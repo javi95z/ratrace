@@ -48,7 +48,7 @@ These are constraints on the milestones that come before any backend exists.
 
 | Component | Use |
 |---|---|
-| Auth | Anonymous sign-in on first launch, with no form. Later the player links email, Google or Apple to keep progress across devices |
+| Auth | Anonymous sign-in on first launch, with no form. Later the player links Google to keep progress across devices |
 | Postgres | Every table below, with row-level security on all of them |
 | Edge Functions | Run the engine and the content packs on the server |
 | Realtime | One private channel per room: who is present, and each round's results |
@@ -110,10 +110,13 @@ Each phase is its own plan and can ship alone.
 4. **Daily challenge:** scenario, one entry per day, streaks.
 5. **Rooms:** create, join, simultaneous rounds, timers, reconnect, live ranking.
 
-## 11. Decisions still open
+## 11. Decisions
 
-1. Sign-in methods beyond anonymous: email link, Google, Apple.
-2. Whether solo is ranked by default when online, as proposed in section 3.
-3. How friends are added: a shareable code or link.
-4. Database region.
-5. Free-tier limits. A free Supabase project may pause when idle; confirm before friends rely on it.
+Settled on 2026-10-13:
+
+1. Sign-in: anonymous on first launch, then Google to keep progress across devices.
+2. Solo is ranked by default when the player is online, and casual when offline.
+3. Friends are added with a shareable code or link.
+4. The database region is the one nearest most players, chosen when the project is created.
+
+Still to confirm when the project is created: free-tier limits. A free Supabase project may pause when idle.

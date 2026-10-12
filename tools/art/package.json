@@ -1,0 +1,9 @@
+{
+  "name": "@ratrace/art-tool",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-art": "tsx src/cli.ts"
+  }
+}

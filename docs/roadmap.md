@@ -12,7 +12,7 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 2 | Art sheets | 21 sheets: items, cars, homes, icons, badges, portraits, card scenes, skylines, logo | Done | | |
 | 3 | Engine core | Markets, trades, debt, property, tax, inflation, bankruptcy, score. 189 tests | Built; second review running | L | P0 |
 | 4 | Engine view for online | The client can hold a game without the future rounds | Planned | S | P0 |
-| 5 | Art cleanup tool | The 21 sheets become final game sprites, with contact sheets to approve | Next | M | P0 |
+| 5 | Art cleanup tool | The 21 sheets become 203 final game sprites, with contact sheets to approve | Built; your approval of the contact sheets pending | M | P0 |
 | 6 | Life systems and content | Cards, careers, family, insurance, status items, news, 6 cities, 21 assets | Planned | L | P0 |
 | 7 | Terminal game and balance bots | First playable life, in the terminal. The fun test starts here | Planned | M | P0 |
 | 8 | Web game, solo | The real game on phone and desktop, with final art and local saves | Planned | XL | P0 |

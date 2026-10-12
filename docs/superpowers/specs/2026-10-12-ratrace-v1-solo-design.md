@@ -275,7 +275,7 @@ Desktop (1024px and wider) uses the same components in three columns: profile an
 ## 6. Visual style
 
 - **Scale:** one art pixel is one CSS pixel on mobile and two on desktop. Integer scaling only, `image-rendering: pixelated`.
-- **Palette:** 64 colours at most. The 31 below are fixed and are the only colours the interface uses. Sprites may use up to 33 more, chosen by the art tool from the approved sheets so that every hue in them survives (pure reds, oranges, forest greens, pinks, leather browns, rose gold, steel blues), and then frozen. A first preview with 48 colours turned a red car orange and a green dial black.
+- **Palette:** each sprite group (items, cars, homes, icons, badges, portraits, cards, skylines, brand) uses at most 64 colours: the 31 below, which are the only colours the interface uses, plus up to 33 taken from that group's own art and then frozen in `art/clean/palette.json`. One palette for everything was tried first and could not hold skin tones, car paint and night skies at once: portraits came out yellow and a green dial came out black. When a pixel is matched to the palette, hue and saturation count three times as much as lightness, for the same reason.
 - **Item tiles:** status items sit on cream tiles. Black and navy items are hard to read on the navy background.
   `#0b1022 #141b33 #1f2a4d #263566 #3b4f8a #3b6ea5 #9ad1d4 #bfe3f0 #dff3ff #5c1a2a #8f2d3f #d1495b #e8788a #7a4f12 #c8891e #f2c14e #ffe9a8 #1f6f66 #2a9d8f #7fd1b9 #c98f6b #e8b796 #2e1f1a #4a3228 #1a1c2c #2b2f44 #4b5269 #8b93a7 #c9cfdc #f4f1e4 #ffffff`
 - **Theme:** night by default. Navy screen, cream cards, gold for the primary action.
@@ -287,10 +287,10 @@ Desktop (1024px and wider) uses the same components in three columns: profile an
 
 1. A prompt pack in `art/prompts/` holds one shared style block and one line per sprite, grouped into sheets.
 2. The author generates each sheet in ChatGPT and saves it to `art/raw/<group>/` under the given filename.
-3. `tools/art` processes each sheet: remove the key colour, find each object by its outline and assign it to the nearest grid cell (so an object that strays a few pixels over a cell line is not cut), downscale to the target size, snap to the palette, threshold alpha, remove stray pixels, trim and centre, add a 1px dark outline where the group asks for it.
-4. The tool writes cleaned sprites to `art/clean/`, a contact sheet per group, and a report that flags suspect sprites (touching the cell edge, too few opaque pixels, key-colour remnants, heavy stray-pixel correction).
+3. `pnpm art` runs `tools/art` over every sheet: remove the key colour, find each object by its outline and assign it to the nearest grid cell (so an object that strays a few pixels over a cell line is not cut, and a neighbour's pixels are never taken), shrink it to the target size by averaging, match it to the group's palette, and clear isolated pixels.
+4. The tool writes the sprites to `art/clean/<group>/<id>.png`, a manifest (`art/clean/manifest.json`) that maps every sprite id to its file and size, a contact sheet per group in `art/contact/` showing every sprite on both the navy and the cream background, and a report (`art/clean/report.md`) that flags empty cells, fragments, objects cut off by the edge of the sheet, leftover key colour and heavy stray-pixel correction.
 5. The author rejects sprites by name. Prompts are adjusted and only those sprites are regenerated.
-6. Approved sprites are packed into an atlas with a typed manifest keyed by content ID.
+6. Sprite ids are fixed in `tools/art/src/sheets.ts` and are the ids the game content refers to. Packing the approved sprites into one atlas image is left to the web game, which is the only thing that needs it.
 
 Generation rules:
 
@@ -313,7 +313,7 @@ Generation rules:
 | Portraits | 64×64 | 24 |
 | Card art | 288×120 | 45 |
 | City skylines | 312×66 | 6 |
-| Logo, wordmark, app icon, mascot | varies | 4 |
+| Logo, wordmark, app icon, mascot | 256×256 | 4 |
 
 A missing sprite falls back to a placeholder and is logged. The game is fully playable on placeholders.
 

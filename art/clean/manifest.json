@@ -1,0 +1,1020 @@
+{
+  "version": 1,
+  "sprites": {
+    "item.watch_casio": {
+      "file": "items/item.watch_casio.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.watch_tissot": {
+      "file": "items/item.watch_tissot.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.watch_omega": {
+      "file": "items/item.watch_omega.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.watch_rolex": {
+      "file": "items/item.watch_rolex.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.watch_ap": {
+      "file": "items/item.watch_ap.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.watch_patek": {
+      "file": "items/item.watch_patek.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_phone": {
+      "file": "items/item.tech_phone.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_laptop": {
+      "file": "items/item.tech_laptop.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_console": {
+      "file": "items/item.tech_console.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_blazer": {
+      "file": "items/item.fashion_blazer.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_polo": {
+      "file": "items/item.fashion_polo.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_loafers": {
+      "file": "items/item.fashion_loafers.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_duffel": {
+      "file": "items/item.fashion_duffel.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_birkin": {
+      "file": "items/item.fashion_birkin.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.art_stencil": {
+      "file": "items/item.art_stencil.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.art_cubist": {
+      "file": "items/item.art_cubist.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.travel_weekend": {
+      "file": "items/item.travel_weekend.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.travel_ibiza": {
+      "file": "items/item.travel_ibiza.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.travel_business_class": {
+      "file": "items/item.travel_business_class.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.travel_maldives": {
+      "file": "items/item.travel_maldives.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_gym": {
+      "file": "items/item.member_gym.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_club": {
+      "file": "items/item.member_club.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_platinum_card": {
+      "file": "items/item.member_platinum_card.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_season_seat": {
+      "file": "items/item.member_season_seat.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.sea_yacht_charter": {
+      "file": "items/item.sea_yacht_charter.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.air_jet_charter": {
+      "file": "items/item.air_jet_charter.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.edu_mba": {
+      "file": "items/item.edu_mba.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_camera": {
+      "file": "items/item.tech_camera.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_headset": {
+      "file": "items/item.tech_headset.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.fashion_sneakers": {
+      "file": "items/item.fashion_sneakers.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_golf": {
+      "file": "items/item.member_golf.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.art_wine": {
+      "file": "items/item.art_wine.png",
+      "width": 64,
+      "height": 64
+    },
+    "car.seat_ibiza": {
+      "file": "cars/car.seat_ibiza.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.toyota_corolla": {
+      "file": "cars/car.toyota_corolla.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.vw_golf_gti": {
+      "file": "cars/car.vw_golf_gti.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.tesla_model_3": {
+      "file": "cars/car.tesla_model_3.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.bmw_m3": {
+      "file": "cars/car.bmw_m3.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.porsche_911": {
+      "file": "cars/car.porsche_911.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.lamborghini_aventador": {
+      "file": "cars/car.lamborghini_aventador.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.mercedes_g_class": {
+      "file": "cars/car.mercedes_g_class.png",
+      "width": 96,
+      "height": 48
+    },
+    "home.rented_room": {
+      "file": "homes/home.rented_room.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.rented_flat": {
+      "file": "homes/home.rented_flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.studio": {
+      "file": "homes/home.studio.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.flat": {
+      "file": "homes/home.flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.house": {
+      "file": "homes/home.house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.penthouse": {
+      "file": "homes/home.penthouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.villa": {
+      "file": "homes/home.villa.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.parking": {
+      "file": "homes/home.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.shop": {
+      "file": "homes/home.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "icon.account": {
+      "file": "icons/icon.account.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.deposit": {
+      "file": "icons/icon.deposit.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bond": {
+      "file": "icons/icon.bond.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.fund": {
+      "file": "icons/icon.fund.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.stock": {
+      "file": "icons/icon.stock.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.crypto": {
+      "file": "icons/icon.crypto.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.gold": {
+      "file": "icons/icon.gold.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.property": {
+      "file": "icons/icon.property.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.pension": {
+      "file": "icons/icon.pension.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.business": {
+      "file": "icons/icon.business.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.mortgage": {
+      "file": "icons/icon.mortgage.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.loan": {
+      "file": "icons/icon.loan.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.card": {
+      "file": "icons/icon.card.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.tax": {
+      "file": "icons/icon.tax.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.insurance": {
+      "file": "icons/icon.insurance.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.focus": {
+      "file": "icons/icon.focus.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.cash": {
+      "file": "icons/icon.cash.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.cashflow": {
+      "file": "icons/icon.cashflow.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.status": {
+      "file": "icons/icon.status.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill": {
+      "file": "icons/icon.skill.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.job": {
+      "file": "icons/icon.job.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.family": {
+      "file": "icons/icon.family.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.city": {
+      "file": "icons/icon.city.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.news": {
+      "file": "icons/icon.news.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.mood": {
+      "file": "icons/icon.mood.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.inflation": {
+      "file": "icons/icon.inflation.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rates": {
+      "file": "icons/icon.rates.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.calendar": {
+      "file": "icons/icon.calendar.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.locked": {
+      "file": "icons/icon.locked.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.star": {
+      "file": "icons/icon.star.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.settings": {
+      "file": "icons/icon.settings.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.trophy": {
+      "file": "icons/icon.trophy.png",
+      "width": 32,
+      "height": 32
+    },
+    "badge.first_100k": {
+      "file": "badges/badge.first_100k.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.millionaire": {
+      "file": "badges/badge.millionaire.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.millionaire_by_35": {
+      "file": "badges/badge.millionaire_by_35.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.ten_million": {
+      "file": "badges/badge.ten_million.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.debt_free_at_40": {
+      "file": "badges/badge.debt_free_at_40.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.no_credit_card": {
+      "file": "badges/badge.no_credit_card.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.escaped": {
+      "file": "badges/badge.escaped.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.escaped_before_40": {
+      "file": "badges/badge.escaped_before_40.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.escaped_before_35": {
+      "file": "badges/badge.escaped_before_35.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.passive_double": {
+      "file": "badges/badge.passive_double.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.first_share": {
+      "file": "badges/badge.first_share.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.five_asset_classes": {
+      "file": "badges/badge.five_asset_classes.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.bought_the_dip": {
+      "file": "badges/badge.bought_the_dip.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.crypto_winter": {
+      "file": "badges/badge.crypto_winter.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.three_rentals": {
+      "file": "badges/badge.three_rentals.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.bond_ladder": {
+      "file": "badges/badge.bond_ladder.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.index_only": {
+      "file": "badges/badge.index_only.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.first_luxury_watch": {
+      "file": "badges/badge.first_luxury_watch.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.supercar": {
+      "file": "badges/badge.supercar.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.penthouse": {
+      "file": "badges/badge.penthouse.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.status_100": {
+      "file": "badges/badge.status_100.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.twenty_items": {
+      "file": "badges/badge.twenty_items.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.every_car": {
+      "file": "badges/badge.every_car.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.three_cities": {
+      "file": "badges/badge.three_cities.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.moved_to_dubai": {
+      "file": "badges/badge.moved_to_dubai.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.family_of_four": {
+      "file": "badges/badge.family_of_four.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.mba": {
+      "file": "badges/badge.mba.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.sold_business": {
+      "file": "badges/badge.sold_business.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.rode_out_recession": {
+      "file": "badges/badge.rode_out_recession.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.bankrupt": {
+      "file": "badges/badge.bankrupt.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.locked": {
+      "file": "badges/badge.locked.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.new": {
+      "file": "badges/badge.new.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.22": {
+      "file": "portraits/portrait.nurse.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.32": {
+      "file": "portraits/portrait.nurse.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.45": {
+      "file": "portraits/portrait.nurse.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nurse.58": {
+      "file": "portraits/portrait.nurse.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.engineer.22": {
+      "file": "portraits/portrait.engineer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.engineer.32": {
+      "file": "portraits/portrait.engineer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.engineer.45": {
+      "file": "portraits/portrait.engineer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.engineer.58": {
+      "file": "portraits/portrait.engineer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.civil_servant.22": {
+      "file": "portraits/portrait.civil_servant.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.civil_servant.32": {
+      "file": "portraits/portrait.civil_servant.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.civil_servant.45": {
+      "file": "portraits/portrait.civil_servant.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.civil_servant.58": {
+      "file": "portraits/portrait.civil_servant.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.22": {
+      "file": "portraits/portrait.rider.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.32": {
+      "file": "portraits/portrait.rider.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.45": {
+      "file": "portraits/portrait.rider.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.rider.58": {
+      "file": "portraits/portrait.rider.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.heir.22": {
+      "file": "portraits/portrait.heir.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.heir.32": {
+      "file": "portraits/portrait.heir.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.heir.45": {
+      "file": "portraits/portrait.heir.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.heir.58": {
+      "file": "portraits/portrait.heir.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.newcomer.22": {
+      "file": "portraits/portrait.newcomer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.newcomer.32": {
+      "file": "portraits/portrait.newcomer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.newcomer.45": {
+      "file": "portraits/portrait.newcomer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.newcomer.58": {
+      "file": "portraits/portrait.newcomer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.banker.22": {
+      "file": "portraits/portrait.banker.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.banker.32": {
+      "file": "portraits/portrait.banker.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.banker.45": {
+      "file": "portraits/portrait.banker.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.banker.58": {
+      "file": "portraits/portrait.banker.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.22": {
+      "file": "portraits/portrait.doctor.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.32": {
+      "file": "portraits/portrait.doctor.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.45": {
+      "file": "portraits/portrait.doctor.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.doctor.58": {
+      "file": "portraits/portrait.doctor.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "card.office_desk": {
+      "file": "cards/card.office_desk.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.handshake": {
+      "file": "cards/card.handshake.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.packed_box": {
+      "file": "cards/card.packed_box.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.airport": {
+      "file": "cards/card.airport.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.library": {
+      "file": "cards/card.library.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.graduation": {
+      "file": "cards/card.graduation.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.online_course": {
+      "file": "cards/card.online_course.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.shopfront": {
+      "file": "cards/card.shopfront.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bar": {
+      "file": "cards/card.bar.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.garage_startup": {
+      "file": "cards/card.garage_startup.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.parcels": {
+      "file": "cards/card.parcels.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.phone_chart": {
+      "file": "cards/card.phone_chart.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.trading_desk": {
+      "file": "cards/card.trading_desk.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.meme_coin": {
+      "file": "cards/card.meme_coin.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.shady_deal": {
+      "file": "cards/card.shady_deal.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.frozen_vault": {
+      "file": "cards/card.frozen_vault.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.door_keys": {
+      "file": "cards/card.door_keys.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moving_boxes": {
+      "file": "cards/card.moving_boxes.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.flooded_room": {
+      "file": "cards/card.flooded_room.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.scaffolding": {
+      "file": "cards/card.scaffolding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sports_car": {
+      "file": "cards/card.sports_car.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.beach_club": {
+      "file": "cards/card.beach_club.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.phone_launch": {
+      "file": "cards/card.phone_launch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.watch_boutique": {
+      "file": "cards/card.watch_boutique.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.nightclub": {
+      "file": "cards/card.nightclub.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.dinner_for_two": {
+      "file": "cards/card.dinner_for_two.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.wedding": {
+      "file": "cards/card.wedding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.nursery": {
+      "file": "cards/card.nursery.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.torn_photo": {
+      "file": "cards/card.torn_photo.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.family_dinner": {
+      "file": "cards/card.family_dinner.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.hospital": {
+      "file": "cards/card.hospital.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.gym": {
+      "file": "cards/card.gym.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.burnout": {
+      "file": "cards/card.burnout.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lottery": {
+      "file": "cards/card.lottery.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.breakdown": {
+      "file": "cards/card.breakdown.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cash_envelope": {
+      "file": "cards/card.cash_envelope.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.casino": {
+      "file": "cards/card.casino.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crash_screens": {
+      "file": "cards/card.crash_screens.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.central_bank": {
+      "file": "cards/card.central_bank.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.empty_street": {
+      "file": "cards/card.empty_street.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.server_room": {
+      "file": "cards/card.server_room.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bank_queue": {
+      "file": "cards/card.bank_queue.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.receipts": {
+      "file": "cards/card.receipts.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.inspector": {
+      "file": "cards/card.inspector.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sunset_bench": {
+      "file": "cards/card.sunset_bench.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.newsroom": {
+      "file": "cards/card.newsroom.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sunrise_balcony": {
+      "file": "cards/card.sunrise_balcony.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_arrival": {
+      "file": "cards/card.city_arrival.png",
+      "width": 288,
+      "height": 120
+    },
+    "skyline.madrid": {
+      "file": "skylines/skyline.madrid.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.london": {
+      "file": "skylines/skyline.london.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.new_york": {
+      "file": "skylines/skyline.new_york.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.dubai": {
+      "file": "skylines/skyline.dubai.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.singapore": {
+      "file": "skylines/skyline.singapore.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.bangkok": {
+      "file": "skylines/skyline.bangkok.png",
+      "width": 312,
+      "height": 66
+    },
+    "brand.logo": {
+      "file": "brand/brand.logo.png",
+      "width": 256,
+      "height": 256
+    },
+    "brand.wordmark": {
+      "file": "brand/brand.wordmark.png",
+      "width": 256,
+      "height": 256
+    },
+    "brand.app_icon": {
+      "file": "brand/brand.app_icon.png",
+      "width": 256,
+      "height": 256
+    },
+    "brand.mascot": {
+      "file": "brand/brand.mascot.png",
+      "width": 256,
+      "height": 256
+    }
+  }
+}
