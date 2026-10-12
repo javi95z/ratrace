@@ -33,6 +33,12 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(@types/node@22.20.5)(vite@8.3.4(@types/node@22.20.5)(esbuild@0.28.2)(tsx@4.23.15))
 
+  packages/content:
+    dependencies:
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../engine
+
   packages/engine: {}
 
   tools/art: {}
