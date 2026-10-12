@@ -1,6 +1,6 @@
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
-import type { Content, Effects, GameView, Headline, Order, PlayerState, WorldState } from '@ratrace/engine';
+import type { Content, Effects, GameEvent, GameView, Headline, Order, PlayerState, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -160,4 +160,71 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
 export function priceHistory(view: GameView, assetId: string): number[] {
   const first = view.timeline[0].assetIndex[assetId];
   return view.timeline.map((world) => world.assetIndex[assetId] / first);
+}
+
+/** Something that happened in a round besides the money. */
+export interface RoundNote {
+  /** Gold is kept for the escape. */
+  tone: Tone | 'gold';
+  /** The sprite shown beside it. */
+  icon: string;
+  title: string;
+  hint?: string;
+}
+
+/** The order the news of a round is told in: what changes the life first, what was merely not done last. */
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'moved', 'orderRejected'];
+
+/** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
+export function roundNotes({ text, names }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
+  const told: Array<{ rank: number; note: RoundNote }> = [];
+  const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
+  for (const event of events) {
+    switch (event.kind) {
+      case 'escaped':
+        add(event, { tone: 'gold', icon: 'icon.trophy', title: t('escaped'), hint: t('escapedHint') });
+        break;
+      case 'escapeLost':
+        add(event, { tone: 'bad', icon: 'icon.cashflow', title: t('escapeLost'), hint: t('escapeLostHint') });
+        break;
+      case 'bankrupt':
+        add(event, { tone: 'bad', icon: 'icon.loan', title: t('bankrupt'), hint: t('bankruptHint') });
+        break;
+      case 'promoted':
+        add(event, { tone: 'good', icon: 'icon.job', title: t('promoted', { title: text.careers[event.careerId].levels[event.level] }) });
+        break;
+      case 'financeSkill':
+        add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'jobHunt':
+        add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
+        break;
+      case 'moved':
+        add(event, { tone: 'plain', icon: 'icon.city', title: t('moved', { city: names.cities[event.cityId] }) });
+        break;
+      case 'orderRejected':
+        add(event, { tone: 'bad', icon: 'icon.locked', title: t('refused', { reason: text.reasons[event.reason] }) });
+        break;
+      default:
+        break;
+    }
+  }
+  // A stable sort: two events of a kind stay in the order they happened.
+  return told.sort((a, b) => a.rank - b.rank).map((entry) => entry.note);
+}
+
+/**
+ * The net-worth graph: one bar a round. Each bar is given as shares of the graph's height, `y`
+ * from the top and `h` tall, with `zero` the line that nothing owned and nothing owed sits on.
+ * A round spent in debt hangs below that line.
+ */
+export function worthBars(history: number[]): { zero: number; bars: Array<{ y: number; h: number; negative: boolean }> } {
+  const top = Math.max(0, ...history);
+  const bottom = Math.min(0, ...history);
+  const span = top - bottom || 1;
+  const zero = top / span;
+  return {
+    zero,
+    bars: history.map((value) => (value >= 0 ? { y: (top - value) / span, h: value / span, negative: false } : { y: zero, h: -value / span, negative: true })),
+  };
 }

@@ -1,0 +1,91 @@
+import { expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+/** The words the tests press and look for, in each language the game speaks. */
+export const WORDS = {
+  en: {
+    newLife: 'New life', start: 'Start this life', toCards: 'See what life brings', nextCard: 'Next card', toFinance: 'To your finances',
+    play: 'Play the round', nextRound: 'Next round', finish: 'See how it ended', theEnd: 'The end', news: 'News', choices: /^Your choices/,
+    happened: 'What happened', later: 'Two years later', card: (n: number) => new RegExp(`^Card ${n} of \\d`), round: (n: number) => `Round ${n} of 20`,
+    continue: /Continue your life/, yourLife: 'Your life', orders: "This round's orders", again: 'Live another life',
+  },
+  es: {
+    newLife: 'Nueva vida', start: 'Empezar esta vida', toCards: 'Ver qué trae la vida', nextCard: 'Siguiente carta', toFinance: 'A tus finanzas',
+    play: 'Jugar la ronda', nextRound: 'Siguiente ronda', finish: 'Ver cómo acabó', theEnd: 'Fin', news: 'Noticias', choices: /^Tus opciones/,
+    happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => `Ronda ${n} de 20`,
+    continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
+  },
+} as const;
+
+export type Lang = keyof typeof WORDS;
+
+/** Everything the page complains about while a test runs. A clean game says nothing. */
+export function watch(page: Page): string[] {
+  const problems: string[] = [];
+  page.on('pageerror', (error) => problems.push(`page error: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') problems.push(`console: ${message.text()}`);
+    if (message.type() === 'warning' && /sprite missing|could not save|saving is off/.test(message.text())) problems.push(`warning: ${message.text()}`);
+  });
+  page.on('response', (response) => {
+    if (response.status() >= 400) problems.push(`${response.status()} ${response.url()}`);
+  });
+  return problems;
+}
+
+/** Starts a new life from the front door. */
+export async function startLife(page: Page, lang: Lang, life: string) {
+  const w = WORDS[lang];
+  await page.goto(`/${lang}`);
+  await page.getByRole('link', { name: w.newLife }).click();
+  await page.getByRole('radio', { name: new RegExp(`^${life}`) }).click();
+  await page.getByRole('button', { name: w.start }).click();
+  await expect(page).toHaveURL(new RegExp(`/${lang}/play$`));
+}
+
+/** Answers every card of the hand with the option at `pick`, or the last open one before it, and stops in the finances. */
+export async function answerHand(page: Page, lang: Lang, pick = 0) {
+  const w = WORDS[lang];
+  for (;;) {
+    const options = page.getByRole('group', { name: w.choices }).getByRole('button');
+    await expect(options.first()).toBeVisible();
+    let chosen = Math.min(pick, (await options.count()) - 1);
+    while (chosen > 0 && !(await options.nth(chosen).isEnabled())) chosen -= 1;
+    await options.nth(chosen).click();
+    await expect(page.getByRole('heading', { name: w.happened })).toBeVisible();
+    const next = page.getByRole('button', { name: w.nextCard });
+    if (await next.isVisible()) await next.click();
+    else {
+      await page.getByRole('button', { name: w.toFinance }).click();
+      return;
+    }
+  }
+}
+
+/** Plays one whole round from its news: the cards, no orders, the ledger. Leaves the page on the ledger. */
+export async function playRound(page: Page, lang: Lang, pick = 0) {
+  const w = WORDS[lang];
+  await page.getByRole('button', { name: w.toCards }).click();
+  await answerHand(page, lang, pick);
+  await page.getByRole('button', { name: w.play }).click();
+  await expect(page.getByRole('heading', { name: w.later })).toBeVisible();
+}
+
+/** True if nothing on the page is wider than the screen. */
+export const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+
+/**
+ * Buttons, links and switches on screen that a thumb would miss: smaller than 44px both ways.
+ * Returns what each one says, so a failure names the culprit.
+ */
+export const smallTargets = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('button, a[href], [role="tab"], [role="switch"], [role="radio"], input[type="range"]')]
+      .filter((el) => {
+        const box = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        const shown = box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && !el.closest('nextjs-portal');
+        return shown && (box.height < 44 || box.width < 44);
+      })
+      .map((el) => `${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40)}" ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`),
+  );

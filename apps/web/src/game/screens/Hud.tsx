@@ -21,9 +21,10 @@ export function useShown(): GameView {
 
 /**
  * Always in sight: who and where you are, cash, yearly cashflow, status, and how far passive income
- * is from covering your life. `compact` leaves the skyline out to give the finance tabs room.
+ * is from covering your life. `compact` leaves the skyline out and shrinks the portrait, to give
+ * the cards and the finance tabs room.
  */
-export function Hud({ compact = false, onProfile }: { compact?: boolean; onProfile(): void }) {
+export function Hud({ compact = false, skyline = !compact, onProfile }: { compact?: boolean; skyline?: boolean; onProfile?: () => void }) {
   const t = useT('hud');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
@@ -38,21 +39,30 @@ export function Hud({ compact = false, onProfile }: { compact?: boolean; onProfi
   const yearly = flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual;
   const escape = preview ? preview.escape : escapeProgress(content, shown);
   const escaped = p.escapedAtRound !== null;
+  // Where the profile is already on screen, as on a wide one, the portrait opens nothing and is no button.
+  const portrait = (
+    // A sprite is never drawn at a fraction of its size: the small portrait is the face, cut out of the whole.
+    <Well className={compact ? 'size-11 items-start overflow-hidden' : 'size-[68px]'}>
+      <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className={compact ? '-mt-1 max-w-none' : ''} />
+    </Well>
+  );
 
   return (
     <header className="flex flex-col gap-2 px-3 pt-3">
-      {compact ? null : (
-        <div className="frame mx-auto bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
-          <Sprite id={cityArt(p.cityId)} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} />
+      {skyline ? (
+        <div className="frame mx-auto flex max-w-full justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
+          <Sprite id={cityArt(p.cityId)} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
         </div>
-      )}
+      ) : null}
 
       <div className="flex items-center gap-3">
-        <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame shrink-0 leading-[0]">
-          <Well className={compact ? 'size-11 overflow-hidden' : 'size-[68px]'}>
-            <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className={compact ? 'scale-[0.6875]' : ''} />
-          </Well>
-        </button>
+        {onProfile ? (
+          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame shrink-0 leading-[0]">
+            {portrait}
+          </button>
+        ) : (
+          <span className="frame shrink-0 leading-[0]">{portrait}</span>
+        )}
         <div className="min-w-0 flex-1">
           <div className="pixel text-[20px]">{common('age', { age })}</div>
           <div className="truncate text-[13px] text-ink-300">
@@ -62,10 +72,12 @@ export function Hud({ compact = false, onProfile }: { compact?: boolean; onProfi
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} />
-        <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} />
-        <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} />
+      <div className="@container">
+        <div className="grid grid-cols-3 gap-2">
+          <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} />
+          <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} />
+          <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} />
+        </div>
       </div>
 
       <div title={t('ratRaceHint')}>

@@ -2,7 +2,7 @@
 export interface Format {
   /** Cents as whole dollars: $12,345. */
   money(cents: number): string;
-  /** Cents as whole dollars with a sign: +$1,200 or −$300. */
+  /** Cents as whole dollars with a sign: +$1,200 or −$300. Nothing is plain $0. */
   signed(cents: number): string;
   /** Cents in a few characters, for small spaces: $12.4k, $1.2M. */
   compact(cents: number): string;
@@ -11,6 +11,8 @@ export interface Format {
   /** Basis points as a signed whole percentage: -2200 → −22%. */
   change(bp: number): string;
   number(value: number): string;
+  /** A percentage as a multiplier with two decimals: 125 → 1.25. */
+  factor(pct: number): string;
 }
 
 const TAGS: Record<string, string> = { en: 'en-US', es: 'es-ES' };
@@ -24,6 +26,7 @@ export function formatFor(locale: string): Format {
   const short = new Intl.NumberFormat(tag, { ...currency, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 });
   const whole = new Intl.NumberFormat(tag, { maximumFractionDigits: 0, useGrouping: 'always' });
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const hundredths = new Intl.NumberFormat(tag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fix = (text: string) => text.replace('-', MINUS);
 
   // Rounded first, and never to a negative zero: forty cents owed is "$0", not "−$0", and its sign is a plus.
@@ -31,10 +34,11 @@ export function formatFor(locale: string): Format {
   const money = (cents: number) => fix(dollars.format(round(cents / 100)));
   return {
     money,
-    signed: (cents) => (round(cents / 100) >= 0 ? `+${money(cents)}` : money(cents)),
+    signed: (cents) => (round(cents / 100) > 0 ? `+${money(cents)}` : money(cents)),
     compact: (cents) => (Math.abs(cents) < 1_000_000 ? money(cents) : fix(short.format(cents / 100))),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${round(bp / 100) >= 0 ? '+' : MINUS}${whole.format(Math.abs(round(bp / 100)))}%`,
     number: (value) => fix(whole.format(round(value))),
+    factor: (pct) => hundredths.format(pct / 100),
   };
 }

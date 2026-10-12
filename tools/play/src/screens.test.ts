@@ -22,7 +22,8 @@ describe('money', () => {
       const fmt = formatFor(locale);
       for (const cents of [0, -0, 40, -40, -49]) {
         expect(fmt.money(cents), `${locale} ${cents}`).not.toMatch(/[−-]/);
-        expect(fmt.signed(cents), `${locale} ${cents}`).toMatch(/^\+[^−-]*$/);
+        // A change of nothing carries no sign at all.
+        expect(fmt.signed(cents), `${locale} ${cents}`).toMatch(/^[^+−-]*$/);
       }
       expect(fmt.signed(-51)).toMatch(/^−[^+]*1/);
       expect(fmt.signed(-12_345_00)).toMatch(/^−/);

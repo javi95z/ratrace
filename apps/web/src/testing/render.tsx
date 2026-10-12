@@ -1,0 +1,40 @@
+import { content, lives } from '@ratrace/content';
+import { render } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
+import type { ReactElement } from 'react';
+import { GameProvider } from '@/game/context';
+import type { Services } from '@/game/context';
+import { LocalSessions } from '@/session/local';
+import { MemoryStore } from '@/session/memory';
+import en from '../../messages/en.json';
+import es from '../../messages/es.json';
+
+/** The game's two services with nothing behind them but memory, and ids, seeds and a clock that never change. */
+export function memoryServices(store = new MemoryStore()): Services & { store: MemoryStore; sessions: LocalSessions } {
+  let ids = 0;
+  let clock = 1_000;
+  const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => `screen-seed-${ids}`, now: () => (clock += 1) });
+  return { sessions, store };
+}
+
+/** Draws a screen inside everything the real pages give it: the language, its text, and the game. */
+export function renderGame(ui: ReactElement, services: Services, locale: 'en' | 'es' = 'en') {
+  return render(
+    <NextIntlClientProvider locale={locale} messages={locale === 'en' ? en : es} timeZone="UTC">
+      <GameProvider services={services}>{ui}</GameProvider>
+    </NextIntlClientProvider>,
+  );
+}
+
+/** Makes the page as wide as a desktop, or as narrow as a phone, for components that ask. */
+export function setWidth(kind: 'phone' | 'desk') {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: (query: string) => ({
+      matches: kind === 'desk' && query.includes('min-width'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+}

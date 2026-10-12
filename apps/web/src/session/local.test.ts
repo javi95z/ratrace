@@ -174,6 +174,8 @@ describe('playing', () => {
       await session.playRound({ orders: [{ type: 'setLifestyle', tier: 3 }] });
     }
     expect((await saveOf(store)).bankruptcies).toBeGreaterThan(0);
+    expect(session.bankruptcies()).toBe((await saveOf(store)).bankruptcies);
+    expect((await setup(store).sessions.resume()).session?.bankruptcies()).toBe(session.bankruptcies());
   });
 
   it('keeps playing when the save cannot be written, and says so', async () => {

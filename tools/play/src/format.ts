@@ -5,7 +5,7 @@ const TAGS: Record<Locale, string> = { en: 'en-US', es: 'es-ES' };
 export interface Format {
   /** Cents as whole dollars: $12,345. */
   money(cents: number): string;
-  /** Cents with an explicit sign: +$1,200 or −$300. */
+  /** Cents with an explicit sign: +$1,200 or −$300. Nothing is plain $0. */
   signed(cents: number): string;
   /** Basis points as a percentage with one decimal: 250 → 2.5%. */
   rate(bp: number): string;
@@ -24,7 +24,7 @@ export function formatFor(locale: Locale): Format {
   const money = (cents: number) => dollars.format(whole(cents)).replace('-', '−');
   return {
     money,
-    signed: (cents) => (whole(cents) >= 0 ? `+${money(cents)}` : money(cents)),
+    signed: (cents) => (whole(cents) > 0 ? `+${money(cents)}` : money(cents)),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${bp >= 0 ? '+' : '−'}${plain.format(Math.abs(Math.round(bp / 100)))}%`,
     number: (value) => plain.format(value),

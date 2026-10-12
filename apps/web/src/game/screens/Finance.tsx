@@ -3,7 +3,7 @@
 import { assetKind, itemArt, propertyArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from '@ratrace/engine';
-import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
+import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -300,19 +300,18 @@ function PropertyTab() {
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               <div className="flex items-center gap-3">
-                <Well className="size-12 overflow-hidden">
-                  <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} className="scale-[0.375]" />
+                <Well className="shrink-0">
+                  <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
                 </Well>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate">
-                    {text.propertyTypes[property.typeId]} · {names.cities[property.cityId]}
-                  </div>
-                  <div className="text-[12px] text-ink-300">
+                  <div className="pixel text-[17px]">{text.propertyTypes[property.typeId]}</div>
+                  <div className="text-[13px] text-ink-200">{names.cities[property.cityId]}</div>
+                  <div className="pixel mt-1 text-[17px] text-gold-500">{fmt.money(property.value)}</div>
+                  <div className="mt-1 text-[12px] text-ink-300">
                     {state}
                     {mortgage ? ` · ${t('mortgageLeft', { amount: fmt.money(mortgage.principal) })}` : ''}
                   </div>
                 </div>
-                <div className="pixel">{fmt.money(property.value)}</div>
               </div>
               {original ? (
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -330,23 +329,21 @@ function PropertyTab() {
       </Panel>
 
       <Panel title={t('title', { city: names.cities[p.cityId] })}>
-        {content.propertyTypes.map((type) => {
-          const quote = quoteProperty(content, shown, type.id);
-          return (
-            <button key={type.id} type="button" onClick={() => setBuying(type.id)} className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left">
-              <Well className="size-12 overflow-hidden">
-                <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} className="scale-[0.375]" />
-              </Well>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate">{text.propertyTypes[type.id]}</span>
-                <span className="block text-[12px] text-ink-300">
-                  {t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })} · {t('status', { n: type.status })}
-                </span>
-              </span>
-              <span className="pixel">{fmt.compact(quote.price)}</span>
-            </button>
-          );
-        })}
+        {/* Two homes side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
+        <div className="grid grid-cols-2 gap-2 @min-[560px]:grid-cols-3">
+          {content.propertyTypes.map((type) => {
+            const quote = quoteProperty(content, shown, type.id);
+            return (
+              <button key={type.id} type="button" onClick={() => setBuying(type.id)} className="frame-raised frame-cream flex min-h-11 flex-col items-center gap-1 bg-cream p-2 text-center text-ink-900 transition-transform active:translate-y-[2px]">
+                <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
+                <span className="text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
+                <span className="pixel text-[15px]">{fmt.compact(quote.price)}</span>
+                <span className="text-[11px] leading-tight text-ink-500">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
+                <Tag tone="good">{t('status', { n: type.status })}</Tag>
+              </button>
+            );
+          })}
+        </div>
       </Panel>
       {buying ? <BuyHome typeId={buying} onClose={() => setBuying(null)} /> : null}
     </div>
@@ -706,29 +703,41 @@ function Taxes() {
 
 // ------------------------------------------------------------------------------------------------
 
-/** The orders of the round so far, each removable. */
-export function Basket({ onClose }: { onClose(): void }) {
+/** The orders of the round so far, in the order they will run, each removable. */
+export function BasketList() {
   const t = useT('finance');
   const labels = useT('orders');
-  const common = useT('common');
   const words = useWords();
-  const view = useGame((s) => s.view) as GameView;
+  const view = useGame((s) => s.view);
   const orders = useGame((s) => s.orders);
   const removeOrder = useGame((s) => s.removeOrder);
+  if (!view) return null;
+  if (orders.length === 0) return <p className="py-1 text-[14px] text-ink-300">{t('basketEmpty')}</p>;
 
   return (
-    <Sheet open onClose={onClose} title={t('basketTitle')} closeLabel={common('close')}>
-      {orders.length === 0 ? <p className="py-2 text-[14px] text-ink-300">{t('basketEmpty')}</p> : null}
-      <ol className="flex flex-col gap-2">
-        {orders.map((order, i) => (
-          <li key={i} className="frame flex items-center justify-between gap-3 bg-night-700 py-1 pl-3 pr-1">
-            <span className="min-w-0 truncate">{orderLabel(words, labels, view.player, order)}</span>
-            <button type="button" onClick={() => removeOrder(i)} aria-label={`${t('remove')}: ${orderLabel(words, labels, view.player, order)}`} className="pixel flex size-11 shrink-0 items-center justify-center text-[18px] text-wine-300">
+    <ol aria-label={t('basketTitle')} className="flex flex-col gap-2">
+      {orders.map((order, i) => {
+        const label = orderLabel(words, labels, view.player, order);
+        return (
+          <li key={i} className="frame flex items-center justify-between gap-3 bg-night-600 py-1 pl-3 pr-1">
+            <span className="min-w-0 truncate">{label}</span>
+            <button type="button" onClick={() => removeOrder(i)} aria-label={`${t('remove')}: ${label}`} className="pixel flex size-11 shrink-0 items-center justify-center text-[18px] text-wine-300">
               ✕
             </button>
           </li>
-        ))}
-      </ol>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** The orders of the round in a sheet, for a phone. */
+export function Basket({ onClose }: { onClose(): void }) {
+  const t = useT('finance');
+  const common = useT('common');
+  return (
+    <Sheet open onClose={onClose} title={t('basketTitle')} closeLabel={common('close')}>
+      <BasketList />
     </Sheet>
   );
 }

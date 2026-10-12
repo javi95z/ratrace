@@ -22,7 +22,7 @@
     "motionHint": "Turns off roll-ups and particles.",
     "lostOutdated": "Your saved life was played under older rules and cannot be continued.",
     "lostDamaged": "Your saved life could not be opened.",
-    "savedHere": "Your life is saved on this device after every round."
+    "savedHere": "Your life is saved on this device after every step."
   },
   "newLife": {
     "title": "Choose a life",
@@ -54,7 +54,8 @@
     "crypto": "Crypto",
     "hint": "Headlines are about the next two years. About seven in ten come true.",
     "toCards": "See what life brings",
-    "toFinance": "To your finances"
+    "toFinance": "To your finances",
+    "opener": "The headlines beside this are about the next two years. About seven in ten come true."
   },
   "cards": {
     "progress": "Card {n} of {total}",
@@ -66,7 +67,8 @@
     "chose": "You chose: {label}",
     "toFinance": "To your finances",
     "next": "Next card",
-    "swipe": "Swipe the card, or tap a choice"
+    "swipe": "Swipe the card, or tap a choice",
+    "choices": "Your choices: {title}"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -117,6 +119,7 @@
     "basketTitle": "This round's orders",
     "basketEmpty": "Nothing yet. Whatever you decide here happens when you play the round.",
     "remove": "Remove",
+    "toTheRound": "The round",
     "refused": "Not possible",
     "portfolio": {
       "cash": "Cash",
@@ -260,6 +263,8 @@
     "title": "Two years later",
     "ages": "Age {from} to {to}",
     "netWorth": "Net worth",
+    "ledger": "What came in and went out",
+    "cashNow": "Cash now",
     "promoted": "Promoted: {title}",
     "jobHuntYes": "The job hunt paid off: a lasting raise.",
     "jobHuntNo": "The job hunt led nowhere this time.",
@@ -302,7 +307,13 @@
     "debts": "Debts",
     "netWorth": "Net worth",
     "owned": "What you own",
-    "nothing": "Nothing yet"
+    "nothing": "Nothing yet",
+    "insurance": "Insurance",
+    "uninsured": "None",
+    "lifestyle": "Lifestyle",
+    "home": "Home",
+    "leave": "Leave to the home screen",
+    "leaveHint": "Your life is saved after every step."
   },
   "end": {
     "title": "The end",

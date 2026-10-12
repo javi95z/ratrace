@@ -22,7 +22,7 @@
     "motionHint": "Quita las animaciones y las partículas.",
     "lostOutdated": "Tu vida guardada se jugó con reglas antiguas y no se puede continuar.",
     "lostDamaged": "No se ha podido abrir tu vida guardada.",
-    "savedHere": "Tu vida se guarda en este dispositivo después de cada ronda."
+    "savedHere": "Tu vida se guarda en este dispositivo después de cada paso."
   },
   "newLife": {
     "title": "Elige una vida",
@@ -54,7 +54,8 @@
     "crypto": "Cripto",
     "hint": "Los titulares hablan de los próximos dos años. Se cumplen unos siete de cada diez.",
     "toCards": "Ver qué trae la vida",
-    "toFinance": "A tus finanzas"
+    "toFinance": "A tus finanzas",
+    "opener": "Los titulares de al lado hablan de los próximos dos años. Se cumplen unos siete de cada diez."
   },
   "cards": {
     "progress": "Carta {n} de {total}",
@@ -66,7 +67,8 @@
     "chose": "Elegiste: {label}",
     "toFinance": "A tus finanzas",
     "next": "Siguiente carta",
-    "swipe": "Desliza la carta o toca una opción"
+    "swipe": "Desliza la carta o toca una opción",
+    "choices": "Tus opciones: {title}"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -117,6 +119,7 @@
     "basketTitle": "Las órdenes de esta ronda",
     "basketEmpty": "Todavía nada. Lo que decidas aquí ocurre cuando juegues la ronda.",
     "remove": "Quitar",
+    "toTheRound": "La ronda",
     "refused": "No se puede",
     "portfolio": {
       "cash": "Efectivo",
@@ -260,6 +263,8 @@
     "title": "Dos años después",
     "ages": "De los {from} a los {to}",
     "netWorth": "Patrimonio",
+    "ledger": "Lo que entró y lo que salió",
+    "cashNow": "Efectivo ahora",
     "promoted": "Ascenso: {title}",
     "jobHuntYes": "La búsqueda dio fruto: una subida para siempre.",
     "jobHuntNo": "Esta vez la búsqueda no llevó a nada.",
@@ -302,7 +307,13 @@
     "debts": "Deudas",
     "netWorth": "Patrimonio",
     "owned": "Lo que tienes",
-    "nothing": "Todavía nada"
+    "nothing": "Todavía nada",
+    "insurance": "Seguros",
+    "uninsured": "Ninguno",
+    "lifestyle": "Estilo de vida",
+    "home": "Casa",
+    "leave": "Salir a la pantalla de inicio",
+    "leaveHint": "Tu vida se guarda después de cada paso."
   },
   "end": {
     "title": "Fin",

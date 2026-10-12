@@ -49,6 +49,10 @@ class LocalSession implements GameSession {
     return [...this.save.history];
   }
 
+  bankruptcies(): number {
+    return this.save.bankruptcies;
+  }
+
   answerCard(option: number): Promise<StepResult> {
     return this.step(async () => {
       const state = this.save.state;

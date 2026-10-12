@@ -16,6 +16,8 @@ export interface RoundState {
   view: GameView | null;
   /** Net worth in start-of-game cents at the start and after each round played. */
   history: number[];
+  /** How many times this life has gone bankrupt. */
+  bankruptcies: number;
   stage: Stage;
   /** What the card just answered did, while its result is on screen. The card to answer next is `view.hand[view.answered]`. */
   cardEvents: GameEvent[];
@@ -66,6 +68,7 @@ const blank: RoundState = {
   lifeId: null,
   view: null,
   history: [],
+  bankruptcies: 0,
   stage: 'news',
   cardEvents: [],
   orders: [],
@@ -97,7 +100,7 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
     const open = (opened: GameSession) => {
       session = opened;
       const view = opened.view();
-      const base = { ...blank, status: 'playing' as const, lifeId: opened.lifeId, view, history: opened.history() };
+      const base = { ...blank, status: 'playing' as const, lifeId: opened.lifeId, view, history: opened.history(), bankruptcies: opened.bankruptcies() };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
@@ -203,6 +206,7 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
           set({
             view: result.view,
             history: session.history(),
+            bankruptcies: session.bankruptcies(),
             resolved: { before: view, events: result.events },
             orders: [],
             preview: null,

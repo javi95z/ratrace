@@ -240,6 +240,22 @@ describe('a whole life', () => {
   });
 });
 
+describe('going bankrupt', () => {
+  it('is counted for the end screen', async () => {
+    const { get } = setup();
+    await get().start('nurse');
+    expect(get().bankruptcies).toBe(0);
+    // A lavish life on a nurse's pay ends in bankruptcy within a few rounds.
+    for (let round = 0; round < 8; round++) {
+      await answerHand(get);
+      get().setOrder(isLifestyle, { type: 'setLifestyle', tier: 3 });
+      await get().play();
+      get().next();
+    }
+    expect(get().bankruptcies).toBeGreaterThan(0);
+  });
+});
+
 describe('coming back', () => {
   it('reopens at the news when the cards are still to be answered', async () => {
     const first = setup();

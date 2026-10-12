@@ -111,7 +111,7 @@ export function CardStage() {
         </div>
       </motion.article>
 
-      <div className="flex flex-col gap-2.5">
+      <div role="group" aria-label={t('choices', { title: written.title })} className="flex flex-col gap-2.5">
         {def.options.map((_, i) => (
           <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} />
         ))}

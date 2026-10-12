@@ -18,14 +18,15 @@ describe('formatFor', () => {
   it('signs an amount that is a change', () => {
     expect(en.signed(120_000)).toBe('+$1,200');
     expect(en.signed(-120_000)).toBe('−$1,200');
-    expect(en.signed(0)).toBe('+$0');
+    // A change of nothing carries no sign: "+$0" of tax reads like a mistake.
+    expect(en.signed(0)).toBe('$0');
   });
 
   it('never writes a negative zero: a few cents either way are no dollars', () => {
     for (const fmt of [en, es]) {
       for (const cents of [0, -0, 40, -40, -49]) {
         expect(fmt.money(cents), String(cents)).not.toMatch(/[−-]/);
-        expect(fmt.signed(cents), String(cents)).toMatch(/^\+[^−-]*$/);
+        expect(fmt.signed(cents), String(cents)).toMatch(/^[^+−-]*$/);
         expect(fmt.compact(cents), String(cents)).not.toMatch(/[−-]/);
       }
     }
@@ -50,6 +51,12 @@ describe('formatFor', () => {
     expect(en.change(1_450)).toBe('+15%');
     expect(en.change(0)).toBe('+0%');
     expect(en.number(-1234)).toBe('−1,234');
+  });
+
+  it('writes a multiplier from its percentage', () => {
+    expect(en.factor(100)).toBe('1.00');
+    expect(en.factor(161)).toBe('1.61');
+    expect(es.factor(125)).toBe('1,25');
   });
 
   it('falls back to English for a language it does not know', () => {

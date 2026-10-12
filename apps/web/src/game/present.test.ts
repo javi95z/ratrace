@@ -1,16 +1,16 @@
 import { content, lives, textFor } from '@ratrace/content';
 import { createGame, viewOf } from '@ratrace/engine';
-import type { Effects, Order } from '@ratrace/engine';
+import type { Effects, GameEvent, Order } from '@ratrace/engine';
 import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
-import { ageAt, chancePct, effectTags, headlineText, orderLabel, portraitAge, priceHistory } from './present';
+import { ageAt, chancePct, effectTags, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
-const t = (locale: 'en' | 'es', namespace: 'effects' | 'orders'): Translate =>
+const t = (locale: 'en' | 'es', namespace: 'effects' | 'orders' | 'resolve'): Translate =>
   createTranslator({ locale, messages: locale === 'en' ? en : es, namespace }) as unknown as Translate;
 
 const state = createGame({ content, start: lives[1].start }, 'present');
@@ -157,5 +157,76 @@ describe('priceHistory', () => {
     expect(history).toHaveLength(3);
     expect(history[0]).toBe(1);
     expect(history[2]).toBe(state.timeline[2].assetIndex.bitcoin / state.timeline[0].assetIndex.bitcoin);
+  });
+});
+
+describe('roundNotes', () => {
+  const notes = (events: GameEvent[], locale: 'en' | 'es' = 'en') => roundNotes(words(locale), t(locale, 'resolve'), events);
+
+  it('tells what happened besides the money, the biggest news first', () => {
+    const told = notes([
+      { kind: 'ledger', line: 'salary', amount: 5_000_000 },
+      { kind: 'orderRejected', order: {}, reason: 'not-enough-cash' },
+      { kind: 'jobHunt', success: true },
+      { kind: 'promoted', careerId: 'tech', level: 2 },
+      { kind: 'financeSkill', level: 1 },
+      { kind: 'moved', cityId: 'dubai' },
+      { kind: 'escaped', round: 7 },
+    ]);
+    expect(told.map((note) => note.title)).toEqual([
+      'You are out of the rat race!',
+      `Promoted: ${words('en').text.careers.tech.levels[2]}`,
+      'Experience pays: finance skill 1.',
+      'The job hunt paid off: a lasting raise.',
+      'You moved to Dubai.',
+      'Not done: You do not have enough cash.',
+    ]);
+    expect(told[0]).toMatchObject({ tone: 'gold', hint: 'Your passive income covers your life. From here on, work is a choice.' });
+    expect(told[1].tone).toBe('good');
+    expect(told[5].tone).toBe('bad');
+  });
+
+  it('says when the escape is lost, and when the player goes bankrupt', () => {
+    const told = notes([{ kind: 'bankrupt', proceeds: 1, debtsCleared: 2 }, { kind: 'escapeLost' }, { kind: 'jobHunt', success: false }]);
+    expect(told.map((note) => [note.tone, note.title])).toEqual([
+      ['bad', 'Back in the rat race'],
+      ['bad', 'Bankrupt'],
+      ['plain', 'The job hunt led nowhere this time.'],
+    ]);
+    expect(told[0].hint).toContain('no longer covers');
+    expect(told[1].hint).toContain('Everything is sold');
+  });
+
+  it('has nothing to tell of a quiet round, and speaks Spanish', () => {
+    expect(notes([{ kind: 'ledger', line: 'salary', amount: 1 }])).toEqual([]);
+    expect(notes([{ kind: 'escapeLost' }], 'es')[0].title).toBe('De vuelta a la rueda');
+  });
+});
+
+describe('worthBars', () => {
+  it('draws each round as a share of the best one', () => {
+    const { zero, bars } = worthBars([0, 50, 100, 25]);
+    expect(zero).toBe(1);
+    expect(bars).toEqual([
+      { y: 1, h: 0, negative: false },
+      { y: 0.5, h: 0.5, negative: false },
+      { y: 0, h: 1, negative: false },
+      { y: 0.75, h: 0.25, negative: false },
+    ]);
+  });
+
+  it('hangs a round spent in debt below the zero line', () => {
+    const { zero, bars } = worthBars([-50, 150]);
+    expect(zero).toBe(0.75);
+    expect(bars).toEqual([
+      { y: 0.75, h: 0.25, negative: true },
+      { y: 0, h: 0.75, negative: false },
+    ]);
+  });
+
+  it('copes with a life that never had anything, or nothing but debt', () => {
+    expect(worthBars([0, 0]).bars).toEqual([{ y: 0, h: 0, negative: false }, { y: 0, h: 0, negative: false }]);
+    expect(worthBars([-10, -20])).toEqual({ zero: 0, bars: [{ y: 0, h: 0.5, negative: true }, { y: 0, h: 1, negative: true }] });
+    expect(worthBars([])).toEqual({ zero: 0, bars: [] });
   });
 });

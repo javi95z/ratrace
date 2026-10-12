@@ -17,6 +17,8 @@ export interface GameSession {
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */
   history(): number[];
+  /** How many times this life has gone bankrupt. */
+  bankruptcies(): number;
   /**
    * Answers the next card of the hand with the option given, and returns what that card did.
    * Cards are answered one at a time: the next one is judged as the player stands after this one.

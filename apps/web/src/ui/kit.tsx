@@ -65,11 +65,14 @@ export function Well({ children, className }: { children: ReactNode; className?:
   return <span className={join('inline-flex shrink-0 items-center justify-center bg-ink-900', className)}>{children}</span>;
 }
 
-/** One figure of the HUD: an icon, a number, and what the number is. */
+/**
+ * One figure of the HUD: an icon, a number, and what the number is. Inside a container too narrow
+ * for three of them side by side, the icon steps aside so the number is never cut short.
+ */
 export function Stat({ icon, value, label, tone, hint }: { icon: string; value: string; label: string; tone?: 'good' | 'bad'; hint?: string }) {
   return (
-    <div className="frame flex min-w-0 items-center gap-2 bg-night-700 p-1" title={hint}>
-      <Well className="size-9">
+    <div className="frame flex min-w-0 items-center gap-2 bg-night-700 p-1 @max-[330px]:px-2" title={hint}>
+      <Well className="size-9 @max-[330px]:hidden">
         <Sprite id={icon} />
       </Well>
       <div className="min-w-0">
