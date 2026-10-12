@@ -65,11 +65,11 @@ Order is fixed, because determinism depends on it.
 
 1. Apply card choices.
 2. Execute finance orders at the prices shown this round.
-3. Work out income and expenses from what the player now holds, at the rates shown this round. Income: salary for two years, dividends, coupons, deposit interest, rent, business profit. Expenses: living costs, item upkeep, debt service, insurance, family.
-4. Advance the world: regime, rates, inflation, asset prices, property indexes. Holdings change value.
+3. Work out income, expenses and tax from what the player now holds, at the rates and prices shown this round. Income: salary for two years, dividends, coupons, deposit interest, rent, business profit. Expenses: living costs, item upkeep, debt service, insurance, family. Because all three use only this round's figures, the preview the player sees before confirming is exact.
+4. Advance the world: regime, rates, inflation, price level, asset prices, property indexes. Holdings change value.
 5. Pay the income and charge the expenses.
-6. Charge taxes: income, realised gains, dividends and rent, property.
-7. Cover any cash shortfall with credit card debt.
+6. Charge the tax from step 3: income tax on salary and business profit, tax on realised gains, dividends, interest and rent, and the yearly property tax. Property purchase tax was already paid in step 2.
+7. Cover any cash shortfall from the savings deposit first, then with credit card debt. Spare cash pays the card down.
 8. Update skills, status, item values, family timers and age.
 9. Check escape, bankruptcy and achievements. Compute score.
 10. Draw next round's cards and news.
@@ -103,7 +103,7 @@ Status items raise status but cost cash and upkeep. Assets raise passive income 
 | Crypto | Bitcoin, Ethereum, Dogecoin |
 | Gold | Inflation hedge |
 | Property | Studio, flat, family house, penthouse and villa in each city. Price = type base × city property index. Live in it or rent it out |
-| Pension plan | Contributions reduce taxable income. Follows MSCI World. Locked until the final round |
+| Pension plan | Contributions reduce taxable income and are capped at 20% of the round's salary. Follows MSCI World and reinvests its dividends untaxed. Locked until the final round |
 | Own business | Started through cards. Costs focus and cash; risky; large upside |
 | Debt | Fixed mortgage, variable mortgage, personal loan, credit card |
 
@@ -126,10 +126,13 @@ Skill rises through course and book cards, and once, by one level, after three r
 World state: regime, policy rate, inflation, crypto cycle, a price per asset and a property index per city.
 
 - **Regime** is a Markov chain over expansion, boom, slowdown, recession and recovery.
-- **Asset return** per round = class mean for the regime + beta × class shock + asset shock + rare event shock.
+- **Asset return** per round = class mean for the regime + beta × class shock + asset shock + the asset's own drift + rare event shock. Beta scales the shock only; the drift is what lets a growth stock and a dividend stock differ in average return.
 - **Bonds:** return = coupon − duration × change in rate.
 - **Property:** base growth + momentum from last round − rate sensitivity × change in rate + city shock. Rent yield is per city.
-- **Crypto** has its own cycle (accumulation, bull, mania, winter), loosely tied to the regime. Dogecoin has a high beta and a small chance of losing 90% in a round.
+- **Crypto** has its own cycle (accumulation, bull, mania, winter). It is tied to the economy in one way: each recession round has a set chance (40% in the test data) of forcing a crypto winter. Dogecoin has a high beta and a small chance of losing 90% in a round.
+- **Price level:** an index that grows by inflation each round. Wages, living costs and other recurring flows follow it (see 3.14).
+- **Price indexes** start at 100,000,000, so an asset that falls 95% several times still shows a moving price.
+- **Random streams:** one for the economy, one per asset and one per city. Adding an asset later does not change the others for any seed, so stored seeds stay valid.
 - **Dividends** are paid per asset at resolve.
 
 Parameter tables live in `packages/content` and are tuned with the balance harness. Initial acceptance bands, adjustable during milestone 1:
@@ -154,8 +157,10 @@ Each city has a tax profile. Bracket thresholds scale with the city's median sal
 Other rules:
 
 - Capital gains are taxed on realised profit. Losses offset gains in the same round only.
-- Buying property costs a purchase tax. Owning it costs a small yearly tax.
-- The Taxes tab shows an estimated bill before the player confirms the round.
+- Buying property costs a purchase tax, paid from cash at the moment of purchase. A player who cannot pay the price and the tax cannot buy. Owning property costs a small yearly tax.
+- Business profit and other non-investment passive income is taxed as income, through the brackets.
+- Bracket thresholds follow the price level.
+- The Taxes tab shows the bill before the player confirms the round. It is exact, not an estimate.
 - World events can change a city's profile mid-game.
 
 ### 3.9 Cities
@@ -189,7 +194,18 @@ Scams and collapses never name a real brand.
 
 ### 3.12 Bankruptcy
 
-If credit card debt exceeds three times annual income, the player goes bankrupt: assets and status items are sold at a discount, remaining debt is cleared, and new credit is unavailable for three rounds. The game continues. Nobody is eliminated, which matters for rooms later.
+A player goes bankrupt when both of these are true at the end of a round:
+
+- credit card debt is above three times annual income (salary plus passive income, with one year of living cost as the floor), and
+- everything they own outside the pension is worth less than everything they owe.
+
+In bankruptcy everything outside the pension is sold at a 30% discount, every debt is cleared, and loans and mortgages are refused for three rounds. The game continues. Nobody is eliminated, which matters for rooms later.
+
+Three consequences are deliberate:
+
+- **A solvent player is never liquidated.** Someone with assets and a large card balance keeps paying the card rate until they sell something.
+- **The credit card keeps working during the lock.** It is how every shortfall is covered. A player who stays insolvent will go bankrupt again.
+- **The pension is protected, so it is capped.** Without the cap on contributions, a player could move sale proceeds into the pension and let bankruptcy erase the tax bill.
 
 ### 3.13 Scoring
 
@@ -201,6 +217,19 @@ If credit card debt exceeds three times annual income, the player goes bankrupt:
 - **Escape** means passive income ≥ total expenses at two consecutive resolves. The multiplier is fixed by the first of the two.
 
 All constants are configuration and are tuned with the balance harness.
+
+### 3.14 Inflation
+
+Each round the price level grows by that round's inflation. The following are stored in start-of-game dollars and converted at the current price level whenever they are used:
+
+- salary
+- living cost
+- other recurring expenses (upkeep, family, insurance)
+- other passive income (business profit)
+- the median salary that sets the tax brackets
+- the personal-loan limit and the bankruptcy floor
+
+Asset values, property prices and debts are nominal and are not converted. So inflation erodes a fixed mortgage, as it does in life, and a 40-year game does not end with one rented flat covering every living cost.
 
 ## 4. Replay hooks in v1
 
@@ -311,7 +340,10 @@ The engine is pure TypeScript with no DOM, network, clock or `Math.random`.
 ```ts
 createGame(config: GameConfig, seed: string): GameState
 applyRound(content: Content, state: GameState, choices: RoundChoices): { state: GameState; events: GameEvent[] }
+previewRound(content: Content, state: GameState, choices: RoundChoices): RoundPreview
 ```
+
+`previewRound` returns the holdings after the orders, the income, expenses and tax the round will bring, and any rejected orders. It reads only the current world, so it cannot leak next round's prices.
 
 Content is passed in and is not stored in the state, so saved games stay small. `createGame` builds the whole 20-round world timeline from the seed.
 
@@ -324,7 +356,14 @@ Modules: `rng`, `market`, `economy`, `tax`, `cards`, `life`, `status`, `scoring`
 - Money is stored as integer cents. Rates and returns are integer basis points.
 - The engine uses only `+ − × ÷`, `Math.floor`, `Math.round` and `Math.sqrt`. A lint rule bans `Math.exp`, `Math.log`, `Math.pow` and trigonometry, whose results can differ between JavaScript engines.
 - Random normals come from summing twelve uniforms, not Box-Muller.
-- The RNG has separate named streams (market, cards, events) derived from the seed, so drawing an extra card never shifts market prices.
+- The RNG has separate named streams derived from the seed: one for the economy, one per asset, one per city, and later one each for cards and events. Drawing an extra card never shifts market prices, and adding an asset never changes another asset's prices.
+
+**Untrusted input.** Orders will later arrive from other players' devices, so the engine treats them as untrusted:
+
+- An order with the wrong shape (a missing type, an id that is not text, a flag that is not true or false) is rejected. Nothing is coerced and nothing throws.
+- A rejected order carries a reason code such as `not-enough-cash`. The client turns the code into text in the player's language.
+- At most 50 orders are executed per round; the rest are rejected.
+- `applyRound` checks every invariant on the state it receives and on the state it returns. A corrupt save, or a bug in a system that writes to the player, raises an error naming the round and the state hash, in production as well as development.
 
 **World and player are separate.** Markets and world events derive from the seed alone. A player's state derives from their own choices plus the world. A room server can later run the same engine unchanged.
 

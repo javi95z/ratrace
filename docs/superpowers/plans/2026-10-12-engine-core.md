@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-12-ratrace-v1-solo-design.md`
 
+**Status: executed, then corrected.** All ten tasks were built as written. The final review then found defects in this plan's design (not in the transcription), and one fix pass corrected them: commits after `95cc4a7`. Where this plan's code blocks and the repository differ, the repository and the spec are right. The main changes are listed in the spec under 3.2, 3.7, 3.8, 3.12, 3.14 and 8.2.
+
 **Plan series for milestone 1:**
 
 1. **Engine core** (this plan): money, RNG, world, tax, portfolio, debt, property, scoring, round resolution.
