@@ -1,6 +1,6 @@
 'use client';
 
-import { useGame, useSettings, useT, useWords } from '@/game/context';
+import { useGame, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
@@ -22,7 +22,11 @@ export function Home() {
   const view = useGame((s) => s.view);
   const lifeId = useGame((s) => s.lifeId);
   const stage = useGame((s) => s.stage);
+  const moved = useGame((s) => s.moved);
+  const saving = useSaving();
   const inProgress = status === 'playing' && view !== null && lifeId !== null && stage !== 'end';
+  // A life that is over stays on the device until another begins, so its score can still be looked at.
+  const over = status === 'playing' && view !== null && view.finished;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-5 px-4 pb-8 pt-10">
@@ -53,7 +57,13 @@ export function Home() {
             >
               {t('newLife')}
             </Link>
+            {over ? (
+              <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
+                {t('lastLife')}
+              </Link>
+            ) : null}
             {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</p> : null}
+            {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}
           </>
         )}
       </div>
@@ -73,7 +83,13 @@ export function Home() {
           ))}
         </div>
         <Toggle on={reducedMotion} onChange={setReducedMotion} label={t('motion')} hint={t('motionHint')} />
-        <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p>
+        {saving ? (
+          <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p>
+        ) : (
+          <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
+            {common('notSaved')}
+          </p>
+        )}
       </Panel>
     </main>
   );

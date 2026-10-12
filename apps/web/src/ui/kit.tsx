@@ -71,12 +71,13 @@ export function Well({ children, className }: { children: ReactNode; className?:
  */
 export function Stat({ icon, value, label, tone, hint }: { icon: string; value: string; label: string; tone?: 'good' | 'bad'; hint?: string }) {
   return (
-    <div className="frame flex min-w-0 items-center gap-2 bg-night-700 p-1 @max-[330px]:px-2" title={hint}>
-      <Well className="size-9 @max-[330px]:hidden">
+    <div className="frame flex min-w-0 items-center gap-1.5 bg-night-700 p-1 @max-[330px]:px-2" title={hint}>
+      {/* The well is exactly the icon: three figures side by side on a 360px phone leave no pixel to spare. */}
+      <Well className="size-8 @max-[330px]:hidden">
         <Sprite id={icon} />
       </Well>
       <div className="min-w-0">
-        <div className={join('pixel truncate text-[15px]', tone === 'good' && 'text-teal-300', tone === 'bad' && 'text-wine-300')}>{value}</div>
+        <div className={join('pixel truncate text-[14px]', tone === 'good' && 'text-teal-300', tone === 'bad' && 'text-wine-300')}>{value}</div>
         <div className="truncate text-[11px] leading-tight text-ink-300">{label}</div>
       </div>
     </div>

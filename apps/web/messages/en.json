@@ -11,11 +11,14 @@
     "cancel": "Cancel",
     "back": "Back",
     "loading": "Loading…",
-    "locked": "Locked"
+    "locked": "Locked",
+    "notSaved": "This browser is not saving right now. Keep this tab open: closing it would lose what you have played."
   },
   "home": {
     "continue": "Continue your life",
     "continueDetail": "{life} · age {age} · {city}",
+    "lastLife": "See how your last life ended",
+    "movedGone": "That life was ended in another tab.",
     "newLife": "New life",
     "language": "Language",
     "motion": "Reduce motion",
@@ -31,7 +34,11 @@
     "handicap": "Handicap",
     "startsIn": "Starts in {city} with {cash}",
     "unlock": "To unlock",
-    "replace": "This ends the life you have in progress."
+    "replace": "This ends the life you have in progress.",
+    "confirmTitle": "End the life you are living?",
+    "confirmBody": "{life}, age {age}. It ends here and is not recorded.",
+    "confirmYes": "End it and start this one",
+    "confirmNo": "Keep my life"
   },
   "hud": {
     "cash": "Cash",
@@ -42,6 +49,14 @@
     "ratRaceHint": "Passive income after tax, against what a round costs you",
     "escaped": "Escaped at {age}",
     "openProfile": "Open your profile"
+  },
+  "play": {
+    "moved": "This life was played on in another tab. Here is where it stands now.",
+    "faultTitle": "Something went wrong",
+    "faultBody": "The game could not go on from here. Your life is saved as it stood before this step. If it happens again, start a new life.",
+    "retry": "Try again",
+    "home": "Home",
+    "newLife": "New life"
   },
   "news": {
     "title": "News",
@@ -128,6 +143,8 @@
       "savingsRate": "{rate} a year",
       "pension": "Pension plan",
       "pensionHint": "Locked until 62. Follows the world index.",
+      "pensionRoom": "Up to {amount} more this round",
+      "pensionFull": "Nothing more can go in this round.",
       "save": "Save",
       "withdraw": "Withdraw",
       "add": "Add",
@@ -185,6 +202,7 @@
       "owned": "Your properties",
       "ownedNone": "You own no property.",
       "sell": "Sell for {amount}",
+      "selling": "Sold when the round is played",
       "rented": "Rented out",
       "livedIn": "You live here",
       "empty": "Standing empty",
@@ -263,6 +281,7 @@
     "title": "Two years later",
     "ages": "Age {from} to {to}",
     "netWorth": "Net worth",
+    "was": "Was {amount} · {change}",
     "ledger": "What came in and went out",
     "cashNow": "Cash now",
     "promoted": "Promoted: {title}",

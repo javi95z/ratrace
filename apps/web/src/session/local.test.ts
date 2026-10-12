@@ -1,7 +1,7 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION, finalScore, livedStatus, realNetWorth } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { LocalSessions } from './local';
+import { LocalSessions, StaleSession } from './local';
 import { MemoryStore } from './memory';
 import type { GameSession, SavedGame } from './types';
 
@@ -19,6 +19,13 @@ function setup(store = new MemoryStore()) {
 }
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame;
+
+/** The same life opened on a second device: a copy of what is stored, so the two can be played side by side and compared. */
+async function elsewhere(store: MemoryStore): Promise<GameSession> {
+  const copy = new MemoryStore();
+  await copy.saveGame(await saveOf(store));
+  return (await setup(copy).sessions.resume()).session as GameSession;
+}
 
 /** Answers every card still waiting with the option given. */
 async function answerAll(session: GameSession, option = 0) {
@@ -211,8 +218,9 @@ describe('coming back to a life', () => {
     expect(again.session?.view()).toEqual(session.view());
     expect(again.session?.history()).toEqual(session.history());
 
+    const twin = await elsewhere(store);
     const a = await session.playRound({ orders: [] });
-    const b = await (again.session as GameSession).playRound({ orders: [] });
+    const b = await twin.playRound({ orders: [] });
     expect(b.view).toEqual(a.view);
     expect(b.events).toEqual(a.events);
   });
@@ -224,7 +232,7 @@ describe('coming back to a life', () => {
     await session.answerCard(1);
     expect(session.view()).toMatchObject({ phase: 'cards', answered: 1 });
 
-    const again = (await setup(store).sessions.resume()).session as GameSession;
+    const again = await elsewhere(store);
     expect(again.view()).toEqual(session.view());
     const a = await session.answerCard(2);
     const b = await again.answerCard(2);
@@ -279,13 +287,92 @@ describe('coming back to a life', () => {
   });
 });
 
+describe('two tabs on one life', () => {
+  it('refuses to play on from a tab the life has left behind, and changes nothing', async () => {
+    const { store, sessions } = setup();
+    const here = await sessions.start('nurse');
+    const there = (await setup(store).sessions.resume()).session as GameSession;
+    await playOne(here);
+    await playOne(here);
+    const saved = JSON.stringify(await saveOf(store));
+    const view = there.view();
+
+    await expect(there.answerCard(1)).rejects.toBeInstanceOf(StaleSession);
+    await expect(there.playRound({ orders: [] })).rejects.toBeInstanceOf(StaleSession);
+    expect(there.view()).toBe(view);
+    expect(JSON.stringify(await saveOf(store))).toBe(saved);
+    // The tab that is ahead plays on undisturbed.
+    expect((await playOne(here)).view.round).toBe(3);
+  });
+
+  it('refuses to play on once the life was finished, replaced or abandoned elsewhere', async () => {
+    const finished = setup();
+    const a = await finished.sessions.start('nurse');
+    const b = (await setup(finished.store).sessions.resume()).session as GameSession;
+    while (!a.view().finished) await playOne(a);
+    await expect(b.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect(await finished.store.listRuns()).toHaveLength(1);
+    expect((await saveOf(finished.store)).state.finished).toBe(true);
+
+    const replaced = setup();
+    const old = await replaced.sessions.start('nurse');
+    await replaced.sessions.start('engineer');
+    await expect(old.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect((await saveOf(replaced.store)).lifeId).toBe('engineer');
+
+    const abandoned = setup();
+    const gone = await abandoned.sessions.start('nurse');
+    await abandoned.sessions.abandon();
+    await expect(gone.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect(await abandoned.store.loadGame()).toBeNull();
+  });
+
+  it('knows another life by its id, even one saved at the very same moment', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('nurse');
+    await store.saveGame({ ...(await saveOf(store)), gameId: 'someone-else' });
+    await expect(session.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+  });
+
+  it('plays on when not even the first save could be written: nothing stored cannot contradict it', async () => {
+    const store = new MemoryStore();
+    store.saveGame = () => Promise.reject(new Error('no database'));
+    const { sessions, errors } = setup(store);
+    const session = await sessions.start('nurse');
+    expect(errors).toHaveLength(1);
+    expect(await store.loadGame()).toBeNull();
+    const result = await playOne(session);
+    expect(result.view.round).toBe(1);
+  });
+
+  it('is not fooled by its own writes that failed: the device still holds what it last took from this tab', async () => {
+    const store = new MemoryStore();
+    const { sessions, errors } = setup(store);
+    const session = await sessions.start('nurse');
+    const save = store.saveGame;
+    store.saveGame = () => Promise.reject(new Error('disk full'));
+    await playOne(session);
+    expect(errors.length).toBeGreaterThan(0);
+    store.saveGame = save;
+    const result = await playOne(session);
+    expect(result.view.round).toBe(2);
+    expect((await saveOf(store)).state.round).toBe(2);
+  });
+});
+
 describe('finishing a life', () => {
-  it('records the run, with its history and its log, and clears the game in progress', async () => {
+  it('records the run, with its history and its log, and keeps the finished life until another begins', async () => {
     const { store, sessions } = setup();
     const session = await sessions.start('civil_servant');
     while (!session.view().finished) await playOne(session);
 
-    expect(await store.loadGame()).toBeNull();
+    // Kept, so that closing the page on the last ledger or on the score does not lose the result.
+    expect((await saveOf(store)).state.finished).toBe(true);
+    const again = await setup(store).sessions.resume();
+    expect(again.lost).toBeNull();
+    expect(again.session?.view()).toEqual(session.view());
+    expect(again.session?.history()).toEqual(session.history());
+    expect(await store.listRuns()).toHaveLength(1);
     const runs = await store.listRuns();
     expect(runs).toHaveLength(1);
     const run = runs[0];
@@ -299,7 +386,11 @@ describe('finishing a life', () => {
     expect(run.history[20]).toBe(run.netWorth);
     expect(run.log).toHaveLength(20);
     expect(run.finishedAt).toBeGreaterThan(1_000);
-    expect(await sessions.resume()).toEqual({ session: null, lost: null });
     await expect(session.playRound({ orders: [] })).rejects.toThrow('already finished');
+
+    // A new life takes its place; the run stays in the record.
+    await sessions.start('nurse');
+    expect((await saveOf(store)).lifeId).toBe('nurse');
+    expect(await store.listRuns()).toHaveLength(1);
   });
 });

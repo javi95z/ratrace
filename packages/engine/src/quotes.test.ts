@@ -72,7 +72,28 @@ describe('quoteItem', () => {
       expect(buy(quote.price).player.life.items[0].value).toBe(quote.resale);
       expect(quote).toMatchObject({ owned: false, forSale: true });
     }
-    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, forSale: true });
+    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, forSale: true, sellable: false });
+  });
+
+  it('says whether the owner may sell it, exactly as the sell order will decide', () => {
+    const special = fixtureContent();
+    special.items = special.items.map((item) => (item.id === 'watch_gold' ? { ...item, cardOnly: true } : item));
+    const base = createGame({ content: special, start: fixtureStart() }, 'quotes');
+    const owning = (itemId: string, roundsLeft: number | null) => withPlayer(special, base, {}, { items: [{ itemId, value: 100_000, roundsLeft }], collection: [itemId] });
+    const cases: Array<[GameState, string]> = [
+      [owning('car_basic', null), 'car_basic'],
+      [owning('club', null), 'club'],
+      [owning('trip', 2), 'trip'],
+      [owning('watch_gold', null), 'watch_gold'],
+      [base, 'car_basic'],
+    ];
+    const answers = cases.map(([state, itemId]) => {
+      const sold = executeOrder(structuredClone(state.player), { type: 'sellItem', itemId }, { content: special, world: state.timeline[0], round: 0, tally: newTally() });
+      expect(quoteItem(special, viewOf(state), itemId).sellable, itemId).toBe(sold === null);
+      return sold;
+    });
+    // A car and a membership go; a trip already taken and a thing only a card gives do not; nor does what is not owned.
+    expect(answers).toEqual([null, null, 'cannot-sell', 'cannot-sell', 'not-owned']);
   });
 
   it('says what an item already owned would sell for, and what a card-only item is', () => {

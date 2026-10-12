@@ -3,7 +3,7 @@
 import { itemArt } from '@ratrace/content';
 import { cashflow, focusLeft, homeOf, netWorth } from '@ratrace/engine';
 import type { InsuranceKind } from '@ratrace/engine';
-import { useT, useWords } from '@/game/context';
+import { useSaving, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { Panel, Row, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -112,12 +112,20 @@ export function ProfileSheet({ open, onClose }: { open: boolean; onClose(): void
 /** The way out of a life in progress. Nothing is lost by taking it. */
 export function Leave() {
   const t = useT('profile');
+  const common = useT('common');
+  const saving = useSaving();
   return (
     <div className="mt-3">
       <Link href="/" className="pixel frame flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
         {t('leave')}
       </Link>
-      <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('leaveHint')}</p>
+      {saving ? (
+        <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('leaveHint')}</p>
+      ) : (
+        <p role="alert" className="frame mt-2 bg-wine-900 px-3 py-2 text-[13px]">
+          {common('notSaved')}
+        </p>
+      )}
     </div>
   );
 }

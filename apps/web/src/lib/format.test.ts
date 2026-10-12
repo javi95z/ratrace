@@ -36,12 +36,42 @@ describe('formatFor', () => {
     expect(en.number(-0)).toBe('0');
   });
 
-  it('shortens large amounts for small spaces, and leaves small ones whole', () => {
+  it('shortens large amounts to three figures for small spaces, and leaves small ones whole', () => {
     expect(en.compact(123_400)).toBe('$1,234');
+    expect(en.compact(999_900)).toBe('$9,999');
     expect(en.compact(1_240_000)).toBe('$12.4K');
-    expect(en.compact(123_400_000)).toBe('$1.2M');
+    expect(en.compact(28_846_700)).toBe('$288K');
+    expect(en.compact(123_400_000)).toBe('$1.23M');
     expect(en.compact(-5_000_000)).toBe('−$50K');
-    expect(plain(es.compact(123_400_000))).toMatch(/^1,2 M \$$/);
+    expect(en.compact(987_654_321_000)).toBe('$9.88B');
+  });
+
+  it('never lets a rounded figure spill into four digits before its unit', () => {
+    expect(en.compact(99_960_000)).toBe('$1M');
+    expect(en.compact(99_940_000)).toBe('$999K');
+    expect(en.compact(99_999_990_000)).toBe('$1B');
+  });
+
+  it('keeps a shortened amount short in Spanish too, with the units a player reads at a glance', () => {
+    // Intl would write "14,3 mil $" and "1,2 mil M $": correct, and too long for the HUD of a phone.
+    expect(plain(es.compact(1_430_000))).toBe('14,3K $');
+    expect(plain(es.compact(28_846_700))).toBe('288K $');
+    expect(plain(es.compact(123_400_000))).toBe('1,23M $');
+    expect(plain(es.compact(-5_000_000))).toBe('−50K $');
+    // A Spanish "B" would be read as a billón, a million millions. Thousands of millions are written out.
+    expect(plain(es.compact(987_654_321_000))).toBe('9.880M $');
+    expect(plain(es.compact(123_400))).toBe('1.234 $');
+  });
+
+  it('writes no shortened amount longer than nine characters, sign included, up to a billion dollars', () => {
+    for (const fmt of [en, es]) {
+      for (let exponent = 0; exponent <= 10; exponent++) {
+        for (const lead of [1, 1.234, 4.5678, 9.999, 9.9999]) {
+          const cents = Math.round(lead * 10 ** exponent);
+          for (const amount of [cents, -cents]) expect(plain(fmt.compact(amount)).length, `${amount}`).toBeLessThanOrEqual(9);
+        }
+      }
+    }
   });
 
   it('writes rates and changes', () => {

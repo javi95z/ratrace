@@ -38,17 +38,19 @@ function Portfolio() {
   const t = useT('finance.portfolio');
   const amount = useT('finance.amount');
   const { content, names, fmt } = useWords();
-  const { p, world } = useRound();
+  const { p, world, preview } = useRound();
   const addOrder = useGame((s) => s.addOrder);
   const [move, setMove] = useState<Move | null>(null);
   const held = content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id));
+  // The most the pension takes this round, from the engine: its cap, the cash there is, and solvency.
+  const pensionRoom = preview.pensionRoom;
 
   const sheet = (() => {
     if (!move) return null;
     const close = () => setMove(null);
     if (move.kind === 'save') return <AmountSheet title={amount('save')} max={p.cash} onClose={close} onConfirm={(a) => addOrder({ type: 'depositIn', amount: a })} />;
     if (move.kind === 'withdraw') return <AmountSheet title={amount('withdraw')} max={p.deposit} onClose={close} onConfirm={(a) => addOrder({ type: 'depositOut', amount: a })} />;
-    if (move.kind === 'pension') return <AmountSheet title={amount('pension')} max={p.cash} onClose={close} onConfirm={(a) => addOrder({ type: 'pensionIn', amount: a })} />;
+    if (move.kind === 'pension') return <AmountSheet title={amount('pension')} max={pensionRoom} onClose={close} onConfirm={(a) => addOrder({ type: 'pensionIn', amount: a })} />;
     const name = names.assets[move.asset.id].name;
     return (
       <AmountSheet
@@ -76,7 +78,8 @@ function Portfolio() {
         </div>
         <div className="my-3 h-[2px] bg-night-900" />
         <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
-        <Button className="mt-1" wide onClick={() => setMove({ kind: 'pension' })} disabled={p.cash <= 0}>
+        <p className="text-[12px] text-ink-300">{pensionRoom > 0 ? t('pensionRoom', { amount: fmt.money(pensionRoom) }) : t('pensionFull')}</p>
+        <Button className="mt-2" wide onClick={() => setMove({ kind: 'pension' })} disabled={pensionRoom <= 0}>
           {t('add')}
         </Button>
       </Panel>
@@ -288,14 +291,22 @@ function PropertyTab() {
   const [buying, setBuying] = useState<string | null>(null);
   const home = homeOf(p, content);
 
+  // A home put up for sale this round stays in its place until the round is played: were it to
+  // vanish, the next one would slide under the thumb that just pressed "Sell".
+  const selling = view.player.properties.filter((before) => !p.properties.some((now) => now.id === before.id));
+  const listed = [...view.player.properties.map((before) => p.properties.find((now) => now.id === before.id) ?? before), ...p.properties.filter((now) => !view.player.properties.some((before) => before.id === now.id))];
+
   return (
     <div className="flex flex-col gap-3">
-      <Panel title={t('owned')}>
-        {p.properties.length === 0 ? <p className="text-[14px] text-ink-300">{t('ownedNone')}</p> : null}
-        {p.properties.map((property) => {
+      <section aria-label={t('owned')} className="frame bg-night-700 p-3">
+        <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('owned')}</h2>
+        {listed.length === 0 ? <p className="text-[14px] text-ink-300">{t('ownedNone')}</p> : null}
+        {listed.map((property) => {
           const original = view.player.properties.find((x) => x.id === property.id);
-          const mortgage = p.debts.find((d) => d.id === property.mortgageId);
-          const state = property.rented ? t('rented') : home?.id === property.id ? t('livedIn') : property.cityId === p.cityId ? t('livedIn') : t('empty');
+          const sold = selling.some((x) => x.id === property.id);
+          const mortgage = (sold ? view.player.debts : p.debts).find((d) => d.id === property.mortgageId);
+          // Which home the player lives in is the engine's to say: it is one, however many they own in town.
+          const state = property.rented ? t('rented') : home?.id === property.id ? t('livedIn') : t('empty');
           const same = (order: Order) => order.type === 'setRented' && order.propertyId === property.id;
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
@@ -313,7 +324,11 @@ function PropertyTab() {
                   </div>
                 </div>
               </div>
-              {original ? (
+              {sold ? (
+                <Button className="mt-2" wide disabled>
+                  {t('selling')}
+                </Button>
+              ) : original ? (
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <Button onClick={() => setOrder(same, original.rented === !property.rented ? null : { type: 'setRented', propertyId: property.id, rented: !property.rented })}>
                     {property.rented ? t('stopRenting') : t('startRenting')}
@@ -326,7 +341,7 @@ function PropertyTab() {
             </div>
           );
         })}
-      </Panel>
+      </section>
 
       <Panel title={t('title', { city: names.cities[p.cityId] })}>
         {/* Two homes side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
@@ -600,12 +615,15 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
             {common('cancel')}
           </Button>
         ) : held ? (
-          held.roundsLeft !== null ? (
-            <p className="text-center text-[14px] text-ink-300">{t('spent', { years: held.roundsLeft * years })}</p>
-          ) : (
+          quote.sellable ? (
             <Button variant="danger" wide onClick={() => done(addOrder({ type: 'sellItem', itemId: item.id }))}>
               {item.kind === 'membership' ? t('cancel') : t('sell', { amount: fmt.money(held.value) })}
             </Button>
+          ) : held.roundsLeft !== null ? (
+            <p className="text-center text-[14px] text-ink-300">{t('spent', { years: held.roundsLeft * years })}</p>
+          ) : (
+            // What only life can give, a degree for one, is not the player's to sell.
+            <p className="text-center text-[14px] text-ink-300">{t('cardOnly')}</p>
           )
         ) : quote.forSale ? (
           <Button variant="primary" wide onClick={() => done(addOrder({ type: 'buyItem', itemId: item.id }))}>

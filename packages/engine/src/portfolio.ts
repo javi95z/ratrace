@@ -51,18 +51,34 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
       return null;
     }
     case 'pensionIn': {
+      const limits = pensionLimits(p, ctx.content, ctx.world, ctx.tally.pensionContribution);
       if (order.amount > p.cash) return 'not-enough-cash';
-      const roundSalary = indexed(p.salaryAnnual, ctx.world) * ctx.content.yearsPerRound;
-      const cap = applyBp(roundSalary, ctx.content.pensionContributionCapBp);
-      if (ctx.tally.pensionContribution + order.amount > cap) return 'over-pension-limit';
+      if (order.amount > limits.underCap) return 'over-pension-limit';
       // The pension is protected in bankruptcy, so it may not be filled with money the player owes.
-      if (ownedOutsidePension(p) - order.amount < totalOwed(p)) return 'would-be-insolvent';
+      if (order.amount > limits.solvent) return 'would-be-insolvent';
       p.cash -= order.amount;
       p.pension += order.amount;
       ctx.tally.pensionContribution += order.amount;
       return null;
     }
   }
+}
+
+/** The two limits on a pension contribution besides cash: what the round's cap still allows, and what leaves the player solvent outside the pension. */
+function pensionLimits(p: PlayerState, content: Content, world: WorldState, paidIn: number): { underCap: number; solvent: number } {
+  const roundSalary = indexed(p.salaryAnnual, world) * content.yearsPerRound;
+  const cap = applyBp(roundSalary, content.pensionContributionCapBp);
+  return { underCap: cap - paidIn, solvent: ownedOutsidePension(p) - totalOwed(p) };
+}
+
+/**
+ * How much more may be paid into the pension this round, given what has already gone in.
+ * It is worked out from the same limits the order is judged by, so the two cannot disagree:
+ * exactly this much is accepted, and a cent more is refused.
+ */
+export function pensionRoom(p: PlayerState, content: Content, world: WorldState, paidIn: number): number {
+  const limits = pensionLimits(p, content, world, paidIn);
+  return Math.max(0, Math.min(p.cash, limits.underCap, limits.solvent));
 }
 
 /**

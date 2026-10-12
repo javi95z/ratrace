@@ -272,8 +272,8 @@ Asset values, property prices and debts are nominal and are not converted. So in
 | Home | Continue, new life, collection, records, settings |
 | New life | Choose a starting life. Locked lives show their unlock goal |
 | Round: News | Headlines and gauges |
-| Round: Cards | Swipe, or tap buttons. Effects visible before commit |
-| Round: Finance | Tabs: Portfolio, Market, Property, Debt, Taxes, Lifestyle |
+| Round: Cards | One card at a time. Swipe, or tap buttons; each side of a card says which choice it picks. Effects visible before commit, and the result of each card is shown before the next |
+| Round: Finance | Tabs: Portfolio, Market, Property, Debt, Lifestyle, Shop, Taxes. Shopping is a tab of its own because 34 items buried the lifestyle controls on a phone |
 | Round: Resolve | Animated ledger; rat-race bar update |
 | HUD | Age, cash, cashflow, status, rat-race bar. Tapping opens the income statement and balance sheet |
 | Profile | Job, skills, family, insurance, focus |
@@ -286,8 +286,11 @@ Interaction rules:
 - Buying and selling use a bottom sheet with an amount slider and 25%, 50% and 100% chips.
 - The first life is guided.
 - Swipes always have a button alternative. Tap targets are at least 44pt. A reduced-motion setting disables roll-ups and particle effects.
+- A tap never does two things. The primary button sits in the same place on every screen, and a card's first choice sits where the button before it was, so for 400 ms after the screen changes a tap is taken for the tail of the last one and ignored. Without this a double tap answered a card for good, played a round, or skipped the ledger.
+- Nothing that cannot be undone takes one tap from a screen the player did not mean to be on: starting a new life over one in progress asks first, and the chooser is not left behind in the browser's history.
+- A list never moves under the thumb: something sold stays in its place, marked as sold, until the round is played.
 
-Desktop (1024px and wider) uses the same components in three columns: profile and balance sheet on the left, the current step in the centre, market and news on the right. Mobile bottom sheets become docked panels.
+Desktop (1024px and wider) uses the same components in three columns: profile and balance sheet on the left, the current step in the centre, news and this round's orders on the right. The side columns give way first on a narrow desktop. Amount and purchase sheets are centred dialogs on a wide screen in v1; docking them is left to the polish step.
 
 ## 6. Visual style
 
@@ -398,7 +401,7 @@ Data flow: the UI collects the round's choices, calls `applyRound`, stores the n
 
 IndexedDB, with three stores:
 
-- `currentGame`: seed, config, choice log and latest snapshot. Saved after every round.
+- `currentGame`: seed, config, choice log and latest snapshot. Saved after every card answered and after every round. A finished life stays here until the next one begins, so that closing the page on the last ledger or on the score does not lose it.
 - `runs`: finished lives.
 - `profile`: unlocks, achievements, collection, settings.
 
@@ -418,7 +421,10 @@ The save format carries a version number and migrations.
 |---|---|
 | Broken content reference | Build fails |
 | Missing translation | Build fails |
-| Corrupt save | Load the last good snapshot; if none, offer a new life and keep the profile |
+| Corrupt save | Rebuild the state by replaying the log from the seed; if that fails, offer a new life and keep the profile |
+| The device will not save (private window, full disk) | The game plays on and says plainly that it is not saving; every later write offers the device what it refused |
+| The same life open in two tabs | The tab that is behind refuses its next step, opens the life as it now stands, and says why |
+| The game refuses a step, or a screen cannot be drawn | Say so, with the way to a new life and the way home; never a button that does nothing |
 | Old save version | Run migrations; if one fails, treat as corrupt |
 | Missing sprite | Show a placeholder and log it |
 | Engine invariant broken (development) | Throw with the state hash and round number |

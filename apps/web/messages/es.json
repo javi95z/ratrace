@@ -11,11 +11,14 @@
     "cancel": "Cancelar",
     "back": "Volver",
     "loading": "Cargando…",
-    "locked": "Bloqueado"
+    "locked": "Bloqueado",
+    "notSaved": "Este navegador no está guardando ahora mismo. No cierres esta pestaña: perderías lo que has jugado."
   },
   "home": {
     "continue": "Seguir con tu vida",
     "continueDetail": "{life} · {age} años · {city}",
+    "lastLife": "Ver cómo acabó tu última vida",
+    "movedGone": "Esa vida se terminó en otra pestaña.",
     "newLife": "Nueva vida",
     "language": "Idioma",
     "motion": "Reducir movimiento",
@@ -31,7 +34,11 @@
     "handicap": "Desventaja",
     "startsIn": "Empieza en {city} con {cash}",
     "unlock": "Para desbloquearla",
-    "replace": "Esto termina la vida que tienes en marcha."
+    "replace": "Esto termina la vida que tienes en marcha.",
+    "confirmTitle": "¿Terminar la vida que estás viviendo?",
+    "confirmBody": "{life}, {age} años. Termina aquí y no queda registrada.",
+    "confirmYes": "Terminarla y empezar esta",
+    "confirmNo": "Seguir con mi vida"
   },
   "hud": {
     "cash": "Efectivo",
@@ -42,6 +49,14 @@
     "ratRaceHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta una ronda",
     "escaped": "Saliste a los {age}",
     "openProfile": "Abrir tu perfil"
+  },
+  "play": {
+    "moved": "Esta vida siguió en otra pestaña. Así está ahora.",
+    "faultTitle": "Algo ha fallado",
+    "faultBody": "La partida no pudo seguir desde aquí. Tu vida está guardada como estaba antes de este paso. Si vuelve a pasar, empieza una vida nueva.",
+    "retry": "Probar otra vez",
+    "home": "Inicio",
+    "newLife": "Nueva vida"
   },
   "news": {
     "title": "Noticias",
@@ -128,6 +143,8 @@
       "savingsRate": "{rate} al año",
       "pension": "Plan de pensiones",
       "pensionHint": "Bloqueado hasta los 62. Sigue al índice mundial.",
+      "pensionRoom": "Hasta {amount} más esta ronda",
+      "pensionFull": "Esta ronda no cabe nada más.",
       "save": "Ahorrar",
       "withdraw": "Retirar",
       "add": "Aportar",
@@ -185,6 +202,7 @@
       "owned": "Tus viviendas",
       "ownedNone": "No tienes ninguna vivienda.",
       "sell": "Vender por {amount}",
+      "selling": "Se vende al jugar la ronda",
       "rented": "Alquilada",
       "livedIn": "Vives aquí",
       "empty": "Vacía",
@@ -263,6 +281,7 @@
     "title": "Dos años después",
     "ages": "De los {from} a los {to}",
     "netWorth": "Patrimonio",
+    "was": "Antes {amount} · {change}",
     "ledger": "Lo que entró y lo que salió",
     "cashNow": "Efectivo ahora",
     "promoted": "Ascenso: {title}",

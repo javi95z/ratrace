@@ -9,7 +9,7 @@ import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
 import { newPlayer } from './player';
-import { growPortfolio } from './portfolio';
+import { growPortfolio, pensionRoom } from './portfolio';
 import { growProperties } from './property';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
@@ -143,6 +143,8 @@ export interface RoundPreview {
   purchaseTaxPaid: Cents;
   /** Cash after income, expenses and tax. If negative, the deposit and then the credit card cover it. */
   cashAfter: Cents;
+  /** How much more may be paid into the pension this round, after the orders so far. */
+  pensionRoom: Cents;
   /**
    * The two sides of the escape test for this round. The player is out of the rat race once
    * passive income, after the tax it would bear with no salary, covers the outgoings two rounds running.
@@ -202,6 +204,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
     tax: bill,
     purchaseTaxPaid: tally.purchaseTaxPaid,
     cashAfter: player.cash + income.salary + passive - outgoings - bill.total,
+    pensionRoom: pensionRoom(player, content, now, tally.pensionContribution),
     escape,
     rejected,
   };

@@ -3,27 +3,33 @@
 import { lives, portraitArt } from '@ratrace/content';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { useRouter } from '@/i18n/navigation';
-import { Link } from '@/i18n/navigation';
+import { ageAt } from '@/game/present';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Tag, Well } from '@/ui/kit';
+import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
 /** Choose who to be. A locked life shows what unlocks it. */
 export function NewLife() {
   const t = useT('newLife');
   const common = useT('common');
-  const { text, names, fmt } = useWords();
+  const { content, text, names, fmt } = useWords();
   const router = useRouter();
   const start = useGame((s) => s.start);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
+  const living = useGame((s) => s.lifeId);
+  const round = useGame((s) => s.view?.round ?? 0);
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
+  const [asking, setAsking] = useState(false);
 
   const begin = async () => {
+    setAsking(false);
     setStarting(true);
     try {
       await start(chosen);
-      router.push('/play');
+      // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
+      router.replace('/play');
     } finally {
       setStarting(false);
     }
@@ -81,11 +87,24 @@ export function NewLife() {
       <div className="pb-safe fixed inset-x-0 bottom-0 z-10 bg-night-900 px-3 pt-3">
         <div className="mx-auto w-full max-w-md">
           {inProgress ? <p className="mb-2 text-center text-[12px] text-wine-300">{t('replace')}</p> : null}
-          <Button variant="primary" wide disabled={starting} onClick={begin}>
+          {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
+          <Button variant="primary" wide disabled={starting} onClick={() => (inProgress ? setAsking(true) : void begin())}>
             {t('start')}
           </Button>
         </div>
       </div>
+
+      <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={t('confirmTitle')} closeLabel={common('close')}>
+        <p className="text-[15px] leading-snug text-ink-200">{t('confirmBody', { life: text.lives[living ?? '']?.name ?? '', age: ageAt(content, round) })}</p>
+        <div className="mt-4 flex flex-col gap-3">
+          <Button variant="primary" wide onClick={() => setAsking(false)}>
+            {t('confirmNo')}
+          </Button>
+          <Button variant="danger" wide disabled={starting} onClick={() => void begin()}>
+            {t('confirmYes')}
+          </Button>
+        </div>
+      </Sheet>
     </main>
   );
 }

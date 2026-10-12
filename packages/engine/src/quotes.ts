@@ -1,7 +1,7 @@
 import { loanRoom } from './debt';
 import { livingCostAnnual } from './economy';
 import { INSURANCE_KINDS } from './life/derive';
-import { itemTerms, moveCost } from './life/orders';
+import { canSellItem, itemTerms, moveCost } from './life/orders';
 import { cityOf, itemOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
@@ -41,6 +41,8 @@ export interface ItemQuote {
   owned: boolean;
   /** False for something only a card can give. */
   forSale: boolean;
+  /** True if the player owns it and may sell or cancel it. False for an experience already spent and for what only a card gives. */
+  sellable: boolean;
 }
 
 export function quoteItem(content: Content, view: GameView, itemId: string): ItemQuote {
@@ -54,6 +56,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     upkeepAnnual: indexed(item.upkeepAnnual, world),
     owned: held !== undefined,
     forSale: item.cardOnly !== true,
+    sellable: held !== undefined && canSellItem(content, held),
   };
 }
 

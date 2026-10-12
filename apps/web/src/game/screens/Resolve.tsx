@@ -75,7 +75,7 @@ export function Resolve() {
         <Row
           className="mt-1 border-t-2 border-night-900 pt-2"
           left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
-          sub={`${fmt.money(worthBefore)} → ${fmt.signed(worthNow - worthBefore)}`}
+          sub={t('was', { amount: fmt.money(worthBefore), change: fmt.signed(worthNow - worthBefore) })}
           right={<span className="text-[19px] text-gold-500">{fmt.money(worthNow)}</span>}
         />
       </Panel>

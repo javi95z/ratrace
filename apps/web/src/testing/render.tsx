@@ -9,12 +9,15 @@ import { MemoryStore } from '@/session/memory';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
 
-/** The game's two services with nothing behind them but memory, and ids, seeds and a clock that never change. */
-export function memoryServices(store = new MemoryStore()): Services & { store: MemoryStore; sessions: LocalSessions } {
+/**
+ * The game's services with nothing behind them but memory, and ids, seeds and a clock that never change.
+ * No tap is ever too soon, unless a test asks for the guard; and saving works, unless a test says it does not.
+ */
+export function memoryServices(store = new MemoryStore(), options: { tapGuardMs?: number; savingOff?: boolean } = {}): Services & { store: MemoryStore; sessions: LocalSessions } {
   let ids = 0;
   let clock = 1_000;
   const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => `screen-seed-${ids}`, now: () => (clock += 1) });
-  return { sessions, store };
+  return { sessions, store, tapGuardMs: options.tapGuardMs ?? 0, saving: { degraded: () => options.savingOff === true, subscribe: () => () => {} } };
 }
 
 /** Draws a screen inside everything the real pages give it: the language, its text, and the game. */

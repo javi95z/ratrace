@@ -2,7 +2,7 @@ import { careerOf } from '../lookup';
 import { mulDiv } from '../money';
 import { indexed } from '../rates';
 import type { Cents } from '../money';
-import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, PlayerState, RejectReason, WorldState } from '../types';
+import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, WorldState } from '../types';
 import { INSURANCE_KINDS } from './derive';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt'];
@@ -58,13 +58,20 @@ function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): Reje
   return null;
 }
 
-/** Sells a durable for what it is worth today, or cancels a membership. An experience is already spent. */
+/**
+ * True if something owned may be sold or cancelled. An experience is already spent, and what only
+ * a card can give, a degree for one, is not the player's to sell. The order and the quote both ask here.
+ */
+export function canSellItem(content: Content, owned: OwnedItem): boolean {
+  return owned.roundsLeft === null && !content.items.some((item) => item.id === owned.itemId && item.cardOnly === true);
+}
+
+/** Sells a durable for what it is worth today, or cancels a membership. */
 function executeSellItem(p: PlayerState, itemId: string, ctx: OrderContext): RejectReason | null {
   const index = p.life.items.findIndex((owned) => owned.itemId === itemId);
   if (index < 0) return 'not-owned';
   const owned = p.life.items[index];
-  // An experience is already spent, and what only a card can give, a degree for one, is not the player's to sell.
-  if (owned.roundsLeft !== null || ctx.content.items.some((item) => item.id === itemId && item.cardOnly === true)) return 'cannot-sell';
+  if (!canSellItem(ctx.content, owned)) return 'cannot-sell';
   p.cash += owned.value;
   ctx.tally.itemsSold += owned.value;
   p.life.items.splice(index, 1);

@@ -6,11 +6,13 @@ import { MemoryStore } from '@/session/memory';
 import type { SavedGame } from '@/session/types';
 import { createGameStore } from './store';
 
-function setup(store = new MemoryStore()) {
+/** `guardMs` and `clock` are for the tests of taps that come too soon; without them no tap is ever too soon. */
+function setup(store = new MemoryStore(), guardMs = 0, clock = { at: 0 }) {
   let ids = 0;
-  const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => `store-seed-${ids}`, now: () => 1 });
-  const game = createGameStore({ sessions, content });
-  return { store, sessions, game, get: game.getState };
+  let saved = 0;
+  const sessions = new LocalSessions(store, content, lives, { newId: () => `id-${(ids += 1)}`, newSeed: () => `store-seed-${ids}`, now: () => (saved += 1) });
+  const game = createGameStore({ sessions, content, now: () => clock.at, guardMs });
+  return { store, sessions, game, get: game.getState, clock };
 }
 
 /** Answers every card of the hand with the given option, falling back as the engine does, and goes on to the finances. */
@@ -234,9 +236,162 @@ describe('a whole life', () => {
     expect(get().history).toHaveLength(21);
     expect(await store.listRuns()).toHaveLength(1);
 
+    // Opened again, the device shows how the life ended, until another one begins.
     const again = setup(store);
     await again.get().boot();
-    expect(again.get().status).toBe('none');
+    expect(again.get()).toMatchObject({ status: 'playing', stage: 'end' });
+    expect(again.get().view).toEqual(get().view);
+    expect(again.get().history).toEqual(get().history);
+    await again.get().start('nurse');
+    expect(again.get()).toMatchObject({ status: 'playing', stage: 'news', lifeId: 'nurse' });
+  });
+});
+
+describe('a tap that comes too soon', () => {
+  const GUARD = 400;
+  /** A store whose clock the test moves by hand. `wait` lets a deliberate tap through. */
+  async function guarded() {
+    const ctx = setup(new MemoryStore(), GUARD);
+    const wait = (ms = GUARD) => {
+      ctx.clock.at += ms;
+    };
+    await ctx.get().start('nurse');
+    wait();
+    return { ...ctx, wait };
+  }
+
+  it('is ignored when it lands where the last tap just put something else', async () => {
+    const { get, wait } = await guarded();
+    // News → cards: the first option now sits under the thumb that pressed the button.
+    get().leaveNews();
+    await get().pick(1);
+    expect(get()).toMatchObject({ stage: 'cards' });
+    expect(get().view?.answered).toBe(0);
+    wait(GUARD - 1);
+    await get().pick(1);
+    expect(get().view?.answered).toBe(0);
+    wait(1);
+    await get().pick(0);
+    expect(get()).toMatchObject({ stage: 'outcome' });
+    expect(get().view?.answered).toBe(1);
+
+    // Result → next card: the same again.
+    get().afterCard();
+    expect(get().stage).toBe('outcome');
+    wait();
+    get().afterCard();
+    expect(get().stage).toBe('cards');
+    await get().pick(0);
+    expect(get().view?.answered).toBe(1);
+  });
+
+  it('cannot play the round or skip the ledger by landing twice on the same spot', async () => {
+    const { get, wait } = await guarded();
+    get().leaveNews();
+    while (get().view?.phase === 'cards') {
+      wait();
+      await get().pick(0);
+      wait();
+      get().afterCard();
+    }
+    expect(get().stage).toBe('finance');
+    // "To your finances" and "Play the round" share a place.
+    await get().play();
+    expect(get()).toMatchObject({ stage: 'finance' });
+    expect(get().view?.round).toBe(0);
+    wait();
+    await get().play();
+    expect(get().stage).toBe('resolve');
+    // So do "Play the round" and "Next round".
+    get().next();
+    expect(get().stage).toBe('resolve');
+    expect(get().resolved).not.toBeNull();
+    wait();
+    get().next();
+    expect(get().stage).toBe('news');
+    // And "Next round" and "See what life brings".
+    get().leaveNews();
+    expect(get().stage).toBe('news');
+    wait();
+    get().leaveNews();
+    expect(get().stage).toBe('cards');
+  });
+
+  it('does not stand in the way of the orders, which change no screen', async () => {
+    const { get, wait } = await guarded();
+    get().leaveNews();
+    while (get().view?.phase === 'cards') {
+      wait();
+      await get().pick(0);
+      wait();
+      get().afterCard();
+    }
+    expect(get().addOrder(study)).toBe(true);
+    expect(get().addOrder(overtime)).toBe(true);
+    get().removeOrder(0);
+    expect(get().orders).toEqual([overtime]);
+  });
+});
+
+describe('when something goes wrong', () => {
+  it('shows where the life stands now when another tab has played it on', async () => {
+    const here = setup();
+    await here.get().start('nurse');
+    const there = setup(here.store);
+    await there.get().boot();
+    await answerHand(here.get);
+    await here.get().play();
+    here.get().next();
+
+    there.get().leaveNews();
+    await there.get().pick(1);
+    expect(there.get()).toMatchObject({ status: 'playing', moved: true, busy: false, fault: false, stage: 'news' });
+    expect(there.get().view).toEqual(here.get().view);
+    expect(there.get().view?.round).toBe(1);
+    there.get().clearMoved();
+    expect(there.get().moved).toBe(false);
+    // And from there it plays on like any other.
+    await answerHand(there.get);
+    expect(there.get().stage).toBe('finance');
+  });
+
+  it('goes home with nothing when the life was abandoned in another tab', async () => {
+    const here = setup();
+    await here.get().start('nurse');
+    const there = setup(here.store);
+    await there.get().boot();
+    await here.get().abandon();
+    there.get().leaveNews();
+    await there.get().pick(0);
+    expect(there.get()).toMatchObject({ status: 'none', view: null, moved: true });
+  });
+
+  it('says so, and stops, when the game itself fails: no button is left that does nothing', async () => {
+    const { sessions, get } = setup();
+    await get().start('nurse');
+    const session = (await sessions.resume()).session;
+    expect(session).not.toBeNull();
+    // Break the save under the session, so that the engine refuses the next step.
+    const broken = createGameStore({
+      content,
+      sessions: {
+        ...sessions,
+        start: () => sessions.start('nurse'),
+        abandon: () => sessions.abandon(),
+        resume: async () => ({
+          lost: null,
+          session: {
+            gameId: 'x', lifeId: 'nurse', view: () => get().view as never, history: () => [], bankruptcies: () => 0,
+            answerCard: () => Promise.reject(new Error('invariant broken: cash is not a whole number')),
+            playRound: () => Promise.reject(new Error('invariant broken')),
+          },
+        }),
+      },
+    });
+    await broken.getState().boot();
+    broken.getState().leaveNews();
+    await broken.getState().pick(0);
+    expect(broken.getState()).toMatchObject({ fault: true, busy: false, moved: false, stage: 'cards' });
   });
 });
 

@@ -73,7 +73,7 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
       </div>
 
       <div className="@container">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} />
           <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} />
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} />

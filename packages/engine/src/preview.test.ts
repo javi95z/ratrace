@@ -92,3 +92,46 @@ describe('previewRound', () => {
     expect(() => previewRound(content, state, { orders: [] })).toThrow('previewRound: the game is already finished');
   });
 });
+
+describe('the pension room of a preview', () => {
+  const rejectedWith = (state: ReturnType<typeof createGame>, orders: RoundChoices['orders']) => previewRound(content, state, { orders }).rejected.map((r) => r.reason);
+
+  it('is the most the pension will take this round: that much goes in, a cent more is refused', () => {
+    for (const cash of [50_000, 400_000, 20_000_000]) {
+      const start = createGame({ content, start: { ...fixtureStart(), cash } }, 'pension-room');
+      const room = previewRound(content, start, { orders: [] }).pensionRoom;
+      expect(room, String(cash)).toBeGreaterThan(0);
+      expect(room, String(cash)).toBeLessThanOrEqual(cash);
+      expect(rejectedWith(start, [{ type: 'pensionIn', amount: room }]), String(cash)).toEqual([]);
+      expect(rejectedWith(start, [{ type: 'pensionIn', amount: room + 1 }]), String(cash)).toHaveLength(1);
+    }
+  });
+
+  it('is never more than the cash in hand, however much is owned elsewhere', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 20_000_000 } }, 'pension-room');
+    // Nearly everything goes into savings first: plenty is still owned, but little of it is cash.
+    const saved = { type: 'depositIn' as const, amount: 19_900_000 };
+    expect(previewRound(content, start, { orders: [saved] }).pensionRoom).toBe(100_000);
+    expect(rejectedWith(start, [saved, { type: 'pensionIn', amount: 100_000 }])).toEqual([]);
+    expect(rejectedWith(start, [saved, { type: 'pensionIn', amount: 100_001 }])).toEqual(['not-enough-cash']);
+  });
+
+  it('shrinks by what the orders so far have already paid in, down to nothing', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 20_000_000 } }, 'pension-room');
+    const room = previewRound(content, start, { orders: [] }).pensionRoom;
+    expect(previewRound(content, start, { orders: [{ type: 'pensionIn', amount: 100_000 }] }).pensionRoom).toBe(room - 100_000);
+    const full = previewRound(content, start, { orders: [{ type: 'pensionIn', amount: room }] });
+    expect(full.rejected).toEqual([]);
+    expect(full.pensionRoom).toBe(0);
+  });
+
+  it('is nothing for someone who owes more than they own outside it, however much cash they hold', () => {
+    const debt = { kind: 'personalLoan' as const, principal: 9_000_000, fixedRateBp: 600, roundsLeft: 4 };
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 2_000_000, debts: [debt] } }, 'pension-room');
+    expect(previewRound(content, start, { orders: [] }).pensionRoom).toBe(0);
+    expect(rejectedWith(start, [{ type: 'pensionIn', amount: 1 }])).toEqual(['would-be-insolvent']);
+    // Clear of debt, the same cash has room again.
+    const clear = createGame({ content, start: { ...fixtureStart(), cash: 2_000_000 } }, 'pension-room');
+    expect(previewRound(content, clear, { orders: [] }).pensionRoom).toBeGreaterThan(0);
+  });
+});

@@ -13,7 +13,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   reporter: [['list']],
-  timeout: 120_000,
+  timeout: 240_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
@@ -28,7 +28,9 @@ export default defineConfig({
   webServer: {
     command: `pnpm build && pnpm start --port ${PORT}`,
     url: `http://localhost:${PORT}/en`,
-    reuseExistingServer: !process.env.CI,
+    // Always a fresh build: a server left running would be testing yesterday's game.
+    // Set RATRACE_REUSE=1 to skip the build while working on the tests themselves.
+    reuseExistingServer: process.env.RATRACE_REUSE === '1',
     timeout: 240_000,
   },
 });

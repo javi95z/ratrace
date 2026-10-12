@@ -116,6 +116,13 @@ export function CardStage() {
           <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} />
         ))}
       </div>
+      {swipeable ? (
+        // A swipe cannot be taken back, so each side says what it picks. The buttons above say the same to a screen reader.
+        <div aria-hidden className="flex items-start justify-between gap-3 text-[12px] text-ink-300">
+          <span className="min-w-0 flex-1 truncate text-left">← {written.options[0].label}</span>
+          <span className={`min-w-0 flex-1 truncate text-right ${previews[1]?.available ? '' : 'line-through'}`}>{written.options[1].label} →</span>
+        </div>
+      ) : null}
       {swipeable ? <p className="text-center text-[12px] text-ink-300">{t('swipe')}</p> : null}
     </div>
   );

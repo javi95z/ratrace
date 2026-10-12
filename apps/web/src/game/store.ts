@@ -2,6 +2,7 @@ import { previewRound } from '@ratrace/engine';
 import type { Content, GameEvent, GameView, Order, RejectReason, RoundPreview } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
+import { StaleSession } from '@/session/errors';
 import type { GameSession, Lost, Sessions } from '@/session/types';
 
 /** Where the player is within a round. */
@@ -31,6 +32,10 @@ export interface RoundState {
   resolved: { before: GameView; events: GameEvent[] } | null;
   /** True while an answer or a round is being played. */
   busy: boolean;
+  /** True once the life was found to have moved on in another tab, until the player has been told. The store has already opened it as it now stands. */
+  moved: boolean;
+  /** True when the game itself refused a step. The life cannot go on from here; the screen says so. */
+  fault: boolean;
 }
 
 export interface RoundActions {
@@ -55,6 +60,7 @@ export interface RoundActions {
    */
   setOrder(same: (order: Order) => boolean, order: Order | null): boolean;
   clearRefusal(): void;
+  clearMoved(): void;
   play(): Promise<void>;
   /** From the ledger to the next round, or to the end. */
   next(): void;
@@ -76,14 +82,34 @@ const blank: RoundState = {
   refusal: null,
   resolved: null,
   busy: false,
+  moved: false,
+  fault: false,
 };
+
+export interface GameStoreOptions {
+  sessions: Sessions;
+  content: Content;
+  /** A clock in milliseconds, for telling a second tap from a first. */
+  now?: () => number;
+  /**
+   * How long after the screen changes a tap is still taken for the tail of the last one, and
+   * ignored. The primary button sits in the same place on every screen, and a card's first option
+   * sits where the button before it was: without this a double tap answers a card for good,
+   * plays a round, or skips the ledger. Zero, the default, ignores nothing.
+   */
+  guardMs?: number;
+}
 
 /**
  * The state of the round on screen. It talks to the game through a `GameSession` only,
  * and asks the engine's own preview what each order would do: no rule of the game lives here.
  */
-export function createGameStore({ sessions, content }: { sessions: Sessions; content: Content }): GameStore {
+export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 }: GameStoreOptions): GameStore {
   let session: GameSession | null = null;
+  /** When the stage on screen last changed. */
+  let changedAt = Number.NEGATIVE_INFINITY;
+  /** False while a tap may still be the tail of the one that brought this screen. */
+  const settled = () => now() - changedAt >= guardMs;
 
   /** The basket with every order the round would refuse taken out, and the preview of what is left. */
   const settle = (view: GameView, orders: Order[]): { orders: Order[]; preview: RoundPreview } => {
@@ -96,7 +122,18 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
     }
   };
 
-  return createStore<RoundState & RoundActions>()((set, get) => {
+  const store = createStore<RoundState & RoundActions>()((set, get) => {
+    /** What every step does when the session refuses it: open the life as it now stands, or stop. */
+    const refused = async (error: unknown) => {
+      if (error instanceof StaleSession) {
+        await get().boot();
+        set({ moved: true });
+      } else {
+        console.error('the game refused a step:', error);
+        set({ fault: true });
+      }
+    };
+
     const open = (opened: GameSession) => {
       session = opened;
       const view = opened.view();
@@ -131,19 +168,21 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
       },
 
       leaveNews() {
-        const { view } = get();
-        if (!view) return;
+        const { view, stage } = get();
+        if (!view || stage !== 'news' || !settled()) return;
         if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
         else get().toFinance();
       },
 
       async pick(option) {
         const { view, busy, stage } = get();
-        if (!view || !session || busy || stage !== 'cards') return;
+        if (!view || !session || busy || stage !== 'cards' || !settled()) return;
         set({ busy: true });
         try {
           const result = await session.answerCard(option);
           set({ view: result.view, cardEvents: result.events, stage: 'outcome' });
+        } catch (error) {
+          await refused(error);
         } finally {
           set({ busy: false });
         }
@@ -151,7 +190,7 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
 
       afterCard() {
         const { view, stage } = get();
-        if (!view || stage !== 'outcome') return;
+        if (!view || stage !== 'outcome' || !settled()) return;
         if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
         else {
           set({ cardEvents: [] });
@@ -197,9 +236,13 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
         set({ refusal: null });
       },
 
+      clearMoved() {
+        set({ moved: false });
+      },
+
       async play() {
-        const { view, orders, busy } = get();
-        if (!view || !session || busy) return;
+        const { view, orders, busy, stage } = get();
+        if (!view || !session || busy || stage !== 'finance' || !settled()) return;
         set({ busy: true });
         try {
           const result = await session.playRound({ orders });
@@ -213,16 +256,24 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
             refusal: null,
             stage: 'resolve',
           });
+        } catch (error) {
+          await refused(error);
         } finally {
           set({ busy: false });
         }
       },
 
       next() {
-        const { view } = get();
-        if (!view) return;
+        const { view, stage } = get();
+        if (!view || stage !== 'resolve' || !settled()) return;
         set({ stage: view.finished ? 'end' : 'news', cardEvents: [], resolved: null });
       },
     };
   });
+
+  // Every change of screen starts the short wait in which a tap is taken for the tail of the last one.
+  store.subscribe((state, before) => {
+    if (state.stage !== before.stage) changedAt = now();
+  });
+  return store;
 }

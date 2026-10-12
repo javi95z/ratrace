@@ -50,7 +50,8 @@
   /* Three columns from here up. */
   --breakpoint-desk: 64rem;
 
-  --animate-rise: rise 0.28s steps(4, end) both;
+  /* `backwards`, not `both`: once it has risen, the element answers to its own transform again, so a card can be dragged. */
+  --animate-rise: rise 0.28s steps(4, end) backwards;
   --animate-blink: blink 1s steps(2, start) infinite;
 
   @keyframes rise {

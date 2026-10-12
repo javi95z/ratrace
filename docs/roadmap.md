@@ -11,13 +11,13 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 1 | Design | Spec for the solo game | Done | | |
 | 2 | Art sheets | 21 sheets: items, cars, homes, icons, badges, portraits, card scenes, skylines, logo | Done | | |
 | 3 | Engine core | Markets, trades, debt, property, tax, inflation, bankruptcy, score | Done, reviewed twice | | |
-| 4 | Engine view for online | The client can hold a game without the future rounds | Planned | S | P0 |
+| 4 | Engine view for online | The client holds a game without the seed, the dice or the future rounds | Done, as the first task of step 8 | | P0 |
 | 5 | Art cleanup tool | The 21 sheets become 203 final game sprites, with contact sheets to approve | Built; your approval of the contact sheets in `art/contact/` pending | | P0 |
-| 6 | Life systems and content | Cards, careers, family, insurance, status items, news and tax reforms; 6 cities, 19 assets, 34 items, 100 cards, 6 lives; all text in English and Spanish | Built | | P0 |
-| 7 | Terminal game and balance bots | First playable life: `pnpm play`. Six bots hold the game inside its balance bands: `pnpm balance` | Built; your play-test pending | | P0 |
-| 8 | Web game, solo | The real game on phone and desktop, with final art and local saves | Planned | XL | P0 |
-| 9 | Replay hooks | Unlockable lives, achievements, collection, records, share card | Planned | M | P1 |
-| 10 | Polish | Guided first life, desktop layout, accessibility, Spanish and English text | Planned | M | P1 |
+| 6 | Life systems and content | Cards, careers, family, insurance, status items, news and tax reforms; 6 cities, 19 assets, 34 items, 100 cards, 6 lives; all text in English and Spanish | Done, reviewed; five rules changed by the review | | P0 |
+| 7 | Terminal game and balance bots | First playable life: `pnpm play`. Six bots hold the game inside its balance bands: `pnpm balance` | Done, reviewed | | P0 |
+| 8 | Web game, solo | The real game on phone and desktop, in English and Spanish, with final art and local saves: `pnpm dev` | Built, reviewed; your play-test pending | | P0 |
+| 9 | Replay hooks | Unlockable lives, achievements, collection, records, share card | Next; unblocked | M | P1 |
+| 10 | Polish | Guided first life, accessibility pass, text pass in both languages. The desktop layout came with step 8 | Planned; unblocked | S | P1 |
 | 11 | Online foundation | Supabase: sign-in, profiles, database, security rules, engine on the server | Planned | L | P1 |
 | 12 | Cloud saves | Saved games, history and unlocks on every device | Planned | M | P1 |
 | 13 | Ranked solo and rankings | Server-run games; global, weekly and friends rankings | Planned | M | P2 |

@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import type { Stage } from '@/game/store';
-import { useRouter } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
+import { Toast } from '@/ui/overlay';
 import { useIsDesk } from '@/ui/useMedia';
 import { CardStage, Outcome } from './Cards';
 import { End } from './End';
@@ -99,6 +100,25 @@ function StageView({ stage, desk }: { stage: Stage; desk: boolean }) {
   }
 }
 
+/** The game refused a step. The life is saved as it stood before it; this is the way out. */
+function Fault() {
+  const t = useT('play');
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-4 px-4">
+      <div role="alert" className="frame bg-wine-900 p-4">
+        <h1 className="pixel text-[20px]">{t('faultTitle')}</h1>
+        <p className="mt-2 text-[14px] leading-snug">{t('faultBody')}</p>
+      </div>
+      <Link href="/new" className="pixel frame-raised frame-gold flex min-h-12 items-center justify-center bg-gold-500 px-4 text-[17px] text-ink-900">
+        {t('newLife')}
+      </Link>
+      <Link href="/" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 text-[15px] text-cream">
+        {t('home')}
+      </Link>
+    </main>
+  );
+}
+
 const Waiting = ({ children }: { children: ReactNode }) => (
   <main className="flex min-h-dvh items-center justify-center">
     <p className="pixel animate-blink text-ink-300">{children}</p>
@@ -120,6 +140,10 @@ export function Play() {
   const status = useGame((s) => s.status);
   const stage = useGame((s) => s.stage);
   const view = useGame((s) => s.view);
+  const moved = useGame((s) => s.moved);
+  const fault = useGame((s) => s.fault);
+  const clearMoved = useGame((s) => s.clearMoved);
+  const play = useT('play');
   const [profileOpen, setProfileOpen] = useState(false);
   const [basketOpen, setBasketOpen] = useState(false);
 
@@ -133,8 +157,12 @@ export function Play() {
     setBasketOpen(false);
   }, [stage, desk]);
 
+  if (fault) return <Fault />;
   if (status !== 'playing' || !view) return <Waiting>{common('loading')}</Waiting>;
   if (stage === 'end') return <End />;
+
+  // Another tab played this life on: the store has already opened it as it now stands, and the player is told why the screen changed.
+  const notice = <Toast message={moved ? play('moved') : null} onDone={clearMoved} ms={6_000} />;
 
   const actions = <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
   const hasActions = stage !== 'cards';
@@ -172,6 +200,7 @@ export function Play() {
             </Panel>
           ) : null}
         </aside>
+        {notice}
       </div>
     );
   }
@@ -190,6 +219,7 @@ export function Play() {
       ) : null}
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       {basketOpen && stage === 'finance' ? <Basket onClose={() => setBasketOpen(false)} /> : null}
+      {notice}
     </div>
   );
 }

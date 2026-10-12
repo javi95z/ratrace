@@ -4,7 +4,7 @@ export interface Format {
   money(cents: number): string;
   /** Cents as whole dollars with a sign: +$1,200 or −$300. Nothing is plain $0. */
   signed(cents: number): string;
-  /** Cents in a few characters, for small spaces: $12.4k, $1.2M. */
+  /** Cents in a few characters, for small spaces: $12.4K, $1.23M. Three figures at most, and whole dollars under ten thousand. */
   compact(cents: number): string;
   /** Basis points as a percentage with one decimal: 250 → 2.5%. */
   rate(bp: number): string;
@@ -23,7 +23,24 @@ export function formatFor(locale: string): Format {
   const currency = { style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol' } as const;
   // Spanish leaves four-digit numbers ungrouped by default; a game about money reads better with them grouped.
   const dollars = new Intl.NumberFormat(tag, { ...currency, maximumFractionDigits: 0, useGrouping: 'always' });
-  const short = new Intl.NumberFormat(tag, { ...currency, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  const figures = new Intl.NumberFormat(tag, { maximumSignificantDigits: 3, useGrouping: 'always' });
+  // Where the currency sign goes in this language, and what stands between it and the number.
+  const parts = dollars.formatToParts(1);
+  const digit = parts.findIndex((part) => part.type === 'integer');
+  const before = parts.slice(0, digit).map((part) => part.value).join('');
+  const after = parts.slice(digit + 1).map((part) => part.value).join('');
+  // English counts thousands, millions and billions. A Spanish "B" would be read as a billón, a
+  // million millions, so Spanish stops at millions and writes thousands of them out.
+  const units: ReadonlyArray<readonly [number, string]> = tag === TAGS.es ? [[1e3, 'K'], [1e6, 'M']] : [[1e3, 'K'], [1e6, 'M'], [1e9, 'B']];
+
+  /** A large amount as three figures and a unit. Intl's own short form runs to "14,3 mil $", too long for a phone's HUD. */
+  const shortened = (wholeDollars: number): string => {
+    const size = Math.abs(wholeDollars);
+    let at = 0;
+    while (at < units.length - 1 && Number((size / units[at][0]).toPrecision(3)) >= 1000) at += 1;
+    const [scale, unit] = units[at];
+    return `${wholeDollars < 0 ? MINUS : ''}${before}${figures.format(Number((size / scale).toPrecision(3)))}${unit}${after}`;
+  };
   const whole = new Intl.NumberFormat(tag, { maximumFractionDigits: 0, useGrouping: 'always' });
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const hundredths = new Intl.NumberFormat(tag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,7 +52,7 @@ export function formatFor(locale: string): Format {
   return {
     money,
     signed: (cents) => (round(cents / 100) > 0 ? `+${money(cents)}` : money(cents)),
-    compact: (cents) => (Math.abs(cents) < 1_000_000 ? money(cents) : fix(short.format(cents / 100))),
+    compact: (cents) => (Math.abs(round(cents / 100)) < 10_000 ? money(cents) : shortened(round(cents / 100))),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${round(bp / 100) >= 0 ? '+' : MINUS}${whole.format(Math.abs(round(bp / 100)))}%`,
     number: (value) => fix(whole.format(round(value))),
