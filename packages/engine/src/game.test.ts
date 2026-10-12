@@ -89,6 +89,26 @@ describe('applyRound: the basic round', () => {
   });
 });
 
+describe('applyRound: corrupt input', () => {
+  it('refuses a state that breaks an invariant instead of computing with it', () => {
+    const good = createGame({ content, start: fixtureStart() }, 'bad');
+    const tier = JSON.parse(JSON.stringify(good));
+    tier.player.lifestyleTier = 4;
+    expect(() => applyRound(content, tier, { orders: [] })).toThrow(
+      /^invariant broken at round 0 \(state [0-9a-f]{16}\): lifestyleTier is not 0, 1, 2 or 3: 4$/,
+    );
+    const cash = JSON.parse(JSON.stringify(good));
+    cash.player.cash = null;
+    expect(() => applyRound(content, cash, { orders: [] })).toThrow('cash is not a non-negative whole number: null');
+  });
+
+  it('refuses a start that makes no sense', () => {
+    expect(() => createGame({ content, start: { ...fixtureStart(), cash: -5 } }, 's')).toThrow(
+      'invalid start: cash must be a non-negative whole number of cents',
+    );
+  });
+});
+
 describe('applyRound: inflation', () => {
   it('raises salary, living cost and the tax brackets with the price level from the second round on', () => {
     const start = createGame({ content, start: fixtureStart() }, 'inflation');

@@ -22,6 +22,11 @@ describe('scoring', () => {
     expect(wealthPoints(1e24, points)).toBe(500);
   });
 
+  it('refuses a net worth that is not a finite number', () => {
+    expect(() => wealthPoints(NaN, points)).toThrow('wealthPoints: net worth is not a finite number');
+    expect(() => wealthPoints(Infinity, points)).toThrow('wealthPoints: net worth is not a finite number');
+  });
+
   it('multiplies by 100 without escape and more the earlier the escape', () => {
     expect(escapeMultiplier(null, 20, content.scoring)).toBe(100);
     expect(escapeMultiplier(20, 20, content.scoring)).toBe(125);

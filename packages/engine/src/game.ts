@@ -1,5 +1,6 @@
 import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
+import { assertInvariants } from './invariants';
 import { cityOf } from './lookup';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
@@ -18,13 +19,14 @@ import type {
   RoundChoices,
   RoundTally,
 } from './types';
-import { validateContent } from './validate';
+import { validateContent, validateStart } from './validate';
 import { generateTimeline } from './world';
 
 export function createGame(config: GameConfig, seed: string): GameState {
   const errors = validateContent(config.content);
   if (errors.length > 0) throw new Error(`invalid content: ${errors.join('; ')}`);
-  cityOf(config.content, config.start.cityId);
+  const startErrors = validateStart(config.content, config.start);
+  if (startErrors.length > 0) throw new Error(`invalid start: ${startErrors.join('; ')}`);
   return {
     seed,
     round: 0,
@@ -56,6 +58,7 @@ export function applyRound(
   if (typeof choices !== 'object' || choices === null || !Array.isArray(choices.orders)) {
     throw new Error('applyRound: choices.orders must be an array');
   }
+  assertInvariants(content, state);
 
   const next = structuredClone(state);
   const p = next.player;
@@ -131,5 +134,6 @@ export function applyRound(
 
   next.round = completed;
   next.finished = completed >= content.rounds;
+  assertInvariants(content, next);
   return { state: next, events };
 }

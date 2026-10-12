@@ -3,6 +3,7 @@ import type { Cents } from './money';
 import type { Content, ScoringParams } from './types';
 
 export function wealthPoints(netWorth: Cents, breakpoints: ReadonlyArray<readonly [Cents, number]>): number {
+  if (!Number.isFinite(netWorth)) throw new Error('wealthPoints: net worth is not a finite number');
   if (netWorth <= breakpoints[0][0]) return breakpoints[0][1];
   for (let i = 1; i < breakpoints.length; i++) {
     const [x0, y0] = breakpoints[i - 1];
