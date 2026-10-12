@@ -79,7 +79,12 @@ export function findInvariantBreaks(content: Content, state: GameState): string[
 }
 
 export function assertInvariants(content: Content, state: GameState): void {
-  const breaks = findInvariantBreaks(content, state);
+  let breaks: string[];
+  try {
+    breaks = findInvariantBreaks(content, state);
+  } catch {
+    throw new Error('invariant broken: the state is not a game state');
+  }
   if (breaks.length > 0) {
     throw new Error(`invariant broken at round ${state.round} (state ${stateHash(state)}): ${breaks.join('; ')}`);
   }

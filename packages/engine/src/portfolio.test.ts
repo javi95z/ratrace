@@ -151,6 +151,15 @@ describe('portfolio growth', () => {
     expect(p.pension).toBe(500_000 + 50_000 + 18_000);
   });
 
+  it('reinvests the yield the pension asset paid this round, not the one it will pay next', () => {
+    const { content, timeline, p } = setup();
+    p.pension = 500_000;
+    const bondPension = { ...content, pensionAssetId: 'bond_long' };
+    const after = { ...timeline[1], policyRateBp: 800, assetReturnBp: { ...timeline[1].assetReturnBp, bond_long: 0 } };
+    growPortfolio(p, bondPension, timeline[0], after);
+    expect(p.pension).toBe(500_000 + 30_000);
+  });
+
   it('drops a position that falls to nothing', () => {
     const { content, timeline, p } = setup();
     p.positions.coin_meme = { value: 3, basis: 300 };

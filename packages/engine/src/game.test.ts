@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyRound, createGame } from './game';
 import { PRICE_LEVEL_START } from './rates';
-import { cashflow, finalScore, netWorth } from './selectors';
+import { cashflow, finalScore, netWorth, realNetWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import type { GameEvent, GameState, LedgerLine } from './types';
 
@@ -257,6 +257,30 @@ describe('applyRound: shortfalls and bankruptcy', () => {
   });
 });
 
+describe('applyRound: bankruptcy uses this round\'s prices', () => {
+  it('measures income at the current price level when setting the card limit', () => {
+    const base = createGame({ content, start: fixtureStart() }, 'limit');
+    const start = structuredClone(base);
+    start.timeline[0].priceLevel = 2_000_000;
+    start.player.debts = [{ id: 'debt-1', kind: 'creditCard', principal: 12_000_000, fixedRateBp: 0, roundsLeft: 0 }];
+    start.player.nextId = 1;
+    const { state, events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'salary')).toBe(12_000_000);
+    expect(state.player.debts[0].principal).toBeGreaterThan(3 * 3_600_000);
+    expect(state.player.debts[0].principal).toBeLessThan(3 * 6_000_000);
+    expect(events.some((e) => e.kind === 'bankrupt')).toBe(false);
+  });
+
+  it('takes the living-cost floor from the current world, not the next one', () => {
+    const base = createGame({ content, start: { ...fixtureStart(), salaryAnnual: 0 } }, 'floor');
+    const start = structuredClone(base);
+    start.timeline[1].priceLevel = 500_000;
+    const { state, events } = applyRound(content, start, { orders: [] });
+    expect(state.player.debts.map((d) => d.principal)).toEqual([3_600_000]);
+    expect(events.some((e) => e.kind === 'bankrupt')).toBe(false);
+  });
+});
+
 describe('applyRound: escape', () => {
   it('marks escape after two rounds in a row of passive income covering expenses', () => {
     const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g7'), { extraPassiveAnnual: 5_000_000 });
@@ -298,6 +322,22 @@ describe('selectors', () => {
       escapedAtRound: 1,
     });
     expect(finalScore(content, state)).toBe(637);
+  });
+
+  it('reports cashflow at the price level of the current round', () => {
+    const start = createGame({ content, start: fixtureStart() }, 'c2');
+    const after = applyRound(content, start, { orders: [] }).state;
+    expect(cashflow(content, after).salaryAnnual).toBe(atRound(start, 1, 3_000_000));
+    expect(cashflow(content, after).salaryAnnual).not.toBe(3_000_000);
+  });
+
+  it('scores net worth in start-of-game dollars', () => {
+    const base = withPlayer(createGame({ content, start: { ...fixtureStart(), cash: 200_000_000 } }, 'real'), { statusPoints: 50 });
+    const inflated = structuredClone(base);
+    inflated.timeline[0].priceLevel = 2_000_000;
+    expect(realNetWorth(inflated)).toBe(100_000_000);
+    expect(finalScore(content, inflated)).toBe(350);
+    expect(finalScore(content, base)).toBeGreaterThan(350);
   });
 
   it('reports annual cashflow at the current rates', () => {

@@ -20,6 +20,6 @@ exports[`golden replay > reproduces the recorded final state from the stored cho
   ],
   "netWorth": 172941610,
   "rejected": 1,
-  "score": 308,
+  "score": 255,
 }
 `;

@@ -3,6 +3,7 @@ import { applyBp, BP, isAmount, mulDiv } from './money';
 import type { Bp, Cents } from './money';
 import { newId } from './player';
 import { indexed } from './rates';
+import { ownedOutsidePension, totalOwed } from './solvency';
 import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
 /** Annual rate in bp. */
@@ -157,12 +158,8 @@ export function checkBankruptcy(
   const limit = content.debt.bankruptcyIncomeMultiple * Math.max(annualIncome, floor);
   if (card.principal <= limit) return null;
 
-  let owned = p.cash + p.deposit;
-  for (const held of Object.values(p.positions)) owned += held.value;
-  for (const property of p.properties) owned += property.value;
-  let owed = 0;
-  for (const d of p.debts) owed += d.principal;
-  if (owned >= owed) return null;
+  const owed = totalOwed(p);
+  if (ownedOutsidePension(p) >= owed) return null;
 
   const keep = BP - content.debt.fireSaleDiscountBp;
   let proceeds = p.cash + p.deposit;

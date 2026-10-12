@@ -1,5 +1,6 @@
 import { applyBp, isAmount, mulDiv } from './money';
 import { assetYieldBp, indexed } from './rates';
+import { ownedOutsidePension, totalOwed } from './solvency';
 import type { Content, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
 export type PortfolioOrder = Extract<Order, { type: 'buy' | 'sell' | 'depositIn' | 'depositOut' | 'pensionIn' }>;
@@ -52,6 +53,8 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
       const roundSalary = indexed(p.salaryAnnual, ctx.world) * ctx.content.yearsPerRound;
       const cap = applyBp(roundSalary, ctx.content.pensionContributionCapBp);
       if (ctx.tally.pensionContribution + order.amount > cap) return 'over-pension-limit';
+      // The pension is protected in bankruptcy, so it may not be filled with money the player owes.
+      if (ownedOutsidePension(p) - order.amount < totalOwed(p)) return 'would-be-insolvent';
       p.cash -= order.amount;
       p.pension += order.amount;
       ctx.tally.pensionContribution += order.amount;

@@ -27,6 +27,8 @@ describe('engine lint guard', () => {
     expect(await lint('export const a = (1234.5).toLocaleString();\n')).toContain('no-restricted-syntax');
     expect(await lint('export const a = performance.now();\n')).toContain('no-restricted-globals');
     expect(await lint('export const a = globalThis.Date.now();\n')).toContain('no-restricted-properties');
+    expect(await lint("export const a = 'a'.localeCompare('b');\n")).toContain('no-restricted-syntax');
+    expect(await lint('export const a = new Intl.NumberFormat();\n')).toContain('no-restricted-globals');
   });
 
   it('accepts exact maths', async () => {

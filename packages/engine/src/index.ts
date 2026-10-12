@@ -4,7 +4,7 @@ export { createGame, applyRound, previewRound } from './game';
 export type { RejectedOrder, RoundPreview } from './game';
 export type { RoundExpenses, RoundIncome } from './economy';
 export type { TaxBill } from './tax';
-export { netWorth, finalScore, cashflow } from './selectors';
+export { netWorth, realNetWorth, finalScore, cashflow } from './selectors';
 export { validateContent, validateStart } from './validate';
 export { propertyPrice } from './property';
 export { debtRateBp } from './debt';

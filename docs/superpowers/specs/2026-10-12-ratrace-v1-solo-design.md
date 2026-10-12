@@ -205,13 +205,13 @@ Three consequences are deliberate:
 
 - **A solvent player is never liquidated.** Someone with assets and a large card balance keeps paying the card rate until they sell something.
 - **The credit card keeps working during the lock.** It is how every shortfall is covered. A player who stays insolvent will go bankrupt again.
-- **The pension is protected, so it is capped.** Without the cap on contributions, a player could move sale proceeds into the pension and let bankruptcy erase the tax bill.
+- **The pension is protected, so it is capped.** Without the cap on contributions, a player could move sale proceeds into the pension and let bankruptcy erase the tax bill. For the same reason a contribution is refused if it would leave the player owing more than they own outside the pension: borrowed money cannot be parked there and then written off.
 
 ### 3.13 Scoring
 
 `score = (W + S) × E / 100`, using integer arithmetic.
 
-- **W, wealth points:** linear interpolation between breakpoints. Net worth ≤ 0 → 0; 10k → 100; 100k → 200; 1M → 300; 10M → 400; 100M → 500.
+- **W, wealth points:** linear interpolation between breakpoints, on net worth in start-of-game dollars, so that lives played through different inflation can be compared. Net worth ≤ 0 → 0; 10k → 100; 100k → 200; 1M → 300; 10M → 400; 100M → 500.
 - **S, status points:** the status total. Item values are calibrated so a high-status life lands between 250 and 350.
 - **E, escape multiplier:** 100 if the player never escaped. Otherwise 125 + 3 × rounds remaining at the moment of escape.
 - **Escape** means passive income ≥ total expenses at two consecutive resolves. The multiplier is fixed by the first of the two.
@@ -347,7 +347,7 @@ previewRound(content: Content, state: GameState, choices: RoundChoices): RoundPr
 
 Content is passed in and is not stored in the state, so saved games stay small. `createGame` builds the whole 20-round world timeline from the seed.
 
-Selectors derive net worth, cashflow, tax estimate and score from a state.
+Selectors derive net worth, cashflow and score from a state. The tax bill comes from `previewRound`, below.
 
 Modules: `rng`, `market`, `economy`, `tax`, `cards`, `life`, `status`, `scoring`. Each has one job and is tested alone.
 

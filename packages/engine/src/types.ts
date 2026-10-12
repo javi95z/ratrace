@@ -97,7 +97,11 @@ export interface DebtParams {
   /** Bankruptcy when credit card debt exceeds this multiple of annual income. */
   bankruptcyIncomeMultiple: number;
   bankruptcyLockRounds: number;
-  /** Discount on forced sales, in bp. */
+  /**
+   * Discount on the forced sale in bankruptcy, in bp. Bankruptcy only happens to a player who owes
+   * more than they own, so the sale never leaves them cash; the discount sets how much the
+   * creditors recover, which the bankruptcy event reports.
+   */
   fireSaleDiscountBp: Bp;
 }
 
@@ -180,11 +184,16 @@ export interface PlayerState {
   positions: Record<string, Position>;
   properties: Property[];
   debts: Debt[];
+  /**
+   * The next three amounts are in start-of-game dollars. The engine converts them at the current
+   * price level each time it uses them. Cash, deposit, pension, positions, properties and debts
+   * are in the dollars of the day and are never converted.
+   */
   salaryAnnual: Cents;
   lifestyleTier: LifestyleTier;
-  /** Upkeep, family and insurance. Set by the life systems in plan 2. */
+  /** Upkeep, family and insurance. Set by the life systems. */
   extraExpensesAnnual: Cents;
-  /** Business profit and similar. Set by the life systems in plan 2. */
+  /** Business profit and similar. Set by the life systems. */
   extraPassiveAnnual: Cents;
   statusPoints: number;
   nextId: number;
@@ -239,6 +248,7 @@ export type RejectReason =
   | 'exceeds-position'
   | 'exceeds-deposit'
   | 'over-pension-limit'
+  | 'would-be-insolvent'
   | 'no-credit'
   | 'over-loan-limit'
   | 'unknown-debt'

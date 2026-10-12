@@ -58,6 +58,14 @@ describe('invariants', () => {
     ]);
   });
 
+  it('refuses something that is not a game state, with a clear error', () => {
+    const state = createGame({ content, start: fixtureStart() }, 'i');
+    const broken = JSON.parse(JSON.stringify(state));
+    delete broken.player;
+    expect(() => assertInvariants(content, broken)).toThrow('invariant broken: the state is not a game state');
+    expect(() => assertInvariants(content, null as never)).toThrow('invariant broken: the state is not a game state');
+  });
+
   it('throws with the round and the state hash', () => {
     const state = createGame({ content, start: fixtureStart() }, 'i');
     state.player.cash = -1;
