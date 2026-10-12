@@ -13,7 +13,7 @@ export interface LifeDef {
 /**
  * Six starting lives (spec section 4). A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
- * `share_plan` and `remote_work` by cards.
+ * `share_plan` and `bilingual` by cards.
  */
 export const lives: LifeDef[] = [
   {
@@ -30,7 +30,7 @@ export const lives: LifeDef[] = [
     },
   },
   {
-    // Well paid, with a share plan and remote work, and a student loan to clear.
+    // Well paid, with a share plan and a head start in finance, and a student loan to clear.
     id: 'engineer',
     unlock: 'default',
     start: {
@@ -39,7 +39,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [{ kind: 'personalLoan', principal: usd(18_000), fixedRateBp: 600, roundsLeft: 5 }],
-      life: { lifeId: 'engineer', career: { id: 'tech', level: 0 }, careerSkill: 0, financeSkill: 1, focus: 3, flags: ['share_plan', 'remote_work'] },
+      life: { lifeId: 'engineer', career: { id: 'tech', level: 0 }, careerSkill: 0, financeSkill: 1, focus: 3, flags: ['share_plan'] },
     },
   },
   {

@@ -38,7 +38,7 @@ describe('validateContent: life data', () => {
     expect(withItem({ price: -1 })).toContain('item car_basic needs a whole, non-negative price and upkeep');
     expect(withItem({ upkeepAnnual: 0.5 })).toContain('item car_basic needs a whole, non-negative price and upkeep');
     expect(withItem({ status: 1.5 })).toContain('item car_basic needs a whole, non-negative status');
-    expect(withItem({ resaleStartPct: 250 })).toContain('item car_basic has a resale percentage outside 0..200');
+    expect(withItem({ resaleStartPct: 101 })).toContain('item car_basic has a resale percentage outside 0..100');
     expect(withItem({ resaleDriftBp: -10_000 })).toContain('item car_basic has a resale drift that is not a whole number above -10000');
     expect(withItem({ resaleDriftBp: NaN })).toContain('item car_basic has a resale drift that is not a whole number above -10000');
     expect(withItem({ kind: 'experience', boostRounds: 0 })).toContain('experience car_basic needs at least one round of boost');
@@ -63,7 +63,7 @@ describe('validateContent: life data', () => {
     expect(life({ financeExperienceRounds: 0.5 })).toContain('life.financeExperienceRounds must be a positive whole number');
     expect(life({ jobHuntChancePct: 101 })).toContain('life.jobHuntChancePct must be between 0 and 100');
     expect(life({ lesserItemPct: -1 })).toContain('life.lesserItemPct must be between 0 and 100');
-    expect(life({ unstablePayPct: 120 })).toContain('life.unstablePayPct must be between 0 and 100');
+    expect(life({ unstablePayPct: 120 })).toContain('life.unstablePayPct must be a whole number from 0 to 100');
     expect(life({ rentTierHousingPct: [60] })).toContain('life.rentTierHousingPct must be two numbers between 0 and 100');
     expect(life({ rentTierHousingPct: [60, 140] })).toContain('life.rentTierHousingPct must be two numbers between 0 and 100');
     expect(life({ rentTierStatus: [0, -1] })).toContain('life.rentTierStatus must be two whole, non-negative numbers');

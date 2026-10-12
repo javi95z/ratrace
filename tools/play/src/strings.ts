@@ -57,11 +57,14 @@ export interface Ui {
   financeSkillUp: string;
   moved: string;
   escaped: string;
+  escapeLost: string;
   bankrupt: string;
   theEnd: string;
   score: string;
   wealthPoints: string;
   statusPoints: string;
+  /** Says that the status counted is the average over the life. */
+  statusNote: string;
   escapeBonus: string;
   neverEscaped: string;
   escapedAtAge: string;
@@ -74,7 +77,7 @@ export interface Ui {
   columns: {
     asset: string; change: string; yield: string; held: string; price: string; upkeep: string; owned: string; needsSkill: string;
     medianSalary: string; living: string; moveCost: string; incomeTax: string; gainsTax: string; down: string; rent: string; rented: string; livedIn: string;
-    value: string; gain: string; owed: string; rate: string; roundsLeft: string;
+    value: string; gain: string; owed: string; rate: string; roundsLeft: string; cashNeeded: string; cardOnly: string;
   };
   taxLines: { income: string; investment: string; property: string; purchase: string; total: string; escape: string; escapeYes: string; escapeNo: string };
   noOrders: string;
@@ -158,11 +161,13 @@ const en: Ui = {
   financeSkillUp: 'Experience pays: your finance skill is now',
   moved: 'You moved to',
   escaped: 'You are out of the rat race. Your passive income covers your life.',
+  escapeLost: 'Back in the rat race: your passive income no longer covers your life.',
   bankrupt: 'Bankrupt. Everything is sold and every debt is cleared.',
   theEnd: 'THE END',
   score: 'Score',
   wealthPoints: 'Wealth',
   statusPoints: 'Status',
+  statusNote: 'Status counts as you lived it: the average over all twenty rounds.',
   escapeBonus: 'Escape bonus',
   neverEscaped: 'You never left the rat race.',
   escapedAtAge: 'You left the rat race at',
@@ -177,6 +182,7 @@ const en: Ui = {
     asset: 'asset', change: 'last round', yield: 'yield', held: 'you hold', price: 'price', upkeep: 'upkeep', owned: 'owned', needsSkill: 'needs finance skill',
     medianSalary: 'median salary', living: 'living cost', moveCost: 'to move there', incomeTax: 'income tax', gainsTax: 'gains', down: 'smallest down payment',
     rent: 'rent', rented: 'rented out', livedIn: 'lived in', value: 'value', gain: 'gain', owed: 'owed', rate: 'rate', roundsLeft: 'rounds left',
+    cashNeeded: 'cash needed', cardOnly: 'by card only',
   },
   taxLines: {
     income: 'Income tax', investment: 'Tax on investments', property: 'Property tax', purchase: 'Purchase tax paid', total: 'Tax this round',
@@ -195,7 +201,7 @@ const en: Ui = {
     'overtime | study | hunt     move <city>',
     'Screens: me, news, market, port, shop, homes, cities, tax, orders',
     'undo removes the last order. done plays the round. quit leaves the game.',
-    'Amounts: 5000, 5k, 1.5m, 50%, all.',
+    'Amounts: 5000, 5,000, 5k, 1.5m, 50%, all.',
   ],
   effects: {
     salaryMod: 'salary for good', salaryBoost: 'pay this round', careerSkill: 'career skill', financeSkill: 'finance skill', status: 'status', focus: 'focus',
@@ -203,7 +209,7 @@ const en: Ui = {
     leaveJob: 'you stop working', newCareer: 'new career:', promotion: 'a step up', demotion: 'a step down', moveTo: 'you move to',
     partnerIn: 'you share your life and your bills', partnerOut: 'you separate',
     child: (n) => (n === 1 ? 'a child' : `${n} children`), get: 'you get', invest: (amount, asset) => `${amount} into ${asset}`, pension: 'into your pension',
-    loan: 'loan of', buyHome: 'you buy a', toRentOut: 'to rent out', refinance: ['mortgage becomes fixed', 'mortgage becomes variable'],
+    loan: 'loan of', buyHome: 'you buy:', toRentOut: 'to rent out', refinance: ['mortgage becomes fixed', 'mortgage becomes variable'],
     sellHome: 'you sell your home', homeValue: 'home value', lose: (pct, what) => `you lose ${pct}% of your ${what}`, savingsWord: 'savings',
     lifestyleFloor: 'lifestyle at least',
   },
@@ -276,11 +282,13 @@ const es: Ui = {
   financeSkillUp: 'La experiencia cuenta: tu nivel de finanzas es ahora',
   moved: 'Te has mudado a',
   escaped: 'Has salido de la rueda. Tus ingresos pasivos pagan tu vida.',
+  escapeLost: 'De vuelta a la rueda: tus ingresos pasivos ya no pagan tu vida.',
   bankrupt: 'Quiebra. Se vende todo y se cancelan todas las deudas.',
   theEnd: 'FIN',
   score: 'Puntuación',
   wealthPoints: 'Riqueza',
   statusPoints: 'Estatus',
+  statusNote: 'El estatus cuenta como lo viviste: la media de las veinte rondas.',
   escapeBonus: 'Bonus por salir',
   neverEscaped: 'Nunca saliste de la rueda.',
   escapedAtAge: 'Saliste de la rueda a los',
@@ -292,9 +300,10 @@ const es: Ui = {
     debts: 'Deudas', properties: 'Viviendas', items: 'Cosas',
   },
   columns: {
-    asset: 'activo', change: 'última ronda', yield: 'renta', held: 'tienes', price: 'precio', upkeep: 'mantenimiento', owned: 'tuyo', needsSkill: 'pide nivel de finanzas',
-    medianSalary: 'sueldo medio', living: 'coste de vida', moveCost: 'mudarte allí', incomeTax: 'renta', gainsTax: 'ganancias', down: 'entrada mínima',
-    rent: 'alquiler', rented: 'alquilada', livedIn: 'vives en ella', value: 'valor', gain: 'ganancia', owed: 'debes', rate: 'tipo', roundsLeft: 'rondas',
+    asset: 'activo', change: 'última ronda', yield: 'rendimiento', held: 'tienes', price: 'precio', upkeep: 'mantenimiento', owned: 'tuyo', needsSkill: 'pide nivel de finanzas',
+    medianSalary: 'sueldo medio', living: 'coste de vida', moveCost: 'mudarte allí', incomeTax: 'impuesto sobre la renta', gainsTax: 'ganancias', down: 'entrada mínima',
+    rent: 'alquiler', rented: 'en alquiler', livedIn: 'tu hogar', value: 'valor', gain: 'ganancia', owed: 'debes', rate: 'tipo', roundsLeft: 'rondas',
+    cashNeeded: 'efectivo necesario', cardOnly: 'solo por carta',
   },
   taxLines: {
     income: 'Impuesto sobre la renta', investment: 'Impuestos sobre inversiones', property: 'Impuesto sobre la vivienda', purchase: 'Impuesto de compra pagado',
@@ -306,14 +315,14 @@ const es: Ui = {
     'comprar <activo> <importe>  vender <activo> <importe|todo>',
     'ahorrar <importe>           retirar <importe|todo>',
     'pension <importe>           pedir <importe>          pagar <n> <importe|todo>',
-    'casa <tipo> [entrada%] [fixed|variable|contado] [alquilar]',
+    'casa <tipo> [entrada%] [fija|variable|contado] [alquilar]',
     'vendercasa <n>              alquilar <n> si|no',
     'adquirir <artículo>         soltar <artículo>',
     'vida <0-3>                  habitacion | piso        seguro <tipo> [si|no]',
     'extras | estudiar | buscar  mudar <ciudad>',
     'Pantallas: yo, noticias, mercado, cartera, tienda, casas, ciudades, impuestos, ordenes',
     'deshacer quita la última orden. listo juega la ronda. salir deja la partida.',
-    'Importes: 5000, 5k, 1.5m, 50%, todo.',
+    'Importes: 5000, 5.000, 5k, 1,5m, 50%, todo.',
   ],
   effects: {
     salaryMod: 'de sueldo para siempre', salaryBoost: 'de sueldo esta ronda', careerSkill: 'de experiencia', financeSkill: 'de finanzas', status: 'de estatus', focus: 'de foco',
@@ -321,7 +330,7 @@ const es: Ui = {
     leaveJob: 'dejas de trabajar', newCareer: 'nueva carrera:', promotion: 'un ascenso', demotion: 'un paso atrás', moveTo: 'te mudas a',
     partnerIn: 'compartes tu vida y tus facturas', partnerOut: 'os separáis',
     child: (n) => (n === 1 ? 'un hijo' : `${n} hijos`), get: 'te llevas', invest: (amount, asset) => `${amount} en ${asset}`, pension: 'a tu plan de pensiones',
-    loan: 'préstamo de', buyHome: 'compras', toRentOut: 'para alquilar', refinance: ['la hipoteca pasa a fija', 'la hipoteca pasa a variable'],
+    loan: 'préstamo de', buyHome: 'compras:', toRentOut: 'para alquilar', refinance: ['la hipoteca pasa a fija', 'la hipoteca pasa a variable'],
     sellHome: 'vendes tu casa', homeValue: 'valor de tu casa', lose: (pct, what) => `pierdes el ${pct} % de tu ${what}`, savingsWord: 'ahorro',
     lifestyleFloor: 'estilo de vida mínimo:',
   },

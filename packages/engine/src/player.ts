@@ -48,6 +48,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     extraExpensesAnnual: 0,
     extraPassiveAnnual: 0,
     statusPoints: 0,
+    statusSum: 0,
     nextId: 0,
     passiveStreak: 0,
     escapedAtRound: null,

@@ -14,14 +14,17 @@ The engine core knows money. This adds the life that produces it: cards, career,
 
 ### A round now has two calls
 
-1. `applyCards(content, state, picks)` resolves the player's answers to the cards in their hand, including any dice rolls, and moves the game to the finance phase.
+1. `applyCard(content, state, option)` answers the next card of the hand, rolls its dice and settles it; after the last card the game moves to the finance phase. `applyCards(content, state, picks)` answers every card still waiting in one call.
 2. `applyRound(content, state, { orders })` then runs as before.
+
+Cards were first answered all at once. The review showed that an option previewed as open could then be closed by an earlier card of the same hand and silently become the default, so cards are now answered one at a time and each is judged as the player stands after the ones before it.
 
 Reason: the player should see what a card did before deciding their finances, and `previewRound` stays exact because nothing random is left to happen after the orders. If `applyRound` is called while cards are unanswered, every card takes its first option, which is always the "do nothing" option. That is also what an absent player in a room gets.
 
 ### State
 
-- `GameState` gains `phase` (`cards` or `finance`), `hand` (ids of the cards drawn this round) and `rng.cards` (the saved position of the player's own random stream).
+- `GameState` gains `phase` (`cards` or `finance`), `hand` (ids of the cards drawn this round), `answered` (how many of them are settled) and `rng.cards` (the saved position of the player's own random stream).
+- `PlayerState` gains `statusSum`, the running total of status at the end of every round played, because the score counts status as it was lived (spec 3.13).
 - `PlayerState` gains `life`:
   - `lifeId`
   - `career` (`{ id, level }` or null when unemployed), `salaryModPct`, `salaryBoostPct` (this round only), `careerSkill`
@@ -97,4 +100,4 @@ Bankruptcy also sells status items at the fire-sale discount and counts their va
 - [x] 7. Content: 100 cards
 - [x] 8. Text in English and Spanish, with the lint test
 - [x] 9. Whole-life tests on the real content: invariants, determinism, accounting identity
-- [ ] 10. Fresh review and one fix pass
+- [x] 10. Fresh review and one fix pass

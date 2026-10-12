@@ -1,6 +1,6 @@
 import { content, lives } from '@ratrace/content';
-import { applyCards, applyRound, createGame } from '@ratrace/engine';
-import type { GameState, RejectReason } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
+import type { GameState, GameView, RejectReason } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { bots } from './bots';
 import type { Bot } from './bots';
@@ -12,16 +12,22 @@ const bot = (id: string): Bot => {
   return found;
 };
 
-/** Plays a life and hands every state in the finance phase, and every refusal, to the caller. */
+/**
+ * Plays a life and hands the caller every state a bot is asked about: before each card, and once
+ * in the finance phase. Returns every refusal.
+ */
 function watch(b: Bot, lifeId: string, seed: string, see: (state: GameState) => void = () => {}): RejectReason[] {
   const life = lives.find((l) => l.id === lifeId);
   if (!life) throw new Error(`no life ${lifeId}`);
   const refused: RejectReason[] = [];
   let state = createGame({ content, start: life.start }, seed);
   while (!state.finished) {
-    if (state.phase === 'cards') state = applyCards(content, state, b.picks(content, state)).state;
+    while (state.phase === 'cards') {
+      see(state);
+      state = applyCard(content, state, b.pick(content, viewOf(state))).state;
+    }
     see(state);
-    const result = applyRound(content, state, { orders: b.orders(content, state) });
+    const result = applyRound(content, state, { orders: b.orders(content, viewOf(state)) });
     for (const e of result.events) if (e.kind === 'orderRejected') refused.push(e.reason);
     state = result.state;
   }
@@ -66,15 +72,46 @@ describe('bots', () => {
     }
   });
 
-  it('decide from what a player can see: a different future does not change this round', () => {
+  it('decide from a view alone: the same view of two different games gets the same answer', () => {
+    // Two games that look alike today and differ in everything a player cannot see: the seed, the
+    // dice and every world to come. A bot handed the full game could tell them apart.
+    const decide = (b: Bot, view: GameView) => (view.phase === 'cards' ? b.pick(content, view) : b.orders(content, view));
     for (const b of bots) {
+      let asked = 0;
       watch(b, 'engineer', 'no-peeking', (state) => {
-        const blind = structuredClone(state);
-        const now = blind.timeline[blind.round];
-        for (let r = blind.round + 1; r < blind.timeline.length; r++) blind.timeline[r] = { ...now, round: r };
-        expect(b.orders(content, blind), `${b.id} round ${state.round}`).toEqual(b.orders(content, state));
+        const other: GameState = structuredClone(state);
+        other.seed = 'another-seed';
+        const now = other.timeline[other.round];
+        for (let r = other.round + 1; r < other.timeline.length; r++) other.timeline[r] = { ...now, round: r };
+        expect(viewOf(other), `${b.id} round ${state.round}`).toEqual(viewOf(state));
+        expect(decide(b, viewOf(other)), `${b.id} round ${state.round}`).toEqual(decide(b, viewOf(state)));
+        asked += 1;
       });
+      expect(asked, b.id).toBeGreaterThan(content.rounds);
     }
+  });
+
+  it('are never handed the seed or the dice', () => {
+    const seen: GameView[] = [];
+    const spy: Bot = {
+      id: 'spy',
+      pick: (_content, view) => {
+        seen.push(view);
+        return 0;
+      },
+      orders: (_content, view) => {
+        seen.push(view);
+        return [];
+      },
+    };
+    const result = playLife(content, lives[0], 'spy', spy);
+    expect(seen.length).toBeGreaterThan(content.rounds);
+    for (const view of seen) {
+      expect(Object.hasOwn(view, 'seed')).toBe(false);
+      expect(Object.hasOwn(view, 'rng')).toBe(false);
+      expect(view.timeline).toHaveLength(view.round + 1);
+    }
+    expect(result.state.finished).toBe(true);
   });
 
   it('keep to their strategy', () => {
@@ -88,7 +125,7 @@ describe('bots', () => {
     const sold = (b: Bot) => {
       let sells = 0;
       watch(b, 'civil_servant', 'strategy', (state) => {
-        sells += b.orders(content, state).filter((o) => o.type === 'sell').length;
+        if (state.phase === 'finance') sells += b.orders(content, viewOf(state)).filter((o) => o.type === 'sell').length;
       });
       return sells;
     };
@@ -103,11 +140,25 @@ describe('bots', () => {
     expect(owned).toBeGreaterThan(1);
     expect(rented).toBeGreaterThan(0);
 
-    let coins = false;
-    watch(bot('gambler'), 'engineer', 'strategy', (state) => {
-      if (['bitcoin', 'ethereum', 'dogecoin'].some((id) => Object.hasOwn(state.player.positions, id))) coins = true;
+    // The gambler is the indexer's twin: it never borrows and never sells a coin, and once it may buy coins it holds nothing else.
+    const COINS = ['bitcoin', 'ethereum', 'dogecoin'];
+    const gambler = bot('gambler');
+    let allIn = 0;
+    const refused = watch(gambler, 'engineer', 'strategy', (state) => {
+      if (state.phase !== 'finance') return;
+      const orders = gambler.orders(content, viewOf(state));
+      expect(orders.filter((o) => o.type === 'borrow'), `round ${state.round}`).toEqual([]);
+      expect(orders.filter((o) => o.type === 'sell' && COINS.includes(o.assetId)), `round ${state.round}`).toEqual([]);
+      expect(orders.filter((o) => o.type === 'setLifestyle' && o.tier > state.player.life.minLifestyleTier), `round ${state.round}`).toEqual([]);
+      const held = Object.keys(state.player.positions);
+      if (held.length > 0 && held.every((id) => COINS.includes(id))) allIn += 1;
     });
-    expect(coins).toBe(true);
+    expect(allIn).toBeGreaterThan(5);
+    expect(refused).toEqual([]);
+    // It waits until it is allowed to buy coins: whatever life it starts from, it is never turned away for want of finance skill.
+    for (const life of ['nurse', 'civil_servant']) {
+      expect(watch(gambler, life, 'strategy').filter((reason) => reason === 'needs-finance-skill'), life).toEqual([]);
+    }
 
     let items = 0;
     watch(bot('chaser'), 'engineer', 'strategy', (state) => {

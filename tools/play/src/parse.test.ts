@@ -9,7 +9,7 @@ function scene(change: (state: GameState) => void = () => {}, locale: 'en' | 'es
   const state = createGame({ content: { ...content, cards: [] }, start: { ...lives[0].start, cash: 1_000_000 } }, 'parse');
   change(state);
   const { text, names } = textFor(locale);
-  return { content, state, names, text };
+  return { content, state, names, text, locale };
 }
 const run = (line: string, s: Scene = scene()) => parse(line, s);
 const orderOf = (line: string, s: Scene = scene()) => {
@@ -38,6 +38,38 @@ describe('parseAmount', () => {
     for (const typed of [undefined, '', '0', '-5', 'lots', '5x', '1e9', '150%', 'NaN', '5 000']) expect(parseAmount(typed, 70_000)).toBeNull();
     expect(parseAmount('all', 0)).toBeNull();
     expect(parseAmount('50%', 1)).toBeNull();
+  });
+});
+
+describe('parseAmount, in the language of the player', () => {
+  it('reads a dot as thousands and a comma as decimals in Spanish, and the other way round in English', () => {
+    expect(parseAmount('12.345', 0, 'es')).toBe(1_234_500);
+    expect(parseAmount('1.234.567', 0, 'es')).toBe(123_456_700);
+    expect(parseAmount('12,5', 0, 'es')).toBe(1_250);
+    expect(parseAmount('1,5k', 0, 'es')).toBe(150_000);
+    expect(parseAmount('12,345', 0, 'en')).toBe(1_234_500);
+    expect(parseAmount('12.5', 0, 'en')).toBe(1_250);
+    expect(parseAmount('12,345', 0)).toBe(1_234_500);
+  });
+
+  it('reads what fits only one way that way, whatever the language', () => {
+    expect(parseAmount('1.5k', 0, 'es')).toBe(150_000);
+    expect(parseAmount('1,5k', 0, 'en')).toBe(150_000);
+    expect(parseAmount('2.50', 0, 'es')).toBe(250);
+    expect(parseAmount('1.234,56', 0, 'en')).toBe(123_456);
+    expect(parseAmount('1,234.56', 0, 'es')).toBe(123_456);
+  });
+
+  it('reads a percentage with a decimal comma', () => {
+    expect(parseAmount('12,5%', 80_000, 'es')).toBe(10_000);
+    expect(parseAmount('12.5%', 80_000, 'en')).toBe(10_000);
+  });
+
+  it('still refuses what is no amount', () => {
+    for (const typed of ['1.2.3', '1,2,3', '.5', '5.', ',5', '1..5', '1,,5', '1.234.56,7.8']) {
+      expect(parseAmount(typed, 70_000, 'es'), typed).toBeNull();
+      expect(parseAmount(typed, 70_000, 'en'), typed).toBeNull();
+    }
   });
 });
 
@@ -166,5 +198,17 @@ describe('parse', () => {
     expect(run('save -5')).toEqual({ kind: 'error', problem: 'bad-amount' });
     expect(run('__proto__ 5')).toEqual({ kind: 'error', problem: 'unknown-command' });
     expect(run('constructor')).toEqual({ kind: 'error', problem: 'unknown-command' });
+  });
+
+  it('reads a typed amount in the language of the game', () => {
+    expect(orderOf('comprar msci 12.345', scene(() => {}, 'es'))).toEqual({ type: 'buy', assetId: 'msci_world', amount: 1_234_500 });
+    expect(orderOf('buy msci 12,345')).toEqual({ type: 'buy', assetId: 'msci_world', amount: 1_234_500 });
+  });
+
+  it('does not take punctuation for the first lifestyle', () => {
+    for (const line of ['lifestyle ???', 'vida ???', 'lifestyle !', 'lifestyle 4', 'lifestyle -1']) {
+      expect(run(line), line).toEqual({ kind: 'error', problem: 'bad-tier' });
+    }
+    expect(orderOf('lifestyle 0')).toEqual({ type: 'setLifestyle', tier: 0 });
   });
 });

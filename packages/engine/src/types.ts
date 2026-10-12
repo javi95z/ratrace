@@ -239,6 +239,8 @@ export interface Condition {
   ownsLadder?: string;
   /** Owns none of these items. */
   notItems?: string[];
+  /** Holds this insurance. */
+  insured?: InsuranceKind;
   regimes?: Regime[];
   /** Property in the player's city returned this or less in the round that just ended. */
   cityPropertyReturnAtMostBp?: Bp;
@@ -308,14 +310,15 @@ export interface Effects {
   /**
    * Buys a property in the player's city at `pricePct` percent of the market price,
    * paying `downPct` percent of that in cash and the rest with a fixed mortgage.
+   * The property is worth what was paid for it, so a bargain cannot be sold on at once for more.
    */
   property?: { typeId: string; pricePct: number; downPct: number; rented: boolean };
   /** Turns every mortgage into this kind, at today's rate. */
   refinance?: 'fixed' | 'variable';
   /** Sells the home the player lives in, repays its mortgage, and makes them a tenant. Untaxed. */
   sellHome?: boolean;
-  /** Changes the value of the home the player lives in, in percent. */
-  homeValuePct?: number;
+  /** Adds this much to the value of the home the player lives in. A fixed amount, so a grand home gains no more than a small one. */
+  homeValue?: Cents;
   /** Takes away a percent of the deposit or of every holding in one asset class. */
   lose?: { what: AssetClass | 'deposit'; pct: number };
   /** Raises the lowest lifestyle tier the player can choose. */
@@ -551,9 +554,16 @@ export interface PlayerState {
   /** Business profit and other recurring passive income. */
   extraPassiveAnnual: Cents;
   statusPoints: number;
+  /**
+   * The status of every round played so far, added up, each as it stood once that round's orders
+   * had run. The score uses the average, so status has to be lived with: buying it in the last
+   * round counts for one round in twenty.
+   */
+  statusSum: number;
   nextId: number;
-  /** Consecutive rounds in which passive income covered expenses. */
+  /** Consecutive rounds in which passive income, after tax, covered expenses. */
   passiveStreak: number;
+  /** The round at which the current escape was won, or null. An escape is lost by the first round that does not cover. */
   escapedAtRound: number | null;
   /** Borrowing is refused while the current round is below this. */
   bankruptUntilRound: number;
@@ -679,6 +689,8 @@ export type GameEvent =
   | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
   | { kind: 'ledger'; line: LedgerLine; amount: Cents }
   | { kind: 'escaped'; round: number }
+  /** Passive income stopped covering expenses, and the escape is over. It can be won again. */
+  | { kind: 'escapeLost' }
   | { kind: 'bankrupt'; proceeds: Cents; debtsCleared: Cents }
   /**
    * A card was answered. `picked` is what the player asked for; `option` is what happened, which
@@ -741,6 +753,8 @@ export interface GameState {
   phase: Phase;
   /** Ids of the cards drawn for this round, in the order they are answered. */
   hand: string[];
+  /** How many cards of the hand are answered. The next one to answer is `hand[answered]`. */
+  answered: number;
   /** Saved position of the player's own random stream. */
   rng: { cards: RngState };
 }

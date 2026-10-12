@@ -1,5 +1,5 @@
 import { previewRound } from '@ratrace/engine';
-import type { CardPicks, Content, GameEvent, GameView, Order, RejectReason, RoundPreview } from '@ratrace/engine';
+import type { Content, GameEvent, GameView, Order, RejectReason, RoundPreview } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import type { GameSession, Lost, Sessions } from '@/session/types';
@@ -17,11 +17,8 @@ export interface RoundState {
   /** Net worth in start-of-game cents at the start and after each round played. */
   history: number[];
   stage: Stage;
-  /** Which card of the hand is on screen. */
-  cardIndex: number;
-  picks: CardPicks;
-  /** What the hand did, shown once it is answered. */
-  handEvents: GameEvent[];
+  /** What the card just answered did, while its result is on screen. The card to answer next is `view.hand[view.answered]`. */
+  cardEvents: GameEvent[];
   /** The basket: orders for this round, in the order they will run. None of them will be refused. */
   orders: Order[];
   /** What the round will pay and charge with the basket as it is. Null outside the finance phase. */
@@ -41,8 +38,10 @@ export interface RoundActions {
   abandon(): Promise<void>;
   /** From the news to the cards, or straight to the finances when there are none. */
   leaveNews(): void;
-  /** Answers the card on screen. After the last card the whole hand is played. */
+  /** Answers the card on screen. The game settles it at once and its result is shown. */
   pick(option: number): Promise<void>;
+  /** From a card's result to the next card, or to the finances after the last. */
+  afterCard(): void;
   toFinance(): void;
   /** Puts an order in the basket if the round would accept it. Returns false, and sets `refusal`, if not. */
   addOrder(order: Order): boolean;
@@ -68,9 +67,7 @@ const blank: RoundState = {
   view: null,
   history: [],
   stage: 'news',
-  cardIndex: 0,
-  picks: {},
-  handEvents: [],
+  cardEvents: [],
   orders: [],
   preview: null,
   refusal: null,
@@ -102,7 +99,8 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
       const view = opened.view();
       const base = { ...blank, status: 'playing' as const, lifeId: opened.lifeId, view, history: opened.history() };
       if (view.finished) set({ ...base, stage: 'end' });
-      else if (view.phase === 'cards') set({ ...base, stage: 'news' });
+      // A hand left half answered opens on its next card: the news were read before the first.
+      else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
       else set({ ...base, stage: 'finance', ...settle(view, []) });
     };
 
@@ -132,30 +130,35 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
       leaveNews() {
         const { view } = get();
         if (!view) return;
-        if (view.phase === 'cards' && view.hand.length > 0) set({ stage: 'cards', cardIndex: 0, picks: {}, handEvents: [] });
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
         else get().toFinance();
       },
 
       async pick(option) {
-        const { view, cardIndex, picks, busy, stage } = get();
+        const { view, busy, stage } = get();
         if (!view || !session || busy || stage !== 'cards') return;
-        const chosen = { ...picks, [view.hand[cardIndex]]: option };
-        if (cardIndex < view.hand.length - 1) {
-          set({ picks: chosen, cardIndex: cardIndex + 1 });
-          return;
-        }
-        set({ picks: chosen, busy: true });
+        set({ busy: true });
         try {
-          const result = await session.answerCards(chosen);
-          set({ view: result.view, handEvents: result.events, stage: 'outcome' });
+          const result = await session.answerCard(option);
+          set({ view: result.view, cardEvents: result.events, stage: 'outcome' });
         } finally {
           set({ busy: false });
         }
       },
 
+      afterCard() {
+        const { view, stage } = get();
+        if (!view || stage !== 'outcome') return;
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
+        else {
+          set({ cardEvents: [] });
+          get().toFinance();
+        }
+      },
+
       toFinance() {
         const { view } = get();
-        if (!view) return;
+        if (!view || view.finished || view.phase !== 'finance') return;
         set({ stage: 'finance', refusal: null, ...settle(view, []) });
       },
 
@@ -214,7 +217,7 @@ export function createGameStore({ sessions, content }: { sessions: Sessions; con
       next() {
         const { view } = get();
         if (!view) return;
-        set({ stage: view.finished ? 'end' : 'news', cardIndex: 0, picks: {}, handEvents: [], resolved: null });
+        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], resolved: null });
       },
     };
   });

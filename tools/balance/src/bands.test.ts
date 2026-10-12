@@ -36,6 +36,8 @@ describe('balance', () => {
     for (const bot of bots) expect(table[bot.id].topScorePct, bot.id).toBeLessThanOrEqual(40);
   });
 
+  // The gambler is the indexer with coins in place of the fund: same thrift, same work, no loans.
+  // So this band measures what holding crypto does, and nothing the bot does besides.
   it('ruins the crypto gambler in 30% to 60% of lives, and makes it the richest of all in at least one in ten', () => {
     expect(table.gambler.ruinedPct).toBeGreaterThanOrEqual(30);
     expect(table.gambler.ruinedPct).toBeLessThanOrEqual(60);

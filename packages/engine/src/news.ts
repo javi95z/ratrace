@@ -53,11 +53,16 @@ const others = <T>(all: readonly T[], real: T, rng: Rng): T => {
   return rest[rng.int(rest.length)];
 };
 
-/** A headline on the same topic that is wrong. */
-function falsehood(real: Headline, rng: Rng): Headline {
+/**
+ * A headline on the same topic that is wrong. A false regime is one that could have followed the
+ * current one, where there is such a regime: a forecast of something impossible would give itself away.
+ */
+function falsehood(content: Content, real: Headline, now: WorldState, rng: Rng): Headline {
   switch (real.topic) {
-    case 'regime':
-      return { topic: 'regime', regime: others(REGIMES, real.regime, rng) };
+    case 'regime': {
+      const reachable = content.market.regimeTransitions[now.regime].filter(([to, weight]) => weight > 0 && to !== real.regime).map(([to]) => to);
+      return { topic: 'regime', regime: reachable.length > 0 ? reachable[rng.int(reachable.length)] : others(REGIMES, real.regime, rng) };
+    }
     case 'crypto':
       return { topic: 'crypto', phase: others(PHASES, real.phase, rng) };
     case 'rates':
@@ -95,7 +100,7 @@ export function writeNews(seed: string, content: Content, timeline: WorldState[]
               ? { topic, phase: now.cryptoPhase }
               : { topic, trend: 'flat' };
       const real = truth(content, about, now, next);
-      news.push(rng.chance(rules.newsTruthPct) ? real : falsehood(real, rng));
+      news.push(rng.chance(rules.newsTruthPct) ? real : falsehood(content, real, now, rng));
     }
     now.news = news;
   }

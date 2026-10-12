@@ -76,6 +76,7 @@ export function validateCards(c: Content): string[] {
     minFinanceSkill: skill, maxFinanceSkill: skill,
     flags: flagList, notFlags: flagList,
     holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
+    insured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
   };
   const triggerChecks: Record<string, Check> = {
@@ -107,8 +108,8 @@ export function validateCards(c: Content): string[] {
 
   const effectChecks: Record<string, Check> = {
     cash: whole, cashSalaryPct: whole, cashNetWorthPct: whole, salaryModPct: whole, salaryBoostPct: whole,
-    careerSkill: whole, financeSkill: whole, status: whole, homeValuePct: whole,
-    loan: positive, pension: positive,
+    careerSkill: whole, financeSkill: whole, status: whole,
+    loan: positive, pension: positive, homeValue: positive,
     focus: (value) => (isWhole(value) && value >= 0 && value <= 10 ? null : 'needs focus from 0 to 10'),
     children: (value) => (isWhole(value) && value >= 1 && value <= 4 ? null : 'needs children from 1 to 4'),
     lifestyleFloor: (value) => ([0, 1, 2, 3].includes(value as number) ? null : 'has a lifestyle floor that is not 0, 1, 2 or 3'),
@@ -132,7 +133,7 @@ export function validateCards(c: Content): string[] {
     endRecurring: nameList, setFlags: nameList, clearFlags: nameList,
     job: jobCheck,
     moveCity: oneOf(cities, 'city'),
-    partner: (value) => (value === null || (isRecord(value) && within(value.salaryPct, 0, 10_000)) ? null : 'needs a non-negative partner salary'),
+    partner: (value) => (value === null || (isRecord(value) && isCount(value.salaryPct)) ? null : 'needs a whole, non-negative partner salary'),
     buyItem: (value) => {
       const deal = isRecord(value) ? value : {};
       if (!items.includes(deal.itemId as string)) return `names an unknown item: ${String(deal.itemId)}`;

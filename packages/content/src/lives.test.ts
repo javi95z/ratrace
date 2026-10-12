@@ -214,7 +214,16 @@ describe('whole lives on the v1 content', () => {
           for (const property of held.properties) moves += moved(property.value, after.propertyReturnBp[property.cityId]);
           // The pension follows the MSCI World fund and reinvests its 1.8% yield for two years.
           moves += moved(held.pension, after.assetReturnBp.msci_world) + Math.round((held.pension * 360) / 10_000);
-          const items = itemsValue(result.state.player) - itemsValue(answered.player);
+          // Items: what the orders did to their value, then the rule for a round of ageing, written out here:
+          // a durable moves by its own drift and by inflation; nothing else has a value.
+          const now = answered.timeline[answered.round];
+          let items = itemsValue(held) - itemsValue(answered.player);
+          for (const owned of held.life.items) {
+            const item = content.items.find((i) => i.id === owned.itemId);
+            if (!item || item.kind !== 'durable') continue;
+            const drifted = Math.floor((owned.value * (10_000 + item.resaleDriftBp)) / 10_000);
+            items += Math.floor((drifted * after.priceLevel) / now.priceLevel) - owned.value;
+          }
 
           expect(netWorth(result.state.player) - netWorth(answered.player)).toBe(flows + moves + items);
           checked += 1;
@@ -223,6 +232,31 @@ describe('whole lives on the v1 content', () => {
       { numRuns: 80, seed: SEED },
     );
     expect(checked).toBeGreaterThan(1_200);
+  });
+
+  it('never make the player richer by placing orders: no order creates wealth', () => {
+    let rounds = 0;
+    fc.assert(
+      fc.property(life, (input) => {
+        play(input, (answered, orders) => {
+          const after = previewRound(content, answered, { orders }).player;
+          expect(netWorth(after)).toBeLessThanOrEqual(netWorth(answered.player));
+          rounds += 1;
+        });
+      }),
+      { numRuns: 60, seed: SEED },
+    );
+    expect(rounds).toBe(1_200);
+  });
+
+  it('cannot be gamed by buying and selling the same thing in one round, whatever the thing', () => {
+    const rich = createGame({ content, start: { ...lives[0].start, cash: 100_000_000_00 } }, 'flip');
+    const state = rich.phase === 'cards' ? applyCards(content, rich, {}).state : rich;
+    for (const item of content.items) {
+      const orders: Order[] = [{ type: 'buyItem', itemId: item.id }, { type: 'sellItem', itemId: item.id }];
+      const after = previewRound(content, state, { orders }).player;
+      expect(after.cash, item.id).toBeLessThanOrEqual(state.player.cash);
+    }
   });
 
   it('account for every dollar a hand of cards moves in or out of cash', () => {

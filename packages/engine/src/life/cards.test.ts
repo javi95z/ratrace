@@ -267,7 +267,7 @@ describe('applyCards', () => {
     expect(result.state.player.debts).toEqual([{ id: 'debt-1', kind: 'creditCard', principal: 200_000, fixedRateBp: 0, roundsLeft: 0 }]);
   });
 
-  it('keeps an option that brings money in open to a player already in the red', () => {
+  it('settles each card before the next, so a windfall does not undo an earlier bill', () => {
     const bill = card('bill', { options: [{ effects: { cash: -300_000 } }, {}] });
     const windfall = card('windfall', { options: [{}, { effects: { cash: 100_000 } }] });
     const content = contentWith([bill, windfall]);
@@ -275,7 +275,9 @@ describe('applyCards', () => {
     state = { ...state, hand: ['bill', 'windfall'] };
     const result = applyCards(content, state, { windfall: 1 });
     expect(cardEvents(result.events)[1]).toMatchObject({ cardId: 'windfall', picked: 1, option: 1, cash: 100_000 });
-    expect(result.state.player.debts[0].principal).toBe(200_000);
+    // The bill went on the credit card as soon as its card was answered. The windfall is cash, to repay it with or not.
+    expect(result.state.player.debts[0].principal).toBe(300_000);
+    expect(result.state.player.cash).toBe(100_000);
   });
 
   it('rolls an outcome from the player’s own stream', () => {

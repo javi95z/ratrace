@@ -20,7 +20,7 @@ export const cards: Record<string, CardText> = {
   career_competitor_offer: c('Llama la competencia', 'La empresa rival te quiere, y ofrece más.', [
     'Ser leal',
     'Aceptar el puesto',
-    ['Enseñársela a tu jefe', 'A mediodía llega la contraoferta.', 'Tu jefe te desea suerte. Te quedas, incómodo.', 'Ahora eres «riesgo de fuga». El bonus se olvida de ti.'],
+    ['Enseñársela a tu jefe', 'A mediodía llega la contraoferta.', 'Tu jefe te desea suerte. Te quedas, y la incomodidad se nota.', 'Ahora eres «riesgo de fuga». El bonus se olvida de ti.'],
   ]),
   career_relocation: c('Un ascenso con letra pequeña', 'El ascenso es tuyo. La mesa está en {city:london}.', [
     'Rechazarlo',
@@ -28,7 +28,7 @@ export const cards: Record<string, CardText> = {
   ]),
   career_overtime_crunch: c('Semanas de entrega', 'Han adelantado la fecha. Alguien tiene que quedarse hasta tarde un mes.', [
     ['Hacer lo justo', 'Nadie se da cuenta.', 'Alguien se ha dado cuenta.'],
-    'Echar las horas',
+    'Echar horas',
   ]),
   career_layoff: c('Una ronda de despidos', 'En tu calendario aparece una reunión general sin orden del día.', [
     'Aceptar la indemnización',
@@ -52,7 +52,7 @@ export const cards: Record<string, CardText> = {
   ]),
   career_shares_vs_salary: c('Acciones o sueldo', 'Tu subida puede llegar en efectivo cada mes o en acciones que se liberan en dos años.', [
     'Coger el efectivo',
-    ['Coger las acciones', 'La empresa se dispara. Tú también.', 'Un resultado decente. Más o menos lo que habría sido el efectivo.', 'Las acciones se liberan valiendo menos.'],
+    ['Coger las acciones', 'La empresa se dispara. Tú también.', 'Un resultado decente. Más o menos lo que habría valido la subida.', 'Las acciones se liberan valiendo menos.'],
   ]),
   career_remote_work: c('Teletrabajo aprobado', 'Puedes trabajar desde casa para siempre, si quieres.', [
     'Seguir yendo a la oficina',
@@ -102,9 +102,9 @@ export const cards: Record<string, CardText> = {
     'Pasar',
     'Aceptarlo',
   ]),
-  biz_self_employed: c('Hacerte autónomo', 'Podrías hacer tu trabajo para tres clientes en vez de para un jefe.', [
+  biz_self_employed: c('Trabajar por tu cuenta', 'Podrías hacer tu trabajo para tres clientes en vez de para un jefe.', [
     'Seguir con la nómina',
-    ['Hacerte autónomo', 'Los clientes hacen cola. Subes tus tarifas.', 'Sale más o menos igual, con más papeleo.', 'Dos clientes pagan tarde y uno no paga.'],
+    ['Darte de alta por tu cuenta', 'Los clientes hacen cola. Subes tus tarifas.', 'Sale más o menos igual, con más papeleo.', 'Dos clientes pagan tarde y uno no paga.'],
   ]),
   biz_bar: c('Un bar propio', 'Se traspasa el bar de la esquina. El dueño quiere dejarlo antes de primavera.', [
     'Pasar de largo',
@@ -126,7 +126,7 @@ export const cards: Record<string, CardText> = {
   biz_cofounder: c('La propuesta del socio', 'Un excompañero brillante monta una empresa y te quiere dentro.', [
     'Desearle suerte',
     ['Poner dinero', 'La compran. Tu parte se multiplica por nueve.', 'Una venta modesta. Recuperas lo puesto y algo más.', 'La empresa cierra.'],
-    ['Entrar como cofundador', 'La compran. Dinero que te cambia la vida.', 'Una venta pequeña y una historia muy buena.', 'Cierra. Sales más sabio.'],
+    ['Entrar en el equipo fundador', 'La compran. Dinero que te cambia la vida.', 'Una venta pequeña y una historia muy buena.', 'Cierra. Sales con más experiencia.'],
   ]),
   biz_acquisition: c('Una oferta por el negocio', 'Una empresa más grande quiere comprarte. La cifra va en serio.', [
     'Quedarte con el negocio',
@@ -173,7 +173,7 @@ export const cards: Record<string, CardText> = {
     ['Reservar una unidad', 'Vendes el contrato con beneficio antes de que la construyan.', 'Recuperas la señal, tarde.', 'El promotor deja de contestar. Recuperas una parte.'],
   ]),
   inv_guru_course: c('El gurú del trading', 'Publica desde un deportivo alquilado y su curso está «casi agotado».', [
-    'Seguir bajando',
+    'Pasar de largo',
     ['Comprar el curso', 'Bajo el ruido hay una buena lección sobre el riesgo.', 'Seis horas de frases motivadoras.'],
   ]),
   inv_crowdfunding: c('Crowdfunding inmobiliario', 'Una plataforma te deja comprar un trozo de un edificio en alquiler.', [
@@ -184,7 +184,7 @@ export const cards: Record<string, CardText> = {
   // Vivienda
   house_rent_hike: c('Sube el alquiler', 'Una carta del casero: «para ajustarlo al mercado».', [
     'Pagar',
-    ['Negociar', 'Prefiere conservar a un buen inquilino.', 'No cede ni un euro.'],
+    ['Negociar', 'Prefiere conservar a un buen inquilino.', 'No cede ni un céntimo.'],
   ]),
   house_first_flat: c('Tu primer piso', 'Una ayuda para primera vivienda te deja entrar con la décima parte del precio.', [
     'Seguir de alquiler',
@@ -270,7 +270,7 @@ export const cards: Record<string, CardText> = {
 
   // Familia
   fam_dating: c('Empezar a salir con alguien', 'Una amiga quiere presentarte a alguien. Se te han acabado las excusas.', [
-    'Seguir soltero',
+    'Seguir sin pareja',
     'Decir que sí',
   ]),
   fam_wedding: c('La boda', 'Te casas. La única duda es cómo.', [
@@ -288,7 +288,7 @@ export const cards: Record<string, CardText> = {
   ]),
   fam_sibling_loan: c('Tu hermano necesita dinero', '«Solo hasta el verano.»', [
     'Decir que no',
-    ['Prestárselo', 'Te lo devuelve entero, con una botella de vino.', 'Nadie vuelve a mencionarlo.'],
+    ['Prestárselo', 'Te lo devuelve entero, con una botella de vino.', 'No te lo devuelve, pero no olvida que estuviste ahí.'],
     'Regalarle una cantidad menor',
   ]),
   fam_cosign: c('Avalar un préstamo', 'Tu amigo de toda la vida necesita un avalista.', [
@@ -300,10 +300,10 @@ export const cards: Record<string, CardText> = {
     'Mandar dinero cada mes',
     'Pagar a una cuidadora',
   ]),
-  fam_inheritance: c('Una herencia', 'Tu abuela te ha dejado algo, y una nota que dice «sé sensato».', [
+  fam_inheritance: c('Una herencia', 'Tu abuela te ha dejado algo, y una nota que dice «usa la cabeza».', [
     'Coger el dinero',
     'Meterlo todo en un fondo indexado',
-    'Quedarte con su pisito',
+    'Usarlo de entrada para un piso de alquiler',
   ]),
   fam_divorce: c('Divorcio', 'Se veía venir desde hace tiempo.', [
     'Llegar a un acuerdo discreto',
@@ -320,6 +320,7 @@ export const cards: Record<string, CardText> = {
   health_illness: c('Una enfermedad grave', 'Pruebas, un diagnóstico y un tratamiento con precio.', [
     'Ir por la pública y esperar',
     'Ir por la privada, ya',
+    'Cobrar tu seguro de vida',
   ]),
   health_burnout: c('Agotamiento', 'Llevas una hora mirando el mismo correo.', [
     'Seguir tirando',
@@ -411,7 +412,7 @@ export const cards: Record<string, CardText> = {
     'Comprar uno para alquilar',
   ]),
   world_tech_bubble: c('Manía tecnológica', 'De repente todas las empresas son tecnológicas.', [
-    'Seguir diversificado',
+    'Mantener la cartera repartida',
     'Subirte con {asset:nvidia}',
   ]),
   world_ai_boom: c('El auge de la IA', 'Herramientas nuevas cada semana. La mitad de tu trabajo podría hacerse de otra manera.', [
@@ -436,7 +437,7 @@ export const cards: Record<string, CardText> = {
   // Impuestos
   tax_advisor: c('Contratar a un asesor fiscal', 'Una amiga jura que la suya se pagó sola el primer año.', [
     'Hacerlo tú',
-    ['Contratar a una', 'Encuentra deducciones que no sabías que existían.', 'Este año no hay nada. Aun así, estás cubierto.'],
+    ['Contratar a una', 'Encuentra deducciones que no sabías que existían.', 'Este año no hay nada. Aun así, tienes las espaldas cubiertas.'],
   ]),
   tax_pension_topup: c('Aportación al plan de pensiones', 'Este año tu empresa iguala lo que aportes a tu plan.', [
     'Pasar',

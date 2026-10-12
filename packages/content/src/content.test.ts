@@ -40,6 +40,63 @@ describe('the v1 content', () => {
     for (const asset of content.assets) expect((asset.minFinanceSkill ?? 0) === 0, asset.id).toBe(assetKind(asset) === 'fund');
   });
 
+  it('never sells an item through a card for less than it could be sold on for at once', () => {
+    const flips: string[] = [];
+    for (const card of content.cards) {
+      for (const option of card.options) {
+        for (const effects of [option.effects ?? {}, ...(option.outcomes ?? []).map((o) => o.effects)]) {
+          const deal = effects.buyItem;
+          if (!deal || deal.pricePct === 0) continue;
+          const item = content.items.find((i) => i.id === deal.itemId);
+          if (item && item.kind === 'durable' && deal.pricePct < item.resaleStartPct) flips.push(`${card.id}: ${item.id} at ${deal.pricePct}%`);
+        }
+      }
+    }
+    expect(flips).toEqual([]);
+  });
+
+  it('gives every insurance a card that it softens or opens', () => {
+    const used = new Set<string>();
+    for (const card of content.cards) {
+      for (const option of card.options) {
+        if (option.when?.insured) used.add(option.when.insured);
+        for (const effects of [option.effects ?? {}, ...(option.outcomes ?? []).map((o) => o.effects)]) {
+          if (effects.protection?.insurance) used.add(effects.protection.insurance);
+        }
+      }
+    }
+    expect([...used].sort()).toEqual(['health', 'home', 'liability', 'life']);
+  });
+
+  it('reads every flag a life starts with, in a card or in the engine', () => {
+    const engine = new Set(['unstable_pay', 'cheap_mortgage']);
+    const read = new Set<string>();
+    const note = (when: { flags?: string[]; notFlags?: string[] } | undefined) => {
+      for (const flag of [...(when?.flags ?? []), ...(when?.notFlags ?? [])]) read.add(flag);
+    };
+    for (const card of content.cards) {
+      note(card.when);
+      for (const option of card.options) {
+        note(option.when);
+        for (const effects of [option.effects ?? {}, ...(option.outcomes ?? []).map((o) => o.effects)]) {
+          if (effects.protection?.flag) read.add(effects.protection.flag);
+        }
+      }
+    }
+    for (const life of lives) {
+      for (const flag of life.start.life?.flags ?? []) expect(engine.has(flag) || read.has(flag), `${life.id}: ${flag}`).toBe(true);
+    }
+  });
+
+  it('keeps the numbers the spec names for a life and for bankruptcy', () => {
+    expect(content.rounds).toBe(20);
+    expect(content.yearsPerRound).toBe(2);
+    expect(content.debt.bankruptcyStatusPenalty).toBe(25);
+    expect(content.lifestyleMultiplierPct).toEqual([70, 100, 140, 200]);
+    // A crypto winter takes three quarters: the one number that holds the gambler's band (spec 3.7).
+    expect(content.market.cryptoMeanBp.winter).toBe(-7_500);
+  });
+
   it('starts every life cleanly', () => {
     for (const life of lives) {
       expect(validateStart(content, life.start), life.id).toEqual([]);

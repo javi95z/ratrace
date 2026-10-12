@@ -147,7 +147,8 @@ export function validateContent(c: Content): string[] {
     if (!idAllowed(item.ladder)) errors.push(`item ${item.id} has a ladder name that is not allowed`);
     if (!isCount(item.price) || !isCount(item.upkeepAnnual)) errors.push(`item ${item.id} needs a whole, non-negative price and upkeep`);
     if (!isCount(item.status)) errors.push(`item ${item.id} needs a whole, non-negative status`);
-    if (!within(item.resaleStartPct, 0, 200)) errors.push(`item ${item.id} has a resale percentage outside 0..200`);
+    // Never above 100: an item worth more than it cost the moment it is bought could be bought and sold for a profit all day.
+    if (!within(item.resaleStartPct, 0, 100)) errors.push(`item ${item.id} has a resale percentage outside 0..100`);
     if (!isWhole(item.resaleDriftBp) || item.resaleDriftBp <= -10_000) {
       errors.push(`item ${item.id} has a resale drift that is not a whole number above -10000`);
     }
@@ -163,9 +164,11 @@ export function validateContent(c: Content): string[] {
   for (const field of ['childRounds', 'financeExperienceRounds']) {
     if (!(isWhole(life[field]) && life[field] >= 1)) errors.push(`life.${field} must be a positive whole number`);
   }
-  for (const field of ['jobHuntChancePct', 'lesserItemPct', 'unstablePayPct']) {
+  for (const field of ['jobHuntChancePct', 'lesserItemPct']) {
     if (!within(life[field], 0, 100)) errors.push(`life.${field} must be between 0 and 100`);
   }
+  // It is added to a whole-number percentage of pay, so it must be whole too.
+  if (!(isCount(life.unstablePayPct) && life.unstablePayPct <= 100)) errors.push('life.unstablePayPct must be a whole number from 0 to 100');
   const listOf = (x: unknown, length: number, ok: (v: unknown) => boolean) => Array.isArray(x) && x.length === length && x.every(ok);
   if (!listOf(life.rentTierHousingPct, 2, (v) => within(v, 0, 100))) {
     errors.push('life.rentTierHousingPct must be two numbers between 0 and 100');

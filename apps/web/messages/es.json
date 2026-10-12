@@ -65,6 +65,7 @@
     "results": "Qué ha pasado",
     "chose": "Elegiste: {label}",
     "toFinance": "A tus finanzas",
+    "next": "Siguiente carta",
     "swipe": "Desliza la carta o toca una opción"
   },
   "effects": {
@@ -95,7 +96,7 @@
     "refinanceFixed": "La hipoteca pasa a fija",
     "refinanceVariable": "La hipoteca pasa a variable",
     "sellHome": "Vendes tu casa",
-    "homeValue": "Valor de tu casa {value} %",
+    "homeValue": "Valor de tu casa {amount}",
     "lose": "Pierdes el {pct} % de tu {what}",
     "savings": "ahorro",
     "lifestyleFloor": "Estilo de vida mínimo: {tier}"
@@ -266,6 +267,8 @@
     "moved": "Te has mudado a {city}.",
     "escaped": "¡Has salido de la rueda!",
     "escapedHint": "Tus ingresos pasivos pagan tu vida. A partir de ahora, trabajar es una elección.",
+    "escapeLost": "De vuelta a la rueda",
+    "escapeLostHint": "Tus ingresos pasivos ya no pagan tu vida. Vuelve a cubrirla y saldrás otra vez.",
     "bankrupt": "Quiebra",
     "bankruptHint": "Se vende todo y se cancelan todas las deudas. Los bancos se acordarán.",
     "refused": "No se hizo: {reason}",
@@ -307,6 +310,7 @@
     "score": "Puntuación",
     "wealth": "Riqueza",
     "status": "Estatus",
+    "statusHint": "El estatus cuenta como lo viviste: la media de toda la vida.",
     "bonus": "Bonus por salir ×{multiplier}",
     "noBonus": "Sin bonus por salir",
     "never": "Nunca saliste de la rueda.",

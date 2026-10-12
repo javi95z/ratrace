@@ -63,7 +63,8 @@ function executeSellItem(p: PlayerState, itemId: string, ctx: OrderContext): Rej
   const index = p.life.items.findIndex((owned) => owned.itemId === itemId);
   if (index < 0) return 'not-owned';
   const owned = p.life.items[index];
-  if (owned.roundsLeft !== null) return 'cannot-sell';
+  // An experience is already spent, and what only a card can give, a degree for one, is not the player's to sell.
+  if (owned.roundsLeft !== null || ctx.content.items.some((item) => item.id === itemId && item.cardOnly === true)) return 'cannot-sell';
   p.cash += owned.value;
   ctx.tally.itemsSold += owned.value;
   p.life.items.splice(index, 1);

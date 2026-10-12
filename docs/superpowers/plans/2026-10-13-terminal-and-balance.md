@@ -23,7 +23,7 @@ A bot is two pure functions: one answers a hand of cards, one writes the orders 
 |---|---|
 | Saver | Lives cheaply, studies, keeps everything in the savings deposit |
 | Indexer | Lives cheaply, studies, puts every spare dollar in an index fund and never sells |
-| Crypto gambler | Learns just enough to buy crypto, then puts everything in it, on borrowed money too, and takes every risky card |
+| Crypto gambler | The indexer's twin: as thrifty and as hard-working, with no loans, but everything goes into coins from the day its finance skill allows, and it never sells one |
 | Status chaser | Lives lavishly and buys the best thing it can afford every round, on credit if it must |
 | Property leverager | Saves a down payment, buys with the largest mortgage, rents out, repeats |
 | Random | Random answers and random orders |
@@ -34,9 +34,11 @@ Every bot plays the three default lives over the same seeds.
 
 - The indexer escapes the rat race in 25% to 45% of lives.
 - No bot has the top score in more than 40% of lives.
-- The crypto gambler goes bankrupt in 30% to 60% of lives.
+- The crypto gambler is ruined in 30% to 60% of lives and the richest of all bots in at least 10%. Ruined means ending with less than half the saver's net worth on the same life and seed.
 
-The test runs a fixed set of seeds, so its result never changes between runs or machines. `pnpm balance` runs a larger set and prints the full table. When the game leaves a band, numbers in `packages/content` are tuned, never the bots and never the band.
+The test runs a fixed set of seeds, so its result never changes between runs or machines. `pnpm balance` runs a larger set and prints the full table. When the game leaves a band, numbers in `packages/content` are tuned, not the bots.
+
+That sentence first read "never the bots and never the band", and both halves were broken while building: the third band was changed from bankruptcies to ruin (spec 3.7 says why), and the gambler was reshaped several times. The review of this step showed that the band then measured the gambler's habits, not crypto. The gambler is now the plain twin described above, every bot is handed a view of the game instead of the game, and the band is held by one crypto parameter.
 
 ### Terminal game
 

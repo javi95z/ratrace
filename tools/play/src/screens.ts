@@ -3,18 +3,20 @@ import {
   cashflow,
   debtRateBp,
   effectiveTax,
-  finalScore,
   focusLeft,
   headlineHeld,
   homeOf,
   indexed,
   netWorth,
   previewCard,
-  propertyPrice,
+  quoteItem,
+  quoteMove,
+  quoteProperty,
   realNetWorth,
+  scoreBreakdown,
 } from '@ratrace/engine';
 import type { CardDef, Content, Effects, GameEvent, GameState, Headline, RoundPreview } from '@ratrace/engine';
-import type { ContentText, Names } from '@ratrace/content';
+import type { ContentText, Locale, Names } from '@ratrace/content';
 import { padEnd, padStart } from './format';
 import type { Format } from './format';
 import type { Ui } from './strings';
@@ -24,6 +26,7 @@ export interface Pen {
   content: Content;
   text: ContentText;
   names: Names;
+  locale: Locale;
   ui: Ui;
   fmt: Format;
 }
@@ -151,8 +154,6 @@ export function portfolio(pen: Pen, state: GameState): string[] {
 
 export function shop(pen: Pen, state: GameState): string[] {
   const { ui, fmt, names, text, content } = pen;
-  const p = state.player;
-  const world = state.timeline[state.round];
   const c = ui.columns;
   const lines = [` ${ui.headers.shop}`];
   let ladder = '';
@@ -161,24 +162,26 @@ export function shop(pen: Pen, state: GameState): string[] {
       ladder = item.ladder;
       lines.push(`  ${text.ladders[ladder]}`);
     }
-    const owned = p.life.items.some((x) => x.itemId === item.id) ? `  ✓ ${c.owned}` : '';
-    const upkeep = item.upkeepAnnual > 0 ? `  ${c.upkeep} ${fmt.money(indexed(item.upkeepAnnual, world))}${ui.perYear}` : '';
-    lines.push(
-      `   ${padStart(String(i + 1), 2)}. ${padEnd(names.items[item.id], 28)}${padStart(fmt.money(indexed(item.price, world)), 12)}  ${ui.status} +${item.status}${upkeep}${owned}`,
-    );
+    const quote = quoteItem(content, state, item.id);
+    const owned = quote.owned ? `  ✓ ${c.owned}` : '';
+    const upkeep = quote.upkeepAnnual > 0 ? `  ${c.upkeep} ${fmt.money(quote.upkeepAnnual)}${ui.perYear}` : '';
+    const price = quote.forSale ? fmt.money(quote.price) : c.cardOnly;
+    lines.push(`   ${padStart(String(i + 1), 2)}. ${padEnd(names.items[item.id], 28)}${padStart(price, 12)}  ${ui.status} +${item.status}${upkeep}${owned}`);
   });
   return lines;
 }
 
 export function homes(pen: Pen, state: GameState): string[] {
   const { ui, fmt, text, names, content } = pen;
-  const p = state.player;
-  const world = state.timeline[state.round];
-  const lines = [` ${ui.headers.homes} · ${names.cities[p.cityId]}`];
+  const c = ui.columns;
+  const lines = [` ${ui.headers.homes} · ${names.cities[state.player.cityId]}`];
   for (const type of content.propertyTypes) {
-    const price = propertyPrice(content, world, p.cityId, type.id);
-    const down = price - Math.round((price * content.debt.mortgageMaxLtvBp) / 10_000);
-    lines.push(`  ${padEnd(text.propertyTypes[type.id], 16)}${padStart(fmt.money(price), 14)}   ${ui.columns.down} ${fmt.money(down)}   ${ui.status} +${type.status}`);
+    // The tax is paid in cash on top of the down payment, so the cash a purchase takes is the sum of the two.
+    const quote = quoteProperty(content, state, type.id);
+    lines.push(
+      `  ${padEnd(text.propertyTypes[type.id], 16)}${padStart(fmt.money(quote.price), 14)}   ${c.down} ${fmt.money(quote.minDown)}   ` +
+        `${c.cashNeeded} ${fmt.money(quote.minDown + quote.purchaseTax)}   ${ui.status} +${type.status}`,
+    );
   }
   return lines;
 }
@@ -190,7 +193,7 @@ export function cities(pen: Pen, state: GameState): string[] {
   const lines = [` ${ui.headers.cities}`];
   for (const city of content.cities) {
     const tax = effectiveTax(city, world);
-    const move = Math.floor((indexed(city.livingCostAnnual, world) * content.life.moveCostPct) / 100);
+    const move = quoteMove(content, state, city.id).cost;
     lines.push(`  ${names.cities[city.id]}${city.id === state.player.cityId ? ' ●' : ''} — ${text.cities[city.id].tagline}`);
     lines.push(
       `    ${c.medianSalary} ${fmt.money(indexed(city.medianSalaryAnnual, world))}   ${c.living} ${fmt.money(indexed(city.livingCostAnnual, world))}   ` +
@@ -264,7 +267,7 @@ export function effectPhrases(pen: Pen, state: GameState, effects: Effects | und
   if (effects.property) out.push(`${e.buyHome} ${text.propertyTypes[effects.property.typeId].toLowerCase()}${effects.property.rented ? ` ${e.toRentOut}` : ''}`);
   if (effects.refinance) out.push(e.refinance[effects.refinance === 'fixed' ? 0 : 1]);
   if (effects.sellHome) out.push(e.sellHome);
-  if (effects.homeValuePct) out.push(`${e.homeValue} ${signed(effects.homeValuePct)}%`);
+  if (effects.homeValue) out.push(`${e.homeValue} ${fmt.signed(indexed(effects.homeValue, world))}`);
   if (effects.lose) out.push(e.lose(effects.lose.pct, effects.lose.what === 'deposit' ? e.savingsWord : text.assetClasses[effects.lose.what].toLowerCase()));
   if (effects.lifestyleFloor !== undefined) out.push(`${e.lifestyleFloor} ${text.lifestyleTiers[effects.lifestyleFloor].toLowerCase()}`);
   return out;
@@ -332,6 +335,9 @@ export function ledger(pen: Pen, events: GameEvent[]): string[] {
       case 'escaped':
         lines.push(`  ★★★ ${ui.escaped}`);
         break;
+      case 'escapeLost':
+        lines.push(`  ▼ ${ui.escapeLost}`);
+        break;
       case 'bankrupt':
         lines.push(`  ✖ ${ui.bankrupt}`);
         break;
@@ -345,9 +351,8 @@ export function ledger(pen: Pen, events: GameEvent[]): string[] {
 export function ending(pen: Pen, state: GameState): string[] {
   const { ui, fmt, content } = pen;
   const p = state.player;
-  const total = finalScore(content, state);
-  const multiplier = p.escapedAtRound === null ? 100 : content.scoring.escapeBase + content.scoring.escapePerRoundLeft * (content.rounds - p.escapedAtRound);
-  const wealth = Math.round((total * 100) / multiplier) - p.statusPoints;
+  // The engine's own breakdown: nothing about the score is worked out here.
+  const score = scoreBreakdown(content, state);
   return [
     RULE,
     ` ${ui.theEnd} · ${ui.age} ${ageAt(pen, state.round)}`,
@@ -355,7 +360,8 @@ export function ending(pen: Pen, state: GameState): string[] {
     `  ${ui.netWorth}: ${fmt.money(netWorth(p))}`,
     `  ${ui.realNetWorth}: ${fmt.money(realNetWorth(state))}`,
     `  ${p.escapedAtRound === null ? ui.neverEscaped : `${ui.escapedAtAge} ${ageAt(pen, p.escapedAtRound)}.`}`,
-    `  ${ui.score}: (${ui.wealthPoints} ${wealth} + ${ui.statusPoints} ${p.statusPoints}) × ${(multiplier / 100).toFixed(2)} ${ui.escapeBonus.toLowerCase()} = ${fmt.number(total)}`,
+    `  ${ui.score}: (${ui.wealthPoints} ${score.wealth} + ${ui.statusPoints} ${score.status}) × ${(score.multiplierPct / 100).toFixed(2)} ${ui.escapeBonus.toLowerCase()} = ${fmt.number(score.total)}`,
+    `  ${ui.statusNote}`,
   ];
 }
 

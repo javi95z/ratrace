@@ -1,7 +1,7 @@
 // These tests damage saves on purpose.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
-import { applyCards, applyRound, createGame, ENGINE_VERSION, realNetWorth, stateHash } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, ENGINE_VERSION, realNetWorth, stateHash } from '@ratrace/engine';
 import type { GameState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { openSave, replay } from './save';
@@ -9,19 +9,24 @@ import type { RoundLog, SavedGame } from './types';
 
 const nurse = lives[0];
 
-/** Plays `rounds` rounds and returns the save a session would have written, with the cards of the next round answered. */
-function saved(rounds: number): SavedGame {
+/**
+ * Plays `rounds` rounds and returns the save a session would have written, with `answered` cards of
+ * the next round answered: all of them unless told otherwise.
+ */
+function saved(rounds: number, answered = Infinity): SavedGame {
   let state: GameState = createGame({ content, start: nurse.start }, 'save-seed');
   const log: RoundLog[] = [];
   const history = [realNetWorth(state)];
   for (let i = 0; i <= rounds; i++) {
-    const entry: RoundLog = { picks: null, orders: null };
-    log.push(entry);
-    if (state.phase === 'cards') {
-      entry.picks = Object.fromEntries(state.hand.map((id) => [id, 1]));
-      state = applyCards(content, state, entry.picks).state;
+    const entry: RoundLog = { picks: [], orders: null };
+    const limit = i === rounds ? answered : Infinity;
+    if (state.phase === 'cards' && limit > 0) log.push(entry);
+    while (state.phase === 'cards' && entry.picks.length < limit) {
+      entry.picks.push(1);
+      state = applyCard(content, state, 1).state;
     }
     if (i === rounds) break;
+    if (!log.includes(entry)) log.push(entry);
     entry.orders = [{ type: 'focus', action: 'studyCareer' }, { type: 'depositIn', amount: 10_000 }];
     state = applyRound(content, state, { orders: entry.orders }).state;
     history.push(realNetWorth(state));
@@ -48,12 +53,33 @@ describe('replay', () => {
     expect(fresh.phase).toBe('cards');
   });
 
+  it('rebuilds a hand left half answered, card by card', () => {
+    for (const answered of [0, 1, 2]) {
+      const save = saved(3, answered);
+      expect(save.state).toMatchObject({ round: 3, phase: 'cards', answered });
+      const again = replay(content, nurse.start, save.seed, save.log);
+      expect(stateHash(again.state)).toBe(stateHash(save.state));
+    }
+  });
+
+  it('plays a round whose hand was only partly answered as the engine did', () => {
+    const start = createGame({ content, start: nurse.start }, 'save-seed');
+    const one = applyCard(content, start, 1).state;
+    const played = applyRound(content, one, { orders: [] }).state;
+    const again = replay(content, nurse.start, 'save-seed', [{ picks: [1], orders: [] }]);
+    expect(stateHash(again.state)).toBe(stateHash(played));
+  });
+
   it('refuses a log that does not fit the game', () => {
-    expect(() => replay(content, nurse.start, 'save-seed', [{ picks: null, orders: [] }, { picks: null, orders: null }, { picks: null, orders: [] }])).toThrow(
+    expect(() => replay(content, nurse.start, 'save-seed', [{ picks: [], orders: [] }, { picks: [], orders: null }, { picks: [], orders: [] }])).toThrow(
       'the log goes on after a round that was never played',
     );
-    const tooLong = new Array<RoundLog>(25).fill({ picks: null, orders: [] });
+    const tooLong = new Array<RoundLog>(25).fill({ picks: [], orders: [] });
     expect(() => replay(content, nurse.start, 'save-seed', tooLong)).toThrow('the log is longer than a life');
+    const hand = createGame({ content, start: nurse.start }, 'save-seed').hand.length;
+    expect(() => replay(content, nurse.start, 'save-seed', [{ picks: new Array<number>(hand + 1).fill(0), orders: null }])).toThrow(
+      'the log answers more cards than the round had',
+    );
   });
 });
 
@@ -98,12 +124,36 @@ describe('openSave', () => {
     expect(stateHash(opened.save.state)).toBe(stateHash(save.state));
   });
 
+  it('does not trust a state that belongs to another card of the same hand', () => {
+    const save = saved(4, 2);
+    for (const other of [saved(4, 0), saved(4, 1), saved(4)]) {
+      const opened = open({ ...save, state: other.state });
+      if (!opened.ok) throw new Error('expected the save to be rebuilt');
+      expect(opened.repaired).toBe(true);
+      expect(opened.save.state.answered).toBe(2);
+      expect(stateHash(opened.save.state)).toBe(stateHash(save.state));
+    }
+    expect(open(JSON.parse(JSON.stringify(save)))).toEqual({ ok: true, repaired: false, save });
+  });
+
+  it('does not trust a state whose log has a round that was never played in the middle of it', () => {
+    const save = saved(3);
+    const holed = save.log.map((entry, i) => (i === 1 ? { ...entry, orders: null } : entry));
+    // Such a log cannot be played again, so the state it comes with cannot be checked: the save is lost,
+    // however sound the state and however well the rest of the record fits it.
+    expect(open({ ...JSON.parse(JSON.stringify(save)), log: holed })).toEqual({ ok: false, lost: 'damaged' });
+    expect(open({ ...JSON.parse(JSON.stringify(save)), log: holed, history: save.history.slice(0, 3) })).toEqual({ ok: false, lost: 'damaged' });
+  });
+
   it('gives up on a save that cannot be rebuilt either', () => {
     const save = saved(2);
     expect(open({ ...save, state: null, log: 'none' })).toEqual({ ok: false, lost: 'damaged' });
     expect(open({ ...save, state: null, seed: 7 })).toEqual({ ok: false, lost: 'damaged' });
     expect(open({ ...save, state: null, lifeId: 'pirate' })).toEqual({ ok: false, lost: 'damaged' });
-    expect(open({ ...save, state: null, log: [{ picks: null, orders: 'buy' }] })).toEqual({ ok: false, lost: 'damaged' });
+    expect(open({ ...save, state: null, log: [{ picks: [], orders: 'buy' }] })).toEqual({ ok: false, lost: 'damaged' });
+    for (const picks of [null, {}, 'first', [0.5], [-1], ['0'], [null]]) {
+      expect(open({ ...save, log: [{ picks, orders: null }] }), JSON.stringify(picks)).toEqual({ ok: false, lost: 'damaged' });
+    }
     for (const junk of [null, undefined, 'save', 42, [], {}]) expect(open(junk)).toEqual({ ok: false, lost: 'damaged' });
   });
 

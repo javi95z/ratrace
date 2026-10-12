@@ -189,7 +189,10 @@ export function checkBankruptcy(
   p.positions = {};
   p.properties = [];
   p.debts = [];
-  p.life.items = [];
+  // What has no sale value and is not a subscription stays: nobody repossesses a degree.
+  p.life.items = p.life.items.filter(
+    (owned) => owned.value === 0 && content.items.some((item) => item.id === owned.itemId && item.kind === 'durable'),
+  );
   p.lifestyleTier = p.life.minLifestyleTier;
   p.life.bonusStatus -= content.debt.bankruptcyStatusPenalty;
   p.bankruptUntilRound = completedRound + content.debt.bankruptcyLockRounds;

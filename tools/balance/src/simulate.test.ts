@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import type { Bot } from './bots';
 import { compare, playLife, seedsFor } from './simulate';
 
-const idle = (id: string): Bot => ({ id, picks: () => ({}), orders: () => [] });
+const idle = (id: string): Bot => ({ id, pick: () => 0, orders: () => [] });
 /** Saves nothing and lives lavishly: ends poor. */
-const spender: Bot = { id: 'spender', picks: () => ({}), orders: () => [{ type: 'setLifestyle', tier: 3 }] };
+const spender: Bot = { id: 'spender', pick: () => 0, orders: () => [{ type: 'setLifestyle', tier: 3 }] };
 const nurse = lives.filter((life) => life.id === 'nurse');
 
 describe('the simulator', () => {

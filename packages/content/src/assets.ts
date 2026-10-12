@@ -56,7 +56,9 @@ export const market: MarketParams = {
     winter: [['accumulation', 60], ['winter', 40]],
   },
   equityMeanBp: { expansion: 1_400, boom: 2_400, slowdown: 300, recession: -2_200, recovery: 1_800 },
-  cryptoMeanBp: { accumulation: 1_500, bull: 8_000, mania: 15_000, winter: -4_000 },
+  // A winter takes three quarters, as the real ones did. Held blindly through the cycle, coins lose more
+  // often than they win, and win enormously when they do: the timing is the whole game.
+  cryptoMeanBp: { accumulation: 1_500, bull: 8_000, mania: 15_000, winter: -7_500 },
   goldMeanBp: { expansion: 300, boom: 0, slowdown: 600, recession: 1_400, recovery: 200 },
   classVolBp: { equity: 1_400, crypto: 2_500, gold: 900 },
   rateDriftBp: { expansion: 50, boom: 100, slowdown: -25, recession: -150, recovery: -25 },

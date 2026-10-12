@@ -2,7 +2,7 @@ import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './econ
 import { flowsOf } from './flows';
 import type { Cents } from './money';
 import { PRICE_LEVEL_START } from './rates';
-import { scoreOf } from './scoring';
+import { escapeMultiplier, wealthPoints } from './scoring';
 import { newTally } from './tally';
 import type { Content, GameView, PlayerState } from './types';
 
@@ -22,9 +22,32 @@ export function realNetWorth(state: GameView): Cents {
   return Math.floor((netWorth(state.player) * PRICE_LEVEL_START) / world.priceLevel);
 }
 
-export function finalScore(content: Content, state: GameView): number {
+/** The status the score counts: the average over the rounds played, or the status held now before the first. */
+export function livedStatus(state: GameView): number {
   const p = state.player;
-  return scoreOf(realNetWorth(state), p.statusPoints, p.escapedAtRound, content);
+  return state.round === 0 ? p.statusPoints : Math.floor(p.statusSum / state.round);
+}
+
+export interface ScoreBreakdown {
+  /** Points for net worth in start-of-game dollars. */
+  wealth: number;
+  /** Status, averaged over the life. */
+  status: number;
+  /** 100 means no escape bonus. */
+  multiplierPct: number;
+  total: number;
+}
+
+/** The score and the three parts it is made of, so that no interface has to work them out again. */
+export function scoreBreakdown(content: Content, state: GameView): ScoreBreakdown {
+  const wealth = wealthPoints(realNetWorth(state), content.scoring.wealthBreakpoints);
+  const status = livedStatus(state);
+  const multiplierPct = escapeMultiplier(state.player.escapedAtRound, content.rounds, content.scoring);
+  return { wealth, status, multiplierPct, total: Math.floor(((wealth + status) * multiplierPct) / 100) };
+}
+
+export function finalScore(content: Content, state: GameView): number {
+  return scoreBreakdown(content, state).total;
 }
 
 /**
@@ -33,8 +56,7 @@ export function finalScore(content: Content, state: GameView): number {
  * this can be asked while the cards are still unanswered, so the rat-race bar always has a figure.
  */
 export function escapeProgress(content: Content, state: GameView): { passiveAfterTax: Cents; outgoings: Cents } {
-  const { passiveAfterTax, outgoings } = flowsOf(content, state.player, state.timeline[state.round], newTally());
-  return { passiveAfterTax, outgoings };
+  return flowsOf(content, state.player, state.timeline[state.round], newTally()).escape;
 }
 
 /** Yearly figures at the current world's rates, for the HUD. */

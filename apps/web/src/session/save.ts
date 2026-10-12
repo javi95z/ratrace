@@ -1,6 +1,6 @@
 import type { LifeDef } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
-import { applyCards, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks, realNetWorth } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks, realNetWorth } from '@ratrace/engine';
 import type { Content, GameState, StartConfig } from '@ratrace/engine';
 import { SAVE_FORMAT } from './types';
 import type { Lost, RoundLog, SavedGame } from './types';
@@ -26,7 +26,10 @@ export function replay(content: Content, start: StartConfig, seed: string, log: 
   let bankruptcies = 0;
 
   log.forEach((entry, i) => {
-    if (entry.picks !== null && state.phase === 'cards') state = applyCards(content, state, entry.picks).state;
+    for (const pick of entry.picks) {
+      if (state.phase !== 'cards') throw new Error('the log answers more cards than the round had');
+      state = applyCard(content, state, pick).state;
+    }
     if (entry.orders === null) {
       if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
       return;
@@ -45,23 +48,36 @@ function readLog(raw: unknown): RoundLog[] | null {
   for (const entry of raw) {
     if (!isRecord(entry)) return null;
     const { picks, orders } = entry;
-    if (picks !== null && !isRecord(picks)) return null;
+    if (!Array.isArray(picks) || !picks.every(isCount)) return null;
     if (orders !== null && !Array.isArray(orders)) return null;
-    log.push({ picks: picks as RoundLog['picks'], orders: orders as RoundLog['orders'] });
+    log.push({ picks, orders: orders as RoundLog['orders'] });
   }
   return log;
 }
 
-/** True if the stored state is a sound game that stands exactly where the log says the player is. */
-function stateFits(content: Content, state: unknown, seed: string, log: RoundLog[]): state is GameState {
+/** Where a log says the player is: the rounds played, and the cards answered in the round in progress. */
+interface Standing {
+  played: number;
+  answered: number;
+}
+
+/**
+ * Reads where a log stops. Only the round in progress may be unplayed, and it is the last entry
+ * if it is there at all; a log with an unplayed round in the middle cannot be played again, so it is null.
+ */
+function standingOf(log: RoundLog[]): Standing | null {
+  const pending = log.length > 0 && log[log.length - 1].orders === null ? log[log.length - 1] : null;
+  const played = pending === null ? log.length : log.length - 1;
+  if (log.slice(0, played).some((entry) => entry.orders === null)) return null;
+  return { played, answered: pending?.picks.length ?? 0 };
+}
+
+/** True if the stored state is a sound game that stands exactly where the log says the player is, to the very card. */
+function stateFits(content: Content, state: unknown, seed: string, at: Standing): state is GameState {
   try {
     const candidate = state as GameState;
     if (findInvariantBreaks(content, candidate).length > 0) return false;
-    const played = log.filter((entry) => entry.orders !== null).length;
-    if (candidate.seed !== seed || candidate.round !== played) return false;
-    const pending = log[log.length - 1];
-    const answered = pending !== undefined && pending.orders === null && pending.picks !== null;
-    return !(answered && candidate.phase !== 'finance');
+    return candidate.seed === seed && candidate.round === at.played && candidate.answered === at.answered;
   } catch {
     return false;
   }
@@ -89,7 +105,8 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
   const life = lives.find((candidate) => candidate.id === raw.lifeId);
   const log = readLog(raw.log);
   const seed = raw.seed;
-  if (!life || log === null || typeof seed !== 'string') return { ok: false, lost: 'damaged' };
+  const at = log === null ? null : standingOf(log);
+  if (!life || log === null || at === null || typeof seed !== 'string') return { ok: false, lost: 'damaged' };
 
   const header = {
     format: SAVE_FORMAT,
@@ -102,9 +119,8 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
     updatedAt: isCount(raw.updatedAt) ? raw.updatedAt : 0,
   } as const;
 
-  const played = log.filter((entry) => entry.orders !== null).length;
-  const historyFits = Array.isArray(raw.history) && raw.history.length === played + 1 && raw.history.every((x) => Number.isSafeInteger(x));
-  if (stateFits(content, raw.state, seed, log) && historyFits && isCount(raw.bankruptcies) && isCount(raw.updatedAt)) {
+  const historyFits = Array.isArray(raw.history) && raw.history.length === at.played + 1 && raw.history.every((x) => Number.isSafeInteger(x));
+  if (stateFits(content, raw.state, seed, at) && historyFits && isCount(raw.bankruptcies) && isCount(raw.updatedAt)) {
     return { ok: true, repaired: false, save: { ...header, history: raw.history as number[], bankruptcies: raw.bankruptcies, state: raw.state } };
   }
   try {

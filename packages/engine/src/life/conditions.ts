@@ -65,6 +65,7 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
     if (!owned) return false;
   }
   if (when.notItems !== undefined && life.items.some((x) => when.notItems?.includes(x.itemId))) return false;
+  if (when.insured !== undefined && !life.insurance[when.insured]) return false;
 
   if (when.regimes !== undefined && !when.regimes.includes(world.regime)) return false;
   if (when.cityPropertyReturnAtMostBp !== undefined) {

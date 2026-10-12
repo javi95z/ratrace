@@ -1,6 +1,6 @@
-import { propertyPrice } from '@ratrace/engine';
+import { quoteProperty } from '@ratrace/engine';
 import type { Content, FocusAction, GameState, InsuranceKind, Order } from '@ratrace/engine';
-import type { ContentText, Names } from '@ratrace/content';
+import type { ContentText, Locale, Names } from '@ratrace/content';
 import { plain } from './format';
 
 export type View = 'help' | 'me' | 'news' | 'market' | 'portfolio' | 'shop' | 'tax' | 'cities' | 'homes' | 'orders';
@@ -34,6 +34,8 @@ export interface Scene {
   state: GameState;
   names: Names;
   text: ContentText;
+  /** The language the player types amounts in. */
+  locale: Locale;
 }
 
 /** Every word a command answers to, in both languages. The first is the one the help shows. */
@@ -92,23 +94,43 @@ const wordOf = (typed: string): Word | undefined => {
   return (Object.keys(WORDS) as Word[]).find((word) => (WORDS[word] as readonly string[]).includes(key));
 };
 
+const SEPARATORS: Record<Locale, { thousands: string; decimal: string }> = {
+  en: { thousands: ',', decimal: '.' },
+  es: { thousands: '.', decimal: ',' },
+};
+const NUMBER_SHAPE = (thousands: string, decimal: string) => new RegExp(`^(?:\\d{1,3}(?:\\${thousands}\\d{3})+|\\d+)(?:\\${decimal}\\d+)?$`);
+
 /**
- * An amount in cents. Accepts 5000, 5,000, 5k, 1.5m, a percentage of `whole`, or "all".
- * Returns null for anything that is not a positive amount.
+ * A number as the player's language writes it: 12.345 is twelve thousand in Spanish and twelve
+ * and a bit in English. What cannot be read that way is read as the other language would, so
+ * 1.5k and 1,5k mean the same to everyone. Null if it is no number either way.
  */
-export function parseAmount(typed: string | undefined, whole: number): number | null {
+function readNumber(typed: string, locale: Locale): number | null {
+  for (const { thousands, decimal } of [SEPARATORS[locale], SEPARATORS[locale === 'en' ? 'es' : 'en']]) {
+    if (NUMBER_SHAPE(thousands, decimal).test(typed)) return Number(typed.split(thousands).join('').replace(decimal, '.'));
+  }
+  return null;
+}
+
+/**
+ * An amount in cents. Accepts 5000, 5,000, 5k, 1.5m, a percentage of `whole`, or "all", with the
+ * thousands and decimal marks of the player's language. Returns null for anything that is not a positive amount.
+ */
+export function parseAmount(typed: string | undefined, whole: number, locale: Locale = 'en'): number | null {
   if (typed === undefined) return null;
   const word = typed.toLowerCase();
   if (ALL.includes(word)) return whole > 0 ? whole : null;
-  const percent = /^(\d+(?:\.\d+)?)%$/.exec(word);
-  if (percent) {
-    const amount = Math.floor((whole * Number(percent[1])) / 100);
-    return Number(percent[1]) <= 100 && amount > 0 ? amount : null;
+  if (word.endsWith('%')) {
+    const share = readNumber(word.slice(0, -1), locale);
+    if (share === null || share > 100) return null;
+    const amount = Math.floor((whole * share) / 100);
+    return amount > 0 ? amount : null;
   }
-  const match = /^\$?(\d[\d,]*(?:\.\d+)?)([km]?)$/.exec(word);
-  if (!match) return null;
+  const match = /^\$?([\d.,]+)([km]?)$/.exec(word);
+  const value = match ? readNumber(match[1], locale) : null;
+  if (!match || value === null) return null;
   const scale = match[2] === 'k' ? 1_000 : match[2] === 'm' ? 1_000_000 : 1;
-  const cents = Math.round(Number(match[1].replace(/,/g, '')) * scale * 100);
+  const cents = Math.round(value * scale * 100);
   return Number.isSafeInteger(cents) && cents > 0 ? cents : null;
 }
 
@@ -136,9 +158,8 @@ export function parse(line: string, scene: Scene): Command {
   const word = wordOf(words[0]);
   if (word === undefined) return error('unknown-command');
   const args = words.slice(1);
-  const { content, state, names, text } = scene;
+  const { content, state, names, text, locale } = scene;
   const p = state.player;
-  const world = state.timeline[state.round];
 
   if (VIEWS.includes(word)) return { kind: 'view', view: word as View };
   if (word === 'undo' || word === 'done' || word === 'quit') return { kind: word };
@@ -154,31 +175,31 @@ export function parse(line: string, scene: Scene): Command {
     case 'buy': {
       const found = asset();
       if (!found) return error('unknown-asset');
-      const amount = parseAmount(args[1], p.cash);
+      const amount = parseAmount(args[1], p.cash, locale);
       return amount === null ? error('bad-amount') : order({ type: 'buy', assetId: found.id, amount });
     }
     case 'sell': {
       const found = asset();
       if (!found) return error('unknown-asset');
       const held = Object.hasOwn(p.positions, found.id) ? p.positions[found.id].value : 0;
-      const amount = parseAmount(args[1], held);
+      const amount = parseAmount(args[1], held, locale);
       return amount === null ? error('bad-amount') : order({ type: 'sell', assetId: found.id, amount });
     }
     case 'save':
     case 'pension':
     case 'borrow': {
-      const amount = parseAmount(args[0], p.cash);
+      const amount = parseAmount(args[0], p.cash, locale);
       if (amount === null) return error('bad-amount');
       return order(word === 'save' ? { type: 'depositIn', amount } : word === 'pension' ? { type: 'pensionIn', amount } : { type: 'borrow', amount });
     }
     case 'withdraw': {
-      const amount = parseAmount(args[0], p.deposit);
+      const amount = parseAmount(args[0], p.deposit, locale);
       return amount === null ? error('bad-amount') : order({ type: 'depositOut', amount });
     }
     case 'repay': {
       const debt = nth(p.debts, args[0]);
       if (!debt) return error('unknown-number');
-      const amount = parseAmount(args[1], Math.min(debt.principal, p.cash));
+      const amount = parseAmount(args[1], Math.min(debt.principal, p.cash), locale);
       return amount === null ? error('bad-amount') : order({ type: 'repay', debtId: debt.id, amount });
     }
     case 'home': {
@@ -186,13 +207,13 @@ export function parse(line: string, scene: Scene): Command {
       if (!type) return error('unknown-home');
       const rest = args.slice(1).map((w) => w.toLowerCase());
       const rented = rest.some((w) => WORDS.rent.includes(w as never));
-      const price = propertyPrice(content, world, p.cityId, type.id);
+      // The engine's own figures: the price, and the smallest down payment a bank takes.
+      const { price, minDown } = quoteProperty(content, state, type.id);
       if (rest.some((w) => w === 'cash' || w === 'contado')) {
         return order({ type: 'buyProperty', typeId: type.id, downPayment: 0, mortgage: 'none', rented });
       }
       const share = rest.find((w) => /^\d+(?:\.\d+)?%?$/.test(w));
-      const smallest = price - Math.round((price * content.debt.mortgageMaxLtvBp) / 10_000);
-      const downPayment = share === undefined ? smallest : Math.ceil((price * Number(share.replace('%', ''))) / 100);
+      const downPayment = share === undefined ? minDown : Math.ceil((price * Number(share.replace('%', ''))) / 100);
       if (!(downPayment > 0)) return error('bad-amount');
       const mortgage = rest.includes('variable') ? 'variable' : 'fixed';
       return order({ type: 'buyProperty', typeId: type.id, downPayment, mortgage, rented });
@@ -216,7 +237,9 @@ export function parse(line: string, scene: Scene): Command {
       return order(word === 'get' ? { type: 'buyItem', itemId: item.id } : { type: 'sellItem', itemId: item.id });
     }
     case 'lifestyle': {
-      const tier = /^[0-3]$/.test(args[0]) ? Number(args[0]) : text.lifestyleTiers.findIndex((label) => plain(label).startsWith(plain(args[0])));
+      // A name is matched by its start, so a word with no letters in it must not match every name.
+      const wanted = plain(args[0]);
+      const tier = /^[0-3]$/.test(args[0]) ? Number(args[0]) : wanted === '' ? -1 : text.lifestyleTiers.findIndex((label) => plain(label).startsWith(wanted));
       if (tier !== 0 && tier !== 1 && tier !== 2 && tier !== 3) return error('bad-tier');
       return order({ type: 'setLifestyle', tier });
     }

@@ -19,10 +19,12 @@ export function formatFor(locale: Locale): Format {
   const dollars = new Intl.NumberFormat(tag, { style: 'currency', currency: 'USD', currencyDisplay: 'narrowSymbol', maximumFractionDigits: 0 });
   const plain = new Intl.NumberFormat(tag, { maximumFractionDigits: 0 });
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const money = (cents: number) => dollars.format(Math.round(cents / 100)).replace('-', '−');
+  // Whole dollars, and never a negative zero: forty cents owed is "$0", not "−$0".
+  const whole = (cents: number) => Math.round(cents / 100) || 0;
+  const money = (cents: number) => dollars.format(whole(cents)).replace('-', '−');
   return {
     money,
-    signed: (cents) => (cents >= 0 ? `+${money(cents)}` : money(cents)),
+    signed: (cents) => (whole(cents) >= 0 ? `+${money(cents)}` : money(cents)),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${bp >= 0 ? '+' : '−'}${plain.format(Math.abs(Math.round(bp / 100)))}%`,
     number: (value) => plain.format(value),

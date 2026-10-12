@@ -99,7 +99,7 @@ export const cardArt: Record<string, string> = {
   world_crypto_bull: scene('meme_coin'),
   world_crypto_winter: scene('frozen_vault'),
   world_housing_crash: scene('empty_street'),
-  world_tech_bubble: scene('crash_screens'),
+  world_tech_bubble: scene('trading_desk'),
   world_ai_boom: scene('server_room'),
   world_pandemic: scene('empty_street'),
   world_tax_reform: scene('newsroom'),

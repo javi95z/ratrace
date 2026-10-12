@@ -26,8 +26,9 @@ export const housingCards: CardDef[] = [
   ]),
   card('house_renovation', 'housing', { cooldown: 6, when: { ownsHome: true } }, [
     { effects: { cash: usd(-800) } },
-    { effects: { cash: usd(-18_000), homeValuePct: 9, status: 2 } },
-    { effects: { cash: usd(-45_000), homeValuePct: 18, status: 5 } },
+    // A renovation adds a little less than it costs, whatever the home is worth. The rest is the status.
+    { effects: { cash: usd(-18_000), homeValue: usd(14_000), status: 2 } },
+    { effects: { cash: usd(-45_000), homeValue: usd(38_000), status: 5 } },
   ]),
   card('house_flood', 'housing', { weight: 6, cooldown: 8, when: { ownsHome: true } }, [
     { effects: { cash: usd(-7_000), protection: { insurance: 'home', coverPct: 90 } } },
@@ -42,7 +43,7 @@ export const housingCards: CardDef[] = [
 export const lifestyleCards: CardDef[] = [
   card('life_sports_car', 'lifestyle', { cooldown: 6, when: { employed: true, minRound: 2, notItems: ['car_bmw_m3'] } }, [
     {},
-    { effects: { buyItem: { itemId: 'car_vw_golf_gti', pricePct: 70 } } },
+    { effects: { buyItem: { itemId: 'car_vw_golf_gti', pricePct: 85 } } },
     { effects: { loan: usd(95_000), buyItem: { itemId: 'car_bmw_m3', pricePct: 100 } } },
   ]),
   card('life_ibiza', 'lifestyle', { cooldown: 3 }, [
@@ -110,7 +111,7 @@ export const familyCards: CardDef[] = [
   ]),
   card('fam_first_child', 'family', { cooldown: 3, when: { partner: true, maxChildren: 0, maxRound: 10 } }, [
     {},
-    { effects: { children: 1, lifestyleFloor: 1 } },
+    { effects: { children: 1, lifestyleFloor: 1, status: 8 } },
   ]),
   card('fam_prenup', 'family', { once: true, when: { partner: true, notFlags: ['married', 'prenup'] } }, [
     {},
@@ -118,7 +119,7 @@ export const familyCards: CardDef[] = [
   ]),
   card('fam_sibling_loan', 'family', { cooldown: 6 }, [
     {},
-    { effects: { cash: usd(-5_000) }, outcomes: [{ weight: 60, effects: { cash: usd(5_000) } }, { weight: 40, effects: {} }] },
+    { effects: { cash: usd(-5_000) }, outcomes: [{ weight: 60, effects: { cash: usd(5_000), status: 1 } }, { weight: 40, effects: { status: 2 } }] },
     { effects: { cash: usd(-2_000), status: 1 } },
   ]),
   card('fam_cosign', 'family', { once: true }, [
@@ -133,12 +134,13 @@ export const familyCards: CardDef[] = [
   card('fam_inheritance', 'family', { once: true, when: { minRound: 3 } }, [
     { effects: { cash: usd(25_000) } },
     { effects: { cash: usd(25_000), invest: { assetId: 'msci_world', amount: usd(25_000) } } },
-    { effects: { property: { typeId: 'studio', pricePct: 1, downPct: 100, rented: false } } },
+    // The money becomes the deposit on a flat to rent out, with less down than a bank asks and no finance skill needed.
+    { effects: { cash: usd(25_000), property: { typeId: 'studio', pricePct: 100, downPct: 10, rented: true } } },
   ]),
   card('fam_divorce', 'family', { weight: 5, once: true, when: { partner: true, flags: ['married'], minRound: 4 } }, [
-    { effects: split(30) },
-    { effects: { cash: usd(-8_000), ...split(18) } },
-    { effects: { focus: 2, cash: usd(-3_000) }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: split(30) }] },
+    { effects: split(20) },
+    { effects: { cash: usd(-8_000), ...split(12) } },
+    { effects: { focus: 2, cash: usd(-3_000) }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: split(20) }] },
   ]),
   card('fam_school', 'family', { once: true, when: { minChildren: 1, minRound: 3 } }, [
     {},

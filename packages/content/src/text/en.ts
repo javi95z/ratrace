@@ -65,7 +65,7 @@ export const en: ContentText = {
     },
     engineer: {
       name: 'Software engineer',
-      perk: 'Good pay, a share plan, and work from anywhere.',
+      perk: 'Good pay, a share plan, and a head start in finance.',
       handicap: 'Starts with a student loan.',
       unlock: 'Available from the start.',
     },

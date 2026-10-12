@@ -1,4 +1,4 @@
-import { applyCards, applyRound, createGame, finalScore, realNetWorth } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameState, StartConfig } from '@ratrace/engine';
 import type { Bot } from './bots';
 
@@ -9,6 +9,7 @@ export interface LifeResult {
   score: number;
   /** Net worth at the end, in start-of-game cents. */
   netWorth: number;
+  /** Status averaged over the life, which is what the score counts. */
   status: number;
   escapedAtRound: number | null;
   bankruptcies: number;
@@ -20,8 +21,9 @@ export function playLife(content: Content, life: { id: string; start: StartConfi
   let state = createGame({ content, start: life.start }, seed);
   let bankruptcies = 0;
   while (!state.finished) {
-    if (state.phase === 'cards') state = applyCards(content, state, bot.picks(content, state)).state;
-    const result = applyRound(content, state, { orders: bot.orders(content, state) });
+    // The bot is handed a view, never the game: what it cannot see it cannot use.
+    while (state.phase === 'cards') state = applyCard(content, state, bot.pick(content, viewOf(state))).state;
+    const result = applyRound(content, state, { orders: bot.orders(content, viewOf(state)) });
     for (const event of result.events) if (event.kind === 'bankrupt') bankruptcies += 1;
     state = result.state;
   }
@@ -31,7 +33,7 @@ export function playLife(content: Content, life: { id: string; start: StartConfi
     seed,
     score: finalScore(content, state),
     netWorth: realNetWorth(state),
-    status: state.player.statusPoints,
+    status: livedStatus(state),
     escapedAtRound: state.player.escapedAtRound,
     bankruptcies,
     state,

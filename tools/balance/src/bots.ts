@@ -1,48 +1,46 @@
-import { cashflow, focusLeft, homeOf, indexed, previewCard, propertyPrice } from '@ratrace/engine';
-import type { CardDef, CardPicks, Content, Effects, FocusAction, GameState, LifestyleTier, OptionPreview, Order } from '@ratrace/engine';
+import { cashflow, focusLeft, homeOf, indexed, previewCard, quoteProperty, stateHash } from '@ratrace/engine';
+import type { CardDef, Content, Effects, FocusAction, GameView, LifestyleTier, OptionPreview, Order } from '@ratrace/engine';
 
 /**
- * A bot plays a life the way one kind of player would. It sees what a player sees:
- * the state up to the current round, and what each card option would do. It never reads a future world.
+ * A bot plays a life the way one kind of player would. It is handed a view of the game, which is
+ * all a player ever has: no seed, no dice, no world after the current round. So a bot cannot peek
+ * even by mistake.
  */
 export interface Bot {
   id: string;
-  /** Answers to the cards in the hand. */
-  picks(content: Content, state: GameState): CardPicks;
+  /** The option to take on the next card of the hand. */
+  pick(content: Content, view: GameView): number;
   /** Orders for the finance phase. They run in order, with the cash the player holds after the cards. */
-  orders(content: Content, state: GameState): Order[];
+  orders(content: Content, view: GameView): Order[];
 }
 
 const usd = (dollars: number) => dollars * 100;
 
 /** An amount in start-of-game dollars, at today's prices. */
-const today = (state: GameState, dollars: number) => indexed(usd(dollars), state.timeline[state.round]);
+const today = (state: GameView, dollars: number) => indexed(usd(dollars), state.timeline[state.round]);
 
 // ---------------------------------------------------------------------------------------------
 // Answering cards
 
-type Judge = (card: CardDef, index: number, preview: OptionPreview, state: GameState) => number;
+type Judge = (card: CardDef, index: number, preview: OptionPreview, state: GameView) => number;
 
-/** Picks, for each card, the open option the judge scores highest. Ties go to the earlier option. */
-function answer(content: Content, state: GameState, judge: Judge): CardPicks {
-  const picks: CardPicks = {};
-  for (const cardId of state.hand) {
-    const card = content.cards.find((c) => c.id === cardId);
-    if (!card) continue;
-    const previews = previewCard(content, state, cardId);
-    let best = 0;
-    let bestScore = judge(card, 0, previews[0], state);
-    for (let i = 1; i < card.options.length; i++) {
-      if (!previews[i].available) continue;
-      const score = judge(card, i, previews[i], state);
-      if (score > bestScore) {
-        best = i;
-        bestScore = score;
-      }
+/** Picks, for the next card of the hand, the open option the judge scores highest. Ties go to the earlier option. */
+function answer(content: Content, state: GameView, judge: Judge): number {
+  const cardId = state.hand[state.answered];
+  const card = content.cards.find((c) => c.id === cardId);
+  if (!card) return 0;
+  const previews = previewCard(content, state, cardId);
+  let best = 0;
+  let bestScore = judge(card, 0, previews[0], state);
+  for (let i = 1; i < card.options.length; i++) {
+    if (!previews[i].available) continue;
+    const score = judge(card, i, previews[i], state);
+    if (score > bestScore) {
+      best = i;
+      bestScore = score;
     }
-    picks[cardId] = best;
   }
-  return picks;
+  return best;
 }
 
 /** Every effect an option can have: its fixed effects and each of its outcomes. */
@@ -52,15 +50,6 @@ const allEffects = (card: CardDef, index: number): Effects[] => {
 };
 const any = (card: CardDef, index: number, test: (effects: Effects) => boolean) => allEffects(card, index).some(test);
 const rolls = (card: CardDef, index: number) => (card.options[index].outcomes?.length ?? 0) > 0;
-
-/** Cash the option brings on average, weighing each outcome by its chance. */
-function expectedCash(preview: OptionPreview): number {
-  let total = 0;
-  for (const outcome of preview.outcomes) total += outcome.weight;
-  let expected = preview.cash;
-  for (const outcome of preview.outcomes) expected += (outcome.cash * outcome.weight) / total;
-  return expected;
-}
 
 /** Takes what is certain and free; never rolls dice, never spends. */
 const cautious: Judge = (card, index, preview) => {
@@ -77,11 +66,10 @@ const ambitious: Judge = (card, index, preview, state) => {
   return cautious(card, index, preview, state);
 };
 
-/** Takes the gamble with the best average, and anything with crypto in it. */
-const reckless: Judge = (card, index, preview, state) => {
-  if (any(card, index, (e) => e.invest !== undefined && ['bitcoin', 'ethereum', 'dogecoin', 'tesla'].includes(e.invest.assetId))) return 100 + index;
+/** Like the ambitious one, and also takes any coins a card offers and whatever teaches the finance to buy more. */
+const believer: Judge = (card, index, preview, state) => {
+  if (any(card, index, (e) => e.invest !== undefined && ['bitcoin', 'ethereum', 'dogecoin'].includes(e.invest.assetId))) return 100 + index;
   if (any(card, index, (e) => (e.financeSkill ?? 0) > 0) && state.player.life.financeSkill < 2) return 90;
-  if (rolls(card, index)) return 50 + expectedCash(preview) / 1e9;
   return ambitious(card, index, preview, state);
 };
 
@@ -102,19 +90,19 @@ const builder: Judge = (card, index, preview, state) => {
 // Writing orders
 
 /** Focus actions for the round, in the order given, as far as focus allows. */
-function work(state: GameState, actions: FocusAction[]): Order[] {
+function work(state: GameView, actions: FocusAction[]): Order[] {
   if (state.player.life.career === null) return [];
   return actions.slice(0, focusLeft(state.player)).map((action) => ({ type: 'focus', action }));
 }
 
 /** The lowest lifestyle tier the life allows. Where the player rents is left as the life began. */
-function frugal(state: GameState): Order[] {
+function frugal(state: GameView): Order[] {
   const p = state.player;
   return p.lifestyleTier === p.life.minLifestyleTier ? [] : [{ type: 'setLifestyle', tier: p.life.minLifestyleTier }];
 }
 
 /** Pays the credit card down first: nothing a bot can buy earns what the card costs. */
-function clearCard(state: GameState): { orders: Order[]; cash: number } {
+function clearCard(state: GameView): { orders: Order[]; cash: number } {
   const p = state.player;
   const card = p.debts.find((d) => d.kind === 'creditCard');
   if (!card || p.cash <= 0) return { orders: [], cash: p.cash };
@@ -123,14 +111,14 @@ function clearCard(state: GameState): { orders: Order[]; cash: number } {
 }
 
 /** Keeps a cushion in the savings deposit, so a bad card does not land on the credit card. */
-function cushion(state: GameState, cash: number, dollars: number): { orders: Order[]; cash: number } {
+function cushion(state: GameView, cash: number, dollars: number): { orders: Order[]; cash: number } {
   const missing = today(state, dollars) - state.player.deposit;
   const amount = Math.min(cash, Math.max(0, missing));
   return amount > 0 ? { orders: [{ type: 'depositIn', amount }], cash: cash - amount } : { orders: [], cash };
 }
 
 /** The highest lifestyle tier whose yearly cost leaves a third of income for tax and for shopping. */
-function grandestAffordable(content: Content, state: GameState): LifestyleTier {
+function grandestAffordable(content: Content, state: GameView): LifestyleTier {
   const p = state.player;
   const flow = cashflow(content, state);
   const income = flow.salaryAnnual + flow.passiveAnnual;
@@ -146,7 +134,7 @@ function grandestAffordable(content: Content, state: GameState): LifestyleTier {
 
 const saver: Bot = {
   id: 'saver',
-  picks: (content, state) => answer(content, state, ambitious),
+  pick: (content, state) => answer(content, state, ambitious),
   orders: (_content, state) => {
     const card = clearCard(state);
     const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
@@ -157,7 +145,7 @@ const saver: Bot = {
 
 const indexer: Bot = {
   id: 'indexer',
-  picks: (content, state) => answer(content, state, ambitious),
+  pick: (content, state) => answer(content, state, ambitious),
   orders: (_content, state) => {
     const card = clearCard(state);
     const safe = cushion(state, card.cash, 3_000);
@@ -167,87 +155,33 @@ const indexer: Bot = {
   },
 };
 
-/** What the player's coins are worth today. */
-function coins(content: Content, state: GameState): number {
-  let total = 0;
-  for (const asset of content.assets) {
-    if (asset.class === 'crypto' && Object.hasOwn(state.player.positions, asset.id)) total += state.player.positions[asset.id].value;
-  }
-  return total;
-}
-
 /**
- * The tier a gambler feels rich enough for: the highest one that the coins could pay for five years of.
- * Scaling all yearly expenses by the tier multiplier is a fair first guess for a tenant.
- */
-function paperRichTier(content: Content, state: GameState): LifestyleTier {
-  const p = state.player;
-  const held = coins(content, state);
-  const flow = cashflow(content, state);
-  const multipliers = content.lifestyleMultiplierPct;
-  for (const tier of [3, 2] as const) {
-    const cost = Math.floor((flow.expensesAnnual * multipliers[tier]) / multipliers[p.lifestyleTier]);
-    if (held >= cost * 5) return tier;
-  }
-  return 0;
-}
-
-/**
- * Four rules, none of them tuned to a result:
- * borrow the maximum; put everything into coins; live up to paper gains and never back down;
- * sell coins only when the credit card demands it.
+ * The indexer's twin, who believes in coins instead. It lives as cheaply, works as hard and keeps
+ * the same cushion; it never borrows and never sells a coin. So the only thing that sets the two
+ * apart is what they hold, and what happens to the gambler is what crypto does.
+ *
+ * Coins need finance skill, so until it has enough it holds the index fund, which is also what
+ * teaches the first level, and it moves everything across the day it is allowed to.
  */
 const gambler: Bot = {
   id: 'gambler',
-  picks: (content, state) => answer(content, state, reckless),
+  pick: (content, state) => answer(content, state, believer),
   orders: (content, state) => {
     const p = state.player;
-    const world = state.timeline[state.round];
-    const orders: Order[] = [...work(state, ['overtime', 'jobHunt', 'studyCareer'])];
-    const tier = Math.max(p.lifestyleTier, paperRichTier(content, state)) as LifestyleTier;
-    if (tier !== p.lifestyleTier) orders.push({ type: 'setLifestyle', tier });
-    let cash = p.cash;
-
-    const card = p.debts.find((d) => d.kind === 'creditCard');
-    if (card) {
-      let needed = card.principal - cash;
-      for (const [assetId, held] of Object.entries(p.positions)) {
-        if (needed <= 0) break;
-        const amount = Math.min(held.value, needed);
-        orders.push({ type: 'sell', assetId, amount });
-        cash += amount;
-        needed -= amount;
-      }
-      const paid = Math.min(cash, card.principal);
-      if (paid > 0) {
-        orders.push({ type: 'repay', debtId: card.id, amount: paid });
-        cash -= paid;
-      }
-    }
-
-    if (state.round >= p.bankruptUntilRound) {
-      let loans = 0;
-      for (const d of p.debts) if (d.kind === 'personalLoan') loans += d.principal;
-      const room = Math.floor((indexed(p.salaryAnnual, world) * content.debt.personalLoanMaxIncomePct) / 100) - loans;
-      if (room > today(state, 1_000)) {
-        orders.push({ type: 'borrow', amount: room });
-        cash += room;
-      }
-    }
-    if (cash <= 0) return orders;
+    const card = clearCard(state);
+    const safe = cushion(state, card.cash, 3_000);
+    const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
+    let cash = safe.cash;
 
     if (p.life.financeSkill < 2) {
-      // Not allowed near crypto yet. Holding anything for three rounds teaches one level.
-      orders.push({ type: 'buy', assetId: 'sp500', amount: cash });
+      if (cash > 0) orders.push({ type: 'buy', assetId: 'msci_world', amount: cash });
       return orders;
     }
-    if (!card) {
-      for (const [assetId, held] of Object.entries(p.positions)) {
-        const asset = content.assets.find((a) => a.id === assetId);
-        if (asset && asset.class !== 'crypto') {
-          orders.push({ type: 'sell', assetId, amount: held.value });
-          cash += held.value;
-        }
+    for (const [assetId, held] of Object.entries(p.positions)) {
+      const asset = content.assets.find((a) => a.id === assetId);
+      if (asset && asset.class !== 'crypto') {
+        orders.push({ type: 'sell', assetId, amount: held.value });
+        cash += held.value;
       }
     }
     const half = Math.floor(cash / 2);
@@ -260,7 +194,7 @@ const gambler: Bot = {
 
 const chaser: Bot = {
   id: 'chaser',
-  picks: (content, state) => answer(content, state, showy),
+  pick: (content, state) => answer(content, state, showy),
   orders: (content, state) => {
     const p = state.player;
     const world = state.timeline[state.round];
@@ -289,10 +223,9 @@ const chaser: Bot = {
 
 const landlord: Bot = {
   id: 'landlord',
-  picks: (content, state) => answer(content, state, builder),
+  pick: (content, state) => answer(content, state, builder),
   orders: (content, state) => {
     const p = state.player;
-    const world = state.timeline[state.round];
     const card = clearCard(state);
     const orders: Order[] = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
     let cash = card.cash + p.deposit;
@@ -308,12 +241,10 @@ const landlord: Bot = {
     for (let bought = 0; bought < 2 && canBorrow && (!hasHome || canRentOut); bought++) {
       const rented = hasHome || bought > 0;
       if (rented && !canRentOut) break;
-      const price = propertyPrice(content, world, p.cityId, 'studio');
-      const down = price - Math.floor((price * content.debt.mortgageMaxLtvBp) / 10_000);
-      const tax = Math.ceil((price * 1_000) / 10_000);
-      if (cash < down + tax + reserve) break;
-      orders.push({ type: 'buyProperty', typeId: 'studio', downPayment: down, mortgage: 'fixed', rented });
-      cash -= down + tax;
+      const quote = quoteProperty(content, state, 'studio');
+      if (cash < quote.minDown + quote.purchaseTax + reserve) break;
+      orders.push({ type: 'buyProperty', typeId: 'studio', downPayment: quote.minDown, mortgage: 'fixed', rented });
+      cash -= quote.minDown + quote.purchaseTax;
       if (!hasHome && bought === 0 && !canRentOut) break;
     }
     if (cash > 0) orders.push({ type: 'depositIn', amount: cash });
@@ -321,10 +252,10 @@ const landlord: Bot = {
   },
 };
 
-/** A small generator seeded from the game, so the random bot is the same on every run. */
-function dice(state: GameState): () => number {
+/** A small generator seeded from what the bot can see, so the random bot plays the same life the same way on every run. */
+function dice(state: GameView): () => number {
   let h = 2166136261;
-  for (const ch of `${state.seed}:${state.round}:${state.phase}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  for (const ch of stateHash(state)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   return () => {
     h = Math.imul(h ^ (h >>> 15), 2246822507);
     h = Math.imul(h ^ (h >>> 13), 3266489909);
@@ -335,10 +266,7 @@ function dice(state: GameState): () => number {
 
 const random: Bot = {
   id: 'random',
-  picks: (_content, state) => {
-    const roll = dice(state);
-    return Object.fromEntries(state.hand.map((id) => [id, Math.floor(roll() * 3)]));
-  },
+  pick: (_content, state) => Math.floor(dice(state)() * 3),
   orders: (content, state) => {
     const roll = dice(state);
     const p = state.player;

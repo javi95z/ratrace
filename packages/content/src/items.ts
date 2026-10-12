@@ -21,7 +21,9 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
  * price, and the change in resale value each round, in bp, on top of inflation.
- * Cars, tech and most fashion lose value. The top watches, the Birkin and art hold or gain it.
+ * Cars, tech and most fashion lose value. The top watches, the Birkin and art hold or gain it over
+ * the years, but nothing is worth on day one what it cost: there is always a dealer's margin to
+ * earn back, so buying and selling in the same round can only lose money.
  */
 export const items: ItemDef[] = [
   ...durables('car', [
@@ -37,9 +39,9 @@ export const items: ItemDef[] = [
     ['watch_casio', 20, 0, 1, 50, -1_000],
     ['watch_tissot', 750, 0, 3, 60, -800],
     ['watch_omega', 7_000, 100, 10, 75, -300],
-    ['watch_rolex', 11_000, 150, 18, 95, 200],
-    ['watch_ap', 38_000, 300, 32, 100, 300],
-    ['watch_patek', 90_000, 400, 45, 105, 400],
+    ['watch_rolex', 11_000, 150, 18, 90, 200],
+    ['watch_ap', 38_000, 300, 32, 92, 300],
+    ['watch_patek', 90_000, 400, 45, 95, 400],
   ]),
   ...durables('tech', [
     ['tech_phone', 1_200, 0, 2, 60, -5_000],
@@ -51,7 +53,7 @@ export const items: ItemDef[] = [
     ['fashion_polo', 600, 0, 3, 25, -5_000],
     ['fashion_loafers', 950, 0, 6, 40, -3_000],
     ['fashion_duffel', 2_800, 0, 11, 60, -1_500],
-    ['fashion_birkin', 14_000, 0, 25, 110, 300],
+    ['fashion_birkin', 14_000, 0, 25, 95, 300],
   ]),
   ...durables('art', [
     ['art_stencil', 28_000, 0, 14, 90, 500],

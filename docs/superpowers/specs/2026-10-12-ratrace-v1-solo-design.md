@@ -53,7 +53,7 @@ This document covers **v1: the solo game**. Multiplayer and daily challenges are
 Each round covers two years and has four steps.
 
 1. **News.** Three headlines and three gauges (interest rate, inflation, market mood). Each headline hints at what happens next round and is true 70% of the time.
-2. **Life cards.** Three personal cards drawn from the deck, plus at most one world event shared by all players. Each card has two or three options. Effects are shown before the player commits.
+2. **Life cards.** Three personal cards drawn from the deck, plus at most one world event shared by all players. Each card has two or three options. Effects are shown before the player commits. Cards are answered one at a time: each is settled, dice included, before the next is shown, so every option is judged as the player then stands and an option shown as open is open.
 3. **Finance.** The player trades, borrows, repays, shops for status items, changes lifestyle tier, or moves city.
 4. **Resolve.** The engine applies everything and shows an animated ledger.
 
@@ -63,7 +63,7 @@ Solo play is untimed. Rooms (later) use a 90-second round timer that ends early 
 
 Order is fixed, because determinism depends on it.
 
-1. Apply card choices.
+1. Apply card choices, one card at a time, in the order of the hand. A shortfall a card leaves is covered at once by the rule of step 7, so the game is sound between one card and the next. A card left unanswered takes its first option.
 2. Execute finance orders at the prices shown this round.
 3. Work out income, expenses and tax from what the player now holds, at the rates and prices shown this round. Income: salary for two years, dividends, coupons, deposit interest, rent, business profit. Expenses: living costs, item upkeep, debt service, insurance, family. Because all three use only this round's figures, the preview the player sees before confirming is exact.
 4. Advance the world: regime, rates, inflation, price level, asset prices, property indexes. Holdings change value.
@@ -71,7 +71,7 @@ Order is fixed, because determinism depends on it.
 6. Charge the tax from step 3: income tax on salary and business profit, tax on realised gains, dividends, interest and rent, and the yearly property tax. Property purchase tax was already paid in step 2.
 7. Cover any cash shortfall from the savings deposit first, then with credit card debt. Spare cash pays the card down.
 8. Update skills, status, item values, family timers and age.
-9. Check escape, bankruptcy and achievements. Compute score.
+9. Check escape (won or lost, see 3.13), bankruptcy and achievements. Add this round's status to the running total the score averages. Compute score.
 10. Draw next round's cards and news.
 
 ### 3.3 Player state
@@ -137,13 +137,17 @@ World state: regime, policy rate, inflation, crypto cycle, a price per asset and
 
 Parameter tables live in `packages/content` and are tuned with the balance harness. Acceptance bands, measured over the three starting lives:
 
-- An index-fund-only bot escapes the rat race in 25% to 45% of lives.
+- An index-fund-only bot escapes the rat race in 25% to 45% of lives. Escaped means still out of it at the end (3.13).
 - No single bot strategy has the top score in more than 40% of lives.
 - The crypto-gambler bot is ruined in 30% to 60% of lives, and is the richest of all bots in at least 10%. Ruined means it ends with less than half the net worth the saver bot reached on the same life and seed.
 
-The third band first counted bankruptcies. It was changed during milestone 1, as this section allowed: since a solvent player is never liquidated (3.12), a gambler who sells coins to clear the credit card is seldom formally bankrupt, about one life in nine, so bankruptcy stopped measuring the risk of crypto. Ending far behind someone who merely saved does measure it.
+The third band first counted bankruptcies. It was changed during milestone 1, as this section allowed: since a solvent player is never liquidated (3.12), a gambler who sells coins to clear the credit card is seldom formally bankrupt, so bankruptcy stopped measuring the risk of crypto. Ending far behind someone who merely saved does measure it.
 
-The bots are defined in `tools/balance`. Each is a few plain rules with no number chosen to hit a band; when the game leaves a band, the content is tuned, not the bots.
+What the gambler is matters as much as the band. It is the index bot's twin: it lives as cheaply, works as hard, keeps the same cushion, never borrows and never sells a coin. The one difference is what it holds: half bitcoin, a quarter each of ethereum and dogecoin, from the day its finance skill allows, and the index fund until then. So the band measures what holding crypto does and nothing else, and it is held by the crypto parameters alone: a winter takes three quarters, as the real ones did, which makes coins held blindly through the cycle lose more often than they win and win enormously when they do.
+
+An earlier gambler also borrowed to its limit and raised its lifestyle as it grew rich on paper. The first independent review showed that the band then measured those habits rather than crypto, and that an earlier version of this paragraph, which said no number in a bot was chosen to hit a band, was not true of it. That bot was replaced by the twin.
+
+The bots are defined in `tools/balance`. Each is a few plain rules. A bot is handed a view of the game (8.9), never the game, so it cannot use the seed, the dice or a future world even by mistake. When the game leaves a band, the content is tuned, not the bots.
 
 ### 3.8 Taxes
 
@@ -185,6 +189,8 @@ Values are tiers from 1 to 5. Moving city costs cash and one focus point, and fo
 - Each item has a price, upkeep, status value and resale curve.
 - Within one ladder, the best owned item counts in full and the others count 25%.
 - Cars, tech and most fashion lose value. Rolex, Audemars Piguet, Patek Philippe, the Hermès Birkin and art can hold or gain.
+- Nothing is worth more on the day it is bought than it cost. Resale starts at or below the price, for every item and by validation, so buying and selling in one round can never make money. The pieces that hold value start a little under their price and may drift up from there.
+- Something only a card can give (a degree) cannot be sold, and is not sold in bankruptcy.
 - The home ladder is where the player lives: a rented room, a rented flat, or any owned property.
 - Lifestyle tier multiplies living costs: frugal 0.7, normal 1.0, comfortable 1.4, lavish 2.0. Lavish gives a little status. Some cards push the tier up.
 
@@ -195,6 +201,8 @@ A card has an ID, category, draw conditions (age, city, job, family, wealth, fla
 v1 ships 100 cards: Career 12, Education 6, Business 8, Investing 10, Housing 8, Lifestyle 10, Family 10, Health 5, Luck 8, World 12, Tax 6, Later life 5. The selection is the first N titles of each category in Appendix A.
 
 Scams and collapses never name a real brand.
+
+Cards do not create money. A property bought through a card is worth what was paid for it, whatever discount the card gave; a renovation adds a fixed amount to the home, not a share of its value; an item bought through a card is never cheaper than it could be sold on for at once. During the bankruptcy lock no card lends: an option that borrows, or buys a home on a mortgage, is closed. A card may not fill the pension of someone who owes more than they own (3.12).
 
 ### 3.12 Bankruptcy
 
@@ -218,9 +226,12 @@ Three consequences are deliberate:
 `score = (W + S) × E / 100`, using integer arithmetic.
 
 - **W, wealth points:** linear interpolation between breakpoints, on net worth in start-of-game dollars, so that lives played through different inflation can be compared. Net worth ≤ 0 → 0; 10k → 100; 100k → 200; 1M → 300; 10M → 400; 100M → 500.
-- **S, status points:** the status total. Item values are calibrated so a high-status life lands between 250 and 350.
-- **E, escape multiplier:** 100 if the player never escaped. Otherwise 125 + 3 × rounds remaining at the moment of escape.
-- **Escape** means passive income, after the tax it would bear if the player had no salary, ≥ total expenses at two consecutive resolves. The test asks whether the player could stop working, so it ignores the salary and the tax bracket the salary puts them in, and it is easier to pass where passive income is taxed lightly. The multiplier is fixed by the first of the two.
+- **S, status points:** status as it was lived: the average of the status total over the rounds played. Status held only on the last day counts for one twentieth. Item values are calibrated so a life lived in high status lands between 250 and 350.
+- **E, escape multiplier:** 100 if the player is not out of the rat race at the end. Otherwise 125 + 3 × rounds remaining at the moment of the escape that still holds.
+- **Escape** means passive income, after the tax it would bear if the player had no salary, ≥ total expenses plus the property tax on what the player owns, at two consecutive resolves. The test asks whether the player could stop working, so it ignores the salary and the tax bracket the salary puts them in, and it is easier to pass where passive income is taxed lightly. The multiplier is fixed by the first of the two.
+- **An escape can be lost.** The first resolve at which passive income no longer covers puts the player back in the rat race, and the bonus is gone. It can be won again by two more covering resolves, counted from the later date.
+
+Two of these rules were changed after the first independent review of the life systems, which showed two ways to play the score instead of the game. Counting status as held at the end let a player turn their whole fortune into watches in the last round, which beat every other strategy. Fixing the escape for good the moment it was won let a player park money in deposits for two rounds, collect the bonus, and take it out again.
 
 All constants are configuration and are tuned with the balance harness.
 
@@ -248,7 +259,7 @@ Asset values, property prices and debts are nominal and are not converted. So in
 | Life | Start | Perk | Handicap | Unlock |
 |---|---|---|---|---|
 | Nurse | Madrid | Cannot be laid off; paid night shifts | Low salary cap | Default |
-| Software engineer | Madrid | Remote work; share packages | Student loan | Default |
+| Software engineer | Madrid | Share plan at work; a head start in finance | Student loan | Default |
 | Civil servant | Madrid | Job for life; cheaper mortgage | Slow raises | Default |
 | Delivery rider | Madrid | 4 focus points | Unstable pay; no savings | Finish one life |
 | Heir | Madrid | Starts with cash and a flat | High lifestyle baseline; low skills | Reach 1M net worth |

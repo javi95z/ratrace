@@ -1,7 +1,7 @@
 import { content as defaultContent, lives, textFor } from '@ratrace/content';
 import type { Locale } from '@ratrace/content';
-import { applyCards, applyRound, createGame, previewRound } from '@ratrace/engine';
-import type { CardPicks, Content, GameState, Order } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, previewRound } from '@ratrace/engine';
+import type { Content, GameState, Order } from '@ratrace/engine';
 import { formatFor } from './format';
 import { parse } from './parse';
 import * as screens from './screens';
@@ -43,18 +43,24 @@ async function chooseLife(io: Io, pen: Pen, wanted: string | undefined) {
   }
 }
 
-/** Shows each card of the hand and collects the answers. An empty or unreadable answer is the first option. */
-async function answerHand(io: Io, pen: Pen, state: GameState): Promise<CardPicks> {
-  const picks: CardPicks = {};
-  for (let i = 0; i < state.hand.length; i++) {
-    const def = pen.content.cards.find((card) => card.id === state.hand[i]);
-    if (!def) continue;
-    say(io, screens.card(pen, state, def, i + 1, state.hand.length));
-    const typed = await io.ask(` ${pen.ui.pick(def.options.length)}`);
+/**
+ * Plays the hand one card at a time: each card is shown as the player stands now, answered, and
+ * settled before the next one is shown, so what a card says it will do is what it does.
+ * An empty or unreadable answer is the first option.
+ */
+async function answerHand(io: Io, pen: Pen, start: GameState): Promise<GameState> {
+  let state = start;
+  while (!state.finished && state.phase === 'cards') {
+    const def = pen.content.cards.find((card) => card.id === state.hand[state.answered]);
+    if (def) say(io, screens.card(pen, state, def, state.answered + 1, state.hand.length));
+    const typed = def ? await io.ask(` ${pen.ui.pick(def.options.length)}`) : null;
     const choice = typed === null ? 1 : Number(typed.trim() || '1');
-    picks[def.id] = Number.isInteger(choice) && choice >= 1 && choice <= def.options.length ? choice - 1 : 0;
+    const answered = applyCard(pen.content, state, Number.isInteger(choice) && choice >= 1 ? choice - 1 : 0);
+    for (const event of answered.events) if (event.kind === 'card') say(io, screens.cardResult(pen, event));
+    say(io, screens.ledger(pen, answered.events));
+    state = answered.state;
   }
-  return picks;
+  return state;
 }
 
 /**
@@ -73,7 +79,7 @@ async function takeOrders(io: Io, pen: Pen, state: GameState): Promise<Order[] |
     const line = await io.ask(` ${ui.prompt}`);
     if (line === null) return orders;
     const preview = previewRound(content, state, { orders });
-    const scene = { content, state: { ...state, player: preview.player }, names, text };
+    const scene = { content, state: { ...state, player: preview.player }, names, text, locale: pen.locale };
     const command = parse(line, scene);
     switch (command.kind) {
       case 'empty':
@@ -130,7 +136,7 @@ async function takeOrders(io: Io, pen: Pen, state: GameState): Promise<Order[] |
 export async function runGame(io: Io, options: Options): Promise<GameState | null> {
   const content = options.content ?? defaultContent;
   const { text, names } = textFor(options.locale);
-  const pen: Pen = { content, text, names, ui: allUi[options.locale], fmt: formatFor(options.locale) };
+  const pen: Pen = { content, text, names, locale: options.locale, ui: allUi[options.locale], fmt: formatFor(options.locale) };
   const { ui } = pen;
 
   io.print('');
@@ -146,14 +152,8 @@ export async function runGame(io: Io, options: Options): Promise<GameState | nul
     say(io, screens.news(pen, state));
     say(io, screens.me(pen, state));
 
-    if (state.phase === 'cards') {
-      const picks = await answerHand(io, pen, state);
-      const answered = applyCards(content, state, picks);
-      io.print('');
-      for (const event of answered.events) if (event.kind === 'card') say(io, screens.cardResult(pen, event));
-      say(io, screens.ledger(pen, answered.events));
-      state = answered.state;
-    }
+    state = await answerHand(io, pen, state);
+    io.print('');
 
     const orders = await takeOrders(io, pen, state);
     if (orders === null) {

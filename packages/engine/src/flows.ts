@@ -11,9 +11,13 @@ export interface Flows {
   income: RoundIncome;
   expenses: RoundExpenses;
   passive: Cents;
-  /** Passive income less the tax it would bear if the player had no salary: what they could live on without working. */
-  passiveAfterTax: Cents;
   outgoings: Cents;
+  /**
+   * The two sides of the escape test. On one side, passive income less the tax it would bear if the
+   * player had no salary: what they could live on without working. On the other, everything the
+   * round costs them, with the property tax on what they own counted as a cost of living.
+   */
+  escape: { passiveAfterTax: Cents; outgoings: Cents };
   bill: TaxBill;
 }
 
@@ -45,5 +49,7 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
   // The same income with no salary and nothing sold: the tax a life of leisure would pay.
   const idle = computeTax(tax, median, content.yearsPerRound, { ...earned, salary: 0, pensionContribution: 0, realisedGains: 0 });
   const passive = passiveOf(income);
-  return { income, expenses, passive, passiveAfterTax: passive - idle.total, outgoings: outgoingsOf(expenses), bill };
+  const outgoings = outgoingsOf(expenses);
+  const escape = { passiveAfterTax: passive - idle.income - idle.investment, outgoings: outgoings + idle.property };
+  return { income, expenses, passive, outgoings, escape, bill };
 }

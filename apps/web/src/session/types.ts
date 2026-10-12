@@ -1,4 +1,4 @@
-import type { CardPicks, GameEvent, GameState, GameView, Order, RoundChoices } from '@ratrace/engine';
+import type { GameEvent, GameState, GameView, Order, RoundChoices } from '@ratrace/engine';
 
 /** What one answer or one round gives back: the game as it now stands, and what happened on the way. */
 export interface StepResult {
@@ -17,7 +17,12 @@ export interface GameSession {
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */
   history(): number[];
-  answerCards(picks: CardPicks): Promise<StepResult>;
+  /**
+   * Answers the next card of the hand with the option given, and returns what that card did.
+   * Cards are answered one at a time: the next one is judged as the player stands after this one.
+   */
+  answerCard(option: number): Promise<StepResult>;
+  /** Plays the round. Cards still unanswered take their first option. */
   playRound(choices: RoundChoices): Promise<StepResult>;
 }
 
@@ -33,9 +38,12 @@ export interface Sessions {
   abandon(): Promise<void>;
 }
 
-/** What the player did in one round. `picks` is null when there were no cards; `orders` is null until the round is played. */
+/**
+ * What the player did in one round. `picks` is the option taken on each card answered so far, in
+ * the order of the hand; `orders` is null until the round is played.
+ */
 export interface RoundLog {
-  picks: CardPicks | null;
+  picks: number[];
   orders: Order[] | null;
 }
 
@@ -73,7 +81,9 @@ export interface FinishedRun {
   score: number;
   /** Net worth at the end, in start-of-game cents. */
   netWorth: number;
+  /** Status averaged over the life, which is what the score counted. */
   status: number;
+  /** The round of the escape that still held at the end, or null. */
   escapedAtRound: number | null;
   bankruptcies: number;
   history: number[];

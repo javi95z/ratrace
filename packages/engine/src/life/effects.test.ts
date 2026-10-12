@@ -255,7 +255,7 @@ describe('applyEffects: things bought through a card', () => {
     expect(p.cash).toBe(10_000_000 - 2_700_000 - 1_080_000);
     expect(p.debts).toEqual([{ id: 'debt-1', kind: 'mortgageFixed', principal: 10_800_000, fixedRateBp: 400, roundsLeft: 12 }]);
     expect(p.properties).toEqual([
-      { id: 'property-2', cityId: 'home', typeId: 'studio', value: 15_000_000, basis: 13_500_000, rented: false, mortgageId: 'debt-1' },
+      { id: 'property-2', cityId: 'home', typeId: 'studio', value: 13_500_000, basis: 13_500_000, rented: false, mortgageId: 'debt-1' },
     ]);
     expect(p.statusPoints).toBe(3);
   });
@@ -296,14 +296,13 @@ describe('applyEffects: the home', () => {
     expect(p.statusPoints).toBe(2);
   });
 
-  it('changes the value of the home', () => {
-    expect(after({ homeValuePct: 10 }, player(mortgage)).properties[0].value).toBe(27_500_000);
-    expect(after({ homeValuePct: -20 }, player(mortgage)).properties[0].value).toBe(20_000_000);
-    expect(after({ homeValuePct: -150 }, player(mortgage)).properties[0].value).toBe(0);
+  it('adds a fixed amount to the value of the home', () => {
+    expect(after({ homeValue: 2_500_000 }, player(mortgage)).properties[0].value).toBe(27_500_000);
+    expect(after({ homeValue: 2_500_000 }, player(mortgage), dearer).properties[0].value).toBe(27_750_000);
   });
 
   it('leaves a tenant untouched by effects on a home', () => {
     const before = JSON.stringify(player());
-    expect(JSON.stringify(after({ sellHome: true, homeValuePct: 10, refinance: 'fixed' }))).toBe(before);
+    expect(JSON.stringify(after({ sellHome: true, homeValue: 1_000_000, refinance: 'fixed' }))).toBe(before);
   });
 });

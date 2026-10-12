@@ -3,6 +3,9 @@ import { card, usd, yearly } from './build';
 
 const BUSINESSES = ['bar', 'shop', 'app'];
 
+/** A private employer in tech or finance comes with a share plan, and without a public servant's job for life. */
+const NEW_EMPLOYER = { setFlags: ['share_plan'], clearFlags: ['layoff_proof'] };
+
 export const careerCards: CardDef[] = [
   card('career_raise', 'career', { cooldown: 3, when: { employed: true } }, [
     {},
@@ -34,8 +37,11 @@ export const careerCards: CardDef[] = [
   ]),
   card('career_switch', 'career', { once: true, when: { careers: ['healthcare', 'public', 'service', 'tech'], maxRound: 12 } }, [
     {},
-    { effects: { focus: 2, careerSkill: -5, job: { career: 'finance', level: 0 } } },
-    { effects: { focus: 1, cash: usd(-4_000) }, outcomes: [{ weight: 60, effects: { job: { career: 'finance', level: 0 } } }, { weight: 40, effects: {} }] },
+    { effects: { focus: 2, careerSkill: -5, job: { career: 'finance', level: 0 }, ...NEW_EMPLOYER } },
+    {
+      effects: { focus: 1, cash: usd(-4_000) },
+      outcomes: [{ weight: 60, effects: { job: { career: 'finance', level: 0 }, ...NEW_EMPLOYER } }, { weight: 40, effects: {} }],
+    },
   ]),
   card('career_big_offer', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
     {},
@@ -44,7 +50,8 @@ export const careerCards: CardDef[] = [
   ]),
   card('career_shares_vs_salary', 'career', { cooldown: 8, when: { careers: ['tech', 'finance'] } }, [
     { effects: { salaryModPct: 4 } },
-    { outcomes: [{ weight: 25, effects: { cashSalaryPct: 60 } }, { weight: 45, effects: { cashSalaryPct: 15 } }, { weight: 30, effects: {} }] },
+    // Worth about what the raise is over the years left, on average, with everything riding on the company.
+    { outcomes: [{ weight: 25, effects: { cashSalaryPct: 200 } }, { weight: 45, effects: { cashSalaryPct: 60 } }, { weight: 30, effects: {} }] },
   ]),
   card('career_remote_work', 'career', { once: true, when: { careers: ['tech', 'finance', 'public'], minRound: 1, notFlags: ['remote_work'] } }, [
     {},
@@ -83,7 +90,7 @@ export const educationCards: CardDef[] = [
   ]),
   card('edu_bootcamp', 'education', { once: true, when: { careers: ['healthcare', 'public', 'service', 'finance'], maxRound: 10 } }, [
     {},
-    { effects: { focus: 2, cash: usd(-7_000), careerSkill: -4, job: { career: 'tech', level: 0 } } },
+    { effects: { focus: 2, cash: usd(-7_000), careerSkill: -4, job: { career: 'tech', level: 0 }, ...NEW_EMPLOYER } },
   ]),
   card('edu_language', 'education', { once: true, when: { notFlags: ['bilingual'] } }, [
     {},

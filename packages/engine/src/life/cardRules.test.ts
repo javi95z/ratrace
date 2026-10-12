@@ -15,7 +15,7 @@ const good: CardDef = {
     minRound: 2, maxRound: 18, cities: ['home'], notCities: ['haven'], employed: true, careers: ['office'], minLevel: 0, maxLevel: 2,
     partner: false, minChildren: 0, maxChildren: 3, ownsHome: false, landlord: false, hasMortgage: false, minNetWorth: -500_000,
     maxNetWorth: 900_000_000, minFinanceSkill: 0, maxFinanceSkill: 2, flags: ['asked'], notFlags: ['retired'], holds: 'deposit',
-    ownsLadder: 'car', notItems: ['watch_gold'], regimes: ['boom'], cityPropertyReturnAtMostBp: -500,
+    ownsLadder: 'car', notItems: ['watch_gold'], insured: 'health', regimes: ['boom'], cityPropertyReturnAtMostBp: -500,
   },
   options: [
     { effects: { cash: -10_000, protection: { insurance: 'health', coverPct: 50 } } },
@@ -27,7 +27,7 @@ const good: CardDef = {
         endRecurring: ['shop'], setFlags: ['asked'], clearFlags: ['dating'], job: { career: 'office', level: 1, levelDelta: 1 }, moveCity: 'haven',
         partner: { salaryPct: 80 }, children: 1, buyItem: { itemId: 'car_basic', pricePct: 60 },
         invest: { assetId: 'gold', amount: 100_000, bonusPct: 10 }, pension: 1_000, loan: 5_000,
-        property: { typeId: 'studio', pricePct: 90, downPct: 20, rented: false }, refinance: 'fixed', sellHome: true, homeValuePct: 8,
+        property: { typeId: 'studio', pricePct: 90, downPct: 20, rented: false }, refinance: 'fixed', sellHome: true, homeValue: 800_000,
         lose: { what: 'crypto', pct: 30 }, lifestyleFloor: 2,
       },
       outcomes: [{ weight: 3, effects: { cash: 5 } }, { weight: 1, effects: { partner: null, job: { leave: true } } }],
@@ -126,11 +126,11 @@ describe('validateContent: cards', () => {
     const effect = (over: Record<string, unknown>) => problems((c) => Object.assign(c.options[1].effects, over));
     expect(effect({ fame: 5 })).toEqual(['card offer option 1 has an unknown effect: fame']);
     expect(problems((c) => (c.options[1].outcomes[0].effects = { fame: 5 }))).toEqual(['card offer option 1 outcome 0 has an unknown effect: fame']);
-    for (const field of ['cash', 'cashSalaryPct', 'cashNetWorthPct', 'salaryModPct', 'salaryBoostPct', 'careerSkill', 'financeSkill', 'status', 'homeValuePct']) {
+    for (const field of ['cash', 'cashSalaryPct', 'cashNetWorthPct', 'salaryModPct', 'salaryBoostPct', 'careerSkill', 'financeSkill', 'status']) {
       expect(effect({ [field]: 0.5 })).toEqual([`card offer option 1 needs a whole number for ${field}`]);
       expect(effect({ [field]: '5' })).toEqual([`card offer option 1 needs a whole number for ${field}`]);
     }
-    for (const field of ['loan', 'pension']) {
+    for (const field of ['loan', 'pension', 'homeValue']) {
       expect(effect({ [field]: 0 })).toEqual([`card offer option 1 needs a positive whole number for ${field}`]);
       expect(effect({ [field]: -5 })).toEqual([`card offer option 1 needs a positive whole number for ${field}`]);
     }
@@ -162,7 +162,7 @@ describe('validateContent: cards', () => {
     expect(effect({ job: { levelDelta: 0.5 } })).toEqual(['card offer option 1 needs whole numbers for a job level']);
     expect(effect({ job: { rank: 2 } })).toEqual(['card offer option 1 has a job change with an unknown part: rank']);
     expect(effect({ moveCity: 'atlantis' })).toEqual(['card offer option 1 names an unknown city: atlantis']);
-    expect(effect({ partner: { salaryPct: -1 } })).toEqual(['card offer option 1 needs a non-negative partner salary']);
+    expect(effect({ partner: { salaryPct: -1 } })).toEqual(['card offer option 1 needs a whole, non-negative partner salary']);
     expect(effect({ buyItem: { itemId: 'jetpack', pricePct: 100 } })).toEqual(['card offer option 1 names an unknown item: jetpack']);
     expect(effect({ buyItem: { itemId: 'car_basic', pricePct: 201 } })).toEqual(['card offer option 1 has an item price outside 0..200 percent']);
     expect(effect({ invest: { assetId: 'tulips', amount: 5 } })).toEqual(['card offer option 1 names an unknown asset: tulips']);

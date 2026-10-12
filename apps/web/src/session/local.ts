@@ -1,7 +1,7 @@
 import type { LifeDef } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
-import { applyCards, applyRound, createGame, ENGINE_VERSION, finalScore, realNetWorth, viewOf } from '@ratrace/engine';
-import type { CardPicks, Content, GameView, RoundChoices } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
+import type { Content, GameView, RoundChoices } from '@ratrace/engine';
 import { openSave } from './save';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, Lost, PlayerStore, SavedGame, Sessions, StepResult } from './types';
@@ -49,12 +49,14 @@ class LocalSession implements GameSession {
     return [...this.save.history];
   }
 
-  answerCards(picks: CardPicks): Promise<StepResult> {
+  answerCard(option: number): Promise<StepResult> {
     return this.step(async () => {
       const state = this.save.state;
-      const result = applyCards(this.content, state, picks);
+      // What is logged must replay to the same game: a whole number, or the first option the engine falls back to.
+      const asked = Number.isSafeInteger(option) && option >= 0 ? option : 0;
+      const result = applyCard(this.content, state, asked);
       const log = [...this.save.log];
-      log[state.round] = { picks: structuredClone(picks), orders: null };
+      log[state.round] = { picks: [...(log[state.round]?.picks ?? []), asked], orders: null };
       return this.settle({ ...this.save, log, state: result.state }, result.events);
     });
   }
@@ -64,7 +66,7 @@ class LocalSession implements GameSession {
       const state = this.save.state;
       const result = applyRound(this.content, state, choices);
       const log = [...this.save.log];
-      log[state.round] = { picks: log[state.round]?.picks ?? null, orders: structuredClone(choices.orders) };
+      log[state.round] = { picks: log[state.round]?.picks ?? [], orders: structuredClone(choices.orders) };
       let bankruptcies = this.save.bankruptcies;
       for (const event of result.events) if (event.kind === 'bankrupt') bankruptcies += 1;
       const history = [...this.save.history, realNetWorth(result.state)];
@@ -112,7 +114,7 @@ class LocalSession implements GameSession {
       finishedAt: save.updatedAt,
       score: finalScore(this.content, save.state),
       netWorth: realNetWorth(save.state),
-      status: save.state.player.statusPoints,
+      status: livedStatus(save.state),
       escapedAtRound: save.state.player.escapedAtRound,
       bankruptcies: save.bankruptcies,
       history: save.history,

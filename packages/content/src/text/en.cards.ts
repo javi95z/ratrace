@@ -52,7 +52,7 @@ export const cards: Record<string, CardText> = {
   ]),
   career_shares_vs_salary: c('Shares or salary', 'Your raise can come as cash every month or as shares that vest in two years.', [
     'Take the cash',
-    ['Take the shares', 'The company soars. So do you.', 'A decent result. Roughly what the cash would have been.', 'The shares vest under water.'],
+    ['Take the shares', 'The company soars. So do you.', 'A decent result. Roughly what the raise would have been worth.', 'The shares vest under water.'],
   ]),
   career_remote_work: c('Remote work approved', 'You can work from home for good, if you want to.', [
     'Keep going to the office',
@@ -288,7 +288,7 @@ export const cards: Record<string, CardText> = {
   ]),
   fam_sibling_loan: c('Your sibling needs money', '"Just until the summer."', [
     'Say no',
-    ['Lend it', 'Paid back in full, with a bottle of wine.', 'Nobody mentions it again.'],
+    ['Lend it', 'Paid back in full, with a bottle of wine.', 'Never paid back, and never forgotten: you were there.'],
     'Give a smaller sum as a gift',
   ]),
   fam_cosign: c('Co-sign a loan', 'Your oldest friend needs a guarantor for a loan.', [
@@ -303,7 +303,7 @@ export const cards: Record<string, CardText> = {
   fam_inheritance: c('An inheritance', 'Your grandmother left you something, and a note that says "be sensible".', [
     'Take the cash',
     'Put it all in an index fund',
-    'Keep her little flat',
+    'Make it the deposit on a flat to let',
   ]),
   fam_divorce: c('Divorce', 'It has been a long time coming.', [
     'Settle quietly',
@@ -320,6 +320,7 @@ export const cards: Record<string, CardText> = {
   health_illness: c('A serious illness', 'Tests, a diagnosis, and a treatment plan with a price.', [
     'Use the public system and wait',
     'Go private, now',
+    'Claim on your life cover',
   ]),
   health_burnout: c('Burnout', 'You have been staring at the same email for an hour.', [
     'Push through',

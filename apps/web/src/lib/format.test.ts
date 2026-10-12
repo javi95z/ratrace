@@ -21,6 +21,20 @@ describe('formatFor', () => {
     expect(en.signed(0)).toBe('+$0');
   });
 
+  it('never writes a negative zero: a few cents either way are no dollars', () => {
+    for (const fmt of [en, es]) {
+      for (const cents of [0, -0, 40, -40, -49]) {
+        expect(fmt.money(cents), String(cents)).not.toMatch(/[−-]/);
+        expect(fmt.signed(cents), String(cents)).toMatch(/^\+[^−-]*$/);
+        expect(fmt.compact(cents), String(cents)).not.toMatch(/[−-]/);
+      }
+    }
+    expect(en.signed(-51)).toBe('−$1');
+    expect(en.change(-49)).toBe('+0%');
+    expect(en.change(-51)).toBe('−1%');
+    expect(en.number(-0)).toBe('0');
+  });
+
   it('shortens large amounts for small spaces, and leaves small ones whole', () => {
     expect(en.compact(123_400)).toBe('$1,234');
     expect(en.compact(1_240_000)).toBe('$12.4K');

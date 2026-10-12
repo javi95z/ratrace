@@ -26,13 +26,15 @@ export function formatFor(locale: string): Format {
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const fix = (text: string) => text.replace('-', MINUS);
 
-  const money = (cents: number) => fix(dollars.format(Math.round(cents / 100)));
+  // Rounded first, and never to a negative zero: forty cents owed is "$0", not "−$0", and its sign is a plus.
+  const round = (value: number) => Math.round(value) || 0;
+  const money = (cents: number) => fix(dollars.format(round(cents / 100)));
   return {
     money,
-    signed: (cents) => (cents >= 0 ? `+${money(cents)}` : money(cents)),
+    signed: (cents) => (round(cents / 100) >= 0 ? `+${money(cents)}` : money(cents)),
     compact: (cents) => (Math.abs(cents) < 1_000_000 ? money(cents) : fix(short.format(cents / 100))),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
-    change: (bp) => `${bp >= 0 ? '+' : MINUS}${whole.format(Math.abs(Math.round(bp / 100)))}%`,
-    number: (value) => fix(whole.format(value)),
+    change: (bp) => `${round(bp / 100) >= 0 ? '+' : MINUS}${whole.format(Math.abs(round(bp / 100)))}%`,
+    number: (value) => fix(whole.format(round(value))),
   };
 }

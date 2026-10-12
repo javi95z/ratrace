@@ -65,6 +65,7 @@
     "results": "What happened",
     "chose": "You chose: {label}",
     "toFinance": "To your finances",
+    "next": "Next card",
     "swipe": "Swipe the card, or tap a choice"
   },
   "effects": {
@@ -95,7 +96,7 @@
     "refinanceFixed": "Mortgage becomes fixed",
     "refinanceVariable": "Mortgage becomes variable",
     "sellHome": "You sell your home",
-    "homeValue": "Home value {value}%",
+    "homeValue": "Home value {amount}",
     "lose": "Lose {pct}% of your {what}",
     "savings": "savings",
     "lifestyleFloor": "Lifestyle at least: {tier}"
@@ -266,6 +267,8 @@
     "moved": "You moved to {city}.",
     "escaped": "You are out of the rat race!",
     "escapedHint": "Your passive income covers your life. From here on, work is a choice.",
+    "escapeLost": "Back in the rat race",
+    "escapeLostHint": "Your passive income no longer covers your life. Cover it again and you are out again.",
     "bankrupt": "Bankrupt",
     "bankruptHint": "Everything is sold and every debt is cleared. Banks will remember.",
     "refused": "Not done: {reason}",
@@ -307,6 +310,7 @@
     "score": "Score",
     "wealth": "Wealth",
     "status": "Status",
+    "statusHint": "Status counts as you lived it: the average over the whole life.",
     "bonus": "Escape bonus ×{multiplier}",
     "noBonus": "No escape bonus",
     "never": "You never left the rat race.",

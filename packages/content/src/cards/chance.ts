@@ -6,10 +6,12 @@ export const healthCards: CardDef[] = [
   card('health_illness', 'health', { weight: 6, cooldown: 6, when: { minRound: 2 } }, [
     { effects: { focus: 2, cash: usd(-1_500), protection: { insurance: 'health', coverPct: 90 } } },
     { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 } } },
+    // Life cover pays out on a serious illness.
+    { when: { insured: 'life' }, effects: { focus: 2, cash: usd(9_000) } },
   ]),
   card('health_burnout', 'health', { cooldown: 6, when: { employed: true, minRound: 3, notFlags: ['fit'] } }, [
     { effects: { focus: 2 } },
-    { effects: { salaryBoostPct: -25 } },
+    { effects: { salaryBoostPct: -10 } },
     { effects: { focus: 1, cash: usd(-2_500) } },
   ]),
   card('health_dental', 'health', { cooldown: 5 }, [
@@ -84,9 +86,10 @@ export const laterLifeCards: CardDef[] = [
     { effects: { recurring: [yearly('university', 'expense', 16_000, 2)], status: 4 } },
     { effects: { status: -2 } },
   ]),
-  card('late_early_retirement', 'laterLife', { once: true, when: { employed: true, minRound: 15 } }, [
+  // Offered in the last six years only: three and a half years of pay, and some standing, for at most six of work.
+  card('late_early_retirement', 'laterLife', { once: true, when: { employed: true, minRound: 17 } }, [
     {},
-    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
+    { effects: { job: { leave: true }, cashSalaryPct: 350, status: 6 } },
   ]),
   card('late_downsizing', 'laterLife', { once: true, when: { ownsHome: true, minRound: 13 } }, [
     {},

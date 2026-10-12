@@ -68,6 +68,7 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
     ['extraExpensesAnnual', p.extraExpensesAnnual],
     ['extraPassiveAnnual', p.extraPassiveAnnual],
     ['statusPoints', p.statusPoints],
+    ['statusSum', p.statusSum],
     ['nextId', p.nextId],
     ['passiveStreak', p.passiveStreak],
     ['bankruptUntilRound', p.bankruptUntilRound],

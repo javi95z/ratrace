@@ -7,7 +7,7 @@ export const investingCards: CardDef[] = [
     { effects: { invest: { assetId: 'tesla', amount: usd(2_000) } } },
     { effects: { invest: { assetId: 'tesla', amount: usd(10_000) } } },
   ]),
-  card('inv_share_plan', 'investing', { cooldown: 5, when: { careers: ['tech', 'finance'] } }, [
+  card('inv_share_plan', 'investing', { cooldown: 5, when: { employed: true, flags: ['share_plan'] } }, [
     {},
     { effects: { invest: { assetId: 'microsoft', amount: usd(3_000), bonusPct: 15 } } },
     { effects: { invest: { assetId: 'microsoft', amount: usd(9_000), bonusPct: 15 } } },
@@ -80,8 +80,8 @@ export const taxCards: CardDef[] = [
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { cashSalaryPct: -12 } }] },
   ]),
   card('tax_undeclared', 'tax', { cooldown: 6 }, [
-    { effects: { cash: usd(2_500) } },
-    { outcomes: [{ weight: 75, effects: { cash: usd(4_000) } }, { weight: 25, effects: { cash: usd(-6_000) } }] },
+    { effects: { cash: usd(2_000) } },
+    { outcomes: [{ weight: 75, effects: { cash: usd(4_500) } }, { weight: 25, effects: { cash: usd(-4_000) } }] },
   ]),
   card('tax_residency', 'tax', { once: true, when: { minNetWorth: usd(250_000), notCities: ['dubai'] } }, [
     {},

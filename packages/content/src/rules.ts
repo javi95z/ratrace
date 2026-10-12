@@ -41,7 +41,8 @@ export const life: LifeRules = {
   childCostPct: 22,
   childRounds: 10,
   partnerCostPct: 45,
-  insurancePremiumBp: { health: 350, home: 120, life: 100, liability: 80 },
+  // Priced so that a careful player can justify each one: about what the bills it covers cost over a life.
+  insurancePremiumBp: { health: 150, home: 60, life: 60, liability: 40 },
   // A rented room costs a little over half the housing share of a rented flat.
   rentTierHousingPct: [55, 100],
   rentTierStatus: [0, 3],

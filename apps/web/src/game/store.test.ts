@@ -1,5 +1,5 @@
 import { content, lives } from '@ratrace/content';
-import type { Order } from '@ratrace/engine';
+import type { GameEvent, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
@@ -13,10 +13,13 @@ function setup(store = new MemoryStore()) {
   return { store, sessions, game, get: game.getState };
 }
 
-/** Answers every card of the hand with the given option, falling back as the engine does. */
+/** Answers every card of the hand with the given option, falling back as the engine does, and goes on to the finances. */
 async function answerHand(get: ReturnType<typeof setup>['get'], option = 0) {
   get().leaveNews();
-  while (get().stage === 'cards') await get().pick(option);
+  while (get().stage === 'cards') {
+    await get().pick(option);
+    get().afterCard();
+  }
 }
 
 const study: Order = { type: 'focus', action: 'studyCareer' };
@@ -51,29 +54,61 @@ describe('opening the game', () => {
 });
 
 describe('the cards of a round', () => {
-  it('shows them one at a time and answers them all at once after the last', async () => {
+  const cardsIn = (events: GameEvent[]) => events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
+
+  it('settles each card and shows what it did before the next one', async () => {
     const { get } = setup();
     await get().start('nurse');
     get().leaveNews();
     const hand = get().view?.hand ?? [];
-    expect(get()).toMatchObject({ stage: 'cards', cardIndex: 0 });
-    await get().pick(0);
-    expect(get()).toMatchObject({ stage: 'cards', cardIndex: 1 });
-    expect(get().view?.phase).toBe('cards');
-    while (get().stage === 'cards') await get().pick(0);
-    const s = get();
-    expect(s.stage).toBe('outcome');
-    expect(s.view?.phase).toBe('finance');
-    expect(s.handEvents.filter((e) => e.kind === 'card').map((e) => (e.kind === 'card' ? e.cardId : ''))).toEqual(hand);
+    expect(hand.length).toBeGreaterThan(1);
+    expect(get().stage).toBe('cards');
+
+    for (let i = 0; i < hand.length; i++) {
+      expect(get().view).toMatchObject({ phase: 'cards', answered: i });
+      await get().pick(0);
+      const s = get();
+      expect(s.stage).toBe('outcome');
+      expect(s.view?.answered).toBe(i + 1);
+      expect(cardsIn(s.cardEvents).map((e) => e.cardId)).toEqual([hand[i]]);
+      get().afterCard();
+      expect(get().cardEvents).toEqual([]);
+      if (i < hand.length - 1) expect(get().stage).toBe('cards');
+    }
+    expect(get()).toMatchObject({ stage: 'finance', orders: [] });
+    expect(get().view?.phase).toBe('finance');
+    expect(get().preview).not.toBeNull();
   });
 
-  it('passes on the option the player chose for each card', async () => {
+  it('passes on the option the player chose', async () => {
     const { get } = setup();
     await get().start('nurse');
-    await answerHand(get, 1);
-    const cards = get().handEvents.filter((e) => e.kind === 'card');
-    expect(cards.length).toBeGreaterThan(0);
-    for (const event of cards) if (event.kind === 'card') expect(event.picked).toBe(1);
+    get().leaveNews();
+    await get().pick(1);
+    expect(cardsIn(get().cardEvents)).toMatchObject([{ picked: 1 }]);
+  });
+
+  it('ignores a tap that comes at the wrong moment', async () => {
+    const { get } = setup();
+    await get().start('nurse');
+    // Still on the news: there is no card on screen to answer, no result to leave, and no finances yet.
+    await get().pick(1);
+    get().afterCard();
+    expect(() => get().toFinance()).not.toThrow();
+    expect(get()).toMatchObject({ stage: 'news', preview: null });
+    expect(get().view?.answered).toBe(0);
+    get().leaveNews();
+    get().afterCard();
+    get().toFinance();
+    expect(get()).toMatchObject({ stage: 'cards', preview: null });
+    const first = get().pick(0);
+    expect(get().busy).toBe(true);
+    await get().pick(1);
+    await first;
+    expect(get().view?.answered).toBe(1);
+    // The result is on screen: a second answer must wait for the next card.
+    await get().pick(1);
+    expect(get().view?.answered).toBe(1);
   });
 });
 
@@ -168,7 +203,7 @@ describe('the finance phase', () => {
     const { get } = await inFinance();
     await get().play();
     get().next();
-    expect(get()).toMatchObject({ stage: 'news', cardIndex: 0, picks: {}, handEvents: [], resolved: null });
+    expect(get()).toMatchObject({ stage: 'news', cardEvents: [], resolved: null });
   });
 
   it('ignores a second tap while the round is being played', async () => {
@@ -213,6 +248,17 @@ describe('coming back', () => {
     await again.get().boot();
     expect(again.get()).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'news' });
     expect(again.get().view).toEqual(first.get().view);
+  });
+
+  it('reopens on the next card when the hand was left half answered', async () => {
+    const first = setup();
+    await first.get().start('nurse');
+    first.get().leaveNews();
+    await first.get().pick(0);
+    const again = setup(first.store);
+    await again.get().boot();
+    expect(again.get()).toMatchObject({ status: 'playing', stage: 'cards', cardEvents: [] });
+    expect(again.get().view).toMatchObject({ phase: 'cards', answered: 1 });
   });
 
   it('reopens in the finance phase when the cards were already answered', async () => {

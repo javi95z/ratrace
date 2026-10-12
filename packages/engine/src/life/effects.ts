@@ -80,11 +80,12 @@ function buyProperty(p: PlayerState, deal: NonNullable<Effects['property']>, at:
       roundsLeft: content.debt.mortgageTermRounds,
     });
   }
+  // Worth what was paid: a discount is a cheaper way in, not equity to cash out the same day.
   p.properties.push({
     id: newId(p, 'property'),
     cityId: p.cityId,
     typeId: deal.typeId,
-    value: market,
+    value: price,
     basis: price,
     rented: deal.rented,
     mortgageId,
@@ -189,9 +190,9 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
       debt.fixedRateBp = effects.refinance === 'fixed' ? world.policyRateBp + mortgageSpreadBp(p, content) : 0;
     }
   }
-  if (effects.homeValuePct !== undefined) {
+  if (effects.homeValue !== undefined) {
     const home = homeOf(p, content);
-    if (home !== null) home.value = Math.max(0, home.value + mulDiv(home.value, effects.homeValuePct, 100));
+    if (home !== null) home.value += indexed(effects.homeValue, world);
   }
   if (effects.sellHome) sellHome(p, at);
 

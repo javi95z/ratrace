@@ -99,8 +99,12 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
       else if (inHand.has(cardId)) breaks.push(`hand holds ${cardId} twice`);
       inHand.add(cardId);
     }
+    const answered: unknown = state.answered;
     if (state.finished === true && state.hand.length > 0) breaks.push('the game is finished but a hand is still drawn');
     else if (state.phase === 'cards' && state.hand.length === 0) breaks.push('phase is cards but the hand is empty');
+    else if (!isCount(answered) || answered > state.hand.length) breaks.push(`answered is ${String(answered)} but the hand holds ${state.hand.length} cards`);
+    else if (state.phase === 'cards' && answered === state.hand.length) breaks.push('phase is cards but every card is answered');
+    else if (state.phase === 'finance' && answered < state.hand.length) breaks.push('phase is finance but a card is still unanswered');
   }
 
   return breaks;

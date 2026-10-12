@@ -91,7 +91,7 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.property) add('plain', t(effects.property.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[effects.property.typeId] }));
   if (effects.refinance) add('plain', t(effects.refinance === 'fixed' ? 'refinanceFixed' : 'refinanceVariable'));
   if (effects.sellHome) add('plain', t('sellHome'));
-  if (effects.homeValuePct) add(toneOf(effects.homeValuePct), t('homeValue', { value: signed(effects.homeValuePct) }));
+  if (effects.homeValue) add(toneOf(effects.homeValue), t('homeValue', { amount: fmt.signed(indexed(effects.homeValue, world)) }));
   if (effects.lose) {
     const what = effects.lose.what === 'deposit' ? t('savings') : text.assetClasses[effects.lose.what].toLowerCase();
     add('bad', t('lose', { pct: effects.lose.pct, what }));

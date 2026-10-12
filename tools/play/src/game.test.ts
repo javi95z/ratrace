@@ -159,14 +159,52 @@ describe('the terminal game', () => {
     expect(shown).not.toMatch(/undefined|NaN|\{[a-z_:]+\}/);
   });
 
+  it('settles each card before it shows the next', async () => {
+    const { text: written } = textFor('en');
+    const start = createGame({ content, start: lives[1].start }, 'one-by-one');
+    expect(start.hand.length).toBeGreaterThanOrEqual(2);
+    const { io, out } = scripted(['', '', '', 'quit']);
+    await runGame(io, { locale: 'en', lifeId: 'engineer', seed: 'one-by-one' });
+    const shown = text(out);
+    const first = written.cards[start.hand[0]];
+    const result = shown.indexOf(`${first.title}: you chose`);
+    const second = shown.indexOf(`CARD 2 of ${start.hand.length}`);
+    expect(result).toBeGreaterThan(0);
+    expect(second).toBeGreaterThan(result);
+  });
+
   it('plays every life to the end in both languages without a hole in the text', async () => {
     for (const lifeId of ['nurse', 'engineer', 'civil_servant', 'rider', 'heir', 'newcomer']) {
       for (const locale of ['en', 'es'] as const) {
-        // Take the last option of every card where it is open, to walk through as much text as possible.
-        const { io, out } = scripted(new Array(400).fill('3'));
+        // Take the last option of every card where it is open, to walk through as much text as possible,
+        // look at every screen once a round, and play the round.
+        const out: string[] = [];
+        const queue: string[] = [];
+        let cards = 0;
+        let rounds = 0;
+        const done = locale === 'en' ? 'done' : 'listo';
+        const io: Io = {
+          print: (line) => out.push(line),
+          ask: (prompt) => {
+            if (/\(1-\d/.test(prompt)) {
+              cards += 1;
+              return Promise.resolve('3');
+            }
+            if (queue.length === 0) {
+              rounds += 1;
+              queue.push('me', 'market', 'port', 'shop', 'homes', 'cities', 'tax', 'orders', 'help', done);
+            }
+            return Promise.resolve(queue.shift() as string);
+          },
+        };
         const state = await runGame(io, { locale, lifeId, seed: `walk-${lifeId}` });
-        expect(state === null || state.finished, `${lifeId} ${locale}`).toBe(true);
-        expect(text(out), `${lifeId} ${locale}`).not.toMatch(/undefined|NaN|\{[a-z_:]+\}/);
+        expect(state?.finished, `${lifeId} ${locale}`).toBe(true);
+        expect(rounds, `${lifeId} ${locale}`).toBe(content.rounds);
+        expect(cards, `${lifeId} ${locale}`).toBeGreaterThanOrEqual(content.rounds * content.life.cardsPerRound - 3);
+        const shown = text(out);
+        expect(shown, `${lifeId} ${locale}`).not.toMatch(/undefined|NaN|\{[a-z_:]+\}/);
+        // No sign in front of a sign, and no minus in front of nothing.
+        expect(shown, `${lifeId} ${locale}`).not.toMatch(/[+−-][−-]\s?[$\d]|[−-]\$0(?![\d.,])|[−-]0\s\$/);
       }
     }
   });

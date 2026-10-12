@@ -69,15 +69,16 @@ export function CardStage() {
   const { content, text } = useWords();
   const { reducedMotion } = useSettings();
   const view = useGame((s) => s.view);
-  const cardIndex = useGame((s) => s.cardIndex);
   const busy = useGame((s) => s.busy);
   const pick = useGame((s) => s.pick);
   const x = useMotionValue(0);
   const tilt = useTransform(x, [-160, 160], [-6, 6]);
 
-  const cardId = view?.hand[cardIndex];
+  // The card to answer is the next one of the hand, judged as the player stands after the ones before it.
+  const waiting = view !== null && view.phase === 'cards';
+  const cardId = waiting ? view.hand[view.answered] : undefined;
   const def = content.cards.find((card) => card.id === cardId);
-  const previews = useMemo(() => (view && def ? previewCard(content, view, def.id) : []), [content, view, def]);
+  const previews = useMemo(() => (view && def && waiting ? previewCard(content, view, def.id) : []), [content, view, def, waiting]);
   if (!view || !def) return null;
 
   const written = text.cards[def.id];
@@ -86,7 +87,7 @@ export function CardStage() {
   return (
     <div className="flex flex-col gap-3 px-3">
       <p className="pixel text-center text-[13px] text-ink-300">
-        {t('progress', { n: cardIndex + 1, total: view.hand.length })} · {def.category === 'world' ? t('world') : text.categories[def.category]}
+        {t('progress', { n: view.answered + 1, total: view.hand.length })} · {def.category === 'world' ? t('world') : text.categories[def.category]}
       </p>
 
       <motion.article
@@ -120,11 +121,11 @@ export function CardStage() {
   );
 }
 
-/** What the hand did, once it is answered: the choice made on each card, what the dice said, and the money. */
+/** What the card just answered did: the choice made, what the dice said, and the money. */
 export function Outcome() {
   const t = useT('cards');
   const { text, fmt } = useWords();
-  const events = useGame((s) => s.handEvents);
+  const events = useGame((s) => s.cardEvents);
   const cards = events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
   const money = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
 

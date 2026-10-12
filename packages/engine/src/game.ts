@@ -2,7 +2,7 @@ import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { flowsOf } from './flows';
 import { assertInvariants, assertViewInvariants } from './invariants';
-import { answerCards, drawHand } from './life/cards';
+import { answerNext, answerRest, drawHand } from './life/cards';
 import { refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
 import { ageLife, turnPage } from './life/roundEnd';
@@ -46,6 +46,7 @@ export function createGame(config: GameConfig, seed: string): GameState {
     finished: false,
     phase: 'finance',
     hand: [],
+    answered: 0,
     rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ''}`) },
   };
   const rng = new Rng(state.rng.cards);
@@ -66,23 +67,47 @@ function beginRound(content: Content, state: GameState, rng: Rng): void {
     refreshDerived(state.player, content);
   }
   state.hand = drawHand(state, content, rng);
+  state.answered = 0;
   state.phase = state.hand.length > 0 ? 'cards' : 'finance';
 }
 
-/** Answers the hand on `state` itself and moves it to the finance phase. */
-function resolveHand(content: Content, state: GameState, picks: CardPicks, events: GameEvent[]): void {
+/** Answers, on `state` itself, the next card or every card still waiting, and moves on to the finance phase after the last. */
+function resolveHand(content: Content, state: GameState, answer: { next: unknown } | { rest: CardPicks }, events: GameEvent[]): void {
   const rng = new Rng(state.rng.cards);
-  answerCards(state, content, picks, rng, events);
+  if ('rest' in answer) answerRest(state, content, answer.rest, rng, events);
+  else answerNext(state, content, answer.next, rng, events);
   state.rng.cards = rng.snapshot();
-  state.phase = 'finance';
+  if (state.answered >= state.hand.length) state.phase = 'finance';
+}
+
+function guardCards(caller: string, content: Content, state: GameState): void {
+  if (state.finished) throw new Error(`${caller}: the game is already finished`);
+  assertInvariants(content, state);
+  if (state.phase !== 'cards') throw new Error(`${caller}: the cards of this round are already answered`);
 }
 
 /**
- * Answers the cards in the player's hand and moves the round on to the finance phase.
- * `picks` maps a card id to the number of the chosen option. It may come from an untrusted client:
- * a card that is missing, a number that is not an option, or an option the player cannot take
- * all fall back to the first option. Dice are rolled here, so nothing random is left for
- * `applyRound`, and `previewRound` stays exact.
+ * Answers the next card of the hand with the option given, and rolls its dice.
+ * Cards are answered one at a time so that each is judged as the player stands after the ones
+ * before it: an option shown as open is open. After the last card the round moves on to the finance phase.
+ *
+ * `option` may come from an untrusted client. Anything that is not the number of an open option
+ * falls back to the first option. The state passed in is never changed.
+ */
+export function applyCard(content: Content, state: GameState, option: number | null): { state: GameState; events: GameEvent[] } {
+  guardCards('applyCard', content, state);
+  const next = structuredClone(state);
+  const events: GameEvent[] = [];
+  resolveHand(content, next, { next: option }, events);
+  assertInvariants(content, next);
+  return { state: next, events };
+}
+
+/**
+ * Answers every card still waiting, each with the option `picks` gives for its id, and moves the
+ * round on to the finance phase. A card that `picks` does not name takes its first option.
+ * Dice are rolled here and in `applyCard`, so nothing random is left for `applyRound`,
+ * and `previewRound` stays exact.
  *
  * The state passed in is never changed.
  */
@@ -91,12 +116,10 @@ export function applyCards(content: Content, state: GameState, picks: CardPicks)
   if (typeof picks !== 'object' || picks === null || Array.isArray(picks)) {
     throw new Error('applyCards: picks must be a record of card id to option number');
   }
-  assertInvariants(content, state);
-  if (state.phase !== 'cards') throw new Error('applyCards: the cards of this round are already answered');
-
+  guardCards('applyCards', content, state);
   const next = structuredClone(state);
   const events: GameEvent[] = [];
-  resolveHand(content, next, picks, events);
+  resolveHand(content, next, { rest: picks }, events);
   assertInvariants(content, next);
   return { state: next, events };
 }
@@ -166,7 +189,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
   const { tally, rejected } = executeChoices(content, player, now, state.round, choices);
-  const { income, expenses, passive, passiveAfterTax, outgoings, bill } = flowsOf(content, player, now, tally);
+  const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, player, now, tally);
   return {
     player,
     income,
@@ -179,13 +202,13 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
     tax: bill,
     purchaseTaxPaid: tally.purchaseTaxPaid,
     cashAfter: player.cash + income.salary + passive - outgoings - bill.total,
-    escape: { passiveAfterTax, outgoings },
+    escape,
     rejected,
   };
 }
 
 /**
- * Plays one round. If the hand is still unanswered, every card first takes its first option.
+ * Plays one round. Any card still unanswered first takes its first option.
  * Then the steps run in a fixed order:
  *
  * 1. Orders execute at the prices and rates of this round.
@@ -214,12 +237,15 @@ export function applyRound(
   const completed = next.round + 1;
   const events: GameEvent[] = [];
 
-  if (next.phase === 'cards') resolveHand(content, next, {}, events);
+  if (next.phase === 'cards') resolveHand(content, next, { rest: {} }, events);
 
   const { tally, rejected } = executeChoices(content, p, now, next.round, choices);
   for (const { order, reason } of rejected) events.push({ kind: 'orderRejected', order, reason });
 
-  const { income, expenses, passive, passiveAfterTax, outgoings, bill } = flowsOf(content, p, now, tally);
+  // The status this round was lived with: after the cards and the orders, before anything ages.
+  p.statusSum += p.statusPoints;
+
+  const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, p, now, tally);
 
   growPortfolio(p, content, now, after);
   growProperties(p, after);
@@ -253,10 +279,15 @@ export function applyRound(
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });
   }
 
-  p.passiveStreak = passiveAfterTax >= outgoings ? p.passiveStreak + 1 : 0;
+  // Out of the rat race after two covering rounds in a row; back in it after the first that does not cover.
+  const covered = escape.passiveAfterTax >= escape.outgoings;
+  p.passiveStreak = covered ? p.passiveStreak + 1 : 0;
   if (p.escapedAtRound === null && p.passiveStreak >= 2) {
     p.escapedAtRound = completed - 1;
     events.push({ kind: 'escaped', round: completed - 1 });
+  } else if (p.escapedAtRound !== null && !covered) {
+    p.escapedAtRound = null;
+    events.push({ kind: 'escapeLost' });
   }
 
   const rng = new Rng(next.rng.cards);
@@ -273,6 +304,7 @@ export function applyRound(
   next.finished = completed >= content.rounds;
   if (next.finished) {
     next.hand = [];
+    next.answered = 0;
     next.phase = 'finance';
   } else {
     beginRound(content, next, rng);

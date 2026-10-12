@@ -74,18 +74,23 @@ describe('effectTags', () => {
       tags({
         job: { career: 'finance', level: 0 }, moveCity: 'london', partner: { salaryPct: 85 }, children: 1,
         buyItem: { itemId: 'watch_rolex', pricePct: 100 }, invest: { assetId: 'tesla', amount: 200_000 }, pension: 400_000, loan: 1_200_000,
-        property: { typeId: 'studio', pricePct: 85, downPct: 25, rented: true }, refinance: 'fixed', homeValuePct: 9,
+        property: { typeId: 'studio', pricePct: 85, downPct: 25, rented: true }, refinance: 'fixed', homeValue: 2_000_000,
         lose: { what: 'crypto', pct: 40 }, lifestyleFloor: 1,
       }).map((tag) => tag.text),
     ).toEqual([
       'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', '$2,000 into Tesla', '+$4,000 pension', 'Loan of $12,000',
-      'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +9%', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
+      'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +$20,000', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
     ]);
     expect(tags({ job: { leave: true }, partner: null, sellHome: true, lose: { what: 'deposit', pct: 15 } }).map((tag) => tag.text)).toEqual([
       'You stop working', 'You separate', 'You sell your home', 'Lose 15% of your savings',
     ]);
     expect(tags({ job: { levelDelta: 1 } })[0]).toEqual({ tone: 'good', text: 'A step up' });
     expect(tags({ job: { levelDelta: -1 } })[0]).toEqual({ tone: 'bad', text: 'A step down' });
+  });
+
+  it('writes a renovation at today\u2019s prices, as the engine will add it', () => {
+    const later = { ...world, priceLevel: world.priceLevel * 2 };
+    expect(effectTags(words('en'), t('en', 'effects'), later, { homeValue: 2_000_000 })).toEqual([{ tone: 'good', text: 'Home value +$40,000' }]);
   });
 
   it('speaks Spanish', () => {
