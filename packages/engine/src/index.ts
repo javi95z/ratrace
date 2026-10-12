@@ -18,4 +18,5 @@ export { propertyPrice } from './property';
 export { debtRateBp, mortgageSpreadBp } from './debt';
 export { assetYieldBp, depositRateBp, indexed, INDEX_START, PRICE_LEVEL_START } from './rates';
 export { stateHash } from './hash';
-export { assertInvariants, findInvariantBreaks } from './invariants';
+export { assertInvariants, assertViewInvariants, findInvariantBreaks, findViewBreaks } from './invariants';
+export { viewOf } from './view';

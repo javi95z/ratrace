@@ -744,3 +744,10 @@ export interface GameState {
   /** Saved position of the player's own random stream. */
   rng: { cards: RngState };
 }
+
+/**
+ * A game as a client may hold it: no seed, no saved random stream, and a timeline that stops at the
+ * current round. `viewOf` makes one. Previews and selectors accept a view; playing needs the game.
+ * A whole `GameState` is also a valid view, of itself.
+ */
+export type GameView = Omit<GameState, 'seed' | 'rng'>;

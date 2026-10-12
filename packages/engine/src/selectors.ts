@@ -2,7 +2,7 @@ import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './econ
 import type { Cents } from './money';
 import { PRICE_LEVEL_START } from './rates';
 import { scoreOf } from './scoring';
-import type { Content, GameState, PlayerState } from './types';
+import type { Content, GameView, PlayerState } from './types';
 
 /** Everything owned, with status items at what they would sell for, less everything owed. */
 export function netWorth(p: PlayerState): Cents {
@@ -15,12 +15,12 @@ export function netWorth(p: PlayerState): Cents {
 }
 
 /** Net worth in start-of-game dollars, so that lives played through different inflation can be compared. */
-export function realNetWorth(state: GameState): Cents {
+export function realNetWorth(state: GameView): Cents {
   const world = state.timeline[state.round];
   return Math.floor((netWorth(state.player) * PRICE_LEVEL_START) / world.priceLevel);
 }
 
-export function finalScore(content: Content, state: GameState): number {
+export function finalScore(content: Content, state: GameView): number {
   const p = state.player;
   return scoreOf(realNetWorth(state), p.statusPoints, p.escapedAtRound, content);
 }
@@ -28,7 +28,7 @@ export function finalScore(content: Content, state: GameState): number {
 /** Yearly figures at the current world's rates, for the HUD. */
 export function cashflow(
   content: Content,
-  state: GameState,
+  state: GameView,
 ): { salaryAnnual: Cents; passiveAnnual: Cents; expensesAnnual: Cents } {
   const world = state.timeline[state.round];
   const years = content.yearsPerRound;

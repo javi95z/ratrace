@@ -2,13 +2,13 @@ import { coverShortfall } from '../debt';
 import { cardOf } from '../lookup';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
-import type { CardDef, CardPicks, Content, GameEvent, GameState, PlayerState } from '../types';
+import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, PlayerState } from '../types';
 import { conditionHolds } from './conditions';
 import type { Situation } from './conditions';
 import { applyEffects } from './effects';
 import { focusLeft } from './orders';
 
-const situationOf = (content: Content, state: GameState): Situation => ({
+const situationOf = (content: Content, state: GameView): Situation => ({
   content,
   world: state.timeline[state.round],
   round: state.round,
@@ -106,8 +106,8 @@ export interface OptionPreview {
   outcomes: Array<{ weight: number; cash: Cents }>;
 }
 
-/** What each option of a card in the hand would do to the player's cash, and whether it is open. */
-export function previewCard(content: Content, state: GameState, cardId: string): OptionPreview[] {
+/** What each option of a card in the hand would do to the player's cash, and whether it is open. A view is all it needs. */
+export function previewCard(content: Content, state: GameView, cardId: string): OptionPreview[] {
   if (!state.hand.includes(cardId)) throw new Error(`previewCard: ${cardId} is not in the hand`);
   const card = cardOf(content, cardId);
   const at = situationOf(content, state);

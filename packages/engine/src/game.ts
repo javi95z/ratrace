@@ -1,7 +1,7 @@
 import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
-import { assertInvariants } from './invariants';
+import { assertInvariants, assertViewInvariants } from './invariants';
 import { answerCards, drawHand } from './life/cards';
 import { refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
@@ -23,6 +23,7 @@ import type {
   GameConfig,
   GameEvent,
   GameState,
+  GameView,
   LedgerLine,
   OrderContext,
   PlayerState,
@@ -130,12 +131,11 @@ export interface RoundPreview {
   rejected: RejectedOrder[];
 }
 
-function guard(caller: string, content: Content, state: GameState, choices: RoundChoices): void {
+function guard(caller: string, state: GameView, choices: RoundChoices): void {
   if (state.finished) throw new Error(`${caller}: the game is already finished`);
   if (typeof choices !== 'object' || choices === null || !Array.isArray(choices.orders)) {
     throw new Error(`${caller}: choices.orders must be an array`);
   }
-  assertInvariants(content, state);
 }
 
 /** Executes the round's orders on `p` at the prices and rates of `now`. */
@@ -200,10 +200,12 @@ function flowsOf(content: Content, p: PlayerState, now: WorldState, tally: Round
 
 /**
  * Shows what a round will pay and charge for the given choices, without playing it.
- * It reads only the current world, so it reveals nothing about next round's prices.
+ * It reads only the current world, so it reveals nothing about next round's prices,
+ * and a view of the game is all it needs.
  */
-export function previewRound(content: Content, state: GameState, choices: RoundChoices): RoundPreview {
-  guard('previewRound', content, state, choices);
+export function previewRound(content: Content, state: GameView, choices: RoundChoices): RoundPreview {
+  guard('previewRound', state, choices);
+  assertViewInvariants(content, state);
   if (state.phase === 'cards') throw new Error('previewRound: answer the cards first');
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
@@ -245,7 +247,8 @@ export function applyRound(
   state: GameState,
   choices: RoundChoices,
 ): { state: GameState; events: GameEvent[] } {
-  guard('applyRound', content, state, choices);
+  guard('applyRound', state, choices);
+  assertInvariants(content, state);
 
   const next = structuredClone(state);
   const p = next.player;

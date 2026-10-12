@@ -1,9 +1,9 @@
 import { isCount, isRecurring, isWhole } from '../checks';
-import type { Content, GameState } from '../types';
+import type { Content, GameView } from '../types';
 import { INSURANCE_KINDS } from './derive';
 
-/** Every broken rule about the player's life, the hand, the phase and the saved random stream. */
-export function lifeBreaks(content: Content, state: GameState): string[] {
+/** Every broken rule about the player's life, the hand and the phase. */
+export function lifeBreaks(content: Content, state: GameView): string[] {
   const p = state.player;
   const life = p.life;
   const breaks: string[] = [];
@@ -102,10 +102,6 @@ export function lifeBreaks(content: Content, state: GameState): string[] {
     if (state.finished === true && state.hand.length > 0) breaks.push('the game is finished but a hand is still drawn');
     else if (state.phase === 'cards' && state.hand.length === 0) breaks.push('phase is cards but the hand is empty');
   }
-
-  const saved: unknown = state.rng.cards;
-  const isStream = Array.isArray(saved) && saved.length === 4 && saved.every((x) => isCount(x) && x <= 0xffff_ffff);
-  if (!isStream) breaks.push('rng.cards is not a saved random stream');
 
   return breaks;
 }

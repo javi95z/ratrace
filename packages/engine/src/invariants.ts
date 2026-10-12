@@ -2,7 +2,7 @@ import { isCount } from './checks';
 import { stateHash } from './hash';
 import { deriveExpenses, derivePassive, deriveSalary, deriveStatus } from './life/derive';
 import { lifeBreaks } from './life/invariants';
-import type { Content, GameState } from './types';
+import type { Content, GameState, GameView } from './types';
 import { DEBT_KINDS } from './validate';
 
 
@@ -12,6 +12,19 @@ import { DEBT_KINDS } from './validate';
  * so a corrupt save or a bug in a system that writes to the player is caught at once.
  */
 export function findInvariantBreaks(content: Content, state: GameState): string[] {
+  return breaksOf(content, state, state);
+}
+
+/**
+ * The same check for a view, which has no seed and no saved random stream, and whose timeline
+ * stops at the current round. `previewRound` and `previewCard` run this on what they are given.
+ */
+export function findViewBreaks(content: Content, view: GameView): string[] {
+  return breaksOf(content, view, null);
+}
+
+/** `whole` is the full game when there is one to check, and null when only a view is at hand. */
+function breaksOf(content: Content, state: GameView, whole: GameState | null): string[] {
   const p = state.player;
   const breaks: string[] = [];
 
@@ -73,11 +86,19 @@ export function findInvariantBreaks(content: Content, state: GameState): string[
     if (!content.cities.some((city) => city.id === property.cityId)) breaks.push(`property ${property.id} is in an unknown city`);
     if (!content.propertyTypes.some((type) => type.id === property.typeId)) breaks.push(`property ${property.id} has an unknown type`);
   }
-  if (state.timeline.length !== content.rounds + 1) {
-    breaks.push(`timeline has ${state.timeline.length} states, expected ${content.rounds + 1}`);
+  const states = state.timeline.length;
+  if (whole !== null) {
+    if (states !== content.rounds + 1) breaks.push(`timeline has ${states} states, expected ${content.rounds + 1}`);
+  } else if (states !== state.round + 1 && states !== content.rounds + 1) {
+    breaks.push(`timeline has ${states} states, expected ${state.round + 1} or ${content.rounds + 1}`);
   }
 
   breaks.push(...lifeBreaks(content, state));
+  if (whole !== null) {
+    const saved: unknown = whole.rng.cards;
+    const isStream = Array.isArray(saved) && saved.length === 4 && saved.every((x) => isCount(x) && x <= 0xffff_ffff);
+    if (!isStream) breaks.push('rng.cards is not a saved random stream');
+  }
 
   if (breaks.length === 0) {
     const derived: Array<[string, number, number]> = [
@@ -94,14 +115,22 @@ export function findInvariantBreaks(content: Content, state: GameState): string[
   return breaks;
 }
 
-export function assertInvariants(content: Content, state: GameState): void {
+function assertNone(state: GameView, find: () => string[]): void {
   let breaks: string[];
   try {
-    breaks = findInvariantBreaks(content, state);
+    breaks = find();
   } catch {
     throw new Error('invariant broken: the state is not a game state');
   }
   if (breaks.length > 0) {
     throw new Error(`invariant broken at round ${state.round} (state ${stateHash(state)}): ${breaks.join('; ')}`);
   }
+}
+
+export function assertInvariants(content: Content, state: GameState): void {
+  assertNone(state, () => findInvariantBreaks(content, state));
+}
+
+export function assertViewInvariants(content: Content, view: GameView): void {
+  assertNone(view, () => findViewBreaks(content, view));
 }
