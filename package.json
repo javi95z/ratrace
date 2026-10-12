@@ -8,8 +8,10 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art",
-    "art": "pnpm --filter @ratrace/art-tool build-art"
+    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play",
+    "art": "pnpm --filter @ratrace/art-tool build-art",
+    "balance": "pnpm --filter @ratrace/balance balance",
+    "play": "pnpm --filter @ratrace/play play"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

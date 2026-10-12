@@ -1,0 +1,13 @@
+{
+  "name": "@ratrace/balance",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "balance": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@ratrace/content": "workspace:*",
+    "@ratrace/engine": "workspace:*"
+  }
+}

@@ -63,7 +63,7 @@ export const market: MarketParams = {
   rateNoiseBp: 40,
   inflationTargetBp: { expansion: 220, boom: 380, slowdown: 250, recession: 80, recovery: 180 },
   inflationNoiseBp: 80,
-  depositSpreadBp: 100,
+  depositSpreadBp: 150,
   recessionWinterChancePct: 40,
   start: { regime: 'expansion', cryptoPhase: 'accumulation', policyRateBp: 250, inflationBp: 220 },
 };

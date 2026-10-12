@@ -43,6 +43,24 @@ importers:
 
   tools/art: {}
 
+  tools/balance:
+    dependencies:
+      '@ratrace/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+
+  tools/play:
+    dependencies:
+      '@ratrace/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+
 packages:
 
   '@cacheable/memory@2.2.0':

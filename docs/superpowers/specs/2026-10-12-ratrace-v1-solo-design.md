@@ -135,11 +135,15 @@ World state: regime, policy rate, inflation, crypto cycle, a price per asset and
 - **Random streams:** one for the economy, one per asset and one per city. Adding an asset later does not change the others for any seed, so stored seeds stay valid.
 - **Dividends** are paid per asset at resolve.
 
-Parameter tables live in `packages/content` and are tuned with the balance harness. Initial acceptance bands, adjustable during milestone 1:
+Parameter tables live in `packages/content` and are tuned with the balance harness. Acceptance bands, measured over the three starting lives:
 
-- An index-fund-only bot escapes the rat race in 25% to 45% of seeds.
-- No single bot strategy has the top score in more than 40% of seeds.
-- The crypto-gambler bot goes bankrupt in 30% to 60% of seeds.
+- An index-fund-only bot escapes the rat race in 25% to 45% of lives.
+- No single bot strategy has the top score in more than 40% of lives.
+- The crypto-gambler bot is ruined in 30% to 60% of lives, and is the richest of all bots in at least 10%. Ruined means it ends with less than half the net worth the saver bot reached on the same life and seed.
+
+The third band first counted bankruptcies. It was changed during milestone 1, as this section allowed: since a solvent player is never liquidated (3.12), a gambler who sells coins to clear the credit card is seldom formally bankrupt, about one life in nine, so bankruptcy stopped measuring the risk of crypto. Ending far behind someone who merely saved does measure it.
+
+The bots are defined in `tools/balance`. Each is a few plain rules with no number chosen to hit a band; when the game leaves a band, the content is tuned, not the bots.
 
 ### 3.8 Taxes
 
@@ -214,7 +218,7 @@ Three consequences are deliberate:
 - **W, wealth points:** linear interpolation between breakpoints, on net worth in start-of-game dollars, so that lives played through different inflation can be compared. Net worth ≤ 0 → 0; 10k → 100; 100k → 200; 1M → 300; 10M → 400; 100M → 500.
 - **S, status points:** the status total. Item values are calibrated so a high-status life lands between 250 and 350.
 - **E, escape multiplier:** 100 if the player never escaped. Otherwise 125 + 3 × rounds remaining at the moment of escape.
-- **Escape** means passive income ≥ total expenses at two consecutive resolves. The multiplier is fixed by the first of the two.
+- **Escape** means passive income, after the tax it would bear if the player had no salary, ≥ total expenses at two consecutive resolves. The test asks whether the player could stop working, so it ignores the salary and the tax bracket the salary puts them in, and it is easier to pass where passive income is taxed lightly. The multiplier is fixed by the first of the two.
 
 All constants are configuration and are tuned with the balance harness.
 

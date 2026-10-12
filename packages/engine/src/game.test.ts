@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyRound, createGame } from './game';
+import { applyRound, createGame, previewRound } from './game';
 import { PRICE_LEVEL_START } from './rates';
 import { cashflow, finalScore, netWorth, realNetWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
@@ -293,6 +293,31 @@ describe('applyRound: escape', () => {
     const third = applyRound(content, second.state, { orders: [] });
     expect(third.state.player.escapedAtRound).toBe(1);
     expect(third.events.some((e) => e.kind === 'escaped')).toBe(false);
+  });
+
+  it('counts passive income after the tax it would bear on its own', () => {
+    // Living costs 3,600,000 a round. Passive income of 3,700,000 covers it before tax,
+    // but the 133,000 of income tax it would bear without a salary leaves it short.
+    const taxed = withPlayer(createGame({ content, start: fixtureStart() }, 'after-tax'), {}, { recurring: passive(1_850_000) });
+    expect(previewRound(content, taxed, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000 });
+    expect(applyRound(content, taxed, { orders: [] }).state.player.passiveStreak).toBe(0);
+
+    const enough = withPlayer(createGame({ content, start: fixtureStart() }, 'after-tax'), {}, { recurring: passive(1_900_000) });
+    expect(previewRound(content, enough, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000 });
+    expect(applyRound(content, enough, { orders: [] }).state.player.passiveStreak).toBe(1);
+  });
+
+  it('judges escape as if the salary were gone, so a high earner is not held back by the bracket their salary puts them in', () => {
+    const rich = withPlayer(createGame({ content, start: { ...fixtureStart(), salaryAnnual: 50_000_000 } }, 'after-tax'), {}, { recurring: passive(1_900_000) });
+    expect(previewRound(content, rich, { orders: [] }).escape).toEqual({ passiveAfterTax: 3_648_000, outgoings: 3_600_000 });
+    expect(applyRound(content, rich, { orders: [] }).state.player.passiveStreak).toBe(1);
+  });
+
+  it('is easier to reach where passive income is not taxed', () => {
+    // In the zero-tax city living costs 8,000,000 a round, and 8,100,000 of passive income is all kept.
+    const start = withPlayer(createGame({ content, start: { ...fixtureStart(), cityId: 'haven' } }, 'no-tax'), {}, { recurring: passive(4_050_000) });
+    expect(previewRound(content, start, { orders: [] }).escape).toEqual({ passiveAfterTax: 8_100_000, outgoings: 8_000_000 });
+    expect(applyRound(content, start, { orders: [] }).state.player.passiveStreak).toBe(1);
   });
 
   it('resets the streak when passive income falls short', () => {

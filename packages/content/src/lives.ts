@@ -17,7 +17,7 @@ export interface LifeDef {
  */
 export const lives: LifeDef[] = [
   {
-    // Cannot be laid off and is paid well for night shifts; the ladder tops out low.
+    // Cannot be laid off and is paid well for night shifts; the ladder tops out low, and a flat of her own must wait.
     id: 'nurse',
     unlock: 'default',
     start: {
@@ -26,7 +26,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [],
-      life: { lifeId: 'nurse', career: { id: 'healthcare', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3, flags: ['layoff_proof'] },
+      life: { lifeId: 'nurse', career: { id: 'healthcare', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3, rentTier: 0, flags: ['layoff_proof'] },
     },
   },
   {

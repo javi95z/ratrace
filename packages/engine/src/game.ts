@@ -122,6 +122,11 @@ export interface RoundPreview {
   purchaseTaxPaid: Cents;
   /** Cash after income, expenses and tax. If negative, the deposit and then the credit card cover it. */
   cashAfter: Cents;
+  /**
+   * The two sides of the escape test for this round. The player is out of the rat race once
+   * passive income, after the tax it would bear with no salary, covers the outgoings two rounds running.
+   */
+  escape: { passiveAfterTax: Cents; outgoings: Cents };
   rejected: RejectedOrder[];
 }
 
@@ -156,6 +161,8 @@ interface Flows {
   income: RoundIncome;
   expenses: RoundExpenses;
   passive: Cents;
+  /** Passive income less the tax it would bear if the player had no salary: what they could live on without working. */
+  passiveAfterTax: Cents;
   outgoings: Cents;
   bill: TaxBill;
 }
@@ -171,16 +178,24 @@ function flowsOf(content: Content, p: PlayerState, now: WorldState, tally: Round
   let propertyValueOwned = 0;
   for (const property of p.properties) propertyValueOwned += property.value;
   const city = cityOf(content, p.cityId);
-  const bill = computeTax(effectiveTax(city, now), indexed(city.medianSalaryAnnual, now), content.yearsPerRound, {
-    salary: income.salary,
+  const tax = effectiveTax(city, now);
+  const median = indexed(city.medianSalaryAnnual, now);
+  const earned = {
     otherIncome: income.otherPassive,
-    pensionContribution: tally.pensionContribution,
-    realisedGains: tally.realisedGains,
     dividends: income.dividends + income.interest,
     rent: income.rent,
     propertyValueOwned,
+  };
+  const bill = computeTax(tax, median, content.yearsPerRound, {
+    ...earned,
+    salary: income.salary,
+    pensionContribution: tally.pensionContribution,
+    realisedGains: tally.realisedGains,
   });
-  return { income, expenses, passive: passiveOf(income), outgoings: outgoingsOf(expenses), bill };
+  // The same income with no salary and nothing sold: the tax a life of leisure would pay.
+  const idle = computeTax(tax, median, content.yearsPerRound, { ...earned, salary: 0, pensionContribution: 0, realisedGains: 0 });
+  const passive = passiveOf(income);
+  return { income, expenses, passive, passiveAfterTax: passive - idle.total, outgoings: outgoingsOf(expenses), bill };
 }
 
 /**
@@ -193,7 +208,7 @@ export function previewRound(content: Content, state: GameState, choices: RoundC
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
   const { tally, rejected } = executeChoices(content, player, now, state.round, choices);
-  const { income, expenses, passive, outgoings, bill } = flowsOf(content, player, now, tally);
+  const { income, expenses, passive, passiveAfterTax, outgoings, bill } = flowsOf(content, player, now, tally);
   return {
     player,
     income,
@@ -206,6 +221,7 @@ export function previewRound(content: Content, state: GameState, choices: RoundC
     tax: bill,
     purchaseTaxPaid: tally.purchaseTaxPaid,
     cashAfter: player.cash + income.salary + passive - outgoings - bill.total,
+    escape: { passiveAfterTax, outgoings },
     rejected,
   };
 }
@@ -244,7 +260,7 @@ export function applyRound(
   const { tally, rejected } = executeChoices(content, p, now, next.round, choices);
   for (const { order, reason } of rejected) events.push({ kind: 'orderRejected', order, reason });
 
-  const { income, expenses, passive, outgoings, bill } = flowsOf(content, p, now, tally);
+  const { income, expenses, passive, passiveAfterTax, outgoings, bill } = flowsOf(content, p, now, tally);
 
   growPortfolio(p, content, now, after);
   growProperties(p, after);
@@ -278,7 +294,7 @@ export function applyRound(
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });
   }
 
-  p.passiveStreak = passive >= outgoings ? p.passiveStreak + 1 : 0;
+  p.passiveStreak = passiveAfterTax >= outgoings ? p.passiveStreak + 1 : 0;
   if (p.escapedAtRound === null && p.passiveStreak >= 2) {
     p.escapedAtRound = completed - 1;
     events.push({ kind: 'escaped', round: completed - 1 });

@@ -6,13 +6,13 @@ const BUSINESSES = ['bar', 'shop', 'app'];
 export const careerCards: CardDef[] = [
   card('career_raise', 'career', { cooldown: 3, when: { employed: true } }, [
     {},
-    { outcomes: [{ weight: 55, effects: { salaryModPct: 5 } }, { weight: 35, effects: {} }, { weight: 10, effects: { status: -2 } }] },
-    { effects: { focus: 1 }, outcomes: [{ weight: 75, effects: { salaryModPct: 7 } }, { weight: 25, effects: {} }] },
+    { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 40, effects: {} }, { weight: 10, effects: { status: -2 } }] },
+    { effects: { focus: 1 }, outcomes: [{ weight: 70, effects: { salaryModPct: 5 } }, { weight: 30, effects: {} }] },
   ]),
   card('career_competitor_offer', 'career', { cooldown: 5, when: { employed: true, minRound: 2 } }, [
     {},
-    { effects: { salaryModPct: 10, careerSkill: -1 } },
-    { outcomes: [{ weight: 50, effects: { salaryModPct: 6 } }, { weight: 35, effects: {} }, { weight: 15, effects: { salaryModPct: -3 } }] },
+    { effects: { salaryModPct: 6, careerSkill: -1 } },
+    { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 35, effects: {} }, { weight: 15, effects: { salaryModPct: -3 } }] },
   ]),
   card('career_relocation', 'career', { once: true, when: { employed: true, minLevel: 1, notCities: ['london'] } }, [
     {},
@@ -39,8 +39,8 @@ export const careerCards: CardDef[] = [
   ]),
   card('career_big_offer', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
     {},
-    { effects: { focus: 1, salaryModPct: 15, status: 6 } },
-    { outcomes: [{ weight: 60, effects: { salaryModPct: 22, status: 6 } }, { weight: 40, effects: {} }] },
+    { effects: { focus: 1, salaryModPct: 10, status: 6 } },
+    { outcomes: [{ weight: 60, effects: { salaryModPct: 15, status: 6 } }, { weight: 40, effects: {} }] },
   ]),
   card('career_shares_vs_salary', 'career', { cooldown: 8, when: { careers: ['tech', 'finance'] } }, [
     { effects: { salaryModPct: 4 } },
@@ -53,12 +53,12 @@ export const careerCards: CardDef[] = [
   ]),
   card('career_become_manager', 'career', { once: true, when: { employed: true, minLevel: 1 } }, [
     { effects: { careerSkill: 1 } },
-    { effects: { focus: 1, salaryModPct: 8, status: 3 } },
+    { effects: { focus: 1, salaryModPct: 5, status: 3 } },
   ]),
   card('career_headhunter', 'career', { cooldown: 6, when: { employed: true, minLevel: 2 } }, [
     {},
-    { effects: { focus: 1 }, outcomes: [{ weight: 45, effects: { salaryModPct: 12 } }, { weight: 55, effects: {} }] },
-    { when: { notCities: ['new_york'] }, effects: { moveCity: 'new_york', salaryModPct: 10, cash: usd(5_000) } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 45, effects: { salaryModPct: 8 } }, { weight: 55, effects: {} }] },
+    { when: { notCities: ['new_york'] }, effects: { moveCity: 'new_york', salaryModPct: 6, cash: usd(5_000) } },
   ]),
 ];
 
@@ -78,8 +78,8 @@ export const educationCards: CardDef[] = [
   ]),
   card('edu_mba', 'education', { once: true, when: { employed: true, minRound: 2, maxRound: 10, notItems: ['edu_mba'] } }, [
     {},
-    { effects: { focus: 2, buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 8 } },
-    { effects: { focus: 2, loan: usd(95_000), buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 8 } },
+    { effects: { focus: 2, buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 6 } },
+    { effects: { focus: 2, loan: usd(95_000), buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 6 } },
   ]),
   card('edu_bootcamp', 'education', { once: true, when: { careers: ['healthcare', 'public', 'service', 'finance'], maxRound: 10 } }, [
     {},
@@ -100,7 +100,7 @@ export const businessCards: CardDef[] = [
     {},
     {
       effects: { focus: 2, setFlags: ['self_employed'] },
-      outcomes: [{ weight: 40, effects: { salaryModPct: 25 } }, { weight: 35, effects: { salaryModPct: 5 } }, { weight: 25, effects: { salaryModPct: -15 } }],
+      outcomes: [{ weight: 40, effects: { salaryModPct: 15 } }, { weight: 35, effects: { salaryModPct: 4 } }, { weight: 25, effects: { salaryModPct: -10 } }],
     },
   ]),
   card('biz_bar', 'business', { cooldown: 8, when: { minFinanceSkill: 2, minRound: 2, notFlags: ['has_business'] } }, [

@@ -84,7 +84,7 @@ export const cities: CityDef[] = [
   {
     id: 'madrid',
     medianSalaryAnnual: usd(32_000),
-    livingCostAnnual: usd(20_000),
+    livingCostAnnual: usd(26_000),
     flatPrice: usd(280_000),
     rentYieldBp: 420,
     propertyGrowthBp: 550,
@@ -97,7 +97,7 @@ export const cities: CityDef[] = [
   {
     id: 'london',
     medianSalaryAnnual: usd(58_000),
-    livingCostAnnual: usd(40_000),
+    livingCostAnnual: usd(47_000),
     flatPrice: usd(620_000),
     rentYieldBp: 360,
     propertyGrowthBp: 550,
@@ -110,7 +110,7 @@ export const cities: CityDef[] = [
   {
     id: 'new_york',
     medianSalaryAnnual: usd(75_000),
-    livingCostAnnual: usd(46_000),
+    livingCostAnnual: usd(60_000),
     flatPrice: usd(700_000),
     rentYieldBp: 400,
     propertyGrowthBp: 600,
@@ -123,7 +123,7 @@ export const cities: CityDef[] = [
   {
     id: 'dubai',
     medianSalaryAnnual: usd(56_000),
-    livingCostAnnual: usd(34_000),
+    livingCostAnnual: usd(45_000),
     flatPrice: usd(330_000),
     rentYieldBp: 650,
     propertyGrowthBp: 500,
@@ -136,7 +136,7 @@ export const cities: CityDef[] = [
   {
     id: 'singapore',
     medianSalaryAnnual: usd(58_000),
-    livingCostAnnual: usd(40_000),
+    livingCostAnnual: usd(47_000),
     flatPrice: usd(640_000),
     rentYieldBp: 320,
     propertyGrowthBp: 550,
@@ -149,7 +149,7 @@ export const cities: CityDef[] = [
   {
     id: 'bangkok',
     medianSalaryAnnual: usd(13_000),
-    livingCostAnnual: usd(9_000),
+    livingCostAnnual: usd(10_500),
     flatPrice: usd(95_000),
     rentYieldBp: 500,
     propertyGrowthBp: 500,
