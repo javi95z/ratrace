@@ -166,6 +166,8 @@ export interface LifeRules {
   unstablePayPct: number;
   /** Mortgage spread saved by a life with the `cheap_mortgage` flag, in bp. */
   cheapMortgageBp: Bp;
+  /** Personal cards drawn each round. */
+  cardsPerRound: number;
 }
 
 /** News and tax reforms. Both come from their own random streams, so they never move a price. */
@@ -180,6 +182,11 @@ export interface WorldRules {
   taxReformsPerGame: number;
   /** A reform moves every non-zero rate of one city by one of these amounts. */
   taxReformStepsBp: ReadonlyArray<Bp>;
+  /**
+   * Weight of "no world card this round", set against the weights of the world cards whose
+   * trigger holds. Zero means a world card always appears when one can.
+   */
+  quietWeight: number;
 }
 
 export type CardCategory =

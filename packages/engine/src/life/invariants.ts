@@ -1,0 +1,111 @@
+import { isCount, isRecurring, isWhole } from '../checks';
+import type { Content, GameState } from '../types';
+import { INSURANCE_KINDS } from './derive';
+
+/** Every broken rule about the player's life, the hand, the phase and the saved random stream. */
+export function lifeBreaks(content: Content, state: GameState): string[] {
+  const p = state.player;
+  const life = p.life;
+  const breaks: string[] = [];
+
+  if (life.career !== null) {
+    const career = content.careers.find((c) => c.id === life.career?.id);
+    if (!career) breaks.push(`life.career is not a known career: ${life.career.id}`);
+    else if (!isCount(life.career.level) || life.career.level >= career.levels.length) {
+      breaks.push(`life.career level ${life.career.level} does not exist in ${career.id}`);
+    }
+  }
+
+  const counts = ['baseSalaryAnnual', 'careerSkill', 'investedRounds', 'focusBase', 'focusUsed', 'partnerSalaryPct'] as const;
+  for (const field of counts) {
+    if (!isCount(life[field])) breaks.push(`life.${field} is not a non-negative whole number: ${life[field]}`);
+  }
+  for (const field of ['salaryModPct', 'salaryBoostPct', 'bonusStatus'] as const) {
+    if (!isWhole(life[field])) breaks.push(`life.${field} is not a whole number: ${life[field]}`);
+  }
+  if (![0, 1, 2].includes(life.financeSkill)) breaks.push(`life.financeSkill is not 0, 1 or 2: ${life.financeSkill}`);
+  if (life.rentTier !== 0 && life.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life.rentTier}`);
+  if (![0, 1, 2, 3].includes(life.minLifestyleTier)) {
+    breaks.push(`life.minLifestyleTier is not 0, 1, 2 or 3: ${life.minLifestyleTier}`);
+  } else if (p.lifestyleTier < life.minLifestyleTier) {
+    breaks.push(`lifestyleTier ${p.lifestyleTier} is below the floor of the life, ${life.minLifestyleTier}`);
+  }
+
+  if (typeof life.partner !== 'boolean') breaks.push('life.partner is not true or false');
+  if (!Array.isArray(life.children)) breaks.push('life.children is not a list');
+  else {
+    for (const left of life.children) {
+      if (!(isCount(left) && left >= 1)) breaks.push(`life.children holds something other than rounds left: ${left}`);
+    }
+  }
+  for (const kind of INSURANCE_KINDS) {
+    if (typeof life.insurance[kind] !== 'boolean') breaks.push(`life.insurance.${kind} is not true or false`);
+  }
+
+  const owned = new Set<string>();
+  for (const held of life.items) {
+    const item = content.items.find((i) => i.id === held.itemId);
+    if (!item) {
+      breaks.push(`item ${held.itemId} is not in the content`);
+      continue;
+    }
+    if (owned.has(item.id)) {
+      breaks.push(`item ${item.id} is owned twice`);
+      continue;
+    }
+    owned.add(item.id);
+    if (!isCount(held.value)) breaks.push(`item ${item.id} value is not a non-negative whole number: ${held.value}`);
+    else {
+      const shaped =
+        item.kind === 'durable'
+          ? held.roundsLeft === null
+          : item.kind === 'membership'
+            ? held.roundsLeft === null && held.value === 0
+            : isCount(held.roundsLeft) && held.roundsLeft >= 1 && held.value === 0;
+      if (!shaped) breaks.push(`item ${item.id} has the wrong shape for ${item.kind === 'experience' ? 'an' : 'a'} ${item.kind}`);
+    }
+    if (!life.collection.includes(item.id)) breaks.push(`item ${item.id} is owned but not in the collection`);
+  }
+  for (const id of life.collection) {
+    if (!content.items.some((i) => i.id === id)) breaks.push(`collection holds an unknown item: ${id}`);
+  }
+
+  const tags = new Set<string>();
+  life.recurring.forEach((entry, i) => {
+    const valid = isRecurring(entry);
+    if (!valid) breaks.push(`life.recurring entry ${i} is not valid`);
+    else if (tags.has(entry.tag)) breaks.push(`life.recurring has two entries tagged ${entry.tag}`);
+    tags.add(entry.tag);
+  });
+  for (const [flag, round] of Object.entries(life.flags)) {
+    if (!isCount(round)) breaks.push(`life.flags.${flag} is not a round number: ${round}`);
+  }
+  for (const [cardId, round] of Object.entries(life.seen)) {
+    if (!content.cards.some((card) => card.id === cardId)) breaks.push(`life.seen names an unknown card: ${cardId}`);
+    else if (!isCount(round)) breaks.push(`life.seen.${cardId} is not a round number: ${round}`);
+  }
+
+  if (life.movingTo !== null) {
+    if (!content.cities.some((city) => city.id === life.movingTo)) breaks.push(`life.movingTo is not a known city: ${life.movingTo}`);
+    else if (life.movingTo === p.cityId) breaks.push('life.movingTo is the city the player already lives in');
+  }
+
+  if (state.phase !== 'cards' && state.phase !== 'finance') breaks.push(`phase is neither cards nor finance: ${state.phase}`);
+  if (!Array.isArray(state.hand)) breaks.push('hand is not a list');
+  else {
+    const inHand = new Set<string>();
+    for (const cardId of state.hand) {
+      if (!content.cards.some((card) => card.id === cardId)) breaks.push(`hand holds an unknown card: ${cardId}`);
+      else if (inHand.has(cardId)) breaks.push(`hand holds ${cardId} twice`);
+      inHand.add(cardId);
+    }
+    if (state.finished === true && state.hand.length > 0) breaks.push('the game is finished but a hand is still drawn');
+    else if (state.phase === 'cards' && state.hand.length === 0) breaks.push('phase is cards but the hand is empty');
+  }
+
+  const saved: unknown = state.rng.cards;
+  const isStream = Array.isArray(saved) && saved.length === 4 && saved.every((x) => isCount(x) && x <= 0xffff_ffff);
+  if (!isStream) breaks.push('rng.cards is not a saved random stream');
+
+  return breaks;
+}

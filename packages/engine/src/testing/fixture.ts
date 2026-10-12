@@ -166,6 +166,7 @@ const base: Content = {
     rentOutMinFinanceSkill: 0,
     unstablePayPct: 30,
     cheapMortgageBp: 50,
+    cardsPerRound: 3,
   },
   // No reforms and no cards by default, so tests of money are not disturbed. Tests of either add their own.
   world: {
@@ -175,6 +176,7 @@ const base: Content = {
     taxReformChancePct: 0,
     taxReformsPerGame: 2,
     taxReformStepsBp: [-300, -200, 200, 300],
+    quietWeight: 10,
   },
   cards: [],
 };

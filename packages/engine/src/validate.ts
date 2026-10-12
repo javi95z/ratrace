@@ -1,5 +1,7 @@
+import { idAllowed, isCount, isFiniteNumber, isRecord, isRecurring, isWhole, notNegative, within } from './checks';
+import { validateCards } from './life/cardRules';
 import { INSURANCE_KINDS } from './life/derive';
-import type { Content, CryptoPhase, DebtKind, Recurring, Regime, StartConfig } from './types';
+import type { Content, CryptoPhase, DebtKind, Regime, StartConfig } from './types';
 
 type Transitions = Record<string, ReadonlyArray<readonly [string, number]>>;
 
@@ -7,32 +9,7 @@ const REGIMES: readonly Regime[] = ['expansion', 'boom', 'slowdown', 'recession'
 const PHASES: readonly CryptoPhase[] = ['accumulation', 'bull', 'mania', 'winter'];
 export const DEBT_KINDS: readonly DebtKind[] = ['mortgageFixed', 'mortgageVariable', 'personalLoan', 'creditCard'];
 
-/** Ids become object keys in state, so they must be plain lower-case names and never a built-in property name. */
-const SAFE_ID = /^[a-z][a-z0-9_]*$/;
-const idAllowed = (id: unknown): boolean => typeof id === 'string' && SAFE_ID.test(id) && !(id in Object.prototype);
-
-const isWhole = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x);
-const within = (x: unknown, lo: number, hi: number): boolean =>
-  typeof x === 'number' && Number.isFinite(x) && x >= lo && x <= hi;
-const notNegative = (x: unknown): boolean => typeof x === 'number' && Number.isFinite(x) && x >= 0;
-const isFinite = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
-const isCount = (x: unknown): x is number => isWhole(x) && x >= 0;
-const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
-
 export const ITEM_KINDS: readonly string[] = ['durable', 'membership', 'experience'];
-
-/** True for a well-formed recurring entry. Used for starting lives, card effects and saved states alike. */
-export function isRecurring(x: unknown): x is Recurring {
-  if (!isRecord(x)) return false;
-  return (
-    idAllowed(x.tag) &&
-    (x.kind === 'expense' || x.kind === 'passive') &&
-    isCount(x.annual) &&
-    (x.roundsLeft === null || (isWhole(x.roundsLeft) && x.roundsLeft >= 1))
-  );
-}
-
-export { idAllowed };
 
 /** Returns a list of problems. An empty list means the content is usable. */
 export function validateContent(c: Content): string[] {
@@ -90,7 +67,7 @@ export function validateContent(c: Content): string[] {
       errors.push(`asset ${a.id} has a crash chance outside 0..100`);
     }
     if (!notNegative(a.idioVolBp) || !notNegative(a.yieldBp)) errors.push(`asset ${a.id} has a negative volatility or yield`);
-    if (!isFinite(a.betaPct)) errors.push(`asset ${a.id} has a beta that is not a finite number`);
+    if (!isFiniteNumber(a.betaPct)) errors.push(`asset ${a.id} has a beta that is not a finite number`);
     if (a.driftBp !== undefined && !isWhole(a.driftBp)) errors.push(`asset ${a.id} has a drift that is not a whole number`);
     if (a.minFinanceSkill !== undefined && ![0, 1, 2].includes(a.minFinanceSkill)) {
       errors.push(`asset ${a.id} needs a finance skill of 0, 1 or 2`);
@@ -117,17 +94,17 @@ export function validateContent(c: Content): string[] {
   for (const [name, table, keys] of tables) {
     for (const key of keys) {
       const value = isRecord(table) ? table[key] : undefined;
-      if (!isFinite(value)) errors.push(`market.${name}.${key} must be a finite number`);
+      if (!isFiniteNumber(value)) errors.push(`market.${name}.${key} must be a finite number`);
       else if (name === 'classVolBp' && value < 0) errors.push(`market.${name}.${key} must not be negative`);
     }
   }
   for (const name of ['rateNoiseBp', 'inflationNoiseBp', 'depositSpreadBp'] as const) {
-    if (!isFinite(m[name])) errors.push(`market.${name} must be a finite number`);
+    if (!isFiniteNumber(m[name])) errors.push(`market.${name} must be a finite number`);
   }
   if (!REGIMES.includes(m.start.regime)) errors.push(`market.start.regime is not a regime: ${m.start.regime}`);
   if (!PHASES.includes(m.start.cryptoPhase)) errors.push(`market.start.cryptoPhase is not a crypto phase: ${m.start.cryptoPhase}`);
   for (const name of ['policyRateBp', 'inflationBp'] as const) {
-    if (!isFinite(m.start[name])) errors.push(`market.start.${name} must be a finite number`);
+    if (!isFiniteNumber(m.start[name])) errors.push(`market.start.${name} must be a finite number`);
   }
 
   for (const city of c.cities) {
@@ -156,7 +133,7 @@ export function validateContent(c: Content): string[] {
     if (career.levels[0].minSkill !== 0) errors.push(`career ${career.id} must start at skill 0`);
     career.levels.forEach((level, i) => {
       const name = `career ${career.id} level ${i}`;
-      if (!(isFinite(level.salaryPct) && level.salaryPct > 0)) errors.push(`${name} needs a positive salary percentage`);
+      if (!(isFiniteNumber(level.salaryPct) && level.salaryPct > 0)) errors.push(`${name} needs a positive salary percentage`);
       if (!isCount(level.status)) errors.push(`${name} needs a whole, non-negative status`);
       if (!isCount(level.minSkill)) errors.push(`${name} needs a whole, non-negative skill`);
       else if (i > 0 && level.minSkill <= career.levels[i - 1].minSkill) {
@@ -235,6 +212,7 @@ export function validateContent(c: Content): string[] {
     }
   }
 
+  errors.push(...validateCards(c));
   return errors;
 }
 

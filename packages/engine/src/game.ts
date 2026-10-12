@@ -2,7 +2,9 @@ import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { assertInvariants } from './invariants';
+import { answerCards, drawHand } from './life/cards';
 import { refreshDerived } from './life/derive';
+import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
 import { finishRound } from './life/roundEnd';
 import { cityOf } from './lookup';
 import type { Cents } from './money';
@@ -11,11 +13,12 @@ import { newPlayer } from './player';
 import { growPortfolio } from './portfolio';
 import { growProperties } from './property';
 import { indexed } from './rates';
-import { seedRng } from './rng';
+import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
 import { computeTax } from './tax';
 import type { TaxBill } from './tax';
 import type {
+  CardPicks,
   Content,
   GameConfig,
   GameEvent,
@@ -47,7 +50,57 @@ export function createGame(config: GameConfig, seed: string): GameState {
     hand: [],
     rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ''}`) },
   };
+  beginRound(config.content, state);
   return state;
+}
+
+/**
+ * Opens the round the state is at: a gig worker's pay swings, the hand is drawn,
+ * and the phase is set. Both use the player's own random stream.
+ */
+function beginRound(content: Content, state: GameState): void {
+  const rng = new Rng(state.rng.cards);
+  const life = state.player.life;
+  if (hasFlag(life.flags, FLAG_UNSTABLE_PAY)) {
+    const range = content.life.unstablePayPct;
+    life.salaryBoostPct += rng.int(2 * range + 1) - range;
+    refreshDerived(state.player, content);
+  }
+  state.hand = drawHand(state, content, rng);
+  state.phase = state.hand.length > 0 ? 'cards' : 'finance';
+  state.rng.cards = rng.snapshot();
+}
+
+/** Answers the hand on `state` itself and moves it to the finance phase. */
+function resolveHand(content: Content, state: GameState, picks: CardPicks, events: GameEvent[]): void {
+  const rng = new Rng(state.rng.cards);
+  answerCards(state, content, picks, rng, events);
+  state.rng.cards = rng.snapshot();
+  state.phase = 'finance';
+}
+
+/**
+ * Answers the cards in the player's hand and moves the round on to the finance phase.
+ * `picks` maps a card id to the number of the chosen option. It may come from an untrusted client:
+ * a card that is missing, a number that is not an option, or an option the player cannot take
+ * all fall back to the first option. Dice are rolled here, so nothing random is left for
+ * `applyRound`, and `previewRound` stays exact.
+ *
+ * The state passed in is never changed.
+ */
+export function applyCards(content: Content, state: GameState, picks: CardPicks): { state: GameState; events: GameEvent[] } {
+  if (state.finished) throw new Error('applyCards: the game is already finished');
+  if (typeof picks !== 'object' || picks === null || Array.isArray(picks)) {
+    throw new Error('applyCards: picks must be a record of card id to option number');
+  }
+  assertInvariants(content, state);
+  if (state.phase !== 'cards') throw new Error('applyCards: the cards of this round are already answered');
+
+  const next = structuredClone(state);
+  const events: GameEvent[] = [];
+  resolveHand(content, next, picks, events);
+  assertInvariants(content, next);
+  return { state: next, events };
 }
 
 export interface RejectedOrder {
@@ -136,6 +189,7 @@ function flowsOf(content: Content, p: PlayerState, now: WorldState, tally: Round
  */
 export function previewRound(content: Content, state: GameState, choices: RoundChoices): RoundPreview {
   guard('previewRound', content, state, choices);
+  if (state.phase === 'cards') throw new Error('previewRound: answer the cards first');
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
   const { tally, rejected } = executeChoices(content, player, now, state.round, choices);
@@ -157,7 +211,8 @@ export function previewRound(content: Content, state: GameState, choices: RoundC
 }
 
 /**
- * Plays one round. The steps run in a fixed order:
+ * Plays one round. If the hand is still unanswered, every card first takes its first option.
+ * Then the steps run in a fixed order:
  *
  * 1. Orders execute at the prices and rates of this round.
  * 2. Income, expenses and tax are worked out from what the player now holds.
@@ -182,6 +237,8 @@ export function applyRound(
   const years = content.yearsPerRound;
   const completed = next.round + 1;
   const events: GameEvent[] = [];
+
+  if (next.phase === 'cards') resolveHand(content, next, {}, events);
 
   const { tally, rejected } = executeChoices(content, p, now, next.round, choices);
   for (const { order, reason } of rejected) events.push({ kind: 'orderRejected', order, reason });
@@ -234,6 +291,12 @@ export function applyRound(
   refreshDerived(p, content);
   next.round = completed;
   next.finished = completed >= content.rounds;
+  if (next.finished) {
+    next.hand = [];
+    next.phase = 'finance';
+  } else {
+    beginRound(content, next);
+  }
   assertInvariants(content, next);
   return { state: next, events };
 }

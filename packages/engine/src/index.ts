@@ -1,6 +1,6 @@
 export * from './types';
 export type { Bp, Cents } from './money';
-export { createGame, applyRound, previewRound } from './game';
+export { createGame, applyCards, applyRound, previewRound } from './game';
 export type { RejectedOrder, RoundPreview } from './game';
 export type { RoundExpenses, RoundIncome } from './economy';
 export type { TaxBill } from './tax';

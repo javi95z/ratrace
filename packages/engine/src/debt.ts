@@ -93,6 +93,25 @@ export function executeRepay(p: PlayerState, order: Extract<Order, { type: 'repa
   return null;
 }
 
+/** Brings negative cash back to zero: from the deposit first, then on the credit card. Spare cash is left alone. */
+export function coverShortfall(p: PlayerState): Pick<Settlement, 'fromDeposit' | 'drawn'> {
+  if (p.cash >= 0) return { fromDeposit: 0, drawn: 0 };
+  let shortfall = -p.cash;
+  const fromDeposit = Math.min(p.deposit, shortfall);
+  p.deposit -= fromDeposit;
+  shortfall -= fromDeposit;
+  if (shortfall > 0) {
+    let card = p.debts.find((d) => d.kind === 'creditCard');
+    if (!card) {
+      card = { id: newId(p, 'debt'), kind: 'creditCard', principal: 0, fixedRateBp: 0, roundsLeft: 0 };
+      p.debts.push(card);
+    }
+    card.principal += shortfall;
+  }
+  p.cash = 0;
+  return { fromDeposit, drawn: shortfall };
+}
+
 export interface Settlement {
   /** Taken from the deposit to cover a shortfall. */
   fromDeposit: Cents;
@@ -108,26 +127,10 @@ export interface Settlement {
  * Spare cash pays the credit card down; the deposit is never used for that.
  */
 export function settleCash(p: PlayerState): Settlement {
+  if (p.cash < 0) return { ...coverShortfall(p), repaid: 0 };
+
   const result: Settlement = { fromDeposit: 0, drawn: 0, repaid: 0 };
-  let card = p.debts.find((d) => d.kind === 'creditCard');
-
-  if (p.cash < 0) {
-    let shortfall = -p.cash;
-    result.fromDeposit = Math.min(p.deposit, shortfall);
-    p.deposit -= result.fromDeposit;
-    shortfall -= result.fromDeposit;
-    if (shortfall > 0) {
-      if (!card) {
-        card = { id: newId(p, 'debt'), kind: 'creditCard', principal: 0, fixedRateBp: 0, roundsLeft: 0 };
-        p.debts.push(card);
-      }
-      card.principal += shortfall;
-      result.drawn = shortfall;
-    }
-    p.cash = 0;
-    return result;
-  }
-
+  const card = p.debts.find((d) => d.kind === 'creditCard');
   if (card && p.cash > 0) {
     result.repaid = Math.min(p.cash, card.principal);
     card.principal -= result.repaid;

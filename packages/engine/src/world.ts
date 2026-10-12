@@ -1,3 +1,4 @@
+import { triggerHolds } from './life/conditions';
 import { clamp, round } from './money';
 import { INDEX_START, PRICE_LEVEL_START } from './rates';
 import { Rng, seedRng } from './rng';
@@ -136,5 +137,29 @@ export function generateTimeline(seed: string, content: Content): WorldState[] {
     },
   ];
   for (let r = 1; r <= content.rounds; r++) timeline.push(stepWorld(timeline[r - 1], content, streams));
+  chooseWorldCards(seed, content, timeline);
   return timeline;
+}
+
+/**
+ * Picks the world card of each round from those whose trigger holds, by weight, against the
+ * weight of a quiet round. The choice depends on the world alone, so every player sees the same card.
+ */
+function chooseWorldCards(seed: string, content: Content, timeline: WorldState[]): void {
+  const cards = content.cards.filter((card) => card.category === 'world');
+  if (cards.length === 0) return;
+  const rng = new Rng(seedRng(seed, 'events'));
+  const lastUsed = new Map<string, number>();
+  for (let r = 1; r < timeline.length; r++) {
+    const choices: Array<[string | null, number]> = [[null, content.world.quietWeight]];
+    for (const card of cards) {
+      const last = lastUsed.get(card.id);
+      if (last !== undefined && (card.once === true || r - last <= card.cooldown)) continue;
+      if (triggerHolds(card.trigger, timeline[r - 1], timeline[r])) choices.push([card.id, card.weight]);
+    }
+    if (choices.length === 1) continue;
+    const picked = rng.pickWeighted(choices);
+    timeline[r].eventCardId = picked;
+    if (picked !== null) lastUsed.set(picked, r);
+  }
 }

@@ -1,9 +1,10 @@
+import { isCount } from './checks';
 import { stateHash } from './hash';
 import { deriveExpenses, derivePassive, deriveSalary, deriveStatus } from './life/derive';
+import { lifeBreaks } from './life/invariants';
 import type { Content, GameState } from './types';
 import { DEBT_KINDS } from './validate';
 
-const isCount = (x: unknown): boolean => typeof x === 'number' && Number.isInteger(x) && x >= 0 && !Object.is(x, -0);
 
 /**
  * Lists every broken rule. An empty list means the state is sound.
@@ -75,6 +76,8 @@ export function findInvariantBreaks(content: Content, state: GameState): string[
   if (state.timeline.length !== content.rounds + 1) {
     breaks.push(`timeline has ${state.timeline.length} states, expected ${content.rounds + 1}`);
   }
+
+  breaks.push(...lifeBreaks(content, state));
 
   if (breaks.length === 0) {
     const derived: Array<[string, number, number]> = [
