@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`golden replay > reproduces the recorded final state 1`] = `
+{
+  "escapedAtRound": null,
+  "hash": "56b2e048e113da87",
+  "netWorth": 118439513,
+  "score": 302,
+}
+`;
