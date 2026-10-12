@@ -5,10 +5,19 @@ import type { Cents } from './money';
 import { executeOrder } from './orders';
 import { newPlayer } from './player';
 import { growPortfolio } from './portfolio';
-import type { OrderContext, RoundTally } from './portfolio';
 import { growProperties } from './property';
+import { indexed } from './rates';
 import { computeTax } from './tax';
-import type { Content, GameConfig, GameEvent, GameState, LedgerLine, RoundChoices } from './types';
+import type {
+  Content,
+  GameConfig,
+  GameEvent,
+  GameState,
+  LedgerLine,
+  OrderContext,
+  RoundChoices,
+  RoundTally,
+} from './types';
 import { validateContent } from './validate';
 import { generateTimeline } from './world';
 
@@ -25,6 +34,19 @@ export function createGame(config: GameConfig, seed: string): GameState {
   };
 }
 
+/**
+ * Plays one round. The steps run in a fixed order:
+ *
+ * 1. Orders execute at the prices and rates of this round.
+ * 2. Income, expenses and tax are worked out from what the player now holds, at this round's rates.
+ * 3. Prices move to the next world state.
+ * 4. Income is paid, expenses and debt payments are charged, tax is charged.
+ * 5. Cash is settled: a shortfall comes from the deposit, then the credit card.
+ * 6. Escape and bankruptcy are checked.
+ *
+ * Everything in step 2 uses values from before prices move, so nothing the player is charged
+ * depends on information they could not see when they decided.
+ */
 export function applyRound(
   content: Content,
   state: GameState,
@@ -40,7 +62,7 @@ export function applyRound(
   const years = content.yearsPerRound;
   const completed = next.round + 1;
 
-  const tally: RoundTally = { realisedGains: 0, pensionContribution: 0, propertyPurchases: 0 };
+  const tally: RoundTally = { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 };
   const ctx: OrderContext = { content, world: now, round: next.round, tally };
   for (const order of choices.orders) {
     const reason = executeOrder(p, order, ctx);
@@ -51,27 +73,26 @@ export function applyRound(
   const expenses = expensesForRound(p, content, now);
   const passive = passiveOf(income);
   const outgoings = outgoingsOf(expenses);
-
-  growPortfolio(p, content, after);
-  growProperties(p, after);
-
-  p.cash += income.salary + passive - outgoings;
-  applyDebtPayments(p, expenses.service);
-
   let propertyValueOwned = 0;
   for (const property of p.properties) propertyValueOwned += property.value;
-  const bill = computeTax(cityOf(content, p.cityId), years, {
+  const city = cityOf(content, p.cityId);
+  const bill = computeTax(city.tax, indexed(city.medianSalaryAnnual, now), years, {
     salary: income.salary,
+    otherIncome: income.otherPassive,
     pensionContribution: tally.pensionContribution,
     realisedGains: tally.realisedGains,
     dividends: income.dividends + income.interest,
     rent: income.rent,
     propertyValueOwned,
-    propertyPurchases: tally.propertyPurchases,
   });
-  p.cash -= bill.total;
 
-  const drawn = settleCash(p);
+  growPortfolio(p, content, now, after);
+  growProperties(p, after);
+
+  p.cash += income.salary + passive - outgoings;
+  applyDebtPayments(p, expenses.service);
+  p.cash -= bill.total;
+  const settled = settleCash(p);
 
   const lines: Array<[LedgerLine, Cents]> = [
     ['salary', income.salary],
@@ -86,7 +107,10 @@ export function applyRound(
     ['incomeTax', -bill.income],
     ['investmentTax', -bill.investment],
     ['propertyTax', -bill.property],
-    ['creditCardDraw', drawn],
+    ['purchaseTax', -tally.purchaseTaxPaid],
+    ['depositDraw', settled.fromDeposit],
+    ['creditCardDraw', settled.drawn],
+    ['creditCardRepay', -settled.repaid],
   ];
   for (const [line, amount] of lines) {
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });
@@ -98,8 +122,9 @@ export function applyRound(
     events.push({ kind: 'escaped', round: completed - 1 });
   }
 
-  const annualIncome = p.salaryAnnual + Math.floor(passive / years);
-  if (checkBankruptcy(p, content, annualIncome, completed)) events.push({ kind: 'bankrupt' });
+  const annualIncome = indexed(p.salaryAnnual, now) + Math.floor(passive / years);
+  const bankruptcy = checkBankruptcy(p, content, now, annualIncome, completed);
+  if (bankruptcy) events.push({ kind: 'bankrupt', ...bankruptcy });
 
   next.round = completed;
   next.finished = completed >= content.rounds;

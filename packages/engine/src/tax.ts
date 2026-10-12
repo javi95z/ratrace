@@ -1,10 +1,12 @@
 import { applyBp } from './money';
-import type { Cents } from './money';
-import type { CityDef } from './types';
+import type { Bp, Cents } from './money';
+import type { TaxProfile } from './types';
 
 /** Amounts for one whole round. */
 export interface TaxInput {
   salary: Cents;
+  /** Business profit and similar. Taxed through the brackets, like salary. */
+  otherIncome: Cents;
   pensionContribution: Cents;
   /** Net realised gain. Negative for a net loss. */
   realisedGains: Cents;
@@ -12,7 +14,6 @@ export interface TaxInput {
   dividends: Cents;
   rent: Cents;
   propertyValueOwned: Cents;
-  propertyPurchases: Cents;
 }
 
 export interface TaxBill {
@@ -22,12 +23,15 @@ export interface TaxBill {
   total: Cents;
 }
 
-export function incomeTaxAnnual(annual: Cents, city: CityDef): Cents {
-  const median = city.medianSalaryAnnual;
-  const first = Math.floor(median / 2);
-  const second = Math.floor((median * 3) / 2);
-  const third = median * 4;
-  const [low, mid, high] = city.tax.incomeRatesBp;
+/**
+ * Tax on one year's income. The brackets start at 0.5, 1.5 and 4 times the median salary,
+ * so they move with the price level when the caller passes an indexed median.
+ */
+export function incomeTaxAnnual(annual: Cents, medianSalaryAnnual: Cents, ratesBp: readonly [Bp, Bp, Bp]): Cents {
+  const first = Math.floor(medianSalaryAnnual / 2);
+  const second = Math.floor((medianSalaryAnnual * 3) / 2);
+  const third = medianSalaryAnnual * 4;
+  const [low, mid, high] = ratesBp;
 
   let tax = 0;
   if (annual > first) tax += applyBp(Math.min(annual, second) - first, low);
@@ -36,28 +40,31 @@ export function incomeTaxAnnual(annual: Cents, city: CityDef): Cents {
   return tax;
 }
 
-export function computeTax(city: CityDef, years: number, input: TaxInput): TaxBill {
-  const t = city.tax;
-
+/** The tax bill for one round, excluding the purchase tax, which is paid when a property is bought. */
+export function computeTax(tax: TaxProfile, medianSalaryAnnual: Cents, years: number, input: TaxInput): TaxBill {
   const salaryAnnual = Math.floor(input.salary / years);
-  const rentAnnual = t.rentAsIncome ? Math.floor(input.rent / years) : 0;
+  const otherAnnual = Math.floor(input.otherIncome / years);
+  const rentAnnual = tax.rentAsIncome ? Math.floor(input.rent / years) : 0;
   const deduction = Math.min(
     Math.floor(input.pensionContribution / years),
-    applyBp(salaryAnnual, t.pensionDeductionCapBp),
+    applyBp(salaryAnnual, tax.pensionDeductionCapBp),
   );
-  const taxableAnnual = Math.max(0, salaryAnnual + rentAnnual - deduction);
-  const income = incomeTaxAnnual(taxableAnnual, city) * years;
+  const taxableAnnual = Math.max(0, salaryAnnual + otherAnnual + rentAnnual - deduction);
+  const income = incomeTaxAnnual(taxableAnnual, medianSalaryAnnual, tax.incomeRatesBp) * years;
 
   const gains = Math.max(0, input.realisedGains);
-  const gainsTaxable = Math.max(0, gains - t.investmentAllowance);
-  const allowanceLeft = Math.max(0, t.investmentAllowance - gains);
+  const gainsTaxable = Math.max(0, gains - tax.investmentAllowance);
+  const allowanceLeft = Math.max(0, tax.investmentAllowance - gains);
   const dividendsTaxable = Math.max(0, input.dividends - allowanceLeft);
-  const rentTax = t.rentAsIncome ? 0 : applyBp(input.rent, t.rentBp);
-  const investment = applyBp(gainsTaxable, t.capitalGainsBp) + applyBp(dividendsTaxable, t.dividendBp) + rentTax;
+  const rentTax = tax.rentAsIncome ? 0 : applyBp(input.rent, tax.rentBp);
+  const investment = applyBp(gainsTaxable, tax.capitalGainsBp) + applyBp(dividendsTaxable, tax.dividendBp) + rentTax;
 
-  const property =
-    applyBp(input.propertyValueOwned, t.propertyAnnualBp) * years +
-    applyBp(input.propertyPurchases, t.propertyPurchaseBp);
+  const property = applyBp(input.propertyValueOwned, tax.propertyAnnualBp) * years;
 
   return { income, investment, property, total: income + investment + property };
+}
+
+/** One-off tax on buying a property. */
+export function purchaseTax(tax: TaxProfile, price: Cents): Cents {
+  return applyBp(price, tax.propertyPurchaseBp);
 }

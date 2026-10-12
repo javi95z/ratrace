@@ -3,8 +3,8 @@
 exports[`golden replay > reproduces the recorded final state 1`] = `
 {
   "escapedAtRound": null,
-  "hash": "003313ee8e34ef53",
-  "netWorth": 105282412,
-  "score": 300,
+  "hash": "179b8c01b93e1d30",
+  "netWorth": 172941610,
+  "score": 308,
 }
 `;

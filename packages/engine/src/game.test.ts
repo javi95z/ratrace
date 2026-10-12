@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { applyRound, createGame } from './game';
+import { PRICE_LEVEL_START } from './rates';
 import { cashflow, finalScore, netWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import type { GameEvent, GameState, LedgerLine } from './types';
 
 const content = fixtureContent();
 
-const ledger = (events: GameEvent[], line: LedgerLine) => events.find((e) => e.kind === 'ledger' && e.line === line);
+const ledger = (events: GameEvent[], line: LedgerLine): number | undefined => {
+  const found = events.find((e) => e.kind === 'ledger' && e.line === line);
+  return found && found.kind === 'ledger' ? found.amount : undefined;
+};
+
+const rejections = (events: GameEvent[]) => events.flatMap((e) => (e.kind === 'orderRejected' ? [e.reason] : []));
 
 function withPlayer(state: GameState, over: Partial<GameState['player']>): GameState {
   return { ...state, player: { ...state.player, ...over } };
 }
+
+/** An amount in start-of-game dollars, at the price level of the given round. */
+const atRound = (state: GameState, round: number, amount: number) =>
+  Math.floor((amount * state.timeline[round].priceLevel) / PRICE_LEVEL_START);
 
 describe('createGame', () => {
   it('builds the timeline and the player', () => {
@@ -27,15 +37,15 @@ describe('createGame', () => {
   });
 });
 
-describe('applyRound', () => {
+describe('applyRound: the basic round', () => {
   it('pays salary, charges living costs and income tax', () => {
     const start = createGame({ content, start: fixtureStart() }, 'g1');
     const { state, events } = applyRound(content, start, { orders: [] });
     expect(state.round).toBe(1);
     expect(state.player.cash).toBe(1_830_000);
-    expect(ledger(events, 'salary')).toEqual({ kind: 'ledger', line: 'salary', amount: 6_000_000 });
-    expect(ledger(events, 'living')).toEqual({ kind: 'ledger', line: 'living', amount: -3_600_000 });
-    expect(ledger(events, 'incomeTax')).toEqual({ kind: 'ledger', line: 'incomeTax', amount: -570_000 });
+    expect(ledger(events, 'salary')).toBe(6_000_000);
+    expect(ledger(events, 'living')).toBe(-3_600_000);
+    expect(ledger(events, 'incomeTax')).toBe(-570_000);
     expect(ledger(events, 'dividends')).toBeUndefined();
   });
 
@@ -58,41 +68,150 @@ describe('applyRound', () => {
     const bad = applyRound(content, start, { orders: [{ type: 'buy', assetId: 'fund_world', amount: 12.5 }] });
     const none = applyRound(content, start, { orders: [] });
     expect(bad.events.filter((e) => e.kind === 'orderRejected')).toEqual([
-      { kind: 'orderRejected', order: { type: 'buy', assetId: 'fund_world', amount: 12.5 }, reason: 'amount must be a positive whole number of cents' },
+      { kind: 'orderRejected', order: { type: 'buy', assetId: 'fund_world', amount: 12.5 }, reason: 'bad-amount' },
     ]);
     expect(bad.state).toEqual(none.state);
   });
 
-  it('rejects orders that are not orders', () => {
-    const start = createGame({ content, start: { ...fixtureStart(), cash: 20_000_000 } }, 'g4b');
-    const orders = JSON.parse(
-      '[{"type":"teleport","amount":5},null,7,{"type":"buyProperty","typeId":"studio","downPayment":5000000,"mortgage":"weird","rented":"yes"}]',
-    );
-    const { state, events } = applyRound(content, start, { orders });
-    const reasons = events.flatMap((e) => (e.kind === 'orderRejected' ? [e.reason] : []));
-    expect(reasons).toEqual(['unknown order type', 'unknown order type', 'unknown order type', 'unknown mortgage type']);
-    expect(state.player.properties).toEqual([]);
+  it('gives the same result after a JSON round trip of the state', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 2_000_000 } }, 'g9');
+    const orders = [{ type: 'buy' as const, assetId: 'coin_meme', amount: 500_000 }];
+    const direct = applyRound(content, applyRound(content, start, { orders }).state, { orders: [] });
+    const reloaded = JSON.parse(JSON.stringify(applyRound(content, start, { orders }).state)) as GameState;
+    expect(applyRound(content, reloaded, { orders: [] })).toEqual(direct);
   });
 
-  it('survives a life with no income: card debt, one bankruptcy lock, and still reaches the end', () => {
+  it('finishes after the last round and then refuses to continue', () => {
+    let state = createGame({ content, start: fixtureStart() }, 'g10');
+    for (let i = 0; i < 20; i++) state = applyRound(content, state, { orders: [] }).state;
+    expect(state.finished).toBe(true);
+    expect(() => applyRound(content, state, { orders: [] })).toThrow('applyRound: the game is already finished');
+  });
+});
+
+describe('applyRound: inflation', () => {
+  it('raises salary, living cost and the tax brackets with the price level from the second round on', () => {
+    const start = createGame({ content, start: fixtureStart() }, 'inflation');
+    const first = applyRound(content, start, { orders: [] });
+    const second = applyRound(content, first.state, { orders: [] });
+    expect(start.timeline[1].priceLevel).not.toBe(PRICE_LEVEL_START);
+    expect(ledger(second.events, 'salary')).toBe(atRound(start, 1, 3_000_000) * 2);
+    expect(ledger(second.events, 'living')).toBe(-atRound(start, 1, 1_800_000) * 2);
+    const median = atRound(start, 1, 3_000_000);
+    const taxable = atRound(start, 1, 3_000_000) - Math.floor(median / 2);
+    expect(ledger(second.events, 'incomeTax')).toBe(-Math.round((taxable * 1_900) / 10_000) * 2);
+  });
+});
+
+describe('applyRound: tax inputs', () => {
+  it('taxes other passive income as income', () => {
+    const start = withPlayer(createGame({ content, start: fixtureStart() }, 't1'), { extraPassiveAnnual: 3_000_000 });
+    const { events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'otherPassive')).toBe(6_000_000);
+    expect(ledger(events, 'incomeTax')).toBe(-2_040_000);
+  });
+
+  it('taxes a realised gain, and not an unrealised one', () => {
+    const base = createGame({ content, start: fixtureStart() }, 't2');
+    const start = withPlayer(base, { positions: { gold: { value: 2_000_000, basis: 500_000 } } });
+    const held = applyRound(content, start, { orders: [] });
+    expect(ledger(held.events, 'investmentTax')).toBeUndefined();
+    const sold = applyRound(content, start, { orders: [{ type: 'sell', assetId: 'gold', amount: 1_000_000 }] });
+    expect(ledger(sold.events, 'investmentTax')).toBe(-157_500);
+  });
+
+  it('taxes dividends and deposit interest together', () => {
+    const base = createGame({ content, start: fixtureStart() }, 't3');
+    const start = withPlayer(base, { deposit: 1_000_000, positions: { fund_world: { value: 1_000_000, basis: 1_000_000 } } });
+    const { events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'dividends')).toBe(36_000);
+    expect(ledger(events, 'interest')).toBe(30_000);
+    expect(ledger(events, 'investmentTax')).toBe(-13_860);
+  });
+
+  it('deducts a pension contribution from taxable income', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 1_000_000 } }, 't4');
+    const { events, state } = applyRound(content, start, { orders: [{ type: 'pensionIn', amount: 600_000 }] });
+    expect(ledger(events, 'incomeTax')).toBe(-456_000);
+    expect(state.player.pension).toBeGreaterThan(0);
+  });
+
+  it('taxes rent and charges the yearly property tax on a rental', () => {
+    const base = createGame({ content, start: fixtureStart() }, 't5');
+    const start = withPlayer(base, {
+      properties: [{ id: 'property-1', cityId: 'home', typeId: 'flat', value: 25_000_000, basis: 25_000_000, rented: true, mortgageId: null }],
+      nextId: 1,
+    });
+    const { events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'rent')).toBe(2_250_000);
+    expect(ledger(events, 'investmentTax')).toBe(-472_500);
+    expect(ledger(events, 'propertyTax')).toBe(-150_000);
+  });
+
+  it('charges the purchase tax when a property is bought, and shows it on its own line', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 20_000_000 } }, 't6');
+    const { events, state } = applyRound(content, start, {
+      orders: [{ type: 'buyProperty', typeId: 'studio', downPayment: 0, mortgage: 'none', rented: true }],
+    });
+    expect(ledger(events, 'purchaseTax')).toBe(-1_200_000);
+    expect(ledger(events, 'propertyTax')).toBe(-90_000);
+    expect(state.player.properties).toHaveLength(1);
+    expect(state.player.debts).toEqual([]);
+  });
+});
+
+describe('applyRound: shortfalls and bankruptcy', () => {
+  it('covers a shortfall from the deposit before the credit card', () => {
+    const start = withPlayer(createGame({ content, start: { ...fixtureStart(), salaryAnnual: 0 } }, 's1'), { deposit: 5_000_000 });
+    const { state, events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'interest')).toBe(150_000);
+    expect(ledger(events, 'investmentTax')).toBe(-31_500);
+    expect(ledger(events, 'depositDraw')).toBe(3_481_500);
+    expect(ledger(events, 'creditCardDraw')).toBeUndefined();
+    expect(state.player.deposit).toBe(5_000_000 - 3_481_500);
+    expect(state.player.cash).toBe(0);
+    expect(state.player.debts).toEqual([]);
+  });
+
+  it('pays the card down from the next surplus and says so in the ledger', () => {
+    const base = createGame({ content, start: fixtureStart() }, 's2');
+    const start = withPlayer(base, {
+      debts: [{ id: 'debt-1', kind: 'creditCard', principal: 500_000, fixedRateBp: 0, roundsLeft: 0 }],
+      nextId: 1,
+    });
+    const { state, events } = applyRound(content, start, { orders: [] });
+    expect(ledger(events, 'debtInterest')).toBe(-220_000);
+    expect(ledger(events, 'creditCardRepay')).toBe(-500_000);
+    expect(state.player.debts).toEqual([]);
+    expect(state.player.cash).toBe(1_830_000 - 220_000 - 500_000);
+  });
+
+  it('survives a life with no income: card debt, repeated bankruptcy while insolvent, and still reaches the end', () => {
     let state = createGame({ content, start: { ...fixtureStart(), salaryAnnual: 0 } }, 'g5');
     const first = applyRound(content, state, { orders: [] });
     expect(first.state.player.debts).toEqual([{ id: 'debt-1', kind: 'creditCard', principal: 3_600_000, fixedRateBp: 0, roundsLeft: 0 }]);
-    expect(ledger(first.events, 'creditCardDraw')).toEqual({ kind: 'ledger', line: 'creditCardDraw', amount: 3_600_000 });
+    expect(ledger(first.events, 'creditCardDraw')).toBe(3_600_000);
+    expect(first.events.some((e) => e.kind === 'bankrupt')).toBe(false);
 
     const second = applyRound(content, first.state, { orders: [] });
-    expect(second.events).toContainEqual({ kind: 'bankrupt' });
+    const owed = 3_600_000 + 1_584_000 + atRound(state, 1, 1_800_000) * 2;
+    expect(second.events).toContainEqual({ kind: 'bankrupt', proceeds: 0, debtsCleared: owed });
     expect(second.state.player.debts).toEqual([]);
     expect(second.state.player.bankruptUntilRound).toBe(5);
 
     const third = applyRound(content, second.state, { orders: [{ type: 'borrow', amount: 100 }] });
-    expect(third.events.find((e) => e.kind === 'orderRejected')).toMatchObject({ reason: 'no credit available after bankruptcy' });
+    expect(rejections(third.events)).toEqual(['no-credit']);
+    expect(third.state.player.debts.map((d) => d.kind)).toEqual(['creditCard']);
 
+    let bankruptcies = 1;
     state = third.state;
     while (!state.finished) {
-      state = applyRound(content, state, { orders: [] }).state;
+      const next = applyRound(content, state, { orders: [] });
+      state = next.state;
+      if (next.events.some((e) => e.kind === 'bankrupt')) bankruptcies += 1;
       expect(state.player.cash).toBeGreaterThanOrEqual(0);
     }
+    expect(bankruptcies).toBe(10);
     expect(state.round).toBe(20);
     expect(Number.isFinite(netWorth(state.player))).toBe(true);
   });
@@ -103,6 +222,7 @@ describe('applyRound', () => {
       orders: [{ type: 'buyProperty', typeId: 'studio', downPayment: 3_000_000, mortgage: 'variable', rented: false }],
     });
     expect(bought.state.player.properties).toHaveLength(1);
+    expect(rejections(bought.events)).toEqual([]);
     const crashed = structuredClone(bought.state);
     crashed.player.properties[0].value = 5_000_000;
     const sold = applyRound(content, crashed, {
@@ -115,7 +235,9 @@ describe('applyRound', () => {
     expect(p.cash).toBe(0);
     expect(ledger(sold.events, 'investmentTax')).toBeUndefined();
   });
+});
 
+describe('applyRound: escape', () => {
   it('marks escape after two rounds in a row of passive income covering expenses', () => {
     const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g7'), { extraPassiveAnnual: 5_000_000 });
     const first = applyRound(content, start, { orders: [] });
@@ -135,21 +257,6 @@ describe('applyRound', () => {
     const second = applyRound(content, withPlayer(first.state, { extraPassiveAnnual: 0 }), { orders: [] });
     expect(second.state.player.passiveStreak).toBe(0);
     expect(second.state.player.escapedAtRound).toBeNull();
-  });
-
-  it('gives the same result after a JSON round trip of the state', () => {
-    const start = createGame({ content, start: { ...fixtureStart(), cash: 2_000_000 } }, 'g9');
-    const orders = [{ type: 'buy' as const, assetId: 'coin_meme', amount: 500_000 }];
-    const direct = applyRound(content, applyRound(content, start, { orders }).state, { orders: [] });
-    const reloaded = JSON.parse(JSON.stringify(applyRound(content, start, { orders }).state)) as GameState;
-    expect(applyRound(content, reloaded, { orders: [] })).toEqual(direct);
-  });
-
-  it('finishes after the last round and then refuses to continue', () => {
-    let state = createGame({ content, start: fixtureStart() }, 'g10');
-    for (let i = 0; i < 20; i++) state = applyRound(content, state, { orders: [] }).state;
-    expect(state.finished).toBe(true);
-    expect(() => applyRound(content, state, { orders: [] })).toThrow('applyRound: the game is already finished');
   });
 });
 

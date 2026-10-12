@@ -32,6 +32,8 @@ const base: Content = {
   lifestyleMultiplierPct: [70, 100, 140, 200],
   housingSharePct: 35,
   pensionAssetId: 'fund_world',
+  pensionContributionCapBp: 2_000,
+  maxOrdersPerRound: 50,
   assets: [
     { id: 'bond_long', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 8, yieldSpreadBp: 50 },
     { id: 'fund_world', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 180 },

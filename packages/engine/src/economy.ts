@@ -4,6 +4,7 @@ import { cityOf } from './lookup';
 import { applyBp, mulDiv } from './money';
 import type { Cents } from './money';
 import { ownsHome } from './property';
+import { assetYieldBp, depositRateBp, indexed } from './rates';
 import type { Content, PlayerState, WorldState } from './types';
 
 /** Amounts for one whole round. */
@@ -23,26 +24,28 @@ export interface RoundExpenses {
   service: DebtService;
 }
 
-export function livingCostAnnual(p: PlayerState, content: Content): Cents {
+/** One year of living cost at the given world's prices. An owner-occupier does not pay the housing share. */
+export function livingCostAnnual(p: PlayerState, content: Content, world: WorldState): Cents {
   const city = cityOf(content, p.cityId);
-  const base = mulDiv(city.livingCostAnnual, content.lifestyleMultiplierPct[p.lifestyleTier], 100);
+  const atTier = mulDiv(city.livingCostAnnual, content.lifestyleMultiplierPct[p.lifestyleTier], 100);
+  const base = indexed(atTier, world);
   return ownsHome(p) ? base - mulDiv(base, content.housingSharePct, 100) : base;
 }
 
-/** Income earned on what the player holds, at the rates of the given world. */
+/**
+ * Income earned on what the player holds, at the rates and prices of the given world.
+ * Wages and other passive income follow the price level; investment income does not.
+ */
 export function incomeForRound(p: PlayerState, content: Content, world: WorldState): RoundIncome {
   const years = content.yearsPerRound;
 
   let dividends = 0;
   for (const asset of content.assets) {
     if (!Object.hasOwn(p.positions, asset.id)) continue;
-    const yieldBp =
-      asset.class === 'bond' ? Math.max(0, world.policyRateBp + (asset.yieldSpreadBp ?? 0)) : asset.yieldBp;
-    dividends += applyBp(p.positions[asset.id].value, yieldBp * years);
+    dividends += applyBp(p.positions[asset.id].value, assetYieldBp(asset, world) * years);
   }
 
-  const depositRateBp = Math.max(0, world.policyRateBp - content.market.depositSpreadBp);
-  const interest = applyBp(p.deposit, depositRateBp * years);
+  const interest = applyBp(p.deposit, depositRateBp(content, world) * years);
 
   let rent = 0;
   for (const property of p.properties) {
@@ -50,20 +53,21 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
   }
 
   return {
-    salary: p.salaryAnnual * years,
+    salary: indexed(p.salaryAnnual, world) * years,
     dividends,
     interest,
     rent,
-    otherPassive: p.extraPassiveAnnual * years,
+    otherPassive: indexed(p.extraPassiveAnnual, world) * years,
   };
 }
 
+/** Living cost and other expenses follow the price level; debt service is nominal. */
 export function expensesForRound(p: PlayerState, content: Content, world: WorldState): RoundExpenses {
   const years = content.yearsPerRound;
   const service = debtServiceForRound(p, content, world);
   return {
-    living: livingCostAnnual(p, content) * years,
-    other: p.extraExpensesAnnual * years,
+    living: livingCostAnnual(p, content, world) * years,
+    other: indexed(p.extraExpensesAnnual, world) * years,
     debtInterest: service.interest,
     debtPrincipal: service.principal,
     service,

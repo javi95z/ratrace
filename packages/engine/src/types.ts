@@ -113,8 +113,12 @@ export interface Content {
   lifestyleMultiplierPct: readonly [number, number, number, number];
   /** Share of living cost that is housing, in percent. Waived for owner-occupiers. */
   housingSharePct: number;
-  /** The pension follows this asset's return. */
+  /** The pension follows this asset: its price return plus its reinvested yield. */
   pensionAssetId: string;
+  /** Pension contributions in one round may total this share of the round's salary, in bp. */
+  pensionContributionCapBp: Bp;
+  /** Orders beyond this many in one round are rejected. */
+  maxOrdersPerRound: number;
   assets: ReadonlyArray<AssetDef>;
   market: MarketParams;
   cities: ReadonlyArray<CityDef>;
@@ -205,6 +209,45 @@ export interface RoundChoices {
   orders: Order[];
 }
 
+/** Running totals for the round, read later by the tax step. */
+export interface RoundTally {
+  realisedGains: Cents;
+  pensionContribution: Cents;
+  /** Property purchase tax already paid from cash while executing orders. */
+  purchaseTaxPaid: Cents;
+}
+
+export interface OrderContext {
+  content: Content;
+  /** The world whose prices and rates the player saw when deciding. */
+  world: WorldState;
+  round: number;
+  tally: RoundTally;
+}
+
+/** Why an order was not executed. The client turns the code into text in the player's language. */
+export type RejectReason =
+  | 'bad-order'
+  | 'unknown-order'
+  | 'too-many-orders'
+  | 'bad-amount'
+  | 'not-enough-cash'
+  | 'unknown-asset'
+  | 'no-position'
+  | 'exceeds-position'
+  | 'exceeds-deposit'
+  | 'over-pension-limit'
+  | 'no-credit'
+  | 'over-loan-limit'
+  | 'unknown-debt'
+  | 'exceeds-debt'
+  | 'unknown-property-type'
+  | 'unknown-mortgage-type'
+  | 'bad-down-payment'
+  | 'down-payment-too-low'
+  | 'down-payment-too-high'
+  | 'unknown-property';
+
 export type LedgerLine =
   | 'salary'
   | 'dividends'
@@ -218,13 +261,20 @@ export type LedgerLine =
   | 'incomeTax'
   | 'investmentTax'
   | 'propertyTax'
-  | 'creditCardDraw';
+  | 'purchaseTax'
+  | 'depositDraw'
+  | 'creditCardDraw'
+  | 'creditCardRepay';
 
+/**
+ * What happened in a round. Ledger amounts are signed from the point of view of the player's cash:
+ * positive is money in, negative is money out. `purchaseTax` was paid while executing orders.
+ */
 export type GameEvent =
-  | { kind: 'orderRejected'; order: Order; reason: string }
+  | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
   | { kind: 'ledger'; line: LedgerLine; amount: Cents }
   | { kind: 'escaped'; round: number }
-  | { kind: 'bankrupt' };
+  | { kind: 'bankrupt'; proceeds: Cents; debtsCleared: Cents };
 
 export interface StartConfig {
   cityId: string;

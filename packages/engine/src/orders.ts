@@ -1,12 +1,11 @@
 import { executeBorrow, executeRepay } from './debt';
 import { executePortfolioOrder } from './portfolio';
-import type { OrderContext } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
-import type { Order, PlayerState } from './types';
+import type { Order, OrderContext, PlayerState, RejectReason } from './types';
 
 /** Returns the reason for rejection, or null when the order was executed. */
-export function executeOrder(p: PlayerState, order: Order, ctx: OrderContext): string | null {
-  if (order === null || typeof order !== 'object') return 'unknown order type';
+export function executeOrder(p: PlayerState, order: Order, ctx: OrderContext): RejectReason | null {
+  if (order === null || typeof order !== 'object') return 'bad-order';
   switch (order.type) {
     case 'buy':
     case 'sell':
@@ -25,6 +24,6 @@ export function executeOrder(p: PlayerState, order: Order, ctx: OrderContext): s
     case 'setRented':
       return executeSetRented(p, order);
     default:
-      return 'unknown order type';
+      return 'unknown-order';
   }
 }

@@ -2,9 +2,9 @@ import { cityOf } from './lookup';
 import { applyBp, isAmount, round } from './money';
 import type { Cents } from './money';
 import { newId } from './player';
-import type { OrderContext } from './portfolio';
 import { INDEX_START } from './rates';
-import type { Content, Debt, Order, PlayerState, WorldState } from './types';
+import { purchaseTax } from './tax';
+import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
 export function propertyPrice(content: Content, world: WorldState, cityId: string, typeId: string): Cents {
   const city = cityOf(content, cityId);
@@ -18,25 +18,32 @@ export function ownsHome(p: PlayerState): boolean {
   return p.properties.some((x) => x.cityId === p.cityId && !x.rented);
 }
 
+/**
+ * Buys a property in the player's current city.
+ * Cash must cover the purchase tax as well as the price or the down payment; the tax is paid here.
+ */
 export function executeBuyProperty(
   p: PlayerState,
   order: Extract<Order, { type: 'buyProperty' }>,
   ctx: OrderContext,
-): string | null {
+): RejectReason | null {
   const { content, world } = ctx;
-  if (!content.propertyTypes.some((t) => t.id === order.typeId)) return `unknown property type: ${order.typeId}`;
-  if (order.mortgage !== 'fixed' && order.mortgage !== 'variable' && order.mortgage !== 'none') return 'unknown mortgage type';
+  if (!content.propertyTypes.some((t) => t.id === order.typeId)) return 'unknown-property-type';
+  if (order.mortgage !== 'fixed' && order.mortgage !== 'variable' && order.mortgage !== 'none') {
+    return 'unknown-mortgage-type';
+  }
   const price = propertyPrice(content, world, p.cityId, order.typeId);
+  const tax = purchaseTax(cityOf(content, p.cityId).tax, price);
 
   let debt: Debt | null = null;
-  let cashNeeded = price;
+  let fromCash = price;
   if (order.mortgage !== 'none') {
-    if (ctx.round < p.bankruptUntilRound) return 'no credit available after bankruptcy';
-    if (!isAmount(order.downPayment)) return 'down payment must be a positive whole number of cents';
+    if (ctx.round < p.bankruptUntilRound) return 'no-credit';
+    if (!isAmount(order.downPayment)) return 'bad-down-payment';
     const minimum = price - applyBp(price, content.debt.mortgageMaxLtvBp);
-    if (order.downPayment < minimum) return 'down payment is below the minimum';
-    if (order.downPayment >= price) return 'down payment covers the full price; buy without a mortgage';
-    cashNeeded = order.downPayment;
+    if (order.downPayment < minimum) return 'down-payment-too-low';
+    if (order.downPayment >= price) return 'down-payment-too-high';
+    fromCash = order.downPayment;
     debt = {
       id: '',
       kind: order.mortgage === 'fixed' ? 'mortgageFixed' : 'mortgageVariable',
@@ -45,9 +52,10 @@ export function executeBuyProperty(
       roundsLeft: content.debt.mortgageTermRounds,
     };
   }
-  if (cashNeeded > p.cash) return 'not enough cash';
+  if (fromCash + tax > p.cash) return 'not-enough-cash';
 
-  p.cash -= cashNeeded;
+  p.cash -= fromCash + tax;
+  ctx.tally.purchaseTaxPaid += tax;
   if (debt) {
     debt.id = newId(p, 'debt');
     p.debts.push(debt);
@@ -61,17 +69,17 @@ export function executeBuyProperty(
     rented: order.rented === true,
     mortgageId: debt ? debt.id : null,
   });
-  ctx.tally.propertyPurchases += price;
   return null;
 }
 
+/** Sells at the current value and repays the linked mortgage. Cash may go negative; the round settles it. */
 export function executeSellProperty(
   p: PlayerState,
   order: Extract<Order, { type: 'sellProperty' }>,
   ctx: OrderContext,
-): string | null {
+): RejectReason | null {
   const index = p.properties.findIndex((x) => x.id === order.propertyId);
-  if (index < 0) return `unknown property: ${order.propertyId}`;
+  if (index < 0) return 'unknown-property';
   const property = p.properties[index];
 
   let payoff = 0;
@@ -88,9 +96,9 @@ export function executeSellProperty(
   return null;
 }
 
-export function executeSetRented(p: PlayerState, order: Extract<Order, { type: 'setRented' }>): string | null {
+export function executeSetRented(p: PlayerState, order: Extract<Order, { type: 'setRented' }>): RejectReason | null {
   const property = p.properties.find((x) => x.id === order.propertyId);
-  if (!property) return `unknown property: ${order.propertyId}`;
+  if (!property) return 'unknown-property';
   property.rented = order.rented === true;
   return null;
 }

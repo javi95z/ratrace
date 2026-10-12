@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { newPlayer } from './player';
 import { executePortfolioOrder, growPortfolio } from './portfolio';
-import type { OrderContext, PortfolioOrder } from './portfolio';
+import type { PortfolioOrder } from './portfolio';
 import { fixtureContent, fixtureStart } from './testing/fixture';
+import type { OrderContext } from './types';
 import { generateTimeline } from './world';
 
 function setup(cash = 1_000_000) {
@@ -13,7 +14,7 @@ function setup(cash = 1_000_000) {
     content,
     world: timeline[0],
     round: 0,
-    tally: { realisedGains: 0, pensionContribution: 0, propertyPurchases: 0 },
+    tally: { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 },
   };
   return { content, timeline, p, ctx };
 }
@@ -51,23 +52,15 @@ describe('portfolio orders', () => {
     expect(p.cash).toBe(500_000);
   });
 
-  it('pays into the pension and records the contribution', () => {
-    const { p, ctx } = setup();
-    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 250_000 }, ctx)).toBeNull();
-    expect(p.pension).toBe(250_000);
-    expect(p.cash).toBe(750_000);
-    expect(ctx.tally.pensionContribution).toBe(250_000);
-  });
-
   it('refuses to overspend, oversell or overdraw', () => {
     const { p, ctx } = setup(100);
     p.positions.gold = { value: 500, basis: 500 };
     p.deposit = 300;
-    expect(executePortfolioOrder(p, { type: 'buy', assetId: 'gold', amount: 101 }, ctx)).toBe('not enough cash');
-    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'gold', amount: 501 }, ctx)).toBe('cannot sell more than you hold');
-    expect(executePortfolioOrder(p, { type: 'depositIn', amount: 101 }, ctx)).toBe('not enough cash');
-    expect(executePortfolioOrder(p, { type: 'depositOut', amount: 301 }, ctx)).toBe('not enough in the deposit');
-    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 101 }, ctx)).toBe('not enough cash');
+    expect(executePortfolioOrder(p, { type: 'buy', assetId: 'gold', amount: 101 }, ctx)).toBe('not-enough-cash');
+    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'gold', amount: 501 }, ctx)).toBe('exceeds-position');
+    expect(executePortfolioOrder(p, { type: 'depositIn', amount: 101 }, ctx)).toBe('not-enough-cash');
+    expect(executePortfolioOrder(p, { type: 'depositOut', amount: 301 }, ctx)).toBe('exceeds-deposit');
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 101 }, ctx)).toBe('not-enough-cash');
   });
 
   it('rejects malformed amounts and changes nothing', () => {
@@ -84,46 +77,85 @@ describe('portfolio orders', () => {
         { type: 'depositOut', amount },
         { type: 'pensionIn', amount },
       ];
-      for (const order of orders) {
-        expect(executePortfolioOrder(p, order, ctx)).toBe('amount must be a positive whole number of cents');
-      }
+      for (const order of orders) expect(executePortfolioOrder(p, order, ctx)).toBe('bad-amount');
     }
     expect(JSON.stringify({ p, tally: ctx.tally })).toBe(before);
   });
 
   it('rejects stale and hostile asset ids without touching prototypes', () => {
     const { p, ctx } = setup();
-    expect(executePortfolioOrder(p, { type: 'buy', assetId: 'nope', amount: 100 }, ctx)).toBe('unknown asset: nope');
-    expect(executePortfolioOrder(p, { type: 'buy', assetId: '__proto__', amount: 100 }, ctx)).toBe('unknown asset: __proto__');
-    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'fund_world', amount: 100 }, ctx)).toBe('no position in fund_world');
-    expect(executePortfolioOrder(p, { type: 'sell', assetId: '__proto__', amount: 100 }, ctx)).toBe('no position in __proto__');
-    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'constructor', amount: 100 }, ctx)).toBe('no position in constructor');
+    expect(executePortfolioOrder(p, { type: 'buy', assetId: 'nope', amount: 100 }, ctx)).toBe('unknown-asset');
+    expect(executePortfolioOrder(p, { type: 'buy', assetId: '__proto__', amount: 100 }, ctx)).toBe('unknown-asset');
+    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'fund_world', amount: 100 }, ctx)).toBe('no-position');
+    expect(executePortfolioOrder(p, { type: 'sell', assetId: '__proto__', amount: 100 }, ctx)).toBe('no-position');
+    expect(executePortfolioOrder(p, { type: 'sell', assetId: 'constructor', amount: 100 }, ctx)).toBe('no-position');
     expect(({} as Record<string, unknown>).value).toBeUndefined();
     expect(p.cash).toBe(1_000_000);
   });
 });
 
+describe('pension contributions', () => {
+  it('pays into the pension and records the contribution', () => {
+    const { p, ctx } = setup();
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 250_000 }, ctx)).toBeNull();
+    expect(p.pension).toBe(250_000);
+    expect(p.cash).toBe(750_000);
+    expect(ctx.tally.pensionContribution).toBe(250_000);
+  });
+
+  it("caps contributions at a share of the round's salary, across several orders", () => {
+    const { p, ctx } = setup(5_000_000);
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 1_200_001 }, ctx)).toBe('over-pension-limit');
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 700_000 }, ctx)).toBeNull();
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 500_001 }, ctx)).toBe('over-pension-limit');
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 500_000 }, ctx)).toBeNull();
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 1 }, ctx)).toBe('over-pension-limit');
+    expect(p.pension).toBe(1_200_000);
+    expect(p.cash).toBe(3_800_000);
+  });
+
+  it('lets nobody without a salary pay in', () => {
+    const { p, ctx } = setup(5_000_000);
+    p.salaryAnnual = 0;
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 1 }, ctx)).toBe('over-pension-limit');
+    expect(p.pension).toBe(0);
+  });
+
+  it('raises the cap with the price level', () => {
+    const { p, ctx } = setup(5_000_000);
+    const dearer = { ...ctx, world: { ...ctx.world, priceLevel: 2_000_000 } };
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 2_400_000 }, dearer)).toBeNull();
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 1 }, dearer)).toBe('over-pension-limit');
+  });
+});
+
 describe('portfolio growth', () => {
-  it('applies each asset return and follows the pension asset', () => {
+  it('applies each asset return to what is held', () => {
     const { content, timeline, p } = setup();
     p.positions.fund_world = { value: 1_000_000, basis: 900_000 };
     p.positions.coin_meme = { value: 200_000, basis: 200_000 };
-    p.pension = 500_000;
     const after = {
       ...timeline[1],
       assetReturnBp: { ...timeline[1].assetReturnBp, fund_world: 1_000, coin_meme: -9_000 },
     };
-    growPortfolio(p, content, after);
+    growPortfolio(p, content, timeline[0], after);
     expect(p.positions.fund_world).toEqual({ value: 1_100_000, basis: 900_000 });
     expect(p.positions.coin_meme).toEqual({ value: 20_000, basis: 200_000 });
-    expect(p.pension).toBe(550_000);
+  });
+
+  it('grows the pension by the price return of its asset plus its reinvested yield', () => {
+    const { content, timeline, p } = setup();
+    p.pension = 500_000;
+    const after = { ...timeline[1], assetReturnBp: { ...timeline[1].assetReturnBp, fund_world: 1_000 } };
+    growPortfolio(p, content, timeline[0], after);
+    expect(p.pension).toBe(500_000 + 50_000 + 18_000);
   });
 
   it('drops a position that falls to nothing', () => {
     const { content, timeline, p } = setup();
     p.positions.coin_meme = { value: 3, basis: 300 };
     const after = { ...timeline[1], assetReturnBp: { ...timeline[1].assetReturnBp, coin_meme: -9_500 } };
-    growPortfolio(p, content, after);
+    growPortfolio(p, content, timeline[0], after);
     expect(p.positions.coin_meme).toBeUndefined();
   });
 });
