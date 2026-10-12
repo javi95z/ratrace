@@ -1,7 +1,8 @@
+import { mortgageSpreadBp } from './debt';
+import { newId } from './ids';
 import { cityOf } from './lookup';
 import { applyBp, isAmount, round } from './money';
 import type { Cents } from './money';
-import { newId } from './player';
 import { INDEX_START } from './rates';
 import { purchaseTax } from './tax';
 import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
@@ -32,6 +33,7 @@ export function executeBuyProperty(
   if (order.mortgage !== 'fixed' && order.mortgage !== 'variable' && order.mortgage !== 'none') {
     return 'unknown-mortgage-type';
   }
+  if (order.rented === true && p.life.financeSkill < content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
   const price = propertyPrice(content, world, p.cityId, order.typeId);
   const tax = purchaseTax(cityOf(content, p.cityId).tax, price);
 
@@ -48,7 +50,7 @@ export function executeBuyProperty(
       id: '',
       kind: order.mortgage === 'fixed' ? 'mortgageFixed' : 'mortgageVariable',
       principal: price - order.downPayment,
-      fixedRateBp: order.mortgage === 'fixed' ? world.policyRateBp + content.debt.mortgageSpreadBp : 0,
+      fixedRateBp: order.mortgage === 'fixed' ? world.policyRateBp + mortgageSpreadBp(p, content) : 0,
       roundsLeft: content.debt.mortgageTermRounds,
     };
   }
@@ -96,9 +98,14 @@ export function executeSellProperty(
   return null;
 }
 
-export function executeSetRented(p: PlayerState, order: Extract<Order, { type: 'setRented' }>): RejectReason | null {
+export function executeSetRented(
+  p: PlayerState,
+  order: Extract<Order, { type: 'setRented' }>,
+  ctx: OrderContext,
+): RejectReason | null {
   const property = p.properties.find((x) => x.id === order.propertyId);
   if (!property) return 'unknown-property';
+  if (order.rented === true && p.life.financeSkill < ctx.content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
   property.rented = order.rented === true;
   return null;
 }

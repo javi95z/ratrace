@@ -1,9 +1,14 @@
 import type { Bp, Cents } from './money';
+import type { RngState } from './rng';
 
 export type Regime = 'expansion' | 'boom' | 'slowdown' | 'recession' | 'recovery';
 export type CryptoPhase = 'accumulation' | 'bull' | 'mania' | 'winter';
 export type AssetClass = 'bond' | 'equity' | 'crypto' | 'gold';
 export type LifestyleTier = 0 | 1 | 2 | 3;
+export type FinanceSkill = 0 | 1 | 2;
+export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
+/** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
+export type RentTier = 0 | 1;
 
 export interface AssetDef {
   id: string;
@@ -22,6 +27,8 @@ export interface AssetDef {
   yieldSpreadBp?: Bp;
   /** Chance per round, in percent, of a 90% crash. */
   crashChancePct?: number;
+  /** Finance skill needed to buy this asset through an order. Cards can ignore it. Defaults to 0. */
+  minFinanceSkill?: FinanceSkill;
 }
 
 export interface MarketParams {
@@ -76,12 +83,266 @@ export interface CityDef {
   propertyRateSensitivity: number;
   propertyVolBp: Bp;
   tax: TaxProfile;
+  /** Status points for living here. */
+  prestige: number;
 }
 
 export interface PropertyTypeDef {
   id: string;
   /** Price as a percent of the city's flat price. */
   pricePct: number;
+  /** Status points for living in one. */
+  status: number;
+}
+
+export interface CareerLevel {
+  /** Salary as a percent of the city's median salary. */
+  salaryPct: number;
+  /** Career skill needed to hold this level. */
+  minSkill: number;
+  /** Status points for the job title. */
+  status: number;
+}
+
+export interface CareerDef {
+  id: string;
+  levels: CareerLevel[];
+  /** Extra salary for a round of overtime, in percent. */
+  overtimePct: number;
+}
+
+export type ItemKind = 'durable' | 'membership' | 'experience';
+
+export interface ItemDef {
+  id: string;
+  /** Items in one ladder compete: the best counts in full, the rest in part. */
+  ladder: string;
+  /** durable: owned and resold. membership: upkeep until cancelled. experience: consumed, boosts status for a while. */
+  kind: ItemKind;
+  /** In start-of-game dollars. */
+  price: Cents;
+  /** In start-of-game dollars. */
+  upkeepAnnual: Cents;
+  status: number;
+  /** Durables: resale value right after purchase, as a percent of the price paid. */
+  resaleStartPct: number;
+  /** Durables: change in resale value each round, in bp. Negative loses value, positive gains it. */
+  resaleDriftBp: Bp;
+  /** Experiences: rounds the status lasts. */
+  boostRounds: number;
+}
+
+/** The numbers behind family, insurance, housing and effort. */
+export interface LifeRules {
+  /** Yearly cost of one child, as a percent of the city's living cost. */
+  childCostPct: number;
+  /** Rounds a child depends on the player. */
+  childRounds: number;
+  /** Yearly cost a partner adds, as a percent of the city's living cost. */
+  partnerCostPct: number;
+  /** Yearly premium of each insurance, as a share of the city's living cost, in bp. */
+  insurancePremiumBp: Record<InsuranceKind, Bp>;
+  /** Share of the housing cost paid at each rent tier, in percent. */
+  rentTierHousingPct: readonly [number, number];
+  rentTierStatus: readonly [number, number];
+  /** Status for each lifestyle tier. */
+  lifestyleStatus: readonly [number, number, number, number];
+  /** How much of its status an item gives when a better one in its ladder is owned, in percent. */
+  lesserItemPct: number;
+  /** Cost of moving, as a percent of the destination's yearly living cost. */
+  moveCostPct: number;
+  /** Career skill gained by a round of work. */
+  workSkill: number;
+  /** Career skill gained on top by a round of study. */
+  studySkill: number;
+  jobHuntChancePct: number;
+  /** Lasting raise from a successful job hunt, in percent. */
+  jobHuntRaisePct: number;
+  /** Rounds of holding an investment before finance skill rises once from experience. */
+  financeExperienceRounds: number;
+  /** Finance skill needed to rent a property out. */
+  rentOutMinFinanceSkill: FinanceSkill;
+  /** Pay of a life with the `unstable_pay` flag swings by up to this many percent each round. */
+  unstablePayPct: number;
+  /** Mortgage spread saved by a life with the `cheap_mortgage` flag, in bp. */
+  cheapMortgageBp: Bp;
+}
+
+/** News and tax reforms. Both come from their own random streams, so they never move a price. */
+export interface WorldRules {
+  headlinesPerRound: number;
+  /** Chance in percent that a headline is true. */
+  newsTruthPct: number;
+  /** A move in rates or inflation smaller than this is reported as flat. */
+  flatBandBp: Bp;
+  /** Chance per round, in percent, of a tax reform somewhere. */
+  taxReformChancePct: number;
+  taxReformsPerGame: number;
+  /** A reform moves every non-zero rate of one city by one of these amounts. */
+  taxReformStepsBp: ReadonlyArray<Bp>;
+}
+
+export type CardCategory =
+  | 'career'
+  | 'education'
+  | 'business'
+  | 'investing'
+  | 'housing'
+  | 'lifestyle'
+  | 'family'
+  | 'health'
+  | 'luck'
+  | 'world'
+  | 'tax'
+  | 'laterLife';
+
+/** What must be true of the player. Every part that is present must hold. */
+export interface Condition {
+  minRound?: number;
+  maxRound?: number;
+  cities?: string[];
+  notCities?: string[];
+  /** True needs a career, false needs none. */
+  employed?: boolean;
+  careers?: string[];
+  minLevel?: number;
+  maxLevel?: number;
+  partner?: boolean;
+  minChildren?: number;
+  maxChildren?: number;
+  /** Lives in a home they own. */
+  ownsHome?: boolean;
+  /** Owns a property that is rented out. */
+  landlord?: boolean;
+  hasMortgage?: boolean;
+  /** Net worth in start-of-game dollars. */
+  minNetWorth?: Cents;
+  maxNetWorth?: Cents;
+  minFinanceSkill?: FinanceSkill;
+  maxFinanceSkill?: FinanceSkill;
+  /** All of these flags are set. */
+  flags?: string[];
+  /** None of these flags is set. */
+  notFlags?: string[];
+  /** Holds something of this kind. */
+  holds?: AssetClass | 'deposit';
+  /** Owns an item in this ladder. */
+  ownsLadder?: string;
+  /** Owns none of these items. */
+  notItems?: string[];
+  regimes?: Regime[];
+  /** Property in the player's city returned this or less in the round that just ended. */
+  cityPropertyReturnAtMostBp?: Bp;
+}
+
+/** What must be true of the world for a world card to appear. Every part that is present must hold. */
+export interface WorldTrigger {
+  /** The regime changed to one of these this round. */
+  regimeBegan?: Regime[];
+  regimes?: Regime[];
+  /** The crypto cycle changed to one of these this round. */
+  cryptoBegan?: CryptoPhase[];
+  rateChangeAtLeastBp?: Bp;
+  rateChangeAtMostBp?: Bp;
+  inflationAtLeastBp?: Bp;
+  /** Property in at least one city returned this or less. */
+  anyPropertyReturnAtMostBp?: Bp;
+  /** A tax reform happened this round. */
+  taxReform?: boolean;
+}
+
+/**
+ * What a card option does. Amounts of money are in start-of-game dollars and are converted at
+ * the price level of the round. Everything is optional; an empty record does nothing.
+ */
+export interface Effects {
+  /** One-off money. Negative is a cost. */
+  cash?: Cents;
+  /** One-off money as a percent of one year's salary. */
+  cashSalaryPct?: number;
+  /** One-off money as a percent of net worth, when net worth is positive. */
+  cashNetWorthPct?: number;
+  /** Reduces a net loss from the three fields above when the player holds the insurance or the flag. */
+  protection?: { insurance?: InsuranceKind; flag?: string; coverPct: number };
+  /** Lasting change to the salary, in percent. */
+  salaryModPct?: number;
+  /** Change to this round's salary only, in percent. */
+  salaryBoostPct?: number;
+  careerSkill?: number;
+  financeSkill?: number;
+  /** Lasting status. */
+  status?: number;
+  /** Focus points this takes this round. */
+  focus?: number;
+  /** Added to the player's recurring entries. An entry with the same tag is replaced. */
+  recurring?: Recurring[];
+  /** Tags of recurring entries to end. */
+  endRecurring?: string[];
+  setFlags?: string[];
+  clearFlags?: string[];
+  /** Changes the job. `leave` ends the career; otherwise the career, the level or both are set. */
+  job?: { career?: string; level?: number; levelDelta?: number; leave?: boolean };
+  /** The player moves here when the round has resolved. */
+  moveCity?: string;
+  /** A partner with this salary, as a percent of the city median, or null to end the partnership. */
+  partner?: { salaryPct: number } | null;
+  /** Children born. */
+  children?: number;
+  /** Buys an item at this percent of its price. Zero is a gift. */
+  buyItem?: { itemId: string; pricePct: number };
+  /** Buys an asset whatever the player's finance skill. `bonusPct` adds free units on top. */
+  invest?: { assetId: string; amount: Cents; bonusPct?: number };
+  /** Paid into the pension, on top of the yearly cap. */
+  pension?: Cents;
+  /** A personal loan of this size, paid out in cash, whatever the usual limit. */
+  loan?: Cents;
+  /**
+   * Buys a property in the player's city at `pricePct` percent of the market price,
+   * paying `downPct` percent of that in cash and the rest with a fixed mortgage.
+   */
+  property?: { typeId: string; pricePct: number; downPct: number; rented: boolean };
+  /** Turns every mortgage into this kind, at today's rate. */
+  refinance?: 'fixed' | 'variable';
+  /** Sells the home the player lives in, repays its mortgage, and makes them a tenant. Untaxed. */
+  sellHome?: boolean;
+  /** Changes the value of the home the player lives in, in percent. */
+  homeValuePct?: number;
+  /** Takes away a percent of the deposit or of every holding in one asset class. */
+  lose?: { what: AssetClass | 'deposit'; pct: number };
+  /** Raises the lowest lifestyle tier the player can choose. */
+  lifestyleFloor?: LifestyleTier;
+}
+
+export interface CardOutcome {
+  weight: number;
+  effects: Effects;
+}
+
+export interface CardOption {
+  /** The option is locked unless this holds. Never set on the first option. */
+  when?: Condition;
+  effects?: Effects;
+  /** One of these is rolled from the player's own random stream, on top of `effects`. */
+  outcomes?: CardOutcome[];
+}
+
+export interface CardDef {
+  id: string;
+  category: CardCategory;
+  /** Relative chance of being drawn. */
+  weight: number;
+  /** Rounds that must pass before the card can be drawn again. */
+  cooldown: number;
+  /** Drawn at most once in a life. */
+  once?: boolean;
+  when?: Condition;
+  /** World cards only. */
+  trigger?: WorldTrigger;
+  /**
+   * Two or three options. The first is the default: it is what an absent player gets,
+   * so it never has a condition and never buys anything.
+   */
+  options: CardOption[];
 }
 
 export interface DebtParams {
@@ -131,7 +392,22 @@ export interface Content {
   propertyTypes: ReadonlyArray<PropertyTypeDef>;
   debt: DebtParams;
   scoring: ScoringParams;
+  careers: ReadonlyArray<CareerDef>;
+  items: ReadonlyArray<ItemDef>;
+  life: LifeRules;
+  world: WorldRules;
+  cards: ReadonlyArray<CardDef>;
 }
+
+export type Trend = 'up' | 'down' | 'flat';
+
+/** A claim about the next world state. Whether it was true shows once that state arrives. */
+export type Headline =
+  | { topic: 'regime'; regime: Regime }
+  | { topic: 'crypto'; phase: CryptoPhase }
+  | { topic: 'rates'; trend: Trend }
+  | { topic: 'inflation'; trend: Trend }
+  | { topic: 'property'; cityId: string; trend: 'up' | 'down' };
 
 export interface WorldState {
   round: number;
@@ -147,6 +423,12 @@ export interface WorldState {
   assetIndex: Record<string, number>;
   propertyReturnBp: Record<string, Bp>;
   propertyIndex: Record<string, number>;
+  /** Added to every non-zero tax rate of a city, in bp. Changes only when a reform happens. */
+  taxShiftBp: Record<string, Bp>;
+  /** Headlines about the next world state. Empty in the last one. */
+  news: Headline[];
+  /** The world card of this round, the same for every player, or null. */
+  eventCardId: string | null;
 }
 
 export interface Position {
@@ -176,6 +458,63 @@ export interface Property {
   mortgageId: string | null;
 }
 
+export interface OwnedItem {
+  itemId: string;
+  /** Durables: what it would sell for today. Otherwise 0. */
+  value: Cents;
+  /** Experiences: rounds of status left. Otherwise null. */
+  roundsLeft: number | null;
+}
+
+export interface Recurring {
+  /** Names the entry so a later card can end it. */
+  tag: string;
+  kind: 'expense' | 'passive';
+  /** In start-of-game dollars. */
+  annual: Cents;
+  /** Null means it never ends on its own. */
+  roundsLeft: number | null;
+}
+
+/** The player's life outside their portfolio. The derived fields of PlayerState are computed from this. */
+export interface LifeState {
+  lifeId: string;
+  /** Null when the player has no job on a career ladder. */
+  career: { id: string; level: number } | null;
+  /** Salary while there is no career, in start-of-game dollars. Zero in the real lives. */
+  baseSalaryAnnual: Cents;
+  /** Lasting raises and cuts, in percent. */
+  salaryModPct: number;
+  /** This round only, in percent: overtime, or a gig worker's good or bad spell. */
+  salaryBoostPct: number;
+  careerSkill: number;
+  financeSkill: FinanceSkill;
+  /** Rounds in which the player held an investment. */
+  investedRounds: number;
+  focusBase: number;
+  focusUsed: number;
+  partner: boolean;
+  /** The partner's salary as a percent of the city median. Zero when not working. */
+  partnerSalaryPct: number;
+  /** One entry per child: rounds of dependence left. */
+  children: number[];
+  insurance: Record<InsuranceKind, boolean>;
+  rentTier: RentTier;
+  minLifestyleTier: LifestyleTier;
+  items: OwnedItem[];
+  /** Every item ever owned, for the collection screen. */
+  collection: string[];
+  recurring: Recurring[];
+  /** Flag name to the round it was set. */
+  flags: Record<string, number>;
+  /** Card id to the round it was last drawn. */
+  seen: Record<string, number>;
+  /** Lasting status from cards. May be negative; total status never is. */
+  bonusStatus: number;
+  /** City the player moves to when this round has resolved. */
+  movingTo: string | null;
+}
+
 export interface PlayerState {
   cityId: string;
   cash: Cents;
@@ -184,16 +523,21 @@ export interface PlayerState {
   positions: Record<string, Position>;
   properties: Property[];
   debts: Debt[];
+  lifestyleTier: LifestyleTier;
+  life: LifeState;
   /**
-   * The next three amounts are in start-of-game dollars. The engine converts them at the current
-   * price level each time it uses them. Cash, deposit, pension, positions, properties and debts
-   * are in the dollars of the day and are never converted.
+   * The next four fields are derived from `life`, the city and what the player owns.
+   * `refreshDerived` recomputes them, and the invariant check fails if they are ever out of step.
+   * Change `life`, not these.
+   *
+   * The three amounts are in start-of-game dollars. The engine converts them at the current
+   * price level each time it uses them. Cash, deposit, pension, positions, properties, debts and
+   * item values are in the dollars of the day and are never converted.
    */
   salaryAnnual: Cents;
-  lifestyleTier: LifestyleTier;
-  /** Upkeep, family and insurance. Set by the life systems. */
+  /** Item upkeep, family, insurance and recurring expenses. */
   extraExpensesAnnual: Cents;
-  /** Business profit and similar. Set by the life systems. */
+  /** Business profit and other recurring passive income. */
   extraPassiveAnnual: Cents;
   statusPoints: number;
   nextId: number;
@@ -214,18 +558,37 @@ export type Order =
   | { type: 'repay'; debtId: string; amount: Cents }
   | { type: 'buyProperty'; typeId: string; downPayment: Cents; mortgage: 'fixed' | 'variable' | 'none'; rented: boolean }
   | { type: 'sellProperty'; propertyId: string }
-  | { type: 'setRented'; propertyId: string; rented: boolean };
+  | { type: 'setRented'; propertyId: string; rented: boolean }
+  | { type: 'focus'; action: FocusAction }
+  | { type: 'buyItem'; itemId: string }
+  | { type: 'sellItem'; itemId: string }
+  | { type: 'setLifestyle'; tier: LifestyleTier }
+  | { type: 'setRentTier'; tier: RentTier }
+  | { type: 'setInsurance'; insurance: InsuranceKind; on: boolean }
+  | { type: 'moveCity'; cityId: string };
+
+/** Each costs one focus point and can be done once a round. */
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt';
 
 export interface RoundChoices {
   orders: Order[];
 }
 
-/** Running totals for the round, read later by the tax step. */
+/** The player's answers to the cards in their hand: card id to option number. */
+export type CardPicks = Record<string, number>;
+
+/** Running totals for the round, read later by the tax step and the end-of-round updates. */
 export interface RoundTally {
   realisedGains: Cents;
   pensionContribution: Cents;
   /** Property purchase tax already paid from cash while executing orders. */
   purchaseTaxPaid: Cents;
+  /** Focus actions ordered this round. */
+  focusActions: FocusAction[];
+  /** Cash spent on status items, raised by selling them, and spent on moving city. */
+  itemsBought: Cents;
+  itemsSold: Cents;
+  movingCost: Cents;
 }
 
 export interface OrderContext {
@@ -258,7 +621,22 @@ export type RejectReason =
   | 'bad-down-payment'
   | 'down-payment-too-low'
   | 'down-payment-too-high'
-  | 'unknown-property';
+  | 'unknown-property'
+  | 'needs-finance-skill'
+  | 'unknown-action'
+  | 'no-focus'
+  | 'already-done'
+  | 'no-job'
+  | 'unknown-item'
+  | 'already-owned'
+  | 'not-owned'
+  | 'cannot-sell'
+  | 'bad-tier'
+  | 'below-lifestyle-floor'
+  | 'unknown-insurance'
+  | 'unknown-city'
+  | 'same-city'
+  | 'already-moving';
 
 export type LedgerLine =
   | 'salary'
@@ -274,6 +652,9 @@ export type LedgerLine =
   | 'investmentTax'
   | 'propertyTax'
   | 'purchaseTax'
+  | 'itemPurchases'
+  | 'itemSales'
+  | 'moving'
   | 'depositDraw'
   | 'creditCardDraw'
   | 'creditCardRepay';
@@ -286,20 +667,56 @@ export type GameEvent =
   | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
   | { kind: 'ledger'; line: LedgerLine; amount: Cents }
   | { kind: 'escaped'; round: number }
-  | { kind: 'bankrupt'; proceeds: Cents; debtsCleared: Cents };
+  | { kind: 'bankrupt'; proceeds: Cents; debtsCleared: Cents }
+  /**
+   * A card was answered. `picked` is what the player asked for; `option` is what happened, which
+   * is the default when the pick was missing, malformed or locked. `outcome` is the number of the
+   * rolled outcome, or null. `cash` is the change in the player's cash.
+   */
+  | { kind: 'card'; cardId: string; picked: number | null; option: number; outcome: number | null; cash: Cents }
+  | { kind: 'promoted'; careerId: string; level: number }
+  | { kind: 'jobHunt'; success: boolean }
+  | { kind: 'financeSkill'; level: FinanceSkill }
+  | { kind: 'moved'; cityId: string };
+
+/** How a life begins beyond its money. All of it is optional: without it the player has a fixed salary and no career. */
+export interface LifeStart {
+  lifeId: string;
+  /** Null for a life with no career: it earns the fixed `salaryAnnual` of its start. */
+  career: { id: string; level: number } | null;
+  careerSkill: number;
+  financeSkill: FinanceSkill;
+  focus: number;
+  minLifestyleTier?: LifestyleTier;
+  rentTier?: RentTier;
+  /** Homes owned on day one, bought at the round-0 price with no mortgage. */
+  properties?: Array<{ typeId: string; rented: boolean }>;
+  recurring?: Recurring[];
+  flags?: string[];
+}
 
 export interface StartConfig {
   cityId: string;
   cash: Cents;
+  /** Salary of a life with no career, in start-of-game dollars. A life with a career ignores it. */
   salaryAnnual: Cents;
   lifestyleTier: LifestyleTier;
   debts: Array<Omit<Debt, 'id'>>;
+  life?: LifeStart;
 }
 
 export interface GameConfig {
   content: Content;
   start: StartConfig;
+  /**
+   * Names this player's own random stream. Players who share a seed share the world;
+   * a different key gives each of them their own cards and dice.
+   */
+  playerKey?: string;
 }
+
+/** `cards`: the hand is waiting for answers. `finance`: the cards are settled and orders are next. */
+export type Phase = 'cards' | 'finance';
 
 export interface GameState {
   seed: string;
@@ -309,4 +726,9 @@ export interface GameState {
   timeline: WorldState[];
   player: PlayerState;
   finished: boolean;
+  phase: Phase;
+  /** Ids of the cards drawn for this round, in the order they are answered. */
+  hand: string[];
+  /** Saved position of the player's own random stream. */
+  rng: { cards: RngState };
 }

@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { newPlayer } from './player';
 import { executePortfolioOrder, growPortfolio } from './portfolio';
 import type { PortfolioOrder } from './portfolio';
-import { fixtureContent, fixtureStart } from './testing/fixture';
+import { newTally } from './tally';
+import { fixtureContent, fixturePlayer } from './testing/fixture';
 import type { OrderContext } from './types';
 import { generateTimeline } from './world';
 
 function setup(cash = 1_000_000) {
   const content = fixtureContent();
   const timeline = generateTimeline('portfolio', content);
-  const p = newPlayer({ ...fixtureStart(), cash });
+  const p = fixturePlayer({ cash });
   const ctx: OrderContext = {
     content,
     world: timeline[0],
     round: 0,
-    tally: { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 },
+    tally: newTally(),
   };
   return { content, timeline, p, ctx };
 }

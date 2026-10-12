@@ -4,7 +4,7 @@ exports[`golden replay > reproduces the recorded final state from the stored cho
 {
   "escapedAtRound": null,
   "executed": 107,
-  "hash": "26671bf999f3542e",
+  "hash": "244a9ab35c00560e",
   "ledgerLines": [
     "debtInterest",
     "debtPrincipal",
@@ -20,6 +20,6 @@ exports[`golden replay > reproduces the recorded final state from the stored cho
   ],
   "netWorth": 172941610,
   "rejected": 1,
-  "score": 255,
+  "score": 257,
 }
 `;

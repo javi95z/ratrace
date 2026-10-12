@@ -1,4 +1,6 @@
-import type { Content, StartConfig, TaxProfile } from '../types';
+import { newPlayer } from '../player';
+import type { Content, PlayerState, StartConfig, TaxProfile } from '../types';
+import { generateTimeline } from '../world';
 
 const USD = 100;
 
@@ -81,6 +83,7 @@ const base: Content = {
       propertyRateSensitivity: 4,
       propertyVolBp: 700,
       tax: homeTax,
+      prestige: 0,
     },
     {
       id: 'haven',
@@ -93,14 +96,15 @@ const base: Content = {
       propertyRateSensitivity: 3,
       propertyVolBp: 900,
       tax: havenTax,
+      prestige: 5,
     },
   ],
   propertyTypes: [
-    { id: 'studio', pricePct: 60 },
-    { id: 'flat', pricePct: 100 },
-    { id: 'house', pricePct: 180 },
-    { id: 'penthouse', pricePct: 400 },
-    { id: 'villa', pricePct: 800 },
+    { id: 'studio', pricePct: 60, status: 3 },
+    { id: 'flat', pricePct: 100, status: 6 },
+    { id: 'house', pricePct: 180, status: 10 },
+    { id: 'penthouse', pricePct: 400, status: 25 },
+    { id: 'villa', pricePct: 800, status: 40 },
   ],
   debt: {
     personalLoanSpreadBp: 500,
@@ -126,6 +130,53 @@ const base: Content = {
     escapeBase: 125,
     escapePerRoundLeft: 3,
   },
+  careers: [
+    {
+      id: 'office',
+      overtimePct: 15,
+      levels: [
+        { salaryPct: 80, minSkill: 0, status: 0 },
+        { salaryPct: 110, minSkill: 4, status: 3 },
+        { salaryPct: 150, minSkill: 10, status: 6 },
+      ],
+    },
+  ],
+  items: [
+    { id: 'car_basic', ladder: 'car', kind: 'durable', price: 12_000 * USD, upkeepAnnual: 1_200 * USD, status: 4, resaleStartPct: 80, resaleDriftBp: -2_000, boostRounds: 0 },
+    { id: 'car_sports', ladder: 'car', kind: 'durable', price: 150_000 * USD, upkeepAnnual: 6_000 * USD, status: 40, resaleStartPct: 85, resaleDriftBp: -1_500, boostRounds: 0 },
+    { id: 'watch_gold', ladder: 'watch', kind: 'durable', price: 10_000 * USD, upkeepAnnual: 0, status: 12, resaleStartPct: 90, resaleDriftBp: 300, boostRounds: 0 },
+    { id: 'club', ladder: 'membership', kind: 'membership', price: 500 * USD, upkeepAnnual: 2_400 * USD, status: 5, resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 0 },
+    { id: 'trip', ladder: 'travel', kind: 'experience', price: 3_000 * USD, upkeepAnnual: 0, status: 10, resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 2 },
+  ],
+  life: {
+    childCostPct: 25,
+    childRounds: 9,
+    partnerCostPct: 50,
+    insurancePremiumBp: { health: 400, home: 300, life: 200, liability: 100 },
+    rentTierHousingPct: [60, 100],
+    rentTierStatus: [0, 2],
+    lifestyleStatus: [0, 0, 0, 9],
+    lesserItemPct: 25,
+    moveCostPct: 20,
+    workSkill: 1,
+    studySkill: 1,
+    jobHuntChancePct: 35,
+    jobHuntRaisePct: 8,
+    financeExperienceRounds: 3,
+    rentOutMinFinanceSkill: 0,
+    unstablePayPct: 30,
+    cheapMortgageBp: 50,
+  },
+  // No reforms and no cards by default, so tests of money are not disturbed. Tests of either add their own.
+  world: {
+    headlinesPerRound: 3,
+    newsTruthPct: 70,
+    flatBandBp: 25,
+    taxReformChancePct: 0,
+    taxReformsPerGame: 2,
+    taxReformStepsBp: [-300, -200, 200, 300],
+  },
+  cards: [],
 };
 
 /** A fresh copy each call, so a test may alter it freely. */
@@ -135,4 +186,9 @@ export function fixtureContent(): Content {
 
 export function fixtureStart(): StartConfig {
   return { cityId: 'home', cash: 0, salaryAnnual: 30_000 * USD, lifestyleTier: 1, debts: [] };
+}
+
+/** A player on day one of the fixture world, for tests of single systems. */
+export function fixturePlayer(over: Partial<StartConfig> = {}, content: Content = base): PlayerState {
+  return newPlayer(content, { ...fixtureStart(), ...over }, generateTimeline('fixture', content)[0]);
 }

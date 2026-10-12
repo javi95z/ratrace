@@ -71,7 +71,7 @@ describe('validateContent', () => {
       expect(validateContent({ ...c, assets: [...c.assets, asset(id)] })).toContain(`asset id ${JSON.stringify(id)} is not allowed`);
     }
     expect(validateContent({ ...c, cities: [{ ...c.cities[0], id: 'toString' }] })).toContain('city id "toString" is not allowed');
-    expect(validateContent({ ...c, propertyTypes: [{ id: 'constructor', pricePct: 100 }] })).toContain(
+    expect(validateContent({ ...c, propertyTypes: [{ id: 'constructor', pricePct: 100, status: 0 }] })).toContain(
       'property type id "constructor" is not allowed',
     );
   });
@@ -99,9 +99,9 @@ describe('validateContent', () => {
     expect(errors({ assets: [...c.assets, { id: 'odd', class: 'equity', betaPct: 100, idioVolBp: -1, yieldBp: 0 }] })).toContain(
       'asset odd has a negative volatility or yield',
     );
-    expect(errors({ propertyTypes: [{ id: 'shed', pricePct: 0 }] })).toContain('property type shed needs a positive price percentage');
+    expect(errors({ propertyTypes: [{ id: 'shed', pricePct: 0, status: 0 }] })).toContain('property type shed needs a positive price percentage');
     expect(errors({ assets: [...c.assets, { id: 'adrift', class: 'equity', betaPct: 100, idioVolBp: 0, yieldBp: 0, driftBp: NaN }] })).toContain(
-      'asset adrift has a drift that is not a finite number',
+      'asset adrift has a drift that is not a whole number',
     );
   });
 });

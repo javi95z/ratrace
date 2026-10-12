@@ -3,6 +3,7 @@ import { applyRound, createGame } from './game';
 import { PRICE_LEVEL_START } from './rates';
 import { cashflow, finalScore, netWorth, realNetWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
+import { passive, withPlayer as patched } from './testing/patch';
 import type { GameEvent, GameState, LedgerLine } from './types';
 
 const content = fixtureContent();
@@ -14,9 +15,8 @@ const ledger = (events: GameEvent[], line: LedgerLine): number | undefined => {
 
 const rejections = (events: GameEvent[]) => events.flatMap((e) => (e.kind === 'orderRejected' ? [e.reason] : []));
 
-function withPlayer(state: GameState, over: Partial<GameState['player']>): GameState {
-  return { ...state, player: { ...state.player, ...over } };
-}
+const withPlayer = (state: GameState, over: Partial<GameState['player']>, life: Partial<GameState['player']['life']> = {}) =>
+  patched(content, state, over, life);
 
 /** An amount in start-of-game dollars, at the price level of the given round. */
 const atRound = (state: GameState, round: number, amount: number) =>
@@ -125,7 +125,7 @@ describe('applyRound: inflation', () => {
 
 describe('applyRound: tax inputs', () => {
   it('taxes other passive income as income', () => {
-    const start = withPlayer(createGame({ content, start: fixtureStart() }, 't1'), { extraPassiveAnnual: 3_000_000 });
+    const start = withPlayer(createGame({ content, start: fixtureStart() }, 't1'), {}, { recurring: passive(3_000_000) });
     const { events } = applyRound(content, start, { orders: [] });
     expect(ledger(events, 'otherPassive')).toBe(6_000_000);
     expect(ledger(events, 'incomeTax')).toBe(-2_040_000);
@@ -283,7 +283,7 @@ describe('applyRound: bankruptcy uses this round\'s prices', () => {
 
 describe('applyRound: escape', () => {
   it('marks escape after two rounds in a row of passive income covering expenses', () => {
-    const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g7'), { extraPassiveAnnual: 5_000_000 });
+    const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g7'), {}, { recurring: passive(5_000_000) });
     const first = applyRound(content, start, { orders: [] });
     expect(first.state.player.passiveStreak).toBe(1);
     expect(first.state.player.escapedAtRound).toBeNull();
@@ -296,9 +296,9 @@ describe('applyRound: escape', () => {
   });
 
   it('resets the streak when passive income falls short', () => {
-    const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g8'), { extraPassiveAnnual: 5_000_000 });
+    const start = withPlayer(createGame({ content, start: fixtureStart() }, 'g8'), {}, { recurring: passive(5_000_000) });
     const first = applyRound(content, start, { orders: [] });
-    const second = applyRound(content, withPlayer(first.state, { extraPassiveAnnual: 0 }), { orders: [] });
+    const second = applyRound(content, withPlayer(first.state, {}, { recurring: [] }), { orders: [] });
     expect(second.state.player.passiveStreak).toBe(0);
     expect(second.state.player.escapedAtRound).toBeNull();
   });
@@ -317,10 +317,12 @@ describe('selectors', () => {
   });
 
   it('scores a finished state', () => {
-    const state = withPlayer(createGame({ content, start: { ...fixtureStart(), cash: 100_000_000 } }, 'f'), {
-      statusPoints: 50,
-      escapedAtRound: 1,
-    });
+    // Status is 50: 48 from cards and 2 for the rented flat.
+    const state = withPlayer(
+      createGame({ content, start: { ...fixtureStart(), cash: 100_000_000 } }, 'f'),
+      { escapedAtRound: 1 },
+      { bonusStatus: 48 },
+    );
     expect(finalScore(content, state)).toBe(637);
   });
 
@@ -332,7 +334,7 @@ describe('selectors', () => {
   });
 
   it('scores net worth in start-of-game dollars', () => {
-    const base = withPlayer(createGame({ content, start: { ...fixtureStart(), cash: 200_000_000 } }, 'real'), { statusPoints: 50 });
+    const base = withPlayer(createGame({ content, start: { ...fixtureStart(), cash: 200_000_000 } }, 'real'), {}, { bonusStatus: 48 });
     const inflated = structuredClone(base);
     inflated.timeline[0].priceLevel = 2_000_000;
     expect(realNetWorth(inflated)).toBe(100_000_000);

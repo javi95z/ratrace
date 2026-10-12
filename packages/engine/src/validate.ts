@@ -1,4 +1,5 @@
-import type { Content, CryptoPhase, DebtKind, Regime, StartConfig } from './types';
+import { INSURANCE_KINDS } from './life/derive';
+import type { Content, CryptoPhase, DebtKind, Recurring, Regime, StartConfig } from './types';
 
 type Transitions = Record<string, ReadonlyArray<readonly [string, number]>>;
 
@@ -14,6 +15,24 @@ const isWhole = (x: unknown): x is number => typeof x === 'number' && Number.isS
 const within = (x: unknown, lo: number, hi: number): boolean =>
   typeof x === 'number' && Number.isFinite(x) && x >= lo && x <= hi;
 const notNegative = (x: unknown): boolean => typeof x === 'number' && Number.isFinite(x) && x >= 0;
+const isFinite = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
+const isCount = (x: unknown): x is number => isWhole(x) && x >= 0;
+const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+export const ITEM_KINDS: readonly string[] = ['durable', 'membership', 'experience'];
+
+/** True for a well-formed recurring entry. Used for starting lives, card effects and saved states alike. */
+export function isRecurring(x: unknown): x is Recurring {
+  if (!isRecord(x)) return false;
+  return (
+    idAllowed(x.tag) &&
+    (x.kind === 'expense' || x.kind === 'passive') &&
+    isCount(x.annual) &&
+    (x.roundsLeft === null || (isWhole(x.roundsLeft) && x.roundsLeft >= 1))
+  );
+}
+
+export { idAllowed };
 
 /** Returns a list of problems. An empty list means the content is usable. */
 export function validateContent(c: Content): string[] {
@@ -53,6 +72,8 @@ export function validateContent(c: Content): string[] {
   checkIds(c.assets.map((a) => a.id), 'asset');
   checkIds(c.cities.map((x) => x.id), 'city');
   checkIds(c.propertyTypes.map((x) => x.id), 'property type');
+  checkIds(c.careers.map((x) => x.id), 'career');
+  checkIds(c.items.map((x) => x.id), 'item');
 
   if (c.lifestyleMultiplierPct.length !== 4 || c.lifestyleMultiplierPct.some((x) => !isWhole(x) || x <= 0)) {
     errors.push('lifestyleMultiplierPct must be four positive integers');
@@ -69,7 +90,11 @@ export function validateContent(c: Content): string[] {
       errors.push(`asset ${a.id} has a crash chance outside 0..100`);
     }
     if (!notNegative(a.idioVolBp) || !notNegative(a.yieldBp)) errors.push(`asset ${a.id} has a negative volatility or yield`);
-    if (a.driftBp !== undefined && !Number.isFinite(a.driftBp)) errors.push(`asset ${a.id} has a drift that is not a finite number`);
+    if (!isFinite(a.betaPct)) errors.push(`asset ${a.id} has a beta that is not a finite number`);
+    if (a.driftBp !== undefined && !isWhole(a.driftBp)) errors.push(`asset ${a.id} has a drift that is not a whole number`);
+    if (a.minFinanceSkill !== undefined && ![0, 1, 2].includes(a.minFinanceSkill)) {
+      errors.push(`asset ${a.id} needs a finance skill of 0, 1 or 2`);
+    }
   }
   if (!c.assets.some((a) => a.id === c.pensionAssetId)) {
     errors.push(`pensionAssetId ${c.pensionAssetId} is not an asset`);
@@ -80,6 +105,30 @@ export function validateContent(c: Content): string[] {
   if (!within(c.market.recessionWinterChancePct, 0, 100)) {
     errors.push('market.recessionWinterChancePct must be between 0 and 100');
   }
+  const m = c.market;
+  const tables: Array<[string, Record<string, unknown>, readonly string[]]> = [
+    ['equityMeanBp', m.equityMeanBp, REGIMES],
+    ['goldMeanBp', m.goldMeanBp, REGIMES],
+    ['rateDriftBp', m.rateDriftBp, REGIMES],
+    ['inflationTargetBp', m.inflationTargetBp, REGIMES],
+    ['cryptoMeanBp', m.cryptoMeanBp, PHASES],
+    ['classVolBp', m.classVolBp, ['equity', 'crypto', 'gold']],
+  ];
+  for (const [name, table, keys] of tables) {
+    for (const key of keys) {
+      const value = isRecord(table) ? table[key] : undefined;
+      if (!isFinite(value)) errors.push(`market.${name}.${key} must be a finite number`);
+      else if (name === 'classVolBp' && value < 0) errors.push(`market.${name}.${key} must not be negative`);
+    }
+  }
+  for (const name of ['rateNoiseBp', 'inflationNoiseBp', 'depositSpreadBp'] as const) {
+    if (!isFinite(m[name])) errors.push(`market.${name} must be a finite number`);
+  }
+  if (!REGIMES.includes(m.start.regime)) errors.push(`market.start.regime is not a regime: ${m.start.regime}`);
+  if (!PHASES.includes(m.start.cryptoPhase)) errors.push(`market.start.cryptoPhase is not a crypto phase: ${m.start.cryptoPhase}`);
+  for (const name of ['policyRateBp', 'inflationBp'] as const) {
+    if (!isFinite(m.start[name])) errors.push(`market.start.${name} must be a finite number`);
+  }
 
   for (const city of c.cities) {
     const rates = [...city.tax.incomeRatesBp, city.tax.capitalGainsBp, city.tax.dividendBp, city.tax.rentBp];
@@ -88,12 +137,84 @@ export function validateContent(c: Content): string[] {
     if (sizes.some((x) => !isWhole(x) || x <= 0)) {
       errors.push(`city ${city.id} needs a positive salary, living cost and flat price`);
     }
+    if (!isCount(city.prestige)) errors.push(`city ${city.id} needs a whole, non-negative prestige`);
   }
 
   for (const type of c.propertyTypes) {
     if (!(typeof type.pricePct === 'number' && Number.isFinite(type.pricePct) && type.pricePct > 0)) {
       errors.push(`property type ${type.id} needs a positive price percentage`);
     }
+    if (!isCount(type.status)) errors.push(`property type ${type.id} needs a whole, non-negative status`);
+  }
+
+  for (const career of c.careers) {
+    if (!notNegative(career.overtimePct)) errors.push(`career ${career.id} has a negative overtime percentage`);
+    if (career.levels.length === 0) {
+      errors.push(`career ${career.id} needs at least one level`);
+      continue;
+    }
+    if (career.levels[0].minSkill !== 0) errors.push(`career ${career.id} must start at skill 0`);
+    career.levels.forEach((level, i) => {
+      const name = `career ${career.id} level ${i}`;
+      if (!(isFinite(level.salaryPct) && level.salaryPct > 0)) errors.push(`${name} needs a positive salary percentage`);
+      if (!isCount(level.status)) errors.push(`${name} needs a whole, non-negative status`);
+      if (!isCount(level.minSkill)) errors.push(`${name} needs a whole, non-negative skill`);
+      else if (i > 0 && level.minSkill <= career.levels[i - 1].minSkill) {
+        errors.push(`${name} must need more skill than the level below`);
+      }
+    });
+  }
+
+  for (const item of c.items) {
+    if (!ITEM_KINDS.includes(item.kind)) errors.push(`item ${item.id} has an unknown kind`);
+    if (!idAllowed(item.ladder)) errors.push(`item ${item.id} has a ladder name that is not allowed`);
+    if (!isCount(item.price) || !isCount(item.upkeepAnnual)) errors.push(`item ${item.id} needs a whole, non-negative price and upkeep`);
+    if (!isCount(item.status)) errors.push(`item ${item.id} needs a whole, non-negative status`);
+    if (!within(item.resaleStartPct, 0, 200)) errors.push(`item ${item.id} has a resale percentage outside 0..200`);
+    if (!isWhole(item.resaleDriftBp) || item.resaleDriftBp <= -10_000) {
+      errors.push(`item ${item.id} has a resale drift that is not a whole number above -10000`);
+    }
+    if (item.kind === 'experience' && !(isWhole(item.boostRounds) && item.boostRounds >= 1)) {
+      errors.push(`experience ${item.id} needs at least one round of boost`);
+    }
+  }
+
+  const life = c.life as unknown as Record<string, unknown>;
+  for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
+    if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
+  }
+  for (const field of ['childRounds', 'financeExperienceRounds']) {
+    if (!(isWhole(life[field]) && life[field] >= 1)) errors.push(`life.${field} must be a positive whole number`);
+  }
+  for (const field of ['jobHuntChancePct', 'lesserItemPct', 'unstablePayPct']) {
+    if (!within(life[field], 0, 100)) errors.push(`life.${field} must be between 0 and 100`);
+  }
+  const listOf = (x: unknown, length: number, ok: (v: unknown) => boolean) => Array.isArray(x) && x.length === length && x.every(ok);
+  if (!listOf(life.rentTierHousingPct, 2, (v) => within(v, 0, 100))) {
+    errors.push('life.rentTierHousingPct must be two numbers between 0 and 100');
+  }
+  if (!listOf(life.rentTierStatus, 2, isCount)) errors.push('life.rentTierStatus must be two whole, non-negative numbers');
+  if (!listOf(life.lifestyleStatus, 4, isCount)) errors.push('life.lifestyleStatus must be four whole, non-negative numbers');
+  for (const kind of INSURANCE_KINDS) {
+    const premiums = life.insurancePremiumBp;
+    if (!isRecord(premiums) || !isCount(premiums[kind])) {
+      errors.push(`life.insurancePremiumBp needs a whole, non-negative number for ${kind}`);
+    }
+  }
+  if (![0, 1, 2].includes(life.rentOutMinFinanceSkill as number)) errors.push('life.rentOutMinFinanceSkill must be 0, 1 or 2');
+
+  const w = c.world;
+  if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 5)) {
+    errors.push('world.headlinesPerRound must be a whole number from 0 to 5');
+  }
+  if (!within(w.newsTruthPct, 0, 100)) errors.push('world.newsTruthPct must be between 0 and 100');
+  if (!isCount(w.flatBandBp)) errors.push('world.flatBandBp must be a whole, non-negative number');
+  if (!within(w.taxReformChancePct, 0, 100)) errors.push('world.taxReformChancePct must be between 0 and 100');
+  if (!isCount(w.taxReformsPerGame)) errors.push('world.taxReformsPerGame must be a whole, non-negative number');
+  if (!Array.isArray(w.taxReformStepsBp) || w.taxReformStepsBp.some((step) => !isWhole(step) || step === 0)) {
+    errors.push('world.taxReformStepsBp must be whole numbers other than zero');
+  } else if (w.taxReformStepsBp.length === 0 && w.taxReformChancePct > 0 && w.taxReformsPerGame > 0) {
+    errors.push('world.taxReformStepsBp is empty but reforms can happen');
   }
 
   const d = c.debt;
@@ -137,5 +258,48 @@ export function validateStart(content: Content, start: StartConfig): string[] {
       errors.push(`debt ${i} needs a non-negative rate and term`);
     }
   });
+  if (start.life !== undefined) errors.push(...lifeStartErrors(content, start));
+  return errors;
+}
+
+function lifeStartErrors(content: Content, start: StartConfig): string[] {
+  const life = start.life as unknown;
+  if (!isRecord(life)) return ['life must be a record'];
+  const errors: string[] = [];
+
+  if (!idAllowed(life.lifeId)) errors.push(`life.lifeId ${JSON.stringify(life.lifeId)} is not allowed`);
+  if (life.career !== null) {
+    const job = isRecord(life.career) ? life.career : {};
+    const career = content.careers.find((x) => x.id === job.id);
+    if (!career) errors.push(`life.career is unknown: ${String(job.id)}`);
+    else if (!isCount(job.level) || job.level >= career.levels.length) {
+      errors.push(`life.career level ${String(job.level)} does not exist in ${career.id}`);
+    }
+  }
+  if (!isCount(life.careerSkill)) errors.push('life.careerSkill must be a whole, non-negative number');
+  if (![0, 1, 2].includes(life.financeSkill as number)) errors.push('life.financeSkill must be 0, 1 or 2');
+  if (!(isWhole(life.focus) && life.focus >= 1 && life.focus <= 10)) errors.push('life.focus must be a whole number from 1 to 10');
+  if (life.minLifestyleTier !== undefined) {
+    const floor = life.minLifestyleTier as number;
+    if (![0, 1, 2, 3].includes(floor) || floor > start.lifestyleTier) {
+      errors.push('life.minLifestyleTier must be 0, 1, 2 or 3 and no higher than lifestyleTier');
+    }
+  }
+  if (life.rentTier !== undefined && life.rentTier !== 0 && life.rentTier !== 1) errors.push('life.rentTier must be 0 or 1');
+
+  const list = (x: unknown): unknown[] => (Array.isArray(x) ? x : []);
+  list(life.properties).forEach((home, i) => {
+    const entry = isRecord(home) ? home : {};
+    if (!content.propertyTypes.some((t) => t.id === entry.typeId)) {
+      errors.push(`life property ${i} has an unknown type: ${String(entry.typeId)}`);
+    }
+    if (typeof entry.rented !== 'boolean') errors.push(`life property ${i} needs rented to be true or false`);
+  });
+  list(life.recurring).forEach((entry, i) => {
+    if (!isRecurring(entry)) errors.push(`life recurring entry ${i} is not valid`);
+  });
+  for (const flag of list(life.flags)) {
+    if (!idAllowed(flag)) errors.push(`life flag ${JSON.stringify(flag)} is not allowed`);
+  }
   return errors;
 }

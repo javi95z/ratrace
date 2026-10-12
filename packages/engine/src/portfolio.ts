@@ -14,7 +14,9 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
 
   switch (order.type) {
     case 'buy': {
-      if (!ctx.content.assets.some((a) => a.id === order.assetId)) return 'unknown-asset';
+      const asset = ctx.content.assets.find((a) => a.id === order.assetId);
+      if (!asset) return 'unknown-asset';
+      if ((asset.minFinanceSkill ?? 0) > p.life.financeSkill) return 'needs-finance-skill';
       if (order.amount > p.cash) return 'not-enough-cash';
       const held = Object.hasOwn(p.positions, order.assetId) ? p.positions[order.assetId] : { value: 0, basis: 0 };
       p.positions[order.assetId] = { value: held.value + order.amount, basis: held.basis + order.amount };

@@ -8,20 +8,20 @@ import {
   executeRepay,
   settleCash,
 } from './debt';
-import { newPlayer } from './player';
-import { fixtureContent, fixtureStart } from './testing/fixture';
+import { newTally } from './tally';
+import { fixtureContent, fixturePlayer } from './testing/fixture';
 import type { Debt, OrderContext } from './types';
 import { generateTimeline } from './world';
 
 function setup(cash = 0) {
   const content = fixtureContent();
   const world = generateTimeline('debt', content)[0];
-  const p = newPlayer({ ...fixtureStart(), cash });
+  const p = fixturePlayer({ cash });
   const ctx: OrderContext = {
     content,
     world,
     round: 0,
-    tally: { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 },
+    tally: newTally(),
   };
   return { content, world, p, ctx };
 }
@@ -31,11 +31,11 @@ const card = (principal: number): Debt => debt({ id: 'card', kind: 'creditCard',
 
 describe('debt rates and service', () => {
   it('uses the right rate for each kind', () => {
-    const { content, world } = setup();
-    expect(debtRateBp(debt({ kind: 'personalLoan' }), content, world)).toBe(750);
-    expect(debtRateBp(debt({ kind: 'mortgageFixed', fixedRateBp: 400 }), content, world)).toBe(400);
-    expect(debtRateBp(debt({ kind: 'mortgageVariable', fixedRateBp: 0 }), content, world)).toBe(250 + 150);
-    expect(debtRateBp(card(1), content, world)).toBe(2_200);
+    const { content, world, p } = setup();
+    expect(debtRateBp(debt({ kind: 'personalLoan' }), content, world, p)).toBe(750);
+    expect(debtRateBp(debt({ kind: 'mortgageFixed', fixedRateBp: 400 }), content, world, p)).toBe(400);
+    expect(debtRateBp(debt({ kind: 'mortgageVariable', fixedRateBp: 0 }), content, world, p)).toBe(250 + 150);
+    expect(debtRateBp(card(1), content, world, p)).toBe(2_200);
   });
 
   it('charges simple interest and an equal principal slice', () => {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { cityOf } from './lookup';
-import { newId, newPlayer } from './player';
-import { fixtureContent, fixtureStart } from './testing/fixture';
+import { newId } from './ids';
+import { fixtureContent, fixturePlayer } from './testing/fixture';
 
 describe('player', () => {
   it('starts from the start config with nothing owned', () => {
-    const p = newPlayer({ ...fixtureStart(), cash: 500 });
+    const p = fixturePlayer({ cash: 500 });
     expect(p.cash).toBe(500);
     expect(p.cityId).toBe('home');
     expect(p.positions).toEqual({});
@@ -15,15 +15,14 @@ describe('player', () => {
   });
 
   it('gives starting debts ids', () => {
-    const p = newPlayer({
-      ...fixtureStart(),
+    const p = fixturePlayer({
       debts: [{ kind: 'personalLoan', principal: 900_000, fixedRateBp: 600, roundsLeft: 3 }],
     });
     expect(p.debts).toEqual([{ id: 'debt-1', kind: 'personalLoan', principal: 900_000, fixedRateBp: 600, roundsLeft: 3 }]);
   });
 
   it('mints increasing ids', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     expect(newId(p, 'property')).toBe('property-1');
     expect(newId(p, 'debt')).toBe('debt-2');
   });

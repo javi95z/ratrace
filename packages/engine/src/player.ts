@@ -1,11 +1,39 @@
-import type { PlayerState, StartConfig } from './types';
+import { newId } from './ids';
+import { refreshDerived } from './life/derive';
+import { propertyPrice } from './property';
+import type { Content, LifeState, PlayerState, StartConfig, WorldState } from './types';
 
-export function newId(p: PlayerState, prefix: string): string {
-  p.nextId += 1;
-  return `${prefix}-${p.nextId}`;
-}
+/** Focus points of a life that does not say. */
+export const DEFAULT_FOCUS = 3;
 
-export function newPlayer(start: StartConfig): PlayerState {
+/** The player on day one. `world` is the opening world state, which prices the homes a life starts with. */
+export function newPlayer(content: Content, start: StartConfig, world: WorldState): PlayerState {
+  const from = start.life;
+  const life: LifeState = {
+    lifeId: from?.lifeId ?? 'plain',
+    career: from?.career ? { id: from.career.id, level: from.career.level } : null,
+    baseSalaryAnnual: start.salaryAnnual,
+    salaryModPct: 0,
+    salaryBoostPct: 0,
+    careerSkill: from?.careerSkill ?? 0,
+    financeSkill: from?.financeSkill ?? 0,
+    investedRounds: 0,
+    focusBase: from?.focus ?? DEFAULT_FOCUS,
+    focusUsed: 0,
+    partner: false,
+    partnerSalaryPct: 0,
+    children: [],
+    insurance: { health: false, home: false, life: false, liability: false },
+    rentTier: from?.rentTier ?? 1,
+    minLifestyleTier: from?.minLifestyleTier ?? 0,
+    items: [],
+    collection: [],
+    recurring: (from?.recurring ?? []).map((entry) => ({ ...entry })),
+    flags: Object.fromEntries((from?.flags ?? []).map((flag) => [flag, 0])),
+    seen: {},
+    bonusStatus: 0,
+    movingTo: null,
+  };
   const p: PlayerState = {
     cityId: start.cityId,
     cash: start.cash,
@@ -14,8 +42,9 @@ export function newPlayer(start: StartConfig): PlayerState {
     positions: {},
     properties: [],
     debts: [],
-    salaryAnnual: start.salaryAnnual,
     lifestyleTier: start.lifestyleTier,
+    life,
+    salaryAnnual: 0,
     extraExpensesAnnual: 0,
     extraPassiveAnnual: 0,
     statusPoints: 0,
@@ -25,5 +54,18 @@ export function newPlayer(start: StartConfig): PlayerState {
     bankruptUntilRound: 0,
   };
   for (const debt of start.debts) p.debts.push({ id: newId(p, 'debt'), ...debt });
+  for (const home of from?.properties ?? []) {
+    const price = propertyPrice(content, world, start.cityId, home.typeId);
+    p.properties.push({
+      id: newId(p, 'property'),
+      cityId: start.cityId,
+      typeId: home.typeId,
+      value: price,
+      basis: price,
+      rented: home.rented,
+      mortgageId: null,
+    });
+  }
+  refreshDerived(p, content);
   return p;
 }

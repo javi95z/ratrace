@@ -1,4 +1,5 @@
 import { executeBorrow, executeRepay } from './debt';
+import { executeLifeOrder } from './life/orders';
 import { executePortfolioOrder } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
 import type { Order, OrderContext, PlayerState, RejectReason } from './types';
@@ -14,6 +15,13 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'buyProperty',
   'sellProperty',
   'setRented',
+  'focus',
+  'buyItem',
+  'sellItem',
+  'setLifestyle',
+  'setRentTier',
+  'setInsurance',
+  'moveCity',
 ]);
 
 const isText = (x: unknown): x is string => typeof x === 'string';
@@ -21,7 +29,7 @@ const isFlag = (x: unknown): x is boolean => typeof x === 'boolean';
 
 /**
  * True if the fields that name things have the right primitive type.
- * Amounts are checked by each executor, which rejects them as 'bad-amount'.
+ * Amounts and tiers are checked by each executor, which rejects them as 'bad-amount' or 'bad-tier'.
  */
 function hasValidFields(fields: Record<string, unknown>): boolean {
   switch (fields.type) {
@@ -36,6 +44,15 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
       return isText(fields.propertyId);
     case 'setRented':
       return isText(fields.propertyId) && isFlag(fields.rented);
+    case 'focus':
+      return isText(fields.action);
+    case 'buyItem':
+    case 'sellItem':
+      return isText(fields.itemId);
+    case 'setInsurance':
+      return isText(fields.insurance) && isFlag(fields.on);
+    case 'moveCity':
+      return isText(fields.cityId);
     default:
       return true;
   }
@@ -70,6 +87,14 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'sellProperty':
       return executeSellProperty(p, order, ctx);
     case 'setRented':
-      return executeSetRented(p, order);
+      return executeSetRented(p, order, ctx);
+    case 'focus':
+    case 'buyItem':
+    case 'sellItem':
+    case 'setLifestyle':
+    case 'setRentTier':
+    case 'setInsurance':
+    case 'moveCity':
+      return executeLifeOrder(p, order, ctx);
   }
 }

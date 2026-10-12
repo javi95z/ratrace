@@ -1,15 +1,22 @@
+import { newId } from './ids';
+import { FLAG_CHEAP_MORTGAGE, hasFlag } from './life/flags';
 import { cityOf } from './lookup';
 import { applyBp, BP, isAmount, mulDiv } from './money';
 import type { Bp, Cents } from './money';
-import { newId } from './player';
 import { indexed } from './rates';
 import { ownedOutsidePension, totalOwed } from './solvency';
 import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
+/** What this player pays above the policy rate on a mortgage, in bp. */
+export function mortgageSpreadBp(p: PlayerState, content: Content): Bp {
+  const discount = hasFlag(p.life.flags, FLAG_CHEAP_MORTGAGE) ? content.life.cheapMortgageBp : 0;
+  return Math.max(0, content.debt.mortgageSpreadBp - discount);
+}
+
 /** Annual rate in bp. */
-export function debtRateBp(d: Debt, content: Content, world: WorldState): Bp {
+export function debtRateBp(d: Debt, content: Content, world: WorldState, p: PlayerState): Bp {
   if (d.kind === 'creditCard') return content.debt.creditCardRateBp;
-  if (d.kind === 'mortgageVariable') return world.policyRateBp + content.debt.mortgageSpreadBp;
+  if (d.kind === 'mortgageVariable') return world.policyRateBp + mortgageSpreadBp(p, content);
   return d.fixedRateBp;
 }
 
@@ -24,7 +31,7 @@ export function debtServiceForRound(p: PlayerState, content: Content, world: Wor
   const years = content.yearsPerRound;
   const service: DebtService = { interest: 0, principal: 0, perDebt: [] };
   for (const d of p.debts) {
-    service.interest += applyBp(d.principal, debtRateBp(d, content, world) * years);
+    service.interest += applyBp(d.principal, debtRateBp(d, content, world, p) * years);
     let due = 0;
     if (d.kind !== 'creditCard') due = d.roundsLeft <= 1 ? d.principal : Math.ceil(d.principal / d.roundsLeft);
     service.principal += due;

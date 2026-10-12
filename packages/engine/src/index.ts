@@ -7,7 +7,7 @@ export type { TaxBill } from './tax';
 export { netWorth, realNetWorth, finalScore, cashflow } from './selectors';
 export { validateContent, validateStart } from './validate';
 export { propertyPrice } from './property';
-export { debtRateBp } from './debt';
+export { debtRateBp, mortgageSpreadBp } from './debt';
 export { assetYieldBp, depositRateBp, indexed, INDEX_START, PRICE_LEVEL_START } from './rates';
 export { stateHash } from './hash';
 export { assertInvariants, findInvariantBreaks } from './invariants';

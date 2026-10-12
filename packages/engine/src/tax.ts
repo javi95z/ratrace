@@ -1,6 +1,25 @@
-import { applyBp } from './money';
+import { applyBp, clamp } from './money';
 import type { Bp, Cents } from './money';
-import type { TaxProfile } from './types';
+import { indexed } from './rates';
+import type { CityDef, TaxProfile, WorldState } from './types';
+
+/**
+ * The tax profile a city applies in the given world: its own rates, moved by any reform so far,
+ * with the tax-free allowance following the price level. A rate of zero is never moved.
+ */
+export function effectiveTax(city: CityDef, world: WorldState): TaxProfile {
+  const shift = world.taxShiftBp[city.id] ?? 0;
+  const moved = (rate: Bp): Bp => (rate === 0 ? 0 : clamp(rate + shift, 0, 10_000));
+  const tax = city.tax;
+  return {
+    ...tax,
+    incomeRatesBp: [moved(tax.incomeRatesBp[0]), moved(tax.incomeRatesBp[1]), moved(tax.incomeRatesBp[2])],
+    capitalGainsBp: moved(tax.capitalGainsBp),
+    dividendBp: moved(tax.dividendBp),
+    rentBp: moved(tax.rentBp),
+    investmentAllowance: indexed(tax.investmentAllowance, world),
+  };
+}
 
 /** Amounts for one whole round. */
 export interface TaxInput {

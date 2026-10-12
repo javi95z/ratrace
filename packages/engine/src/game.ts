@@ -2,6 +2,8 @@ import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { assertInvariants } from './invariants';
+import { refreshDerived } from './life/derive';
+import { finishRound } from './life/roundEnd';
 import { cityOf } from './lookup';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
@@ -9,6 +11,8 @@ import { newPlayer } from './player';
 import { growPortfolio } from './portfolio';
 import { growProperties } from './property';
 import { indexed } from './rates';
+import { seedRng } from './rng';
+import { newTally } from './tally';
 import { computeTax } from './tax';
 import type { TaxBill } from './tax';
 import type {
@@ -32,13 +36,18 @@ export function createGame(config: GameConfig, seed: string): GameState {
   if (errors.length > 0) throw new Error(`invalid content: ${errors.join('; ')}`);
   const startErrors = validateStart(config.content, config.start);
   if (startErrors.length > 0) throw new Error(`invalid start: ${startErrors.join('; ')}`);
-  return {
+  const timeline = generateTimeline(seed, config.content);
+  const state: GameState = {
     seed,
     round: 0,
-    timeline: generateTimeline(seed, config.content),
-    player: newPlayer(config.start),
+    timeline,
+    player: newPlayer(config.content, config.start, timeline[0]),
     finished: false,
+    phase: 'finance',
+    hand: [],
+    rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ''}`) },
   };
+  return state;
 }
 
 export interface RejectedOrder {
@@ -79,13 +88,14 @@ function executeChoices(
   round: number,
   choices: RoundChoices,
 ): { tally: RoundTally; rejected: RejectedOrder[] } {
-  const tally: RoundTally = { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 };
+  const tally = newTally();
   const ctx: OrderContext = { content, world: now, round, tally };
   const rejected: RejectedOrder[] = [];
   choices.orders.forEach((order: unknown, index) => {
     const reason = index < content.maxOrdersPerRound ? executeOrder(p, order, ctx) : 'too-many-orders';
     if (reason !== null) rejected.push({ index, order, reason });
   });
+  refreshDerived(p, content);
   return { tally, rejected };
 }
 
@@ -199,6 +209,9 @@ export function applyRound(
     ['investmentTax', -bill.investment],
     ['propertyTax', -bill.property],
     ['purchaseTax', -tally.purchaseTaxPaid],
+    ['itemPurchases', -tally.itemsBought],
+    ['itemSales', tally.itemsSold],
+    ['moving', -tally.movingCost],
     ['depositDraw', settled.fromDeposit],
     ['creditCardDraw', settled.drawn],
     ['creditCardRepay', -settled.repaid],
@@ -217,6 +230,8 @@ export function applyRound(
   const bankruptcy = checkBankruptcy(p, content, now, annualIncome, completed);
   if (bankruptcy) events.push({ kind: 'bankrupt', ...bankruptcy });
 
+  finishRound(p, content, events);
+  refreshDerived(p, content);
   next.round = completed;
   next.finished = completed >= content.rounds;
   assertInvariants(content, next);

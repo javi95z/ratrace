@@ -24,12 +24,17 @@ export interface RoundExpenses {
   service: DebtService;
 }
 
-/** One year of living cost at the given world's prices. An owner-occupier does not pay the housing share. */
+/**
+ * One year of living cost at the given world's prices.
+ * An owner-occupier does not pay the housing share; a tenant pays the part of it their rent tier sets.
+ */
 export function livingCostAnnual(p: PlayerState, content: Content, world: WorldState): Cents {
   const city = cityOf(content, p.cityId);
   const atTier = mulDiv(city.livingCostAnnual, content.lifestyleMultiplierPct[p.lifestyleTier], 100);
   const base = indexed(atTier, world);
-  return ownsHome(p) ? base - mulDiv(base, content.housingSharePct, 100) : base;
+  const housing = mulDiv(base, content.housingSharePct, 100);
+  if (ownsHome(p)) return base - housing;
+  return base - housing + mulDiv(housing, content.life.rentTierHousingPct[p.life.rentTier], 100);
 }
 
 /**

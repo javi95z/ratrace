@@ -1,4 +1,5 @@
 import { stateHash } from './hash';
+import { deriveExpenses, derivePassive, deriveSalary, deriveStatus } from './life/derive';
 import type { Content, GameState } from './types';
 import { DEBT_KINDS } from './validate';
 
@@ -73,6 +74,18 @@ export function findInvariantBreaks(content: Content, state: GameState): string[
   }
   if (state.timeline.length !== content.rounds + 1) {
     breaks.push(`timeline has ${state.timeline.length} states, expected ${content.rounds + 1}`);
+  }
+
+  if (breaks.length === 0) {
+    const derived: Array<[string, number, number]> = [
+      ['salaryAnnual', p.salaryAnnual, deriveSalary(p, content)],
+      ['extraExpensesAnnual', p.extraExpensesAnnual, deriveExpenses(p, content)],
+      ['extraPassiveAnnual', p.extraPassiveAnnual, derivePassive(p)],
+      ['statusPoints', p.statusPoints, deriveStatus(p, content)],
+    ];
+    for (const [name, value, expected] of derived) {
+      if (value !== expected) breaks.push(`${name} is out of step with the life: ${value}, expected ${expected}`);
+    }
   }
 
   return breaks;

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { newPlayer } from './player';
 import {
   executeBuyProperty,
   executeSellProperty,
@@ -8,19 +7,20 @@ import {
   ownsHome,
   propertyPrice,
 } from './property';
-import { fixtureContent, fixtureStart } from './testing/fixture';
+import { newTally } from './tally';
+import { fixtureContent, fixturePlayer } from './testing/fixture';
 import type { OrderContext } from './types';
 import { generateTimeline } from './world';
 
 function setup(cash = 0) {
   const content = fixtureContent();
   const timeline = generateTimeline('property', content);
-  const p = newPlayer({ ...fixtureStart(), cash });
+  const p = fixturePlayer({ cash });
   const ctx: OrderContext = {
     content,
     world: timeline[0],
     round: 0,
-    tally: { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 },
+    tally: newTally(),
   };
   return { content, timeline, p, ctx };
 }
@@ -119,14 +119,14 @@ describe('selling and renting property', () => {
     const { p, ctx } = setup();
     expect(executeSellProperty(p, { type: 'sellProperty', propertyId: 'gone' }, ctx)).toBe('unknown-property');
     expect(executeSellProperty(p, { type: 'sellProperty', propertyId: '__proto__' }, ctx)).toBe('unknown-property');
-    expect(executeSetRented(p, { type: 'setRented', propertyId: 'gone', rented: true })).toBe('unknown-property');
+    expect(executeSetRented(p, { type: 'setRented', propertyId: 'gone', rented: true }, ctx)).toBe('unknown-property');
   });
 
   it('switches a property between home and rental', () => {
     const { p, ctx } = setup(20_000_000);
     executeBuyProperty(p, { type: 'buyProperty', typeId: 'studio', downPayment: 0, mortgage: 'none', rented: false }, ctx);
     expect(ownsHome(p)).toBe(true);
-    expect(executeSetRented(p, { type: 'setRented', propertyId: 'property-1', rented: true })).toBeNull();
+    expect(executeSetRented(p, { type: 'setRented', propertyId: 'property-1', rented: true }, ctx)).toBeNull();
     expect(ownsHome(p)).toBe(false);
   });
 

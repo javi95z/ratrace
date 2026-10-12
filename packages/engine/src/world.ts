@@ -104,6 +104,9 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldS
     assetIndex,
     propertyReturnBp,
     propertyIndex,
+    taxShiftBp: prev.taxShiftBp,
+    news: [],
+    eventCardId: null,
   };
 }
 
@@ -127,6 +130,9 @@ export function generateTimeline(seed: string, content: Content): WorldState[] {
       assetIndex: Object.fromEntries(content.assets.map((a) => [a.id, INDEX_START])),
       propertyReturnBp: Object.fromEntries(content.cities.map((c) => [c.id, 0])),
       propertyIndex: Object.fromEntries(content.cities.map((c) => [c.id, INDEX_START])),
+      taxShiftBp: Object.fromEntries(content.cities.map((c) => [c.id, 0])),
+      news: [],
+      eventCardId: null,
     },
   ];
   for (let r = 1; r <= content.rounds; r++) timeline.push(stepWorld(timeline[r - 1], content, streams));

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expensesForRound, incomeForRound, livingCostAnnual, outgoingsOf, passiveOf } from './economy';
-import { newPlayer } from './player';
-import { fixtureContent, fixtureStart } from './testing/fixture';
+import { fixtureContent, fixturePlayer } from './testing/fixture';
 import type { Property } from './types';
 import { generateTimeline } from './world';
 
@@ -15,17 +14,17 @@ const flat = (over: Partial<Property>): Property => ({
 
 describe('living cost', () => {
   it('scales with the lifestyle tier', () => {
-    expect(livingCostAnnual(newPlayer({ ...fixtureStart(), lifestyleTier: 0 }), content, world)).toBe(1_260_000);
-    expect(livingCostAnnual(newPlayer({ ...fixtureStart(), lifestyleTier: 1 }), content, world)).toBe(1_800_000);
-    expect(livingCostAnnual(newPlayer({ ...fixtureStart(), lifestyleTier: 3 }), content, world)).toBe(3_600_000);
+    expect(livingCostAnnual(fixturePlayer({ lifestyleTier: 0 }), content, world)).toBe(1_260_000);
+    expect(livingCostAnnual(fixturePlayer({ lifestyleTier: 1 }), content, world)).toBe(1_800_000);
+    expect(livingCostAnnual(fixturePlayer({ lifestyleTier: 3 }), content, world)).toBe(3_600_000);
   });
 
   it('rises with the price level', () => {
-    expect(livingCostAnnual(newPlayer(fixtureStart()), content, dearer)).toBe(2_700_000);
+    expect(livingCostAnnual(fixturePlayer(), content, dearer)).toBe(2_700_000);
   });
 
   it('drops the housing share for an owner-occupier only', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.properties.push(flat({}));
     expect(livingCostAnnual(p, content, world)).toBe(1_170_000);
     p.properties[0].rented = true;
@@ -37,7 +36,7 @@ describe('living cost', () => {
 
 describe('income for a round', () => {
   it('pays salary, dividends, coupons, deposit interest, rent and other passive income', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.positions.fund_world = { value: 1_000_000, basis: 1_000_000 };
     p.positions.bond_long = { value: 1_000_000, basis: 1_000_000 };
     p.deposit = 1_000_000;
@@ -49,7 +48,7 @@ describe('income for a round', () => {
   });
 
   it('raises wages and other passive income with the price level, but not investment income', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.positions.fund_world = { value: 1_000_000, basis: 1_000_000 };
     p.deposit = 1_000_000;
     p.extraPassiveAnnual = 100_000;
@@ -61,7 +60,7 @@ describe('income for a round', () => {
   });
 
   it('pays no rent on a home and no interest when the policy rate is under the spread', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.deposit = 1_000_000;
     p.properties.push(flat({ rented: false }));
     const income = incomeForRound(p, content, { ...world, policyRateBp: 50 });
@@ -72,7 +71,7 @@ describe('income for a round', () => {
 
 describe('expenses for a round', () => {
   it('adds living cost, other expenses and debt service', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.extraExpensesAnnual = 250_000;
     p.debts.push({ id: 'debt-1', kind: 'personalLoan', principal: 900_000, fixedRateBp: 750, roundsLeft: 3 });
     const expenses = expensesForRound(p, content, world);
@@ -84,7 +83,7 @@ describe('expenses for a round', () => {
   });
 
   it('raises living cost and other expenses with the price level, but not debt service', () => {
-    const p = newPlayer(fixtureStart());
+    const p = fixturePlayer();
     p.extraExpensesAnnual = 250_000;
     p.debts.push({ id: 'debt-1', kind: 'personalLoan', principal: 900_000, fixedRateBp: 750, roundsLeft: 3 });
     const expenses = expensesForRound(p, content, dearer);
