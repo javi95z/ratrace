@@ -317,5 +317,30 @@
     "bankruptcies": "{count, plural, =0 {Never bankrupt} one {Bankrupt once} other {Bankrupt # times}}",
     "again": "Live another life",
     "home": "Home"
+  },
+  "orders": {
+    "buy": "Buy {name} · {amount}",
+    "sell": "Sell {name} · {amount}",
+    "save": "Save {amount}",
+    "withdraw": "Withdraw {amount}",
+    "pension": "Pension · {amount}",
+    "borrow": "Borrow {amount}",
+    "repay": "Repay {name} · {amount}",
+    "buyHome": "Buy a home: {home}",
+    "buyRental": "Buy a rental: {home}",
+    "sellHome": "Sell: {home}",
+    "rentOn": "Rent out: {home}",
+    "rentOff": "Stop renting out: {home}",
+    "overtime": "Overtime",
+    "study": "Study",
+    "hunt": "Job hunt",
+    "buyItem": "Buy {item}",
+    "sellItem": "Sell {item}",
+    "cancelItem": "Cancel {item}",
+    "lifestyle": "Live: {tier}",
+    "rentTier": "Home: {tier}",
+    "insureOn": "Insure: {kind}",
+    "insureOff": "Cancel: {kind}",
+    "move": "Move to {city}"
   }
 }

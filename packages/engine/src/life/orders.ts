@@ -1,7 +1,8 @@
 import { careerOf } from '../lookup';
 import { mulDiv } from '../money';
 import { indexed } from '../rates';
-import type { FocusAction, InsuranceKind, Order, OrderContext, PlayerState, RejectReason } from '../types';
+import type { Cents } from '../money';
+import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, PlayerState, RejectReason, WorldState } from '../types';
 import { INSURANCE_KINDS } from './derive';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt'];
@@ -28,18 +29,29 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): R
   return null;
 }
 
+/** What an item costs in the shop today, and what it is worth the moment it is bought. */
+export function itemTerms(item: ItemDef, world: WorldState): { price: Cents; resale: Cents } {
+  const price = indexed(item.price, world);
+  return { price, resale: item.kind === 'durable' ? mulDiv(price, item.resaleStartPct, 100) : 0 };
+}
+
+/** What moving to a city costs today. */
+export function moveCost(content: Content, world: WorldState, city: CityDef): Cents {
+  return mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+}
+
 function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): RejectReason | null {
   const item = ctx.content.items.find((i) => i.id === itemId);
   if (!item) return 'unknown-item';
   if (item.cardOnly === true) return 'not-for-sale';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
-  const price = indexed(item.price, ctx.world);
+  const { price, resale } = itemTerms(item, ctx.world);
   if (price > p.cash) return 'not-enough-cash';
   p.cash -= price;
   ctx.tally.itemsBought += price;
   p.life.items.push({
     itemId,
-    value: item.kind === 'durable' ? mulDiv(price, item.resaleStartPct, 100) : 0,
+    value: resale,
     roundsLeft: item.kind === 'experience' ? item.boostRounds : null,
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
@@ -64,7 +76,7 @@ function executeMoveCity(p: PlayerState, cityId: string, ctx: OrderContext): Rej
   if (cityId === p.cityId) return 'same-city';
   if (p.life.movingTo !== null) return 'already-moving';
   if (focusLeft(p) < 1) return 'no-focus';
-  const cost = mulDiv(indexed(city.livingCostAnnual, ctx.world), ctx.content.life.moveCostPct, 100);
+  const cost = moveCost(ctx.content, ctx.world, city);
   if (cost > p.cash) return 'not-enough-cash';
   p.cash -= cost;
   ctx.tally.movingCost += cost;

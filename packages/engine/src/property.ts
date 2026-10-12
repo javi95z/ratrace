@@ -2,7 +2,7 @@ import { mortgageSpreadBp } from './debt';
 import { newId } from './ids';
 import { cityOf } from './lookup';
 import { applyBp, isAmount, round } from './money';
-import type { Cents } from './money';
+import type { Bp, Cents } from './money';
 import { INDEX_START } from './rates';
 import { effectiveTax, purchaseTax } from './tax';
 import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
@@ -12,6 +12,31 @@ export function propertyPrice(content: Content, world: WorldState, cityId: strin
   const type = content.propertyTypes.find((t) => t.id === typeId);
   if (!type) throw new Error(`unknown property type: ${typeId}`);
   return round((((city.flatPrice * type.pricePct) / 100) * world.propertyIndex[cityId]) / INDEX_START);
+}
+
+export interface PropertyTerms {
+  price: Cents;
+  /** The smallest down payment a bank accepts. */
+  minDown: Cents;
+  /** Paid in cash on top of the price or the down payment. */
+  purchaseTax: Cents;
+  /** The yearly rate a fixed mortgage taken today would carry for its whole life. */
+  fixedRateBp: Bp;
+  /** The yearly rate a variable mortgage would carry this round. */
+  variableRateBp: Bp;
+}
+
+/** What buying a property of this type costs this player today. Orders and quotes both read it, so they cannot disagree. */
+export function propertyTerms(p: PlayerState, content: Content, world: WorldState, typeId: string): PropertyTerms {
+  const price = propertyPrice(content, world, p.cityId, typeId);
+  const rate = world.policyRateBp + mortgageSpreadBp(p, content);
+  return {
+    price,
+    minDown: price - applyBp(price, content.debt.mortgageMaxLtvBp),
+    purchaseTax: purchaseTax(effectiveTax(cityOf(content, p.cityId), world), price),
+    fixedRateBp: rate,
+    variableRateBp: rate,
+  };
 }
 
 /** True if the player lives in a property they own in their current city. */
@@ -34,23 +59,22 @@ export function executeBuyProperty(
     return 'unknown-mortgage-type';
   }
   if (order.rented === true && p.life.financeSkill < content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
-  const price = propertyPrice(content, world, p.cityId, order.typeId);
-  const tax = purchaseTax(effectiveTax(cityOf(content, p.cityId), world), price);
+  const terms = propertyTerms(p, content, world, order.typeId);
+  const { price, purchaseTax: tax } = terms;
 
   let debt: Debt | null = null;
   let fromCash = price;
   if (order.mortgage !== 'none') {
     if (ctx.round < p.bankruptUntilRound) return 'no-credit';
     if (!isAmount(order.downPayment)) return 'bad-down-payment';
-    const minimum = price - applyBp(price, content.debt.mortgageMaxLtvBp);
-    if (order.downPayment < minimum) return 'down-payment-too-low';
+    if (order.downPayment < terms.minDown) return 'down-payment-too-low';
     if (order.downPayment >= price) return 'down-payment-too-high';
     fromCash = order.downPayment;
     debt = {
       id: '',
       kind: order.mortgage === 'fixed' ? 'mortgageFixed' : 'mortgageVariable',
       principal: price - order.downPayment,
-      fixedRateBp: order.mortgage === 'fixed' ? world.policyRateBp + mortgageSpreadBp(p, content) : 0,
+      fixedRateBp: order.mortgage === 'fixed' ? terms.fixedRateBp : 0,
       roundsLeft: content.debt.mortgageTermRounds,
     };
   }

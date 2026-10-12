@@ -1,0 +1,131 @@
+'use client';
+
+import { useEffect, useId, useRef } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * A sheet that rises from the bottom of a phone, and sits in the middle of a wide screen.
+ * It takes the focus while it is open, keeps Tab inside it, closes on Escape or a tap outside,
+ * and gives the focus back to whatever opened it.
+ */
+export function Sheet({ open, onClose, title, closeLabel, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; children: ReactNode }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const opener = document.activeElement as HTMLElement | null;
+    panel.current?.focus();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+      opener?.focus?.();
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab' || !panel.current) return;
+    const stops = [...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    if (stops.length === 0) return;
+    const first = stops[0];
+    const last = stops[stops.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || active === panel.current)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end justify-center desk:items-center desk:p-6">
+      <div aria-hidden className="absolute inset-0 bg-night-900/80" onClick={onClose} />
+      <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        onKeyDown={onKeyDown}
+        className="frame pb-safe relative max-h-[88dvh] w-full max-w-md animate-rise overflow-y-auto bg-night-800 p-4 outline-none"
+      >
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <h2 id={titleId} className="pixel pt-1 text-[19px]">
+            {title}
+          </h2>
+          <button type="button" onClick={onClose} aria-label={closeLabel} className="pixel -mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center text-[20px] text-ink-300">
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** A strip of tabs that scrolls sideways on a phone. Arrow keys move between them. */
+export function Tabs<T extends string>({ label, tabs, value, onChange }: { label: string; tabs: Array<{ id: T; label: ReactNode }>; value: T; onChange(id: T): void }) {
+  const strip = useRef<HTMLDivElement>(null);
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (step === 0) return;
+    event.preventDefault();
+    const at = tabs.findIndex((tab) => tab.id === value);
+    const next = tabs[(at + step + tabs.length) % tabs.length];
+    onChange(next.id);
+    strip.current?.querySelector<HTMLElement>(`[data-tab="${next.id}"]`)?.focus();
+  };
+
+  return (
+    <div ref={strip} role="tablist" aria-label={label} onKeyDown={onKeyDown} className="no-scrollbar flex gap-2 overflow-x-auto px-3 py-2">
+      {tabs.map((tab) => {
+        const on = tab.id === value;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            data-tab={tab.id}
+            aria-selected={on}
+            tabIndex={on ? 0 : -1}
+            onClick={() => onChange(tab.id)}
+            className={`pixel frame min-h-11 shrink-0 px-3 text-[15px] ${on ? 'bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A short message that shows itself out. */
+export function Toast({ message, onDone, ms = 2600 }: { message: ReactNode | null; onDone(): void; ms?: number }) {
+  useEffect(() => {
+    if (message === null) return;
+    const timer = setTimeout(onDone, ms);
+    return () => clearTimeout(timer);
+  }, [message, onDone, ms]);
+
+  if (message === null) return null;
+  return (
+    <div role="alert" className="pointer-events-none fixed inset-x-0 bottom-28 z-[60] flex justify-center px-4">
+      <div className="frame animate-rise bg-wine-700 px-3 py-2 text-center text-[14px] text-cream">{message}</div>
+    </div>
+  );
+}

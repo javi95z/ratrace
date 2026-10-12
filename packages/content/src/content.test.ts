@@ -1,5 +1,6 @@
 import { applyRound, createGame, validateContent, validateStart } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
+import { assetKind } from './art';
 import { content } from './content';
 import { lives } from './lives';
 
@@ -25,6 +26,18 @@ describe('the v1 content', () => {
       career: 12, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 10,
       family: 10, health: 5, luck: 8, world: 12, tax: 6, laterLife: 5,
     });
+  });
+
+  it('groups assets the way the market screen shows them', () => {
+    const groups: Record<string, string[]> = {};
+    for (const asset of content.assets) (groups[assetKind(asset)] ??= []).push(asset.id);
+    expect(groups.fund).toEqual(['sp500', 'msci_world']);
+    expect(groups.bond).toEqual(['treasury_short', 'treasury_long', 'bund']);
+    expect(groups.crypto).toEqual(['bitcoin', 'ethereum', 'dogecoin']);
+    expect(groups.gold).toEqual(['gold']);
+    expect(groups.stock).toHaveLength(10);
+    // A fund is what a beginner may buy: it needs no finance skill.
+    for (const asset of content.assets) expect((asset.minFinanceSkill ?? 0) === 0, asset.id).toBe(assetKind(asset) === 'fund');
   });
 
   it('starts every life cleanly', () => {

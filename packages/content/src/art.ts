@@ -138,3 +138,13 @@ export const assetClassArt: Record<'bond' | 'fund' | 'stock' | 'crypto' | 'gold'
   crypto: 'icon.crypto',
   gold: 'icon.gold',
 };
+
+/** How the market screen groups assets. Index funds are equities in the engine, but a player thinks of them apart from single stocks. */
+export type AssetKind = 'fund' | 'bond' | 'stock' | 'crypto' | 'gold';
+
+const FUNDS: ReadonlySet<string> = new Set(['sp500', 'msci_world']);
+
+export function assetKind(asset: { id: string; class: 'bond' | 'equity' | 'crypto' | 'gold' }): AssetKind {
+  if (asset.class === 'equity') return FUNDS.has(asset.id) ? 'fund' : 'stock';
+  return asset.class;
+}

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { GameProvider } from '@/game/context';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 
@@ -42,7 +43,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} className={`${pixel.variable} ${inter.variable}`}>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <GameProvider>{children}</GameProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

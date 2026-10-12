@@ -5,4 +5,5 @@ export { names } from './names';
 export type { Locale, Names } from './names';
 export { fillNames, rawText, textFor } from './text';
 export type { CardText, ContentText } from './text';
-export { assetClassArt, cardArt, cityArt, itemArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt } from './art';
+export { assetClassArt, assetKind, cardArt, cityArt, itemArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt } from './art';
+export type { AssetKind } from './art';

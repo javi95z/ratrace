@@ -59,6 +59,14 @@ export function applyDebtPayments(p: PlayerState, service: DebtService): void {
   removePaidDebts(p);
 }
 
+/** How much more this player may borrow in personal loans today: a share of the yearly salary, less what is already owed. */
+export function loanRoom(p: PlayerState, content: Content, world: WorldState): Cents {
+  let existing = 0;
+  for (const d of p.debts) if (d.kind === 'personalLoan') existing += d.principal;
+  const limit = mulDiv(indexed(p.salaryAnnual, world), content.debt.personalLoanMaxIncomePct, 100);
+  return Math.max(0, limit - existing);
+}
+
 export function executeBorrow(
   p: PlayerState,
   order: Extract<Order, { type: 'borrow' }>,
@@ -66,10 +74,7 @@ export function executeBorrow(
 ): RejectReason | null {
   if (!isAmount(order.amount)) return 'bad-amount';
   if (ctx.round < p.bankruptUntilRound) return 'no-credit';
-  let existing = 0;
-  for (const d of p.debts) if (d.kind === 'personalLoan') existing += d.principal;
-  const limit = mulDiv(indexed(p.salaryAnnual, ctx.world), ctx.content.debt.personalLoanMaxIncomePct, 100);
-  if (existing + order.amount > limit) return 'over-loan-limit';
+  if (order.amount > loanRoom(p, ctx.content, ctx.world)) return 'over-loan-limit';
   p.debts.push({
     id: newId(p, 'debt'),
     kind: 'personalLoan',

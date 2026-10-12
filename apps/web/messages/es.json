@@ -317,5 +317,30 @@
     "bankruptcies": "{count, plural, =0 {Nunca en quiebra} one {Una quiebra} other {# quiebras}}",
     "again": "Vivir otra vida",
     "home": "Inicio"
+  },
+  "orders": {
+    "buy": "Comprar {name} · {amount}",
+    "sell": "Vender {name} · {amount}",
+    "save": "Ahorrar {amount}",
+    "withdraw": "Retirar {amount}",
+    "pension": "Pensión · {amount}",
+    "borrow": "Pedir {amount}",
+    "repay": "Amortizar {name} · {amount}",
+    "buyHome": "Comprar vivienda: {home}",
+    "buyRental": "Comprar para alquilar: {home}",
+    "sellHome": "Vender: {home}",
+    "rentOn": "Alquilar: {home}",
+    "rentOff": "Dejar de alquilar: {home}",
+    "overtime": "Horas extra",
+    "study": "Estudiar",
+    "hunt": "Buscar trabajo",
+    "buyItem": "Comprar {item}",
+    "sellItem": "Vender {item}",
+    "cancelItem": "Baja de {item}",
+    "lifestyle": "Vivir: {tier}",
+    "rentTier": "Casa: {tier}",
+    "insureOn": "Asegurar: {kind}",
+    "insureOff": "Cancelar: {kind}",
+    "move": "Mudarte a {city}"
   }
 }
