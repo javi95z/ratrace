@@ -58,7 +58,7 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldS
   const assetIndex: Record<string, number> = {};
   content.assets.forEach((asset, i) => {
     const rng = streams.assets[i];
-    const own = round(asset.idioVolBp * rng.normal());
+    const own = round(asset.idioVolBp * rng.normal()) + (asset.driftBp ?? 0);
     const crashed = asset.crashChancePct !== undefined && rng.chance(asset.crashChancePct);
 
     let ret: number;

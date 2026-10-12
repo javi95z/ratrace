@@ -69,6 +69,7 @@ export function validateContent(c: Content): string[] {
       errors.push(`asset ${a.id} has a crash chance outside 0..100`);
     }
     if (!notNegative(a.idioVolBp) || !notNegative(a.yieldBp)) errors.push(`asset ${a.id} has a negative volatility or yield`);
+    if (a.driftBp !== undefined && !Number.isFinite(a.driftBp)) errors.push(`asset ${a.id} has a drift that is not a finite number`);
   }
   if (!c.assets.some((a) => a.id === c.pensionAssetId)) {
     errors.push(`pensionAssetId ${c.pensionAssetId} is not an asset`);

@@ -12,6 +12,8 @@ export interface AssetDef {
   betaPct: number;
   /** Asset-specific volatility per round, in bp. */
   idioVolBp: Bp;
+  /** Added to the asset's return every round, in bp. Lets assets in one class have different average returns. */
+  driftBp?: Bp;
   /** Annual dividend yield in bp. Bonds use yieldSpreadBp instead. */
   yieldBp: Bp;
   /** Bonds only: price sensitivity to rate changes, in years. */

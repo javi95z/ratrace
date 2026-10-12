@@ -38,7 +38,7 @@ const base: Content = {
     { id: 'bond_long', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 8, yieldSpreadBp: 50 },
     { id: 'fund_world', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 180 },
     { id: 'stock_growth', class: 'equity', betaPct: 140, idioVolBp: 1_800, yieldBp: 0 },
-    { id: 'stock_dividend', class: 'equity', betaPct: 70, idioVolBp: 900, yieldBp: 320 },
+    { id: 'stock_dividend', class: 'equity', betaPct: 70, idioVolBp: 900, yieldBp: 320, driftBp: -500 },
     { id: 'coin_major', class: 'crypto', betaPct: 100, idioVolBp: 1_500, yieldBp: 0 },
     { id: 'coin_meme', class: 'crypto', betaPct: 160, idioVolBp: 3_500, yieldBp: 0, crashChancePct: 8 },
     { id: 'gold', class: 'gold', betaPct: 100, idioVolBp: 600, yieldBp: 0 },

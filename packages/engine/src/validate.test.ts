@@ -100,6 +100,9 @@ describe('validateContent', () => {
       'asset odd has a negative volatility or yield',
     );
     expect(errors({ propertyTypes: [{ id: 'shed', pricePct: 0 }] })).toContain('property type shed needs a positive price percentage');
+    expect(errors({ assets: [...c.assets, { id: 'adrift', class: 'equity', betaPct: 100, idioVolBp: 0, yieldBp: 0, driftBp: NaN }] })).toContain(
+      'asset adrift has a drift that is not a finite number',
+    );
   });
 });
 

@@ -130,6 +130,19 @@ describe('world timeline', () => {
     expect(Math.abs(growth / n - fund / n)).toBeLessThan(400);
   });
 
+  it("adds an asset's own drift to every return, so assets in one class can differ", () => {
+    const drifting = {
+      ...content,
+      assets: content.assets.map((asset) => (asset.id === 'fund_world' ? { ...asset, driftBp: -700 } : asset)),
+    };
+    const base = generateTimeline('drift', content);
+    const moved = generateTimeline('drift', drifting);
+    for (let r = 1; r < base.length; r++) {
+      expect(moved[r].assetReturnBp.fund_world).toBe(base[r].assetReturnBp.fund_world - 700);
+      expect(moved[r].assetReturnBp.gold).toBe(base[r].assetReturnBp.gold);
+    }
+  });
+
   it('crashes the meme coin by 90% now and then', () => {
     let crashes = 0;
     for (let s = 0; s < 300; s++) {
