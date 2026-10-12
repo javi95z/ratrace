@@ -3,9 +3,57 @@ import { executePortfolioOrder } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
 import type { Order, OrderContext, PlayerState, RejectReason } from './types';
 
-/** Returns the reason for rejection, or null when the order was executed. */
-export function executeOrder(p: PlayerState, order: Order, ctx: OrderContext): RejectReason | null {
-  if (order === null || typeof order !== 'object') return 'bad-order';
+const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
+  'buy',
+  'sell',
+  'depositIn',
+  'depositOut',
+  'pensionIn',
+  'borrow',
+  'repay',
+  'buyProperty',
+  'sellProperty',
+  'setRented',
+]);
+
+const isText = (x: unknown): x is string => typeof x === 'string';
+const isFlag = (x: unknown): x is boolean => typeof x === 'boolean';
+
+/**
+ * True if the fields that name things have the right primitive type.
+ * Amounts are checked by each executor, which rejects them as 'bad-amount'.
+ */
+function hasValidFields(fields: Record<string, unknown>): boolean {
+  switch (fields.type) {
+    case 'buy':
+    case 'sell':
+      return isText(fields.assetId);
+    case 'repay':
+      return isText(fields.debtId);
+    case 'buyProperty':
+      return isText(fields.typeId) && isText(fields.mortgage) && isFlag(fields.rented);
+    case 'sellProperty':
+      return isText(fields.propertyId);
+    case 'setRented':
+      return isText(fields.propertyId) && isFlag(fields.rented);
+    default:
+      return true;
+  }
+}
+
+/**
+ * Executes one order. The order may come from an untrusted client, so its shape is checked first:
+ * nothing here throws, and nothing is coerced.
+ * Returns the reason for rejection, or null when the order was executed.
+ */
+export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): RejectReason | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return 'bad-order';
+  const fields = raw as Record<string, unknown>;
+  if (!isText(fields.type)) return 'bad-order';
+  if (!ORDER_TYPES.has(fields.type)) return 'unknown-order';
+  if (!hasValidFields(fields)) return 'bad-order';
+
+  const order = raw as Order;
   switch (order.type) {
     case 'buy':
     case 'sell':
@@ -23,7 +71,5 @@ export function executeOrder(p: PlayerState, order: Order, ctx: OrderContext): R
       return executeSellProperty(p, order, ctx);
     case 'setRented':
       return executeSetRented(p, order);
-    default:
-      return 'unknown-order';
   }
 }

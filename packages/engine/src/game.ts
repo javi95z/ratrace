@@ -53,6 +53,9 @@ export function applyRound(
   choices: RoundChoices,
 ): { state: GameState; events: GameEvent[] } {
   if (state.finished) throw new Error('applyRound: the game is already finished');
+  if (typeof choices !== 'object' || choices === null || !Array.isArray(choices.orders)) {
+    throw new Error('applyRound: choices.orders must be an array');
+  }
 
   const next = structuredClone(state);
   const p = next.player;
@@ -64,10 +67,10 @@ export function applyRound(
 
   const tally: RoundTally = { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0 };
   const ctx: OrderContext = { content, world: now, round: next.round, tally };
-  for (const order of choices.orders) {
-    const reason = executeOrder(p, order, ctx);
+  choices.orders.forEach((order: unknown, i) => {
+    const reason = i < content.maxOrdersPerRound ? executeOrder(p, order, ctx) : 'too-many-orders';
     if (reason !== null) events.push({ kind: 'orderRejected', order, reason });
-  }
+  });
 
   const income = incomeForRound(p, content, now);
   const expenses = expensesForRound(p, content, now);
