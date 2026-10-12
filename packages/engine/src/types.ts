@@ -37,6 +37,8 @@ export interface MarketParams {
   inflationNoiseBp: Bp;
   /** Deposit rate = policy rate minus this spread, floored at zero. */
   depositSpreadBp: Bp;
+  /** Chance in percent that a recession pulls the crypto cycle into winter. */
+  recessionWinterChancePct: number;
   start: { regime: Regime; cryptoPhase: CryptoPhase; policyRateBp: Bp; inflationBp: Bp };
 }
 
@@ -127,9 +129,11 @@ export interface WorldState {
   cryptoPhase: CryptoPhase;
   policyRateBp: Bp;
   inflationBp: Bp;
+  /** Consumer price level. Wages and living costs follow it. Starts at PRICE_LEVEL_START. */
+  priceLevel: number;
   /** Return of each asset over the round that just ended, in bp. Zero at round 0. */
   assetReturnBp: Record<string, Bp>;
-  /** Price index per asset. Starts at 10000. */
+  /** Price index per asset. Starts at INDEX_START. */
   assetIndex: Record<string, number>;
   propertyReturnBp: Record<string, Bp>;
   propertyIndex: Record<string, number>;

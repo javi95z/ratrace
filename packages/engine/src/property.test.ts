@@ -30,7 +30,7 @@ describe('property prices', () => {
     const { content, timeline } = setup();
     expect(propertyPrice(content, timeline[0], 'home', 'flat')).toBe(25_000_000);
     expect(propertyPrice(content, timeline[0], 'home', 'studio')).toBe(15_000_000);
-    const dearer = { ...timeline[0], propertyIndex: { ...timeline[0].propertyIndex, home: 11_000 } };
+    const dearer = { ...timeline[0], propertyIndex: { ...timeline[0].propertyIndex, home: 110_000_000 } };
     expect(propertyPrice(content, dearer, 'home', 'studio')).toBe(16_500_000);
   });
 });

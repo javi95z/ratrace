@@ -3,8 +3,8 @@ import { applyBp, isAmount, round } from './money';
 import type { Cents } from './money';
 import { newId } from './player';
 import type { OrderContext } from './portfolio';
+import { INDEX_START } from './rates';
 import type { Content, Debt, Order, PlayerState, WorldState } from './types';
-import { INDEX_START } from './world';
 
 export function propertyPrice(content: Content, world: WorldState, cityId: string, typeId: string): Cents {
   const city = cityOf(content, cityId);
