@@ -3,3 +3,7 @@ dist
 .DS_Store
 *.tsbuildinfo
 art/preview/
+.worktrees/
+.next/
+playwright-report/
+test-results/

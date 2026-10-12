@@ -88,13 +88,13 @@ Bankruptcy also sells status items at the fire-sale discount and counts their va
 
 ## Tasks
 
-- [ ] 1. Types, life state, starting lives, derived values, invariants
-- [ ] 2. Life orders and finance-skill gating
-- [ ] 3. Cards: conditions, effects, outcomes, hand, `applyCards`, the two-phase round
-- [ ] 4. End-of-round life updates; bankruptcy with items
-- [ ] 5. World news and tax shifts
-- [ ] 6. Content: cities, assets, market, careers, items, lives
-- [ ] 7. Content: 100 cards
-- [ ] 8. Text in English and Spanish, with the lint test
-- [ ] 9. Whole-life tests on the real content: invariants, determinism, accounting identity
+- [x] 1. Types, life state, starting lives, derived values, invariants
+- [x] 2. Life orders and finance-skill gating
+- [x] 3. Cards: conditions, effects, outcomes, hand, `applyCards`, the two-phase round
+- [x] 4. End-of-round life updates; bankruptcy with items
+- [x] 5. World news and tax shifts
+- [x] 6. Content: cities, assets, market, careers, items, lives
+- [x] 7. Content: 100 cards
+- [x] 8. Text in English and Spanish, with the lint test
+- [x] 9. Whole-life tests on the real content: invariants, determinism, accounting identity
 - [ ] 10. Fresh review and one fix pass

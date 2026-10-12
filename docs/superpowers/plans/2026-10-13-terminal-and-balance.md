@@ -48,8 +48,8 @@ The test runs a fixed set of seeds, so its result never changes between runs or 
 
 ## Tasks
 
-- [ ] 1. Bots and the simulator
-- [ ] 2. Report, bands test, and tuning the content until the bands hold
-- [ ] 3. Terminal: formatting, command parser, screens
-- [ ] 4. Terminal: the game loop, the program, a scripted whole-life test
+- [x] 1. Bots and the simulator
+- [x] 2. Report, bands test, and tuning the content until the bands hold
+- [x] 3. Terminal: formatting, command parser, screens
+- [x] 4. Terminal: the game loop, the program, a scripted whole-life test
 - [ ] 5. Fresh review of steps 6 and 7 together, and one fix pass
