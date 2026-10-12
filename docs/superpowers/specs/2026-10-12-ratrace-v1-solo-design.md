@@ -410,6 +410,17 @@ The save format carries a version number and migrations.
 
 Vercel. v1 has no server-side data.
 
+### 8.9 Ready for online
+
+Everything a player has will later live in an online database: saves, history, unlocks, rankings, daily challenges and rooms. The plan is in `docs/superpowers/specs/2026-10-13-ratrace-online-design.md`. v1 builds none of it, but follows six rules so that nothing has to be rewritten:
+
+1. The interface reaches the game only through `GameSession` (start, current view, preview, submit a round) and reaches saved data only through `PlayerStore`. v1 ships local versions of both.
+2. The client holds a `GameView`: a state whose timeline stops at the current round. In ranked online play the server keeps the future rounds.
+3. Every saved game records its engine version and content version.
+4. Games and runs get UUIDs on the device.
+5. The resolve screen is drawn from the round's events only.
+6. No game rules live in the interface.
+
 ## 9. Testing
 
 - **Unit tests** (Vitest) for tax, mortgage amortisation, bond pricing, scoring, card conditions.
@@ -438,8 +449,7 @@ The art prompt pack can be written alongside milestone 1, since generation is do
 
 Each will have its own design document.
 
-- **Daily sprint.** Nickname identity, a seeded 5 to 10 minute scenario, friends leaderboard, streak. The server replays the submitted choice log to verify the score.
-- **Private rooms.** Join by link or code, 2 to 6 players, shared seed, round timer, reconnect, live ranking.
+- **Online.** Accounts, cloud saves, rankings, the daily challenge and private rooms, all on Supabase. See `docs/superpowers/specs/2026-10-13-ratrace-online-design.md`.
 - **More content.** The rest of the catalog: seven more cities, about forty more assets and tools, thirty-five more status items, fifty more cards, eight more lives. Advanced tools (margin, short selling, options, staking) arrive here as finance skill level 3 and above.
 - **Polish.** Installable app, reminders.
 
