@@ -130,6 +130,8 @@ export interface ItemDef {
   resaleDriftBp: Bp;
   /** Experiences: rounds the status lasts. */
   boostRounds: number;
+  /** True for something a card can give but the shop does not sell. */
+  cardOnly?: boolean;
 }
 
 /** The numbers behind family, insurance, housing and effort. */
@@ -635,6 +637,7 @@ export type RejectReason =
   | 'already-done'
   | 'no-job'
   | 'unknown-item'
+  | 'not-for-sale'
   | 'already-owned'
   | 'not-owned'
   | 'cannot-sell'

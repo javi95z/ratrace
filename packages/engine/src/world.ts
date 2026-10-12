@@ -1,5 +1,6 @@
 import { triggerHolds } from './life/conditions';
 import { clamp, round } from './money';
+import { applyTaxReforms, writeNews } from './news';
 import { INDEX_START, PRICE_LEVEL_START } from './rates';
 import { Rng, seedRng } from './rng';
 import type { Content, CryptoPhase, WorldState } from './types';
@@ -137,7 +138,10 @@ export function generateTimeline(seed: string, content: Content): WorldState[] {
     },
   ];
   for (let r = 1; r <= content.rounds; r++) timeline.push(stepWorld(timeline[r - 1], content, streams));
+  // Each of these has its own random stream and reads prices without changing them.
+  applyTaxReforms(seed, content, timeline);
   chooseWorldCards(seed, content, timeline);
+  writeNews(seed, content, timeline);
   return timeline;
 }
 

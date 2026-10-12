@@ -152,7 +152,8 @@ export interface Bankruptcy {
  * and everything they own outside the pension is worth less than everything they owe.
  *
  * A solvent player is never liquidated; they keep paying the card rate until they sell something.
- * In bankruptcy everything outside the pension is sold at a discount, every debt is cleared,
+ * In bankruptcy everything outside the pension is sold at a discount, status items included,
+ * every debt is cleared, memberships lapse, the lifestyle falls to the lowest tier the life allows,
  * and loans and mortgages are refused for a number of rounds. The credit card keeps working.
  */
 export function checkBankruptcy(
@@ -175,12 +176,15 @@ export function checkBankruptcy(
   let proceeds = p.cash + p.deposit;
   for (const held of Object.values(p.positions)) proceeds += applyBp(held.value, keep);
   for (const property of p.properties) proceeds += applyBp(property.value, keep);
+  for (const item of p.life.items) proceeds += applyBp(item.value, keep);
 
   p.cash = 0;
   p.deposit = 0;
   p.positions = {};
   p.properties = [];
   p.debts = [];
+  p.life.items = [];
+  p.lifestyleTier = p.life.minLifestyleTier;
   p.bankruptUntilRound = completedRound + content.debt.bankruptcyLockRounds;
   return { proceeds, debtsCleared: owed };
 }

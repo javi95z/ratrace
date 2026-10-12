@@ -31,6 +31,7 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): R
 function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): RejectReason | null {
   const item = ctx.content.items.find((i) => i.id === itemId);
   if (!item) return 'unknown-item';
+  if (item.cardOnly === true) return 'not-for-sale';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
   const price = indexed(item.price, ctx.world);
   if (price > p.cash) return 'not-enough-cash';

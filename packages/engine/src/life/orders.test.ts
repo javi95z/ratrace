@@ -121,6 +121,15 @@ describe('item orders', () => {
     expect(p.life.items).toHaveLength(1);
   });
 
+  it('does not sell in the shop what only a card can give', () => {
+    const content = fixtureContent();
+    content.items = content.items.map((item) => (item.id === 'watch_gold' ? { ...item, cardOnly: true } : item));
+    const { p, run } = setup({}, {}, content);
+    expect(run({ type: 'buyItem', itemId: 'watch_gold' })).toBe('not-for-sale');
+    expect(p.cash).toBe(5_000_000);
+    expect(p.life.items).toEqual([]);
+  });
+
   it('sells a durable for its value and keeps it in the collection', () => {
     const { p, run } = setup();
     run({ type: 'buyItem', itemId: 'car_basic' });

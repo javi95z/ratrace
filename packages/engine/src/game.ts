@@ -5,7 +5,7 @@ import { assertInvariants } from './invariants';
 import { answerCards, drawHand } from './life/cards';
 import { refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
-import { finishRound } from './life/roundEnd';
+import { ageLife, turnPage } from './life/roundEnd';
 import { cityOf } from './lookup';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
@@ -15,7 +15,7 @@ import { growProperties } from './property';
 import { indexed } from './rates';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
-import { computeTax } from './tax';
+import { computeTax, effectiveTax } from './tax';
 import type { TaxBill } from './tax';
 import type {
   CardPicks,
@@ -50,7 +50,9 @@ export function createGame(config: GameConfig, seed: string): GameState {
     hand: [],
     rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ''}`) },
   };
-  beginRound(config.content, state);
+  const rng = new Rng(state.rng.cards);
+  beginRound(config.content, state, rng);
+  state.rng.cards = rng.snapshot();
   return state;
 }
 
@@ -58,8 +60,7 @@ export function createGame(config: GameConfig, seed: string): GameState {
  * Opens the round the state is at: a gig worker's pay swings, the hand is drawn,
  * and the phase is set. Both use the player's own random stream.
  */
-function beginRound(content: Content, state: GameState): void {
-  const rng = new Rng(state.rng.cards);
+function beginRound(content: Content, state: GameState, rng: Rng): void {
   const life = state.player.life;
   if (hasFlag(life.flags, FLAG_UNSTABLE_PAY)) {
     const range = content.life.unstablePayPct;
@@ -68,7 +69,6 @@ function beginRound(content: Content, state: GameState): void {
   }
   state.hand = drawHand(state, content, rng);
   state.phase = state.hand.length > 0 ? 'cards' : 'finance';
-  state.rng.cards = rng.snapshot();
 }
 
 /** Answers the hand on `state` itself and moves it to the finance phase. */
@@ -171,7 +171,7 @@ function flowsOf(content: Content, p: PlayerState, now: WorldState, tally: Round
   let propertyValueOwned = 0;
   for (const property of p.properties) propertyValueOwned += property.value;
   const city = cityOf(content, p.cityId);
-  const bill = computeTax(city.tax, indexed(city.medianSalaryAnnual, now), content.yearsPerRound, {
+  const bill = computeTax(effectiveTax(city, now), indexed(city.medianSalaryAnnual, now), content.yearsPerRound, {
     salary: income.salary,
     otherIncome: income.otherPassive,
     pensionContribution: tally.pensionContribution,
@@ -219,7 +219,8 @@ export function previewRound(content: Content, state: GameState, choices: RoundC
  * 3. Prices move to the next world state.
  * 4. Income is paid; expenses, debt payments and tax are charged.
  * 5. Cash is settled: a shortfall comes from the deposit, then the credit card.
- * 6. Escape and bankruptcy are checked.
+ * 6. Escape is checked. The life ages: skills, promotion, item values, family and other clocks.
+ * 7. Bankruptcy is checked. A pending move happens. The next hand is drawn.
  *
  * The state passed in is never changed.
  */
@@ -283,11 +284,15 @@ export function applyRound(
     events.push({ kind: 'escaped', round: completed - 1 });
   }
 
-  const annualIncome = indexed(p.salaryAnnual, now) + Math.floor(passive / years);
+  const rng = new Rng(next.rng.cards);
+  ageLife(p, content, now, after, tally, rng, events);
+
+  // The card limit is set by what the player earned in the round that just ended.
+  const annualIncome = Math.floor((income.salary + passive) / years);
   const bankruptcy = checkBankruptcy(p, content, now, annualIncome, completed);
   if (bankruptcy) events.push({ kind: 'bankrupt', ...bankruptcy });
 
-  finishRound(p, content, events);
+  turnPage(p, events);
   refreshDerived(p, content);
   next.round = completed;
   next.finished = completed >= content.rounds;
@@ -295,8 +300,9 @@ export function applyRound(
     next.hand = [];
     next.phase = 'finance';
   } else {
-    beginRound(content, next);
+    beginRound(content, next, rng);
   }
+  next.rng.cards = rng.snapshot();
   assertInvariants(content, next);
   return { state: next, events };
 }

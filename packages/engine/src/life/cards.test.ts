@@ -254,6 +254,17 @@ describe('applyCards', () => {
     expect(result.state.player.debts).toEqual([{ id: 'debt-1', kind: 'creditCard', principal: 200_000, fixedRateBp: 0, roundsLeft: 0 }]);
   });
 
+  it('keeps an option that brings money in open to a player already in the red', () => {
+    const bill = card('bill', { options: [{ effects: { cash: -300_000 } }, {}] });
+    const windfall = card('windfall', { options: [{}, { effects: { cash: 100_000 } }] });
+    const content = contentWith([bill, windfall]);
+    let state = createGame({ content, start: start({ cash: 0 }) }, 'red');
+    state = { ...state, hand: ['bill', 'windfall'] };
+    const result = applyCards(content, state, { windfall: 1 });
+    expect(cardEvents(result.events)[1]).toMatchObject({ cardId: 'windfall', picked: 1, option: 1, cash: 100_000 });
+    expect(result.state.player.debts[0].principal).toBe(200_000);
+  });
+
   it('rolls an outcome from the player’s own stream', () => {
     const gamble = card('gamble', {
       options: [{}, { effects: { cash: -1_000 }, outcomes: [{ weight: 1, effects: { cash: 50_000 } }, { weight: 1, effects: { cash: -20_000 } }] }],

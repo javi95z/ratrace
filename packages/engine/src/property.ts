@@ -4,7 +4,7 @@ import { cityOf } from './lookup';
 import { applyBp, isAmount, round } from './money';
 import type { Cents } from './money';
 import { INDEX_START } from './rates';
-import { purchaseTax } from './tax';
+import { effectiveTax, purchaseTax } from './tax';
 import type { Content, Debt, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
 export function propertyPrice(content: Content, world: WorldState, cityId: string, typeId: string): Cents {
@@ -35,7 +35,7 @@ export function executeBuyProperty(
   }
   if (order.rented === true && p.life.financeSkill < content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
   const price = propertyPrice(content, world, p.cityId, order.typeId);
-  const tax = purchaseTax(cityOf(content, p.cityId).tax, price);
+  const tax = purchaseTax(effectiveTax(cityOf(content, p.cityId), world), price);
 
   let debt: Debt | null = null;
   let fromCash = price;
