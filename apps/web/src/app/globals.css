@@ -1,0 +1,178 @@
+@import 'tailwindcss';
+
+/*
+ * The look of The Rat Race: a night city in pixels.
+ *
+ * Only the 31 interface colours of the design spec (section 6) exist here. Tailwind's own palette
+ * is switched off, so a colour that is not on the list cannot be used by accident.
+ */
+@theme {
+  --color-*: initial;
+
+  --color-night-900: #0b1022;
+  --color-night-800: #141b33;
+  --color-night-700: #1f2a4d;
+  --color-night-600: #263566;
+  --color-night-500: #3b4f8a;
+  --color-sky-500: #3b6ea5;
+  --color-sky-300: #9ad1d4;
+  --color-sky-200: #bfe3f0;
+  --color-sky-100: #dff3ff;
+  --color-wine-900: #5c1a2a;
+  --color-wine-700: #8f2d3f;
+  --color-wine-500: #d1495b;
+  --color-wine-300: #e8788a;
+  --color-gold-900: #7a4f12;
+  --color-gold-700: #c8891e;
+  --color-gold-500: #f2c14e;
+  --color-gold-200: #ffe9a8;
+  --color-teal-800: #1f6f66;
+  --color-teal-600: #2a9d8f;
+  --color-teal-300: #7fd1b9;
+  --color-skin-500: #c98f6b;
+  --color-skin-300: #e8b796;
+  --color-wood-900: #2e1f1a;
+  --color-wood-700: #4a3228;
+  --color-ink-900: #1a1c2c;
+  --color-ink-700: #2b2f44;
+  --color-ink-500: #4b5269;
+  --color-ink-300: #8b93a7;
+  --color-ink-200: #c9cfdc;
+  --color-cream: #f4f1e4;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Pixelify Sans for titles and numbers, Inter for anything read as a sentence. */
+  --font-pixel: var(--font-pixelify), ui-monospace, 'Courier New', monospace;
+  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Three columns from here up. */
+  --breakpoint-desk: 64rem;
+
+  --animate-rise: rise 0.28s steps(4, end) both;
+  --animate-blink: blink 1s steps(2, start) infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes blink {
+    to {
+      visibility: hidden;
+    }
+  }
+}
+
+:root {
+  color-scheme: dark;
+  /* How many screen pixels one art pixel takes. A stage that has room for it sets this to 2. */
+  --art: 1;
+}
+
+html {
+  background: var(--color-night-900);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--color-night-800);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Sprites are drawn pixel for pixel, never smoothed. */
+.sprite {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-500);
+  outline-offset: 2px;
+}
+
+/*
+ * A 2px pixel border with notched corners: four hard shadows, one per side, so the corner pixels
+ * are left empty the way a hand-drawn pixel frame leaves them.
+ */
+@utility frame {
+  box-shadow:
+    0 -2px 0 0 var(--frame, var(--color-night-900)),
+    0 2px 0 0 var(--frame, var(--color-night-900)),
+    -2px 0 0 0 var(--frame, var(--color-night-900)),
+    2px 0 0 0 var(--frame, var(--color-night-900));
+}
+
+/* The same frame with a hard drop shadow under it, for things that can be pressed. */
+@utility frame-raised {
+  box-shadow:
+    0 -2px 0 0 var(--frame, var(--color-night-900)),
+    0 2px 0 0 var(--frame, var(--color-night-900)),
+    -2px 0 0 0 var(--frame, var(--color-night-900)),
+    2px 0 0 0 var(--frame, var(--color-night-900)),
+    0 6px 0 -2px var(--frame, var(--color-night-900));
+}
+
+@utility frame-gold {
+  --frame: var(--color-gold-900);
+}
+
+@utility frame-cream {
+  --frame: var(--color-ink-900);
+}
+
+/* Titles and numbers. */
+@utility pixel {
+  font-family: var(--font-pixel);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+/* Hides a scrollbar without stopping the scroll, for tab strips. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* The safe area at the bottom of a phone, for bars that sit on the edge. */
+@utility pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Whoever asks for less motion, in the system or in the game's own settings, gets none. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

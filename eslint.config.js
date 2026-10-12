@@ -1,3 +1,4 @@
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 const bannedMath = [
@@ -35,6 +36,15 @@ export default [
         { selector: "AssignmentExpression[operator='**=']", message: 'Exponentiation is not identical across JavaScript engines. Multiply instead.' },
         { selector: 'CallExpression[callee.property.name=/^(toLocale|localeCompare)/]', message: 'Locale-dependent output differs between devices.' },
       ],
+    },
+  },
+  {
+    // The web app: the rules of hooks, and a wall between the screens and the two things only the session layer may touch.
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
 ];

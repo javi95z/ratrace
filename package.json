@@ -8,15 +8,21 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play",
+    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play && pnpm --filter @ratrace/web typecheck",
     "art": "pnpm --filter @ratrace/art-tool build-art",
     "balance": "pnpm --filter @ratrace/balance balance",
-    "play": "pnpm --filter @ratrace/play play"
+    "play": "pnpm --filter @ratrace/play play",
+    "dev": "pnpm --filter @ratrace/web dev",
+    "build": "pnpm --filter @ratrace/web build",
+    "e2e": "pnpm --filter @ratrace/web e2e"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
+    "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "fast-check": "^4.10.2",
+    "jsdom": "^30.1.2",
     "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",

@@ -1,0 +1,120 @@
+// These tests damage saves on purpose.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { applyCards, applyRound, createGame, ENGINE_VERSION, realNetWorth, stateHash } from '@ratrace/engine';
+import type { GameState } from '@ratrace/engine';
+import { describe, expect, it } from 'vitest';
+import { openSave, replay } from './save';
+import type { RoundLog, SavedGame } from './types';
+
+const nurse = lives[0];
+
+/** Plays `rounds` rounds and returns the save a session would have written, with the cards of the next round answered. */
+function saved(rounds: number): SavedGame {
+  let state: GameState = createGame({ content, start: nurse.start }, 'save-seed');
+  const log: RoundLog[] = [];
+  const history = [realNetWorth(state)];
+  for (let i = 0; i <= rounds; i++) {
+    const entry: RoundLog = { picks: null, orders: null };
+    log.push(entry);
+    if (state.phase === 'cards') {
+      entry.picks = Object.fromEntries(state.hand.map((id) => [id, 1]));
+      state = applyCards(content, state, entry.picks).state;
+    }
+    if (i === rounds) break;
+    entry.orders = [{ type: 'focus', action: 'studyCareer' }, { type: 'depositIn', amount: 10_000 }];
+    state = applyRound(content, state, { orders: entry.orders }).state;
+    history.push(realNetWorth(state));
+  }
+  return {
+    format: 1, gameId: 'game-1', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, lifeId: 'nurse', seed: 'save-seed',
+    log, history, bankruptcies: 0, state, updatedAt: 5,
+  };
+}
+
+const open = (raw: unknown) => openSave(raw, content, lives);
+
+describe('replay', () => {
+  it('rebuilds the state from the seed and the log, at any point of a round', () => {
+    for (const rounds of [0, 1, 6]) {
+      const save = saved(rounds);
+      const again = replay(content, nurse.start, save.seed, save.log);
+      expect(stateHash(again.state)).toBe(stateHash(save.state));
+      expect(again.history).toEqual(save.history);
+      expect(again.bankruptcies).toBe(0);
+    }
+    const fresh = replay(content, nurse.start, 'save-seed', []).state;
+    expect(fresh.round).toBe(0);
+    expect(fresh.phase).toBe('cards');
+  });
+
+  it('refuses a log that does not fit the game', () => {
+    expect(() => replay(content, nurse.start, 'save-seed', [{ picks: null, orders: [] }, { picks: null, orders: null }, { picks: null, orders: [] }])).toThrow(
+      'the log goes on after a round that was never played',
+    );
+    const tooLong = new Array<RoundLog>(25).fill({ picks: null, orders: [] });
+    expect(() => replay(content, nurse.start, 'save-seed', tooLong)).toThrow('the log is longer than a life');
+  });
+});
+
+describe('openSave', () => {
+  it('opens a sound save as it is', () => {
+    const save = saved(3);
+    const opened = open(JSON.parse(JSON.stringify(save)));
+    expect(opened).toEqual({ ok: true, repaired: false, save });
+  });
+
+  it('calls a save from other rules outdated', () => {
+    expect(open({ ...saved(1), engineVersion: '0.0.1' })).toEqual({ ok: false, lost: 'outdated' });
+    expect(open({ ...saved(1), contentVersion: '9.9.9' })).toEqual({ ok: false, lost: 'outdated' });
+    expect(open({ ...saved(1), format: 2 })).toEqual({ ok: false, lost: 'outdated' });
+  });
+
+  it('rebuilds a damaged state from the seed and the log', () => {
+    const save = saved(4);
+    const hash = stateHash(save.state);
+    for (const damage of [
+      (s: any) => (s.state.player.cash = -1),
+      (s: any) => (s.state.player.statusPoints += 1),
+      (s: any) => delete s.state.player.life,
+      (s: any) => (s.state = null),
+      (s: any) => s.state.timeline.pop(),
+    ]) {
+      const broken = JSON.parse(JSON.stringify(save));
+      damage(broken);
+      const opened = open(broken);
+      if (!opened.ok) throw new Error('expected the save to be rebuilt');
+      expect(stateHash(opened.save.state)).toBe(hash);
+      expect(opened.save.gameId).toBe('game-1');
+    }
+  });
+
+  it('does not trust a state that belongs to another point of the game', () => {
+    const save = saved(4);
+    const earlier = saved(2);
+    const opened = open({ ...save, state: earlier.state });
+    if (!opened.ok) throw new Error('expected the save to be rebuilt');
+    expect(opened.save.state.round).toBe(4);
+    expect(stateHash(opened.save.state)).toBe(stateHash(save.state));
+  });
+
+  it('gives up on a save that cannot be rebuilt either', () => {
+    const save = saved(2);
+    expect(open({ ...save, state: null, log: 'none' })).toEqual({ ok: false, lost: 'damaged' });
+    expect(open({ ...save, state: null, seed: 7 })).toEqual({ ok: false, lost: 'damaged' });
+    expect(open({ ...save, state: null, lifeId: 'pirate' })).toEqual({ ok: false, lost: 'damaged' });
+    expect(open({ ...save, state: null, log: [{ picks: null, orders: 'buy' }] })).toEqual({ ok: false, lost: 'damaged' });
+    for (const junk of [null, undefined, 'save', 42, [], {}]) expect(open(junk)).toEqual({ ok: false, lost: 'damaged' });
+  });
+
+  it('repairs the small things a save may lack', () => {
+    const save = saved(1);
+    const opened = open({ ...save, history: 'none', bankruptcies: -3, updatedAt: 'yesterday' });
+    if (!opened.ok) throw new Error('expected the save to open');
+    expect(opened.repaired).toBe(true);
+    expect(opened.save.history).toEqual(save.history);
+    expect(opened.save.bankruptcies).toBe(0);
+    expect(opened.save.updatedAt).toBe(0);
+    expect(stateHash(opened.save.state)).toBe(stateHash(save.state));
+  });
+});

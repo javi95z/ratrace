@@ -1,0 +1,1017 @@
+{
+  "badge.bankrupt": {
+    "src": "badges/badge.bankrupt.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.bond_ladder": {
+    "src": "badges/badge.bond_ladder.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.bought_the_dip": {
+    "src": "badges/badge.bought_the_dip.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.crypto_winter": {
+    "src": "badges/badge.crypto_winter.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.debt_free_at_40": {
+    "src": "badges/badge.debt_free_at_40.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.escaped": {
+    "src": "badges/badge.escaped.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.escaped_before_35": {
+    "src": "badges/badge.escaped_before_35.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.escaped_before_40": {
+    "src": "badges/badge.escaped_before_40.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.every_car": {
+    "src": "badges/badge.every_car.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.family_of_four": {
+    "src": "badges/badge.family_of_four.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.first_100k": {
+    "src": "badges/badge.first_100k.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.first_luxury_watch": {
+    "src": "badges/badge.first_luxury_watch.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.first_share": {
+    "src": "badges/badge.first_share.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.five_asset_classes": {
+    "src": "badges/badge.five_asset_classes.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.index_only": {
+    "src": "badges/badge.index_only.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.locked": {
+    "src": "badges/badge.locked.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.mba": {
+    "src": "badges/badge.mba.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.millionaire": {
+    "src": "badges/badge.millionaire.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.millionaire_by_35": {
+    "src": "badges/badge.millionaire_by_35.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.moved_to_dubai": {
+    "src": "badges/badge.moved_to_dubai.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.new": {
+    "src": "badges/badge.new.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.no_credit_card": {
+    "src": "badges/badge.no_credit_card.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.passive_double": {
+    "src": "badges/badge.passive_double.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.penthouse": {
+    "src": "badges/badge.penthouse.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.rode_out_recession": {
+    "src": "badges/badge.rode_out_recession.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.sold_business": {
+    "src": "badges/badge.sold_business.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.status_100": {
+    "src": "badges/badge.status_100.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.supercar": {
+    "src": "badges/badge.supercar.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.ten_million": {
+    "src": "badges/badge.ten_million.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.three_cities": {
+    "src": "badges/badge.three_cities.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.three_rentals": {
+    "src": "badges/badge.three_rentals.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.twenty_items": {
+    "src": "badges/badge.twenty_items.png",
+    "w": 64,
+    "h": 64
+  },
+  "brand.app_icon": {
+    "src": "brand/brand.app_icon.png",
+    "w": 256,
+    "h": 256
+  },
+  "brand.logo": {
+    "src": "brand/brand.logo.png",
+    "w": 256,
+    "h": 256
+  },
+  "brand.mascot": {
+    "src": "brand/brand.mascot.png",
+    "w": 256,
+    "h": 256
+  },
+  "brand.wordmark": {
+    "src": "brand/brand.wordmark.png",
+    "w": 256,
+    "h": 256
+  },
+  "car.bmw_m3": {
+    "src": "cars/car.bmw_m3.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.lamborghini_aventador": {
+    "src": "cars/car.lamborghini_aventador.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.mercedes_g_class": {
+    "src": "cars/car.mercedes_g_class.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.porsche_911": {
+    "src": "cars/car.porsche_911.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.seat_ibiza": {
+    "src": "cars/car.seat_ibiza.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.tesla_model_3": {
+    "src": "cars/car.tesla_model_3.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.toyota_corolla": {
+    "src": "cars/car.toyota_corolla.png",
+    "w": 96,
+    "h": 48
+  },
+  "car.vw_golf_gti": {
+    "src": "cars/car.vw_golf_gti.png",
+    "w": 96,
+    "h": 48
+  },
+  "card.airport": {
+    "src": "cards/card.airport.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bank_queue": {
+    "src": "cards/card.bank_queue.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bar": {
+    "src": "cards/card.bar.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.beach_club": {
+    "src": "cards/card.beach_club.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.breakdown": {
+    "src": "cards/card.breakdown.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.burnout": {
+    "src": "cards/card.burnout.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.cash_envelope": {
+    "src": "cards/card.cash_envelope.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.casino": {
+    "src": "cards/card.casino.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.central_bank": {
+    "src": "cards/card.central_bank.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_arrival": {
+    "src": "cards/card.city_arrival.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crash_screens": {
+    "src": "cards/card.crash_screens.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.dinner_for_two": {
+    "src": "cards/card.dinner_for_two.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.door_keys": {
+    "src": "cards/card.door_keys.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.empty_street": {
+    "src": "cards/card.empty_street.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.family_dinner": {
+    "src": "cards/card.family_dinner.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.flooded_room": {
+    "src": "cards/card.flooded_room.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.frozen_vault": {
+    "src": "cards/card.frozen_vault.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.garage_startup": {
+    "src": "cards/card.garage_startup.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.graduation": {
+    "src": "cards/card.graduation.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.gym": {
+    "src": "cards/card.gym.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.handshake": {
+    "src": "cards/card.handshake.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.hospital": {
+    "src": "cards/card.hospital.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.inspector": {
+    "src": "cards/card.inspector.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.library": {
+    "src": "cards/card.library.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lottery": {
+    "src": "cards/card.lottery.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.meme_coin": {
+    "src": "cards/card.meme_coin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moving_boxes": {
+    "src": "cards/card.moving_boxes.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.newsroom": {
+    "src": "cards/card.newsroom.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.nightclub": {
+    "src": "cards/card.nightclub.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.nursery": {
+    "src": "cards/card.nursery.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.office_desk": {
+    "src": "cards/card.office_desk.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.online_course": {
+    "src": "cards/card.online_course.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.packed_box": {
+    "src": "cards/card.packed_box.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.parcels": {
+    "src": "cards/card.parcels.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.phone_chart": {
+    "src": "cards/card.phone_chart.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.phone_launch": {
+    "src": "cards/card.phone_launch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.receipts": {
+    "src": "cards/card.receipts.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.scaffolding": {
+    "src": "cards/card.scaffolding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.server_room": {
+    "src": "cards/card.server_room.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.shady_deal": {
+    "src": "cards/card.shady_deal.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.shopfront": {
+    "src": "cards/card.shopfront.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sports_car": {
+    "src": "cards/card.sports_car.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sunrise_balcony": {
+    "src": "cards/card.sunrise_balcony.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sunset_bench": {
+    "src": "cards/card.sunset_bench.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.torn_photo": {
+    "src": "cards/card.torn_photo.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.trading_desk": {
+    "src": "cards/card.trading_desk.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.watch_boutique": {
+    "src": "cards/card.watch_boutique.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.wedding": {
+    "src": "cards/card.wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "home.flat": {
+    "src": "homes/home.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.house": {
+    "src": "homes/home.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.parking": {
+    "src": "homes/home.parking.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.penthouse": {
+    "src": "homes/home.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.rented_flat": {
+    "src": "homes/home.rented_flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.rented_room": {
+    "src": "homes/home.rented_room.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.shop": {
+    "src": "homes/home.shop.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.studio": {
+    "src": "homes/home.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.villa": {
+    "src": "homes/home.villa.png",
+    "w": 128,
+    "h": 128
+  },
+  "icon.account": {
+    "src": "icons/icon.account.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bond": {
+    "src": "icons/icon.bond.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.business": {
+    "src": "icons/icon.business.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.calendar": {
+    "src": "icons/icon.calendar.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.card": {
+    "src": "icons/icon.card.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.cash": {
+    "src": "icons/icon.cash.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.cashflow": {
+    "src": "icons/icon.cashflow.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city": {
+    "src": "icons/icon.city.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.crypto": {
+    "src": "icons/icon.crypto.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.deposit": {
+    "src": "icons/icon.deposit.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.family": {
+    "src": "icons/icon.family.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.focus": {
+    "src": "icons/icon.focus.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.fund": {
+    "src": "icons/icon.fund.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.gold": {
+    "src": "icons/icon.gold.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.inflation": {
+    "src": "icons/icon.inflation.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.insurance": {
+    "src": "icons/icon.insurance.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.job": {
+    "src": "icons/icon.job.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.loan": {
+    "src": "icons/icon.loan.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.locked": {
+    "src": "icons/icon.locked.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.mood": {
+    "src": "icons/icon.mood.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.mortgage": {
+    "src": "icons/icon.mortgage.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.news": {
+    "src": "icons/icon.news.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.pension": {
+    "src": "icons/icon.pension.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.property": {
+    "src": "icons/icon.property.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rates": {
+    "src": "icons/icon.rates.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.settings": {
+    "src": "icons/icon.settings.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill": {
+    "src": "icons/icon.skill.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.star": {
+    "src": "icons/icon.star.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.status": {
+    "src": "icons/icon.status.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.stock": {
+    "src": "icons/icon.stock.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.tax": {
+    "src": "icons/icon.tax.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.trophy": {
+    "src": "icons/icon.trophy.png",
+    "w": 32,
+    "h": 32
+  },
+  "item.air_jet_charter": {
+    "src": "items/item.air_jet_charter.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_cubist": {
+    "src": "items/item.art_cubist.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_stencil": {
+    "src": "items/item.art_stencil.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_wine": {
+    "src": "items/item.art_wine.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.edu_mba": {
+    "src": "items/item.edu_mba.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_birkin": {
+    "src": "items/item.fashion_birkin.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_blazer": {
+    "src": "items/item.fashion_blazer.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_duffel": {
+    "src": "items/item.fashion_duffel.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_loafers": {
+    "src": "items/item.fashion_loafers.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_polo": {
+    "src": "items/item.fashion_polo.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_sneakers": {
+    "src": "items/item.fashion_sneakers.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_club": {
+    "src": "items/item.member_club.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_golf": {
+    "src": "items/item.member_golf.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_gym": {
+    "src": "items/item.member_gym.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_platinum_card": {
+    "src": "items/item.member_platinum_card.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_season_seat": {
+    "src": "items/item.member_season_seat.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.sea_yacht_charter": {
+    "src": "items/item.sea_yacht_charter.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_camera": {
+    "src": "items/item.tech_camera.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_console": {
+    "src": "items/item.tech_console.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_headset": {
+    "src": "items/item.tech_headset.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_laptop": {
+    "src": "items/item.tech_laptop.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_phone": {
+    "src": "items/item.tech_phone.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_business_class": {
+    "src": "items/item.travel_business_class.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_ibiza": {
+    "src": "items/item.travel_ibiza.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_maldives": {
+    "src": "items/item.travel_maldives.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_weekend": {
+    "src": "items/item.travel_weekend.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_ap": {
+    "src": "items/item.watch_ap.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_casio": {
+    "src": "items/item.watch_casio.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_omega": {
+    "src": "items/item.watch_omega.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_patek": {
+    "src": "items/item.watch_patek.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_rolex": {
+    "src": "items/item.watch_rolex.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.watch_tissot": {
+    "src": "items/item.watch_tissot.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.banker.22": {
+    "src": "portraits/portrait.banker.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.banker.32": {
+    "src": "portraits/portrait.banker.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.banker.45": {
+    "src": "portraits/portrait.banker.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.banker.58": {
+    "src": "portraits/portrait.banker.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.civil_servant.22": {
+    "src": "portraits/portrait.civil_servant.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.civil_servant.32": {
+    "src": "portraits/portrait.civil_servant.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.civil_servant.45": {
+    "src": "portraits/portrait.civil_servant.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.civil_servant.58": {
+    "src": "portraits/portrait.civil_servant.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.doctor.22": {
+    "src": "portraits/portrait.doctor.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.doctor.32": {
+    "src": "portraits/portrait.doctor.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.doctor.45": {
+    "src": "portraits/portrait.doctor.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.doctor.58": {
+    "src": "portraits/portrait.doctor.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.engineer.22": {
+    "src": "portraits/portrait.engineer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.engineer.32": {
+    "src": "portraits/portrait.engineer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.engineer.45": {
+    "src": "portraits/portrait.engineer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.engineer.58": {
+    "src": "portraits/portrait.engineer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.heir.22": {
+    "src": "portraits/portrait.heir.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.heir.32": {
+    "src": "portraits/portrait.heir.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.heir.45": {
+    "src": "portraits/portrait.heir.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.heir.58": {
+    "src": "portraits/portrait.heir.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.newcomer.22": {
+    "src": "portraits/portrait.newcomer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.newcomer.32": {
+    "src": "portraits/portrait.newcomer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.newcomer.45": {
+    "src": "portraits/portrait.newcomer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.newcomer.58": {
+    "src": "portraits/portrait.newcomer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nurse.22": {
+    "src": "portraits/portrait.nurse.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nurse.32": {
+    "src": "portraits/portrait.nurse.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nurse.45": {
+    "src": "portraits/portrait.nurse.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nurse.58": {
+    "src": "portraits/portrait.nurse.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.rider.22": {
+    "src": "portraits/portrait.rider.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.rider.32": {
+    "src": "portraits/portrait.rider.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.rider.45": {
+    "src": "portraits/portrait.rider.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.rider.58": {
+    "src": "portraits/portrait.rider.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "skyline.bangkok": {
+    "src": "skylines/skyline.bangkok.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.dubai": {
+    "src": "skylines/skyline.dubai.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.london": {
+    "src": "skylines/skyline.london.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.madrid": {
+    "src": "skylines/skyline.madrid.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.new_york": {
+    "src": "skylines/skyline.new_york.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.singapore": {
+    "src": "skylines/skyline.singapore.png",
+    "w": 312,
+    "h": 66
+  }
+}
