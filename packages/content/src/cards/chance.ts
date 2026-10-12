@@ -2,9 +2,10 @@ import type { CardDef, CardOutcome } from '@ratrace/engine';
 import { card, usd, yearly } from './build';
 
 export const healthCards: CardDef[] = [
-  card('health_illness', 'health', { weight: 6, cooldown: 6 }, [
-    { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 } } },
+  // Not before the fourth year: a player needs a chance to have bought insurance first.
+  card('health_illness', 'health', { weight: 6, cooldown: 6, when: { minRound: 2 } }, [
     { effects: { focus: 2, cash: usd(-1_500), protection: { insurance: 'health', coverPct: 90 } } },
+    { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 } } },
   ]),
   card('health_burnout', 'health', { cooldown: 6, when: { employed: true, minRound: 3, notFlags: ['fit'] } }, [
     { effects: { focus: 2 } },

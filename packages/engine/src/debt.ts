@@ -154,7 +154,8 @@ export interface Bankruptcy {
  * A solvent player is never liquidated; they keep paying the card rate until they sell something.
  * In bankruptcy everything outside the pension is sold at a discount, status items included,
  * every debt is cleared, memberships lapse, the lifestyle falls to the lowest tier the life allows,
- * and loans and mortgages are refused for a number of rounds. The credit card keeps working.
+ * some standing is lost for good, and loans and mortgages are refused for a number of rounds.
+ * The credit card keeps working.
  */
 export function checkBankruptcy(
   p: PlayerState,
@@ -185,6 +186,7 @@ export function checkBankruptcy(
   p.debts = [];
   p.life.items = [];
   p.lifestyleTier = p.life.minLifestyleTier;
+  p.life.bonusStatus -= content.debt.bankruptcyStatusPenalty;
   p.bankruptUntilRound = completedRound + content.debt.bankruptcyLockRounds;
   return { proceeds, debtsCleared: owed };
 }

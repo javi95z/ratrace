@@ -223,6 +223,19 @@ describe('applyCards', () => {
     expect(result.state.player.life.focusUsed).toBe(2);
   });
 
+  it('locks an option that takes a loan while the bankruptcy lock lasts', () => {
+    const credit = card('credit', { options: [{}, { effects: { loan: 500_000, status: 4 } }] });
+    const { content, state } = one([credit]);
+    const locked = withPlayer(content, state, { bankruptUntilRound: 3 });
+    const refused = applyCards(content, locked, { credit: 1 });
+    expect(refused.events[0]).toMatchObject({ picked: 1, option: 0 });
+    expect(refused.state.player.debts).toEqual([]);
+    expect(previewCard(content, locked, 'credit')[1].available).toBe(false);
+    const free = withPlayer(content, { ...state, round: 3 }, { bankruptUntilRound: 3 });
+    expect(previewCard(content, free, 'credit')[1].available).toBe(true);
+    expect(applyCards(content, state, { credit: 1 }).events[0]).toMatchObject({ picked: 1, option: 1, cash: 500_000 });
+  });
+
   it('locks buying an item already owned, and a mortgage during the bankruptcy lock', () => {
     const car = card('car', { options: [{}, { effects: { buyItem: { itemId: 'car_basic', pricePct: 10 } } }] });
     const flat = card('flat', { options: [{}, { effects: { property: { typeId: 'studio', pricePct: 50, downPct: 5, rented: false } } }] });

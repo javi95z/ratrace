@@ -373,6 +373,8 @@ export interface DebtParams {
    * creditors recover, which the bankruptcy event reports.
    */
   fireSaleDiscountBp: Bp;
+  /** Status a bankruptcy costs for good. Going broke in public is remembered. */
+  bankruptcyStatusPenalty: number;
 }
 
 export interface ScoringParams {

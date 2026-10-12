@@ -214,6 +214,17 @@ describe('end of round: bankruptcy and status items', () => {
     expect(p.statusPoints).toBe(6 + 2);
   });
 
+  it('costs standing for good, by the amount the content sets', () => {
+    const harsh = fixtureContent();
+    harsh.debt.bankruptcyStatusPenalty = 5;
+    const { state, events } = applyRound(harsh, broke(2_000_000), { orders: [] });
+    expect(kinds(events)).toContain('bankrupt');
+    expect(state.player.life.bonusStatus).toBe(1);
+    expect(state.player.statusPoints).toBe(1 + 2);
+    const again = applyRound(harsh, state, { orders: [] }).state;
+    expect(again.player.life.bonusStatus).toBe(1);
+  });
+
   it('never liquidates a player whose items are worth more than they owe', () => {
     const { state, events } = play(broke(40_000_000));
     expect(kinds(events)).not.toContain('bankrupt');

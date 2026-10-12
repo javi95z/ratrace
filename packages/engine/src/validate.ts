@@ -200,6 +200,7 @@ export function validateContent(c: Content): string[] {
   if ([d.mortgageTermRounds, d.personalLoanTermRounds, d.bankruptcyLockRounds].some((x) => !isWhole(x) || x < 1)) {
     errors.push('debt terms must be positive integers');
   }
+  if (!isCount(d.bankruptcyStatusPenalty)) errors.push('debt.bankruptcyStatusPenalty must be a whole, non-negative number');
   const amounts = [d.personalLoanSpreadBp, d.mortgageSpreadBp, d.creditCardRateBp, d.personalLoanMaxIncomePct, d.bankruptcyIncomeMultiple];
   if (amounts.some((x) => !notNegative(x))) errors.push('debt rates, spreads and limits must not be negative');
 

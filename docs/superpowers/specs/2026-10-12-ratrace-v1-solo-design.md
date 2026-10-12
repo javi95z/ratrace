@@ -203,7 +203,9 @@ A player goes bankrupt when both of these are true at the end of a round:
 - credit card debt is above three times annual income (salary plus passive income, with one year of living cost as the floor), and
 - everything they own outside the pension is worth less than everything they owe.
 
-In bankruptcy everything outside the pension is sold at a 30% discount, every debt is cleared, and loans and mortgages are refused for three rounds. The game continues. Nobody is eliminated, which matters for rooms later.
+In bankruptcy everything outside the pension is sold at a 30% discount, status items included; every debt is cleared; memberships lapse; the lifestyle falls to the lowest tier the life allows; 25 status points are lost for good; and loans and mortgages are refused for three rounds, whether asked for in the finance phase or offered by a card. The game continues. Nobody is eliminated, which matters for rooms later.
+
+The lasting loss of status was added while balancing: without it, buying status on credit and going bankrupt every few rounds was the strategy with the top score most often.
 
 Three consequences are deliberate:
 

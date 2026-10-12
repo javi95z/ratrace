@@ -74,6 +74,11 @@ describe('validateContent: life data', () => {
     expect(life({ rentOutMinFinanceSkill: 5 })).toContain('life.rentOutMinFinanceSkill must be 0, 1 or 2');
   });
 
+  it('checks the status a bankruptcy costs', () => {
+    expect(errors({ debt: { ...c.debt, bankruptcyStatusPenalty: -1 } })).toContain('debt.bankruptcyStatusPenalty must be a whole, non-negative number');
+    expect(errors({ debt: { ...c.debt, bankruptcyStatusPenalty: 2.5 } })).toContain('debt.bankruptcyStatusPenalty must be a whole, non-negative number');
+  });
+
   it('checks the world rules', () => {
     const world = (over: Record<string, unknown>) => errors({ world: { ...c.world, ...over } as never });
     expect(world({ headlinesPerRound: 6 })).toContain('world.headlinesPerRound must be a whole number from 0 to 5');

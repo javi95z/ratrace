@@ -209,7 +209,7 @@ export const cards: Record<string, CardText> = {
     'Do it properly',
     'Go premium',
   ]),
-  house_flood: c('Water damage', 'The neighbour upstairs left a tap running for a weekend.', [
+  house_flood: c('Water damage', 'A pipe bursts while you are away for the weekend. It is your flat, so it is your bill.', [
     'Call the repair firm',
     'Do most of it yourself',
   ]),
@@ -318,8 +318,8 @@ export const cards: Record<string, CardText> = {
 
   // Health
   health_illness: c('A serious illness', 'Tests, a diagnosis, and a treatment plan with a price.', [
-    'Go private, now',
     'Use the public system and wait',
+    'Go private, now',
   ]),
   health_burnout: c('Burnout', 'You have been staring at the same email for an hour.', [
     'Push through',

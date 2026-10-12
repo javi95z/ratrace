@@ -117,6 +117,7 @@ const base: Content = {
     bankruptcyIncomeMultiple: 3,
     bankruptcyLockRounds: 3,
     fireSaleDiscountBp: 3_000,
+    bankruptcyStatusPenalty: 0,
   },
   scoring: {
     wealthBreakpoints: [

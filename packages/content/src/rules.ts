@@ -21,6 +21,7 @@ export const debt: DebtParams = {
   bankruptcyIncomeMultiple: 3,
   bankruptcyLockRounds: 3,
   fireSaleDiscountBp: 3_000,
+  bankruptcyStatusPenalty: 25,
 };
 
 export const scoring: ScoringParams = {

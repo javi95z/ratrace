@@ -28,7 +28,9 @@ export function optionAvailable(p: PlayerState, card: CardDef, index: number, at
   if ((effects.focus ?? 0) > focusLeft(p)) return false;
   const item = effects.buyItem;
   if (item !== undefined && p.life.items.some((owned) => owned.itemId === item.itemId)) return false;
-  if (effects.property !== undefined && effects.property.downPct < 100 && at.round < p.bankruptUntilRound) return false;
+  // No bank lends during the bankruptcy lock, through a card or otherwise.
+  const borrows = effects.loan !== undefined || (effects.property !== undefined && effects.property.downPct < 100);
+  if (borrows && at.round < p.bankruptUntilRound) return false;
 
   const trial = structuredClone(p);
   applyEffects(trial, effects, at);

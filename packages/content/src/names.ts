@@ -102,7 +102,7 @@ export const names: Record<Locale, Names> = {
       ...items,
       fashion_blazer: 'Blazer de Zara',
       fashion_polo: 'Polo Ralph Lauren',
-      fashion_loafers: 'Mocasines Gucci',
+      fashion_loafers: 'Mocasines de Gucci',
       art_stencil: 'Serigrafía de Banksy',
       art_cubist: 'Litografía de Picasso',
       travel_weekend: 'Escapada con Ryanair',

@@ -29,7 +29,7 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-18_000), homeValuePct: 9, status: 2 } },
     { effects: { cash: usd(-45_000), homeValuePct: 18, status: 5 } },
   ]),
-  card('house_flood', 'housing', { weight: 6, cooldown: 8 }, [
+  card('house_flood', 'housing', { weight: 6, cooldown: 8, when: { ownsHome: true } }, [
     { effects: { cash: usd(-7_000), protection: { insurance: 'home', coverPct: 90 } } },
     { effects: { focus: 1, cash: usd(-2_500), protection: { insurance: 'home', coverPct: 90 } } },
   ]),

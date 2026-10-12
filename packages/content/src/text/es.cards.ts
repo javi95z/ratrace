@@ -209,7 +209,7 @@ export const cards: Record<string, CardText> = {
     'Hacerlo bien',
     'Reforma de lujo',
   ]),
-  house_flood: c('Daños por agua', 'El vecino de arriba se dejó un grifo abierto todo el fin de semana.', [
+  house_flood: c('Daños por agua', 'Revienta una tubería mientras pasas el fin de semana fuera. El piso es tuyo, y la factura también.', [
     'Llamar a una empresa',
     'Hacerlo casi todo tú',
   ]),
@@ -249,7 +249,7 @@ export const cards: Record<string, CardText> = {
   ]),
   life_designer_sale: c('Venta privada', 'Un cuarenta por ciento menos, solo esta noche y con invitación.', [
     'Borrar el correo',
-    'Los {item:fashion_loafers}',
+    '{item:fashion_loafers}',
     'La {item:fashion_duffel}',
   ]),
   life_car_finance: c('Necesitas coche', 'El metro cierra a medianoche y tu nuevo trabajo no.', [
@@ -318,8 +318,8 @@ export const cards: Record<string, CardText> = {
 
   // Salud
   health_illness: c('Una enfermedad grave', 'Pruebas, un diagnóstico y un tratamiento con precio.', [
-    'Ir por la privada, ya',
     'Ir por la pública y esperar',
+    'Ir por la privada, ya',
   ]),
   health_burnout: c('Agotamiento', 'Llevas una hora mirando el mismo correo.', [
     'Seguir tirando',
