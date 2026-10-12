@@ -1,0 +1,457 @@
+# The Rat Race: v1 Solo Design
+
+Date: 2026-10-12
+Status: awaiting review
+
+## 1. Summary
+
+A web life-simulation game about money. The player lives one life from age 22 to 62, makes career, lifestyle and investment decisions each round, and tries to finish with the highest score. Score comes from wealth and status, multiplied by a bonus for escaping the rat race (passive income covers expenses).
+
+The game uses real brands, real companies, real coins and real cities, with simulated (not historical) markets. Visuals are detailed pixel art on a night-city palette. It is a personal project for the author and friends.
+
+This document covers **v1: the solo game**. Multiplayer and daily challenges are later phases, but the engine is designed for them now.
+
+### Goals for v1
+
+- A full solo life is playable start to finish in 20 to 30 minutes on a phone.
+- Finance is deep: stocks, funds, bonds, crypto, gold, property, debt, pensions and per-city taxes.
+- The player wants to start another life after finishing one.
+- Mobile-first, clean on desktop.
+- Spanish and English from day one.
+
+### Non-goals for v1
+
+- Accounts, backend, leaderboards, rooms, daily sprint.
+- Monetization, analytics, push notifications.
+- Margin, short selling, options, staking.
+- Hand touch-up of sprites.
+
+## 2. Decisions
+
+| Area | Decision |
+|---|---|
+| Purpose | Personal and friends project |
+| Core loop | Life-sim. Simultaneous rounds: swipe life cards, then manage finances |
+| Life length | Age 22 to 62, 20 rounds of 2 years |
+| Win rule | Fixed length. Score = (wealth + status) × escape multiplier |
+| Tone | Realistic, with luxury flavour |
+| World | Real brands, companies, coins and cities. No real people |
+| Markets | Simulated from a seed. No historical replay |
+| Name | The Rat Race, in English in every language |
+| Currency | US dollars everywhere, shown with the plain `$` sign |
+| Languages | Spanish and English |
+| Visual style | Pixel art, fine scale, night palette, moody city look |
+| Art source | Author generates drafts in ChatGPT; automated cleanup; no manual touch-up |
+| Asset icons | Code-drawn ticker badges, not logos |
+| Architecture | Pure deterministic engine, local-first web client, no backend in v1 |
+| Later multiplayer | Private rooms (2 to 6, live) and an async daily sprint (5 to 10 min) |
+
+## 3. Game design
+
+### 3.1 Round flow
+
+Each round covers two years and has four steps.
+
+1. **News.** Three headlines and three gauges (interest rate, inflation, market mood). Each headline hints at what happens next round and is true 70% of the time.
+2. **Life cards.** Three personal cards drawn from the deck, plus at most one world event shared by all players. Each card has two or three options. Effects are shown before the player commits.
+3. **Finance.** The player trades, borrows, repays, shops for status items, changes lifestyle tier, or moves city.
+4. **Resolve.** The engine applies everything and shows an animated ledger.
+
+Solo play is untimed. Rooms (later) use a 90-second round timer that ends early when all players are ready.
+
+### 3.2 Resolve order
+
+Order is fixed, because determinism depends on it.
+
+1. Apply card choices.
+2. Execute finance orders at the prices shown this round.
+3. Work out income and expenses from what the player now holds, at the rates shown this round. Income: salary for two years, dividends, coupons, deposit interest, rent, business profit. Expenses: living costs, item upkeep, debt service, insurance, family.
+4. Advance the world: regime, rates, inflation, asset prices, property indexes. Holdings change value.
+5. Pay the income and charge the expenses.
+6. Charge taxes: income, realised gains, dividends and rent, property.
+7. Cover any cash shortfall with credit card debt.
+8. Update skills, status, item values, family timers and age.
+9. Check escape, bankruptcy and achievements. Compute score.
+10. Draw next round's cards and news.
+
+### 3.3 Player state
+
+- **Money:** cash, holdings, properties, debts. Net worth = assets − debts.
+- **Income:** salary plus passive income.
+- **Expenses:** city living cost × lifestyle tier, plus upkeep, debt service, insurance and family. Living in a property you own removes the housing share of living cost (35%).
+- **Career:** track, level, employer. Salary = track base × level × city multiplier.
+- **Skills:** career skill and finance skill. Skills are a means and are not scored.
+- **Status:** points from items, home, job title and city.
+- **Focus:** 3 points per round by default. Overtime, a course, a side business, job hunting and moving city cost 1 point each; a master's degree or MBA costs 2. This stops "do everything" from being optimal.
+- **Family:** partner, children, dependants. Family changes expenses and housing needs.
+- **Insurance:** health, home, life, liability. Each softens or blocks specific event cards.
+- **Flags:** facts that cards read and write, used for card chains.
+
+### 3.4 The core tension
+
+Status items raise status but cost cash and upkeep. Assets raise passive income but give no status. Some items sit in between: certain watches, bags and art hold or gain value. Deciding when to buy status, and which status, is the heart of the game.
+
+### 3.5 Finance tools in v1
+
+| Tool | Behaviour |
+|---|---|
+| Current account | No interest |
+| Savings deposit | Rate follows the policy rate minus a spread |
+| Government bonds | US Treasury short, US Treasury long, German Bund. Coupon income; price falls when rates rise |
+| Index funds | S&P 500, MSCI World |
+| Stocks | Apple, Microsoft, Nvidia, Amazon, Tesla, Inditex, Santander, LVMH, Ferrari, Coca-Cola |
+| Crypto | Bitcoin, Ethereum, Dogecoin |
+| Gold | Inflation hedge |
+| Property | Studio, flat, family house, penthouse and villa in each city. Price = type base × city property index. Live in it or rent it out |
+| Pension plan | Contributions reduce taxable income. Follows MSCI World. Locked until the final round |
+| Own business | Started through cards. Costs focus and cash; risky; large upside |
+| Debt | Fixed mortgage, variable mortgage, personal loan, credit card |
+
+Each stock has an archetype that sets its behaviour: growth, dividend, cyclical, defensive or meme.
+
+### 3.6 Finance skill
+
+Tools unlock as finance skill grows. This keeps early rounds simple and doubles as onboarding.
+
+| Level | Unlocks |
+|---|---|
+| 0 | Current account, savings deposit, index funds, mortgage on own home, pension plan, personal loan, credit card |
+| 1 | Government bonds, gold, individual stocks |
+| 2 | Crypto, buy-to-let property, own business |
+
+Skill rises through course and book cards, and once, by one level, after three rounds of holding any investment. Level 2 is the maximum in v1. Cards can still offer a locked asset directly ("your cousin has a hot tip"), which lets a player gamble without understanding.
+
+### 3.7 Market model
+
+World state: regime, policy rate, inflation, crypto cycle, a price per asset and a property index per city.
+
+- **Regime** is a Markov chain over expansion, boom, slowdown, recession and recovery.
+- **Asset return** per round = class mean for the regime + beta × class shock + asset shock + rare event shock.
+- **Bonds:** return = coupon − duration × change in rate.
+- **Property:** base growth + momentum from last round − rate sensitivity × change in rate + city shock. Rent yield is per city.
+- **Crypto** has its own cycle (accumulation, bull, mania, winter), loosely tied to the regime. Dogecoin has a high beta and a small chance of losing 90% in a round.
+- **Dividends** are paid per asset at resolve.
+
+Parameter tables live in `packages/content` and are tuned with the balance harness. Initial acceptance bands, adjustable during milestone 1:
+
+- An index-fund-only bot escapes the rat race in 25% to 45% of seeds.
+- No single bot strategy has the top score in more than 40% of seeds.
+- The crypto-gambler bot goes bankrupt in 30% to 60% of seeds.
+
+### 3.8 Taxes
+
+Each city has a tax profile. Bracket thresholds scale with the city's median salary (0.5×, 1.5× and 4×). These are game values, deliberately simplified, and are not real tax rates.
+
+| City | Income tax by bracket | Capital gains | Dividends and rent | Special rule |
+|---|---|---|---|---|
+| Madrid | 19% / 30% / 45% | 21% | 21% | Pension deduction |
+| London | 20% / 40% / 45% | 20% | 20% | The first slice of gains and dividends each round is tax-free |
+| New York | 25% / 38% / 50% | 25% | 25% | Pension deduction |
+| Dubai | 0% | 0% | 0% | None |
+| Singapore | 5% / 15% / 22% | 0% | Dividends 0%; rent taxed as income | None |
+| Bangkok | 5% / 20% / 35% | 10% | 10% | None |
+
+Other rules:
+
+- Capital gains are taxed on realised profit. Losses offset gains in the same round only.
+- Buying property costs a purchase tax. Owning it costs a small yearly tax.
+- The Taxes tab shows an estimated bill before the player confirms the round.
+- World events can change a city's profile mid-game.
+
+### 3.9 Cities
+
+| City | Role | Salary | Living cost | Property | Prestige |
+|---|---|---|---|---|---|
+| Madrid | Balanced start | 2 | 2 | 3 | 2 |
+| London | Finance careers | 4 | 5 | 5 | 4 |
+| New York | Highest pay, highest tax | 5 | 5 | 5 | 5 |
+| Dubai | Zero-tax luxury | 4 | 4 | 3 | 5 |
+| Singapore | Low tax, expensive | 4 | 5 | 5 | 4 |
+| Bangkok | Low-cost base | 1 | 1 | 1 | 2 |
+
+Values are tiers from 1 to 5. Moving city costs cash and one focus point, and forces a home change.
+
+### 3.10 Status
+
+- Each item has a price, upkeep, status value and resale curve.
+- Within one ladder, the best owned item counts in full and the others count 25%.
+- Cars, tech and most fashion lose value. Rolex, Audemars Piguet, Patek Philippe, the Hermès Birkin and art can hold or gain.
+- The home ladder is where the player lives: a rented room, a rented flat, or any owned property.
+- Lifestyle tier multiplies living costs: frugal 0.7, normal 1.0, comfortable 1.4, lavish 2.0. Lavish gives a little status. Some cards push the tier up.
+
+### 3.11 Cards
+
+A card has an ID, category, draw conditions (age, city, job, family, wealth, flags), a weight, and two or three options. An option has effects on cash, income, expenses, skills, status, focus and flags. Effects may be probabilistic, rolled from the seeded card stream. Options can set flags that make follow-up cards eligible later.
+
+v1 ships 100 cards: Career 12, Education 6, Business 8, Investing 10, Housing 8, Lifestyle 10, Family 10, Health 5, Luck 8, World 12, Tax 6, Later life 5. The selection is the first N titles of each category in Appendix A.
+
+Scams and collapses never name a real brand.
+
+### 3.12 Bankruptcy
+
+If credit card debt exceeds three times annual income, the player goes bankrupt: assets and status items are sold at a discount, remaining debt is cleared, and new credit is unavailable for three rounds. The game continues. Nobody is eliminated, which matters for rooms later.
+
+### 3.13 Scoring
+
+`score = (W + S) × E / 100`, using integer arithmetic.
+
+- **W, wealth points:** linear interpolation between breakpoints. Net worth ≤ 0 → 0; 10k → 100; 100k → 200; 1M → 300; 10M → 400; 100M → 500.
+- **S, status points:** the status total. Item values are calibrated so a high-status life lands between 250 and 350.
+- **E, escape multiplier:** 100 if the player never escaped. Otherwise 125 + 3 × rounds remaining at the moment of escape.
+- **Escape** means passive income ≥ total expenses at two consecutive resolves. The multiplier is fixed by the first of the two.
+
+All constants are configuration and are tuned with the balance harness.
+
+## 4. Replay hooks in v1
+
+- **Starting lives.** Six lives with different jobs, cash, debts, perks and handicaps. Three are unlocked at first; three unlock through goals.
+- **Achievements.** Thirty badges (Appendix C).
+- **Collection.** A gallery of every status item the player has ever owned, with locked silhouettes for the rest.
+- **Records and history.** Personal bests and a list of past lives with net-worth graphs.
+- **Share card.** An image summarising the life, generated in the browser.
+
+| Life | Start | Perk | Handicap | Unlock |
+|---|---|---|---|---|
+| Nurse | Madrid | Cannot be laid off; paid night shifts | Low salary cap | Default |
+| Software engineer | Madrid | Remote work; share packages | Student loan | Default |
+| Civil servant | Madrid | Job for life; cheaper mortgage | Slow raises | Default |
+| Delivery rider | Madrid | 4 focus points | Unstable pay; no savings | Finish one life |
+| Heir | Madrid | Starts with cash and a flat | High lifestyle baseline; low skills | Reach 1M net worth |
+| Newcomer abroad | London | 4 focus points; language skill | Low cash; sends money home each round | Live in three cities in one life |
+
+## 5. Screens
+
+| Screen | Content |
+|---|---|
+| Home | Continue, new life, collection, records, settings |
+| New life | Choose a starting life. Locked lives show their unlock goal |
+| Round: News | Headlines and gauges |
+| Round: Cards | Swipe, or tap buttons. Effects visible before commit |
+| Round: Finance | Tabs: Portfolio, Market, Property, Debt, Taxes, Lifestyle |
+| Round: Resolve | Animated ledger; rat-race bar update |
+| HUD | Age, cash, cashflow, status, rat-race bar. Tapping opens the income statement and balance sheet |
+| Profile | Job, skills, family, insurance, focus |
+| End of life | Net-worth graph, score breakdown, achievements, unlocks, share card |
+| Collection | Items, badges, run history |
+
+Interaction rules:
+
+- Primary actions sit in the bottom half of the screen for one-handed use.
+- Buying and selling use a bottom sheet with an amount slider and 25%, 50% and 100% chips.
+- The first life is guided.
+- Swipes always have a button alternative. Tap targets are at least 44pt. A reduced-motion setting disables roll-ups and particle effects.
+
+Desktop (1024px and wider) uses the same components in three columns: profile and balance sheet on the left, the current step in the centre, market and news on the right. Mobile bottom sheets become docked panels.
+
+## 6. Visual style
+
+- **Scale:** one art pixel is one CSS pixel on mobile and two on desktop. Integer scaling only, `image-rendering: pixelated`.
+- **Palette:** 64 colours at most. The 31 below are fixed and are the only colours the interface uses. Sprites may use up to 33 more, chosen by the art tool from the approved sheets so that every hue in them survives (pure reds, oranges, forest greens, pinks, leather browns, rose gold, steel blues), and then frozen. A first preview with 48 colours turned a red car orange and a green dial black.
+- **Item tiles:** status items sit on cream tiles. Black and navy items are hard to read on the navy background.
+  `#0b1022 #141b33 #1f2a4d #263566 #3b4f8a #3b6ea5 #9ad1d4 #bfe3f0 #dff3ff #5c1a2a #8f2d3f #d1495b #e8788a #7a4f12 #c8891e #f2c14e #ffe9a8 #1f6f66 #2a9d8f #7fd1b9 #c98f6b #e8b796 #2e1f1a #4a3228 #1a1c2c #2b2f44 #4b5269 #8b93a7 #c9cfdc #f4f1e4 #ffffff`
+- **Theme:** night by default. Navy screen, cream cards, gold for the primary action.
+- **Type:** Pixelify Sans for titles and numbers; Inter for body text.
+- **Chrome:** panels, buttons, bars and ticker badges are drawn in CSS with 2px stepped pixel borders. They need no sprites.
+- **Reference look:** moody city pixel art, in the manner of Coffee Talk and VA-11 Hall-A.
+
+## 7. Art pipeline
+
+1. A prompt pack in `art/prompts/` holds one shared style block and one line per sprite, grouped into sheets.
+2. The author generates each sheet in ChatGPT and saves it to `art/raw/<group>/` under the given filename.
+3. `tools/art` processes each sheet: remove the key colour, find each object by its outline and assign it to the nearest grid cell (so an object that strays a few pixels over a cell line is not cut), downscale to the target size, snap to the palette, threshold alpha, remove stray pixels, trim and centre, add a 1px dark outline where the group asks for it.
+4. The tool writes cleaned sprites to `art/clean/`, a contact sheet per group, and a report that flags suspect sprites (touching the cell edge, too few opaque pixels, key-colour remnants, heavy stray-pixel correction).
+5. The author rejects sprites by name. Prompts are adjusted and only those sprites are regenerated.
+6. Approved sprites are packed into an atlas with a typed manifest keyed by content ID.
+
+Generation rules:
+
+- Sheets, not single images. Small sprites use a 4×4 grid of 16. Larger art uses smaller grids: cars 2×4, homes 3×3, card scenes 2×3, skylines 1×3. The prompt pack in `art/prompts/v1-prompt-pack.md` gives the layout of every sheet.
+- Scene sheets (card art, skylines) are full-bleed panels separated by gutters. The generator drew magenta gutters on the skyline sheets and thin white lines on the card sheets (at x 765 to 770 and y 336 to 341 and 676 to 681 on every card sheet). The tool finds either kind and falls back to an even grid.
+- Portraits fill their cells edge to edge, so they are cut on the fixed grid rather than by outline.
+- Solid magenta (`#ff00ff`) background.
+- One fixed view per ladder: cars side-on facing right, watches front-on, homes three-quarter.
+- Real brand logos may appear on products. No other text in any image. Prompts name the real model and also describe its shape and colour, so a line still works if the name has to be dropped.
+- The first approved sheet is attached as a style reference to every later prompt.
+- Each life's portraits are one sheet: the same person at four ages.
+
+| Sprite | Size (px) | v1 count |
+|---|---|---|
+| Finance tool and interface icons | 32×32 | 32 |
+| Achievement badges | 64×64 | 30 |
+| Status items (excluding cars and homes) | 64×64 | 27 |
+| Homes and property types | 128×128 | 7 |
+| Cars | 96×48 | 7 |
+| Portraits | 64×64 | 24 |
+| Card art | 288×120 | 45 |
+| City skylines | 312×66 | 6 |
+| Logo, wordmark, app icon, mascot | varies | 4 |
+
+A missing sprite falls back to a placeholder and is logged. The game is fully playable on placeholders.
+
+Expect 20% to 30% of sprites to be rejected on the first pass, and two or three rounds per group. Small flaws will remain; that is the accepted cost of no manual touch-up.
+
+## 8. Architecture
+
+### 8.1 Repository
+
+A pnpm monorepo.
+
+| Path | Purpose | Depends on |
+|---|---|---|
+| `packages/engine` | Game rules | Nothing |
+| `packages/content` | Game data, validated with zod | Engine types |
+| `apps/web` | Next.js client | Engine, content |
+| `tools/balance` | Bot simulations | Engine, content |
+| `tools/art` | Sprite pipeline (Node, sharp) | Nothing |
+
+### 8.2 Engine
+
+The engine is pure TypeScript with no DOM, network, clock or `Math.random`.
+
+```ts
+createGame(config: GameConfig, seed: string): GameState
+applyRound(content: Content, state: GameState, choices: RoundChoices): { state: GameState; events: GameEvent[] }
+```
+
+Content is passed in and is not stored in the state, so saved games stay small. `createGame` builds the whole 20-round world timeline from the seed.
+
+Selectors derive net worth, cashflow, tax estimate and score from a state.
+
+Modules: `rng`, `market`, `economy`, `tax`, `cards`, `life`, `status`, `scoring`. Each has one job and is tested alone.
+
+**Determinism rules.** The same seed and choices must produce the same state on every device and on a server, because later phases verify scores by replay.
+
+- Money is stored as integer cents. Rates and returns are integer basis points.
+- The engine uses only `+ − × ÷`, `Math.floor`, `Math.round` and `Math.sqrt`. A lint rule bans `Math.exp`, `Math.log`, `Math.pow` and trigonometry, whose results can differ between JavaScript engines.
+- Random normals come from summing twelve uniforms, not Box-Muller.
+- The RNG has separate named streams (market, cards, events) derived from the seed, so drawing an extra card never shifts market prices.
+
+**World and player are separate.** Markets and world events derive from the seed alone. A player's state derives from their own choices plus the world. A room server can later run the same engine unchanged.
+
+### 8.3 Content
+
+Content is data: cities, tax profiles, assets, market parameters, status items, cards, lives, achievements. It holds IDs and numbers only, never display text. The build validates every reference and fails on a broken one.
+
+### 8.4 Web client
+
+Next.js App Router, TypeScript strict, Tailwind, Motion for gestures and animation, Zustand for client state, next-intl for translation.
+
+Data flow: the UI collects the round's choices, calls `applyRound`, stores the new state, animates the resolve screen from the event list, then saves.
+
+### 8.5 Persistence
+
+IndexedDB, with three stores:
+
+- `currentGame`: seed, config, choice log and latest snapshot. Saved after every round.
+- `runs`: finished lives.
+- `profile`: unlocks, achievements, collection, settings.
+
+The save format carries a version number and migrations.
+
+### 8.6 Internationalisation
+
+- Routes are `/es/...` and `/en/...`. The first visit picks from the browser language and falls back to English.
+- UI text and content text live in `messages/{es,en}.json`. Content text is keyed by content ID.
+- Real brand names live in a separate name pack per locale, so they can be swapped for a parody pack if the game is ever published.
+- Numbers and currency use `Intl.NumberFormat` with `currency: 'USD'` and `currencyDisplay: 'narrowSymbol'`, so both languages show a plain `$`.
+- The build fails if any key lacks a translation.
+
+### 8.7 Failure handling
+
+| Failure | Response |
+|---|---|
+| Broken content reference | Build fails |
+| Missing translation | Build fails |
+| Corrupt save | Load the last good snapshot; if none, offer a new life and keep the profile |
+| Old save version | Run migrations; if one fails, treat as corrupt |
+| Missing sprite | Show a placeholder and log it |
+| Engine invariant broken (development) | Throw with the state hash and round number |
+
+### 8.8 Hosting
+
+Vercel. v1 has no server-side data.
+
+## 9. Testing
+
+- **Unit tests** (Vitest) for tax, mortgage amortisation, bond pricing, scoring, card conditions.
+- **Determinism test:** the same seed and choices give the same state hash.
+- **Property tests** (fast-check): no NaN, no negative holdings, net worth always equals assets minus debts.
+- **Golden replays:** stored choice logs must reproduce their recorded final state.
+- **Balance harness:** bots (saver, indexer, crypto gambler, status chaser, property leverager, random) play thousands of seeds. The run fails if results leave the bands in 3.7.
+- **Content lint:** every ID has Spanish and English text and a sprite or placeholder.
+- **End-to-end** (Playwright): a scripted full life at a phone viewport and a desktop viewport.
+- **Accessibility checks:** contrast on the night palette, tap-target size, keyboard play on desktop.
+
+## 10. Milestones
+
+Each milestone gets its own implementation plan.
+
+1. **Engine and balance harness.** A full life is playable in the terminal. Determinism, property and balance tests pass.
+2. **UI on placeholders.** A full life is playable in the browser on phone and desktop.
+3. **Content and languages.** All v1 content in Spanish and English. Content lint passes.
+4. **Art.** All v1 sprites through the pipeline and into the game.
+5. **Replay hooks.** Unlocks, achievements, collection, records, share card.
+6. **Polish.** Guided first life, desktop layout, accessibility, animation.
+
+The art prompt pack can be written alongside milestone 1, since generation is done by the author.
+
+## 11. Later phases
+
+Each will have its own design document.
+
+- **Daily sprint.** Nickname identity, a seeded 5 to 10 minute scenario, friends leaderboard, streak. The server replays the submitted choice log to verify the score.
+- **Private rooms.** Join by link or code, 2 to 6 players, shared seed, round timer, reconnect, live ranking.
+- **More content.** The rest of the catalog: seven more cities, about forty more assets and tools, thirty-five more status items, fifty more cards, eight more lives. Advanced tools (margin, short selling, options, staking) arrive here as finance skill level 3 and above.
+- **Polish.** Installable app, reminders.
+
+## 12. Risks
+
+| Risk | Mitigation |
+|---|---|
+| The game is not fun | Milestone 1 is engine-only so balance is tested before any UI exists |
+| One strategy dominates | Balance harness with fixed acceptance bands |
+| AI sprites are inconsistent | Sheets, a style anchor, fixed views, an automated report, placeholders as fallback |
+| Scope creep from the full catalog | v1 content is fixed by this document; the rest is a later phase |
+| Real brands, if the game is ever published | Engine uses IDs only; names and sprites are swappable packs. Sprites may carry real logos, so a public release swaps the sprite pack as well as the name pack. No real brand is cast as a villain |
+| Cross-device replay mismatch | Integer money and restricted maths, enforced by lint and the determinism test |
+
+The mascot is the rat in a suit with a briefcase and red tie that first appeared as the stencil print on the anchor sheet.
+
+## Appendix A: Card catalog
+
+Titles are in priority order within each category.
+
+- **Career:** ask for a raise, competitor offer, promotion with relocation, overtime crunch, layoff round, toxic boss, career switch, offer from Google / Inditex / Goldman Sachs, shares versus salary, remote work approved, become manager, headhunter call, sabbatical, burnout, civil-service exam.
+- **Education:** master's degree, finance course, finance book, MBA, coding bootcamp, new language, CFA, mentor, industry conference, public speaking.
+- **Business:** freelance gig, go self-employed, open a bar, online shop, rent spare room on Airbnb, launch an app, co-founder pitch, acquisition offer, YouTube channel, buy a franchise, partner dispute, first hire, business tax inspection, supplier fails.
+- **Investing:** cousin's hot tip, employer share plan, new memecoin, friend's startup round, IPO hype, "guaranteed 20% a month" scheme, crypto exchange freezes withdrawals, off-plan flat in Dubai, trading-guru course, property crowdfunding, parking space deal, private equity invite, NFT drop, timeshare pitch, inherited rural land, gold dealer.
+- **Housing:** rent hike, first flat, landlord sells, refinance fixed or variable, tenant stops paying, renovation, flood damage, move in with partner, area gentrifies, housemates, buy-to-let chance, building repair levy.
+- **Lifestyle:** colleague's sports car, Ibiza trip, new iPhone, wedding abroad, Rolex waitlist call, business-class upgrade, designer sale, lease or buy a car, bottle service, Black Friday, gym upgrade, neighbours' new kitchen, influencer envy, first-class lounge.
+- **Family:** start dating, wedding (three budgets), first child, prenup, sibling asks for a loan, friend asks you to co-sign, support parents, grandparent inheritance, divorce, school choice, second child, pet, partner loses job, partner's career booms.
+- **Health:** illness without insurance, burnout, dental emergency, sports injury, gym habit, therapy, parent needs care, health scare.
+- **Luck:** El Gordo ticket, car breakdown, tax refund, stolen phone, surprise bonus, phishing scam, speeding fine, betting app, lawsuit, casino night, found wallet, laptop dies, flight cancelled, old Bitcoin wallet found.
+- **World:** recession, rate hike, rate cut, inflation spike, crypto bull run, crypto winter, housing crash, tech bubble, AI boom, pandemic, election tax reform, bank failure, energy crisis, sovereign debt scare, new wealth tax, remote-work boom.
+- **Tax:** hire a tax advisor, pension top-up, optimise your return, tax audit, undeclared cash temptation, change tax residency, crypto reporting rule, inheritance tax bill, holding company, golden visa.
+- **Later life:** midlife-crisis Porsche, kids' university, early retirement option, downsizing, write your will, mentoring, pass on the business, big health check, grandchild.
+
+## Appendix B: Status items in v1
+
+- **Cars:** SEAT Ibiza, Toyota Corolla, VW Golf GTI, Tesla Model 3, BMW M3, Porsche 911, Lamborghini Aventador. (The generated top car reads as a Lamborghini; Ferrari arrives with the later supercar sheet.)
+- **Watches:** Casio F-91W, Tissot PRX, Omega Speedmaster, Rolex Submariner, Audemars Piguet Royal Oak, Patek Philippe Nautilus.
+- **Tech:** iPhone, MacBook Pro, PS5.
+- **Fashion:** Zara, Ralph Lauren, Gucci, Louis Vuitton, Hermès Birkin.
+- **Homes:** rented room, rented flat, then owned: studio, flat, family house, penthouse, villa.
+- **Travel:** Ryanair weekend, Ibiza summer, Emirates business class, Maldives resort.
+- **Memberships:** Basic-Fit, Soho House, Amex Platinum, Bernabéu season seat.
+- **Air and sea:** yacht charter week, NetJets charter.
+- **Education:** MBA at IESE.
+- **Art:** Banksy print, Picasso lithograph.
+
+## Appendix C: Achievements in v1
+
+- **Wealth:** first 100k, millionaire, millionaire by 35, ten million, debt-free at 40, never used the credit card.
+- **Escape:** out of the rat race, escaped before 40, escaped before 35, passive income twice expenses.
+- **Investing:** first share, five asset classes at once, bought the dip, held crypto through a winter, three rental properties, bond ladder, index funds only and escaped.
+- **Status:** first luxury watch, supercar owner, penthouse, status 100, twenty items collected, every car owned.
+- **Life:** three cities, moved to Dubai, family of four, MBA, sold a business, rode out a recession without selling.
+- **Misfortune:** bankrupt.
