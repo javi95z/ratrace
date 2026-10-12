@@ -1,7 +1,9 @@
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
+import { flowsOf } from './flows';
 import type { Cents } from './money';
 import { PRICE_LEVEL_START } from './rates';
 import { scoreOf } from './scoring';
+import { newTally } from './tally';
 import type { Content, GameView, PlayerState } from './types';
 
 /** Everything owned, with status items at what they would sell for, less everything owed. */
@@ -23,6 +25,16 @@ export function realNetWorth(state: GameView): Cents {
 export function finalScore(content: Content, state: GameView): number {
   const p = state.player;
   return scoreOf(realNetWorth(state), p.statusPoints, p.escapedAtRound, content);
+}
+
+/**
+ * The two sides of the escape test as the player stands now, before any order: passive income after
+ * the tax it would bear with no salary, and outgoings, both for one round. Unlike `previewRound`,
+ * this can be asked while the cards are still unanswered, so the rat-race bar always has a figure.
+ */
+export function escapeProgress(content: Content, state: GameView): { passiveAfterTax: Cents; outgoings: Cents } {
+  const { passiveAfterTax, outgoings } = flowsOf(content, state.player, state.timeline[state.round], newTally());
+  return { passiveAfterTax, outgoings };
 }
 
 /** Yearly figures at the current world's rates, for the HUD. */

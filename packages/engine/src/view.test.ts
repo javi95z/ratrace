@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { applyCards, applyRound, createGame, previewRound } from './game';
 import { assertViewInvariants, findInvariantBreaks, findViewBreaks } from './invariants';
 import { previewCard } from './life/cards';
-import { cashflow, finalScore, realNetWorth } from './selectors';
+import { cashflow, escapeProgress, finalScore, realNetWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import type { CardDef, GameState, GameView, LifeStart, Order } from './types';
 import { viewOf } from './view';
@@ -137,5 +137,24 @@ describe('findViewBreaks', () => {
     expect(findInvariantBreaks(content, noStream)).toEqual(['rng.cards is not a saved random stream']);
     expect(findViewBreaks(content, noStream)).toEqual([]);
     expect(() => assertViewInvariants(content, null as never)).toThrow('invariant broken: the state is not a game state');
+  });
+});
+
+describe('escapeProgress', () => {
+  it('gives both sides of the escape test at any point of a round, with no orders', () => {
+    const waiting = played(2);
+    expect(waiting.phase).toBe('cards');
+    const answered = applyCards(content, waiting, {}).state;
+    const expected = previewRound(content, answered, { orders: [] }).escape;
+    expect(escapeProgress(content, viewOf(answered))).toEqual(expected);
+    // Before the cards are answered there is no preview to ask, and the figure is still there.
+    expect(escapeProgress(content, viewOf(waiting))).toEqual(expected);
+    expect(expected.outgoings).toBeGreaterThan(0);
+  });
+
+  it('counts passive income after its own tax', () => {
+    const state = createGame({ content, start: fixtureStart() }, 'escape');
+    const withIncome = { ...state, player: { ...state.player, extraPassiveAnnual: 1_850_000, life: { ...state.player.life, recurring: [{ tag: 'bar', kind: 'passive' as const, annual: 1_850_000, roundsLeft: null }] } } };
+    expect(escapeProgress(content, withIncome)).toEqual({ passiveAfterTax: 3_567_000, outgoings: 3_600_000 });
   });
 });
