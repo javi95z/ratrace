@@ -1,10 +1,25 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`golden replay > reproduces the recorded final state 1`] = `
+exports[`golden replay > reproduces the recorded final state from the stored choice log 1`] = `
 {
   "escapedAtRound": null,
+  "executed": 107,
   "hash": "179b8c01b93e1d30",
+  "ledgerLines": [
+    "debtInterest",
+    "debtPrincipal",
+    "dividends",
+    "incomeTax",
+    "interest",
+    "investmentTax",
+    "living",
+    "propertyTax",
+    "purchaseTax",
+    "rent",
+    "salary",
+  ],
   "netWorth": 172941610,
+  "rejected": 1,
   "score": 308,
 }
 `;

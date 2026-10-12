@@ -215,6 +215,14 @@ describe('bankruptcy', () => {
     expect(checkBankruptcy(p, content, world, 3_000_000, 5)).toBeNull();
   });
 
+  it('counts the forced sale of property in the proceeds', () => {
+    const { content, world, p } = setup();
+    p.debts.push(card(30_000_000));
+    p.properties.push({ id: 'property-8', cityId: 'home', typeId: 'studio', value: 10_000_000, basis: 15_000_000, rented: true, mortgageId: null });
+    expect(checkBankruptcy(p, content, world, 3_000_000, 5)).toEqual({ proceeds: 7_000_000, debtsCleared: 30_000_000 });
+    expect(p.properties).toEqual([]);
+  });
+
   it('does not count the pension as an asset', () => {
     const { content, world, p } = setup();
     p.debts.push(card(9_000_001));

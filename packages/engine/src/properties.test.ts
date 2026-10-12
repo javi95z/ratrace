@@ -1,12 +1,16 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { applyRound, createGame } from './game';
+import { applyRound, createGame, previewRound } from './game';
 import { stateHash } from './hash';
 import { findInvariantBreaks } from './invariants';
+import { netWorth } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
-import type { GameState, Order } from './types';
+import type { GameState, LedgerLine, Order } from './types';
 
 const content = fixtureContent();
+
+/** A fixed seed, so a failure here is the same failure on every machine and every run. */
+const SEED = 20261012;
 
 const amount = fc.oneof(
   fc.integer({ min: -1_000, max: 50_000_000 }),
@@ -43,15 +47,25 @@ const game = fc.record({
   rounds: fc.array(fc.array(order, { maxLength: 6 }), { minLength: 20, maxLength: 20 }),
 });
 
-function play(input: { seed: string; cash: number; salary: number; tier: 0 | 1 | 2 | 3; rounds: Order[][] }): GameState {
-  const start = { ...fixtureStart(), cash: input.cash, salaryAnnual: input.salary, lifestyleTier: input.tier };
-  let state = createGame({ content, start }, input.seed);
+type Game = { seed: string; cash: number; salary: number; tier: 0 | 1 | 2 | 3; rounds: Order[][] };
+
+const begin = (input: Game): GameState =>
+  createGame({ content, start: { ...fixtureStart(), cash: input.cash, salaryAnnual: input.salary, lifestyleTier: input.tier } }, input.seed);
+
+function play(input: Game): GameState {
+  let state = begin(input);
   for (const orders of input.rounds) {
     state = applyRound(content, state, { orders }).state;
     expect(findInvariantBreaks(content, state)).toEqual([]);
   }
   return state;
 }
+
+/** Ledger lines that only move money between the player's own pockets. */
+const TRANSFERS: ReadonlySet<LedgerLine> = new Set<LedgerLine>(['debtPrincipal', 'depositDraw', 'creditCardDraw', 'creditCardRepay']);
+
+/** The rule for a price move, written out here so the test does not lean on the engine's own helper. */
+const moved = (value: number, returnBp: number) => Math.max(0, value + Math.round((value * returnBp) / 10_000)) - value;
 
 describe('engine invariants under arbitrary orders', () => {
   it('keeps money whole, non-negative and consistent for any seed and any orders', () => {
@@ -61,7 +75,7 @@ describe('engine invariants under arbitrary orders', () => {
         expect(state.round).toBe(20);
         expect(state.finished).toBe(true);
       }),
-      { numRuns: 200 },
+      { numRuns: 200, seed: SEED },
     );
   });
 
@@ -70,8 +84,43 @@ describe('engine invariants under arbitrary orders', () => {
       fc.property(game, (input) => {
         expect(stateHash(play(input))).toBe(stateHash(play(input)));
       }),
-      { numRuns: 50 },
+      { numRuns: 50, seed: SEED },
     );
+  });
+
+  it('changes net worth by exactly the ledger flows plus the price moves, in every round', () => {
+    let roundsChecked = 0;
+    fc.assert(
+      fc.property(game, (input) => {
+        let state = begin(input);
+        for (const orders of input.rounds) {
+          const before = netWorth(state.player);
+          const held = previewRound(content, state, { orders }).player;
+          const now = state.timeline[state.round];
+          const after = state.timeline[state.round + 1];
+          const result = applyRound(content, state, { orders });
+
+          if (!result.events.some((e) => e.kind === 'bankrupt')) {
+            let flows = 0;
+            for (const e of result.events) {
+              if (e.kind === 'ledger' && !TRANSFERS.has(e.line)) flows += e.amount;
+            }
+            let moves = 0;
+            for (const [id, position] of Object.entries(held.positions)) moves += moved(position.value, after.assetReturnBp[id]);
+            for (const property of held.properties) moves += moved(property.value, after.propertyReturnBp[property.cityId]);
+            const pensionYieldBp = 180 * content.yearsPerRound;
+            moves += moved(held.pension, after.assetReturnBp.fund_world) + Math.round((held.pension * pensionYieldBp) / 10_000);
+
+            expect(now.round).toBe(state.round);
+            expect(netWorth(result.state.player) - before).toBe(flows + moves);
+            roundsChecked += 1;
+          }
+          state = result.state;
+        }
+      }),
+      { numRuns: 150, seed: SEED },
+    );
+    expect(roundsChecked).toBeGreaterThan(2_500);
   });
 
   it('leaves Object.prototype untouched', () => {

@@ -1,9 +1,13 @@
 export * from './types';
 export type { Bp, Cents } from './money';
-export { createGame, applyRound } from './game';
+export { createGame, applyRound, previewRound } from './game';
+export type { RejectedOrder, RoundPreview } from './game';
+export type { RoundExpenses, RoundIncome } from './economy';
+export type { TaxBill } from './tax';
 export { netWorth, finalScore, cashflow } from './selectors';
-export { validateContent } from './validate';
+export { validateContent, validateStart } from './validate';
 export { propertyPrice } from './property';
 export { debtRateBp } from './debt';
+export { assetYieldBp, depositRateBp, indexed, INDEX_START, PRICE_LEVEL_START } from './rates';
 export { stateHash } from './hash';
 export { assertInvariants, findInvariantBreaks } from './invariants';
