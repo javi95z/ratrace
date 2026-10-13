@@ -2,7 +2,6 @@
 
 import { badgeArt } from '@ratrace/content';
 import { useGame, useT, useWords } from '@/game/context';
-import { Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
 /**
@@ -30,9 +29,9 @@ export function Celebrations() {
       ))}
       {unlocked.map((id) => (
         <div key={id} role="status" className="frame frame-gold flex animate-rise items-center gap-3 bg-gold-500 p-2 text-ink-900">
-          <Well className="size-10">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center">
             <Sprite id="icon.star" />
-          </Well>
+          </span>
           <div className="min-w-0">
             <p className="pixel text-[12px] uppercase tracking-wider">{t('unlocked')}</p>
             <p className="pixel text-[18px]">{text.lives[id]?.name ?? id}</p>

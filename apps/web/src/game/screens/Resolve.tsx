@@ -5,7 +5,7 @@ import type { GameEvent } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, roundNotes } from '@/game/present';
 import type { RoundNote } from '@/game/present';
-import { Panel, Row, Well } from '@/ui/kit';
+import { Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sprite } from '@/ui/Sprite';
 
@@ -47,9 +47,9 @@ export function Resolve() {
       <Celebrations />
       {notes.map((note, i) => (
         <div key={i} role="status" className={`frame flex animate-rise items-center gap-3 p-2 ${NOTE[note.tone]}`}>
-          <Well className="size-10">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center">
             <Sprite id={note.icon} />
-          </Well>
+          </span>
           <div className="min-w-0">
             <p className="pixel text-[17px]">{note.title}</p>
             {note.hint ? <p className="text-[13px] leading-snug">{note.hint}</p> : null}
