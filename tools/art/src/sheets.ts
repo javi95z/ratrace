@@ -53,7 +53,7 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
-    // Sixteen more rungs: travel, air and sea, art and fashion. Until it lands, `ITEM_STAND_IN` lends each an older picture.
+    // Sixteen more rungs: travel, air and sea, art and fashion.
     // The last cell is the shipowner's badge, drawn here beside the boats it is earned with.
     file: 'items/items-04', group: 'items', kind: 'objects', cols: 4, rows: 4, width: 64, height: 64,
     ids: [

@@ -401,48 +401,48 @@ Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cua
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/items/item.fashion_blazer.png" alt="Blazer de Zara"> | Blazer de Zara | 150 $ |  | +1 | 20 %, -60 % por ronda |  |
 | <img src="../art/clean/items/item.fashion_sneakers.png" alt="Air Jordan 1"> | Air Jordan 1 | 350 $ |  | +2 | 90 %, +2 % por ronda |  |
-| <img src="../art/clean/items/item.fashion_polo.png" alt="Gafas Persol"> | Gafas Persol | 450 $ |  | +2 | 30 %, -40 % por ronda |  |
+| <img src="../art/clean/items/item.fashion_sunglasses.png" alt="Gafas Persol"> | Gafas Persol | 450 $ |  | +2 | 30 %, -40 % por ronda |  |
 | <img src="../art/clean/items/item.fashion_polo.png" alt="Polo Ralph Lauren"> | Polo Ralph Lauren | 600 $ |  | +3 | 25 %, -50 % por ronda |  |
 | <img src="../art/clean/items/item.fashion_loafers.png" alt="Mocasines de Gucci"> | Mocasines de Gucci | 950 $ |  | +6 | 40 %, -30 % por ronda |  |
 | <img src="../art/clean/items/item.fashion_duffel.png" alt="Louis Vuitton Keepall"> | Louis Vuitton Keepall | 2.800 $ |  | +11 | 60 %, -15 % por ronda |  |
-| <img src="../art/clean/items/item.fashion_blazer.png" alt="Traje de Savile Row"> | Traje de Savile Row | 6.000 $ |  | +14 | 20 %, -50 % por ronda | Solo en Londres; se pierde al mudarse |
+| <img src="../art/clean/items/item.fashion_suit.png" alt="Traje de Savile Row"> | Traje de Savile Row | 6.000 $ |  | +14 | 20 %, -50 % por ronda | Solo en Londres; se pierde al mudarse |
 | <img src="../art/clean/items/item.fashion_birkin.png" alt="Hermès Birkin"> | Hermès Birkin | 14.000 $ |  | +25 | 95 %, +3 % por ronda |  |
-| <img src="../art/clean/items/item.fashion_blazer.png" alt="Abrigo de alta costura Chanel"> | Abrigo de alta costura Chanel | 25.000 $ |  | +30 | 40 %, -25 % por ronda |  |
+| <img src="../art/clean/items/item.fashion_coat.png" alt="Abrigo de alta costura Chanel"> | Abrigo de alta costura Chanel | 25.000 $ |  | +30 | 40 %, -25 % por ronda |  |
 
 ### Arte
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Notas |
 | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.art_stencil.png" alt="Lámina firmada de artista local"> | Lámina firmada de artista local | 600 $ |  | +2 | 50 %, -5 % por ronda |  |
-| <img src="../art/clean/items/item.art_stencil.png" alt="Fotografía de edición limitada"> | Fotografía de edición limitada | 5.000 $ |  | +6 | 80 %, 0 % por ronda |  |
+| <img src="../art/clean/items/item.art_local_print.png" alt="Lámina firmada de artista local"> | Lámina firmada de artista local | 600 $ |  | +2 | 50 %, -5 % por ronda |  |
+| <img src="../art/clean/items/item.art_photo.png" alt="Fotografía de edición limitada"> | Fotografía de edición limitada | 5.000 $ |  | +6 | 80 %, 0 % por ronda |  |
 | <img src="../art/clean/items/item.art_stencil.png" alt="Serigrafía de Banksy"> | Serigrafía de Banksy | 28.000 $ |  | +14 | 90 %, +5 % por ronda |  |
 | <img src="../art/clean/items/item.art_cubist.png" alt="Litografía de Picasso"> | Litografía de Picasso | 60.000 $ |  | +25 | 92 %, +4 % por ronda |  |
-| <img src="../art/clean/items/item.art_cubist.png" alt="Escultura de bronce"> | Escultura de bronce | 150.000 $ |  | +38 | 92 %, +3 % por ronda |  |
-| <img src="../art/clean/items/item.art_cubist.png" alt="Óleo de un maestro antiguo"> | Óleo de un maestro antiguo | 900.000 $ |  | +60 | 95 %, +4 % por ronda |  |
+| <img src="../art/clean/items/item.art_bronze.png" alt="Escultura de bronce"> | Escultura de bronce | 150.000 $ |  | +38 | 92 %, +3 % por ronda |  |
+| <img src="../art/clean/items/item.art_old_master.png" alt="Óleo de un maestro antiguo"> | Óleo de un maestro antiguo | 900.000 $ |  | +60 | 95 %, +4 % por ronda |  |
 
 ### Viajes
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Notas |
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/items/item.travel_weekend.png" alt="Escapada con Ryanair"> | Escapada con Ryanair | 300 $ |  | +2 |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.travel_weekend.png" alt="Pase de Interrail"> | Pase de Interrail | 1.200 $ |  | +3 |  | El estatus dura 2 años |
+| <img src="../art/clean/items/item.travel_interrail.png" alt="Pase de Interrail"> | Pase de Interrail | 1.200 $ |  | +3 |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_ibiza.png" alt="Verano en Ibiza"> | Verano en Ibiza | 2.500 $ |  | +5 |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.travel_ibiza.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +7 |  | El estatus dura 2 años. Solo en Madrid, Londres; se pierde al mudarse |
+| <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +7 |  | El estatus dura 2 años. Solo en Madrid, Londres; se pierde al mudarse |
 | <img src="../art/clean/items/item.travel_business_class.png" alt="Business de Emirates"> | Business de Emirates | 6.000 $ |  | +9 |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.travel_maldives.png" alt="Safari en el Masái Mara"> | Safari en el Masái Mara | 9.000 $ |  | +12 |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_safari.png" alt="Safari en el Masái Mara"> | Safari en el Masái Mara | 9.000 $ |  | +12 |  | El estatus dura 4 años |
 | <img src="../art/clean/items/item.travel_maldives.png" alt="Resort en Maldivas"> | Resort en Maldivas | 14.000 $ |  | +15 |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.travel_business_class.png" alt="Vuelta al mundo en primera"> | Vuelta al mundo en primera | 40.000 $ |  | +22 |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_world_first.png" alt="Vuelta al mundo en primera"> | Vuelta al mundo en primera | 40.000 $ |  | +22 |  | El estatus dura 4 años |
 
 ### Aire y mar
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Notas |
 | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Curso de vela"> | Curso de vela | 2.500 $ |  | +4 |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.air_jet_charter.png" alt="Vuelo en helicóptero"> | Vuelo en helicóptero | 6.000 $ |  | +8 |  | El estatus dura 2 años |
+| <img src="../art/clean/items/item.sea_sailing_course.png" alt="Curso de vela"> | Curso de vela | 2.500 $ |  | +4 |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.air_helicopter.png" alt="Vuelo en helicóptero"> | Vuelo en helicóptero | 6.000 $ |  | +8 |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Semana en yate"> | Semana en yate | 45.000 $ |  | +25 |  | El estatus dura 4 años |
 | <img src="../art/clean/items/item.air_jet_charter.png" alt="Vuelo con NetJets"> | Vuelo con NetJets | 80.000 $ |  | +30 |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Velero Beneteau"> | Velero Beneteau | 180.000 $ | 12.000 $/año | +35 | 75 %, -12 % por ronda |  |
-| <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Yate Sunseeker"> | Yate Sunseeker | 1.200.000 $ | 90.000 $/año | +70 | 70 %, -15 % por ronda | Solo en Dubái, Singapur; se pierde al mudarse |
+| <img src="../art/clean/items/item.sea_sailboat.png" alt="Velero Beneteau"> | Velero Beneteau | 180.000 $ | 12.000 $/año | +35 | 75 %, -12 % por ronda |  |
+| <img src="../art/clean/items/item.sea_motor_yacht.png" alt="Yate Sunseeker"> | Yate Sunseeker | 1.200.000 $ | 90.000 $/año | +70 | 70 %, -15 % por ronda | Solo en Dubái, Singapur; se pierde al mudarse |
 
 ### Clubes y abonos
 
@@ -750,7 +750,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.first_luxury_watch.png" alt="Primer reloj de lujo"> | Primer reloj de lujo | Ten un Omega Speedmaster o algo mejor. |
 | <img src="../art/clean/badges/badge.supercar.png" alt="Superdeportivo"> | Superdeportivo | Ten un Lamborghini Aventador. |
-| <img src="../art/clean/badges/badge.new.png" alt="Armador"> | Armador | Ten barco propio: el Velero Beneteau o el Yate Sunseeker. |
+| <img src="../art/clean/items/badge.shipowner.png" alt="Armador"> | Armador | Ten barco propio: el Velero Beneteau o el Yate Sunseeker. |
 | <img src="../art/clean/badges/badge.penthouse.png" alt="Ático"> | Ático | Ten un ático en propiedad. |
 | <img src="../art/clean/badges/badge.status_100.png" alt="Estatus 100"> | Estatus 100 | Llega a 100 de estatus. |
 | <img src="../art/clean/badges/badge.twenty_items.png" alt="Veinte cosas"> | Veinte cosas | Ten veinte cosas distintas, contando todas tus vidas. |
