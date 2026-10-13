@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Jersey_15 } from 'next/font/google';
+import { Chakra_Petch, Jersey_15 } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -9,7 +9,8 @@ import { routing } from '@/i18n/routing';
 import '../globals.css';
 
 const pixel = Jersey_15({ subsets: ['latin', 'latin-ext'], weight: '400', variable: '--font-jersey', display: 'swap' });
-const inter = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-inter', display: 'swap' });
+// The two weights the game sets sentences in: plain, and the heavier one of a headline.
+const reading = Chakra_Petch({ subsets: ['latin', 'latin-ext'], weight: ['400', '600'], variable: '--font-chakra', display: 'swap' });
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
 
@@ -42,7 +43,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={`${pixel.variable} ${inter.variable}`}>
+    <html lang={locale} className={`${pixel.variable} ${reading.variable}`}>
       <body>
         <NextIntlClientProvider>
           <GameProvider>{children}</GameProvider>

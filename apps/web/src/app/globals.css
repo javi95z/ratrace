@@ -46,12 +46,13 @@
   --color-current: currentColor;
 
   /*
-   * Jersey 15 for titles and numbers, Inter for anything read as a sentence. Jersey's figures are
+   * Jersey 15 for titles and numbers, Chakra Petch for anything read as a sentence. Chakra's cut
+   * corners repeat the geometry of the pixels, so the two read as one family. Jersey's figures are
    * told apart at a glance (its 5 is not an S, its 2 not a Z), which is why it took Pixelify's place.
-   * A sign Jersey does not draw is borrowed from Inter, not from whatever the device calls monospace.
+   * A sign Jersey does not draw is borrowed from Chakra, not from whatever the device calls monospace.
    */
-  --font-pixel: var(--font-jersey), var(--font-inter), system-ui, sans-serif;
-  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-pixel: var(--font-jersey), var(--font-chakra), system-ui, sans-serif;
+  --font-sans: var(--font-chakra), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Three columns from here up. */
   --breakpoint-desk: 64rem;

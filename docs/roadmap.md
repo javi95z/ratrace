@@ -8,12 +8,10 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 
 | # | Step | What you get | Status | Effort | Priority |
 |---|---|---|---|---|---|
-| 1–4 | Foundations | The design spec, 21 art sheets, the engine core, and the view of a game a client may hold | Done, reviewed | | |
-| 5 | Art cleanup tool | The 21 sheets become 203 final game sprites, with contact sheets to approve | Built; your approval of the contact sheets in `art/contact/` pending | | P0 |
+| 1–5 | Foundations and art | The design spec, the engine core, the view of a game a client may hold, and the art tool that turns the sheets you generate into final game sprites (244 from 24 sheets so far), with contact sheets you approved | Done, reviewed | | |
 | 6–7 | Life and first play | Cards, careers, family, insurance, status items, news and tax reforms, with all content in English and Spanish; the terminal game (`pnpm play`) and the balance bots (`pnpm balance`) | Done, reviewed | | |
-| 8 | Web game, solo | The real game on phone and desktop, in English and Spanish, with final art and local saves: `pnpm dev` | Built, reviewed; your play-test pending | | P0 |
-| 9–10 | Replay and polish | Three unlockable lives, thirty badges, a collection of everything ever owned, personal bests and past lives, a share card; a guided first life, an accessibility pass checked by an audit on every screen, a text pass in both languages | Done, reviewed | | |
-| 10b | Look and legibility | The "pixel de lujo" look on every screen, Jersey 15 for titles and amounts, sixteen kinds of property on the same tiles as everything else (eleven homes, five to let), icons on every choice of the lifestyle tab | Done, reviewed; your pick of the reading typeface pending (`docs/design/2026-10-13-body-typefaces.png`) | | |
+| 8 | Web game, solo | The real game on phone and desktop, in English and Spanish, with final art and local saves: `pnpm dev` | Built, reviewed; your play-test under way, fine so far | | P0 |
+| 9–10b | Replay, polish and look | Unlockable lives, thirty badges, a collection of everything ever owned, personal bests and past lives, a share card; a guided first life, an accessibility audit on every screen, a text pass in both languages; the "pixel de lujo" look with Jersey 15 for titles and amounts and Chakra Petch for reading, sixteen kinds of property, icons on every choice | Done, reviewed | | |
 | 11 | Online foundation | Supabase: sign-in, profiles, database, security rules, engine on the server | Planned | L | P1 |
 | 12 | Cloud saves | Saved games, history and unlocks on every device | Planned | M | P1 |
 | 13 | Ranked solo and rankings | Server-run games; global, weekly and friends rankings | Planned | M | P2 |

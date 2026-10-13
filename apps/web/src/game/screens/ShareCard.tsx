@@ -29,7 +29,7 @@ const browserLoader: SpriteLoader = (id) => {
 function families(): Record<'pixel' | 'sans', string> {
   const style = getComputedStyle(document.documentElement);
   const named = (name: string, otherwise: string) => style.getPropertyValue(name).trim() || otherwise;
-  return { pixel: named('--font-jersey', 'monospace'), sans: named('--font-inter', 'sans-serif') };
+  return { pixel: named('--font-jersey', 'monospace'), sans: named('--font-chakra', 'sans-serif') };
 }
 
 /**

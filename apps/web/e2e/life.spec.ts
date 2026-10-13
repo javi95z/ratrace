@@ -646,6 +646,10 @@ test('a first life is guided, one tip at a time, until the player says enough', 
   await startLife(page, 'en', 'Nurse');
   const tip = page.getByRole('note', { name: w.guide });
   await expect(tip).toContainText('Every round opens with the news');
+  // The two typefaces of the game: Chakra Petch for what is read as a sentence, Jersey 15 for titles and figures.
+  const faceOf = (locator: ReturnType<typeof page.locator>) => locator.evaluate((node) => getComputedStyle(node).fontFamily);
+  expect(await faceOf(tip.locator('p').nth(1))).toMatch(/^"?Chakra Petch/);
+  expect(await faceOf(page.getByRole('button', { name: w.toCards }))).toMatch(/^"?Jersey 15/);
   // The colours of a frame belong to the thing that names them: the gold panel and the gold button are lit in gold,
   // and a plain button inside the gold panel is not.
   const litIn = (locator: ReturnType<typeof page.locator>) => locator.evaluate((node) => getComputedStyle(node).boxShadow);

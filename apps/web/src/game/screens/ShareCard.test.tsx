@@ -88,13 +88,13 @@ describe('drawing the share card', () => {
     };
     // The names the page gave its two typefaces.
     document.documentElement.style.setProperty('--font-jersey', 'JerseyOfThePage');
-    document.documentElement.style.setProperty('--font-inter', 'InterOfThePage');
+    document.documentElement.style.setProperty('--font-chakra', 'ChakraOfThePage');
     await drawCard(ops, async () => sprite);
     document.documentElement.removeAttribute('style');
     const fontOf = (line: string) => (fake.calls.find(([k, , text]) => k === 'text' && text === line) as [string, string])[1];
     // The title is set at 15 on the grid: 60px on the canvas, grown by 0.56 / 0.4.
     expect(fontOf('THE RAT RACE')).toBe('400 84px JerseyOfThePage');
-    expect(fontOf('Age 62 · Madrid')).toBe('400 36px InterOfThePage');
+    expect(fontOf('Age 62 · Madrid')).toBe('400 36px ChakraOfThePage');
   });
 
   it('agrees with the page on how large that is', () => {
