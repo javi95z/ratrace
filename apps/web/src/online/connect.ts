@@ -13,7 +13,10 @@ export async function connectSupabase(url: string, key: string): Promise<Cloud> 
   const client = createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } });
   return {
     async currentUser() {
-      const { data } = await client.auth.getSession();
+      // A stored session that could not be renewed comes back as no session and an error. That is
+      // not "nobody is signed in": said so, the game would make a new guest over the stored player.
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
       return userOf(data.session?.user);
     },
     async signInAsGuest() {
@@ -25,8 +28,13 @@ export async function connectSupabase(url: string, key: string): Promise<Cloud> 
       const { error } = await client.auth.linkIdentity({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
+    async signInWithGoogle(redirectTo) {
+      // Replaces whoever is signed in here with the player the Google account belongs to.
+      const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
+      return error === null;
+    },
     async ensureProfile(userId, language) {
-      const { error } = await client.from('profiles').upsert({ user_id: userId, language }, { onConflict: 'user_id', ignoreDuplicates: true });
+      const { error } = await client.from('profiles').upsert({ user_id: userId, language }, { onConflict: 'user_id' });
       if (error) throw error;
     },
     onUser(listener) {

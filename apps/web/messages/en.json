@@ -530,11 +530,13 @@
     "title": "Account",
     "guest": "You are playing as a guest. Your account lives in this browser.",
     "keep": "Keep it with Google",
-    "keepHint": "The account becomes yours on any device. Your lives are still saved on this device only.",
+    "keepHint": "With Google it is the same account on every device, and it is not lost if this browser is cleared.",
     "member": "Kept with Google",
     "memberAs": "Signed in as {email}",
-    "taken": "That Google account already has a player in this game. Nothing was changed.",
-    "failed": "Google could not be reached. You are still a guest: try again later.",
+    "taken": "That Google account already has a player in this game. If it is you, use it here: what you have on this device joins it.",
+    "useExisting": "Use that account on this device",
+    "notNow": "Not now",
+    "failed": "Nothing was linked. You are still a guest.",
     "dismiss": "OK"
   }
 }

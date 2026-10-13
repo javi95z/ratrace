@@ -3,6 +3,8 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SupabaseAccount } from '@/online/supabase';
+import type { Cloud } from '@/online/supabase';
 import type { Account, AccountState } from '@/online/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Preferences } from './Settings';
@@ -37,6 +39,10 @@ function fakeAccount(initial: AccountState, kept = true) {
       asked.push(`keep ${returnTo}`);
       return kept;
     },
+    useExistingAccount: async (returnTo) => {
+      asked.push(`use ${returnTo}`);
+      return kept;
+    },
     dismissNotice: () => {
       asked.push('dismiss');
       if (state.kind === 'guest') state = { ...state, notice: null };
@@ -67,8 +73,7 @@ describe('the account in the settings', () => {
     show(account);
     const block = screen.getByRole('region', { name: 'Account' });
     expect(block.textContent).toContain('You are playing as a guest');
-    // Nothing is promised that is not true yet: lives are still saved on this device.
-    expect(block.textContent).toContain('still saved on this device only');
+    expect(block.textContent).toContain('the same account on every device');
     await user.click(screen.getByRole('button', { name: 'Keep it with Google' }));
     expect(asked).toContain(`keep ${window.location.href}`);
     // On its way to Google: a second press must not start a second journey.
@@ -83,28 +88,56 @@ describe('the account in the settings', () => {
     await waitFor(() => expect((screen.getByRole('button', { name: 'Keep it with Google' }) as HTMLButtonElement).disabled).toBe(false));
   });
 
-  it('says, once, that the Google account chosen already has a player, and that nothing changed', async () => {
+  it('offers a second device the account its Google already has, and can be told to leave it', async () => {
     const { account, asked } = fakeAccount({ kind: 'guest', userId: 'u', notice: 'taken' });
     const user = userEvent.setup();
     show(account);
-    expect(screen.getByRole('alert').textContent).toBe('That Google account already has a player in this game. Nothing was changed.');
-    await user.click(screen.getByRole('button', { name: 'OK' }));
+    // Most often it is the same player on another device: the way in is offered, and nothing is lost by taking it.
+    expect(screen.getByRole('alert').textContent).toBe('That Google account already has a player in this game. If it is you, use it here: what you have on this device joins it.');
+    await user.click(screen.getByRole('button', { name: 'Use that account on this device' }));
+    expect(asked).toContain(`use ${window.location.href}`);
+    expect((screen.getByRole('button', { name: 'Use that account on this device' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('lets the notice be put away, and is then a guest as before', async () => {
+    const { account, asked } = fakeAccount({ kind: 'guest', userId: 'u', notice: 'taken' });
+    const user = userEvent.setup();
+    show(account);
+    await user.click(screen.getByRole('button', { name: 'Not now' }));
     expect(asked).toContain('dismiss');
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.getByRole('button', { name: 'Keep it with Google' })).toBeTruthy();
   });
 
-  it('says when Google could not be reached', () => {
+  it('says plainly when nothing was linked, whatever the reason', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: 'failed' }).account);
-    expect(screen.getByRole('alert').textContent).toBe('Google could not be reached. You are still a guest: try again later.');
+    expect(screen.getByRole('alert').textContent).toBe('Nothing was linked. You are still a guest.');
+    expect(screen.queryByRole('button', { name: 'Use that account on this device' })).toBeNull();
   });
 
-  it('shows a kept account as kept, with who it is, and offers nothing more', () => {
-    show(fakeAccount({ kind: 'member', userId: 'u', email: 'ana@example.com' }).account);
+  it('shows a kept account as kept, with enough of the address to know it and not the whole of it', () => {
+    show(fakeAccount({ kind: 'member', userId: 'u', email: 'ana.garcia@example.com' }).account);
     const block = screen.getByRole('region', { name: 'Account' });
     expect(block.textContent).toContain('Kept with Google');
-    expect(block.textContent).toContain('ana@example.com');
+    // The settings are also drawn on the front door, where anyone beside the player can read them.
+    expect(block.textContent).toContain('an•••@example.com');
+    expect(block.textContent).not.toContain('ana.garcia');
     expect(screen.queryByRole('button', { name: 'Keep it with Google' })).toBeNull();
+  });
+
+  it('works over the real account, not only over a stand-in: a guest signs in, and is shown as one', async () => {
+    // The class the game really uses, on a cloud that answers at once. Its methods are handed to React loose,
+    // which is how a method that needs `this` breaks the whole page.
+    const cloud: Cloud = {
+      currentUser: async () => null,
+      signInAsGuest: async () => ({ id: 'user-1', is_anonymous: true, email: undefined }),
+      linkGoogle: async () => true,
+      signInWithGoogle: async () => true,
+      ensureProfile: async () => {},
+      onUser: () => () => {},
+    };
+    show(new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en', () => {}));
+    expect((await screen.findByRole('region', { name: 'Account' })).textContent).toContain('You are playing as a guest');
   });
 
   it('speaks Spanish', () => {

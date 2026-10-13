@@ -9,5 +9,6 @@ export const offlineAccount: Account = {
   subscribe: () => () => {},
   start: async () => {},
   keepWithGoogle: async () => false,
+  useExistingAccount: async () => false,
   dismissNotice: () => {},
 };

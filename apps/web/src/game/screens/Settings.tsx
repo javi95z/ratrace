@@ -3,10 +3,11 @@
 import { portraitArt } from '@ratrace/content';
 import { netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { ageAt, portraitAge } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
+import { maskEmail } from '@/lib/mask';
 import { routing } from '@/i18n/routing';
 import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -15,14 +16,29 @@ import { Sprite } from '@/ui/Sprite';
 const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
 
 /**
- * Who is playing, as the cloud knows them. A guest can keep the account with Google; nothing is
- * shown at all where the game has no cloud behind it, or could not reach it.
+ * Who is playing, as the cloud knows them. A guest can keep the account with Google, and a guest
+ * on a second device can take up the account their Google already has. Nothing is shown at all
+ * where the game has no cloud behind it, or could not reach it.
  */
 function AccountBlock() {
   const t = useT('account');
-  const { state, keepWithGoogle, dismissNotice } = useAccount();
+  const { state, keepWithGoogle, useExistingAccount, dismissNotice } = useAccount();
   const [leaving, setLeaving] = useState(false);
+  // A page brought back from Google by the Back button is the page as it was left, button pressed and all.
+  useEffect(() => {
+    const back = () => setLeaving(false);
+    window.addEventListener('pageshow', back);
+    return () => window.removeEventListener('pageshow', back);
+  }, []);
   if (state.kind === 'offline') return null;
+
+  // The page is about to leave for Google. If it could not, the button is there to try again.
+  const leaveWith = (go: () => Promise<boolean>) => () => {
+    setLeaving(true);
+    void go().then((begun) => {
+      if (!begun) setLeaving(false);
+    });
+  };
 
   return (
     <section aria-label={t('title')} className="bevel flex flex-col gap-2 bg-night-600 p-3">
@@ -30,35 +46,33 @@ function AccountBlock() {
       {state.kind === 'member' ? (
         <>
           <p className="pixel text-[16px] text-teal-300">{t('member')}</p>
-          {state.email ? <p className="break-all text-[13px] text-ink-200">{t('memberAs', { email: state.email })}</p> : null}
+          {state.email ? <p className="break-all text-[13px] text-ink-200">{t('memberAs', { email: maskEmail(state.email) })}</p> : null}
         </>
       ) : (
         <>
           <p className="text-[14px] leading-snug">{t('guest')}</p>
           {state.notice ? (
-            <div className="frame flex items-start gap-2 bg-wine-900 p-2">
-              <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug">
+            <div className="frame flex flex-col gap-2 bg-wine-900 p-2">
+              <p role="alert" className="text-[13px] leading-snug">
                 {t(state.notice)}
               </p>
-              <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
-                {t('dismiss')}
-              </Button>
+              <div className="flex gap-2">
+                {state.notice === 'taken' ? (
+                  <Button variant="primary" className="flex-1 text-[15px]" disabled={leaving} onClick={leaveWith(useExistingAccount)}>
+                    {t('useExisting')}
+                  </Button>
+                ) : null}
+                <Button variant="quiet" className="text-[14px]" onClick={dismissNotice}>
+                  {t(state.notice === 'taken' ? 'notNow' : 'dismiss')}
+                </Button>
+              </div>
             </div>
           ) : null}
-          <Button
-            variant="primary"
-            wide
-            // The page is about to leave for Google. If it could not, the button is there to try again.
-            disabled={leaving}
-            onClick={() => {
-              setLeaving(true);
-              void keepWithGoogle().then((begun) => {
-                if (!begun) setLeaving(false);
-              });
-            }}
-          >
-            {t('keep')}
-          </Button>
+          {state.notice === 'taken' ? null : (
+            <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
+              {t('keep')}
+            </Button>
+          )}
           <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
         </>
       )}

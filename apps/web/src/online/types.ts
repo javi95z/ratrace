@@ -12,7 +12,8 @@ export type AccountState =
 
 /**
  * Something the player should be told once about keeping their account.
- * `taken`: the Google account they chose already belongs to another player of this game.
+ * `taken`: the Google account they chose already belongs to a player of this game, most often
+ * themselves on another device. `failed`: nothing was linked, whatever the reason.
  */
 export type AccountNotice = 'taken' | 'failed';
 
@@ -21,13 +22,21 @@ export interface Account {
   state(): AccountState;
   /** Calls `listener` whenever the state changes. Returns how to stop. */
   subscribe(listener: () => void): () => void;
-  /** Signs in as a guest unless someone already is. Never throws: with no network the state stays `offline`. */
+  /**
+   * Signs in as a guest unless someone already is. Never throws: with no network the state stays
+   * `offline`, and it can be asked again later.
+   */
   start(language: string): Promise<void>;
   /**
    * Sends the player to Google to keep this account, and brings them back to `returnTo`.
    * The account stays the same one, so nothing has to be moved. Resolves false if it could not even begin.
    */
   keepWithGoogle(returnTo: string): Promise<boolean>;
+  /**
+   * Signs in as the player a Google account already belongs to, in place of the guest this
+   * browser has been so far, and comes back to `returnTo`. For a second device. Resolves false if it could not begin.
+   */
+  useExistingAccount(returnTo: string): Promise<boolean>;
   /** The player has read the notice. */
   dismissNotice(): void;
 }

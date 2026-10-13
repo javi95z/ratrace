@@ -530,11 +530,13 @@
     "title": "Cuenta",
     "guest": "Juegas como invitado. Tu cuenta vive en este navegador.",
     "keep": "Conservarla con Google",
-    "keepHint": "La cuenta pasa a ser tuya en cualquier dispositivo. Tus vidas siguen guardándose solo en este dispositivo.",
+    "keepHint": "Con Google es la misma cuenta en todos tus dispositivos, y no se pierde si se borran los datos de este navegador.",
     "member": "Conservada con Google",
     "memberAs": "Has entrado como {email}",
-    "taken": "Esa cuenta de Google ya tiene un jugador en este juego. No se ha cambiado nada.",
-    "failed": "No se ha podido llegar a Google. Sigues como invitado: inténtalo más tarde.",
+    "taken": "Esa cuenta de Google ya tiene un jugador en este juego. Si eres tú, úsala aquí: lo que tienes en este dispositivo se suma a ella.",
+    "useExisting": "Usar esa cuenta en este dispositivo",
+    "notNow": "Ahora no",
+    "failed": "No se ha vinculado nada. Sigues como invitado.",
     "dismiss": "Vale"
   }
 }

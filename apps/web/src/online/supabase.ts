@@ -13,13 +13,15 @@ export interface CloudUser {
  * having no network.
  */
 export interface Cloud {
-  /** Whoever this browser is already signed in as, or null. */
+  /** Whoever this browser is already signed in as, or null. Fails if it could not find out: that is not "nobody". */
   currentUser(): Promise<CloudUser | null>;
   /** Makes a guest account with no form. Null if the cloud would not. */
   signInAsGuest(): Promise<CloudUser | null>;
   /** Starts linking a Google account to the one signed in, and comes back to `redirectTo`. False if it could not start. */
   linkGoogle(redirectTo: string): Promise<boolean>;
-  /** Makes the player's profile row if it is not there yet. */
+  /** Starts signing in as the player a Google account already belongs to. False if it could not start. */
+  signInWithGoogle(redirectTo: string): Promise<boolean>;
+  /** Writes the player's profile row: made if it is not there, and its language brought up to date. */
   ensureProfile(userId: string, language: string): Promise<void>;
   /** Calls `listener` whenever who is signed in changes. Returns how to stop. */
   onUser(listener: (user: CloudUser | null) => void): () => void;
@@ -64,13 +66,17 @@ function withoutFailure(address: string): string {
  * The player's account in the cloud. It signs in as a guest on first launch, with no form, and
  * can be kept with Google later; either way it is the same account, so nothing has to be moved.
  * Every failure leaves the game where it would be with no cloud at all: playing, offline.
+ *
+ * Its methods are fields, not methods of the class: they are handed loose to whoever watches the
+ * account, and a method that needed `this` would break there.
  */
 export class SupabaseAccount implements Account {
   private current: AccountState = { kind: 'offline' };
   private readonly listeners = new Set<() => void>();
-  private cloud: Cloud | null = null;
+  private link: Cloud | null = null;
   private starting: Promise<void> | null = null;
   private notice: AccountNotice | null = null;
+  private stopListening: (() => void) | null = null;
 
   /**
    * `connect` loads the client, so a game that never goes online never downloads it.
@@ -82,33 +88,44 @@ export class SupabaseAccount implements Account {
     private readonly clean: (address: string) => void,
   ) {}
 
-  state(): AccountState {
-    return this.current;
-  }
+  /** The cloud, once someone is signed in to it. For what syncs to the account, not for screens. */
+  readonly cloud = (): Cloud | null => (this.current.kind === 'offline' ? null : this.link);
 
-  subscribe(listener: () => void): () => void {
+  readonly state = (): AccountState => this.current;
+
+  readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
-  }
+  };
 
-  start(language: string): Promise<void> {
-    return (this.starting ??= this.begin(language));
-  }
+  readonly start = (language: string): Promise<void> => {
+    // Already signed in: there is nothing to start. Asked while starting: the same start answers.
+    if (this.current.kind !== 'offline') return Promise.resolve();
+    return (this.starting ??= this.begin(language).finally(() => {
+      // A start that ended offline may be tried again later; one that signed in is not repeated.
+      this.starting = null;
+    }));
+  };
 
   private async begin(language: string): Promise<void> {
     try {
-      const cloud = await this.connect();
+      const cloud = this.link ?? (await this.connect());
       const here = this.address();
-      this.notice = noticeIn(here);
-      if (this.notice !== null) this.clean(withoutFailure(here));
+      const said = noticeIn(here);
+      if (said !== null) {
+        this.notice = said;
+        this.clean(withoutFailure(here));
+      }
 
+      // A failure to find out who is signed in is not "nobody": making a guest then would write
+      // a new player over the one this browser has stored. It throws, and the game stays offline.
       const user = (await cloud.currentUser()) ?? (await cloud.signInAsGuest());
       if (user === null) return;
-      this.cloud = cloud;
+      this.link = cloud;
       this.show(user);
-      cloud.onUser((next) => this.show(next));
+      this.stopListening ??= cloud.onUser((next) => this.show(next));
       // The profile row is the player's own first write. If it cannot be made now, the next launch makes it.
       void cloud.ensureProfile(user.id, language).catch(() => undefined);
     } catch {
@@ -116,9 +133,14 @@ export class SupabaseAccount implements Account {
     }
   }
 
-  async keepWithGoogle(returnTo: string): Promise<boolean> {
-    if (this.cloud === null) return false;
-    const begun = await this.cloud.linkGoogle(returnTo).catch(() => false);
+  readonly keepWithGoogle = async (returnTo: string): Promise<boolean> => this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
+
+  readonly useExistingAccount = async (returnTo: string): Promise<boolean> => this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+
+  /** Sends the player to Google one way or the other. If the journey cannot begin, a guest is told so. */
+  private async leaveFor(go: (cloud: Cloud) => Promise<boolean>): Promise<boolean> {
+    if (this.link === null || this.current.kind === 'offline') return false;
+    const begun = await go(this.link).catch(() => false);
     if (!begun && this.current.kind === 'guest') {
       this.notice = 'failed';
       this.set({ ...this.current, notice: 'failed' });
@@ -126,10 +148,10 @@ export class SupabaseAccount implements Account {
     return begun;
   }
 
-  dismissNotice(): void {
+  readonly dismissNotice = (): void => {
     this.notice = null;
     if (this.current.kind === 'guest' && this.current.notice !== null) this.set({ ...this.current, notice: null });
-  }
+  };
 
   private show(user: CloudUser | null): void {
     if (user === null) this.set({ kind: 'offline' });

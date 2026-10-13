@@ -216,13 +216,15 @@ export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
 const NOBODY: AccountState = { kind: 'offline' };
 
 /** Who is playing, as the cloud knows them, and the two things a player can do about it. */
-export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; dismissNotice(): void } {
+export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void } {
   const { account } = useGameContext();
   const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  // Back to the very page the player is on, without whatever a sign-in left after the hash.
+  const here = () => window.location.href.split('#')[0];
   return {
     state,
-    // Back to the very page the player is on, without whatever a sign-in left after the hash.
-    keepWithGoogle: () => account.keepWithGoogle(window.location.href.split('#')[0]),
+    keepWithGoogle: () => account.keepWithGoogle(here()),
+    useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
   };
 }
