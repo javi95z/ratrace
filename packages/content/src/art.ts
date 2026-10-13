@@ -105,13 +105,12 @@ export const cardArt: Record<string, string> = {
   world_ai_boom: scene('server_room'),
   world_pandemic: scene('empty_street'),
   world_tax_reform: scene('newsroom'),
-  // The six cards of the crises wait for sheet cards-18. Until it lands each borrows a scene: see CARD_STAND_INS.
-  crisis_crash_panic: scene('crash_screens'),
-  crisis_crash_layoffs: scene('packed_box'),
-  crisis_energy_bills: scene('price_tags'),
-  crisis_energy_wages: scene('empty_street'),
-  crisis_debt_spreads: scene('central_bank'),
-  crisis_debt_austerity: scene('receipts'),
+  crisis_crash_panic: scene('crisis_black_monday'),
+  crisis_crash_layoffs: scene('crisis_all_hands'),
+  crisis_energy_bills: scene('crisis_thick_bill'),
+  crisis_energy_wages: scene('crisis_picket'),
+  crisis_debt_spreads: scene('crisis_spread'),
+  crisis_debt_austerity: scene('crisis_cuts'),
   world_bank_failure: scene('bank_queue'),
 
   tax_advisor: scene('advisor_office'),
@@ -181,20 +180,17 @@ export const topicArt: Record<Headline['topic'], string> = {
 /** A badge, or `locked` for one not earned yet. */
 export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
 
-/** Cards that share a scene with another for want of their own. A test lets these, and only these, do so. */
-export const CARD_STAND_INS: readonly string[] = ['crisis_crash_panic', 'crisis_crash_layoffs', 'crisis_energy_bills', 'crisis_energy_wages', 'crisis_debt_spreads', 'crisis_debt_austerity'];
-
 /**
  * The picture of a moment that stops the game: leaving the rat race, going bankrupt, the first
- * million, and the opening of each crisis. Until sheet cards-19 lands each borrows a card's scene.
+ * million, and the opening of each crisis.
  */
 export const momentArt: Record<string, string> = {
-  escape: 'card.sunrise_balcony',
-  bankrupt: 'card.packed_box',
-  million: 'card.contract_signing',
-  crash: 'card.crash_screens',
-  energy: 'card.price_tags',
-  debt: 'card.central_bank',
+  escape: 'card.moment_escape',
+  bankrupt: 'card.moment_bankrupt',
+  million: 'card.moment_million',
+  crash: 'card.moment_crash',
+  energy: 'card.moment_energy',
+  debt: 'card.moment_debt',
 };
 
 /** A life is drawn at four ages. */

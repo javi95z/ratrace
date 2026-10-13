@@ -1621,6 +1621,66 @@
       "width": 288,
       "height": 120
     },
+    "card.crisis_black_monday": {
+      "file": "cards/card.crisis_black_monday.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crisis_all_hands": {
+      "file": "cards/card.crisis_all_hands.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crisis_thick_bill": {
+      "file": "cards/card.crisis_thick_bill.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crisis_picket": {
+      "file": "cards/card.crisis_picket.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crisis_spread": {
+      "file": "cards/card.crisis_spread.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crisis_cuts": {
+      "file": "cards/card.crisis_cuts.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_escape": {
+      "file": "cards/card.moment_escape.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_bankrupt": {
+      "file": "cards/card.moment_bankrupt.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_million": {
+      "file": "cards/card.moment_million.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_crash": {
+      "file": "cards/card.moment_crash.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_energy": {
+      "file": "cards/card.moment_energy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_debt": {
+      "file": "cards/card.moment_debt.png",
+      "width": 288,
+      "height": 120
+    },
     "skyline.madrid": {
       "file": "skylines/skyline.madrid.png",
       "width": 312,

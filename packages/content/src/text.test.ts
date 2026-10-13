@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { assetClassArt, CARD_STAND_INS, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, momentArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
+import { assetClassArt, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, momentArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
 import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
@@ -158,10 +158,7 @@ describe('content art', () => {
 
   it('gives every card a scene of its own, and no scene to a card that does not exist', () => {
     expect(keys(cardArt)).toEqual(ids(content.cards));
-    // No two cards share a scene, but for those still waiting for their own.
-    const drawn = content.cards.filter((card) => !CARD_STAND_INS.includes(card.id));
-    expect(new Set(drawn.map((card) => cardArt[card.id])).size).toBe(drawn.length);
-    for (const id of CARD_STAND_INS) expect(keys(cardArt)).toContain(id);
+    expect(new Set(Object.values(cardArt)).size).toBe(content.cards.length);
   });
 
   it('points only at sprites that exist', () => {

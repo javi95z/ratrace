@@ -349,6 +349,36 @@
     "w": 288,
     "h": 120
   },
+  "card.crisis_all_hands": {
+    "src": "cards/card.crisis_all_hands.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crisis_black_monday": {
+    "src": "cards/card.crisis_black_monday.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crisis_cuts": {
+    "src": "cards/card.crisis_cuts.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crisis_picket": {
+    "src": "cards/card.crisis_picket.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crisis_spread": {
+    "src": "cards/card.crisis_spread.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crisis_thick_bill": {
+    "src": "cards/card.crisis_thick_bill.png",
+    "w": 288,
+    "h": 120
+  },
   "card.crowd_building": {
     "src": "cards/card.crowd_building.png",
     "w": 288,
@@ -471,6 +501,36 @@
   },
   "card.meme_coin": {
     "src": "cards/card.meme_coin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_bankrupt": {
+    "src": "cards/card.moment_bankrupt.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_crash": {
+    "src": "cards/card.moment_crash.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_debt": {
+    "src": "cards/card.moment_debt.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_energy": {
+    "src": "cards/card.moment_energy.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_escape": {
+    "src": "cards/card.moment_escape.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_million": {
+    "src": "cards/card.moment_million.png",
     "w": 288,
     "h": 120
   },
