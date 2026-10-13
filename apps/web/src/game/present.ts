@@ -1,7 +1,7 @@
 import { cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed, ITEM_PERKS } from '@ratrace/engine';
-import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
+import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -57,9 +57,14 @@ export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] 
   return ITEM_PERKS.filter((perk) => (perks[perk] ?? 0) > 0).map((perk) => t(`perks.${perk}`, { n: perks[perk] ?? 0 }));
 }
 
-/** What a debt is called: its kind, and the thing it bought when it was taken to buy one. */
-export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem'>): string {
+/**
+ * What a debt is called: its kind, and what it bought. A mortgage is named for the home it is on,
+ * found among the properties given; a loan taken to buy a thing, for the thing.
+ */
+export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem'> & { id?: string }, properties: ReadonlyArray<Property> = []): string {
   const kind = words.text.debts[debt.kind];
+  const home = debt.id === undefined ? undefined : properties.find((property) => property.mortgageId === debt.id);
+  if (home) return `${kind} · ${words.text.propertyTypes[home.typeId]}, ${words.names.cities[home.cityId]}`;
   return debt.forItem !== undefined && words.names.items[debt.forItem] !== undefined ? `${kind} · ${words.names.items[debt.forItem]}` : kind;
 }
 
@@ -152,7 +157,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('borrow', { amount: fmt.money(order.amount) });
     case 'repay': {
       const debt = player.debts.find((d) => d.id === order.debtId);
-      return t('repay', { name: debt ? debtLabel(words, debt) : '', amount: fmt.money(order.amount) });
+      return t('repay', { name: debt ? debtLabel(words, debt, player.properties) : '', amount: fmt.money(order.amount) });
     }
     case 'buyProperty':
       return t(order.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[order.typeId] });

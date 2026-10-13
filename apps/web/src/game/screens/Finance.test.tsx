@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteProperty, viewOf } from '@ratrace/engine';
+import { previewRound, quoteItem, quoteOwnedProperty, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -177,8 +177,10 @@ describe('a parking space already owned', () => {
     // The same life, with a parking space bought in an earlier round, and beside it a flat that is let.
     const owning = (): GameView => {
       const view = session.view();
-      const let_ = (id: string, typeId: string) => ({ id, cityId: view.player.cityId, typeId, value: 4_000_000, basis: 4_000_000, rented: true, mortgageId: null });
-      return { ...view, player: { ...view.player, properties: [...view.player.properties, let_('property-8', 'parking'), let_('property-9', 'flat')] } };
+      const let_ = (id: string, typeId: string, mortgageId: string | null = null) => ({ id, cityId: view.player.cityId, typeId, value: 4_000_000, basis: 4_000_000, rented: true, mortgageId });
+      // The let flat still has a mortgage on it.
+      const mortgage = { id: 'debt-9', kind: 'mortgageFixed' as const, principal: 1_000_000, fixedRateBp: 300, roundsLeft: 8 };
+      return { ...view, player: { ...view.player, debts: [...view.player.debts, mortgage], properties: [...view.player.properties, let_('property-8', 'parking'), let_('property-9', 'flat', 'debt-9')] } };
     };
     const landlord: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: owning, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
     services.sessions.resume = async () => ({ lost: null, session: landlord });
@@ -189,6 +191,15 @@ describe('a parking space already owned', () => {
     // The flat can be taken off the market; the parking space cannot.
     expect(within(owned).getAllByRole('button', { name: 'Stop renting it out' })).toHaveLength(1);
     expect(within(owned).getAllByRole('button', { name: /^Sell for/ }).length).toBeGreaterThanOrEqual(2);
+
+    // What is let says what a year of it brings, the engine's own figure; the home lived in says nothing of rent.
+    const rents = ['property-8', 'property-9'].map((id) => quoteOwnedProperty(content, owning(), id)?.rentAnnual ?? 0);
+    expect(rents.every((rent) => rent > 0)).toBe(true);
+    expect(within(owned).getAllByText(/^Rent \+/).map((line) => line.textContent)).toEqual(rents.map((rent) => `Rent +${fmt.money(rent)}/yr`));
+
+    // A mortgage is named for the home it is on.
+    await user.click(screen.getByRole('tab', { name: 'Debt' }));
+    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Fixed mortgage · Flat, Madrid')).toBeTruthy();
   });
 });
 

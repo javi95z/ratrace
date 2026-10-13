@@ -199,7 +199,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
             {p.debts.map((debt) => (
               <li key={debt.id} className="frame bg-night-700 px-3 py-2">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="pixel text-[16px]">{debtLabel(words, debt)}</span>
+                  <span className="pixel text-[16px]">{debtLabel(words, debt, p.properties)}</span>
                   <span className="pixel text-wine-300">{fmt.money(debt.principal)}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1.5">

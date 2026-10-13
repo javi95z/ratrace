@@ -43,6 +43,11 @@ describe('debtLabel', () => {
     expect(debtLabel(words('en'), { kind: 'personalLoan' })).toBe('Personal loan');
     expect(debtLabel(words('en'), { kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('Personal loan · SEAT Ibiza');
     expect(debtLabel(words('es'), { kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('Préstamo personal · SEAT Ibiza');
+    // A mortgage is named for the home it is on, and not for another's.
+    const flat = { id: 'property-1', cityId: 'london', typeId: 'flat', value: 1, basis: 1, rented: false, mortgageId: 'debt-7' };
+    expect(debtLabel(words('en'), { id: 'debt-7', kind: 'mortgageFixed' }, [flat])).toBe('Fixed mortgage · Flat, London');
+    expect(debtLabel(words('es'), { id: 'debt-7', kind: 'mortgageVariable' }, [flat])).toBe('Hipoteca variable · Piso, Londres');
+    expect(debtLabel(words('en'), { id: 'debt-8', kind: 'mortgageFixed' }, [flat])).toBe('Fixed mortgage');
     // A thing no longer in the game is not named.
     expect(debtLabel(words('en'), { kind: 'personalLoan', forItem: 'gone' })).toBe('Personal loan');
   });

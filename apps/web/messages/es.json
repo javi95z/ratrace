@@ -349,6 +349,7 @@
       "startRenting": "Ponerlo en alquiler",
       "stopRenting": "Dejar de alquilarlo",
       "mortgageLeft": "Quedan {amount} de hipoteca",
+      "rentYear": "Renta +{amount}/año",
       "lets": "Renta {amount} al año",
       "buyLetTitle": "Comprar para alquilar: {home}",
       "rent": "Renta al año",

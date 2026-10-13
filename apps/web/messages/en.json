@@ -349,6 +349,7 @@
       "startRenting": "Rent it out",
       "stopRenting": "Stop renting it out",
       "mortgageLeft": "{amount} mortgage left",
+      "rentYear": "Rent +{amount}/yr",
       "lets": "Lets for {amount} a year",
       "buyLetTitle": "Buy to let: {home}",
       "rent": "Rent a year",

@@ -387,6 +387,8 @@ function PropertyTab() {
           const same = (order: Order) => order.type === 'setRented' && order.propertyId === property.id;
           // Whether it can be lived in is the engine's to say, like its price.
           const letOnly = quoteProperty(content, shown, property.typeId).letOnly;
+          // What a year of letting it brings is the engine's figure, shown for what is let now.
+          const rent = property.rented ? quoteOwnedProperty(content, shown, property.id)?.rentAnnual : undefined;
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
@@ -398,6 +400,7 @@ function PropertyTab() {
                   <span className="pixel block text-[17px]">{text.propertyTypes[property.typeId]}</span>
                   <span className="block text-[13px] text-ink-200">{names.cities[property.cityId]}</span>
                   <span className="pixel mt-1 block text-[17px] text-gold-500">{fmt.money(property.value)}</span>
+                  {rent !== undefined ? <span className="pixel block text-[14px] text-teal-300">{t('rentYear', { amount: fmt.money(rent) })}</span> : null}
                   <span className="mt-1 block text-[12px] text-ink-300">
                     {state}
                     {mortgage ? ` · ${t('mortgageLeft', { amount: fmt.money(mortgage.principal) })}` : ''}
@@ -483,7 +486,7 @@ function DebtTab() {
         {p.debts.map((debt) => (
           <div key={debt.id} className="flex items-center gap-3 border-t-2 border-night-900 py-2">
             <div className="min-w-0 flex-1">
-              <div className="truncate">{debtLabel(words, debt)}</div>
+              <div className="truncate">{debtLabel(words, debt, p.properties)}</div>
               <div className="text-[12px] text-ink-300">
                 {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })} · {t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}
               </div>
@@ -515,7 +518,7 @@ function DebtTab() {
 
       {repaying ? (
         <AmountSheet
-          title={amount('repay', { name: debtLabel(words, repaying) })}
+          title={amount('repay', { name: debtLabel(words, repaying, p.properties) })}
           max={Math.min(repaying.principal, p.cash)}
           onClose={() => setRepaying(null)}
           onConfirm={(a) => addOrder({ type: 'repay', debtId: repaying.id, amount: a })}
