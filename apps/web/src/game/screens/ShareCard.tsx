@@ -94,15 +94,18 @@ export function ShareCard({ ops, fileName, alt, load }: { ops: DrawOp[]; fileNam
     let url: string | null = null;
     let live = true;
     void (async () => {
-      const canvas = await drawCard(ops, load).catch(() => null);
-      const blob = canvas ? await toBlob(canvas) : null;
-      if (!live) return;
-      if (!blob) {
-        setPicture('failed');
-        return;
+      // Drawing, handing the picture over and wrapping it as a file can each be refused by a browser. Whichever it is, say so.
+      try {
+        const canvas = await drawCard(ops, load);
+        const blob = canvas ? await toBlob(canvas) : null;
+        if (!live) return;
+        if (!blob) throw new Error('no picture');
+        const file = new File([blob], fileName, { type: 'image/png' });
+        url = URL.createObjectURL(blob);
+        setPicture({ url, file });
+      } catch {
+        if (live) setPicture('failed');
       }
-      url = URL.createObjectURL(blob);
-      setPicture({ url, file: new File([blob], fileName, { type: 'image/png' }) });
     })();
     return () => {
       live = false;

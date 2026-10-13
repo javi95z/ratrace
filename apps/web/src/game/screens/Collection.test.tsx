@@ -29,9 +29,12 @@ describe('the collection', () => {
     expect(await screen.findByText(`2 of ${content.items.length} owned`)).toBeTruthy();
     const things = screen.getByRole('tabpanel', { name: 'Things' });
     expect(within(things).getAllByRole('listitem')).toHaveLength(content.items.length);
-    // Owned: drawn, and named for someone who cannot see it.
-    expect(within(things).getByRole('img', { name: 'Casio F-91W' })).toBeTruthy();
-    expect(within(things).getByRole('img', { name: 'SEAT Ibiza' })).toBeTruthy();
+    // Owned: drawn. Its name is the text beside it, said once, so the picture needs none of its own.
+    const casio = within(things).getByText('Casio F-91W').closest('li') as HTMLElement;
+    expect(casio.querySelector('img')?.getAttribute('src')).toContain('item.watch_casio');
+    expect(casio.querySelector('img')?.getAttribute('alt')).toBe('');
+    expect(within(casio).queryByText('Not owned yet')).toBeNull();
+    expect((within(things).getByText('SEAT Ibiza').closest('li') as HTMLElement).querySelector('img')?.getAttribute('src')).toContain('car.seat_ibiza');
     // Not owned: its name is there to aim for, its picture is a shadow.
     const rolex = within(things).getByText('Rolex Submariner').closest('li') as HTMLElement;
     expect(within(rolex).queryByRole('img')).toBeNull();

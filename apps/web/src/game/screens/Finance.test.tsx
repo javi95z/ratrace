@@ -29,6 +29,8 @@ const button = (name: string | RegExp) => screen.getByRole('button', { name });
 /** A life taken to the finances of its current round, without the screen. */
 async function inFinance(lifeId: string) {
   const services = memoryServices();
+  // The heir is a life a player has to unlock before choosing it.
+  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' } } });
   const session = await services.sessions.start(lifeId);
   await toFinance(session);
   return { services, session };

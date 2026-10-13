@@ -30,14 +30,14 @@ What each badge means, where the spec's one-line name left room:
 |---|---|
 | First 100k, Millionaire, Ten million | Net worth in start-of-game dollars reaches it at the end of a round |
 | Millionaire by 35 | The same, at age 34 or younger |
-| Debt-free at 40 | Owes nothing at age 40 |
+| Debt-free at 40 | Owes nothing at age 40, and has never gone bankrupt |
 | Never used the credit card | A whole life ends without a shortfall ever going on the card |
 | Out of the rat race, before 40, before 35 | The escape is won; by the age of its first covering round |
 | Passive income twice expenses | Passive income after tax is at least twice what a round costs |
 | First share | Holds any single stock |
 | Five asset classes at once | Holds five of: index funds, bonds, stocks, crypto, gold, property |
 | Bought the dip | Buys an index fund or a stock in a recession |
-| Held crypto through a winter | Holds coins at the start of a winter round, sells none, still holds them after |
+| Held crypto through a winter | Holds coins at the start of a winter round, places no order to sell any, still holds them after |
 | Three rental properties | Three properties rented out at once |
 | Bond ladder | Holds all three bonds at once |
 | Index funds only and escaped | Wins the escape having never held anything but index funds, and no property |
@@ -51,7 +51,7 @@ What each badge means, where the spec's one-line name left room:
 | Family of four | A partner and two children at home |
 | MBA | Holds the degree |
 | Sold a business | A card sells the business |
-| Rode out a recession without selling | Holds investments through a recession round and sells none |
+| Rode out a recession without selling | Holds investments through a recession round and places no order to sell any |
 | Bankrupt | Goes bankrupt |
 
 ### Unlocks follow from badges and finished lives
@@ -83,7 +83,7 @@ Personal bests are worked out from the finished runs by one pure function: best 
 
 | Screen | Content |
 |---|---|
-| Collection | Two tabs. Items: every status item, in colour once owned, a silhouette until then, grouped as the shop groups them. Badges: all thirty, with how each is earned; earned ones in colour with the date |
+| Collection | Two tabs. Items: every status item, in colour once owned, a silhouette until then, grouped as the shop groups them. Badges: all thirty, with how each is earned; earned ones in colour with the date, by the player's own clock |
 | Records | Personal bests, then every past life, the latest first |
 | Home | Gains the way to both |
 
@@ -91,7 +91,7 @@ A silhouette is the sprite used as a mask over a palette colour, so no colour ou
 
 ### Guided first life
 
-- Until a first life is finished, each stage of a round shows one short tip the first time it is reached: the news, a card, a result, the finances, the ledger, and a few that wait for their moment (the first refusal, the first round with money to invest, the first escape progress).
+- Until a first life is finished, each stage of a round shows one short tip the first time it is reached: the news, a card, the finances, the ledger, and four that wait for a later round (the rat-race bar, money left idle, focus, the flow). One tip a visit to a stage. On a card the tip follows the choices. Tips for a card's result, the first refusal and the first escape progress were planned and not built: the result and the ledger already say those things in place.
 - A tip is a panel in the flow of the page, not a dialog: it blocks nothing, can be closed, and "skip the guide" closes them all for good. Which tip is due is decided by one pure function.
 
 ### Accessibility
@@ -99,7 +99,7 @@ A silhouette is the sprite used as a mask over a palette colour, so no colour ou
 - An automated audit (axe) runs in the end-to-end tests on every screen at phone and desktop sizes, and must find nothing serious.
 - By hand, from the step 8 review: the focus moves to the new stage and the stage is announced; the tab list and tab panels are named; every page has one top heading and its own title; the two text colours that fell short of 4.5 to 1 are replaced; a locked card option says why it is locked.
 - The engine gains the reason a card option is locked, since only it knows.
-- A sheet closes on the phone's Back button.
+- A sheet closes on the phone's Back button. Its entry in the history is marked in the entry itself, taken out when the sheet closes by its own button, and stepped over if a change of page left it behind.
 - Amount and purchase sheets stay centred dialogs on a wide screen. The spec said "docked panels"; a dialog keeps one component and one focus trap, and reads well at 1440px. The spec is changed to say so.
 
 ### Text pass
@@ -127,4 +127,4 @@ Still deferred, with reasons, in the final report: always replaying a save on op
 - [x] 9. Text pass: the lint, unused keys, the read-through
 - [x] 10. The open minors of step 8
 - [x] 11. End-to-end for all of it, at the three sizes
-- [ ] 12. Fresh review and one fix pass
+- [x] 12. Fresh review and one fix pass

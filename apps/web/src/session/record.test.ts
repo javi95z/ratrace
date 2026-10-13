@@ -12,8 +12,8 @@ function play(rounds: number, orders: Parameters<typeof applyRound>[2]['orders']
   let state = createGame({ content, start: nurse }, 'record');
   let record = recordStart(content, state);
   const earned: string[][] = [];
-  const take = (after: GameState, events: Parameters<typeof recordStep>[4]) => {
-    const step = recordStep(content, record, state, after, events);
+  const take = (after: GameState, events: Parameters<typeof recordStep>[4], given: typeof orders = []) => {
+    const step = recordStep(content, record, state, after, events, given);
     record = step.record;
     earned.push(step.earned);
     state = after;
@@ -24,7 +24,7 @@ function play(rounds: number, orders: Parameters<typeof applyRound>[2]['orders']
       take(card.state, card.events);
     }
     const round = applyRound(content, state, { orders });
-    take(round.state, round.events);
+    take(round.state, round.events, orders);
   }
   return { state, record, earned };
 }
@@ -67,7 +67,21 @@ describe('the record of a life', () => {
     const record = recordStart(content, state);
     const copy = structuredClone(record);
     const card = applyCard(content, state, 0);
-    recordStep(content, record, state, card.state, card.events);
+    recordStep(content, record, state, card.state, card.events, []);
     expect(record).toEqual(copy);
+  });
+
+  it('hands the orders of a round to the badges, which is how selling and buying back is told from holding', () => {
+    // A hand-made round in a recession: the fund is still held, at the price paid, but an order sold some of it.
+    const state = createGame({ content, start: nurse }, 'record');
+    state.phase = 'finance';
+    state.timeline[0] = { ...state.timeline[0], regime: 'recession' };
+    state.player.positions.msci_world = { value: 500_000, basis: 500_000 };
+    const after = structuredClone(state);
+    after.round = 1;
+    after.timeline.push({ ...state.timeline[0], round: 1 });
+    const record = recordStart(content, state);
+    expect(recordStep(content, record, state, after, [], []).earned).toContain('rode_out_recession');
+    expect(recordStep(content, record, state, after, [], [{ type: 'sell', assetId: 'msci_world', amount: 1 }]).earned).not.toContain('rode_out_recession');
   });
 });

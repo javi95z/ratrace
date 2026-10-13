@@ -9,10 +9,15 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
 
 /**
  * A sheet that rises from the bottom of a phone, and sits in the middle of a wide screen.
+ * Whatever a tap opens to say more about something goes in one of these, over a dimmed page:
+ * details are never unfolded in place, where they would push the game about.
  * It takes the focus while it is open, keeps Tab inside it, closes on Escape, a tap outside or
  * the Back button of a phone, and gives the focus back to whatever opened it.
+ *
+ * `back={false}` leaves the history alone. It is for a sheet whose answer replaces the page: an
+ * entry of its own would be the one replaced, and the page it meant to leave would stay behind.
  */
-export function Sheet({ open, onClose, title, closeLabel, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; children: ReactNode }) {
+export function Sheet({ open, onClose, title, closeLabel, back = true, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; children: ReactNode }) {
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
   // The latest `onClose`, so that a parent which makes a new one on every draw does not reopen the effect below.
@@ -58,7 +63,7 @@ export function Sheet({ open, onClose, title, closeLabel, children }: { open: bo
       }
     };
     document.addEventListener('keydown', onKeyDown, true);
-    const forgetBack = closeOnBack(() => close.current());
+    const forgetBack = back ? closeOnBack(() => close.current()) : () => {};
 
     // When the thing that had the focus is taken out of the sheet (an order removed from a list),
     // the browser drops the focus on the page behind. Bring it back.
@@ -74,7 +79,7 @@ export function Sheet({ open, onClose, title, closeLabel, children }: { open: bo
       document.body.style.overflow = overflow;
       opener?.focus?.();
     };
-  }, [open]);
+  }, [open, back]);
 
   if (!open) return null;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { portraitArt } from '@ratrace/content';
-import { useRuns, useSettings, useT, useWords } from '@/game/context';
+import { useRuns, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { recordsOf } from '@/game/records';
 import { Link } from '@/i18n/navigation';
@@ -10,16 +10,12 @@ import { Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { WorthGraph } from './WorthGraph';
 
-const DAY: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' };
-
 /** Personal bests, and every life lived to the end with its graph. */
 export function Records() {
   const t = useT('records');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
-  const { locale } = useSettings();
   const runs = useRuns();
-  const day = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : 'en-GB', DAY);
   const lifeName = (run: FinishedRun) => text.lives[run.lifeId]?.name ?? run.lifeId;
   const records = recordsOf(runs ?? []);
 
@@ -76,7 +72,7 @@ export function Records() {
                     <div className="min-w-0 flex-1">
                       <p className="pixel text-[17px]">{lifeName(run)}</p>
                       <p className="text-[12px] text-ink-300">
-                        {day.format(run.finishedAt)} · {run.cities.map((city) => names.cities[city] ?? city).join(' · ')}
+                        {fmt.day(run.finishedAt)} · {run.cities.map((city) => names.cities[city] ?? city).join(' · ')}
                       </p>
                       <p className={`mt-0.5 text-[13px] ${run.escapedAtRound === null ? 'text-ink-200' : 'text-teal-300'}`}>
                         {run.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, run.escapedAtRound) })} · {t('badges', { count: run.badges.length })}

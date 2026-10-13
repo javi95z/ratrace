@@ -74,12 +74,12 @@
     "title": "Guía",
     "news": "Cada ronda empieza con las noticias. Cada titular da una pista de los próximos dos años, y se cumplen unos siete de cada diez. Léelos antes de mover tu dinero.",
     "cards": "La vida te reparte unas cuantas cartas cada ronda. Cada opción enseña lo que cuesta y lo que trae antes de elegir, con las probabilidades cuando hay dados. Una elección no se puede deshacer.",
-    "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, al dólar, el efectivo que tendrás después. Empieza por Cartera.",
+    "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, con exactitud, el efectivo que tendrás después. Empieza por Cartera.",
     "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
     "ratRace": "La barra de arriba es el juego entero: tus ingresos pasivos frente a lo que cuesta tu vida. Cubre ese coste dos rondas seguidas y sales de la rueda.",
     "invest": "El efectivo no rinde nada. El ahorro da un poco y es seguro. En Mercado hay fondos indexados, que puede comprar cualquiera, y se abre más según sube tu nivel de finanzas.",
     "focus": "En la pestaña Vida está tu foco: estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
-    "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda al dólar.",
+    "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda con exactitud.",
     "gotIt": "Entendido",
     "skip": "Quitar la guía"
   },
@@ -379,7 +379,7 @@
     "unlocked": "Nueva vida desbloqueada: {life}",
     "bestScore": "Nueva mejor puntuación",
     "bestNetWorth": "Tu vida más rica hasta ahora",
-    "bestEscape": "Tu salida más joven hasta ahora",
+    "bestEscape": "Tu salida más temprana hasta ahora",
     "bestStatus": "Más estatus que nunca",
     "collection": "Ver tu colección",
     "again": "Vivir otra vida",
@@ -406,7 +406,7 @@
     "bests": "Tus mejores marcas",
     "bestScore": "Mejor puntuación",
     "richest": "Mayor patrimonio",
-    "youngestEscape": "Salida más joven",
+    "youngestEscape": "Salida más temprana",
     "mostStatus": "Más estatus",
     "none": "Todavía ninguna",
     "lives": "{count, plural, one {1 vida vivida} other {# vidas vividas}}",
@@ -431,7 +431,9 @@
     "drawing": "Dibujando…",
     "alt": "{life}: puntuación {score}",
     "badges": "Insignias",
-    "netWorth": "Patrimonio, en dólares de tus 22 años"
+    "netWorth": "Patrimonio, en dólares de los 22 años",
+    "never": "Nunca salió de la rueda",
+    "escapedAt": "Fuera de la rueda a los {age}"
   },
   "orders": {
     "buy": "Comprar {name} · {amount}",

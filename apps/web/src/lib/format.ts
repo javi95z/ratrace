@@ -13,9 +13,13 @@ export interface Format {
   number(value: number): string;
   /** A percentage as a multiplier with two decimals: 125 → 1.25. */
   factor(pct: number): string;
+  /** A moment as a day, by the clock of whoever is reading: 13 Oct 2026. */
+  day(ms: number): string;
 }
 
 const TAGS: Record<string, string> = { en: 'en-US', es: 'es-ES' };
+/** Days are written day first in both languages; American English would put the month first. */
+const DAY_TAGS: Record<string, string> = { en: 'en-GB', es: 'es-ES' };
 const MINUS = '−';
 
 export function formatFor(locale: string): Format {
@@ -45,6 +49,8 @@ export function formatFor(locale: string): Format {
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const hundredths = new Intl.NumberFormat(tag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fix = (text: string) => text.replace('-', MINUS);
+  // No time zone is named: a badge earned late in the evening is dated the day the player earned it.
+  const days = new Intl.DateTimeFormat(DAY_TAGS[locale] ?? DAY_TAGS.en, { day: 'numeric', month: 'short', year: 'numeric' });
 
   // Rounded first, and never to a negative zero: forty cents owed is "$0", not "−$0", and its sign is a plus.
   const round = (value: number) => Math.round(value) || 0;
@@ -57,5 +63,6 @@ export function formatFor(locale: string): Format {
     change: (bp) => `${round(bp / 100) >= 0 ? '+' : MINUS}${whole.format(Math.abs(round(bp / 100)))}%`,
     number: (value) => fix(whole.format(round(value))),
     factor: (pct) => hundredths.format(pct / 100),
+    day: (ms) => days.format(ms),
   };
 }

@@ -15,6 +15,20 @@ describe('formatFor', () => {
     expect(plain(es.money(300_000))).toBe('3.000 $');
   });
 
+  it('writes a day as the clock of the player has it, not as London does', () => {
+    const zone = process.env.TZ;
+    process.env.TZ = 'Asia/Tokyo';
+    try {
+      // Half past eleven at night in London is already the next morning in Tokyo.
+      const late = Date.UTC(2026, 9, 13, 23, 30);
+      expect(formatFor('en').day(late)).toBe('14 Oct 2026');
+      expect(plain(formatFor('es').day(late))).toBe('14 oct 2026');
+    } finally {
+      if (zone === undefined) delete process.env.TZ;
+      else process.env.TZ = zone;
+    }
+  });
+
   it('signs an amount that is a change', () => {
     expect(en.signed(120_000)).toBe('+$1,200');
     expect(en.signed(-120_000)).toBe('−$1,200');

@@ -76,8 +76,12 @@ describe('choosing a life', () => {
 
     await user.click(await screen.findByRole('radio', { name: /^Civil servant/ }));
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    const entries = history.length;
     const ask = await screen.findByRole('dialog', { name: 'End the life you are living?' });
     expect(within(ask).getByText('Nurse, age 24. It ends here and is not recorded.')).toBeTruthy();
+    // Saying yes replaces this page with the game. An entry for the question would be the one replaced, and this page would stay behind it.
+    expect(history.length).toBe(entries);
+    expect((history.state as { ratraceSheet?: boolean } | null)?.ratraceSheet).not.toBe(true);
     expect((await saved(services))?.lifeId).toBe('nurse');
     expect(router.replace).not.toHaveBeenCalled();
 

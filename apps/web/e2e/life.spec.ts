@@ -16,6 +16,9 @@ const shot = async (page: Page, name: string, project: string) => {
   await page.screenshot({ path: `${SHOTS}/${project}-${name}.png` });
 };
 
+/** True while the page stands on the entry a sheet keeps in the history for Back to take away. */
+const onSheetEntry = (page: Page) => page.evaluate(() => (history.state as { ratraceSheet?: boolean } | null)?.ratraceSheet === true);
+
 test('a whole life, from the front door to the score', async ({ page }, info) => {
   const problems = watch(page);
   const w = WORDS.en;
@@ -62,6 +65,8 @@ test('a whole life, from the front door to the score', async ({ page }, info) =>
   await page.getByRole('link', { name: 'Save the picture' }).click();
   expect((await saving).suggestedFilename()).toMatch(/^rat-race-nurse-\d+\.png$/);
   await page.keyboard.press('Escape');
+  // The sheet takes its entry out of the history as it goes; a hand is not quick enough to reload before it has.
+  await expect.poll(() => onSheetEntry(page)).toBe(false);
 
   // Closing the page on the score does not lose it.
   const total = await score.locator('p').nth(1).textContent();
@@ -505,6 +510,83 @@ test('the Back button closes a sheet and leaves the life where it was', async ({
   await expect(page).toHaveURL(/\/en$/);
   await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
   expect(problems).toEqual([]);
+});
+
+test('Back is never spent on a sheet that is gone, and still closes the next one', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'the Back button is a phone habit');
+  const problems = watch(page);
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+
+  // The game is left from inside a sheet: the sheet's entry stays in the history, under the front door.
+  await page.getByRole('button', { name: w.openProfile }).click();
+  await page.getByRole('link', { name: 'Leave to the home screen' }).click();
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  await page.getByRole('link', { name: w.collection }).click();
+  await expect(page.getByRole('heading', { level: 1, name: w.collection })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+
+  // One Back from the front door is the game, with no sheet and no press wasted on the entry the sheet left.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/en\/play$/);
+  await expect(page.getByRole('button', { name: w.toCards })).toBeVisible();
+  await expect.poll(() => onSheetEntry(page)).toBe(false);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // And a sheet opened now closes on Back, as the first one would have.
+  await page.getByRole('button', { name: w.openProfile }).click();
+  await expect(page.getByRole('dialog', { name: w.yourLife })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/en\/play$/);
+  await expect(page.getByRole('button', { name: w.toCards })).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('a life started over another leaves no way back onto the chooser, and its sheets close on Back', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'the Back button is a phone habit');
+  const problems = watch(page);
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  await page.goto('/en');
+  await page.getByRole('link', { name: w.newLife }).click();
+  await page.getByRole('radio', { name: /^Civil servant/ }).click();
+  await page.getByRole('button', { name: w.start }).click();
+  // The question is a sheet, and saying yes replaces the chooser with the game.
+  await page.getByRole('dialog').getByRole('button', { name: 'End it and start this one' }).click();
+  await expect(page).toHaveURL(/\/en\/play$/);
+  await expect(page.getByRole('heading', { level: 1, name: /^Civil servant/ })).toBeAttached();
+  await settle(page);
+
+  await page.getByRole('button', { name: w.openProfile }).click();
+  await expect(page.getByRole('dialog', { name: w.yourLife })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/en\/play$/);
+
+  // With no sheet open, Back is the front door: the chooser is not in the way.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('on the smallest phone a tip of the guide never stands between the player and the choices of a card', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'a matter of a small screen');
+  await page.setViewportSize({ width: 360, height: 640 });
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  await page.getByRole('button', { name: w.toCards }).click();
+  const first = page.getByRole('group', { name: w.choices }).getByRole('button').first();
+  await expect(first).toBeVisible();
+  // The tip is there, after the choices; the first of them is on screen without a scroll.
+  await expect(page.getByRole('note', { name: w.guide })).toContainText('Life deals you a few cards');
+  await expect(first).toBeInViewport();
+  const tipTop = await page.getByRole('note', { name: w.guide }).evaluate((node) => node.getBoundingClientRect().top);
+  const choiceTop = await first.evaluate((node) => node.getBoundingClientRect().top);
+  expect(tipTop).toBeGreaterThan(choiceTop);
 });
 
 test('the round on screen survives a change of language', async ({ page }, info) => {

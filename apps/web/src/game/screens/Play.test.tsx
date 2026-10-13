@@ -3,6 +3,8 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { content, textFor } from '@ratrace/content';
+import { previewCard } from '@ratrace/engine';
 import type { GameSession, SavedGame } from '@/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
@@ -184,6 +186,23 @@ describe('the play screen', () => {
     expect(screen.queryByText('New best score')).toBeNull();
     expect(screen.getByRole('link', { name: 'See your collection' }).getAttribute('href')).toBe('/collection');
 
+    // The picture to share is shown to someone else: it speaks of the life, not to the player.
+    const written: string[] = [];
+    const pen = { fillRect() {}, drawImage() {}, measureText: () => ({ width: 1 }), fillText: (line: string) => written.push(line) };
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => pen as never);
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((done: BlobCallback) => done(new Blob(['png'], { type: 'image/png' })));
+    URL.createObjectURL = vi.fn(() => 'blob:picture');
+    URL.revokeObjectURL = vi.fn();
+    // No sprite arrives in a test: each is left out, and the rest is drawn.
+    vi.stubGlobal('Image', class { onerror: (() => void) | null = null; set src(_: string) { queueMicrotask(() => this.onerror?.()); } });
+    await user.click(button('Share this life'));
+    await screen.findByRole('img', { name: /^Civil servant: score/ });
+    expect(written).toContain(run.escapedAtRound === null ? 'Never left the rat race' : `Out of the rat race at ${22 + run.escapedAtRound * 2}`);
+    expect(written.some((line) => /\byou\b/i.test(line))).toBe(false);
+    await user.keyboard('{Escape}');
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+
     // The page is closed on the score and opened again: the score is still there.
     expect(((await services.store.loadGame()) as SavedGame).state.finished).toBe(true);
     cleanup();
@@ -207,8 +226,11 @@ describe('the play screen', () => {
 
     await user.click(button('See what life brings'));
     expect((await screen.findByRole('note', { name: 'Guide' })).textContent).toContain('Life deals you a few cards');
+    // On a card the choices come first: a tip must never push them off a small screen.
+    const choices = screen.getByRole('group', { name: /^Your choices/ });
+    expect(choices.compareDocumentPosition(screen.getByRole('note', { name: 'Guide' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // Left unread, a tip is still there the next time its stage comes round.
-    const options = within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button');
+    const options = within(choices).getAllByRole('button');
     await user.click(options[0]);
     await screen.findByRole('heading', { name: 'What happened' });
     expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
@@ -227,6 +249,8 @@ describe('the play screen', () => {
     renderGame(<Play />, services);
     await user.click(within(await screen.findByRole('note', { name: 'Guide' })).getByRole('button', { name: 'Skip the guide' }));
     expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+    // The button is gone and the keyboard is not left nowhere: the stage has the focus again.
+    expect(document.activeElement).toBe(screen.getByRole('main'));
     await user.click(button('See what life brings'));
     expect(screen.getByText(/^Card 1 of \d/)).toBeTruthy();
     expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
@@ -279,22 +303,80 @@ describe('the play screen', () => {
 
   it('celebrates a badge on the ledger of the round that earned it, and the life a round unlocked', async () => {
     const services = memoryServices();
-    const session = await services.sessions.start('nurse');
-    await playRounds(session, 19);
+    const real = await services.sessions.start('nurse');
+    // A round that earns a badge and unlocks a life, whatever is played.
+    services.sessions.resume = async () => ({
+      lost: null,
+      session: {
+        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => ['millionaire'],
+        answerCard: (option: number) => real.answerCard(option),
+        playRound: async (choices) => ({ ...(await real.playRound(choices)), earned: ['millionaire'], unlocked: ['heir'] }),
+      },
+    });
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
     await answerHand(user);
     await user.click(button('Play the round'));
     await screen.findByRole('heading', { name: 'Two years later' });
-    // The last round of a first life: never on the card (if it was not), and the rider unlocked.
     const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
-    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Delivery rider'))).toBe(true);
-    const [run] = await services.store.listRuns();
-    const profile = await services.store.loadProfile();
-    for (const id of ['no_credit_card'].filter((badge) => run.badges.includes(badge) && profile.badges[badge].at === run.finishedAt)) {
-      expect(news.some((text) => text.includes('Badge earned') && text.includes('Never on the card')), id).toBe(true);
+    expect(news.some((text) => text.includes('Badge earned') && text.includes('Millionaire') && text.includes('Be worth a million'))).toBe(true);
+    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
+    // Gone with the ledger: the next round opens without them.
+    await user.click(button('Next round'));
+    await screen.findByRole('button', { name: 'See what life brings' });
+    expect(screen.queryByText('Badge earned')).toBeNull();
+  });
+
+  it('says why a choice is locked in full strength, and dims only the choice', async () => {
+    const services = memoryServices();
+    // Played on, without the screen, to a card with a choice that is locked.
+    let session = await services.sessions.start('nurse');
+    const waiting = () => {
+      const view = session.view();
+      return view.phase === 'cards' ? previewCard(content, view, view.hand[view.answered]) : [];
+    };
+    for (let tries = 0; !waiting().some((option) => option.lock !== null); tries++) {
+      if (tries > 2000) throw new Error('no life met a locked choice');
+      if (session.view().finished) session = await services.sessions.start('nurse');
+      else if (session.view().phase === 'cards') await session.answerCard(waiting().findIndex((option) => option.available));
+      else await session.playRound({ orders: [] });
     }
+    const at = waiting().findIndex((option) => option.lock !== null);
+    const lock = waiting()[at].lock as NonNullable<ReturnType<typeof waiting>[number]['lock']>;
+    const user = userEvent.setup();
+    renderGame(<Play />, memoryServices(services.store));
+    // A hand not begun opens on the news; one begun opens on the card that waits.
+    await screen.findByRole('heading', { level: 1 });
+    const begin = screen.queryByRole('button', { name: 'See what life brings' });
+    if (begin) await user.click(begin);
+
+    const locked = within(await screen.findByRole('group', { name: /^Your choices/ })).getAllByRole('button')[at] as HTMLButtonElement;
+    expect(locked.disabled).toBe(true);
+    const dimmed = (node: Element) => node.closest('[class*="opacity-"]') !== null;
+    const reason = within(locked).getByText(textFor('en').text.optionLocks[lock]);
+    // The reason is what the player needs to read: nothing on the way up to it takes its strength away.
+    expect(dimmed(reason)).toBe(false);
+    // What cannot be chosen is dimmed.
+    expect(dimmed(within(locked).getByText('Locked').previousElementSibling as Element)).toBe(true);
+  });
+
+  it('gives one tip a visit, and hands the focus back to the stage when a tip is read', async () => {
+    const services = memoryServices();
+    // The stage tips are read; the ones that wait for the second round are not.
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), guide: { seen: ['news', 'cards', 'finance', 'ledger', 'ratRace'], off: false } });
+    const session = await services.sessions.start('nurse');
+    await playRounds(session, 1);
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const tip = await screen.findByRole('note', { name: 'Guide' });
+    expect(tip.textContent).toContain('Cash earns nothing');
+    await user.click(within(tip).getByRole('button', { name: 'Got it' }));
+    // The next tip in line waits for the next visit: nothing takes the place of the one just read.
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('main'));
+    await waitFor(async () => expect((await services.store.loadProfile()).guide.seen).toContain('invest'));
   });
 
   it('marks a second life that beats the first', async () => {

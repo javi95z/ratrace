@@ -2,14 +2,12 @@
 
 import { badgeArt, badges, itemArt } from '@ratrace/content';
 import { useId, useState } from 'react';
-import { useProfile, useSettings, useT, useWords } from '@/game/context';
+import { useProfile, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { Tabs } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
 type Tab = 'items' | 'badges';
-
-const DAY: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' };
 
 /** Every thing in the game, grouped as the shop groups them: in colour once owned in any life, a shadow until then. */
 function Things() {
@@ -31,7 +29,8 @@ function Things() {
                 const owned = gallery.includes(item.id);
                 return (
                   <li key={item.id} className={`frame flex flex-col items-center gap-1 p-2 text-center ${owned ? 'frame-cream bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}>
-                    <Sprite id={itemArt(item.id)} alt={owned ? names.items[item.id] : ''} silhouette={!owned} fallback={{ w: 64, h: 64 }} />
+                    {/* The name stands under the picture, so the picture itself says nothing more. */}
+                    <Sprite id={itemArt(item.id)} silhouette={!owned} fallback={{ w: 64, h: 64 }} />
                     <span className="text-[13px] leading-tight">{names.items[item.id]}</span>
                     {owned ? null : <span className="text-[11px] leading-tight text-ink-300">{t('notOwned')}</span>}
                   </li>
@@ -48,10 +47,8 @@ function Things() {
 function Badges() {
   const t = useT('collection');
   const labels = useT('badges');
-  const { text } = useWords();
-  const { locale } = useSettings();
+  const { text, fmt } = useWords();
   const { badges: earned } = useProfile();
-  const day = new Intl.DateTimeFormat(locale === 'es' ? 'es-ES' : 'en-GB', DAY);
   const groups = [...new Set(badges.map((badge) => badge.group))];
 
   return (
@@ -71,7 +68,7 @@ function Badges() {
                     <div className="min-w-0 flex-1">
                       <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{text.badges[badge.id].name}</p>
                       <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p>
-                      <p className={`mt-0.5 text-[12px] ${got ? 'text-teal-300' : 'text-ink-300'}`}>{got ? labels('earnedOn', { date: day.format(got.at) }) : labels('notYet')}</p>
+                      <p className={`mt-0.5 text-[12px] ${got ? 'text-teal-300' : 'text-ink-300'}`}>{got ? labels('earnedOn', { date: fmt.day(got.at) }) : labels('notYet')}</p>
                     </div>
                   </li>
                 );

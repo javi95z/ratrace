@@ -19,8 +19,8 @@ function saved(rounds: number, answered = Infinity): SavedGame {
   const log: RoundLog[] = [];
   let record = recordStart(content, state);
   /** Takes a step and keeps the record of the life, as a session does. */
-  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }) => {
-    record = recordStep(content, record, state, result.state, result.events).record;
+  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }, orders: Parameters<typeof recordStep>[5] = []) => {
+    record = recordStep(content, record, state, result.state, result.events, orders).record;
     state = result.state;
   };
   for (let i = 0; i <= rounds; i++) {
@@ -34,7 +34,7 @@ function saved(rounds: number, answered = Infinity): SavedGame {
     if (i === rounds) break;
     if (!log.includes(entry)) log.push(entry);
     entry.orders = [{ type: 'focus', action: 'studyCareer' }, { type: 'depositIn', amount: 10_000 }];
-    take(applyRound(content, state, { orders: entry.orders }));
+    take(applyRound(content, state, { orders: entry.orders }), entry.orders);
   }
   expect(record.history[0]).toBe(realNetWorth(createGame({ content, start: nurse.start }, 'save-seed')));
   return {

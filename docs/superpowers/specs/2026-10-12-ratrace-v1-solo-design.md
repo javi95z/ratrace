@@ -71,7 +71,7 @@ Order is fixed, because determinism depends on it.
 6. Charge the tax from step 3: income tax on salary and business profit, tax on realised gains, dividends, interest and rent, and the yearly property tax. Property purchase tax was already paid in step 2.
 7. Cover any cash shortfall from the savings deposit first, then with credit card debt. Spare cash pays the card down.
 8. Update skills, status, item values, family timers and age.
-9. Check escape (won or lost, see 3.13), bankruptcy and achievements. Add this round's status to the running total the score averages. Compute score.
+9. Check escape (won or lost, see 3.13) and bankruptcy. Add this round's status to the running total the score averages. Compute score. Achievements are not part of the round: they are judged after it, outside the engine, from what the round did (section 4).
 10. Draw next round's cards and news.
 
 ### 3.3 Player state
@@ -251,8 +251,9 @@ Asset values, property prices and debts are nominal and are not converted. So in
 ## 4. Replay hooks in v1
 
 - **Starting lives.** Six lives with different jobs, cash, debts, perks and handicaps. Three are unlocked at first; three unlock through goals.
-- **Achievements.** Thirty badges (Appendix C).
-- **Collection.** A gallery of every status item the player has ever owned, with locked silhouettes for the rest.
+- **Achievements.** Thirty badges (Appendix C). Each is a small rule over one step of a life: the game before it, the orders, what happened, the game after it, and a short journal of the life (cities lived in, whether the card was ever used, kinds of asset ever held, badges already earned). The rules live with the content, not in the engine, so a life plays the same with or without them and a saved game stays valid. Whoever runs the game judges them: the device today, the server later, with the same code. A screen never does.
+- **Collection.** A gallery of every status item the player has ever owned. A thing not owned yet is a silhouette with its name, and every badge says how it is earned: they are goals to aim for. Two badges count the gallery across all lives, and are credited to the life that completed them.
+- **The profile is the record, and it is caught up.** Every step tells the profile all the badges of the life so far, not only the newest, and opening a life in progress does the same. A badge earned while the device could not write is recorded as soon as it can.
 - **Records and history.** Personal bests and a list of past lives with net-worth graphs.
 - **Share card.** An image summarising the life, generated in the browser.
 
@@ -278,19 +279,22 @@ Asset values, property prices and debts are nominal and are not converted. So in
 | HUD | Age, cash, cashflow, status, rat-race bar. Tapping opens the income statement and balance sheet |
 | Profile | Job, skills, family, insurance, focus |
 | End of life | Net-worth graph, score breakdown, achievements, unlocks, share card |
-| Collection | Items, badges, run history |
+| Collection | Items and badges |
+| Records | Personal bests, then every past life with its score and its net-worth graph. Dates are the player's own, not London's |
 
 Interaction rules:
 
 - Primary actions sit in the bottom half of the screen for one-handed use.
 - Buying and selling use a bottom sheet with an amount slider and 25%, 50% and 100% chips.
-- The first life is guided.
+- The first life is guided. Each stage of a round shows one short tip the first time it is reached, and a few more wait for a later round. A tip is a note in the flow of the page, never a dialog: it blocks nothing. One tip a visit: reading one does not bring up the next. On a card the tip stands after the choices, so that it never pushes them off a small screen. A tip left unread is there next time; "skip the guide" ends them for good, and someone who has finished a life sees none.
+- On a phone, the Back button closes the sheet on top instead of leaving the page. A sheet keeps one entry in the browser's history while it is open and takes it out when it is closed by its own button; a press of Back is never spent on a sheet that is gone. A sheet whose answer replaces the page keeps no entry.
+- Why a card's choice is locked is always said, in full strength: the choice is dimmed, the reason is not.
 - Swipes always have a button alternative. Tap targets are at least 44pt. A reduced-motion setting disables roll-ups and particle effects.
 - A tap never does two things. The primary button sits in the same place on every screen, and a card's first choice sits where the button before it was, so for 400 ms after the screen changes a tap is taken for the tail of the last one and ignored. Without this a double tap answered a card for good, played a round, or skipped the ledger.
 - Nothing that cannot be undone takes one tap from a screen the player did not mean to be on: starting a new life over one in progress asks first, and the chooser is not left behind in the browser's history.
 - A list never moves under the thumb: something sold stays in its place, marked as sold, until the round is played.
 
-Desktop (1024px and wider) uses the same components in three columns: profile and balance sheet on the left, the current step in the centre, news and this round's orders on the right. The side columns give way first on a narrow desktop. Amount and purchase sheets are centred dialogs on a wide screen in v1; docking them is left to the polish step.
+Desktop (1024px and wider) uses the same components in three columns: profile and balance sheet on the left, the current step in the centre, news and this round's orders on the right. The side columns give way first on a narrow desktop. Amount and purchase sheets are centred dialogs on a wide screen: one component and one focus trap serve the phone and the desktop, and they read well at 1440px. Docked panels were considered and dropped.
 
 ## 6. Visual style
 
@@ -499,7 +503,7 @@ Titles are in priority order within each category.
 - **Investing:** cousin's hot tip, employer share plan, new memecoin, friend's startup round, IPO hype, "guaranteed 20% a month" scheme, crypto exchange freezes withdrawals, off-plan flat in Dubai, trading-guru course, property crowdfunding, parking space deal, private equity invite, NFT drop, timeshare pitch, inherited rural land, gold dealer.
 - **Housing:** rent hike, first flat, landlord sells, refinance fixed or variable, tenant stops paying, renovation, flood damage, move in with partner, area gentrifies, housemates, buy-to-let chance, building repair levy.
 - **Lifestyle:** colleague's sports car, Ibiza trip, new iPhone, wedding abroad, Rolex waitlist call, business-class upgrade, designer sale, lease or buy a car, bottle service, Black Friday, gym upgrade, neighbours' new kitchen, influencer envy, first-class lounge.
-- **Family:** start dating, wedding (three budgets), first child, prenup, sibling asks for a loan, friend asks you to co-sign, support parents, grandparent inheritance, divorce, school choice, second child, pet, partner loses job, partner's career booms.
+- **Family:** start dating, wedding (three budgets), a child (the card comes again while there is one child at home, which is how a family of four happens), prenup, sibling asks for a loan, friend asks you to co-sign, support parents, grandparent inheritance, divorce, school choice, second child, pet, partner loses job, partner's career booms.
 - **Health:** illness without insurance, burnout, dental emergency, sports injury, gym habit, therapy, parent needs care, health scare.
 - **Luck:** El Gordo ticket, car breakdown, tax refund, stolen phone, surprise bonus, phishing scam, speeding fine, betting app, lawsuit, casino night, found wallet, laptop dies, flight cancelled, old Bitcoin wallet found.
 - **World:** recession, rate hike, rate cut, inflation spike, crypto bull run, crypto winter, housing crash, tech bubble, AI boom, pandemic, election tax reform, bank failure, energy crisis, sovereign debt scare, new wealth tax, remote-work boom.
@@ -527,3 +531,5 @@ Titles are in priority order within each category.
 - **Status:** first luxury watch, supercar owner, penthouse, status 100, twenty items collected, every car owned.
 - **Life:** three cities, moved to Dubai, family of four, MBA, sold a business, rode out a recession without selling.
 - **Misfortune:** bankrupt.
+
+Where a name leaves room: amounts are net worth in the dollars of age 22; "by 35" and "before 35" mean age 34 or younger; debt-free at 40 means owing nothing at 40 without ever having gone bankrupt; the two "held through" badges mean selling none of what was held, so selling and buying back does not count; index funds only means never having held anything else, a home included. An escape is dated to the end of the first round that covered it. The full table is in `docs/superpowers/plans/2026-10-13-replay-and-polish.md`.

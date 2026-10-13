@@ -29,6 +29,8 @@ class LocalSession implements GameSession {
   private tail: Promise<unknown> = Promise.resolve();
   /** The `updatedAt` of the record the store last took from this session or gave to it. Null until there is one. */
   private stored: number | null;
+  /** Badges the profile counts as earned in this life that the life's own journal cannot know: those of the gallery. */
+  private ofGallery: string[] = [];
 
   /** `stored` says whether `save` is already in the store, as it is for a life that was just loaded. */
   constructor(
@@ -64,7 +66,7 @@ class LocalSession implements GameSession {
   }
 
   badges(): string[] {
-    return [...this.save.journal.earned];
+    return [...this.save.journal.earned, ...this.ofGallery];
   }
 
   answerCard(option: number): Promise<StepResult> {
@@ -76,7 +78,7 @@ class LocalSession implements GameSession {
       const result = applyCard(this.content, state, asked);
       const log = [...this.save.log];
       log[state.round] = { picks: [...(log[state.round]?.picks ?? []), asked], orders: null };
-      return this.settle(log, result);
+      return this.settle(log, result, []);
     });
   }
 
@@ -87,7 +89,7 @@ class LocalSession implements GameSession {
       const result = applyRound(this.content, state, choices);
       const log = [...this.save.log];
       log[state.round] = { picks: log[state.round]?.picks ?? [], orders: structuredClone(choices.orders) };
-      return this.settle(log, result);
+      return this.settle(log, result, choices.orders);
     });
   }
 
@@ -107,21 +109,25 @@ class LocalSession implements GameSession {
   }
 
   /**
-   * Tells the profile what the life has earned and owned so far: badges it has not held before,
-   * the gallery, and the lives those unlock. Returns what is new, for the screen to celebrate.
-   * A failure is reported and nothing is celebrated: the profile is the record of what was earned.
+   * Tells the profile everything the life has earned and owned so far: badges it has not held
+   * before, the gallery, and the lives those unlock. It tells all of it every time, not only the
+   * step just played, so that whatever a failed write or an older version of the game left out
+   * is put right by the next step. Returns what is new, for the screen to celebrate.
    */
-  async tellProfile(earned: readonly string[]): Promise<{ earned: string[]; unlocked: string[] }> {
+  async tellProfile(): Promise<{ earned: string[]; unlocked: string[] }> {
     const { save } = this;
     try {
-      const finished = save.state.finished ? (await this.store.listRuns()).length : 0;
-      const step = { gameId: save.gameId, at: save.updatedAt, earned, collection: save.state.player.life.collection, finished };
+      // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty.
+      const runs = await this.store.listRuns().catch(() => []);
+      const finished = Math.max(runs.length, save.state.finished ? 1 : 0);
+      const step = { gameId: save.gameId, at: save.updatedAt, earned: save.journal.earned, collection: save.state.player.life.collection, finished };
       let news = { earned: [] as string[], unlocked: [] as string[] };
-      await updateProfile(this.store, (profile) => {
-        const after = profileAfter(this.content, this.lives, profile, step);
+      const profile = await updateProfile(this.store, (current) => {
+        const after = profileAfter(this.content, this.lives, current, step);
         news = { earned: after.earned, unlocked: after.unlocked };
         return after.profile;
       });
+      this.ofGallery = Object.keys(profile.badges).filter((id) => profile.badges[id].gameId === save.gameId && !save.journal.earned.includes(id));
       return news;
     } catch (error) {
       this.deps.onSaveError?.(error);
@@ -147,13 +153,16 @@ class LocalSession implements GameSession {
   }
 
   /** Takes a step the engine has played: keeps the record, saves, tells the profile, and hands back the view. */
-  private async settle(log: SavedGame['log'], result: { state: SavedGame['state']; events: StepResult['events'] }): Promise<StepResult> {
+  private async settle(log: SavedGame['log'], result: { state: SavedGame['state']; events: StepResult['events'] }, orders: RoundChoices['orders']): Promise<StepResult> {
     const before = this.save;
-    const { record, earned } = recordStep(this.content, { history: before.history, bankruptcies: before.bankruptcies, journal: before.journal }, before.state, result.state, result.events);
+    const { record } = recordStep(this.content, { history: before.history, bankruptcies: before.bankruptcies, journal: before.journal }, before.state, result.state, result.events, orders);
     this.save = { ...before, log, ...record, state: result.state, updatedAt: this.deps.now() };
     this.current = viewOf(this.save.state);
     await this.persist();
-    const news = await this.tellProfile(earned);
+    const had = this.ofGallery.length;
+    const news = await this.tellProfile();
+    // The run was written before the profile could say which gallery badges this life earned: write it again with them.
+    if (this.save.state.finished && this.ofGallery.length !== had) await this.persist();
     return { view: this.current, events: result.events, earned: news.earned, unlocked: news.unlocked };
   }
 
@@ -180,7 +189,7 @@ class LocalSession implements GameSession {
       escapedAtRound: save.state.player.escapedAtRound,
       bankruptcies: save.bankruptcies,
       history: save.history,
-      badges: save.journal.earned,
+      badges: this.badges(),
       cities: save.journal.cities,
       verified: false,
     };
@@ -199,6 +208,8 @@ export class LocalSessions implements Sessions {
   async start(lifeId: string): Promise<GameSession> {
     const life = this.lives.find((candidate) => candidate.id === lifeId);
     if (!life) throw new Error(`unknown life: ${lifeId}`);
+    // Which lives a player may choose is decided here, not by a button that happens to be disabled.
+    if (life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
     const gameId = this.deps.newId();
     const seed = this.deps.newSeed();
     const state = createGame({ content: this.content, start: life.start }, seed);
@@ -237,6 +248,9 @@ export class LocalSessions implements Sessions {
     // A repaired save keeps its `updatedAt`, so the stored record is still the one this session answers for.
     const session = new LocalSession(opened.save, this.store, this.content, this.lives, this.deps, true);
     if (opened.repaired) await session.persist();
+    // Whatever the life had earned that the profile does not hold yet is put right now. Opening the life does not
+    // wait for it: it is bookkeeping, and the first step would do the same.
+    void session.tellProfile();
     return { session, lost: null };
   }
 

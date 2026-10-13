@@ -93,7 +93,11 @@ export class ResilientStore implements PlayerStore {
     const waiting = this.pending.game;
     if (waiting !== undefined) return 'save' in waiting ? structuredClone(waiting.save) : null;
     return this.read(
-      () => this.primary.loadGame(),
+      async () => {
+        const game = await this.primary.loadGame();
+        this.mirror.game = (structuredClone(game) as SavedGame | null) ?? null;
+        return game;
+      },
       () => structuredClone(this.mirror.game),
     );
   };
@@ -129,7 +133,12 @@ export class ResilientStore implements PlayerStore {
   loadProfile = async (): Promise<Profile> => {
     if (this.pending.profile !== undefined) return structuredClone(this.pending.profile);
     return this.read(
-      () => this.primary.loadProfile(),
+      async () => {
+        // What was read is remembered: if the device then stops answering, the profile it held is not mistaken for none.
+        const profile = await this.primary.loadProfile();
+        this.mirror.profile = structuredClone(profile);
+        return profile;
+      },
       () => readProfile(structuredClone(this.mirror.profile)),
     );
   };

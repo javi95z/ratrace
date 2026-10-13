@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { applyCard, applyRound, createGame, escapeProgress, viewOf } from '@ratrace/engine';
-import type { GameEvent, GameState, GameView, PlayerState } from '@ratrace/engine';
+import { previewCard } from '@ratrace/engine';
+import type { Effects, GameEvent, GameState, GameView, Order, PlayerState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeArt } from './art';
 import { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE } from './badges';
@@ -30,6 +31,8 @@ interface Change {
   world?: Partial<GameView['timeline'][number]>;
   journal?: Partial<Journal>;
   finished?: boolean;
+  /** The orders of the round. */
+  orders?: Order[];
 }
 
 /** One step of a life, built by hand: the nurse's first round with the changes asked for. */
@@ -48,7 +51,7 @@ function step(change: Change = {}) {
   change.player?.(after.player);
   const events = change.events ?? [];
   const journal = { ...journalAfter(content, journalStart(content, before), after, events), ...change.journal };
-  return { content, before, after, events, journal };
+  return { content, before, after, events, journal, orders: change.orders ?? [] };
 }
 
 const hold = (assetId: string, value = usd(1_000), basis = value) => (p: PlayerState) => {
@@ -84,6 +87,9 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
       { round: 9, player: (p) => p.debts.push({ id: 'd', kind: 'personalLoan', principal: 100, fixedRateBp: 500, roundsLeft: 3 }) },
       // Reaching 40 is a round; a card answered at 40 is not the moment.
       { round: 9, card: true },
+      // Debts wiped by a bankruptcy are not debts paid: not in the round of one, and not in a life that has had one.
+      { round: 9, events: [{ kind: 'bankrupt', proceeds: 0, debtsCleared: 100 }] },
+      { round: 9, journal: { earned: ['bankrupt'] } },
     ],
   },
   no_credit_card: {
@@ -122,6 +128,8 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
       { world: WINTER, was: hold('bitcoin', usd(5_000)), player: (p) => delete p.positions.bitcoin },
       { world: WINTER, player: hold('bitcoin', usd(1_000)) },
       { world: WINTER, was: hold('bitcoin', usd(5_000)), player: hold('bitcoin', usd(1_200), usd(5_000)), card: true },
+      // Sold and bought back in the same round: what was paid for it is the same, and it was not held through.
+      { world: WINTER, was: hold('bitcoin', usd(5_000)), player: hold('bitcoin', usd(1_200), usd(5_000)), orders: [{ type: 'sell', assetId: 'bitcoin', amount: 100 }, { type: 'buy', assetId: 'bitcoin', amount: 100 }] },
     ],
   },
   three_rentals: {
@@ -168,6 +176,7 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
       { world: RECESSION, was: all(hold('msci_world', usd(5_000)), hold('apple')), player: (p) => delete p.positions.apple },
       { world: RECESSION },
       { world: RECESSION, was: hold('msci_world', usd(5_000)), player: hold('msci_world', usd(3_900), usd(5_000)), card: true },
+      { world: RECESSION, was: hold('msci_world', usd(5_000)), player: hold('msci_world', usd(3_900), usd(5_000)), orders: [{ type: 'sell', assetId: 'msci_world', amount: 100 }, { type: 'buy', assetId: 'msci_world', amount: 100 }] },
     ],
   },
   bankrupt: { earns: { events: [{ kind: 'bankrupt', proceeds: 0, debtsCleared: 100 }] }, misses: [{}] },
@@ -317,7 +326,7 @@ describe('a whole life', () => {
         const result = state.phase === 'cards' ? applyCard(content, state, 1) : applyRound(content, state, { orders: [{ type: 'focus', action: 'studyCareer' }] });
         state = result.state;
         journal = journalAfter(content, journal, viewOf(state), result.events);
-        const earned = badgesEarned({ content, before: viewOf(before), after: viewOf(state), events: result.events, journal });
+        const earned = badgesEarned({ content, before: viewOf(before), after: viewOf(state), events: result.events, journal, orders: before.phase === 'cards' ? [] : [{ type: 'focus', action: 'studyCareer' }] });
         for (const id of earned) {
           expect(known.has(id), id).toBe(true);
           expect(everything, `${id} earned twice`).not.toContain(id);
@@ -325,10 +334,40 @@ describe('a whole life', () => {
         everything.push(...earned);
         journal = { ...journal, earned: [...journal.earned, ...earned] };
       }
-      // Someone who studies and saves nothing else ends with money in the bank at least.
-      expect(journal.cities.length, life.id).toBeGreaterThan(0);
-      expect(everything.length, life.id).toBe(journal.earned.length);
+      // The journal still begins where the life began, and a life of work earns something.
+      expect(journal.cities[0], life.id).toBe(life.start.cityId);
+      expect(everything.length, life.id).toBeGreaterThan(0);
+      expect(journal.earned, life.id).toEqual(everything);
     }
+  });
+
+  it('can end in a family of four: a second child can come while the first is still at home', () => {
+    // Says yes to a date, to a partner and to every child the cards offer, and looks for a life with two children at home.
+    const wantsFamily = (state: GameState): number => {
+      const card = content.cards.find((c) => c.id === state.hand[state.answered]);
+      if (!card) return 0;
+      const open = previewCard(content, viewOf(state), card.id);
+      const towardsFamily = (effects: Effects | undefined) =>
+        effects !== undefined && ((effects.partner ?? null) !== null || (effects.children ?? 0) > 0 || (effects.setFlags ?? []).includes('dating'));
+      const index = card.options.findIndex((option, i) => i > 0 && open[i].available && towardsFamily(option.effects));
+      return Math.max(0, index);
+    };
+    const found: string[] = [];
+    for (let seed = 0; seed < 80 && found.length === 0; seed++) {
+      let state: GameState = createGame({ content, start: lives[1].start }, `family-${seed}`);
+      let journal = journalStart(content, viewOf(state));
+      while (!state.finished) {
+        const before = state;
+        const card = state.phase === 'cards';
+        const result = card ? applyCard(content, state, wantsFamily(state)) : applyRound(content, state, { orders: [] });
+        state = result.state;
+        journal = journalAfter(content, journal, viewOf(state), result.events);
+        const earned = badgesEarned({ content, before: viewOf(before), after: viewOf(state), events: result.events, journal, orders: [] });
+        journal = { ...journal, earned: [...journal.earned, ...earned] };
+        if (earned.includes('family_of_four')) found.push(`family-${seed}`);
+      }
+    }
+    expect(found).toHaveLength(1);
   });
 
   it('ages by two years a round from 22', () => {

@@ -15,11 +15,11 @@ import { Celebrations } from './Celebrations';
 /** How far a card must be dragged before letting go answers it. */
 const SWIPE = 90;
 
-function Tags({ cash, tags, empty }: { cash: number; tags: EffectTag[]; empty?: string }) {
+function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: EffectTag[]; empty?: string; className?: string }) {
   const { fmt } = useWords();
-  if (cash === 0 && tags.length === 0) return empty ? <span className="text-[12px] text-ink-300">{empty}</span> : null;
+  if (cash === 0 && tags.length === 0) return empty ? <span className={`text-[12px] text-ink-300 ${className}`}>{empty}</span> : null;
   return (
-    <span className="flex flex-wrap gap-1">
+    <span className={`flex flex-wrap gap-1 ${className}`}>
       {cash !== 0 ? <Tag tone={cash > 0 ? 'good' : 'bad'}>{fmt.signed(cash)}</Tag> : null}
       {tags.map((tag, i) => (
         <Tag key={i} tone={tag.tone}>
@@ -41,23 +41,25 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
   const written = words.text.cards[def.id].options[index];
   let total = 0;
   for (const outcome of preview.outcomes) total += outcome.weight;
+  // What cannot be chosen is dimmed part by part, not as a whole: the reason it is locked must stay easy to read.
+  const dim = preview.available ? '' : 'opacity-50';
 
   return (
     <button
       type="button"
       onClick={onPick}
       disabled={disabled || !preview.available}
-      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform active:translate-y-[2px] disabled:opacity-50"
+      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
     >
       <span className="flex items-start justify-between gap-2">
-        <span className="pixel text-[16px]">{written.label}</span>
+        <span className={`pixel text-[16px] ${dim}`}>{written.label}</span>
         {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
       </span>
-      {/* Why it is locked is the engine's to say. A locked button is dimmed, so the reason sits outside the dimming. */}
+      {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <span className="text-[13px] leading-snug text-cream">{words.text.optionLocks[preview.lock]}</span> : null}
-      <Tags cash={preview.cash} tags={effectTags(words, effects, world, option.effects)} />
+      <Tags cash={preview.cash} tags={effectTags(words, effects, world, option.effects)} className={dim} />
       {(option.outcomes ?? []).map((outcome, k) => (
-        <span key={k} className="flex items-start gap-2">
+        <span key={k} className={`flex items-start gap-2 ${dim}`}>
           <span className="pixel w-12 shrink-0 text-right text-[13px] text-gold-500">{t('chance', { pct: chancePct(preview.outcomes[k].weight, total) })}</span>
           <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects)} empty={t('nothing')} />
         </span>

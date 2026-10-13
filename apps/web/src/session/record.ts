@@ -1,7 +1,7 @@
 import { badgesEarned, journalAfter, journalStart } from '@ratrace/content';
 import type { Journal } from '@ratrace/content';
 import { realNetWorth, viewOf } from '@ratrace/engine';
-import type { Content, GameEvent, GameState } from '@ratrace/engine';
+import type { Content, GameEvent, GameState, Order } from '@ratrace/engine';
 
 /**
  * What a session keeps about a life besides the game itself. All of it follows from the seed
@@ -20,11 +20,12 @@ export function recordStart(content: Content, state: GameState): LifeRecord {
 
 /**
  * The record after one step, the answer to a card or a round, and the badges that step earned
- * in this life. The session and the replay of a save both keep their record with this, so the two cannot drift.
+ * in this life. `orders` are the orders of a round, none for a card. The session and the replay of
+ * a save both keep their record with this, so the two cannot drift.
  */
-export function recordStep(content: Content, record: LifeRecord, before: GameState, after: GameState, events: GameEvent[]): { record: LifeRecord; earned: string[] } {
+export function recordStep(content: Content, record: LifeRecord, before: GameState, after: GameState, events: GameEvent[], orders: readonly Order[]): { record: LifeRecord; earned: string[] } {
   const seen = journalAfter(content, record.journal, viewOf(after), events);
-  const earned = badgesEarned({ content, before: viewOf(before), after: viewOf(after), events, journal: seen });
+  const earned = badgesEarned({ content, before: viewOf(before), after: viewOf(after), events, orders, journal: seen });
   let bankruptcies = record.bankruptcies;
   for (const event of events) if (event.kind === 'bankrupt') bankruptcies += 1;
   return {

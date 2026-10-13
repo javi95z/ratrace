@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
 import { readProfile } from './profile';
+import { readRuns } from './runs';
 import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
 
 const GAME = 'currentGame';
@@ -45,8 +46,7 @@ export class LocalStore implements PlayerStore {
   }
 
   async listRuns(): Promise<FinishedRun[]> {
-    const runs = (await (await this.db()).getAll(RUNS)) as FinishedRun[];
-    return runs.sort((a, b) => b.finishedAt - a.finishedAt);
+    return readRuns(await (await this.db()).getAll(RUNS));
   }
 
   async loadProfile(): Promise<Profile> {

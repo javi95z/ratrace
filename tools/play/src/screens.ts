@@ -16,6 +16,7 @@ import {
   scoreBreakdown,
 } from '@ratrace/engine';
 import type { CardDef, Content, Effects, GameEvent, GameState, Headline, RoundPreview } from '@ratrace/engine';
+import { START_AGE } from '@ratrace/content';
 import type { ContentText, Locale, Names } from '@ratrace/content';
 import { padEnd, padStart } from './format';
 import type { Format } from './format';
@@ -33,7 +34,6 @@ export interface Pen {
 
 const RULE = '═'.repeat(64);
 const THIN = '─'.repeat(64);
-const START_AGE = 22;
 
 export const ageAt = (pen: Pen, round: number) => START_AGE + round * pen.content.yearsPerRound;
 

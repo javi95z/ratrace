@@ -66,7 +66,7 @@ function Ended({ view }: { view: GameView }) {
         title: meta('title').toUpperCase(),
         life: lifeName,
         where: `${t('age', { age: ageAt(content, view.round) })} · ${names.cities[p.cityId]}`,
-        outcome,
+        outcome: p.escapedAtRound === null ? share('never') : share('escapedAt', { age: ageAt(content, p.escapedAtRound) }),
         escaped,
         portrait: portraitArt(lifeId, 58),
         scoreLabel: t('score'),
@@ -82,7 +82,7 @@ function Ended({ view }: { view: GameView }) {
         badgesLabel: share('badges'),
         badges: earned.map(badgeArt),
       }),
-    [meta, t, share, fmt, content, names, view, history, earned, lifeId, lifeName, outcome, escaped, score.total, score.wealth, score.status, score.multiplierPct, p.cityId],
+    [meta, t, share, fmt, content, names, view, history, earned, lifeId, lifeName, p.escapedAtRound, escaped, score.total, score.wealth, score.status, score.multiplierPct, p.cityId],
   );
 
   return (

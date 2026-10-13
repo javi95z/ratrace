@@ -34,7 +34,7 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-7_000), protection: { insurance: 'home', coverPct: 90 } } },
     { effects: { focus: 1, cash: usd(-2_500), protection: { insurance: 'home', coverPct: 90 } } },
   ]),
-  card('house_move_in', 'housing', { cooldown: 2, when: { flags: ['dating'], partner: false } }, [
+  card('house_move_in', 'housing', { weight: 40, cooldown: 2, when: { flags: ['dating'], partner: false } }, [
     {},
     { effects: { partner: { salaryPct: 85 }, clearFlags: ['dating'], setFlags: ['cohabiting'] } },
   ]),
@@ -100,7 +100,7 @@ const split = (pct: number): Effects => ({
 });
 
 export const familyCards: CardDef[] = [
-  card('fam_dating', 'family', { cooldown: 2, when: { partner: false, notFlags: ['dating'] } }, [
+  card('fam_dating', 'family', { weight: 25, cooldown: 2, when: { partner: false, notFlags: ['dating'] } }, [
     {},
     { effects: { focus: 1, cash: usd(-600), setFlags: ['dating'] } },
   ]),
@@ -109,7 +109,9 @@ export const familyCards: CardDef[] = [
     { effects: { cash: usd(-18_000), setFlags: ['married'], status: 5 } },
     { effects: { cash: usd(-45_000), setFlags: ['married'], status: 10 } },
   ]),
-  card('fam_first_child', 'family', { cooldown: 3, when: { partner: true, maxChildren: 0, maxRound: 10 } }, [
+  // A couple is asked more often than chance would, and it can come again while the first child is still at home:
+  // a family of four is two of these, some years apart. Once in a few hundred lives was no way to earn a badge.
+  card('fam_first_child', 'family', { weight: 60, cooldown: 2, when: { partner: true, maxChildren: 1, maxRound: 10 } }, [
     {},
     { effects: { children: 1, lifestyleFloor: 1, status: 8 } },
   ]),

@@ -8,16 +8,12 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 
 | # | Step | What you get | Status | Effort | Priority |
 |---|---|---|---|---|---|
-| 1 | Design | Spec for the solo game | Done | | |
-| 2 | Art sheets | 21 sheets: items, cars, homes, icons, badges, portraits, card scenes, skylines, logo | Done | | |
-| 3 | Engine core | Markets, trades, debt, property, tax, inflation, bankruptcy, score | Done, reviewed twice | | |
-| 4 | Engine view for online | The client holds a game without the seed, the dice or the future rounds | Done, as the first task of step 8 | | P0 |
+| 1–4 | Foundations | The design spec, 21 art sheets, the engine core, and the view of a game a client may hold | Done, reviewed | | |
 | 5 | Art cleanup tool | The 21 sheets become 203 final game sprites, with contact sheets to approve | Built; your approval of the contact sheets in `art/contact/` pending | | P0 |
-| 6 | Life systems and content | Cards, careers, family, insurance, status items, news and tax reforms; 6 cities, 19 assets, 34 items, 100 cards, 6 lives; all text in English and Spanish | Done, reviewed; five rules changed by the review | | P0 |
-| 7 | Terminal game and balance bots | First playable life: `pnpm play`. Six bots hold the game inside its balance bands: `pnpm balance` | Done, reviewed | | P0 |
+| 6–7 | Life and first play | Cards, careers, family, insurance, status items, news and tax reforms, with all content in English and Spanish; the terminal game (`pnpm play`) and the balance bots (`pnpm balance`) | Done, reviewed | | |
 | 8 | Web game, solo | The real game on phone and desktop, in English and Spanish, with final art and local saves: `pnpm dev` | Built, reviewed; your play-test pending | | P0 |
-| 9 | Replay hooks | Unlockable lives, achievements, collection, records, share card | Next; unblocked | M | P1 |
-| 10 | Polish | Guided first life, accessibility pass, text pass in both languages. The desktop layout came with step 8 | Planned; unblocked | S | P1 |
+| 9–10 | Replay and polish | Three unlockable lives, thirty badges, a collection of everything ever owned, personal bests and past lives, a share card; a guided first life, an accessibility pass checked by an audit on every screen, a text pass in both languages | Done, reviewed | | |
+| 10b | Look and legibility | A richer look on every screen, and amounts in a typeface that reads at a glance | Three directions drawn (`docs/design/2026-10-13-visual-directions.png`); your pick pending | M | P0 |
 | 11 | Online foundation | Supabase: sign-in, profiles, database, security rules, engine on the server | Planned | L | P1 |
 | 12 | Cloud saves | Saved games, history and unlocks on every device | Planned | M | P1 |
 | 13 | Ranked solo and rankings | Server-run games; global, weekly and friends rankings | Planned | M | P2 |

@@ -1,5 +1,5 @@
 import { escapeProgress, realNetWorth } from '@ratrace/engine';
-import type { Content, GameEvent, GameView, PlayerState, Position } from '@ratrace/engine';
+import type { Content, GameEvent, GameView, Order, PlayerState, Position } from '@ratrace/engine';
 import { assetKind } from './art';
 import type { AssetKind } from './art';
 import { usd } from './money';
@@ -70,6 +70,8 @@ export interface Step {
   before: GameView;
   after: GameView;
   events: GameEvent[];
+  /** The orders of the round, as the player gave them. None for the answer to a card. */
+  orders: readonly Order[];
   /** The journal as it stands after the step, without the badges the step is about to earn. */
   journal: Journal;
 }
@@ -145,9 +147,18 @@ function factsOf(step: Step): Facts {
 
 const basisOf = (p: PlayerState, assetId: string): number => (Object.hasOwn(p.positions, assetId) ? p.positions[assetId].basis : 0);
 const owns = (p: PlayerState, itemId: string): boolean => p.life.items.some((item) => item.itemId === itemId);
-/** True if none of these was sold in the step: each is still there, and what was paid for the part held has not shrunk. */
+/**
+ * True if none of these was sold in the step: no order tried to sell one, each is still there, and
+ * what was paid for the part held has not shrunk. Selling and buying back in the same round is selling.
+ */
 const keptAll = (f: Facts, kept: Facts['heldBefore']): boolean =>
-  kept.every((held) => Object.hasOwn(f.p.positions, held.id) && f.p.positions[held.id].basis >= held.position.basis);
+  kept.every(
+    (held) =>
+      !f.orders.some((order) => order.type === 'sell' && order.assetId === held.id) &&
+      Object.hasOwn(f.p.positions, held.id) &&
+      f.p.positions[held.id].basis >= held.position.basis,
+  );
+const wentBankrupt = (f: Facts): boolean => f.journal.earned.includes('bankrupt') || f.events.some((e) => e.kind === 'bankrupt');
 
 /** When each badge is earned. The two that are about the gallery of every life are judged by `galleryBadges`. */
 const RULES: Record<string, (f: Facts) => boolean> = {
@@ -155,7 +166,8 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   millionaire: (f) => f.worth >= usd(1_000_000),
   millionaire_by_35: (f) => f.worth >= usd(1_000_000) && f.age <= 35,
   ten_million: (f) => f.worth >= usd(10_000_000),
-  debt_free_at_40: (f) => f.round && f.age === 40 && f.p.debts.every((debt) => debt.principal === 0),
+  // Debts a bankruptcy wiped out are not debts paid.
+  debt_free_at_40: (f) => f.round && f.age === 40 && f.p.debts.every((debt) => debt.principal === 0) && !wentBankrupt(f),
   no_credit_card: (f) => f.after.finished && !f.journal.cardUsed,
 
   escaped: (f) => f.escapedAtAge !== null,

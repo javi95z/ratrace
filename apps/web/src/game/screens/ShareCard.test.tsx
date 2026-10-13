@@ -124,6 +124,17 @@ describe('the share sheet', () => {
     Object.assign(navigator, { canShare: undefined, share: undefined });
   });
 
+  it('says so when the browser will not hand the picture over, instead of drawing for ever', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(() => {
+      throw new DOMException('The canvas has been tainted', 'SecurityError');
+    });
+    const user = userEvent.setup();
+    show();
+    await user.click(screen.getByRole('button', { name: 'Share this life' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('This browser could not draw the picture.');
+    expect(screen.queryByText('Drawing…')).toBeNull();
+  });
+
   it('says so when the picture cannot be drawn, and lets go of it when closed', async () => {
     const user = userEvent.setup();
     show();

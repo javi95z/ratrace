@@ -1,6 +1,6 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION, finalScore, livedStatus, realNetWorth } from '@ratrace/engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { LocalSessions, StaleSession } from './local';
 import { MemoryStore } from './memory';
 import type { GameSession, SavedGame } from './types';
@@ -384,16 +384,78 @@ describe('what a life earns', () => {
     expect((await store.loadProfile()).settings.reducedMotion).toBe(true);
   });
 
-  it('plays on, celebrating nothing, when the profile cannot be written', async () => {
+  it('plays on when the profile cannot be written, and records and celebrates the badge as soon as it can', async () => {
     const store = new MemoryStore();
     const { sessions, errors } = setup(store);
     const session = await sessions.start('nurse');
+    const save = store.saveProfile;
     store.saveProfile = () => Promise.reject(new Error('no room'));
     const { earned } = await live(session, 10, lavish);
     expect(session.view().round).toBe(10);
     expect(earned).toEqual([]);
     expect(session.badges()).toContain('bankrupt');
     expect(errors.length).toBeGreaterThan(0);
+    // The device takes writes again: the very next step tells the profile everything the life has earned.
+    store.saveProfile = save;
+    const later = await session.answerCard(0);
+    expect(later.earned).toContain('bankrupt');
+    expect((await store.loadProfile()).badges.bankrupt.gameId).toBe('id-1');
+    expect((await session.answerCard(0)).earned).not.toContain('bankrupt');
+  });
+
+  it('tells the profile what a life had already earned when it is opened again', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('nurse');
+    await live(session, 10, lavish);
+    // The profile lost it: written by an older version of the game, or a tab closed at the wrong moment.
+    await store.saveProfile({ ...(await store.loadProfile()), badges: {} });
+    await sessions.resume();
+    await vi.waitFor(async () => expect(Object.keys((await store.loadProfile()).badges)).toContain('bankrupt'));
+  });
+
+  it('unlocks the rider for anyone with a finished life on the device, whenever that is noticed', async () => {
+    const { store, sessions } = setup();
+    await live(await sessions.start('civil_servant'), 20);
+    // A profile from before lives could be unlocked.
+    await store.saveProfile({ ...(await store.loadProfile()), unlocked: {} });
+    const next = await sessions.start('nurse');
+    const first = await next.answerCard(0);
+    expect(first.unlocked).toEqual(['rider']);
+  });
+
+  it('unlocks the rider at the end of a first life even if the list of lives cannot be read just then', async () => {
+    const store = new MemoryStore();
+    const { sessions } = setup(store);
+    const session = await sessions.start('civil_servant');
+    store.listRuns = () => Promise.reject(new Error('busy'));
+    const { unlocked } = await live(session, 20);
+    expect(session.view().finished).toBe(true);
+    expect(unlocked).toEqual(['rider']);
+  });
+
+  it('counts a badge of the gallery among the badges of the life that earned it', async () => {
+    const { store, sessions } = setup();
+    // Nineteen things owned in earlier lives: the twentieth earns the badge.
+    const owned = content.items.filter((item) => item.id !== 'watch_casio').slice(0, 19).map((item) => item.id);
+    await store.saveProfile({ ...(await store.loadProfile()), gallery: owned });
+    const session = await sessions.start('nurse');
+    await answerAll(session);
+    const round = await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    expect(round.earned).toContain('twenty_items');
+    expect(session.badges()).toContain('twenty_items');
+    // Opened again, the life still counts it as its own.
+    const reopened = (await setup(store).sessions.resume()).session as GameSession;
+    await vi.waitFor(() => expect(reopened.badges()).toContain('twenty_items'));
+    await live(session, 20);
+    expect((await store.listRuns())[0].badges).toContain('twenty_items');
+  });
+
+  it('refuses to start a life the player has not unlocked', async () => {
+    const { store, sessions } = setup();
+    await expect(sessions.start('heir')).rejects.toThrow('locked life: heir');
+    expect(await store.loadGame()).toBeNull();
+    await store.saveProfile({ ...(await store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'g' } } });
+    expect((await sessions.start('heir')).lifeId).toBe('heir');
   });
 
   it('rebuilds the journal with the game when a save is repaired', async () => {

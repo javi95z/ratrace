@@ -5,7 +5,7 @@ import { newProfile } from './types';
 import type { FinishedRun, SavedGame } from './types';
 
 const game = (updatedAt: number) => ({ format: 1, gameId: 'g', log: [], history: [], updatedAt }) as unknown as SavedGame;
-const run = (runId: string, finishedAt: number) => ({ format: 1, runId, finishedAt }) as unknown as FinishedRun;
+const run = (runId: string, finishedAt: number) => ({ format: 1, runId, lifeId: 'nurse', finishedAt }) as unknown as FinishedRun;
 
 /** A device store that can be told to refuse, and counts what it was asked. */
 function device() {
@@ -59,7 +59,7 @@ describe('ResilientStore', () => {
     await store.addRun(run('a', 10));
     await store.saveProfile({ ...newProfile(), settings: { reducedMotion: true } });
     expect(store.degraded).toBe(true);
-    expect(await store.listRuns()).toEqual([run('a', 10)]);
+    expect((await store.listRuns()).map((r) => r.runId)).toEqual(['a']);
     expect((await store.loadProfile()).settings.reducedMotion).toBe(true);
 
     down.writes = false;
@@ -67,7 +67,7 @@ describe('ResilientStore', () => {
     expect(store.degraded).toBe(false);
     expect(changes).toEqual([true, false]);
     expect(await primary.loadGame()).toEqual(game(2));
-    expect(await primary.listRuns()).toEqual([run('a', 10)]);
+    expect((await primary.listRuns()).map((r) => r.runId)).toEqual(['a']);
     expect((await new ResilientStore(Object.assign(new MemoryStore(), primary)).loadGame())).toEqual(game(2));
   });
 
@@ -97,6 +97,20 @@ describe('ResilientStore', () => {
     await store.addRun(run('d', 9));
     expect((await store.listRuns()).map((r) => r.runId)).toEqual(['d', 'c']);
     expect(changes).toEqual([true]);
+  });
+
+  it('remembers what it read, so a device that then stops answering does not turn a full profile into an empty one', async () => {
+    const primary = new MemoryStore();
+    const full = { ...newProfile(), badges: { millionaire: { at: 5, gameId: 'g' } }, gallery: ['watch_rolex'] };
+    await primary.saveProfile(full);
+    const load = primary.loadProfile;
+    const store = new ResilientStore(primary);
+    expect(await store.loadProfile()).toEqual(full);
+    primary.loadProfile = () => Promise.reject(new Error('gone'));
+    expect(await store.loadProfile()).toEqual(full);
+    // And a write made while it could not be read does not put a fresh profile over the full one.
+    primary.loadProfile = load;
+    expect((await primary.loadProfile()).badges).toEqual(full.badges);
   });
 
   it('hands back copies, so nothing kept changes behind its back', async () => {

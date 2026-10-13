@@ -1,7 +1,8 @@
 'use client';
 
 import { useWords } from '@/game/context';
-import { START_AGE, worthBars } from '@/game/present';
+import { START_AGE } from '@ratrace/content';
+import { worthBars } from '@/game/present';
 
 /** One bar of the graph, in screen pixels: ten of bar and four of gap. */
 const BAR = 10;

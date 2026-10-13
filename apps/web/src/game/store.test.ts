@@ -117,6 +117,8 @@ describe('the cards of a round', () => {
 describe('the finance phase', () => {
   async function inFinance(lifeId = 'nurse') {
     const ctx = setup();
+    // A life that has to be unlocked is unlocked first, as it would be for a player who may choose it.
+    await ctx.store.saveProfile({ ...(await ctx.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' } } });
     await ctx.get().start(lifeId);
     await answerHand(ctx.get);
     ctx.get().toFinance();

@@ -96,7 +96,8 @@ export function NewLife() {
         </div>
       </div>
 
-      <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={t('confirmTitle')} closeLabel={common('close')}>
+      {/* Saying yes replaces this page with the game, so the sheet keeps no entry of its own in the history. */}
+      <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={t('confirmTitle')} closeLabel={common('close')} back={false}>
         <p className="text-[15px] leading-snug text-ink-200">{t('confirmBody', { life: text.lives[living ?? '']?.name ?? '', age: ageAt(content, round) })}</p>
         <div className="mt-4 flex flex-col gap-3">
           <Button variant="primary" wide onClick={() => setAsking(false)}>

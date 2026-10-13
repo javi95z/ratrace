@@ -12,6 +12,7 @@ describe('reading a profile', () => {
   it('starts a new player with nothing but the default settings', () => {
     expect(newProfile()).toEqual({ format: 1, settings: { reducedMotion: false }, badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false } });
     for (const junk of [null, undefined, 'profile', 7, [], {}, { format: 2 }, { format: 1, settings: null }, { format: 1, settings: {} }]) {
+      // Not a profile at all, or one with nothing in it but broken settings: a fresh one either way.
       expect(readProfile(junk), JSON.stringify(junk)).toEqual(newProfile());
     }
   });
@@ -38,6 +39,18 @@ describe('reading a profile', () => {
       unlocked: { rider: { at: 9, gameId: 'g' } },
       guide: { seen: ['news'], off: false },
     });
+  });
+
+  it('keeps every badge when only the settings are damaged', () => {
+    const stored = { ...newProfile(), badges: { millionaire: { at: 5, gameId: 'g' } }, gallery: ['watch_rolex'], unlocked: { rider: { at: 9, gameId: 'g' } } };
+    for (const settings of [null, 'loud', {}, { reducedMotion: 'yes' }]) {
+      expect(readProfile({ ...stored, settings }), JSON.stringify(settings)).toEqual({ ...stored, settings: { reducedMotion: false } });
+    }
+  });
+
+  it('drops a badge whose date is no date at all', () => {
+    const read = readProfile({ ...newProfile(), badges: { a: { at: 1e17, gameId: 'g' }, b: { at: -1e17, gameId: 'g' }, c: { at: Number.NaN, gameId: 'g' }, d: { at: 1_700_000_000_000, gameId: 'g' } } });
+    expect(Object.keys(read.badges)).toEqual(['d']);
   });
 
   it('hands back a copy, never the thing it was given', () => {

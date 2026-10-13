@@ -431,7 +431,9 @@
     "drawing": "Drawing…",
     "alt": "{life}: score {score}",
     "badges": "Badges",
-    "netWorth": "Net worth, in the dollars of age 22"
+    "netWorth": "Net worth, in the dollars of age 22",
+    "never": "Never left the rat race",
+    "escapedAt": "Out of the rat race at {age}"
   },
   "orders": {
     "buy": "Buy {name} · {amount}",

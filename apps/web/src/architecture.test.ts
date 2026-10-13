@@ -64,6 +64,13 @@ describe('the wall between the screens and the game', () => {
     expect(broke).toEqual([]);
   });
 
+  it('lets no screen judge a badge, an unlock or what a life adds to the profile', () => {
+    // Whoever runs the game judges these: the session today, a server later. A screen shows what it is told.
+    const JUDGES = /\b(badgesEarned|galleryBadges|unlockedLives|journalAfter|journalStart|profileAfter|recordStep)\b/;
+    const broke = screens.flatMap((path) => importsOf(path).filter((i) => JUDGES.test(i.names)).map((i) => `${rel(path)}: ${i.names}`));
+    expect(broke).toEqual([]);
+  });
+
   it('wires the real session and store in one place', () => {
     const wires = all.filter((path) => importsOf(path).some((i) => /^@\/session\/(local|indexeddb|memory|resilient)$/.test(i.from))).map(rel);
     expect(wires.filter((file) => !file.startsWith('session/')).sort()).toEqual(WIRING);

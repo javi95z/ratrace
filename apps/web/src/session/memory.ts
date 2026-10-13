@@ -1,4 +1,5 @@
 import { readProfile } from './profile';
+import { readRuns } from './runs';
 import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
 
 /**
@@ -24,8 +25,7 @@ export class MemoryStore implements PlayerStore {
     this.runs.set(run.runId, structuredClone(run));
   };
 
-  listRuns = async (): Promise<FinishedRun[]> =>
-    structuredClone([...this.runs.values()]).sort((a, b) => b.finishedAt - a.finishedAt);
+  listRuns = async (): Promise<FinishedRun[]> => readRuns(structuredClone([...this.runs.values()]));
 
   loadProfile = async (): Promise<Profile> => readProfile(structuredClone(this.profile));
 

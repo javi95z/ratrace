@@ -1,3 +1,4 @@
+import { START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
 import type { Content, Effects, GameEvent, GameView, Headline, Order, PlayerState, WorldState } from '@ratrace/engine';
@@ -13,8 +14,6 @@ export interface Words {
   names: Names;
   fmt: Format;
 }
-
-export const START_AGE = 22;
 
 export const ageAt = (content: Content, round: number): number => START_AGE + round * content.yearsPerRound;
 

@@ -84,12 +84,26 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
   }
 }
 
-/** What the stage of the round shows, under the tip of the guide when one is due. */
+/**
+ * What the stage of the round shows, under the tip of the guide when one is due.
+ * A card is the exception: its choices are the stage, so the tip follows them and never pushes them off a small screen.
+ */
 function StageView({ stage, desk }: { stage: Stage; desk: boolean }) {
+  const body = <StageBody stage={stage} desk={desk} />;
+  if (stage !== 'cards') {
+    return (
+      <>
+        <Guide />
+        {body}
+      </>
+    );
+  }
   return (
     <>
-      <Guide />
-      <StageBody stage={stage} desk={desk} />
+      {body}
+      <div className="pt-3">
+        <Guide />
+      </div>
     </>
   );
 }

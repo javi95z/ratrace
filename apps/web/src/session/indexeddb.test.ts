@@ -56,6 +56,18 @@ describe.each(stores)('%s', (_name, make) => {
     expect(runs[2].score).toBe(999);
   });
 
+  it('lists only finished lives that can be shown, and mends the ones from before badges were recorded', async () => {
+    const store = make();
+    const old = { ...run('old', 5) } as Record<string, unknown>;
+    delete old.badges;
+    delete old.cities;
+    await store.addRun(old as never);
+    await store.addRun({ ...run('broken', 9), finishedAt: Number.NaN });
+    const listed = await store.listRuns();
+    expect(listed.map((r) => r.runId)).toEqual(['old']);
+    expect(listed[0]).toMatchObject({ badges: [], cities: [] });
+  });
+
   it('keeps the profile', async () => {
     const store = make();
     const mine = { ...newProfile(), settings: { reducedMotion: true }, gallery: ['watch_rolex'], badges: { millionaire: { at: 3, gameId: 'g' } } };

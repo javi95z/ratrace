@@ -23,8 +23,8 @@ export function replay(content: Content, start: StartConfig, seed: string, log: 
   if (log.length > content.rounds) throw new Error('the log is longer than a life');
   let state = createGame({ content, start }, seed);
   let record = recordStart(content, state);
-  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }) => {
-    record = recordStep(content, record, state, result.state, result.events).record;
+  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }, orders: Parameters<typeof recordStep>[5] = []) => {
+    record = recordStep(content, record, state, result.state, result.events, orders).record;
     state = result.state;
   };
 
@@ -37,7 +37,7 @@ export function replay(content: Content, start: StartConfig, seed: string, log: 
       if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
       return;
     }
-    take(applyRound(content, state, { orders: entry.orders }));
+    take(applyRound(content, state, { orders: entry.orders }), entry.orders);
   });
   return { state, ...record };
 }

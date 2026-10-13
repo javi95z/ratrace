@@ -1,6 +1,7 @@
 import { badges, galleryBadges, unlockedLives } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
+import { isDay } from './runs';
 import { newProfile, SAVE_FORMAT } from './types';
 import type { Earned, PlayerStore, Profile } from './types';
 
@@ -12,24 +13,25 @@ function earnedOf(x: unknown): Record<string, Earned> {
   const out: Record<string, Earned> = {};
   if (!isRecord(x)) return out;
   for (const [id, entry] of Object.entries(x)) {
-    if (isRecord(entry) && typeof entry.at === 'number' && Number.isFinite(entry.at) && typeof entry.gameId === 'string') out[id] = { at: entry.at, gameId: entry.gameId };
+    if (isRecord(entry) && isDay(entry.at) && typeof entry.gameId === 'string') out[id] = { at: entry.at, gameId: entry.gameId };
   }
   return out;
 }
 
 /**
- * A stored profile, checked part by part. What is sound is kept and what is not is dropped, so a
- * bad write never locks the player out, and a profile from before badges existed opens with none.
- * Anything that is not a profile at all becomes a fresh one.
+ * A stored profile, checked part by part. What is sound is kept and what is not is dropped or put
+ * back to its default, so a bad write never locks the player out, and a profile from before badges
+ * existed opens with none. Anything that is not a profile at all becomes a fresh one.
  */
 export function readProfile(raw: unknown): Profile {
   if (!isRecord(raw) || raw.format !== SAVE_FORMAT) return newProfile();
-  const settings = raw.settings;
-  if (!isRecord(settings) || typeof settings.reducedMotion !== 'boolean') return newProfile();
+  // Damaged settings go back to the default, and take nothing else with them: the profile is written
+  // back after every step, and one bad field must not cost a player thirty badges.
+  const settings = isRecord(raw.settings) ? raw.settings : {};
   const guide = isRecord(raw.guide) ? raw.guide : {};
   return {
     format: SAVE_FORMAT,
-    settings: { reducedMotion: settings.reducedMotion },
+    settings: { reducedMotion: settings.reducedMotion === true },
     badges: earnedOf(raw.badges),
     gallery: strings(raw.gallery),
     unlocked: earnedOf(raw.unlocked),
