@@ -1,8 +1,8 @@
-import { cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
+import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemPerks, PlayerState, Property } from '../types';
+import type { Content, InsuranceKind, ItemPerks, PlayerState, Property, Regime } from '../types';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -37,6 +37,26 @@ export function perksOf(p: PlayerState, content: Content): Required<ItemPerks> {
   }
   for (const ladder of best.values()) for (const perk of ITEM_PERKS) total[perk] += ladder[perk];
   return total;
+}
+
+/**
+ * What the player's career does to their pay in a round, in percent: what the economy adds or takes
+ * in a trade that follows it, and what age takes in a trade for the young. Nothing without a career.
+ */
+export function careerSwing(p: PlayerState, content: Content, regime: Regime, round: number): { cyclePct: number; fadePct: number } {
+  const job = p.life.career;
+  if (job === null) return { cyclePct: 0, fadePct: 0 };
+  const career = careerOf(content, job.id);
+  const fade = career.fade;
+  return {
+    cyclePct: career.cyclePct?.[regime] ?? 0,
+    fadePct: fade && round >= fade.fromRound ? -Math.min(fade.maxPct, fade.pctPerRound * (round - fade.fromRound + 1)) : 0,
+  };
+}
+
+/** Focus on top in a round: what the things held give, and what the career leaves over. */
+export function focusBonusOf(p: PlayerState, content: Content): number {
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0);
 }
 
 /**

@@ -59,7 +59,8 @@ function Badges() {
       {groups.map((group) => (
         <section key={group}>
           <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{text.badgeGroups[group]}</h2>
-          <ul className="flex flex-col gap-2">
+          {/* Two to a row wherever there is room for two. */}
+          <ul className="grid grid-cols-1 gap-2 @min-[560px]:grid-cols-2">
             {badges
               .filter((badge) => badge.group === group)
               .map((badge) => {

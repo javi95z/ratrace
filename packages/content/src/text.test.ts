@@ -195,7 +195,7 @@ describe('content art', () => {
       ...Object.values(topicArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(106 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+    expect(wanted.length).toBe(108 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
   });
 
   it('draws who shares a life: the couple, then the youngest child, and a full house as one picture', () => {

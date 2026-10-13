@@ -2,7 +2,7 @@ import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, FinanceSkill, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
-import { perksOf } from './derive';
+import { focusBonusOf, perksOf } from './derive';
 import { lapsingIn } from './orders';
 
 /**
@@ -108,6 +108,6 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
   }
   life.focusUsed = 0;
   // A rest taken shows in the round after: counted now, from what is still held once the old round has closed.
-  life.focusBonus = perksOf(p, content).focus;
+  life.focusBonus = focusBonusOf(p, content);
   life.salaryBoostPct = 0;
 }

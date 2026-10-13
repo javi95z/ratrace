@@ -47,7 +47,7 @@ describe('the work panel of the profile', () => {
     // The bar runs from the experience the job asked for to the experience the next one asks for.
     const bar = within(panel).getByRole('progressbar', { name: 'Progress towards Senior nurse' });
     expect(bar.getAttribute('aria-valuenow')).toBe(String(Math.round(((work.skill - here.minSkill) * 100) / (next.minSkill - here.minSkill))));
-    expect(within(panel).getByText(`Career skill ${work.skill} of ${next.minSkill}`)).toBeTruthy();
+    expect(within(panel).getByText(`Career skill ${work.skill}/${next.minSkill}`)).toBeTruthy();
     expect(within(panel).getByText(`${fmt.money(next.payAnnual)}/yr`)).toBeTruthy();
     expect(next.payAnnual).toBeGreaterThan(here.payAnnual);
     // The two other lines are named for what they are, not for the career they could be mistaken for.
@@ -124,7 +124,46 @@ describe('the work panel of the profile', () => {
     const sheet = screen.getByRole('dialog', { name: 'Focus' });
     expect(within(sheet).getByText(`${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBeTruthy();
     expect(within(sheet).getByText('What you own is already counted in these figures.')).toBeTruthy();
-    expect(within(sheet).getByText(/1 from the rest your last trip gave you\.$/)).toBeTruthy();
+    expect(within(sheet).getByText(/1 is from the rest your last trip gave you\.$/)).toBeTruthy();
+  });
+
+  it('says what sets a career apart: time left over, pay that follows the economy, an audience that does not last', async () => {
+    setWidth('desk');
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const base = ((await services.store.loadGame()) as SavedGame).state;
+    const user = userEvent.setup();
+    const traitsOf = async (career: string, change: (state: SavedGame['state']) => void = () => {}) => {
+      const state = structuredClone(base);
+      state.player.life.career = { id: career, level: 0 };
+      change(state);
+      renderGame(<WorkPanel shown={viewOf(state)} />, services);
+      const panel = await screen.findByRole('region', { name: 'Work' });
+      const sub = within(panel).getByText('Focus this round').parentElement?.textContent ?? '';
+      await user.click(within(panel).getAllByRole('button')[0]);
+      const list = within(screen.getByRole('dialog', { name: 'Your career' })).queryByRole('list', { name: 'What sets this career apart' });
+      const lines = list ? within(list).getAllByRole('listitem').map((li) => li.textContent) : [];
+      cleanup();
+      return { lines, sub };
+    };
+
+    expect((await traitsOf('healthcare')).lines).toEqual([]);
+    const teacher = await traitsOf('education', (state) => {
+      state.player.life.focusBonus = 1;
+    });
+    expect(teacher.lines).toEqual(['It leaves time over: +1 focus every round.']);
+    expect(teacher.sub).toContain('+1 because your job leaves time over');
+
+    const swing = content.careers.find((career) => career.id === 'sales')?.cyclePct?.[base.timeline[0].regime] ?? 0;
+    expect((await traitsOf('sales')).lines).toEqual([
+      swing > 0 ? `Your pay follows the economy: this round you earn ${swing}% more.` : swing < 0 ? `Your pay follows the economy: this round you earn ${-swing}% less.` : 'Your pay follows the economy: up in good times, down in bad. This round, neither.',
+    ]);
+
+    expect((await traitsOf('influencer')).lines).toEqual(['It is a trade for the young: from the age of 34 you earn 12% less each round, down to 70% less.']);
+    const fading = await traitsOf('influencer', (state) => {
+      state.round = 7;
+    });
+    expect(fading.lines).toEqual(['Your audience is growing up: this round you earn 24% less, and it will fall to 70%.']);
   });
 
   it('says so plainly when there is no job', async () => {

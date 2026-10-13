@@ -1,7 +1,7 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
-import { homeOf, INSURANCE_KINDS, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { jobHuntChance, landingOf } from './life/roundEnd';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
@@ -309,6 +309,12 @@ export interface WorkQuote {
   focus: { left: number; total: number; bonus: number };
   /** What the things owned add, by perk. */
   perks: Required<ItemPerks>;
+  /**
+   * What is particular to the career: what the economy does to its pay this round, what age does,
+   * the round from which age starts to and by how much a round, and the focus it leaves over.
+   * All nothing for an ordinary career.
+   */
+  traits: { cyclePct: number; follows: boolean; fadePct: number; fade: { fromRound: number; pctPerRound: number; maxPct: number } | null; focus: number };
 }
 
 /** The player's working life in figures: the ladder they are on and what each way of spending focus is worth to them. */
@@ -317,6 +323,7 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
   const world = view.timeline[view.round];
   const job = p.life.career;
   const perks = perksOf(p, content);
+  const career = job ? careerOf(content, job.id) : null;
   return {
     ladder: job
       ? careerOf(content, job.id).levels.map((rung, level) => ({ level, payAnnual: indexed(ownPay(p, content, level), world), status: rung.status, minSkill: rung.minSkill }))
@@ -331,5 +338,11 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     jobHuntRaisePct: content.life.jobHuntRaisePct,
     focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus },
     perks,
+    traits: {
+      ...careerSwing(p, content, world.regime, view.round),
+      follows: career?.cyclePct !== undefined,
+      fade: career?.fade ?? null,
+      focus: career?.focus ?? 0,
+    },
   };
 }

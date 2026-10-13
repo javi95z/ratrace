@@ -95,7 +95,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 700,
     tax: madridTax,
     prestige: 6,
-    careerPayPct: { public: 115, healthcare: 110 },
+    careerPayPct: { public: 115, healthcare: 110, education: 110 },
   },
   {
     id: 'london',
@@ -109,7 +109,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: londonTax,
     prestige: 12,
-    careerPayPct: { finance: 120, medicine: 110 },
+    careerPayPct: { finance: 120, medicine: 110, law: 115, sales: 110 },
   },
   {
     id: 'new_york',
@@ -123,7 +123,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: newYorkTax,
     prestige: 15,
-    careerPayPct: { finance: 125, tech: 110 },
+    careerPayPct: { finance: 125, tech: 110, law: 120, sales: 115 },
   },
   {
     id: 'dubai',
@@ -137,7 +137,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 1_300,
     tax: dubaiTax,
     prestige: 15,
-    careerPayPct: { service: 120, finance: 110 },
+    careerPayPct: { service: 120, finance: 110, influencer: 120, hospitality: 115 },
   },
   {
     id: 'singapore',
@@ -151,7 +151,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 600,
     tax: singaporeTax,
     prestige: 12,
-    careerPayPct: { tech: 120, finance: 110 },
+    careerPayPct: { tech: 120, finance: 110, education: 115 },
   },
   {
     id: 'bangkok',
@@ -165,6 +165,6 @@ export const cities: CityDef[] = [
     propertyVolBp: 900,
     tax: bangkokTax,
     prestige: 6,
-    careerPayPct: { service: 115, tech: 110 },
+    careerPayPct: { service: 115, tech: 110, hospitality: 120, influencer: 110 },
   },
 ];

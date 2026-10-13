@@ -751,7 +751,7 @@
     "noJobSub": "You live on what you have",
     "status": "Status +{n}",
     "toNext": "Progress towards {title}",
-    "skillOf": "Career skill {skill} of {need}",
+    "skillOf": "Career skill {skill}/{need}",
     "nextIs": "Next: {title}",
     "top": "At the top of your career. Career skill {skill}.",
     "finance": "Money sense",
@@ -780,8 +780,8 @@
     "financeLandlord": "And letting property out.",
     "financeHow": "It rises with practice: after {years} years with money invested. Some cards raise it too, such as a course or a good book.",
     "financeTop": "You are at the top: the whole market is open to you.",
-    "focusAbout": "Focus is your time and your energy for two years. You have {total} a round.",
-    "focusBonus": "One more than your own this time: {n} from the rest your last trip gave you.",
+    "focusAbout": "Focus is your time and your energy for two years. This round you have {total}.",
+    "focusBonus": "{n} is from the rest your last trip gave you.",
     "focusLeft": "left this round",
     "focusNoJob": "Without a job there is no overtime, no study and no hunt: your focus is for moving city and for the cards.",
     "overtime": "Overtime",
@@ -792,6 +792,16 @@
     "huntGives": "{pct}% chance of a {raise}% raise for good.",
     "focusAlso": "Moving city takes 1 focus, and some cards ask for 1 or 2 to take their best option.",
     "focusThings": "What you own is already counted in these figures.",
-    "focusWhere": "It is spent in the Lifestyle tab, during the finances."
+    "focusWhere": "It is spent in the Lifestyle tab, during the finances.",
+    "traits": "What sets this career apart",
+    "cycleUp": "Your pay follows the economy: this round you earn {pct}% more.",
+    "cycleDown": "Your pay follows the economy: this round you earn {pct}% less.",
+    "cycleFlat": "Your pay follows the economy: up in good times, down in bad. This round, neither.",
+    "fadeLater": "It is a trade for the young: from the age of {age} you earn {pct}% less each round, down to {max}% less.",
+    "fadeNow": "Your audience is growing up: this round you earn {pct}% less, and it will fall to {max}%.",
+    "jobFocus": "It leaves time over: +{n} focus every round.",
+    "focusJob": "+{n} because your job leaves time over",
+    "focusExtra": "+{n} extra this round",
+    "focusFromJob": "{n} comes from your job, which leaves time over."
   }
 }

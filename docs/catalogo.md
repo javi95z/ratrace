@@ -1,19 +1,19 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.10.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.11.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
 | Qué | Cuántos |
 | --- | --- |
 | [Vidas](#vidas) | 11 |
-| [Carreras](#carreras) | 6 |
+| [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 6 |
 | [Objetos](#objetos) | 55, de ellos 7 coches |
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 19 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 106 |
+| [Cartas](#cartas) | 108 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 31 |
 
@@ -259,6 +259,64 @@ Horas extra: +8 % de sueldo esa ronda.
 | Especialista | 200 % del sueldo medio | 14 | +17 |
 | Jefa de servicio | 260 % del sueldo medio | 24 | +26 |
 
+### Derecho
+
+Horas extra: +6 % de sueldo esa ronda.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Pasante | 90 % del sueldo medio | 0 | +4 |
+| Abogado júnior | 115 % del sueldo medio | 6 | +8 |
+| Abogado | 160 % del sueldo medio | 14 | +15 |
+| Socio | 240 % del sueldo medio | 24 | +24 |
+| Socio director | 380 % del sueldo medio | 34 | +32 |
+
+### Educación
+
+Horas extra: +3 % de sueldo esa ronda. Deja tiempo libre: +1 de foco cada ronda.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Profesor interino | 80 % del sueldo medio | 0 | +3 |
+| Profesor | 90 % del sueldo medio | 6 | +6 |
+| Jefe de departamento | 102 % del sueldo medio | 14 | +10 |
+| Director de centro | 115 % del sueldo medio | 24 | +15 |
+
+### Influencer
+
+Horas extra: +12 % de sueldo esa ronda. Oficio de jóvenes: desde los 34 años, 12 % menos de sueldo cada ronda, hasta un 70 % menos.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Creador novato | 70 % del sueldo medio | 0 | +6 |
+| Creador | 130 % del sueldo medio | 3 | +14 |
+| Influencer | 220 % del sueldo medio | 8 | +24 |
+| Estrella | 300 % del sueldo medio | 14 | +34 |
+
+### Hostelería
+
+Horas extra: +14 % de sueldo esa ronda.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Camarero | 60 % del sueldo medio | 0 | +1 |
+| Jefe de sala | 78 % del sueldo medio | 4 | +3 |
+| Encargado | 100 % del sueldo medio | 10 | +7 |
+| Director de hotel | 130 % del sueldo medio | 18 | +12 |
+| Director de cadena | 170 % del sueldo medio | 28 | +19 |
+
+### Ventas
+
+Horas extra: +8 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +25 %, Expansión +10 %, Desaceleración -10 %, Recesión -25 %.
+
+| Puesto | Sueldo | Experiencia | Estatus |
+| --- | --- | --- | --- |
+| Comercial júnior | 75 % del sueldo medio | 0 | +2 |
+| Comercial | 100 % del sueldo medio | 4 | +5 |
+| Responsable de cuentas | 135 % del sueldo medio | 10 | +10 |
+| Director comercial | 180 % del sueldo medio | 18 | +17 |
+| Director de ventas | 240 % del sueldo medio | 28 | +25 |
+
 ## Ciudades
 
 Cada ciudad tiene su perfil de noche y de día, y un icono.
@@ -280,7 +338,7 @@ Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.
 | Impuesto sobre la renta | 19 % · 30 % · 45 % |
 | Impuesto sobre ganancias | 21 % |
 | Estatus por vivir aquí | +6 |
-| Carreras que paga mejor | Función pública +15 % · Sanidad +10 % |
+| Carreras que paga mejor | Función pública +15 % · Sanidad +10 % · Educación +10 % |
 
 ### <img src="../art/clean/icons/icon.city_london.png" alt=""> Londres
 
@@ -297,7 +355,7 @@ Donde se hacen las carreras en finanzas y se pagan los alquileres.
 | Impuesto sobre la renta | 20 % · 40 % · 45 % |
 | Impuesto sobre ganancias | 20 % |
 | Estatus por vivir aquí | +12 |
-| Carreras que paga mejor | Finanzas +20 % · Medicina +10 % |
+| Carreras que paga mejor | Finanzas +20 % · Medicina +10 % · Derecho +15 % · Ventas +10 % |
 
 ### <img src="../art/clean/icons/icon.city_new_york.png" alt=""> Nueva York
 
@@ -314,7 +372,7 @@ Los sueldos más altos del juego, y los impuestos más altos.
 | Impuesto sobre la renta | 25 % · 38 % · 50 % |
 | Impuesto sobre ganancias | 25 % |
 | Estatus por vivir aquí | +15 |
-| Carreras que paga mejor | Finanzas +25 % · Tecnología +10 % |
+| Carreras que paga mejor | Finanzas +25 % · Tecnología +10 % · Derecho +20 % · Ventas +15 % |
 
 ### <img src="../art/clean/icons/icon.city_dubai.png" alt=""> Dubái
 
@@ -331,7 +389,7 @@ Sin impuesto sobre la renta y con mil maneras de gastar lo que te queda.
 | Impuesto sobre la renta | 0 % · 0 % · 0 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +15 |
-| Carreras que paga mejor | Servicios +20 % · Finanzas +10 % |
+| Carreras que paga mejor | Servicios +20 % · Finanzas +10 % · Influencer +20 % · Hostelería +15 % |
 
 ### <img src="../art/clean/icons/icon.city_singapore.png" alt=""> Singapur
 
@@ -348,7 +406,7 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 | Impuesto sobre la renta | 5 % · 15 % · 22 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +12 |
-| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % |
+| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % · Educación +15 % |
 
 ### <img src="../art/clean/icons/icon.city_bangkok.png" alt=""> Bangkok
 
@@ -365,7 +423,7 @@ Tu dinero cunde cuatro veces más. Tus ahorros también.
 | Impuesto sobre la renta | 5 % · 20 % · 35 % |
 | Impuesto sobre ganancias | 10 % |
 | Estatus por vivir aquí | +6 |
-| Carreras que paga mejor | Servicios +15 % · Tecnología +10 % |
+| Carreras que paga mejor | Servicios +15 % · Tecnología +10 % · Hostelería +20 % · Influencer +10 % |
 
 ## Objetos
 
@@ -565,7 +623,7 @@ Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durant
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (12)
+### Carrera (14)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -576,6 +634,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.packed_box.png" alt="Una ronda de despidos"> | **Una ronda de despidos**<br>En tu calendario aparece una reunión general sin orden del día. | 1. Aceptar la indemnización<br>2. Pelear por tu puesto<br>3. Formarte mientras buscas |
 | <img src="../art/clean/cards/card.angry_boss.png" alt="El jefe nuevo"> | **El jefe nuevo**<br>Correos a medianoche. Elogios en privado, broncas en público. | 1. Aguantar<br>2. Denunciarlo a Recursos Humanos<br>3. Cambiar de equipo |
 | <img src="../art/clean/cards/card.two_ladders.png" alt="Otra escalera"> | **Otra escalera**<br>Un amigo que trabaja en banca dice que buscan gente con «experiencia del mundo real». | 1. Quedarte donde estás<br>2. Empezar desde abajo en finanzas<br>3. Pagar un curso y presentarte |
+| <img src="../art/clean/cards/card.courtroom.png" alt="El bufete busca pasantes"> | **El bufete busca pasantes**<br>Un despacho contrata pasantes. Las horas son largas y la escalera, la más alta de la ciudad. | 1. Quedarte donde estás<br>2. Empezar desde abajo en derecho<br>3. Pagar el curso de acceso |
+| <img src="../art/clean/cards/card.street_market.png" alt="Sábado en el mercado"> | **Sábado en el mercado**<br>Un puesto necesita quien venda, y el bar de la esquina, quien sirva. Nadie pide currículum. | 1. Seguir andando<br>2. Vender en el puesto<br>3. Servir en el bar |
 | <img src="../art/clean/cards/card.tower_lobby.png" alt="El gran nombre"> | **El gran nombre**<br>Google, Inditex o Goldman Sachs: quien manda en tu sector quiere hablar contigo. | 1. Quedarte<br>2. Aceptar la oferta<br>3. Negociar fuerte |
 | <img src="../art/clean/cards/card.shares_or_salary.png" alt="Acciones o sueldo"> | **Acciones o sueldo**<br>Tu subida puede llegar en efectivo cada mes o en acciones que se liberan en dos años. | 1. Coger el efectivo<br>2. Coger las acciones |
 | <img src="../art/clean/cards/card.sunrise_balcony.png" alt="Teletrabajo aprobado"> | **Teletrabajo aprobado**<br>Puedes trabajar desde casa para siempre, si quieres. | 1. Seguir yendo a la oficina<br>2. Pasarte al teletrabajo<br>3. Pedir a cambio un aumento |
@@ -591,7 +651,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.library.png" alt="Un libro sobre dinero"> | **Un libro sobre dinero**<br>Una compañera te presta el libro que «le cambió la forma de pensar en el dinero». | 1. Dejarlo en la estantería<br>2. Leerlo |
 | <img src="../art/clean/cards/card.lecture_hall.png" alt="El MBA"> | **El MBA**<br>Tienes plaza en el MBA en el IESE. Cuesta una fortuna y se come dos años de tardes. | 1. No es para mí<br>2. Matricularte y pagar<br>3. Matricularte con un préstamo |
 | <img src="../art/clean/cards/card.bootcamp.png" alt="Bootcamp de programación"> | **Bootcamp de programación**<br>Dieciséis semanas para ser programador júnior. Dicen que todos encuentran trabajo. | 1. Pasar<br>2. Apuntarte y pasarte a tecnología |
-| <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte |
+| <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte<br>3. Apuntarte, y quedarte con sus clases |
 
 ### Negocios (8)
 
@@ -640,7 +700,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | --- | --- | --- |
 | <img src="../art/clean/cards/card.sports_car.png" alt="El coche nuevo de un compañero"> | **El coche nuevo de un compañero**<br>Lo aparca ocupando dos plazas. Baja todo el mundo a verlo. | 1. Encogerte de hombros<br>2. Comprarle barato su viejo VW Golf GTI<br>3. Financiar un BMW M3 |
 | <img src="../art/clean/cards/card.beach_club.png" alt="Ibiza"> | **Ibiza**<br>En el grupo ya hay villa, fechas y un plazo para pagar la señal. | 1. Quedarte en casa<br>2. Ir<br>3. Ir, con mesa en la discoteca |
-| <img src="../art/clean/cards/card.phone_launch.png" alt="El nuevo iPhone"> | **El nuevo iPhone**<br>El tuyo funciona. Este tiene mejor cámara. | 1. Seguir con el viejo<br>2. Comprarlo |
+| <img src="../art/clean/cards/card.phone_launch.png" alt="El nuevo iPhone"> | **El nuevo iPhone**<br>El tuyo funciona. Este tiene mejor cámara. | 1. Seguir con el viejo<br>2. Comprarlo<br>3. Comprarlo y empezar a grabar |
 | <img src="../art/clean/cards/card.beach_wedding.png" alt="Una boda en el extranjero"> | **Una boda en el extranjero**<br>Tu amiga se casa junto a un lago: cuatro días y etiqueta «elegante». | 1. Mandar un regalo<br>2. Ir<br>3. Ir a lo grande |
 | <img src="../art/clean/cards/card.watch_boutique.png" alt="La lista de espera"> | **La lista de espera**<br>Llaman de la joyería. Después de dos años, ha llegado tu Rolex Submariner. | 1. Dejarlo pasar<br>2. Comprarlo y llevarlo<br>3. Comprarlo y revenderlo |
 | <img src="../art/clean/cards/card.business_cabin.png" alt="Mejora en la puerta de embarque"> | **Mejora en la puerta de embarque**<br>Por una fracción del billete, el asiento se convierte en cama. | 1. Quedarte en turista<br>2. Aceptar la mejora |

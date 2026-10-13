@@ -54,6 +54,8 @@ export const lifestyleCards: CardDef[] = [
   card('life_new_phone', 'lifestyle', { cooldown: 3, when: { notItems: ['tech_phone'] } }, [
     {},
     { effects: { buyItem: { itemId: 'tech_phone', pricePct: 100 } } },
+    // The better camera is a way to earn a living, for someone young enough for an audience.
+    { when: { careers: ['service', 'hospitality', 'sales', 'tech', 'healthcare', 'public', 'education'], maxRound: 5 }, effects: { focus: 2, careerSkill: -6, buyItem: { itemId: 'tech_phone', pricePct: 100 }, job: { career: 'influencer', level: 0 }, clearFlags: ['layoff_proof', 'share_plan'] } },
   ]),
   card('life_wedding_abroad', 'lifestyle', { cooldown: 5 }, [
     { effects: { cash: usd(-150), status: -1 } },

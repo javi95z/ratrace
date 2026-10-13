@@ -20,6 +20,8 @@ export const cardArt: Record<string, string> = {
   career_remote_work: scene('sunrise_balcony'),
   career_become_manager: scene('meeting_room'),
   career_headhunter: scene('headhunter_call'),
+  career_law_firm: scene('courtroom'),
+  career_market: scene('street_market'),
 
   edu_masters: scene('graduation'),
   edu_finance_course: scene('online_course'),

@@ -138,6 +138,16 @@ export function validateContent(c: Content): string[] {
 
   for (const career of c.careers) {
     if (!notNegative(career.overtimePct)) errors.push(`career ${career.id} has a negative overtime percentage`);
+    if (career.focus !== undefined && !isCount(career.focus)) errors.push(`career ${career.id} needs a whole, non-negative focus`);
+    if (career.cyclePct !== undefined) {
+      for (const [regime, pct] of Object.entries(career.cyclePct)) {
+        if (!(REGIMES as readonly string[]).includes(regime) || !isWhole(pct) || pct < -100) errors.push(`career ${career.id} has a swing that is not a whole percentage for a known state of the economy`);
+      }
+    }
+    if (career.fade !== undefined) {
+      const { fromRound, pctPerRound, maxPct } = career.fade;
+      if (!isCount(fromRound) || !isCount(pctPerRound) || !isCount(maxPct) || maxPct > 100) errors.push(`career ${career.id} needs a fade of whole rounds and percentages, at most 100 in all`);
+    }
     if (career.levels.length === 0) {
       errors.push(`career ${career.id} needs at least one level`);
       continue;

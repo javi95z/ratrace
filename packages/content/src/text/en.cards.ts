@@ -63,6 +63,16 @@ export const cards: Record<string, CardText> = {
     'Stay hands-on',
     'Take the team',
   ]),
+  career_law_firm: c('The firm takes clerks', 'A law firm is hiring paralegals. The hours are long and the ladder is the tallest in town.', [
+    'Stay where you are',
+    'Start at the bottom in law',
+    ['Pay for the entrance course', 'You pass. The firm calls on Monday.', 'You fail the exam by four points.'],
+  ]),
+  career_market: c('Saturday at the market', 'A stallholder needs a seller, and the bar on the corner a waiter. Neither asks for a CV.', [
+    'Walk on',
+    'Sell at the stall',
+    'Serve at the bar',
+  ]),
   career_headhunter: c('A headhunter calls', '"Are you free for a confidential coffee?"', [
     'Not interested',
     ['Take the meeting', 'A better package at a better firm.', 'A pleasant coffee and nothing more.'],
@@ -95,6 +105,7 @@ export const cards: Record<string, CardText> = {
   edu_language: c('A new language', 'A teacher two streets away gives evening classes.', [
     'Maybe next year',
     'Sign up',
+    'Sign up, and take over her classes',
   ]),
 
   // Business
@@ -234,6 +245,7 @@ export const cards: Record<string, CardText> = {
   life_new_phone: c('The new {item:tech_phone}', 'Yours still works. This one has a better camera.', [
     'Keep the old one',
     'Buy it',
+    'Buy it and start filming',
   ]),
   life_wedding_abroad: c('A wedding abroad', 'Your friend is getting married on a lake, four days, dress code "elegant".', [
     'Send a gift',

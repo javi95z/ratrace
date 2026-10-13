@@ -115,6 +115,15 @@ export interface CareerDef {
   levels: CareerLevel[];
   /** Extra salary for a round of overtime, in percent. */
   overtimePct: number;
+  /** Pay that follows the economy: percent on top of the pay, or off it, in each state of it. Absent: none. */
+  cyclePct?: Partial<Record<Regime, number>>;
+  /**
+   * A trade for the young. From `fromRound` on the pay falls by `pctPerRound` each round, that
+   * round included, until it is `maxPct` down.
+   */
+  fade?: { fromRound: number; pctPerRound: number; maxPct: number };
+  /** Focus points on top each round: a job that leaves time over. */
+  focus?: number;
 }
 
 export type ItemKind = 'durable' | 'membership' | 'experience';

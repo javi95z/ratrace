@@ -1,5 +1,5 @@
 import { newId } from './ids';
-import { refreshDerived } from './life/derive';
+import { focusBonusOf, refreshDerived } from './life/derive';
 import { propertyPrice } from './property';
 import type { Content, LifeState, PlayerState, StartConfig, WorldState } from './types';
 
@@ -71,6 +71,8 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     });
   }
   for (const held of from?.holdings ?? []) p.positions[held.assetId] = { value: held.value, basis: held.value };
+  // A job that leaves time over leaves it from the first day.
+  p.life.focusBonus = focusBonusOf(p, content);
   refreshDerived(p, content, 0);
   return p;
 }

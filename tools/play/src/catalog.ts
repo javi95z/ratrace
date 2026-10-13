@@ -97,7 +97,12 @@ say('## Carreras', 'El sueldo es un porcentaje del sueldo medio de la ciudad don
 for (const career of content.careers) {
   say(
     `### ${text.careers[career.id].name}`,
-    `Horas extra: +${career.overtimePct} % de sueldo esa ronda.`,
+    [
+      `Horas extra: +${career.overtimePct} % de sueldo esa ronda.`,
+      career.focus ? `Deja tiempo libre: +${career.focus} de foco cada ronda.` : '',
+      career.cyclePct ? `El sueldo sigue a la economía: ${Object.entries(career.cyclePct).map(([regime, share]) => `${text.regimes[regime as keyof typeof text.regimes] ?? regime} ${signed(share)} %`).join(', ')}.` : '',
+      career.fade ? `Oficio de jóvenes: desde los ${START_AGE + career.fade.fromRound * content.yearsPerRound} años, ${career.fade.pctPerRound} % menos de sueldo cada ronda, hasta un ${career.fade.maxPct} % menos.` : '',
+    ].filter(Boolean).join(' '),
     table(
       ['Puesto', 'Sueldo', 'Experiencia', 'Estatus'],
       career.levels.map((level, i) => [text.careers[career.id].levels[i], `${level.salaryPct} % del sueldo medio`, `${level.minSkill}`, signed(level.status)]),
