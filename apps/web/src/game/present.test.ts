@@ -182,6 +182,8 @@ describe('orderLabel', () => {
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 200_000 })).toBe('Invest $2,000 every round in S&P 500');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 0 })).toBe('Stop investing in S&P 500');
+    expect(label({ type: 'setReinvest', on: true })).toBe('Reinvest the dividends');
+    expect(label({ type: 'setReinvest', on: false })).toBe('Take the dividends as cash');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');

@@ -153,6 +153,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('withdraw', { amount: fmt.money(order.amount) });
     case 'pensionIn':
       return t('pension', { amount: fmt.money(order.amount) });
+    case 'setReinvest':
+      return t(order.on ? 'reinvestOn' : 'reinvestOff');
     case 'setPlan':
       return t(order.amount > 0 ? 'planOn' : 'planOff', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
     case 'borrow':

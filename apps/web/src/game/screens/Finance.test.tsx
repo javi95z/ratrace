@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, viewOf } from '@ratrace/engine';
+import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -216,6 +216,68 @@ describe('the lifestyle tab', () => {
     const switches = screen.getAllByRole('switch');
     expect(switches).toHaveLength(3 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
+  });
+});
+
+describe('the portfolio at a glance', () => {
+  it('says what the player\'s wealth is held in, share by share, and what most of it hangs on', async () => {
+    // The heir owns a flat and has cash; a round later, two funds as well.
+    const { services, session } = await inFinance('heir');
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'buy', assetId: 'msci_world', amount: 500_000 }] });
+    await toFinance(session);
+    const quote = quotePortfolio(content, viewOf(await stateOf(services)));
+    renderGame(<Play />, services);
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    expect(within(glance).getByText(fmt.money(quote.total))).toBeTruthy();
+    // One line a kind, in the order and the shares the engine gives.
+    const kinds: Record<string, string> = { cash: 'Cash', savings: 'Savings', pension: 'Pension', equity: 'Funds and stocks', bond: 'Bonds', crypto: 'Crypto', gold: 'Gold', property: 'Property', things: 'Things' };
+    expect(within(glance).getAllByRole('listitem').map((li) => li.textContent)).toEqual(quote.slices.map((slice) => `${kinds[slice.kind]}${fmt.rate(slice.shareBp)}`));
+    // The flat is most of what is put to work, and the screen says so in words.
+    expect(quote).toMatchObject({ concentrated: true, largest: { kind: 'property' } });
+    expect(within(glance).getByRole('note').textContent).toBe(`${fmt.rate(quote.largest?.shareBp ?? 0)} of what you have invested is in one thing: Flat, Madrid. If it does badly, so do you.`);
+  });
+
+  it('warns nobody who is only beginning, and says nothing of being paid to someone nothing pays', async () => {
+    const { services } = await inFinance('nurse');
+    renderGame(<Play />, services);
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    expect(within(glance).queryByRole('note')).toBeNull();
+    // All she has is cash, and the one line says so.
+    expect(within(glance).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Cash100.0%']);
+    expect(screen.queryByRole('region', { name: 'What you are paid' })).toBeNull();
+  });
+});
+
+describe('what the investments pay', () => {
+  it('is shown on each holding and in all, and can be put back into them with one switch', async () => {
+    const { services, session } = await inFinance('heir');
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'buy', assetId: 'msci_world', amount: 500_000 }] });
+    await toFinance(session);
+    const state = await stateOf(services);
+    const quote = quotePortfolio(content, viewOf(state));
+    expect(quote.dividends).toHaveLength(2);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const pays = await screen.findByRole('region', { name: 'What you are paid' });
+    expect(within(pays).getByText(fmt.signed(quote.dividendsTotal))).toBeTruthy();
+    for (const paid of quote.dividends) expect(screen.getByText(`Pays ${fmt.money(paid.amount)} this round`)).toBeTruthy();
+
+    const toggle = within(pays).getByRole('switch', { name: /^Reinvest the dividends/ });
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    await user.click(toggle);
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    expect(toggle.textContent).toContain('Each asset buys more of itself with what it pays.');
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Reinvest the dividends' })).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Close' }));
+
+    await user.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    const after = await stateOf(services);
+    expect(after.player.reinvest).toBe(true);
+    // Each holding cost what it cost, and what it paid on top.
+    for (const paid of quote.dividends) expect(after.player.positions[paid.assetId].basis).toBe(state.player.positions[paid.assetId].basis + paid.amount);
+    expect(screen.getByText('Dividends reinvested')).toBeTruthy();
   });
 });
 

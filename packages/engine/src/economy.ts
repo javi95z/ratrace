@@ -37,6 +37,17 @@ export function livingCostAnnual(p: PlayerState, content: Content, world: WorldS
   return base - housing + mulDiv(housing, content.life.rentTierHousingPct[p.life.rentTier], 100);
 }
 
+/** What each investment held pays in the round, at the rates of the given world. Nothing is listed for one that pays nothing. */
+export function dividendsByAsset(p: PlayerState, content: Content, world: WorldState): Array<{ assetId: string; amount: Cents }> {
+  const paid: Array<{ assetId: string; amount: Cents }> = [];
+  for (const asset of content.assets) {
+    if (!Object.hasOwn(p.positions, asset.id)) continue;
+    const amount = applyBp(p.positions[asset.id].value, assetYieldBp(asset, world) * content.yearsPerRound);
+    if (amount > 0) paid.push({ assetId: asset.id, amount });
+  }
+  return paid;
+}
+
 /**
  * Income earned on what the player holds, at the rates and prices of the given world.
  * Wages and other passive income follow the price level; investment income does not.
@@ -45,10 +56,7 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
   const years = content.yearsPerRound;
 
   let dividends = 0;
-  for (const asset of content.assets) {
-    if (!Object.hasOwn(p.positions, asset.id)) continue;
-    dividends += applyBp(p.positions[asset.id].value, assetYieldBp(asset, world) * years);
-  }
+  for (const paid of dividendsByAsset(p, content, world)) dividends += paid.amount;
 
   const interest = applyBp(p.deposit, depositRateBp(content, world) * years);
 

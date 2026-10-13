@@ -157,7 +157,7 @@ describe('interface text', () => {
         return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
       });
     const source = files(root).map((path) => readFileSync(path, 'utf8')).join('\n');
-    const BUILT = [/^finance\.tabs\./, /^play\.stages\./, /^meta\.titles\./, /^guide\.(news|cards|finance|ledger|ratRace|invest|focus|flow)$/, /^end\.best(Score|NetWorth|Escape|Status)$/, /^effects\.perks\.(moveCostOffPct|studySkill|salaryPct|jobHuntPct|focus)$/, /^work\.financeOpens\.[012]$/];
+    const BUILT = [/^finance\.tabs\./, /^play\.stages\./, /^meta\.titles\./, /^guide\.(news|cards|finance|ledger|ratRace|invest|focus|flow)$/, /^end\.best(Score|NetWorth|Escape|Status)$/, /^effects\.perks\.(moveCostOffPct|studySkill|salaryPct|jobHuntPct|focus)$/, /^work\.financeOpens\.[0123]$/, /^finance\.glance\.kinds\./];
     const unused = [...en.keys()].filter((key) => {
       if (BUILT.some((built) => built.test(key))) return false;
       const leaf = key.split('.').at(-1) as string;

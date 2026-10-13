@@ -1,5 +1,5 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
-import { livingCostAnnual } from './economy';
+import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
@@ -9,7 +9,7 @@ import { applyBp, BP, mulDiv } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
-import { indexed } from './rates';
+import { depositRateBp, indexed } from './rates';
 import type { Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, WorldState } from './types';
 
 /**
@@ -388,4 +388,77 @@ export function quotePlans(view: GameView): PlanQuote[] {
       priceVsAverageBp: held.basis > 0 ? mulDiv(held.value - held.basis, BP, held.basis) : null,
     };
   });
+}
+
+/** The kinds of thing wealth is held in, as the portfolio is read at a glance. */
+export type WealthKind = 'cash' | 'savings' | 'pension' | 'equity' | 'bond' | 'crypto' | 'gold' | 'property' | 'things';
+
+/** Past this share of what is invested, one holding is the player's fate: the screen says so. */
+export const CONCENTRATION_PCT = 50;
+
+export interface PortfolioQuote {
+  /** Everything owned, before any debt: the whole the shares are of. */
+  total: Cents;
+  /** What is owned, kind by kind, largest first. Kinds with nothing in them are left out. `sharePct` is of `total`, to one decimal in bp. */
+  slices: Array<{ kind: WealthKind; value: Cents; shareBp: Bp }>;
+  /** What is put to work: investments and property, without cash, savings, pension or things. */
+  invested: Cents;
+  /**
+   * The single largest thing among what is put to work, an asset or a property, and its share of
+   * it. Null with nothing invested. `concentrated` is true when that share is past the mark.
+   */
+  largest: { kind: 'asset' | 'property'; id: string; value: Cents; shareBp: Bp } | null;
+  concentrated: boolean;
+  /** What each investment pays this round, and the interest the savings pay. */
+  dividends: Array<{ assetId: string; amount: Cents }>;
+  dividendsTotal: Cents;
+  interest: Cents;
+  /** True if the dividends are put back into what paid them. */
+  reinvest: boolean;
+}
+
+/** The player's wealth at a glance: what it is held in, how much hangs on one thing, and what it pays this round. */
+export function quotePortfolio(content: Content, view: GameView): PortfolioQuote {
+  const p = view.player;
+  const world = view.timeline[view.round];
+  const held: Record<WealthKind, Cents> = { cash: p.cash, savings: p.deposit, pension: p.pension, equity: 0, bond: 0, crypto: 0, gold: 0, property: 0, things: 0 };
+  let largest: PortfolioQuote['largest'] = null;
+  const consider = (kind: 'asset' | 'property', id: string, value: Cents) => {
+    if (largest === null || value > largest.value) largest = { kind, id, value, shareBp: 0 };
+  };
+  for (const asset of content.assets) {
+    if (!Object.hasOwn(p.positions, asset.id)) continue;
+    const value = p.positions[asset.id].value;
+    held[asset.class] += value;
+    consider('asset', asset.id, value);
+  }
+  for (const property of p.properties) {
+    held.property += property.value;
+    consider('property', property.id, property.value);
+  }
+  for (const owned of p.life.items) held.things += owned.value;
+
+  let total = 0;
+  for (const value of Object.values(held)) total += value;
+  const invested = held.equity + held.bond + held.crypto + held.gold + held.property;
+  const share = (value: Cents, of: Cents): Bp => (of > 0 ? mulDiv(value, BP, of) : 0);
+  const top = largest as PortfolioQuote['largest'];
+  const dividends = dividendsByAsset(p, content, world);
+  let dividendsTotal = 0;
+  for (const paid of dividends) dividendsTotal += paid.amount;
+  return {
+    total,
+    slices: (Object.keys(held) as WealthKind[])
+      .filter((kind) => held[kind] > 0)
+      .map((kind) => ({ kind, value: held[kind], shareBp: share(held[kind], total) }))
+      .sort((a, b) => b.value - a.value),
+    invested,
+    largest: top ? { ...top, shareBp: share(top.value, invested) } : null,
+    // One holding is no warning to someone who has only begun: it takes two things for one to weigh too much.
+    concentrated: top !== null && share(top.value, invested) > CONCENTRATION_PCT * 100 && invested > top.value,
+    dividends,
+    dividendsTotal,
+    interest: applyBp(p.deposit, depositRateBp(content, world) * content.yearsPerRound),
+    reinvest: p.reinvest,
+  };
 }

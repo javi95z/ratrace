@@ -300,5 +300,6 @@ export const es: ContentText = {
     depositDraw: 'Sacado del ahorro',
     creditCardDraw: 'Cargado a la tarjeta',
     creditCardRepay: 'Tarjeta pagada',
+    dividendsReinvested: 'Dividendos reinvertidos',
   },
 };

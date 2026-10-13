@@ -11,6 +11,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'depositOut',
   'pensionIn',
   'setPlan',
+  'setReinvest',
   'borrow',
   'repay',
   'buyProperty',
@@ -54,6 +55,8 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
       return isText(fields.itemId);
     case 'setInsurance':
       return isText(fields.insurance) && isFlag(fields.on);
+    case 'setReinvest':
+      return isFlag(fields.on);
     case 'moveCity':
       return isText(fields.cityId);
     default:
@@ -83,6 +86,9 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
       return executePortfolioOrder(p, order, ctx);
     case 'setPlan':
       return executeSetPlan(p, order, ctx);
+    case 'setReinvest':
+      p.reinvest = order.on;
+      return null;
     case 'borrow':
       return executeBorrow(p, order, ctx);
     case 'repay':

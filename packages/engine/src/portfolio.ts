@@ -26,6 +26,23 @@ export function executeSetPlan(p: PlayerState, order: Extract<Order, { type: 'se
 }
 
 /**
+ * Puts what the investments paid in the round back into them, each into itself, if the player has
+ * asked for that and the cash is there once the round's bills are met: nothing is borrowed to
+ * reinvest, and it is all or nothing. Returns what was put back.
+ */
+export function reinvestDividends(p: PlayerState, paid: ReadonlyArray<{ assetId: string; amount: Cents }>): Cents {
+  let total = 0;
+  for (const each of paid) total += each.amount;
+  if (!p.reinvest || total === 0 || p.cash < total) return 0;
+  for (const each of paid) {
+    const held = p.positions[each.assetId];
+    p.positions[each.assetId] = { value: held.value + each.amount, basis: held.basis + each.amount };
+  }
+  p.cash -= total;
+  return total;
+}
+
+/**
  * Runs the player's plans for the round, in the order they were made, each as a purchase like any
  * other. A plan the round cannot pay for buys nothing this once and stays: nothing is borrowed for it.
  */
