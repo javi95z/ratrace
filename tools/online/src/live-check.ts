@@ -61,12 +61,12 @@ const check = (ok: boolean, what: string) => results.push({ ok, what });
  */
 interface GameCloud {
   playingGames(): Promise<Array<{ id: string; round: number; status: string; log: unknown }>>;
-  pushGame(game: { id: string; lifeId: string; engineVersion: string; contentVersion: string; seed: string; round: number; log: unknown; stateHash: string }): Promise<'saved' | 'closed'>;
+  pushGame(game: { id: string; lifeId: string; engineVersion: string; contentVersion: string; seed: string; round: number; log: unknown; stateHash: string }): Promise<'saved' | 'closed' | 'taken' | 'behind'>;
   abandonGame(id: string): Promise<void>;
   loadProgress(): Promise<unknown>;
   saveProgress(progress: unknown): Promise<void>;
   listRuns(): Promise<Array<{ id: string; score: number; badges: string[] }>>;
-  finishRun(gameId: string): Promise<'done' | 'refused' | 'failed'>;
+  finishRun(gameId: string): Promise<'done' | 'refused' | 'unknown-version' | 'failed'>;
 }
 
 /** A nurse's life, first choice on every card, and the log of it: the whole of it, or its first rounds. */
@@ -204,6 +204,10 @@ try {
   // The database keeps what it is given, not the order of its keys.
   check(onLaptop?.round === 3 && isDeepStrictEqual(onLaptop.log, early3.log), 'a second device signed in as the same player finds that life, choice for choice');
   check((await laptop.pushGame(upload(early5))) === 'saved' && (await phone.playingGames()).find((game) => game.id === shared)?.round === 5, 'played further there, the first device finds it further along');
+  // The first device has not looked since, and sends the older copy it still holds.
+  check((await phone.pushGame(upload(early3))) === 'behind' && (await laptop.playingGames()).find((game) => game.id === shared)?.round === 5, 'an older copy does not go over the further one: the game is told the account is further along');
+  // Another player's device holding a life under that same id: the guest this device was, before its player signed in as someone else.
+  check((await stranger.pushGame(upload(early5))) === 'taken' && (await stranger.playingGames()).length === 0, 'another account saving under that id is told the id is taken, and nothing of it is written');
   await laptop.abandonGame(shared);
   check(!(await phone.playingGames()).some((game) => game.id === shared), 'given up on one device, it is no longer offered to the other');
   check((await phone.pushGame(upload(early5))) === 'saved' && (await laptop.playingGames()).some((game) => game.id === shared), 'and the device still playing it takes it up again');
@@ -220,6 +224,10 @@ try {
   check(JSON.stringify(there?.badges) === JSON.stringify(mine.journal.earned), 'and with the badges of that life');
   check((await phone.pushGame(upload(life, whole, 'live-check-parity'))) === 'closed', 'the game is told that a life the server has finished is closed');
   check((await phone.finishRun(crypto.randomUUID())) === 'refused', 'and that the server will not finish a life it was never sent');
+  const other = crypto.randomUUID();
+  await phone.pushGame({ ...upload(life, other, 'live-check-parity'), engineVersion: '9.9.9' });
+  check((await phone.finishRun(other)) === 'unknown-version', 'and that it does not hold versions it does not hold, which is not the same as no');
+  await phone.abandonGame(other);
   const theirs = [await stranger.playingGames(), await stranger.listRuns()] as const;
   check(theirs[0].length === 0 && !theirs[1].some((one) => one.id === whole) && (await stranger.loadProgress()) === null, 'another player finds none of it in their own account');
 } catch (error) {

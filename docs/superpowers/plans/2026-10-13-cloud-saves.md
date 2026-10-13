@@ -46,11 +46,12 @@ Not here: ranked games, where the server holds the seed (13), rankings (13), the
 
 This happens when an account starts on a device and when a guest becomes a member.
 
-- **What is unlocked: union.** A badge earned anywhere is earned, with its earliest date. The gallery and the unlocked lives are joined. A tip of the guide seen anywhere is seen; the guide is off if it was turned off anywhere. The result is written to the device and to the cloud. Nothing a player has can be lost by signing in.
+- **What is unlocked: union.** A badge earned anywhere is earned, with its earliest date. The gallery and the unlocked lives are joined. A tip of the guide seen anywhere is seen. The result is written to the device and to the cloud, and the cloud's copy is read again before it is written over, so what another device added meanwhile is kept. Nothing a player has can be lost by signing in.
+- Whether the guide is on is not joined: it belongs to the device, like less motion. (As first built it was joined, "off anywhere is off", and the switch could never be turned back on.)
 - **Finished lives: union by id.** Lives finished on other devices appear in the records. They carry the server's numbers.
 - **The life in progress:**
   - The device has none, the cloud has one: the device takes it, and the player finds their life waiting.
-  - Both have the same life: the copy with more of it played wins. They are never merged.
+  - Both have the same life: the copy with more of it played wins. They are never merged. This is also a rule of the table: a save with less of a life played than the account holds is refused, so a device that has not read the account lately cannot write its older copy over a further one. Refused, it reads the account and takes the further copy.
   - They have different lives: the device keeps its own, and nothing is replaced behind the player's back. The front door offers "Continue the life in your account", which asks before it ends the one on the device, as starting a new life does. The player can end the life in the account instead.
   - The device has a life that is over: it stays there, where its score can still be looked at, and the cloud's is offered.
   - The device still holds as in progress a life that was lived to the end on another device: it lets go of it, and the result arrives with the finished lives.
@@ -62,12 +63,14 @@ This happens when an account starts on a device and when a guest becomes a membe
 
 - A new device starts as a guest, like every device. "Keep it with Google" there finds that the Google account already has a player. Step 11 stopped at saying so.
 - Now the notice offers "Use that account on this device". It signs in with Google as that player; then the merge above runs, so whatever the guest had done on this device joins the account.
-- The guest account left behind is empty of anything the player needs. Removing abandoned guests is housekeeping for a later step.
+- An id belongs to whoever saved it first, and what this device sent as a guest went up under the guest. The account will not take those lives under their own ids, and says so; the device then gives each a new id (the life in progress, its record among the finished lives, and what it earned keep pointing at it) and sends it under that.
+- The guest account left behind still holds its copies. Nothing the player needs is only there. Removing abandoned guests is housekeeping for a later step.
 
 ### Limits
 
 - A player may hold at most 50 games in the cloud; the oldest abandoned and finished ones make room. Enforced in the database, not in the client.
-- The function refuses a game that is not finished, not the caller's, ranked, or on versions it does not hold.
+- The function refuses a game that is not finished, not the caller's, ranked, or on versions it does not hold. A life it will not finish is given up in the account, so that it is not left there as one being played.
+- A finished life goes up whatever versions it was lived on: the server may still hold them. If it says it does not, no other life on those versions is sent until the page is opened anew.
 
 ### What the player sees
 
@@ -96,5 +99,5 @@ This happens when an account starts on a device and when a guest becomes a membe
 - [x] 7. Signing in to an existing account from a second device
 - [x] 8. What the player sees: the saving line, the offer on the front door, text in both languages
 - [x] 9. The live check extended; the end-to-end suite with no cloud still untouched
-- [ ] 10. Spec and roadmap brought up to date
-- [ ] 11. Fresh review and one fix pass (together with the review of step 11)
+- [x] 10. Spec and roadmap brought up to date
+- [x] 11. Fresh review and one fix pass. The review found that a guest who signed in as an account they already had never got their lives into it, and was told they had; that a device which had not read the account wrote its older copy, and what it had unlocked, over what another had added; that the guide could not be turned back on; and that a page opened offline never signed in. All fixed, each with a test that failed first

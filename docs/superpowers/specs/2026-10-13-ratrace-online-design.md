@@ -91,6 +91,8 @@ Rankings are views over `runs` and `daily_entries`: all-time best per player, th
 
 When a device meets its account (the page opens, the connection returns, someone signs in) the two are brought together. What is unlocked is joined, and nothing is ever taken away. Finished lives are joined by id. Of a life in progress one copy is taken whole: the account's if the device has none; the one with more of it played if both have the same life; and if they have different lives the device keeps its own and the account's is offered, never imposed. A life given up is marked `abandoned`, which means it is offered to nobody; a device still playing it takes it up again. Only a life the server has finished is closed.
 
+Two rules of the `games` table hold this together whatever a device does. The account's copy of a life never goes backwards: a save with less of the life played than the account holds is refused under a code of its own, and the device that sent it reads the account. And an id belongs to whoever saved it first: a device that has changed accounts (a guest who signed in as someone who already had one) is told the id is taken, gives its life a new one, and sends it under that.
+
 **Ranked solo.** `start-game` creates the seed, stores it in `game_secrets` and returns the view at round 0. Each round the client calls `submit-round` with its choices; the server runs `applyRound`, stores the result and returns the events and the next view. A repeated call for the same round returns the stored result. The preview needs no server call, because it reads only the current world.
 
 **Daily challenge.** Cron creates tomorrow's scenario and seed. `daily-start` creates the player's one game for today. It then plays as ranked solo, with a shorter scenario set in content. A streak is a run of consecutive days in `daily_entries`. Days are UTC.
@@ -102,7 +104,7 @@ When a device meets its account (the page opens, the connection returns, someone
 - Ranked play: the client cannot see the future or alter its state.
 - Casual play: a player can peek on their own device, so casual results stay off global rankings.
 - A casual run is `verified` in one sense only: the server played its log itself, so its figures are the engine's. Whether the future was secret is what `mode` says.
-- What a player can store is bounded in the database: fifty games, a log of 128 KB, progress of 64 KB. The engine caps orders per round and rejects malformed ones.
+- What a player can store is bounded in the database: fifty games, a log of 128 KB, progress of 64 KB. The engine caps orders per round and rejects malformed ones. Finished lives are not bounded yet: see below.
 - Nicknames are unique and short. Filtering them comes with the rankings that first show them.
 - Deleting an account deletes its rows.
 
@@ -110,7 +112,8 @@ Still to build before strangers play, and not built by phases 1 and 2:
 
 - **A rate limit on the functions.** A signed-in guest can call `engine` and `finish-run` as often as they like. Each call is milliseconds of work, and guests cost nothing to make: a limit, and a CAPTCHA on guest sign-in, come with phase 3.
 - **A wider seed.** The engine's random stream is seeded with 32 bits, and the state hash covers the seed. In casual play that is harmless, because the seed is on the device anyway. In ranked play the secret would be a seed that can be searched in seconds from the rounds already seen. Phase 3 must widen it, under a new engine version, before the first ranked game.
-- **Removing abandoned guests.** A guest who never comes back leaves an account and its rows.
+- **Removing abandoned guests.** A guest who never comes back leaves an account and its rows. So does the guest a device was before its player signed in as someone else.
+- **A bound on finished lives, and rankings that know what they rank.** A casual life is an honest replay, but nothing stops one player from finishing as many as they like, or the same life under many ids, and a casual run is `verified`. Rankings must read `mode = 'ranked'` only (the index `runs_by_score` covers every verified run today), and casual runs need a cap or a rule against copies. `finished_at` is when the server wrote the run, not when the life ended on its device.
 
 ## 9. Versions
 
