@@ -1,9 +1,9 @@
 import { readProfile } from './profile';
-import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
+import type { FinishedRun, PlayerStore, Profile, StoredGame } from './types';
 
 /** What the device has not taken yet. The game and the profile are whole records, so only the latest of each matters. */
 interface Pending {
-  game?: { save: SavedGame } | { clear: true };
+  game?: { save: StoredGame } | { clear: true };
   /** What was done to the finished lives, in the order it was done: a life put in, or one taken out by id. */
   runs: Array<{ add: FinishedRun } | { remove: string }>;
   profile?: Profile;
@@ -22,7 +22,7 @@ interface Pending {
 export class ResilientStore implements PlayerStore {
   private pending: Pending = { runs: [] };
   /** The last game and profile this visit wrote or read, for when the device cannot be read at all. */
-  private mirror: { game: SavedGame | null; profile: Profile | null } = { game: null, profile: null };
+  private mirror: { game: StoredGame | null; profile: Profile | null } = { game: null, profile: null };
   private unreadable = false;
   /** True from a write the device refused until one it takes. */
   private refusing = false;
@@ -108,14 +108,14 @@ export class ResilientStore implements PlayerStore {
     return this.read(
       async () => {
         const game = await this.primary.loadGame();
-        this.mirror.game = (structuredClone(game) as SavedGame | null) ?? null;
+        this.mirror.game = (structuredClone(game) as StoredGame | null) ?? null;
         return game;
       },
       () => structuredClone(this.mirror.game),
     );
   };
 
-  saveGame = (game: SavedGame): Promise<void> => {
+  saveGame = (game: StoredGame): Promise<void> => {
     const copy = structuredClone(game);
     this.mirror.game = copy;
     this.pending.game = { save: copy };

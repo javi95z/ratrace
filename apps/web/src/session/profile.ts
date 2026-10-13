@@ -62,6 +62,31 @@ export function updateProfile(store: PlayerStore, change: (profile: Profile) => 
   return result;
 }
 
+/**
+ * Tells the profile everything a life has earned and owned so far: badges it has not held
+ * before, the gallery, and the lives those unlock. It tells all of it every time, not only the
+ * step just played, so that whatever a failed write or an older version of the game left out is
+ * put right by the next step. Returns what is new, for the screen to celebrate, and the badges
+ * of the gallery that the profile counts as this life's.
+ */
+export async function tellProfile(
+  store: PlayerStore,
+  content: Content,
+  lives: ReadonlyArray<LifeDef>,
+  life: { gameId: string; at: number; earned: readonly string[]; collection: readonly string[]; over: boolean },
+): Promise<{ earned: string[]; unlocked: string[]; ofGallery: string[] }> {
+  // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty.
+  const runs = await store.listRuns().catch(() => []);
+  const step: LifeStep = { gameId: life.gameId, at: life.at, earned: life.earned, collection: life.collection, finished: Math.max(runs.length, life.over ? 1 : 0) };
+  let news = { earned: [] as string[], unlocked: [] as string[] };
+  const profile = await updateProfile(store, (current) => {
+    const after = profileAfter(content, lives, current, step);
+    news = { earned: after.earned, unlocked: after.unlocked };
+    return after.profile;
+  });
+  return { ...news, ofGallery: Object.keys(profile.badges).filter((id) => profile.badges[id].gameId === life.gameId && !life.earned.includes(id)) };
+}
+
 /** What one step of a life has to tell the profile. */
 export interface LifeStep {
   gameId: string;

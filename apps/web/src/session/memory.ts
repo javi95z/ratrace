@@ -1,19 +1,19 @@
 import { readProfile } from './profile';
 import { readRuns } from './runs';
-import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
+import type { FinishedRun, PlayerStore, Profile, StoredGame } from './types';
 
 /**
  * A store that lives only as long as the page. Used by tests, and by the game itself when the
  * browser gives it no database to write to, as some private windows do: the game still plays.
  */
 export class MemoryStore implements PlayerStore {
-  private game: SavedGame | null = null;
+  private game: StoredGame | null = null;
   private runs = new Map<string, FinishedRun>();
   private profile: unknown = null;
 
   loadGame = async (): Promise<unknown> => structuredClone(this.game);
 
-  saveGame = async (game: SavedGame): Promise<void> => {
+  saveGame = async (game: StoredGame): Promise<void> => {
     this.game = structuredClone(game);
   };
 

@@ -2,7 +2,7 @@ import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
 import { readProfile } from './profile';
 import { readRuns } from './runs';
-import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
+import type { FinishedRun, PlayerStore, Profile, StoredGame } from './types';
 
 const GAME = 'currentGame';
 const RUNS = 'runs';
@@ -33,7 +33,7 @@ export class LocalStore implements PlayerStore {
     return (await (await this.db()).get(GAME, ONLY)) ?? null;
   }
 
-  async saveGame(game: SavedGame): Promise<void> {
+  async saveGame(game: StoredGame): Promise<void> {
     await (await this.db()).put(GAME, game, ONLY);
   }
 

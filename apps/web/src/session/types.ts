@@ -18,6 +18,8 @@ export interface StepResult {
 export interface GameSession {
   readonly gameId: string;
   readonly lifeId: string;
+  /** True for a life the server plays, step by step: its result can be set beside everyone else's. Left out, the device plays it. */
+  readonly ranked?: boolean;
   /** The game as the player may see it. The same object until the next answer or round. */
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */
@@ -44,8 +46,12 @@ export interface GameSession {
 export type Lost = 'outdated' | 'damaged' | 'newer';
 
 export interface Sessions {
-  /** Starts a new life. A life in progress is replaced. */
-  start(lifeId: string): Promise<GameSession>;
+  /**
+   * Starts a new life. A life in progress is replaced. `ranked` asks for a life the server plays;
+   * when that cannot be had, with no account or no connection, the life is a casual one, and
+   * `GameSession.ranked` says which it turned out to be.
+   */
+  start(lifeId: string, options?: { ranked?: boolean }): Promise<GameSession>;
   /** The life in progress. `lost` says why there is none when a save existed but could not be opened. */
   resume(): Promise<{ session: GameSession | null; lost: Lost | null }>;
   /** Drops the life in progress. */
@@ -84,6 +90,31 @@ export interface SavedGame {
   updatedAt: number;
 }
 
+/**
+ * A ranked life in progress, as the device remembers it: which game it is, and what the server
+ * last showed of it. The game itself is on the server. There is no seed here and no world to
+ * come: the device could not play it if it tried.
+ */
+export interface RankedGame {
+  format: typeof SAVE_FORMAT;
+  ranked: true;
+  gameId: string;
+  engineVersion: string;
+  contentVersion: string;
+  lifeId: string;
+  /** How many steps the server has taken, as far as this device knows. The next one is numbered with it. */
+  step: number;
+  /** The game as the server last showed it. Null for a life the account brought, which this device has not opened yet. */
+  view: GameView | null;
+  history: number[];
+  bankruptcies: number;
+  journal: Journal | null;
+  updatedAt: number;
+}
+
+/** What the device keeps as the life in progress: a game it plays itself, or the note of one the server plays. */
+export type StoredGame = SavedGame | RankedGame;
+
 /** A finished life. */
 export interface FinishedRun {
   format: typeof SAVE_FORMAT;
@@ -109,6 +140,8 @@ export interface FinishedRun {
   cities: string[];
   /** Ran on this device, so it counts for personal bests only. */
   verified: false;
+  /** True for a life the server played: the one kind that is in the rankings. */
+  ranked?: true;
 }
 
 export interface Settings {
@@ -151,7 +184,7 @@ export const newProfile = (): Profile => ({
 export interface PlayerStore {
   /** The stored game exactly as it was written, unchecked, or null. */
   loadGame(): Promise<unknown>;
-  saveGame(game: SavedGame): Promise<void>;
+  saveGame(game: StoredGame): Promise<void>;
   clearGame(): Promise<void>;
   addRun(run: FinishedRun): Promise<void>;
   /** Takes a finished life out. One that is not there is not an error. */

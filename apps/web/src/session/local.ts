@@ -3,7 +3,7 @@ import { CONTENT_VERSION } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameView, RoundChoices } from '@ratrace/engine';
 import { StaleSession } from './errors';
-import { profileAfter, updateProfile } from './profile';
+import { tellProfile } from './profile';
 import { recordStart, recordStep } from './record';
 import { openSave } from './save';
 import { SAVE_FORMAT } from './types';
@@ -52,6 +52,9 @@ class LocalSession implements GameSession {
   get lifeId(): string {
     return this.save.lifeId;
   }
+
+  /** A life the device plays itself. */
+  readonly ranked = false;
 
   view(): GameView {
     return this.current;
@@ -121,18 +124,9 @@ class LocalSession implements GameSession {
   async tellProfile(): Promise<{ earned: string[]; unlocked: string[] }> {
     const { save } = this;
     try {
-      // Lives lived to the end, this one included if it just ended. A list that cannot be read counts as empty.
-      const runs = await this.store.listRuns().catch(() => []);
-      const finished = Math.max(runs.length, save.state.finished ? 1 : 0);
-      const step = { gameId: save.gameId, at: save.updatedAt, earned: save.journal.earned, collection: save.state.player.life.collection, finished };
-      let news = { earned: [] as string[], unlocked: [] as string[] };
-      const profile = await updateProfile(this.store, (current) => {
-        const after = profileAfter(this.content, this.lives, current, step);
-        news = { earned: after.earned, unlocked: after.unlocked };
-        return after.profile;
-      });
-      this.ofGallery = Object.keys(profile.badges).filter((id) => profile.badges[id].gameId === save.gameId && !save.journal.earned.includes(id));
-      return news;
+      const told = await tellProfile(this.store, this.content, this.lives, { gameId: save.gameId, at: save.updatedAt, earned: save.journal.earned, collection: save.state.player.life.collection, over: save.state.finished });
+      this.ofGallery = told.ofGallery;
+      return { earned: told.earned, unlocked: told.unlocked };
     } catch (error) {
       this.deps.onSaveError?.(error);
       return { earned: [], unlocked: [] };

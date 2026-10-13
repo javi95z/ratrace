@@ -34,6 +34,7 @@ export function readRun(raw: unknown): FinishedRun | null {
     badges: strings(raw.badges),
     cities: strings(raw.cities),
     verified: false,
+    ...(raw.ranked === true ? { ranked: true as const } : {}),
   };
 }
 
