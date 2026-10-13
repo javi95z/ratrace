@@ -152,7 +152,7 @@ describe('quoteItem', () => {
     const view = viewOf(game(5_000_000));
     expect(quoteItem(content, view, 'club').finance).toBeNull();
     expect(quoteItem(content, view, 'trip').finance).toBeNull();
-    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
+    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0, age: 0 }], collection: ['car_basic'] });
     expect(quoteItem(content, viewOf(owner), 'car_basic').finance).toBeNull();
     const special = fixtureContent();
     special.items = special.items.map((item) => (item.id === 'car_basic' ? { ...item, cardOnly: true } : item));
@@ -163,7 +163,7 @@ describe('quoteItem', () => {
     const special = fixtureContent();
     special.items = special.items.map((item) => (item.id === 'watch_gold' ? { ...item, cardOnly: true } : item));
     const base = createGame({ content: special, start: fixtureStart() }, 'quotes');
-    const owning = (itemId: string, roundsLeft: number | null) => withPlayer(special, base, {}, { items: [{ itemId, value: 100_000, roundsLeft, paid: 150_000 }], collection: [itemId] });
+    const owning = (itemId: string, roundsLeft: number | null) => withPlayer(special, base, {}, { items: [{ itemId, value: 100_000, roundsLeft, paid: 150_000, age: 0 }], collection: [itemId] });
     const cases: Array<[GameState, string]> = [
       [owning('car_basic', null), 'car_basic'],
       [owning('club', null), 'club'],
@@ -181,7 +181,7 @@ describe('quoteItem', () => {
   });
 
   it('says what an item already owned would sell for, and what a card-only item is', () => {
-    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
+    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0, age: 0 }], collection: ['car_basic'] });
     expect(quoteItem(content, viewOf(owner), 'car_basic')).toMatchObject({ owned: true, resale: 700_000 });
     const special = fixtureContent();
     special.items = special.items.map((item) => (item.id === 'trip' ? { ...item, cardOnly: true } : item));

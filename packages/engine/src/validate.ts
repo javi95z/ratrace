@@ -207,6 +207,8 @@ export function validateContent(c: Content): string[] {
   for (const field of ['movePartnerPct', 'moveChildPct', 'moveRungsLost', 'partnerSettlingRounds'] as const) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
+  if (!Array.isArray(life.agingLadders) || life.agingLadders.some((ladder) => !c.items.some((item) => item.ladder === ladder))) errors.push('life.agingLadders must name ladders that exist');
+  if (!(isCount(life.agingFloorPct) && life.agingFloorPct <= 100)) errors.push('life.agingFloorPct must be a whole number from 0 to 100');
   if (!isCount(life.roomLateRound)) errors.push('life.roomLateRound must be a whole, non-negative number');
   if (!isWhole(life.roomLateStatus)) errors.push('life.roomLateStatus must be a whole number');
   if (!listOf(life.lifestyleStatus, 4, isWhole)) errors.push('life.lifestyleStatus must be four whole numbers');

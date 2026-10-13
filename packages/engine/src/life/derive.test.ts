@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createGame } from '../game';
+import { applyRound, createGame } from '../game';
 import { findInvariantBreaks } from '../invariants';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import type { GameState, LifeStart, LifeState } from '../types';
-import { deriveExpenses, derivePassive, deriveSalary, deriveStatus, refreshDerived, statusParts } from './derive';
+import { deriveExpenses, derivePassive, deriveSalary, deriveStatus, itemStatus, refreshDerived, statusParts } from './derive';
 
 const content = fixtureContent();
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3 };
@@ -48,7 +48,7 @@ describe('other expenses and passive income', () => {
       partner: true,
       children: [11, 4],
       insurance: { health: true, home: false, life: true, liability: false },
-      items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'club', value: 0, roundsLeft: null, paid: 0 }],
+      items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0, age: 0 }, { itemId: 'club', value: 0, roundsLeft: null, paid: 0, age: 0 }],
       recurring: [
         { tag: 'school', kind: 'expense', annual: 100_000, roundsLeft: 3 },
         { tag: 'bar', kind: 'passive', annual: 700_000, roundsLeft: null },
@@ -67,8 +67,8 @@ describe('other expenses and passive income', () => {
 
 describe('status', () => {
   it('counts the best item of a ladder in full and the rest in part', () => {
-    const one = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }] });
-    const two = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'car_sports', value: 0, roundsLeft: null, paid: 0 }] });
+    const one = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0, age: 0 }] });
+    const two = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0, age: 0 }, { itemId: 'car_sports', value: 0, roundsLeft: null, paid: 0, age: 0 }] });
     expect(deriveStatus(one.player, content, 0)).toBe(4 + 2);
     expect(deriveStatus(two.player, content, 0)).toBe(40 + 1 + 2);
   });
@@ -78,7 +78,7 @@ describe('status', () => {
     expect(deriveStatus(base.player, content, 0)).toBe(6);
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,
-      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
+      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0, age: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
     expect(deriveStatus(fancy.player, content, 0)).toBe(6 + 2 + 5 + 9 + 7 + 10);
   });
@@ -101,6 +101,46 @@ describe('status', () => {
     expect(statusParts(owner, late, 0).home).toBe(statusParts(owner, late, 9).home);
   });
 
+  it('takes status off a thing that ages as it takes value off it, down to a floor, and off nothing else', () => {
+    const aging = fixtureContent();
+    aging.life.agingLadders = ['car'];
+    aging.life.agingFloorPct = 25;
+    const car = aging.items.find((item) => item.id === 'car_basic')!;
+    const watch = aging.items.find((item) => item.id === 'watch_gold')!;
+    // The car loses a fifth of its value a round, and of its status with it: 4, 3.2, 2.56, 2.05, 1.64, 1.31, and then the floor of a quarter.
+    expect([0, 1, 2, 3, 4, 5, 6, 7, 20].map((age) => itemStatus(car, age, aging))).toEqual([4, 3, 3, 2, 2, 1, 1, 1, 1]);
+    const sports = aging.items.find((item) => item.id === 'car_sports')!;
+    expect(itemStatus(sports, 0, aging)).toBe(40);
+    expect(itemStatus(sports, 4, aging)).toBe(Math.round(40 * 0.85 ** 4));
+    expect(itemStatus(sports, 50, aging)).toBe(10);
+    // A watch that gains value gains no status, and loses none; nor does a thing in a ladder that does not age.
+    expect([0, 5, 20].map((age) => itemStatus(watch, age, aging))).toEqual([12, 12, 12]);
+    aging.life.agingLadders = ['car', 'watch'];
+    expect(itemStatus(watch, 20, aging)).toBe(12);
+    expect(itemStatus(car, 5, content)).toBe(4);
+  });
+
+  it('counts an aged thing for what it gives now, in the status of the player and round after round', () => {
+    const aging = fixtureContent();
+    aging.life.agingLadders = ['car'];
+    let state = createGame({ content: aging, start: { ...fixtureStart(), cash: 500_000_000 } }, 'aging');
+    const before = state.player.statusPoints;
+    state = applyRound(aging, state, { orders: [{ type: 'buyItem', itemId: 'car_sports' }] }).state;
+    const seen: number[] = [];
+    for (let round = 0; round < 4; round++) {
+      seen.push(statusParts(state.player, aging, state.round).items);
+      expect(findInvariantBreaks(aging, state)).toEqual([]);
+      state = applyRound(aging, state, { orders: [] }).state;
+    }
+    // Bought in the first round, it is a round old when the next opens.
+    expect(seen).toEqual([1, 2, 3, 4].map((age) => itemStatus(aging.items.find((item) => item.id === 'car_sports')!, age, aging)));
+    expect(seen[0]).toBeLessThan(40);
+    expect(before).toBeLessThan(state.player.statusPoints);
+    // Sold and bought again, it is new again.
+    const renewed = applyRound(aging, state, { orders: [{ type: 'sellItem', itemId: 'car_sports' }, { type: 'buyItem', itemId: 'car_sports' }] }).state;
+    expect(renewed.player.life.items[0].age).toBe(1);
+  });
+
   it('loses what a way of living below the ordinary takes, and shows that part as it is', () => {
     const lean = fixtureContent();
     lean.life.lifestyleStatus = [-4, 0, 0, 9];
@@ -117,7 +157,7 @@ describe('status', () => {
   it('says where it comes from, part by part', () => {
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,
-      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
+      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0, age: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
     expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
     // A loss from a card shows as it is, though the status itself stops at zero.

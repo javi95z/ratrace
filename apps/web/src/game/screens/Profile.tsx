@@ -312,10 +312,12 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
         </div>
         <p className="pixel text-center text-[13px] uppercase tracking-wider text-ink-300">{text.ladders[item.ladder]}</p>
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Tag tone="good">{shop('status', { n: item.status })}</Tag>
+          <Tag tone="good">{shop('status', { n: quote.status })}</Tag>
+          {quote.status < quote.statusNew ? <Tag>{shop('statusWas', { n: quote.statusNew })}</Tag> : null}
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
         </div>
         <ItemUses item={item} />
+        {quote.ages ? <p className="text-center text-[13px] text-ink-300">{shop(quote.status < quote.statusNew ? 'aged' : 'ages')}</p> : null}
         {item.kind === 'durable' ? <p className="text-center text-[14px]">{t('itemWorth', { amount: fmt.money(quote.resale) })}</p> : null}
         <ItemCost quote={quote} />
         {owned.roundsLeft !== null ? <p className="text-center text-[14px] text-ink-300">{shop('spent', { years: owned.roundsLeft * content.yearsPerRound })}</p> : null}

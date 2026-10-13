@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { content } from '@ratrace/content';
+import { content, textFor } from '@ratrace/content';
+import { quoteItem } from '@ratrace/engine';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
@@ -22,6 +23,7 @@ vi.mock('@/i18n/navigation', () => ({
 afterEach(cleanup);
 
 const fmt = formatFor('en');
+const { names } = textFor('en');
 
 /** A nurse who bought a watch and joined a gym in her first round. */
 async function withThings() {
@@ -98,6 +100,25 @@ describe('what the player owns, in the profile', () => {
     await user.click(screen.getByRole('button', { name: 'Play the round' }));
     await screen.findByRole('heading', { name: 'Two years later' });
     expect(((await services.store.loadGame()) as SavedGame).state.player.life.items).toEqual([]);
+  });
+
+  it('shows a thing that has aged at the status it gives now, beside what it gave new', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'tech_phone' }] });
+    const quote = quoteItem(content, session.view(), 'tech_phone');
+    // A phone halves in value in a round, and in what it says about its owner.
+    expect(quote).toMatchObject({ statusNew: 2, status: 1, ages: true });
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    await user.click(screen.getByRole('button', { name: names.items.tech_phone }));
+    const sheet = screen.getByRole('dialog', { name: names.items.tech_phone });
+    expect(within(sheet).getByText('Status +1')).toBeTruthy();
+    expect(within(sheet).getByText('Gave +2 new')).toBeTruthy();
+    expect(within(sheet).getByText('It has lost status over the years. A new one gives it all again.')).toBeTruthy();
   });
 
   it('opens from the side column of a wide screen too', async () => {

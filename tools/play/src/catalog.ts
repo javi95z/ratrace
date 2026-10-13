@@ -142,6 +142,7 @@ say(
   '## Objetos',
   'Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.',
   '«Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.',
+  `Los objetos de ${content.life.agingLadders.map((ladder) => text.ladders[ladder].toLowerCase()).join(' y ')} pierden estatus al envejecer, al mismo ritmo que pierden valor, hasta quedarse en el ${content.life.agingFloorPct} % de lo que daban nuevos.`,
   '«Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.',
   `A plazos se vende lo que dura y cuesta ${usd(content.life.itemFinanceMinPrice)} o más: un ${content.life.itemFinanceDownPct} % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.`,
 );

@@ -163,6 +163,9 @@ const base: Content = {
     itemFinanceDownPct: 20,
     itemFinanceMinPrice: 500_000,
     lesserItemPct: 25,
+    // Nothing ages by default. Tests of ageing name their own ladders.
+    agingLadders: [],
+    agingFloorPct: 25,
     moveCostPct: 20,
     // Nothing by default, so tests of anything else move as before. Tests of a move's cost set their own.
     movePartnerPct: 0,

@@ -1,7 +1,7 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
-import { careerSwing, homeOf, INSURANCE_KINDS, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { jobHuntChance, landingOf } from './life/roundEnd';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
@@ -88,6 +88,11 @@ export interface ItemQuote {
   resale: Cents;
   /** Yearly upkeep at today's prices. */
   upkeepAnnual: Cents;
+  /** The status it gives new, and the status it gives as the player holds it: less for a thing that has aged. */
+  statusNew: number;
+  status: number;
+  /** True for a thing that loses status as the years go by. */
+  ages: boolean;
   owned: boolean;
   /** What the player paid for it, at the prices of that day, or null if they do not own it. */
   paid: Cents | null;
@@ -133,6 +138,10 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     price: terms.price,
     resale: held ? held.value : terms.resale,
     upkeepAnnual: indexed(item.upkeepAnnual, world),
+    statusNew: item.status,
+    status: itemStatus(item, held ? held.age : 0, content),
+    // Asked of a thing held long enough to have reached the floor: does it give less than it gave?
+    ages: itemStatus(item, 1_000, content) < item.status,
     owned: held !== undefined,
     paid: held ? held.paid : null,
     owed: view.player.debts.reduce((sum, debt) => (debt.forItem === itemId ? sum + debt.principal : sum), 0),

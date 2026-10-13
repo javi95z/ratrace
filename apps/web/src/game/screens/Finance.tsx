@@ -914,11 +914,13 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
           </Bare>
         </div>
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Tag tone="good">{t('status', { n: item.status })}</Tag>
+          <Tag tone="good">{t('status', { n: quote.status })}</Tag>
+          {quote.status < quote.statusNew ? <Tag>{t('statusWas', { n: quote.statusNew })}</Tag> : null}
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{t('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {item.kind === 'experience' ? <Tag>{t('lasts', { years: item.boostRounds * years })}</Tag> : null}
         </div>
         <ItemUses item={item} />
+        {quote.ages ? <p className="text-center text-[13px] text-ink-300">{t(quote.status < quote.statusNew ? 'aged' : 'ages')}</p> : null}
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
         {item.kind === 'durable' && !held && quote.forSale ? <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(quote.resale) })}</p> : null}
         <ItemCost quote={quote} />
@@ -991,7 +993,7 @@ function Shop() {
                     </Bare>
                     <span className="mt-0.5 line-clamp-2 min-h-[2.4em] text-[13px] leading-tight">{names.items[item.id]}</span>
                     <span className={`pixel text-[16px] ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
-                    <Tag tone="good">{t('status', { n: item.status })}</Tag>
+                    <Tag tone="good">{t('status', { n: quoteItem(content, shown, item.id).status })}</Tag>
                   </button>
                 );
               })}

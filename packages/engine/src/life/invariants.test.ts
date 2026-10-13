@@ -54,17 +54,17 @@ describe('invariants of the life', () => {
       s.player.life.items = [item];
       s.player.life.collection = collection;
     };
-    expect(breaks(own({ itemId: 'jetpack', value: 0, roundsLeft: null, paid: 0 }))).toEqual(['item jetpack is not in the content']);
-    expect(breaks(own({ itemId: 'car_basic', value: -1, roundsLeft: null, paid: 0 }))).toEqual(['item car_basic value is not a non-negative whole number: -1']);
-    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: 2, paid: 0 }))).toEqual(['item car_basic has the wrong shape for a durable']);
-    expect(breaks(own({ itemId: 'club', value: 5, roundsLeft: null, paid: 0 }))).toEqual(['item club has the wrong shape for a membership']);
-    expect(breaks(own({ itemId: 'trip', value: 0, roundsLeft: null, paid: 0 }))).toEqual(['item trip has the wrong shape for an experience']);
-    expect(breaks(own({ itemId: 'trip', value: 0, roundsLeft: 0, paid: 0 }))).toEqual(['item trip has the wrong shape for an experience']);
-    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0 }, []))).toEqual(['item car_basic is owned but not in the collection']);
-    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0 }, ['car_basic', 'jetpack']))).toEqual(['collection holds an unknown item: jetpack']);
+    expect(breaks(own({ itemId: 'jetpack', value: 0, roundsLeft: null, paid: 0, age: 0 }))).toEqual(['item jetpack is not in the content']);
+    expect(breaks(own({ itemId: 'car_basic', value: -1, roundsLeft: null, paid: 0, age: 0 }))).toEqual(['item car_basic value is not a non-negative whole number: -1']);
+    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: 2, paid: 0, age: 0 }))).toEqual(['item car_basic has the wrong shape for a durable']);
+    expect(breaks(own({ itemId: 'club', value: 5, roundsLeft: null, paid: 0, age: 0 }))).toEqual(['item club has the wrong shape for a membership']);
+    expect(breaks(own({ itemId: 'trip', value: 0, roundsLeft: null, paid: 0, age: 0 }))).toEqual(['item trip has the wrong shape for an experience']);
+    expect(breaks(own({ itemId: 'trip', value: 0, roundsLeft: 0, paid: 0, age: 0 }))).toEqual(['item trip has the wrong shape for an experience']);
+    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0, age: 0 }, []))).toEqual(['item car_basic is owned but not in the collection']);
+    expect(breaks(own({ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0, age: 0 }, ['car_basic', 'jetpack']))).toEqual(['collection holds an unknown item: jetpack']);
     expect(
       breaks((s) => {
-        s.player.life.items = [{ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0 }, { itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0 }];
+        s.player.life.items = [{ itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0, age: 0 }, { itemId: 'car_basic', value: 5, roundsLeft: null, paid: 0, age: 0 }];
         s.player.life.collection = ['car_basic'];
       }),
     ).toEqual(['item car_basic is owned twice']);

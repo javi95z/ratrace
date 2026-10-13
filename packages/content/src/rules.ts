@@ -76,6 +76,9 @@ export const life: LifeRules = {
   itemFinanceDownPct: 20,
   itemFinanceMinPrice: usd(5_000),
   lesserItemPct: 25,
+  // A car and a gadget are worth less to look at as they are worth less to sell: down to a quarter of what they gave new.
+  agingLadders: ['car', 'tech'],
+  agingFloorPct: 25,
   moveCostPct: 25,
   // A household is dearer to move, and a move of one's own costs a rung and a partner's pay for a round:
   // the cheap way to another city is to be sent there.

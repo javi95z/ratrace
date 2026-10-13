@@ -209,6 +209,14 @@ export interface LifeRules {
   moveRungsLost: number;
   /** Rounds a partner goes without pay after such a move, while they find work of their own. */
   partnerSettlingRounds: number;
+  /**
+   * The ladders whose things lose status as they lose value: an old car is not the car it was. Each
+   * round held takes the item's own loss of resale value off its status too, never below the floor.
+   * A thing that holds or gains value keeps its status and gains none.
+   */
+  agingLadders: readonly string[];
+  /** The least of its status an aged thing keeps, in percent. */
+  agingFloorPct: number;
   /** Career skill gained by a round of work. */
   workSkill: number;
   /** Career skill gained on top by a round of study. */
@@ -582,6 +590,8 @@ export interface OwnedItem {
   roundsLeft: number | null;
   /** What was paid for it, at the prices of the day it was bought. Zero for a gift. */
   paid: Cents;
+  /** Rounds it has been held. A thing that ages gives less status with each. */
+  age: number;
 }
 
 export interface Recurring {

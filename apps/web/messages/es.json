@@ -453,7 +453,10 @@
       "owed": "Aún debes del préstamo",
       "owedKept": "Lo compraste a plazos. Si lo vendes, la deuda sigue contigo.",
       "owedShort": "Lo compraste a plazos. Venderlo hoy no cubre la deuda: faltarían {amount}.",
-      "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue."
+      "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue.",
+      "statusWas": "Nuevo daba +{n}",
+      "ages": "Pierde estatus con los años, a la vez que valor.",
+      "aged": "Ha perdido estatus con los años. Uno nuevo vuelve a dar todo."
     },
     "taxes": {
       "income": "Lo que entra",
