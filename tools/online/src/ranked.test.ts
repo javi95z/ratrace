@@ -1,11 +1,14 @@
 import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { GameState, GameView, LoggedRound, Order, WorldState } from '@ratrace/engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { GAMES } from '../../../supabase/functions/_shared/game/index.ts';
 import { ranked } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RunRow } from '../../../supabase/functions/_shared/finish.ts';
+
+// Several tests here play a whole life: a second and a half alone, and past the usual five on a busy machine.
+vi.setConfig({ testTimeout: 60_000 });
 
 const ME = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const OTHER = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
