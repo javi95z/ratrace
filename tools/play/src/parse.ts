@@ -51,6 +51,7 @@ const WORDS = {
   sellhome: ['sellhome', 'vendercasa'],
   rent: ['rent', 'alquilar'],
   get: ['get', 'adquirir'],
+  finance: ['finance', 'financiar'],
   drop: ['drop', 'soltar'],
   lifestyle: ['lifestyle', 'vida'],
   room: ['room', 'habitacion'],
@@ -231,11 +232,13 @@ export function parse(line: string, scene: Scene): Command {
       return order({ type: 'setRented', propertyId: property.id, rented: ON.includes(flag) });
     }
     case 'get':
+    case 'finance':
     case 'drop': {
       const typed = args.join(' ');
       const item = nth(content.items, args.length === 1 ? args[0] : undefined) ?? find(content.items, typed, (i) => [i.id, names.items[i.id]]);
       if (!item) return error('unknown-item');
-      return order(word === 'get' ? { type: 'buyItem', itemId: item.id } : { type: 'sellItem', itemId: item.id });
+      if (word === 'drop') return order({ type: 'sellItem', itemId: item.id });
+      return order(word === 'finance' ? { type: 'buyItem', itemId: item.id, financed: true } : { type: 'buyItem', itemId: item.id });
     }
     case 'lifestyle': {
       // A name is matched by its start, so a word with no letters in it must not match every name.

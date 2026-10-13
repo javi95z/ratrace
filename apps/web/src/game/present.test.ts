@@ -78,7 +78,7 @@ describe('effectTags', () => {
         lose: { what: 'crypto', pct: 40 }, lifestyleFloor: 1,
       }).map((tag) => tag.text),
     ).toEqual([
-      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', '$2,000 into Tesla', '+$4,000 pension', 'Loan of $12,000',
+      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', 'Status +18', '−$150/yr', '$2,000 into Tesla', '+$4,000 pension', 'Loan of $12,000',
       'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +$20,000', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
     ]);
     expect(tags({ job: { leave: true }, partner: null, sellHome: true, lose: { what: 'deposit', pct: 15 } }).map((tag) => tag.text)).toEqual([
@@ -86,6 +86,20 @@ describe('effectTags', () => {
     ]);
     expect(tags({ job: { levelDelta: 1 } })[0]).toEqual({ tone: 'good', text: 'A step up' });
     expect(tags({ job: { levelDelta: -1 } })[0]).toEqual({ tone: 'bad', text: 'A step down' });
+  });
+
+  it('says what a thing offered gives: its status, how long that lasts, and the price it is usually sold at', () => {
+    // An upgrade at the gate: a trip, at two fifths of its price.
+    expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } })).toEqual([
+      { tone: 'plain', text: 'Emirates business class' },
+      { tone: 'good', text: 'Status +9 for 4 years' },
+      { tone: 'plain', text: 'Usually $6,000' },
+    ]);
+    // At full price there is no bargain to name, and a thing that lasts gives its status for good.
+    expect(tags({ buyItem: { itemId: 'watch_casio', pricePct: 100 } }).map((tag) => tag.text)).toEqual(['Casio F-91W', 'Status +1']);
+    expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } }, 'es').map((tag) => tag.text.replace(/\u00a0/g, ' '))).toEqual([
+      'Business de Emirates', 'Estatus +9 durante 4 años', 'Precio normal 6.000 $',
+    ]);
   });
 
   it('writes a renovation at today\u2019s prices, as the engine will add it', () => {
@@ -133,6 +147,7 @@ describe('orderLabel', () => {
     expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Study');
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
+    expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');
     expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Basic-Fit');
     expect(label({ type: 'setLifestyle', tier: 0 })).toBe('Live: Frugal');

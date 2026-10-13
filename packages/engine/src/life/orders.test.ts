@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { debtRateBp } from '../debt';
+import { debtRateBp, loanRoom } from '../debt';
 import { applyRound, createGame, previewRound } from '../game';
 import { cityOf } from '../lookup';
 import { executeOrder } from '../orders';
@@ -26,6 +26,9 @@ const start = (over: Partial<StartConfig> = {}, life: Partial<LifeStart> = {}): 
   ...over,
   life: { ...office, ...life },
 });
+
+/** All the player may still borrow in personal loans. */
+const quoteLoanRoom = ({ p, content, world }: ReturnType<typeof setup>) => loanRoom(p, content, world);
 
 const ledger = (events: GameEvent[], line: LedgerLine): number | undefined => {
   const found = events.find((e) => e.kind === 'ledger' && e.line === line);
@@ -122,6 +125,67 @@ describe('item orders', () => {
     expect(run({ type: 'buyItem', itemId: 'car_basic' })).toBe('already-owned');
     expect(p.cash).toBe(300_000);
     expect(p.life.items).toHaveLength(1);
+  });
+
+  it('buys a durable on instalments: a share down, the rest a personal loan at the rate of the day', () => {
+    const { p, ctx, content, run } = setup({ cash: 240_000 });
+    expect(run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBeNull();
+    // A fifth of 12,000 down; the car is owned whole, at what it would sell for, and it cost its full price.
+    expect(p.cash).toBe(0);
+    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000 }]);
+    expect(p.debts).toEqual([
+      { id: p.debts[0].id, kind: 'personalLoan', principal: 960_000, fixedRateBp: ctx.world.policyRateBp + content.debt.personalLoanSpreadBp, roundsLeft: content.debt.personalLoanTermRounds },
+    ]);
+    // The whole price counts as spent on things, exactly as when it is paid at once.
+    expect(ctx.tally.itemsBought).toBe(1_200_000);
+  });
+
+  it('leaves the debt with the player when the thing bought on instalments is sold', () => {
+    const { p, run } = setup({ cash: 240_000 });
+    run({ type: 'buyItem', itemId: 'car_basic', financed: true });
+    expect(run({ type: 'sellItem', itemId: 'car_basic' })).toBeNull();
+    expect(p.cash).toBe(960_000);
+    expect(p.debts).toHaveLength(1);
+    expect(p.debts[0].principal).toBe(960_000);
+  });
+
+  it('refuses instalments without the down payment, over the loan limit, during the bankruptcy lock, and with a malformed flag', () => {
+    const short = setup({ cash: 239_999 });
+    expect(short.run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBe('not-enough-cash');
+
+    // A loan already at the limit of the salary leaves no room for the car's.
+    const full = setup();
+    expect(full.run({ type: 'borrow', amount: quoteLoanRoom(full) })).toBeNull();
+    expect(full.run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBe('over-loan-limit');
+
+    const locked = setup();
+    locked.p.bankruptUntilRound = 4;
+    expect(locked.run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBe('no-credit');
+    // Paying in full needs no bank.
+    expect(locked.run({ type: 'buyItem', itemId: 'car_basic' })).toBeNull();
+
+    const odd = setup();
+    expect(odd.run({ type: 'buyItem', itemId: 'car_basic', financed: 'yes' })).toBe('bad-order');
+    expect(odd.run({ type: 'buyItem', itemId: 'car_basic', financed: false })).toBeNull();
+    for (const each of [short, full]) {
+      expect(each.p.life.items).toEqual([]);
+      expect(each.p.debts.filter((d) => d.principal === 960_000)).toEqual([]);
+    }
+    expect(short.p.cash).toBe(239_999);
+  });
+
+  it('sells on instalments only what lasts and costs enough for a contract', () => {
+    const { p, run } = setup();
+    // A membership, an experience, and a durable under the least price.
+    expect(run({ type: 'buyItem', itemId: 'club', financed: true })).toBe('cannot-finance');
+    expect(run({ type: 'buyItem', itemId: 'trip', financed: true })).toBe('cannot-finance');
+    const cheap = fixtureContent();
+    cheap.life.itemFinanceMinPrice = 1_200_001;
+    expect(setup({}, {}, cheap).run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBe('cannot-finance');
+    cheap.life.itemFinanceMinPrice = 1_200_000;
+    expect(setup({}, {}, cheap).run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBeNull();
+    expect(p.cash).toBe(5_000_000);
+    expect(p.debts).toEqual([]);
   });
 
   it('does not sell in the shop what only a card can give', () => {

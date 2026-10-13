@@ -624,6 +624,9 @@ function Lifestyle() {
             disabled: tier < p.life.minLifestyleTier,
           }))}
         />
+        <p className="mt-2 text-[12px] text-ink-300">
+          {t('tierStatus')} {text.lifestyleTiers.map((name, tier) => `${name} ${points(content.life.lifestyleStatus[tier])}`).join(' · ')}
+        </p>
         {p.life.minLifestyleTier > 0 ? <p className="mt-2 text-[12px] text-ink-300">{t('tierFloor')}</p> : null}
       </Panel>
 
@@ -691,15 +694,19 @@ function Lifestyle() {
 // ------------------------------------------------------------------------------------------------
 // Shop
 
+/** Status points with their sign: +3, −3, 0. */
+const points = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
+
 function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
   const t = useT('finance.shop');
   const common = useT('common');
-  const { content, names, fmt } = useWords();
+  const { content, text, names, fmt } = useWords();
   const { shown, p } = useRound();
   const orders = useGame((s) => s.orders);
   const addOrder = useGame((s) => s.addOrder);
   const setOrder = useGame((s) => s.setOrder);
   const quote = quoteItem(content, shown, item.id);
+  const plan = quote.finance;
   const held = p.life.items.find((owned) => owned.itemId === item.id);
   const inBasket = orders.some((order) => order.type === 'buyItem' && order.itemId === item.id);
   const years = content.yearsPerRound;
@@ -740,9 +747,25 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
             <p className="text-center text-[14px] text-ink-300">{t('cardOnly')}</p>
           )
         ) : quote.forSale ? (
-          <Button variant="primary" wide onClick={() => done(addOrder({ type: 'buyItem', itemId: item.id }))}>
-            {t('buy', { amount: fmt.money(quote.price) })}
-          </Button>
+          <>
+            <Button variant="primary" wide onClick={() => done(addOrder({ type: 'buyItem', itemId: item.id }))}>
+              {t('buy', { amount: fmt.money(quote.price) })}
+            </Button>
+            {plan ? (
+              <div className="flex flex-col gap-1.5">
+                <Button wide disabled={plan.lock !== null} onClick={() => done(addOrder({ type: 'buyItem', itemId: item.id, financed: true }))}>
+                  {t('finance', { amount: fmt.money(plan.down) })}
+                </Button>
+                {plan.lock !== null ? (
+                  <p className="text-center text-[13px] text-wine-300">{text.reasons[plan.lock]}</p>
+                ) : (
+                  <p className="text-center text-[13px] text-ink-300">
+                    {t('financeTerms', { loan: fmt.money(plan.loan), rate: fmt.rate(plan.rateBp), years: plan.termRounds * years, annual: fmt.money(plan.annual) })} {t('financeKept')}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </>
         ) : (
           <p className="text-center text-[14px] text-ink-300">{t('cardOnly')}</p>
         )}

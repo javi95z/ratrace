@@ -1,14 +1,14 @@
-import { debtRateBp, loanRoom } from './debt';
+import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
 import { homeOf, INSURANCE_KINDS } from './life/derive';
-import { canSellItem, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
+import { canSellItem, financeLock, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { indexed } from './rates';
-import type { Content, GameView, InsuranceKind, LifestyleTier, RentTier } from './types';
+import type { Content, GameView, InsuranceKind, LifestyleTier, RejectReason, RentTier } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -97,6 +97,22 @@ export interface ItemQuote {
   local: boolean;
   /** True if the player owns it and may sell or cancel it. False for an experience already spent and for what only a card gives. */
   sellable: boolean;
+  /** The terms of buying it on instalments today, or null for what no shop sells that way. */
+  finance: ItemFinanceQuote | null;
+}
+
+export interface ItemFinanceQuote {
+  /** Paid from cash on the day. */
+  down: Cents;
+  /** The rest, taken as a personal loan. */
+  loan: Cents;
+  /** The yearly rate of that loan, fixed for its term. */
+  rateBp: Bp;
+  termRounds: number;
+  /** What the loan costs in each of its first years: interest, and the slice of the loan paid back. */
+  annual: Cents;
+  /** Why the player may not have these terms today, or null when they may. */
+  lock: RejectReason | null;
 }
 
 export function quoteItem(content: Content, view: GameView, itemId: string): ItemQuote {
@@ -104,6 +120,11 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   const world = view.timeline[view.round];
   const held = view.player.life.items.find((owned) => owned.itemId === itemId);
   const terms = itemTerms(item, world);
+  // Nothing is sold twice: there are no terms for what the player already owns.
+  const plan = held ? null : itemFinance(item, content, world);
+  const rateBp = personalLoanRateBp(content, world);
+  const termRounds = content.debt.personalLoanTermRounds;
+  const years = content.yearsPerRound;
   return {
     price: terms.price,
     resale: held ? held.value : terms.resale,
@@ -114,6 +135,16 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     soldHere: soldIn(item, view.player.cityId),
     local: item.kind === 'membership' && item.cities !== undefined,
     sellable: held !== undefined && canSellItem(content, held),
+    finance:
+      plan === null
+        ? null
+        : {
+            ...plan,
+            rateBp,
+            termRounds,
+            annual: Math.round((applyBp(plan.loan, rateBp * years) + Math.ceil(plan.loan / Math.max(1, termRounds))) / years),
+            lock: financeLock(view.player, plan, content, world, view.round),
+          },
   };
 }
 
@@ -141,7 +172,7 @@ export function quoteLoan(content: Content, view: GameView): LoanQuote {
   const locked = view.round < p.bankruptUntilRound;
   return {
     room: locked ? 0 : loanRoom(p, content, world),
-    rateBp: world.policyRateBp + content.debt.personalLoanSpreadBp,
+    rateBp: personalLoanRateBp(content, world),
     termRounds: content.debt.personalLoanTermRounds,
     lockedUntilRound: locked ? p.bankruptUntilRound : null,
   };

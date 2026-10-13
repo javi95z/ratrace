@@ -121,11 +121,12 @@ describe('what the player owns, in the profile', () => {
     expect(choices.map((li) => li.getAttribute('aria-current'))).toEqual([null, 'true', null, null]);
     expect(within(choices[1]).getByText('Normal')).toBeTruthy();
     expect(within(choices[1]).getByText('Yours')).toBeTruthy();
-    // Each says what a year of it costs, dearer as it goes up, and the top two give status.
+    // Each says what a year of it costs, dearer as it goes up; the top two give status, and the frugal one takes it.
     const costs = choices.map((li) => Number((li.textContent ?? '').match(/\$([\d,]+)\/yr/)?.[1].replace(/,/g, '')));
     expect(costs).toEqual([...costs].sort((a, b) => a - b));
     expect(within(choices[3]).getByText('Status +8')).toBeTruthy();
-    expect(within(choices[0]).queryByText(/^Status/)).toBeNull();
+    expect(within(choices[0]).getByText('Status −3')).toBeTruthy();
+    expect(within(choices[1]).queryByText(/^Status/)).toBeNull();
     expect(within(sheet).getByText('It is changed in the Lifestyle tab, during the finances.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
 

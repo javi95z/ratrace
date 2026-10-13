@@ -157,6 +157,8 @@ const base: Content = {
     rentTierHousingPct: [60, 100],
     rentTierStatus: [0, 2],
     lifestyleStatus: [0, 0, 0, 9],
+    itemFinanceDownPct: 20,
+    itemFinanceMinPrice: 500_000,
     lesserItemPct: 25,
     moveCostPct: 20,
     workSkill: 1,

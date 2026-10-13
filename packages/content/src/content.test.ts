@@ -1,4 +1,4 @@
-import { applyRound, createGame, validateContent, validateStart } from '@ratrace/engine';
+import { applyRound, createGame, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './art';
 import { content } from './content';
@@ -76,6 +76,21 @@ describe('the v1 content', () => {
     // Each of these speaks of an office, an employer or a new job in its text.
     for (const id of ['luck_lottery', 'life_car_finance', 'world_ai_boom', 'crisis_crash_layoffs']) expect(when(id).employed, id).toBe(true);
     expect(when('life_car_finance').lacksLadder).toBe('car');
+  });
+
+  it('sells on instalments every car and nothing that is used up, and takes status from a frugal life', () => {
+    const view = viewOf(createGame({ content, start: lives[0].start }, 'instalments'));
+    const financed = content.items.filter((item) => quoteItem(content, view, item.id).finance !== null);
+    for (const item of financed) expect(item.kind, item.id).toBe('durable');
+    for (const item of content.items.filter((x) => x.ladder === 'car')) expect(financed, item.id).toContain(item);
+    // The cheap end of a ladder is paid for at the till.
+    expect(financed.map((item) => item.id)).not.toContain('watch_casio');
+    for (const item of financed) {
+      const quote = quoteItem(content, view, item.id);
+      expect((quote.finance?.down ?? 0) + (quote.finance?.loan ?? 0), item.id).toBe(quote.price);
+      expect(Math.abs((quote.finance?.down ?? 0) * 5 - quote.price), item.id).toBeLessThan(5);
+    }
+    expect(content.life.lifestyleStatus).toEqual([-3, 0, 3, 8]);
   });
 
   it('gives every insurance a card that it softens or opens', () => {

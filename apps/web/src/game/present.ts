@@ -83,7 +83,17 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.partner === null) add('plain', t('partnerOut'));
   else if (effects.partner !== undefined) add('plain', t('partnerIn'));
   if (effects.children) add('plain', t('children', { count: effects.children }));
-  if (effects.buyItem) add('plain', t('get', { item: names.items[effects.buyItem.itemId] }));
+  if (effects.buyItem) {
+    // A thing is taken for what it gives: the name alone says nothing of the status, how long it lasts, or the bargain.
+    const { itemId, pricePct } = effects.buyItem;
+    const item = content.items.find((x) => x.id === itemId);
+    add('plain', t('get', { item: names.items[itemId] }));
+    if (item) {
+      if (item.status > 0) add('good', item.kind === 'experience' ? t('itemStatusFor', { n: item.status, years: item.boostRounds * content.yearsPerRound }) : t('itemStatus', { n: item.status }));
+      if (item.upkeepAnnual > 0) add('bad', t('yearlyCost', { amount: dollars(item.upkeepAnnual) }));
+      if (pricePct < 100) add('plain', t('itemUsual', { amount: dollars(item.price) }));
+    }
+  }
   if (effects.invest) add('plain', t('invest', { amount: dollars(effects.invest.amount), asset: names.assets[effects.invest.assetId].name }));
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));
   if (effects.loan) add('bad', t('loan', { amount: dollars(effects.loan) }));
@@ -139,7 +149,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'focus':
       return t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : 'hunt');
     case 'buyItem':
-      return t('buyItem', { item: names.items[order.itemId] });
+      return t(order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'sellItem': {
       const kind = content.items.find((item) => item.id === order.itemId)?.kind;
       return t(kind === 'membership' ? 'cancelItem' : 'sellItem', { item: names.items[order.itemId] });

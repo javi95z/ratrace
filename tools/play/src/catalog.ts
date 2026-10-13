@@ -132,6 +132,7 @@ say(
   '## Objetos',
   'Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.',
   '«Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.',
+  `A plazos se vende lo que dura y cuesta ${usd(content.life.itemFinanceMinPrice)} o más: un ${content.life.itemFinanceDownPct} % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.`,
 );
 for (const [ladder, items] of itemsByLadder) {
   say(

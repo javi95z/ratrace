@@ -180,7 +180,9 @@ export function validateContent(c: Content): string[] {
     errors.push('life.rentTierHousingPct must be two numbers between 0 and 100');
   }
   if (!listOf(life.rentTierStatus, 2, isCount)) errors.push('life.rentTierStatus must be two whole, non-negative numbers');
-  if (!listOf(life.lifestyleStatus, 4, isCount)) errors.push('life.lifestyleStatus must be four whole, non-negative numbers');
+  if (!listOf(life.lifestyleStatus, 4, isWhole)) errors.push('life.lifestyleStatus must be four whole numbers');
+  if (!(isCount(life.itemFinanceDownPct) && life.itemFinanceDownPct <= 100)) errors.push('life.itemFinanceDownPct must be a whole number from 0 to 100');
+  if (!isCount(life.itemFinanceMinPrice)) errors.push('life.itemFinanceMinPrice must be a whole, non-negative amount');
   for (const kind of INSURANCE_KINDS) {
     const premiums = life.insurancePremiumBp;
     if (!isRecord(premiums) || !isCount(premiums[kind])) {

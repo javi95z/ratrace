@@ -246,6 +246,7 @@ export const en: ContentText = {
     'over-pension-limit': "That is over this round's pension limit.",
     'would-be-insolvent': 'You cannot pay into the pension while you owe more than you own.',
     'no-credit': 'No bank will lend to you yet after your bankruptcy.',
+    'cannot-finance': 'This is not sold on instalments.',
     'over-loan-limit': 'That is more than you can borrow on your salary.',
     'unknown-debt': 'That debt does not exist.',
     'exceeds-debt': 'That is more than you owe.',

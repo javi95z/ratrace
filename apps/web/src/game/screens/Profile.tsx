@@ -169,7 +169,7 @@ function Choice({ icon, name, cost, status, on, onLabel, children }: { icon: str
         </div>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {on ? <Tag tone="good">{onLabel}</Tag> : null}
-          {status ? <Tag tone="good">{shop('status', { n: status })}</Tag> : null}
+          {status ? <Tag tone={status > 0 ? 'good' : 'bad'}>{status > 0 ? shop('status', { n: status }) : shop('statusDown', { n: -status })}</Tag> : null}
         </div>
         {children}
       </div>

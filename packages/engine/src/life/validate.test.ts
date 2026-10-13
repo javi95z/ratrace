@@ -91,7 +91,12 @@ describe('validateContent: life data', () => {
     expect(life({ rentTierHousingPct: [60] })).toContain('life.rentTierHousingPct must be two numbers between 0 and 100');
     expect(life({ rentTierHousingPct: [60, 140] })).toContain('life.rentTierHousingPct must be two numbers between 0 and 100');
     expect(life({ rentTierStatus: [0, -1] })).toContain('life.rentTierStatus must be two whole, non-negative numbers');
-    expect(life({ lifestyleStatus: [0, 0, 0] })).toContain('life.lifestyleStatus must be four whole, non-negative numbers');
+    expect(life({ lifestyleStatus: [0, 0, 0] })).toContain('life.lifestyleStatus must be four whole numbers');
+    expect(life({ lifestyleStatus: [0, 0.5, 0, 0] })).toContain('life.lifestyleStatus must be four whole numbers');
+    // A way of living may take status away.
+    expect(life({ lifestyleStatus: [-3, 0, 3, 8] })).toEqual([]);
+    expect(life({ itemFinanceDownPct: 101 })).toContain('life.itemFinanceDownPct must be a whole number from 0 to 100');
+    expect(life({ itemFinanceMinPrice: -1 })).toContain('life.itemFinanceMinPrice must be a whole, non-negative amount');
     expect(life({ insurancePremiumBp: { health: 400, home: 300, life: 200 } })).toContain(
       'life.insurancePremiumBp needs a whole, non-negative number for liability',
     );

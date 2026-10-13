@@ -53,6 +53,7 @@ const order: fc.Arbitrary<Order> = fc.oneof(
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setRented' as const), propertyId: ownedId('property'), rented: fc.boolean() }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('focus' as const), action: fc.constantFrom('overtime' as const, 'studyCareer' as const, 'jobHunt' as const, 'nap' as never) }) },
   { weight: 3, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, financed: fc.constantFrom(true, false, 'yes' as never) }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('sellItem' as const), itemId }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setLifestyle' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as const, 3 as const, 7 as never) }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setRentTier' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as never) }) },

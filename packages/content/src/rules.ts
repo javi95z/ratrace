@@ -67,7 +67,11 @@ export const life: LifeRules = {
   // A rented room costs a little over half the housing share of a rented flat.
   rentTierHousingPct: [55, 100],
   rentTierStatus: [0, 3],
-  lifestyleStatus: [0, 0, 3, 8],
+  // Living on less than most people is seen, and it costs standing: saving is not free.
+  lifestyleStatus: [-3, 0, 3, 8],
+  // A fifth down and the rest on a personal loan, for anything a dealer would write a contract for.
+  itemFinanceDownPct: 20,
+  itemFinanceMinPrice: usd(5_000),
   lesserItemPct: 25,
   moveCostPct: 25,
   workSkill: 1,

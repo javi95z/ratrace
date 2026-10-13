@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { debtServiceForRound } from './debt';
 import { applyRound, createGame, previewRound } from './game';
 import { executeOrder } from './orders';
 import { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
@@ -103,7 +104,52 @@ describe('quoteItem', () => {
       expect(buy(quote.price).player.life.items[0].value).toBe(quote.resale);
       expect(quote).toMatchObject({ owned: false, forSale: true });
     }
-    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, paid: null, forSale: true, soldHere: true, local: false, sellable: false });
+    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toMatchObject({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, paid: null, forSale: true, soldHere: true, local: false, sellable: false });
+  });
+
+  it('quotes the instalments exactly as the order will take them, and why they are refused when they are', () => {
+    for (const state of [game(5_000_000), later(game(5_000_000))]) {
+      const view = viewOf(state);
+      const plan = quoteItem(content, view, 'car_basic').finance;
+      if (plan === null) throw new Error('a car is sold on instalments');
+      const world = state.timeline[state.round];
+      expect(plan.down + plan.loan).toBe(quoteItem(content, view, 'car_basic').price);
+      expect(plan).toMatchObject({ rateBp: quoteLoan(content, view).rateBp, termRounds: content.debt.personalLoanTermRounds, lock: null });
+
+      const buy = (cash: number) => tryOrder(withPlayer(content, state, { cash }), { type: 'buyItem', itemId: 'car_basic', financed: true });
+      expect(buy(plan.down - 1).reason).toBe('not-enough-cash');
+      const bought = buy(plan.down);
+      expect(bought.reason).toBeNull();
+      expect(bought.player.cash).toBe(0);
+      const debt = bought.player.debts[bought.player.debts.length - 1];
+      expect(debt).toMatchObject({ kind: 'personalLoan', principal: plan.loan, fixedRateBp: plan.rateBp, roundsLeft: plan.termRounds });
+
+      // What a year of it costs is what the first round then charges for that debt, spread over its years.
+      const service = debtServiceForRound({ ...bought.player, debts: [debt] }, content, world);
+      expect(plan.annual).toBe(Math.round((service.interest + service.principal) / content.yearsPerRound));
+
+      // The lock the quote names is the reason the order gives.
+      for (const [over, reason] of [
+        [{ cash: plan.down - 1 }, 'not-enough-cash'],
+        [{ bankruptUntilRound: state.round + 2 }, 'no-credit'],
+        [{ debts: [{ id: 'old', kind: 'personalLoan', principal: 900_000_000, fixedRateBp: 500, roundsLeft: 3 }] }, 'over-loan-limit'],
+      ] as Array<[Partial<PlayerState>, RejectReason]>) {
+        const stuck = withPlayer(content, state, over);
+        expect(quoteItem(content, viewOf(stuck), 'car_basic').finance?.lock, reason).toBe(reason);
+        expect(tryOrder(stuck, { type: 'buyItem', itemId: 'car_basic', financed: true }).reason).toBe(reason);
+      }
+    }
+  });
+
+  it('has no instalments for what does not last, for what is already owned, or for what a card gives', () => {
+    const view = viewOf(game(5_000_000));
+    expect(quoteItem(content, view, 'club').finance).toBeNull();
+    expect(quoteItem(content, view, 'trip').finance).toBeNull();
+    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
+    expect(quoteItem(content, viewOf(owner), 'car_basic').finance).toBeNull();
+    const special = fixtureContent();
+    special.items = special.items.map((item) => (item.id === 'car_basic' ? { ...item, cardOnly: true } : item));
+    expect(quoteItem(special, viewOf(createGame({ content: special, start: fixtureStart() }, 'quotes')), 'car_basic').finance).toBeNull();
   });
 
   it('says whether the owner may sell it, exactly as the sell order will decide', () => {
