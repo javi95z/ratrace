@@ -129,13 +129,16 @@ describe('an account in the cloud', () => {
 
   it('tries again in the language it was started in, when asked to, and only if nobody is signed in', async () => {
     let network = false;
+    let tried = 0;
     const { cloud, calls } = fakeCloud();
     const account = new SupabaseAccount(async () => {
+      tried += 1;
       if (!network) throw new Error('no network');
       return cloud;
     }, () => 'http://localhost/es', () => {});
-    // Never started: there is nothing to try again.
+    // Never started: there is nothing to try again, and it does not so much as load the client.
     await account.again();
+    expect(tried).toBe(0);
     expect(account.state()).toEqual({ kind: 'offline' });
     await account.start('es');
     expect(account.state()).toEqual({ kind: 'offline' });

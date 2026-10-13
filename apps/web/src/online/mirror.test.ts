@@ -191,9 +191,10 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(state.asked).toEqual([`push ${session.gameId}`]);
     expect(d.mirror.status()).toBe('saved');
     // Asked to sync, it reads the account again: that is how a life from another device is found.
+    // Finding its own copy there exactly as it stands here, it sends nothing.
     state.asked.length = 0;
     await d.mirror.sync();
-    expect(reads(state.asked)).toHaveLength(3);
+    expect(state.asked).toEqual(['read runs', 'read games', 'read progress']);
   });
 
   it('still reads the account when a write asks to be sent while a reading is about to begin', async () => {

@@ -404,7 +404,6 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     // take or to offer; a copy that does not play back to a sound life is passed over, and the next is tried.
     let games = playing.filter((game) => !this.abandoned.has(game.id));
     let waiting: SavedGame | null = null;
-    let taken: SavedGame | null = null;
     for (;;) {
       const choice = chooseGame(current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished }, games, this.options.versions);
       const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
@@ -417,15 +416,15 @@ export class MirroredStore implements PlayerStore, AccountSaves {
         break;
       }
       await this.device.saveGame(save);
-      current = taken = save;
+      current = save;
       moved = true;
     }
-    // What the device holds goes up next, unless the account has that very copy: the one just taken
-    // from it, or one that stands there exactly as it does here. A copy written over it there since
-    // this device last sent does not stand.
+    // What the device holds goes up next, unless the account has that very copy, standing there
+    // exactly as it does here: the one just taken from it, for one. A copy written over the
+    // device's own there, since this device last sent, does not stand.
     const mine = current === null ? null : uploadOf(current);
     const theirs = playing.find((game) => game.id === current?.gameId);
-    this.sent = mine !== null && (current === taken || theirs?.stateHash === mine.stateHash) ? standing(mine) : null;
+    this.sent = mine !== null && theirs?.stateHash === mine.stateHash ? standing(mine) : null;
     this.setOffer(waiting);
     if (moved) this.tell('game');
 
