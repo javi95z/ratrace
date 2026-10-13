@@ -283,7 +283,16 @@
       "lets": "Lets for {amount} a year",
       "buyLetTitle": "Buy to let: {home}",
       "rent": "Rent a year",
-      "letTitle": "To let in {city}"
+      "letTitle": "To let in {city}",
+      "worth": "Worth today",
+      "paid": "You paid",
+      "gain": "Gain",
+      "wouldLet": "Let, it would bring a year",
+      "owed": "Still owed",
+      "term": "Term",
+      "ownedOutright": "It is all yours: nothing is owed on it.",
+      "netOnSale": "A sale would leave you",
+      "netOnSaleHint": "After the mortgage is repaid and before tax on the gain."
     },
     "debt": {
       "none": "You owe nothing.",

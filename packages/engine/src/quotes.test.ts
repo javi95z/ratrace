@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyRound, createGame, previewRound } from './game';
 import { executeOrder } from './orders';
-import { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from './quotes';
+import { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
 import { newTally } from './tally';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import { withPlayer } from './testing/patch';
@@ -59,6 +59,37 @@ describe('quoteProperty', () => {
 
   it('refuses a kind of home that does not exist', () => {
     expect(() => quoteProperty(content, viewOf(game(0)), 'castle')).toThrow('unknown property type: castle');
+  });
+});
+
+describe('quoteOwnedProperty', () => {
+  it('says of a home what the sale, the rent and the mortgage orders will then do', () => {
+    const start = game(20_000_000, { financeSkill: 2 });
+    const terms = quoteProperty(content, viewOf(start), 'studio');
+    const bought = applyRound(content, start, { orders: [{ type: 'buyProperty', typeId: 'studio', downPayment: terms.minDown, mortgage: 'fixed', rented: false }] }).state;
+    const [property] = bought.player.properties;
+    const quote = quoteOwnedProperty(content, viewOf(bought), property.id);
+    if (!quote) throw new Error('no quote');
+
+    const debt = bought.player.debts.find((d) => d.id === property.mortgageId);
+    expect(quote).toMatchObject({ value: property.value, paid: terms.price, rented: false, livedIn: true, letOnly: false });
+    expect(quote.mortgage).toEqual({ principal: debt?.principal, rateBp: debt?.fixedRateBp, roundsLeft: debt?.roundsLeft, variable: false });
+
+    // Selling leaves exactly what the quote says, before tax.
+    const sold = tryOrder(bought, { type: 'sellProperty', propertyId: property.id });
+    expect(sold.player.cash - bought.player.cash).toBe(quote.netOnSale);
+
+    // Let for a round, it brings what the quote says for each of its years, to the cent the rounding allows.
+    const let_ = previewRound(content, bought, { orders: [{ type: 'setRented', propertyId: property.id, rented: true }] });
+    expect(Math.abs(let_.income.rent - quote.rentAnnual * content.yearsPerRound)).toBeLessThanOrEqual(1);
+    expect(quote.rentAnnual).toBeGreaterThan(0);
+  });
+
+  it('has no mortgage to tell of a home owned outright, and nothing at all for a home not owned', () => {
+    const start = createGame({ content, start: { ...fixtureStart(), cash: 0, life: { ...office, properties: [{ typeId: 'studio', rented: true }] } } }, 'owned');
+    const quote = quoteOwnedProperty(content, viewOf(start), start.player.properties[0].id);
+    expect(quote).toMatchObject({ mortgage: null, rented: true, livedIn: false, netOnSale: start.player.properties[0].value });
+    expect(quoteOwnedProperty(content, viewOf(start), 'property-99')).toBeNull();
   });
 });
 

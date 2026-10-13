@@ -1,8 +1,8 @@
-import { loanRoom } from './debt';
+import { debtRateBp, loanRoom } from './debt';
 import { livingCostAnnual } from './economy';
-import { INSURANCE_KINDS } from './life/derive';
+import { homeOf, INSURANCE_KINDS } from './life/derive';
 import { canSellItem, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
-import { cityOf, itemOf } from './lookup';
+import { cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
@@ -36,6 +36,47 @@ export function quoteProperty(content: Content, view: GameView, typeId: string):
     canRentOut: p.life.financeSkill >= content.life.rentOutMinFinanceSkill,
     letOnly: rentalOnly(content, typeId),
     rentAnnual: applyBp(terms.price, rentYieldBp(content, p.cityId, typeId)),
+  };
+}
+
+export interface OwnedPropertyQuote {
+  /** What it would sell for today. */
+  value: Cents;
+  /** What was paid for it. */
+  paid: Cents;
+  /** What a year of letting it brings at today's value, whether or not it is let now. */
+  rentAnnual: Cents;
+  rented: boolean;
+  /** True for the one home the player lives in. */
+  livedIn: boolean;
+  /** True for what nobody can live in. */
+  letOnly: boolean;
+  /** The status it gives while it is the player's home. */
+  status: number;
+  /** The loan on it, at the rate it bears today, or null when it is owned outright. */
+  mortgage: { principal: Cents; rateBp: Bp; roundsLeft: number; variable: boolean } | null;
+  /** What a sale would leave after the mortgage is repaid, before any tax on the gain. */
+  netOnSale: Cents;
+}
+
+/** Everything about a property the player owns, or null if they do not own it. */
+export function quoteOwnedProperty(content: Content, view: GameView, propertyId: string): OwnedPropertyQuote | null {
+  const p = view.player;
+  const property = p.properties.find((x) => x.id === propertyId);
+  if (!property) return null;
+  const debt = p.debts.find((d) => d.id === property.mortgageId);
+  return {
+    value: property.value,
+    paid: property.basis,
+    rentAnnual: applyBp(property.value, rentYieldBp(content, property.cityId, property.typeId)),
+    rented: property.rented,
+    livedIn: homeOf(p, content)?.id === property.id,
+    letOnly: rentalOnly(content, property.typeId),
+    status: propertyTypeOf(content, property.typeId).status,
+    mortgage: debt
+      ? { principal: debt.principal, rateBp: debtRateBp(debt, content, view.timeline[view.round], p), roundsLeft: debt.roundsLeft, variable: debt.kind === 'mortgageVariable' }
+      : null,
+    netOnSale: property.value - (debt?.principal ?? 0),
   };
 }
 
