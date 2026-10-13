@@ -503,7 +503,6 @@
       "marginTitle": "Buying on margin",
       "margin": "On margin: the broker puts in as much again",
       "marginHint": "You buy twice as much. The loan costs {rate} a year.",
-      "marginSkill": "It takes money sense {level}. That comes with years of having money invested.",
       "marginFull": "You already owe more than {pct}% of what you hold of this: no more is lent on it.",
       "marginRisk": "You gain and lose twice as much. If the loan passes {call}% of what it is worth, the broker sells it all: a fall of {drop}% is enough.",
       "marginOwed": "You owe the broker {amount}",

@@ -503,7 +503,6 @@
       "marginTitle": "Comprar con margen",
       "margin": "Con margen: el bróker pone otro tanto",
       "marginHint": "Compras el doble. El préstamo cuesta un {rate} al año.",
-      "marginSkill": "Necesitas saber financiero {level}. Se llega con años de tener dinero invertido.",
       "marginFull": "Ya debes más del {pct} % de lo que tienes en este activo: no se presta más sobre él.",
       "marginRisk": "Ganas y pierdes el doble. Si el préstamo pasa del {call} % de lo que vale, el bróker lo vende todo: basta una caída del {drop} %.",
       "marginOwed": "Debes {amount} al bróker",

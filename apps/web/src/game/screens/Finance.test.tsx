@@ -291,15 +291,34 @@ describe('buying with borrowed money', () => {
     return { services, view: skilled() };
   };
 
-  it('is closed to someone without the skill, and says what it takes', async () => {
-    const { services } = await inFinance('civil_servant');
+  it('is not shown to someone without the skill: the sheet only buys', async () => {
+    const { services, session } = await inFinance('civil_servant');
+    expect(quoteMargin(content, session.view(), 'sp500').lock).toBe('needs-finance-skill');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
+    expect(within(sheet).queryByRole('region', { name: 'Buying on margin' })).toBeNull();
+    expect(within(sheet).queryByRole('switch')).toBeNull();
+    expect(within(sheet).queryByText(/margin|broker/i)).toBeNull();
+    // What is bought there is bought with their own money alone.
+    fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
+    await user.click(within(sheet).getByRole('button', { name: 'Confirm $1,000' }));
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Buy S&P 500 · $1,000' })).toBeTruthy();
+  });
+
+  it('stays in sight, closed, for someone who has the skill and no credit after a bankruptcy', async () => {
+    const { services, view } = await seasoned('civil_servant', (view) => ({ ...view, player: { ...view.player, bankruptUntilRound: view.round + 2 } }));
+    expect(quoteMargin(content, view, 'sp500').lock).toBe('no-credit');
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Market' }));
     await user.click(button(/S&P 500/));
     const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Buying on margin' });
     expect((within(section).getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
-    expect(within(section).getByText('It takes money sense 3. That comes with years of having money invested.')).toBeTruthy();
+    expect(within(section).getByText('No bank will lend to you yet after your bankruptcy.')).toBeTruthy();
   });
 
   it('buys twice what is put in for someone who has it, says what it risks, and names the order for what it is', async () => {

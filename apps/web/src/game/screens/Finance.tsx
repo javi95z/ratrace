@@ -321,7 +321,8 @@ function Market() {
               : addOrder(geared && margin?.lock === null && margin.canDouble ? { type: 'buy', assetId: buying.id, amount: a, margin: a } : { type: 'buy', assetId: buying.id, amount: a })
           }
           footer={
-            each || !margin ? null : (
+            // Margin is not spoken of until the player has the skill for it: a closed switch teaches nothing to someone years from it.
+            each || !margin || margin.lock === 'needs-finance-skill' ? null : (
               <section aria-label={plans('marginTitle')} className="mt-3 border-t-2 border-night-900 pt-3">
                 <Toggle
                   on={geared && margin.lock === null && margin.canDouble}
@@ -331,13 +332,11 @@ function Market() {
                   hint={plans('marginHint', { rate: fmt.rate(margin.rateBp) })}
                 />
                 <p className={`mt-1.5 text-[12px] leading-snug ${margin.lock !== null || !margin.canDouble ? 'text-gold-200' : 'text-ink-300'}`}>
-                  {margin.lock === 'needs-finance-skill'
-                    ? plans('marginSkill', { level: margin.minSkill })
-                    : margin.lock !== null
-                      ? text.reasons[margin.lock]
-                      : !margin.canDouble
-                        ? plans('marginFull', { pct: margin.maxPct })
-                        : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
+                  {margin.lock !== null
+                    ? text.reasons[margin.lock]
+                    : !margin.canDouble
+                      ? plans('marginFull', { pct: margin.maxPct })
+                      : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
                 </p>
               </section>
             )
