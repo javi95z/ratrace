@@ -71,24 +71,8 @@ describe('what a card did', () => {
     else expect(changes.textContent?.length ?? 0).toBeGreaterThan('What changes'.length);
   });
 
-  it('opens what was not chosen: every other option as it was offered, and not the one taken', async () => {
-    const { def, index, user, written } = await answer('engineer', () => 0);
-    expect(screen.queryByRole('dialog')).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'What you did not choose' }));
-    const sheet = screen.getByRole('dialog', { name: 'What you did not choose' });
-    const others = within(sheet).getAllByRole('listitem');
-    expect(others).toHaveLength(def.options.length - 1);
-    def.options.forEach((_, i) => {
-      const there = within(sheet).queryByText(written.options[i].label) !== null;
-      expect(there, written.options[i].label).toBe(i !== index);
-    });
-    // They are to be read, not chosen: the card is answered.
-    expect(within(sheet).queryAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Close']);
-
-    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('dialog')).toBeNull();
-    // Moving on forgets it: the next card starts clean.
-    await user.click(screen.getByRole('button', { name: /^(Next card|To your finances)$/ }));
-    expect(screen.queryByRole('button', { name: 'What you did not choose' })).toBeNull();
+  it('does not go back over the options that were not taken', async () => {
+    await answer('engineer', () => 0);
+    expect(screen.queryByRole('button', { name: /did not choose/ })).toBeNull();
   });
 });

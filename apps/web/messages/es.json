@@ -200,9 +200,7 @@
     "swipe": "Desliza la carta o toca una opción",
     "choices": "Tus opciones: {title}",
     "changes": "Lo que cambia",
-    "rolled": "de probabilidad de que saliera esto",
-    "others": "Lo que no elegiste",
-    "othersHint": "Así estaban las demás opciones cuando elegiste."
+    "rolled": "de probabilidad de que saliera esto"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -409,7 +407,8 @@
       "shortfall": "Si falta dinero, sale primero de tu ahorro y después va a la tarjeta de crédito.",
       "escapeTitle": "Prueba de salida",
       "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales."
-    }
+    },
+    "decided": "Ya decidido"
   },
   "resolve": {
     "title": "Dos años después",

@@ -200,9 +200,7 @@
     "swipe": "Swipe the card, or tap a choice",
     "choices": "Your choices: {title}",
     "changes": "What changes",
-    "rolled": "chance of this being what came up",
-    "others": "What you did not choose",
-    "othersHint": "This is what the other options offered when you chose."
+    "rolled": "chance of this being what came up"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -409,7 +407,8 @@
       "shortfall": "A shortfall comes out of your savings first, then goes on the credit card.",
       "escapeTitle": "Escape test",
       "escapeHint": "Passive income after tax, against what the round costs you. Cover it two rounds in a row and you are out."
-    }
+    },
+    "decided": "Already decided"
   },
   "resolve": {
     "title": "Two years later",

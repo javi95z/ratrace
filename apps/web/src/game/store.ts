@@ -35,7 +35,7 @@ export interface RoundState {
   cardEvents: GameEvent[];
   /**
    * The card just answered as it stood when it was answered: what each of its options offered, and
-   * the world they were offered in. Kept with the result, to say what was chosen and what was not.
+   * the world they were offered in. Kept with the result, to say how likely what came up was.
    */
   offered: { cardId: string; options: OptionPreview[]; world: WorldState } | null;
   /** The basket: orders for this round, in the order they will run. None of them will be refused. */

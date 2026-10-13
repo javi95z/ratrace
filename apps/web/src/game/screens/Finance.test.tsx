@@ -264,3 +264,42 @@ describe('a property the player owns', () => {
   });
 });
 
+describe("this round's orders", () => {
+  it('list a move the player orders, which can be taken back', async () => {
+    const { services } = await inFinance('heir');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+    const cities = screen.getByRole('dialog', { name: 'Move to another city' });
+    await user.click(within(cities).getAllByRole('button', { name: 'Move here' })[0]);
+
+    await user.click(button('1 order'));
+    const orders = screen.getByRole('dialog', { name: "This round's orders" });
+    expect(within(orders).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(orders).getByText(/^Move to /)).toBeTruthy();
+    await user.click(within(orders).getByRole('button', { name: /^Remove: Move to / }));
+    expect(within(orders).getByText(/^Nothing yet/)).toBeTruthy();
+  });
+
+  it('list a move a card already decided, at the top and with no way to take it back', async () => {
+    const { services, session } = await inFinance('nurse');
+    // The same life, having said yes on a card to a job in London.
+    const moving = (): GameView => ({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, movingTo: 'london' } } });
+    const leaving: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: moving, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: leaving });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await screen.findByRole('tab', { name: 'Lifestyle' });
+
+    // The basket still counts only what the player ordered: the move is not theirs to remove.
+    await user.click(button('No orders'));
+    const orders = screen.getByRole('dialog', { name: "This round's orders" });
+    const [move] = within(orders).getAllByRole('listitem');
+    expect(within(move).getByText('Move to London')).toBeTruthy();
+    expect(within(move).getByText('Already decided')).toBeTruthy();
+    expect(within(move).queryByRole('button')).toBeNull();
+    expect(within(orders).queryByText(/^Nothing yet/)).toBeNull();
+  });
+});
+

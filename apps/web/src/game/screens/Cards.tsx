@@ -4,12 +4,11 @@ import { cardArt } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
 import type { CardDef, GameEvent, OptionPreview, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
 import { chancePct, effectTags } from '@/game/present';
 import type { EffectTag } from '@/game/present';
-import { Button, Panel, Tag } from '@/ui/kit';
-import { Sheet } from '@/ui/overlay';
+import { Panel, Tag } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Celebrations } from './Celebrations';
 
@@ -145,18 +144,16 @@ export function CardStage() {
 
 /**
  * What the card just answered did: its picture again, the choice made and what followed from it,
- * what the dice said when there were dice, everything it changed, and, for whoever wants to know,
- * what the other options offered. Nothing is worked out here: the figures are the engine's.
+ * what the dice said when there were dice, and everything it changed. Nothing is worked out
+ * here: the figures are the engine's.
  */
 export function Outcome() {
   const t = useT('cards');
   const effects = useT('effects');
-  const common = useT('common');
   const words = useWords();
   const { content, text, fmt } = words;
   const events = useGame((s) => s.cardEvents);
   const offered = useGame((s) => s.offered);
-  const [others, setOthers] = useState(false);
   const cards = events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
   const money = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
 
@@ -177,7 +174,6 @@ export function Outcome() {
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
         const tags = world ? [...effectTags(words, effects, world, chosen?.effects), ...effectTags(words, effects, world, rolled?.effects)] : [];
-        const rest = def && was ? def.options.map((_, i) => i).filter((i) => i !== event.option) : [];
 
         return (
           <div key={event.cardId} className="flex flex-col gap-3">
@@ -204,23 +200,6 @@ export function Outcome() {
               <Tags cash={event.cash} tags={tags} empty={t('nothing')} />
             </Panel>
 
-            {rest.length > 0 && def && was ? (
-              <>
-                <Button variant="quiet" wide aria-haspopup="dialog" onClick={() => setOthers(true)} className="text-[15px]">
-                  {t('others')}
-                </Button>
-                <Sheet open={others} onClose={() => setOthers(false)} title={t('others')} closeLabel={common('close')}>
-                  <p className="mb-3 text-[13px] text-ink-300">{t('othersHint')}</p>
-                  <ul className="flex flex-col gap-2.5">
-                    {rest.map((i) => (
-                      <li key={i} className="frame flex flex-col gap-1.5 bg-night-700 px-3 py-2">
-                        <Offer def={def} index={i} preview={was.options[i]} world={was.world} />
-                      </li>
-                    ))}
-                  </ul>
-                </Sheet>
-              </>
-            ) : null}
           </div>
         );
       })}
