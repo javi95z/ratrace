@@ -181,6 +181,18 @@ export const useSettings = () => {
 /** What belongs to the player rather than to one life: badges, the gallery, the lives unlocked. */
 export const useProfile = (): Profile => useGameContext().profile;
 
+/** The guided first life: the tips already read, and the two ways to be done with one. */
+export function useGuide() {
+  const { profile, changeProfile } = useGameContext();
+  return {
+    ...profile.guide,
+    /** Marks one tip as read. */
+    read: (tip: string) => changeProfile((current) => (current.guide.seen.includes(tip) ? current : { ...current, guide: { ...current.guide, seen: [...current.guide.seen, tip] } })),
+    /** Turns the guide off for good. */
+    turnOff: () => changeProfile((current) => ({ ...current, guide: { ...current.guide, off: true } })),
+  };
+}
+
 /** Finished lives, the latest first, or null while the device has not answered yet. */
 export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
 

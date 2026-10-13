@@ -22,7 +22,8 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: 'meta' });
   return {
-    title: t('title'),
+    // A page gives its own title and the game's name follows it; the front door is the game's name alone.
+    title: { default: t('title'), template: `%s · ${t('title')}` },
     description: t('description'),
     icons: { icon: '/sprites/brand/brand.app_icon.png' },
   };

@@ -4,7 +4,7 @@ import { assetKind, itemArt, propertyArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, orderLabel, priceHistory } from '@/game/present';
@@ -158,12 +158,15 @@ function Market() {
                   type="button"
                   disabled={locked}
                   onClick={() => setBuying(asset)}
-                  className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left disabled:opacity-55"
+                  className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left"
                 >
-                  <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} />
+                  {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
+                  <span className={locked ? 'opacity-50' : ''}>
+                    <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} />
+                  </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate">{names.assets[asset.id].name}</span>
-                    <span className="block text-[12px] text-ink-300">{locked ? t('needsSkill', { level: need }) : pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : ' '}</span>
+                    <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>
+                    <span className={`block text-[12px] ${locked ? 'text-gold-200' : 'text-ink-300'}`}>{locked ? t('needsSkill', { level: need }) : pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : ' '}</span>
                   </span>
                   <span className={`pixel text-right ${view.round === 0 ? 'text-ink-300' : change >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
                     {view.round === 0 ? '—' : fmt.change(change)}
@@ -766,14 +769,17 @@ export function Finance() {
   const { text } = useWords();
   const refusal = useGame((s) => s.refusal);
   const clearRefusal = useGame((s) => s.clearRefusal);
+  const alsoRemoved = useGame((s) => s.alsoRemoved);
+  const clearAlsoRemoved = useGame((s) => s.clearAlsoRemoved);
   const [tab, setTab] = useState<TabId>('portfolio');
+  const ids = useId();
 
   return (
     <div>
       <div className="sticky top-0 z-10 bg-night-800">
-        <Tabs<TabId> label={t('tabs.portfolio')} tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
+        <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
       </div>
-      <div role="tabpanel" className="px-3 pt-1">
+      <div role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} className="px-3 pt-1">
         {tab === 'portfolio' ? <Portfolio /> : null}
         {tab === 'market' ? <Market /> : null}
         {tab === 'property' ? <PropertyTab /> : null}
@@ -783,6 +789,8 @@ export function Finance() {
         {tab === 'taxes' ? <Taxes /> : null}
       </div>
       <Toast message={refusal ? `${t('refused')}: ${text.reasons[refusal]}` : null} onDone={clearRefusal} />
+      {/* Taking one order out can take others with it; that must not happen without a word. */}
+      <Toast message={alsoRemoved > 0 && !refusal ? t('alsoRemoved', { count: alsoRemoved }) : null} onDone={clearAlsoRemoved} ms={4_000} />
     </div>
   );
 }

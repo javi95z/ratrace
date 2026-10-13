@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -8,12 +9,14 @@ export const WORDS = {
     play: 'Play the round', nextRound: 'Next round', finish: 'See how it ended', theEnd: 'The end', news: 'News', choices: /^Your choices/,
     happened: 'What happened', later: 'Two years later', card: (n: number) => new RegExp(`^Card ${n} of \\d`), round: (n: number) => `Round ${n} of 20`,
     continue: /Continue your life/, yourLife: 'Your life', orders: "This round's orders", again: 'Live another life',
+    tabs: ['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle', 'Shop', 'Taxes'], openProfile: 'Open your profile', collection: 'Collection', records: 'Records', guide: 'Guide', skipGuide: 'Skip the guide',
   },
   es: {
     newLife: 'Nueva vida', start: 'Empezar esta vida', toCards: 'Ver qué trae la vida', nextCard: 'Siguiente carta', toFinance: 'A tus finanzas',
     play: 'Jugar la ronda', nextRound: 'Siguiente ronda', finish: 'Ver cómo acabó', theEnd: 'Fin', news: 'Noticias', choices: /^Tus opciones/,
     happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => `Ronda ${n} de 20`,
     continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
+    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', guide: 'Guía', skipGuide: 'Quitar la guía',
   },
 } as const;
 
@@ -84,6 +87,17 @@ export async function playRound(page: Page, lang: Lang, pick = 0) {
   await page.getByRole('button', { name: w.play }).click();
   await expect(page.getByRole('heading', { name: w.later })).toBeVisible();
   await settle(page);
+}
+
+/**
+ * What an accessibility audit finds wrong with the page as it stands: every breach of WCAG 2 A and AA
+ * that axe can see, one line each, with the first element it is about. A clean page gives none.
+ */
+export async function auditOf(page: Page): Promise<string[]> {
+  // Whatever is rising into place is still half transparent, and would be measured as unreadable.
+  await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished)));
+  const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  return violations.flatMap((violation) => violation.nodes.map((node) => `${violation.id} (${violation.impact}): ${node.html.slice(0, 120)}`));
 }
 
 /** True if nothing on the page is wider than the screen. */

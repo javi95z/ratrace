@@ -1,11 +1,34 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Sprite, spriteOf } from './Sprite';
 
 afterEach(cleanup);
 
 describe('Sprite', () => {
+  it('draws a thing not owned yet as its outline in a colour of the palette, with no name of its own', () => {
+    const { container } = render(<Sprite id="item.watch_rolex" alt="Rolex Submariner" silhouette />);
+    expect(container.querySelector('img')).toBeNull();
+    const shadow = container.querySelector('[data-silhouette="item.watch_rolex"]') as HTMLElement;
+    expect(shadow.getAttribute('aria-hidden')).toBe('true');
+    expect(shadow.style.maskImage).toContain('/sprites/items/item.watch_rolex.png');
+    expect(shadow.style.width).toBe('64px');
+    expect(shadow.className).toContain('bg-night-500');
+  });
+
+  it('shows the placeholder, once reported, when a sprite it knows does not arrive', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = render(<Sprite id="item.watch_omega" alt="Omega" />);
+    const img = container.querySelector('img') as HTMLImageElement;
+    fireEvent.error(img);
+    expect(container.querySelector('img')).toBeNull();
+    const placeholder = container.querySelector('[data-sprite-missing="item.watch_omega"]') as HTMLElement;
+    expect(placeholder.getAttribute('aria-label')).toBe('Omega');
+    expect(placeholder.style.width).toBe('64px');
+    expect(warn).toHaveBeenCalledWith('sprite did not load: item.watch_omega');
+    warn.mockRestore();
+  });
+
   it('draws a sprite at its own size, pixel for pixel', () => {
     const { container } = render(<Sprite id="item.watch_rolex" alt="Rolex Submariner" />);
     const img = container.querySelector('img') as HTMLImageElement;

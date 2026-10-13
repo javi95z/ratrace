@@ -107,8 +107,10 @@ export function shareCard(input: ShareInput): DrawOp[] {
 
   // The badges of the life: four are drawn, and the count says the rest.
   text(`${input.badgesLabel} · ${input.badges.length}`, MARGIN, 262, 8, 'pixel', C.ink300, 'left', INNER);
+  // Four badges are a little wider than the room between the margins. They are round, with empty corners,
+  // so each may stand four pixels into the next without touching it.
   input.badges.slice(0, MAX_BADGES).forEach((id, i) => {
-    ops.push({ kind: 'sprite', id, x: MARGIN - 4 + i * (BADGE + 1), y: 266, w: BADGE, h: BADGE });
+    ops.push({ kind: 'sprite', id, x: MARGIN + 1 + i * (BADGE - 4), y: 266, w: BADGE, h: BADGE });
   });
   return ops;
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, escapeProgress, viewOf } from '@ratrace/engine';
 import type { GameEvent, GameState, GameView, PlayerState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeArt } from './art';
@@ -229,6 +229,22 @@ describe('the badges', () => {
     const world = inflated.after.timeline[inflated.after.round];
     inflated.after.timeline[inflated.after.round] = { ...world, priceLevel: world.priceLevel * 2 };
     expect(badgesEarned(inflated)).toEqual([]);
+  });
+
+  it('asks for passive income of twice what life costs, not merely of what it costs', () => {
+    // Savings large enough to cover the round, and not twice over: an escape, but not this badge.
+    const withSavings = (dollars: number) => step({ player: (p) => (p.deposit = usd(dollars)) });
+    const ratio = (dollars: number) => {
+      const escape = escapeProgress(content, withSavings(dollars).after);
+      return escape.passiveAfterTax / escape.outgoings;
+    };
+    let between = 1_000_000;
+    while (ratio(between) < 1.2) between += 250_000;
+    expect(ratio(between)).toBeLessThan(1.8);
+    expect(badgesEarned(withSavings(between))).not.toContain('passive_double');
+    let twice = between;
+    while (ratio(twice) < 2) twice += 250_000;
+    expect(badgesEarned(withSavings(twice))).toContain('passive_double');
   });
 
   it('gives the gallery its two badges', () => {

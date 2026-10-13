@@ -72,7 +72,7 @@ export function Home() {
                 {t('records')}
               </Link>
             </div>
-            {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</p> : null}
+            {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : lost === 'newer' ? 'lostNewer' : 'lostDamaged')}</p> : null}
             {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}
           </>
         )}

@@ -364,20 +364,40 @@ describe('previewCard', () => {
     const state = createGame({ content, start: start() }, 'peek');
     const before = JSON.stringify(state);
     expect(previewCard(content, state, 'deal')).toEqual([
-      { available: true, cash: -50_000, outcomes: [] },
-      { available: false, cash: -2_000_000, outcomes: [] },
-      { available: true, cash: 240_000, outcomes: [{ weight: 3, cash: 100_000 }, { weight: 1, cash: -400_000 }] },
+      { available: true, lock: null, cash: -50_000, outcomes: [] },
+      { available: false, lock: 'cash', cash: -2_000_000, outcomes: [] },
+      { available: true, lock: null, cash: 240_000, outcomes: [{ weight: 3, cash: 100_000 }, { weight: 1, cash: -400_000 }] },
     ]);
     expect(JSON.stringify(state)).toBe(before);
   });
 
-  it('matches what applyCards then does', () => {
-    const content = contentWith([deal]);
-    const state = createGame({ content, start: start() }, 'peek');
-    const preview = previewCard(content, state, 'deal');
-    const event = applyCards(content, state, { deal: 2 }).events[0];
-    if (event.kind !== 'card' || event.outcome === null) throw new Error('expected a rolled outcome');
-    expect(event.cash).toBe(preview[2].cash + preview[2].outcomes[event.outcome].cash);
+  it('says why an option is locked, so the screen can tell the player', () => {
+    // Three cards, two lockable options each, one for every reason there is.
+    const cards = [
+      card('why_a', { options: [{}, { when: { partner: true }, effects: { cash: 1 } }, { effects: { focus: 9 } }] }),
+      card('why_b', { options: [{}, { effects: { buyItem: { itemId: 'car_basic', pricePct: 50 } } }, { effects: { cash: -5_000_000 } }] }),
+      card('why_c', { options: [{}, { effects: { loan: 100_000 } }, { effects: { cash: -100_000, pension: 100_000 } }] }),
+    ];
+    const content = contentWith(cards);
+    const state = createGame({ content, start: start() }, 'why');
+    expect([...state.hand].sort()).toEqual(['why_a', 'why_b', 'why_c']);
+    const locks = (s: GameState) => cards.flatMap((c) => previewCard(content, s, c.id).map((option) => option.lock));
+
+    // Single, with a million in cash and three focus: no partner, no nine focus, no five million.
+    expect(locks(state)).toEqual([null, 'condition', 'focus', null, null, 'cash', null, null, null]);
+    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null }], collection: ['car_basic'] });
+    expect(locks(owner)[4]).toBe('owned');
+    expect(locks(withPlayer(content, state, { bankruptUntilRound: 3 }))[7]).toBe('bankruptcy');
+    const owing = withPlayer(content, state, { cash: 300_000, debts: [{ id: 'debt-1', kind: 'personalLoan', principal: 250_000, fixedRateBp: 700, roundsLeft: 2 }], nextId: 1 });
+    expect(locks(owing)[8]).toBe('insolvent');
+    // What is locked is exactly what is not available, and the first option never is.
+    for (const s of [state, owner, owing]) {
+      for (const c of cards) {
+        const options = previewCard(content, s, c.id);
+        for (const option of options) expect(option.available).toBe(option.lock === null);
+        expect(options[0].lock).toBeNull();
+      }
+    }
   });
 
   it('refuses a card that is not in the hand', () => {

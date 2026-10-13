@@ -57,7 +57,7 @@ describe('drawing the share card', () => {
     expect(of('rect')[0]).toEqual(['rect', '#141b33', 0, 0, 1080, CARD.h * 4]);
     expect(of('image')).toEqual([
       ['image', sprite, 56, 136, 256, 256],
-      ['image', sprite, 32, 1064, 256, 256],
+      ['image', sprite, 52, 1064, 256, 256],
     ]);
     const written = of('text').map((call) => call[2]);
     for (const line of ['THE RAT RACE', 'Nurse', '364', '$1,999,329']) expect(written).toContain(line);

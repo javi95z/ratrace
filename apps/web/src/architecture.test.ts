@@ -31,7 +31,8 @@ const WIRING = ['game/context.tsx', 'testing/render.tsx'];
 
 describe('the wall between the screens and the game', () => {
   it('finds the screens', () => {
-    expect(screens.length).toBeGreaterThan(12);
+    expect(screens.length).toBeGreaterThan(20);
+    for (const screen of ['game/screens/Collection.tsx', 'game/screens/Records.tsx', 'game/screens/ShareCard.tsx', 'game/screens/Guide.tsx']) expect(screens.map(rel)).toContain(screen);
     expect(screens.map(rel)).toContain('game/screens/Play.tsx');
     expect(screens.map(rel)).toContain('game/screens/Finance.tsx');
   });
@@ -77,7 +78,11 @@ describe('the wall between the screens and the game', () => {
     // The engine's quotes, previews and score breakdown give every figure. A screen that reads one of
     // these tables is working a figure out itself. (Tax rates are shown, not used: they come from `effectiveTax`.)
     const TABLES = /\b(mortgageMaxLtvBp|purchaseTaxBp|propertyTaxBp|personalLoanSpreadBp|moveCostPct|wealthBreakpoints|escapeBase|escapePerRoundLeft|resaleStartPct|insurancePremiumBp|lifestyleMultiplierPct)\b/;
-    const broke = screens.filter((path) => TABLES.test(readFileSync(path, 'utf8'))).map(rel);
+    // The presenters, the round store and the other pure helpers of the game turn engine figures into words and
+    // pictures; they are held to the same rule as the screens they serve.
+    const helpers = all.filter((path) => /^game\/[a-z]+\.ts$/.test(rel(path)));
+    expect(helpers.map(rel)).toEqual(expect.arrayContaining(['game/present.ts', 'game/store.ts', 'game/records.ts', 'game/guide.ts', 'game/share.ts']));
+    const broke = [...screens, ...helpers].filter((path) => TABLES.test(readFileSync(path, 'utf8'))).map(rel);
     expect(broke).toEqual([]);
   });
 });

@@ -6,6 +6,7 @@ import type {
   FocusAction,
   InsuranceKind,
   LedgerLine,
+  OptionLock,
   Regime,
   RejectReason,
   Trend,
@@ -51,6 +52,8 @@ export interface ContentText {
   /** Badges: what each is called, and how it is earned. */
   badges: Record<string, { name: string; how: string }>;
   badgeGroups: Record<BadgeGroup, string>;
+  /** Why a card option is closed to the player. */
+  optionLocks: Record<OptionLock, string>;
   /** Why an order was refused. */
   reasons: Record<RejectReason, string>;
   ledger: Record<LedgerLine, string>;

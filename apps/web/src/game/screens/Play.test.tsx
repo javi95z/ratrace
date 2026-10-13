@@ -68,13 +68,23 @@ describe('the play screen', () => {
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect(screen.getByText('Age 22')).toBeTruthy();
     expect(screen.getByText(/Round 1 of 20 · Madrid/)).toBeTruthy();
+    // One top heading says whose life this is; the stage on screen is a named region that takes the focus.
+    expect(screen.getByRole('heading', { level: 1, name: 'Nurse, age 22' })).toBeTruthy();
+    const stage = () => screen.getByRole('main');
+    expect(stage().getAttribute('aria-label')).toBe('News');
+    expect(document.activeElement).toBe(stage());
     expect(screen.getByRole('progressbar', { name: 'Rat race escape' })).toBeTruthy();
 
     await user.click(button('See what life brings'));
     expect(screen.getByText(/^Card 1 of \d/)).toBeTruthy();
+    expect(stage().getAttribute('aria-label')).toMatch(/^Card 1 of \d/);
+    expect(document.activeElement).toBe(stage());
     await answerHand(user);
 
-    expect(screen.getByRole('tablist')).toBeTruthy();
+    // The tabs are named for what they are, and each panel for its tab.
+    expect(screen.getByRole('tablist', { name: 'Your finances' })).toBeTruthy();
+    expect(screen.getByRole('tabpanel', { name: 'Portfolio' })).toBeTruthy();
+    expect(stage().getAttribute('aria-label')).toBe('Your finances');
     expect(screen.getByText('Cash after the round')).toBeTruthy();
     expect(button('No orders')).toBeTruthy();
     await user.click(button('Play the round'));
@@ -181,6 +191,90 @@ describe('the play screen', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('guides a first life: one tip a stage, each read once, and remembered', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+
+    const tip = await screen.findByRole('note', { name: 'Guide' });
+    expect(tip.textContent).toContain('Every round opens with the news');
+    await user.click(within(tip).getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+    await waitFor(async () => expect((await services.store.loadProfile()).guide).toEqual({ seen: ['news'], off: false }));
+
+    await user.click(button('See what life brings'));
+    expect((await screen.findByRole('note', { name: 'Guide' })).textContent).toContain('Life deals you a few cards');
+    // Left unread, a tip is still there the next time its stage comes round.
+    const options = within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button');
+    await user.click(options[0]);
+    await screen.findByRole('heading', { name: 'What happened' });
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+
+    // Opened again later on the next card: what was read stays read, and what was not is offered again.
+    cleanup();
+    renderGame(<Play />, memoryServices(services.store));
+    expect((await screen.findByRole('note', { name: 'Guide' })).textContent).toContain('Life deals you a few cards');
+    expect((await services.store.loadProfile()).guide.seen).toEqual(['news']);
+  });
+
+  it('turns the guide off for good when asked to', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(within(await screen.findByRole('note', { name: 'Guide' })).getByRole('button', { name: 'Skip the guide' }));
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+    await user.click(button('See what life brings'));
+    expect(screen.getByText(/^Card 1 of \d/)).toBeTruthy();
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+    await waitFor(async () => expect((await services.store.loadProfile()).guide.off).toBe(true));
+  });
+
+  it('does not guide someone who has already lived a life', async () => {
+    const services = memoryServices();
+    await playRounds(await services.sessions.start('nurse'), 20);
+    await services.sessions.start('engineer');
+    renderGame(<Play />, services);
+    await screen.findByRole('button', { name: 'See what life brings' });
+    // Give the device time to answer about past lives: the guide waits for that before it speaks.
+    await waitFor(async () => expect(await services.store.listRuns()).toHaveLength(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+  });
+
+  it('says nothing until the device has said whether a life was ever finished', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    // The device never answers about past lives: for all the page knows, this is a veteran.
+    services.store.listRuns = () => new Promise(() => {});
+    renderGame(<Play />, services);
+    await screen.findByRole('button', { name: 'See what life brings' });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+  });
+
+  it('announces a life unlocked by a step that earned no badge', async () => {
+    const services = memoryServices();
+    const real = await services.sessions.start('nurse');
+    services.sessions.resume = async () => ({
+      lost: null,
+      session: {
+        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => [],
+        answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: [], unlocked: ['heir'] }),
+        playRound: (choices) => real.playRound(choices),
+      },
+    });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
+    await screen.findByRole('heading', { name: 'What happened' });
+    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
+    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
+    expect(news.some((text) => text.includes('Badge earned'))).toBe(false);
   });
 
   it('celebrates a badge on the ledger of the round that earned it, and the life a round unlocked', async () => {

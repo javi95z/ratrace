@@ -150,7 +150,7 @@ export function Segmented<T extends string | number>({
             )}
           >
             <span className="pixel text-[14px]">{option.label}</span>
-            {option.hint ? <span className={join('text-[11px] leading-tight', on ? 'text-ink-500' : 'text-ink-300')}>{option.hint}</span> : null}
+            {option.hint ? <span className={join('text-[11px] leading-tight', on ? 'text-ink-500' : 'text-ink-200')}>{option.hint}</span> : null}
           </button>
         );
       })}
@@ -171,7 +171,7 @@ export function Toggle({ on, onChange, label, hint, disabled }: { on: boolean; o
     >
       <span className="min-w-0">
         <span className="pixel block text-[15px]">{label}</span>
-        {hint ? <span className="block text-[12px] leading-tight text-ink-300">{hint}</span> : null}
+        {hint ? <span className="block text-[12px] leading-tight text-ink-200">{hint}</span> : null}
       </span>
       <span aria-hidden className={join('frame relative h-5 w-10 shrink-0', on ? 'bg-teal-600' : 'bg-night-900')}>
         <span className={join('absolute top-0 size-5 bg-cream transition-[left]', on ? 'left-5' : 'left-0')} />

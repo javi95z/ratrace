@@ -68,4 +68,12 @@ describe('the front door', () => {
     renderGame(<Home />, services);
     expect((await screen.findByRole('status')).textContent).toContain('played under older rules');
   });
+
+  it('tells apart a saved life from a newer version of the game', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    await services.store.saveGame({ ...((await services.store.loadGame()) as never as object), format: 2 } as never);
+    renderGame(<Home />, services);
+    expect((await screen.findByRole('status')).textContent).toContain('newer version of the game');
+  });
 });

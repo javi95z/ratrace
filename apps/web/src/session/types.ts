@@ -35,8 +35,11 @@ export interface GameSession {
   playRound(choices: RoundChoices): Promise<StepResult>;
 }
 
-/** Why a saved life could not be opened. */
-export type Lost = 'outdated' | 'damaged';
+/**
+ * Why a saved life could not be opened: it was played under older rules; it cannot be read or
+ * rebuilt; or it was written by a newer version of the game than this page, which must leave it be.
+ */
+export type Lost = 'outdated' | 'damaged' | 'newer';
 
 export interface Sessions {
   /** Starts a new life. A life in progress is replaced. */

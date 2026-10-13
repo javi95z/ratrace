@@ -101,8 +101,8 @@ export type Opened = { ok: true; save: SavedGame; repaired: boolean } | { ok: fa
  */
 export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<LifeDef>): Opened {
   if (!isRecord(raw)) return { ok: false, lost: 'damaged' };
-  // A higher format was written by a newer version of the game. There are no older formats to migrate from yet.
-  if (typeof raw.format === 'number' && raw.format > SAVE_FORMAT) return { ok: false, lost: 'outdated' };
+  // A higher format was written by a newer version of the game than this page. There are no older formats to migrate from yet.
+  if (typeof raw.format === 'number' && raw.format > SAVE_FORMAT) return { ok: false, lost: 'newer' };
   if (raw.format !== SAVE_FORMAT) return { ok: false, lost: 'damaged' };
   if (typeof raw.engineVersion !== 'string' || typeof raw.contentVersion !== 'string' || typeof raw.gameId !== 'string') {
     return { ok: false, lost: 'damaged' };

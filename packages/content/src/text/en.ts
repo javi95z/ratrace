@@ -173,6 +173,14 @@ export const en: ContentText = {
     bankrupt: { name: 'Bankrupt', how: 'Go bankrupt. It happens to the best.' },
   },
   badgeGroups: { wealth: 'Wealth', escape: 'Escape', investing: 'Investing', status: 'Status', life: 'Life', misfortune: 'Misfortune' },
+  optionLocks: {
+    condition: 'Not open to you as things stand.',
+    bankruptcy: 'No bank lends to you so soon after a bankruptcy.',
+    focus: 'You have no focus left for it this round.',
+    owned: 'You already have it.',
+    cash: 'You cannot pay for it, even with your savings.',
+    insolvent: 'You owe more than you own, so nothing more can go into your pension.',
+  },
   reasons: {
     'bad-order': 'That order is not valid.',
     'unknown-order': 'That kind of order does not exist.',
@@ -183,7 +191,7 @@ export const en: ContentText = {
     'no-position': 'You do not own any of that.',
     'exceeds-position': 'You do not own that much.',
     'exceeds-deposit': 'There is not that much in your savings.',
-    'over-pension-limit': 'That is over this round’s pension limit.',
+    'over-pension-limit': "That is over this round's pension limit.",
     'would-be-insolvent': 'You cannot pay into the pension while you owe more than you own.',
     'no-credit': 'No bank will lend to you yet after your bankruptcy.',
     'over-loan-limit': 'That is more than you can borrow on your salary.',

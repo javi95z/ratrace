@@ -3,13 +3,14 @@
 import { useEffect, useId, useRef } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { closeOnBack } from './back';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * A sheet that rises from the bottom of a phone, and sits in the middle of a wide screen.
- * It takes the focus while it is open, keeps Tab inside it, closes on Escape or a tap outside,
- * and gives the focus back to whatever opened it.
+ * It takes the focus while it is open, keeps Tab inside it, closes on Escape, a tap outside or
+ * the Back button of a phone, and gives the focus back to whatever opened it.
  */
 export function Sheet({ open, onClose, title, closeLabel, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; children: ReactNode }) {
   const panel = useRef<HTMLDivElement>(null);
@@ -57,6 +58,7 @@ export function Sheet({ open, onClose, title, closeLabel, children }: { open: bo
       }
     };
     document.addEventListener('keydown', onKeyDown, true);
+    const forgetBack = closeOnBack(() => close.current());
 
     // When the thing that had the focus is taken out of the sheet (an order removed from a list),
     // the browser drops the focus on the page behind. Bring it back.
@@ -66,6 +68,7 @@ export function Sheet({ open, onClose, title, closeLabel, children }: { open: bo
     watcher.observe(box, { childList: true, subtree: true });
 
     return () => {
+      forgetBack();
       watcher.disconnect();
       document.removeEventListener('keydown', onKeyDown, true);
       document.body.style.overflow = overflow;

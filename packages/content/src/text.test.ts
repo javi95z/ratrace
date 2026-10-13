@@ -72,6 +72,26 @@ describe.each(LOCALES)('content text: %s', (locale) => {
     }
   });
 
+  it('is typeset one way throughout', () => {
+    const all = strings(text);
+    const broken = (test: (sentence: string) => boolean) => all.filter(([, sentence]) => test(sentence)).map(([path]) => path);
+    // Three dots are one character, and a dash is never a spaced hyphen.
+    expect(broken((s) => s.includes('...'))).toEqual([]);
+    expect(broken((s) => / - /.test(s))).toEqual([]);
+    expect(broken((s) => / [,.;:!?](\s|$)/.test(s))).toEqual([]);
+    if (locale === 'en') {
+      // English: straight apostrophes and quotes, and a percent sign against its number.
+      expect(broken((s) => /[‘’“”«»]/.test(s))).toEqual([]);
+      expect(broken((s) => /\d %/.test(s))).toEqual([]);
+    } else {
+      // Spanish: angle quotes, a space before the percent sign, and a question or an exclamation opened as well as closed.
+      expect(broken((s) => /["“”]/.test(s))).toEqual([]);
+      expect(broken((s) => /\d%/.test(s))).toEqual([]);
+      expect(broken((s) => (s.match(/\?/g)?.length ?? 0) !== (s.match(/¿/g)?.length ?? 0))).toEqual([]);
+      expect(broken((s) => (s.match(/!/g)?.length ?? 0) !== (s.match(/¡/g)?.length ?? 0))).toEqual([]);
+    }
+  });
+
   it('keeps titles and option labels short enough for a phone', () => {
     for (const card of Object.values(text.cards)) {
       expect(card.title.length, card.title).toBeLessThanOrEqual(45);

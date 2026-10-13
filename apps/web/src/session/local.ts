@@ -230,7 +230,8 @@ export class LocalSessions implements Sessions {
     if (raw === null || raw === undefined) return { session: null, lost: null };
     const opened = openSave(raw, this.content, this.lives);
     if (!opened.ok) {
-      await this.store.clearGame();
+      // A save this page is too old to read is not this page's to throw away: the newer page that wrote it can open it.
+      if (opened.lost !== 'newer') await this.store.clearGame();
       return { session: null, lost: opened.lost };
     }
     // A repaired save keeps its `updatedAt`, so the stored record is still the one this session answers for.

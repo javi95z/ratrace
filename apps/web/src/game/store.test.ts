@@ -161,8 +161,13 @@ describe('the finance phase', () => {
     get().removeOrder(0);
     expect(get().orders).toEqual([study]);
     expect(get().preview?.rejected).toEqual([]);
+    // The player is told that another order went with the one they removed.
+    expect(get().alsoRemoved).toBe(1);
     get().removeOrder(5);
     expect(get().orders).toEqual([study]);
+    expect(get().alsoRemoved).toBe(0);
+    get().removeOrder(0);
+    expect(get()).toMatchObject({ orders: [], alsoRemoved: 0 });
   });
 
   it('switches a choice on and off, and replaces a setting instead of stacking it', async () => {
@@ -416,6 +421,34 @@ describe('what a step earned', () => {
     }
     expect(seen).toBe(true);
     expect(get().badges).toContain('bankrupt');
+  });
+
+  it('is shown for the answer to a card as well as for a round', async () => {
+    const { sessions } = setup();
+    const real = await sessions.start('nurse');
+    // A session whose next card earns a badge and unlocks a life, whatever is answered.
+    const game = createGameStore({
+      content,
+      sessions: {
+        ...sessions,
+        start: () => sessions.start('nurse'),
+        abandon: () => sessions.abandon(),
+        resume: async () => ({
+          lost: null,
+          session: {
+            gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => ['mba'],
+            answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: ['mba'], unlocked: ['heir'] }),
+            playRound: (choices) => real.playRound(choices),
+          },
+        }),
+      },
+    });
+    await game.getState().boot();
+    game.getState().leaveNews();
+    await game.getState().pick(0);
+    expect(game.getState()).toMatchObject({ stage: 'outcome', earned: ['mba'], unlocked: ['heir'], badges: ['mba'] });
+    game.getState().afterCard();
+    expect(game.getState()).toMatchObject({ earned: [], unlocked: [] });
   });
 
   it('includes the life unlocked by finishing a first one', async () => {

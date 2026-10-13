@@ -100,7 +100,9 @@ describe('openSave', () => {
   it('calls a save from other rules outdated', () => {
     expect(open({ ...saved(1), engineVersion: '0.0.1' })).toEqual({ ok: false, lost: 'outdated' });
     expect(open({ ...saved(1), contentVersion: '9.9.9' })).toEqual({ ok: false, lost: 'outdated' });
-    expect(open({ ...saved(1), format: 2 })).toEqual({ ok: false, lost: 'outdated' });
+    // A save from a version of the game newer than this page is not old: it is ahead, and must be left alone.
+    expect(open({ ...saved(1), format: 2 })).toEqual({ ok: false, lost: 'newer' });
+    expect(open({ ...saved(1), format: 2, engineVersion: '99.0.0' })).toEqual({ ok: false, lost: 'newer' });
   });
 
   it('rebuilds a damaged state from the seed and the log', () => {

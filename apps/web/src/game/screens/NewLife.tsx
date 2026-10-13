@@ -72,7 +72,7 @@ export function NewLife() {
                     {written.unlock}
                   </span>
                 ) : (
-                  <span className="mt-0.5 block text-[12px] text-ink-300">
+                  <span className="mt-0.5 block text-[12px] text-ink-200">
                     {t('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}
                   </span>
                 )}

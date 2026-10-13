@@ -36,6 +36,8 @@ export interface RoundState {
   preview: RoundPreview | null;
   /** Why the last order was not taken. */
   refusal: RejectReason | null;
+  /** How many other orders went with the last one removed, because they only worked thanks to it. The player is told. */
+  alsoRemoved: number;
   /** The round just played: the game as it stood before, and everything that happened. */
   resolved: { before: GameView; events: GameEvent[] } | null;
   /** True while an answer or a round is being played. */
@@ -68,6 +70,7 @@ export interface RoundActions {
    */
   setOrder(same: (order: Order) => boolean, order: Order | null): boolean;
   clearRefusal(): void;
+  clearAlsoRemoved(): void;
   clearMoved(): void;
   play(): Promise<void>;
   /** From the ledger to the next round, or to the end. */
@@ -92,6 +95,7 @@ const blank: RoundState = {
   orders: [],
   preview: null,
   refusal: null,
+  alsoRemoved: 0,
   resolved: null,
   busy: false,
   moved: false,
@@ -237,7 +241,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       removeOrder(index) {
         const { view, orders } = get();
         if (!view) return;
-        set({ refusal: null, ...settle(view, orders.filter((_, i) => i !== index)) });
+        const without = orders.filter((_, i) => i !== index);
+        const settled = settle(view, without);
+        set({ refusal: null, alsoRemoved: without.length - settled.orders.length, ...settled });
       },
 
       setOrder(same, order) {
@@ -245,7 +251,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         if (!view) return false;
         const base = orders.filter((existing) => !same(existing));
         if (order === null) {
-          set({ refusal: null, ...settle(view, base) });
+          set({ refusal: null, alsoRemoved: 0, ...settle(view, base) });
           return true;
         }
         const tried = previewRound(content, view, { orders: [...base, order] });
@@ -254,12 +260,16 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
           set({ refusal: refused.reason });
           return false;
         }
-        set({ refusal: null, ...settle(view, [...base, order]) });
+        set({ refusal: null, alsoRemoved: 0, ...settle(view, [...base, order]) });
         return true;
       },
 
       clearRefusal() {
         set({ refusal: null });
+      },
+
+      clearAlsoRemoved() {
+        set({ alsoRemoved: 0 });
       },
 
       clearMoved() {
@@ -283,6 +293,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
             orders: [],
             preview: null,
             refusal: null,
+            alsoRemoved: 0,
             stage: 'resolve',
           });
         } catch (error) {

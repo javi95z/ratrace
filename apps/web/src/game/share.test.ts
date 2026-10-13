@@ -48,6 +48,14 @@ describe('the share card', () => {
     for (const op of drawn) expect([op.w, op.h]).toEqual([64, 64]);
   });
 
+  it('keeps the badges between the margins, clear of the frame', () => {
+    const four = sprites(shareCard(input({ badges: ['badge.a', 'badge.b', 'badge.c', 'badge.d'] }))).filter((op) => op.id.startsWith('badge.'));
+    expect(four).toHaveLength(4);
+    expect(Math.min(...four.map((op) => op.x))).toBeGreaterThanOrEqual(12);
+    expect(Math.max(...four.map((op) => op.x + op.w))).toBeLessThanOrEqual(CARD.w - 12);
+    expect(Math.max(...four.map((op) => op.y + op.h))).toBeLessThanOrEqual(CARD.h - 6);
+  });
+
   it('shows four badges at most, and says how many there are', () => {
     const many = shareCard(input({ badges: Array.from({ length: 9 }, (_, i) => `badge.b${i}`) }));
     expect(sprites(many).filter((op) => op.id.startsWith('badge.')).map((op) => op.id)).toEqual(['badge.b0', 'badge.b1', 'badge.b2', 'badge.b3']);

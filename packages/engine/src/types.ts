@@ -330,6 +330,13 @@ export interface CardOutcome {
   effects: Effects;
 }
 
+/**
+ * Why a card option is closed to a player: its condition does not hold; no bank lends during the
+ * bankruptcy lock; not enough focus; the thing is already owned; not enough cash and savings;
+ * or it would fill the pension of someone who owes more than they own.
+ */
+export type OptionLock = 'condition' | 'bankruptcy' | 'focus' | 'owned' | 'cash' | 'insolvent';
+
 export interface CardOption {
   /** The option is locked unless this holds. Never set on the first option. */
   when?: Condition;

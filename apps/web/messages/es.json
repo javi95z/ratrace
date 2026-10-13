@@ -1,7 +1,13 @@
 {
   "meta": {
     "title": "The Rat Race",
-    "description": "Cuarenta años, veinte rondas. Hazte rico, gana estatus y sal de la rueda."
+    "description": "Cuarenta años, veinte rondas. Hazte rico, gana estatus y sal de la rueda.",
+    "titles": {
+      "new": "Elige una vida",
+      "play": "Tu vida",
+      "collection": "Colección",
+      "records": "Récords"
+    }
   },
   "common": {
     "age": "{age} años",
@@ -11,7 +17,6 @@
     "cancel": "Cancelar",
     "back": "Volver",
     "loading": "Cargando…",
-    "locked": "Bloqueado",
     "notSaved": "Este navegador no está guardando ahora mismo. No cierres esta pestaña: perderías lo que has jugado."
   },
   "home": {
@@ -27,13 +32,12 @@
     "motionHint": "Quita las animaciones y las partículas.",
     "lostOutdated": "Tu vida guardada se jugó con reglas antiguas y no se puede continuar.",
     "lostDamaged": "No se ha podido abrir tu vida guardada.",
+    "lostNewer": "Tu vida guardada es de una versión más nueva del juego. Recarga la página para seguir con ella.",
     "savedHere": "Tu vida se guarda en este dispositivo después de cada paso."
   },
   "newLife": {
     "title": "Elige una vida",
     "start": "Empezar esta vida",
-    "perk": "Ventaja",
-    "handicap": "Desventaja",
     "startsIn": "Empieza en {city} con {cash}",
     "unlock": "Para desbloquearla",
     "replace": "Esto termina la vida que tienes en marcha.",
@@ -58,7 +62,26 @@
     "faultBody": "La partida no pudo seguir desde aquí. Tu vida está guardada como estaba antes de este paso. Si vuelve a pasar, empieza una vida nueva.",
     "retry": "Probar otra vez",
     "home": "Inicio",
-    "newLife": "Nueva vida"
+    "newLife": "Nueva vida",
+    "heading": "{life}, {age} años",
+    "stages": {
+      "outcome": "Qué ha pasado",
+      "finance": "Tus finanzas",
+      "resolve": "Dos años después"
+    }
+  },
+  "guide": {
+    "title": "Guía",
+    "news": "Cada ronda empieza con las noticias. Cada titular da una pista de los próximos dos años, y se cumplen unos siete de cada diez. Léelos antes de mover tu dinero.",
+    "cards": "La vida te reparte unas cuantas cartas cada ronda. Cada opción enseña lo que cuesta y lo que trae antes de elegir, con las probabilidades cuando hay dados. Una elección no se puede deshacer.",
+    "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, al dólar, el efectivo que tendrás después. Empieza por Cartera.",
+    "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
+    "ratRace": "La barra de arriba es el juego entero: tus ingresos pasivos frente a lo que cuesta tu vida. Cubre ese coste dos rondas seguidas y sales de la rueda.",
+    "invest": "El efectivo no rinde nada. El ahorro da un poco y es seguro. En Mercado hay fondos indexados, que puede comprar cualquiera, y se abre más según sube tu nivel de finanzas.",
+    "focus": "En la pestaña Vida está tu foco: estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
+    "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda al dólar.",
+    "gotIt": "Entendido",
+    "skip": "Quitar la guía"
   },
   "news": {
     "title": "Noticias",
@@ -130,14 +153,15 @@
       "shop": "Tienda",
       "taxes": "Impuestos"
     },
+    "tabsLabel": "Tus finanzas",
     "play": "Jugar la ronda",
     "afterRound": "Efectivo tras la ronda",
     "basket": "{count, plural, =0 {Sin órdenes} one {1 orden} other {# órdenes}}",
     "basketTitle": "Las órdenes de esta ronda",
     "basketEmpty": "Todavía nada. Lo que decidas aquí ocurre cuando juegues la ronda.",
     "remove": "Quitar",
-    "toTheRound": "La ronda",
     "refused": "No se puede",
+    "alsoRemoved": "{count, plural, one {También se ha quitado 1 orden que dependía de ella.} other {También se han quitado # órdenes que dependían de ella.}}",
     "portfolio": {
       "cash": "Efectivo",
       "cashHint": "No rinde nada",
@@ -158,11 +182,10 @@
     },
     "market": {
       "funds": "Fondos indexados",
-      "bonds": "Deuda pública",
+      "bonds": "Bonos del Estado",
       "stocks": "Acciones",
       "crypto": "Cripto",
       "gold": "Oro",
-      "lastRound": "Últimos 2 años",
       "yield": "Paga un {rate}",
       "needsSkill": "Finanzas nivel {level}",
       "buy": "Comprar",
@@ -231,7 +254,7 @@
       "study": "Estudiar",
       "studyHint": "+{n} de experiencia",
       "hunt": "Buscar trabajo",
-      "huntHint": "{pct} % de opciones de una subida para siempre",
+      "huntHint": "{pct} % de probabilidad de una subida para siempre",
       "noJob": "No tienes trabajo, así que no hay en qué poner el foco.",
       "tier": "Cómo vives",
       "tierFloor": "Tu vida no permite menos que esto.",
@@ -321,7 +344,7 @@
     "balance": "Balance",
     "cash": "Efectivo",
     "savings": "Ahorro",
-    "pension": "Pensión",
+    "pension": "Plan de pensiones",
     "investments": "Inversiones",
     "homes": "Viviendas",
     "things": "Cosas",

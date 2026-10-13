@@ -267,6 +267,16 @@ describe('coming back to a life', () => {
     expect(await sessions.resume()).toEqual({ session: null, lost: null });
   });
 
+  it('leaves a save from a newer version of the game where it is, and says so', async () => {
+    const { store, sessions } = setup();
+    await sessions.start('nurse');
+    const ahead = { ...(await saveOf(store)), format: 2 as never };
+    await store.saveGame(ahead);
+    expect(await sessions.resume()).toEqual({ session: null, lost: 'newer' });
+    // Not dropped: the newer page that wrote it can still open it.
+    expect(await store.loadGame()).toEqual(ahead);
+  });
+
   it('rebuilds a damaged state and saves the repair', async () => {
     const { store, sessions } = setup();
     const session = await sessions.start('nurse');

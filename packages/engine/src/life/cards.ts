@@ -2,7 +2,7 @@ import { coverShortfall } from '../debt';
 import { cardOf } from '../lookup';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
-import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, PlayerState } from '../types';
+import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, OptionLock, PlayerState } from '../types';
 import { conditionHolds } from './conditions';
 import type { Situation } from './conditions';
 import { applyEffects } from './effects';
@@ -16,31 +16,36 @@ const situationOf = (content: Content, state: GameView): Situation => ({
 });
 
 /**
- * True if the player may take this option. The first option is always open.
+ * Why the player may not take an option, or null if they may. The first option is always open.
  * Any other needs its condition to hold, enough focus, and enough cash and savings for its fixed
  * effects. Rolled outcomes are never checked: they are the risk the player takes.
  */
-export function optionAvailable(p: PlayerState, card: CardDef, index: number, at: Situation): boolean {
-  if (index === 0) return true;
+export function optionLock(p: PlayerState, card: CardDef, index: number, at: Situation): OptionLock | null {
+  if (index === 0) return null;
   const option = card.options[index];
-  if (!conditionHolds(option.when, p, at)) return false;
+  if (!conditionHolds(option.when, p, at)) return 'condition';
   // No bank lends during the bankruptcy lock, through a card or otherwise, and no bank takes a bankrupt as a guarantor.
   const all = [option.effects ?? {}, ...(option.outcomes ?? []).map((outcome) => outcome.effects)];
   const borrows = all.some((e) => e.loan !== undefined || (e.property !== undefined && e.property.downPct < 100));
-  if (borrows && at.round < p.bankruptUntilRound) return false;
+  if (borrows && at.round < p.bankruptUntilRound) return 'bankruptcy';
 
   const effects = option.effects;
-  if (effects === undefined) return true;
-  if ((effects.focus ?? 0) > focusLeft(p)) return false;
+  if (effects === undefined) return null;
+  if ((effects.focus ?? 0) > focusLeft(p)) return 'focus';
   const item = effects.buyItem;
-  if (item !== undefined && p.life.items.some((owned) => owned.itemId === item.itemId)) return false;
+  if (item !== undefined && p.life.items.some((owned) => owned.itemId === item.itemId)) return 'owned';
 
   const trial = structuredClone(p);
   applyEffects(trial, effects, at);
-  if (trial.cash + trial.deposit < 0) return false;
+  if (trial.cash + trial.deposit < 0) return 'cash';
   // The pension is protected in bankruptcy, so a card may not fill it for someone who owes more than they own.
-  if (effects.pension !== undefined && ownedOutsidePension(trial) < totalOwed(trial)) return false;
-  return true;
+  if (effects.pension !== undefined && ownedOutsidePension(trial) < totalOwed(trial)) return 'insolvent';
+  return null;
+}
+
+/** True if the player may take this option. */
+export function optionAvailable(p: PlayerState, card: CardDef, index: number, at: Situation): boolean {
+  return optionLock(p, card, index, at) === null;
 }
 
 /**
@@ -111,6 +116,8 @@ export function answerRest(state: GameState, content: Content, picks: CardPicks,
 
 export interface OptionPreview {
   available: boolean;
+  /** Why the option is closed to this player, or null when it is open. */
+  lock: OptionLock | null;
   /** Change in cash from the fixed effects of the option. */
   cash: Cents;
   /** One entry per outcome that may be rolled: its weight, and the further change in cash it brings. */
@@ -137,6 +144,7 @@ export function previewCard(content: Content, state: GameView, cardId: string): 
       applyEffects(rolled, outcome.effects, at);
       return { weight: outcome.weight, cash: rolled.cash - fixed.cash };
     });
-    return { available: optionAvailable(p, card, index, at), cash: fixed.cash - p.cash, outcomes };
+    const lock = optionLock(p, card, index, at);
+    return { available: lock === null, lock, cash: fixed.cash - p.cash, outcomes };
   });
 }

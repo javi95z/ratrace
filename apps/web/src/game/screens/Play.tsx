@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
+import { ageAt } from '@/game/present';
 import type { Stage } from '@/game/store';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
@@ -11,6 +12,7 @@ import { useIsDesk } from '@/ui/useMedia';
 import { CardStage, Outcome } from './Cards';
 import { End } from './End';
 import { Basket, BasketList, Finance } from './Finance';
+import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { Headlines, NewsPanel, RoundOpener } from './News';
 import { Leave, ProfileBody, ProfileSheet } from './Profile';
@@ -82,8 +84,18 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
   }
 }
 
-/** What the stage of the round shows. On a wide screen the headlines sit at the side, so the round opens on its own title. */
+/** What the stage of the round shows, under the tip of the guide when one is due. */
 function StageView({ stage, desk }: { stage: Stage; desk: boolean }) {
+  return (
+    <>
+      <Guide />
+      <StageBody stage={stage} desk={desk} />
+    </>
+  );
+}
+
+/** On a wide screen the headlines sit at the side, so the round opens on its own title. */
+function StageBody({ stage, desk }: { stage: Stage; desk: boolean }) {
   switch (stage) {
     case 'news':
       return <div className="px-3">{desk ? <RoundOpener /> : <NewsPanel />}</div>;
@@ -144,6 +156,10 @@ export function Play() {
   const fault = useGame((s) => s.fault);
   const clearMoved = useGame((s) => s.clearMoved);
   const play = useT('play');
+  const cards = useT('cards');
+  const { content, text } = useWords();
+  const lifeId = useGame((s) => s.lifeId);
+  const stageRef = useRef<HTMLElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [basketOpen, setBasketOpen] = useState(false);
 
@@ -157,6 +173,15 @@ export function Play() {
     setBasketOpen(false);
   }, [stage, desk]);
 
+  // A new stage starts at its top and takes the focus, so a screen reader says where the player now is
+  // and the keyboard carries on from there.
+  const playing = status === 'playing' && view !== null;
+  useEffect(() => {
+    if (!playing) return;
+    window.scrollTo?.({ top: 0 });
+    stageRef.current?.focus({ preventScroll: true });
+  }, [stage, playing]);
+
   if (fault) return <Fault />;
   if (status !== 'playing' || !view) return <Waiting>{common('loading')}</Waiting>;
   if (stage === 'end') return <End />;
@@ -166,12 +191,17 @@ export function Play() {
 
   const actions = <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
   const hasActions = stage !== 'cards';
+  const heading = <h1 className="sr-only">{play('heading', { life: text.lives[lifeId ?? '']?.name ?? '', age: ageAt(content, view.round) })}</h1>;
+  // What the stage is called, for someone who cannot see it change.
+  const stageName =
+    stage === 'news' ? news('title') : stage === 'cards' ? cards('progress', { n: Math.min(view.answered + 1, view.hand.length), total: view.hand.length }) : play(`stages.${stage}`);
 
   if (desk) {
     // The side columns give way first on a narrow desktop, so the round in the middle never drops below a phone's width.
     return (
       <div className="mx-auto grid min-h-dvh w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
         <aside aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto pb-5 pt-2">
+          {heading}
           <div className="-mx-3">
             <Hud skyline={false} />
           </div>
@@ -181,7 +211,7 @@ export function Play() {
 
         <div className="@container flex min-h-dvh min-w-0 flex-col">
           {/* Art is drawn at twice its size only where the column has room for a card that wide. */}
-          <main className={`mx-auto w-full max-w-[680px] pt-5 @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
+          <main ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
             <StageView stage={stage} desk />
           </main>
           {hasActions ? (
@@ -207,9 +237,10 @@ export function Play() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+      {heading}
       {/* The skyline opens and closes a round. In between, the room goes to the cards and the finances. */}
       <Hud compact={stage !== 'news' && stage !== 'resolve'} onProfile={() => setProfileOpen(true)} />
-      <main className={`flex-1 pt-3 ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
+      <main ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
         <StageView stage={stage} desk={false} />
       </main>
       {hasActions ? (

@@ -225,7 +225,8 @@ export function parse(line: string, scene: Scene): Command {
     case 'rent': {
       const property = nth(p.properties, args[0]);
       if (!property) return error('unknown-number');
-      const flag = (args[1] ?? '').toLowerCase();
+      // Without accents, so that "sí" is "si".
+      const flag = plain(args[1] ?? '');
       if (!ON.includes(flag) && !OFF.includes(flag)) return error('needs-on-off');
       return order({ type: 'setRented', propertyId: property.id, rented: ON.includes(flag) });
     }
@@ -247,7 +248,7 @@ export function parse(line: string, scene: Scene): Command {
       const wanted = plain(args[0]);
       const kind = (Object.keys(INSURANCE) as InsuranceKind[]).find((k) => INSURANCE[k].includes(wanted));
       if (!kind) return error('unknown-insurance');
-      const flag = (args[1] ?? 'on').toLowerCase();
+      const flag = plain(args[1] ?? 'on');
       if (!ON.includes(flag) && !OFF.includes(flag)) return error('needs-on-off');
       return order({ type: 'setInsurance', insurance: kind, on: ON.includes(flag) });
     }

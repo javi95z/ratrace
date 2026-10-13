@@ -1,7 +1,13 @@
 {
   "meta": {
     "title": "The Rat Race",
-    "description": "Forty years, twenty rounds. Get rich, get status, get out."
+    "description": "Forty years, twenty rounds. Get rich, get status, get out.",
+    "titles": {
+      "new": "Choose a life",
+      "play": "Your life",
+      "collection": "Collection",
+      "records": "Records"
+    }
   },
   "common": {
     "age": "Age {age}",
@@ -11,7 +17,6 @@
     "cancel": "Cancel",
     "back": "Back",
     "loading": "Loading…",
-    "locked": "Locked",
     "notSaved": "This browser is not saving right now. Keep this tab open: closing it would lose what you have played."
   },
   "home": {
@@ -27,13 +32,12 @@
     "motionHint": "Turns off roll-ups and particles.",
     "lostOutdated": "Your saved life was played under older rules and cannot be continued.",
     "lostDamaged": "Your saved life could not be opened.",
+    "lostNewer": "Your saved life was written by a newer version of the game. Reload the page to carry on with it.",
     "savedHere": "Your life is saved on this device after every step."
   },
   "newLife": {
     "title": "Choose a life",
     "start": "Start this life",
-    "perk": "Perk",
-    "handicap": "Handicap",
     "startsIn": "Starts in {city} with {cash}",
     "unlock": "To unlock",
     "replace": "This ends the life you have in progress.",
@@ -58,7 +62,26 @@
     "faultBody": "The game could not go on from here. Your life is saved as it stood before this step. If it happens again, start a new life.",
     "retry": "Try again",
     "home": "Home",
-    "newLife": "New life"
+    "newLife": "New life",
+    "heading": "{life}, age {age}",
+    "stages": {
+      "outcome": "What happened",
+      "finance": "Your finances",
+      "resolve": "Two years later"
+    }
+  },
+  "guide": {
+    "title": "Guide",
+    "news": "Every round opens with the news. Each headline hints at the next two years, and about seven in ten come true. Read them before you put your money anywhere.",
+    "cards": "Life deals you a few cards every round. Each choice shows what it costs and what it brings before you pick, with the odds where there are dice. A choice cannot be taken back.",
+    "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
+    "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
+    "ratRace": "The bar at the top is the whole game: your passive income against what your life costs. Cover the cost two rounds running and you are out of the rat race.",
+    "invest": "Cash earns nothing. Savings pay a little and are safe. The Market tab has index funds, which anyone can buy, and more opens up as your finance skill grows.",
+    "focus": "The Lifestyle tab holds your focus: study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
+    "flow": "Flow, at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
+    "gotIt": "Got it",
+    "skip": "Skip the guide"
   },
   "news": {
     "title": "News",
@@ -130,14 +153,15 @@
       "shop": "Shop",
       "taxes": "Taxes"
     },
+    "tabsLabel": "Your finances",
     "play": "Play the round",
     "afterRound": "Cash after the round",
     "basket": "{count, plural, =0 {No orders} one {1 order} other {# orders}}",
     "basketTitle": "This round's orders",
     "basketEmpty": "Nothing yet. Whatever you decide here happens when you play the round.",
     "remove": "Remove",
-    "toTheRound": "The round",
     "refused": "Not possible",
+    "alsoRemoved": "{count, plural, one {1 order that depended on it went with it.} other {# orders that depended on it went with it.}}",
     "portfolio": {
       "cash": "Cash",
       "cashHint": "Earns nothing",
@@ -162,7 +186,6 @@
       "stocks": "Stocks",
       "crypto": "Crypto",
       "gold": "Gold",
-      "lastRound": "Last 2 years",
       "yield": "Pays {rate}",
       "needsSkill": "Finance skill {level}",
       "buy": "Buy",
@@ -321,7 +344,7 @@
     "balance": "Balance sheet",
     "cash": "Cash",
     "savings": "Savings",
-    "pension": "Pension",
+    "pension": "Pension plan",
     "investments": "Investments",
     "homes": "Property",
     "things": "Things",

@@ -116,15 +116,15 @@ Still deferred, with reasons, in the final report: always replaying a save on op
 
 ## Tasks
 
-- [ ] 1. Badges in `packages/content`: the journal, the thirty rules, their text and art, the unlock rules
-- [ ] 2. Profile and session: the grown profile, merged writes, the life record in the save and in replay, what a step gives back, runs with badges
-- [ ] 3. Round store and context: badges and unlocks on screen state, the profile for the screens, the round surviving a change of language
-- [ ] 4. Ledger and end of life: badges earned, lives unlocked, personal bests
-- [ ] 5. Collection and records screens, and the way to them from home; the chooser reads the unlocks
-- [ ] 6. Share card
-- [ ] 7. Guided first life
-- [ ] 8. Accessibility: lock reasons from the engine, focus and announcements, names and headings, contrast, the Back button, the axe audit
-- [ ] 9. Text pass: the lint, unused keys, the read-through
-- [ ] 10. The open minors of step 8
-- [ ] 11. End-to-end for all of it, at the three sizes
+- [x] 1. Badges in `packages/content`: the journal, the thirty rules, their text and art, the unlock rules
+- [x] 2. Profile and session: the grown profile, merged writes, the life record in the save and in replay, what a step gives back, runs with badges
+- [x] 3. Round store and context: badges and unlocks on screen state, the profile for the screens, the round surviving a change of language
+- [x] 4. Ledger and end of life: badges earned, lives unlocked, personal bests
+- [x] 5. Collection and records screens, and the way to them from home; the chooser reads the unlocks
+- [x] 6. Share card
+- [x] 7. Guided first life
+- [x] 8. Accessibility: lock reasons from the engine, focus and announcements, names and headings, contrast, the Back button, the axe audit
+- [x] 9. Text pass: the lint, unused keys, the read-through
+- [x] 10. The open minors of step 8
+- [x] 11. End-to-end for all of it, at the three sizes
 - [ ] 12. Fresh review and one fix pass

@@ -1,6 +1,8 @@
+import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { answerHand, fitsWidth, playRound, settle, smallTargets, startLife, watch, WORDS } from './game';
+import { answerHand, auditOf, fitsWidth, playRound, settle, smallTargets, startLife, watch, WORDS } from './game';
+import type { Lang } from './game';
 
 /** Set RATRACE_SHOTS to a folder to keep a picture of every screen the tests pass through. */
 const SHOTS = process.env.RATRACE_SHOTS;
@@ -40,6 +42,27 @@ test('a whole life, from the front door to the score', async ({ page }, info) =>
   expect(await fitsWidth(page)).toBe(true);
   await shot(page, 'end', info.project.name);
 
+  // A first life lived to the end: its badges, and the life it unlocked.
+  await expect(page.getByText('New life unlocked: Delivery rider')).toBeVisible();
+  const earned = page.getByRole('region', { name: 'Badges of this life' });
+  const badgeCount = await earned.getByRole('listitem').count();
+  expect(await auditOf(page), 'the end: accessibility').toEqual([]);
+  expect(await smallTargets(page), 'the end: too small to press').toEqual([]);
+
+  // The picture of the life: drawn at full size, and saved as a file with a name that says whose it is.
+  await page.getByRole('button', { name: 'Share this life' }).click();
+  const picture = page.getByRole('dialog', { name: 'A picture of this life' }).getByRole('img');
+  await expect(picture).toBeVisible();
+  expect(await picture.evaluate((img: HTMLImageElement) => [img.naturalWidth, img.naturalHeight])).toEqual([1080, 1348]);
+  if (SHOTS) {
+    const bytes = await picture.evaluate(async (img: HTMLImageElement) => [...new Uint8Array(await (await fetch(img.src)).arrayBuffer())]);
+    writeFileSync(`${SHOTS}/${info.project.name}-share-card.png`, Buffer.from(bytes));
+  }
+  const saving = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Save the picture' }).click();
+  expect((await saving).suggestedFilename()).toMatch(/^rat-race-nurse-\d+\.png$/);
+  await page.keyboard.press('Escape');
+
   // Closing the page on the score does not lose it.
   const total = await score.locator('p').nth(1).textContent();
   await page.reload();
@@ -52,11 +75,32 @@ test('a whole life, from the front door to the score', async ({ page }, info) =>
   await expect(page.getByRole('link', { name: 'See how your last life ended' })).toBeVisible();
   await expect(page.getByRole('link', { name: w.continue })).toHaveCount(0);
 
+  // The records list the life, and the collection shows what it earned.
+  await page.getByRole('link', { name: 'Records' }).click();
+  await expect(page.getByRole('region', { name: 'Past lives' }).getByRole('listitem')).toHaveCount(1);
+  await expect(page.getByRole('region', { name: 'Personal bests' }).getByText('Best score')).toBeVisible();
+  await expect(page).toHaveTitle('Records · The Rat Race');
+  expect(await auditOf(page), 'records: accessibility').toEqual([]);
+  await shot(page, 'records', info.project.name);
+  await page.getByRole('link', { name: 'Back' }).click();
+  await page.getByRole('link', { name: 'Collection' }).click();
+  await page.getByRole('tab', { name: 'Badges' }).click();
+  await expect(page.getByText(new RegExp(`^${badgeCount} of 30 earned$`))).toBeVisible();
+  await shot(page, 'collection-badges-earned', info.project.name);
+  await page.getByRole('link', { name: 'Back' }).click();
+
+  // The delivery rider is now a life to choose, and a veteran is no longer guided.
+  await page.getByRole('link', { name: w.newLife }).click();
+  await expect(page.getByRole('radio', { name: /^Delivery rider/ })).toBeEnabled();
+  await page.goto('/en');
+
   // A new life begins without a question, since nothing is in progress, and Back does not lead to the chooser again.
   await page.getByRole('link', { name: w.newLife }).click();
   await page.getByRole('button', { name: w.start }).click();
   await expect(page.getByRole('button', { name: w.toCards })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('note', { name: w.guide })).toHaveCount(0);
+  await expect(page).toHaveTitle('Your life · The Rat Race');
   await page.goBack();
   await expect(page).not.toHaveURL(/\/new$/);
   expect(problems).toEqual([]);
@@ -173,32 +217,30 @@ test('a first visit follows the language of the browser', async ({ browser }) =>
   }
 });
 
-test('every screen fits the width, and everything pressable is big enough for a thumb', async ({ page }, info) => {
-  const w = WORDS.en;
-  const check = async (name: string) => {
-    expect(await fitsWidth(page), `${name}: wider than the screen`).toBe(true);
-    expect(await smallTargets(page), `${name}: too small to press`).toEqual([]);
-    await shot(page, name, info.project.name);
-  };
-
-  await page.goto('/en');
+/**
+ * Walks every screen of a first round and hands each to `check`: the front door, the chooser, the
+ * news, a card and its result, each finance tab, the profile or the side columns, and the ledger.
+ */
+async function walk(page: Page, lang: Lang, wide: boolean, check: (name: string) => Promise<void>) {
+  const w = WORDS[lang];
+  await page.goto(`/${lang}`);
   await expect(page.getByRole('link', { name: w.newLife })).toBeVisible();
-  // The ruler itself is checked first: a button too small to press is found and named.
-  await page.evaluate(() => {
-    const tiny = document.createElement('button');
-    tiny.textContent = 'tiny';
-    tiny.id = 'tiny';
-    tiny.style.cssText = 'width:30px;height:30px;position:fixed;top:0;left:0';
-    document.body.append(tiny);
-  });
-  expect(await smallTargets(page)).toEqual(['button "tiny" 30x30']);
-  await page.evaluate(() => document.getElementById('tiny')?.remove());
   await check('home');
-  await page.getByRole('link', { name: w.newLife }).click();
+  await page.getByRole('link', { name: w.collection }).click();
+  await expect(page.getByRole('heading', { level: 1, name: w.collection })).toBeVisible();
+  await check('collection');
+  await page.getByRole('tab').nth(1).click();
+  await check('collection-badges');
+  await page.goto(`/${lang}/records`);
+  await expect(page.getByRole('heading', { level: 1, name: w.records })).toBeVisible();
+  await check('records-empty');
+  await page.goto(`/${lang}/new`);
   await expect(page.getByRole('button', { name: w.start })).toBeVisible();
   await check('new-life');
   await page.getByRole('button', { name: w.start }).click();
   await expect(page.getByRole('button', { name: w.toCards })).toBeVisible();
+  // A first life is guided: the tip is part of the screen being measured.
+  await expect(page.getByRole('note', { name: w.guide })).toBeVisible();
   await check('news');
   await settle(page);
   await page.getByRole('button', { name: w.toCards }).click();
@@ -212,18 +254,24 @@ test('every screen fits the width, and everything pressable is big enough for a 
   const next = page.getByRole('button', { name: w.nextCard });
   if (await next.isVisible()) {
     await next.click();
-    await answerHand(page, 'en');
+    await answerHand(page, lang);
   } else {
     await page.getByRole('button', { name: w.toFinance }).click();
     await settle(page);
   }
 
-  for (const tab of ['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle', 'Shop', 'Taxes']) {
-    await page.getByRole('tab', { name: tab }).click();
-    await check(`finance-${tab.toLowerCase()}`);
+  for (const [i, tab] of w.tabs.entries()) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    await check(`finance-${WORDS.en.tabs[i].toLowerCase()}`);
   }
-  if (info.project.name === 'phone') {
-    await page.getByRole('button', { name: 'Open your profile' }).click();
+  // A sheet is a screen too.
+  await page.getByRole('tab', { name: w.tabs[0], exact: true }).click();
+  await page.getByRole('tabpanel').getByRole('button').first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await check('amount-sheet');
+  await page.keyboard.press('Escape');
+  if (!wide) {
+    await page.getByRole('button', { name: w.openProfile }).click();
     await expect(page.getByRole('dialog', { name: w.yourLife })).toBeVisible();
     await check('profile');
     await page.keyboard.press('Escape');
@@ -234,6 +282,49 @@ test('every screen fits the width, and everything pressable is big enough for a 
   await page.getByRole('button', { name: w.play }).click();
   await expect(page.getByRole('heading', { name: w.later })).toBeVisible();
   await check('ledger');
+}
+
+test('every screen fits the width, everything pressable is big enough for a thumb, and an audit finds nothing', async ({ page }, info) => {
+  const wide = info.project.name !== 'phone';
+  await page.goto('/en');
+  await expect(page.getByRole('link', { name: WORDS.en.newLife })).toBeVisible();
+  // The ruler itself is checked first: a button too small to press is found and named.
+  await page.evaluate(() => {
+    const tiny = document.createElement('button');
+    tiny.textContent = 'tiny';
+    tiny.id = 'tiny';
+    tiny.style.cssText = 'width:30px;height:30px;position:fixed;top:0;left:0';
+    document.body.append(tiny);
+  });
+  expect(await smallTargets(page)).toEqual(['button "tiny" 30x30']);
+  // And so is the audit: text that cannot be read against its background is found.
+  await page.evaluate(() => {
+    const tiny = document.getElementById('tiny') as HTMLElement;
+    tiny.style.cssText += ';width:60px;height:60px;color:#1f2a4d;background:#141b33';
+  });
+  expect((await auditOf(page)).some((line) => line.startsWith('color-contrast'))).toBe(true);
+  await page.evaluate(() => document.getElementById('tiny')?.remove());
+
+  const found = await measure(page, 'en', wide, (name) => shot(page, name, info.project.name));
+  expect(found).toEqual([]);
+});
+
+/** Walks every screen and returns everything wrong with any of them, so one run shows the whole list. */
+async function measure(page: Page, lang: Lang, wide: boolean, also: (name: string) => Promise<void> = async () => {}): Promise<string[]> {
+  const found: string[] = [];
+  await walk(page, lang, wide, async (name) => {
+    if (!(await fitsWidth(page))) found.push(`${name}: wider than the screen`);
+    for (const small of await smallTargets(page)) found.push(`${name}: too small to press: ${small}`);
+    for (const breach of await auditOf(page)) found.push(`${name}: ${breach}`);
+    await also(name);
+  });
+  return found;
+}
+
+test('the smallest phone, in Spanish, where the words are longest: every screen still fits', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'a phone is where space runs out');
+  await page.setViewportSize({ width: 360, height: 740 });
+  expect(await measure(page, 'es', false, (name) => shot(page, `${name}-es-360`, info.project.name))).toEqual([]);
 });
 
 test('a double tap never does a second thing: no card answered, no round played, no ledger skipped', async ({ page }) => {
@@ -381,4 +472,78 @@ test('the figures of the HUD are never cut short, in either language, on a small
     }
     await page.setViewportSize({ width: 390, height: 844 });
   }
+});
+
+test('the Back button closes a sheet and leaves the life where it was', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'the Back button is a phone habit');
+  const problems = watch(page);
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  await page.getByRole('button', { name: w.toCards }).click();
+  await answerHand(page, 'en');
+
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/en\/play$/);
+  await expect(page.getByRole('button', { name: w.play })).toBeVisible();
+
+  // A sheet closed by its own button leaves nothing behind for Back to trip over: twice in and out, then Back still closes the third.
+  for (let i = 0; i < 2; i++) {
+    await page.getByRole('button', { name: w.openProfile }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  }
+  await page.getByRole('button', { name: w.openProfile }).click();
+  await expect(page.getByRole('dialog', { name: w.yourLife })).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: w.play })).toBeVisible();
+
+  // With no sheet open, one Back leaves the game for the front door.
+  await page.goBack();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('the round on screen survives a change of language', async ({ page }, info) => {
+  const problems = watch(page);
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  await page.getByRole('button', { name: w.toCards }).click();
+  await answerHand(page, 'en');
+  await page.getByRole('tab', { name: 'Lifestyle' }).click();
+  await page.getByRole('switch', { name: /^Study/ }).click();
+
+  // Home, by the game's own way out, and into Spanish.
+  if (info.project.name === 'phone') await page.getByRole('button', { name: w.openProfile }).click();
+  await page.getByRole('link', { name: 'Leave to the home screen' }).click();
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  await page.getByRole('link', { name: 'Español' }).click();
+  await page.getByRole('link', { name: WORDS.es.continue }).click();
+  await expect(page.getByRole('button', { name: WORDS.es.play })).toBeVisible();
+  // The order placed in English is still in the basket.
+  await page.getByRole('tab', { name: 'Vida', exact: true }).click();
+  await expect(page.getByRole('switch', { name: /^Estudiar/ })).toHaveAttribute('aria-checked', 'true');
+  expect(problems).toEqual([]);
+});
+
+test('a first life is guided, one tip at a time, until the player says enough', async ({ page }) => {
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  const tip = page.getByRole('note', { name: w.guide });
+  await expect(tip).toContainText('Every round opens with the news');
+  await tip.getByRole('button', { name: 'Got it' }).click();
+  await expect(tip).toHaveCount(0);
+  await page.getByRole('button', { name: w.toCards }).click();
+  await expect(tip).toContainText('Life deals you a few cards');
+  await tip.getByRole('button', { name: w.skipGuide }).click();
+  await expect(tip).toHaveCount(0);
+  // Turned off, it stays off: through the round, and after the page is opened again.
+  await answerHand(page, 'en');
+  await expect(tip).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('button', { name: w.play })).toBeVisible();
+  await expect(tip).toHaveCount(0);
 });

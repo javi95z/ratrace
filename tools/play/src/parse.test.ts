@@ -205,6 +205,17 @@ describe('parse', () => {
     expect(orderOf('buy msci 12,345')).toEqual({ type: 'buy', assetId: 'msci_world', amount: 1_234_500 });
   });
 
+  it('reads yes and no with or without an accent', () => {
+    const owner = scene((state) => {
+      state.player.properties.push({ id: 'p1', cityId: state.player.cityId, typeId: 'studio', value: 1, basis: 1, rented: false, mortgageId: null });
+    }, 'es');
+    expect(orderOf('alquilar 1 sí', owner)).toEqual({ type: 'setRented', propertyId: 'p1', rented: true });
+    expect(orderOf('alquilar 1 SÍ', owner)).toEqual({ type: 'setRented', propertyId: 'p1', rented: true });
+    expect(orderOf('alquilar 1 si', owner)).toEqual({ type: 'setRented', propertyId: 'p1', rented: true });
+    expect(orderOf('alquilar 1 no', owner)).toEqual({ type: 'setRented', propertyId: 'p1', rented: false });
+    expect(orderOf('seguro salud sí', owner)).toEqual({ type: 'setInsurance', insurance: 'health', on: true });
+  });
+
   it('does not take punctuation for the first lifestyle', () => {
     for (const line of ['lifestyle ???', 'vida ???', 'lifestyle !', 'lifestyle 4', 'lifestyle -1']) {
       expect(run(line), line).toEqual({ kind: 'error', problem: 'bad-tier' });

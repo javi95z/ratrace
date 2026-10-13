@@ -53,6 +53,8 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
         <span className="pixel text-[16px]">{written.label}</span>
         {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
       </span>
+      {/* Why it is locked is the engine's to say. A locked button is dimmed, so the reason sits outside the dimming. */}
+      {preview.lock ? <span className="text-[13px] leading-snug text-cream">{words.text.optionLocks[preview.lock]}</span> : null}
       <Tags cash={preview.cash} tags={effectTags(words, effects, world, option.effects)} />
       {(option.outcomes ?? []).map((outcome, k) => (
         <span key={k} className="flex items-start gap-2">

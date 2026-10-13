@@ -1,11 +1,21 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Sheet, Tabs, Toast } from './overlay';
 
 afterEach(cleanup);
+
+/** Presses the Back button of the browser, as far as the page can tell. */
+const pressBack = () => act(() => void window.dispatchEvent(new PopStateEvent('popstate')));
+
+/** Takes away the history entry an earlier test's sheet may have left for Back, so each test starts with none. */
+function forgetGuard() {
+  const back = vi.spyOn(history, 'back').mockImplementation(() => {});
+  pressBack();
+  back.mockRestore();
+}
 
 /** A page with something behind the sheet, and a sheet whose first button removes itself when pressed. */
 function Page({ onClose = () => {} }: { onClose?: () => void }) {
@@ -99,6 +109,44 @@ describe('Sheet', () => {
     screen.getByRole('button', { name: 'Behind' }).focus();
     await user.tab({ shift: true });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove two' }));
+  });
+
+  it('closes on the Back button of a phone, and stays on the page', async () => {
+    forgetGuard();
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<Page onClose={onClose} />);
+    const entries = history.length;
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    // Opening a sheet puts one entry in the history for Back to take away.
+    expect(history.length).toBe(entries + 1);
+    pressBack();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    // A second sheet, opened and closed by its own button, adds no entry of its own to pile up.
+    const guarded = history.length;
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await user.keyboard('{Escape}');
+    expect(history.length).toBe(guarded);
+  });
+
+  it('lets Back leave the page for real once no sheet is open', async () => {
+    forgetGuard();
+    const user = userEvent.setup();
+    const back = vi.spyOn(history, 'back').mockImplementation(() => {});
+    render(<Page />);
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    // The entry the sheet left behind is taken by this Back; the page then goes back once more on its own.
+    pressBack();
+    expect(back).toHaveBeenCalledTimes(1);
+    // With nothing of ours in the history, Back is none of the sheet's business.
+    pressBack();
+    expect(back).toHaveBeenCalledTimes(1);
+    back.mockRestore();
   });
 
   it('stops the page behind it from scrolling, and lets it scroll again afterwards', async () => {

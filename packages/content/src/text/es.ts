@@ -173,6 +173,14 @@ export const es: ContentText = {
     bankrupt: { name: 'Quiebra', how: 'Quiebra. Les pasa a los mejores.' },
   },
   badgeGroups: { wealth: 'Riqueza', escape: 'Salida', investing: 'Inversión', status: 'Estatus', life: 'Vida', misfortune: 'Mala suerte' },
+  optionLocks: {
+    condition: 'No está a tu alcance tal como están las cosas.',
+    bankruptcy: 'Ningún banco te presta tan pronto después de una quiebra.',
+    focus: 'No te queda foco para esto esta ronda.',
+    owned: 'Ya lo tienes.',
+    cash: 'No puedes pagarlo, ni con tus ahorros.',
+    insolvent: 'Debes más de lo que tienes, así que no cabe nada más en tu plan de pensiones.',
+  },
   reasons: {
     'bad-order': 'Esa orden no es válida.',
     'unknown-order': 'Ese tipo de orden no existe.',
