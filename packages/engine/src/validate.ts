@@ -116,6 +116,15 @@ export function validateContent(c: Content): string[] {
       errors.push(`city ${city.id} needs a positive salary, living cost and flat price`);
     }
     if (!isCount(city.prestige)) errors.push(`city ${city.id} needs a whole, non-negative prestige`);
+    if (city.careerPayPct !== undefined) {
+      if (!isRecord(city.careerPayPct)) errors.push(`city ${city.id} needs its career pay as a record`);
+      else {
+        for (const [career, pct] of Object.entries(city.careerPayPct)) {
+          if (!c.careers.some((x) => x.id === career)) errors.push(`city ${city.id} pays for an unknown career: ${career}`);
+          if (!(isWhole(pct) && pct > 0)) errors.push(`city ${city.id} needs a whole, positive pay percentage for ${career}`);
+        }
+      }
+    }
   }
 
   for (const type of c.propertyTypes) {
@@ -185,6 +194,9 @@ export function validateContent(c: Content): string[] {
     errors.push('life.rentTierHousingPct must be two numbers between 0 and 100');
   }
   if (!listOf(life.rentTierStatus, 2, isCount)) errors.push('life.rentTierStatus must be two whole, non-negative numbers');
+  for (const field of ['movePartnerPct', 'moveChildPct', 'moveRungsLost', 'partnerSettlingRounds'] as const) {
+    if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
+  }
   if (!isCount(life.roomLateRound)) errors.push('life.roomLateRound must be a whole, non-negative number');
   if (!isWhole(life.roomLateStatus)) errors.push('life.roomLateStatus must be a whole number');
   if (!listOf(life.lifestyleStatus, 4, isWhole)) errors.push('life.lifestyleStatus must be four whole numbers');

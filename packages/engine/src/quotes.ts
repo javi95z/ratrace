@@ -1,15 +1,16 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
-import { homeOf, INSURANCE_KINDS, ownPay, perksOf, rentStatusAt } from './life/derive';
+import { effectiveTax, incomeTaxAnnual } from './tax';
+import { homeOf, INSURANCE_KINDS, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
-import { jobHuntChance } from './life/roundEnd';
+import { jobHuntChance, landingOf } from './life/roundEnd';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { indexed } from './rates';
-import type { Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, RejectReason, RentTier } from './types';
+import type { Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -152,11 +153,79 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   };
 }
 
-export function quoteMove(content: Content, view: GameView, cityId: string): { cost: Cents; lapses: string[] } {
+/** A year of the player's working life in one city, at today's prices: what comes in, what goes, and what is left. */
+export interface CityYear {
+  /** The rung of the career held there, or null without a career. */
+  level: number | null;
+  /** The player's own pay. */
+  payAnnual: Cents;
+  /** A partner's pay on top. */
+  partnerAnnual: Cents;
+  /** Income tax on the two together, at the city's rates. Tax on investments is not here: it follows what is sold. */
+  taxAnnual: Cents;
+  /** Living, family, insurance and upkeep. Debts are the same anywhere and are left out. */
+  costAnnual: Cents;
+  /** Pay after tax and after those costs. */
+  leftAnnual: Cents;
+  /** Status for living there. */
+  prestige: number;
+  /** What the player's career is paid there against the usual, in percent. 100 without a career. */
+  careerPayPct: number;
+}
+
+export interface MoveQuote {
+  cost: Cents;
+  /** The memberships the move would end, by item id. */
+  lapses: string[];
+  /** The year as it is where the player lives, and as it would be on landing in the other city. */
+  here: CityYear;
+  there: CityYear;
+  /** Rungs of the career the move would cost, until the next promotion gives them back. */
+  rungsLost: number;
+  /** Rounds a partner would go without pay. */
+  partnerIdleRounds: number;
+}
+
+function cityYear(content: Content, p: PlayerState, world: WorldState): CityYear {
+  const city = cityOf(content, p.cityId);
+  const pay = indexed(ownPay(p, content), world);
+  const household = indexed(p.salaryAnnual, world);
+  const tax = incomeTaxAnnual(household, indexed(city.medianSalaryAnnual, world), effectiveTax(city, world).incomeRatesBp);
+  const cost = livingCostAnnual(p, content, world) + indexed(p.extraExpensesAnnual, world);
   return {
-    cost: moveCost(content, view.timeline[view.round], cityOf(content, cityId), view.player),
-    // The memberships the move would end, by item id.
-    lapses: lapsingIn(content, view.player, cityId),
+    level: p.life.career ? p.life.career.level : null,
+    payAnnual: pay,
+    partnerAnnual: household - pay,
+    taxAnnual: tax,
+    costAnnual: cost,
+    leftAnnual: household - tax - cost,
+    prestige: city.prestige,
+    careerPayPct: p.life.career ? (city.careerPayPct?.[p.life.career.id] ?? 100) : 100,
+  };
+}
+
+/**
+ * What a move of the player's own to a city costs, what it ends, and the year there beside the
+ * year here. The year there is the player as they would land: by the rules the order then follows.
+ */
+export function quoteMove(content: Content, view: GameView, cityId: string): MoveQuote {
+  const p = view.player;
+  const world = view.timeline[view.round];
+  const lapses = lapsingIn(content, p, cityId);
+  const landed = structuredClone(p);
+  const landing = landingOf(landed, content, false);
+  landed.cityId = cityId;
+  if (landed.life.career && landing.level !== null) landed.life.career.level = landing.level;
+  landed.life.partnerSettling = landing.partnerSettling;
+  landed.life.items = landed.life.items.filter((owned) => !lapses.includes(owned.itemId));
+  refreshDerived(landed, content, view.round);
+  return {
+    cost: moveCost(content, world, cityOf(content, cityId), p),
+    lapses,
+    here: cityYear(content, p, world),
+    there: cityYear(content, landed, world),
+    rungsLost: landing.rungsLost,
+    partnerIdleRounds: landing.partnerSettling - p.life.partnerSettling,
   };
 }
 

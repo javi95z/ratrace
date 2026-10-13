@@ -34,6 +34,8 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     seen: {},
     bonusStatus: 0,
     movingTo: null,
+    movingTransfer: false,
+    partnerSettling: 0,
   };
   const p: PlayerState = {
     cityId: start.cityId,

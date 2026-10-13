@@ -79,7 +79,7 @@ describe('the story of a life', () => {
     const state = life('nurse');
     const story = step(storyStart(content, viewOf(state)), state, () => undefined, [
       { kind: 'escaped', round: 3 },
-      { kind: 'moved', cityId: 'dubai' },
+      { kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false },
       { kind: 'bankrupt', proceeds: 0, debtsCleared: 0 },
       { kind: 'escapeLost' },
     ]);

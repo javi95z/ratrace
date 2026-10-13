@@ -398,13 +398,22 @@
       "moveCost": "Moving costs {amount} and 1 focus",
       "moving": "You move to {city} when this round is played.",
       "stay": "Stay after all",
-      "medianSalary": "Median salary",
-      "livingCost": "Living cost",
       "incomeTax": "Income tax",
-      "gainsTax": "Tax on gains",
       "here": "You live here",
       "moveHere": "Move here",
-      "moveLapses": "Moving ends: {items}."
+      "moveLapses": "Moving ends: {items}.",
+      "moveAbout": "Every city, with your year there beside the one you have here. Moving of your own accord costs a rung of your career and, with a partner, their pay for a round; a transfer a card offers costs none of that.",
+      "cityStatus": "Status +{n}",
+      "cityTrade": "{career} +{pct}%",
+      "yearHere": "Here",
+      "yearThere": "There",
+      "yourPay": "Your pay",
+      "partnerPay": "Your partner's pay",
+      "costs": "Living, family and insurance",
+      "left": "Left over a year",
+      "taxRates": "Income tax bands: {income}. On gains: {gains}.",
+      "moveRung": "You arrive as {title}: a rung down, until your next promotion.",
+      "movePartner": "Your partner will go {years} years without pay while they find work."
     },
     "shop": {
       "status": "Status +{n}",
@@ -470,7 +479,9 @@
     "next": "Next round",
     "finish": "See how it ended",
     "lapsed": "You lost {item}.",
-    "lapsedHint": "It belonged to the city you left. Nothing is paid back."
+    "lapsedHint": "It belonged to the city you left. Nothing is paid back.",
+    "movedRung": "You start a rung down, until your next promotion.",
+    "movedPartner": "Your partner is looking for work: a round without their pay."
   },
   "profile": {
     "title": "Your life",

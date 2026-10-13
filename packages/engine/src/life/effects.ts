@@ -155,7 +155,11 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   for (const flag of effects.clearFlags ?? []) delete life.flags[flag];
 
   if (effects.job !== undefined) changeJob(p, effects.job, at);
-  if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) life.movingTo = effects.moveCity;
+  if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) {
+    life.movingTo = effects.moveCity;
+    // A move a card offers comes with a place to go to.
+    life.movingTransfer = true;
+  }
 
   if (effects.partner !== undefined) {
     life.partner = effects.partner !== null;

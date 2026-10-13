@@ -106,7 +106,11 @@ for (const career of content.careers) {
 }
 
 // ---------------------------------------------------------------------------------------------
-say('## Ciudades', 'Cada ciudad tiene su perfil de noche y de día, y un icono.');
+say(
+  '## Ciudades',
+  'Cada ciudad tiene su perfil de noche y de día, y un icono.',
+  `Mudarse cuesta el ${content.life.moveCostPct} % del coste de vida anual del destino y 1 de foco; con pareja, un ${content.life.movePartnerPct} % más, y un ${content.life.moveChildPct} % más por cada hijo. Quien se muda por su cuenta llega ${content.life.moveRungsLost} puesto por debajo, hasta su siguiente ascenso, y su pareja pasa ${content.life.partnerSettlingRounds * content.yearsPerRound} años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.`,
+);
 for (const city of content.cities) {
   say(
     `### ${img(cityIcon(city.id))} ${names.cities[city.id]}`,
@@ -122,6 +126,7 @@ for (const city of content.cities) {
         ['Impuesto sobre la renta', city.tax.incomeRatesBp.map((rate) => pct(rate)).join(' · ')],
         ['Impuesto sobre ganancias', pct(city.tax.capitalGainsBp)],
         ['Estatus por vivir aquí', signed(city.prestige)],
+        ['Carreras que paga mejor', Object.entries(city.careerPayPct ?? {}).map(([career, share]) => `${text.careers[career].name} +${share - 100} %`).join(' · ')],
       ],
     ),
   );

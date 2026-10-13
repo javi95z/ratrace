@@ -398,13 +398,22 @@
       "moveCost": "Mudarte cuesta {amount} y 1 de foco",
       "moving": "Te mudas a {city} cuando se juegue esta ronda.",
       "stay": "Mejor quedarte",
-      "medianSalary": "Sueldo medio",
-      "livingCost": "Coste de vida",
       "incomeTax": "Impuesto sobre la renta",
-      "gainsTax": "Impuesto sobre ganancias",
       "here": "Vives aquí",
       "moveHere": "Mudarte aquí",
-      "moveLapses": "Al mudarte pierdes: {items}."
+      "moveLapses": "Al mudarte pierdes: {items}.",
+      "moveAbout": "Cada ciudad, con tu año allí al lado del que llevas aquí. Mudarte por tu cuenta cuesta un puesto y, si tienes pareja, su sueldo durante una ronda; un traslado que te ofrezca una carta no cuesta nada de eso.",
+      "cityStatus": "Estatus +{n}",
+      "cityTrade": "{career} +{pct} %",
+      "yearHere": "Aquí",
+      "yearThere": "Allí",
+      "yourPay": "Tu sueldo",
+      "partnerPay": "Sueldo de tu pareja",
+      "costs": "Vida, familia y seguros",
+      "left": "Te queda al año",
+      "taxRates": "Tramos de renta: {income}. Sobre ganancias: {gains}.",
+      "moveRung": "Llegas como {title}: un puesto por debajo, hasta tu siguiente ascenso.",
+      "movePartner": "Tu pareja pasará {years} años sin sueldo mientras encuentra trabajo."
     },
     "shop": {
       "status": "Estatus +{n}",
@@ -470,7 +479,9 @@
     "next": "Siguiente ronda",
     "finish": "Ver cómo acabó",
     "lapsed": "Has perdido {item}.",
-    "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada."
+    "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada.",
+    "movedRung": "Empiezas un puesto por debajo, hasta tu siguiente ascenso.",
+    "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo."
   },
   "profile": {
     "title": "Tu vida",

@@ -80,6 +80,8 @@ const bangkokTax: TaxProfile = {
   investmentAllowance: 0,
 };
 
+// Each city is the place for a trade or two, which it pays above the usual: the capital for its
+// civil servants, the two financial centres for finance, the hubs for whoever serves or builds there.
 export const cities: CityDef[] = [
   {
     id: 'madrid',
@@ -93,6 +95,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 700,
     tax: madridTax,
     prestige: 6,
+    careerPayPct: { public: 115, healthcare: 110 },
   },
   {
     id: 'london',
@@ -106,6 +109,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: londonTax,
     prestige: 12,
+    careerPayPct: { finance: 120, medicine: 110 },
   },
   {
     id: 'new_york',
@@ -119,6 +123,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: newYorkTax,
     prestige: 15,
+    careerPayPct: { finance: 125, tech: 110 },
   },
   {
     id: 'dubai',
@@ -132,6 +137,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 1_300,
     tax: dubaiTax,
     prestige: 15,
+    careerPayPct: { service: 120, finance: 110 },
   },
   {
     id: 'singapore',
@@ -145,6 +151,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 600,
     tax: singaporeTax,
     prestige: 12,
+    careerPayPct: { tech: 120, finance: 110 },
   },
   {
     id: 'bangkok',
@@ -158,5 +165,6 @@ export const cities: CityDef[] = [
     propertyVolBp: 900,
     tax: bangkokTax,
     prestige: 6,
+    careerPayPct: { service: 115, tech: 110 },
   },
 ];

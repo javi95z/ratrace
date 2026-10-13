@@ -55,7 +55,10 @@ export function lapsingIn(content: Content, p: PlayerState, cityId: string): str
 
 /** What moving to a city costs this player today: less for someone with a car to carry their life in. */
 export function moveCost(content: Content, world: WorldState, city: CityDef, p: PlayerState): Cents {
-  const full = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+  const alone = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+  // A household is dearer to move than a suitcase: a partner and each child add their share.
+  const family = (p.life.partner ? content.life.movePartnerPct : 0) + p.life.children.length * content.life.moveChildPct;
+  const full = mulDiv(alone, 100 + family, 100);
   return mulDiv(full, Math.max(0, 100 - perksOf(p, content).moveCostOffPct), 100);
 }
 
@@ -146,6 +149,7 @@ function executeMoveCity(p: PlayerState, cityId: string, ctx: OrderContext): Rej
   ctx.tally.movingCost += cost;
   p.life.focusUsed += 1;
   p.life.movingTo = cityId;
+  p.life.movingTransfer = false;
   return null;
 }
 

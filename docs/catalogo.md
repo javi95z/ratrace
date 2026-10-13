@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.9.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.10.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -263,6 +263,8 @@ Horas extra: +8 % de sueldo esa ronda.
 
 Cada ciudad tiene su perfil de noche y de día, y un icono.
 
+Mudarse cuesta el 25 % del coste de vida anual del destino y 1 de foco; con pareja, un 50 % más, y un 25 % más por cada hijo. Quien se muda por su cuenta llega 1 puesto por debajo, hasta su siguiente ascenso, y su pareja pasa 2 años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.
+
 ### <img src="../art/clean/icons/icon.city_madrid.png" alt=""> Madrid
 
 Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.
@@ -278,6 +280,7 @@ Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.
 | Impuesto sobre la renta | 19 % · 30 % · 45 % |
 | Impuesto sobre ganancias | 21 % |
 | Estatus por vivir aquí | +6 |
+| Carreras que paga mejor | Función pública +15 % · Sanidad +10 % |
 
 ### <img src="../art/clean/icons/icon.city_london.png" alt=""> Londres
 
@@ -294,6 +297,7 @@ Donde se hacen las carreras en finanzas y se pagan los alquileres.
 | Impuesto sobre la renta | 20 % · 40 % · 45 % |
 | Impuesto sobre ganancias | 20 % |
 | Estatus por vivir aquí | +12 |
+| Carreras que paga mejor | Finanzas +20 % · Medicina +10 % |
 
 ### <img src="../art/clean/icons/icon.city_new_york.png" alt=""> Nueva York
 
@@ -310,6 +314,7 @@ Los sueldos más altos del juego, y los impuestos más altos.
 | Impuesto sobre la renta | 25 % · 38 % · 50 % |
 | Impuesto sobre ganancias | 25 % |
 | Estatus por vivir aquí | +15 |
+| Carreras que paga mejor | Finanzas +25 % · Tecnología +10 % |
 
 ### <img src="../art/clean/icons/icon.city_dubai.png" alt=""> Dubái
 
@@ -326,6 +331,7 @@ Sin impuesto sobre la renta y con mil maneras de gastar lo que te queda.
 | Impuesto sobre la renta | 0 % · 0 % · 0 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +15 |
+| Carreras que paga mejor | Servicios +20 % · Finanzas +10 % |
 
 ### <img src="../art/clean/icons/icon.city_singapore.png" alt=""> Singapur
 
@@ -342,6 +348,7 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 | Impuesto sobre la renta | 5 % · 15 % · 22 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +12 |
+| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % |
 
 ### <img src="../art/clean/icons/icon.city_bangkok.png" alt=""> Bangkok
 
@@ -358,6 +365,7 @@ Tu dinero cunde cuatro veces más. Tus ahorros también.
 | Impuesto sobre la renta | 5 % · 20 % · 35 % |
 | Impuesto sobre ganancias | 10 % |
 | Estatus por vivir aquí | +6 |
+| Carreras que paga mejor | Servicios +15 % · Tecnología +10 % |
 
 ## Objetos
 

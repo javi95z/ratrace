@@ -98,6 +98,23 @@ describe('the v1 content', () => {
     expect(content.life.rentTierStatus).toEqual([0, 3]);
   });
 
+  it('gives every city a trade or two it pays above the usual, and every career a city to go to', () => {
+    const paid = new Set<string>();
+    for (const city of content.cities) {
+      const trades = Object.entries(city.careerPayPct ?? {});
+      expect(trades.length, city.id).toBeGreaterThanOrEqual(1);
+      expect(trades.length, city.id).toBeLessThanOrEqual(2);
+      for (const [career, share] of trades) {
+        expect(share, `${city.id} ${career}`).toBeGreaterThan(100);
+        expect(share, `${city.id} ${career}`).toBeLessThanOrEqual(125);
+        paid.add(career);
+      }
+    }
+    expect([...paid].sort()).toEqual(content.careers.map((career) => career.id).sort());
+    // Moving of one's own accord has a price beyond the fare.
+    expect(content.life).toMatchObject({ moveRungsLost: 1, movePartnerPct: 50, moveChildPct: 25, partnerSettlingRounds: 1 });
+  });
+
   it('makes the things that are good for something good for what their kind is', () => {
     const by = (ladder: string) => content.items.filter((item) => item.ladder === ladder);
     // Every car moves a life for less, and the dearest no more than the cheapest.

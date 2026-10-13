@@ -48,14 +48,17 @@ export function ownPay(p: PlayerState, content: Content, level?: number): Cents 
   const life = p.life;
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
   const rung = life.career ? levelOf(content, level === undefined ? life.career : { id: life.career.id, level }) : null;
-  const base = rung ? mulDiv(median, rung.salaryPct, 100) : life.baseSalaryAnnual;
+  // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.
+  const here = life.career ? (cityOf(content, p.cityId).careerPayPct?.[life.career.id] ?? 100) : 100;
+  const base = rung ? mulDiv(mulDiv(median, rung.salaryPct, 100), here, 100) : life.baseSalaryAnnual;
   return mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
 }
 
 /** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */
 export function deriveSalary(p: PlayerState, content: Content): Cents {
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
-  const partner = p.life.partner ? mulDiv(median, p.life.partnerSalaryPct, 100) : 0;
+  // A partner who has just followed the player to a new city earns nothing until they have found work there.
+  const partner = p.life.partner && p.life.partnerSettling === 0 ? mulDiv(median, p.life.partnerSalaryPct, 100) : 0;
   return ownPay(p, content) + partner;
 }
 
