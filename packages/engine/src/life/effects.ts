@@ -60,6 +60,7 @@ function buyItem(p: PlayerState, order: NonNullable<Effects['buyItem']>, at: Sit
     value: item.kind === 'durable' ? mulDiv(price, item.resaleStartPct, 100) : 0,
     roundsLeft: item.kind === 'experience' ? item.boostRounds : null,
     paid,
+    age: 0,
   });
   if (!p.life.collection.includes(item.id)) p.life.collection.push(item.id);
 }

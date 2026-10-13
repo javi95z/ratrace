@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.11.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.12.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -430,6 +430,8 @@ Tu dinero cunde cuatro veces más. Tus ahorros también.
 Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.
 
 «Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.
+
+Los objetos de coches y tecnología pierden estatus al envejecer, al mismo ritmo que pierden valor, hasta quedarse en el 25 % de lo que daban nuevos.
 
 «Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.
 

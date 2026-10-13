@@ -121,7 +121,7 @@ describe('conditionHolds', () => {
     const p = player((x) => {
       x.deposit = 5;
       x.positions.coin_major = { value: 5, basis: 5 };
-      x.life.items.push({ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 });
+      x.life.items.push({ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0, age: 0 });
     });
     expect(holds({ holds: 'deposit' }, p)).toBe(true);
     expect(holds({ holds: 'deposit' })).toBe(false);

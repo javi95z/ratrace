@@ -243,7 +243,7 @@ describe('applyCards', () => {
     const flat = card('flat', { options: [{}, { effects: { property: { typeId: 'studio', pricePct: 50, downPct: 5, rented: false } } }] });
     const outright = card('outright', { options: [{}, { effects: { property: { typeId: 'studio', pricePct: 1, downPct: 100, rented: false } } }] });
     const { content, state } = one([car, flat, outright], { cash: 5_000_000 });
-    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
+    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0, age: 0 }], collection: ['car_basic'] });
     const locked = withPlayer(content, owner, { bankruptUntilRound: 3 });
     const events = cardEvents(applyCards(content, locked, { car: 1, flat: 1, outright: 1 }).events);
     const byId = Object.fromEntries(events.map((e) => [e.kind === 'card' ? e.cardId : '', e]));
@@ -493,7 +493,7 @@ describe('previewCard', () => {
 
     // Single, with a million in cash and three focus: no partner, no nine focus, no five million.
     expect(locks(state)).toEqual([null, 'condition', 'focus', null, null, 'cash', null, null, null]);
-    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
+    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0, age: 0 }], collection: ['car_basic'] });
     expect(locks(owner)[4]).toBe('owned');
     expect(locks(withPlayer(content, state, { bankruptUntilRound: 3 }))[7]).toBe('bankruptcy');
     const owing = withPlayer(content, state, { cash: 300_000, debts: [{ id: 'debt-1', kind: 'personalLoan', principal: 250_000, fixedRateBp: 700, roundsLeft: 2 }], nextId: 1 });

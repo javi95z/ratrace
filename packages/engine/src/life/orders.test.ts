@@ -92,7 +92,7 @@ describe('item orders', () => {
     const { p, run } = setup();
     expect(run({ type: 'buyItem', itemId: 'car_basic' })).toBeNull();
     expect(p.cash).toBe(3_800_000);
-    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000 }]);
+    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000, age: 0 }]);
     expect(p.life.collection).toEqual(['car_basic']);
   });
 
@@ -110,8 +110,8 @@ describe('item orders', () => {
     expect(run({ type: 'buyItem', itemId: 'trip' })).toBeNull();
     expect(p.cash).toBe(5_000_000 - 50_000 - 300_000);
     expect(p.life.items).toEqual([
-      { itemId: 'club', value: 0, roundsLeft: null, paid: 50_000 },
-      { itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000 },
+      { itemId: 'club', value: 0, roundsLeft: null, paid: 50_000, age: 0 },
+      { itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000, age: 0 },
     ]);
   });
 
@@ -132,7 +132,7 @@ describe('item orders', () => {
     expect(run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBeNull();
     // A fifth of 12,000 down; the car is owned whole, at what it would sell for, and it cost its full price.
     expect(p.cash).toBe(0);
-    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000 }]);
+    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000, age: 0 }]);
     expect(p.debts).toEqual([
       { id: p.debts[0].id, kind: 'personalLoan', principal: 960_000, fixedRateBp: ctx.world.policyRateBp + content.debt.personalLoanSpreadBp, roundsLeft: content.debt.personalLoanTermRounds, forItem: 'car_basic' },
     ]);
@@ -220,7 +220,7 @@ describe('item orders', () => {
     expect(run({ type: 'sellItem', itemId: 'car_basic' })).toBe('not-owned');
     expect(run({ type: 'sellItem', itemId: null })).toBe('bad-order');
     expect(p.cash).toBe(cash);
-    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000 }]);
+    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000, age: 0 }]);
   });
 
   it('reports what was spent on and raised from items in the ledger, and charges upkeep', () => {

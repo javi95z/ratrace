@@ -24,17 +24,21 @@ interface Props {
   onConfirm(amount: number): boolean;
   /** Shown above the amount: what is being bought, at what price, and so on. */
   children?: ReactNode;
+  /** The amount the sheet opens on, for something that already has one. Zero if absent. */
+  start?: number;
+  /** Shown under the button: another thing that can be done from here. */
+  footer?: ReactNode;
 }
 
 /**
  * Picks an amount of money: a slider, chips for a quarter, a half and all of it, and one button.
  * It is mounted only while it is open, so it always starts from zero.
  */
-export function AmountSheet({ title, max, onClose, onConfirm, children }: Props) {
+export function AmountSheet({ title, max, onClose, onConfirm, children, start = 0, footer }: Props) {
   const t = useT('finance.amount');
   const common = useT('common');
   const { fmt } = useWords();
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(Math.min(start, Math.max(0, max)));
   const step = sliderStep(max);
 
   return (
@@ -77,6 +81,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children }: Props)
           </Button>
         </div>
       )}
+      {footer}
     </Sheet>
   );
 }

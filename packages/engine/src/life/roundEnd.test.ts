@@ -86,8 +86,8 @@ describe('end of round: things with a clock', () => {
     const [now, after] = [start.timeline[0].priceLevel, start.timeline[1].priceLevel];
     const real = (value: number, driftBp: number) => Math.floor((Math.floor((value * (10_000 + driftBp)) / 10_000) * after) / now);
     expect(first.player.life.items).toEqual([
-      { itemId: 'car_basic', value: real(960_000, -2_000), roundsLeft: null, paid: 1_200_000 },
-      { itemId: 'watch_gold', value: real(900_000, 300), roundsLeft: null, paid: 1_000_000 },
+      { itemId: 'car_basic', value: real(960_000, -2_000), roundsLeft: null, paid: 1_200_000, age: 1 },
+      { itemId: 'watch_gold', value: real(900_000, 300), roundsLeft: null, paid: 1_000_000, age: 1 },
     ]);
     expect(first.player.life.items[0].value).toBeLessThan(960_000);
     expect(first.player.life.items[1].value).toBeGreaterThan(900_000);
@@ -95,7 +95,7 @@ describe('end of round: things with a clock', () => {
 
   it('lets an experience fade', () => {
     let state = play(game('trip'), { orders: [{ type: 'buyItem', itemId: 'trip' }] }).state;
-    expect(state.player.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 1, paid: 300_000 }]);
+    expect(state.player.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 1, paid: 300_000, age: 0 }]);
     expect(state.player.statusPoints).toBe(10 + 2);
     state = play(state).state;
     expect(state.player.life.items).toEqual([]);
@@ -189,9 +189,9 @@ describe('end of round: bankruptcy and status items', () => {
         minLifestyleTier: 1,
         bonusStatus: 6,
         items: [
-          { itemId: 'watch_gold', value: watchValue, roundsLeft: null, paid: 1_000_000 },
-          { itemId: 'club', value: 0, roundsLeft: null, paid: 50_000 },
-          { itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000 },
+          { itemId: 'watch_gold', value: watchValue, roundsLeft: null, paid: 1_000_000, age: 0 },
+          { itemId: 'club', value: 0, roundsLeft: null, paid: 50_000, age: 0 },
+          { itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000, age: 0 },
         ],
         collection: ['watch_gold', 'club', 'trip'],
       },

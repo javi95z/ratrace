@@ -453,7 +453,10 @@
       "owed": "Still owed on the loan",
       "owedKept": "You bought it on instalments. Sell it and the debt stays with you.",
       "owedShort": "You bought it on instalments. Selling it today would not clear the debt: you would be {amount} short.",
-      "owedGone": "You bought it on instalments and no longer have it. The debt stays."
+      "owedGone": "You bought it on instalments and no longer have it. The debt stays.",
+      "statusWas": "Gave +{n} new",
+      "ages": "It loses status over the years, as it loses value.",
+      "aged": "It has lost status over the years. A new one gives it all again."
     },
     "taxes": {
       "income": "Coming in",
@@ -470,7 +473,30 @@
       "escapeTitle": "Escape test",
       "escapeHint": "Passive income after tax, against what the round costs you. Cover it two rounds in a row and you are out."
     },
-    "decided": "Already decided"
+    "decided": "Already decided",
+    "plans": {
+      "title": "Regular investing",
+      "none": "Nothing yet. In the Market, when you buy a fund or a stock, choose \"Every round\": it is bought round after round, dear or cheap, without your having to remember.",
+      "total": "Each round you invest {amount} without lifting a finger.",
+      "putIn": "Put in {amount} over {rounds, plural, one {# round} other {# rounds}}",
+      "starts": "Starts this round",
+      "aRound": "a round",
+      "priceAbove": "Worth {pct} more today than your average price",
+      "priceBelow": "Worth {pct} less today than your average price",
+      "missed": "No cash for it this round: it will not buy",
+      "new": "New plan",
+      "edit": "Invest in {name} every round",
+      "editHint": "It buys when each round is played, after your own orders. If a round has no cash for it, it does not buy that once: it never borrows for you.",
+      "stop": "Stop investing",
+      "held": "What you hold today",
+      "cost": "What it cost you",
+      "how": "How to buy",
+      "once": "Once",
+      "onceHint": "Now",
+      "each": "Every round",
+      "eachHint": "Automatic",
+      "already": "You already invest {amount} every round. Change the amount here."
+    }
   },
   "resolve": {
     "title": "Two years later",
@@ -496,7 +522,8 @@
     "lapsed": "You lost {item}.",
     "lapsedHint": "It belonged to the city you left. Nothing is paid back.",
     "movedRung": "You start a rung down, until your next promotion.",
-    "movedPartner": "Your partner is looking for work: a round without their pay."
+    "movedPartner": "Your partner is looking for work: a round without their pay.",
+    "planMissed": "Your plan did not buy {name}: it needed {amount}."
   },
   "profile": {
     "title": "Your life",
@@ -744,7 +771,9 @@
     "rentTier": "Home: {tier}",
     "insureOn": "Insure: {kind}",
     "insureOff": "Cancel: {kind}",
-    "move": "Move to {city}"
+    "move": "Move to {city}",
+    "planOn": "Invest {amount} every round in {name}",
+    "planOff": "Stop investing in {name}"
   },
   "account": {
     "title": "Account",

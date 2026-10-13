@@ -38,6 +38,14 @@ describe('headlineText', () => {
   });
 });
 
+describe('a plan to invest, told after the round', () => {
+  it('is news only when it could not buy, and then says why', () => {
+    const notes = (reason: 'not-enough-cash' | null) => roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'planRan', assetId: 'sp500', amount: 200_000, reason }]);
+    expect(notes(null)).toEqual([]);
+    expect(notes('not-enough-cash')).toEqual([{ tone: 'bad', icon: 'icon.fund', title: 'Your plan did not buy S&P 500: it needed $2,000.', hint: words('en').text.reasons['not-enough-cash'] }]);
+  });
+});
+
 describe('a move, told after the round', () => {
   it('says what it cost besides its price, and nothing when it cost nothing', () => {
     const note = (rungsLost: number, partnerIdle: boolean) =>
@@ -172,6 +180,8 @@ describe('orderLabel', () => {
     expect(label({ type: 'focus', action: 'overtime' })).toBe('Overtime');
     expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Study');
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
+    expect(label({ type: 'setPlan', assetId: 'sp500', amount: 200_000 })).toBe('Invest $2,000 every round in S&P 500');
+    expect(label({ type: 'setPlan', assetId: 'sp500', amount: 0 })).toBe('Stop investing in S&P 500');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');

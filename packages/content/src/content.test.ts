@@ -140,6 +140,16 @@ describe('the v1 content', () => {
     for (const id of ['law', 'education', 'influencer', 'hospitality', 'sales']) expect(leads, id).toContain(id);
   });
 
+  it('lets cars and gadgets lose status as they age, and nothing that holds its value', () => {
+    const view = viewOf(createGame({ content, start: lives[0].start }, 'aging'));
+    const aging = content.items.filter((item) => quoteItem(content, view, item.id).ages);
+    expect([...new Set(aging.map((item) => item.ladder))].sort()).toEqual(['car', 'tech']);
+    expect(aging).toHaveLength(content.items.filter((item) => item.ladder === 'car' || item.ladder === 'tech').length);
+    // New, a thing gives all it gives.
+    for (const item of content.items) expect(quoteItem(content, view, item.id)).toMatchObject({ status: item.status, statusNew: item.status });
+    expect(content.life.agingFloorPct).toBe(25);
+  });
+
   it('makes the things that are good for something good for what their kind is', () => {
     const by = (ladder: string) => content.items.filter((item) => item.ladder === ladder);
     // Every car moves a life for less, and the dearest no more than the cheapest.

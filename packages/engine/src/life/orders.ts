@@ -112,6 +112,7 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
     value: resale,
     roundsLeft: item.kind === 'experience' ? item.boostRounds : null,
     paid: price,
+    age: 0,
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
   return null;

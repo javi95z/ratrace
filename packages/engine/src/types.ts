@@ -209,6 +209,14 @@ export interface LifeRules {
   moveRungsLost: number;
   /** Rounds a partner goes without pay after such a move, while they find work of their own. */
   partnerSettlingRounds: number;
+  /**
+   * The ladders whose things lose status as they lose value: an old car is not the car it was. Each
+   * round held takes the item's own loss of resale value off its status too, never below the floor.
+   * A thing that holds or gains value keeps its status and gains none.
+   */
+  agingLadders: readonly string[];
+  /** The least of its status an aged thing keeps, in percent. */
+  agingFloorPct: number;
   /** Career skill gained by a round of work. */
   workSkill: number;
   /** Career skill gained on top by a round of study. */
@@ -582,6 +590,8 @@ export interface OwnedItem {
   roundsLeft: number | null;
   /** What was paid for it, at the prices of the day it was bought. Zero for a gift. */
   paid: Cents;
+  /** Rounds it has been held. A thing that ages gives less status with each. */
+  age: number;
 }
 
 export interface Recurring {
@@ -639,12 +649,28 @@ export interface LifeState {
   partnerSettling: number;
 }
 
+/**
+ * A standing instruction to put the same amount into an asset every round, whatever its price:
+ * much when it is cheap in units and little when it is dear, without the player having to decide.
+ */
+export interface InvestPlan {
+  assetId: string;
+  /** Bought each round, in the dollars of the day. */
+  amount: Cents;
+  /** Everything the plan has put in so far. */
+  invested: Cents;
+  /** Rounds in which it bought. */
+  rounds: number;
+}
+
 export interface PlayerState {
   cityId: string;
   cash: Cents;
   deposit: Cents;
   pension: Cents;
   positions: Record<string, Position>;
+  /** Standing instructions to invest, at most one an asset, run each round after the player's own orders. */
+  plans: InvestPlan[];
   properties: Property[];
   debts: Debt[];
   lifestyleTier: LifestyleTier;
@@ -685,6 +711,8 @@ export type Order =
   | { type: 'depositIn'; amount: Cents }
   | { type: 'depositOut'; amount: Cents }
   | { type: 'pensionIn'; amount: Cents }
+  /** Sets what is put into the asset every round from now on, this round included. Zero ends the plan. */
+  | { type: 'setPlan'; assetId: string; amount: Cents }
   | { type: 'borrow'; amount: Cents }
   | { type: 'repay'; debtId: string; amount: Cents }
   | { type: 'buyProperty'; typeId: string; downPayment: Cents; mortgage: 'fixed' | 'variable' | 'none'; rented: boolean }
@@ -821,6 +849,8 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
+  /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
+  | { kind: 'planRan'; assetId: string; amount: Cents; reason: RejectReason | null }
   | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean }
   /** A membership of the city just left ended with the move. Nothing is paid back. */
   | { kind: 'lapsed'; itemId: string };

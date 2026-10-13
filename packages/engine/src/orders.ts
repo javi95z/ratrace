@@ -1,6 +1,6 @@
 import { executeBorrow, executeRepay } from './debt';
 import { executeLifeOrder } from './life/orders';
-import { executePortfolioOrder } from './portfolio';
+import { executePortfolioOrder, executeSetPlan } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
 import type { Order, OrderContext, PlayerState, RejectReason } from './types';
 
@@ -10,6 +10,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'depositIn',
   'depositOut',
   'pensionIn',
+  'setPlan',
   'borrow',
   'repay',
   'buyProperty',
@@ -35,6 +36,7 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
   switch (fields.type) {
     case 'buy':
     case 'sell':
+    case 'setPlan':
       return isText(fields.assetId);
     case 'repay':
       return isText(fields.debtId);
@@ -79,6 +81,8 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'depositOut':
     case 'pensionIn':
       return executePortfolioOrder(p, order, ctx);
+    case 'setPlan':
+      return executeSetPlan(p, order, ctx);
     case 'borrow':
       return executeBorrow(p, order, ctx);
     case 'repay':

@@ -453,7 +453,10 @@
       "owed": "Aún debes del préstamo",
       "owedKept": "Lo compraste a plazos. Si lo vendes, la deuda sigue contigo.",
       "owedShort": "Lo compraste a plazos. Venderlo hoy no cubre la deuda: faltarían {amount}.",
-      "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue."
+      "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue.",
+      "statusWas": "Nuevo daba +{n}",
+      "ages": "Pierde estatus con los años, a la vez que valor.",
+      "aged": "Ha perdido estatus con los años. Uno nuevo vuelve a dar todo."
     },
     "taxes": {
       "income": "Lo que entra",
@@ -470,7 +473,30 @@
       "escapeTitle": "Prueba de salida",
       "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales."
     },
-    "decided": "Ya decidido"
+    "decided": "Ya decidido",
+    "plans": {
+      "title": "Inversión periódica",
+      "none": "Nada todavía. En Mercado, al comprar un fondo o una acción, elige «Cada ronda»: se compra solo ronda tras ronda, caro o barato, sin que tengas que acordarte.",
+      "total": "Cada ronda inviertes {amount} sin tocar nada.",
+      "putIn": "Aportado {amount} en {rounds, plural, one {# ronda} other {# rondas}}",
+      "starts": "Empieza esta ronda",
+      "aRound": "cada ronda",
+      "priceAbove": "Hoy vale un {pct} más que tu precio medio",
+      "priceBelow": "Hoy vale un {pct} menos que tu precio medio",
+      "missed": "Esta ronda no llega el efectivo: no compra",
+      "new": "Plan nuevo",
+      "edit": "Invertir en {name} cada ronda",
+      "editHint": "Se compra al jugar cada ronda, después de tus órdenes. Si una ronda no hay efectivo, esa vez no compra: nunca se endeuda por ti.",
+      "stop": "Dejar de invertir",
+      "held": "Lo que tienes hoy",
+      "cost": "Lo que te costó",
+      "how": "Cómo comprar",
+      "once": "Una vez",
+      "onceHint": "Ahora",
+      "each": "Cada ronda",
+      "eachHint": "Automático",
+      "already": "Ya inviertes {amount} cada ronda. Cambia la cantidad aquí."
+    }
   },
   "resolve": {
     "title": "Dos años después",
@@ -496,7 +522,8 @@
     "lapsed": "Has perdido {item}.",
     "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada.",
     "movedRung": "Empiezas un puesto por debajo, hasta tu siguiente ascenso.",
-    "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo."
+    "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo.",
+    "planMissed": "Tu plan no compró {name}: faltaban {amount}."
   },
   "profile": {
     "title": "Tu vida",
@@ -744,7 +771,9 @@
     "rentTier": "Casa: {tier}",
     "insureOn": "Asegurar: {kind}",
     "insureOff": "Cancelar: {kind}",
-    "move": "Mudarte a {city}"
+    "move": "Mudarte a {city}",
+    "planOn": "Invertir {amount} cada ronda en {name}",
+    "planOff": "Dejar de invertir en {name}"
   },
   "account": {
     "title": "Cuenta",

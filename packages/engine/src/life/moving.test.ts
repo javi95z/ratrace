@@ -163,7 +163,7 @@ describe('the year here beside the year there', () => {
     const local = contentWith((c) => {
       c.items = c.items.map((item) => (item.id === 'club' ? { ...item, cities: ['home'] } : item));
     });
-    const member = withPlayer(local, game(local), {}, { items: [{ itemId: 'club', value: 0, roundsLeft: null, paid: 0 }], collection: ['club'] });
+    const member = withPlayer(local, game(local), {}, { items: [{ itemId: 'club', value: 0, roundsLeft: null, paid: 0, age: 0 }], collection: ['club'] });
     const plain = quoteMove(local, viewOf(game(local)), 'haven');
     const quote = quoteMove(local, viewOf(member), 'haven');
     expect(quote.lapses).toEqual(['club']);

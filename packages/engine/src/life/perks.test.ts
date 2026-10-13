@@ -23,7 +23,7 @@ function contentWith(perks: Record<string, ItemPerks>, change: (c: Content) => v
 
 const game = (content: Content, cash = 50_000_000): GameState =>
   createGame({ content, start: { ...fixtureStart(), cash, life: office } }, 'perks');
-const owning = (...ids: string[]): OwnedItem[] => ids.map((itemId) => ({ itemId, value: 0, roundsLeft: itemId === 'trip' ? 2 : null, paid: 0 }));
+const owning = (...ids: string[]): OwnedItem[] => ids.map((itemId) => ({ itemId, value: 0, roundsLeft: itemId === 'trip' ? 2 : null, paid: 0, age: 0 }));
 const holding = (content: Content, state: GameState, ...ids: string[]) => withPlayer(content, state, {}, { items: owning(...ids), collection: ids });
 
 describe('what the things owned are good for', () => {

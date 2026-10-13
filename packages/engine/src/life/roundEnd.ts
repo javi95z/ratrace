@@ -69,7 +69,7 @@ export function ageLife(
     }
     // A durable's resale value moves by its own drift, on top of the general rise in prices.
     const drifted = mulDiv(owned.value, BP + itemOf(content, owned.itemId).resaleDriftBp, BP);
-    kept.push({ ...owned, value: mulDiv(drifted, after.priceLevel, now.priceLevel) });
+    kept.push({ ...owned, value: mulDiv(drifted, after.priceLevel, now.priceLevel), age: owned.age + 1 });
   }
   life.items = kept;
 

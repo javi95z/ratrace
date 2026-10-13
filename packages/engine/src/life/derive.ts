@@ -1,8 +1,8 @@
 import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
-import { applyBp, mulDiv } from '../money';
+import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemPerks, PlayerState, Property, Regime } from '../types';
+import type { Content, InsuranceKind, ItemDef, ItemPerks, PlayerState, Property, Regime } from '../types';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -19,6 +19,19 @@ export function homeOf(p: PlayerState, content: Content): Property | null {
     }
   }
   return home;
+}
+
+/**
+ * The status a thing gives, held for `age` rounds. In a ladder that ages, each round takes the
+ * item's own loss of resale value off its status as well, down to the floor: a ten-year-old car is
+ * worth less at the lights as well as at the dealer's. Whatever holds or gains value keeps what it gave.
+ */
+export function itemStatus(item: ItemDef, age: number, content: Content): number {
+  if (item.resaleDriftBp >= 0 || !content.life.agingLadders.includes(item.ladder)) return item.status;
+  const floor = content.life.agingFloorPct * 100;
+  let share = BP;
+  for (let round = 0; round < age && share > floor; round++) share = mulDiv(share, BP + item.resaleDriftBp, BP);
+  return Math.floor((item.status * Math.max(share, floor) + BP / 2) / BP);
 }
 
 /**
@@ -134,9 +147,10 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
   const ladders = new Map<string, number[]>();
   for (const owned of life.items) {
     const item = itemOf(content, owned.itemId);
+    const status = itemStatus(item, owned.age, content);
     const group = ladders.get(item.ladder);
-    if (group) group.push(item.status);
-    else ladders.set(item.ladder, [item.status]);
+    if (group) group.push(status);
+    else ladders.set(item.ladder, [status]);
   }
   let items = 0;
   for (const group of ladders.values()) {
