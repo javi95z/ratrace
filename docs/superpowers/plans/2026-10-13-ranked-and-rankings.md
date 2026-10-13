@@ -60,7 +60,7 @@ Not here: the daily challenge (14), rooms (15).
 - A ranking is the best ranked life of each player: of all time, or finished this week (weeks begin on Monday, UTC), optionally of one starting life, optionally among friends only. Higher score first; of two equal scores, the earlier.
 - One database function answers all of them: the first fifty, and the asker's own place if it is further down.
 - **Names.** A player appears under their nickname: 3 to 16 letters, digits or underscores, unique whatever the capitals. Without one they appear as "Rat" and four characters of their id. Names are checked in the database, where a client cannot skip the check: a list of words that are not accepted, read through the usual disguises (digits for letters, underscores, repeated letters), and a list of names that are not anyone's to take.
-- **Friends** are people a player follows. Each player has a short code; entering someone's code, or opening their link, follows them. Following is one-way and needs no answer: it only decides whose lives a player sees in their friends ranking. A player can stop following anyone.
+- **Friends** are people a player follows. Each player has a short code; entering someone's code follows them. Following is one-way and needs no answer: it only decides whose lives a player sees in their friends ranking. A player can stop following anyone. A link that follows on opening is left for later: a page that changes whom a player follows because it was opened is not something to build in passing.
 
 ### Limits
 

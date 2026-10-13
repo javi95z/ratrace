@@ -1,7 +1,7 @@
 # The Rat Race: Online Design
 
 Date: 2026-10-13
-Status: phases 1 (foundation) and 2 (cloud saves) built on 2026-10-13; see `docs/superpowers/plans/2026-10-13-online-foundation.md` and `2026-10-13-cloud-saves.md`. Where what was built differs from what was designed, this document says what was built. The later phases are still design. Each phase gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
+Status: phases 1 (foundation), 2 (cloud saves) and 3 (ranked solo and rankings) built on 2026-10-13; see `docs/superpowers/plans/2026-10-13-online-foundation.md`, `2026-10-13-cloud-saves.md` and `2026-10-13-ranked-and-rankings.md`. Where what was built differs from what was designed, this document says what was built. The later phases are still design. Each phase gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
 
 ## 1. Goal
 
@@ -22,13 +22,13 @@ Its first purpose was to make sure v1 was built in a way that needs no rewrite. 
 | | Casual | Ranked |
 |---|---|---|
 | Seed | Made on the device | Made and kept by the server |
-| Engine runs | On the device | On the server, one call per round |
+| Engine runs | On the device | On the server, one call per card and per round |
 | Future rounds | On the device, so a player could peek | Never leave the server |
 | Saves | Local, synced to the cloud | The server's record is the save |
 | Counts for | Personal bests, unlocks, achievements | Global, weekly, daily and room rankings |
 | Works offline | Yes | No |
 
-Default: a signed-in player who is online plays ranked. With no connection the game falls back to casual and says so.
+Default: a signed-in player who is online plays ranked, and can turn that off for the life they are about to start. With no connection the game falls back to casual and says so, before the life begins; a server that cannot be reached at that very moment does the same, and the life says so once it has begun.
 
 ## 4. What v1 must do now
 
@@ -63,15 +63,22 @@ As built in phase 1:
 - The engine reaches the functions as one bundled file per pair of engine and content versions, kept in `supabase/functions/_shared/game`. A test fails if the bundle of the current versions is stale, and the function refuses a pair it does not hold.
 - Screens learn who is playing through an `Account` and nothing else. The Supabase client is loaded in one file, only when an account starts.
 
+As built in phase 3:
+
+- One function, `ranked`, plays ranked lives. It can be asked to start one, to show one, to answer a card, to play a round and to give one up.
+- Every function counts its calls per player in a window and answers `429` beyond it: `engine` and `finish-run` 30 a minute, ranked steps 240 a minute, new ranked lives 20 an hour.
+- With `NEXT_PUBLIC_SUPABASE_REGION` in the build, a ranked life asks for its function in the region of the database, where each of its steps is one long hop instead of several.
+- With `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in the build, the game asks Cloudflare Turnstile for a token before it signs a guest in, and hands it to Supabase. Its script is loaded only then. It is off until the owner makes the keys and turns on "Enable CAPTCHA protection" in Supabase with the same widget's secret: one without the other signs no new guest in.
+
 ## 6. Data
 
 | Table | Holds | Who can read | Who can write |
 |---|---|---|---|
-| `profiles` | Nickname (optional, unique whatever its capitals), portrait, language | Everyone signed in | Owner |
+| `profiles` | Nickname (optional, unique whatever its capitals, checked by the database), portrait, language, and a friend code the database makes | Everyone signed in | Owner: nickname, portrait and language only |
 | `player_progress` | Unlocked lives, achievements, collection, totals | Owner | Owner for casual progress; server for ranked |
 | `games` | Mode, life, versions, start, round, status, choice log, state hash | Owner | Owner for casual, until the server finishes the life; server for ranked. Never deleted by a player; fifty a player at most |
-| `game_secrets` | Seed and full server state of ranked games | Nobody | Server |
-| `runs` | One row per finished life: score, net worth, escape round, verified flag | Everyone signed in | Server |
+| `game_secrets` | Seed of ranked games. The state is not kept: it is played again from the seed and the log at every step | Nobody | Server |
+| `runs` | One row per finished life: mode, score, net worth, escape round, verified flag. A player keeps 500 casual ones at most: the oldest make room | Everyone signed in | Server |
 | `daily_challenges` | Day, scenario, content version | Everyone signed in | Server |
 | `daily_secrets` | Day, seed | Nobody | Server |
 | `daily_entries` | Day, player, game, score. One per player per day | Everyone signed in | Server |
@@ -79,9 +86,11 @@ As built in phase 1:
 | `room_secrets` | Seed and each member's full state | Nobody | Server |
 | `room_players` | Seat, ready flag, public summary (net worth, status, score) | Members | Server; member sets own ready flag |
 | `room_choices` | A member's choices for the current round | Owner only, until the round resolves | Owner, once per round |
-| `friendships` | Who follows whom | Both sides | Either side |
+| `friendships` | Who follows whom. Following is one-way and needs no answer | Both sides | The follower: follows through a database function that takes a friend code, and stops by deleting the row. 200 at most |
 
 Rankings are views over `runs` and `daily_entries`: all-time best per player, this week, per starting life, today's challenge, and each of those filtered to friends.
+
+As built in phase 3, the rankings of `runs` are one database function, `ranking`, not views. It reads ranked lives only, takes the best of each player, and answers the first fifty and the asker's own place if it is further down. A week begins on Monday, UTC. Of two equal scores the earlier is ahead. It runs with the asker's own rights. A second private table counts each player's calls for the rate limit, and a third holds the words a name may not contain.
 
 "Nobody" means the table has no policies at all, so only server code can touch it.
 
@@ -95,6 +104,12 @@ Two rules of the `games` table hold this together whatever a device does. The ac
 
 **Ranked solo.** `start-game` creates the seed, stores it in `game_secrets` and returns the view at round 0. Each round the client calls `submit-round` with its choices; the server runs `applyRound`, stores the result and returns the events and the next view. A repeated call for the same round returns the stored result. The preview needs no server call, because it reads only the current world.
 
+As built: the `ranked` function makes a seed of 32 random bytes, keeps it in `game_secrets`, and keeps the life's log in `games`. At each step it plays the log again from the seed, takes the one new step, and writes the longer log. Nothing else of the state is stored, so there is no second copy to drift from the first. A step is numbered: the client says which step it is taking. If the server has already taken that step with that very choice, it answers what it answered then, so a reply lost on the way can be asked for again; if it stands anywhere else, it says where, and the client opens the life as it now is. The log is written only if the row is as it was read, so two requests at once cannot both be taken. A step answers what changed: the player as they now stand, what happened, and the one new world if the round turned. When the last round is played the server writes the run with `mode = 'ranked'` and closes the game.
+
+A player has one ranked life in progress; starting another gives the first up. The server refuses a life the player has not unlocked. The device keeps a note of the ranked life with the last view it was given, so the front door can show it and it can be looked at with no connection. It cannot be played without one: a step that does not get through says so and can be tried again. A device with no life takes the account's ranked life in progress when it meets the account. The mirror of cloud saves leaves a ranked life alone. A ranked life begun under other versions than the page's cannot be continued there, and is given up.
+
+**Rankings, names and friends.** The rankings page shows the best ranked life of each player, of all time, of this week, or among the people the player follows, of any starting life or of one. A player appears under their nickname: 3 to 16 letters, digits or underscores. The database checks it where a client cannot skip the check: how it is written, that nobody has it, that it holds no word from a list read through the usual disguises (digits for letters, underscores), and that it is not a name that is nobody's to take. Without one a player appears as "Rat" and four characters of their id. Each player has a code of eight characters; entering someone's code follows them. A player can stop following anyone.
+
 **Daily challenge.** Cron creates tomorrow's scenario and seed. `daily-start` creates the player's one game for today. It then plays as ranked solo, with a shorter scenario set in content. A streak is a run of consecutive days in `daily_entries`. Days are UTC.
 
 **Rooms.** The host creates a room and shares its code. Each round, members submit choices, which others cannot read. When everyone is ready or the deadline passes, any member's client calls `room-resolve`. A row lock makes it run once. It runs `applyRound` for every member against the shared world, stores the results and broadcasts them. A cron sweep resolves rooms nobody resolved. A member who reconnects fetches their view. A member who sends nothing plays an empty round.
@@ -104,16 +119,22 @@ Two rules of the `games` table hold this together whatever a device does. The ac
 - Ranked play: the client cannot see the future or alter its state.
 - Casual play: a player can peek on their own device, so casual results stay off global rankings.
 - A casual run is `verified` in one sense only: the server played its log itself, so its figures are the engine's. Whether the future was secret is what `mode` says.
-- What a player can store is bounded in the database: fifty games, a log of 128 KB, progress of 64 KB. The engine caps orders per round and rejects malformed ones. Finished lives are not bounded yet: see below.
-- Nicknames are unique and short. Filtering them comes with the rankings that first show them.
+- What a player can store is bounded in the database: fifty games, a log of 128 KB, progress of 64 KB, 500 finished casual lives, 200 people followed. The engine caps orders per round and rejects malformed ones.
+- Nicknames are unique and short, and filtered in the database.
 - Deleting an account deletes its rows.
 
-Still to build before strangers play, and not built by phases 1 and 2:
+Built by phase 3, having been owed before strangers play:
 
-- **A rate limit on the functions.** A signed-in guest can call `engine` and `finish-run` as often as they like. Each call is milliseconds of work, and guests cost nothing to make: a limit, and a CAPTCHA on guest sign-in, come with phase 3.
-- **A wider seed.** The engine's random stream is seeded with 32 bits, and the state hash covers the seed. In casual play that is harmless, because the seed is on the device anyway. In ranked play the secret would be a seed that can be searched in seconds from the rounds already seen. Phase 3 must widen it, under a new engine version, before the first ranked game.
+- **A rate limit on the functions.** Each function counts calls per player and refuses beyond its limit.
+- **A wider seed.** Every random stream of a game used to start from one 32-bit number derived from the seed: whoever saw a few rounds of one asset's prices could try every start in seconds and read that asset's future. Each stream now starts from the first 128 bits of SHA-256 of the seed and the stream's name, from engine 0.10.0 on. SHA-256 is written out in the engine, which stays pure TypeScript. The server starts a ranked life only on a version whose bundle says its seed is that wide, and a ranked seed never leaves the server, nor does any hash of the hidden state.
+- **A bound on finished lives, and rankings that know what they rank.** A player keeps 500 casual runs at most, and the rankings read `mode = 'ranked'` only.
+- **A CAPTCHA on guest sign-in.** Built, and off until the owner sets its two keys.
+
+Still to build:
+
 - **Removing abandoned guests.** A guest who never comes back leaves an account and its rows. So does the guest a device was before its player signed in as someone else.
-- **A bound on finished lives, and rankings that know what they rank.** A casual life is an honest replay, but nothing stops one player from finishing as many as they like, or the same life under many ids, and a casual run is `verified`. Rankings must read `mode = 'ranked'` only (the index `runs_by_score` covers every verified run today), and casual runs need a cap or a rule against copies. `finished_at` is when the server wrote the run, not when the life ended on its device.
+- **A way for the live check past the CAPTCHA.** `pnpm online:live-check` signs two guests in from a terminal, with no browser to answer Turnstile. Once CAPTCHA protection is on in Supabase it cannot make them, and says so.
+- `finished_at` is when the server wrote the run, not when the life ended on its device. For a ranked life the two are the same moment.
 
 ## 9. Versions
 
@@ -123,7 +144,9 @@ The server's copy of the game is one file for each pair of versions (`pnpm onlin
 
 The server's copy holds the rules and nothing of how the game looks: no art, no names, no text. A new drawing or a reworded card changes no bundle. A change to the engine, to the numbers of the content, or to how a badge is judged does, and needs a new version.
 
-To put a new version on the server, from a checkout linked to the project: `pnpm online:deploy` (bundle, deploy the two functions, note the bundle as shipped), then `pnpm online:live-check`.
+To put a new version on the server, from a checkout linked to the project: `pnpm online:deploy` (bundle, deploy the three functions, note the bundle as shipped), then `pnpm online:live-check`.
+
+A ranked life is played by the server under the versions it began with, but shown and previewed by the page under the page's own. So a ranked life in progress does not outlive a change of version: the page that meets one says it was played under older rules, and it is given up.
 
 ## 10. Phases
 
@@ -160,3 +183,13 @@ Settled when phase 2 was built:
 11. A game is given up, never deleted, and a life that was given up can be taken up again by a device still playing it. Only a life the server has finished is closed.
 12. Settings such as less motion belong to the device, not the account.
 13. Every finished life in an account was finished by the server from its log. A device cannot write a run.
+
+Settled when phase 3 was built:
+
+14. The server keeps a ranked life as its seed and its log, and plays the log again at every step, in place of the stored state this document first planned. It is the code that already finishes casual lives, and a few milliseconds.
+15. A player has one ranked life in progress. Starting another, of either kind, gives it up.
+16. Decision 2 stands, with a switch: the chooser offers "Ranked life", on by default, to a player who is signed in and online. The choice is made for each life and not remembered.
+17. Decision 3 is built as a code only. Following is one-way and needs no answer: it decides whose lives a player sees in their friends ranking, and nothing else. A link that follows on opening is not built.
+18. A ranking is the best ranked life of each player, not every life. One function answers all of them.
+19. Decision 8 has its answer: the CAPTCHA is Cloudflare Turnstile, built and off. It is turned on by naming its site key in the build and its secret in Supabase, together.
+20. A friend code can be read by anyone signed in, like the rest of a profile. Whoever has it can follow its player and see nothing they could not see already.
