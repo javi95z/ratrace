@@ -11,6 +11,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { LoggedRound } from '@ratrace/engine';
@@ -54,13 +55,27 @@ const statusOf = (result: { error: unknown }): number => {
 const results: Array<{ ok: boolean; what: string }> = [];
 const check = (ok: boolean, what: string) => results.push({ ok, what });
 
-/** A nurse's whole life, first choice on every card, and the log of it. */
-function wholeLife(seed: string) {
+/**
+ * The game's own way of talking to the account, as far as this check uses it. It is loaded from
+ * the web app below, so that what is checked against the real project is the code that is shipped.
+ */
+interface GameCloud {
+  playingGames(): Promise<Array<{ id: string; round: number; status: string; log: unknown }>>;
+  pushGame(game: { id: string; lifeId: string; engineVersion: string; contentVersion: string; seed: string; round: number; log: unknown; stateHash: string }): Promise<'saved' | 'closed'>;
+  abandonGame(id: string): Promise<void>;
+  loadProgress(): Promise<unknown>;
+  saveProgress(progress: unknown): Promise<void>;
+  listRuns(): Promise<Array<{ id: string; score: number; badges: string[] }>>;
+  finishRun(gameId: string): Promise<'done' | 'refused' | 'failed'>;
+}
+
+/** A nurse's life, first choice on every card, and the log of it: the whole of it, or its first rounds. */
+function wholeLife(seed: string, rounds = Number.POSITIVE_INFINITY) {
   const start = lives.find((life) => life.id === 'nurse')?.start;
   if (!start) throw new Error('no nurse');
   let state = createGame({ content, start }, seed);
   const log: LoggedRound[] = [];
-  while (!state.finished) {
+  while (!state.finished && log.length < rounds) {
     const picks: number[] = [];
     while (state.phase === 'cards') {
       state = applyCard(content, state, 0).state;
@@ -161,6 +176,52 @@ try {
   const readBack = await a.from('player_progress').select('progress').eq('user_id', idA);
   const seenByOther = await b.from('player_progress').select('user_id').eq('user_id', idA);
   check(kept.error === null && readBack.data?.length === 1 && seenByOther.data?.length === 0, 'a player keeps what they have unlocked, and only they can read it');
+
+  // Cloud saves, through the game's own code: one player on two devices, and another player beside them.
+  const adapter = fileURLToPath(new URL('../../../apps/web/src/online/connect.ts', import.meta.url));
+  const { cloudOf } = (await import(adapter)) as { cloudOf(client: unknown): GameCloud };
+  const session = (await a.auth.getSession()).data.session;
+  if (!session) throw new Error('the first guest has no session to take to a second device');
+  const a2 = guest();
+  await a2.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+  const [phone, laptop, stranger] = [cloudOf(a), cloudOf(a2), cloudOf(b)];
+
+  const early3 = wholeLife('live-check-two-devices', 3);
+  const early5 = wholeLife('live-check-two-devices', 5);
+  const shared = crypto.randomUUID();
+  const upload = (played: { state: { round: number }; log: LoggedRound[] }, id = shared, seed = 'live-check-two-devices') => ({
+    id,
+    lifeId: 'nurse',
+    engineVersion: ENGINE_VERSION,
+    contentVersion: CONTENT_VERSION,
+    seed,
+    round: played.state.round,
+    log: played.log,
+    stateHash: stateHash(played.state as never),
+  });
+  check((await phone.pushGame(upload(early3))) === 'saved', 'the game saves a life in progress to the account');
+  const onLaptop = (await laptop.playingGames()).find((game) => game.id === shared);
+  // The database keeps what it is given, not the order of its keys.
+  check(onLaptop?.round === 3 && isDeepStrictEqual(onLaptop.log, early3.log), 'a second device signed in as the same player finds that life, choice for choice');
+  check((await laptop.pushGame(upload(early5))) === 'saved' && (await phone.playingGames()).find((game) => game.id === shared)?.round === 5, 'played further there, the first device finds it further along');
+  await laptop.abandonGame(shared);
+  check(!(await phone.playingGames()).some((game) => game.id === shared), 'given up on one device, it is no longer offered to the other');
+  check((await phone.pushGame(upload(early5))) === 'saved' && (await laptop.playingGames()).some((game) => game.id === shared), 'and the device still playing it takes it up again');
+
+  const unlocked = { badges: { first_100k: { at: 1, gameId: shared } }, gallery: ['watch_casio'], unlocked: {}, guide: { seen: ['news'], off: false } };
+  await phone.saveProgress(unlocked);
+  check(isDeepStrictEqual(await laptop.loadProgress(), unlocked), 'what is unlocked on one device is found on the other');
+
+  const whole = crypto.randomUUID();
+  const pushed = await phone.pushGame(upload(life, whole, 'live-check-parity'));
+  const done = await phone.finishRun(whole);
+  const there = (await laptop.listRuns()).find((one) => one.id === whole);
+  check(pushed === 'saved' && done === 'done' && there?.score === finalScore(content, life.state), 'a life finished on one device is among the finished lives of the other, with the server\'s score');
+  check(JSON.stringify(there?.badges) === JSON.stringify(mine.journal.earned), 'and with the badges of that life');
+  check((await phone.pushGame(upload(life, whole, 'live-check-parity'))) === 'closed', 'the game is told that a life the server has finished is closed');
+  check((await phone.finishRun(crypto.randomUUID())) === 'refused', 'and that the server will not finish a life it was never sent');
+  const theirs = [await stranger.playingGames(), await stranger.listRuns()] as const;
+  check(theirs[0].length === 0 && !theirs[1].some((one) => one.id === whole) && (await stranger.loadProgress()) === null, 'another player finds none of it in their own account');
 } catch (error) {
   check(false, error instanceof Error ? error.message : String(error));
 } finally {
