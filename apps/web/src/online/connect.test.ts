@@ -15,7 +15,7 @@ const client = vi.hoisted(() => {
     make: () => ({
       auth: {
         getSession: async () => answers.getSession,
-        signInAnonymously: async () => answers.signInAnonymously,
+        signInAnonymously: async (...a: unknown[]) => (asked.push(['signInAnonymously', ...a]), answers.signInAnonymously),
         linkIdentity: async (...a: unknown[]) => (asked.push(['linkIdentity', ...a]), answers.linkIdentity),
         signInWithOAuth: async (...a: unknown[]) => (asked.push(['signInWithOAuth', ...a]), answers.signInWithOAuth),
         onAuthStateChange: (listener: (event: string, session: unknown) => void) => {
@@ -95,6 +95,18 @@ describe('the cloud, made from the Supabase client', () => {
     expect(await cloud.signInAsGuest()).toEqual({ id: 'u-1', is_anonymous: true, email: undefined });
     client.answers.signInAnonymously = { data: { user: null }, error: new Error('anonymous sign-ins are disabled') };
     expect(await cloud.signInAsGuest()).toBeNull();
+    // With no guard at the door, nothing is handed over with the request.
+    expect(client.asked).toEqual([['signInAnonymously'], ['signInAnonymously']]);
+  });
+
+  it('asks the guard at the door for its word before it makes a guest, where there is one, and makes none without it', async () => {
+    const words: Array<string | null> = ['a-word', null];
+    const cloud = await connectSupabase('u', 'k', { captcha: async () => words.shift() ?? null });
+    expect(await cloud.signInAsGuest()).toEqual({ id: 'u-1', is_anonymous: true, email: undefined });
+    expect(client.asked).toEqual([['signInAnonymously', { options: { captchaToken: 'a-word' } }]]);
+    // No word: the cloud would refuse, so it is not asked.
+    expect(await cloud.signInAsGuest()).toBeNull();
+    expect(client.asked).toHaveLength(1);
   });
 
   it('links Google to the player signed in, and signs in as an existing player, each back to the address given', async () => {
@@ -270,7 +282,7 @@ describe('what the cloud keeps of a player', () => {
 
 describe('ranked lives, as the cloud is asked for them', () => {
   it('asks the ranked function, in the region of the database when one is named, and hands back what it answered', async () => {
-    const cloud = await connectSupabase('u', 'k', 'ap-northeast-1');
+    const cloud = await connectSupabase('u', 'k', { region: 'ap-northeast-1' });
     const standing = { gameId: 'g-1', lifeId: 'nurse', step: 0, view: { round: 0, timeline: [{}], phase: 'cards' }, record: { history: [1], bankruptcies: 0, journal: {} } };
     client.answers.invoke = { data: standing, error: null };
     expect(await cloud.ranked.start('nurse', { engine: '0.10.0', content: '1.9.0' })).toMatchObject({ gameId: 'g-1', step: 0 });

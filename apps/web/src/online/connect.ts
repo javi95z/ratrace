@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { Captcha } from './captcha';
 import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
@@ -72,11 +73,19 @@ async function wordOf(error: unknown): Promise<string | null> {
   }
 }
 
+/** What a build may say about its cloud beyond where it is. */
+export interface CloudOptions {
+  /** The region the database is in. Named, the functions that use it most are asked for there. */
+  region?: string;
+  /** The guard at the door of guest sign-in, where the project has one. */
+  captcha?: Captcha;
+}
+
 /**
  * The cloud, made from a Supabase client. Every table it touches is guarded in the database: a
  * player reads and writes their own rows and nothing else, whatever this code asks for.
  */
-export function cloudOf(client: SupabaseClient, region?: string): Cloud {
+export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOptions = {}): Cloud {
   /** Who is signed in, for the two things that must name their owner. */
   const me = async (): Promise<string> => {
     const { data } = await client.auth.getSession();
@@ -93,7 +102,10 @@ export function cloudOf(client: SupabaseClient, region?: string): Cloud {
       return userOf(data.session?.user);
     },
     async signInAsGuest() {
-      const { data, error } = await client.auth.signInAnonymously();
+      // Where there is a guard at the door, the cloud makes no guest without its word: with none, it is not asked.
+      const word = captcha ? await captcha() : undefined;
+      if (word === null) return null;
+      const { data, error } = await (word === undefined ? client.auth.signInAnonymously() : client.auth.signInAnonymously({ options: { captchaToken: word } }));
       return error ? null : userOf(data.user);
     },
     async linkGoogle(redirectTo) {
@@ -266,9 +278,9 @@ export function cloudOf(client: SupabaseClient, region?: string): Cloud {
  * starts, so a game with no project configured never downloads it.
  * `key` is the publishable key: it is public by design. The secret key has no business in a browser.
  */
-export async function connectSupabase(url: string, key: string, region?: string): Promise<Cloud> {
+export async function connectSupabase(url: string, key: string, options: CloudOptions = {}): Promise<Cloud> {
   const { createClient } = await import('@supabase/supabase-js');
   // A request that never gets an answer would hold up everything after it: the mirror sends one thing at a time.
   const patient: typeof fetch = (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(PATIENCE) });
-  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }), region);
+  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }), options);
 }

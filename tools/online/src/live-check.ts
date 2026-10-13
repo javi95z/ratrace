@@ -111,7 +111,7 @@ try {
   const inB = await b.auth.signInAnonymously();
   if (inB.data.user) made.push(inB.data.user.id);
   check(!inA.error && !inB.error && inA.data.user?.is_anonymous === true, 'two guests can sign in with no form');
-  if (inA.error || inB.error || !inA.data.user || !inB.data.user) throw new Error(`guests cannot sign in: ${(inA.error ?? inB.error)?.message}. Is "Anonymous sign-ins" on in the dashboard?`);
+  if (inA.error || inB.error || !inA.data.user || !inB.data.user) throw new Error(`guests cannot sign in: ${(inA.error ?? inB.error)?.message}. Is "Anonymous sign-ins" on in the dashboard? With CAPTCHA protection on, this check cannot make its guests: it has no browser to answer with.`);
   const idA = inA.data.user.id;
   const idB = inB.data.user.id;
 

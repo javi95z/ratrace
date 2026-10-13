@@ -2,6 +2,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { RankedApi } from '@/session/ranked';
 import type { PlayerStore } from '@/session/types';
+import { turnstile } from './captcha';
 import { connectSupabase } from './connect';
 import { follow } from './follow';
 import type { Page } from './follow';
@@ -104,8 +105,10 @@ export function browserOnline(device: PlayerStore): Online {
   if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null, community: () => null };
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.NEXT_PUBLIC_SUPABASE_REGION || undefined;
+  // The site key of the guard at the door of guest sign-in. Named, a guest is made only with its word; left out, there is no guard.
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || undefined;
   return onlineOver(device, {
-    connect: () => connectSupabase(url, key, region),
+    connect: () => connectSupabase(url, key, { region, captcha: siteKey ? turnstile(siteKey) : undefined }),
     address: () => window.location.href,
     clean: (address) => window.history.replaceState(window.history.state, '', address),
     page: browserPage,

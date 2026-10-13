@@ -5,6 +5,8 @@ import { browserOnline, browserPage, givenUpIn } from './index';
 import { offlineAccount } from './offline';
 
 const connected = vi.hoisted(() => [] as unknown[][]);
+// The guard at the door, as this test knows it: by the site it was made for.
+vi.mock('./captcha', () => ({ turnstile: (siteKey: string) => `the guard of ${siteKey}` }));
 vi.mock('./connect', () => ({
   connectSupabase: async (...values: unknown[]) => {
     connected.push(values);
@@ -47,7 +49,7 @@ describe('the cloud of this browser', () => {
     expect((await device.loadProfile()).gallery).toEqual(['watch_casio']);
 
     await online.account.start('en');
-    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', undefined]]);
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', { region: undefined, captcha: undefined }]]);
     // Nobody is signed in: there is no server of ranked lives to ask.
     expect(online.ranked()).toBeNull();
     // It could not connect: the game is offline, and plays.
@@ -59,9 +61,22 @@ describe('the cloud of this browser', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_REGION', 'ap-northeast-1');
     await browserOnline(new MemoryStore()).account.start('en');
-    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', 'ap-northeast-1']]);
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', { region: 'ap-northeast-1', captcha: undefined }]]);
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '');
     expect(browserOnline(new MemoryStore()).ranked()).toBeNull();
+  });
+
+  it('puts a guard at the door of guest sign-in only in a build that names its site key', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '0x4AAAAAAA');
+    await browserOnline(new MemoryStore()).account.start('en');
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', { region: undefined, captcha: 'the guard of 0x4AAAAAAA' }]]);
+    // An empty value is no key.
+    connected.length = 0;
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');
+    await browserOnline(new MemoryStore()).account.start('en');
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', { region: undefined, captcha: undefined }]]);
   });
 
   it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', () => {
