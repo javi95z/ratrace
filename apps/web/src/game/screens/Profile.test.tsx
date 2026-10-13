@@ -64,4 +64,31 @@ describe('what the player owns, in the profile', () => {
     await user.click(screen.getByRole('button', { name: 'Casio F-91W' }));
     expect(screen.getByRole('dialog', { name: 'Casio F-91W' })).toBeTruthy();
   });
+
+  it('says in words what the picture of the family shows: alone, seeing someone, together, married', async () => {
+    setWidth('desk');
+    for (const [flags, partner, words] of [
+      [[], false, 'Single'],
+      [['dating'], false, 'Seeing someone'],
+      [['cohabiting'], true, 'Partner'],
+      [['married'], true, 'Married'],
+    ] as const) {
+      const services = memoryServices();
+      const real = await services.sessions.start('nurse');
+      const seen = () => {
+        const view = structuredClone(real.view());
+        view.player.life.partner = partner;
+        for (const flag of flags) view.player.life.flags[flag] = 0;
+        return view;
+      };
+      services.sessions.resume = async () => ({
+        lost: null,
+        session: { gameId: real.gameId, lifeId: real.lifeId, view: seen, history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => real.answerCard(option), playRound: (choices) => real.playRound(choices) },
+      });
+      renderGame(<Play />, services);
+      await screen.findAllByRole('heading', { name: 'News' });
+      expect(screen.getByText(words), words).toBeTruthy();
+      cleanup();
+    }
+  });
 });

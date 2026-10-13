@@ -61,7 +61,8 @@ export function ProfileBody() {
               {familyArt({ partner: life.partner, married: Object.hasOwn(life.flags, 'married'), dating: Object.hasOwn(life.flags, 'dating'), children: life.children, childRounds: content.life.childRounds }).map((sprite) => (
                 <Sprite key={sprite} id={sprite} />
               ))}
-              {life.partner ? t('partner') : t('single')}
+              {/* The words follow the picture: seeing someone is not yet living with them, and neither is being married. */}
+              {t(life.partner ? (Object.hasOwn(life.flags, 'married') ? 'married' : 'partner') : Object.hasOwn(life.flags, 'dating') ? 'dating' : 'single')}
             </span>
           }
           right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />

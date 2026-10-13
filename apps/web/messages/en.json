@@ -470,7 +470,9 @@
     "leaveHint": "Your life is saved after every step.",
     "itemWorth": "Would sell for {amount} today",
     "itemWhere": "Sell or cancel it in the Shop tab.",
-    "itemKept": "It cannot be sold."
+    "itemKept": "It cannot be sold.",
+    "dating": "Seeing someone",
+    "married": "Married"
   },
   "end": {
     "title": "The end",
