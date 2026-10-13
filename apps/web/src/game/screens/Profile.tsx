@@ -1,6 +1,6 @@
 'use client';
 
-import { itemArt } from '@ratrace/content';
+import { familyArt, itemArt } from '@ratrace/content';
 import { cashflow, focusLeft, homeOf, netWorth, quoteItem } from '@ratrace/engine';
 import type { GameView, InsuranceKind, OwnedItem } from '@ratrace/engine';
 import { useState } from 'react';
@@ -55,7 +55,16 @@ export function ProfileBody() {
       </Panel>
 
       <Panel title={t('family')}>
-        <Row left={life.partner ? t('partner') : t('single')} right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
+        <Row
+          left={
+            <span className="flex items-center gap-2">
+              {familyArt({ partner: life.partner, married: Object.hasOwn(life.flags, 'married'), dating: Object.hasOwn(life.flags, 'dating'), children: life.children, childRounds: content.life.childRounds }).map((sprite) => (
+                <Sprite key={sprite} id={sprite} />
+              ))}
+              {life.partner ? t('partner') : t('single')}
+            </span>
+          }
+          right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
         <Row left={t('lifestyle')} right={text.lifestyleTiers[p.lifestyleTier]} />
         <Row left={t('home')} sub={names.cities[p.cityId]} right={home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]} />
         <Row left={t('insurance')} right={insured.length > 0 ? <span className="font-sans text-[13px]">{insured.join(', ')}</span> : t('uninsured')} />

@@ -122,14 +122,30 @@ export const cardArt: Record<string, string> = {
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-/** City seats whose own picture is not drawn yet wear Madrid's. A seat leaves this list when sheet items-03 lands. */
-const ITEM_STAND_IN: readonly string[] = ['member_seat_london', 'member_seat_new_york', 'member_beach_dubai', 'member_paddock_singapore', 'member_ringside_bangkok'];
-export const itemArt = (itemId: string): string =>
-  itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${ITEM_STAND_IN.includes(itemId) ? 'member_season_seat' : itemId}`;
-
+export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
 export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
-export const cityArt = (cityId: string): string => `skyline.${cityId}`;
+/** The skyline of a city: by night, or in the first light a round opens in. */
+export const cityArt = (cityId: string, light: 'night' | 'day' = 'night'): string => (light === 'day' ? `skyline.${cityId}.day` : `skyline.${cityId}`);
+/** The landmark that stands for a city where there is only room for an icon. */
+export const cityIcon = (cityId: string): string => `icon.city_${cityId}`;
+
+/** Every picture of who shares a life. */
+export const FAMILY_ART = ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family_four'] as const;
+
+/**
+ * Who shares the life, in pictures: the couple first, then the youngest child. A couple with two
+ * children or more is one picture. `children` holds the rounds each child still depends on the
+ * player, out of `childRounds`.
+ */
+export function familyArt(home: { partner: boolean; married: boolean; dating: boolean; children: readonly number[]; childRounds: number }): string[] {
+  if (home.partner && home.children.length >= 2) return ['icon.family_four'];
+  const couple = home.partner ? (home.married ? 'icon.married' : 'icon.partner') : home.dating ? 'icon.dating' : 'icon.single';
+  if (home.children.length === 0) return [couple];
+  // The youngest has the most rounds left. A third of childhood each: baby, child, teenager.
+  const grown = home.childRounds - Math.max(...home.children);
+  return [couple, grown * 3 < home.childRounds ? 'icon.baby' : grown * 3 < home.childRounds * 2 ? 'icon.child' : 'icon.teen'];
+}
 
 /** The four ways of living, the cheapest first. */
 export const lifestyleArt: readonly string[] = ['icon.life_frugal', 'icon.life_normal', 'icon.life_comfortable', 'icon.life_lavish'];

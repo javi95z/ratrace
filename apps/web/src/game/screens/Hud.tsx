@@ -98,6 +98,7 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const preview = useGame((s) => s.preview);
   const shown = useShown();
+  const stage = useGame((s) => s.stage);
   const [open, setOpen] = useState<Figure | null>(null);
   const [settings, setSettings] = useState(false);
   const p = shown.player;
@@ -120,7 +121,8 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
     <header className="flex flex-col gap-2 px-3 pt-3">
       {skyline ? (
         <div className="frame-double mx-auto mb-1.5 mt-1 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
-          <Sprite id={cityArt(p.cityId)} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
+          {/* A round opens in the first light and closes at night. */}
+          <Sprite id={cityArt(p.cityId, stage === 'news' ? 'day' : 'night')} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
         </div>
       ) : null}
 

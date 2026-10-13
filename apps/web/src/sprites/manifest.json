@@ -554,6 +554,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.baby": {
+    "src": "icons/icon.baby.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.bond": {
     "src": "icons/icon.bond.png",
     "w": 32,
@@ -584,13 +589,53 @@
     "w": 32,
     "h": 32
   },
+  "icon.child": {
+    "src": "icons/icon.child.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.city": {
     "src": "icons/icon.city.png",
     "w": 32,
     "h": 32
   },
+  "icon.city_bangkok": {
+    "src": "icons/icon.city_bangkok.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_dubai": {
+    "src": "icons/icon.city_dubai.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_london": {
+    "src": "icons/icon.city_london.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_madrid": {
+    "src": "icons/icon.city_madrid.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_new_york": {
+    "src": "icons/icon.city_new_york.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_singapore": {
+    "src": "icons/icon.city_singapore.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.crypto": {
     "src": "icons/icon.crypto.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.dating": {
+    "src": "icons/icon.dating.png",
     "w": 32,
     "h": 32
   },
@@ -611,6 +656,11 @@
   },
   "icon.family": {
     "src": "icons/icon.family.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.family_four": {
+    "src": "icons/icon.family_four.png",
     "w": 32,
     "h": 32
   },
@@ -709,6 +759,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.married": {
+    "src": "icons/icon.married.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.mood": {
     "src": "icons/icon.mood.png",
     "w": 32,
@@ -726,6 +781,11 @@
   },
   "icon.news": {
     "src": "icons/icon.news.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.partner": {
+    "src": "icons/icon.partner.png",
     "w": 32,
     "h": 32
   },
@@ -759,6 +819,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.single": {
+    "src": "icons/icon.single.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.skill": {
     "src": "icons/icon.skill.png",
     "w": 32,
@@ -781,6 +846,11 @@
   },
   "icon.tax": {
     "src": "icons/icon.tax.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.teen": {
+    "src": "icons/icon.teen.png",
     "w": 32,
     "h": 32
   },
@@ -844,6 +914,11 @@
     "w": 64,
     "h": 64
   },
+  "item.member_beach_dubai": {
+    "src": "items/item.member_beach_dubai.png",
+    "w": 64,
+    "h": 64
+  },
   "item.member_club": {
     "src": "items/item.member_club.png",
     "w": 64,
@@ -859,13 +934,38 @@
     "w": 64,
     "h": 64
   },
+  "item.member_opera": {
+    "src": "items/item.member_opera.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_paddock_singapore": {
+    "src": "items/item.member_paddock_singapore.png",
+    "w": 64,
+    "h": 64
+  },
   "item.member_platinum_card": {
     "src": "items/item.member_platinum_card.png",
     "w": 64,
     "h": 64
   },
+  "item.member_ringside_bangkok": {
+    "src": "items/item.member_ringside_bangkok.png",
+    "w": 64,
+    "h": 64
+  },
   "item.member_season_seat": {
     "src": "items/item.member_season_seat.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_seat_london": {
+    "src": "items/item.member_seat_london.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_seat_new_york": {
+    "src": "items/item.member_seat_new_york.png",
     "w": 64,
     "h": 64
   },
@@ -1194,8 +1294,18 @@
     "w": 312,
     "h": 66
   },
+  "skyline.bangkok.day": {
+    "src": "skylines/skyline.bangkok.day.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.dubai": {
     "src": "skylines/skyline.dubai.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.dubai.day": {
+    "src": "skylines/skyline.dubai.day.png",
     "w": 312,
     "h": 66
   },
@@ -1204,8 +1314,18 @@
     "w": 312,
     "h": 66
   },
+  "skyline.london.day": {
+    "src": "skylines/skyline.london.day.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.madrid": {
     "src": "skylines/skyline.madrid.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.madrid.day": {
+    "src": "skylines/skyline.madrid.day.png",
     "w": 312,
     "h": 66
   },
@@ -1214,8 +1334,18 @@
     "w": 312,
     "h": 66
   },
+  "skyline.new_york.day": {
+    "src": "skylines/skyline.new_york.day.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.singapore": {
     "src": "skylines/skyline.singapore.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.singapore.day": {
+    "src": "skylines/skyline.singapore.day.png",
     "w": 312,
     "h": 66
   }

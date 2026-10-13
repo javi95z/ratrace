@@ -107,7 +107,7 @@ export const SHEETS: SheetSpec[] = [
   {
     // Who shares the life: not shown anywhere yet.
     file: 'icons/icons-04', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 32, height: 32,
-    ids: ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family'],
+    ids: ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family_four'],
   },
   {
     // A landmark for each city, to stand where the globe of `icon.city` stands today.

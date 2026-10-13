@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, itemArt, propertyArt, focusArt, insuranceArt, lifestyleArt, rentTierIcon } from '@ratrace/content';
+import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
@@ -474,8 +474,11 @@ function MoveSheet({ onClose }: { onClose(): void }) {
           const { cost, lapses } = quoteMove(content, shown, city.id);
           return (
             <Panel key={city.id}>
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="pixel text-[17px]">{names.cities[city.id]}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="pixel flex min-w-0 items-center gap-2 text-[17px]">
+                  <Sprite id={cityIcon(city.id)} />
+                  {names.cities[city.id]}
+                </h3>
                 {here ? <Tag tone="good">{t('here')}</Tag> : null}
               </div>
               <p className="mb-2 text-[13px] text-ink-300">{text.cities[city.id].tagline}</p>
@@ -589,7 +592,7 @@ function Lifestyle() {
       <Panel title={t('city')}>
         <div className="mb-2 flex items-center gap-3">
           <Bare className="size-9">
-            <Sprite id="icon.city" />
+            <Sprite id={cityIcon(p.cityId)} />
           </Bare>
           <div className="min-w-0">
             <div className="pixel text-[18px]">{names.cities[p.cityId]}</div>

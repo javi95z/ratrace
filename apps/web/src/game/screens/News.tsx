@@ -92,7 +92,7 @@ export function RoundOpener() {
   return (
     <div className="flex flex-col gap-3">
       <div className="frame-double mx-auto my-1.5 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
-        <Sprite id={cityArt(view.player.cityId)} scale="art" alt={names.cities[view.player.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
+        <Sprite id={cityArt(view.player.cityId, 'day')} scale="art" alt={names.cities[view.player.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
       </div>
       <Panel className="text-center">
         <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{common('round', { n: view.round + 1, total: content.rounds })}</p>
