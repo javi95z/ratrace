@@ -1349,6 +1349,9 @@ function scoreBreakdown(content2, state) {
 function finalScore(content2, state) {
   return scoreBreakdown(content2, state).total;
 }
+function escapeProgress(content2, state) {
+  return flowsOf(content2, state.player, state.timeline[state.round], newTally()).escape;
+}
 
 // packages/engine/src/life/conditions.ts
 function conditionHolds(when, p, at) {
@@ -2480,6 +2483,19 @@ function replayLog(content2, start, seed, log, onStep) {
     take(applyRound(content2, state, { orders: entry.orders }), entry.orders);
   });
   return state;
+}
+
+// packages/engine/src/view.ts
+function viewOf(state) {
+  return structuredClone({
+    round: state.round,
+    timeline: state.timeline.slice(0, state.round + 1),
+    player: state.player,
+    finished: state.finished,
+    phase: state.phase,
+    hand: state.hand,
+    answered: state.answered
+  });
 }
 
 // packages/content/src/assets.ts
@@ -3736,6 +3752,267 @@ var lives = [
     }
   }
 ];
+
+// packages/content/src/art.ts
+var scene = (name) => `card.${name}`;
+var cardArt = {
+  career_raise: scene("boss_door"),
+  career_competitor_offer: scene("handshake"),
+  career_relocation: scene("airport"),
+  career_overtime_crunch: scene("office_desk"),
+  career_layoff: scene("packed_box"),
+  career_toxic_boss: scene("angry_boss"),
+  career_switch: scene("two_ladders"),
+  career_big_offer: scene("tower_lobby"),
+  career_shares_vs_salary: scene("shares_or_salary"),
+  career_remote_work: scene("sunrise_balcony"),
+  career_become_manager: scene("meeting_room"),
+  career_headhunter: scene("headhunter_call"),
+  edu_masters: scene("graduation"),
+  edu_finance_course: scene("online_course"),
+  edu_finance_book: scene("library"),
+  edu_mba: scene("lecture_hall"),
+  edu_bootcamp: scene("bootcamp"),
+  edu_language: scene("language_class"),
+  biz_freelance_gig: scene("kitchen_laptop"),
+  biz_self_employed: scene("shopfront"),
+  biz_bar: scene("bar"),
+  biz_online_shop: scene("parcels"),
+  biz_airbnb: scene("spare_room"),
+  biz_app: scene("app_launch"),
+  biz_cofounder: scene("pitch_napkin"),
+  biz_acquisition: scene("contract_signing"),
+  inv_hot_tip: scene("phone_chart"),
+  inv_share_plan: scene("share_certificate"),
+  inv_memecoin: scene("meme_coin"),
+  inv_friend_startup: scene("garage_startup"),
+  inv_ipo_hype: scene("trading_desk"),
+  inv_ponzi: scene("shady_deal"),
+  inv_exchange_freeze: scene("frozen_vault"),
+  inv_offplan_dubai: scene("offplan_model"),
+  inv_guru_course: scene("trading_guru"),
+  inv_crowdfunding: scene("crowd_building"),
+  house_rent_hike: scene("rent_letter"),
+  house_first_flat: scene("door_keys"),
+  house_landlord_sells: scene("sold_board"),
+  house_refinance: scene("mortgage_scales"),
+  house_tenant_default: scene("unpaid_rent"),
+  house_renovation: scene("scaffolding"),
+  house_flood: scene("flooded_room"),
+  house_move_in: scene("moving_boxes"),
+  life_sports_car: scene("sports_car"),
+  life_ibiza: scene("beach_club"),
+  life_new_phone: scene("phone_launch"),
+  life_wedding_abroad: scene("beach_wedding"),
+  life_rolex_call: scene("watch_boutique"),
+  life_upgrade: scene("business_cabin"),
+  life_designer_sale: scene("private_sale"),
+  life_car_finance: scene("car_dealer"),
+  life_bottle_service: scene("nightclub"),
+  life_black_friday: scene("sale_crowd"),
+  fam_dating: scene("dinner_for_two"),
+  fam_wedding: scene("wedding"),
+  fam_first_child: scene("nursery"),
+  fam_prenup: scene("prenup"),
+  fam_sibling_loan: scene("sibling_doorstep"),
+  fam_cosign: scene("bank_cosign"),
+  fam_support_parents: scene("family_dinner"),
+  fam_inheritance: scene("will_reading"),
+  fam_divorce: scene("torn_photo"),
+  fam_school: scene("school_gate"),
+  health_illness: scene("hospital"),
+  health_burnout: scene("burnout"),
+  health_dental: scene("dentist_chair"),
+  health_injury: scene("pitch_injury"),
+  health_gym_habit: scene("gym"),
+  luck_lottery: scene("lottery"),
+  luck_car_breakdown: scene("breakdown"),
+  luck_tax_refund: scene("tax_refund"),
+  luck_stolen_phone: scene("pickpocket"),
+  luck_bonus: scene("bonus_confetti"),
+  luck_phishing: scene("phishing"),
+  luck_speeding_fine: scene("speed_camera"),
+  luck_betting_app: scene("casino"),
+  world_recession: scene("crash_screens"),
+  world_rate_hike: scene("central_bank"),
+  world_rate_cut: scene("rate_scissors"),
+  world_inflation: scene("price_tags"),
+  world_crypto_bull: scene("crypto_rocket"),
+  world_crypto_winter: scene("crypto_winter"),
+  world_housing_crash: scene("for_sale_signs"),
+  world_tech_bubble: scene("tech_bubble"),
+  world_ai_boom: scene("server_room"),
+  world_pandemic: scene("empty_street"),
+  world_tax_reform: scene("newsroom"),
+  world_bank_failure: scene("bank_queue"),
+  tax_advisor: scene("advisor_office"),
+  tax_pension_topup: scene("piggy_bank"),
+  tax_optimise: scene("receipts"),
+  tax_audit: scene("inspector"),
+  tax_undeclared: scene("cash_envelope"),
+  tax_residency: scene("city_arrival"),
+  late_porsche: scene("coupe_garage"),
+  late_university: scene("campus_dropoff"),
+  late_early_retirement: scene("sunset_bench"),
+  late_downsizing: scene("small_house"),
+  late_will: scene("will_desk")
+};
+var FUNDS = /* @__PURE__ */ new Set(["sp500", "msci_world"]);
+function assetKind(asset) {
+  if (asset.class === "equity") return FUNDS.has(asset.id) ? "fund" : "stock";
+  return asset.class;
+}
+
+// packages/content/src/badges.ts
+var START_AGE = 22;
+var badges = [
+  { id: "first_100k", group: "wealth" },
+  { id: "millionaire", group: "wealth" },
+  { id: "millionaire_by_35", group: "wealth" },
+  { id: "ten_million", group: "wealth" },
+  { id: "debt_free_at_40", group: "wealth" },
+  { id: "no_credit_card", group: "wealth" },
+  { id: "escaped", group: "escape" },
+  { id: "escaped_before_40", group: "escape" },
+  { id: "escaped_before_35", group: "escape" },
+  { id: "passive_double", group: "escape" },
+  { id: "first_share", group: "investing" },
+  { id: "five_asset_classes", group: "investing" },
+  { id: "bought_the_dip", group: "investing" },
+  { id: "crypto_winter", group: "investing" },
+  { id: "three_rentals", group: "investing" },
+  { id: "bond_ladder", group: "investing" },
+  { id: "index_only", group: "investing" },
+  { id: "first_luxury_watch", group: "status" },
+  { id: "supercar", group: "status" },
+  { id: "penthouse", group: "status" },
+  { id: "status_100", group: "status" },
+  { id: "twenty_items", group: "status" },
+  { id: "every_car", group: "status" },
+  { id: "three_cities", group: "life" },
+  { id: "moved_to_dubai", group: "life" },
+  { id: "family_of_four", group: "life" },
+  { id: "mba", group: "life" },
+  { id: "sold_business", group: "life" },
+  { id: "rode_out_recession", group: "life" },
+  { id: "bankrupt", group: "misfortune" }
+];
+function holdings(content2, p) {
+  return content2.assets.filter((asset) => Object.hasOwn(p.positions, asset.id) && p.positions[asset.id].value > 0).map((asset) => ({ id: asset.id, kind: assetKind(asset), position: p.positions[asset.id] }));
+}
+function kindsHeld(content2, p) {
+  const kinds = new Set(holdings(content2, p).map((held) => held.kind));
+  if (p.properties.length > 0) kinds.add("property");
+  return [...kinds];
+}
+function journalStart(_content, view) {
+  return { cities: [view.player.cityId], cardUsed: false, kinds: [], earned: [] };
+}
+function journalAfter(content2, journal, after, events) {
+  const city = after.player.cityId;
+  const kinds = /* @__PURE__ */ new Set([...journal.kinds, ...kindsHeld(content2, after.player)]);
+  return {
+    cities: journal.cities.includes(city) ? journal.cities : [...journal.cities, city],
+    cardUsed: journal.cardUsed || events.some((e) => e.kind === "ledger" && e.line === "creditCardDraw" && e.amount !== 0),
+    kinds: [...kinds],
+    earned: journal.earned
+  };
+}
+var LUXURY_WATCHES = ["watch_omega", "watch_rolex", "watch_ap", "watch_patek"];
+function factsOf(step) {
+  const { content: content2, before, after, events } = step;
+  const years = content2.yearsPerRound;
+  const escape = events.find((e) => e.kind === "escaped");
+  return {
+    ...step,
+    p: after.player,
+    was: before.player,
+    round: after.round === before.round + 1,
+    world: before.timeline[before.round],
+    age: START_AGE + after.round * years,
+    worth: realNetWorth(after),
+    held: holdings(content2, after.player),
+    heldBefore: holdings(content2, before.player),
+    escapedAtAge: escape ? START_AGE + escape.round * years : null
+  };
+}
+var basisOf = (p, assetId) => Object.hasOwn(p.positions, assetId) ? p.positions[assetId].basis : 0;
+var owns = (p, itemId) => p.life.items.some((item) => item.itemId === itemId);
+var keptAll = (f, kept) => kept.every(
+  (held) => !f.orders.some((order) => order.type === "sell" && order.assetId === held.id) && Object.hasOwn(f.p.positions, held.id) && f.p.positions[held.id].basis >= held.position.basis
+);
+var wentBankrupt = (f) => f.journal.earned.includes("bankrupt") || f.events.some((e) => e.kind === "bankrupt");
+var RULES = {
+  first_100k: (f) => f.worth >= usd(1e5),
+  millionaire: (f) => f.worth >= usd(1e6),
+  millionaire_by_35: (f) => f.worth >= usd(1e6) && f.age <= 35,
+  ten_million: (f) => f.worth >= usd(1e7),
+  // Debts a bankruptcy wiped out are not debts paid.
+  debt_free_at_40: (f) => f.round && f.age === 40 && f.p.debts.every((debt2) => debt2.principal === 0) && !wentBankrupt(f),
+  no_credit_card: (f) => f.after.finished && !f.journal.cardUsed,
+  escaped: (f) => f.escapedAtAge !== null,
+  escaped_before_40: (f) => f.escapedAtAge !== null && f.escapedAtAge < 40,
+  escaped_before_35: (f) => f.escapedAtAge !== null && f.escapedAtAge < 35,
+  passive_double: (f) => {
+    const escape = escapeProgress(f.content, f.after);
+    return escape.outgoings > 0 && escape.passiveAfterTax >= 2 * escape.outgoings;
+  },
+  first_share: (f) => f.held.some((held) => held.kind === "stock"),
+  five_asset_classes: (f) => kindsHeld(f.content, f.p).length >= 5,
+  bought_the_dip: (f) => f.world.regime === "recession" && f.content.assets.some((asset) => ["fund", "stock"].includes(assetKind(asset)) && basisOf(f.p, asset.id) > basisOf(f.was, asset.id)),
+  crypto_winter: (f) => {
+    const coins = f.heldBefore.filter((held) => held.kind === "crypto");
+    return f.round && f.world.cryptoPhase === "winter" && coins.length > 0 && keptAll(f, coins);
+  },
+  // A parking space is a let, but three of them cost less than one studio: the badge is for a landlord.
+  three_rentals: (f) => f.p.properties.filter((property) => property.rented && property.typeId !== "parking").length >= 3,
+  bond_ladder: (f) => {
+    const bonds = f.content.assets.filter((asset) => assetKind(asset) === "bond");
+    return bonds.length > 0 && bonds.every((bond) => f.held.some((held) => held.id === bond.id));
+  },
+  index_only: (f) => f.escapedAtAge !== null && f.held.length > 0 && f.held.every((held) => held.kind === "fund") && f.p.properties.length === 0 && f.journal.kinds.every((kind) => kind === "fund"),
+  first_luxury_watch: (f) => LUXURY_WATCHES.some((watch) => owns(f.p, watch)),
+  supercar: (f) => owns(f.p, "car_lamborghini_aventador"),
+  penthouse: (f) => f.p.properties.some((property) => property.typeId === "penthouse"),
+  status_100: (f) => f.p.statusPoints >= 100,
+  three_cities: (f) => f.journal.cities.length >= 3,
+  moved_to_dubai: (f) => f.events.some((e) => e.kind === "moved" && e.cityId === "dubai"),
+  family_of_four: (f) => f.p.life.partner && f.p.life.children.length >= 2,
+  mba: (f) => owns(f.p, "edu_mba"),
+  sold_business: (f) => Object.hasOwn(f.p.life.flags, "sold_business"),
+  rode_out_recession: (f) => f.round && f.world.regime === "recession" && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),
+  bankrupt: (f) => f.events.some((e) => e.kind === "bankrupt")
+};
+function badgesEarned(step) {
+  const facts = factsOf(step);
+  return badges.filter((badge) => Object.hasOwn(RULES, badge.id) && !step.journal.earned.includes(badge.id) && RULES[badge.id](facts)).map((badge) => badge.id);
+}
+
+// packages/content/src/record.ts
+function recordStart(content2, state) {
+  return { history: [realNetWorth(state)], bankruptcies: 0, journal: journalStart(content2, viewOf(state)) };
+}
+function recordStep(content2, record, before, after, events, orders) {
+  const seen = journalAfter(content2, record.journal, viewOf(after), events);
+  const earned = badgesEarned({ content: content2, before: viewOf(before), after: viewOf(after), events, orders, journal: seen });
+  let bankruptcies = record.bankruptcies;
+  for (const event of events) if (event.kind === "bankrupt") bankruptcies += 1;
+  return {
+    earned,
+    record: {
+      history: after.round > before.round ? [...record.history, realNetWorth(after)] : record.history,
+      bankruptcies,
+      journal: { ...seen, earned: [...seen.earned, ...earned] }
+    }
+  };
+}
+function replayLife(content2, start, seed, log) {
+  let record = null;
+  const state = replayLog(content2, start, seed, log, (before, result, orders) => {
+    record = recordStep(content2, record ?? recordStart(content2, before), before, result.state, result.events, orders ?? []).record;
+  });
+  return { state, ...record ?? recordStart(content2, state) };
+}
 export {
   CONTENT_VERSION,
   ENGINE_VERSION,
@@ -3744,6 +4021,7 @@ export {
   livedStatus,
   lives,
   realNetWorth,
+  replayLife,
   replayLog,
   stateHash
 };

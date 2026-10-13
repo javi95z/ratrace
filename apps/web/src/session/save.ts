@@ -1,8 +1,7 @@
-import type { LifeDef } from '@ratrace/content';
-import { CONTENT_VERSION } from '@ratrace/content';
-import { createGame, ENGINE_VERSION, findInvariantBreaks, replayLog } from '@ratrace/engine';
-import type { Content, GameState, StartConfig } from '@ratrace/engine';
-import { recordStart, recordStep } from './record';
+import type { LifeDef, Replayed } from '@ratrace/content';
+import { CONTENT_VERSION, replayLife } from '@ratrace/content';
+import { ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
+import type { Content, GameState } from '@ratrace/engine';
 import type { LifeRecord } from './record';
 import { SAVE_FORMAT } from './types';
 import type { Lost, RoundLog, SavedGame } from './types';
@@ -10,23 +9,12 @@ import type { Lost, RoundLog, SavedGame } from './types';
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
 
-/** A game played again from its seed: where it stands, and the record of how it got there. */
-export interface Replayed extends LifeRecord {
-  state: GameState;
-}
-
 /**
- * Plays a game again from its seed and the log of what the player did.
- * The engine is deterministic, so this gives back exactly the game that was played.
+ * Plays a game again from its seed and the log of what the player did, with the record of the life.
+ * It is the content's own `replayLife`: the device, another device and the server all rebuild a life the same way.
  */
-export function replay(content: Content, start: StartConfig, seed: string, log: RoundLog[]): Replayed {
-  // The loop is the engine's, the same one a server runs. The record of the life is kept alongside it.
-  let record: LifeRecord | null = null;
-  const state = replayLog(content, start, seed, log, (before, result, orders) => {
-    record = recordStep(content, record ?? recordStart(content, before), before, result.state, result.events, orders ?? []).record;
-  });
-  return { state, ...(record ?? recordStart(content, createGame({ content, start }, seed))) };
-}
+export const replay = replayLife;
+export type { Replayed };
 
 function readLog(raw: unknown): RoundLog[] | null {
   if (!Array.isArray(raw)) return null;

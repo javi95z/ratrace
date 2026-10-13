@@ -3,4 +3,4 @@
  * version. `pnpm online:bundle` turns this into a single file an Edge Function can import.
  */
 export { ENGINE_VERSION, finalScore, livedStatus, realNetWorth, replayLog, stateHash } from '@ratrace/engine';
-export { content, CONTENT_VERSION, lives } from '@ratrace/content';
+export { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';

@@ -8,6 +8,8 @@ export type { CardText, ContentText } from './text';
 export { assetClassArt, assetKind, badgeArt, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
 export { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE } from './badges';
 export type { BadgeDef, BadgeGroup, Journal, Step } from './badges';
+export { recordStart, recordStep, replayLife } from './record';
+export type { LifeRecord, Replayed } from './record';
 export { unlockedLives } from './unlocks';
 export type { Played } from './unlocks';
 export type { AssetKind } from './art';
