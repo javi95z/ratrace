@@ -11,6 +11,7 @@ declare
   passed int := 0;
   failed text[] := '{}';
   n int;
+  held int;
   t timestamptz;
   big jsonb;
   made uuid;
@@ -202,9 +203,16 @@ begin
   update public.games set status = 'abandoned' where id = made;
   get diagnostics n = row_count;
   if n = 1 then passed := passed + 1; else failed := array_append(failed, 'A could not abandon their own game'); end if;
+  -- A life one device gave up is taken up again by the device that is still playing it.
   update public.games set round = 1, status = 'playing' where id = made;
   get diagnostics n = row_count;
-  if n = 0 then passed := passed + 1; else failed := array_append(failed, 'an abandoned game was taken up again'); end if;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'a game that was given up could not be taken up again by its owner'); end if;
+  update public.games set status = 'abandoned' where id = made;
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  update public.games set status = 'playing' where id = made;
+  get diagnostics n = row_count;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, 'B took up a game that A had given up'); end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
 
   begin
     select count(*) into n from public.game_secrets;
@@ -258,6 +266,17 @@ begin
   update public.games set seed = 'another-seed', log = '[]' where id = game_a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, 'A rewrote a finished game'); end if;
+  update public.games set status = 'playing' where id = game_a;
+  get diagnostics n = row_count;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, 'A took up again a game the server had finished'); end if;
+  -- The way a device saves: insert, or update if it is there. On a finished game it is refused aloud,
+  -- which is how the device learns that the life is over.
+  begin
+    insert into public.games (id, mode, life_id, engine_version, content_version, seed, round, status) values (game_a, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 3, 'playing')
+      on conflict (id) do update set round = excluded.round, status = excluded.status;
+    failed := array_append(failed, 'A saved over a finished game');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
 
   -- A player holds fifty games at most. Lives that are over make room; lives still being played do not.
   first_of_many := gen_random_uuid();
@@ -272,6 +291,12 @@ begin
   if n <= 50 then passed := passed + 1; else failed := array_append(failed, format('A holds %s games, more than fifty', n)); end if;
   select count(*) into n from public.games where id in (first_of_many, made);
   if n = 1 and exists (select 1 from public.games where id = made) then passed := passed + 1; else failed := array_append(failed, 'the oldest game that was over did not make room for the newest'); end if;
+  -- Saving a game that is already held needs no room: nothing is deleted for it, and it is taken up again.
+  select count(*) into held from public.games where user_id = a;
+  insert into public.games (id, mode, life_id, engine_version, content_version, seed, round, status) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 2, 'playing')
+    on conflict (id) do update set round = excluded.round, status = excluded.status;
+  select count(*) into n from public.games where user_id = a;
+  if n = held and exists (select 1 from public.games where id = made and round = 2 and status = 'playing') then passed := passed + 1; else failed := array_append(failed, format('saving a game already held changed how many A holds, from %s to %s', held, n)); end if;
 
   -- ---------------------------------------------------------------- player B
   reset role;
