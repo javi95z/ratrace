@@ -53,6 +53,17 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // Sixteen more rungs: travel, air and sea, art and fashion. Until it lands, `ITEM_STAND_IN` lends each an older picture.
+    // The last cell is the shipowner's badge, drawn here beside the boats it is earned with.
+    file: 'items/items-04', group: 'items', kind: 'objects', cols: 4, rows: 4, width: 64, height: 64,
+    ids: [
+      'item.travel_interrail', 'item.travel_ski', 'item.travel_safari', 'item.travel_world_first',
+      'item.sea_sailing_course', 'item.air_helicopter', 'item.sea_sailboat', 'item.sea_motor_yacht',
+      'item.art_local_print', 'item.art_photo', 'item.art_bronze', 'item.art_old_master',
+      'item.fashion_sunglasses', 'item.fashion_suit', 'item.fashion_coat', 'badge.shipowner',
+    ],
+  },
+  {
     file: 'cars/cars-01', group: 'cars', kind: 'objects', cols: 2, rows: 4, width: 96, height: 48,
     ids: [
       'car.seat_ibiza', 'car.toyota_corolla', 'car.vw_golf_gti', 'car.tesla_model_3',

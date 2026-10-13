@@ -194,6 +194,7 @@ export const en: ContentText = {
     index_only: { name: 'Index and nothing else', how: 'Leave the rat race having never held any investment but index funds, and owning no property.' },
     first_luxury_watch: { name: 'First luxury watch', how: 'Own an {item:watch_omega} or anything finer.' },
     supercar: { name: 'Supercar owner', how: 'Own a {item:car_lamborghini_aventador}.' },
+    shipowner: { name: 'Shipowner', how: 'Own a boat of your own: the {item:sea_sailboat} or the {item:sea_motor_yacht}.' },
     penthouse: { name: 'Penthouse', how: 'Own a penthouse.' },
     status_100: { name: 'Status 100', how: 'Reach 100 status.' },
     twenty_items: { name: 'Twenty items', how: 'Own twenty different things, counted across all your lives.' },

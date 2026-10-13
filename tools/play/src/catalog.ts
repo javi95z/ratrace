@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -17,9 +17,10 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const OUT = path.join(ROOT, 'docs/catalogo.md');
 const { text, names } = textFor('es');
 
-const FOLDER: Record<string, string> = { item: 'items', car: 'cars', home: 'homes', icon: 'icons', badge: 'badges', portrait: 'portraits', card: 'cards', skyline: 'skylines' };
+/** Where each sprite was cut to. The manifest says: a sprite is not always in the folder its name suggests. */
+const manifest = JSON.parse(readFileSync(path.join(ROOT, 'art/clean/manifest.json'), 'utf8')) as { sprites: Record<string, { file: string }> };
 /** A sprite as an image in the page, at the size it was drawn. */
-const img = (sprite: string, alt = ''): string => `<img src="../art/clean/${FOLDER[sprite.split('.')[0]]}/${sprite}.png" alt="${alt}">`;
+const img = (sprite: string, alt = ''): string => `<img src="../art/clean/${manifest.sprites[sprite].file}" alt="${alt}">`;
 
 // Spanish leaves four-digit numbers ungrouped; German groups them the same way and always.
 const whole = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });

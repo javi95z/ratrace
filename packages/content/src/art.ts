@@ -122,7 +122,15 @@ export const cardArt: Record<string, string> = {
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
+/** Things whose own picture is not drawn yet, and whose they wear meanwhile. A thing leaves this list when sheet items-04 lands. */
+const ITEM_STAND_IN: Record<string, string> = {
+  fashion_sunglasses: 'fashion_polo', fashion_suit: 'fashion_blazer', fashion_coat: 'fashion_blazer',
+  art_local_print: 'art_stencil', art_photo: 'art_stencil', art_bronze: 'art_cubist', art_old_master: 'art_cubist',
+  travel_interrail: 'travel_weekend', travel_ski: 'travel_ibiza', travel_safari: 'travel_maldives', travel_world_first: 'travel_business_class',
+  sea_sailing_course: 'sea_yacht_charter', air_helicopter: 'air_jet_charter', sea_sailboat: 'sea_yacht_charter', sea_motor_yacht: 'sea_yacht_charter',
+};
+export const itemArt = (itemId: string): string =>
+  itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${Object.hasOwn(ITEM_STAND_IN, itemId) ? ITEM_STAND_IN[itemId] : itemId}`;
 export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 /** The skyline of a city: by night, or in the first light a round opens in. */
@@ -172,7 +180,8 @@ export const topicArt: Record<Headline['topic'], string> = {
 };
 
 /** A badge, or `locked` for one not earned yet. */
-export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
+/** The shipowner's badge is on sheet items-04, with the boats. Until it lands it wears the plain star. */
+export const badgeArt = (badgeId: string): string => `badge.${badgeId === 'shipowner' ? 'new' : badgeId}`;
 
 /** A life is drawn at four ages. */
 export const PORTRAIT_AGES = [22, 32, 45, 58] as const;

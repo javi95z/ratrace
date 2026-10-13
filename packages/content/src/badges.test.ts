@@ -153,6 +153,8 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   },
   first_luxury_watch: { earns: { player: own('watch_omega') }, misses: [{ player: own('watch_tissot', 'watch_casio') }] },
   supercar: { earns: { player: own('car_lamborghini_aventador') }, misses: [{ player: own('car_porsche_911') }] },
+  // A boat of one's own, not a week on someone else's.
+  shipowner: { earns: { player: own('sea_sailboat') }, misses: [{ player: own('sea_yacht_charter', 'sea_sailing_course') }] },
   penthouse: { earns: { player: home('penthouse') }, misses: [{ player: home('villa') }] },
   status_100: { earns: { player: (p) => (p.statusPoints = 100) }, misses: [{ player: (p) => (p.statusPoints = 99) }] },
   three_cities: {
@@ -187,11 +189,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec, each in one of six groups', () => {
-    expect(badges).toHaveLength(30);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(30);
+  it('are the thirty of the spec and the shipowner, each in one of six groups', () => {
+    expect(badges).toHaveLength(31);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(31);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 7, 6, 6, 1]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 7, 7, 6, 1]);
   });
 
   it('each have a name, a way to earn them, and a picture, in both languages', () => {

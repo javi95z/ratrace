@@ -194,6 +194,7 @@ export const es: ContentText = {
     index_only: { name: 'Solo indexados', how: 'Sal de la rueda sin haber tenido nunca otra inversión que fondos indexados, y sin ninguna vivienda.' },
     first_luxury_watch: { name: 'Primer reloj de lujo', how: 'Ten un {item:watch_omega} o algo mejor.' },
     supercar: { name: 'Superdeportivo', how: 'Ten un {item:car_lamborghini_aventador}.' },
+    shipowner: { name: 'Armador', how: 'Ten barco propio: el {item:sea_sailboat} o el {item:sea_motor_yacht}.' },
     penthouse: { name: 'Ático', how: 'Ten un ático en propiedad.' },
     status_100: { name: 'Estatus 100', how: 'Llega a 100 de estatus.' },
     twenty_items: { name: 'Veinte cosas', how: 'Ten veinte cosas distintas, contando todas tus vidas.' },

@@ -14,7 +14,7 @@ export interface BadgeDef {
   group: BadgeGroup;
 }
 
-/** The thirty badges of v1, in the order the collection shows them (spec, Appendix C). */
+/** The thirty badges of v1 (spec, Appendix C) and one added since, in the order the collection shows them. */
 export const badges: BadgeDef[] = [
   { id: 'first_100k', group: 'wealth' },
   { id: 'millionaire', group: 'wealth' },
@@ -35,6 +35,7 @@ export const badges: BadgeDef[] = [
   { id: 'index_only', group: 'investing' },
   { id: 'first_luxury_watch', group: 'status' },
   { id: 'supercar', group: 'status' },
+  { id: 'shipowner', group: 'status' },
   { id: 'penthouse', group: 'status' },
   { id: 'status_100', group: 'status' },
   { id: 'twenty_items', group: 'status' },
@@ -202,6 +203,7 @@ const RULES: Record<string, (f: Facts) => boolean> = {
 
   first_luxury_watch: (f) => LUXURY_WATCHES.some((watch) => owns(f.p, watch)),
   supercar: (f) => owns(f.p, 'car_lamborghini_aventador'),
+  shipowner: (f) => owns(f.p, 'sea_sailboat') || owns(f.p, 'sea_motor_yacht'),
   penthouse: (f) => f.p.properties.some((property) => property.typeId === 'penthouse'),
   status_100: (f) => f.p.statusPoints >= 100,
 

@@ -13,7 +13,7 @@ describe('the v1 content', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(19);
     expect(content.careers).toHaveLength(6);
-    expect(content.items).toHaveLength(39);
+    expect(content.items).toHaveLength(55);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
@@ -137,16 +137,28 @@ describe('the v1 content', () => {
     }
   });
 
-  it('gives every city one seat of its own, sold nowhere else, and ties nothing else to a city', () => {
+  it('gives every city one membership of its own, and sells a few other things only where they belong', () => {
     const local = content.items.filter((item) => item.cities !== undefined);
-    expect(local.map((item) => item.cities).flat().sort()).toEqual(content.cities.map((city) => city.id).sort());
-    for (const item of local) {
-      expect(item.kind, item.id).toBe('membership');
-      expect(item.cities, item.id).toHaveLength(1);
-    }
+    const seats = local.filter((item) => item.kind === 'membership');
+    expect(seats.map((item) => item.cities).flat().sort()).toEqual(content.cities.map((city) => city.id).sort());
+    for (const seat of seats) expect(seat.cities, seat.id).toHaveLength(1);
+    // What is not a membership goes along on a move, so it may be sold in more than one city.
+    expect(local.filter((item) => item.kind !== 'membership').map((item) => [item.id, item.cities])).toEqual([
+      ['fashion_suit', ['london']],
+      ['travel_ski', ['madrid', 'london']],
+      ['sea_motor_yacht', ['dubai', 'singapore']],
+    ]);
     // A card hands a thing over wherever the player is, so no card may give what belongs to one city.
     const given = content.cards.flatMap((card) => card.options.flatMap((option) => [option.effects, ...(option.outcomes ?? []).map((o) => o.effects)])).map((effects) => effects?.buyItem?.itemId);
     for (const item of local) expect(given, item.id).not.toContain(item.id);
+  });
+
+  it('keeps each ladder a climb: no two rungs give the same status for the same price', () => {
+    for (const ladder of new Set(content.items.map((item) => item.ladder))) {
+      const rungs = content.items.filter((item) => item.ladder === ladder && item.cities === undefined);
+      const seen = new Set(rungs.map((item) => `${item.price}:${item.status}`));
+      expect(seen.size, ladder).toBe(rungs.length);
+    }
   });
 
   it('starts every life cleanly', () => {

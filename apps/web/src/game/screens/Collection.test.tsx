@@ -44,7 +44,7 @@ describe('the collection', () => {
     for (const group of ['Cars', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
   });
 
-  it('shows all thirty badges with how each is earned, and marks the ones earned with the day', async () => {
+  it('shows every badge with how each is earned, and marks the ones earned with the day', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: Date.UTC(2026, 9, 13, 12), gameId: 'g' }, bankrupt: { at: Date.UTC(2026, 0, 2, 12), gameId: 'g' } } });
     const user = userEvent.setup();
@@ -53,7 +53,7 @@ describe('the collection', () => {
     await user.click(await screen.findByRole('tab', { name: 'Badges' }));
     expect(screen.getByText(`2 of ${badges.length} earned`)).toBeTruthy();
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
-    expect(within(panel).getAllByRole('listitem')).toHaveLength(30);
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
     for (const group of ['Wealth', 'Escape', 'Investing', 'Status', 'Life', 'Misfortune']) expect(within(panel).getByRole('heading', { name: group })).toBeTruthy();
 
     const earned = within(panel).getByText('Millionaire').closest('li') as HTMLElement;
