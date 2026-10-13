@@ -125,7 +125,7 @@ function ScoreNow({ shown }: { shown: GameView }) {
  * is from covering your life. `compact` leaves the skyline out and shrinks the portrait, to give
  * the cards and the finance tabs room. A tap on a figure opens a sheet of what it means and what it is made of.
  */
-export function Hud({ compact = false, skyline = !compact, onProfile }: { compact?: boolean; skyline?: boolean; onProfile?: () => void }) {
+export function Hud({ compact = false, skyline = !compact, flush = false, onProfile }: { compact?: boolean; skyline?: boolean; /** In a column that has its own margins: no padding at the sides, so it lines up with what is under it. */ flush?: boolean; onProfile?: () => void }) {
   const t = useT('hud');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
@@ -152,7 +152,7 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
   );
 
   return (
-    <header className="flex flex-col gap-2 px-3 pt-3">
+    <header className={`flex flex-col gap-2 pt-3 ${flush ? '' : 'px-3'}`}>
       {/* A round opens in the first light and closes at night. */}
       {skyline ? <CityBanner cityId={p.cityId} light={stage === 'news' ? 'day' : 'night'} /> : null}
 

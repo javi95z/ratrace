@@ -215,11 +215,10 @@ export function Play() {
     // The side columns give way first on a narrow desktop, so the round in the middle never drops below a phone's width.
     return (
       <div className="mx-auto grid min-h-dvh w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
-        <aside aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto pb-5 pt-2">
+        <aside aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden pb-5 pt-2">
           {heading}
-          <div className="-mx-3">
-            <Hud skyline={false} />
-          </div>
+          {/* No negative margin to line it up: a column that scrolls down would then scroll sideways too. */}
+          <Hud skyline={false} flush />
           <ProfileBody />
           <Leave />
         </aside>
@@ -237,7 +236,7 @@ export function Play() {
           ) : null}
         </div>
 
-        <aside aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto py-5">
+        <aside aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
           <Headlines hint={false} />
           {stage === 'finance' ? (
             <Panel title={finance('basketTitle')}>
