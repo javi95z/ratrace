@@ -230,6 +230,21 @@ describe('what the player owns, in the profile', () => {
     expect(within(sheet).queryByText(/^From the age of/)).toBeNull();
   });
 
+  it('names every insurance held in one word each, so that four of them fit on the line', async () => {
+    setWidth('desk');
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: (['health', 'home', 'life', 'liability'] as const).map((insurance) => ({ type: 'setInsurance' as const, insurance, on: true })) });
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    expect(screen.getByRole('button', { name: /^Insurance/ }).textContent).toContain('Health · Home · Life · Liability');
+    cleanup();
+    renderGame(<Play />, services, 'es');
+    await screen.findAllByRole('heading', { name: 'Noticias' });
+    expect(screen.getByRole('button', { name: /^Seguros/ }).textContent).toContain('Salud · Hogar · Vida · R. civil');
+  });
+
   it('shows the home itself, and no rent, to someone who owns where they live', async () => {
     setWidth('desk');
     const user = userEvent.setup();

@@ -503,6 +503,7 @@
     "married": "Married",
     "yours": "Yours",
     "insured": "Insured",
+    "insuranceShort": { "health": "Health", "home": "Home", "life": "Life", "liability": "Liability" },
     "aboutLifestyle": "Your lifestyle multiplies what living costs you each year. Living on little shows and takes status away; the top two give it.",
     "aboutRent": "Until you own a home in {city}, you rent. A room or a flat changes what you spend and your status.",
     "rentCost": "The cost is that of your whole life with that rent, at the lifestyle you lead.",

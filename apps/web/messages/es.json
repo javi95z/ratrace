@@ -503,6 +503,7 @@
     "married": "En matrimonio",
     "yours": "Así vives",
     "insured": "Contratado",
+    "insuranceShort": { "health": "Salud", "home": "Hogar", "life": "Vida", "liability": "R. civil" },
     "aboutLifestyle": "Tu estilo de vida multiplica lo que te cuesta vivir cada año. Vivir con poco se nota y resta estatus; los dos más altos lo dan.",
     "aboutRent": "Mientras no tengas casa propia en {city}, vives de alquiler. Elegir entre habitación y piso cambia el gasto y el estatus.",
     "rentCost": "El coste es el de tu vida entera con ese alquiler, al estilo de vida que llevas.",

@@ -32,7 +32,8 @@ export function ProfileBody() {
   const career = life.career ? content.careers.find((c) => c.id === life.career?.id) : undefined;
   const next = career && life.career ? career.levels.at(life.career.level + 1) : undefined;
   const home = homeOf(p, content);
-  const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => text.insurance[kind]);
+  // One word each: the full names of four insurances do not fit on a line, and the sheet behind the row has them.
+  const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => t(`insuranceShort.${kind}`));
   const flow = cashflow(content, shown);
   const [open, setOpen] = useState<string | null>(null);
   const [about, setAbout] = useState<About | null>(null);
@@ -81,7 +82,7 @@ export function ProfileBody() {
           <Row left={t('home')} sub={names.cities[p.cityId]} right={<>{home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]}<More /></>} />
         </button>
         <button type="button" aria-haspopup="dialog" onClick={() => setAbout('insurance')} className="block w-full text-left">
-          <Row left={t('insurance')} right={<>{insured.length > 0 ? <span className="font-sans text-[13px]">{insured.join(', ')}</span> : t('uninsured')}<More /></>} />
+          <Row left={t('insurance')} right={<>{insured.length > 0 ? insured.join(' · ') : t('uninsured')}<More /></>} />
         </button>
       </Panel>
       {about ? <AboutSheet about={about} shown={shown} onClose={() => setAbout(null)} /> : null}
