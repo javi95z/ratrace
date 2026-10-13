@@ -64,6 +64,7 @@ One English word, one Russian word, everywhere.
 | card | карта | |
 | choice / option | выбор / вариант | |
 | order (a thing queued for the round) | план | «Планы на раунд», 1 план, 2 плана, 5 планов |
+| plan (buying an asset every round, by itself) | автопокупка | not «план», which is taken: «Новая автопокупка», «Регулярные инвестиции» for the panel |
 | play the round | сыграть раунд | |
 | cash | наличные | |
 | savings | сбережения | |
