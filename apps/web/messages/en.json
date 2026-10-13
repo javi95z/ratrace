@@ -437,8 +437,8 @@
     "never": "You never left the rat race.",
     "escapedAt": "You left the rat race at {age}.",
     "netWorth": "Net worth",
-    "realNetWorth": "In the dollars of age 22",
-    "graph": "Your net worth through life, in the dollars of age 22",
+    "realNetWorth": "After inflation",
+    "graph": "Your net worth through life, after inflation",
     "bankruptcies": "{count, plural, =0 {Never bankrupt} one {Bankrupt once} other {Bankrupt # times}}",
     "badges": "Badges of this life",
     "noBadges": "No badge this time. The collection shows how each is earned.",
@@ -486,7 +486,7 @@
     "score": "Score {score}",
     "badges": "{count, plural, =0 {No badges} one {1 badge} other {# badges}}",
     "graph": "Net worth through this life",
-    "realWorth": "In the dollars of age 22"
+    "realWorth": "After inflation"
   },
   "share": {
     "open": "Share this life",
@@ -497,7 +497,7 @@
     "drawing": "Drawing…",
     "alt": "{life}: score {score}",
     "badges": "Badges",
-    "netWorth": "Net worth, in the dollars of age 22",
+    "netWorth": "Net worth, after inflation",
     "never": "Never left the rat race",
     "escapedAt": "Out of the rat race at {age}"
   },

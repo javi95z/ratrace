@@ -437,8 +437,8 @@
     "never": "Nunca saliste de la rueda.",
     "escapedAt": "Saliste de la rueda a los {age}.",
     "netWorth": "Patrimonio",
-    "realNetWorth": "En dólares de tus 22 años",
-    "graph": "Tu patrimonio a lo largo de la vida, en dólares de tus 22 años",
+    "realNetWorth": "Descontando la inflación",
+    "graph": "Tu patrimonio a lo largo de la vida, descontando la inflación",
     "bankruptcies": "{count, plural, =0 {Nunca en quiebra} one {Una quiebra} other {# quiebras}}",
     "badges": "Insignias de esta vida",
     "noBadges": "Esta vez, ninguna insignia. En la colección se ve cómo se consigue cada una.",
@@ -486,7 +486,7 @@
     "score": "Puntuación {score}",
     "badges": "{count, plural, =0 {Sin insignias} one {1 insignia} other {# insignias}}",
     "graph": "El patrimonio a lo largo de esta vida",
-    "realWorth": "En dólares de tus 22 años"
+    "realWorth": "Descontando la inflación"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -497,7 +497,7 @@
     "drawing": "Dibujando…",
     "alt": "{life}: puntuación {score}",
     "badges": "Insignias",
-    "netWorth": "Patrimonio, en dólares de los 22 años",
+    "netWorth": "Patrimonio, descontando la inflación",
     "never": "Nunca salió de la rueda",
     "escapedAt": "Fuera de la rueda a los {age}"
   },

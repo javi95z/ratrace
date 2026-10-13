@@ -173,7 +173,7 @@ const en: Ui = {
   escapeBonus: 'Escape bonus',
   neverEscaped: 'You never left the rat race.',
   escapedAtAge: 'You left the rat race at',
-  realNetWorth: 'Net worth in the dollars of age 22',
+  realNetWorth: 'Net worth after inflation',
   replay: 'To play this life again',
   goodbye: 'See you next life.',
   headers: {
@@ -295,7 +295,7 @@ const es: Ui = {
   escapeBonus: 'Bonus por salir',
   neverEscaped: 'Nunca saliste de la rueda.',
   escapedAtAge: 'Saliste de la rueda a los',
-  realNetWorth: 'Patrimonio en dólares de los 22 años',
+  realNetWorth: 'Patrimonio descontando la inflación',
   replay: 'Para volver a jugar esta vida',
   goodbye: 'Hasta la próxima vida.',
   headers: {

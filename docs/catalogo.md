@@ -716,10 +716,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 
 |  | Insignia | Cómo se consigue |
 | --- | --- | --- |
-| <img src="../art/clean/badges/badge.first_100k.png" alt="Primeros 100.000"> | Primeros 100.000 | Ten un patrimonio de 100.000 $, contado en dólares de tus 22 años. |
-| <img src="../art/clean/badges/badge.millionaire.png" alt="Millonario"> | Millonario | Ten un patrimonio de un millón, contado en dólares de tus 22 años. |
-| <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Millonario a los 35"> | Millonario a los 35 | Ten un patrimonio de un millón a los 35 años o antes, contado en dólares de tus 22 años. |
-| <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, contado en dólares de tus 22 años. |
+| <img src="../art/clean/badges/badge.first_100k.png" alt="Primeros 100.000"> | Primeros 100.000 | Ten un patrimonio de 100.000 $, descontando la inflación. |
+| <img src="../art/clean/badges/badge.millionaire.png" alt="Millonario"> | Millonario | Ten un patrimonio de un millón, descontando la inflación. |
+| <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Millonario a los 35"> | Millonario a los 35 | Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación. |
+| <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, descontando la inflación. |
 | <img src="../art/clean/badges/badge.debt_free_at_40.png" alt="Sin deudas a los 40"> | Sin deudas a los 40 | No debas nada de nada el día que cumplas 40, sin haber quebrado nunca. |
 | <img src="../art/clean/badges/badge.no_credit_card.png" alt="Ni una vez la tarjeta"> | Ni una vez la tarjeta | Vive una vida entera sin que nada acabe cargado a la tarjeta de crédito. |
 
