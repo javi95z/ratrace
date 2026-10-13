@@ -79,3 +79,46 @@ export interface AccountSaves {
   /** Ends the offered life in the account instead. */
   declineOffer(): Promise<void>;
 }
+
+/** One line of a ranking: the best ranked life of one player. */
+export interface RankingRow {
+  place: number;
+  userId: string;
+  /** The name the player chose, or null if they have not chosen one. */
+  nickname: string | null;
+  score: number;
+  lifeId: string;
+  finishedAt: number;
+  /** True for the line of the player who asked. */
+  mine: boolean;
+}
+
+/** Which ranking: of all time or of this week; among everyone or among friends; of one starting life or of any. */
+export interface RankingQuery {
+  period: 'all' | 'week';
+  friends: boolean;
+  lifeId: string | null;
+}
+
+/** Someone the player follows. */
+export interface Friend {
+  userId: string;
+  nickname: string | null;
+}
+
+/**
+ * The other players, as far as a screen is told of them: the rankings, the player's own name and
+ * friend code, and whom they follow. It needs someone signed in and a connection; what cannot be
+ * read just now is null, and what cannot be done says so in a word.
+ */
+export interface Community {
+  me(): Promise<{ nickname: string | null; friendCode: string } | null>;
+  /** `taken`: someone has that name. `refused`: the name is not accepted. */
+  rename(nickname: string): Promise<'ok' | 'taken' | 'refused' | 'failed'>;
+  /** The first fifty, and the asker's own line if it is further down. */
+  ranking(query: RankingQuery): Promise<RankingRow[] | null>;
+  friends(): Promise<Friend[] | null>;
+  /** Follows the player a friend code belongs to. `full`: the player follows as many as one may. */
+  follow(code: string): Promise<'ok' | 'unknown' | 'self' | 'full' | 'failed'>;
+  unfollow(userId: string): Promise<boolean>;
+}

@@ -1,6 +1,6 @@
 import type { RankedApi } from '@/session/ranked';
 import type { SyncCloud } from './mirror';
-import type { Account, AccountNotice, AccountState } from './types';
+import type { Account, AccountNotice, AccountState, Community } from './types';
 
 /** A signed-in player as the cloud describes them. */
 export interface CloudUser {
@@ -17,6 +17,8 @@ export interface CloudUser {
 export interface Cloud extends SyncCloud {
   /** The server of ranked lives, asked as whoever is signed in. */
   ranked: RankedApi;
+  /** The other players: rankings, names, friends. */
+  community: Community;
   /** Whoever this browser is already signed in as, or null. Fails if it could not find out: that is not "nobody". */
   currentUser(): Promise<CloudUser | null>;
   /** Makes a guest account with no form. Null if the cloud would not. */

@@ -3,7 +3,7 @@ import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { AccountLife, AccountSaves } from '@/online/types';
+import type { Account, AccountLife, AccountSaves, AccountState } from '@/online/types';
 import { MemoryStore } from '@/session/memory';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Home } from './Home';
@@ -66,6 +66,17 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');
     expect(screen.getByRole('link', { name: 'Records' }).getAttribute('href')).toBe('/records');
+  });
+
+  it('leads to the rankings where someone is signed in, and shows no way to them where nobody is', async () => {
+    renderGame(<Home />, memoryServices());
+    await screen.findByRole('link', { name: 'Records' });
+    expect(screen.queryByRole('link', { name: 'Rankings' })).toBeNull();
+    cleanup();
+    const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    renderGame(<Home />, { ...memoryServices(), account });
+    expect((await screen.findByRole('link', { name: 'Rankings' })).getAttribute('href')).toBe('/rankings');
   });
 
   it('offers the life in progress first, with who and where', async () => {

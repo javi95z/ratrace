@@ -6,7 +6,8 @@
       "new": "Elige una vida",
       "play": "Tu vida",
       "collection": "Colección",
-      "records": "Récords"
+      "records": "Récords",
+      "rankings": "Clasificaciones"
     }
   },
   "common": {
@@ -791,5 +792,44 @@
     "focusAlso": "Mudarte de ciudad cuesta 1 de foco, y algunas cartas piden 1 o 2 para elegir su mejor opción.",
     "focusThings": "Lo que tienes ya cuenta en estas cifras.",
     "focusWhere": "Se gasta en la pestaña Vida, en la fase de finanzas."
+  },
+  "rankings": {
+    "title": "Clasificaciones",
+    "needAccount": "Las clasificaciones necesitan una cuenta y conexión.",
+    "you": "Tú",
+    "noName": "Aún no tienes nombre. Hasta que elijas uno, las clasificaciones te muestran como «Rata» y cuatro caracteres.",
+    "yourName": "Apareces como {name}.",
+    "chooseName": "Elegir un nombre",
+    "changeName": "Cambiarlo",
+    "name": "Nombre",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "invalid": "De 3 a 16 letras, cifras o guiones bajos.",
+    "taken": "Alguien ya tiene ese nombre.",
+    "refused": "Ese nombre no se acepta.",
+    "failed": "No se ha podido guardar el nombre. Inténtalo de nuevo.",
+    "code": "Tu código de amigo",
+    "codeHint": "Dáselo a un amigo: con él puede seguirte.",
+    "kinds": "Qué clasificación",
+    "all": "Histórica",
+    "week": "Esta semana",
+    "friends": "Amigos",
+    "life": "Vida inicial",
+    "anyLife": "Cualquier vida",
+    "nameless": "Rata {tag}",
+    "empty": "Nadie ha terminado aún una vida clasificatoria aquí. La tuya puede ser la primera.",
+    "unreachable": "No se han podido leer las clasificaciones. Inténtalo más tarde.",
+    "hint": "La mejor vida clasificatoria de cada jugador. Solo cuentan las vidas jugadas en el servidor.",
+    "following": "A quién sigues",
+    "nobody": "Aún no sigues a nadie.",
+    "friendsUnreachable": "No se ha podido leer a quién sigues.",
+    "friendCode": "Código de amigo",
+    "follow": "Seguir",
+    "stop": "Dejar de seguir a {name}",
+    "stopShort": "Dejar",
+    "followUnknown": "Ningún jugador tiene ese código.",
+    "followSelf": "Ese es tu propio código.",
+    "followFull": "Ya sigues a todos los jugadores que se puede.",
+    "followFailed": "No ha funcionado. Inténtalo de nuevo."
   }
 }

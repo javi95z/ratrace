@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccountSaves, useGame, useSaving, useT, useWords } from '@/game/context';
+import { useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
@@ -22,6 +22,8 @@ export function Home() {
   const stage = useGame((s) => s.stage);
   const moved = useGame((s) => s.moved);
   const saving = useSaving();
+  // The rankings are the other players': there is a way to them only where someone is signed in to ask.
+  const ranking = useRanking();
   const { offer, takeOffer, declineOffer } = useAccountSaves();
   // The life in the account the player has asked about, by its id: the question is never open for another one.
   const [asking, setAsking] = useState<string | null>(null);
@@ -93,6 +95,12 @@ export function Home() {
                 <Sprite id="icon.trophy" />
                 {t('records')}
               </Link>
+              {ranking !== 'no' ? (
+                <Link href="/rankings" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+                  <Sprite id="icon.status" />
+                  {t('rankings')}
+                </Link>
+              ) : null}
             </div>
             {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : lost === 'newer' ? 'lostNewer' : 'lostDamaged')}</p> : null}
             {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}

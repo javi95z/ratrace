@@ -6,7 +6,8 @@
       "new": "Choose a life",
       "play": "Your life",
       "collection": "Collection",
-      "records": "Records"
+      "records": "Records",
+      "rankings": "Rankings"
     }
   },
   "common": {
@@ -791,5 +792,44 @@
     "focusAlso": "Moving city takes 1 focus, and some cards ask for 1 or 2 to take their best option.",
     "focusThings": "What you own is already counted in these figures.",
     "focusWhere": "It is spent in the Lifestyle tab, during the finances."
+  },
+  "rankings": {
+    "title": "Rankings",
+    "needAccount": "The rankings need an account and a connection.",
+    "you": "You",
+    "noName": "You have no name yet. Until you choose one, the rankings show you as \"Rat\" and four characters.",
+    "yourName": "You appear as {name}.",
+    "chooseName": "Choose a name",
+    "changeName": "Change it",
+    "name": "Name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "invalid": "3 to 16 letters, digits or underscores.",
+    "taken": "Someone already has that name.",
+    "refused": "That name is not accepted.",
+    "failed": "The name could not be saved. Try again.",
+    "code": "Your friend code",
+    "codeHint": "Give it to a friend: with it they can follow you.",
+    "kinds": "Which ranking",
+    "all": "All time",
+    "week": "This week",
+    "friends": "Friends",
+    "life": "Starting life",
+    "anyLife": "Any life",
+    "nameless": "Rat {tag}",
+    "empty": "Nobody has finished a ranked life here yet. Yours could be the first.",
+    "unreachable": "The rankings could not be read. Try again later.",
+    "hint": "The best ranked life of each player. Only lives played on the server count.",
+    "following": "People you follow",
+    "nobody": "You follow nobody yet.",
+    "friendsUnreachable": "The people you follow could not be read.",
+    "friendCode": "Friend code",
+    "follow": "Follow",
+    "stop": "Stop following {name}",
+    "stopShort": "Stop",
+    "followUnknown": "No player has that code.",
+    "followSelf": "That is your own code.",
+    "followFull": "You follow as many players as one can.",
+    "followFailed": "That did not work. Try again."
   }
 }

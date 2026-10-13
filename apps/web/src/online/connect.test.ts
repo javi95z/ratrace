@@ -28,7 +28,7 @@ const client = vi.hoisted(() => {
       from: (table: string) => {
         const question: unknown[] = [table];
         const builder: Record<string, unknown> = {};
-        for (const word of ['select', 'eq', 'order', 'limit', 'update', 'upsert', 'maybeSingle']) {
+        for (const word of ['select', 'eq', 'in', 'order', 'limit', 'update', 'upsert', 'delete', 'maybeSingle']) {
           builder[word] = (...a: unknown[]) => (question.push([word, ...a]), builder);
         }
         builder.then = (resolve: (answer: unknown) => unknown, reject: (error: unknown) => unknown) => {
@@ -42,6 +42,7 @@ const client = vi.hoisted(() => {
       functions: {
         invoke: async (...a: unknown[]) => (asked.push(['invoke', ...a]), answers.invoke),
       },
+      rpc: async (...a: unknown[]) => (asked.push(['rpc', ...a]), answers.rpc),
     }),
   };
 });
@@ -62,6 +63,8 @@ beforeEach(() => {
     player_progress: { data: null, error: null },
     runs: { data: [], error: null },
     invoke: { data: { run: {} }, error: null },
+    rpc: { data: null, error: null },
+    friendships: { data: [], error: null },
   });
 });
 
@@ -301,6 +304,89 @@ describe('ranked lives, as the cloud is asked for them', () => {
     expect(await cloud.rankedLife()).toBeNull();
     client.answers.games = { data: null, error: new Error('offline') };
     await expect(cloud.rankedLife()).rejects.toThrow('offline');
+  });
+});
+
+describe('names, friends and rankings, as the cloud is asked for them', () => {
+  const signedIn = { data: { session: { user: { id: 'u-1', is_anonymous: false } } }, error: null };
+
+  it('reads the player\'s own name and friend code', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.profiles = { data: { nickname: 'Rata_Uno', friend_code: 'ABCD2345' }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.me()).toEqual({ nickname: 'Rata_Uno', friendCode: 'ABCD2345' });
+    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
+    client.answers.profiles = { data: null, error: null };
+    expect(await cloud.community.me()).toBeNull();
+    client.answers.profiles = { data: null, error: new Error('offline') };
+    expect(await cloud.community.me()).toBeNull();
+  });
+
+  it('gives the player a name, and says in a word why not when it does not', async () => {
+    client.answers.getSession = signedIn;
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.rename('Rata_Uno')).toBe('ok');
+    expect(client.asked).toEqual([['profiles', ['update', { nickname: 'Rata_Uno' }], ['eq', 'user_id', 'u-1']]]);
+    for (const [code, word] of [['23505', 'taken'], ['RR002', 'refused'], ['23514', 'refused'], ['08006', 'failed']] as const) {
+      client.answers.profiles = { error: { code, message: 'no' } };
+      expect(await cloud.community.rename('Rata_Uno'), code).toBe(word);
+    }
+  });
+
+  it('asks the database for a ranking, and says which line is the player\'s own', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.rpc = {
+      data: [
+        { place: 1, user_id: 'u-9', nickname: 'Otra', portrait: null, score: 900, life_id: 'engineer', finished_at: '2026-10-12T08:00:00Z', run_id: 'r-9' },
+        { place: 7, user_id: 'u-1', nickname: null, portrait: null, score: 300, life_id: 'nurse', finished_at: '2026-10-13T08:00:00Z', run_id: 'r-1' },
+      ],
+      error: null,
+    };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.ranking({ period: 'week', friends: true, lifeId: 'nurse' })).toEqual([
+      { place: 1, userId: 'u-9', nickname: 'Otra', score: 900, lifeId: 'engineer', finishedAt: Date.parse('2026-10-12T08:00:00Z'), mine: false },
+      { place: 7, userId: 'u-1', nickname: null, score: 300, lifeId: 'nurse', finishedAt: Date.parse('2026-10-13T08:00:00Z'), mine: true },
+    ]);
+    expect(client.asked).toEqual([['rpc', 'ranking', { period: 'week', life: 'nurse', friends: true, top: 50 }]]);
+    client.asked.length = 0;
+    await cloud.community.ranking({ period: 'all', friends: false, lifeId: null });
+    expect(client.asked).toEqual([['rpc', 'ranking', { period: 'all', life: null, friends: false, top: 50 }]]);
+    client.answers.rpc = { data: null, error: new Error('offline') };
+    expect(await cloud.community.ranking({ period: 'all', friends: false, lifeId: null })).toBeNull();
+  });
+
+  it('follows a player by their code, lists whom the player follows by name, and stops following', async () => {
+    client.answers.getSession = signedIn;
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.rpc = { data: 'ok', error: null };
+    expect(await cloud.community.follow(' abcd2345 ')).toBe('ok');
+    expect(client.asked).toEqual([['rpc', 'add_friend', { code: ' abcd2345 ' }]]);
+    for (const word of ['unknown', 'self', 'full'] as const) {
+      client.answers.rpc = { data: word, error: null };
+      expect(await cloud.community.follow('x')).toBe(word);
+    }
+    client.answers.rpc = { data: 'something else', error: null };
+    expect(await cloud.community.follow('x')).toBe('failed');
+    client.answers.rpc = { data: null, error: new Error('offline') };
+    expect(await cloud.community.follow('x')).toBe('failed');
+
+    client.asked.length = 0;
+    client.answers.friendships = { data: [{ followed: 'u-9' }, { followed: 'u-8' }], error: null };
+    client.answers.profiles = { data: [{ user_id: 'u-9', nickname: 'Otra' }], error: null };
+    expect(await cloud.community.friends()).toEqual([{ userId: 'u-9', nickname: 'Otra' }, { userId: 'u-8', nickname: null }]);
+    expect(client.asked).toEqual([
+      ['friendships', ['select', 'followed'], ['eq', 'follower', 'u-1'], ['order', 'created_at', { ascending: false }]],
+      ['profiles', ['select', 'user_id, nickname'], ['in', 'user_id', ['u-9', 'u-8']]],
+    ]);
+    client.answers.friendships = { data: null, error: new Error('offline') };
+    expect(await cloud.community.friends()).toBeNull();
+
+    client.asked.length = 0;
+    client.answers.friendships = { error: null };
+    expect(await cloud.community.unfollow('u-9')).toBe(true);
+    expect(client.asked).toEqual([['friendships', ['delete'], ['eq', 'follower', 'u-1'], ['eq', 'followed', 'u-9']]]);
+    client.answers.friendships = { error: new Error('offline') };
+    expect(await cloud.community.unfollow('u-9')).toBe(false);
   });
 });
 

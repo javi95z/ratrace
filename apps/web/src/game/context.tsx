@@ -10,7 +10,7 @@ import { useStore } from 'zustand';
 import { formatFor } from '@/lib/format';
 import { browserOnline } from '@/online';
 import { offlineAccount } from '@/online/offline';
-import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving } from '@/online/types';
+import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
 import { RankedSessions } from '@/session/ranked';
@@ -45,6 +45,8 @@ export interface Services {
   account?: Account;
   /** How the account's copy of the player's things stands. Left out, nothing is saved to an account. */
   saves?: AccountSaves | null;
+  /** The other players, while someone is signed in, and null otherwise. Left out, there are none to ask. */
+  community?: () => Community | null;
   /** What plays the sounds. Left out, a test hears nothing. */
   sound?: SoundBoard;
 }
@@ -60,6 +62,7 @@ interface Game {
   saving: Saving;
   account: Account;
   saves: AccountSaves;
+  community: () => Community | null;
   sound: SoundBoard;
   words: Words;
   locale: Locale;
@@ -79,7 +82,7 @@ function browserServices(): Services {
     if (degraded) console.warn('this browser is not saving:', error);
     for (const listener of listeners) listener();
   });
-  const { account, store, saves, ranked } = browserOnline(kept);
+  const { account, store, saves, ranked, community } = browserOnline(kept);
   const saving: Saving = {
     degraded: () => kept.degraded,
     subscribe: (listener) => {
@@ -97,7 +100,7 @@ function browserServices(): Services {
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
   const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
-  return { sessions, store, saving, account, saves, sound: createSoundBoard() };
+  return { sessions, store, saving, account, saves, community, sound: createSoundBoard() };
 }
 
 /** Anything a tap is meant for: it answers with a tick. */
@@ -110,12 +113,13 @@ interface Made {
   saving: Saving;
   account: Account;
   saves: AccountSaves;
+  community: () => Community | null;
   sound: SoundBoard;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, sound }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, sound }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, sound: sound ?? createSoundBoard(() => null) };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null) };
 }
 
 /**
@@ -206,6 +210,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       saving: made.saving,
       account: made.account,
       saves: made.saves,
+      community: made.community,
       sound: made.sound,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
@@ -288,6 +293,19 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
   };
+}
+
+const NO_COMMUNITY = (): Community | null => null;
+
+/**
+ * The other players: the rankings, the player's name, whom they follow. Null while nobody is
+ * signed in. It is asked again whenever who is signed in changes.
+ */
+export function useCommunity(): Community | null {
+  const { account, community } = useGameContext();
+  // Who is signed in decides whether there is anyone to ask: read here so that a change of it draws the screen anew.
+  useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  return community();
 }
 
 /** Tells of every change of whether the browser has a connection. Returns how to stop. */

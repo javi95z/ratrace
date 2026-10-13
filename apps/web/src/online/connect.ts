@@ -45,6 +45,10 @@ const runOf = (row: RunRow): CloudRun => ({
 
 /** The database's own word for "the rules of this table do not let you". */
 const NOT_ALLOWED = '42501';
+/** A name someone already has, a name that is not accepted for what it says, and one that is not written as a name is. */
+const TAKEN = '23505';
+const UNWELCOME = 'RR002';
+const NOT_A_NAME = '23514';
 /** The word of the `games` table for a save with less of a life played than the account holds. */
 const BEHIND = 'RR001';
 /** The answers the `finish-run` function gives of its own accord, by name. Asked again, it would give the same. */
@@ -180,6 +184,70 @@ export function cloudOf(client: SupabaseClient, region?: string): Cloud {
       if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
       throw error instanceof Error ? error : new Error('the ranked function could not be reached');
     }),
+    community: {
+      async me() {
+        try {
+          const { data, error } = await client.from('profiles').select('nickname, friend_code').eq('user_id', await me()).maybeSingle();
+          const row = data as { nickname: string | null; friend_code: string } | null;
+          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code };
+        } catch {
+          return null;
+        }
+      },
+      async rename(nickname) {
+        try {
+          const { error } = await client.from('profiles').update({ nickname }).eq('user_id', await me());
+          if (!error) return 'ok';
+          // The database checks a name itself: someone has it, or it is not accepted (what it says, or how it is written).
+          if (error.code === TAKEN) return 'taken';
+          return error.code === UNWELCOME || error.code === NOT_A_NAME ? 'refused' : 'failed';
+        } catch {
+          return 'failed';
+        }
+      },
+      async ranking(query) {
+        try {
+          const mine = await me();
+          const { data, error } = await client.rpc('ranking', { period: query.period, life: query.lifeId, friends: query.friends, top: 50 });
+          if (error) return null;
+          return ((data ?? []) as Array<{ place: number; user_id: string; nickname: string | null; score: number; life_id: string; finished_at: string }>).map((row) => ({
+            place: Number(row.place), userId: row.user_id, nickname: row.nickname, score: row.score, lifeId: row.life_id, finishedAt: Date.parse(row.finished_at) || 0, mine: row.user_id === mine,
+          }));
+        } catch {
+          return null;
+        }
+      },
+      async friends() {
+        try {
+          const followed = await client.from('friendships').select('followed').eq('follower', await me()).order('created_at', { ascending: false });
+          if (followed.error) return null;
+          const ids = ((followed.data ?? []) as Array<{ followed: string }>).map((row) => row.followed);
+          if (ids.length === 0) return [];
+          const named = await client.from('profiles').select('user_id, nickname').in('user_id', ids);
+          if (named.error) return null;
+          const names = new Map(((named.data ?? []) as Array<{ user_id: string; nickname: string | null }>).map((row) => [row.user_id, row.nickname]));
+          return ids.map((userId) => ({ userId, nickname: names.get(userId) ?? null }));
+        } catch {
+          return null;
+        }
+      },
+      async follow(code) {
+        try {
+          const { data, error } = await client.rpc('add_friend', { code });
+          return !error && (data === 'ok' || data === 'unknown' || data === 'self' || data === 'full') ? data : 'failed';
+        } catch {
+          return 'failed';
+        }
+      },
+      async unfollow(userId) {
+        try {
+          const { error } = await client.from('friendships').delete().eq('follower', await me()).eq('followed', userId);
+          return error === null;
+        } catch {
+          return false;
+        }
+      },
+    },
     async finishRun(gameId) {
       const { error } = await client.functions.invoke('finish-run', { body: { gameId } });
       if (!error) return 'done';
