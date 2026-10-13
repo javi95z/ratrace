@@ -472,7 +472,16 @@
     "itemWhere": "Se vende o se cancela en la pestaña Tienda.",
     "itemKept": "No se puede vender.",
     "dating": "Saliendo con alguien",
-    "married": "En matrimonio"
+    "married": "En matrimonio",
+    "yours": "Así vives",
+    "insured": "Contratado",
+    "aboutLifestyle": "Tu estilo de vida multiplica lo que te cuesta vivir cada año. Los dos más altos dan estatus.",
+    "aboutRent": "Mientras no tengas casa propia en {city}, vives de alquiler. Elegir entre habitación y piso cambia el gasto y el estatus.",
+    "rentCost": "El coste es el de tu vida entera con ese alquiler, al estilo de vida que llevas.",
+    "aboutInsurance": "Pagas una prima cada año. A cambio, cuando llega una carta mala, el seguro paga parte de la factura.",
+    "pays": "Paga el {pct} % en «{card}»",
+    "opens": "Abre una salida en «{card}»",
+    "changedIn": "Se cambia en la pestaña Vida, en la fase de finanzas."
   },
   "end": {
     "title": "Fin",

@@ -91,4 +91,61 @@ describe('what the player owns, in the profile', () => {
       cleanup();
     }
   });
+
+  it('opens how the player lives, where, and what each insurance is for', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+
+    // The nurse lives normally, in a rented room, with no insurance.
+    await user.click(screen.getByRole('button', { name: /^Lifestyle/ }));
+    let sheet = screen.getByRole('dialog', { name: 'Lifestyle' });
+    let choices = within(sheet).getAllByRole('listitem');
+    expect(choices.map((li) => li.getAttribute('aria-current'))).toEqual([null, 'true', null, null]);
+    expect(within(choices[1]).getByText('Normal')).toBeTruthy();
+    expect(within(choices[1]).getByText('Yours')).toBeTruthy();
+    // Each says what a year of it costs, dearer as it goes up, and the top two give status.
+    const costs = choices.map((li) => Number((li.textContent ?? '').match(/\$([\d,]+)\/yr/)?.[1].replace(/,/g, '')));
+    expect(costs).toEqual([...costs].sort((a, b) => a - b));
+    expect(within(choices[3]).getByText('Status +8')).toBeTruthy();
+    expect(within(choices[0]).queryByText(/^Status/)).toBeNull();
+    expect(within(sheet).getByText('It is changed in the Lifestyle tab, during the finances.')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+
+    await user.click(screen.getByRole('button', { name: /^Home/ }));
+    sheet = screen.getByRole('dialog', { name: 'Home' });
+    choices = within(sheet).getAllByRole('listitem');
+    expect(choices).toHaveLength(2);
+    expect(choices[0].getAttribute('aria-current')).toBe('true');
+    expect(within(sheet).getByText(/^Until you own a home in Madrid, you rent/)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+
+    await user.click(screen.getByRole('button', { name: /^Insurance/ }));
+    sheet = screen.getByRole('dialog', { name: 'Insurance' });
+    // What each one is for is read from the cards: the bills it pays part of, and the ways out it opens.
+    expect(within(sheet).getByText('Pays 90% on "A serious illness"')).toBeTruthy();
+    expect(within(sheet).getByText('Pays 90% on "Water damage"')).toBeTruthy();
+    expect(within(sheet).getByText('Opens a way out on "A serious illness"')).toBeTruthy();
+    expect(within(sheet).queryByText('Insured')).toBeNull();
+    expect(within(sheet).getAllByText(/^\$\d+\/yr$/)).toHaveLength(4);
+  });
+
+  it('shows the home itself, and no rent, to someone who owns where they live', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = memoryServices();
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' } } });
+    await services.sessions.start('heir');
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    await user.click(screen.getByRole('button', { name: /^Home/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Home' });
+    expect(within(sheet).getByText('You live in a home you own, so you pay no rent.')).toBeTruthy();
+    expect(within(sheet).getByText('Flat')).toBeTruthy();
+    expect(within(sheet).getByText('Worth today')).toBeTruthy();
+    expect(within(sheet).queryAllByRole('listitem')).toEqual([]);
+  });
 });

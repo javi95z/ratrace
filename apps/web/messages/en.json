@@ -472,7 +472,16 @@
     "itemWhere": "Sell or cancel it in the Shop tab.",
     "itemKept": "It cannot be sold.",
     "dating": "Seeing someone",
-    "married": "Married"
+    "married": "Married",
+    "yours": "Yours",
+    "insured": "Insured",
+    "aboutLifestyle": "Your lifestyle multiplies what living costs you each year. The top two give status.",
+    "aboutRent": "Until you own a home in {city}, you rent. A room or a flat changes what you spend and your status.",
+    "rentCost": "The cost is that of your whole life with that rent, at the lifestyle you lead.",
+    "aboutInsurance": "You pay a premium every year. In return, when a bad card comes, the insurance pays part of the bill.",
+    "pays": "Pays {pct}% on \"{card}\"",
+    "opens": "Opens a way out on \"{card}\"",
+    "changedIn": "It is changed in the Lifestyle tab, during the finances."
   },
   "end": {
     "title": "The end",

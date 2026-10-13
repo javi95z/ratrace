@@ -1,7 +1,7 @@
 import { cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
-import type { Content, Effects, GameEvent, GameView, Headline, Order, PlayerState, WorldState } from '@ratrace/engine';
+import type { Content, Effects, GameEvent, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -230,3 +230,27 @@ export function worthBars(history: number[]): { zero: number; bars: Array<{ y: n
     bars: history.map((value) => (value >= 0 ? { y: (top - value) / span, h: value / span, negative: false } : { y: zero, h: -value / span, negative: true })),
   };
 }
+
+/** What an insurance does for whoever holds it, read from the cards themselves so that it is never out of date. */
+export interface InsuranceCover {
+  /** Cards whose bill it pays part of, with the largest share it pays on that card, in percent. */
+  pays: Array<{ cardId: string; pct: number }>;
+  /** Cards on which it opens an option that is closed to the uninsured. */
+  opens: string[];
+}
+
+export function insuranceCover(content: Content, kind: InsuranceKind): InsuranceCover {
+  const pays = new Map<string, number>();
+  const opens = new Set<string>();
+  for (const card of content.cards) {
+    for (const option of card.options) {
+      if (option.when?.insured === kind) opens.add(card.id);
+      for (const effects of [option.effects, ...(option.outcomes ?? []).map((outcome) => outcome.effects)]) {
+        const cover = effects?.protection;
+        if (cover?.insurance === kind) pays.set(card.id, Math.max(pays.get(card.id) ?? 0, cover.coverPct));
+      }
+    }
+  }
+  return { pays: [...pays].map(([cardId, pct]) => ({ cardId, pct })), opens: [...opens] };
+}
+
