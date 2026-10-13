@@ -2,7 +2,7 @@
 
 import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -90,7 +90,7 @@ function Portfolio() {
         </Button>
       </Panel>
 
-      <Panel title={t('holdings')}>
+      <Panel title={t('holdings')} label={t('holdings')}>
         {held.length === 0 ? <p className="text-[14px] text-ink-300">{t('none')}</p> : null}
         {held.map((asset) => {
           const position = p.positions[asset.id];
@@ -104,6 +104,7 @@ function Portfolio() {
                   {t(gain >= 0 ? 'gain' : 'loss', { amount: fmt.money(Math.abs(gain)) })}
                 </div>
                 {dividends.has(asset.id) ? <div className="text-[12px] text-ink-300">{t('pays', { amount: fmt.money(dividends.get(asset.id) ?? 0) })}</div> : null}
+                <MarginLine assetId={asset.id} />
               </div>
               <div className="pixel text-right">{fmt.money(position.value)}</div>
               <Button onClick={() => setMove({ kind: 'sell', asset })}>{t('sell')}</Button>
@@ -114,6 +115,20 @@ function Portfolio() {
       <Payouts />
       <Plans />
       {sheet}
+    </div>
+  );
+}
+
+/** What is owed to the broker on a holding, and how far its price may fall before he sells it. Nothing for a holding bought outright. */
+function MarginLine({ assetId }: { assetId: string }) {
+  const t = useT('finance.plans');
+  const { content, fmt } = useWords();
+  const { shown } = useRound();
+  const margin = quoteMargin(content, shown, assetId);
+  if (margin.owed === 0 || margin.dropToCallBp === null) return null;
+  return (
+    <div className="text-[12px] text-wine-300">
+      {t('marginOwed', { amount: fmt.money(margin.owed) })} · {margin.dropToCallBp > 0 ? t('marginDrop', { pct: fmt.rate(margin.dropToCallBp) }) : t('marginNow')}
     </div>
   );
 }
@@ -246,6 +261,9 @@ function Market() {
   const [buying, setBuying] = useState<AssetDef | null>(null);
   // The same sheet buys once or sets what is bought every round.
   const [each, setEach] = useState(false);
+  // Bought once, it may be bought with as much again borrowed from the broker.
+  const [geared, setGeared] = useState(false);
+  const margin = buying ? quoteMargin(content, shown, buying.id) : null;
   const planned = buying ? shown.player.plans.find((plan) => plan.assetId === buying.id) : undefined;
 
   return (
@@ -266,6 +284,7 @@ function Market() {
                   disabled={locked}
                   onClick={() => {
                     setEach(false);
+                    setGeared(false);
                     setBuying(asset);
                   }}
                   className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left"
@@ -295,7 +314,33 @@ function Market() {
           max={each ? planMax(p.cash, preview.income.salary) : p.cash}
           start={each ? (planned?.amount ?? 0) : 0}
           onClose={() => setBuying(null)}
-          onConfirm={(a) => (each ? setOrder(isPlanFor(buying.id), planOrder(view, buying.id, a)) : addOrder({ type: 'buy', assetId: buying.id, amount: a }))}
+          onConfirm={(a) =>
+            each
+              ? setOrder(isPlanFor(buying.id), planOrder(view, buying.id, a))
+              : addOrder(geared && margin?.lock === null && margin.canDouble ? { type: 'buy', assetId: buying.id, amount: a, margin: a } : { type: 'buy', assetId: buying.id, amount: a })
+          }
+          footer={
+            each || !margin ? null : (
+              <section aria-label={plans('marginTitle')} className="mt-3 border-t-2 border-night-900 pt-3">
+                <Toggle
+                  on={geared && margin.lock === null && margin.canDouble}
+                  onChange={setGeared}
+                  disabled={margin.lock !== null || !margin.canDouble}
+                  label={plans('margin')}
+                  hint={plans('marginHint', { rate: fmt.rate(margin.rateBp) })}
+                />
+                <p className={`mt-1.5 text-[12px] leading-snug ${margin.lock !== null || !margin.canDouble ? 'text-gold-200' : 'text-ink-300'}`}>
+                  {margin.lock === 'needs-finance-skill'
+                    ? plans('marginSkill', { level: margin.minSkill })
+                    : margin.lock !== null
+                      ? text.reasons[margin.lock]
+                      : !margin.canDouble
+                        ? plans('marginFull', { pct: margin.maxPct })
+                        : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
+                </p>
+              </section>
+            )
+          }
         >
           <div className="mb-3">
             <Segmented<'once' | 'each'>

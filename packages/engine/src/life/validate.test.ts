@@ -164,7 +164,8 @@ describe('validateStart: the life', () => {
     expect(check({ career: { id: 'office', level: 3 } })).toEqual(['life.career level 3 does not exist in office']);
     expect(check({ career: { id: 'office', level: 0.5 } })).toEqual(['life.career level 0.5 does not exist in office']);
     expect(check({ careerSkill: -1 })).toEqual(['life.careerSkill must be a whole, non-negative number']);
-    expect(check({ financeSkill: 3 })).toEqual(['life.financeSkill must be 0, 1 or 2']);
+    expect(check({ financeSkill: 4 as never })).toEqual(['life.financeSkill must be 0, 1, 2 or 3']);
+    expect(check({ financeSkill: 3 })).toEqual([]);
     expect(check({ focus: 0 })).toEqual(['life.focus must be a whole number from 1 to 10']);
     expect(check({ focus: 11 })).toEqual(['life.focus must be a whole number from 1 to 10']);
     expect(check({ minLifestyleTier: 2 })).toEqual(['life.minLifestyleTier must be 0, 1, 2 or 3 and no higher than lifestyleTier']);

@@ -83,6 +83,9 @@ export function ageLife(
     if (life.investedRounds === rules.financeExperienceRounds && life.financeSkill < 2) {
       life.financeSkill = (life.financeSkill + 1) as FinanceSkill;
       events.push({ kind: 'financeSkill', level: life.financeSkill });
+    } else if (life.financeSkill === 2 && life.investedRounds >= rules.financeMasterRounds) {
+      life.financeSkill = 3;
+      events.push({ kind: 'financeSkill', level: 3 });
     }
   }
 }

@@ -140,6 +140,15 @@ describe('the v1 content', () => {
     for (const id of ['law', 'education', 'influencer', 'hospitality', 'sales']) expect(leads, id).toContain(id);
   });
 
+  it('lends to buy investments only to a seasoned investor, at half the holding, and sells it at three quarters', () => {
+    expect(content.debt).toMatchObject({ marginMaxPct: 50, marginCallPct: 75, marginMinFinanceSkill: 3 });
+    // No life starts able to: it is earned by years with money invested.
+    for (const life of lives) expect(life.start.life?.financeSkill ?? 0, life.id).toBeLessThan(3);
+    expect(content.life.financeMasterRounds).toBeGreaterThan(content.life.financeExperienceRounds);
+    // No asset asks for the fourth level: it opens borrowed money, not a market.
+    for (const asset of content.assets) expect(asset.minFinanceSkill ?? 0, asset.id).toBeLessThan(3);
+  });
+
   it('lets cars and gadgets lose status as they age, and nothing that holds its value', () => {
     const view = viewOf(createGame({ content, start: lives[0].start }, 'aging'));
     const aging = content.items.filter((item) => quoteItem(content, view, item.id).ages);

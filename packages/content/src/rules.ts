@@ -32,6 +32,11 @@ export const propertyTypes: PropertyTypeDef[] = [
 ];
 
 export const debt: DebtParams = {
+  // Borrowing from a broker to buy more: cheap money, half of the holding at most, and sold out from under you at three quarters.
+  marginSpreadBp: 300,
+  marginMaxPct: 50,
+  marginCallPct: 75,
+  marginMinFinanceSkill: 3,
   personalLoanSpreadBp: 500,
   mortgageSpreadBp: 150,
   creditCardRateBp: 2_200,
@@ -91,6 +96,8 @@ export const life: LifeRules = {
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
   financeExperienceRounds: 3,
+  // Twelve years with money at work make an investor who may be lent to.
+  financeMasterRounds: 6,
   rentOutMinFinanceSkill: 2,
   unstablePayPct: 30,
   cheapMortgageBp: 60,

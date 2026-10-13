@@ -92,6 +92,11 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
   for (const debt of p.debts) {
     if (!DEBT_KINDS.includes(debt.kind)) breaks.push(`debt ${debt.id} has an unknown kind`);
     if (debt.forItem !== undefined && typeof debt.forItem !== 'string') breaks.push(`debt ${debt.id} names an item that is not text`);
+    // A margin loan is secured on what it bought: one a holding, and never without the holding.
+    if (debt.kind === 'margin') {
+      if (typeof debt.forAsset !== 'string' || !Object.hasOwn(p.positions, debt.forAsset)) breaks.push(`margin loan ${debt.id} is not secured on an investment the player holds`);
+      else if (p.debts.some((other) => other !== debt && other.kind === 'margin' && other.forAsset === debt.forAsset)) breaks.push(`two margin loans are secured on ${debt.forAsset}`);
+    }
     if (!isCount(debt.roundsLeft)) breaks.push(`debt ${debt.id} roundsLeft is not a non-negative whole number: ${debt.roundsLeft}`);
   }
   for (const property of p.properties) {

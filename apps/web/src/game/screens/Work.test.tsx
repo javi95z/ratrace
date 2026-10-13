@@ -80,7 +80,10 @@ describe('the work panel of the profile', () => {
     await user.click(within(panel).getByRole('button', { name: /^Money sense/ }));
     const sheet = screen.getByRole('dialog', { name: 'Money sense' });
     const levels = within(sheet).getAllByRole('listitem');
-    expect(levels.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null, null]);
+    expect(levels.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null, null, null]);
+    // The last level opens no market: it opens the broker's money, and no course gives it.
+    expect(within(levels[3]).getByText('No new market: what changes is whose money you buy with.')).toBeTruthy();
+    expect(within(levels[content.debt.marginMinFinanceSkill]).getByText('And buying with money borrowed from the broker.')).toBeTruthy();
     // The counts are the game's own: what each level adds to what can be bought.
     const at = (level: number) => content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === level).length;
     expect(within(levels[0]).getByText(new RegExp(`^Index funds: ${at(0)} to choose from`))).toBeTruthy();

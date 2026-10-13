@@ -46,6 +46,21 @@ describe('a plan to invest, told after the round', () => {
   });
 });
 
+describe('a margin call, told after the round', () => {
+  it('says what was sold, and whether the sale covered the loan', () => {
+    const note = (sold: number, repaid: number) => roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'marginCall', assetId: 'sp500', sold, repaid }])[0];
+    expect(note(900_000, 700_000)).toEqual({ tone: 'bad', icon: 'icon.loan', title: 'The broker has sold your S&P 500.', hint: 'It fell too far for what you owed. It sold for $9,000, and $7,000 went to pay the loan.' });
+    expect(note(500_000, 700_000).hint).toBe('It fell too far for what you owed. It sold for $5,000, and you had to find another $2,000.');
+  });
+});
+
+describe('debts named for what they bought', () => {
+  it('names a margin loan for the investment it is on', () => {
+    expect(debtLabel(words('en'), { kind: 'margin', forAsset: 'sp500' })).toBe('Margin loan · S&P 500');
+    expect(debtLabel(words('es'), { kind: 'margin', forAsset: 'sp500' })).toBe('Préstamo de margen · S&P 500');
+  });
+});
+
 describe('a move, told after the round', () => {
   it('says what it cost besides its price, and nothing when it cost nothing', () => {
     const note = (rungsLost: number, partnerIdle: boolean) =>
@@ -182,6 +197,7 @@ describe('orderLabel', () => {
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 200_000 })).toBe('Invest $2,000 every round in S&P 500');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 0 })).toBe('Stop investing in S&P 500');
+    expect(label({ type: 'buy', assetId: 'sp500', amount: 100_000, margin: 100_000 })).toBe('Buy $2,000 of S&P 500 on margin (you put in $1,000)');
     expect(label({ type: 'setReinvest', on: true })).toBe('Reinvest the dividends');
     expect(label({ type: 'setReinvest', on: false })).toBe('Take the dividends as cash');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');

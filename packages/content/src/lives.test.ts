@@ -33,6 +33,7 @@ const ownedId = (prefix: string) => fc.integer({ min: 1, max: 12 }).map((n) => `
 
 const order: fc.Arbitrary<Order> = fc.oneof(
   { weight: 3, arbitrary: fc.record({ type: fc.constant('buy' as const), assetId, amount }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('buy' as const), assetId, amount, margin: amount }) },
   { weight: 3, arbitrary: fc.record({ type: fc.constant('setPlan' as const), assetId, amount: fc.oneof(amount, fc.constant(0)) }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('sell' as const), assetId, amount }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('depositIn' as const), amount }) },

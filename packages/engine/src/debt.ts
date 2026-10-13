@@ -16,8 +16,51 @@ export function mortgageSpreadBp(p: PlayerState, content: Content): Bp {
 /** Annual rate in bp. */
 export function debtRateBp(d: Debt, content: Content, world: WorldState, p: PlayerState): Bp {
   if (d.kind === 'creditCard') return content.debt.creditCardRateBp;
+  if (d.kind === 'margin') return world.policyRateBp + content.debt.marginSpreadBp;
   if (d.kind === 'mortgageVariable') return world.policyRateBp + mortgageSpreadBp(p, content);
   return d.fixedRateBp;
+}
+
+/** True for a debt with no term: interest is paid on it each round, and it is paid back when the player chooses or has to. */
+export function isRevolving(d: Debt): boolean {
+  return d.kind === 'creditCard' || d.kind === 'margin';
+}
+
+/** The margin loan secured on an investment, if there is one. */
+export function marginOn(p: PlayerState, assetId: string): Debt | undefined {
+  return p.debts.find((d) => d.kind === 'margin' && d.forAsset === assetId);
+}
+
+/** Puts an amount on the credit card, opening one if there is none. */
+export function chargeCard(p: PlayerState, amount: Cents): void {
+  if (amount <= 0) return;
+  let card = p.debts.find((d) => d.kind === 'creditCard');
+  if (!card) {
+    card = { id: newId(p, 'debt'), kind: 'creditCard', principal: 0, fixedRateBp: 0, roundsLeft: 0 };
+    p.debts.push(card);
+  }
+  card.principal += amount;
+}
+
+/**
+ * Sells whatever was bought with borrowed money and has fallen too far for the loan on it: when
+ * the loan is more than the call share of what the holding is worth, the broker sells all of it
+ * and takes the loan back first. What the sale does not cover is the player's to find. Run once the
+ * round's prices are in.
+ */
+export function callMargins(p: PlayerState, content: Content): Array<{ assetId: string; sold: Cents; repaid: Cents }> {
+  const called: Array<{ assetId: string; sold: Cents; repaid: Cents }> = [];
+  for (const loan of p.debts.filter((d) => d.kind === 'margin')) {
+    const assetId = loan.forAsset ?? '';
+    const value = Object.hasOwn(p.positions, assetId) ? p.positions[assetId].value : 0;
+    if (loan.principal * 100 <= value * content.debt.marginCallPct) continue;
+    delete p.positions[assetId];
+    p.cash += value - loan.principal;
+    called.push({ assetId, sold: value, repaid: loan.principal });
+    loan.principal = 0;
+  }
+  removePaidDebts(p);
+  return called;
 }
 
 export interface DebtService {
@@ -33,7 +76,7 @@ export function debtServiceForRound(p: PlayerState, content: Content, world: Wor
   for (const d of p.debts) {
     service.interest += applyBp(d.principal, debtRateBp(d, content, world, p) * years);
     let due = 0;
-    if (d.kind !== 'creditCard') due = d.roundsLeft <= 1 ? d.principal : Math.ceil(d.principal / d.roundsLeft);
+    if (!isRevolving(d)) due = d.roundsLeft <= 1 ? d.principal : Math.ceil(d.principal / d.roundsLeft);
     service.principal += due;
     service.perDebt.push({ id: d.id, principal: due });
   }
@@ -54,7 +97,7 @@ export function applyDebtPayments(p: PlayerState, service: DebtService): void {
     const d = p.debts.find((x) => x.id === payment.id);
     if (!d) continue;
     d.principal -= payment.principal;
-    if (d.kind !== 'creditCard') d.roundsLeft = Math.max(0, d.roundsLeft - 1);
+    if (!isRevolving(d)) d.roundsLeft = Math.max(0, d.roundsLeft - 1);
   }
   removePaidDebts(p);
 }

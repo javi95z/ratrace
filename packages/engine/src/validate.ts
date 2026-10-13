@@ -8,7 +8,7 @@ type Transitions = Record<string, ReadonlyArray<readonly [string, number]>>;
 
 const REGIMES: readonly Regime[] = ['expansion', 'boom', 'slowdown', 'recession', 'recovery'];
 const PHASES: readonly CryptoPhase[] = ['accumulation', 'bull', 'mania', 'winter'];
-export const DEBT_KINDS: readonly DebtKind[] = ['mortgageFixed', 'mortgageVariable', 'personalLoan', 'creditCard'];
+export const DEBT_KINDS: readonly DebtKind[] = ['mortgageFixed', 'mortgageVariable', 'personalLoan', 'creditCard', 'margin'];
 
 export const ITEM_KINDS: readonly string[] = ['durable', 'membership', 'experience'];
 
@@ -191,7 +191,7 @@ export function validateContent(c: Content): string[] {
   for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
-  for (const field of ['childRounds', 'financeExperienceRounds']) {
+  for (const field of ['childRounds', 'financeExperienceRounds', 'financeMasterRounds']) {
     if (!(isWhole(life[field]) && life[field] >= 1)) errors.push(`life.${field} must be a positive whole number`);
   }
   for (const field of ['jobHuntChancePct', 'lesserItemPct']) {
@@ -262,7 +262,11 @@ export function validateContent(c: Content): string[] {
     errors.push('debt terms must be positive integers');
   }
   if (!isCount(d.bankruptcyStatusPenalty)) errors.push('debt.bankruptcyStatusPenalty must be a whole, non-negative number');
-  const amounts = [d.personalLoanSpreadBp, d.mortgageSpreadBp, d.creditCardRateBp, d.personalLoanMaxIncomePct, d.bankruptcyIncomeMultiple];
+  if (!(isCount(d.marginMaxPct) && isCount(d.marginCallPct) && d.marginMaxPct < d.marginCallPct && d.marginCallPct < 100)) {
+    errors.push('debt.marginMaxPct must be a whole percentage below debt.marginCallPct, itself below 100');
+  }
+  if (![0, 1, 2, 3].includes(d.marginMinFinanceSkill as number)) errors.push('debt.marginMinFinanceSkill must be 0, 1, 2 or 3');
+  const amounts = [d.marginSpreadBp, d.personalLoanSpreadBp, d.mortgageSpreadBp, d.creditCardRateBp, d.personalLoanMaxIncomePct, d.bankruptcyIncomeMultiple];
   if (amounts.some((x) => !notNegative(x))) errors.push('debt rates, spreads and limits must not be negative');
 
   const points = c.scoring.wealthBreakpoints;
@@ -317,7 +321,7 @@ function lifeStartErrors(content: Content, start: StartConfig): string[] {
     }
   }
   if (!isCount(life.careerSkill)) errors.push('life.careerSkill must be a whole, non-negative number');
-  if (![0, 1, 2].includes(life.financeSkill as number)) errors.push('life.financeSkill must be 0, 1 or 2');
+  if (![0, 1, 2, 3].includes(life.financeSkill as number)) errors.push('life.financeSkill must be 0, 1, 2 or 3');
   if (!(isWhole(life.focus) && life.focus >= 1 && life.focus <= 10)) errors.push('life.focus must be a whole number from 1 to 10');
   if (life.minLifestyleTier !== undefined) {
     const floor = life.minLifestyleTier as number;

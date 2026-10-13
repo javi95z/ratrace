@@ -64,7 +64,7 @@ export const en: ContentText = {
   lifestyleTiers: ['Frugal', 'Normal', 'Comfortable', 'Lavish'],
   insurance: { health: 'Health insurance', home: 'Home insurance', life: 'Life insurance', liability: 'Liability insurance' },
   focusActions: { overtime: 'Work overtime', studyCareer: 'Study for your career', jobHunt: 'Look for a better job' },
-  debts: { mortgageFixed: 'Fixed mortgage', mortgageVariable: 'Variable mortgage', personalLoan: 'Personal loan', creditCard: 'Credit card' },
+  debts: { mortgageFixed: 'Fixed mortgage', mortgageVariable: 'Variable mortgage', personalLoan: 'Personal loan', creditCard: 'Credit card', margin: 'Margin loan' },
   lives: {
     nurse: {
       name: 'Nurse',
@@ -253,6 +253,7 @@ export const en: ContentText = {
     'no-credit': 'No bank will lend to you yet after your bankruptcy.',
     'cannot-finance': 'This is not sold on instalments.',
     'over-loan-limit': 'That is more than you can borrow on your salary.',
+    'over-margin-limit': 'The broker lends at most half of what you would then hold.',
     'unknown-debt': 'That debt does not exist.',
     'exceeds-debt': 'That is more than you owe.',
     'unknown-property-type': 'That kind of property does not exist.',

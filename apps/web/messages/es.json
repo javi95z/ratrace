@@ -496,7 +496,16 @@
       "onceHint": "Ahora",
       "each": "Cada ronda",
       "eachHint": "Automático",
-      "already": "Ya inviertes {amount} cada ronda. Cambia la cantidad aquí."
+      "already": "Ya inviertes {amount} cada ronda. Cambia la cantidad aquí.",
+      "marginTitle": "Comprar con margen",
+      "margin": "Con margen: el bróker pone otro tanto",
+      "marginHint": "Compras el doble. El préstamo cuesta un {rate} al año.",
+      "marginSkill": "Necesitas saber financiero {level}. Se llega con años de tener dinero invertido.",
+      "marginFull": "Ya debes más del {pct} % de lo que tienes en este activo: no se presta más sobre él.",
+      "marginRisk": "Ganas y pierdes el doble. Si el préstamo pasa del {call} % de lo que vale, el bróker lo vende todo: basta una caída del {drop} %.",
+      "marginOwed": "Debes {amount} al bróker",
+      "marginDrop": "se vende si cae un {pct}",
+      "marginNow": "al borde de la venta forzosa"
     },
     "glance": {
       "title": "De un vistazo",
@@ -550,7 +559,10 @@
     "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada.",
     "movedRung": "Empiezas un puesto por debajo, hasta tu siguiente ascenso.",
     "movedPartner": "Tu pareja busca trabajo: una ronda sin su sueldo.",
-    "planMissed": "Tu plan no compró {name}: faltaban {amount}."
+    "planMissed": "Tu plan no compró {name}: faltaban {amount}.",
+    "marginCall": "El bróker ha vendido tu {name}.",
+    "marginCallHint": "Cayó demasiado para lo que debías. Se vendió por {sold} y {repaid} fueron a pagar el préstamo.",
+    "marginCallShort": "Cayó demasiado para lo que debías. Se vendió por {sold}, y aún faltaban {short} que has puesto tú."
   },
   "profile": {
     "title": "Tu vida",
@@ -802,7 +814,8 @@
     "planOn": "Invertir {amount} cada ronda en {name}",
     "planOff": "Dejar de invertir en {name}",
     "reinvestOn": "Reinvertir los dividendos",
-    "reinvestOff": "Cobrar los dividendos en efectivo"
+    "reinvestOff": "Cobrar los dividendos en efectivo",
+    "buyMargin": "Comprar {amount} de {name} con margen (pones {own})"
   },
   "account": {
     "title": "Cuenta",
@@ -851,7 +864,8 @@
     "financeOpens": {
       "0": "Fondos indexados: {n} para elegir. Lo sencillo, y lo que casi siempre basta.",
       "1": "Bonos, acciones sueltas y oro: {n} más.",
-      "2": "Criptomonedas: {n} más."
+      "2": "Criptomonedas: {n} más.",
+      "3": "Ningún mercado nuevo: lo que cambia es con qué dinero compras."
     },
     "financeLandlord": "Y poner propiedades en alquiler.",
     "financeHow": "Sube con la práctica: tras {years} años con dinero invertido. También con algunas cartas, como un curso o un buen libro.",
@@ -878,7 +892,9 @@
     "jobFocus": "Deja tiempo libre: +{n} de foco cada ronda.",
     "focusJob": "+{n} porque tu trabajo deja tiempo",
     "focusExtra": "+{n} extra esta ronda",
-    "focusFromJob": "{n} es de tu trabajo, que deja tiempo."
+    "focusFromJob": "{n} es de tu trabajo, que deja tiempo.",
+    "financeMargin": "Y comprar con dinero prestado del bróker.",
+    "financeMaster": "El último nivel no lo da ningún curso: llega tras {years} años con dinero invertido."
   },
   "rankings": {
     "title": "Clasificaciones",

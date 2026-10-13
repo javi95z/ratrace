@@ -81,7 +81,7 @@ for (const life of lives) {
       [
         ['Empieza en', `${names.cities[start.cityId]}, con ${usd(start.cash)}`],
         ['Trabajo', job],
-        ['Experiencia · Finanzas · Foco', `${from?.careerSkill ?? 0} · ${from?.financeSkill ?? 0}/2 · ${from?.focus ?? 3}`],
+        ['Experiencia · Finanzas · Foco', `${from?.careerSkill ?? 0} · ${from?.financeSkill ?? 0}/3 · ${from?.focus ?? 3}`],
         ['Modo de vida', `${text.lifestyleTiers[start.lifestyleTier]}${from?.minLifestyleTier ? ` (no puede bajar de ${text.lifestyleTiers[from.minLifestyleTier]})` : ''}`],
         ['Empieza con', extras.length > 0 ? extras.join('; ') : 'Nada más'],
         ['Ventaja', written.perk],

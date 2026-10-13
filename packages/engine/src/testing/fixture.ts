@@ -107,6 +107,10 @@ const base: Content = {
     { id: 'villa', pricePct: 800, status: 40 },
   ],
   debt: {
+    marginSpreadBp: 300,
+    marginMaxPct: 50,
+    marginCallPct: 75,
+    marginMinFinanceSkill: 3,
     personalLoanSpreadBp: 500,
     mortgageSpreadBp: 150,
     creditCardRateBp: 2_200,
@@ -177,6 +181,7 @@ const base: Content = {
     jobHuntChancePct: 35,
     jobHuntRaisePct: 8,
     financeExperienceRounds: 3,
+    financeMasterRounds: 6,
     rentOutMinFinanceSkill: 0,
     unstablePayPct: 30,
     cheapMortgageBp: 50,

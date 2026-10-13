@@ -1,8 +1,17 @@
 import { applyBp, isAmount, mulDiv } from './money';
 import type { Cents } from './money';
 import { assetYieldBp, indexed } from './rates';
+import { chargeCard, marginOn, removePaidDebts } from './debt';
+import { newId } from './ids';
 import { ownedOutsidePension, totalOwed } from './solvency';
 import type { Content, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
+
+/** Why the player may not buy with borrowed money, or null when they may: it takes the skill, and a broker willing to lend. */
+export function marginLock(p: PlayerState, content: Content, round: number): RejectReason | null {
+  if (p.life.financeSkill < content.debt.marginMinFinanceSkill) return 'needs-finance-skill';
+  if (round < p.bankruptUntilRound) return 'no-credit';
+  return null;
+}
 
 export type PortfolioOrder = Extract<Order, { type: 'buy' | 'sell' | 'depositIn' | 'depositOut' | 'pensionIn' }>;
 
@@ -69,9 +78,23 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
       const asset = ctx.content.assets.find((a) => a.id === order.assetId);
       if (!asset) return 'unknown-asset';
       if ((asset.minFinanceSkill ?? 0) > p.life.financeSkill) return 'needs-finance-skill';
-      if (order.amount > p.cash) return 'not-enough-cash';
+      const margin = order.margin ?? 0;
       const held = Object.hasOwn(p.positions, order.assetId) ? p.positions[order.assetId] : { value: 0, basis: 0 };
-      p.positions[order.assetId] = { value: held.value + order.amount, basis: held.basis + order.amount };
+      if (margin !== 0) {
+        if (!isAmount(margin)) return 'bad-amount';
+        const lock = marginLock(p, ctx.content, ctx.round);
+        if (lock !== null) return lock;
+        // The loan is judged against the whole holding as the purchase leaves it, loan and all.
+        const owed = (marginOn(p, order.assetId)?.principal ?? 0) + margin;
+        if (owed * 100 > (held.value + order.amount + margin) * ctx.content.debt.marginMaxPct) return 'over-margin-limit';
+      }
+      if (order.amount > p.cash) return 'not-enough-cash';
+      if (margin !== 0) {
+        const loan = marginOn(p, order.assetId);
+        if (loan) loan.principal += margin;
+        else p.debts.push({ id: newId(p, 'debt'), kind: 'margin', principal: margin, fixedRateBp: 0, roundsLeft: 0, forAsset: order.assetId });
+      }
+      p.positions[order.assetId] = { value: held.value + order.amount + margin, basis: held.basis + order.amount + margin };
       p.cash -= order.amount;
       return null;
     }
@@ -87,6 +110,21 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
         delete p.positions[order.assetId];
       } else {
         p.positions[order.assetId] = { value: held.value - order.amount, basis: held.basis - basisSold };
+      }
+      // The broker is paid first: the share of the loan that the share sold carried, or all of it when all is sold.
+      const loan = marginOn(p, order.assetId);
+      if (loan) {
+        const all = order.amount === held.value;
+        const due = all ? loan.principal : Math.min(loan.principal, Math.ceil((loan.principal * order.amount) / held.value));
+        const paid = Math.min(due, order.amount);
+        p.cash -= paid;
+        loan.principal -= paid;
+        if (all && loan.principal > 0) {
+          // The sale did not cover the loan, and there is nothing left to secure the rest on.
+          chargeCard(p, loan.principal);
+          loan.principal = 0;
+        }
+        removePaidDebts(p);
       }
       return null;
     }

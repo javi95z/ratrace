@@ -140,7 +140,8 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   life.salaryModPct += effects.salaryModPct ?? 0;
   life.salaryBoostPct += effects.salaryBoostPct ?? 0;
   life.careerSkill = Math.max(0, life.careerSkill + (effects.careerSkill ?? 0));
-  life.financeSkill = clamp(life.financeSkill + (effects.financeSkill ?? 0), 0, 2) as FinanceSkill;
+  // A course or a book takes someone as far as the third level; the fourth comes only from years of investing.
+  life.financeSkill = clamp(life.financeSkill + (effects.financeSkill ?? 0), 0, Math.max(2, life.financeSkill)) as FinanceSkill;
   life.bonusStatus += effects.status ?? 0;
   life.focusUsed += effects.focus ?? 0;
 

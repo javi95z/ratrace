@@ -87,7 +87,7 @@ export function WorkPanel({ shown }: { shown: GameView }) {
         ) : null}
       </Opener>
       <Opener onOpen={() => setAbout('finance')}>
-        <Row className="border-t-2 border-night-900" left={t('finance')} sub={t('financeSub')} right={<>{`${life.financeSkill}/2`}<More /></>} />
+        <Row className="border-t-2 border-night-900" left={t('finance')} sub={t('financeSub')} right={<>{`${life.financeSkill}/3`}<More /></>} />
       </Opener>
       <Opener onOpen={() => setAbout('focus')}>
         <Row className="border-t-2 border-night-900" left={t('focus')} sub={work.focus.bonus === 0 ? t('focusSub') : work.traits.focus === 0 ? t('focusRested', { n: work.focus.bonus }) : work.traits.focus === work.focus.bonus ? t('focusJob', { n: work.focus.bonus }) : t('focusExtra', { n: work.focus.bonus })} right={<>{`${work.focus.left}/${work.focus.total}`}<More /></>} />
@@ -170,7 +170,7 @@ function FinanceLevels({ level }: { level: FinanceSkill }) {
     <>
       <p className="text-[14px] leading-snug">{t('financeAbout')}</p>
       <ul className="flex flex-col gap-2">
-        {([0, 1, 2] as const).map((at) => {
+        {([0, 1, 2, 3] as const).map((at) => {
           const opens = content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === at).length;
           return (
             <li key={at} aria-current={at === level ? 'true' : undefined} className={`px-2.5 py-2 ${at === level ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'} ${at > level ? 'opacity-70' : ''}`}>
@@ -179,12 +179,15 @@ function FinanceLevels({ level }: { level: FinanceSkill }) {
                 {at === level ? <Tag tone="good">{t('yourLevel')}</Tag> : at > level ? <Tag>{t('locked')}</Tag> : null}
               </div>
               <p className="mt-1 text-[13px] leading-snug text-ink-200">{t(`financeOpens.${at}`, { n: opens })}</p>
+              {content.debt.marginMinFinanceSkill === at ? <p className="mt-0.5 text-[13px] leading-snug text-ink-200">{t('financeMargin')}</p> : null}
               {content.life.rentOutMinFinanceSkill === at ? <p className="mt-0.5 text-[13px] leading-snug text-ink-200">{t('financeLandlord')}</p> : null}
             </li>
           );
         })}
       </ul>
-      <p className="text-[12px] text-ink-300">{level < 2 ? t('financeHow', { years }) : t('financeTop')}</p>
+      <p className="text-[12px] text-ink-300">
+        {level < 2 ? t('financeHow', { years }) : level === 2 ? t('financeMaster', { years: content.life.financeMasterRounds * content.yearsPerRound }) : t('financeTop')}
+      </p>
     </>
   );
 }

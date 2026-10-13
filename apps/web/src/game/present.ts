@@ -61,10 +61,11 @@ export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] 
  * What a debt is called: its kind, and what it bought. A mortgage is named for the home it is on,
  * found among the properties given; a loan taken to buy a thing, for the thing.
  */
-export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem'> & { id?: string }, properties: ReadonlyArray<Property> = []): string {
+export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'forAsset'> & { id?: string }, properties: ReadonlyArray<Property> = []): string {
   const kind = words.text.debts[debt.kind];
   const home = debt.id === undefined ? undefined : properties.find((property) => property.mortgageId === debt.id);
   if (home) return `${kind} · ${words.text.propertyTypes[home.typeId]}, ${words.names.cities[home.cityId]}`;
+  if (debt.forAsset !== undefined && words.names.assets[debt.forAsset] !== undefined) return `${kind} · ${words.names.assets[debt.forAsset].name}`;
   return debt.forItem !== undefined && words.names.items[debt.forItem] !== undefined ? `${kind} · ${words.names.items[debt.forItem]}` : kind;
 }
 
@@ -145,8 +146,10 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
   };
   switch (order.type) {
     case 'buy':
+      if ((order.margin ?? 0) > 0) return t('buyMargin', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount + (order.margin ?? 0)), own: fmt.money(order.amount) });
+      return t('buy', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
     case 'sell':
-      return t(order.type, { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
+      return t('sell', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
     case 'depositIn':
       return t('save', { amount: fmt.money(order.amount) });
     case 'depositOut':
@@ -205,7 +208,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'marginCall', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -227,6 +230,14 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'marginCall':
+        add(event, {
+          tone: 'bad',
+          icon: 'icon.loan',
+          title: t('marginCall', { name: names.assets[event.assetId]?.name ?? event.assetId }),
+          hint: t(event.sold >= event.repaid ? 'marginCallHint' : 'marginCallShort', { sold: fmt.money(event.sold), repaid: fmt.money(event.repaid), short: fmt.money(Math.max(0, event.repaid - event.sold)) }),
+        });
         break;
       case 'planRan':
         // A plan that bought is in the ledger with every other purchase. One that could not is news.

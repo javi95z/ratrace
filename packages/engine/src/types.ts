@@ -5,7 +5,7 @@ export type Regime = 'expansion' | 'boom' | 'slowdown' | 'recession' | 'recovery
 export type CryptoPhase = 'accumulation' | 'bull' | 'mania' | 'winter';
 export type AssetClass = 'bond' | 'equity' | 'crypto' | 'gold';
 export type LifestyleTier = 0 | 1 | 2 | 3;
-export type FinanceSkill = 0 | 1 | 2;
+export type FinanceSkill = 0 | 1 | 2 | 3;
 export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
 /** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
 export type RentTier = 0 | 1;
@@ -226,6 +226,8 @@ export interface LifeRules {
   jobHuntRaisePct: number;
   /** Rounds of holding an investment before finance skill rises once from experience. */
   financeExperienceRounds: number;
+  /** Rounds of holding an investment that take someone at the third level to the fourth and last. Cards never do. */
+  financeMasterRounds: number;
   /** Finance skill needed to rent a property out. */
   rentOutMinFinanceSkill: FinanceSkill;
   /** Pay of a life with the `unstable_pay` flag swings by up to this many percent each round. */
@@ -462,6 +464,14 @@ export interface CardDef {
 }
 
 export interface DebtParams {
+  /** What a margin loan costs above the policy rate, in bp. It moves with the rate. */
+  marginSpreadBp: Bp;
+  /** The most that may be borrowed against an investment when buying, as a percent of what is then held of it. */
+  marginMaxPct: number;
+  /** When the loan is more than this percent of what the investment is worth, the broker sells it all. */
+  marginCallPct: number;
+  /** Finance skill needed to buy with borrowed money. */
+  marginMinFinanceSkill: FinanceSkill;
   personalLoanSpreadBp: Bp;
   mortgageSpreadBp: Bp;
   creditCardRateBp: Bp;
@@ -559,7 +569,7 @@ export interface Position {
   basis: Cents;
 }
 
-export type DebtKind = 'mortgageFixed' | 'mortgageVariable' | 'personalLoan' | 'creditCard';
+export type DebtKind = 'mortgageFixed' | 'mortgageVariable' | 'personalLoan' | 'creditCard' | 'margin';
 
 export interface Debt {
   id: string;
@@ -570,6 +580,8 @@ export interface Debt {
   roundsLeft: number;
   /** The item this loan paid for, when it was taken to buy one on instalments. It stays owed if the item is sold. */
   forItem?: string;
+  /** The investment a margin loan was taken to buy more of, and is secured on. */
+  forAsset?: string;
 }
 
 export interface Property {
@@ -708,7 +720,8 @@ export interface PlayerState {
 }
 
 export type Order =
-  | { type: 'buy'; assetId: string; amount: Cents }
+  /** `margin` is borrowed from the broker on top of the amount, and buys more of the same. */
+  | { type: 'buy'; assetId: string; amount: Cents; margin?: Cents }
   | { type: 'sell'; assetId: string; amount: Cents }
   | { type: 'depositIn'; amount: Cents }
   | { type: 'depositOut'; amount: Cents }
@@ -777,6 +790,7 @@ export type RejectReason =
   | 'would-be-insolvent'
   | 'no-credit'
   | 'over-loan-limit'
+  | 'over-margin-limit'
   | 'unknown-debt'
   | 'exceeds-debt'
   | 'unknown-property-type'
@@ -854,6 +868,8 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
+  /** The broker sold an investment bought with borrowed money, because the loan had grown too large beside it. */
+  | { kind: 'marginCall'; assetId: string; sold: Cents; repaid: Cents }
   /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
   | { kind: 'planRan'; assetId: string; amount: Cents; reason: RejectReason | null }
   | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean }

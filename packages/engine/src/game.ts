@@ -1,4 +1,4 @@
-import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
+import { applyDebtPayments, callMargins, checkBankruptcy, settleCash } from './debt';
 import { dividendsByAsset } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { flowsOf } from './flows';
@@ -284,6 +284,8 @@ export function applyRound(
   applyDebtPayments(p, expenses.service);
   // After every bill of the round, and before spare cash goes to the credit card: the player asked for this first.
   const reinvested = reinvestDividends(p, paid);
+  // The round's prices are in: a holding bought with borrowed money that has fallen too far is sold now, loan first.
+  for (const call of callMargins(p, content)) events.push({ kind: 'marginCall', ...call });
   const settled = settleCash(p);
 
   const lines: Array<[LedgerLine, Cents]> = [

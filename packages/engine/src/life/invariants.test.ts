@@ -36,7 +36,8 @@ describe('invariants of the life', () => {
       expect(breaks((s) => (s.player.life[field] = 0.5))).toEqual([`life.${field} is not a whole number: 0.5`]);
       expect(breaks((s) => (s.player.life[field] = null))).toEqual([`life.${field} is not a whole number: null`]);
     }
-    expect(breaks((s) => (s.player.life.financeSkill = 3))).toEqual(['life.financeSkill is not 0, 1 or 2: 3']);
+    expect(breaks((s) => (s.player.life.financeSkill = 4 as never))).toEqual(['life.financeSkill is not 0, 1, 2 or 3: 4']);
+    expect(breaks((s) => (s.player.life.financeSkill = 3))).toEqual([]);
     expect(breaks((s) => (s.player.life.rentTier = 2))).toEqual(['life.rentTier is not 0 or 1: 2']);
     expect(breaks((s) => (s.player.life.minLifestyleTier = 4))).toEqual(['life.minLifestyleTier is not 0, 1, 2 or 3: 4']);
     expect(breaks((s) => (s.player.life.minLifestyleTier = 2))).toEqual(['lifestyleTier 1 is below the floor of the life, 2']);

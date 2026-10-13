@@ -64,7 +64,7 @@ export const es: ContentText = {
   lifestyleTiers: ['Austero', 'Normal', 'Cómodo', 'Lujoso'],
   insurance: { health: 'Seguro de salud', home: 'Seguro de hogar', life: 'Seguro de vida', liability: 'Seguro de responsabilidad civil' },
   focusActions: { overtime: 'Hacer horas extra', studyCareer: 'Formarte para tu carrera', jobHunt: 'Buscar un trabajo mejor' },
-  debts: { mortgageFixed: 'Hipoteca fija', mortgageVariable: 'Hipoteca variable', personalLoan: 'Préstamo personal', creditCard: 'Tarjeta de crédito' },
+  debts: { mortgageFixed: 'Hipoteca fija', mortgageVariable: 'Hipoteca variable', personalLoan: 'Préstamo personal', creditCard: 'Tarjeta de crédito', margin: 'Préstamo de margen' },
   lives: {
     nurse: {
       name: 'Enfermera',
@@ -253,6 +253,7 @@ export const es: ContentText = {
     'no-credit': 'Tras tu quiebra, ningún banco te presta todavía.',
     'cannot-finance': 'Esto no se vende a plazos.',
     'over-loan-limit': 'Es más de lo que puedes pedir con tu sueldo.',
+    'over-margin-limit': 'El bróker presta como mucho la mitad de lo que tendrías.',
     'unknown-debt': 'Esa deuda no existe.',
     'exceeds-debt': 'Es más de lo que debes.',
     'unknown-property-type': 'Ese tipo de vivienda no existe.',

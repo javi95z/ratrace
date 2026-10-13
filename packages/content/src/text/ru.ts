@@ -64,7 +64,7 @@ export const ru: ContentText = {
   lifestyleTiers: ['Эконом', 'Стандарт', 'Комфорт', 'Люкс'],
   insurance: { health: 'Медицинская страховка', home: 'Страховка жилья', life: 'Страховка жизни', liability: 'Страховка ответственности' },
   focusActions: { overtime: 'Работать сверхурочно', studyCareer: 'Учиться ради карьеры', jobHunt: 'Искать работу получше' },
-  debts: { mortgageFixed: 'Фиксированная ипотека', mortgageVariable: 'Плавающая ипотека', personalLoan: 'Потребительский кредит', creditCard: 'Кредитная карта' },
+  debts: { mortgageFixed: 'Фиксированная ипотека', mortgageVariable: 'Плавающая ипотека', personalLoan: 'Потребительский кредит', creditCard: 'Кредитная карта', margin: 'Маржинальный кредит' },
   lives: {
     nurse: {
       name: 'Медсестра',
@@ -253,6 +253,7 @@ export const ru: ContentText = {
     'no-credit': 'После банкротства ни один банк пока не даст тебе в долг.',
     'cannot-finance': 'Это не продаётся в рассрочку.',
     'over-loan-limit': 'С твоей зарплатой столько не одолжат.',
+    'over-margin-limit': 'Брокер даёт взаймы не больше половины того, что у тебя тогда будет.',
     'unknown-debt': 'Такого долга не существует.',
     'exceeds-debt': 'Это больше, чем твой долг.',
     'unknown-property-type': 'Такого вида недвижимости не существует.',

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
+import { previewRound, quoteItem, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -278,6 +278,72 @@ describe('what the investments pay', () => {
     // Each holding cost what it cost, and what it paid on top.
     for (const paid of quote.dividends) expect(after.player.positions[paid.assetId].basis).toBe(state.player.positions[paid.assetId].basis + paid.amount);
     expect(screen.getByText('Dividends reinvested')).toBeTruthy();
+  });
+});
+
+describe('buying with borrowed money', () => {
+  /** The same life with the skill for it, as years of investing would leave it. */
+  const seasoned = async (lifeId: string, change: (view: GameView) => GameView = (view) => view) => {
+    const { services, session } = await inFinance(lifeId);
+    const skilled = (): GameView => change({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, financeSkill: 3 } } });
+    const investor: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: skilled, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: investor });
+    return { services, view: skilled() };
+  };
+
+  it('is closed to someone without the skill, and says what it takes', async () => {
+    const { services } = await inFinance('civil_servant');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Buying on margin' });
+    expect((within(section).getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
+    expect(within(section).getByText('It takes money sense 3. That comes with years of having money invested.')).toBeTruthy();
+  });
+
+  it('buys twice what is put in for someone who has it, says what it risks, and names the order for what it is', async () => {
+    const { services, view } = await seasoned('civil_servant');
+    const quote = quoteMargin(content, view, 'sp500');
+    expect(quote).toMatchObject({ lock: null, canDouble: true });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
+    const section = within(sheet).getByRole('region', { name: 'Buying on margin' });
+    expect(within(section).getByText(`You buy twice as much. The loan costs ${fmt.rate(quote.rateBp)} a year.`)).toBeTruthy();
+    expect(within(section).getByText('You gain and lose twice as much. If the loan passes 75% of what it is worth, the broker sells it all: a fall of 33% is enough.')).toBeTruthy();
+    await user.click(within(section).getByRole('switch'));
+    fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
+    await user.click(within(sheet).getByRole('button', { name: 'Confirm $1,000' }));
+
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Buy $2,000 of S&P 500 on margin (you put in $1,000)' })).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Close' }));
+
+    // The holding is twice what was put in, and says what is owed on it and how far it may fall.
+    await user.click(screen.getByRole('tab', { name: 'Portfolio' }));
+    const holdings = screen.getByRole('region', { name: 'Your investments' });
+    expect(within(holdings).getByText('$2,000')).toBeTruthy();
+    expect(within(holdings).getByText('You owe the broker $1,000 · sold if it falls 33.3%')).toBeTruthy();
+    // And it is a debt among the debts, named for what it bought.
+    await user.click(screen.getByRole('tab', { name: 'Debt' }));
+    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Margin loan · S&P 500')).toBeTruthy();
+  });
+
+  it('lends no more on a holding that already owes more than half of itself', async () => {
+    const { services } = await seasoned('civil_servant', (view) => ({
+      ...view,
+      player: { ...view.player, positions: { sp500: { value: 1_000_000, basis: 1_500_000 } }, debts: [...view.player.debts, { id: 'debt-m', kind: 'margin', principal: 600_000, fixedRateBp: 0, roundsLeft: 0, forAsset: 'sp500' }] },
+    }));
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Buying on margin' });
+    expect((within(section).getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
+    expect(within(section).getByText('You already owe more than 50% of what you hold of this: no more is lent on it.')).toBeTruthy();
   });
 });
 

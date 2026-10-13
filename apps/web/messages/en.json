@@ -496,7 +496,16 @@
       "onceHint": "Now",
       "each": "Every round",
       "eachHint": "Automatic",
-      "already": "You already invest {amount} every round. Change the amount here."
+      "already": "You already invest {amount} every round. Change the amount here.",
+      "marginTitle": "Buying on margin",
+      "margin": "On margin: the broker puts in as much again",
+      "marginHint": "You buy twice as much. The loan costs {rate} a year.",
+      "marginSkill": "It takes money sense {level}. That comes with years of having money invested.",
+      "marginFull": "You already owe more than {pct}% of what you hold of this: no more is lent on it.",
+      "marginRisk": "You gain and lose twice as much. If the loan passes {call}% of what it is worth, the broker sells it all: a fall of {drop}% is enough.",
+      "marginOwed": "You owe the broker {amount}",
+      "marginDrop": "sold if it falls {pct}",
+      "marginNow": "on the edge of a forced sale"
     },
     "glance": {
       "title": "At a glance",
@@ -550,7 +559,10 @@
     "lapsedHint": "It belonged to the city you left. Nothing is paid back.",
     "movedRung": "You start a rung down, until your next promotion.",
     "movedPartner": "Your partner is looking for work: a round without their pay.",
-    "planMissed": "Your plan did not buy {name}: it needed {amount}."
+    "planMissed": "Your plan did not buy {name}: it needed {amount}.",
+    "marginCall": "The broker has sold your {name}.",
+    "marginCallHint": "It fell too far for what you owed. It sold for {sold}, and {repaid} went to pay the loan.",
+    "marginCallShort": "It fell too far for what you owed. It sold for {sold}, and you had to find another {short}."
   },
   "profile": {
     "title": "Your life",
@@ -802,7 +814,8 @@
     "planOn": "Invest {amount} every round in {name}",
     "planOff": "Stop investing in {name}",
     "reinvestOn": "Reinvest the dividends",
-    "reinvestOff": "Take the dividends as cash"
+    "reinvestOff": "Take the dividends as cash",
+    "buyMargin": "Buy {amount} of {name} on margin (you put in {own})"
   },
   "account": {
     "title": "Account",
@@ -851,7 +864,8 @@
     "financeOpens": {
       "0": "Index funds: {n} to choose from. The simple thing, and nearly always enough.",
       "1": "Bonds, single stocks and gold: {n} more.",
-      "2": "Cryptocurrencies: {n} more."
+      "2": "Cryptocurrencies: {n} more.",
+      "3": "No new market: what changes is whose money you buy with."
     },
     "financeLandlord": "And letting property out.",
     "financeHow": "It rises with practice: after {years} years with money invested. Some cards raise it too, such as a course or a good book.",
@@ -878,7 +892,9 @@
     "jobFocus": "It leaves time over: +{n} focus every round.",
     "focusJob": "+{n} because your job leaves time over",
     "focusExtra": "+{n} extra this round",
-    "focusFromJob": "{n} comes from your job, which leaves time over."
+    "focusFromJob": "{n} comes from your job, which leaves time over.",
+    "financeMargin": "And buying with money borrowed from the broker.",
+    "financeMaster": "No course gives the last level: it comes after {years} years with money invested."
   },
   "rankings": {
     "title": "Rankings",

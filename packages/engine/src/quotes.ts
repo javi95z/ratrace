@@ -1,4 +1,5 @@
-import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
+import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
+import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
@@ -460,5 +461,49 @@ export function quotePortfolio(content: Content, view: GameView): PortfolioQuote
     dividendsTotal,
     interest: applyBp(p.deposit, depositRateBp(content, world) * content.yearsPerRound),
     reinvest: p.reinvest,
+  };
+}
+
+export interface MarginQuote {
+  /** Why the player may not buy with borrowed money today, or null when they may. */
+  lock: RejectReason | null;
+  /** The finance skill it takes. */
+  minSkill: number;
+  /** What the loan costs a year today. It moves with the policy rate. */
+  rateBp: Bp;
+  /** The most that may be owed on the holding when buying, and the share at which the broker sells it, both in percent of its value. */
+  maxPct: number;
+  callPct: number;
+  /** What is held of the asset, and what is owed on it. */
+  value: Cents;
+  owed: Cents;
+  /** True if a purchase may borrow as much again as is put in, as the holding stands. */
+  canDouble: boolean;
+  /**
+   * How far the price may fall from today before the broker sells, in bp of today's price. Null
+   * with nothing owed. Zero or less means the next round already has it sold unless it rises.
+   */
+  dropToCallBp: Bp | null;
+}
+
+/** The terms of buying an asset with borrowed money, and how the player's holding of it stands against its loan. */
+export function quoteMargin(content: Content, view: GameView, assetId: string): MarginQuote {
+  const p = view.player;
+  const world = view.timeline[view.round];
+  const value = Object.hasOwn(p.positions, assetId) ? p.positions[assetId].value : 0;
+  const owed = marginOn(p, assetId)?.principal ?? 0;
+  const { marginMaxPct: maxPct, marginCallPct: callPct } = content.debt;
+  return {
+    lock: marginLock(p, content, view.round),
+    minSkill: content.debt.marginMinFinanceSkill,
+    rateBp: world.policyRateBp + content.debt.marginSpreadBp,
+    maxPct,
+    callPct,
+    value,
+    owed,
+    // Putting in one and borrowing one adds two to the holding and one to the loan.
+    canDouble: owed * 100 <= value * maxPct,
+    // The broker sells when the loan is more than `callPct` of the value: at a value of owed / callPct.
+    dropToCallBp: owed > 0 && value > 0 ? BP - Math.ceil((owed * 100 * BP) / (value * callPct)) : null,
   };
 }

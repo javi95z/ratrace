@@ -23,7 +23,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
   for (const field of ['salaryModPct', 'salaryBoostPct', 'bonusStatus'] as const) {
     if (!isWhole(life[field])) breaks.push(`life.${field} is not a whole number: ${life[field]}`);
   }
-  if (![0, 1, 2].includes(life.financeSkill)) breaks.push(`life.financeSkill is not 0, 1 or 2: ${life.financeSkill}`);
+  if (![0, 1, 2, 3].includes(life.financeSkill)) breaks.push(`life.financeSkill is not 0, 1, 2 or 3: ${life.financeSkill}`);
   if (life.rentTier !== 0 && life.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life.rentTier}`);
   if (![0, 1, 2, 3].includes(life.minLifestyleTier)) {
     breaks.push(`life.minLifestyleTier is not 0, 1, 2 or 3: ${life.minLifestyleTier}`);
