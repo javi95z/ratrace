@@ -87,5 +87,5 @@ Only the tables this step and the next one use. The others arrive with the step 
 - [x] 4. The game signs in as a guest; the profile row; the account block in settings; keeping it with Google; text in both languages
 - [x] 5. The game with no Supabase configured: unchanged, proved by the existing end-to-end suite (35 passed)
 - [x] 6. Spec and roadmap brought up to date
-- [ ] 6b. The live check (`pnpm online:live-check`): two real guests through the public API, and a whole life replayed by the deployed function. Written; it waits for `apps/web/.env.local`
+- [x] 6b. The live check (`pnpm online:live-check`): two real guests through the public API, and a whole life replayed by the deployed function. 17 checks held on 2026-10-13, and the two guests were removed afterwards
 - [ ] 7. Fresh review and one fix pass
