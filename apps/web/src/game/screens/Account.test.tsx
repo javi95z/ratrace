@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SupabaseAccount } from '@/online/supabase';
 import type { Cloud } from '@/online/supabase';
-import type { Account, AccountState } from '@/online/types';
+import type { Account, AccountSaves, AccountState, CloudSaving } from '@/online/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Preferences } from './Settings';
 
@@ -51,7 +51,16 @@ function fakeAccount(initial: AccountState, kept = true) {
   };
   return { account, asked };
 }
-const show = (account?: Account, locale: 'en' | 'es' = 'en') => renderGame(<Preferences />, { ...memoryServices(), account }, locale);
+/** The account's copy, standing wherever the test says. */
+const savesAt = (status: CloudSaving): AccountSaves => ({
+  status: () => status,
+  offer: () => null,
+  subscribe: () => () => {},
+  onDeviceChanged: () => () => {},
+  takeOffer: async () => false,
+  declineOffer: async () => {},
+});
+const show = (account?: Account, locale: 'en' | 'es' = 'en', saves?: AccountSaves) => renderGame(<Preferences />, { ...memoryServices(), account, saves }, locale);
 
 describe('the account in the settings', () => {
   it('is not there at all in a game with no cloud behind it', () => {
@@ -109,6 +118,31 @@ describe('the account in the settings', () => {
     expect(screen.getByRole('button', { name: 'Keep it with Google' })).toBeTruthy();
   });
 
+  it('says where the player\'s things are: in the account, on their way to it, or waiting for a connection', () => {
+    const member: AccountState = { kind: 'member', userId: 'u', email: null };
+    show(fakeAccount(member).account, 'en', savesAt('saved'));
+    expect(screen.getByRole('status').textContent).toBe('Saved to your account');
+    cleanup();
+    show(fakeAccount(member).account, 'en', savesAt('sending'));
+    expect(screen.getByRole('status').textContent).toBe('Saving to your account…');
+    cleanup();
+    show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account, 'es', savesAt('waiting'));
+    expect(screen.getByRole('status').textContent).toBe('Guardado en este dispositivo. Esperando conexión.');
+  });
+
+  it('says nothing about saving to an account where nothing is being saved to one', () => {
+    show(fakeAccount({ kind: 'member', userId: 'u', email: null }).account, 'en', savesAt('off'));
+    expect(screen.queryByRole('status')).toBeNull();
+    cleanup();
+    show(fakeAccount({ kind: 'member', userId: 'u', email: null }).account);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('tells a guest that the account is in the cloud, and that only this browser can open it', () => {
+    show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account);
+    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain('You are playing as a guest: an account that only this browser can open.');
+  });
+
   it('says plainly when nothing was linked, whatever the reason', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: 'failed' }).account);
     expect(screen.getByRole('alert').textContent).toBe('Nothing was linked. You are still a guest.');
@@ -135,6 +169,13 @@ describe('the account in the settings', () => {
       signInWithGoogle: async () => true,
       ensureProfile: async () => {},
       onUser: () => () => {},
+      playingGames: async () => [],
+      pushGame: async () => 'saved',
+      abandonGame: async () => {},
+      loadProgress: async () => null,
+      saveProgress: async () => {},
+      listRuns: async () => [],
+      finishRun: async () => 'done',
     };
     show(new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en', () => {}));
     expect((await screen.findByRole('region', { name: 'Account' })).textContent).toContain('You are playing as a guest');

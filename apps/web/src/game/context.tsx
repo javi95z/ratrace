@@ -7,9 +7,9 @@ import { createContext, useContext, useEffect, useMemo, useState, useSyncExterna
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { formatFor } from '@/lib/format';
-import { browserAccount } from '@/online';
+import { browserOnline } from '@/online';
 import { offlineAccount } from '@/online/offline';
-import type { Account, AccountState } from '@/online/types';
+import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
@@ -37,17 +37,21 @@ export interface Services {
   saving?: Saving;
   /** Who is playing, as the cloud knows them. Left out, the game has no cloud: nobody is signed in. */
   account?: Account;
+  /** How the account's copy of the player's things stands. Left out, nothing is saved to an account. */
+  saves?: AccountSaves | null;
 }
 
 /** Long enough for the second tap of a double tap or a double click, short enough that nobody waits for it. */
 const TAP_GUARD_MS = 400;
 const ALWAYS_SAVING: Saving = { degraded: () => false, subscribe: () => () => {} };
+const NO_SAVES: AccountSaves = { status: () => 'off', offer: () => null, subscribe: () => () => {}, onDeviceChanged: () => () => {}, takeOffer: async () => false, declineOffer: async () => {} };
 
 interface Game {
   game: GameStore;
   store: PlayerStore;
   saving: Saving;
   account: Account;
+  saves: AccountSaves;
   words: Words;
   locale: Locale;
   profile: Profile;
@@ -58,16 +62,17 @@ interface Game {
 
 const GameContext = createContext<Game | null>(null);
 
-/** The services of the real game: the engine in this browser, saved in this browser. */
+/** The services of the real game: the engine in this browser, saved in this browser, and in the player's account where there is one. */
 function browserServices(): Services {
   const device: PlayerStore = typeof indexedDB === 'undefined' ? new MemoryStore() : new LocalStore();
   const listeners = new Set<() => void>();
-  const store = new ResilientStore(device, (degraded, error) => {
+  const kept = new ResilientStore(device, (degraded, error) => {
     if (degraded) console.warn('this browser is not saving:', error);
     for (const listener of listeners) listener();
   });
+  const { account, store, saves } = browserOnline(kept);
   const saving: Saving = {
-    degraded: () => store.degraded,
+    degraded: () => kept.degraded,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -79,7 +84,7 @@ function browserServices(): Services {
     now: () => Date.now(),
     onSaveError: (error) => console.warn('could not save the game:', error),
   });
-  return { sessions, store, saving, account: browserAccount() };
+  return { sessions, store, saving, account, saves };
 }
 
 /** Everything one page load makes once: the round store and the two services behind it. */
@@ -88,11 +93,12 @@ interface Made {
   store: PlayerStore;
   saving: Saving;
   account: Account;
+  saves: AccountSaves;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES };
 }
 
 /**
@@ -129,9 +135,15 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     const stop = made.game.subscribe((state, before) => {
       if (state.view !== before.view || state.status !== before.status) refresh();
     });
+    // What the account brings from another device: a life is opened as the device now has it, the rest is read again.
+    const stopSaves = made.saves.onDeviceChanged((what) => {
+      if (what === 'game') void made.game.getState().reopen();
+      else refresh();
+    });
     return () => {
       mounted = false;
       stop();
+      stopSaves();
     };
   }, [made]);
 
@@ -154,6 +166,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       store: made.store,
       saving: made.saving,
       account: made.account,
+      saves: made.saves,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
       profile,
@@ -226,6 +239,27 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     keepWithGoogle: () => account.keepWithGoogle(here()),
     useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
+  };
+}
+
+/**
+ * How the account's copy of the player's things stands, and the different life waiting there, if
+ * there is one, with the two things a player can do about it.
+ */
+export function useAccountSaves(): { status: CloudSaving; offer: AccountLife | null; takeOffer(): Promise<boolean>; declineOffer(): Promise<void> } {
+  const { saves, game } = useGameContext();
+  const status = useSyncExternalStore(saves.subscribe, saves.status, () => 'off' as const);
+  const offer = useSyncExternalStore(saves.subscribe, saves.offer, () => null);
+  return {
+    status,
+    offer,
+    takeOffer: async () => {
+      const taken = await saves.takeOffer();
+      // The player asked for it: the life is opened as the device now has it, with nothing to explain.
+      if (taken) await game.getState().boot();
+      return taken;
+    },
+    declineOffer: () => saves.declineOffer(),
   };
 }
 

@@ -4,7 +4,7 @@ import { portraitArt } from '@ratrace/content';
 import { netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
-import { useAccount, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
+import { useAccount, useAccountSaves, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { ageAt, portraitAge } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
 import { maskEmail } from '@/lib/mask';
@@ -16,13 +16,15 @@ import { Sprite } from '@/ui/Sprite';
 const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
 
 /**
- * Who is playing, as the cloud knows them. A guest can keep the account with Google, and a guest
- * on a second device can take up the account their Google already has. Nothing is shown at all
- * where the game has no cloud behind it, or could not reach it.
+ * Who is playing, as the cloud knows them, and whether what they have is in their account yet. A
+ * guest can keep the account with Google, and a guest on a second device can take up the account
+ * their Google already has. Nothing is shown at all where the game has no cloud behind it, or
+ * could not reach it.
  */
 function AccountBlock() {
   const t = useT('account');
   const { state, keepWithGoogle, useExistingAccount, dismissNotice } = useAccount();
+  const { status } = useAccountSaves();
   const [leaving, setLeaving] = useState(false);
   // A page brought back from Google by the Back button is the page as it was left, button pressed and all.
   useEffect(() => {
@@ -40,6 +42,15 @@ function AccountBlock() {
     });
   };
 
+  // One line of truth about saving. The device always has everything; this says whether the account does too.
+  const saved =
+    status === 'off' ? null : (
+      <p role="status" className="flex items-center gap-2 text-[12px] text-ink-200">
+        <span aria-hidden className={`size-2 shrink-0 ${status === 'saved' ? 'bg-teal-300' : status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
+        {t(status)}
+      </p>
+    );
+
   return (
     <section aria-label={t('title')} className="bevel flex flex-col gap-2 bg-night-600 p-3">
       <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
@@ -47,10 +58,12 @@ function AccountBlock() {
         <>
           <p className="pixel text-[16px] text-teal-300">{t('member')}</p>
           {state.email ? <p className="break-all text-[13px] text-ink-200">{t('memberAs', { email: maskEmail(state.email) })}</p> : null}
+          {saved}
         </>
       ) : (
         <>
           <p className="text-[14px] leading-snug">{t('guest')}</p>
+          {saved}
           {state.notice ? (
             <div className="frame flex flex-col gap-2 bg-wine-900 p-2">
               <p role="alert" className="text-[13px] leading-snug">

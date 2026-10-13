@@ -362,6 +362,28 @@ describe('when something goes wrong', () => {
     expect(there.get().stage).toBe('finance');
   });
 
+  it('opens the life as it now stands when it is told the device\'s copy has changed, and says so', async () => {
+    // The account brought a further copy from another device: no step was refused, nothing was pressed.
+    const here = setup();
+    await here.get().start('nurse');
+    const there = setup(here.store);
+    await there.get().boot();
+    await answerHand(here.get);
+    await here.get().play();
+    await there.get().reopen();
+    expect(there.get()).toMatchObject({ status: 'playing', moved: true });
+    expect(there.get().view?.round).toBe(1);
+  });
+
+  it('says nothing when a life appears where there was none: the front door simply offers it', async () => {
+    const here = setup();
+    await here.get().boot();
+    const there = setup(here.store);
+    await there.get().start('nurse');
+    await here.get().reopen();
+    expect(here.get()).toMatchObject({ status: 'playing', moved: false, lifeId: 'nurse' });
+  });
+
   it('goes home with nothing when the life was abandoned in another tab', async () => {
     const here = setup();
     await here.get().start('nurse');
