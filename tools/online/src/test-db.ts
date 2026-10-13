@@ -7,19 +7,18 @@
  */
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { outcomeOf } from './outcome';
+import { outcomeOf, verdict } from './outcome';
 
 const file = fileURLToPath(new URL('../../../supabase/tests/security.sql', import.meta.url));
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const run = spawnSync('supabase', ['db', 'query', '--linked', '--file', file], { cwd: root, encoding: 'utf8' });
 const output = `${run.stdout}\n${run.stderr}`;
 
+/** How many checks `supabase/tests/security.sql` holds. A run with fewer is a run in which some never happened. */
+const EXPECTED = 69;
+
 const outcome = outcomeOf(output);
-if (outcome === null) {
-  console.error('The security tests did not run to the end:\n');
-  console.error(output.trim().slice(0, 2000));
-  process.exit(2);
-}
-for (const line of outcome.failed) console.error(`  ✗ ${line}`);
-console.log(`${outcome.failed.length === 0 ? '✓' : '✗'} security rules: ${outcome.passed} held, ${outcome.failed.length} broken`);
-process.exit(outcome.failed.length === 0 ? 0 : 1);
+const { ok, lines } = verdict(outcome, EXPECTED);
+if (outcome === null) console.error(output.trim().slice(0, 2000));
+for (const line of lines) console.log(line);
+process.exit(ok ? 0 : outcome === null ? 2 : 1);

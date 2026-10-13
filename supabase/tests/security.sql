@@ -13,6 +13,8 @@ declare
   n int;
   t timestamptz;
   big jsonb;
+  made uuid;
+  first_of_many uuid;
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -33,8 +35,25 @@ begin
     then passed := passed + 1; else failed := array_append(failed, ('the grants on profiles are not read, create, change')::text); end if;
   if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'player_progress') = array['INSERT', 'SELECT', 'UPDATE']
     then passed := passed + 1; else failed := array_append(failed, ('the grants on player_progress are not read, create, change')::text); end if;
-  if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'games') = array['DELETE', 'INSERT', 'SELECT', 'UPDATE']
-    then passed := passed + 1; else failed := array_append(failed, ('the grants on games are not read, create, change, delete')::text); end if;
+  if (select array_agg(privilege_type::text order by privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'games') = array['INSERT', 'SELECT', 'UPDATE']
+    then passed := passed + 1; else failed := array_append(failed, ('the grants on games are not read, create, change')::text); end if;
+
+  -- What is made in this schema from now on starts with nothing granted: a table or a function is
+  -- reachable only once a migration says so.
+  select count(*) into n from pg_default_acl d, aclexplode(d.defaclacl) a
+    where d.defaclrole = 'postgres'::regrole and d.defaclnamespace = 'public'::regnamespace and a.grantee in ('anon'::regrole, 'authenticated'::regrole);
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, format('%s default privileges still hand future objects in public to clients', n)); end if;
+  create table public.probe_table (id int);
+  create function public.probe_function() returns int language sql as 'select 1';
+  if not has_table_privilege('anon', 'public.probe_table', 'select') and not has_table_privilege('authenticated', 'public.probe_table', 'select,insert,update,delete')
+    then passed := passed + 1; else failed := array_append(failed, 'a table made without a grant is reachable by clients'); end if;
+  if not has_function_privilege('anon', 'public.probe_function()', 'execute') and not has_function_privilege('authenticated', 'public.probe_function()', 'execute')
+    then passed := passed + 1; else failed := array_append(failed, 'a function made without a grant can be called by clients'); end if;
+  drop function public.probe_function();
+  drop table public.probe_table;
+  select count(*) into n from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace)
+    and (has_function_privilege('anon', p.oid, 'execute') or has_function_privilege('authenticated', p.oid, 'execute'));
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, format('%s functions of the game can be called by clients', n)); end if;
 
   -- ---------------------------------------------------------------- player A
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
@@ -60,6 +79,13 @@ begin
     failed := array_append(failed, ('a nickname with a space and a sign was accepted')::text);
   exception when check_violation then passed := passed + 1;
   end;
+  begin
+    update public.profiles set portrait = '<b>nurse</b>' where user_id = a;
+    failed := array_append(failed, 'a portrait that is not the name of a life was accepted');
+  exception when check_violation then passed := passed + 1;
+  end;
+  update public.profiles set portrait = 'civil_servant' where user_id = a;
+  if (select portrait from public.profiles where user_id = a) = 'civil_servant' then passed := passed + 1; else failed := array_append(failed, 'the name of a life was refused as a portrait'); end if;
   begin
     update public.profiles set language = 'fr' where user_id = a;
     failed := array_append(failed, ('a language the game does not speak was accepted')::text);
@@ -109,6 +135,36 @@ begin
     if n = 2 then passed := passed + 1; else failed := array_append(failed, ('a game saved without naming its owner is not the player''s own')::text); end if;
   exception when others then failed := array_append(failed, (('a game saved without naming its owner was refused: ' || sqlerrm))::text);
   end;
+  begin
+    insert into public.games (id, user_id, mode, life_id, engine_version, content_version, seed, status) values (gen_random_uuid(), a, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 'finished');
+    failed := array_append(failed, 'A saved a game as already finished: only the server finishes a life');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    insert into public.games (id, user_id, mode, life_id, engine_version, content_version, seed) values (game_a, a, 'casual', 'nurse', '0.4.0', '1.3.0', 'seed-a')
+      on conflict (id) do update set mode = 'ranked', seed = null;
+    failed := array_append(failed, 'A turned a casual game into a ranked one by saving over it');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+
+  -- The dates of a row are the server's, whatever the client sends.
+  made := gen_random_uuid();
+  insert into public.games (id, mode, life_id, engine_version, content_version, seed, created_at, updated_at) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's', '2001-01-01', '2099-01-01');
+  if (select created_at > now() - interval '5 minutes' and updated_at < now() + interval '5 minutes' from public.games where id = made)
+    then passed := passed + 1; else failed := array_append(failed, 'a client dated its own row on the way in'); end if;
+  update public.games set created_at = '2001-01-01' where id = made;
+  if (select created_at > now() - interval '5 minutes' from public.games where id = made)
+    then passed := passed + 1; else failed := array_append(failed, 'a client changed the day a row was made'); end if;
+  begin
+    update public.games set id = gen_random_uuid() where id = made;
+    failed := array_append(failed, 'a game was given another id');
+  exception when check_violation then passed := passed + 1;
+  end;
+  begin
+    delete from public.games where id = made;
+    failed := array_append(failed, 'A deleted a game: games are abandoned, not deleted');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
 
   select updated_at into t from public.games where id = game_a;
   update public.games set round = 3, log = '[{"picks":[0],"orders":[]}]', state_hash = 'abc' where id = game_a;
@@ -132,15 +188,42 @@ begin
   exception when check_violation then passed := passed + 1;
   end;
   begin
-    select jsonb_agg(jsonb_build_object('picks', '[0]'::jsonb, 'orders', jsonb_build_array(repeat(md5(random()::text), 400)))) into big from generate_series(1, 40);
+    -- Twelve rounds of 12.8 KB each: about 150 KB, where the longest life the game can produce is under 100.
+    select jsonb_agg(jsonb_build_object('picks', '[0]'::jsonb, 'orders', jsonb_build_array(repeat(md5(random()::text), 400)))) into big from generate_series(1, 12);
     update public.games set log = big where id = game_a;
-    failed := array_append(failed, ('a log of over 256 KB was accepted')::text);
+    failed := array_append(failed, ('a log of over 128 KB was accepted')::text);
   exception when check_violation then passed := passed + 1;
   end;
+  begin
+    update public.games set status = 'finished' where id = game_a;
+    failed := array_append(failed, 'A marked their own game as finished: only the server finishes a life');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  update public.games set status = 'abandoned' where id = made;
+  get diagnostics n = row_count;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'A could not abandon their own game'); end if;
+  update public.games set round = 1, status = 'playing' where id = made;
+  get diagnostics n = row_count;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, 'an abandoned game was taken up again'); end if;
 
   begin
     select count(*) into n from public.game_secrets;
     failed := array_append(failed, ('A read game_secrets')::text);
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    insert into public.game_secrets (game_id, seed, state) values (game_a, 'x', '{}');
+    failed := array_append(failed, 'A wrote game_secrets');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    update public.game_secrets set seed = 'x';
+    failed := array_append(failed, 'A changed game_secrets');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    delete from public.game_secrets;
+    failed := array_append(failed, 'A deleted from game_secrets');
   exception when insufficient_privilege then passed := passed + 1;
   end;
   begin
@@ -167,9 +250,28 @@ begin
   update public.games set round = 5 where id = ranked_a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('A changed a ranked game')::text); end if;
-  delete from public.games where id = ranked_a;
+
+  -- A life the server has finished is closed: its owner can read it and nothing else.
+  reset role;
+  update public.games set status = 'finished', round = 20 where id = game_a;
+  set local role authenticated;
+  update public.games set seed = 'another-seed', log = '[]' where id = game_a;
   get diagnostics n = row_count;
-  if n = 0 then passed := passed + 1; else failed := array_append(failed, ('A deleted a ranked game')::text); end if;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, 'A rewrote a finished game'); end if;
+
+  -- A player holds fifty games at most. Lives that are over make room; lives still being played do not.
+  first_of_many := gen_random_uuid();
+  insert into public.games (id, mode, life_id, engine_version, content_version, seed) values (first_of_many, 'casual', 'nurse', '0.4.0', '1.3.0', 's');
+  update public.games set status = 'abandoned' where id = first_of_many;
+  for i in 1..60 loop
+    made := gen_random_uuid();
+    insert into public.games (id, mode, life_id, engine_version, content_version, seed) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's');
+    update public.games set status = 'abandoned' where id = made;
+  end loop;
+  select count(*) into n from public.games where user_id = a;
+  if n <= 50 then passed := passed + 1; else failed := array_append(failed, format('A holds %s games, more than fifty', n)); end if;
+  select count(*) into n from public.games where id in (first_of_many, made);
+  if n = 1 and exists (select 1 from public.games where id = made) then passed := passed + 1; else failed := array_append(failed, 'the oldest game that was over did not make room for the newest'); end if;
 
   -- ---------------------------------------------------------------- player B
   reset role;
@@ -193,9 +295,13 @@ begin
   update public.games set round = 1 where id = game_a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B changed A''s game')::text); end if;
-  delete from public.games where id = game_a;
-  get diagnostics n = row_count;
-  if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B deleted A''s game')::text); end if;
+  begin
+    for i in 1..51 loop
+      insert into public.games (id, mode, life_id, engine_version, content_version, seed) values (gen_random_uuid(), 'casual', 'nurse', '0.4.0', '1.3.0', 's');
+    end loop;
+    failed := array_append(failed, 'B holds fifty-one lives in progress');
+  exception when check_violation then passed := passed + 1;
+  end;
   update public.profiles set language = 'en' where user_id = a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B changed A''s profile')::text); end if;
@@ -222,6 +328,28 @@ begin
     failed := array_append(failed, ('a visitor with no account saved a game')::text);
   exception when insufficient_privilege then passed := passed + 1;
   end;
+  begin
+    select count(*) into n from public.player_progress;
+    failed := array_append(failed, 'a visitor with no account read progress');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    select count(*) into n from public.game_secrets;
+    failed := array_append(failed, 'a visitor with no account read game_secrets');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+
+  -- A token that names nobody is nobody.
+  reset role;
+  perform set_config('request.jwt.claims', '{"role":"authenticated"}', true);
+  set local role authenticated;
+  begin
+    insert into public.games (id, mode, life_id, engine_version, content_version, seed) values (gen_random_uuid(), 'casual', 'nurse', '0.4.0', '1.3.0', 's');
+    failed := array_append(failed, 'a token with no player in it saved a game');
+  exception when insufficient_privilege or not_null_violation then passed := passed + 1;
+  end;
+  select count(*) into n from public.games;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, format('a token with no player in it reads %s games', n)); end if;
 
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;
@@ -230,5 +358,6 @@ begin
        + (select count(*) from public.game_secrets where game_id = ranked_a) + (select count(*) from public.runs where user_id = a) into n;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, (format('%s rows of a deleted account were left behind', n))::text); end if;
 
-  raise exception 'SECURITY_TESTS %', json_build_object('passed', passed, 'failed', to_json(failed));
+  -- The outcome travels as hex, so no quote in a message can be mistaken for the end of it.
+  raise exception 'SECURITY_TESTS %', encode(convert_to(json_build_object('passed', passed, 'failed', to_json(failed))::text, 'UTF8'), 'hex');
 end $$;
