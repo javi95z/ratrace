@@ -1,24 +1,19 @@
+import { sha256 } from './sha256';
+
 export type RngState = [number, number, number, number];
 
-/** xmur3 string hash: returns a function that yields successive 32-bit seeds. */
-function hashSeed(text: string): () => number {
-  let h = 1779033703 ^ text.length;
-  for (let i = 0; i < text.length; i++) {
-    h = Math.imul(h ^ text.charCodeAt(i), 3432918353);
-    h = (h << 13) | (h >>> 19);
-  }
-  return () => {
-    h = Math.imul(h ^ (h >>> 16), 2246822507);
-    h = Math.imul(h ^ (h >>> 13), 3266489909);
-    h ^= h >>> 16;
-    return h >>> 0;
-  };
-}
-
-/** Each named stream is independent, so drawing a card never shifts market prices. */
+/**
+ * Where a named stream of a game begins: the first 128 bits of SHA-256 of the seed and the
+ * stream's name, which is the whole of the generator's state.
+ *
+ * Each named stream is independent, so drawing a card never shifts market prices. And a stream's
+ * start cannot be found by trying: it once came from a single 32-bit number, which whoever had
+ * seen a few rounds of prices could search in seconds, and read the rounds to come. With a seed of
+ * 128 bits or more, kept by the server, there is nothing short enough to try.
+ */
 export function seedRng(seed: string, stream: string): RngState {
-  const next = hashSeed(`${seed}::${stream}`);
-  return [next(), next(), next(), next()];
+  const [a, b, c, d] = sha256(`${seed}::${stream}`);
+  return [a, b, c, d];
 }
 
 /** sfc32 generator. */

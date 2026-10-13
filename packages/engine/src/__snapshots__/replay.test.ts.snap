@@ -3,8 +3,8 @@
 exports[`golden replay > reproduces the recorded final state from the stored choice log 1`] = `
 {
   "escapedAtRound": null,
-  "executed": 107,
-  "hash": "f7a6c9831e839448",
+  "executed": 98,
+  "hash": "c254673edbef29d1",
   "ledgerLines": [
     "debtInterest",
     "debtPrincipal",
@@ -18,8 +18,8 @@ exports[`golden replay > reproduces the recorded final state from the stored cho
     "rent",
     "salary",
   ],
-  "netWorth": 172941610,
-  "rejected": 1,
-  "score": 257,
+  "netWorth": 100032540,
+  "rejected": 10,
+  "score": 234,
 }
 `;

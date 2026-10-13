@@ -85,9 +85,13 @@ describe('the terminal game', () => {
   });
 
   it('takes orders, shows what they do, refuses what cannot be done, and undoes', async () => {
-    // Three cards to answer, then the finance phase of the first round.
+    // The cards of the first hand to answer, however many this seed deals, then the finance phase of the first round.
+    const engineer = lives.find((life) => life.id === 'engineer');
+    if (!engineer) throw new Error('no engineer');
+    // A seed whose first cards leave the engineer the cash this script goes on to spend.
+    const hand = createGame({ content, start: engineer.start }, 'orders-2').hand;
     const { io, out } = scripted([
-      '', '', '',
+      ...hand.map(() => ''),
       'save 500',
       'buy msci 1000',
       'buy msci 999999999',
@@ -110,7 +114,7 @@ describe('the terminal game', () => {
       'help',
       'done',
     ]);
-    const state = await runGame(io, { locale: 'en', lifeId: 'engineer', seed: 'orders' });
+    const state = await runGame(io, { locale: 'en', lifeId: 'engineer', seed: 'orders-2' });
     const shown = text(out);
     expect(shown).toContain('✓ save 500 (added)');
     expect(shown).toContain('✓ buy msci 1000 (added)');

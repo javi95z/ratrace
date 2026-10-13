@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { Rng, seedRng } from './rng';
 import type { RngState } from './rng';
@@ -5,6 +6,19 @@ import type { RngState } from './rng';
 const take = (rng: Rng, n: number) => Array.from({ length: n }, () => rng.u32());
 
 describe('rng', () => {
+  it('starts every stream from 128 bits of the seed, not from one 32-bit number spread over four', () => {
+    // A stream once began from a single 32-bit number: whoever saw a few of its draws could try all of them
+    // and read the rest. It now begins from the first four words of SHA-256 of the seed and the stream's name.
+    const words = (text: string) => {
+      const digest = createHash('sha256').update(text, 'utf8').digest();
+      return [0, 4, 8, 12].map((at) => digest.readUInt32BE(at));
+    };
+    expect(seedRng('s', 'market')).toEqual(words('s::market'));
+    expect(seedRng('8f2c0a51', 'asset:sp500')).toEqual(words('8f2c0a51::asset:sp500'));
+    // Pinned: a change here changes every game ever seeded, and needs a new engine version.
+    expect(seedRng('the rat race', 'world')).toEqual([3536404475, 2827881105, 1756735627, 1876695792]);
+  });
+
   it('gives the same sequence for the same seed and stream', () => {
     expect(take(new Rng(seedRng('s', 'market')), 20)).toEqual(take(new Rng(seedRng('s', 'market')), 20));
   });

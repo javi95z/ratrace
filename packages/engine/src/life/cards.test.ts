@@ -81,7 +81,9 @@ describe('the hand', () => {
         if (state.hand.includes('slow')) slow.push(state.round);
         state = applyRound(content, state, { orders: [] }).state;
       }
-      expect(rare).toEqual([0]);
+      // Far heavier than the rest, it comes up at once or nearly; marked once, it never comes up again.
+      expect(rare).toHaveLength(1);
+      expect(rare[0]).toBeLessThanOrEqual(1);
       expect(slow.length).toBeGreaterThan(3);
       for (let k = 1; k < slow.length; k++) expect(slow[k] - slow[k - 1]).toBeGreaterThanOrEqual(3);
     }
