@@ -14,14 +14,17 @@ interface Pending {
  * because a save is the whole record and so can always be sent again. Meanwhile it reads back
  * what this visit wrote, so the game goes on exactly as if it had been saved.
  *
- * `degraded` is true while the device is behind or cannot be read: the player is told, because
- * closing the page then loses what the device has not taken.
+ * `degraded` is true once the device has refused a write or a read, until it works again: the
+ * player is told, because closing the page then loses what the device has not taken. A write that
+ * is merely on its way is not a refusal, and does not count.
  */
 export class ResilientStore implements PlayerStore {
   private pending: Pending = { runs: [] };
   /** The last game and profile this visit wrote or read, for when the device cannot be read at all. */
   private mirror: { game: SavedGame | null; profile: Profile | null } = { game: null, profile: null };
   private unreadable = false;
+  /** True from a write the device refused until one it takes. */
+  private refusing = false;
   private reported = false;
   /** Writes reach the device one at a time, in the order they were made. */
   private tail: Promise<void> = Promise.resolve();
@@ -31,14 +34,18 @@ export class ResilientStore implements PlayerStore {
     private readonly onChange: (degraded: boolean, error?: unknown) => void = () => {},
   ) {}
 
-  /** True while the device is missing something this visit wrote, or cannot be read. */
+  /**
+   * True from the moment the device refuses something until it works again. It changes only when
+   * whoever listens is told, so a screen that reads it between two tellings always reads the truth.
+   */
   get degraded(): boolean {
-    return this.unreadable || this.pending.game !== undefined || this.pending.runs.length > 0 || this.pending.profile !== undefined;
+    return this.reported;
   }
 
   /** Tells whoever listens when saving stops working and when it works again, once each time. */
   private report(error?: unknown): void {
-    const now = this.degraded;
+    // What is waiting only because a write is on its way, or because another was made meanwhile, is not a failure.
+    const now = this.unreadable || this.refusing;
     if (now === this.reported) return;
     this.reported = now;
     this.onChange(now, error);
@@ -65,8 +72,10 @@ export class ResilientStore implements PlayerStore {
         }
         // A device that takes writes is working again.
         this.unreadable = false;
+        this.refusing = false;
         this.report();
       } catch (error) {
+        this.refusing = true;
         this.report(error);
       }
     };
