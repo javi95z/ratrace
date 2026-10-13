@@ -300,10 +300,10 @@ Desktop (1024px and wider) uses the same components in three columns: profile an
 
 - **Scale:** one art pixel is one CSS pixel on mobile and two on desktop. Integer scaling only, `image-rendering: pixelated`.
 - **Palette:** each sprite group (items, cars, homes, icons, badges, portraits, cards, skylines, brand) uses at most 64 colours: the 31 below, which are the only colours the interface uses, plus up to 33 taken from that group's own art and then frozen in `art/clean/palette.json`. One palette for everything was tried first and could not hold skin tones, car paint and night skies at once: portraits came out yellow and a green dial came out black. When a pixel is matched to the palette, hue and saturation count three times as much as lightness, for the same reason.
-- **Item tiles:** status items sit on cream tiles. Black and navy items are hard to read on the navy background.
+- **Tiles:** everything that can be bought (property, status items) sits on the same navy tile, its picture in a dark well. Cream tiles were used first, because black and navy items read better on them; they made homes and items look like a different game from the screens around them, and the owner asked for one surface. Cream is kept for paper: the card being answered and the newspaper clippings.
   `#0b1022 #141b33 #1f2a4d #263566 #3b4f8a #3b6ea5 #9ad1d4 #bfe3f0 #dff3ff #5c1a2a #8f2d3f #d1495b #e8788a #7a4f12 #c8891e #f2c14e #ffe9a8 #1f6f66 #2a9d8f #7fd1b9 #c98f6b #e8b796 #2e1f1a #4a3228 #1a1c2c #2b2f44 #4b5269 #8b93a7 #c9cfdc #f4f1e4 #ffffff`
-- **Theme:** night by default. Navy screen, cream cards, gold for the primary action.
-- **Type:** Pixelify Sans for titles and numbers; Inter for body text.
+- **Theme:** night by default, in the manner of a boxed game of the nineties ("pixel de lujo", chosen from three drawn directions in `docs/design/2026-10-13-visual-directions.png`). Every surface has a lit edge and a shaded one, with the light from the top left as in the art. A panel's title hangs on a gold tab over its top edge. What can be pressed stands off the page on a hard shadow; what is only shown (a sprite, a gauge, the rat-race track) is sunk into it. The page is a weave of single pixels one shade off the night. The two pictures that say whose life it is, the city and the face, wear a double frame with gold between. The rat-race track is sixteen lamps ending at a door, which opens when the last is lit. A headline is a clipping: a block in the colour of its subject with the subject's icon, a word for the subject, and the sentence. Gold stays for the primary action.
+- **Type:** Jersey 15 for titles and numbers; Inter for body text. Pixelify Sans was first, and its figures were hard to tell apart at HUD size (5 read as S, 2 as Z); Jersey 15 was chosen by the owner from eight faces set side by side. Jersey is drawn small inside its own size, so it is scaled until its small letters stand 0.56 of the font size (`font-size-adjust`), and the share card does the same sum on its canvas.
 - **Chrome:** panels, buttons, bars and ticker badges are drawn in CSS with 2px stepped pixel borders. They need no sprites.
 - **Reference look:** moody city pixel art, in the manner of Coffee Talk and VA-11 Hall-A.
 
@@ -332,7 +332,7 @@ Generation rules:
 | Finance tool and interface icons | 32×32 | 32 |
 | Achievement badges | 64×64 | 30 |
 | Status items (excluding cars and homes) | 64×64 | 27 |
-| Homes and property types | 128×128 | 7 |
+| Homes and property types | 128×128 | 9 drawn (7 homes, a parking space, a shop); 9 more asked for on sheet 04b |
 | Cars | 96×48 | 7 |
 | Portraits | 64×64 | 24 |
 | Card art | 288×120 | 45 |
@@ -517,6 +517,7 @@ Titles are in priority order within each category.
 - **Tech:** iPhone, MacBook Pro, PS5.
 - **Fashion:** Zara, Ralph Lauren, Gucci, Louis Vuitton, Hermès Birkin.
 - **Homes:** rented room, rented flat, then owned: studio, flat, family house, penthouse, villa.
+- **Property to let only:** parking space, shop unit. Nobody can live in one: it is let from the day it is bought, gives no status, and lets for a little more than a home of the same price (110% and 125% of the city's rent). Renting out needs the same finance skill as any let. Nine more kinds are drawn on sheet 04b and join when it lands: loft, townhouse, duplex, chalet, country estate, mansion, and to let an office floor, a warehouse and an apartment block.
 - **Travel:** Ryanair weekend, Ibiza summer, Emirates business class, Maldives resort.
 - **Memberships:** Basic-Fit, Soho House, Amex Platinum, Bernabéu season seat.
 - **Air and sea:** yacht charter week, NetJets charter.

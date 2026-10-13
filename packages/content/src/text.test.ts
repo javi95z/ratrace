@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { assetClassArt, cardArt, cityArt, itemArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt } from './art';
+import { assetClassArt, cardArt, cityArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, STAND_INS, topicArt } from './art';
 import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
@@ -167,8 +167,28 @@ describe('content art', () => {
       ...content.cities.map((city) => cityArt(city.id)),
       ...lives.flatMap((life) => PORTRAIT_AGES.map((age) => portraitArt(life.id, age))),
       ...Object.values(assetClassArt),
+      ...lifestyleArt,
+      ...rentTierIcon,
+      ...Object.values(insuranceArt),
+      ...Object.values(focusArt),
+      ...Object.values(topicArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(100 + 34 + 5 + 2 + 6 + 44 + 5);
+    expect(wanted.length).toBe(100 + 34 + 7 + 2 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+  });
+
+  it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {
+    expect(lifestyleArt).toHaveLength(content.lifestyleMultiplierPct.length);
+    expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
+    expect(keys(focusArt)).toEqual(['jobHunt', 'overtime', 'studyCareer']);
+    expect(keys(topicArt)).toEqual(['crypto', 'inflation', 'property', 'rates', 'regime']);
+  });
+
+  it('lets a sprite stand in only for one that is not drawn yet, and never for itself', () => {
+    for (const [wanted, standIn] of Object.entries(STAND_INS)) {
+      // The day the sheet lands, this fails and the entry is deleted: the real picture takes over.
+      expect(has(wanted), `${wanted} is drawn now: take it off the stand-in list`).toBe(false);
+      expect(has(standIn), `${standIn} stands in for ${wanted}`).toBe(true);
+    }
   });
 });

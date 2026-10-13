@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Pixelify_Sans } from 'next/font/google';
+import { Inter, Jersey_15 } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -8,7 +8,7 @@ import { GameProvider } from '@/game/context';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 
-const pixel = Pixelify_Sans({ subsets: ['latin', 'latin-ext'], weight: ['400', '500', '600', '700'], variable: '--font-pixelify', display: 'swap' });
+const pixel = Jersey_15({ subsets: ['latin', 'latin-ext'], weight: '400', variable: '--font-jersey', display: 'swap' });
 const inter = Inter({ subsets: ['latin', 'latin-ext'], variable: '--font-inter', display: 'swap' });
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };

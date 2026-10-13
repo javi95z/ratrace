@@ -29,7 +29,7 @@ export function Preferences() {
             href={pathname}
             locale={code}
             aria-current={code === locale ? 'true' : undefined}
-            className={`pixel frame flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
+            className={`pixel frame-raised flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'frame-cream bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
           >
             {LANGUAGES[code]}
           </Link>

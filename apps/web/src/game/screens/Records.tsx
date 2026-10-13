@@ -20,7 +20,7 @@ export function Records() {
   const records = recordsOf(runs ?? []);
 
   const best = (label: string, run: FinishedRun | null, figure: (run: FinishedRun) => string) => (
-    <li className="frame flex items-center justify-between gap-3 bg-night-700 px-3 py-2">
+    <li className="bevel flex items-center justify-between gap-3 bg-night-700 px-3 py-2">
       <span className="min-w-0">
         <span className="block text-[13px] text-ink-200">{label}</span>
         <span className="block truncate text-[12px] text-ink-300">{run ? lifeName(run) : t('none')}</span>
@@ -44,7 +44,7 @@ export function Records() {
       {runs !== null && runs.length > 0 ? (
         <>
           <section aria-label={t('bests')}>
-            <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('bests')}</h2>
+            <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{t('bests')}</h2>
             <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {best(t('bestScore'), records.bestScore, (run) => fmt.number(run.score))}
               {best(t('richest'), records.richest, (run) => fmt.money(run.netWorth))}
@@ -59,10 +59,10 @@ export function Records() {
           </section>
 
           <section aria-label={t('history')}>
-            <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('history')}</h2>
+            <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{t('history')}</h2>
             <ul className="flex flex-col gap-3">
               {runs.map((run) => (
-                <li key={run.runId} className="frame bg-night-700 p-3">
+                <li key={run.runId} className="bevel bg-night-700 p-3">
                   <div className="flex items-center gap-3">
                     <span className="frame shrink-0 leading-[0]">
                       <Well className="size-[68px]">

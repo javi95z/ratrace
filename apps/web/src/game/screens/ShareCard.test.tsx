@@ -3,7 +3,9 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { CARD, shareCard } from '@/game/share';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { CARD, PIXEL_X_HEIGHT, shareCard } from '@/game/share';
 import { memoryServices } from '@/testing/render';
 import { GameProvider } from '@/game/context';
 import en from '../../../messages/en.json';
@@ -76,6 +78,28 @@ describe('drawing the share card', () => {
     const px = Number(/(\d+)px/.exec(name[1])?.[1]);
     expect(px).toBeLessThan(15 * 4);
     expect(px).toBeGreaterThanOrEqual(8);
+  });
+
+  it('draws the pixel typeface as large as the page shows it, and leaves the other alone', async () => {
+    // A typeface whose small letters are 0.4 of its size, as a canvas would measure it.
+    fake.ctx.measureText = (text: string) => {
+      const px = Number(/(\d+)px/.exec(fake.ctx.font)?.[1] ?? 10);
+      return { width: text.length * px * 0.3, actualBoundingBoxAscent: px * 0.4 } as never;
+    };
+    // The names the page gave its two typefaces.
+    document.documentElement.style.setProperty('--font-jersey', 'JerseyOfThePage');
+    document.documentElement.style.setProperty('--font-inter', 'InterOfThePage');
+    await drawCard(ops, async () => sprite);
+    document.documentElement.removeAttribute('style');
+    const fontOf = (line: string) => (fake.calls.find(([k, , text]) => k === 'text' && text === line) as [string, string])[1];
+    // The title is set at 15 on the grid: 60px on the canvas, grown by 0.56 / 0.4.
+    expect(fontOf('THE RAT RACE')).toBe('400 84px JerseyOfThePage');
+    expect(fontOf('Age 62 · Madrid')).toBe('400 36px InterOfThePage');
+  });
+
+  it('agrees with the page on how large that is', () => {
+    const css = readFileSync(join(__dirname, '../../app/globals.css'), 'utf8');
+    expect(css).toContain(`font-size-adjust: ${PIXEL_X_HEIGHT};`);
   });
 
   it('gives up without a fuss where there is no canvas to draw on', async () => {

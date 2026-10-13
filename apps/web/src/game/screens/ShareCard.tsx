@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useT } from '@/game/context';
-import { CARD } from '@/game/share';
+import { CARD, PIXEL_X_HEIGHT } from '@/game/share';
 import type { DrawOp } from '@/game/share';
 import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -29,7 +29,7 @@ const browserLoader: SpriteLoader = (id) => {
 function families(): Record<'pixel' | 'sans', string> {
   const style = getComputedStyle(document.documentElement);
   const named = (name: string, otherwise: string) => style.getPropertyValue(name).trim() || otherwise;
-  return { pixel: named('--font-pixelify', 'monospace'), sans: named('--font-inter', 'sans-serif') };
+  return { pixel: named('--font-jersey', 'monospace'), sans: named('--font-inter', 'sans-serif') };
 }
 
 /**
@@ -46,9 +46,14 @@ export async function drawCard(ops: DrawOp[], load: SpriteLoader = browserLoader
   ctx.imageSmoothingEnabled = false;
 
   const fonts = families();
-  const weight = { pixel: '500', sans: '400' };
+  const weight = { pixel: '400', sans: '400' };
   // The typefaces are on the page already; this only waits until the canvas may use them.
   await Promise.all(Object.values(fonts).map((family) => document.fonts?.load(`16px ${family}`).catch(() => undefined)));
+  // The pixel typeface is drawn small inside its own size. The page scales it until its small letters
+  // stand as tall as `PIXEL_X_HEIGHT` of the size asked for, and so does the card.
+  ctx.font = `${weight.pixel} 100px ${fonts.pixel}`;
+  const small = ctx.measureText('x').actualBoundingBoxAscent;
+  const grow = { pixel: small > 0 ? (PIXEL_X_HEIGHT * 100) / small : 1, sans: 1 };
   const pictures = new Map<string, Drawable | null>();
   for (const op of ops) if (op.kind === 'sprite' && !pictures.has(op.id)) pictures.set(op.id, await load(op.id));
 
@@ -60,7 +65,7 @@ export async function drawCard(ops: DrawOp[], load: SpriteLoader = browserLoader
       const picture = pictures.get(op.id);
       if (picture) ctx.drawImage(picture, op.x * scale, op.y * scale, op.w * scale, op.h * scale);
     } else {
-      let size = op.size * scale;
+      let size = Math.round(op.size * scale * grow[op.font]);
       const font = (px: number) => `${weight[op.font]} ${px}px ${fonts[op.font]}`;
       ctx.font = font(size);
       // A name too long for its place is written smaller, never cut and never over the edge.

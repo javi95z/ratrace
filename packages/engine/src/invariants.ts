@@ -86,6 +86,9 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
   for (const property of p.properties) {
     if (!content.cities.some((city) => city.id === property.cityId)) breaks.push(`property ${property.id} is in an unknown city`);
     if (!content.propertyTypes.some((type) => type.id === property.typeId)) breaks.push(`property ${property.id} has an unknown type`);
+    if (!property.rented && content.propertyTypes.some((type) => type.id === property.typeId && type.rentalOnly === true)) {
+      breaks.push(`property ${property.id} cannot be lived in and is not let`);
+    }
   }
   const states = state.timeline.length;
   if (whole !== null) {

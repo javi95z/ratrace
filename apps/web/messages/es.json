@@ -137,7 +137,14 @@
     "hint": "Los titulares hablan de los próximos dos años. Se cumplen unos siete de cada diez.",
     "toCards": "Ver qué trae la vida",
     "toFinance": "A tus finanzas",
-    "opener": "Los titulares de al lado hablan de los próximos dos años. Se cumplen unos siete de cada diez."
+    "opener": "Los titulares de al lado hablan de los próximos dos años. Se cumplen unos siete de cada diez.",
+    "topics": {
+      "regime": "Economía",
+      "crypto": "Cripto",
+      "rates": "Tipos de interés",
+      "inflation": "Inflación",
+      "property": "Vivienda"
+    }
   },
   "cards": {
     "progress": "Carta {n} de {total}",
@@ -248,10 +255,10 @@
       "nothing": "No hay nada que mover."
     },
     "property": {
-      "title": "Viviendas en {city}",
+      "title": "Inmuebles en {city}",
       "status": "Estatus +{n}",
       "minDown": "Desde {amount} de entrada",
-      "buyTitle": "Comprar una vivienda: {home}",
+      "buyTitle": "Comprar: {home}",
       "price": "Precio",
       "purchaseTax": "Impuesto de compra",
       "down": "Entrada",
@@ -266,16 +273,20 @@
       "rentOutLocked": "Para alquilar hace falta finanzas nivel {level}",
       "payNow": "Pagas {amount} ahora",
       "buy": "Comprar",
-      "owned": "Tus viviendas",
-      "ownedNone": "No tienes ninguna vivienda.",
+      "owned": "Tus inmuebles",
+      "ownedNone": "No tienes ningún inmueble.",
       "sell": "Vender por {amount}",
       "selling": "Se vende al jugar la ronda",
-      "rented": "Alquilada",
+      "rented": "En alquiler",
       "livedIn": "Vives aquí",
-      "empty": "Vacía",
-      "startRenting": "Ponerla en alquiler",
-      "stopRenting": "Dejar de alquilarla",
-      "mortgageLeft": "Quedan {amount} de hipoteca"
+      "empty": "Vacío",
+      "startRenting": "Ponerlo en alquiler",
+      "stopRenting": "Dejar de alquilarlo",
+      "mortgageLeft": "Quedan {amount} de hipoteca",
+      "letOnly": "Solo para alquilar",
+      "lets": "Renta {amount} al año",
+      "buyLetTitle": "Comprar para alquilar: {home}",
+      "rent": "Renta al año"
     },
     "debt": {
       "none": "No debes nada.",

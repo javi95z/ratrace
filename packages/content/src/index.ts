@@ -5,7 +5,7 @@ export { names } from './names';
 export type { Locale, Names } from './names';
 export { fillNames, rawText, textFor } from './text';
 export type { CardText, ContentText } from './text';
-export { assetClassArt, assetKind, badgeArt, cardArt, cityArt, itemArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt } from './art';
+export { assetClassArt, assetKind, badgeArt, cardArt, cityArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
 export { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE } from './badges';
 export type { BadgeDef, BadgeGroup, Journal, Step } from './badges';
 export { unlockedLives } from './unlocks';

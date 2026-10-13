@@ -60,6 +60,15 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // Nine more kinds of property: six to live in, three to let.
+    file: 'homes/homes-02', group: 'homes', kind: 'objects', cols: 3, rows: 3, width: 128, height: 128,
+    ids: [
+      'home.loft', 'home.townhouse', 'home.duplex',
+      'home.chalet', 'home.estate', 'home.mansion',
+      'home.office', 'home.warehouse', 'home.block',
+    ],
+  },
+  {
     file: 'icons/icons-01', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
     ids: [
       'icon.account', 'icon.deposit', 'icon.bond', 'icon.fund',
@@ -75,6 +84,16 @@ export const SHEETS: SheetSpec[] = [
       'icon.job', 'icon.family', 'icon.city', 'icon.news',
       'icon.mood', 'icon.inflation', 'icon.rates', 'icon.calendar',
       'icon.locked', 'icon.star', 'icon.settings', 'icon.trophy',
+    ],
+  },
+  {
+    // A picture for every choice of the lifestyle tab. Until it lands, `STAND_INS` in the content lends each one an older icon.
+    file: 'icons/icons-03', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
+    ids: [
+      'icon.life_frugal', 'icon.life_normal', 'icon.life_comfortable', 'icon.life_lavish',
+      'icon.rent_room', 'icon.rent_flat', 'icon.insure_health', 'icon.insure_home',
+      'icon.insure_life', 'icon.insure_liability', 'icon.focus_overtime', 'icon.focus_study',
+      'icon.focus_hunt', 'icon.economy', 'icon.move', 'icon.exit_door',
     ],
   },
   {

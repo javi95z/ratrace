@@ -122,6 +122,8 @@ export function validateContent(c: Content): string[] {
       errors.push(`property type ${type.id} needs a positive price percentage`);
     }
     if (!isCount(type.status)) errors.push(`property type ${type.id} needs a whole, non-negative status`);
+    if (type.rentalOnly === true && type.status !== 0) errors.push(`property type ${type.id} cannot be lived in, so it gives no status`);
+    if (type.rentPct !== undefined && !(isCount(type.rentPct) && type.rentPct > 0)) errors.push(`property type ${type.id} needs a whole, positive rent percentage`);
   }
 
   for (const career of c.careers) {
@@ -276,6 +278,9 @@ function lifeStartErrors(content: Content, start: StartConfig): string[] {
       errors.push(`life property ${i} has an unknown type: ${String(entry.typeId)}`);
     }
     if (typeof entry.rented !== 'boolean') errors.push(`life property ${i} needs rented to be true or false`);
+    if (entry.rented === false && content.propertyTypes.some((t) => t.id === entry.typeId && t.rentalOnly === true)) {
+      errors.push(`life property ${i} is a ${String(entry.typeId)}, which nobody can live in`);
+    }
   });
   const held = new Set<unknown>();
   list(life.holdings).forEach((holding, i) => {

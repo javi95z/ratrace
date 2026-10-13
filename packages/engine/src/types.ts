@@ -93,6 +93,10 @@ export interface PropertyTypeDef {
   pricePct: number;
   /** Status points for living in one. */
   status: number;
+  /** True for what nobody can live in, such as a parking space or a shop. It is always let, and gives no status. */
+  rentalOnly?: boolean;
+  /** Its rent, as a percent of what a home of the same value brings in its city. 100 where left out. */
+  rentPct?: number;
 }
 
 export interface CareerLevel {
@@ -651,6 +655,7 @@ export type RejectReason =
   | 'down-payment-too-high'
   | 'unknown-property'
   | 'needs-finance-skill'
+  | 'not-a-home'
   | 'unknown-action'
   | 'no-focus'
   | 'already-done'

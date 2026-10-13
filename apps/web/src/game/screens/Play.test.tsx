@@ -69,6 +69,13 @@ describe('the play screen', () => {
 
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect(screen.getByText('Age 22')).toBeTruthy();
+    // Every headline is a clipping that says what it is about, in a word and a picture.
+    const clippings = within(screen.getByRole('region', { name: 'News' })).getAllByRole('listitem');
+    const news = ((await services.store.loadGame()) as SavedGame).state.timeline[0].news;
+    expect(news.length).toBeGreaterThan(0);
+    const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing' };
+    expect(clippings.map((clipping) => clipping.querySelector('[data-topic]')?.textContent)).toEqual(news.map((headline) => SUBJECT[headline.topic]));
+    for (const clipping of clippings) expect(clipping.querySelector('img')).not.toBeNull();
     expect(screen.getByText(/Round 1 of 20 · Madrid/)).toBeTruthy();
     // One top heading says whose life this is; the stage on screen is a named region that takes the focus.
     expect(screen.getByRole('heading', { level: 1, name: 'Nurse, age 22' })).toBeTruthy();
