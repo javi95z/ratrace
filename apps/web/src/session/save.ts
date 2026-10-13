@@ -1,18 +1,18 @@
 import type { LifeDef } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
-import { applyCard, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks, realNetWorth } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
 import type { Content, GameState, StartConfig } from '@ratrace/engine';
+import { recordStart, recordStep } from './record';
+import type { LifeRecord } from './record';
 import { SAVE_FORMAT } from './types';
 import type { Lost, RoundLog, SavedGame } from './types';
 
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
 
-export interface Replayed {
+/** A game played again from its seed: where it stands, and the record of how it got there. */
+export interface Replayed extends LifeRecord {
   state: GameState;
-  /** Net worth in start-of-game cents at the start and after every round played. */
-  history: number[];
-  bankruptcies: number;
 }
 
 /**
@@ -22,24 +22,24 @@ export interface Replayed {
 export function replay(content: Content, start: StartConfig, seed: string, log: RoundLog[]): Replayed {
   if (log.length > content.rounds) throw new Error('the log is longer than a life');
   let state = createGame({ content, start }, seed);
-  const history = [realNetWorth(state)];
-  let bankruptcies = 0;
+  let record = recordStart(content, state);
+  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }) => {
+    record = recordStep(content, record, state, result.state, result.events).record;
+    state = result.state;
+  };
 
   log.forEach((entry, i) => {
     for (const pick of entry.picks) {
       if (state.phase !== 'cards') throw new Error('the log answers more cards than the round had');
-      state = applyCard(content, state, pick).state;
+      take(applyCard(content, state, pick));
     }
     if (entry.orders === null) {
       if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
       return;
     }
-    const result = applyRound(content, state, { orders: entry.orders });
-    for (const event of result.events) if (event.kind === 'bankrupt') bankruptcies += 1;
-    state = result.state;
-    history.push(realNetWorth(state));
+    take(applyRound(content, state, { orders: entry.orders }));
   });
-  return { state, history, bankruptcies };
+  return { state, ...record };
 }
 
 function readLog(raw: unknown): RoundLog[] | null {
@@ -83,6 +83,13 @@ function stateFits(content: Content, state: unknown, seed: string, at: Standing)
   }
 }
 
+const isStrings = (x: unknown): x is string[] => Array.isArray(x) && x.every((entry) => typeof entry === 'string');
+
+/** True if a stored journal has the shape of one. What it says is not checked: replaying the log is what proves it. */
+function isJournal(x: unknown): x is LifeRecord['journal'] {
+  return isRecord(x) && isStrings(x.cities) && x.cities.length > 0 && typeof x.cardUsed === 'boolean' && isStrings(x.kinds) && isStrings(x.earned);
+}
+
 export type Opened = { ok: true; save: SavedGame; repaired: boolean } | { ok: false; lost: Lost };
 
 /**
@@ -120,8 +127,8 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
   } as const;
 
   const historyFits = Array.isArray(raw.history) && raw.history.length === at.played + 1 && raw.history.every((x) => Number.isSafeInteger(x));
-  if (stateFits(content, raw.state, seed, at) && historyFits && isCount(raw.bankruptcies) && isCount(raw.updatedAt)) {
-    return { ok: true, repaired: false, save: { ...header, history: raw.history as number[], bankruptcies: raw.bankruptcies, state: raw.state } };
+  if (stateFits(content, raw.state, seed, at) && historyFits && isCount(raw.bankruptcies) && isCount(raw.updatedAt) && isJournal(raw.journal)) {
+    return { ok: true, repaired: false, save: { ...header, history: raw.history as number[], bankruptcies: raw.bankruptcies, journal: raw.journal, state: raw.state } };
   }
   try {
     return { ok: true, repaired: true, save: { ...header, ...replay(content, life.start, seed, log) } };

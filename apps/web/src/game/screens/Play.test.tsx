@@ -164,6 +164,16 @@ describe('the play screen', () => {
     expect(screen.getByRole('link', { name: 'Live another life' }).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Home' }).getAttribute('href')).toBe('/');
 
+    // A first life lived to the end: its badges are shown, and the life it unlocked.
+    const earned = screen.getByRole('region', { name: 'Badges of this life' });
+    expect(run.badges.length).toBeGreaterThan(0);
+    expect(within(earned).getAllByRole('listitem')).toHaveLength(run.badges.length);
+    expect(within(earned).getAllByText('New').length).toBe(run.badges.length);
+    expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
+    // Nothing to beat in a first life, so no personal best is claimed.
+    expect(screen.queryByText('New best score')).toBeNull();
+    expect(screen.getByRole('link', { name: 'See your collection' }).getAttribute('href')).toBe('/collection');
+
     // The page is closed on the score and opened again: the score is still there.
     expect(((await services.store.loadGame()) as SavedGame).state.finished).toBe(true);
     cleanup();
@@ -171,6 +181,46 @@ describe('the play screen', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('celebrates a badge on the ledger of the round that earned it, and the life a round unlocked', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    await playRounds(session, 19);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    await answerHand(user);
+    await user.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    // The last round of a first life: never on the card (if it was not), and the rider unlocked.
+    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
+    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Delivery rider'))).toBe(true);
+    const [run] = await services.store.listRuns();
+    const profile = await services.store.loadProfile();
+    for (const id of ['no_credit_card'].filter((badge) => run.badges.includes(badge) && profile.badges[badge].at === run.finishedAt)) {
+      expect(news.some((text) => text.includes('Badge earned') && text.includes('Never on the card')), id).toBe(true);
+    }
+  });
+
+  it('marks a second life that beats the first', async () => {
+    const services = memoryServices();
+    // A first life that went badly: lavish on a nurse's pay.
+    const poor = await services.sessions.start('nurse');
+    for (let i = 0; i < 20; i++) {
+      while (poor.view().phase === 'cards') await poor.answerCard(0);
+      await poor.playRound({ orders: [{ type: 'setLifestyle', tier: 3 }] });
+    }
+    const better = await services.sessions.start('nurse');
+    await playRounds(better, 20);
+    const runs = await services.store.listRuns();
+    expect(runs[0].score).toBeGreaterThan(runs[1].score);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(await screen.findByText('New best score')).toBeTruthy();
+    expect(screen.getByText('Your richest life yet')).toBeTruthy();
+    // The rider was unlocked by the first life, not by this one.
+    expect(screen.queryByText(/New life unlocked/)).toBeNull();
   });
 
   it('ignores the second tap of a double tap: it does not answer the card that took the button\u2019s place', async () => {
@@ -215,7 +265,7 @@ describe('the play screen', () => {
     const real = await services.sessions.start('nurse');
     services.sessions.resume = async () => ({
       lost: null,
-      session: { ...real, gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, answerCard: () => Promise.reject(new Error('broken')), playRound: () => Promise.reject(new Error('broken')) },
+      session: { ...real, gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => [], answerCard: () => Promise.reject(new Error('broken')), playRound: () => Promise.reject(new Error('broken')) },
     });
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();

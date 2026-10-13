@@ -1,9 +1,14 @@
+import type { Journal } from '@ratrace/content';
 import type { GameEvent, GameState, GameView, Order, RoundChoices } from '@ratrace/engine';
 
 /** What one answer or one round gives back: the game as it now stands, and what happened on the way. */
 export interface StepResult {
   view: GameView;
   events: GameEvent[];
+  /** Badges this step earned for the first time ever, for the screen to celebrate. */
+  earned: string[];
+  /** Lives this step unlocked. */
+  unlocked: string[];
 }
 
 /**
@@ -19,6 +24,8 @@ export interface GameSession {
   history(): number[];
   /** How many times this life has gone bankrupt. */
   bankruptcies(): number;
+  /** The badges earned in this life so far, in the order they came. */
+  badges(): string[];
   /**
    * Answers the next card of the hand with the option given, and returns what that card did.
    * Cards are answered one at a time: the next one is judged as the player stands after this one.
@@ -66,6 +73,8 @@ export interface SavedGame {
   log: RoundLog[];
   history: number[];
   bankruptcies: number;
+  /** What the life has shown so far that the badges need. Rebuilt with the rest when the log is replayed. */
+  journal: Journal;
   state: GameState;
   updatedAt: number;
 }
@@ -89,6 +98,10 @@ export interface FinishedRun {
   escapedAtRound: number | null;
   bankruptcies: number;
   history: number[];
+  /** The badges earned in this life, in the order they came. */
+  badges: string[];
+  /** Every city lived in, the first one first. */
+  cities: string[];
   /** Ran on this device, so it counts for personal bests only. */
   verified: false;
 }
@@ -98,13 +111,34 @@ export interface Settings {
   reducedMotion: boolean;
 }
 
-/** What belongs to the player rather than to one life. Unlocks, achievements and the collection join it in step 9. */
+/** When something was earned for the first time, and in which life. */
+export interface Earned {
+  at: number;
+  gameId: string;
+}
+
+/** What belongs to the player rather than to one life. */
 export interface Profile {
   format: typeof SAVE_FORMAT;
   settings: Settings;
+  /** Every badge ever earned, by id. */
+  badges: Record<string, Earned>;
+  /** Every status item ever owned, across lives, in the order first owned. */
+  gallery: string[];
+  /** Lives unlocked by play, by id. Lives open from the start are not listed. */
+  unlocked: Record<string, Earned>;
+  /** The guided first life: the tips already shown, and whether the player turned the guide off. */
+  guide: { seen: string[]; off: boolean };
 }
 
-export const newProfile = (): Profile => ({ format: SAVE_FORMAT, settings: { reducedMotion: false } });
+export const newProfile = (): Profile => ({
+  format: SAVE_FORMAT,
+  settings: { reducedMotion: false },
+  badges: {},
+  gallery: [],
+  unlocked: {},
+  guide: { seen: [], off: false },
+});
 
 /** Where everything the player has is kept. Today that is this device. */
 export interface PlayerStore {

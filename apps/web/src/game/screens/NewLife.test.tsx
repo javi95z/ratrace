@@ -3,6 +3,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { newProfile } from '@/session/types';
 import type { SavedGame } from '@/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { NewLife } from './NewLife';
@@ -36,6 +37,20 @@ describe('choosing a life', () => {
       'Nurse', 'Software engineer', 'Civil servant',
     ]);
     expect(screen.getAllByText(/To unlock/)).toHaveLength(3);
+  });
+
+  it('opens a life the player has unlocked, and marks it', async () => {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    const rider = await screen.findByRole('radio', { name: /^Delivery rider/ });
+    await waitFor(() => expect((rider as HTMLButtonElement).disabled).toBe(false));
+    expect(screen.getAllByText(/To unlock/)).toHaveLength(2);
+    await user.click(rider);
+    await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect((await saved(services))?.lifeId).toBe('rider');
   });
 
   it('starts the life chosen and goes to it, leaving no way back onto this screen', async () => {

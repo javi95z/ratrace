@@ -381,7 +381,7 @@ describe('when something goes wrong', () => {
         resume: async () => ({
           lost: null,
           session: {
-            gameId: 'x', lifeId: 'nurse', view: () => get().view as never, history: () => [], bankruptcies: () => 0,
+            gameId: 'x', lifeId: 'nurse', view: () => get().view as never, history: () => [], bankruptcies: () => 0, badges: () => [],
             answerCard: () => Promise.reject(new Error('invariant broken: cash is not a whole number')),
             playRound: () => Promise.reject(new Error('invariant broken')),
           },
@@ -392,6 +392,82 @@ describe('when something goes wrong', () => {
     broken.getState().leaveNews();
     await broken.getState().pick(0);
     expect(broken.getState()).toMatchObject({ fault: true, busy: false, moved: false, stage: 'cards' });
+  });
+});
+
+describe('what a step earned', () => {
+  it('is on the screen with the result of the step, and gone with the next one', async () => {
+    const { get } = setup();
+    await get().start('nurse');
+    expect(get()).toMatchObject({ gameId: 'id-1', badges: [], earned: [], unlocked: [] });
+    // A lavish life on a nurse's pay ends in bankruptcy within a few rounds.
+    let seen = false;
+    for (let round = 0; round < 10 && !seen; round++) {
+      await answerHand(get);
+      get().setOrder(isLifestyle, { type: 'setLifestyle', tier: 3 });
+      await get().play();
+      if (get().earned.includes('bankrupt')) {
+        seen = true;
+        expect(get().badges).toContain('bankrupt');
+        expect(get().stage).toBe('resolve');
+      }
+      get().next();
+      expect(get().earned).toEqual([]);
+    }
+    expect(seen).toBe(true);
+    expect(get().badges).toContain('bankrupt');
+  });
+
+  it('includes the life unlocked by finishing a first one', async () => {
+    const { get } = setup();
+    await get().start('civil_servant');
+    for (let round = 0; round < 20; round++) {
+      await answerHand(get);
+      await get().play();
+      if (round < 19) get().next();
+    }
+    expect(get()).toMatchObject({ stage: 'resolve', unlocked: ['rider'] });
+    get().next();
+    expect(get()).toMatchObject({ stage: 'end', unlocked: [] });
+  });
+
+  it('comes back with the life when the page is opened again', async () => {
+    const first = setup();
+    await first.get().start('nurse');
+    for (let round = 0; round < 8; round++) {
+      await answerHand(first.get);
+      first.get().setOrder(isLifestyle, { type: 'setLifestyle', tier: 3 });
+      await first.get().play();
+      first.get().next();
+    }
+    const again = setup(first.store);
+    await again.get().boot();
+    expect(again.get().badges).toEqual(first.get().badges);
+    expect(again.get().gameId).toBe('id-1');
+  });
+});
+
+describe('opening the device while a life is being started', () => {
+  it('keeps the life that was started, whatever the device then says', async () => {
+    const { store, sessions, get } = setup();
+    await sessions.start('nurse');
+    // The device reads the old life and is slow to hand it over; meanwhile the player starts another.
+    const load = store.loadGame;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    store.loadGame = async () => {
+      const old = await load();
+      await gate;
+      return old;
+    };
+    const booting = get().boot();
+    await Promise.resolve();
+    store.loadGame = load;
+    await get().start('engineer');
+    release();
+    await booting;
+    expect(get()).toMatchObject({ status: 'playing', lifeId: 'engineer' });
+    expect(get().view?.round).toBe(0);
   });
 });
 

@@ -1,47 +1,21 @@
 'use client';
 
-import { portraitArt } from '@ratrace/content';
+import { badgeArt, portraitArt } from '@ratrace/content';
+import { useMemo } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
-import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, START_AGE, worthBars } from '@/game/present';
+import type { GameView } from '@ratrace/engine';
+import { useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
+import { ageAt } from '@/game/present';
+import { bestsOf } from '@/game/records';
+import { shareCard } from '@/game/share';
+import type { Best } from '@/game/records';
 import { Link } from '@/i18n/navigation';
-import { Panel, Row, Well } from '@/ui/kit';
+import { Panel, Row, Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { ShareCard } from './ShareCard';
+import { WorthGraph } from './WorthGraph';
 
-/** One bar of the graph, in screen pixels: ten of bar and four of gap. */
-const BAR = 10;
-const STEP = 14;
-const HEIGHT = 96;
-
-/** Net worth after every round, one pixel bar each, in the dollars of age 22 so the rounds can be compared. */
-function WorthGraph({ history, label }: { history: number[]; label: string }) {
-  const { fmt } = useWords();
-  const { zero, bars } = worthBars(history);
-  const width = bars.length * STEP - (STEP - BAR);
-  const line = Math.min(HEIGHT - 1, Math.round(zero * HEIGHT));
-  const last = history.length - 1;
-
-  return (
-    <div className="mx-auto" style={{ width }}>
-      <div className="mb-1 flex justify-between text-[11px] text-ink-300">
-        <span>{fmt.compact(Math.max(0, ...history))}</span>
-      </div>
-      <svg role="img" aria-label={label} width={width} height={HEIGHT} viewBox={`0 0 ${width} ${HEIGHT}`} shapeRendering="crispEdges" className="block">
-        {bars.map((bar, i) => {
-          // A bar that stands for something is never thinner than two pixels, so a small fortune still shows.
-          const tall = bar.h > 0 ? Math.max(2, Math.round(bar.h * HEIGHT)) : 0;
-          const top = bar.negative ? line : Math.min(Math.round(bar.y * HEIGHT), line - tall);
-          return <rect key={i} x={i * STEP} y={Math.max(0, top)} width={BAR} height={tall} className={bar.negative ? 'fill-wine-500' : i === last ? 'fill-gold-200' : 'fill-gold-500'} />;
-        })}
-        <rect x={0} y={line} width={width} height={1} className="fill-ink-300" />
-      </svg>
-      <div className="mt-1 flex justify-between text-[11px] text-ink-300">
-        <span>{START_AGE}</span>
-        <span>{START_AGE + last * 2}</span>
-      </div>
-    </div>
-  );
-}
+const BEST: Record<Best, string> = { score: 'bestScore', netWorth: 'bestNetWorth', escape: 'bestEscape', status: 'bestStatus' };
 
 function Part({ label, value }: { label: string; value: string }) {
   return (
@@ -52,20 +26,64 @@ function Part({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** How the life ended: the score and the three parts it is made of, the graph of a lifetime, and the way to another. */
+/** How the life ended. Nothing to show until there is a life. */
 export function End() {
+  const view = useGame((s) => s.view);
+  return view ? <Ended view={view} /> : null;
+}
+
+/** The score and the three parts it is made of, what the life earned, the graph of a lifetime, and the way to another. */
+function Ended({ view }: { view: GameView }) {
   const t = useT('end');
   const { content, text, names, fmt } = useWords();
-  const view = useGame((s) => s.view);
   const history = useGame((s) => s.history);
   const bankruptcies = useGame((s) => s.bankruptcies);
   const lifeId = useGame((s) => s.lifeId) ?? '';
-  if (!view) return null;
+  const gameId = useGame((s) => s.gameId);
+  const earned = useGame((s) => s.badges);
+  const badges = useT('badges');
+  const share = useT('share');
+  const meta = useT('meta');
+  const profile = useProfile();
+  const runs = useRuns();
+
+  // What this life did for the first time, as the profile recorded it: nothing is judged here.
+  const isNew = (id: string) => profile.badges[id]?.gameId === gameId;
+  const unlocked = Object.keys(profile.unlocked).filter((id) => profile.unlocked[id].gameId === gameId);
+  const run = runs?.find((candidate) => candidate.runId === gameId);
+  const bests = run && runs ? bestsOf(run, runs) : [];
 
   const p = view.player;
   // The engine's own breakdown: nothing about the score is worked out here.
   const score = scoreBreakdown(content, view);
   const escaped = score.multiplierPct > 100;
+  const lifeName = text.lives[lifeId]?.name ?? lifeId;
+  const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
+  // The picture to share says what this screen says, in the figures the engine gave.
+  const picture = useMemo(
+    () =>
+      shareCard({
+        title: meta('title').toUpperCase(),
+        life: lifeName,
+        where: `${t('age', { age: ageAt(content, view.round) })} · ${names.cities[p.cityId]}`,
+        outcome,
+        escaped,
+        portrait: portraitArt(lifeId, 58),
+        scoreLabel: t('score'),
+        score: fmt.number(score.total),
+        parts: [
+          { label: t('wealth'), value: fmt.number(score.wealth) },
+          { label: t('status'), value: fmt.number(score.status) },
+          { label: escaped ? t('bonus', { multiplier: fmt.factor(score.multiplierPct) }) : t('noBonus'), value: `×${fmt.factor(score.multiplierPct)}` },
+        ],
+        netWorthLabel: share('netWorth'),
+        netWorth: fmt.money(realNetWorth(view)),
+        history,
+        badgesLabel: share('badges'),
+        badges: earned.map(badgeArt),
+      }),
+    [meta, t, share, fmt, content, names, view, history, earned, lifeId, lifeName, outcome, escaped, score.total, score.wealth, score.status, score.multiplierPct, p.cityId],
+  );
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-8 pt-6">
@@ -81,7 +99,7 @@ export function End() {
             <span>{t('age', { age: ageAt(content, view.round) })}</span>
             {' · '}
             <span>
-              {text.lives[lifeId]?.name ?? lifeId} · {names.cities[p.cityId]}
+              {lifeName} · {names.cities[p.cityId]}
             </span>
           </p>
         </div>
@@ -98,9 +116,24 @@ export function End() {
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
       </section>
 
+      {bests.length > 0 || unlocked.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {bests.map((best) => (
+            <p key={best} role="status" className="frame frame-gold pixel animate-rise bg-gold-500 px-3 py-2 text-center text-[16px] text-ink-900">
+              {t(BEST[best])}
+            </p>
+          ))}
+          {unlocked.map((id) => (
+            <p key={id} role="status" className="frame frame-gold pixel animate-rise bg-gold-500 px-3 py-2 text-center text-[16px] text-ink-900">
+              {t('unlocked', { life: text.lives[id]?.name ?? id })}
+            </p>
+          ))}
+        </div>
+      ) : null}
+
       <Panel>
         <p className={`pixel text-[17px] ${escaped ? 'text-teal-300' : ''}`}>
-          {p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) })}
+          {outcome}
         </p>
         <p className="mt-1 text-[13px] text-ink-300">{t('bankruptcies', { count: bankruptcies })}</p>
       </Panel>
@@ -114,7 +147,31 @@ export function End() {
         <p className="mt-2 text-center text-[12px] text-ink-300">{t('graph')}</p>
       </Panel>
 
+      <section aria-label={t('badges')} className="frame bg-night-700 p-3">
+        <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('badges')}</h2>
+        {earned.length === 0 ? (
+          <p className="text-[14px] text-ink-300">{t('noBadges')}</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {earned.map((id) => (
+              <li key={id} className="flex items-center gap-3">
+                <Sprite id={badgeArt(id)} fallback={{ w: 64, h: 64 }} />
+                <div className="min-w-0 flex-1">
+                  <p className="pixel text-[16px]">{text.badges[id]?.name ?? id}</p>
+                  <p className="text-[12px] leading-snug text-ink-300">{text.badges[id]?.how}</p>
+                </div>
+                {isNew(id) ? <Tag tone="good">{badges('isNew')}</Tag> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+        <Link href="/collection" className="pixel frame mt-3 flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
+          {t('collection')}
+        </Link>
+      </section>
+
       <div className="mt-auto flex flex-col gap-3 pt-2">
+        <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} />
         <Link href="/new" className="pixel frame-raised frame-gold flex min-h-12 items-center justify-center bg-gold-500 px-4 py-2 text-center text-[19px] text-ink-900">
           {t('again')}
         </Link>

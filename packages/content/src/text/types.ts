@@ -10,6 +10,7 @@ import type {
   RejectReason,
   Trend,
 } from '@ratrace/engine';
+import type { BadgeGroup } from '../badges';
 
 export interface CardText {
   title: string;
@@ -47,6 +48,9 @@ export interface ContentText {
     inflation: Record<Trend, string>;
     property: Record<'up' | 'down', string>;
   };
+  /** Badges: what each is called, and how it is earned. */
+  badges: Record<string, { name: string; how: string }>;
+  badgeGroups: Record<BadgeGroup, string>;
   /** Why an order was refused. */
   reasons: Record<RejectReason, string>;
   ledger: Record<LedgerLine, string>;

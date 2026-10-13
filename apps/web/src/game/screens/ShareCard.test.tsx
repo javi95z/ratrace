@@ -1,0 +1,139 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CARD, shareCard } from '@/game/share';
+import { memoryServices } from '@/testing/render';
+import { GameProvider } from '@/game/context';
+import en from '../../../messages/en.json';
+import { drawCard, ShareCard } from './ShareCard';
+
+const ops = shareCard({
+  title: 'THE RAT RACE', life: 'Nurse', where: 'Age 62 · Madrid', outcome: 'You never left the rat race.', escaped: false, portrait: 'portrait.nurse.58',
+  scoreLabel: 'Score', score: '364', parts: [{ label: 'Wealth', value: '311' }], netWorthLabel: 'Net worth', netWorth: '$1,999,329', history: [1, 2, 3], badgesLabel: 'Badges', badges: ['badge.escaped'],
+});
+
+/** A canvas that draws nothing and remembers everything it was asked to draw. */
+function fakeCanvas() {
+  const calls: Array<[string, ...unknown[]]> = [];
+  const ctx = {
+    imageSmoothingEnabled: true, font: '', fillStyle: '', textAlign: '', textBaseline: '',
+    fillRect: (...a: unknown[]) => calls.push(['rect', ctx.fillStyle, ...a]),
+    drawImage: (...a: unknown[]) => calls.push(['image', ...a]),
+    fillText: (...a: unknown[]) => calls.push(['text', ctx.font, ...a]),
+    measureText: (text: string) => ({ width: text.length * (Number(/(\d+)px/.exec(ctx.font)?.[1] ?? 10) * 0.6) }),
+  };
+  return { ctx, calls };
+}
+
+let fake = fakeCanvas();
+beforeEach(() => {
+  fake = fakeCanvas();
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => fake.ctx as never);
+  vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(function (this: HTMLCanvasElement, done: BlobCallback) {
+    done(new Blob(['png'], { type: 'image/png' }));
+  });
+  URL.createObjectURL = vi.fn(() => 'blob:picture');
+  URL.revokeObjectURL = vi.fn();
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+const sprite = { tagName: 'IMG' } as unknown as CanvasImageSource;
+
+describe('drawing the share card', () => {
+  it('draws on a canvas four times the grid, with smoothing off', async () => {
+    const canvas = await drawCard(ops, async () => sprite);
+    expect([canvas?.width, canvas?.height]).toEqual([CARD.w * 4, CARD.h * 4]);
+    expect(fake.ctx.imageSmoothingEnabled).toBe(false);
+  });
+
+  it('draws every rectangle, sprite and line of text, four times as large', async () => {
+    await drawCard(ops, async () => sprite);
+    const of = (kind: string) => fake.calls.filter(([k]) => k === kind);
+    expect(of('rect')[0]).toEqual(['rect', '#141b33', 0, 0, 1080, CARD.h * 4]);
+    expect(of('image')).toEqual([
+      ['image', sprite, 56, 136, 256, 256],
+      ['image', sprite, 32, 1064, 256, 256],
+    ]);
+    const written = of('text').map((call) => call[2]);
+    for (const line of ['THE RAT RACE', 'Nurse', '364', '$1,999,329']) expect(written).toContain(line);
+  });
+
+  it('leaves out a sprite that does not arrive, and still draws the rest', async () => {
+    await drawCard(ops, async () => null);
+    expect(fake.calls.filter(([k]) => k === 'image')).toEqual([]);
+    expect(fake.calls.filter(([k]) => k === 'text').length).toBeGreaterThan(5);
+  });
+
+  it('writes a name too long for its place smaller, not over the edge', async () => {
+    const long = shareCard({ ...({ title: 'T', where: 'w', outcome: 'o', escaped: false, portrait: 'p', scoreLabel: 's', score: '1', parts: [], netWorthLabel: 'n', netWorth: '1', history: [], badgesLabel: 'b', badges: [] }), life: 'A life with a name that is far too long to fit beside a portrait' });
+    await drawCard(long, async () => null);
+    const name = fake.calls.find(([k, , text]) => k === 'text' && String(text).startsWith('A life')) as [string, string];
+    const px = Number(/(\d+)px/.exec(name[1])?.[1]);
+    expect(px).toBeLessThan(15 * 4);
+    expect(px).toBeGreaterThanOrEqual(8);
+  });
+
+  it('gives up without a fuss where there is no canvas to draw on', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => null);
+    expect(await drawCard(ops, async () => sprite)).toBeNull();
+  });
+});
+
+describe('the share sheet', () => {
+  const show = () =>
+    render(
+      <NextIntlClientProvider locale="en" messages={en} timeZone="UTC">
+        <GameProvider services={memoryServices()}>
+          <ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => sprite} />
+        </GameProvider>
+      </NextIntlClientProvider>,
+    );
+
+  it('draws the picture when it is opened, and offers it as a file to save', async () => {
+    const user = userEvent.setup();
+    show();
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(fake.calls).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Share this life' }));
+    const sheet = screen.getByRole('dialog', { name: 'A picture of this life' });
+    const picture = await within(sheet).findByRole('img', { name: 'Nurse: score 364' });
+    expect(picture.getAttribute('src')).toBe('blob:picture');
+    const save = within(sheet).getByRole('link', { name: 'Save the picture' });
+    expect(save.getAttribute('download')).toBe('rat-race-nurse-364.png');
+    expect(save.getAttribute('href')).toBe('blob:picture');
+    // No share sheet on this device: saving is the one thing to do.
+    expect(within(sheet).queryByRole('button', { name: 'Share' })).toBeNull();
+  });
+
+  it('offers the share sheet of the device where there is one, with the picture as a file', async () => {
+    const share = vi.fn(() => Promise.resolve());
+    Object.assign(navigator, { canShare: () => true, share });
+    const user = userEvent.setup();
+    show();
+    await user.click(screen.getByRole('button', { name: 'Share this life' }));
+    await user.click(await screen.findByRole('button', { name: 'Share' }));
+    expect(share).toHaveBeenCalledTimes(1);
+    const sent = (share.mock.calls[0] as unknown as [{ files: File[]; title: string }])[0];
+    expect(sent.files[0].name).toBe('rat-race-nurse-364.png');
+    expect(sent.files[0].type).toBe('image/png');
+    Object.assign(navigator, { canShare: undefined, share: undefined });
+  });
+
+  it('says so when the picture cannot be drawn, and lets go of it when closed', async () => {
+    const user = userEvent.setup();
+    show();
+    await user.click(screen.getByRole('button', { name: 'Share this life' }));
+    await screen.findByRole('img', { name: 'Nurse: score 364' });
+    await user.keyboard('{Escape}');
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:picture');
+
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => null);
+    await user.click(screen.getByRole('button', { name: 'Share this life' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('This browser could not draw the picture.');
+  });
+});

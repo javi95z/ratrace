@@ -6,6 +6,7 @@ import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, roundNotes } from '@/game/present';
 import type { RoundNote } from '@/game/present';
 import { Panel, Row, Well } from '@/ui/kit';
+import { Celebrations } from './Celebrations';
 import { Sprite } from '@/ui/Sprite';
 
 const NOTE: Record<RoundNote['tone'], string> = {
@@ -43,6 +44,7 @@ export function Resolve() {
         <p className="text-[13px] text-ink-300">{t('ages', { from: ageAt(content, before.round), to: ageAt(content, view.round) })}</p>
       </div>
 
+      <Celebrations />
       {notes.map((note, i) => (
         <div key={i} role="status" className={`frame flex animate-rise items-center gap-3 p-2 ${NOTE[note.tone]}`}>
           <Well className="size-10">

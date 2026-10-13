@@ -3,6 +3,8 @@ import { CONTENT_VERSION } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameView, RoundChoices } from '@ratrace/engine';
 import { StaleSession } from './errors';
+import { profileAfter, updateProfile } from './profile';
+import { recordStart, recordStep } from './record';
 import { openSave } from './save';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, Lost, PlayerStore, SavedGame, Sessions, StepResult } from './types';
@@ -19,6 +21,7 @@ export interface SessionDeps {
 /**
  * A game that runs in the browser. It keeps the full game to itself, and hands out views:
  * the screens never hold the seed or a future world, exactly as they will not in ranked online play.
+ * It also judges the badges of each step and tells the profile, as a server will later.
  */
 class LocalSession implements GameSession {
   private current: GameView;
@@ -32,6 +35,7 @@ class LocalSession implements GameSession {
     private save: SavedGame,
     private readonly store: PlayerStore,
     private readonly content: Content,
+    private readonly lives: ReadonlyArray<LifeDef>,
     private readonly deps: SessionDeps,
     stored: boolean,
   ) {
@@ -59,6 +63,10 @@ class LocalSession implements GameSession {
     return this.save.bankruptcies;
   }
 
+  badges(): string[] {
+    return [...this.save.journal.earned];
+  }
+
   answerCard(option: number): Promise<StepResult> {
     return this.step(async () => {
       await this.mustBeCurrent();
@@ -68,7 +76,7 @@ class LocalSession implements GameSession {
       const result = applyCard(this.content, state, asked);
       const log = [...this.save.log];
       log[state.round] = { picks: [...(log[state.round]?.picks ?? []), asked], orders: null };
-      return this.settle({ ...this.save, log, state: result.state }, result.events);
+      return this.settle(log, result);
     });
   }
 
@@ -79,10 +87,7 @@ class LocalSession implements GameSession {
       const result = applyRound(this.content, state, choices);
       const log = [...this.save.log];
       log[state.round] = { picks: log[state.round]?.picks ?? [], orders: structuredClone(choices.orders) };
-      let bankruptcies = this.save.bankruptcies;
-      for (const event of result.events) if (event.kind === 'bankrupt') bankruptcies += 1;
-      const history = [...this.save.history, realNetWorth(result.state)];
-      return this.settle({ ...this.save, log, history, bankruptcies, state: result.state }, result.events);
+      return this.settle(log, result);
     });
   }
 
@@ -98,6 +103,29 @@ class LocalSession implements GameSession {
       this.stored = this.save.updatedAt;
     } catch (error) {
       this.deps.onSaveError?.(error);
+    }
+  }
+
+  /**
+   * Tells the profile what the life has earned and owned so far: badges it has not held before,
+   * the gallery, and the lives those unlock. Returns what is new, for the screen to celebrate.
+   * A failure is reported and nothing is celebrated: the profile is the record of what was earned.
+   */
+  async tellProfile(earned: readonly string[]): Promise<{ earned: string[]; unlocked: string[] }> {
+    const { save } = this;
+    try {
+      const finished = save.state.finished ? (await this.store.listRuns()).length : 0;
+      const step = { gameId: save.gameId, at: save.updatedAt, earned, collection: save.state.player.life.collection, finished };
+      let news = { earned: [] as string[], unlocked: [] as string[] };
+      await updateProfile(this.store, (profile) => {
+        const after = profileAfter(this.content, this.lives, profile, step);
+        news = { earned: after.earned, unlocked: after.unlocked };
+        return after.profile;
+      });
+      return news;
+    } catch (error) {
+      this.deps.onSaveError?.(error);
+      return { earned: [], unlocked: [] };
     }
   }
 
@@ -118,11 +146,15 @@ class LocalSession implements GameSession {
     if (record === null || record.gameId !== this.save.gameId || record.updatedAt !== this.stored) throw new StaleSession();
   }
 
-  private async settle(next: SavedGame, events: StepResult['events']): Promise<StepResult> {
-    this.save = { ...next, updatedAt: this.deps.now() };
+  /** Takes a step the engine has played: keeps the record, saves, tells the profile, and hands back the view. */
+  private async settle(log: SavedGame['log'], result: { state: SavedGame['state']; events: StepResult['events'] }): Promise<StepResult> {
+    const before = this.save;
+    const { record, earned } = recordStep(this.content, { history: before.history, bankruptcies: before.bankruptcies, journal: before.journal }, before.state, result.state, result.events);
+    this.save = { ...before, log, ...record, state: result.state, updatedAt: this.deps.now() };
     this.current = viewOf(this.save.state);
     await this.persist();
-    return { view: this.current, events };
+    const news = await this.tellProfile(earned);
+    return { view: this.current, events: result.events, earned: news.earned, unlocked: news.unlocked };
   }
 
   private step<T>(run: () => Promise<T>): Promise<T> {
@@ -148,6 +180,8 @@ class LocalSession implements GameSession {
       escapedAtRound: save.state.player.escapedAtRound,
       bankruptcies: save.bankruptcies,
       history: save.history,
+      badges: save.journal.earned,
+      cities: save.journal.cities,
       verified: false,
     };
   }
@@ -177,13 +211,13 @@ export class LocalSessions implements Sessions {
         lifeId,
         seed,
         log: [],
-        history: [realNetWorth(state)],
-        bankruptcies: 0,
+        ...recordStart(this.content, state),
         state,
         updatedAt: this.deps.now(),
       },
       this.store,
       this.content,
+      this.lives,
       this.deps,
       false,
     );
@@ -200,7 +234,7 @@ export class LocalSessions implements Sessions {
       return { session: null, lost: opened.lost };
     }
     // A repaired save keeps its `updatedAt`, so the stored record is still the one this session answers for.
-    const session = new LocalSession(opened.save, this.store, this.content, this.deps, true);
+    const session = new LocalSession(opened.save, this.store, this.content, this.lives, this.deps, true);
     if (opened.repaired) await session.persist();
     return { session, lost: null };
   }

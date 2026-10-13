@@ -101,8 +101,12 @@ export function Sheet({ open, onClose, title, closeLabel, children }: { open: bo
   );
 }
 
-/** A strip of tabs that scrolls sideways on a phone. Arrow keys move between them. */
-export function Tabs<T extends string>({ label, tabs, value, onChange }: { label: string; tabs: Array<{ id: T; label: ReactNode }>; value: T; onChange(id: T): void }) {
+/**
+ * A strip of tabs that scrolls sideways on a phone. Arrow keys move between them.
+ * With `idPrefix`, each tab gets the id `<prefix>-tab-<id>` and points at the panel `<prefix>-panel-<id>`,
+ * so the panel can be named by its tab.
+ */
+export function Tabs<T extends string>({ label, tabs, value, onChange, idPrefix }: { label: string; tabs: Array<{ id: T; label: ReactNode }>; value: T; onChange(id: T): void; idPrefix?: string }) {
   const strip = useRef<HTMLDivElement>(null);
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -124,6 +128,8 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
             key={tab.id}
             type="button"
             role="tab"
+            id={idPrefix ? `${idPrefix}-tab-${tab.id}` : undefined}
+            aria-controls={idPrefix ? `${idPrefix}-panel-${tab.id}` : undefined}
             data-tab={tab.id}
             aria-selected={on}
             tabIndex={on ? 0 : -1}

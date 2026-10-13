@@ -26,6 +26,12 @@ describe('the front door', () => {
     expect(screen.getByText('Your life is saved on this device after every step.')).toBeTruthy();
   });
 
+  it('leads to the collection and to the records', async () => {
+    renderGame(<Home />, memoryServices());
+    expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');
+    expect(screen.getByRole('link', { name: 'Records' }).getAttribute('href')).toBe('/records');
+  });
+
   it('offers the life in progress first, with who and where', async () => {
     const services = memoryServices();
     await services.sessions.start('engineer');

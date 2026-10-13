@@ -57,7 +57,7 @@ describe('ResilientStore', () => {
     down.writes = true;
     await store.saveGame(game(1));
     await store.addRun(run('a', 10));
-    await store.saveProfile({ format: 1, settings: { reducedMotion: true } });
+    await store.saveProfile({ ...newProfile(), settings: { reducedMotion: true } });
     expect(store.degraded).toBe(true);
     expect(await store.listRuns()).toEqual([run('a', 10)]);
     expect((await store.loadProfile()).settings.reducedMotion).toBe(true);

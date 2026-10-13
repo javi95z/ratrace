@@ -14,11 +14,19 @@ export interface RoundState {
   /** Why a saved life could not be opened, when one existed. */
   lost: Lost | null;
   lifeId: string | null;
+  /** The id of the life on screen, to tell what the profile earned in it. */
+  gameId: string | null;
   view: GameView | null;
   /** Net worth in start-of-game cents at the start and after each round played. */
   history: number[];
   /** How many times this life has gone bankrupt. */
   bankruptcies: number;
+  /** The badges earned in this life so far, in the order they came. */
+  badges: string[];
+  /** Badges the step on screen earned for the first time ever. Shown with its result, and gone with it. */
+  earned: string[];
+  /** Lives the step on screen unlocked. */
+  unlocked: string[];
   stage: Stage;
   /** What the card just answered did, while its result is on screen. The card to answer next is `view.hand[view.answered]`. */
   cardEvents: GameEvent[];
@@ -72,9 +80,13 @@ const blank: RoundState = {
   status: 'none',
   lost: null,
   lifeId: null,
+  gameId: null,
   view: null,
   history: [],
   bankruptcies: 0,
+  badges: [],
+  earned: [],
+  unlocked: [],
   stage: 'news',
   cardEvents: [],
   orders: [],
@@ -126,6 +138,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
     /** What every step does when the session refuses it: open the life as it now stands, or stop. */
     const refused = async (error: unknown) => {
       if (error instanceof StaleSession) {
+        // The session is no longer the life's: let it go, and open whatever the device now holds.
+        session = null;
         await get().boot();
         set({ moved: true });
       } else {
@@ -137,7 +151,16 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
     const open = (opened: GameSession) => {
       session = opened;
       const view = opened.view();
-      const base = { ...blank, status: 'playing' as const, lifeId: opened.lifeId, view, history: opened.history(), bankruptcies: opened.bankruptcies() };
+      const base = {
+        ...blank,
+        status: 'playing' as const,
+        lifeId: opened.lifeId,
+        gameId: opened.gameId,
+        view,
+        history: opened.history(),
+        bankruptcies: opened.bankruptcies(),
+        badges: opened.badges(),
+      };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
@@ -149,7 +172,10 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       status: 'booting',
 
       async boot() {
+        const held = session;
         const { session: found, lost } = await sessions.resume();
+        // A life started while the device was being asked is the one to play: what the device then answers is old news.
+        if (session !== held) return;
         if (found) open(found);
         else {
           session = null;
@@ -180,7 +206,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         set({ busy: true });
         try {
           const result = await session.answerCard(option);
-          set({ view: result.view, cardEvents: result.events, stage: 'outcome' });
+          set({ view: result.view, cardEvents: result.events, badges: session.badges(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
         } catch (error) {
           await refused(error);
         } finally {
@@ -191,9 +217,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       afterCard() {
         const { view, stage } = get();
         if (!view || stage !== 'outcome' || !settled()) return;
-        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], earned: [], unlocked: [] });
         else {
-          set({ cardEvents: [] });
+          set({ cardEvents: [], earned: [], unlocked: [] });
           get().toFinance();
         }
       },
@@ -250,6 +276,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
             view: result.view,
             history: session.history(),
             bankruptcies: session.bankruptcies(),
+            badges: session.badges(),
+            earned: result.earned,
+            unlocked: result.unlocked,
             resolved: { before: view, events: result.events },
             orders: [],
             preview: null,
@@ -266,7 +295,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       next() {
         const { view, stage } = get();
         if (!view || stage !== 'resolve' || !settled()) return;
-        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], resolved: null });
+        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], resolved: null, earned: [], unlocked: [] });
       },
     };
   });

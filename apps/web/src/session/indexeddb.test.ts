@@ -8,7 +8,7 @@ import type { FinishedRun, PlayerStore, SavedGame } from './types';
 const game = (over: Partial<SavedGame> = {}): SavedGame =>
   ({ format: 1, gameId: 'g', engineVersion: 'e', contentVersion: 'c', lifeId: 'nurse', seed: 's', log: [], history: [1], bankruptcies: 0, state: { round: 0 }, updatedAt: 1, ...over }) as SavedGame;
 const run = (runId: string, finishedAt: number): FinishedRun =>
-  ({ format: 1, runId, engineVersion: 'e', contentVersion: 'c', lifeId: 'nurse', seed: 's', log: [], finishedAt, score: 300, netWorth: 5, status: 1, escapedAtRound: null, bankruptcies: 0, history: [1, 5], verified: false });
+  ({ format: 1, runId, engineVersion: 'e', contentVersion: 'c', lifeId: 'nurse', seed: 's', log: [], finishedAt, score: 300, netWorth: 5, status: 1, escapedAtRound: null, bankruptcies: 0, history: [1, 5], badges: [], cities: ['madrid'], verified: false });
 
 let n = 0;
 const stores: Array<[string, () => PlayerStore]> = [
@@ -58,8 +58,9 @@ describe.each(stores)('%s', (_name, make) => {
 
   it('keeps the profile', async () => {
     const store = make();
-    await store.saveProfile({ format: 1, settings: { reducedMotion: true } });
-    expect(await store.loadProfile()).toEqual({ format: 1, settings: { reducedMotion: true } });
+    const mine = { ...newProfile(), settings: { reducedMotion: true }, gallery: ['watch_rolex'], badges: { millionaire: { at: 3, gameId: 'g' } } };
+    await store.saveProfile(mine);
+    expect(await store.loadProfile()).toEqual(mine);
   });
 });
 
@@ -68,7 +69,7 @@ describe('LocalStore', () => {
     const first = new LocalStore('ratrace-test-reopen');
     await first.saveGame(game());
     await first.addRun(run('a', 10));
-    await first.saveProfile({ format: 1, settings: { reducedMotion: true } });
+    await first.saveProfile({ ...newProfile(), settings: { reducedMotion: true } });
     const second = new LocalStore('ratrace-test-reopen');
     expect(await second.loadGame()).toEqual(game());
     expect(await second.listRuns()).toHaveLength(1);

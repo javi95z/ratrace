@@ -2,7 +2,7 @@
 
 import { lives, portraitArt } from '@ratrace/content';
 import { useState } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import { useGame, useProfile, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Tag, Well } from '@/ui/kit';
@@ -22,6 +22,8 @@ export function NewLife() {
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
   const [asking, setAsking] = useState(false);
+  // Which lives are open is the profile's to say. Nothing is judged here.
+  const { unlocked } = useProfile();
 
   const begin = async () => {
     setAsking(false);
@@ -47,7 +49,7 @@ export function NewLife() {
       <div role="radiogroup" aria-label={t('title')} className="flex flex-col gap-3">
         {lives.map((life) => {
           const written = text.lives[life.id];
-          const locked = life.unlock !== 'default';
+          const locked = life.unlock !== 'default' && !Object.hasOwn(unlocked, life.id);
           const on = chosen === life.id;
           return (
             <button

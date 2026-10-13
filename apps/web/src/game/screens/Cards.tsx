@@ -10,6 +10,7 @@ import { chancePct, effectTags } from '@/game/present';
 import type { EffectTag } from '@/game/present';
 import { Panel, Tag } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Celebrations } from './Celebrations';
 
 /** How far a card must be dragged before letting go answers it. */
 const SWIPE = 90;
@@ -139,6 +140,7 @@ export function Outcome() {
   return (
     <div className="flex flex-col gap-3 px-3">
       <h2 className="pixel text-center text-[20px] text-gold-500">{t('results')}</h2>
+      <Celebrations />
       {cards.map((event) => {
         const written = text.cards[event.cardId];
         const option = written.options[event.option];

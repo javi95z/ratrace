@@ -4,6 +4,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, realNetWorth, stateHash } from '@ratrace/engine';
 import type { GameState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
+import { recordStart, recordStep } from './record';
 import { openSave, replay } from './save';
 import type { RoundLog, SavedGame } from './types';
 
@@ -16,24 +17,29 @@ const nurse = lives[0];
 function saved(rounds: number, answered = Infinity): SavedGame {
   let state: GameState = createGame({ content, start: nurse.start }, 'save-seed');
   const log: RoundLog[] = [];
-  const history = [realNetWorth(state)];
+  let record = recordStart(content, state);
+  /** Takes a step and keeps the record of the life, as a session does. */
+  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }) => {
+    record = recordStep(content, record, state, result.state, result.events).record;
+    state = result.state;
+  };
   for (let i = 0; i <= rounds; i++) {
     const entry: RoundLog = { picks: [], orders: null };
     const limit = i === rounds ? answered : Infinity;
     if (state.phase === 'cards' && limit > 0) log.push(entry);
     while (state.phase === 'cards' && entry.picks.length < limit) {
       entry.picks.push(1);
-      state = applyCard(content, state, 1).state;
+      take(applyCard(content, state, 1));
     }
     if (i === rounds) break;
     if (!log.includes(entry)) log.push(entry);
     entry.orders = [{ type: 'focus', action: 'studyCareer' }, { type: 'depositIn', amount: 10_000 }];
-    state = applyRound(content, state, { orders: entry.orders }).state;
-    history.push(realNetWorth(state));
+    take(applyRound(content, state, { orders: entry.orders }));
   }
+  expect(record.history[0]).toBe(realNetWorth(createGame({ content, start: nurse.start }, 'save-seed')));
   return {
     format: 1, gameId: 'game-1', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, lifeId: 'nurse', seed: 'save-seed',
-    log, history, bankruptcies: 0, state, updatedAt: 5,
+    log, ...record, state, updatedAt: 5,
   };
 }
 
@@ -47,6 +53,7 @@ describe('replay', () => {
       expect(stateHash(again.state)).toBe(stateHash(save.state));
       expect(again.history).toEqual(save.history);
       expect(again.bankruptcies).toBe(0);
+      expect(again.journal).toEqual(save.journal);
     }
     const fresh = replay(content, nurse.start, 'save-seed', []).state;
     expect(fresh.round).toBe(0);
@@ -165,6 +172,13 @@ describe('openSave', () => {
     expect(opened.save.history).toEqual(save.history);
     expect(opened.save.bankruptcies).toBe(0);
     expect(opened.save.updatedAt).toBe(0);
+    // A save from before the journal existed, or one whose journal is not a journal, gets it back from the log.
+    for (const journal of [undefined, null, 'none', { cities: [] }, { cities: ['madrid'], cardUsed: 'no', kinds: [], earned: [] }]) {
+      const rebuilt = open({ ...save, journal });
+      if (!rebuilt.ok) throw new Error('expected the save to open');
+      expect(rebuilt.repaired, JSON.stringify(journal)).toBe(true);
+      expect(rebuilt.save.journal).toEqual(save.journal);
+    }
     expect(stateHash(opened.save.state)).toBe(stateHash(save.state));
   });
 });

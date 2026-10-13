@@ -126,6 +126,9 @@ export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 export const cityArt = (cityId: string): string => `skyline.${cityId}`;
 
+/** A badge, or `locked` for one not earned yet. */
+export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
+
 /** A life is drawn at four ages. */
 export const PORTRAIT_AGES = [22, 32, 45, 58] as const;
 export const portraitArt = (lifeId: string, age: (typeof PORTRAIT_AGES)[number]): string => `portrait.${lifeId}.${age}`;

@@ -10,8 +10,10 @@ import { formatFor } from '@/lib/format';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
+import { updateProfile } from '@/session/profile';
 import { ResilientStore } from '@/session/resilient';
-import type { PlayerStore, Sessions } from '@/session/types';
+import { newProfile } from '@/session/types';
+import type { FinishedRun, PlayerStore, Profile, Sessions } from '@/session/types';
 import type { Translate, Words } from './present';
 import { createGameStore } from './store';
 import type { GameStore, RoundActions, RoundState } from './store';
@@ -42,8 +44,10 @@ interface Game {
   saving: Saving;
   words: Words;
   locale: Locale;
-  reducedMotion: boolean;
-  setReducedMotion(value: boolean): void;
+  profile: Profile;
+  /** Finished lives, the latest first. Null until the device has answered. */
+  runs: FinishedRun[] | null;
+  changeProfile(change: (profile: Profile) => Profile): void;
 }
 
 const GameContext = createContext<Game | null>(null);
@@ -72,24 +76,59 @@ function browserServices(): Services {
   return { sessions, store, saving };
 }
 
+/** Everything one page load makes once: the round store and the two services behind it. */
+interface Made {
+  game: GameStore;
+  store: PlayerStore;
+  saving: Saving;
+}
+
+function make({ sessions, store, saving, tapGuardMs }: Services): Made {
+  const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
+  return { game, store, saving: saving ?? ALWAYS_SAVING };
+}
+
 /**
- * Holds the game for every screen under it: the round store, the player's settings, and the words
+ * The real game of this page load. It lives outside the provider, because the provider sits under
+ * the language of the page and is drawn anew when the language changes: the round on screen, with
+ * its basket of orders, must not be thrown away for that.
+ */
+let shared: Made | null = null;
+/** Round stores that have already asked the device for a life in progress. */
+const booted = new WeakSet<GameStore>();
+
+/**
+ * Holds the game for every screen under it: the round store, the player's profile, and the words
  * of the language in use. It opens the life in progress, if there is one, as soon as it mounts.
  */
 export function GameProvider({ children, services }: { children: ReactNode; services?: Services }) {
   const locale = useLocale() as Locale;
-  const [made] = useState(() => {
-    const { sessions, store, saving, tapGuardMs } = services ?? browserServices();
-    const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-    return { game, store, saving: saving ?? ALWAYS_SAVING };
-  });
-  const [reducedMotion, setReduced] = useState(false);
+  const [made] = useState(() => (services ? make(services) : (shared ??= make(browserServices()))));
+  const [profile, setProfile] = useState<Profile>(newProfile);
+  const [runs, setRuns] = useState<FinishedRun[] | null>(null);
 
   useEffect(() => {
-    void made.game.getState().boot();
-    void made.store.loadProfile().then((profile) => setReduced(profile.settings.reducedMotion));
+    let mounted = true;
+    // What the player has earned changes with every step of a life, and the list of lives when one ends.
+    const refresh = () => {
+      void made.store.loadProfile().then((loaded) => mounted && setProfile(loaded));
+      void made.store.listRuns().then((loaded) => mounted && setRuns(loaded));
+    };
+    if (!booted.has(made.game)) {
+      booted.add(made.game);
+      void made.game.getState().boot();
+    }
+    refresh();
+    const stop = made.game.subscribe((state, before) => {
+      if (state.view !== before.view || state.status !== before.status) refresh();
+    });
+    return () => {
+      mounted = false;
+      stop();
+    };
   }, [made]);
 
+  const reducedMotion = profile.settings.reducedMotion;
   useEffect(() => {
     if (reducedMotion) document.documentElement.dataset.motion = 'reduced';
     else delete document.documentElement.dataset.motion;
@@ -102,13 +141,16 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       saving: made.saving,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
-      reducedMotion,
-      setReducedMotion: (next) => {
-        setReduced(next);
-        void made.store.saveProfile({ format: 1, settings: { reducedMotion: next } });
+      profile,
+      runs,
+      changeProfile: (change) => {
+        // Shown at once, then merged into what the device holds: the profile is never written over whole,
+        // because it also holds every badge and the gallery.
+        setProfile((current) => change(current));
+        void updateProfile(made.store, change).then(setProfile, () => undefined);
       },
     }),
-    [made, locale, reducedMotion],
+    [made, locale, profile, runs],
   );
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
@@ -128,9 +170,19 @@ export function useGame<T>(select: (state: RoundState & RoundActions) => T): T {
 export const useWords = (): Words => useGameContext().words;
 
 export const useSettings = () => {
-  const { reducedMotion, setReducedMotion, locale } = useGameContext();
-  return { reducedMotion, setReducedMotion, locale };
+  const { profile, changeProfile, locale } = useGameContext();
+  return {
+    reducedMotion: profile.settings.reducedMotion,
+    setReducedMotion: (reducedMotion: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, reducedMotion } })),
+    locale,
+  };
 };
+
+/** What belongs to the player rather than to one life: badges, the gallery, the lives unlocked. */
+export const useProfile = (): Profile => useGameContext().profile;
+
+/** Finished lives, the latest first, or null while the device has not answered yet. */
+export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
 
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
 export function useSaving(): boolean {

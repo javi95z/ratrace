@@ -287,6 +287,117 @@ describe('coming back to a life', () => {
   });
 });
 
+describe('what a life earns', () => {
+  /** Plays rounds with the same orders, and collects everything the steps said was new. */
+  async function live(session: GameSession, rounds: number, orders: Parameters<GameSession['playRound']>[0]['orders'] = []) {
+    const earned: string[] = [];
+    const unlocked: string[] = [];
+    for (let i = 0; i < rounds && !session.view().finished; i++) {
+      while (session.view().phase === 'cards') {
+        const card = await session.answerCard(0);
+        earned.push(...card.earned);
+        unlocked.push(...card.unlocked);
+      }
+      const round = await session.playRound({ orders });
+      earned.push(...round.earned);
+      unlocked.push(...round.unlocked);
+    }
+    return { earned, unlocked };
+  }
+  const lavish = [{ type: 'setLifestyle' as const, tier: 3 as const }];
+
+  it('says which badges a step earned for the first time, and writes them to the profile with when and where', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('nurse');
+    // A lavish life on a nurse's pay ends in bankruptcy within a few rounds.
+    const { earned } = await live(session, 10, lavish);
+    expect(earned).toContain('bankrupt');
+    expect(new Set(earned).size).toBe(earned.length);
+    const profile = await store.loadProfile();
+    expect(Object.keys(profile.badges).sort()).toEqual([...earned].sort());
+    expect(profile.badges.bankrupt.gameId).toBe('id-1');
+    expect(profile.badges.bankrupt.at).toBeGreaterThan(1_000);
+    expect(session.badges()).toEqual(earned);
+    expect((await saveOf(store)).journal.earned).toEqual(earned);
+  });
+
+  it('does not celebrate in a second life a badge the first one already earned', async () => {
+    const { store, sessions } = setup();
+    await live(await sessions.start('nurse'), 10, lavish);
+    const first = await store.loadProfile();
+    const second = await sessions.start('nurse');
+    const { earned } = await live(second, 10, lavish);
+    expect(earned).not.toContain('bankrupt');
+    // The life itself still earned it, and its own record says so.
+    expect(second.badges()).toContain('bankrupt');
+    expect((await store.loadProfile()).badges.bankrupt).toEqual(first.badges.bankrupt);
+  });
+
+  it('adds everything the life has owned to the gallery', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('nurse');
+    await answerAll(session);
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    expect((await store.loadProfile()).gallery).toContain('watch_casio');
+    await answerAll(session);
+    await session.playRound({ orders: [{ type: 'sellItem', itemId: 'watch_casio' }] });
+    expect((await store.loadProfile()).gallery).toContain('watch_casio');
+  });
+
+  it('unlocks the delivery rider when a first life is lived to the end, and says so once', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('civil_servant');
+    const { unlocked } = await live(session, 20);
+    expect(session.view().finished).toBe(true);
+    expect(unlocked).toEqual(['rider']);
+    expect((await store.loadProfile()).unlocked.rider.gameId).toBe('id-1');
+
+    const again = await live(await sessions.start('nurse'), 20);
+    expect(again.unlocked).toEqual([]);
+    expect(Object.keys((await store.loadProfile()).unlocked)).toEqual(['rider']);
+  });
+
+  it('records the run with the badges and the cities of the life', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('civil_servant');
+    await live(session, 20);
+    const [run] = await store.listRuns();
+    expect(run.badges).toEqual(session.badges());
+    expect(run.cities).toEqual(['madrid']);
+    expect(run.badges).toContain('no_credit_card');
+  });
+
+  it('leaves the settings alone', async () => {
+    const { store, sessions } = setup();
+    await store.saveProfile({ ...(await store.loadProfile()), settings: { reducedMotion: true } });
+    await live(await sessions.start('nurse'), 3, lavish);
+    expect((await store.loadProfile()).settings.reducedMotion).toBe(true);
+  });
+
+  it('plays on, celebrating nothing, when the profile cannot be written', async () => {
+    const store = new MemoryStore();
+    const { sessions, errors } = setup(store);
+    const session = await sessions.start('nurse');
+    store.saveProfile = () => Promise.reject(new Error('no room'));
+    const { earned } = await live(session, 10, lavish);
+    expect(session.view().round).toBe(10);
+    expect(earned).toEqual([]);
+    expect(session.badges()).toContain('bankrupt');
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('rebuilds the journal with the game when a save is repaired', async () => {
+    const { store, sessions } = setup();
+    const session = await sessions.start('nurse');
+    await live(session, 6, lavish);
+    const save = await saveOf(store);
+    await store.saveGame({ ...save, journal: undefined as never });
+    const again = (await sessions.resume()).session as GameSession;
+    expect(again.badges()).toEqual(session.badges());
+    expect((await saveOf(store)).journal).toEqual(save.journal);
+  });
+});
+
 describe('two tabs on one life', () => {
   it('refuses to play on from a tab the life has left behind, and changes nothing', async () => {
     const { store, sessions } = setup();

@@ -62,6 +62,16 @@ export function Home() {
                 {t('lastLife')}
               </Link>
             ) : null}
+            <div className="grid grid-cols-2 gap-3">
+              <Link href="/collection" className="pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+                <Sprite id="icon.star" />
+                {t('collection')}
+              </Link>
+              <Link href="/records" className="pixel frame-raised flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+                <Sprite id="icon.trophy" />
+                {t('records')}
+              </Link>
+            </div>
             {lost ? <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">{t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</p> : null}
             {moved && status === 'none' ? <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">{t('movedGone')}</p> : null}
           </>
