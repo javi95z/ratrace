@@ -14,7 +14,8 @@
     "play": "pnpm --filter @ratrace/play play",
     "dev": "pnpm --filter @ratrace/web dev",
     "build": "pnpm --filter @ratrace/web build",
-    "e2e": "pnpm --filter @ratrace/web e2e"
+    "e2e": "pnpm --filter @ratrace/web e2e",
+    "catalog": "pnpm --filter @ratrace/play catalog"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
