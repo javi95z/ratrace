@@ -78,7 +78,7 @@ export function Sprite({ id, scale = 1, alt = '', fallback = { w: 32, h: 32 }, s
         aria-hidden
         data-silhouette={id}
         style={{ ...style, maskImage: url, WebkitMaskImage: url, maskSize: '100% 100%', WebkitMaskSize: '100% 100%', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }}
-        className={`sprite inline-block shrink-0 bg-night-500 ${className}`}
+        className={`sprite inline-block shrink-0 bg-night-900 ${className}`}
       />
     );
   }

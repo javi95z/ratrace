@@ -8,7 +8,7 @@ import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, orderLabel, priceHistory } from '@/game/present';
-import { Bar, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle, Well } from '@/ui/kit';
+import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
@@ -217,9 +217,9 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
     <Sheet open onClose={onClose} title={t(quote.rentalOnly ? 'buyLetTitle' : 'buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex justify-center">
-          <Well className="p-1 leading-[0]">
+          <Bare className="p-1 leading-[0]">
             <Sprite id={propertyArt(typeId)} fallback={{ w: 128, h: 128 }} />
-          </Well>
+          </Bare>
         </div>
         <Panel>
           <Row left={t('price')} right={fmt.money(quote.price)} />
@@ -324,9 +324,9 @@ function PropertyTab() {
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               <div className="flex items-center gap-3">
-                <Well className="shrink-0">
+                <Bare className="shrink-0">
                   <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
-                </Well>
+                </Bare>
                 <div className="min-w-0 flex-1">
                   <div className="pixel text-[17px]">{text.propertyTypes[property.typeId]}</div>
                   <div className="text-[13px] text-ink-200">{names.cities[property.cityId]}</div>
@@ -366,9 +366,9 @@ function PropertyTab() {
             const quote = quoteProperty(content, shown, type.id);
             return (
               <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
-                <Well className="w-full py-1">
+                <Bare className="w-full py-1">
                   <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
-                </Well>
+                </Bare>
                 <span className="mt-0.5 text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
                 <span className="pixel text-[18px] text-gold-500">{fmt.compact(quote.price)}</span>
                 <span className="text-[11px] leading-tight text-ink-200">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
@@ -585,9 +585,9 @@ function Lifestyle() {
 
       <Panel title={t('city')}>
         <div className="mb-2 flex items-center gap-3">
-          <span className="inline-flex size-9 shrink-0 items-center justify-center">
+          <Bare className="size-9">
             <Sprite id="icon.city" />
-          </span>
+          </Bare>
           <div className="min-w-0">
             <div className="pixel text-[18px]">{names.cities[p.cityId]}</div>
             <p className="text-[13px] leading-snug text-ink-200">{text.cities[p.cityId].tagline}</p>
@@ -636,9 +636,9 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
     <Sheet open onClose={onClose} title={names.items[item.id]} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex justify-center">
-          <Well className="p-2 leading-[0]">
+          <Bare className="p-2 leading-[0]">
             <Sprite id={itemArt(item.id)} scale={2} fallback={{ w: 64, h: 64 }} />
-          </Well>
+          </Bare>
         </div>
         <div className="flex flex-wrap justify-center gap-1.5">
           <Tag tone="good">{t('status', { n: item.status })}</Tag>
@@ -693,9 +693,9 @@ function Shop() {
                 return (
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
                   <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${TILE} ${owned ? 'frame-gold' : ''}`}>
-                    <Well className="w-full py-1.5">
+                    <Bare className="w-full py-1.5">
                       <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
-                    </Well>
+                    </Bare>
                     <span className="mt-0.5 line-clamp-2 min-h-[2.4em] text-[13px] leading-tight">{names.items[item.id]}</span>
                     <span className={`pixel text-[16px] ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
                     <Tag tone="good">{t('status', { n: item.status })}</Tag>

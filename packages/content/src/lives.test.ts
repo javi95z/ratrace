@@ -9,9 +9,12 @@ import {
 } from '@ratrace/engine';
 import type { GameEvent, GameState, LedgerLine, Order, PlayerState } from '@ratrace/engine';
 import fc from 'fast-check';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { content } from './content';
 import { lives } from './lives';
+
+// Whole lives by the hundred: a few seconds alone, and past the usual five on a busy machine.
+vi.setConfig({ testTimeout: 60_000 });
 
 /** A fixed seed, so a failure here is the same failure on every machine and every run. */
 const SEED = 20261013;
@@ -130,7 +133,7 @@ const moved = (value: number, returnBp: number) => Math.max(0, value + Math.roun
 const itemsValue = (p: PlayerState) => p.life.items.reduce((sum, item) => sum + item.value, 0);
 
 describe('whole lives on the v1 content', () => {
-  it('survive any answers and any orders, in every starting life', { timeout: 60_000 }, () => {
+  it('survive any answers and any orders, in every starting life', () => {
     const played = new Set<number>();
     fc.assert(
       fc.property(life, (input) => {

@@ -4,7 +4,7 @@ import { badgeArt, badges, itemArt } from '@ratrace/content';
 import { useId, useState } from 'react';
 import { useProfile, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { Well } from '@/ui/kit';
+import { Bare } from '@/ui/kit';
 import { Tabs } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
@@ -31,9 +31,9 @@ function Things() {
                 return (
                   <li key={item.id} className={`flex flex-col items-center gap-1 p-2 text-center ${owned ? 'bevel frame-gold bg-night-600 text-cream' : 'frame bg-night-700 text-ink-200'}`}>
                     {/* The name stands under the picture, so the picture itself says nothing more. */}
-                    <Well className="w-full py-1.5">
+                    <Bare className="w-full py-1.5">
                       <Sprite id={itemArt(item.id)} silhouette={!owned} fallback={{ w: 64, h: 64 }} />
-                    </Well>
+                    </Bare>
                     <span className="text-[13px] leading-tight">{names.items[item.id]}</span>
                     {owned ? null : <span className="text-[11px] leading-tight text-ink-300">{t('notOwned')}</span>}
                   </li>

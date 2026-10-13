@@ -16,7 +16,7 @@ const BUTTON: Record<ButtonVariant, string> = {
 
 /**
  * Something to buy, as a tile in a grid: the same navy as every other surface, lit and raised
- * because it can be pressed. The picture inside sits in a `Well`.
+ * because it can be pressed. The picture inside sits straight on it, in a `Bare`.
  */
 export const TILE = 'frame-raised flex min-h-11 flex-col items-center gap-1 bg-night-600 p-2 text-center text-cream transition-transform active:translate-y-[2px]';
 
@@ -78,7 +78,12 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: React
   return <span className={join('pixel inline-block px-1.5 py-0.5 text-[12px] leading-tight', TONE[tone])}>{children}</span>;
 }
 
-/** A dark well, sunk into the page, that an icon or a sprite sits in. */
+/** Holds an icon or the picture of a thing straight on the surface it is on, with nothing behind it. */
+export function Bare({ children, className }: { children: ReactNode; className?: string }) {
+  return <span className={join('inline-flex shrink-0 items-center justify-center', className)}>{children}</span>;
+}
+
+/** A dark well, sunk into the page. It is the backdrop of a portrait; icons and things go in a `Bare`. */
 export function Well({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={join('sunk inline-flex shrink-0 items-center justify-center bg-ink-900', className)}>{children}</span>;
 }
@@ -92,9 +97,9 @@ export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string;
   const body = (
     <>
       {/* The well is exactly the icon. On the narrowest phones three figures side by side leave it no room, and it steps aside. */}
-      <Well className="size-8 @max-[340px]:hidden">
+      <Bare className="size-8 @max-[340px]:hidden">
         <Sprite id={icon} />
-      </Well>
+      </Bare>
       <div className="min-w-0">
         {/* Beside its icon the figure has least room on a mid-sized phone, so there it is set a size smaller; nowhere is it cut. */}
         <div className={join('pixel truncate text-[16px] tracking-normal @min-[341px]:@max-[357px]:text-[14px] @min-[358px]:@max-[371px]:text-[15px]', tone === 'good' && 'text-teal-300', tone === 'bad' && 'text-wine-300')}>
@@ -206,9 +211,9 @@ export function Segmented<T extends string | number>({
             )}
           >
             {option.icon ? (
-              <span className="mb-1 inline-flex size-9 shrink-0 items-center justify-center">
+              <Bare className="mb-1 size-9">
                 <Sprite id={option.icon} />
-              </span>
+              </Bare>
             ) : null}
             <span className="pixel text-[14px]">{option.label}</span>
             {option.hint ? <span className={join('text-[11px] leading-tight', on ? 'text-ink-500' : 'text-ink-200')}>{option.hint}</span> : null}
@@ -231,9 +236,9 @@ export function Toggle({ on, onChange, label, hint, disabled, icon }: { on: bool
       className={join('frame-raised flex min-h-11 w-full items-center gap-3 bg-night-600 py-2 pr-3 text-left disabled:opacity-40', icon ? 'pl-2' : 'pl-3')}
     >
       {icon ? (
-        <span className="inline-flex size-9 shrink-0 items-center justify-center">
+        <Bare className="size-9">
           <Sprite id={icon} />
-        </span>
+        </Bare>
       ) : null}
       <span className="min-w-0 flex-1">
         <span className="pixel block text-[15px]">{label}</span>

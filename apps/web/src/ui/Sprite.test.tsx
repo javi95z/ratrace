@@ -13,7 +13,7 @@ describe('Sprite', () => {
     expect(shadow.getAttribute('aria-hidden')).toBe('true');
     expect(shadow.style.maskImage).toContain('/sprites/items/item.watch_rolex.png');
     expect(shadow.style.width).toBe('64px');
-    expect(shadow.className).toContain('bg-night-500');
+    expect(shadow.className).toContain('bg-night-900');
   });
 
   it('shows the placeholder, once reported, when a sprite it knows does not arrive', () => {

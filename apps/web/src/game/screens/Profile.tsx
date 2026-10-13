@@ -5,7 +5,7 @@ import { cashflow, focusLeft, homeOf, netWorth } from '@ratrace/engine';
 import type { InsuranceKind } from '@ratrace/engine';
 import { useSaving, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { Panel, Row, Well } from '@/ui/kit';
+import { Bare, Panel, Row } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useShown } from './Hud';
@@ -85,9 +85,9 @@ export function ProfileBody() {
           <ul className="grid grid-cols-4 gap-2">
             {life.items.map((owned) => (
               <li key={owned.itemId} title={names.items[owned.itemId]}>
-                <Well className="aspect-square w-full overflow-hidden">
+                <Bare className="aspect-square w-full overflow-hidden">
                   <Sprite id={itemArt(owned.itemId)} alt={names.items[owned.itemId]} fallback={{ w: 64, h: 64 }} className="max-w-full" />
-                </Well>
+                </Bare>
               </li>
             ))}
           </ul>
