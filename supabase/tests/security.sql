@@ -214,6 +214,31 @@ begin
   if n = 0 then passed := passed + 1; else failed := array_append(failed, 'B took up a game that A had given up'); end if;
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
 
+  -- The account's copy of a life never goes backwards. A device that has not looked at the account
+  -- since another one played further is refused aloud, under a code of its own, and learns to look.
+  made := gen_random_uuid();
+  insert into public.games (id, mode, life_id, engine_version, content_version, seed, round, log) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 1, '[{"picks":[0,1],"orders":[]},{"picks":[0],"orders":null}]');
+  begin
+    update public.games set round = 1, log = '[{"picks":[0,1],"orders":[]}]' where id = made;
+    failed := array_append(failed, 'a save with less of the life played went over a further one');
+  exception when sqlstate 'RR001' then passed := passed + 1;
+  end;
+  begin
+    insert into public.games (id, mode, life_id, engine_version, content_version, seed, round, status, log) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 0, 'playing', '[{"picks":[0],"orders":null}]')
+      on conflict (id) do update set round = excluded.round, status = excluded.status, log = excluded.log;
+    failed := array_append(failed, 'the way a device saves put an older copy over a further one');
+  exception when sqlstate 'RR001' then passed := passed + 1;
+  end;
+  update public.games set log = '[{"picks":[1,1],"orders":[]},{"picks":[1],"orders":null}]' where id = made;
+  get diagnostics n = row_count;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'a copy as far along as the account''s could not be saved'); end if;
+  update public.games set round = 2, log = '[{"picks":[1,1],"orders":[]},{"picks":[1],"orders":[]}]' where id = made;
+  get diagnostics n = row_count;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'a copy further along could not be saved'); end if;
+  update public.games set status = 'abandoned' where id = made;
+  get diagnostics n = row_count;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'a life could not be given up once it had a log'); end if;
+
   begin
     select count(*) into n from public.game_secrets;
     failed := array_append(failed, ('A read game_secrets')::text);
@@ -320,6 +345,14 @@ begin
   update public.games set round = 1 where id = game_a;
   get diagnostics n = row_count;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, ('B changed A''s game')::text); end if;
+  -- An id belongs to whoever saved it first. Another player who saves under it is refused aloud:
+  -- that is how a device that has changed accounts learns to give its life a new id.
+  begin
+    insert into public.games (id, mode, life_id, engine_version, content_version, seed, round, status) values (made, 'casual', 'nurse', '0.4.0', '1.3.0', 's', 9, 'playing')
+      on conflict (id) do update set round = excluded.round, status = excluded.status;
+    failed := array_append(failed, 'B saved under the id of a game of A');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
   begin
     for i in 1..51 loop
       insert into public.games (id, mode, life_id, engine_version, content_version, seed) values (gen_random_uuid(), 'casual', 'nurse', '0.4.0', '1.3.0', 's');
