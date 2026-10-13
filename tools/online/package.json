@@ -1,0 +1,17 @@
+{
+  "name": "@ratrace/online-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test-db": "tsx src/test-db.ts",
+    "bundle": "tsx src/bundle.ts"
+  },
+  "dependencies": {
+    "@ratrace/content": "workspace:*",
+    "@ratrace/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

@@ -1,6 +1,6 @@
 import type { LifeDef } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
-import { applyCard, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
+import { createGame, ENGINE_VERSION, findInvariantBreaks, replayLog } from '@ratrace/engine';
 import type { Content, GameState, StartConfig } from '@ratrace/engine';
 import { recordStart, recordStep } from './record';
 import type { LifeRecord } from './record';
@@ -20,26 +20,12 @@ export interface Replayed extends LifeRecord {
  * The engine is deterministic, so this gives back exactly the game that was played.
  */
 export function replay(content: Content, start: StartConfig, seed: string, log: RoundLog[]): Replayed {
-  if (log.length > content.rounds) throw new Error('the log is longer than a life');
-  let state = createGame({ content, start }, seed);
-  let record = recordStart(content, state);
-  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }, orders: Parameters<typeof recordStep>[5] = []) => {
-    record = recordStep(content, record, state, result.state, result.events, orders).record;
-    state = result.state;
-  };
-
-  log.forEach((entry, i) => {
-    for (const pick of entry.picks) {
-      if (state.phase !== 'cards') throw new Error('the log answers more cards than the round had');
-      take(applyCard(content, state, pick));
-    }
-    if (entry.orders === null) {
-      if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
-      return;
-    }
-    take(applyRound(content, state, { orders: entry.orders }), entry.orders);
+  // The loop is the engine's, the same one a server runs. The record of the life is kept alongside it.
+  let record: LifeRecord | null = null;
+  const state = replayLog(content, start, seed, log, (before, result, orders) => {
+    record = recordStep(content, record ?? recordStart(content, before), before, result.state, result.events, orders ?? []).record;
   });
-  return { state, ...record };
+  return { state, ...(record ?? recordStart(content, createGame({ content, start }, seed))) };
 }
 
 function readLog(raw: unknown): RoundLog[] | null {

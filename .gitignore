@@ -7,3 +7,8 @@ art/preview/
 .next/
 playwright-report/
 test-results/
+
+# Local settings and keys: never committed. `.env.example` files say which values exist.
+.env
+.env.*
+!.env.example

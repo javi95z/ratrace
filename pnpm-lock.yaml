@@ -131,6 +131,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/engine
 
+  tools/online:
+    dependencies:
+      '@ratrace/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+    devDependencies:
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
+
   tools/play:
     dependencies:
       '@ratrace/content':
