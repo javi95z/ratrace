@@ -1,3 +1,4 @@
+import { openBusiness } from '../business';
 import { mortgageSpreadBp, removePaidDebts, takePersonalLoan } from '../debt';
 import { newId } from '../ids';
 import { careerOf, cityOf, itemOf } from '../lookup';
@@ -10,7 +11,7 @@ import { effectiveTax, purchaseTax } from '../tax';
 import type { Effects, FinanceSkill, LifestyleTier, PlayerState } from '../types';
 import type { Situation } from './conditions';
 import { homeOf, refreshDerived } from './derive';
-import { hasFlag } from './flags';
+import { FLAG_SOLD_BUSINESS, hasFlag } from './flags';
 
 /** The one-off money of an effect, in the dollars of the round, after any protection the player holds. */
 function moneyOf(p: PlayerState, effects: Effects, at: Situation): Cents {
@@ -135,6 +136,14 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     takePersonalLoan(p, indexed(effects.loan, world), content, world);
   }
   if (effects.pension !== undefined) p.pension += indexed(effects.pension, world);
+  if (effects.sellBusinesses !== undefined) {
+    for (const business of p.businesses) p.cash += mulDiv(business.capital, effects.sellBusinesses.pricePct, 100);
+    if (p.businesses.length > 0) life.flags[FLAG_SOLD_BUSINESS] = round;
+    p.businesses = [];
+  }
+  if (effects.business !== undefined && p.businesses.length < content.business.maxBusinesses) {
+    openBusiness(p, effects.business.typeId, indexed(effects.business.capital, world), content);
+  }
   if (effects.lose !== undefined) lose(p, effects.lose, at);
 
   life.salaryModPct += effects.salaryModPct ?? 0;

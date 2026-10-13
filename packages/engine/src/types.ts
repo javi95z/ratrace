@@ -319,6 +319,8 @@ export interface Condition {
   /** Owns a property that is rented out. */
   landlord?: boolean;
   hasMortgage?: boolean;
+  /** True for someone who owns a business. */
+  hasBusiness?: boolean;
   /** Net worth in start-of-game dollars. */
   minNetWorth?: Cents;
   maxNetWorth?: Cents;
@@ -406,6 +408,10 @@ export interface Effects {
   pension?: Cents;
   /** A personal loan of this size, paid out in cash, whatever the usual limit. */
   loan?: Cents;
+  /** Opens a business of a kind with this much in it, in start-of-game dollars. Nothing happens to someone who already runs as many as the rules allow. */
+  business?: { typeId: string; capital: Cents };
+  /** Sells every business the player owns to a buyer, for this percent of what is in each. */
+  sellBusinesses?: { pricePct: number };
   /**
    * Buys a property in the player's city at `pricePct` percent of the market price,
    * paying `downPct` percent of that in cash and the rest with a fixed mortgage.
@@ -501,6 +507,54 @@ export interface ScoringParams {
   escapePerRoundLeft: number;
 }
 
+/** A kind of business the player can own. Amounts are in start-of-game dollars. */
+export interface BusinessTypeDef {
+  id: string;
+  /** The least capital one can be opened with from the business tab. */
+  minCapital: Cents;
+  /** What the capital at work makes a year in an ordinary economy, run by someone, in bp. */
+  yieldBp: Bp;
+  /**
+   * The size the kind is made for. The capital at work is all of a small business and less and
+   * less of each dollar on top: at this capital, half of it works.
+   */
+  scale: Cents;
+  /** What the economy adds to the profit or takes from it, in percent, by its state. Below -100 the round is a loss. */
+  cyclePct: Partial<Record<Regime, number>>;
+  /** The share of the profit a manager takes for running it, in percent. */
+  managerPct: number;
+  minFinanceSkill: FinanceSkill;
+}
+
+export interface BusinessRules {
+  types: ReadonlyArray<BusinessTypeDef>;
+  /** The most businesses one player runs at a time. */
+  maxBusinesses: number;
+  /** The shares of the profit that may be taken out, in percent, lowest first. A business opens on the middle one. */
+  payouts: ReadonlyArray<number>;
+  /** What a business nobody ran makes of what it could have, in percent, and what it loses of its capital, in bp. */
+  neglectProfitPct: number;
+  neglectDecayBp: Bp;
+  /** What a business fetches when sold from the tab, as a percent of its capital, by the state of the economy. Never above 100. */
+  salePct: Record<Regime, number>;
+}
+
+/** A business the player owns. */
+export interface Business {
+  id: string;
+  typeId: string;
+  /** The money in it, in the dollars of the day: what it is worth. */
+  capital: Cents;
+  /** The money the player put in, for the gain when it is sold. Profit left in is not part of it. */
+  basis: Cents;
+  /** The share of each round's profit taken out as income, in percent. The rest stays in and makes it grow. */
+  payoutPct: number;
+  /** True if a manager runs it: no focus is needed, and the manager takes a share of the profit. */
+  manager: boolean;
+  /** True if the owner gave it focus this round. A business with neither manager nor focus is neglected. */
+  tended: boolean;
+}
+
 export interface Content {
   rounds: number;
   yearsPerRound: number;
@@ -521,6 +575,7 @@ export interface Content {
   debt: DebtParams;
   scoring: ScoringParams;
   careers: ReadonlyArray<CareerDef>;
+  business: BusinessRules;
   items: ReadonlyArray<ItemDef>;
   life: LifeRules;
   world: WorldRules;
@@ -681,6 +736,8 @@ export interface PlayerState {
   deposit: Cents;
   pension: Cents;
   positions: Record<string, Position>;
+  /** The businesses owned. */
+  businesses: Business[];
   /** Standing instructions to invest, at most one an asset, run each round after the player's own orders. */
   plans: InvestPlan[];
   /** True if what the investments pay is put back into them each round instead of being kept as cash. */
@@ -726,6 +783,15 @@ export type Order =
   | { type: 'depositIn'; amount: Cents }
   | { type: 'depositOut'; amount: Cents }
   | { type: 'pensionIn'; amount: Cents }
+  /** Opens a business of a kind with this much capital. It takes a point of focus. */
+  | { type: 'startBusiness'; typeId: string; capital: Cents }
+  /** Puts more money into a business. */
+  | { type: 'investBusiness'; businessId: string; amount: Cents }
+  /** Sets how much of its profit a business pays out, and whether a manager runs it. */
+  | { type: 'setBusiness'; businessId: string; payoutPct?: number; manager?: boolean }
+  /** Gives a business a point of this round's focus. */
+  | { type: 'tendBusiness'; businessId: string }
+  | { type: 'sellBusiness'; businessId: string }
   /** Has what the investments pay bought more of them each round, or pays it out as cash again. */
   | { type: 'setReinvest'; on: boolean }
   /** Sets what is put into the asset every round from now on, this round included. Zero ends the plan. */
@@ -765,6 +831,8 @@ export interface RoundTally {
   itemsBought: Cents;
   itemsSold: Cents;
   movingCost: Cents;
+  /** Businesses sold by order this round, for the record of the round. */
+  businessesSold: Array<{ typeId: string; capital: Cents; price: Cents }>;
 }
 
 export interface OrderContext {
@@ -791,6 +859,11 @@ export type RejectReason =
   | 'no-credit'
   | 'over-loan-limit'
   | 'over-margin-limit'
+  | 'unknown-business'
+  | 'unknown-business-type'
+  | 'below-minimum'
+  | 'too-many-businesses'
+  | 'bad-payout'
   | 'unknown-debt'
   | 'exceeds-debt'
   | 'unknown-property-type'
@@ -839,6 +912,7 @@ export type LedgerLine =
   | 'depositDraw'
   | 'creditCardDraw'
   | 'creditCardRepay'
+  | 'business'
   | 'dividendsReinvested';
 
 /**
@@ -868,6 +942,10 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
+  /** A business was sold by its owner, or closed with nothing left in it. */
+  /** `capital` is what was in it, and `price` what it fetched. */
+  | { kind: 'businessSold'; typeId: string; capital: Cents; price: Cents }
+  | { kind: 'businessClosed'; typeId: string }
   /** The broker sold an investment bought with borrowed money, because the loan had grown too large beside it. */
   | { kind: 'marginCall'; assetId: string; sold: Cents; repaid: Cents }
   /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
@@ -892,6 +970,8 @@ export interface LifeStart {
   holdings?: Array<{ assetId: string; value: Cents }>;
   recurring?: Recurring[];
   flags?: string[];
+  /** Businesses owned on day one, with this much in each, in start-of-game dollars. The finance skill is not asked. */
+  businesses?: Array<{ typeId: string; capital: Cents }>;
 }
 
 export interface StartConfig {

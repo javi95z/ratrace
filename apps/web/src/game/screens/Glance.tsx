@@ -16,6 +16,7 @@ const COLOUR: Record<WealthKind, string> = {
   crypto: 'bg-wine-300',
   gold: 'bg-gold-200',
   property: 'bg-skin-500',
+  business: 'bg-teal-600',
   things: 'bg-ink-500',
 };
 
@@ -30,7 +31,8 @@ export function PortfolioGlance() {
   const quote = quotePortfolio(content, shown);
   const top = quote.largest;
   const property = top?.kind === 'property' ? shown.player.properties.find((x) => x.id === top.id) : undefined;
-  const topName = !top ? '' : top.kind === 'asset' ? names.assets[top.id].name : property ? `${text.propertyTypes[property.typeId]}, ${names.cities[property.cityId]}` : '';
+  const business = top?.kind === 'business' ? shown.player.businesses.find((x) => x.id === top.id) : undefined;
+  const topName = !top ? '' : top.kind === 'asset' ? names.assets[top.id].name : property ? `${text.propertyTypes[property.typeId]}, ${names.cities[property.cityId]}` : business ? text.businessTypes[business.typeId].name : '';
 
   return (
     <Panel title={t('title')} label={t('title')}>

@@ -12,13 +12,14 @@ import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggl
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
+import { BusinessTab } from './Business';
 import { Payouts, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
 
-type TabId = 'portfolio' | 'market' | 'property' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
-const TABS: TabId[] = ['portfolio', 'market', 'property', 'debt', 'lifestyle', 'shop', 'taxes'];
+type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
+const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
 const KINDS: AssetKind[] = ['fund', 'bond', 'stock', 'crypto', 'gold'];
 const KIND_TITLE: Record<AssetKind, string> = { fund: 'funds', bond: 'bonds', stock: 'stocks', crypto: 'crypto', gold: 'gold' };
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -1179,6 +1180,7 @@ export function Finance() {
         {tab === 'portfolio' ? <Portfolio /> : null}
         {tab === 'market' ? <Market /> : null}
         {tab === 'property' ? <PropertyTab /> : null}
+        {tab === 'business' ? <BusinessTab /> : null}
         {tab === 'debt' ? <DebtTab /> : null}
         {tab === 'lifestyle' ? <Lifestyle /> : null}
         {tab === 'shop' ? <Shop /> : null}

@@ -1,3 +1,4 @@
+import { businessIncome } from './business';
 import { debtServiceForRound } from './debt';
 import type { DebtService } from './debt';
 import { cityOf } from './lookup';
@@ -13,6 +14,8 @@ export interface RoundIncome {
   dividends: Cents;
   interest: Cents;
   rent: Cents;
+  /** What the player's businesses pay out. */
+  business: Cents;
   otherPassive: Cents;
 }
 
@@ -70,6 +73,7 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
     dividends,
     interest,
     rent,
+    business: businessIncome(p, content, world),
     otherPassive: indexed(p.extraPassiveAnnual, world) * years,
   };
 }
@@ -88,7 +92,7 @@ export function expensesForRound(p: PlayerState, content: Content, world: WorldS
 }
 
 export function passiveOf(income: RoundIncome): Cents {
-  return income.dividends + income.interest + income.rent + income.otherPassive;
+  return income.dividends + income.interest + income.rent + income.business + income.otherPassive;
 }
 
 export function outgoingsOf(expenses: RoundExpenses): Cents {

@@ -271,7 +271,9 @@
       "jobHuntPct": "+{n} puntos de probabilidad al buscar trabajo",
       "focus": "+{n} de foco en la ronda siguiente",
       "best": "De cada gama solo cuenta lo mejor que tengas."
-    }
+    },
+    "openBusiness": "Abres un negocio: {name}",
+    "sellBusinesses": "Vendes tus negocios al {pct} % de lo que valen"
   },
   "finance": {
     "tabs": {
@@ -281,7 +283,8 @@
       "debt": "Deuda",
       "lifestyle": "Vida",
       "shop": "Tienda",
-      "taxes": "Impuestos"
+      "taxes": "Impuestos",
+      "business": "Negocios"
     },
     "tabsLabel": "Tus finanzas",
     "play": "Jugar la ronda",
@@ -520,7 +523,8 @@
         "crypto": "Cripto",
         "gold": "Oro",
         "property": "Vivienda",
-        "things": "Cosas"
+        "things": "Cosas",
+        "business": "Negocios"
       },
       "concentrated": "El {pct} de lo que tienes invertido está en una sola cosa: {name}. Si le va mal, te va mal.",
       "largest": "Lo que más pesa de lo invertido: {name}, el {pct}.",
@@ -532,6 +536,50 @@
       "reinvestOn": "Cada activo compra más de sí mismo con lo que paga.",
       "reinvestOff": "Lo que pagan llega a tu efectivo.",
       "reinvestShort": "Esta ronda no queda efectivo tras los gastos: no se reinvierte."
+    },
+    "business": {
+      "yours": "Tus negocios",
+      "none": "Aún no tienes ninguno. Puedes montar uno aquí abajo, o esperar a que la vida te ofrezca uno.",
+      "runYou": "Lo llevas tú esta ronda",
+      "runManager": "Lo lleva un encargado",
+      "runNobody": "Nadie lo lleva: rinde la mitad y se desgasta",
+      "profitRound": "{amount} esta ronda",
+      "focusLeft": "Te queda {n} de foco esta ronda para dedicarles.",
+      "open": "Montar un negocio",
+      "openAbout": "Montarlo cuesta 1 de foco, y después pide 1 cada ronda o un encargado. Puedes llevar hasta {max}.",
+      "from": "desde {amount}",
+      "yield": "Rinde hasta un {rate} al año",
+      "economy": "La economía ahora: {pct} %",
+      "managerShare": "Encargado: {pct} % del beneficio",
+      "needsSkill": "Necesitas saber financiero {level}.",
+      "start": "Montarlo",
+      "startTitle": "Montar: {name}",
+      "startHint": "Hace falta poner al menos {min}. Cuanto más crece por encima de {scale}, menos rinde cada dólar que metes.",
+      "capitalHint": "Lo que hay dentro: lo que vale",
+      "thisRound": "Esta ronda",
+      "profit": "Beneficio",
+      "economyLine": "La economía le pone un {pct} %",
+      "payout": "A tu bolsillo",
+      "retained": "Se queda dentro y lo hace crecer",
+      "lost": "Sale del negocio",
+      "neglected": "Sin tu foco ni encargado solo gana el {pct} % de lo que podría, y pierde valor.",
+      "payoutLabel": "Qué haces con el beneficio",
+      "keepAll": "Reinvertir",
+      "takeHalf": "A medias",
+      "takeAll": "Cobrarlo",
+      "payoutPct": "{pct} % para ti",
+      "tend": "Dedicarle tu foco esta ronda",
+      "tendHint": "Cuesta 1 de foco. Te quedan {left}.",
+      "tendNoNeed": "Con encargado no hace falta.",
+      "manager": "Contratar un encargado",
+      "managerHint": "Se queda el {pct} % del beneficio, y el negocio ya no pide tu foco.",
+      "invest": "Meter más dinero",
+      "investTitle": "Meter dinero en: {name}",
+      "sell": "Vender por {amount}",
+      "sellHint": "En esta economía un comprador paga el {pct} % de lo que hay dentro.",
+      "sellGain": "Pagarás impuestos por {amount} de ganancia.",
+      "opensNow": "Se abre al jugar la ronda. Desde la siguiente podrás llevarlo, hacerlo crecer o venderlo.",
+      "needsCash": "Te faltan {amount} en efectivo para montarlo."
     }
   },
   "resolve": {
@@ -562,7 +610,10 @@
     "planMissed": "Tu plan no compró {name}: faltaban {amount}.",
     "marginCall": "El bróker ha vendido tu {name}.",
     "marginCallHint": "Cayó demasiado para lo que debías. Se vendió por {sold} y {repaid} fueron a pagar el préstamo.",
-    "marginCallShort": "Cayó demasiado para lo que debías. Se vendió por {sold}, y aún faltaban {short} que has puesto tú."
+    "marginCallShort": "Cayó demasiado para lo que debías. Se vendió por {sold}, y aún faltaban {short} que has puesto tú.",
+    "businessSold": "Has vendido tu negocio ({name}) por {amount}.",
+    "businessClosed": "Tu negocio ha cerrado: {name}.",
+    "businessClosedHint": "Ya no quedaba nada dentro."
   },
   "profile": {
     "title": "Tu vida",
@@ -617,7 +668,8 @@
     "pays": "Paga el {pct} % en «{card}»",
     "opens": "Abre una salida en «{card}»",
     "changedIn": "Se cambia en la fase de finanzas: aquí mismo o en la pestaña Vida.",
-    "pickHere": "Toca para elegir. Se aplica al jugar la ronda."
+    "pickHere": "Toca para elegir. Se aplica al jugar la ronda.",
+    "businesses": "Negocios"
   },
   "balance": {
     "balance": "Saldo",
@@ -670,6 +722,11 @@
       "title": "Patrimonio",
       "about": "Todo lo que tienes menos todo lo que debes. Es la mitad de tu puntuación; la otra es el estatus.",
       "realHint": "El que cuenta para la puntuación"
+    },
+    "businesses": {
+      "title": "Negocios",
+      "about": "Lo que hay dentro de cada negocio tuyo: lo que vale hoy.",
+      "note": "Se llevan, se hacen crecer y se venden en la pestaña Negocios."
     }
   },
   "end": {
@@ -815,7 +872,12 @@
     "planOff": "Dejar de invertir en {name}",
     "reinvestOn": "Reinvertir los dividendos",
     "reinvestOff": "Cobrar los dividendos en efectivo",
-    "buyMargin": "Comprar {amount} de {name} con margen (pones {own})"
+    "buyMargin": "Comprar {amount} de {name} con margen (pones {own})",
+    "startBusiness": "Montar {name} con {amount}",
+    "investBusiness": "Meter {amount} en {name}",
+    "setBusiness": "Cambiar cómo llevas {name}",
+    "tendBusiness": "Dedicar foco a {name}",
+    "sellBusiness": "Vender {name}"
   },
   "account": {
     "title": "Cuenta",

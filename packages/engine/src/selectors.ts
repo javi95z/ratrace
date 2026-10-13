@@ -14,6 +14,7 @@ export function netWorth(p: PlayerState): Cents {
   for (const held of Object.values(p.positions)) total += held.value;
   for (const property of p.properties) total += property.value;
   for (const owned of p.life.items) total += owned.value;
+  for (const business of p.businesses) total += business.capital;
   for (const debt of p.debts) total -= debt.principal;
   return total;
 }

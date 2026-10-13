@@ -1,6 +1,8 @@
+import { openBusiness } from './business';
 import { newId } from './ids';
 import { focusBonusOf, refreshDerived } from './life/derive';
 import { propertyPrice } from './property';
+import { indexed } from './rates';
 import type { Content, LifeState, PlayerState, StartConfig, WorldState } from './types';
 
 /** Focus points of a life that does not say. */
@@ -43,6 +45,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     deposit: 0,
     pension: 0,
     positions: {},
+    businesses: [],
     plans: [],
     reinvest: false,
     properties: [],
@@ -73,6 +76,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     });
   }
   for (const held of from?.holdings ?? []) p.positions[held.assetId] = { value: held.value, basis: held.value };
+  for (const owned of from?.businesses ?? []) openBusiness(p, owned.typeId, indexed(owned.capital, world), content);
   // A job that leaves time over leaves it from the first day.
   p.life.focusBonus = focusBonusOf(p, content);
   refreshDerived(p, content, 0);

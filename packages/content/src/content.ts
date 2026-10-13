@@ -1,6 +1,7 @@
 import type { Content } from '@ratrace/engine';
 import { assets, market } from './assets';
 import { cards } from './cards';
+import { business } from './business';
 import { careers } from './careers';
 import { cities } from './cities';
 import { crises } from './crises';
@@ -8,7 +9,7 @@ import { items } from './items';
 import { debt, life, propertyTypes, scoring, world } from './rules';
 
 /** Bumped whenever a number or a card changes, so a saved game knows which rules it was played under. */
-export const CONTENT_VERSION = '1.13.0';
+export const CONTENT_VERSION = '1.14.0';
 
 /** Everything the engine needs to run a v1 game: 20 rounds of two years, from age 22 to 62. */
 export const content: Content = {
@@ -26,6 +27,7 @@ export const content: Content = {
   debt,
   scoring,
   careers,
+  business,
   items,
   life,
   world,

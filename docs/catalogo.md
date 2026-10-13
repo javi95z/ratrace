@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.12.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.14.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -29,7 +29,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 3.000 $ |
 | Trabajo | Enfermera (Sanidad) |
-| Experiencia · Finanzas · Foco | 0 · 0/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
 | Empieza con | Nada más |
 | Ventaja | No la pueden despedir, y las guardias de noche se pagan bien. |
@@ -44,7 +44,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 2.000 $ |
 | Trabajo | Programador júnior (Tecnología) |
-| Experiencia · Finanzas · Foco | 0 · 1/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
 | Modo de vida | Normal |
 | Empieza con | Préstamo personal de 18.000 $ al 6 % |
 | Ventaja | Buen sueldo, plan de acciones y nociones de finanzas. |
@@ -59,7 +59,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 5.000 $ |
 | Trabajo | Auxiliar (Función pública) |
-| Experiencia · Finanzas · Foco | 0 · 0/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
 | Empieza con | Nada más |
 | Ventaja | Trabajo para toda la vida e hipoteca más barata. |
@@ -74,7 +74,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 0 $ |
 | Trabajo | Repartidor (Servicios) |
-| Experiencia · Finanzas · Foco | 0 · 0/2 · 4 |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 4 |
 | Modo de vida | Austero |
 | Empieza con | Nada más |
 | Ventaja | Cuatro puntos de foco por ronda. |
@@ -89,7 +89,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 60.000 $ |
 | Trabajo | Repartidor (Servicios) |
-| Experiencia · Finanzas · Foco | 0 · 0/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Cómodo (no puede bajar de Cómodo) |
 | Empieza con | Piso en propiedad |
 | Ventaja | Empieza con dinero y un piso. |
@@ -104,7 +104,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Londres, con 1.500 $ |
 | Trabajo | Repartidor (Servicios) |
-| Experiencia · Finanzas · Foco | 2 · 0/2 · 4 |
+| Experiencia · Finanzas · Foco | 2 · 0/3 · 4 |
 | Modo de vida | Austero |
 | Empieza con | Gasto fijo de 2.400 $ al año |
 | Ventaja | Cuatro puntos de foco y un segundo idioma. |
@@ -119,7 +119,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Londres, con 4.000 $ |
 | Trabajo | Analista (Finanzas) |
-| Experiencia · Finanzas · Foco | 0 · 2/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
 | Modo de vida | Cómodo (no puede bajar de Cómodo) |
 | Empieza con | Préstamo personal de 40.000 $ al 6 % |
 | Ventaja | La carrera mejor pagada que hay, y todos los mercados abiertos desde el primer día. |
@@ -134,7 +134,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 1.000 $ |
 | Trabajo | Médica residente (Medicina) |
-| Experiencia · Finanzas · Foco | 0 · 0/2 · 2 |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 2 |
 | Modo de vida | Normal |
 | Empieza con | Préstamo personal de 60.000 $ al 5 % |
 | Ventaja | No la pueden despedir, y acaba cobrando muy bien. |
@@ -149,7 +149,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 0 $ |
 | Trabajo | Encargado de tienda (Servicios) |
-| Experiencia · Finanzas · Foco | 10 · 1/2 · 3 |
+| Experiencia · Finanzas · Foco | 10 · 1/3 · 3 |
 | Modo de vida | Austero |
 | Empieza con | Préstamo personal de 30.000 $ al 14 % |
 | Ventaja | Años de experiencia: empieza dos escalones más arriba. |
@@ -164,9 +164,9 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Madrid, con 3.000 $ |
 | Trabajo | Repartidor (Servicios) |
-| Experiencia · Finanzas · Foco | 0 · 2/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
 | Modo de vida | Austero |
-| Empieza con | Ingreso fijo de 6.000 $ al año |
+| Empieza con | Nada más |
 | Ventaja | Un pequeño negocio que da dinero desde el primer día, y que se puede vender. |
 | Desventaja | El trabajo con el que lo mantiene paga poco. |
 | Se desbloquea | Monta un negocio y véndelo. |
@@ -179,7 +179,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | --- | --- |
 | Empieza en | Singapur, con 1.000 $ |
 | Trabajo | Repartidor (Servicios) |
-| Experiencia · Finanzas · Foco | 0 · 2/2 · 3 |
+| Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
 | Modo de vida | Austero |
 | Empieza con | 20.000 $ en Bitcoin |
 | Ventaja | Empieza con 20.000 $ en Bitcoin, y con todos los mercados abiertos. |
@@ -316,6 +316,18 @@ Horas extra: +8 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +25 
 | Responsable de cuentas | 135 % del sueldo medio | 10 | +10 |
 | Director comercial | 180 % del sueldo medio | 18 | +17 |
 | Director de ventas | 240 % del sueldo medio | 28 | +25 |
+
+## Negocios
+
+Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el 50 % y pierde un 8 % de su capital. Se pueden llevar hasta 3. Vendido desde la pestaña vale entre el 70 % y el 100 % de lo que tiene dentro, según la economía; solo una carta paga más.
+
+| Negocio | Capital mínimo | Rinde al año | Hecho para | Con la economía | Encargado | Saber financiero |
+| --- | --- | --- | --- | --- | --- | --- |
+| Tu oficio por tu cuenta | 2.000 $ | hasta 22 % | 30.000 $ | Auge +15 %, Desaceleración -15 %, Recesión -40 % | 50 % del beneficio | 0 |
+| Tienda online | 5.000 $ | hasta 20 % | 80.000 $ | Auge +25 %, Expansión +5 %, Desaceleración -25 %, Recesión -70 % | 40 % del beneficio | 2 |
+| App | 3.000 $ | hasta 26 % | 120.000 $ | Auge +40 %, Desaceleración -30 %, Recesión -90 %, Recuperación +10 % | 45 % del beneficio | 2 |
+| Bar | 30.000 $ | hasta 15 % | 200.000 $ | Auge +30 %, Expansión +10 %, Desaceleración -35 %, Recesión -130 %, Recuperación -10 % | 35 % del beneficio | 2 |
+| Franquicia | 80.000 $ | hasta 11 % | 600.000 $ | Auge +10 %, Desaceleración -10 %, Recesión -40 % | 20 % del beneficio | 2 |
 
 ## Ciudades
 

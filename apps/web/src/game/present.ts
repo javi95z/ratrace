@@ -114,6 +114,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
       if (pricePct < 100) add('plain', t('itemUsual', { amount: dollars(item.price) }));
     }
   }
+  if (effects.business) add('plain', t('openBusiness', { name: text.businessTypes[effects.business.typeId]?.name ?? effects.business.typeId }));
+  if (effects.sellBusinesses) add('good', t('sellBusinesses', { pct: effects.sellBusinesses.pricePct }));
   if (effects.invest) add('plain', t('invest', { amount: dollars(effects.invest.amount), asset: names.assets[effects.invest.assetId].name }));
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));
   if (effects.loan) add('bad', t('loan', { amount: dollars(effects.loan) }));
@@ -144,6 +146,10 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     const property = player.properties.find((p) => p.id === propertyId);
     return property ? text.propertyTypes[property.typeId] : '';
   };
+  const business = (businessId: string) => {
+    const owned = player.businesses.find((b) => b.id === businessId);
+    return owned ? (text.businessTypes[owned.typeId]?.name ?? owned.typeId) : '';
+  };
   switch (order.type) {
     case 'buy':
       if ((order.margin ?? 0) > 0) return t('buyMargin', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount + (order.margin ?? 0)), own: fmt.money(order.amount) });
@@ -158,6 +164,16 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('pension', { amount: fmt.money(order.amount) });
     case 'setReinvest':
       return t(order.on ? 'reinvestOn' : 'reinvestOff');
+    case 'startBusiness':
+      return t('startBusiness', { name: text.businessTypes[order.typeId]?.name ?? order.typeId, amount: fmt.money(order.capital) });
+    case 'investBusiness':
+      return t('investBusiness', { name: business(order.businessId), amount: fmt.money(order.amount) });
+    case 'setBusiness':
+      return t('setBusiness', { name: business(order.businessId) });
+    case 'tendBusiness':
+      return t('tendBusiness', { name: business(order.businessId) });
+    case 'sellBusiness':
+      return t('sellBusiness', { name: business(order.businessId) });
     case 'setPlan':
       return t(order.amount > 0 ? 'planOn' : 'planOff', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
     case 'borrow':
@@ -208,7 +224,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'marginCall', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -230,6 +246,12 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'businessSold':
+        add(event, { tone: 'good', icon: 'icon.business', title: t('businessSold', { name: text.businessTypes[event.typeId]?.name ?? event.typeId, amount: fmt.money(event.price) }) });
+        break;
+      case 'businessClosed':
+        add(event, { tone: 'bad', icon: 'icon.business', title: t('businessClosed', { name: text.businessTypes[event.typeId]?.name ?? event.typeId }), hint: t('businessClosedHint') });
         break;
       case 'marginCall':
         add(event, {

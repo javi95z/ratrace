@@ -1,0 +1,212 @@
+// @vitest-environment jsdom
+import { content, textFor } from '@ratrace/content';
+import { quoteBusinesses, viewOf } from '@ratrace/engine';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { formatFor } from '@/lib/format';
+import type { GameSession, SavedGame } from '@/session/types';
+import { memoryServices, renderGame, setWidth } from '@/testing/render';
+import { Play } from './Play';
+
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({ href, children, className }: { href: string; children: ReactNode; className?: string }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => '/play',
+}));
+
+// A wide screen, where the orders of the round are listed beside the finances.
+beforeEach(() => setWidth('desk'));
+afterEach(cleanup);
+
+const fmt = formatFor('en');
+const { text } = textFor('en');
+const button = (name: string | RegExp) => screen.getByRole('button', { name });
+const stateOf = async (services: ReturnType<typeof memoryServices>) => ((await services.store.loadGame()) as SavedGame).state;
+const toFinance = async (session: GameSession) => {
+  while (session.view().phase === 'cards') await session.answerCard(0);
+};
+const ordersOf = () => screen.queryAllByRole('button', { name: /^Remove: /, hidden: true }).map((b) => (b.getAttribute('aria-label') ?? '').replace('Remove: ', ''));
+
+/** A life taken to the finances of its first round. The founder starts with a shop of her own. */
+async function inFinance(lifeId: string) {
+  const services = memoryServices();
+  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { founder: { at: 1, gameId: 'earlier' }, comeback: { at: 1, gameId: 'earlier' } } });
+  const session = await services.sessions.start(lifeId);
+  await toFinance(session);
+  return { services, session };
+}
+const openTab = async (user: ReturnType<typeof userEvent.setup>) => user.click(await screen.findByRole('tab', { name: 'Business' }));
+
+describe('the business tab', () => {
+  it('shows each kind there is: what it asks for, what it makes, how the economy treats it now, and why it cannot be opened', async () => {
+    const { services } = await inFinance('civil_servant');
+    const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    expect(within(screen.getByRole('region', { name: 'Your businesses' })).getByText(/^You have none yet\./)).toBeTruthy();
+
+    const kinds = within(screen.getByRole('region', { name: 'Open a business' })).getAllByRole('listitem');
+    expect(kinds).toHaveLength(content.business.types.length);
+    quote.kinds.forEach((kind, i) => {
+      const row = within(kinds[i]);
+      expect(row.getByText(text.businessTypes[kind.typeId].name)).toBeTruthy();
+      expect(row.getByText(`from ${fmt.compact(kind.minCapital)}`)).toBeTruthy();
+      expect(row.getByText(`Makes up to ${fmt.rate(kind.yieldBp)} a year`)).toBeTruthy();
+      expect(row.getByText(`Manager: ${kind.managerPct}% of the profit`)).toBeTruthy();
+      expect(row.getByText(/^The economy now: /)).toBeTruthy();
+    });
+    // A civil servant knows too little about money for anything but her own practice, and the others say so.
+    expect(quote.kinds.map((kind) => kind.lock)).toEqual([null, 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill']);
+    expect(within(kinds[0]).getByRole('button', { name: 'Open it' })).toBeTruthy();
+    for (const locked of kinds.slice(1)) {
+      expect(within(locked).queryByRole('button')).toBeNull();
+      expect(within(locked).getByText('It takes money sense 2.')).toBeTruthy();
+    }
+  });
+
+  it('says how much cash is missing instead of offering what cannot be paid for', async () => {
+    // The comeback starts with nothing in hand.
+    const { services } = await inFinance('comeback');
+    const state = await stateOf(services);
+    const kind = quoteBusinesses(content, viewOf(state)).kinds[0];
+    expect(state.player.cash).toBeLessThan(kind.minCapital);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const first = within(screen.getByRole('region', { name: 'Open a business' })).getAllByRole('listitem')[0];
+    expect(within(first).queryByRole('button')).toBeNull();
+    expect(within(first).getByText(`You are ${fmt.money(kind.minCapital - state.player.cash)} in cash short of opening it.`)).toBeTruthy();
+  });
+
+  it('opens one: the capital leaves the cash, a point of focus goes, and it is the player\'s from the next round', async () => {
+    const { services } = await inFinance('civil_servant');
+    const before = await stateOf(services);
+    const kind = quoteBusinesses(content, viewOf(before)).kinds[0];
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    await user.click(within(within(screen.getByRole('region', { name: 'Open a business' })).getAllByRole('listitem')[0]).getByRole('button', { name: 'Open it' }));
+    const sheet = screen.getByRole('dialog', { name: 'Open: Your own practice' });
+    // The sheet opens on the least it takes.
+    expect(within(sheet).getByRole('status').textContent).toBe(fmt.money(kind.minCapital));
+    await user.click(within(sheet).getByRole('button', { name: `Confirm ${fmt.money(kind.minCapital)}` }));
+    expect(ordersOf()).toEqual([`Open Your own practice with ${fmt.money(kind.minCapital)}`]);
+
+    // It is listed at once, run by its owner, and says it cannot be touched until the round is played.
+    const yours = screen.getByRole('region', { name: 'Your businesses' });
+    const row = within(yours).getByRole('button', { name: /Your own practice/ });
+    expect(row.textContent).toContain('You run it this round');
+    expect(row.textContent).toContain(fmt.money(kind.minCapital));
+    await user.click(row);
+    const own = screen.getByRole('dialog', { name: 'Your own practice' });
+    expect(within(own).getByText(/^It opens when the round is played\./)).toBeTruthy();
+    expect(within(own).queryByRole('switch')).toBeNull();
+    await user.click(within(own).getByRole('button', { name: 'Close' }));
+
+    await user.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    const after = await stateOf(services);
+    expect(after.player.businesses).toMatchObject([{ typeId: 'services', basis: kind.minCapital, payoutPct: 50, manager: false, tended: false }]);
+    expect(screen.getByText('Business profit taken out')).toBeTruthy();
+  });
+
+  it('runs one: what the round makes of it, what is taken out, who runs it, more money in, and a sale', async () => {
+    const { services } = await inFinance('founder');
+    const state = await stateOf(services);
+    const [shop] = quoteBusinesses(content, viewOf(state)).owned;
+    expect(shop).toMatchObject({ typeId: 'shop', tended: true, manager: false, payoutPct: 50 });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const yours = screen.getByRole('region', { name: 'Your businesses' });
+    const row = within(yours).getByRole('button', { name: /Online shop/ });
+    expect(row.textContent).toContain(fmt.money(shop.capital));
+    expect(row.textContent).toContain(`${fmt.signed(shop.profit)} this round`);
+    await user.click(row);
+    let sheet = screen.getByRole('dialog', { name: 'Online shop' });
+    const round = within(sheet).getByRole('region', { name: 'This round' });
+    expect(within(round).getByText(fmt.signed(shop.profit))).toBeTruthy();
+    expect(within(round).getByText(fmt.money(shop.payout))).toBeTruthy();
+    expect(within(round).getByText(fmt.signed(shop.retained))).toBeTruthy();
+
+    // All of the profit taken out: one order, and the sheet shows the round as it will then be.
+    await user.click(within(sheet).getByRole('radio', { name: /^Take it/ }));
+    expect(ordersOf()).toEqual(['Change how Online shop is run']);
+    const all = quoteBusinesses(content, { ...viewOf(state), player: { ...state.player, businesses: [{ ...state.player.businesses[0], payoutPct: 100 }] } }).owned[0];
+    expect(within(within(sheet).getByRole('region', { name: 'This round' })).getByText(fmt.money(all.payout))).toBeTruthy();
+    // A manager on top of that is still the one order; back to how it stood, and there is none.
+    await user.click(within(sheet).getByRole('switch', { name: /^Hire a manager/ }));
+    expect(ordersOf()).toEqual(['Change how Online shop is run']);
+    expect(within(sheet).getByText('A manager runs it')).toBeTruthy();
+    await user.click(within(sheet).getByRole('switch', { name: /^Hire a manager/ }));
+    await user.click(within(sheet).getByRole('radio', { name: /^Half and half/ }));
+    expect(ordersOf()).toEqual([]);
+
+    // More money in.
+    await user.click(within(sheet).getByRole('button', { name: 'Put more money in' }));
+    const amount = screen.getByRole('dialog', { name: 'Put money into: Online shop' });
+    fireEvent.change(within(amount).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
+    await user.click(within(amount).getByRole('button', { name: 'Confirm $1,000' }));
+    expect(ordersOf()).toEqual(['Put $1,000 into Online shop']);
+    expect(within(screen.getByRole('region', { name: 'Your businesses' })).getByRole('button', { name: /Online shop/ }).textContent).toContain(fmt.money(shop.capital + 100_000));
+
+    // Sold: it is gone from the list, and the order says so.
+    await user.click(within(screen.getByRole('region', { name: 'Your businesses' })).getByRole('button', { name: /Online shop/ }));
+    sheet = screen.getByRole('dialog', { name: 'Online shop' });
+    expect(within(sheet).getByText(new RegExp(`^In this economy a buyer pays ${content.business.salePct[state.timeline[0].regime]}% of what is in it\\.`))).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: /^Sell for/ }));
+    expect(screen.queryByRole('dialog', { name: 'Online shop' })).toBeNull();
+    expect(within(screen.getByRole('region', { name: 'Your businesses' })).queryByRole('button', { name: /Online shop/ })).toBeNull();
+    expect(ordersOf()).toContain('Sell Online shop');
+  });
+
+  it('asks for the owner\'s focus each round, and says what happens without it', async () => {
+    const { services, session } = await inFinance('founder');
+    // A round on, nobody has given the shop this round's focus yet.
+    await session.playRound({ orders: [] });
+    await toFinance(session);
+    const state = await stateOf(services);
+    const [shop] = quoteBusinesses(content, viewOf(state)).owned;
+    expect(shop).toMatchObject({ tended: false, neglected: true });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const row = within(screen.getByRole('region', { name: 'Your businesses' })).getByRole('button', { name: /Online shop/ });
+    expect(row.textContent).toContain('Nobody runs it: it makes half and wears down');
+    await user.click(row);
+    const sheet = screen.getByRole('dialog', { name: 'Online shop' });
+    expect(within(sheet).getByText(`Without your focus or a manager it makes only ${content.business.neglectProfitPct}% of what it could, and loses value.`)).toBeTruthy();
+
+    const tend = within(sheet).getByRole('switch', { name: /^Give it your focus this round/ });
+    await user.click(tend);
+    expect(tend.getAttribute('aria-checked')).toBe('true');
+    expect(ordersOf()).toEqual(['Give your focus to Online shop']);
+    expect(within(sheet).getByText('You run it this round')).toBeTruthy();
+    expect(within(sheet).queryByText(/^Without your focus or a manager/)).toBeNull();
+    // With a manager the focus is not asked for, and the switch says so.
+    await user.click(tend);
+    await user.click(within(sheet).getByRole('switch', { name: /^Hire a manager/ }));
+    expect((within(sheet).getByRole('switch', { name: /^Give it your focus this round/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(within(sheet).getByText('With a manager there is no need.')).toBeTruthy();
+  });
+
+  it('counts in the portfolio at a glance and in the balance sheet of the profile', async () => {
+    const { services } = await inFinance('founder');
+    const state = await stateOf(services);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    expect(within(glance).getByText('Businesses')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /^Businesses/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Businesses' });
+    expect(within(sheet).getByText('Online shop')).toBeTruthy();
+    expect(within(sheet).getByText(fmt.money(state.player.businesses[0].capital))).toBeTruthy();
+  });
+});

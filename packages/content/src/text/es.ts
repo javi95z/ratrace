@@ -45,6 +45,13 @@ export const es: ContentText = {
     hospitality: { name: 'Hostelería', levels: ['Camarero', 'Jefe de sala', 'Encargado', 'Director de hotel', 'Director de cadena'] },
     sales: { name: 'Ventas', levels: ['Comercial júnior', 'Comercial', 'Responsable de cuentas', 'Director comercial', 'Director de ventas'] },
   },
+  businessTypes: {
+    services: { name: 'Tu oficio por tu cuenta', blurb: 'Tu trabajo para tus propios clientes. Barato de montar y rápido en dar dinero, y nunca grande.' },
+    shop: { name: 'Tienda online', blurb: 'Un producto, una web y un mensajero. Crece con lo que le dejas dentro.' },
+    app: { name: 'App', blurb: 'Los mejores márgenes del juego y los vaivenes más bruscos.' },
+    bar: { name: 'Bar', blurb: 'Lleno en los buenos tiempos y vacío en los malos: una recesión es una pérdida.' },
+    franchise: { name: 'Franquicia', blurb: 'Cara, aburrida y estable. La que se tiene sin llevarla.' },
+  },
   ladders: {
     car: 'Coches',
     watch: 'Relojes',
@@ -254,6 +261,11 @@ export const es: ContentText = {
     'cannot-finance': 'Esto no se vende a plazos.',
     'over-loan-limit': 'Es más de lo que puedes pedir con tu sueldo.',
     'over-margin-limit': 'El bróker presta como mucho la mitad de lo que tendrías.',
+    'unknown-business': 'Ese negocio no es tuyo.',
+    'unknown-business-type': 'No existe ese tipo de negocio.',
+    'below-minimum': 'Ese tipo de negocio pide más capital para abrir.',
+    'too-many-businesses': 'Ya llevas todos los negocios que puede llevar una persona.',
+    'bad-payout': 'Un negocio reparte nada, la mitad o todo su beneficio.',
     'unknown-debt': 'Esa deuda no existe.',
     'exceeds-debt': 'Es más de lo que debes.',
     'unknown-property-type': 'Ese tipo de vivienda no existe.',
@@ -301,6 +313,7 @@ export const es: ContentText = {
     depositDraw: 'Sacado del ahorro',
     creditCardDraw: 'Cargado a la tarjeta',
     creditCardRepay: 'Tarjeta pagada',
+    business: 'Beneficio retirado de tus negocios',
     dividendsReinvested: 'Dividendos reinvertidos',
   },
 };

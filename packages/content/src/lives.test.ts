@@ -2,6 +2,7 @@ import {
   applyCard,
   applyCards,
   applyRound,
+  businessRound,
   createGame,
   findInvariantBreaks,
   netWorth,
@@ -35,6 +36,12 @@ const order: fc.Arbitrary<Order> = fc.oneof(
   { weight: 3, arbitrary: fc.record({ type: fc.constant('buy' as const), assetId, amount }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('buy' as const), assetId, amount, margin: amount }) },
   { weight: 3, arbitrary: fc.record({ type: fc.constant('setPlan' as const), assetId, amount: fc.oneof(amount, fc.constant(0)) }) },
+  { weight: 1, arbitrary: fc.record({ type: fc.constant('setReinvest' as const), on: fc.boolean() }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('startBusiness' as const), typeId: fc.constantFrom('services', 'shop', 'app', 'bar', 'franchise', 'casino'), capital: amount }) },
+  { weight: 1, arbitrary: fc.record({ type: fc.constant('investBusiness' as const), businessId: ownedId('business'), amount }) },
+  { weight: 1, arbitrary: fc.record({ type: fc.constant('setBusiness' as const), businessId: ownedId('business'), payoutPct: fc.constantFrom(0, 50, 100, 75), manager: fc.boolean() }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('tendBusiness' as const), businessId: ownedId('business') }) },
+  { weight: 1, arbitrary: fc.record({ type: fc.constant('sellBusiness' as const), businessId: ownedId('business') }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('sell' as const), assetId, amount }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('depositIn' as const), amount }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('depositOut' as const), amount }) },
@@ -130,7 +137,7 @@ const ledger = (events: GameEvent[], line: LedgerLine): number => {
 const paid = (events: GameEvent[], line: LedgerLine): number => 0 - ledger(events, line);
 
 /** Ledger lines that only move money between the player's own pockets. */
-const TRANSFERS: ReadonlySet<LedgerLine> = new Set<LedgerLine>(['debtPrincipal', 'depositDraw', 'creditCardDraw', 'creditCardRepay']);
+const TRANSFERS: ReadonlySet<LedgerLine> = new Set<LedgerLine>(['debtPrincipal', 'depositDraw', 'creditCardDraw', 'creditCardRepay', 'dividendsReinvested']);
 
 /** The rule for a price move, written out here so the test does not lean on the engine's own helper. */
 const moved = (value: number, returnBp: number) => Math.max(0, value + Math.round((value * returnBp) / 10_000)) - value;
@@ -232,7 +239,19 @@ describe('whole lives on the v1 content', () => {
             items += Math.floor((drifted * after.priceLevel) / now.priceLevel) - owned.value;
           }
 
-          expect(netWorth(result.state.player) - netWorth(answered.player)).toBe(flows + moves + items);
+          // Businesses: one sold fetched what a buyer paid for what was in it; each one kept grew by what it left in,
+          // wore down if nobody ran it, and followed prices, the rule written out here.
+          let businesses = 0;
+          for (const e of result.events) if (e.kind === 'businessSold') businesses += e.price - e.capital;
+          for (const owned of held.businesses) {
+            const round = businessRound(owned, content, now);
+            let capital = owned.capital + round.retained;
+            if (round.neglected) capital -= Math.round((Math.max(0, capital) * content.business.neglectDecayBp) / 10_000);
+            capital = capital > 0 ? Math.floor((capital * after.priceLevel) / now.priceLevel) : 0;
+            businesses += capital - owned.capital;
+          }
+
+          expect(netWorth(result.state.player) - netWorth(answered.player)).toBe(flows + moves + items + businesses);
           checked += 1;
         });
       }),

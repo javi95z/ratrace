@@ -1,3 +1,4 @@
+import { businessBreaks } from './business';
 import { isCount } from './checks';
 import { stateHash } from './hash';
 import { deriveExpenses, derivePassive, deriveSalary, deriveStatus } from './life/derive';
@@ -37,6 +38,15 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
     money.push([`position ${id} value`, held.value], [`position ${id} basis`, held.basis]);
   }
   if (typeof p.reinvest !== 'boolean') breaks.push('reinvest is not a flag');
+  if (!Array.isArray(p.businesses)) breaks.push('businesses is not a list');
+  else {
+    for (const business of p.businesses) {
+      const broken = businessBreaks(business, content);
+      if (broken !== null) breaks.push(broken);
+    }
+    if (new Set(p.businesses.map((business) => business.id)).size !== p.businesses.length) breaks.push('two businesses have the same id');
+    if (p.businesses.length > content.business.maxBusinesses) breaks.push('more businesses than the rules allow');
+  }
   if (!Array.isArray(p.plans)) breaks.push('plans is not a list');
   else {
     for (const plan of p.plans) {

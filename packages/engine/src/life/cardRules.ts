@@ -71,7 +71,7 @@ export function validateCards(c: Content): string[] {
   const conditionChecks: Record<string, Check> = {
     minRound: count, maxRound: count, minLevel: count, maxLevel: count, minChildren: count, maxChildren: count,
     cities: listOf(cities, 'city'), notCities: listOf(cities, 'city'), careers: listOf(careers, 'career'),
-    employed: flag, partner: flag, ownsHome: flag, landlord: flag, hasMortgage: flag,
+    employed: flag, partner: flag, ownsHome: flag, landlord: flag, hasMortgage: flag, hasBusiness: flag,
     minNetWorth: whole, maxNetWorth: whole, cityPropertyReturnAtMostBp: whole,
     minFinanceSkill: skill, maxFinanceSkill: skill,
     flags: flagList, notFlags: flagList,
@@ -116,6 +116,11 @@ export function validateCards(c: Content): string[] {
     cash: whole, cashSalaryPct: whole, cashNetWorthPct: whole, salaryModPct: whole, salaryBoostPct: whole,
     careerSkill: whole, financeSkill: whole, status: whole,
     loan: positive, pension: positive, homeValue: positive,
+    business: (value) => {
+      if (!isRecord(value) || !c.business.types.some((type) => type.id === value.typeId)) return `opens a business of an unknown kind: ${String(isRecord(value) ? value.typeId : value)}`;
+      return isWhole(value.capital) && value.capital > 0 ? null : 'opens a business with a capital that is not a positive whole number';
+    },
+    sellBusinesses: (value) => (isRecord(value) && isWhole(value.pricePct) && value.pricePct > 0 ? null : 'sells businesses for a share that is not a positive whole percentage'),
     focus: (value) => (isWhole(value) && value >= 0 && value <= 10 ? null : 'needs focus from 0 to 10'),
     children: (value) => (isWhole(value) && value >= 1 && value <= 4 ? null : 'needs children from 1 to 4'),
     lifestyleFloor: (value) => ([0, 1, 2, 3].includes(value as number) ? null : 'has a lifestyle floor that is not 0, 1, 2 or 3'),

@@ -1,7 +1,6 @@
 import type { CardDef } from '@ratrace/engine';
 import { card, usd, yearly } from './build';
 
-const BUSINESSES = ['bar', 'shop', 'app'];
 
 /** A private employer in tech or finance comes with a share plan, and without a public servant's job for life. */
 const NEW_EMPLOYER = { setFlags: ['share_plan'], clearFlags: ['layoff_proof'] };
@@ -139,14 +138,15 @@ export const businessCards: CardDef[] = [
       outcomes: [{ weight: 60, effects: { salaryModPct: 15 } }, { weight: 30, effects: { salaryModPct: 4 } }, { weight: 10, effects: { salaryModPct: -10 } }],
     },
   ]),
-  card('biz_bar', 'business', { cooldown: 8, when: { minFinanceSkill: 2, minRound: 2, notFlags: ['has_business'] } }, [
+  // A business bought through a card is a business like any other from then on: run, grown, neglected or sold in the business tab.
+  card('biz_bar', 'business', { cooldown: 8, when: { minFinanceSkill: 2, minRound: 2, hasBusiness: false } }, [
     {},
     {
-      effects: { focus: 1, cash: usd(-40_000), setFlags: ['has_business'] },
+      effects: { focus: 1, cash: usd(-40_000) },
       outcomes: [
-        { weight: 35, effects: { recurring: [yearly('bar', 'passive', 14_000, null)] } },
-        { weight: 35, effects: { recurring: [yearly('bar', 'passive', 5_000, null)] } },
-        { weight: 30, effects: { clearFlags: ['has_business'] } },
+        { weight: 35, effects: { business: { typeId: 'bar', capital: usd(55_000) } } },
+        { weight: 35, effects: { business: { typeId: 'bar', capital: usd(35_000) } } },
+        { weight: 30, effects: {} },
       ],
     },
     {
@@ -154,14 +154,14 @@ export const businessCards: CardDef[] = [
       outcomes: [{ weight: 50, effects: { recurring: [yearly('bar_stake', 'passive', 2_500, null)] } }, { weight: 50, effects: {} }],
     },
   ]),
-  card('biz_online_shop', 'business', { cooldown: 6, when: { minFinanceSkill: 2, notFlags: ['has_business'] } }, [
+  card('biz_online_shop', 'business', { cooldown: 6, when: { minFinanceSkill: 2, hasBusiness: false } }, [
     {},
     {
-      effects: { focus: 2, cash: usd(-6_000), setFlags: ['has_business'] },
+      effects: { focus: 2, cash: usd(-6_000) },
       outcomes: [
-        { weight: 30, effects: { recurring: [yearly('shop', 'passive', 9_000, null)] } },
-        { weight: 40, effects: { recurring: [yearly('shop', 'passive', 2_500, null)] } },
-        { weight: 30, effects: { clearFlags: ['has_business'] } },
+        { weight: 30, effects: { business: { typeId: 'shop', capital: usd(14_000) } } },
+        { weight: 40, effects: { business: { typeId: 'shop', capital: usd(6_000) } } },
+        { weight: 30, effects: {} },
       ],
     },
   ]),
@@ -169,14 +169,14 @@ export const businessCards: CardDef[] = [
     {},
     { effects: { recurring: [yearly('spare_room', 'passive', 3_600, 3)], status: -1 } },
   ]),
-  card('biz_app', 'business', { cooldown: 8, when: { careers: ['tech'], minFinanceSkill: 2, notFlags: ['has_business'] } }, [
+  card('biz_app', 'business', { cooldown: 8, when: { careers: ['tech'], minFinanceSkill: 2, hasBusiness: false } }, [
     {},
     {
-      effects: { focus: 2, cash: usd(-3_000), setFlags: ['has_business'] },
+      effects: { focus: 2, cash: usd(-3_000) },
       outcomes: [
-        { weight: 15, effects: { recurring: [yearly('app', 'passive', 30_000, null)] } },
-        { weight: 30, effects: { recurring: [yearly('app', 'passive', 4_000, null)] } },
-        { weight: 55, effects: { clearFlags: ['has_business'], careerSkill: 2 } },
+        { weight: 15, effects: { business: { typeId: 'app', capital: usd(45_000) } } },
+        { weight: 30, effects: { business: { typeId: 'app', capital: usd(6_000) } } },
+        { weight: 55, effects: { careerSkill: 2 } },
       ],
     },
   ]),
@@ -191,12 +191,13 @@ export const businessCards: CardDef[] = [
       outcomes: [{ weight: 15, effects: { cash: usd(120_000) } }, { weight: 35, effects: { cash: usd(8_000) } }, { weight: 50, effects: {} }],
     },
   ]),
-  card('biz_acquisition', 'business', { cooldown: 6, when: { flags: ['has_business'] } }, [
+  // A buyer pays for what a business could become, which no sale from the tab ever does: well over what is in it.
+  card('biz_acquisition', 'business', { cooldown: 6, when: { hasBusiness: true } }, [
     {},
-    { effects: { cash: usd(90_000), endRecurring: BUSINESSES, clearFlags: ['has_business'], setFlags: ['sold_business'], status: 4 } },
+    { effects: { sellBusinesses: { pricePct: 170 }, status: 4 } },
     {
       outcomes: [
-        { weight: 40, effects: { cash: usd(140_000), endRecurring: BUSINESSES, clearFlags: ['has_business'], setFlags: ['sold_business'], status: 4 } },
+        { weight: 40, effects: { sellBusinesses: { pricePct: 250 }, status: 4 } },
         { weight: 60, effects: {} },
       ],
     },

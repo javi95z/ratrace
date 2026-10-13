@@ -112,6 +112,24 @@ for (const career of content.careers) {
 
 // ---------------------------------------------------------------------------------------------
 say(
+  '## Negocios',
+  `Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el ${content.business.neglectProfitPct} % y pierde un ${pct(content.business.neglectDecayBp)} de su capital. Se pueden llevar hasta ${content.business.maxBusinesses}. Vendido desde la pestaña vale entre el ${Math.min(...Object.values(content.business.salePct))} % y el ${Math.max(...Object.values(content.business.salePct))} % de lo que tiene dentro, según la economía; solo una carta paga más.`,
+  table(
+    ['Negocio', 'Capital mínimo', 'Rinde al año', 'Hecho para', 'Con la economía', 'Encargado', 'Saber financiero'],
+    content.business.types.map((type) => [
+      text.businessTypes[type.id].name,
+      usd(type.minCapital),
+      `hasta ${pct(type.yieldBp)}`,
+      usd(type.scale),
+      Object.entries(type.cyclePct).map(([regime, share]) => `${text.regimes[regime as keyof typeof text.regimes] ?? regime} ${signed(share)} %`).join(', '),
+      `${type.managerPct} % del beneficio`,
+      `${type.minFinanceSkill}`,
+    ]),
+  ),
+);
+
+// ---------------------------------------------------------------------------------------------
+say(
   '## Ciudades',
   'Cada ciudad tiene su perfil de noche y de día, y un icono.',
   `Mudarse cuesta el ${content.life.moveCostPct} % del coste de vida anual del destino y 1 de foco; con pareja, un ${content.life.movePartnerPct} % más, y un ${content.life.moveChildPct} % más por cada hijo. Quien se muda por su cuenta llega ${content.life.moveRungsLost} puesto por debajo, hasta su siguiente ascenso, y su pareja pasa ${content.life.partnerSettlingRounds * content.yearsPerRound} años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.`,

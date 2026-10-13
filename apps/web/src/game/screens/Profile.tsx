@@ -47,6 +47,8 @@ export function ProfileBody() {
   for (const property of p.properties) homes += property.value;
   let things = 0;
   for (const owned of life.items) things += owned.value;
+  let firms = 0;
+  for (const business of p.businesses) firms += business.capital;
   let owed = 0;
   for (const debt of p.debts) owed += debt.principal;
 
@@ -94,6 +96,7 @@ export function ProfileBody() {
             ['pension', t('pension'), fmt.money(p.pension)],
             ['investments', t('investments'), fmt.money(invested)],
             ['homes', t('homes'), fmt.money(homes)],
+            ...(firms > 0 ? ([['businesses', t('businesses'), fmt.money(firms)]] as const) : []),
             ['things', t('things'), fmt.money(things)],
           ] as const
         ).map(([line, label, amount]) => (

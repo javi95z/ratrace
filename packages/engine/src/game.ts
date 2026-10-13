@@ -1,3 +1,4 @@
+import { growBusinesses } from './business';
 import { applyDebtPayments, callMargins, checkBankruptcy, settleCash } from './debt';
 import { dividendsByAsset } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
@@ -279,6 +280,9 @@ export function applyRound(
 
   growPortfolio(p, content, now, after);
   growProperties(p, after);
+  for (const sale of tally.businessesSold) events.push({ kind: 'businessSold', ...sale });
+  // What each business kept or lost this round goes into it now, at the economy the round was lived in.
+  for (const typeId of growBusinesses(p, content, now, after)) events.push({ kind: 'businessClosed', typeId });
 
   p.cash += income.salary + passive - outgoings - bill.total;
   applyDebtPayments(p, expenses.service);
@@ -293,6 +297,7 @@ export function applyRound(
     ['dividends', income.dividends],
     ['interest', income.interest],
     ['rent', income.rent],
+    ['business', income.business],
     ['otherPassive', income.otherPassive],
     ['living', -expenses.living],
     ['otherExpenses', -expenses.other],

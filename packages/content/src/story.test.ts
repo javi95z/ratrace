@@ -88,7 +88,7 @@ describe('the story of a life', () => {
 
   it('tells of a business started and of one sold', () => {
     const state = life('nurse');
-    let story = step(storyStart(content, viewOf(state)), state, (v) => (v.player.life.flags.has_business = 0));
+    let story = step(storyStart(content, viewOf(state)), state, (v) => v.player.businesses.push({ id: 'business-1', typeId: 'shop', capital: 100_000, basis: 100_000, payoutPct: 50, manager: false, tended: true }));
     story = step(story, state, (v) => (v.player.life.flags.sold_business = 0));
     expect(kinds(story)).toEqual(['business', 'soldBusiness']);
   });

@@ -1,3 +1,4 @@
+import { executeBusinessOrder } from './business';
 import { executeBorrow, executeRepay } from './debt';
 import { executeLifeOrder } from './life/orders';
 import { executePortfolioOrder, executeSetPlan } from './portfolio';
@@ -12,6 +13,11 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'pensionIn',
   'setPlan',
   'setReinvest',
+  'startBusiness',
+  'investBusiness',
+  'setBusiness',
+  'tendBusiness',
+  'sellBusiness',
   'borrow',
   'repay',
   'buyProperty',
@@ -57,6 +63,14 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
       return isText(fields.insurance) && isFlag(fields.on);
     case 'setReinvest':
       return isFlag(fields.on);
+    case 'startBusiness':
+      return isText(fields.typeId);
+    case 'investBusiness':
+    case 'tendBusiness':
+    case 'sellBusiness':
+      return isText(fields.businessId);
+    case 'setBusiness':
+      return isText(fields.businessId) && (fields.manager === undefined || isFlag(fields.manager)) && (fields.payoutPct === undefined || typeof fields.payoutPct === 'number');
     case 'moveCity':
       return isText(fields.cityId);
     default:
@@ -89,6 +103,12 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'setReinvest':
       p.reinvest = order.on;
       return null;
+    case 'startBusiness':
+    case 'investBusiness':
+    case 'setBusiness':
+    case 'tendBusiness':
+    case 'sellBusiness':
+      return executeBusinessOrder(p, order, ctx);
     case 'borrow':
       return executeBorrow(p, order, ctx);
     case 'repay':

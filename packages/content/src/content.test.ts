@@ -1,4 +1,4 @@
-import { applyRound, createGame, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
+import { applyRound, businessRound, createGame, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './kinds';
 import { START_AGE } from './badges';
@@ -140,6 +140,35 @@ describe('the v1 content', () => {
     for (const id of ['law', 'education', 'influencer', 'hospitality', 'sales']) expect(leads, id).toContain(id);
   });
 
+  it('gives every kind of business a size, a yield, a temper and a way in', () => {
+    const view = viewOf(createGame({ content, start: lives[0].start }, 'business'));
+    const kinds = content.business.types;
+    expect(kinds.map((type) => type.id)).toEqual(['services', 'shop', 'app', 'bar', 'franchise']);
+    for (const type of kinds) {
+      expect(type.minCapital, type.id).toBeLessThan(type.scale);
+      // Every kind suffers a recession, and none is spared a slowdown.
+      expect(type.cyclePct.recession ?? 0, type.id).toBeLessThan(0);
+      expect(type.cyclePct.slowdown ?? 0, type.id).toBeLessThan(0);
+      // One opened at its least capital, run by its owner in an ordinary year, pays, and pays less than it yields on paper.
+      const round = businessRound({ id: 'b', typeId: type.id, capital: type.minCapital, basis: type.minCapital, payoutPct: 100, manager: false, tended: true }, content, { ...view.timeline[0], regime: 'expansion' });
+      expect(round.profit, type.id).toBeGreaterThan(0);
+      expect(round.profit, type.id).toBeLessThan((type.minCapital * type.yieldBp * content.yearsPerRound * (100 + (type.cyclePct.expansion ?? 0))) / 1_000_000);
+    }
+    // A bar loses money in a recession; a franchise only makes less.
+    expect(kinds.find((type) => type.id === 'bar')?.cyclePct.recession).toBeLessThan(-100);
+    expect(kinds.find((type) => type.id === 'franchise')?.cyclePct.recession).toBeGreaterThan(-100);
+    // The dearest to open is the cheapest to have run by someone else.
+    const byCost = [...kinds].sort((a, b) => b.minCapital - a.minCapital);
+    expect(byCost[0].managerPct).toBe(Math.min(...kinds.map((type) => type.managerPct)));
+    // No sale from the tab pays more than is in the business; only a buyer's card does.
+    for (const share of Object.values(content.business.salePct)) expect(share).toBeLessThanOrEqual(100);
+    const offer = content.cards.find((card) => card.id === 'biz_acquisition')?.options[1].effects?.sellBusinesses?.pricePct ?? 0;
+    expect(offer).toBeGreaterThan(100);
+    // Three cards open one, each of a kind that exists.
+    const opened = content.cards.flatMap((card) => card.options.flatMap((option) => (option.outcomes ?? []).map((outcome) => outcome.effects.business?.typeId))).filter(Boolean);
+    expect([...new Set(opened)].sort()).toEqual(['app', 'bar', 'shop']);
+  });
+
   it('lends to buy investments only to a seasoned investor, at half the holding, and sells it at three quarters', () => {
     expect(content.debt).toMatchObject({ marginMaxPct: 50, marginCallPct: 75, marginMinFinanceSkill: 3 });
     // No life starts able to: it is earned by years with money invested.
@@ -237,10 +266,11 @@ describe('the v1 content', () => {
     expect(kid.player.life.financeSkill).toBe(content.assets.find((asset) => asset.id === 'bitcoin')?.minFinanceSkill);
 
     const founder = createGame({ content, start: lives.find((life) => life.id === 'founder')!.start }, 'founder');
-    expect(founder.player.extraPassiveAnnual).toBe(600_000);
-    // The card that buys a business out ends it by its tag, and asks for the flag.
-    expect(Object.keys(founder.player.life.flags)).toEqual(['has_business']);
-    expect(founder.player.life.recurring.map((entry) => entry.tag)).toEqual(['shop']);
+    // A shop that pays from the first round, run by its owner, and a buyer's card that asks for nothing else.
+    expect(founder.player.businesses).toMatchObject([{ typeId: 'shop', capital: 4_000_000, basis: 4_000_000, manager: false, tended: true }]);
+    expect(businessRound(founder.player.businesses[0], content, founder.timeline[0]).payout).toBeGreaterThan(0);
+    expect(content.cards.find((card) => card.id === 'biz_acquisition')?.when).toEqual({ hasBusiness: true });
+    expect(founder.player.life.flags).toEqual({});
   });
 
   it('starts every life at a rung its experience holds, so the first round neither promotes nor demotes', () => {

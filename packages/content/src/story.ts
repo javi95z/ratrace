@@ -55,7 +55,7 @@ function standing(content: Content, view: GameView, marks: number, crisisId: str
     partner: p.life.partner,
     children: p.life.children.length,
     ownsHome: homeOf(p, content) !== null,
-    business: Object.hasOwn(p.life.flags, 'has_business'),
+    business: p.businesses.length > 0,
     soldBusiness: Object.hasOwn(p.life.flags, 'sold_business'),
     marks: Math.max(marks, WORTH_MARKS.filter((mark) => worth >= mark).length),
     crisisId: view.timeline[view.round]?.crisis?.id ?? crisisId,

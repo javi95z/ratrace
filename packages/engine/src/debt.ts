@@ -238,6 +238,7 @@ export function checkBankruptcy(
   for (const held of Object.values(p.positions)) proceeds += applyBp(held.value, keep);
   for (const property of p.properties) proceeds += applyBp(property.value, keep);
   for (const item of p.life.items) proceeds += applyBp(item.value, keep);
+  for (const business of p.businesses) proceeds += applyBp(business.capital, keep);
 
   p.cash = 0;
   p.deposit = 0;
@@ -245,6 +246,7 @@ export function checkBankruptcy(
   // Nothing is left to invest, and a plan that outlived the bankruptcy would start buying again unasked.
   p.plans = [];
   p.reinvest = false;
+  p.businesses = [];
   p.properties = [];
   p.debts = [];
   // What has no sale value and is not a subscription stays: nobody repossesses a degree.

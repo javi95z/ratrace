@@ -91,8 +91,14 @@ const builder: Judge = (card, index, preview, state) => {
 
 /** Focus actions for the round, in the order given, as far as focus allows. */
 function work(state: GameView, actions: FocusAction[]): Order[] {
-  if (state.player.life.career === null) return [];
-  return actions.slice(0, focusLeft(state.player)).map((action) => ({ type: 'focus', action }));
+  const left = focusLeft(state.player);
+  // A business comes first: one nobody runs makes half and wears down, which no bot would choose.
+  const tend: Order[] = state.player.businesses
+    .filter((business) => !business.manager && !business.tended)
+    .slice(0, left)
+    .map((business) => ({ type: 'tendBusiness', businessId: business.id }));
+  if (state.player.life.career === null) return tend;
+  return [...tend, ...actions.slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
 }
 
 /** The lowest lifestyle tier the life allows. Where the player rents is left as the life began. */

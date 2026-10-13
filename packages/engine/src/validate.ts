@@ -136,6 +136,26 @@ export function validateContent(c: Content): string[] {
     if (type.rentPct !== undefined && !(isCount(type.rentPct) && type.rentPct > 0)) errors.push(`property type ${type.id} needs a whole, positive rent percentage`);
   }
 
+  const business = c.business;
+  if (!(isWhole(business.maxBusinesses) && business.maxBusinesses >= 1)) errors.push('business.maxBusinesses must be a positive whole number');
+  if (!Array.isArray(business.payouts) || business.payouts.length === 0 || business.payouts.some((share, i) => !isCount(share) || share > 100 || (i > 0 && share <= business.payouts[i - 1]))) {
+    errors.push('business.payouts must be whole percentages from 0 to 100, rising');
+  }
+  if (!within(business.neglectProfitPct, 0, 100) || !within(business.neglectDecayBp, 0, 10_000)) errors.push('business neglect must take a share of the profit and of the capital, no more than all of either');
+  for (const regime of REGIMES) {
+    // Above 100, a business could be opened and sold in one round for a profit, all day.
+    if (!(isCount(business.salePct[regime]) && business.salePct[regime] <= 100)) errors.push(`business.salePct needs a whole percentage up to 100 for ${regime}`);
+  }
+  for (const type of business.types) {
+    if (!idAllowed(type.id)) errors.push(`business type has an id that is not allowed: ${JSON.stringify(type.id)}`);
+    if (!(isWhole(type.minCapital) && type.minCapital > 0 && isWhole(type.scale) && type.scale > 0)) errors.push(`business ${type.id} needs a positive whole least capital and scale`);
+    if (!(isCount(type.yieldBp) && isCount(type.managerPct) && type.managerPct <= 100)) errors.push(`business ${type.id} needs a whole yield and a manager's share up to 100`);
+    if (![0, 1, 2, 3].includes(type.minFinanceSkill as number)) errors.push(`business ${type.id} needs a finance skill of 0, 1, 2 or 3`);
+    for (const [regime, pct] of Object.entries(type.cyclePct)) {
+      if (!(REGIMES as readonly string[]).includes(regime) || !isWhole(pct)) errors.push(`business ${type.id} has a swing that is not a whole percentage for a known state of the economy`);
+    }
+  }
+  if (new Set(business.types.map((type) => type.id)).size !== business.types.length) errors.push('two business types have the same id');
   for (const career of c.careers) {
     if (!notNegative(career.overtimePct)) errors.push(`career ${career.id} has a negative overtime percentage`);
     if (career.focus !== undefined && !isCount(career.focus)) errors.push(`career ${career.id} needs a whole, non-negative focus`);
@@ -349,6 +369,13 @@ function lifeStartErrors(content: Content, start: StartConfig): string[] {
     else if (held.has(entry.assetId)) errors.push(`life holding ${i} repeats an asset: ${String(entry.assetId)}`);
     held.add(entry.assetId);
     if (!isWhole(entry.value) || entry.value <= 0) errors.push(`life holding ${i} needs a positive whole value`);
+  });
+  const owned = list(life.businesses);
+  if (owned.length > content.business.maxBusinesses) errors.push('life starts with more businesses than the rules allow');
+  owned.forEach((business, i) => {
+    const entry = isRecord(business) ? business : {};
+    if (!content.business.types.some((type) => type.id === entry.typeId)) errors.push(`life business ${i} is of an unknown kind: ${String(entry.typeId)}`);
+    if (!isWhole(entry.capital) || entry.capital <= 0) errors.push(`life business ${i} needs a positive whole capital`);
   });
   list(life.recurring).forEach((entry, i) => {
     if (!isRecurring(entry)) errors.push(`life recurring entry ${i} is not valid`);

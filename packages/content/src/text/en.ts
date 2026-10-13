@@ -45,6 +45,13 @@ export const en: ContentText = {
     hospitality: { name: 'Hospitality', levels: ['Waiter', 'Head waiter', 'Restaurant manager', 'Hotel director', 'Chain director'] },
     sales: { name: 'Sales', levels: ['Sales rep', 'Account executive', 'Key account manager', 'Sales director', 'Head of sales'] },
   },
+  businessTypes: {
+    services: { name: 'Your own practice', blurb: 'Your trade for your own clients. Cheap to start and quick to pay, and never large.' },
+    shop: { name: 'Online shop', blurb: 'A product, a website and a courier. It grows with what you leave in it.' },
+    app: { name: 'App', blurb: 'The best margins in the game and the wildest swings.' },
+    bar: { name: 'Bar', blurb: 'Full in good times, empty in bad: a recession is a loss.' },
+    franchise: { name: 'Franchise', blurb: 'Dear, dull and steady. The one to own without running.' },
+  },
   ladders: {
     car: 'Cars',
     watch: 'Watches',
@@ -254,6 +261,11 @@ export const en: ContentText = {
     'cannot-finance': 'This is not sold on instalments.',
     'over-loan-limit': 'That is more than you can borrow on your salary.',
     'over-margin-limit': 'The broker lends at most half of what you would then hold.',
+    'unknown-business': 'That business is not yours.',
+    'unknown-business-type': 'There is no such kind of business.',
+    'below-minimum': 'That kind of business needs more capital to open.',
+    'too-many-businesses': 'You already run as many businesses as one person can.',
+    'bad-payout': 'A business pays out none, half or all of its profit.',
     'unknown-debt': 'That debt does not exist.',
     'exceeds-debt': 'That is more than you owe.',
     'unknown-property-type': 'That kind of property does not exist.',
@@ -301,6 +313,7 @@ export const en: ContentText = {
     depositDraw: 'Taken from savings',
     creditCardDraw: 'Put on the credit card',
     creditCardRepay: 'Credit card paid down',
+    business: 'Business profit taken out',
     dividendsReinvested: 'Dividends reinvested',
   },
 };

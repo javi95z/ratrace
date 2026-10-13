@@ -158,8 +158,7 @@ export const lives: LifeDef[] = [
       debts: [],
       life: {
         lifeId: 'founder', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 2, focus: 3, rentTier: 0,
-        recurring: [{ tag: 'shop', kind: 'passive', annual: usd(6_000), roundsLeft: null }],
-        flags: ['has_business'],
+        businesses: [{ typeId: 'shop', capital: usd(40_000) }],
       },
     },
   },

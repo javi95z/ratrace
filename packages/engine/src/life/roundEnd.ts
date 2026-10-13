@@ -110,6 +110,7 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
     for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });
   }
   life.focusUsed = 0;
+  for (const business of p.businesses) business.tended = false;
   // A rest taken shows in the round after: counted now, from what is still held once the old round has closed.
   life.focusBonus = focusBonusOf(p, content);
   life.salaryBoostPct = 0;

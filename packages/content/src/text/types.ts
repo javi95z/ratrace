@@ -60,6 +60,8 @@ export interface ContentText {
   /** Why a card option is closed to the player. */
   optionLocks: Record<OptionLock, string>;
   /** Why an order was refused. */
+  /** Every kind of business: its name and what owning one is like. */
+  businessTypes: Record<string, { name: string; blurb: string }>;
   reasons: Record<RejectReason, string>;
   ledger: Record<LedgerLine, string>;
 }

@@ -43,7 +43,7 @@ describe('income for a round', () => {
     p.properties.push(flat({ rented: true }));
     p.extraPassiveAnnual = 100_000;
     const income = incomeForRound(p, content, world);
-    expect(income).toEqual({ salary: 6_000_000, dividends: 36_000 + 60_000, interest: 30_000, rent: 2_250_000, otherPassive: 200_000 });
+    expect(income).toEqual({ salary: 6_000_000, dividends: 36_000 + 60_000, interest: 30_000, rent: 2_250_000, business: 0, otherPassive: 200_000 });
     expect(passiveOf(income)).toBe(96_000 + 30_000 + 2_250_000 + 200_000);
   });
 

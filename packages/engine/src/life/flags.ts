@@ -8,6 +8,9 @@ export const FLAG_UNSTABLE_PAY = 'unstable_pay';
 /** Mortgages cost less. */
 export const FLAG_CHEAP_MORTGAGE = 'cheap_mortgage';
 
+/** Set for good the day a business is sold, by order or through a card. */
+export const FLAG_SOLD_BUSINESS = 'sold_business';
+
 export function hasFlag(flags: Record<string, number>, flag: string): boolean {
   return Object.hasOwn(flags, flag);
 }

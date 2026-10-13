@@ -35,7 +35,8 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
   const tax = effectiveTax(city, now);
   const median = indexed(city.medianSalaryAnnual, now);
   const earned = {
-    otherIncome: income.otherPassive,
+    // What a business pays its owner is income like a salary, and taxed as one.
+    otherIncome: income.otherPassive + income.business,
     dividends: income.dividends + income.interest,
     rent: income.rent,
     propertyValueOwned,

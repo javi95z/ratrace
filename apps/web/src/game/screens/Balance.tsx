@@ -12,7 +12,7 @@ import { Sprite } from '@/ui/Sprite';
 import { WorthGraph } from './WorthGraph';
 
 /** The lines of the balance sheet. Each opens what it is made of. */
-export type BalanceLine = 'cash' | 'savings' | 'pension' | 'investments' | 'homes' | 'things' | 'debts' | 'netWorth';
+export type BalanceLine = 'cash' | 'savings' | 'pension' | 'investments' | 'homes' | 'businesses' | 'things' | 'debts' | 'netWorth';
 
 /** The groups the market files investments under, in its order, with the name each has there. */
 const KINDS = [
@@ -164,6 +164,27 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
       );
       break;
     }
+
+    case 'businesses':
+      body = (
+        <>
+          <About>{t('businesses.about')}</About>
+          {p.businesses.length === 0 ? <Empty>{profile('nothing')}</Empty> : null}
+          <ul className="flex flex-col gap-1.5">
+            {p.businesses.map((business) => (
+              <li key={business.id} className="frame flex min-h-11 items-center gap-3 bg-night-700 px-2 py-1">
+                <Bare className="size-9">
+                  <Sprite id="icon.business" />
+                </Bare>
+                <span className="min-w-0 flex-1 truncate">{text.businessTypes[business.typeId].name}</span>
+                <span className="pixel shrink-0">{fmt.money(business.capital)}</span>
+              </li>
+            ))}
+          </ul>
+          <Note>{t('businesses.note')}</Note>
+        </>
+      );
+      break;
 
     case 'things': {
       const owned = [...p.life.items].sort((a, b) => b.value - a.value);

@@ -1,3 +1,5 @@
+import { businessLock, businessRound, businessSalePrice, businessTypeOf } from './business';
+import type { BusinessRound } from './business';
 import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
@@ -11,7 +13,7 @@ import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
-import type { Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, WorldState } from './types';
+import type { Business, Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -392,7 +394,7 @@ export function quotePlans(view: GameView): PlanQuote[] {
 }
 
 /** The kinds of thing wealth is held in, as the portfolio is read at a glance. */
-export type WealthKind = 'cash' | 'savings' | 'pension' | 'equity' | 'bond' | 'crypto' | 'gold' | 'property' | 'things';
+export type WealthKind = 'cash' | 'savings' | 'pension' | 'equity' | 'bond' | 'crypto' | 'gold' | 'property' | 'business' | 'things';
 
 /** Past this share of what is invested, one holding is the player's fate: the screen says so. */
 export const CONCENTRATION_PCT = 50;
@@ -402,13 +404,13 @@ export interface PortfolioQuote {
   total: Cents;
   /** What is owned, kind by kind, largest first. Kinds with nothing in them are left out. `sharePct` is of `total`, to one decimal in bp. */
   slices: Array<{ kind: WealthKind; value: Cents; shareBp: Bp }>;
-  /** What is put to work: investments and property, without cash, savings, pension or things. */
+  /** What is put to work: investments, property and businesses, without cash, savings, pension or things. */
   invested: Cents;
   /**
-   * The single largest thing among what is put to work, an asset or a property, and its share of
-   * it. Null with nothing invested. `concentrated` is true when that share is past the mark.
+   * The single largest thing among what is put to work, an asset, a property or a business, and
+   * its share of it. Null with nothing invested. `concentrated` is true when that share is past the mark.
    */
-  largest: { kind: 'asset' | 'property'; id: string; value: Cents; shareBp: Bp } | null;
+  largest: { kind: 'asset' | 'property' | 'business'; id: string; value: Cents; shareBp: Bp } | null;
   concentrated: boolean;
   /** What each investment pays this round, and the interest the savings pay. */
   dividends: Array<{ assetId: string; amount: Cents }>;
@@ -422,9 +424,9 @@ export interface PortfolioQuote {
 export function quotePortfolio(content: Content, view: GameView): PortfolioQuote {
   const p = view.player;
   const world = view.timeline[view.round];
-  const held: Record<WealthKind, Cents> = { cash: p.cash, savings: p.deposit, pension: p.pension, equity: 0, bond: 0, crypto: 0, gold: 0, property: 0, things: 0 };
+  const held: Record<WealthKind, Cents> = { cash: p.cash, savings: p.deposit, pension: p.pension, equity: 0, bond: 0, crypto: 0, gold: 0, property: 0, business: 0, things: 0 };
   let largest: PortfolioQuote['largest'] = null;
-  const consider = (kind: 'asset' | 'property', id: string, value: Cents) => {
+  const consider = (kind: 'asset' | 'property' | 'business', id: string, value: Cents) => {
     if (largest === null || value > largest.value) largest = { kind, id, value, shareBp: 0 };
   };
   for (const asset of content.assets) {
@@ -437,11 +439,15 @@ export function quotePortfolio(content: Content, view: GameView): PortfolioQuote
     held.property += property.value;
     consider('property', property.id, property.value);
   }
+  for (const business of p.businesses) {
+    held.business += business.capital;
+    consider('business', business.id, business.capital);
+  }
   for (const owned of p.life.items) held.things += owned.value;
 
   let total = 0;
   for (const value of Object.values(held)) total += value;
-  const invested = held.equity + held.bond + held.crypto + held.gold + held.property;
+  const invested = held.equity + held.bond + held.crypto + held.gold + held.property + held.business;
   const share = (value: Cents, of: Cents): Bp => (of > 0 ? mulDiv(value, BP, of) : 0);
   const top = largest as PortfolioQuote['largest'];
   const dividends = dividendsByAsset(p, content, world);
@@ -505,5 +511,44 @@ export function quoteMargin(content: Content, view: GameView, assetId: string): 
     canDouble: owed * 100 <= value * maxPct,
     // The broker sells when the loan is more than `callPct` of the value: at a value of owed / callPct.
     dropToCallBp: owed > 0 && value > 0 ? BP - Math.ceil((owed * 100 * BP) / (value * callPct)) : null,
+  };
+}
+
+export interface BusinessesQuote {
+  /** Each business owned, with what this round makes of it as it stands and what it would sell for today. */
+  owned: Array<Business & BusinessRound & { salePrice: Cents; managerPct: number }>;
+  /** Each kind there is: what it asks for at today's prices, what it yields, how the economy treats it this round, and why it cannot be opened, if it cannot. */
+  kinds: Array<{ typeId: string; minCapital: Cents; yieldBp: Bp; scale: Cents; cyclePct: number; managerPct: number; minFinanceSkill: number; lock: RejectReason | null }>;
+  /** The most businesses there may be, and the shares of the profit that may be taken out. */
+  max: number;
+  payouts: number[];
+  /** The focus left to give them this round. */
+  focusLeft: number;
+}
+
+/** The player's businesses and the ones they could open, in the figures of this round. */
+export function quoteBusinesses(content: Content, view: GameView): BusinessesQuote {
+  const p = view.player;
+  const world = view.timeline[view.round];
+  return {
+    owned: p.businesses.map((business) => ({
+      ...business,
+      ...businessRound(business, content, world),
+      salePrice: businessSalePrice(business, content, world),
+      managerPct: businessTypeOf(content, business.typeId).managerPct,
+    })),
+    kinds: content.business.types.map((type) => ({
+      typeId: type.id,
+      minCapital: indexed(type.minCapital, world),
+      yieldBp: type.yieldBp,
+      scale: indexed(type.scale, world),
+      cyclePct: type.cyclePct[world.regime] ?? 0,
+      managerPct: type.managerPct,
+      minFinanceSkill: type.minFinanceSkill,
+      lock: businessLock(p, type, content),
+    })),
+    max: content.business.maxBusinesses,
+    payouts: [...content.business.payouts],
+    focusLeft: focusLeft(p),
   };
 }

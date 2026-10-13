@@ -271,7 +271,9 @@
       "jobHuntPct": "+{n} points of chance on a job hunt",
       "focus": "+{n} focus in the round after",
       "best": "Within a ladder only the best you own counts."
-    }
+    },
+    "openBusiness": "You open a business: {name}",
+    "sellBusinesses": "You sell your businesses for {pct}% of what they are worth"
   },
   "finance": {
     "tabs": {
@@ -281,7 +283,8 @@
       "debt": "Debt",
       "lifestyle": "Lifestyle",
       "shop": "Shop",
-      "taxes": "Taxes"
+      "taxes": "Taxes",
+      "business": "Business"
     },
     "tabsLabel": "Your finances",
     "play": "Play the round",
@@ -520,7 +523,8 @@
         "crypto": "Crypto",
         "gold": "Gold",
         "property": "Property",
-        "things": "Things"
+        "things": "Things",
+        "business": "Businesses"
       },
       "concentrated": "{pct} of what you have invested is in one thing: {name}. If it does badly, so do you.",
       "largest": "The heaviest of what is invested: {name}, {pct}.",
@@ -532,6 +536,50 @@
       "reinvestOn": "Each asset buys more of itself with what it pays.",
       "reinvestOff": "What they pay comes to your cash.",
       "reinvestShort": "No cash is left this round after the bills: nothing is reinvested."
+    },
+    "business": {
+      "yours": "Your businesses",
+      "none": "You have none yet. You can open one below, or wait for life to offer you one.",
+      "runYou": "You run it this round",
+      "runManager": "A manager runs it",
+      "runNobody": "Nobody runs it: it makes half and wears down",
+      "profitRound": "{amount} this round",
+      "focusLeft": "You have {n} focus left this round to give them.",
+      "open": "Open a business",
+      "openAbout": "Opening one takes 1 focus, and after that it asks for 1 a round or a manager. You can run up to {max}.",
+      "from": "from {amount}",
+      "yield": "Makes up to {rate} a year",
+      "economy": "The economy now: {pct}%",
+      "managerShare": "Manager: {pct}% of the profit",
+      "needsSkill": "It takes money sense {level}.",
+      "start": "Open it",
+      "startTitle": "Open: {name}",
+      "startHint": "It takes at least {min}. The further it grows past {scale}, the less each dollar you put in makes.",
+      "capitalHint": "What is in it: what it is worth",
+      "thisRound": "This round",
+      "profit": "Profit",
+      "economyLine": "The economy puts {pct}% on it",
+      "payout": "To your pocket",
+      "retained": "Stays in and makes it grow",
+      "lost": "Comes out of the business",
+      "neglected": "Without your focus or a manager it makes only {pct}% of what it could, and loses value.",
+      "payoutLabel": "What you do with the profit",
+      "keepAll": "Reinvest",
+      "takeHalf": "Half and half",
+      "takeAll": "Take it",
+      "payoutPct": "{pct}% for you",
+      "tend": "Give it your focus this round",
+      "tendHint": "It takes 1 focus. You have {left} left.",
+      "tendNoNeed": "With a manager there is no need.",
+      "manager": "Hire a manager",
+      "managerHint": "The manager keeps {pct}% of the profit, and the business no longer asks for your focus.",
+      "invest": "Put more money in",
+      "investTitle": "Put money into: {name}",
+      "sell": "Sell for {amount}",
+      "sellHint": "In this economy a buyer pays {pct}% of what is in it.",
+      "sellGain": "You will pay tax on a gain of {amount}.",
+      "opensNow": "It opens when the round is played. From the next one you can run it, grow it or sell it.",
+      "needsCash": "You are {amount} in cash short of opening it."
     }
   },
   "resolve": {
@@ -562,7 +610,10 @@
     "planMissed": "Your plan did not buy {name}: it needed {amount}.",
     "marginCall": "The broker has sold your {name}.",
     "marginCallHint": "It fell too far for what you owed. It sold for {sold}, and {repaid} went to pay the loan.",
-    "marginCallShort": "It fell too far for what you owed. It sold for {sold}, and you had to find another {short}."
+    "marginCallShort": "It fell too far for what you owed. It sold for {sold}, and you had to find another {short}.",
+    "businessSold": "You sold your business ({name}) for {amount}.",
+    "businessClosed": "Your business has closed: {name}.",
+    "businessClosedHint": "There was nothing left in it."
   },
   "profile": {
     "title": "Your life",
@@ -617,7 +668,8 @@
     "pays": "Pays {pct}% on \"{card}\"",
     "opens": "Opens a way out on \"{card}\"",
     "changedIn": "It is changed during the finances: here or in the Lifestyle tab.",
-    "pickHere": "Tap to choose. It takes effect when the round is played."
+    "pickHere": "Tap to choose. It takes effect when the round is played.",
+    "businesses": "Businesses"
   },
   "balance": {
     "balance": "Balance",
@@ -670,6 +722,11 @@
       "title": "Net worth",
       "about": "Everything you own less everything you owe. It is half your score; the other half is status.",
       "realHint": "The one the score counts"
+    },
+    "businesses": {
+      "title": "Businesses",
+      "about": "What is in each of your businesses: what it is worth today.",
+      "note": "They are run, grown and sold in the Business tab."
     }
   },
   "end": {
@@ -815,7 +872,12 @@
     "planOff": "Stop investing in {name}",
     "reinvestOn": "Reinvest the dividends",
     "reinvestOff": "Take the dividends as cash",
-    "buyMargin": "Buy {amount} of {name} on margin (you put in {own})"
+    "buyMargin": "Buy {amount} of {name} on margin (you put in {own})",
+    "startBusiness": "Open {name} with {amount}",
+    "investBusiness": "Put {amount} into {name}",
+    "setBusiness": "Change how {name} is run",
+    "tendBusiness": "Give your focus to {name}",
+    "sellBusiness": "Sell {name}"
   },
   "account": {
     "title": "Account",

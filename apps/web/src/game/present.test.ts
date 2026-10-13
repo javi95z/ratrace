@@ -46,6 +46,16 @@ describe('a plan to invest, told after the round', () => {
   });
 });
 
+describe('a business, in words', () => {
+  it('names what a card does with one, what is ordered of one, and what became of one', () => {
+    expect(tags({ business: { typeId: 'bar', capital: 4_000_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar' }]);
+    expect(tags({ sellBusinesses: { pricePct: 170 } })).toEqual([{ tone: 'good', text: 'You sell your businesses for 170% of what they are worth' }]);
+    const notes = (events: GameEvent[]) => roundNotes(words('en'), t('en', 'resolve'), events);
+    expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'icon.business', title: 'You sold your business (Online shop) for $45,000.' }]);
+    expect(notes([{ kind: 'businessClosed', typeId: 'bar' }])).toEqual([{ tone: 'bad', icon: 'icon.business', title: 'Your business has closed: Bar.', hint: 'There was nothing left in it.' }]);
+  });
+});
+
 describe('a margin call, told after the round', () => {
   it('says what was sold, and whether the sale covered the loan', () => {
     const note = (sold: number, repaid: number) => roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'marginCall', assetId: 'sp500', sold, repaid }])[0];

@@ -7,6 +7,7 @@ export function ownedOutsidePension(p: PlayerState): Cents {
   for (const held of Object.values(p.positions)) owned += held.value;
   for (const property of p.properties) owned += property.value;
   for (const item of p.life.items) owned += item.value;
+  for (const business of p.businesses) owned += business.capital;
   return owned;
 }
 

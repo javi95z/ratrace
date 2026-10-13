@@ -35,6 +35,7 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
 
   if (when.ownsHome !== undefined && when.ownsHome !== (homeOf(p, content) !== null)) return false;
   if (when.landlord !== undefined && when.landlord !== p.properties.some((x) => x.rented)) return false;
+  if (when.hasBusiness !== undefined && when.hasBusiness !== p.businesses.length > 0) return false;
   if (when.hasMortgage !== undefined) {
     const mortgaged = p.debts.some((d) => d.kind === 'mortgageFixed' || d.kind === 'mortgageVariable');
     if (when.hasMortgage !== mortgaged) return false;
