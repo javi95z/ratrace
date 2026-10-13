@@ -1,9 +1,11 @@
 'use client';
 
-import { useGame, useSaving, useT, useWords } from '@/game/context';
+import { useState } from 'react';
+import { useAccountSaves, useGame, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
-import { Link } from '@/i18n/navigation';
-import { Panel } from '@/ui/kit';
+import { Link, useRouter } from '@/i18n/navigation';
+import { Button, Panel } from '@/ui/kit';
+import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { Preferences } from './Settings';
 
@@ -20,9 +22,24 @@ export function Home() {
   const stage = useGame((s) => s.stage);
   const moved = useGame((s) => s.moved);
   const saving = useSaving();
+  const { offer, takeOffer, declineOffer } = useAccountSaves();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
   const inProgress = status === 'playing' && view !== null && lifeId !== null && stage !== 'end';
   // A life that is over stays on the device until another begins, so its score can still be looked at.
   const over = status === 'playing' && view !== null && view.finished;
+
+  // The life waiting in the account, lived on another device. It is taken or ended only when the player says so.
+  const answer = (how: () => Promise<unknown>, then?: () => void) => () => {
+    setBusy(true);
+    void how()
+      .then(then)
+      .finally(() => {
+        setBusy(false);
+        setAsking(false);
+      });
+  };
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-5 px-4 pb-8 pt-10">
@@ -44,6 +61,14 @@ export function Home() {
                   {t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, view.round), city: names.cities[view.player.cityId] })}
                 </span>
               </Link>
+            ) : null}
+            {offer ? (
+              <button type="button" onClick={() => setAsking(true)} className="pixel frame-raised flex min-h-12 flex-col items-center justify-center bg-night-600 px-4 py-2 text-center text-cream">
+                <span className="text-[16px]">{t('accountLife')}</span>
+                <span className="font-sans text-[13px] font-normal text-ink-200">
+                  {t('continueDetail', { life: text.lives[offer.lifeId]?.name ?? '', age: ageAt(content, offer.round), city: names.cities[offer.cityId] ?? '' })}
+                </span>
+              </button>
             ) : null}
             <Link
               href="/new"
@@ -84,6 +109,26 @@ export function Home() {
           </p>
         )}
       </Panel>
+
+      {/* Saying yes leaves this page for the game, so the sheet keeps no entry of its own in the history. */}
+      <Sheet open={asking && offer !== null} onClose={() => setAsking(false)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>
+        {offer ? (
+          <>
+            <p className="text-[15px] leading-snug text-ink-200">
+              {t('accountLifeBody', { life: text.lives[offer.lifeId]?.name ?? '', age: ageAt(content, offer.round), city: names.cities[offer.cityId] ?? '' })}
+            </p>
+            {inProgress ? <p className="mt-2 text-[14px] leading-snug text-wine-300">{t('accountLifeEnds', { life: text.lives[lifeId].name, age: ageAt(content, view.round) })}</p> : null}
+            <div className="mt-4 flex flex-col gap-3">
+              <Button variant="primary" wide disabled={busy} onClick={answer(takeOffer, () => router.push('/play'))}>
+                {t('accountLifeTake')}
+              </Button>
+              <Button variant="danger" wide disabled={busy} onClick={answer(declineOffer)}>
+                {t('accountLifeEnd')}
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </Sheet>
     </main>
   );
 }

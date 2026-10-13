@@ -23,7 +23,7 @@
     "continue": "Seguir con tu vida",
     "continueDetail": "{life} · {age} años · {city}",
     "lastLife": "Ver cómo acabó tu última vida",
-    "movedGone": "Esa vida se terminó en otra pestaña.",
+    "movedGone": "Esa vida se terminó en otra pestaña o en otro dispositivo.",
     "newLife": "Nueva vida",
     "collection": "Colección",
     "records": "Récords",
@@ -33,7 +33,13 @@
     "lostOutdated": "Tu vida guardada se jugó con reglas antiguas y no se puede continuar.",
     "lostDamaged": "No se ha podido abrir tu vida guardada.",
     "lostNewer": "Tu vida guardada es de una versión más nueva del juego. Recarga la página para seguir con ella.",
-    "savedHere": "Tu vida se guarda en este dispositivo después de cada paso."
+    "savedHere": "Tu vida se guarda en este dispositivo después de cada paso.",
+    "accountLife": "Continuar la vida de tu cuenta",
+    "accountLifeTitle": "Una vida en tu cuenta",
+    "accountLifeBody": "{life}, {age} años, en {city}. La dejaste en otro dispositivo.",
+    "accountLifeEnds": "Continuarla termina la vida que tienes en este dispositivo: {life}, {age} años.",
+    "accountLifeTake": "Continuar esa vida",
+    "accountLifeEnd": "Terminar esa vida"
   },
   "newLife": {
     "title": "Elige una vida",
@@ -101,7 +107,7 @@
     "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla."
   },
   "play": {
-    "moved": "Esta vida siguió en otra pestaña. Así está ahora.",
+    "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
     "faultTitle": "Algo ha fallado",
     "faultBody": "La partida no pudo seguir desde aquí. Tu vida está guardada como estaba antes de este paso. Si vuelve a pasar, empieza una vida nueva.",
     "retry": "Probar otra vez",
@@ -604,5 +610,21 @@
     "insureOn": "Asegurar: {kind}",
     "insureOff": "Cancelar: {kind}",
     "move": "Mudarte a {city}"
+  },
+  "account": {
+    "title": "Cuenta",
+    "guest": "Juegas como invitado: una cuenta que solo este navegador puede abrir.",
+    "keep": "Conservarla con Google",
+    "keepHint": "Con Google es la misma cuenta en todos tus dispositivos, y no se pierde si se borran los datos de este navegador.",
+    "member": "Conservada con Google",
+    "memberAs": "Has entrado como {email}",
+    "taken": "Esa cuenta de Google ya tiene un jugador en este juego. Si eres tú, úsala aquí: lo que tienes en este dispositivo se suma a ella.",
+    "useExisting": "Usar esa cuenta en este dispositivo",
+    "notNow": "Ahora no",
+    "failed": "No se ha vinculado nada. Sigues como invitado.",
+    "dismiss": "Vale",
+    "saved": "Guardado en tu cuenta",
+    "sending": "Guardando en tu cuenta…",
+    "waiting": "Guardado en este dispositivo. Esperando conexión."
   }
 }

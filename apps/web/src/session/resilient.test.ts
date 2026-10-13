@@ -38,6 +38,34 @@ describe('ResilientStore', () => {
     expect(changes).toEqual([]);
   });
 
+  it('is not behind while a write is merely on its way: only a refusal is', async () => {
+    // A screen drawn in the middle of a write once read this as "not saving", and kept saying so.
+    const primary = new MemoryStore();
+    const save = primary.saveGame;
+    let letThrough = () => {};
+    primary.saveGame = async (g) => {
+      await new Promise<void>((resolve) => (letThrough = resolve));
+      return save(g);
+    };
+    const changes: boolean[] = [];
+    const store = new ResilientStore(primary, (degraded) => changes.push(degraded));
+    const writing = store.saveGame(game(1));
+    await Promise.resolve();
+    expect(store.degraded).toBe(false);
+    // What is on its way is already what the game reads back.
+    expect(await store.loadGame()).toEqual(game(1));
+    // Nor when a second write is made before the first has landed: the device is busy, not failing.
+    const next = store.saveGame(game(2));
+    letThrough();
+    await writing;
+    expect(store.degraded).toBe(false);
+    letThrough();
+    await next;
+    expect(store.degraded).toBe(false);
+    expect(changes).toEqual([]);
+    expect(await primary.loadGame()).toEqual(game(2));
+  });
+
   it('never fails the game: a write the device refuses is kept, and says so once', async () => {
     const { primary, down, store, changes, errors } = device();
     await store.saveGame(game(1));

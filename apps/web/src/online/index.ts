@@ -1,0 +1,99 @@
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import type { PlayerStore } from '@/session/types';
+import { connectSupabase } from './connect';
+import { follow } from './follow';
+import type { Page } from './follow';
+import { MirroredStore } from './mirror';
+import { offlineAccount } from './offline';
+import { SupabaseAccount } from './supabase';
+import type { Cloud } from './supabase';
+import type { Account, AccountSaves } from './types';
+
+/** What the game gets of the cloud: who is playing, the store to write to, and how the account's copy stands. */
+export interface Online {
+  account: Account;
+  /** The device's store, with the account behind it where there is one. */
+  store: PlayerStore;
+  /** Null where there is no account to save to. */
+  saves: AccountSaves | null;
+}
+
+/** What the cloud is made of. The browser's own in the game; a test hands in stand-ins for the network and the page. */
+export interface OnlineParts {
+  /** Loads the client and connects. */
+  connect(): Promise<Cloud>;
+  /** Where the page is, and how to replace that once a notice has been read from it. */
+  address(): string;
+  clean(address: string): void;
+  page: Page;
+  /** Where the lives given up are noted until the account has been told. */
+  remember: { read(): string[]; write(ids: string[]): void };
+  schedule?(run: () => Promise<void>, ms: number): void;
+}
+
+/**
+ * The player's account around the store of a device: who is playing, the store with the account
+ * as its mirror, and the follower that has the account read when it may have changed. It lasts as
+ * long as the page does.
+ */
+export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
+  const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
+  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule });
+  follow(account, mirror, parts.page);
+  return { account, store: mirror, saves: mirror };
+}
+
+/** Where the lives given up are noted in a browser. One that keeps nothing forgets them with the page. */
+const GIVEN_UP = 'ratrace:given-up';
+const givenUp = {
+  read(): string[] {
+    try {
+      const noted: unknown = JSON.parse(window.localStorage.getItem(GIVEN_UP) ?? '[]');
+      return Array.isArray(noted) ? noted.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  },
+  write(ids: string[]): void {
+    try {
+      window.localStorage.setItem(GIVEN_UP, JSON.stringify(ids));
+    } catch {
+      // Nothing to do: the life is given up in the account if the page lives long enough to say so.
+    }
+  },
+};
+
+const browserPage: Page = {
+  onOnline: (listener) => {
+    window.addEventListener('online', listener);
+    return () => window.removeEventListener('online', listener);
+  },
+  onShown: (listener) => {
+    const shown = () => {
+      if (document.visibilityState === 'visible') listener();
+    };
+    document.addEventListener('visibilitychange', shown);
+    return () => document.removeEventListener('visibilitychange', shown);
+  },
+  now: () => Date.now(),
+};
+
+/**
+ * The cloud of this browser, around the store of this device. With no Supabase project in the
+ * build's settings there is none: the store is the device's own, and the game is exactly what it
+ * is without a network.
+ */
+export function browserOnline(device: PlayerStore): Online {
+  // Named in full, because the build writes these two values into the page only where it sees them so.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null };
+  return onlineOver(device, {
+    connect: () => connectSupabase(url, key),
+    address: () => window.location.href,
+    clean: (address) => window.history.replaceState(window.history.state, '', address),
+    page: browserPage,
+    remember: givenUp,
+  });
+}

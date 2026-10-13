@@ -45,7 +45,7 @@ export interface RoundState {
   resolved: { before: GameView; events: GameEvent[] } | null;
   /** True while an answer or a round is being played. */
   busy: boolean;
-  /** True once the life was found to have moved on in another tab, until the player has been told. The store has already opened it as it now stands. */
+  /** True once the life was found to have moved on in another tab or on another device, until the player has been told. The store has already opened it as it now stands. */
   moved: boolean;
   /** True when the game itself refused a step. The life cannot go on from here; the screen says so. */
   fault: boolean;
@@ -54,6 +54,11 @@ export interface RoundState {
 export interface RoundActions {
   /** Asks the device for a life in progress. */
   boot(): Promise<void>;
+  /**
+   * The life on the device was changed from outside this page, by the account bringing another
+   * device's copy: opens it as it now stands, and says so if a life was on screen.
+   */
+  reopen(): Promise<void>;
   start(lifeId: string): Promise<void>;
   abandon(): Promise<void>;
   /** From the news to the cards, or straight to the finances when there are none. */
@@ -190,6 +195,12 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
           session = null;
           set({ ...blank, lost });
         }
+      },
+
+      async reopen() {
+        const shown = get().status === 'playing';
+        await get().boot();
+        if (shown) set({ moved: true });
       },
 
       async start(lifeId) {

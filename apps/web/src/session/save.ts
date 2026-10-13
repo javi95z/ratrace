@@ -1,8 +1,7 @@
-import type { LifeDef } from '@ratrace/content';
-import { CONTENT_VERSION } from '@ratrace/content';
-import { applyCard, applyRound, createGame, ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
-import type { Content, GameState, StartConfig } from '@ratrace/engine';
-import { recordStart, recordStep } from './record';
+import type { LifeDef, Replayed } from '@ratrace/content';
+import { CONTENT_VERSION, replayLife } from '@ratrace/content';
+import { ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
+import type { Content, GameState } from '@ratrace/engine';
 import type { LifeRecord } from './record';
 import { SAVE_FORMAT } from './types';
 import type { Lost, RoundLog, SavedGame } from './types';
@@ -10,37 +9,12 @@ import type { Lost, RoundLog, SavedGame } from './types';
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
 
-/** A game played again from its seed: where it stands, and the record of how it got there. */
-export interface Replayed extends LifeRecord {
-  state: GameState;
-}
-
 /**
- * Plays a game again from its seed and the log of what the player did.
- * The engine is deterministic, so this gives back exactly the game that was played.
+ * Plays a game again from its seed and the log of what the player did, with the record of the life.
+ * It is the content's own `replayLife`: the device, another device and the server all rebuild a life the same way.
  */
-export function replay(content: Content, start: StartConfig, seed: string, log: RoundLog[]): Replayed {
-  if (log.length > content.rounds) throw new Error('the log is longer than a life');
-  let state = createGame({ content, start }, seed);
-  let record = recordStart(content, state);
-  const take = (result: { state: GameState; events: Parameters<typeof recordStep>[4] }, orders: Parameters<typeof recordStep>[5] = []) => {
-    record = recordStep(content, record, state, result.state, result.events, orders).record;
-    state = result.state;
-  };
-
-  log.forEach((entry, i) => {
-    for (const pick of entry.picks) {
-      if (state.phase !== 'cards') throw new Error('the log answers more cards than the round had');
-      take(applyCard(content, state, pick));
-    }
-    if (entry.orders === null) {
-      if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
-      return;
-    }
-    take(applyRound(content, state, { orders: entry.orders }), entry.orders);
-  });
-  return { state, ...record };
-}
+export const replay = replayLife;
+export type { Replayed };
 
 function readLog(raw: unknown): RoundLog[] | null {
   if (!Array.isArray(raw)) return null;

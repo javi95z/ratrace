@@ -8,13 +8,16 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play && pnpm --filter @ratrace/web typecheck",
+    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play && tsc --noEmit -p tools/online && pnpm --filter @ratrace/web typecheck",
     "art": "pnpm --filter @ratrace/art-tool build-art",
     "balance": "pnpm --filter @ratrace/balance balance",
     "play": "pnpm --filter @ratrace/play play",
     "dev": "pnpm --filter @ratrace/web dev",
     "build": "pnpm --filter @ratrace/web build",
     "e2e": "pnpm --filter @ratrace/web e2e",
+    "online:test-db": "pnpm --filter @ratrace/online-tools test-db",
+    "online:bundle": "pnpm --filter @ratrace/online-tools bundle",
+    "online:live-check": "pnpm --filter @ratrace/online-tools live-check",
     "catalog": "pnpm --filter @ratrace/play catalog"
   },
   "devDependencies": {

@@ -23,7 +23,7 @@
     "continue": "Continue your life",
     "continueDetail": "{life} · age {age} · {city}",
     "lastLife": "See how your last life ended",
-    "movedGone": "That life was ended in another tab.",
+    "movedGone": "That life was ended in another tab or on another device.",
     "newLife": "New life",
     "collection": "Collection",
     "records": "Records",
@@ -33,7 +33,13 @@
     "lostOutdated": "Your saved life was played under older rules and cannot be continued.",
     "lostDamaged": "Your saved life could not be opened.",
     "lostNewer": "Your saved life was written by a newer version of the game. Reload the page to carry on with it.",
-    "savedHere": "Your life is saved on this device after every step."
+    "savedHere": "Your life is saved on this device after every step.",
+    "accountLife": "Continue the life in your account",
+    "accountLifeTitle": "A life in your account",
+    "accountLifeBody": "{life}, age {age}, in {city}. You left it on another device.",
+    "accountLifeEnds": "Continuing it ends the life you have on this device: {life}, age {age}.",
+    "accountLifeTake": "Continue that life",
+    "accountLifeEnd": "End that life"
   },
   "newLife": {
     "title": "Choose a life",
@@ -101,7 +107,7 @@
     "soundHint": "Coins, cards and fanfares. It plays once you touch the screen."
   },
   "play": {
-    "moved": "This life was played on in another tab. Here is where it stands now.",
+    "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
     "faultTitle": "Something went wrong",
     "faultBody": "The game could not go on from here. Your life is saved as it stood before this step. If it happens again, start a new life.",
     "retry": "Try again",
@@ -604,5 +610,21 @@
     "insureOn": "Insure: {kind}",
     "insureOff": "Cancel: {kind}",
     "move": "Move to {city}"
+  },
+  "account": {
+    "title": "Account",
+    "guest": "You are playing as a guest: an account that only this browser can open.",
+    "keep": "Keep it with Google",
+    "keepHint": "With Google it is the same account on every device, and it is not lost if this browser is cleared.",
+    "member": "Kept with Google",
+    "memberAs": "Signed in as {email}",
+    "taken": "That Google account already has a player in this game. If it is you, use it here: what you have on this device joins it.",
+    "useExisting": "Use that account on this device",
+    "notNow": "Not now",
+    "failed": "Nothing was linked. You are still a guest.",
+    "dismiss": "OK",
+    "saved": "Saved to your account",
+    "sending": "Saving to your account…",
+    "waiting": "Saved on this device. Waiting for a connection."
   }
 }

@@ -440,7 +440,7 @@ describe('the play screen', () => {
 
     await user.click(button('See what life brings'));
     await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
-    expect((await screen.findByRole('alert')).textContent).toBe('This life was played on in another tab. Here is where it stands now.');
+    expect((await screen.findByRole('alert')).textContent).toBe('This life was played on in another tab or on another device. Here is where it stands now.');
     expect(screen.getByText('Age 24')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'See what life brings' })).toBeTruthy();
   });

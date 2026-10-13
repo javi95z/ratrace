@@ -1,8 +1,10 @@
-import { content, journalStart, lives } from '@ratrace/content';
-import { applyCard, applyRound, createGame, realNetWorth, viewOf } from '@ratrace/engine';
-import type { GameState } from '@ratrace/engine';
+import { applyCard, applyRound, createGame, realNetWorth, stateHash, viewOf } from '@ratrace/engine';
+import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { recordStart, recordStep } from './record';
+import { journalStart } from './badges';
+import { content } from './content';
+import { lives } from './lives';
+import { recordStart, recordStep, replayLife } from './record';
 import type { LifeRecord } from './record';
 
 const nurse = lives[0].start;
@@ -84,5 +86,50 @@ describe('the record of a life', () => {
     const record = recordStart(content, state);
     expect(recordStep(content, record, state, after, [], []).earned).toContain('rode_out_recession');
     expect(recordStep(content, record, state, after, [], [{ type: 'sell', assetId: 'msci_world', amount: 1 }]).earned).not.toContain('rode_out_recession');
+  });
+});
+
+describe('a life played again from its log', () => {
+  /** A nurse's first `rounds` rounds, first choice on every card, with the record kept step by step and the log of it. */
+  function lived(seed: string, rounds: number) {
+    const start = lives.find((life) => life.id === 'nurse')?.start;
+    if (!start) throw new Error('no nurse');
+    let state = createGame({ content, start }, seed);
+    let record = recordStart(content, state);
+    const log: LoggedRound[] = [];
+    for (let i = 0; i < rounds; i++) {
+      const picks: number[] = [];
+      while (state.phase === 'cards') {
+        const next = applyCard(content, state, 0);
+        record = recordStep(content, record, state, next.state, next.events, []).record;
+        state = next.state;
+        picks.push(0);
+      }
+      const next = applyRound(content, state, { orders: [] });
+      record = recordStep(content, record, state, next.state, next.events, []).record;
+      state = next.state;
+      log.push({ picks, orders: [] });
+    }
+    return { start, state, record, log };
+  }
+
+  it('gives back the game and the very record that was kept while it was played', () => {
+    const { start, state, record, log } = lived('again', 6);
+    const again = replayLife(content, start, 'again', log);
+    expect(stateHash(again.state)).toBe(stateHash(state));
+    expect({ history: again.history, bankruptcies: again.bankruptcies, journal: again.journal }).toEqual(record);
+    expect(again.history).toHaveLength(7);
+  });
+
+  it('gives a life not begun its starting record', () => {
+    const { start } = lived('fresh', 0);
+    const again = replayLife(content, start, 'fresh', []);
+    expect(again.state.round).toBe(0);
+    expect({ history: again.history, bankruptcies: again.bankruptcies, journal: again.journal }).toEqual(recordStart(content, again.state));
+  });
+
+  it('refuses a log that cannot have been played, as the engine does', () => {
+    const { start, log } = lived('bad', 1);
+    expect(() => replayLife(content, start, 'bad', [{ picks: [], orders: null }, log[0]])).toThrow('the log goes on after a round that was never played');
   });
 });
