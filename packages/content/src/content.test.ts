@@ -1,6 +1,6 @@
 import { applyRound, createGame, validateContent, validateStart } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { assetKind } from './art';
+import { assetKind } from './kinds';
 import { content } from './content';
 import { lives } from './lives';
 

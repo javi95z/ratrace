@@ -118,6 +118,10 @@ Every game records the engine and content versions it started with and finishes 
 
 The server's copy of the game is one file for each pair of versions (`pnpm online:bundle`). A pair that has shipped is noted with the fingerprint of its file, and a test holds the file to it: a change to the rules needs a new version, not a new bundle, or the server would play players' saved lives to another end than the device that lived them. A life on versions the server does not hold is refused, not guessed at; it stays on its device.
 
+The server's copy holds the rules and nothing of how the game looks: no art, no names, no text. A new drawing or a reworded card changes no bundle. A change to the engine, to the numbers of the content, or to how a badge is judged does, and needs a new version.
+
+To put a new version on the server, from a checkout linked to the project: `pnpm online:deploy` (bundle, deploy the two functions, note the bundle as shipped), then `pnpm online:live-check`.
+
 ## 10. Phases
 
 Each phase is its own plan and can ship alone.

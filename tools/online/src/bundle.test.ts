@@ -46,6 +46,14 @@ describe('the game as the server holds it', () => {
     expect(readFileSync(join(GAME_DIR, current), 'utf8') === code, `${current} is out of date: run \`pnpm online:bundle\`, or bump a version if games are already being played on it`).toBe(true);
   });
 
+  it('holds the rules and nothing of how the game looks: a change of pictures or words is not a change of the server\'s copy', async () => {
+    const { code } = await bundleGame();
+    const sources = [...code.matchAll(/^\/\/ (packages\/[\w/.-]+)$/gm)].map((m) => m[1]);
+    expect(sources).toContain('packages/content/src/record.ts');
+    expect(sources).toContain('packages/content/src/badges.ts');
+    for (const look of ['art.ts', 'names.ts', 'text/', 'text.ts']) expect(sources.filter((file) => file.includes(`content/src/${look}`)), look).toEqual([]);
+  });
+
   it('never rewrites a bundle that has shipped, unless it is forced to', () => {
     const shipped = { '0.4.0/1.3.0': fingerprint('the game as it shipped') };
     // Versions that have not shipped are written freely: that is every change before a release.

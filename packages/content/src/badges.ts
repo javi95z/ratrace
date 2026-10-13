@@ -1,7 +1,7 @@
 import { escapeProgress, realNetWorth } from '@ratrace/engine';
 import type { Content, GameEvent, GameView, Order, PlayerState, Position } from '@ratrace/engine';
-import { assetKind } from './art';
-import type { AssetKind } from './art';
+import { assetKind } from './kinds';
+import type { AssetKind } from './kinds';
 import { usd } from './money';
 import { storyAfter, storyStart } from './story';
 import type { Story } from './story';

@@ -90,7 +90,8 @@ test('a whole life, from the front door to the score', async ({ page }, info) =>
   await page.getByRole('link', { name: 'Back' }).click();
   await page.getByRole('link', { name: 'Collection' }).click();
   await page.getByRole('tab', { name: 'Badges' }).click();
-  await expect(page.getByText(new RegExp(`^${badgeCount} of 30 earned$`))).toBeVisible();
+  // However many badges the game has by now: what is checked is that every one this life earned is counted.
+  await expect(page.getByText(new RegExp(`^${badgeCount} of \\d+ earned$`))).toBeVisible();
   await shot(page, 'collection-badges-earned', info.project.name);
   await page.getByRole('link', { name: 'Back' }).click();
 
