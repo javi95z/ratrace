@@ -157,6 +157,10 @@ export function validateContent(c: Content): string[] {
     if (item.kind === 'experience' && !(isWhole(item.boostRounds) && item.boostRounds >= 1)) {
       errors.push(`experience ${item.id} needs at least one round of boost`);
     }
+    if (item.cities !== undefined) {
+      if (!Array.isArray(item.cities) || item.cities.length === 0) errors.push(`item ${item.id} needs at least one city, or none at all`);
+      else for (const cityId of item.cities) if (!c.cities.some((city) => city.id === cityId)) errors.push(`item ${item.id} names an unknown city: ${String(cityId)}`);
+    }
   }
 
   const life = c.life as unknown as Record<string, unknown>;

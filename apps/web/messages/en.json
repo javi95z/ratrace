@@ -322,7 +322,8 @@
       "incomeTax": "Income tax",
       "gainsTax": "Tax on gains",
       "here": "You live here",
-      "moveHere": "Move here"
+      "moveHere": "Move here",
+      "moveLapses": "Moving ends: {items}."
     },
     "shop": {
       "status": "Status +{n}",
@@ -334,7 +335,8 @@
       "lasts": "The status lasts {years} years",
       "cardOnly": "Not sold here. Life has to offer it to you.",
       "resale": "Would resell for about {amount} tomorrow",
-      "spent": "Spent. The status fades in {years} years."
+      "spent": "Spent. The status fades in {years} years.",
+      "local": "Only in {city}. Move away and it is gone."
     },
     "taxes": {
       "income": "Coming in",
@@ -372,7 +374,9 @@
     "bankruptHint": "Everything is sold and every debt is cleared. Banks will remember.",
     "refused": "Not done: {reason}",
     "next": "Next round",
-    "finish": "See how it ended"
+    "finish": "See how it ended",
+    "lapsed": "You lost {item}.",
+    "lapsedHint": "It belonged to the city you left. Nothing is paid back."
   },
   "profile": {
     "title": "Your life",

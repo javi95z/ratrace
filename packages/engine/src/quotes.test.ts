@@ -72,7 +72,7 @@ describe('quoteItem', () => {
       expect(buy(quote.price).player.life.items[0].value).toBe(quote.resale);
       expect(quote).toMatchObject({ owned: false, forSale: true });
     }
-    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, forSale: true, sellable: false });
+    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, forSale: true, soldHere: true, local: false, sellable: false });
   });
 
   it('says whether the owner may sell it, exactly as the sell order will decide', () => {
@@ -115,7 +115,7 @@ describe('quoteMove', () => {
       expect(move(cost).reason).toBeNull();
       expect(move(cost - 1).reason).toBe('not-enough-cash');
     }
-    expect(quoteMove(content, viewOf(game(0)), 'haven')).toEqual({ cost: 800_000 });
+    expect(quoteMove(content, viewOf(game(0)), 'haven')).toEqual({ cost: 800_000, lapses: [] });
   });
 });
 

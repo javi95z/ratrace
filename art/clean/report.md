@@ -14,7 +14,7 @@ Sprites: 244. Every group uses the 31 interface colours plus its own.
 | skylines | 6 | 312×66 | 64 |
 | brand | 4 | 256×256 | 64 |
 
-No sheets missing.
+Missing sheets: items/items-03, icons/icons-04, icons/icons-05, skylines/skylines-03, skylines/skylines-04
 
 | Sprite | Notes |
 |---|---|

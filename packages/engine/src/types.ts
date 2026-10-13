@@ -136,6 +136,11 @@ export interface ItemDef {
   boostRounds: number;
   /** True for something a card can give but the shop does not sell. */
   cardOnly?: boolean;
+  /**
+   * The cities whose shops sell it. Absent: every city. A membership tied to cities is of no use
+   * anywhere else, so it lapses when the player moves out of them; anything else goes along.
+   */
+  cities?: readonly string[];
 }
 
 /** The numbers behind family, insurance, housing and effort. */
@@ -662,6 +667,7 @@ export type RejectReason =
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
+  | 'not-sold-here'
   | 'already-owned'
   | 'not-owned'
   | 'cannot-sell'
@@ -713,7 +719,9 @@ export type GameEvent =
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
-  | { kind: 'moved'; cityId: string };
+  | { kind: 'moved'; cityId: string }
+  /** A membership of the city just left ended with the move. Nothing is paid back. */
+  | { kind: 'lapsed'; itemId: string };
 
 /** How a life begins beyond its money. All of it is optional: without it the player has a fixed salary and no career. */
 export interface LifeStart {

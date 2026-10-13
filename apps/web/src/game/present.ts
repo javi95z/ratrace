@@ -172,7 +172,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'moved', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ text, names }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -200,6 +200,9 @@ export function roundNotes({ text, names }: Words, t: Translate, events: GameEve
         break;
       case 'moved':
         add(event, { tone: 'plain', icon: 'icon.city', title: t('moved', { city: names.cities[event.cityId] }) });
+        break;
+      case 'lapsed':
+        add(event, { tone: 'bad', icon: 'icon.city', title: t('lapsed', { item: names.items[event.itemId] }), hint: t('lapsedHint') });
         break;
       case 'orderRejected':
         add(event, { tone: 'bad', icon: 'icon.locked', title: t('refused', { reason: text.reasons[event.reason] }) });

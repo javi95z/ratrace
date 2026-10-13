@@ -174,7 +174,7 @@ describe('content art', () => {
       ...Object.values(topicArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(100 + 34 + 16 + 2 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+    expect(wanted.length).toBe(100 + 39 + 16 + 2 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
   });
 
   it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {

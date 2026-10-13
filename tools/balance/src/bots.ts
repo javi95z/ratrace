@@ -208,7 +208,7 @@ const chaser: Bot = {
     orders.push(...card.orders);
     let cash = card.cash;
     const wanted = content.items
-      .filter((item) => item.cardOnly !== true && !p.life.items.some((owned) => owned.itemId === item.id))
+      .filter((item) => item.cardOnly !== true && (item.cities === undefined || item.cities.includes(p.cityId)) && !p.life.items.some((owned) => owned.itemId === item.id))
       .sort((a, b) => b.status - a.status);
     for (const item of wanted) {
       const price = indexed(item.price, world);

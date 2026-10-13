@@ -332,6 +332,9 @@ export function ledger(pen: Pen, events: GameEvent[]): string[] {
       case 'moved':
         lines.push(`  ✈ ${ui.moved} ${names.cities[event.cityId]}.`);
         break;
+      case 'lapsed':
+        lines.push(`  · ${ui.lapsed} ${names.items[event.itemId]}.`);
+        break;
       case 'escaped':
         lines.push(`  ★★★ ${ui.escaped}`);
         break;
