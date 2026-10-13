@@ -596,7 +596,7 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 
 ### Which card each new scene is for
 
-None of these is wired yet: a card keeps the scene it shares until its own is drawn. When a sheet lands, point the card at its scene in `cardArt`.
+All of these are drawn and wired: every card now has a scene of its own.
 
 | Scene | Card | Sheet |
 |---|---|---|

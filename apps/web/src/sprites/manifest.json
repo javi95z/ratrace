@@ -219,8 +219,28 @@
     "w": 96,
     "h": 48
   },
+  "card.advisor_office": {
+    "src": "cards/card.advisor_office.png",
+    "w": 288,
+    "h": 120
+  },
   "card.airport": {
     "src": "cards/card.airport.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.angry_boss": {
+    "src": "cards/card.angry_boss.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.app_launch": {
+    "src": "cards/card.app_launch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bank_cosign": {
+    "src": "cards/card.bank_cosign.png",
     "w": 288,
     "h": 120
   },
@@ -239,6 +259,26 @@
     "w": 288,
     "h": 120
   },
+  "card.beach_wedding": {
+    "src": "cards/card.beach_wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bonus_confetti": {
+    "src": "cards/card.bonus_confetti.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bootcamp": {
+    "src": "cards/card.bootcamp.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.boss_door": {
+    "src": "cards/card.boss_door.png",
+    "w": 288,
+    "h": 120
+  },
   "card.breakdown": {
     "src": "cards/card.breakdown.png",
     "w": 288,
@@ -246,6 +286,21 @@
   },
   "card.burnout": {
     "src": "cards/card.burnout.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.business_cabin": {
+    "src": "cards/card.business_cabin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.campus_dropoff": {
+    "src": "cards/card.campus_dropoff.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.car_dealer": {
+    "src": "cards/card.car_dealer.png",
     "w": 288,
     "h": 120
   },
@@ -269,8 +324,43 @@
     "w": 288,
     "h": 120
   },
+  "card.contract_signing": {
+    "src": "cards/card.contract_signing.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.coupe_garage": {
+    "src": "cards/card.coupe_garage.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.courtroom": {
+    "src": "cards/card.courtroom.png",
+    "w": 288,
+    "h": 120
+  },
   "card.crash_screens": {
     "src": "cards/card.crash_screens.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crowd_building": {
+    "src": "cards/card.crowd_building.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crypto_rocket": {
+    "src": "cards/card.crypto_rocket.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crypto_winter": {
+    "src": "cards/card.crypto_winter.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.dentist_chair": {
+    "src": "cards/card.dentist_chair.png",
     "w": 288,
     "h": 120
   },
@@ -299,6 +389,11 @@
     "w": 288,
     "h": 120
   },
+  "card.for_sale_signs": {
+    "src": "cards/card.for_sale_signs.png",
+    "w": 288,
+    "h": 120
+  },
   "card.frozen_vault": {
     "src": "cards/card.frozen_vault.png",
     "w": 288,
@@ -324,6 +419,11 @@
     "w": 288,
     "h": 120
   },
+  "card.headhunter_call": {
+    "src": "cards/card.headhunter_call.png",
+    "w": 288,
+    "h": 120
+  },
   "card.hospital": {
     "src": "cards/card.hospital.png",
     "w": 288,
@@ -331,6 +431,21 @@
   },
   "card.inspector": {
     "src": "cards/card.inspector.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.kitchen_laptop": {
+    "src": "cards/card.kitchen_laptop.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.language_class": {
+    "src": "cards/card.language_class.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lecture_hall": {
+    "src": "cards/card.lecture_hall.png",
     "w": 288,
     "h": 120
   },
@@ -344,8 +459,18 @@
     "w": 288,
     "h": 120
   },
+  "card.meeting_room": {
+    "src": "cards/card.meeting_room.png",
+    "w": 288,
+    "h": 120
+  },
   "card.meme_coin": {
     "src": "cards/card.meme_coin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.mortgage_scales": {
+    "src": "cards/card.mortgage_scales.png",
     "w": 288,
     "h": 120
   },
@@ -374,6 +499,11 @@
     "w": 288,
     "h": 120
   },
+  "card.offplan_model": {
+    "src": "cards/card.offplan_model.png",
+    "w": 288,
+    "h": 120
+  },
   "card.online_course": {
     "src": "cards/card.online_course.png",
     "w": 288,
@@ -389,6 +519,11 @@
     "w": 288,
     "h": 120
   },
+  "card.phishing": {
+    "src": "cards/card.phishing.png",
+    "w": 288,
+    "h": 120
+  },
   "card.phone_chart": {
     "src": "cards/card.phone_chart.png",
     "w": 288,
@@ -399,13 +534,68 @@
     "w": 288,
     "h": 120
   },
+  "card.pickpocket": {
+    "src": "cards/card.pickpocket.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.piggy_bank": {
+    "src": "cards/card.piggy_bank.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.pitch_injury": {
+    "src": "cards/card.pitch_injury.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.pitch_napkin": {
+    "src": "cards/card.pitch_napkin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.prenup": {
+    "src": "cards/card.prenup.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.price_tags": {
+    "src": "cards/card.price_tags.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.private_sale": {
+    "src": "cards/card.private_sale.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.rate_scissors": {
+    "src": "cards/card.rate_scissors.png",
+    "w": 288,
+    "h": 120
+  },
   "card.receipts": {
     "src": "cards/card.receipts.png",
     "w": 288,
     "h": 120
   },
+  "card.rent_letter": {
+    "src": "cards/card.rent_letter.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sale_crowd": {
+    "src": "cards/card.sale_crowd.png",
+    "w": 288,
+    "h": 120
+  },
   "card.scaffolding": {
     "src": "cards/card.scaffolding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.school_gate": {
+    "src": "cards/card.school_gate.png",
     "w": 288,
     "h": 120
   },
@@ -419,13 +609,53 @@
     "w": 288,
     "h": 120
   },
+  "card.share_certificate": {
+    "src": "cards/card.share_certificate.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.shares_or_salary": {
+    "src": "cards/card.shares_or_salary.png",
+    "w": 288,
+    "h": 120
+  },
   "card.shopfront": {
     "src": "cards/card.shopfront.png",
     "w": 288,
     "h": 120
   },
+  "card.sibling_doorstep": {
+    "src": "cards/card.sibling_doorstep.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.small_house": {
+    "src": "cards/card.small_house.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.sold_board": {
+    "src": "cards/card.sold_board.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.spare_room": {
+    "src": "cards/card.spare_room.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.speed_camera": {
+    "src": "cards/card.speed_camera.png",
+    "w": 288,
+    "h": 120
+  },
   "card.sports_car": {
     "src": "cards/card.sports_car.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.street_market": {
+    "src": "cards/card.street_market.png",
     "w": 288,
     "h": 120
   },
@@ -439,13 +669,43 @@
     "w": 288,
     "h": 120
   },
+  "card.tax_refund": {
+    "src": "cards/card.tax_refund.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.tech_bubble": {
+    "src": "cards/card.tech_bubble.png",
+    "w": 288,
+    "h": 120
+  },
   "card.torn_photo": {
     "src": "cards/card.torn_photo.png",
     "w": 288,
     "h": 120
   },
+  "card.tower_lobby": {
+    "src": "cards/card.tower_lobby.png",
+    "w": 288,
+    "h": 120
+  },
   "card.trading_desk": {
     "src": "cards/card.trading_desk.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.trading_guru": {
+    "src": "cards/card.trading_guru.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.two_ladders": {
+    "src": "cards/card.two_ladders.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.unpaid_rent": {
+    "src": "cards/card.unpaid_rent.png",
     "w": 288,
     "h": 120
   },
@@ -456,6 +716,16 @@
   },
   "card.wedding": {
     "src": "cards/card.wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.will_desk": {
+    "src": "cards/card.will_desk.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.will_reading": {
+    "src": "cards/card.will_reading.png",
     "w": 288,
     "h": 120
   },

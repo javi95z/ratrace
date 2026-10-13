@@ -154,8 +154,9 @@ describe('content art', () => {
   const manifest = JSON.parse(readFileSync(path, 'utf8')) as { sprites: Record<string, unknown> };
   const has = (sprite: string) => Object.hasOwn(manifest.sprites, sprite);
 
-  it('gives every card a scene, and no scene to a card that does not exist', () => {
+  it('gives every card a scene of its own, and no scene to a card that does not exist', () => {
     expect(keys(cardArt)).toEqual(ids(content.cards));
+    expect(new Set(Object.values(cardArt)).size).toBe(content.cards.length);
   });
 
   it('points only at sprites that exist', () => {

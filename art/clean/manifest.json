@@ -1271,6 +1271,276 @@
       "width": 288,
       "height": 120
     },
+    "card.boss_door": {
+      "file": "cards/card.boss_door.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.meeting_room": {
+      "file": "cards/card.meeting_room.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.kitchen_laptop": {
+      "file": "cards/card.kitchen_laptop.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tower_lobby": {
+      "file": "cards/card.tower_lobby.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.angry_boss": {
+      "file": "cards/card.angry_boss.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.headhunter_call": {
+      "file": "cards/card.headhunter_call.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.contract_signing": {
+      "file": "cards/card.contract_signing.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bank_cosign": {
+      "file": "cards/card.bank_cosign.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.two_ladders": {
+      "file": "cards/card.two_ladders.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.share_certificate": {
+      "file": "cards/card.share_certificate.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.shares_or_salary": {
+      "file": "cards/card.shares_or_salary.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.business_cabin": {
+      "file": "cards/card.business_cabin.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.prenup": {
+      "file": "cards/card.prenup.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tax_refund": {
+      "file": "cards/card.tax_refund.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.price_tags": {
+      "file": "cards/card.price_tags.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.advisor_office": {
+      "file": "cards/card.advisor_office.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.piggy_bank": {
+      "file": "cards/card.piggy_bank.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.speed_camera": {
+      "file": "cards/card.speed_camera.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tech_bubble": {
+      "file": "cards/card.tech_bubble.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crowd_building": {
+      "file": "cards/card.crowd_building.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.trading_guru": {
+      "file": "cards/card.trading_guru.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crypto_rocket": {
+      "file": "cards/card.crypto_rocket.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crypto_winter": {
+      "file": "cards/card.crypto_winter.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.phishing": {
+      "file": "cards/card.phishing.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.spare_room": {
+      "file": "cards/card.spare_room.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rent_letter": {
+      "file": "cards/card.rent_letter.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.unpaid_rent": {
+      "file": "cards/card.unpaid_rent.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.for_sale_signs": {
+      "file": "cards/card.for_sale_signs.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sold_board": {
+      "file": "cards/card.sold_board.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.mortgage_scales": {
+      "file": "cards/card.mortgage_scales.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.small_house": {
+      "file": "cards/card.small_house.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.offplan_model": {
+      "file": "cards/card.offplan_model.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.car_dealer": {
+      "file": "cards/card.car_dealer.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.coupe_garage": {
+      "file": "cards/card.coupe_garage.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rate_scissors": {
+      "file": "cards/card.rate_scissors.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sale_crowd": {
+      "file": "cards/card.sale_crowd.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lecture_hall": {
+      "file": "cards/card.lecture_hall.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.campus_dropoff": {
+      "file": "cards/card.campus_dropoff.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.language_class": {
+      "file": "cards/card.language_class.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bootcamp": {
+      "file": "cards/card.bootcamp.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.app_launch": {
+      "file": "cards/card.app_launch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.pitch_napkin": {
+      "file": "cards/card.pitch_napkin.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.will_reading": {
+      "file": "cards/card.will_reading.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bonus_confetti": {
+      "file": "cards/card.bonus_confetti.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.will_desk": {
+      "file": "cards/card.will_desk.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.dentist_chair": {
+      "file": "cards/card.dentist_chair.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.pitch_injury": {
+      "file": "cards/card.pitch_injury.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.school_gate": {
+      "file": "cards/card.school_gate.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.sibling_doorstep": {
+      "file": "cards/card.sibling_doorstep.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.beach_wedding": {
+      "file": "cards/card.beach_wedding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.private_sale": {
+      "file": "cards/card.private_sale.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.pickpocket": {
+      "file": "cards/card.pickpocket.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.courtroom": {
+      "file": "cards/card.courtroom.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.street_market": {
+      "file": "cards/card.street_market.png",
+      "width": 288,
+      "height": 120
+    },
     "skyline.madrid": {
       "file": "skylines/skyline.madrid.png",
       "width": 312,
