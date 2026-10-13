@@ -5,7 +5,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { bundleGame, bundleName, GAME_DIR, registrySource } from './bundle';
+import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, SHIPPED_FILE } from './bundle';
 
 const current = bundleName(ENGINE_VERSION, CONTENT_VERSION);
 
@@ -44,6 +44,29 @@ describe('the game as the server holds it', () => {
     const { code } = await bundleGame();
     // A change to the engine or the content without a new bundle would have the server play another game than the browser.
     expect(readFileSync(join(GAME_DIR, current), 'utf8') === code, `${current} is out of date: run \`pnpm online:bundle\`, or bump a version if games are already being played on it`).toBe(true);
+  });
+
+  it('never rewrites a bundle that has shipped, unless it is forced to', () => {
+    const shipped = { '0.4.0/1.3.0': fingerprint('the game as it shipped') };
+    // Versions that have not shipped are written freely: that is every change before a release.
+    expect(mayWrite(shipped, '0.5.0/1.3.0', 'anything', false)).toBe('write');
+    // The same bytes again change nothing.
+    expect(mayWrite(shipped, '0.4.0/1.3.0', 'the game as it shipped', false)).toBe('same');
+    // Other rules under versions that players' lives are saved on: refused, because the server would
+    // play those lives to another end than the device that lived them.
+    expect(mayWrite(shipped, '0.4.0/1.3.0', 'the game with a rule changed', false)).toBe('refuse');
+    expect(mayWrite(shipped, '0.4.0/1.3.0', 'the game with a rule changed', true)).toBe('write');
+  });
+
+  it('holds every bundle that has shipped exactly as it shipped', () => {
+    const shipped = JSON.parse(readFileSync(SHIPPED_FILE, 'utf8')) as Record<string, string>;
+    expect(Object.keys(shipped).length).toBeGreaterThan(0);
+    for (const [versions, print] of Object.entries(shipped)) {
+      const [engine, pack] = versions.split('/');
+      const file = join(GAME_DIR, bundleName(engine, pack));
+      expect(existsSync(file), `${versions} has shipped and its bundle is gone: lives on it can no longer be finished`).toBe(true);
+      expect(fingerprint(readFileSync(file, 'utf8')), `${versions} has shipped and its bundle was changed: bump ENGINE_VERSION or CONTENT_VERSION instead of changing the rules under players' saved lives`).toBe(print);
+    }
   });
 
   it('lists every bundle in the folder under the versions it holds', () => {

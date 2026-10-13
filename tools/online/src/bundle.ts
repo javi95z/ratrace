@@ -5,8 +5,13 @@
  * are. A bundle is named by the versions inside it and is never rewritten once those versions
  * have shipped: a game finishes on the versions it started with, so old bundles stay beside the
  * new one for as long as games on them are still being played.
+ *
+ *   pnpm online:bundle             writes the bundle of this checkout's versions
+ *   pnpm online:bundle --shipped   notes that bundle as shipped, once the functions are deployed
+ *   pnpm online:bundle --force     rewrites a shipped bundle all the same (see `mayWrite`)
  */
-import { readdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONTENT_VERSION } from '@ratrace/content';
@@ -14,6 +19,24 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import { build } from 'esbuild';
 
 export const GAME_DIR = fileURLToPath(new URL('../../../supabase/functions/_shared/game/', import.meta.url));
+
+/** The bundles that have shipped, each under "engine/content" with the fingerprint of its bytes. */
+export const SHIPPED_FILE = join(GAME_DIR, 'shipped.json');
+
+export const fingerprint = (code: string): string => createHash('sha256').update(code).digest('hex');
+
+/**
+ * Whether a bundle may be written, given what has shipped. Versions that have not shipped are
+ * written freely. Versions that have are players' saved lives: other rules under the same
+ * versions would have the server play those lives to another end than the device that lived
+ * them, so the answer is a new version, not a new bundle. Forcing is for the days before anyone
+ * but the people making the game has a life saved.
+ */
+export function mayWrite(shipped: Readonly<Record<string, string>>, versions: string, code: string, force: boolean): 'write' | 'same' | 'refuse' {
+  if (!Object.hasOwn(shipped, versions)) return 'write';
+  if (shipped[versions] === fingerprint(code)) return 'same';
+  return force ? 'write' : 'refuse';
+}
 
 /** The file a pair of versions is bundled into. */
 export const bundleName = (engine: string, content: string): string => `v${engine}-${content}.js`;
@@ -53,8 +76,21 @@ export function registrySource(files: readonly string[]): string {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const flags = new Set(process.argv.slice(2));
+  const versions = `${ENGINE_VERSION}/${CONTENT_VERSION}`;
+  const shipped: Record<string, string> = existsSync(SHIPPED_FILE) ? (JSON.parse(readFileSync(SHIPPED_FILE, 'utf8')) as Record<string, string>) : {};
+  const keep = (next: Record<string, string>) => writeFileSync(SHIPPED_FILE, `${JSON.stringify(Object.fromEntries(Object.entries(next).sort()), null, 2)}\n`);
   const { name, code } = await bundleGame();
+
+  if (mayWrite(shipped, versions, code, flags.has('--force')) === 'refuse') {
+    console.error(`✗ engine ${ENGINE_VERSION} with content ${CONTENT_VERSION} has shipped, and the rules in this checkout are no longer the ones that shipped.`);
+    console.error('  Lives saved on those versions would be played to another end by the server than by the device that lived them.');
+    console.error('  Bump ENGINE_VERSION or CONTENT_VERSION and bundle again. Before the game is public, `pnpm online:bundle --force` and a deploy of the functions will also do.');
+    process.exit(1);
+  }
   writeFileSync(join(GAME_DIR, name), code);
   writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(readdirSync(GAME_DIR)));
-  console.log(`bundled ${name} (${Math.round(code.length / 1024)} KB)`);
+  // A shipped bundle that was forced is noted as it now is; `--shipped` notes one for the first time.
+  if (flags.has('--shipped') || Object.hasOwn(shipped, versions)) keep({ ...shipped, [versions]: fingerprint(code) });
+  console.log(`bundled ${name} (${Math.round(code.length / 1024)} KB)${flags.has('--shipped') ? ', noted as shipped' : ''}`);
 }
