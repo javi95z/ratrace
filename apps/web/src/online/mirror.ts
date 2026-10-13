@@ -1,9 +1,10 @@
 import type { LifeDef } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
 import type { Content } from '@ratrace/engine';
+import { rankedOf } from '@/session/ranked';
 import { openSave } from '@/session/save';
 import { SAVE_FORMAT } from '@/session/types';
-import type { Earned, FinishedRun, PlayerStore, Profile, SavedGame } from '@/session/types';
+import type { Earned, FinishedRun, PlayerStore, Profile, RankedGame, SavedGame, StoredGame } from '@/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 import type { AccountLife, AccountSaves, CloudSaving, DeviceChange } from './types';
@@ -23,6 +24,8 @@ export interface GameUpload {
 /** A finished life as the server wrote it. Every figure is the engine's, worked out on the server. */
 export interface CloudRun {
   id: string;
+  /** `ranked` for a life the server played itself. Left out, a casual one. */
+  mode?: 'casual' | 'ranked';
   lifeId: string;
   engineVersion: string;
   contentVersion: string;
@@ -53,6 +56,8 @@ export interface SyncCloud {
   saveProgress(progress: Progress): Promise<void>;
   /** The player's finished lives. */
   listRuns(): Promise<CloudRun[]>;
+  /** The ranked life the player has in progress on the server, if they have one. */
+  rankedLife(): Promise<{ id: string; lifeId: string; engineVersion: string; contentVersion: string } | null>;
   /**
    * Has the server finish a life it has been sent. `refused` if it would not; `unknown-version` if
    * it does not hold the versions the life was lived on; `failed` if it could not be asked.
@@ -109,6 +114,7 @@ const asRun = (run: CloudRun): FinishedRun => ({
   badges: run.badges,
   cities: run.cities,
   verified: false,
+  ...(run.mode === 'ranked' ? { ranked: true as const } : {}),
 });
 
 const uploadOf = (save: SavedGame): GameUpload => ({
@@ -169,7 +175,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   readonly listRuns = (): Promise<FinishedRun[]> => this.device.listRuns();
   readonly loadProfile = (): Promise<Profile> => this.device.loadProfile();
 
-  readonly saveGame = async (game: SavedGame): Promise<void> => {
+  readonly saveGame = async (game: StoredGame): Promise<void> => {
     await this.noteReplaced(game.gameId);
     await this.device.saveGame(game);
     this.poke();
@@ -391,7 +397,11 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     const finished = new Set(runs.map((run) => run.id));
     let moved = false;
 
-    let current = this.open(await this.device.loadGame());
+    const held = await this.device.loadGame();
+    // A ranked life is the server's. The device holds a note of it, which is not a game to send, to
+    // replace or to judge here: it stands for "this device has a life", and that is all.
+    let note = rankedOf(held);
+    let current = note === null ? this.open(held) : null;
     // A life this device was still living that has been lived to the end elsewhere is over here too.
     // Its result is among the finished lives.
     if (current !== null && !current.state.finished && finished.has(current.gameId)) {
@@ -399,13 +409,24 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       current = null;
       moved = true;
     }
+    // A device with no life at all takes the ranked life the account has in progress, as a note: the
+    // life is opened from the server when the player goes to it.
+    if (current === null && note === null) {
+      const ranked = await cloud.rankedLife();
+      if (ranked !== null && ranked.engineVersion === this.options.versions.engine && ranked.contentVersion === this.options.versions.content) {
+        note = { format: SAVE_FORMAT, ranked: true, gameId: ranked.id, lifeId: ranked.lifeId, engineVersion: ranked.engineVersion, contentVersion: ranked.contentVersion, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 } satisfies RankedGame;
+        await this.device.saveGame(note);
+        moved = true;
+      }
+    }
 
     // Which life is played here. One the player has given up since the account answered is not one to
     // take or to offer; a copy that does not play back to a sound life is passed over, and the next is tried.
     let games = playing.filter((game) => !this.abandoned.has(game.id));
     let waiting: SavedGame | null = null;
     for (;;) {
-      const choice = chooseGame(current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished }, games, this.options.versions);
+      const mine = note !== null ? { gameId: note.gameId, steps: 0, finished: note.view?.finished === true } : current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished };
+      const choice = chooseGame(mine, games, this.options.versions);
       const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
       if (candidate === null) break;
       games = games.filter((game) => game !== candidate);

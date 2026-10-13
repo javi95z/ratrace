@@ -13,6 +13,9 @@ const NO_SYNC = {
   saveProgress: async () => {},
   listRuns: async () => [],
   finishRun: async () => 'done' as const,
+  rankedLife: async () => null,
+  // No test of the account plays a ranked life: that has tests of its own.
+  ranked: {} as Cloud['ranked'],
 };
 const member: CloudUser = { id: 'user-1', is_anonymous: false, email: 'ana@example.com' };
 

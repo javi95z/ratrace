@@ -3,7 +3,7 @@ import { ENGINE_VERSION, stateHash } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
-import type { GameSession, PlayerStore, SavedGame } from '@/session/types';
+import type { GameSession, PlayerStore, RankedGame, SavedGame } from '@/session/types';
 import { stepsOf } from './merge';
 import type { CloudGame, Progress } from './merge';
 import { MirroredStore } from './mirror';
@@ -33,6 +33,8 @@ function fakeCloud(world: World = { owners: new Map() }) {
     finishFails: false,
     /** The versions the server can play. */
     holds: new Set([`${ENGINE_VERSION}/${CONTENT_VERSION}`]),
+    /** The ranked life the player has in progress on the server, if any. */
+    ranked: null as { id: string; lifeId: string; engineVersion: string; contentVersion: string } | null,
     held: new Map<string, Promise<void>>(),
   };
   /** Makes one kind of request wait until the function it returns is called. */
@@ -85,6 +87,10 @@ function fakeCloud(world: World = { owners: new Map() }) {
     async listRuns() {
       await guard('runs', 'read runs');
       return [...state.runs];
+    },
+    async rankedLife() {
+      await guard('ranked', 'read ranked');
+      return state.ranked;
     },
     async finishRun(gameId) {
       await guard('finish', `finish ${gameId}`);
@@ -968,5 +974,71 @@ describe('the mirror', { timeout: 60_000 }, () => {
     while (scheduled.length > 0) await scheduled.splice(0)[0].run();
     expect(member.state.games.find((game) => game.id === after.gameId)?.round).toBe(3);
     expect(mirror.status()).toBe('saved');
+  });
+
+  it('leaves a ranked life alone: the server has it already, and no casual life from the account takes its place', async () => {
+    const { cloud, state } = fakeCloud();
+    const elsewhere = device(cloud, 'elsewhere');
+    await play(await elsewhere.sessions.start('nurse'), 2);
+    await elsewhere.mirror.sync();
+    state.asked.length = 0;
+    // This device holds the note of a ranked life. The account holds a casual one, from the other device.
+    const d = device(cloud);
+    const note: RankedGame = { format: 1, ranked: true, gameId: 'ranked-1', lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, step: 3, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 7 };
+    await d.mirror.saveGame(note);
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toEqual(note);
+    expect(state.asked.filter((line) => line.startsWith('push') || line.startsWith('abandon'))).toEqual([]);
+    // The casual life waits in the account, offered and not imposed.
+    expect(d.mirror.offer()).toMatchObject({ gameId: 'elsewhere-1', lifeId: 'nurse' });
+    expect(d.mirror.status()).toBe('saved');
+    // It has a life: it does not ask the account for a ranked one.
+    expect(state.asked).not.toContain('read ranked');
+  });
+
+  it('gives a device with no life the ranked life the account has in progress, as a note to open', async () => {
+    const { cloud, state } = fakeCloud();
+    state.ranked = { id: 'ranked-9', lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    const heard: string[] = [];
+    d.mirror.onDeviceChanged((what) => heard.push(what));
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toMatchObject({ format: 1, ranked: true, gameId: 'ranked-9', lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, view: null });
+    expect(heard).toContain('game');
+    // The note is not a life to send, and it is taken once.
+    state.asked.length = 0;
+    await d.mirror.sync();
+    expect(state.asked.filter((line) => line.startsWith('push'))).toEqual([]);
+    expect(state.asked).not.toContain('read ranked');
+  });
+
+  it('does not take a ranked life begun under rules this build does not play', async () => {
+    const { cloud, state } = fakeCloud();
+    state.ranked = { id: 'ranked-9', lifeId: 'nurse', engineVersion: '0.1.0', contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toBeNull();
+  });
+
+  it('prefers the account\'s ranked life to its casual one for a device with none, and offers the casual one', async () => {
+    const { cloud, state } = fakeCloud();
+    const elsewhere = device(cloud, 'elsewhere');
+    await play(await elsewhere.sessions.start('nurse'), 1);
+    await elsewhere.mirror.sync();
+    state.ranked = { id: 'ranked-9', lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toMatchObject({ ranked: true, gameId: 'ranked-9' });
+    expect(d.mirror.offer()).toMatchObject({ gameId: 'elsewhere-1' });
+  });
+
+  it('brings a ranked life finished elsewhere to the records, marked as ranked', async () => {
+    const { cloud, state } = fakeCloud();
+    state.runs.push({ id: 'ranked-done', mode: 'ranked', lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, score: 400, netWorth: 9, status: 30, escapedAtRound: null, bankruptcies: 0, badges: [], cities: ['madrid'], history: [1], finishedAt: '2026-10-01T08:00:00Z' });
+    const d = device(cloud);
+    await d.mirror.sync();
+    expect(await d.store.listRuns()).toMatchObject([{ runId: 'ranked-done', ranked: true }]);
+    // And it is never sent back as a casual life to be finished.
+    expect(state.asked.filter((line) => line.startsWith('push') || line.startsWith('finish'))).toEqual([]);
   });
 });

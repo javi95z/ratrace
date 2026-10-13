@@ -176,6 +176,8 @@ describe('the account in the settings', () => {
       saveProgress: async () => {},
       listRuns: async () => [],
       finishRun: async () => 'done',
+      rankedLife: async () => null,
+      ranked: {} as Cloud['ranked'],
     };
     show(new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en', () => {}));
     expect((await screen.findByRole('region', { name: 'Account' })).textContent).toContain('You are playing as a guest');

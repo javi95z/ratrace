@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Unreachable } from '@/session/errors';
 import { connectSupabase } from './connect';
 
 /** The parts of the Supabase client the game uses, answering as told and remembering what they were asked. */
@@ -216,9 +217,9 @@ describe('what the cloud keeps of a player', () => {
 
   it('reads the player\'s own finished lives, though every player\'s can be read', async () => {
     client.answers.getSession = signedIn;
-    client.answers.runs = { data: [{ id: 'r-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', score: 321, net_worth: 9_000_000, status: 30, escaped_at_round: null, bankruptcies: 1, badges: ['escaped'], cities: null, history: ['1', 2], finished_at: '2026-10-01T08:00:00Z' }], error: null };
+    client.answers.runs = { data: [{ id: 'r-1', mode: 'ranked', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', score: 321, net_worth: 9_000_000, status: 30, escaped_at_round: null, bankruptcies: 1, badges: ['escaped'], cities: null, history: ['1', 2], finished_at: '2026-10-01T08:00:00Z' }], error: null };
     const cloud = await connectSupabase('u', 'k');
-    expect(await cloud.listRuns()).toEqual([{ id: 'r-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', score: 321, netWorth: 9_000_000, status: 30, escapedAtRound: null, bankruptcies: 1, badges: ['escaped'], cities: [], history: [1, 2], finishedAt: '2026-10-01T08:00:00Z' }]);
+    expect(await cloud.listRuns()).toEqual([{ id: 'r-1', mode: 'ranked', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', score: 321, netWorth: 9_000_000, status: 30, escapedAtRound: null, bankruptcies: 1, badges: ['escaped'], cities: [], history: [1, 2], finishedAt: '2026-10-01T08:00:00Z' }]);
     expect(client.asked[0].slice(2)).toEqual([['eq', 'user_id', 'u-1'], ['order', 'finished_at', { ascending: false }], ['limit', 1000]]);
     client.answers.runs = { data: null, error: new Error('offline') };
     await expect(cloud.listRuns()).rejects.toThrow('offline');
@@ -263,3 +264,43 @@ describe('what the cloud keeps of a player', () => {
     }
   });
 });
+
+describe('ranked lives, as the cloud is asked for them', () => {
+  it('asks the ranked function, in the region of the database when one is named, and hands back what it answered', async () => {
+    const cloud = await connectSupabase('u', 'k', 'ap-northeast-1');
+    const standing = { gameId: 'g-1', lifeId: 'nurse', step: 0, view: { round: 0, timeline: [{}], phase: 'cards' }, record: { history: [1], bankruptcies: 0, journal: {} } };
+    client.answers.invoke = { data: standing, error: null };
+    expect(await cloud.ranked.start('nurse', { engine: '0.10.0', content: '1.9.0' })).toMatchObject({ gameId: 'g-1', step: 0 });
+    expect(client.asked).toEqual([['invoke', 'ranked', { body: { action: 'start', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' }, region: 'ap-northeast-1' }]]);
+    // With no region named, the platform chooses.
+    client.asked.length = 0;
+    await (await connectSupabase('u', 'k')).ranked.start('nurse', { engine: '0.10.0', content: '1.9.0' });
+    expect(client.asked).toEqual([['invoke', 'ranked', { body: { action: 'start', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' } }]]);
+  });
+
+  it('reads what the function said when it said no, and knows no answer at all from an answer', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    // The function's own no: the life is not where the client thinks.
+    client.answers.invoke = { data: null, error: { context: new Response(JSON.stringify({ error: 'out-of-step', step: 4 }), { status: 409 }) } };
+    expect(await cloud.ranked.card('g-1', 3, 0)).toBe('moved');
+    client.answers.invoke = { data: null, error: { context: new Response(JSON.stringify({ error: 'closed' }), { status: 409 }) } };
+    expect(await cloud.ranked.view('g-1')).toBe('gone');
+    // Busy, away, or no network: worth asking again, and said so.
+    for (const error of [{ context: new Response('{"error":"too-many"}', { status: 429 }) }, { context: new Response('', { status: 503 }) }, { context: new TypeError('failed to fetch') }, {}]) {
+      client.answers.invoke = { data: null, error };
+      await expect(cloud.ranked.round('g-1', 3, [])).rejects.toBeInstanceOf(Unreachable);
+    }
+  });
+
+  it('finds the ranked life a player has in progress, if they have one', async () => {
+    client.answers.games = { data: { id: 'g-9', life_id: 'nurse', engine_version: '0.10.0', content_version: '1.9.0' }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.rankedLife()).toEqual({ id: 'g-9', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' });
+    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version'], ['eq', 'mode', 'ranked'], ['eq', 'status', 'playing'], ['limit', 1], ['maybeSingle']]]);
+    client.answers.games = { data: null, error: null };
+    expect(await cloud.rankedLife()).toBeNull();
+    client.answers.games = { data: null, error: new Error('offline') };
+    await expect(cloud.rankedLife()).rejects.toThrow('offline');
+  });
+});
+

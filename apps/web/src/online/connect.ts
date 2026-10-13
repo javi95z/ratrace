@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
+import { rankedApi } from './ranked';
 import type { Cloud, CloudUser } from './supabase';
 
 const userOf = (user: User | null | undefined): CloudUser | null => (user ? { id: user.id, is_anonymous: user.is_anonymous === true, email: user.email } : null);
@@ -19,6 +20,7 @@ interface GameRow {
 }
 interface RunRow {
   id: string;
+  mode: string;
   life_id: string;
   engine_version: string;
   content_version: string;
@@ -37,7 +39,7 @@ const gameOf = (row: GameRow): CloudGame => ({
   id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, seed: row.seed, round: row.round, status: row.status, log: row.log, stateHash: row.state_hash, updatedAt: row.updated_at,
 });
 const runOf = (row: RunRow): CloudRun => ({
-  id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
+  id: row.id, mode: row.mode === 'ranked' ? 'ranked' : 'casual', lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
   escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
 });
 
@@ -70,7 +72,7 @@ async function wordOf(error: unknown): Promise<string | null> {
  * The cloud, made from a Supabase client. Every table it touches is guarded in the database: a
  * player reads and writes their own rows and nothing else, whatever this code asks for.
  */
-export function cloudOf(client: SupabaseClient): Cloud {
+export function cloudOf(client: SupabaseClient, region?: string): Cloud {
   /** Who is signed in, for the two things that must name their owner. */
   const me = async (): Promise<string> => {
     const { data } = await client.auth.getSession();
@@ -154,13 +156,30 @@ export function cloudOf(client: SupabaseClient): Cloud {
       // Every signed-in player may read every run; these are the player's own.
       const { data, error } = await client
         .from('runs')
-        .select('id, life_id, engine_version, content_version, score, net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at')
+        .select('id, mode, life_id, engine_version, content_version, score, net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at')
         .eq('user_id', await me())
         .order('finished_at', { ascending: false })
         .limit(1000);
       if (error) throw error;
       return ((data ?? []) as RunRow[]).map(runOf);
     },
+    async rankedLife() {
+      // A player has one ranked life in progress at most, and sees no game but their own.
+      const { data, error } = await client.from('games').select('id, life_id, engine_version, content_version').eq('mode', 'ranked').eq('status', 'playing').limit(1).maybeSingle();
+      if (error) throw error;
+      const row = data as { id: string; life_id: string; engine_version: string; content_version: string } | null;
+      return row === null ? null : { id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version };
+    },
+    // A ranked life is played by the `ranked` function. Each step reads and writes the database several times,
+    // so the function is asked for in the database's own region when the build names it: one long hop, not four.
+    ranked: rankedApi(async (body) => {
+      const { data, error } = await client.functions.invoke('ranked', { body, ...(region ? { region: region as never } : {}) });
+      if (!error) return { status: 200, body: data };
+      const context = (error as { context?: unknown }).context;
+      // The function answered, and said no: its answer is in the response. Anything else never reached it.
+      if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
+      throw error instanceof Error ? error : new Error('the ranked function could not be reached');
+    }),
     async finishRun(gameId) {
       const { error } = await client.functions.invoke('finish-run', { body: { gameId } });
       if (!error) return 'done';
@@ -179,9 +198,9 @@ export function cloudOf(client: SupabaseClient): Cloud {
  * starts, so a game with no project configured never downloads it.
  * `key` is the publishable key: it is public by design. The secret key has no business in a browser.
  */
-export async function connectSupabase(url: string, key: string): Promise<Cloud> {
+export async function connectSupabase(url: string, key: string, region?: string): Promise<Cloud> {
   const { createClient } = await import('@supabase/supabase-js');
   // A request that never gets an answer would hold up everything after it: the mirror sends one thing at a time.
   const patient: typeof fetch = (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(PATIENCE) });
-  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }));
+  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }), region);
 }
