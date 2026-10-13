@@ -201,6 +201,7 @@ export function checkBankruptcy(
   p.positions = {};
   // Nothing is left to invest, and a plan that outlived the bankruptcy would start buying again unasked.
   p.plans = [];
+  p.reinvest = false;
   p.properties = [];
   p.debts = [];
   // What has no sale value and is not a subscription stays: nobody repossesses a degree.

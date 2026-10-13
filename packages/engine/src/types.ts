@@ -671,6 +671,8 @@ export interface PlayerState {
   positions: Record<string, Position>;
   /** Standing instructions to invest, at most one an asset, run each round after the player's own orders. */
   plans: InvestPlan[];
+  /** True if what the investments pay is put back into them each round instead of being kept as cash. */
+  reinvest: boolean;
   properties: Property[];
   debts: Debt[];
   lifestyleTier: LifestyleTier;
@@ -711,6 +713,8 @@ export type Order =
   | { type: 'depositIn'; amount: Cents }
   | { type: 'depositOut'; amount: Cents }
   | { type: 'pensionIn'; amount: Cents }
+  /** Has what the investments pay bought more of them each round, or pays it out as cash again. */
+  | { type: 'setReinvest'; on: boolean }
   /** Sets what is put into the asset every round from now on, this round included. Zero ends the plan. */
   | { type: 'setPlan'; assetId: string; amount: Cents }
   | { type: 'borrow'; amount: Cents }
@@ -820,7 +824,8 @@ export type LedgerLine =
   | 'moving'
   | 'depositDraw'
   | 'creditCardDraw'
-  | 'creditCardRepay';
+  | 'creditCardRepay'
+  | 'dividendsReinvested';
 
 /**
  * What happened in a round. Ledger amounts are signed from the point of view of the player's cash:

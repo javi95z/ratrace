@@ -308,7 +308,8 @@
       "none": "Aún no tienes inversiones. Se compran en la pestaña Mercado.",
       "sell": "Vender",
       "gain": "{amount} de ganancia",
-      "loss": "{amount} de pérdida"
+      "loss": "{amount} de pérdida",
+      "pays": "Paga {amount} esta ronda"
     },
     "market": {
       "funds": "Fondos indexados",
@@ -496,6 +497,32 @@
       "each": "Cada ronda",
       "eachHint": "Automático",
       "already": "Ya inviertes {amount} cada ronda. Cambia la cantidad aquí."
+    },
+    "glance": {
+      "title": "De un vistazo",
+      "total": "Todo lo que tienes, sin restar deudas",
+      "empty": "Aún no tienes nada que repartir.",
+      "kinds": {
+        "cash": "Efectivo",
+        "savings": "Ahorro",
+        "pension": "Pensión",
+        "equity": "Fondos y acciones",
+        "bond": "Bonos",
+        "crypto": "Cripto",
+        "gold": "Oro",
+        "property": "Vivienda",
+        "things": "Cosas"
+      },
+      "concentrated": "El {pct} de lo que tienes invertido está en una sola cosa: {name}. Si le va mal, te va mal.",
+      "largest": "Lo que más pesa de lo invertido: {name}, el {pct}.",
+      "paysTitle": "Lo que te pagan",
+      "dividends": "Dividendos y cupones",
+      "dividendsHint": "Esta ronda, antes de impuestos",
+      "interest": "Intereses del ahorro",
+      "reinvest": "Reinvertir los dividendos",
+      "reinvestOn": "Cada activo compra más de sí mismo con lo que paga.",
+      "reinvestOff": "Lo que pagan llega a tu efectivo.",
+      "reinvestShort": "Esta ronda no queda efectivo tras los gastos: no se reinvierte."
     }
   },
   "resolve": {
@@ -773,7 +800,9 @@
     "insureOff": "Cancelar: {kind}",
     "move": "Mudarte a {city}",
     "planOn": "Invertir {amount} cada ronda en {name}",
-    "planOff": "Dejar de invertir en {name}"
+    "planOff": "Dejar de invertir en {name}",
+    "reinvestOn": "Reinvertir los dividendos",
+    "reinvestOff": "Cobrar los dividendos en efectivo"
   },
   "account": {
     "title": "Cuenta",

@@ -36,6 +36,7 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
   for (const [id, held] of Object.entries(p.positions)) {
     money.push([`position ${id} value`, held.value], [`position ${id} basis`, held.basis]);
   }
+  if (typeof p.reinvest !== 'boolean') breaks.push('reinvest is not a flag');
   if (!Array.isArray(p.plans)) breaks.push('plans is not a list');
   else {
     for (const plan of p.plans) {

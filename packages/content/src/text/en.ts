@@ -300,5 +300,6 @@ export const en: ContentText = {
     depositDraw: 'Taken from savings',
     creditCardDraw: 'Put on the credit card',
     creditCardRepay: 'Credit card paid down',
+    dividendsReinvested: 'Dividends reinvested',
   },
 };

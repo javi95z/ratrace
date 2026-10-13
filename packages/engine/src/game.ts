@@ -1,4 +1,5 @@
 import { applyDebtPayments, checkBankruptcy, settleCash } from './debt';
+import { dividendsByAsset } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { flowsOf } from './flows';
 import { assertInvariants, assertViewInvariants } from './invariants';
@@ -9,7 +10,7 @@ import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
 import { newPlayer } from './player';
-import { growPortfolio, pensionRoom, runPlans } from './portfolio';
+import { growPortfolio, pensionRoom, reinvestDividends, runPlans } from './portfolio';
 import { growProperties } from './property';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
@@ -156,6 +157,8 @@ export interface RoundPreview {
   purchaseTaxPaid: Cents;
   /** Cash after income, expenses and tax. If negative, the deposit and then the credit card cover it. */
   cashAfter: Cents;
+  /** What the investments pay that will be put back into them instead of kept: all of it, or nothing. Already taken off `cashAfter`. */
+  reinvested: Cents;
   /** What each plan will do this round, after the orders: buy, or not and why. */
   plans: PlanRun[];
   /** How much more may be paid into the pension this round, after the orders so far. */
@@ -209,6 +212,9 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
   const now = state.timeline[state.round];
   const { tally, rejected, plans } = executeChoices(content, player, now, state.round, choices);
   const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, player, now, tally);
+  const cashAfter = player.cash + income.salary + passive - outgoings - bill.total;
+  // The same rule the round then follows: all of it, if the cash is there once the bills are met.
+  const reinvested = player.reinvest && income.dividends > 0 && cashAfter >= income.dividends ? income.dividends : 0;
   return {
     player,
     income,
@@ -220,7 +226,8 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
     },
     tax: bill,
     purchaseTaxPaid: tally.purchaseTaxPaid,
-    cashAfter: player.cash + income.salary + passive - outgoings - bill.total,
+    cashAfter: cashAfter - reinvested,
+    reinvested,
     pensionRoom: pensionRoom(player, content, now, tally.pensionContribution),
     escape,
     rejected,
@@ -268,12 +275,15 @@ export function applyRound(
   p.statusSum += p.statusPoints;
 
   const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, p, now, tally);
+  const paid = dividendsByAsset(p, content, now);
 
   growPortfolio(p, content, now, after);
   growProperties(p, after);
 
   p.cash += income.salary + passive - outgoings - bill.total;
   applyDebtPayments(p, expenses.service);
+  // After every bill of the round, and before spare cash goes to the credit card: the player asked for this first.
+  const reinvested = reinvestDividends(p, paid);
   const settled = settleCash(p);
 
   const lines: Array<[LedgerLine, Cents]> = [
@@ -296,6 +306,7 @@ export function applyRound(
     ['depositDraw', settled.fromDeposit],
     ['creditCardDraw', settled.drawn],
     ['creditCardRepay', -settled.repaid],
+    ['dividendsReinvested', -reinvested],
   ];
   for (const [line, amount] of lines) {
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });

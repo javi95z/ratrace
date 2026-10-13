@@ -308,7 +308,8 @@
       "none": "You hold no investments yet. The Market tab is where they are bought.",
       "sell": "Sell",
       "gain": "{amount} gain",
-      "loss": "{amount} loss"
+      "loss": "{amount} loss",
+      "pays": "Pays {amount} this round"
     },
     "market": {
       "funds": "Index funds",
@@ -496,6 +497,32 @@
       "each": "Every round",
       "eachHint": "Automatic",
       "already": "You already invest {amount} every round. Change the amount here."
+    },
+    "glance": {
+      "title": "At a glance",
+      "total": "All you own, before any debt",
+      "empty": "Nothing to share out yet.",
+      "kinds": {
+        "cash": "Cash",
+        "savings": "Savings",
+        "pension": "Pension",
+        "equity": "Funds and stocks",
+        "bond": "Bonds",
+        "crypto": "Crypto",
+        "gold": "Gold",
+        "property": "Property",
+        "things": "Things"
+      },
+      "concentrated": "{pct} of what you have invested is in one thing: {name}. If it does badly, so do you.",
+      "largest": "The heaviest of what is invested: {name}, {pct}.",
+      "paysTitle": "What you are paid",
+      "dividends": "Dividends and coupons",
+      "dividendsHint": "This round, before tax",
+      "interest": "Interest on savings",
+      "reinvest": "Reinvest the dividends",
+      "reinvestOn": "Each asset buys more of itself with what it pays.",
+      "reinvestOff": "What they pay comes to your cash.",
+      "reinvestShort": "No cash is left this round after the bills: nothing is reinvested."
     }
   },
   "resolve": {
@@ -773,7 +800,9 @@
     "insureOff": "Cancel: {kind}",
     "move": "Move to {city}",
     "planOn": "Invest {amount} every round in {name}",
-    "planOff": "Stop investing in {name}"
+    "planOff": "Stop investing in {name}",
+    "reinvestOn": "Reinvest the dividends",
+    "reinvestOff": "Take the dividends as cash"
   },
   "account": {
     "title": "Account",

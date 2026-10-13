@@ -2,7 +2,7 @@
 
 import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteWork } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -12,6 +12,7 @@ import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggl
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
+import { Payouts, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
@@ -40,7 +41,7 @@ function Portfolio() {
   const t = useT('finance.portfolio');
   const amount = useT('finance.amount');
   const { content, names, fmt } = useWords();
-  const { p, world, preview } = useRound();
+  const { p, shown, world, preview } = useRound();
   const addOrder = useGame((s) => s.addOrder);
   const [move, setMove] = useState<Move | null>(null);
   const held = content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id));
@@ -64,8 +65,11 @@ function Portfolio() {
     );
   })();
 
+  const dividends = new Map(quotePortfolio(content, shown).dividends.map((paid) => [paid.assetId, paid.amount]));
+
   return (
     <div className="flex flex-col gap-3">
+      <PortfolioGlance />
       <Panel>
         <Row left={t('cash')} sub={t('cashHint')} right={fmt.money(p.cash)} />
         <div className="my-1 h-[2px] bg-night-900" />
@@ -99,6 +103,7 @@ function Portfolio() {
                 <div className={`text-[12px] ${gain >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
                   {t(gain >= 0 ? 'gain' : 'loss', { amount: fmt.money(Math.abs(gain)) })}
                 </div>
+                {dividends.has(asset.id) ? <div className="text-[12px] text-ink-300">{t('pays', { amount: fmt.money(dividends.get(asset.id) ?? 0) })}</div> : null}
               </div>
               <div className="pixel text-right">{fmt.money(position.value)}</div>
               <Button onClick={() => setMove({ kind: 'sell', asset })}>{t('sell')}</Button>
@@ -106,6 +111,7 @@ function Portfolio() {
           );
         })}
       </Panel>
+      <Payouts />
       <Plans />
       {sheet}
     </div>

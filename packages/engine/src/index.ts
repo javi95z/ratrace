@@ -27,5 +27,5 @@ export { replayLog } from './replayLog';
 export type { LoggedRound, ReplayStep } from './replayLog';
 export { assertInvariants, assertViewInvariants, findInvariantBreaks, findViewBreaks } from './invariants';
 export { viewOf } from './view';
-export { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteWork } from './quotes';
-export type { CityYear, PlanQuote, ItemFinanceQuote, ItemQuote, MoveQuote, WorkQuote, LivingQuote, LoanQuote, OwnedPropertyQuote, PropertyQuote } from './quotes';
+export { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork, CONCENTRATION_PCT } from './quotes';
+export type { CityYear, PlanQuote, PortfolioQuote, WealthKind, ItemFinanceQuote, ItemQuote, MoveQuote, WorkQuote, LivingQuote, LoanQuote, OwnedPropertyQuote, PropertyQuote } from './quotes';
