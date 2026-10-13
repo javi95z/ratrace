@@ -16,8 +16,11 @@ import type { BadgeGroup } from '../badges';
 export interface CardText {
   title: string;
   body: string;
-  /** One entry per option of the card, each with one line per outcome it can roll. */
-  options: Array<{ label: string; outcomes: string[] }>;
+  /**
+   * One entry per option of the card, each with one line per outcome it can roll. An option the
+   * dice do not decide has instead `after`: what follows from choosing it, in a sentence.
+   */
+  options: Array<{ label: string; outcomes: string[]; after?: string }>;
 }
 
 /**

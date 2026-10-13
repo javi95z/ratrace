@@ -198,7 +198,11 @@
     "toFinance": "To your finances",
     "next": "Next card",
     "swipe": "Swipe the card, or tap a choice",
-    "choices": "Your choices: {title}"
+    "choices": "Your choices: {title}",
+    "changes": "What changes",
+    "rolled": "chance of this being what came up",
+    "others": "What you did not choose",
+    "othersHint": "This is what the other options offered when you chose."
   },
   "effects": {
     "salaryMod": "{value}% salary for good",

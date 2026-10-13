@@ -198,7 +198,11 @@
     "toFinance": "A tus finanzas",
     "next": "Siguiente carta",
     "swipe": "Desliza la carta o toca una opción",
-    "choices": "Tus opciones: {title}"
+    "choices": "Tus opciones: {title}",
+    "changes": "Lo que cambia",
+    "rolled": "de probabilidad de que saliera esto",
+    "others": "Lo que no elegiste",
+    "othersHint": "Así estaban las demás opciones cuando elegiste."
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
