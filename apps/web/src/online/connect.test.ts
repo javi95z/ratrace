@@ -332,6 +332,9 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.me()).toBeNull();
     client.answers.profiles = { data: null, error: new Error('offline') };
     expect(await cloud.community.me()).toBeNull();
+    // An answer that says it failed is a failure, whatever came with it.
+    client.answers.profiles = { data: { nickname: 'Rata_Uno', friend_code: 'ABCD2345' }, error: new Error('half an answer') };
+    expect(await cloud.community.me()).toBeNull();
   });
 
   it('gives the player a name, and says in a word why not when it does not', async () => {
@@ -380,6 +383,8 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     client.answers.rpc = { data: 'something else', error: null };
     expect(await cloud.community.follow('x')).toBe('failed');
     client.answers.rpc = { data: null, error: new Error('offline') };
+    expect(await cloud.community.follow('x')).toBe('failed');
+    client.answers.rpc = { data: 'ok', error: new Error('half an answer') };
     expect(await cloud.community.follow('x')).toBe('failed');
 
     client.asked.length = 0;

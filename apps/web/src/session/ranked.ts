@@ -298,7 +298,7 @@ export class RankedSessions {
     // Played further elsewhere, or never seen here: the note is brought up to what the server says.
     const moved = note.view === null || note.step !== now.step;
     const session = this.open({ ...note, updatedAt: moved ? this.deps.now() : note.updatedAt }, now, !moved);
-    if (moved || now.run) await session.persist(now.run);
+    if (moved) await session.persist(now.run);
     void session.learn();
     return session;
   }

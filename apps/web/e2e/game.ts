@@ -9,14 +9,14 @@ export const WORDS = {
     play: 'Play the round', nextRound: 'Next round', finish: 'See how it ended', theEnd: 'The end', news: 'News', choices: /^Your choices/,
     happened: 'What happened', later: 'Two years later', card: (n: number) => new RegExp(`^Card ${n} of \\d`), round: (n: number) => `Round ${n} of 20`,
     continue: /Continue your life/, yourLife: 'Your life', orders: "This round's orders", again: 'Live another life',
-    tabs: ['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle', 'Shop', 'Taxes'], openProfile: 'Open your profile', collection: 'Collection', records: 'Records', guide: 'Guide', skipGuide: 'Skip the guide',
+    tabs: ['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle', 'Shop', 'Taxes'], openProfile: 'Open your profile', collection: 'Collection', records: 'Records', rankings: 'Rankings', guide: 'Guide', skipGuide: 'Skip the guide',
   },
   es: {
     newLife: 'Nueva vida', start: 'Empezar esta vida', toCards: 'Ver qué trae la vida', nextCard: 'Siguiente carta', toFinance: 'A tus finanzas',
     play: 'Jugar la ronda', nextRound: 'Siguiente ronda', finish: 'Ver cómo acabó', theEnd: 'Fin', news: 'Noticias', choices: /^Tus opciones/,
     happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => `Ronda ${n} de 20`,
     continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
-    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', guide: 'Guía', skipGuide: 'Quitar la guía',
+    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Clasificaciones', guide: 'Guía', skipGuide: 'Quitar la guía',
   },
 } as const;
 

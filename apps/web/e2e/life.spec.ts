@@ -240,6 +240,11 @@ async function walk(page: Page, lang: Lang, wide: boolean, check: (name: string)
   await page.goto(`/${lang}/records`);
   await expect(page.getByRole('heading', { level: 1, name: w.records })).toBeVisible();
   await check('records-empty');
+  // The rankings are the other players'. This build has no cloud to ask: the page is there, and says what it needs.
+  await page.goto(`/${lang}/rankings`);
+  await expect(page.getByRole('heading', { level: 1, name: w.rankings })).toBeVisible();
+  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await check('rankings-none');
   await page.goto(`/${lang}/new`);
   await expect(page.getByRole('button', { name: w.start })).toBeVisible();
   await check('new-life');

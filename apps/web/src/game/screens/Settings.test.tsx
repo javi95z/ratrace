@@ -3,6 +3,13 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import { LocalSessions } from '@/session/local';
+import { MemoryStore } from '@/session/memory';
+import { RankedSessions } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
+import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
 
@@ -31,7 +38,34 @@ async function open() {
   return { services, user, gear, sheet: screen.getByRole('dialog', { name: 'Settings' }) };
 }
 
+/** The sessions of a device that has a server of ranked lives to ask. */
+function withRanked() {
+  const server = rankedServer();
+  const store = new MemoryStore();
+  let ids = 0;
+  let clock = 0;
+  const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+  const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+  const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+  return { sessions, store, tapGuardMs: 0 };
+}
+
 describe('the settings of a life in progress', () => {
+  it('say which kind of life is being lived: a ranked one, or the player\'s own game', async () => {
+    for (const [ranked, said, unsaid] of [[true, 'Ranked life', 'Your game'], [false, 'Your game', 'Ranked life']] as const) {
+      const services = withRanked();
+      await services.sessions.start('nurse', { ranked });
+      const user = userEvent.setup();
+      renderGame(<Play />, services);
+      await screen.findByRole('heading', { name: 'News' });
+      await user.click(screen.getByRole('button', { name: 'Open settings' }));
+      const sheet = screen.getByRole('dialog', { name: 'Settings' });
+      expect(within(sheet).getByText(said), said).toBeTruthy();
+      expect(within(sheet).queryByText(unsaid), said).toBeNull();
+      cleanup();
+    }
+  });
+
   it('say where the game stands: who, how far along, what it is worth, and that it is saved', async () => {
     const { sheet } = await open();
     const game = within(sheet).getByRole('region', { name: 'Your game' });

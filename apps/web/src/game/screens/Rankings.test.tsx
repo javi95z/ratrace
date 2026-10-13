@@ -157,6 +157,21 @@ describe('the rankings', () => {
     expect(asked.filter((line) => line.startsWith('ranking'))).toHaveLength(2);
   });
 
+  it('shows nothing of one ranking under the name of another while that other is on its way', async () => {
+    const { community: c } = community({ ranking: (query) => (query.period === 'all' ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
+    const user = userEvent.setup();
+    show(c);
+    await screen.findByRole('list', { name: 'All time' });
+    await user.click(screen.getByRole('tab', { name: 'This week' }));
+    // The week has not answered: what is on screen is that it is being read, not the lines of all time.
+    const week = screen.getByRole('tabpanel', { name: 'This week' });
+    expect(within(week).queryByRole('list')).toBeNull();
+    expect(within(week).getByText('Loading…')).toBeTruthy();
+    // Back where the answer is known, it is there at once.
+    await user.click(screen.getByRole('tab', { name: 'All time' }));
+    expect(within(screen.getByRole('list', { name: 'All time' })).getAllByRole('listitem')).toHaveLength(1);
+  });
+
   it('keeps the ranking on screen while it is read again', async () => {
     let asks = 0;
     const { community: c } = community({ ranking: () => ((asks += 1) === 1 ? Promise.resolve([row(1, 'aaaa1111-0000')]) : new Promise(() => {})) });
@@ -200,6 +215,27 @@ describe('the rankings', () => {
     expect(screen.queryByRole('region', { name: 'You' })).toBeNull();
   });
 
+  it('takes a name of three to sixteen characters, without the spaces typed around it', async () => {
+    const { community: c, asked } = community();
+    const user = userEvent.setup();
+    show(c);
+    const you = await screen.findByRole('region', { name: 'You' });
+    await user.click(within(you).getByRole('button', { name: 'Choose a name' }));
+    const field = within(you).getByRole('textbox', { name: 'Name' });
+    await user.type(field, 'ab');
+    await user.click(within(you).getByRole('button', { name: 'Save' }));
+    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters, digits or underscores.');
+    // The field takes no more than a name can hold.
+    await user.clear(field);
+    await user.type(field, 'abcdefghijklmnopq');
+    expect((field as HTMLInputElement).value).toBe('abcdefghijklmnop');
+    await user.clear(field);
+    await user.type(field, ' abc ');
+    await user.click(within(you).getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(you.textContent).toContain('You appear as abc.'));
+    expect(asked.filter((line) => line.startsWith('rename'))).toEqual(['rename abc']);
+  });
+
   it('says why a name was not taken', async () => {
     for (const [answer, said] of [['taken', 'Someone already has that name.'], ['refused', 'That name is not accepted.'], ['failed', 'The name could not be saved. Try again.']] as const) {
       const { community: c } = community({ rename: async () => answer });
@@ -219,6 +255,8 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     expect((await screen.findByRole('region', { name: 'You' })).textContent).toContain('ABCD2345');
+    // Whom the player follows belongs with the ranking it decides, and is not shown beside the others.
+    expect(screen.queryByRole('region', { name: 'People you follow' })).toBeNull();
     await user.click(screen.getByRole('tab', { name: 'Friends' }));
     const friends = await screen.findByRole('region', { name: 'People you follow' });
     expect(friends.textContent).toContain('You follow nobody yet.');

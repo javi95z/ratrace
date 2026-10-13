@@ -6,7 +6,7 @@ import { rankedServer } from '@/testing/rankedServer';
 import { StaleSession, Unreachable } from './errors';
 import { LocalSessions } from './local';
 import { MemoryStore } from './memory';
-import { RankedSessions } from './ranked';
+import { rankedOf, RankedSessions } from './ranked';
 import type { RankedApi } from './ranked';
 import { GameSessions } from './sessions';
 import type { GameSession, RankedGame, SavedGame } from './types';
@@ -17,7 +17,7 @@ const locked = lives.find((life) => life.unlock !== 'default');
 if (!nurse || !locked) throw new Error('the content has no nurse, or no locked life');
 
 /** A device: its store, and the sessions the game uses, over a server of ranked lives the test holds. */
-function device(server: ReturnType<typeof rankedServer> | null, store = new MemoryStore(), versions = VERSIONS) {
+function device(server: { api: RankedApi | null } | null, store = new MemoryStore(), versions = VERSIONS) {
   let ids = 0;
   let clock = 1_000;
   const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
@@ -58,6 +58,8 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
     expect(runs).toHaveLength(1);
     expect(runs[0]).toMatchObject({ runId: session.gameId, lifeId: 'nurse', ranked: true, score: finalScore(content, whole.state), history: whole.history, seed: '', log: [] });
     expect(server.runs[0]).toMatchObject({ id: session.gameId, mode: 'ranked', score: runs[0].score });
+    // It ended when the server says it did, whatever the clock of the device.
+    expect(runs[0].finishedAt).toBe(Date.parse(server.runs[0].finished_at));
     // What the life earned went to the profile, as a casual life's does.
     const profile = await d.store.loadProfile();
     for (const badge of whole.journal.earned) expect(Object.keys(profile.badges)).toContain(badge);
@@ -142,6 +144,118 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
     await d.sessions.start('nurse', { ranked: false });
     await expect(session.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
   });
+
+  it('is refused when the note on the device is not the one this session wrote, and the server is not asked', async () => {
+    const server = rankedServer();
+    const d = device(server);
+    const session = await d.sessions.start('nurse', { ranked: true });
+    const note = (await held(d.store)) as RankedGame;
+    // The same life, written since by another tab.
+    await d.store.saveGame({ ...note, updatedAt: note.updatedAt + 1 });
+    await expect(session.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    // Another life, written at the very moment this one was.
+    await d.store.saveGame({ ...note, gameId: 'another-life' });
+    await expect(session.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect(server.state.calls.filter((call) => call === 'card')).toEqual([]);
+    // With its own note back, it goes on.
+    await d.store.saveGame(note);
+    expect((await session.answerCard(0)).view.answered).toBe(1);
+  });
+
+  it('is refused in the same way when it was taken up from the note, not started here', async () => {
+    const server = rankedServer();
+    const d = device(server);
+    await d.sessions.start('nurse', { ranked: true });
+    const note = (await held(d.store)) as RankedGame;
+    const resumed = (await device(server, d.store).sessions.resume()).session as GameSession;
+    await d.store.saveGame({ ...note, gameId: 'another-life' });
+    await expect(resumed.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect(server.state.calls.filter((call) => call === 'card')).toEqual([]);
+  });
+
+  it('takes steps asked for at once one after the other, each in its own place', async () => {
+    const server = rankedServer();
+    const session = await device(server).sessions.start('nurse', { ranked: true });
+    expect(session.view().hand.length).toBeGreaterThanOrEqual(2);
+    const [first, second] = await Promise.all([session.answerCard(0), session.answerCard(0)]);
+    expect([first.view.answered, second.view.answered]).toEqual([1, 2]);
+    expect((server.games.get(session.gameId)?.log as LoggedRound[])[0].picks).toEqual([0, 0]);
+  });
+
+  it('says the server cannot be reached, not that the life has moved, when nobody is signed in any more', async () => {
+    const server = rankedServer();
+    const link: { api: RankedApi | null } = { api: server.api };
+    const session = await device(link).sessions.start('nurse', { ranked: true });
+    link.api = null;
+    await expect(session.answerCard(0)).rejects.toBeInstanceOf(Unreachable);
+    link.api = server.api;
+    expect((await session.answerCard(0)).view.answered).toBe(1);
+  });
+
+  it('does not hold a view that is not whole: an answer with a world missing, or with one too many, is not this life', async () => {
+    const server = rankedServer();
+    // The round turns, and the answer brings no new world.
+    const short: RankedApi = { ...server.api, round: async (...asked) => server.api.round(...asked).then((reply) => (reply === 'moved' ? reply : { ...reply, world: null })) };
+    const session = await device({ api: short }).sessions.start('nurse', { ranked: true });
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    const before = session.view();
+    await expect(session.playRound({ orders: [] })).rejects.toBeInstanceOf(StaleSession);
+    expect(session.view()).toEqual(before);
+    // A card is answered, and the answer brings a world as if the round had turned.
+    const long: RankedApi = { ...server.api, card: async (...asked) => server.api.card(...asked).then((reply) => (reply === 'moved' ? reply : { ...reply, world: before.timeline[0] })) };
+    const other = await device({ api: long }).sessions.start('nurse', { ranked: true });
+    await expect(other.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
+    expect(other.view().answered).toBe(0);
+  });
+
+  it('counts a badge of the gallery among the badges of the life that earned it, in the records too', async () => {
+    // Nineteen things owned in earlier lives: the twentieth earns the badge. Once in the middle of a life, once with its last round.
+    for (const buyAt of [0, content.rounds - 1]) {
+      const server = rankedServer();
+      const d = device(server);
+      const owned = content.items.filter((item) => item.id !== 'watch_casio').slice(0, 19).map((item) => item.id);
+      await d.store.saveProfile({ ...(await d.store.loadProfile()), gallery: owned });
+      const session = await d.sessions.start('nurse', { ranked: true });
+      await play(session, buyAt);
+      while (session.view().phase === 'cards') await session.answerCard(0);
+      const round = await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+      expect(round.earned, `bought in round ${buyAt}`).toContain('twenty_items');
+      expect(session.badges()).toContain('twenty_items');
+      await play(session);
+      expect(session.view().finished).toBe(true);
+      const runs = await d.store.listRuns();
+      expect(runs).toHaveLength(1);
+      expect(runs[0].badges, `bought in round ${buyAt}`).toContain('twenty_items');
+      // The server knows nothing of the gallery: the badge is the device's to add.
+      expect(server.runs[0].badges).not.toContain('twenty_items');
+    }
+  });
+});
+
+describe('the note a device keeps of a ranked life', () => {
+  const note = { format: 1, ranked: true, gameId: 'g-1', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0', step: 4, view: { round: 1, timeline: [{}, {}], player: {} }, journal: { earned: [] }, history: [100, 250], bankruptcies: 1, updatedAt: 9 };
+
+  it('is read back as it was written', () => {
+    expect(rankedOf(structuredClone(note))).toEqual(note);
+  });
+
+  it('is not one when it is anything else: a casual save, another format, a note with no life to name', () => {
+    for (const raw of [null, 'a note', [note], { ...note, ranked: false }, { ...note, ranked: undefined }, { ...note, format: 99 }, { ...note, gameId: 7 }, { ...note, lifeId: undefined }, { ...note, engineVersion: null }, { ...note, contentVersion: 19 }]) {
+      expect(rankedOf(raw), JSON.stringify(raw)).toBeNull();
+    }
+  });
+
+  it('holds a view seen whole, or none at all: half a view is not one', () => {
+    for (const half of [{ journal: null }, { view: null }, { view: { round: 1, player: {} } }, { view: { round: 1, timeline: [{}, {}] } }, { view: 'seen' }, { journal: 'kept' }]) {
+      const read = rankedOf({ ...note, ...half });
+      expect(read, JSON.stringify(half)).toMatchObject({ gameId: 'g-1', step: 4, view: null, journal: null });
+    }
+  });
+
+  it('reads nonsense in its numbers as nothing', () => {
+    expect(rankedOf({ ...note, step: -1, history: [1, 'two', Number.NaN, 3], bankruptcies: 1.5, updatedAt: 'now' })).toMatchObject({ step: 0, history: [1, 3], bankruptcies: 0, updatedAt: 0 });
+    expect(rankedOf({ ...note, step: 2.5, history: 'none', bankruptcies: -1, updatedAt: Number.POSITIVE_INFINITY })).toMatchObject({ step: 0, history: [], bankruptcies: 0, updatedAt: 0 });
+  });
 });
 
 describe('choosing between a ranked life and a casual one', { timeout: 120_000 }, () => {
@@ -167,6 +281,19 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     expect(session.view().round).toBe(1);
   });
 
+  it('begins no casual life in place of a ranked one the server refused for good', async () => {
+    const server = rankedServer();
+    const refusing: RankedApi = {
+      ...server.api,
+      start: async () => {
+        throw new Error('the server refused to start a ranked life: bad-request');
+      },
+    };
+    const d = device({ api: refusing });
+    await expect(d.sessions.start('nurse', { ranked: true })).rejects.toThrow('the server refused to start a ranked life');
+    expect(await held(d.store)).toBeNull();
+  });
+
   it('refuses a locked life before it asks anyone', async () => {
     const server = rankedServer();
     await expect(device(server).sessions.start(locked.id, { ranked: true })).rejects.toThrow(`locked life: ${locked.id}`);
@@ -187,6 +314,32 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     expect(await d.sessions.resume()).toEqual({ session: null, lost: null });
   });
 
+  it('does not ask the server to give up a ranked life that is already over', async () => {
+    const server = rankedServer();
+    const d = device(server);
+    const session = await d.sessions.start('nurse', { ranked: true });
+    await play(session);
+    server.state.calls.length = 0;
+    await d.sessions.start('nurse', { ranked: false });
+    expect(server.state.calls).toEqual([]);
+    expect(server.games.get(session.gameId)?.status).toBe('finished');
+  });
+
+  it('does not take a failure of its own for a server that is away', async () => {
+    const server = rankedServer();
+    const first = device(server);
+    const session = await first.sessions.start('nurse', { ranked: true });
+    await play(session, 1);
+    const broken: RankedApi = {
+      ...server.api,
+      view: async () => {
+        throw new Error('not an answer anyone expected');
+      },
+    };
+    // Shown as it was last seen, this would hide the fault for ever: it is reported.
+    await expect(device({ api: broken }, first.store).sessions.resume()).rejects.toThrow('not an answer anyone expected');
+  });
+
   it('lets go of a ranked life that was given up elsewhere', async () => {
     const server = rankedServer();
     const d = device(server);
@@ -204,6 +357,11 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     expect(await newer.sessions.resume()).toEqual({ session: null, lost: 'outdated' });
     expect(await held(d.store)).toBeNull();
     expect(server.games.get(session.gameId)?.status).toBe('abandoned');
+    // The numbers of the game are rules as much as the engine is.
+    const again = await d.sessions.start('nurse', { ranked: true });
+    const rebalanced = device(server, d.store, { engine: ENGINE_VERSION, content: '99.0.0' });
+    expect(await rebalanced.sessions.resume()).toEqual({ session: null, lost: 'outdated' });
+    expect(server.games.get(again.gameId)?.status).toBe('abandoned');
   });
 
   it('opens a casual life exactly as before', async () => {
@@ -226,6 +384,15 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     const { session } = await laptop.sessions.resume();
     expect(session?.view()).toEqual(there.view());
     expect(((await held(laptop.store)) as RankedGame).view).toEqual(there.view());
+    // A life not yet begun is kept as it was shown, like any other: with no connection it is there to look at.
+    const begun = rankedServer();
+    const started = await device(begun).sessions.start('nurse', { ranked: true });
+    const desk = device(begun);
+    await desk.store.saveGame({ format: 1, ranked: true, gameId: started.gameId, lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 });
+    expect((await desk.sessions.resume()).session?.view()).toEqual(started.view());
+    expect(((await held(desk.store)) as RankedGame).view).toEqual(started.view());
+    begun.state.down = true;
+    expect((await device(begun, desk.store).sessions.resume()).session?.view()).toEqual(started.view());
     // With no connection there is nothing to show of it yet: the note waits.
     const tablet = device(server);
     await tablet.store.saveGame({ format: 1, ranked: true, gameId: there.gameId, lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 });

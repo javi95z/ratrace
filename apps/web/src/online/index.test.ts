@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@/session/memory';
-import { browserOnline, browserPage, givenUpIn } from './index';
+import { browserOnline, browserPage, givenUpIn, onlineOver } from './index';
 import { offlineAccount } from './offline';
+import type { Cloud } from './supabase';
 
 const connected = vi.hoisted(() => [] as unknown[][]);
 // The guard at the door, as this test knows it: by the site it was made for.
@@ -77,6 +78,37 @@ describe('the cloud of this browser', () => {
     vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');
     await browserOnline(new MemoryStore()).account.start('en');
     expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', { region: undefined, captcha: undefined }]]);
+  });
+
+  it('hands on the cloud\'s ranked lives and its other players while someone is signed in, and neither before', async () => {
+    const ranked = {} as Cloud['ranked'];
+    const community = {} as Cloud['community'];
+    const cloud = {
+      currentUser: async () => ({ id: 'u-1', is_anonymous: true }),
+      ensureProfile: async () => {},
+      onUser: () => () => {},
+      playingGames: async () => [],
+      loadProgress: async () => null,
+      listRuns: async () => [],
+      rankedLife: async () => null,
+      ranked,
+      community,
+    } as unknown as Cloud;
+    const online = onlineOver(new MemoryStore(), {
+      connect: async () => cloud,
+      address: () => 'http://localhost/en',
+      clean: () => {},
+      page: { onOnline: () => () => {}, onShown: () => () => {}, now: () => 0 },
+      remember: { read: () => [], write: () => {} },
+      schedule: () => {},
+      newId: () => 'never',
+    });
+    expect(online.ranked()).toBeNull();
+    expect(online.community()).toBeNull();
+    await online.account.start('en');
+    expect(online.account.state()).toMatchObject({ kind: 'guest', userId: 'u-1' });
+    expect(online.ranked()).toBe(ranked);
+    expect(online.community()).toBe(community);
   });
 
   it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', () => {

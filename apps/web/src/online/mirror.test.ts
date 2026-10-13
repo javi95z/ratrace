@@ -1018,6 +1018,10 @@ describe('the mirror', { timeout: 60_000 }, () => {
     const d = device(cloud);
     await d.mirror.sync();
     expect(await d.store.loadGame()).toBeNull();
+    // The numbers of the game are rules as much as the engine is.
+    state.ranked = { id: 'ranked-9', lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: '0.1.0' };
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toBeNull();
   });
 
   it('prefers the account\'s ranked life to its casual one for a device with none, and offers the casual one', async () => {

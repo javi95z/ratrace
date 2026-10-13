@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -553,6 +553,53 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
     renderGame(<><Begin /><Play /></>, services, 'es');
     await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
     expect((await screen.findByRole('alert')).textContent).toBe('No se ha podido llegar al servidor, así que esta vida no es clasificatoria. Se guarda en este dispositivo.');
+  });
+
+  it('takes each of its notices away once it has had time to be read, and does not show it again', async () => {
+    // Time is the test's to move, and goes on by itself meanwhile, so that everything else happens as it does.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      // A step that did not get through.
+      const first = rankedGame();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderGame(<><first.Begin /><Play /></>, first.services);
+      await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
+      await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
+      first.server.state.down = true;
+      await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
+      await screen.findByRole('alert');
+      await act(() => vi.advanceTimersByTimeAsync(6_000));
+      expect(screen.queryByRole('alert')).toBeNull();
+      cleanup();
+
+      // A life that had to begin on the device.
+      const second = rankedGame();
+      second.server.state.down = true;
+      renderGame(<><second.Begin /><Play /></>, second.services);
+      await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
+      await screen.findByRole('alert');
+      await act(() => vi.advanceTimersByTimeAsync(6_000));
+      expect(screen.queryByRole('alert')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('says at the end of a ranked life that it is in the rankings, and leads to them; a casual life says nothing of them', async () => {
+    const ranked = rankedGame();
+    await playRounds(await ranked.services.sessions.start('nurse', { ranked: true }), content.rounds);
+    renderGame(<Play />, ranked.services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    const note = screen.getByText(/A ranked life: it is in the rankings\./);
+    expect(within(note).getByRole('link', { name: 'See the rankings' }).getAttribute('href')).toBe('/rankings');
+    cleanup();
+
+    const casual = rankedGame();
+    await playRounds(await casual.services.sessions.start('nurse'), content.rounds);
+    renderGame(<Play />, casual.services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(screen.queryByText(/in the rankings/)).toBeNull();
+    expect(screen.queryByRole('link', { name: 'See the rankings' })).toBeNull();
   });
 });
 
