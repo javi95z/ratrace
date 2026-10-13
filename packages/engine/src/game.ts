@@ -64,7 +64,7 @@ function beginRound(content: Content, state: GameState, rng: Rng): void {
   if (hasFlag(life.flags, FLAG_UNSTABLE_PAY)) {
     const range = content.life.unstablePayPct;
     life.salaryBoostPct += rng.int(2 * range + 1) - range;
-    refreshDerived(state.player, content);
+    refreshDerived(state.player, content, state.round);
   }
   state.hand = drawHand(state, content, rng);
   state.answered = 0;
@@ -175,7 +175,7 @@ function executeChoices(
     const reason = index < content.maxOrdersPerRound ? executeOrder(p, order, ctx) : 'too-many-orders';
     if (reason !== null) rejected.push({ index, order, reason });
   });
-  refreshDerived(p, content);
+  refreshDerived(p, content, round);
   return { tally, rejected };
 }
 
@@ -302,7 +302,8 @@ export function applyRound(
   if (bankruptcy) events.push({ kind: 'bankrupt', ...bankruptcy });
 
   turnPage(p, content, events);
-  refreshDerived(p, content);
+  // Judged as of the round now opening: this is the status the player starts it with.
+  refreshDerived(p, content, completed);
   next.round = completed;
   next.finished = completed >= content.rounds;
   if (next.finished) {

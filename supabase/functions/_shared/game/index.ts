@@ -4,6 +4,7 @@ import * as g0 from './v0.4.0-1.3.0.js';
 import * as g1 from './v0.5.0-1.5.0.js';
 import * as g2 from './v0.6.0-1.6.0.js';
 import * as g3 from './v0.7.0-1.7.0.js';
+import * as g4 from './v0.8.0-1.8.0.js';
 
 /** Every engine and content pair the server can play, under "engine/content". */
 export const GAMES: Readonly<Record<string, GameModule>> = {
@@ -11,4 +12,5 @@ export const GAMES: Readonly<Record<string, GameModule>> = {
   '0.5.0/1.5.0': g1 as unknown as GameModule,
   '0.6.0/1.6.0': g2 as unknown as GameModule,
   '0.7.0/1.7.0': g3 as unknown as GameModule,
+  '0.8.0/1.8.0': g4 as unknown as GameModule,
 };

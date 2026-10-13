@@ -77,13 +77,17 @@ export function drawHand(state: GameState, content: Content, rng: Rng): string[]
  * and that are not resting after a recent appearance, each with its weight. A card of the hand is
  * resting from the moment it is dealt, so it is never dealt twice in a round.
  */
-function openCards(state: GameState, content: Content, at: Situation): Array<[string, number]> {
+function openCards(state: GameState, content: Content, at: Situation, rested = false): Array<[string, number]> {
   const p = state.player;
   const seen = p.life.seen;
   const pool: Array<[string, number]> = [];
   for (const card of content.cards) {
     if (card.category === 'world') continue;
-    if (Object.hasOwn(seen, card.id) && (card.once === true || state.round - seen[card.id] <= card.cooldown)) continue;
+    if (Object.hasOwn(seen, card.id)) {
+      const since = state.round - seen[card.id];
+      // With `rested`, a card still resting may come back early, but never one of this very round, nor one that comes once in a life.
+      if (card.once === true || since === 0 || (!rested && since <= card.cooldown)) continue;
+    }
     if (conditionHolds(card.when, p, at)) pool.push([card.id, card.weight]);
   }
   return pool;
@@ -94,7 +98,9 @@ function openCards(state: GameState, content: Content, at: Situation): Array<[st
  * and a card answered since may have changed the life it was dealt for: someone who has just
  * retired must not be asked about their boss. A card whose condition no longer holds is taken out
  * as if it had never been dealt, so it may come back another round, and another that is open to
- * the player is dealt in its place; where there is none, the hand is a card shorter.
+ * the player is dealt in its place. A round keeps its number of cards if it possibly can: where
+ * no card is open, one that is still resting is called back early, and only when even that fails
+ * is the hand a card shorter.
  */
 function settleHand(state: GameState, content: Content, rng: Rng, events: GameEvent[]): void {
   const p = state.player;
@@ -103,7 +109,8 @@ function settleHand(state: GameState, content: Content, rng: Rng, events: GameEv
     const waiting = cardOf(content, state.hand[state.answered]);
     if (conditionHolds(waiting.when, p, at)) return;
     delete p.life.seen[waiting.id];
-    const pool = openCards(state, content, at);
+    let pool = openCards(state, content, at);
+    if (pool.length === 0) pool = openCards(state, content, at, true);
     if (pool.length === 0) {
       state.hand.splice(state.answered, 1);
       events.push({ kind: 'cardWithdrawn', cardId: waiting.id, replacedBy: null });

@@ -5,7 +5,7 @@ import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWort
 import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
+import { ageAt, debtLabel } from '@/game/present';
 import { Bare, Panel, Row, Tag, TickerBadge } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -41,7 +41,8 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
   const estate = useT('finance.property');
   const debtText = useT('finance.debt');
   const end = useT('end');
-  const { content, text, names, fmt } = useWords();
+  const words = useWords();
+  const { content, text, names, fmt } = words;
   const history = useGame((s) => s.history);
   const p = shown.player;
   const world = shown.timeline[shown.round];
@@ -198,7 +199,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
             {p.debts.map((debt) => (
               <li key={debt.id} className="frame bg-night-700 px-3 py-2">
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="pixel text-[16px]">{text.debts[debt.kind]}</span>
+                  <span className="pixel text-[16px]">{debtLabel(words, debt)}</span>
                   <span className="pixel text-wine-300">{fmt.money(debt.principal)}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1.5">

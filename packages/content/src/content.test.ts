@@ -1,6 +1,7 @@
 import { applyRound, createGame, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './kinds';
+import { START_AGE } from './badges';
 import { content } from './content';
 import { lives } from './lives';
 
@@ -91,6 +92,10 @@ describe('the v1 content', () => {
       expect(Math.abs((quote.finance?.down ?? 0) * 5 - quote.price), item.id).toBeLessThan(5);
     }
     expect(content.life.lifestyleStatus).toEqual([-3, 0, 3, 8]);
+    // A rented room is neutral until twenty-six, two rounds in, and then costs what a frugal life does.
+    expect(START_AGE + content.life.roomLateRound * content.yearsPerRound).toBe(26);
+    expect(content.life.roomLateStatus).toBe(-3);
+    expect(content.life.rentTierStatus).toEqual([0, 3]);
   });
 
   it('gives every insurance a card that it softens or opens', () => {

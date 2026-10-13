@@ -94,7 +94,7 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
     if (plan === null) return 'cannot-finance';
     const lock = financeLock(p, plan, ctx.content, ctx.world, ctx.round);
     if (lock !== null) return lock;
-    takePersonalLoan(p, plan.loan, ctx.content, ctx.world);
+    takePersonalLoan(p, plan.loan, ctx.content, ctx.world).forItem = itemId;
   } else if (price > p.cash) return 'not-enough-cash';
   p.cash -= price;
   ctx.tally.itemsBought += price;

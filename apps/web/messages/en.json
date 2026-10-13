@@ -81,7 +81,12 @@
     "statusBonus": "Extras from cards",
     "statusNow": "Status now",
     "statusLived": "Average over the life",
-    "statusLivedHint": "What the score counts",
+    "statusLivedHint": "What counts towards the score",
+    "scoreNow": "Your score today",
+    "scoreWealth": "{n} for net worth",
+    "scoreStatus": "{n} for status",
+    "scoreHint": "The score adds the points of your net worth to your average status. Getting out of the rat race multiplies it.",
+    "scoreEscaped": "You got out of the rat race: the sum is multiplied by {multiplier}.",
     "about": {
       "cash": "The money you have on hand. Your expenses and purchases come out of it, and it earns nothing while it waits.",
       "flow": "What comes in less what goes out in a year, before tax. Green, you have money left over; red, you are eating into your cash.",
@@ -373,6 +378,7 @@
       "tier": "How you live",
       "tierFloor": "Your life does not allow less than this.",
       "tierStatus": "Status:",
+      "roomLate": "From the age of {age}, living in a room takes {n} status away.",
       "home": "Where you live",
       "ownerNote": "You live in a home you own, so you pay no rent.",
       "insurance": "Insurance",
@@ -409,7 +415,11 @@
       "statusDown": "Status −{n}",
       "finance": "On instalments · {amount} down",
       "financeTerms": "The rest, {loan}, is a loan at {rate} over {years} years: about {annual} a year at first.",
-      "financeKept": "Sell it and the debt stays with you."
+      "financeKept": "Sell it and the debt stays with you.",
+      "owed": "Still owed on the loan",
+      "owedKept": "You bought it on instalments. Sell it and the debt stays with you.",
+      "owedShort": "You bought it on instalments. Selling it today would not clear the debt: you would be {amount} short.",
+      "owedGone": "You bought it on instalments and no longer have it. The debt stays."
     },
     "taxes": {
       "income": "Coming in",

@@ -134,7 +134,7 @@ describe('item orders', () => {
     expect(p.cash).toBe(0);
     expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000 }]);
     expect(p.debts).toEqual([
-      { id: p.debts[0].id, kind: 'personalLoan', principal: 960_000, fixedRateBp: ctx.world.policyRateBp + content.debt.personalLoanSpreadBp, roundsLeft: content.debt.personalLoanTermRounds },
+      { id: p.debts[0].id, kind: 'personalLoan', principal: 960_000, fixedRateBp: ctx.world.policyRateBp + content.debt.personalLoanSpreadBp, roundsLeft: content.debt.personalLoanTermRounds, forItem: 'car_basic' },
     ]);
     // The whole price counts as spent on things, exactly as when it is paid at once.
     expect(ctx.tally.itemsBought).toBe(1_200_000);
@@ -156,6 +156,8 @@ describe('item orders', () => {
     // A loan already at the limit of the salary leaves no room for the car's.
     const full = setup();
     expect(full.run({ type: 'borrow', amount: quoteLoanRoom(full) })).toBeNull();
+    // A loan asked for as money is for nothing in particular.
+    expect(full.p.debts[0].forItem).toBeUndefined();
     expect(full.run({ type: 'buyItem', itemId: 'car_basic', financed: true })).toBe('over-loan-limit');
 
     const locked = setup();

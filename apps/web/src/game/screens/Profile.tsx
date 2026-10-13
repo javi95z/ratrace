@@ -6,7 +6,7 @@ import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useSaving, useT, useWords } from '@/game/context';
-import { insuranceCover } from '@/game/present';
+import { ageAt, insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -249,11 +249,14 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
         <p className="text-[14px] leading-snug">{t('aboutRent', { city: names.cities[p.cityId] })}</p>
         <ul className="flex flex-col gap-2">
           {text.rentTiers.map((name, tier) => (
-            <Choice key={tier} icon={rentTierIcon[tier]} name={name} cost={living.rentTiers ? perYear(living.rentTiers[tier]) : ''} status={content.life.rentTierStatus[tier]} on={tier === p.life.rentTier} onLabel={t('yours')}
+            <Choice key={tier} icon={rentTierIcon[tier]} name={name} cost={living.rentTiers ? perYear(living.rentTiers[tier]) : ''} status={living.rentStatus[tier]} on={tier === p.life.rentTier} onLabel={t('yours')}
               onPick={now ? () => setOrder((order) => order.type === 'setRentTier', tier === now.life.rentTier ? null : { type: 'setRentTier', tier: tier as RentTier }) : undefined}
             />
           ))}
         </ul>
+        {living.roomLateFromRound !== null ? (
+          <p className="text-[12px] text-wine-300">{life('roomLate', { age: ageAt(content, living.roomLateFromRound), n: -living.roomLateStatus })}</p>
+        ) : null}
         <p className="text-[12px] text-ink-300">{t('rentCost')}</p>
       </>
     );

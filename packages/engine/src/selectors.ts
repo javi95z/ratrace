@@ -111,5 +111,5 @@ export function cashflowLines(content: Content, state: GameView): CashflowLines 
 
 /** Status as it stands now, by where it comes from, beside the status the score counts. */
 export function statusBreakdown(content: Content, state: GameView): StatusParts & { total: number; lived: number } {
-  return { ...statusParts(state.player, content), total: state.player.statusPoints, lived: livedStatus(state) };
+  return { ...statusParts(state.player, content, state.round), total: state.player.statusPoints, lived: livedStatus(state) };
 }

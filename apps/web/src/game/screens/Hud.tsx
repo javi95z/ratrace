@@ -1,7 +1,7 @@
 'use client';
 
 import { portraitArt } from '@ratrace/content';
-import { cashflow, cashflowLines, escapeProgress, netWorth, statusBreakdown } from '@ratrace/engine';
+import { cashflow, cashflowLines, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -76,6 +76,7 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
         {status.bonus !== 0 ? <Row left={t('statusBonus')} right={points(status.bonus)} /> : null}
         <Row className={total} left={t('statusNow')} right={fmt.number(status.total)} />
         <Row left={t('statusLived')} sub={t('statusLivedHint')} right={fmt.number(status.lived)} />
+        <ScoreNow shown={shown} />
       </>
     );
   }
@@ -85,6 +86,37 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
       <p className="mb-1 text-[13px] leading-snug text-ink-200">{t(`about.${figure}`)}</p>
       <div className="text-[14px]">{rows}</div>
     </>
+  );
+}
+
+/**
+ * What status is for: the score as it would stand today, and how much of it is money and how much
+ * is status. The figures are the engine's own, the same the last screen of a life will show.
+ */
+function ScoreNow({ shown }: { shown: GameView }) {
+  const t = useT('hud');
+  const { content, fmt } = useWords();
+  const score = scoreBreakdown(content, shown);
+  const sum = Math.max(1, score.wealth + score.status);
+  const share = Math.round((score.status * 100) / sum);
+  return (
+    <section aria-label={t('scoreNow')} className="frame mt-3 bg-night-800 px-3 py-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('scoreNow')}</span>
+        <span className="pixel text-[22px] leading-none text-gold-500">{fmt.number(score.total)}</span>
+      </div>
+      <div aria-hidden className="sunk mt-2 flex h-3 bg-ink-900">
+        <span className="bg-gold-500" style={{ width: `${100 - share}%` }} />
+        <span className="bg-teal-300" style={{ width: `${share}%` }} />
+      </div>
+      <div className="mt-1.5 flex flex-wrap justify-between gap-x-3 text-[13px]">
+        <span className="text-gold-500">{t('scoreWealth', { n: fmt.number(score.wealth) })}</span>
+        <span className="text-teal-300">{t('scoreStatus', { n: fmt.number(score.status) })}</span>
+      </div>
+      <p className="mt-1.5 text-[12px] leading-snug text-ink-300">
+        {score.multiplierPct > 100 ? t('scoreEscaped', { multiplier: fmt.factor(score.multiplierPct) }) : t('scoreHint')}
+      </p>
+    </section>
   );
 }
 

@@ -11,7 +11,7 @@ const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 0 }
 function life(start: Partial<LifeStart> = {}, patch: Partial<LifeState> = {}, over: Partial<ReturnType<typeof fixtureStart>> = {}): GameState {
   const state = createGame({ content, start: { ...fixtureStart(), ...over, life: { ...office, ...start } } }, 'derive');
   Object.assign(state.player.life, patch);
-  refreshDerived(state.player, content);
+  refreshDerived(state.player, content, 0);
   return state;
 }
 
@@ -69,22 +69,36 @@ describe('status', () => {
   it('counts the best item of a ladder in full and the rest in part', () => {
     const one = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }] });
     const two = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'car_sports', value: 0, roundsLeft: null, paid: 0 }] });
-    expect(deriveStatus(one.player, content)).toBe(4 + 2);
-    expect(deriveStatus(two.player, content)).toBe(40 + 1 + 2);
+    expect(deriveStatus(one.player, content, 0)).toBe(4 + 2);
+    expect(deriveStatus(two.player, content, 0)).toBe(40 + 1 + 2);
   });
 
   it('adds job, home, rent tier, lifestyle, city and lasting bonuses, and experiences while they last', () => {
     const base = life({ career: { id: 'office', level: 2 }, rentTier: 0 });
-    expect(deriveStatus(base.player, content)).toBe(6);
+    expect(deriveStatus(base.player, content, 0)).toBe(6);
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,
       items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
-    expect(deriveStatus(fancy.player, content)).toBe(6 + 2 + 5 + 9 + 7 + 10);
+    expect(deriveStatus(fancy.player, content, 0)).toBe(6 + 2 + 5 + 9 + 7 + 10);
   });
 
   it('is never negative', () => {
-    expect(deriveStatus(life({}, { bonusStatus: -50 }).player, content)).toBe(0);
+    expect(deriveStatus(life({}, { bonusStatus: -50 }).player, content, 0)).toBe(0);
+  });
+
+  it('counts a rented room as neutral while the player is young, and against them from the round the rules name', () => {
+    const late = fixtureContent();
+    late.life.roomLateRound = 3;
+    late.life.roomLateStatus = -4;
+    const room = life({ career: { id: 'office', level: 2 }, rentTier: 0 }).player;
+    const flat = life({ career: { id: 'office', level: 2 }, rentTier: 1 }).player;
+    expect([2, 3, 9].map((round) => deriveStatus(room, late, round))).toEqual([6, 2, 2]);
+    expect([2, 3].map((round) => statusParts(room, late, round).home)).toEqual([0, -4]);
+    // A flat is a flat at any age, and so is a home of one's own.
+    expect([2, 3].map((round) => statusParts(flat, late, round).home)).toEqual([2, 2]);
+    const owner = life({ properties: [{ typeId: 'house', rented: false }] }).player;
+    expect(statusParts(owner, late, 0).home).toBe(statusParts(owner, late, 9).home);
   });
 
   it('loses what a way of living below the ordinary takes, and shows that part as it is', () => {
@@ -95,9 +109,9 @@ describe('status', () => {
       p.lifestyleTier = lifestyleTier;
       return p;
     };
-    expect(deriveStatus(at(1), lean)).toBe(6);
-    expect(deriveStatus(at(0), lean)).toBe(2);
-    expect(statusParts(at(0), lean).lifestyle).toBe(-4);
+    expect(deriveStatus(at(1), lean, 0)).toBe(6);
+    expect(deriveStatus(at(0), lean, 0)).toBe(2);
+    expect(statusParts(at(0), lean, 0).lifestyle).toBe(-4);
   });
 
   it('says where it comes from, part by part', () => {
@@ -105,15 +119,15 @@ describe('status', () => {
       bonusStatus: 7,
       items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
-    expect(statusParts(fancy.player, content)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
+    expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
     // A loss from a card shows as it is, though the status itself stops at zero.
-    expect(statusParts(life({}, { bonusStatus: -50 }).player, content).bonus).toBe(-50);
+    expect(statusParts(life({}, { bonusStatus: -50 }).player, content, 0).bonus).toBe(-50);
   });
 
   it('counts the home the player owns and lives in, instead of the rent tier', () => {
     const owner = life({ properties: [{ typeId: 'house', rented: false }, { typeId: 'villa', rented: true }] });
     expect(owner.player.properties).toHaveLength(2);
-    expect(deriveStatus(owner.player, content)).toBe(10);
+    expect(deriveStatus(owner.player, content, 0)).toBe(10);
   });
 });
 

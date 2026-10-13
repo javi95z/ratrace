@@ -373,12 +373,38 @@ describe('a card that no longer fits', () => {
     expect(all.state).toEqual(step.state);
   });
 
-  it('never puts back a card already dealt this round, nor one that is resting or spent', () => {
+  it('calls back a card that is still resting sooner than leave the round a card short, but only when nothing else is open', () => {
     const rested = card('rested', { when: { flags: ['gone'] }, cooldown: 5 });
-    const { content, state } = dealt([leave, boss, rested]);
-    const resting = withPlayer(content, state, {}, { seen: { ...state.player.life.seen, rested: 0 } });
-    const one = applyCard(content, resting, 1);
-    expect(one.state.hand).toEqual(['leave']);
+    const later = (cards: CardDef[]) => {
+      // The third round, with `rested` last seen in the first: two rounds into a rest of five.
+      const { content, state } = dealt(cards);
+      const moved = { ...withPlayer(content, state, {}, { seen: { leave: 2, boss: 2, rested: 0 } }), round: 2 };
+      return { content, state: withPlayer(content, moved, {}) };
+    };
+    const alone = later([leave, boss, rested]);
+    const one = applyCard(alone.content, alone.state, 1);
+    expect(one.state.hand).toEqual(['leave', 'rested']);
+    expect(withdrawn(one.events)).toEqual([{ kind: 'cardWithdrawn', cardId: 'boss', replacedBy: 'rested' }]);
+    expect(one.state.player.life.seen).toEqual({ leave: 2, rested: 2 });
+
+    // With a card that is properly open beside it, the resting one is left to rest.
+    const both = later([leave, boss, rested, spare]);
+    expect(applyCard(both.content, both.state, 1).state.hand).toEqual(['leave', 'spare']);
+  });
+
+  it('never puts back a card of this very round, nor one that comes once in a life', () => {
+    const spent = card('spent', { when: { flags: ['gone'] }, once: true });
+    const { content, state } = dealt([leave, boss, spent]);
+    const seenIt = withPlayer(content, state, {}, { seen: { ...state.player.life.seen, spent: 0 } });
+    expect(applyCard(content, seenIt, 1).state.hand).toEqual(['leave']);
+    // A card dealt this round and withdrawn is not dealt again in it.
+    const chief = card('chief', { when: { notFlags: ['gone'] } });
+    const three = contentWith([leave, boss, chief], (c) => {
+      c.life.cardsPerRound = 3;
+    });
+    let hand = createGame({ content: three, start: start() }, 'again');
+    for (let i = 0; hand.hand[0] !== 'leave'; i++) hand = createGame({ content: three, start: start() }, `again-${i}`);
+    expect(applyCard(three, hand, 1).state.hand).toEqual(['leave']);
   });
 
   it('withdraws one card after another until one fits', () => {

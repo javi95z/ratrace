@@ -81,6 +81,7 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
   }
   for (const debt of p.debts) {
     if (!DEBT_KINDS.includes(debt.kind)) breaks.push(`debt ${debt.id} has an unknown kind`);
+    if (debt.forItem !== undefined && typeof debt.forItem !== 'string') breaks.push(`debt ${debt.id} names an item that is not text`);
     if (!isCount(debt.roundsLeft)) breaks.push(`debt ${debt.id} roundsLeft is not a non-negative whole number: ${debt.roundsLeft}`);
   }
   for (const property of p.properties) {
@@ -109,7 +110,7 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
       ['salaryAnnual', p.salaryAnnual, deriveSalary(p, content)],
       ['extraExpensesAnnual', p.extraExpensesAnnual, deriveExpenses(p, content)],
       ['extraPassiveAnnual', p.extraPassiveAnnual, derivePassive(p)],
-      ['statusPoints', p.statusPoints, deriveStatus(p, content)],
+      ['statusPoints', p.statusPoints, deriveStatus(p, content, state.round)],
     ];
     for (const [name, value, expected] of derived) {
       if (value !== expected) breaks.push(`${name} is out of step with the life: ${value}, expected ${expected}`);

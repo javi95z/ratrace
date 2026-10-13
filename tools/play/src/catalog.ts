@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   badgeArt, badges, cardArt, cityArt, cityIcon, content, CONTENT_VERSION, FAMILY_ART, focusArt, insuranceArt, itemArt, lifestyleArt,
-  lives, portraitArt, propertyArt, rentTierArt, textFor,
+  lives, portraitArt, propertyArt, rentTierArt, START_AGE, textFor,
 } from '@ratrace/content';
 import type { ItemDef } from '@ratrace/engine';
 
@@ -180,6 +180,7 @@ say(
   ),
   'Quien no tiene casa propia vive de alquiler:',
   table(['', 'Alquiler', 'Gasto de vivienda', 'Estatus'], [0, 1].map((tier) => [img(rentTierArt[tier]), text.rentTiers[tier], `${content.life.rentTierHousingPct[tier]} %`, signed(content.life.rentTierStatus[tier])])),
+  `Desde los ${START_AGE + content.life.roomLateRound * content.yearsPerRound} años, la habitación alquilada pasa a dar ${signed(content.life.roomLateStatus)} de estatus.`,
 );
 
 // ---------------------------------------------------------------------------------------------

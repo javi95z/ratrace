@@ -156,6 +156,9 @@ const base: Content = {
     insurancePremiumBp: { health: 400, home: 300, life: 200, liability: 100 },
     rentTierHousingPct: [60, 100],
     rentTierStatus: [0, 2],
+    // Past the last round, so that tests of anything else never meet it.
+    roomLateRound: 99,
+    roomLateStatus: 0,
     lifestyleStatus: [0, 0, 0, 9],
     itemFinanceDownPct: 20,
     itemFinanceMinPrice: 500_000,

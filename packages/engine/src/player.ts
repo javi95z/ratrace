@@ -68,6 +68,6 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     });
   }
   for (const held of from?.holdings ?? []) p.positions[held.assetId] = { value: held.value, basis: held.value };
-  refreshDerived(p, content);
+  refreshDerived(p, content, 0);
   return p;
 }

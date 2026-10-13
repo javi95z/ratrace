@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
-import { ageAt, chancePct, effectTags, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
+import { ageAt, chancePct, debtLabel, effectTags, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -35,6 +35,16 @@ describe('headlineText', () => {
     expect(headlineText(w, { topic: 'rates', trend: 'up' })).toBe('Central bank hints at higher rates');
     expect(headlineText(w, { topic: 'property', cityId: 'new_york', trend: 'down' })).toBe('Estate agents in New York see prices falling');
     expect(headlineText(words('es'), { topic: 'property', cityId: 'new_york', trend: 'up' })).toBe('Las inmobiliarias de Nueva York ven subir los precios');
+  });
+});
+
+describe('debtLabel', () => {
+  it('names a debt by its kind, and by the thing it bought when it bought one', () => {
+    expect(debtLabel(words('en'), { kind: 'personalLoan' })).toBe('Personal loan');
+    expect(debtLabel(words('en'), { kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('Personal loan · SEAT Ibiza');
+    expect(debtLabel(words('es'), { kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('Préstamo personal · SEAT Ibiza');
+    // A thing no longer in the game is not named.
+    expect(debtLabel(words('en'), { kind: 'personalLoan', forItem: 'gone' })).toBe('Personal loan');
   });
 });
 

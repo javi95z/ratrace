@@ -1,7 +1,7 @@
 import { cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
-import type { Content, Effects, GameEvent, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
+import type { Content, Debt, Effects, GameEvent, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -50,6 +50,12 @@ export interface EffectTag {
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 const toneOf = (n: number): Tone => (n > 0 ? 'good' : 'bad');
+
+/** What a debt is called: its kind, and the thing it bought when it was taken to buy one. */
+export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem'>): string {
+  const kind = words.text.debts[debt.kind];
+  return debt.forItem !== undefined && words.names.items[debt.forItem] !== undefined ? `${kind} · ${words.names.items[debt.forItem]}` : kind;
+}
 
 /**
  * What a card option does, as short tags. Cash is not here: the caller shows the exact figure the
@@ -139,7 +145,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('borrow', { amount: fmt.money(order.amount) });
     case 'repay': {
       const debt = player.debts.find((d) => d.id === order.debtId);
-      return t('repay', { name: debt ? text.debts[debt.kind] : '', amount: fmt.money(order.amount) });
+      return t('repay', { name: debt ? debtLabel(words, debt) : '', amount: fmt.money(order.amount) });
     }
     case 'buyProperty':
       return t(order.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[order.typeId] });

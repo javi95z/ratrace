@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.7.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.8.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -496,6 +496,8 @@ Quien no tiene casa propia vive de alquiler:
 | --- | --- | --- | --- |
 | <img src="../art/clean/homes/home.rented_room.png" alt=""> | Habitación alquilada | 55 % | 0 |
 | <img src="../art/clean/homes/home.rented_flat.png" alt=""> | Piso alquilado | 100 % | +3 |
+
+Desde los 26 años, la habitación alquilada pasa a dar -3 de estatus.
 
 ## Inversiones
 

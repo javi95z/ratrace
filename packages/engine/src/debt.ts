@@ -73,15 +73,17 @@ export function personalLoanRateBp(content: Content, world: WorldState): Bp {
 }
 
 /** Pays a personal loan out in cash, at today's rate and for the usual term. Whether the player may have it is the caller's to judge. */
-export function takePersonalLoan(p: PlayerState, amount: Cents, content: Content, world: WorldState): void {
-  p.debts.push({
+export function takePersonalLoan(p: PlayerState, amount: Cents, content: Content, world: WorldState): Debt {
+  const loan: Debt = {
     id: newId(p, 'debt'),
     kind: 'personalLoan',
     principal: amount,
     fixedRateBp: personalLoanRateBp(content, world),
     roundsLeft: content.debt.personalLoanTermRounds,
-  });
+  };
+  p.debts.push(loan);
   p.cash += amount;
+  return loan;
 }
 
 export function executeBorrow(

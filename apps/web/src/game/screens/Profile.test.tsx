@@ -137,6 +137,10 @@ describe('what the player owns, in the profile', () => {
     expect(choices).toHaveLength(2);
     expect(choices[0].getAttribute('aria-current')).toBe('true');
     expect(within(sheet).getByText(/^Until you own a home in Madrid, you rent/)).toBeTruthy();
+    // A room costs nothing in status at twenty-two, and the sheet says from when it will.
+    expect(within(choices[0]).queryByText(/^Status/)).toBeNull();
+    expect(within(choices[1]).getByText('Status +3')).toBeTruthy();
+    expect(within(sheet).getByText('From the age of 26, living in a room takes 3 status away.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
 
     await user.click(screen.getByRole('button', { name: /^Insurance/ }));
@@ -207,6 +211,23 @@ describe('what the player owns, in the profile', () => {
     expect(after.lifestyleTier).toBe(0);
     expect(after.life.rentTier).toBe(1);
     expect(after.life.insurance).toMatchObject({ health: true, home: false });
+  });
+
+  it('shows a rented room as a loss of status once the player is twenty-six, and warns of it no more', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    for (let round = 0; round < 2; round++) {
+      while (session.view().phase === 'cards') await session.answerCard(0);
+      await session.playRound({ orders: [] });
+    }
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    await user.click(screen.getByRole('button', { name: /^Home/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Home' });
+    expect(within(within(sheet).getAllByRole('listitem')[0]).getByText('Status −3')).toBeTruthy();
+    expect(within(sheet).queryByText(/^From the age of/)).toBeNull();
   });
 
   it('shows the home itself, and no rent, to someone who owns where they live', async () => {

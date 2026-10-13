@@ -67,6 +67,17 @@ describe('the figures of the HUD', () => {
     expect(status.textContent).toContain(String(now));
   });
 
+  it('say what status is for: the score as it stands today, and how much of it is money and how much status', async () => {
+    const user = await open();
+    await user.click(screen.getByRole('button', { name: /Status/ }));
+    const score = within(screen.getByRole('dialog', { name: 'Status' })).getByRole('region', { name: 'Your score today' });
+    const wealth = Number(within(score).getByText(/ for net worth$/).textContent?.split(' ')[0]);
+    const status = Number(within(score).getByText(/ for status$/).textContent?.split(' ')[0]);
+    // The two parts add up to the figure, which is the engine's own: nobody has got out of the rat race at twenty-two.
+    expect(score.querySelector('.text-\\[22px\\]')?.textContent).toBe(String(wealth + status));
+    expect(within(score).getByText(/^The score adds the points of your net worth to your average status\./)).toBeTruthy();
+  });
+
   it('close on Escape, and hand the focus back to the figure that was tapped', async () => {
     const user = await open();
     const status = screen.getByRole('button', { name: /Status/ });

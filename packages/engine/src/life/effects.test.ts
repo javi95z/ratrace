@@ -22,7 +22,7 @@ function after(effects: Effects | undefined, p: PlayerState = player(), world: W
   expect(p.salaryAnnual).toBe(deriveSalary(p, content));
   expect(p.extraExpensesAnnual).toBe(deriveExpenses(p, content));
   expect(p.extraPassiveAnnual).toBe(derivePassive(p));
-  expect(p.statusPoints).toBe(deriveStatus(p, content));
+  expect(p.statusPoints).toBe(deriveStatus(p, content, 4));
   return p;
 }
 

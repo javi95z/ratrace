@@ -292,6 +292,39 @@ describe('buying on instalments', () => {
     expect(after.player.debts.filter((debt) => debt.kind === 'personalLoan')).toHaveLength(before.player.debts.filter((debt) => debt.kind === 'personalLoan').length + 1);
   });
 
+  it('names the debt after the thing it bought, and shows it on the thing until it is paid, sold or not', async () => {
+    const { services, session } = await inFinance('civil_servant');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'car_seat_ibiza', financed: true }] });
+    await toFinance(session);
+    const state = await stateOf(services);
+    const quote = quoteItem(content, viewOf(state), 'car_seat_ibiza');
+    expect(quote.owed).toBeGreaterThan(0);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+
+    await user.click(await screen.findByRole('tab', { name: 'Debt' }));
+    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Personal loan · SEAT Ibiza')).toBeTruthy();
+
+    await user.click(screen.getByRole('tab', { name: 'Shop' }));
+    await user.click(button(/SEAT Ibiza/));
+    const note = within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).getByRole('note');
+    expect(within(note).getByText('Still owed on the loan')).toBeTruthy();
+    expect(within(note).getByText(fmt.money(quote.owed))).toBeTruthy();
+    // A car loses value faster than the loan is paid: the sale is said to fall short, and by how much.
+    const short = quote.owed - quote.resale;
+    expect(within(note).getByText(short > 0 ? `You bought it on instalments. Selling it today would not clear the debt: you would be ${fmt.money(short)} short.` : 'You bought it on instalments. Sell it and the debt stays with you.')).toBeTruthy();
+    cleanup();
+
+    // Sold: the thing is gone from the life, and the debt is still on its sheet in the shop.
+    await session.playRound({ orders: [{ type: 'sellItem', itemId: 'car_seat_ibiza' }] });
+    await toFinance(session);
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await user.click(button(/SEAT Ibiza/));
+    const gone = within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).getByRole('note');
+    expect(within(gone).getByText('You bought it on instalments and no longer have it. The debt stays.')).toBeTruthy();
+  });
+
   it('is not offered for what is used up or costs little, and says why when the bank will not lend', async () => {
     // A nurse's pay does not stretch to the loan a sports car needs.
     const { services } = await inFinance('nurse');

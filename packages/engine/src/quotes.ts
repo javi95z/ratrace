@@ -1,6 +1,6 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
-import { homeOf, INSURANCE_KINDS } from './life/derive';
+import { homeOf, INSURANCE_KINDS, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp } from './money';
@@ -89,6 +89,8 @@ export interface ItemQuote {
   owned: boolean;
   /** What the player paid for it, at the prices of that day, or null if they do not own it. */
   paid: Cents | null;
+  /** What is still owed on the loans that bought it on instalments. It stays owed after a sale. */
+  owed: Cents;
   /** False for something only a card can give. */
   forSale: boolean;
   /** False where the shops of the player's city do not sell it. */
@@ -131,6 +133,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     upkeepAnnual: indexed(item.upkeepAnnual, world),
     owned: held !== undefined,
     paid: held ? held.paid : null,
+    owed: view.player.debts.reduce((sum, debt) => (debt.forItem === itemId ? sum + debt.principal : sum), 0),
     forSale: item.cardOnly !== true,
     soldHere: soldIn(item, view.player.cityId),
     local: item.kind === 'membership' && item.cities !== undefined,
@@ -183,6 +186,12 @@ export interface LivingQuote {
   tiers: [Cents, Cents, Cents, Cents];
   /** Yearly living cost in a rented room and in a rented flat, at the current lifestyle. Null for an owner-occupier. */
   rentTiers: [Cents, Cents] | null;
+  /** The status of a rented room and of a rented flat, as of this round. */
+  rentStatus: [number, number];
+  /** The round from which a rented room has the status of someone no longer young, or null once it has come. */
+  roomLateFromRound: number | null;
+  /** The status a rented room will have from that round on. */
+  roomLateStatus: number;
   /** Yearly premium of each insurance on its own, at today's prices. */
   insurance: Record<InsuranceKind, Cents>;
 }
@@ -197,6 +206,9 @@ export function quoteLiving(content: Content, view: GameView): LivingQuote {
   return {
     tiers: [atTier(0), atTier(1), atTier(2), atTier(3)],
     rentTiers: ownsHome(p) ? null : [atRent(0), atRent(1)],
+    rentStatus: rentStatusAt(content, view.round),
+    roomLateFromRound: view.round < content.life.roomLateRound && content.life.roomLateRound < content.rounds ? content.life.roomLateRound : null,
+    roomLateStatus: content.life.roomLateStatus,
     insurance: Object.fromEntries(INSURANCE_KINDS.map((kind) => [kind, premium(kind)])) as Record<InsuranceKind, Cents>,
   };
 }

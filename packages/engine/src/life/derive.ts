@@ -69,7 +69,13 @@ export interface StatusParts {
 }
 
 /** Status by source. Within one ladder the best item counts in full and the others in part. */
-export function statusParts(p: PlayerState, content: Content): StatusParts {
+/** The status each way of renting gives in a round: a room stops being neutral once the player is no longer young. */
+export function rentStatusAt(content: Content, round: number): [number, number] {
+  const [room, flat] = content.life.rentTierStatus;
+  return [round >= content.life.roomLateRound ? content.life.roomLateStatus : room, flat];
+}
+
+export function statusParts(p: PlayerState, content: Content, round: number): StatusParts {
   const life = p.life;
   const rules = content.life;
 
@@ -92,7 +98,7 @@ export function statusParts(p: PlayerState, content: Content): StatusParts {
   const home = homeOf(p, content);
   return {
     items,
-    home: home ? propertyTypeOf(content, home.typeId).status : rules.rentTierStatus[life.rentTier],
+    home: home ? propertyTypeOf(content, home.typeId).status : rentStatusAt(content, round)[life.rentTier],
     job: life.career ? levelOf(content, life.career).status : 0,
     city: cityOf(content, p.cityId).prestige,
     lifestyle: rules.lifestyleStatus[p.lifestyleTier],
@@ -101,15 +107,15 @@ export function statusParts(p: PlayerState, content: Content): StatusParts {
 }
 
 /** Status points: items, home, job title, city, lifestyle and lasting bonuses from cards. Never negative. */
-export function deriveStatus(p: PlayerState, content: Content): number {
-  const parts = statusParts(p, content);
+export function deriveStatus(p: PlayerState, content: Content, round: number): number {
+  const parts = statusParts(p, content, round);
   return Math.max(0, parts.items + parts.home + parts.job + parts.city + parts.lifestyle + parts.bonus);
 }
 
 /** Brings the derived fields of the player back in step with their life. Call after anything changes it. */
-export function refreshDerived(p: PlayerState, content: Content): void {
+export function refreshDerived(p: PlayerState, content: Content, round: number): void {
   p.salaryAnnual = deriveSalary(p, content);
   p.extraExpensesAnnual = deriveExpenses(p, content);
   p.extraPassiveAnnual = derivePassive(p);
-  p.statusPoints = deriveStatus(p, content);
+  p.statusPoints = deriveStatus(p, content, round);
 }

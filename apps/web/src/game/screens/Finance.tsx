@@ -7,7 +7,7 @@ import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, orderLabel, priceHistory } from '@/game/present';
+import { ageAt, debtLabel, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -203,7 +203,8 @@ function Market() {
 function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const t = useT('finance.property');
   const common = useT('common');
-  const { content, text, fmt } = useWords();
+  const words = useWords();
+  const { content, text, fmt } = words;
   const { shown } = useRound();
   const addOrder = useGame((s) => s.addOrder);
   const quote = quoteProperty(content, shown, typeId);
@@ -464,7 +465,8 @@ function PropertyTab() {
 function DebtTab() {
   const t = useT('finance.debt');
   const amount = useT('finance.amount');
-  const { content, text, fmt } = useWords();
+  const words = useWords();
+  const { content, fmt } = words;
   const { shown, p, world } = useRound();
   const addOrder = useGame((s) => s.addOrder);
   const [repaying, setRepaying] = useState<Debt | null>(null);
@@ -480,7 +482,7 @@ function DebtTab() {
         {p.debts.map((debt) => (
           <div key={debt.id} className="flex items-center gap-3 border-t-2 border-night-900 py-2">
             <div className="min-w-0 flex-1">
-              <div className="truncate">{text.debts[debt.kind]}</div>
+              <div className="truncate">{debtLabel(words, debt)}</div>
               <div className="text-[12px] text-ink-300">
                 {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })} · {t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}
               </div>
@@ -512,7 +514,7 @@ function DebtTab() {
 
       {repaying ? (
         <AmountSheet
-          title={amount('repay', { name: text.debts[repaying.kind] })}
+          title={amount('repay', { name: debtLabel(words, repaying) })}
           max={Math.min(repaying.principal, p.cash)}
           onClose={() => setRepaying(null)}
           onConfirm={(a) => addOrder({ type: 'repay', debtId: repaying.id, amount: a })}
@@ -632,12 +634,18 @@ function Lifestyle() {
 
       <Panel title={t('home')}>
         {living.rentTiers ? (
+          <>
           <Segmented<RentTier>
             label={t('home')}
             value={p.life.rentTier}
             onChange={(tier) => setOrder((order) => order.type === 'setRentTier', tier === view.player.life.rentTier ? null : { type: 'setRentTier', tier })}
             options={([0, 1] as const).map((tier) => ({ value: tier, label: text.rentTiers[tier], icon: rentTierIcon[tier], hint: perYear(living.rentTiers?.[tier] ?? 0) }))}
           />
+          <p className="mt-2 text-[12px] text-ink-300">
+            {t('tierStatus')} {text.rentTiers.map((name, tier) => `${name} ${points(living.rentStatus[tier])}`).join(' · ')}
+            {living.roomLateFromRound !== null ? ` · ${t('roomLate', { age: ageAt(content, living.roomLateFromRound), n: -living.roomLateStatus })}` : ''}
+          </p>
+          </>
         ) : (
           <p className="text-[14px] text-ink-300">{t('ownerNote')}</p>
         )}

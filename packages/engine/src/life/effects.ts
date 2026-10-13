@@ -191,5 +191,5 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   if (effects.sellHome) sellHome(p, at);
 
   removePaidDebts(p);
-  refreshDerived(p, content);
+  refreshDerived(p, content, at.round);
 }

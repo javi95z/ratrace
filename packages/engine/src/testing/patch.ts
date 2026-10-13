@@ -14,7 +14,7 @@ export function withPlayer(
   const next = structuredClone(state);
   Object.assign(next.player, structuredClone(over));
   Object.assign(next.player.life, structuredClone(life));
-  refreshDerived(next.player, content);
+  refreshDerived(next.player, content, next.round);
   return next;
 }
 

@@ -82,6 +82,11 @@
     "statusNow": "Estatus ahora",
     "statusLived": "Media de la vida",
     "statusLivedHint": "Lo que cuenta en la puntuación",
+    "scoreNow": "Tu puntuación hoy",
+    "scoreWealth": "{n} por patrimonio",
+    "scoreStatus": "{n} por estatus",
+    "scoreHint": "La puntuación suma los puntos de tu patrimonio y tu estatus medio. Salir de la carrera la multiplica.",
+    "scoreEscaped": "Saliste de la carrera: la suma se multiplica por {multiplier}.",
     "about": {
       "cash": "El dinero que tienes a mano. De aquí salen tus gastos y tus compras, y mientras espera no rinde nada.",
       "flow": "Lo que entra menos lo que sale en un año, antes de impuestos. En verde te sobra; en rojo te comes el efectivo.",
@@ -373,6 +378,7 @@
       "tier": "Cómo vives",
       "tierFloor": "Tu vida no permite menos que esto.",
       "tierStatus": "Estatus:",
+      "roomLate": "Desde los {age} años, vivir en una habitación resta {n} de estatus.",
       "home": "Dónde vives",
       "ownerNote": "Vives en una casa tuya, así que no pagas alquiler.",
       "insurance": "Seguros",
@@ -409,7 +415,11 @@
       "statusDown": "Estatus −{n}",
       "finance": "A plazos · {amount} de entrada",
       "financeTerms": "El resto, {loan}, es un préstamo al {rate} a {years} años: unos {annual} al año al principio.",
-      "financeKept": "Si lo vendes, la deuda sigue contigo."
+      "financeKept": "Si lo vendes, la deuda sigue contigo.",
+      "owed": "Aún debes del préstamo",
+      "owedKept": "Lo compraste a plazos. Si lo vendes, la deuda sigue contigo.",
+      "owedShort": "Lo compraste a plazos. Venderlo hoy no cubre la deuda: faltarían {amount}.",
+      "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue."
     },
     "taxes": {
       "income": "Lo que entra",

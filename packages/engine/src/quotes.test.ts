@@ -3,6 +3,7 @@ import { debtServiceForRound } from './debt';
 import { applyRound, createGame, previewRound } from './game';
 import { executeOrder } from './orders';
 import { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
+import { statusBreakdown } from './selectors';
 import { newTally } from './tally';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import { withPlayer } from './testing/patch';
@@ -122,7 +123,13 @@ describe('quoteItem', () => {
       expect(bought.reason).toBeNull();
       expect(bought.player.cash).toBe(0);
       const debt = bought.player.debts[bought.player.debts.length - 1];
-      expect(debt).toMatchObject({ kind: 'personalLoan', principal: plan.loan, fixedRateBp: plan.rateBp, roundsLeft: plan.termRounds });
+      expect(debt).toMatchObject({ kind: 'personalLoan', principal: plan.loan, fixedRateBp: plan.rateBp, roundsLeft: plan.termRounds, forItem: 'car_basic' });
+      // What is owed on it is named with the thing, and still is once the thing is sold.
+      const owning = { ...state, player: bought.player };
+      expect(quoteItem(content, viewOf(owning), 'car_basic').owed).toBe(plan.loan);
+      const sold = tryOrder(owning, { type: 'sellItem', itemId: 'car_basic' });
+      expect(quoteItem(content, viewOf({ ...state, player: sold.player }), 'car_basic')).toMatchObject({ owned: false, owed: plan.loan });
+      expect(quoteItem(content, view, 'car_basic').owed).toBe(0);
 
       // What a year of it costs is what the first round then charges for that debt, spread over its years.
       const service = debtServiceForRound({ ...bought.player, debts: [debt] }, content, world);
@@ -244,7 +251,27 @@ describe('quoteLiving', () => {
     expect(quoteLiving(content, viewOf(game(0)))).toEqual({
       tiers: [1_260_000, 1_800_000, 2_520_000, 3_600_000],
       rentTiers: [1_548_000, 1_800_000],
+      rentStatus: [0, 2],
+      roomLateFromRound: null,
+      roomLateStatus: 0,
       insurance: { health: 72_000, home: 54_000, life: 36_000, liability: 18_000 },
     });
+  });
+
+  it('says what a rented room gives now and from when it gives less, exactly as the status then counts it', () => {
+    const late = fixtureContent();
+    late.life.roomLateRound = 2;
+    late.life.roomLateStatus = -3;
+    let state = createGame({ content: late, start: { ...fixtureStart(), cash: 5_000_000, life: { ...office, rentTier: 0 } } }, 'room');
+    const seen: Array<[number, number | null, number]> = [];
+    for (let round = 0; round < 4; round++) {
+      const quote = quoteLiving(late, viewOf(state));
+      seen.push([quote.rentStatus[0], quote.roomLateFromRound, statusBreakdown(late, viewOf(state)).home]);
+      expect(quote.rentStatus[1]).toBe(2);
+      expect(quote.roomLateStatus).toBe(-3);
+      state = applyRound(late, state, { orders: [] }).state;
+    }
+    // Neutral for two rounds, warned of from the start; then it costs, and the warning is over.
+    expect(seen).toEqual([[0, 2, 0], [0, 2, 0], [-3, null, -3], [-3, null, -3]]);
   });
 });

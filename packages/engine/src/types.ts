@@ -156,6 +156,10 @@ export interface LifeRules {
   /** Share of the housing cost paid at each rent tier, in percent. */
   rentTierHousingPct: readonly [number, number];
   rentTierStatus: readonly [number, number];
+  /** From this round on a rented room is no longer neutral: sharing a flat is ordinary at twenty-two and noticed later. */
+  roomLateRound: number;
+  /** The status of a rented room from that round on. */
+  roomLateStatus: number;
   /** Status for each lifestyle tier. Living below the ordinary may take status away. */
   lifestyleStatus: readonly [number, number, number, number];
   /** Buying a thing that lasts on instalments: this percent of the price is paid down, and the rest is a personal loan. */
@@ -517,6 +521,8 @@ export interface Debt {
   /** Annual rate in bp. Ignored for variable mortgages and credit cards. */
   fixedRateBp: Bp;
   roundsLeft: number;
+  /** The item this loan paid for, when it was taken to buy one on instalments. It stays owed if the item is sold. */
+  forItem?: string;
 }
 
 export interface Property {
