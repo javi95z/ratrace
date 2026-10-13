@@ -112,24 +112,28 @@ describe('the homes a player owns', () => {
 });
 
 describe('property that is only for letting', () => {
-  it('shows every kind of property on the same dark tile, and says of a parking space what it lets for', async () => {
+  it('shows homes and what is only for letting apart, every one on the same dark tile, and says of a parking space what it lets for', async () => {
     const { services, session } = await inFinance('heir');
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
-    const market = screen.getByRole('region', { name: 'Property in Madrid' });
-    const tiles = within(market).getAllByRole('button');
-    expect(tiles.map((tile) => tile.querySelector('img')?.getAttribute('src')?.replace(/^.*home\./, '').replace('.png', ''))).toEqual(['parking', 'studio', 'flat', 'shop', 'house', 'penthouse', 'villa']);
+    const kinds = (region: HTMLElement) => within(region).getAllByRole('button').map((tile) => tile.querySelector('img')?.getAttribute('src')?.replace(/^.*home\./, '').replace('.png', ''));
+    const homes = screen.getByRole('region', { name: 'Homes in Madrid' });
+    const lets = screen.getByRole('region', { name: 'To let in Madrid' });
+    // Each list in the order the game keeps them: the cheapest first.
+    expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => type.id));
+    expect(kinds(lets)).toEqual(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id));
+    expect(kinds(homes)).toHaveLength(11);
+    expect(kinds(lets)).toHaveLength(5);
     // No tile is a cream card: property sits on the same navy as everything else that can be bought.
-    for (const tile of tiles) expect(tile.className).not.toMatch(/bg-cream/);
+    for (const tile of [...within(homes).getAllByRole('button'), ...within(lets).getAllByRole('button')]) expect(tile.className).not.toMatch(/bg-cream/);
 
     const parking = quoteProperty(content, session.view(), 'parking');
-    const tile = within(market).getByRole('button', { name: /^Parking space/ });
-    expect(within(tile).getByText('To let only')).toBeTruthy();
+    const tile = within(lets).getByRole('button', { name: /^Parking space/ });
     expect(within(tile).getByText(`Lets for ${fmt.compact(parking.rentAnnual)} a year`)).toBeTruthy();
     expect(within(tile).queryByText(/^Status/)).toBeNull();
     // A home says what living in it is worth.
-    expect(within(within(market).getByRole('button', { name: /^Flat/ })).getByText('Status +14')).toBeTruthy();
+    expect(within(within(homes).getByRole('button', { name: /^Flat/ })).getByText('Status +14')).toBeTruthy();
   });
 
   it('does not ask what a parking space is for, and says why someone without the skill cannot buy one', async () => {

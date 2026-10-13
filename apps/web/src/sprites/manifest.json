@@ -459,6 +459,26 @@
     "w": 288,
     "h": 120
   },
+  "home.block": {
+    "src": "homes/home.block.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.chalet": {
+    "src": "homes/home.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.duplex": {
+    "src": "homes/home.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.estate": {
+    "src": "homes/home.estate.png",
+    "w": 128,
+    "h": 128
+  },
   "home.flat": {
     "src": "homes/home.flat.png",
     "w": 128,
@@ -466,6 +486,21 @@
   },
   "home.house": {
     "src": "homes/home.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.loft": {
+    "src": "homes/home.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mansion": {
+    "src": "homes/home.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.office": {
+    "src": "homes/home.office.png",
     "w": 128,
     "h": 128
   },
@@ -499,8 +534,18 @@
     "w": 128,
     "h": 128
   },
+  "home.townhouse": {
+    "src": "homes/home.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
   "home.villa": {
     "src": "homes/home.villa.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.warehouse": {
+    "src": "homes/home.warehouse.png",
     "w": 128,
     "h": 128
   },
@@ -554,6 +599,16 @@
     "w": 32,
     "h": 32
   },
+  "icon.economy": {
+    "src": "icons/icon.economy.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.exit_door": {
+    "src": "icons/icon.exit_door.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.family": {
     "src": "icons/icon.family.png",
     "w": 32,
@@ -561,6 +616,21 @@
   },
   "icon.focus": {
     "src": "icons/icon.focus.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.focus_hunt": {
+    "src": "icons/icon.focus_hunt.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.focus_overtime": {
+    "src": "icons/icon.focus_overtime.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.focus_study": {
+    "src": "icons/icon.focus_study.png",
     "w": 32,
     "h": 32
   },
@@ -584,8 +654,48 @@
     "w": 32,
     "h": 32
   },
+  "icon.insure_health": {
+    "src": "icons/icon.insure_health.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.insure_home": {
+    "src": "icons/icon.insure_home.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.insure_liability": {
+    "src": "icons/icon.insure_liability.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.insure_life": {
+    "src": "icons/icon.insure_life.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.job": {
     "src": "icons/icon.job.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.life_comfortable": {
+    "src": "icons/icon.life_comfortable.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.life_frugal": {
+    "src": "icons/icon.life_frugal.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.life_lavish": {
+    "src": "icons/icon.life_lavish.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.life_normal": {
+    "src": "icons/icon.life_normal.png",
     "w": 32,
     "h": 32
   },
@@ -609,6 +719,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.move": {
+    "src": "icons/icon.move.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.news": {
     "src": "icons/icon.news.png",
     "w": 32,
@@ -626,6 +741,16 @@
   },
   "icon.rates": {
     "src": "icons/icon.rates.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rent_flat": {
+    "src": "icons/icon.rent_flat.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rent_room": {
+    "src": "icons/icon.rent_room.png",
     "w": 32,
     "h": 32
   },

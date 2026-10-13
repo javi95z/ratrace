@@ -84,7 +84,7 @@ describe('the wall between the screens and the game', () => {
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {
     // The engine's quotes, previews and score breakdown give every figure. A screen that reads one of
     // these tables is working a figure out itself. (Tax rates are shown, not used: they come from `effectiveTax`.)
-    const TABLES = /\b(mortgageMaxLtvBp|purchaseTaxBp|propertyTaxBp|personalLoanSpreadBp|moveCostPct|wealthBreakpoints|escapeBase|escapePerRoundLeft|resaleStartPct|insurancePremiumBp|lifestyleMultiplierPct)\b/;
+    const TABLES = /\b(mortgageMaxLtvBp|purchaseTaxBp|propertyTaxBp|personalLoanSpreadBp|moveCostPct|wealthBreakpoints|escapeBase|escapePerRoundLeft|resaleStartPct|insurancePremiumBp|lifestyleMultiplierPct|rentalOnly|rentPct)\b/;
     // The presenters, the round store and the other pure helpers of the game turn engine figures into words and
     // pictures; they are held to the same rule as the screens they serve.
     const helpers = all.filter((path) => /^game\/[a-z]+\.ts$/.test(rel(path)));

@@ -3,17 +3,32 @@ import { usd } from './money';
 
 /**
  * Property scales from the reference flat of each city, the cheapest first. Status is for living
- * in one. A parking space and a shop cannot be lived in: they are bought to let, and let for a
- * little more than a home of the same price, which is all that makes up for being of no other use.
+ * in one, and among homes a dearer one is always the grander one.
+ *
+ * Five kinds cannot be lived in: they are bought to let. The dearer ones let for a little more than
+ * a home of the same price, which is all that makes up for being of no other use; at 10 to 25
+ * percent over a city's rent a let pays its mortgage with a little to spare, and much more would
+ * mean nobody ever let a flat. A parking space lets for a little less than a home: its small price
+ * already puts a player on borrowed property rounds before a studio could, and with a rent
+ * premium on top it was the best buy in the game.
  */
 export const propertyTypes: PropertyTypeDef[] = [
-  { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 110 },
+  { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 90 },
   { id: 'studio', pricePct: 60, status: 8 },
   { id: 'flat', pricePct: 100, status: 14 },
+  { id: 'loft', pricePct: 125, status: 18 },
   { id: 'shop', pricePct: 130, status: 0, rentalOnly: true, rentPct: 125 },
+  { id: 'townhouse', pricePct: 150, status: 21 },
   { id: 'house', pricePct: 180, status: 24 },
+  { id: 'office', pricePct: 220, status: 0, rentalOnly: true, rentPct: 115 },
+  { id: 'duplex', pricePct: 250, status: 31 },
+  { id: 'warehouse', pricePct: 300, status: 0, rentalOnly: true, rentPct: 120 },
+  { id: 'chalet', pricePct: 320, status: 37 },
   { id: 'penthouse', pricePct: 400, status: 42 },
+  { id: 'estate', pricePct: 550, status: 50 },
   { id: 'villa', pricePct: 800, status: 60 },
+  { id: 'block', pricePct: 900, status: 0, rentalOnly: true, rentPct: 110 },
+  { id: 'mansion', pricePct: 1500, status: 80 },
 ];
 
 export const debt: DebtParams = {

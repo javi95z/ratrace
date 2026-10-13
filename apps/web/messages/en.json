@@ -252,7 +252,7 @@
       "nothing": "There is nothing to move."
     },
     "property": {
-      "title": "Property in {city}",
+      "title": "Homes in {city}",
       "status": "Status +{n}",
       "minDown": "From {amount} down",
       "buyTitle": "Buy: {home}",
@@ -280,10 +280,10 @@
       "startRenting": "Rent it out",
       "stopRenting": "Stop renting it out",
       "mortgageLeft": "{amount} mortgage left",
-      "letOnly": "To let only",
       "lets": "Lets for {amount} a year",
       "buyLetTitle": "Buy to let: {home}",
-      "rent": "Rent a year"
+      "rent": "Rent a year",
+      "letTitle": "To let in {city}"
     },
     "debt": {
       "none": "You owe nothing.",

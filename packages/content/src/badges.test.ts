@@ -134,7 +134,8 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   },
   three_rentals: {
     earns: { player: all(home('studio', true), home('studio', true), home('flat', true)) },
-    misses: [{ player: all(home('studio', true), home('studio', true), home('flat', false)) }],
+    // Three parking spaces are not three rentals: the badge is for a landlord, not for the price of a used car.
+    misses: [{ player: all(home('studio', true), home('studio', true), home('flat', false)) }, { player: all(home('studio', true), home('flat', true), home('parking', true), home('parking', true)) }],
   },
   bond_ladder: {
     earns: { player: all(hold('treasury_short'), hold('treasury_long'), hold('bund')) },

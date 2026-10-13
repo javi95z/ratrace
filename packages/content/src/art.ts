@@ -128,46 +128,24 @@ export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 export const cityArt = (cityId: string): string => `skyline.${cityId}`;
 
-/**
- * Sprites that are asked for and not drawn yet (sheet 06b of the prompt pack), and the one that
- * stands in for each meanwhile. An entry is deleted the day its sprite lands; a test says when.
- */
-export const STAND_INS: Readonly<Record<string, string>> = {
-  'icon.life_frugal': 'icon.deposit',
-  'icon.life_normal': 'icon.account',
-  'icon.life_comfortable': 'icon.card',
-  'icon.life_lavish': 'icon.status',
-  'icon.rent_room': 'icon.property',
-  'icon.rent_flat': 'icon.city',
-  'icon.insure_health': 'icon.insurance',
-  'icon.insure_home': 'icon.property',
-  'icon.insure_life': 'icon.family',
-  'icon.insure_liability': 'icon.tax',
-  'icon.focus_overtime': 'icon.focus',
-  'icon.focus_study': 'icon.skill',
-  'icon.focus_hunt': 'icon.job',
-  'icon.economy': 'icon.mood',
-};
-const drawn = (id: string): string => (Object.hasOwn(STAND_INS, id) ? STAND_INS[id] : id);
-
 /** The four ways of living, the cheapest first. */
-export const lifestyleArt: readonly string[] = ['icon.life_frugal', 'icon.life_normal', 'icon.life_comfortable', 'icon.life_lavish'].map(drawn);
+export const lifestyleArt: readonly string[] = ['icon.life_frugal', 'icon.life_normal', 'icon.life_comfortable', 'icon.life_lavish'];
 /** A rented room and a rented flat, small enough to sit on a button. `rentTierArt` is the same pair drawn large. */
-export const rentTierIcon: readonly string[] = ['icon.rent_room', 'icon.rent_flat'].map(drawn);
+export const rentTierIcon: readonly string[] = ['icon.rent_room', 'icon.rent_flat'];
 export const insuranceArt: Record<InsuranceKind, string> = {
-  health: drawn('icon.insure_health'),
-  home: drawn('icon.insure_home'),
-  life: drawn('icon.insure_life'),
-  liability: drawn('icon.insure_liability'),
+  health: 'icon.insure_health',
+  home: 'icon.insure_home',
+  life: 'icon.insure_life',
+  liability: 'icon.insure_liability',
 };
 export const focusArt: Record<FocusAction, string> = {
-  overtime: drawn('icon.focus_overtime'),
-  studyCareer: drawn('icon.focus_study'),
-  jobHunt: drawn('icon.focus_hunt'),
+  overtime: 'icon.focus_overtime',
+  studyCareer: 'icon.focus_study',
+  jobHunt: 'icon.focus_hunt',
 };
 /** What a headline is about. */
 export const topicArt: Record<Headline['topic'], string> = {
-  regime: drawn('icon.economy'),
+  regime: 'icon.economy',
   crypto: 'icon.crypto',
   rates: 'icon.rates',
   inflation: 'icon.inflation',

@@ -181,7 +181,7 @@ export function roundNotes({ text, names }: Words, t: Translate, events: GameEve
   for (const event of events) {
     switch (event.kind) {
       case 'escaped':
-        add(event, { tone: 'gold', icon: 'icon.trophy', title: t('escaped'), hint: t('escapedHint') });
+        add(event, { tone: 'gold', icon: 'icon.exit_door', title: t('escaped'), hint: t('escapedHint') });
         break;
       case 'escapeLost':
         add(event, { tone: 'bad', icon: 'icon.cashflow', title: t('escapeLost'), hint: t('escapeLostHint') });

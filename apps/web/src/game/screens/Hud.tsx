@@ -126,11 +126,11 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
 
       <div className="flex items-center gap-3">
         {onProfile ? (
-          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame-double m-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">
+          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame-double my-1.5 ml-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">
             {portrait}
           </button>
         ) : (
-          <span className="frame-double m-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
+          <span className="frame-double my-1.5 ml-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
         )}
         <div className="min-w-0 flex-1">
           <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>

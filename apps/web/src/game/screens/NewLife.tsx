@@ -40,7 +40,7 @@ export function NewLife() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-3 pb-28 pt-4">
       <div className="mb-3 flex items-center gap-2">
-        <Link href="/" aria-label={common('back')} className="pixel frame flex size-11 items-center justify-center bg-night-700 text-[18px] text-ink-200">
+        <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 items-center justify-center bg-night-700 text-[18px] text-ink-200">
           ←
         </Link>
         <h1 className="pixel text-[24px] text-gold-500">{t('title')}</h1>
@@ -59,7 +59,7 @@ export function NewLife() {
               aria-checked={on}
               disabled={locked}
               onClick={() => setChosen(life.id)}
-              className={`frame flex gap-3 p-2 text-left ${on ? 'frame-gold bg-night-600' : 'bg-night-700'} ${locked ? 'opacity-60' : ''}`}
+              className={`frame-raised flex gap-3 p-2 text-left ${on ? 'frame-gold bg-night-600' : 'bg-night-700'} ${locked ? 'opacity-60' : ''}`}
             >
               <Well className="size-[68px]">
                 <Sprite id={locked ? 'icon.locked' : portraitArt(life.id, 22)} fallback={{ w: 64, h: 64 }} />

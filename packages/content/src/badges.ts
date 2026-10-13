@@ -187,7 +187,8 @@ const RULES: Record<string, (f: Facts) => boolean> = {
     const coins = f.heldBefore.filter((held) => held.kind === 'crypto');
     return f.round && f.world.cryptoPhase === 'winter' && coins.length > 0 && keptAll(f, coins);
   },
-  three_rentals: (f) => f.p.properties.filter((property) => property.rented).length >= 3,
+  // A parking space is a let, but three of them cost less than one studio: the badge is for a landlord.
+  three_rentals: (f) => f.p.properties.filter((property) => property.rented && property.typeId !== 'parking').length >= 3,
   bond_ladder: (f) => {
     const bonds = f.content.assets.filter((asset) => assetKind(asset) === 'bond');
     return bonds.length > 0 && bonds.every((bond) => f.held.some((held) => held.id === bond.id));

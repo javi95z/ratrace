@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { Tone } from '@/game/present';
 import { Sprite } from './Sprite';
@@ -46,9 +47,9 @@ export function Button({ variant = 'secondary', wide = false, className, type = 
 }
 
 /** The title of a panel: a gold tab that hangs over its top edge. */
-export function TabTitle({ children, as: Heading = 'h2' }: { children: ReactNode; as?: 'h2' | 'h3' }) {
+export function TabTitle({ children, as: Heading = 'h2', id }: { children: ReactNode; as?: 'h2' | 'h3'; id?: string }) {
   return (
-    <Heading className="pixel tab absolute -top-3 left-2 max-w-[calc(100%-1rem)] truncate bg-gold-500 px-2 pb-0.5 pt-1 text-[14px] uppercase tracking-[0.1em] text-ink-900">
+    <Heading id={id} className="pixel tab absolute -top-3 left-2 max-w-[calc(100%-1rem)] truncate bg-gold-500 px-2 pb-0.5 pt-1 text-[14px] uppercase tracking-[0.1em] text-ink-900">
       {children}
     </Heading>
   );
@@ -57,11 +58,17 @@ export function TabTitle({ children, as: Heading = 'h2' }: { children: ReactNode
 /** The room a panel leaves above itself and inside its top for a tab. */
 export const TABBED = 'relative mt-3 pt-5';
 
-/** A navy panel with a lit pixel frame. With a title, the title hangs on a gold tab. `label` names the panel for a screen reader. */
+/**
+ * A navy panel with a lit pixel frame. With a title, the title hangs on a gold tab. `label` makes
+ * the panel a named region for a screen reader: named by its own title where it has one, so the
+ * name is said once, and by the label itself where it has none.
+ */
 export function Panel({ children, className, title, label }: { children: ReactNode; className?: string; title?: ReactNode; label?: string }) {
+  const titleId = useId();
+  const named = label !== undefined;
   return (
-    <section aria-label={label} className={join('bevel bg-night-700 p-3', title ? TABBED : null, className)}>
-      {title ? <TabTitle>{title}</TabTitle> : null}
+    <section aria-labelledby={named && title ? titleId : undefined} aria-label={named && !title ? label : undefined} className={join('bevel bg-night-700 p-3', title ? TABBED : null, className)}>
+      {title ? <TabTitle id={titleId}>{title}</TabTitle> : null}
       {children}
     </section>
   );

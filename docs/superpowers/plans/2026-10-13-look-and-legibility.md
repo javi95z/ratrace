@@ -38,12 +38,13 @@ This is roadmap step 10b. The owner chose the look from three drawn directions (
 - Two kinds join now, with art that was already drawn: a parking space and a shop unit. Nobody can live in them. The engine learns two things about a kind of property: that it is only for letting, and what share of the city's rent it lets for. A kind that is only for letting is always let, gives no status, and cannot be bought as a home, by an order, a card or a starting life.
 - A quote says whether a kind is only for letting and what it would bring in a year, so the screen shows both without working anything out.
 - No version is bumped: a life in progress replays the same, because nothing an existing save could contain behaves differently.
-- Nine more kinds are asked for on a new art sheet (04b) and join when it lands.
+- Nine more kinds were asked for on a new art sheet (04b), which landed the same day: loft, townhouse, duplex, chalet, country estate and mansion to live in; office floor, warehouse and apartment block to let. The shop shows homes and lets on two shelves.
+- After the review: a parking space lets for less than a home, not more (its small price made it the best buy in the game), and three of them do not earn the "three rentals" badge.
 
 ### Icons
 
 - Every choice of the lifestyle tab gets a picture: the three uses of focus, the four ways of living, the two kinds of rented home, the four insurances, and the city.
-- The right pictures are asked for on a new art sheet (06b). Until it lands, each is lent an existing icon through one list in the content. A test fails the day a lent picture exists for real, so the list cannot go stale.
+- The right pictures were asked for on a new art sheet (06b). Until it landed each was lent an existing icon through one list in the content; the sheet landed the same day and the list is gone. At the owner's word to the other session, icons sit on the surface with no dark well behind them.
 
 ## Tasks
 
@@ -53,4 +54,5 @@ This is roadmap step 10b. The owner chose the look from three drawn directions (
 - [x] 4. Screens: HUD, news clippings, property and shop tiles, purchase sheet, lifestyle icons, collection, records, end
 - [x] 5. Art: sheets 04b and 06b in the prompt pack and the art tool
 - [x] 6. End-to-end at the three sizes, audit, both languages
-- [ ] 7. Fresh review and one fix pass
+- [x] 7. Fresh review and one fix pass
+- [x] 8. Sheets 04b and 06b cut and wired in: nine more kinds of property, the real icons

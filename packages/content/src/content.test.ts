@@ -14,11 +14,20 @@ describe('the v1 content', () => {
     expect(content.assets).toHaveLength(19);
     expect(content.careers).toHaveLength(6);
     expect(content.items).toHaveLength(34);
-    expect(content.propertyTypes.map((type) => type.id)).toEqual(['parking', 'studio', 'flat', 'shop', 'house', 'penthouse', 'villa']);
-    // Two of them are investments only: nobody lives in a parking space or behind a shop counter.
-    expect(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id)).toEqual(['parking', 'shop']);
-    // What cannot be lived in lets for a little more than a home: that is all it is good for.
-    for (const type of content.propertyTypes) expect((type.rentPct ?? 100) > 100, type.id).toBe(type.rentalOnly === true);
+    expect(content.propertyTypes.map((type) => type.id)).toEqual([
+      'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
+    ]);
+    // Five of them are investments only: nobody lives in a parking space, behind a shop counter, at a desk, among pallets, or in twelve flats at once.
+    expect(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id)).toEqual(['parking', 'shop', 'office', 'warehouse', 'block']);
+    // Among homes, a dearer one is always the grander one: no home is a worse buy than a cheaper one for someone who wants status.
+    const homes = content.propertyTypes.filter((type) => !type.rentalOnly);
+    for (let i = 1; i < homes.length; i++) expect(homes[i].status, homes[i].id).toBeGreaterThan(homes[i - 1].status);
+    // Only what cannot be lived in has a rent of its own. A parking space lets for a little less than a home,
+    // because its small price is already an advantage; the dearer kinds let for a little more.
+    for (const type of content.propertyTypes) expect(type.rentPct !== undefined, type.id).toBe(type.rentalOnly === true);
+    const rent = Object.fromEntries(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => [type.id, type.rentPct]));
+    expect(rent.parking).toBeLessThan(100);
+    for (const id of ['shop', 'office', 'warehouse', 'block']) expect(rent[id], id).toBeGreaterThan(100);
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));

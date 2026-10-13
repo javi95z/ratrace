@@ -135,6 +135,21 @@ body {
   syntax: '*';
   inherits: false;
 }
+/*
+ * The same for a browser that does not register properties: each element starts with none of its
+ * parent's. In the base layer, so that the element's own `frame-gold` still wins; outside a layer
+ * this rule would beat every utility and strip the gold from everything.
+ */
+@layer base {
+  *,
+  ::before,
+  ::after {
+    --frame: initial;
+    --hi: initial;
+    --lo: initial;
+    --ring: initial;
+  }
+}
 
 /*
  * A 2px pixel border with notched corners: four hard shadows, one per side, so the corner pixels
@@ -200,11 +215,6 @@ body {
 @utility frame-wine {
   --hi: var(--color-wine-500);
   --lo: var(--color-wine-900);
-}
-
-@utility frame-teal {
-  --hi: var(--color-teal-300);
-  --lo: var(--color-teal-800);
 }
 
 /*

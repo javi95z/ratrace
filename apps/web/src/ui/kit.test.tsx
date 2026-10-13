@@ -14,10 +14,22 @@ describe('Panel', () => {
     );
     const panel = screen.getByRole('region', { name: 'News' });
     const title = within(panel).getByRole('heading', { level: 2, name: 'News' });
+    // Named by its own heading, so a screen reader says the name once.
+    expect(panel.getAttribute('aria-labelledby')).toBe(title.id);
+    expect(panel.hasAttribute('aria-label')).toBe(false);
     // The tab stands over the top edge, so the panel leaves room above itself for it.
     expect(title.className).toMatch(/\babsolute\b/);
     expect(panel.className).toMatch(/\brelative\b/);
     expect(panel.className).toMatch(/\bmt-3\b/);
+  });
+
+  it('takes a name of its own when it has no title to be named by', () => {
+    render(
+      <Panel label="Gauges">
+        <p>inside</p>
+      </Panel>,
+    );
+    expect(screen.getByRole('region', { name: 'Gauges' }).getAttribute('aria-label')).toBe('Gauges');
   });
 
   it('leaves no room for a tab it does not have', () => {

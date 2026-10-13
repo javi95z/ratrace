@@ -209,12 +209,12 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const [mortgage, setMortgage] = useState<'fixed' | 'variable' | 'none'>(quote.canBorrow ? 'fixed' : 'none');
   const [down, setDown] = useState(quote.minDown);
   // What nobody can live in is bought to let, and there is nothing to choose.
-  const [rented, setRented] = useState(quote.rentalOnly);
+  const [rented, setRented] = useState(quote.letOnly);
   const cashDown = mortgage === 'none' ? quote.price : down;
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
 
   return (
-    <Sheet open onClose={onClose} title={t(quote.rentalOnly ? 'buyLetTitle' : 'buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
+    <Sheet open onClose={onClose} title={t(quote.letOnly ? 'buyLetTitle' : 'buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex justify-center">
           <Bare className="p-1 leading-[0]">
@@ -260,30 +260,28 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
           </div>
         )}
 
-        <div>
-          {quote.rentalOnly ? null : (
-            <>
-              <h3 className="pixel mb-1.5 text-[14px] uppercase tracking-wider text-ink-200">{t('use')}</h3>
-              <Segmented<'live' | 'rent'>
-                label={t('use')}
-                value={rented ? 'rent' : 'live'}
-                onChange={(value) => setRented(value === 'rent')}
-                options={[
-                  { value: 'live', label: t('liveIn') },
-                  { value: 'rent', label: t('rentOut'), disabled: !quote.canRentOut },
-                ]}
-              />
-            </>
-          )}
-          {quote.canRentOut ? null : <p className="mt-1.5 text-[13px] text-ink-200">{t('rentOutLocked', { level: content.life.rentOutMinFinanceSkill })}</p>}
-        </div>
+        {quote.letOnly ? null : (
+          <div>
+            <h3 className="pixel mb-1.5 text-[14px] uppercase tracking-wider text-ink-200">{t('use')}</h3>
+            <Segmented<'live' | 'rent'>
+              label={t('use')}
+              value={rented ? 'rent' : 'live'}
+              onChange={(value) => setRented(value === 'rent')}
+              options={[
+                { value: 'live', label: t('liveIn') },
+                { value: 'rent', label: t('rentOut'), disabled: !quote.canRentOut },
+              ]}
+            />
+          </div>
+        )}
+        {quote.canRentOut ? null : <p className="text-[13px] text-ink-200">{t('rentOutLocked', { level: content.life.rentOutMinFinanceSkill })}</p>}
 
         <p className="pixel text-center text-[17px] text-gold-500">{t('payNow', { amount: fmt.money(cashDown + quote.purchaseTax) })}</p>
         <Button
           variant="primary"
           wide
           // Something only a landlord can own is not for sale to anyone else: the line above says why.
-          disabled={quote.rentalOnly && !quote.canRentOut}
+          disabled={quote.letOnly && !quote.canRentOut}
           onClick={() => {
             if (addOrder({ type: 'buyProperty', typeId, downPayment: mortgage === 'none' ? 0 : down, mortgage, rented })) onClose();
           }}
@@ -320,7 +318,8 @@ function PropertyTab() {
           // Which home the player lives in is the engine's to say: it is one, however many they own in town.
           const state = property.rented ? t('rented') : home?.id === property.id ? t('livedIn') : t('empty');
           const same = (order: Order) => order.type === 'setRented' && order.propertyId === property.id;
-          const letOnly = content.propertyTypes.some((type) => type.id === property.typeId && type.rentalOnly === true);
+          // Whether it can be lived in is the engine's to say, like its price.
+          const letOnly = quoteProperty(content, shown, property.typeId).letOnly;
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               <div className="flex items-center gap-3">
@@ -359,33 +358,33 @@ function PropertyTab() {
         })}
       </Panel>
 
-      <Panel title={t('title', { city: names.cities[p.cityId] })} label={t('title', { city: names.cities[p.cityId] })}>
-        {/* Two side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
-        <div className="grid grid-cols-2 gap-2 @min-[560px]:grid-cols-3">
-          {content.propertyTypes.map((type) => {
-            const quote = quoteProperty(content, shown, type.id);
-            return (
-              <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
-                <Bare className="w-full py-1">
-                  <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
-                </Bare>
-                <span className="mt-0.5 text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
-                <span className="pixel text-[18px] text-gold-500">{fmt.compact(quote.price)}</span>
-                <span className="text-[11px] leading-tight text-ink-200">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
-                {/* A home says what living in it is worth; what cannot be lived in says what it lets for. */}
-                {quote.rentalOnly ? (
-                  <>
-                    <span className="text-[11px] leading-tight text-teal-300">{t('lets', { amount: fmt.compact(quote.rentAnnual) })}</span>
-                    <Tag>{t('letOnly')}</Tag>
-                  </>
-                ) : (
-                  <Tag tone="good">{t('status', { n: type.status })}</Tag>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </Panel>
+      {/* Somewhere to live, and what is only bought to let: two shelves, each with its cheapest first. */}
+      {([false, true] as const).map((letOnly) => {
+        const title = t(letOnly ? 'letTitle' : 'title', { city: names.cities[p.cityId] });
+        return (
+          <Panel key={String(letOnly)} title={title} label={title}>
+            {/* Two side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
+            <div className="grid grid-cols-2 gap-2 @min-[560px]:grid-cols-3">
+              {content.propertyTypes.map((type) => {
+                const quote = quoteProperty(content, shown, type.id);
+                if (quote.letOnly !== letOnly) return null;
+                return (
+                  <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
+                    <Bare className="w-full py-1">
+                      <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
+                    </Bare>
+                    <span className="mt-0.5 text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
+                    <span className="pixel text-[18px] text-gold-500">{fmt.compact(quote.price)}</span>
+                    <span className="text-[11px] leading-tight text-ink-200">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
+                    {/* A home says what living in it is worth; what cannot be lived in says what it lets for. */}
+                    {quote.letOnly ? <span className="text-[12px] leading-tight text-teal-300">{t('lets', { amount: fmt.compact(quote.rentAnnual) })}</span> : <Tag tone="good">{t('status', { n: type.status })}</Tag>}
+                  </button>
+                );
+              })}
+            </div>
+          </Panel>
+        );
+      })}
       {buying ? <BuyHome typeId={buying} onClose={() => setBuying(null)} /> : null}
     </div>
   );
@@ -604,6 +603,7 @@ function Lifestyle() {
           </>
         ) : (
           <Button wide onClick={() => setMoving(true)}>
+            <Sprite id="icon.move" className="-my-1" />
             {t('move')}
           </Button>
         )}

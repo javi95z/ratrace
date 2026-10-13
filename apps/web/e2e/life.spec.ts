@@ -271,10 +271,14 @@ async function walk(page: Page, lang: Lang, wide: boolean, check: (name: string)
   }
   // A sheet is a screen too.
   await page.getByRole('tab', { name: w.tabs[0], exact: true }).click();
-  await page.getByRole('tabpanel').getByRole('button').first().click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-  await check('amount-sheet');
-  await page.keyboard.press('Escape');
+  // The first thing the tab lets this life do. A life left without cash by its cards can do nothing here, and then there is no sheet to look at.
+  const opener = page.getByRole('tabpanel').locator('button:enabled').first();
+  if ((await opener.count()) > 0) {
+    await opener.click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await check('amount-sheet');
+    await page.keyboard.press('Escape');
+  }
   if (!wide) {
     await page.getByRole('button', { name: w.openProfile }).click();
     await expect(page.getByRole('dialog', { name: w.yourLife })).toBeVisible();
@@ -479,6 +483,31 @@ test('the figures of the HUD are never cut short, in either language, on a small
   }
 });
 
+test('a gauge of the economy is never cut short, at the width where the side column is tightest', async ({ page }, info) => {
+  test.skip(info.project.name !== 'laptop', 'the side column is tightest at 1024px');
+  await startLife(page, 'en', 'Nurse');
+  for (const lang of ['en', 'es'] as const) {
+    await page.goto(`/${lang}/play`);
+    await expect(page.getByRole('button', { name: WORDS[lang].toCards })).toBeVisible();
+    // The longest reading either language has, put on every gauge.
+    const cut = await page.evaluate((word) => {
+      const found: string[] = [];
+      const gauges = [...document.querySelectorAll<HTMLElement>('[data-gauge]')];
+      for (const gauge of gauges) {
+        const value = gauge.querySelector<HTMLElement>('.pixel');
+        if (!value) continue;
+        const original = value.textContent;
+        if (gauge.className.includes('col-span-2')) value.textContent = word;
+        if (value.scrollWidth > value.clientWidth || gauge.scrollWidth > gauge.clientWidth) found.push(`${value.textContent} needs ${value.scrollWidth}px, has ${value.clientWidth}px`);
+        value.textContent = original;
+      }
+      return { gauges: gauges.length, found };
+    }, lang === 'es' ? 'Desaceleración' : 'Stagflation');
+    expect(cut.gauges, lang).toBe(4);
+    expect(cut.found, lang).toEqual([]);
+  }
+});
+
 test('the Back button closes a sheet and leaves the life where it was', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'the Back button is a phone habit');
   const problems = watch(page);
@@ -487,7 +516,8 @@ test('the Back button closes a sheet and leaves the life where it was', async ({
   await page.getByRole('button', { name: w.toCards }).click();
   await answerHand(page, 'en');
 
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  // The list of this round's orders: a sheet every life can open, whatever its cards left it with.
+  await page.getByRole('button', { name: /orders?$/ }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.goBack();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -616,6 +646,13 @@ test('a first life is guided, one tip at a time, until the player says enough', 
   await startLife(page, 'en', 'Nurse');
   const tip = page.getByRole('note', { name: w.guide });
   await expect(tip).toContainText('Every round opens with the news');
+  // The colours of a frame belong to the thing that names them: the gold panel and the gold button are lit in gold,
+  // and a plain button inside the gold panel is not.
+  const litIn = (locator: ReturnType<typeof page.locator>) => locator.evaluate((node) => getComputedStyle(node).boxShadow);
+  const GOLD_LIGHT = 'rgb(255, 233, 168)';
+  expect(await litIn(tip)).toContain(GOLD_LIGHT);
+  expect(await litIn(page.getByRole('button', { name: w.toCards }))).toContain(GOLD_LIGHT);
+  expect(await litIn(tip.getByRole('button', { name: 'Got it' }))).not.toContain(GOLD_LIGHT);
   await tip.getByRole('button', { name: 'Got it' }).click();
   await expect(tip).toHaveCount(0);
   await page.getByRole('button', { name: w.toCards }).click();

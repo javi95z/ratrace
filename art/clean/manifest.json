@@ -246,6 +246,51 @@
       "width": 128,
       "height": 128
     },
+    "home.loft": {
+      "file": "homes/home.loft.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.townhouse": {
+      "file": "homes/home.townhouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.duplex": {
+      "file": "homes/home.duplex.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.chalet": {
+      "file": "homes/home.chalet.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.estate": {
+      "file": "homes/home.estate.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mansion": {
+      "file": "homes/home.mansion.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.office": {
+      "file": "homes/home.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.warehouse": {
+      "file": "homes/home.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.block": {
+      "file": "homes/home.block.png",
+      "width": 128,
+      "height": 128
+    },
     "icon.account": {
       "file": "icons/icon.account.png",
       "width": 32,
@@ -403,6 +448,86 @@
     },
     "icon.trophy": {
       "file": "icons/icon.trophy.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.life_frugal": {
+      "file": "icons/icon.life_frugal.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.life_normal": {
+      "file": "icons/icon.life_normal.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.life_comfortable": {
+      "file": "icons/icon.life_comfortable.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.life_lavish": {
+      "file": "icons/icon.life_lavish.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rent_room": {
+      "file": "icons/icon.rent_room.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rent_flat": {
+      "file": "icons/icon.rent_flat.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.insure_health": {
+      "file": "icons/icon.insure_health.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.insure_home": {
+      "file": "icons/icon.insure_home.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.insure_life": {
+      "file": "icons/icon.insure_life.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.insure_liability": {
+      "file": "icons/icon.insure_liability.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.focus_overtime": {
+      "file": "icons/icon.focus_overtime.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.focus_study": {
+      "file": "icons/icon.focus_study.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.focus_hunt": {
+      "file": "icons/icon.focus_hunt.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.economy": {
+      "file": "icons/icon.economy.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.move": {
+      "file": "icons/icon.move.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.exit_door": {
+      "file": "icons/icon.exit_door.png",
       "width": 32,
       "height": 32
     },

@@ -42,7 +42,7 @@ const order: fc.Arbitrary<Order> = fc.oneof(
     weight: 1,
     arbitrary: fc.record({
       type: fc.constant('buyProperty' as const),
-      typeId: fc.constantFrom('studio', 'flat', 'house', 'castle'),
+      typeId: fc.constantFrom('studio', 'flat', 'house', 'parking', 'shop', 'block', 'mansion', 'castle'),
       downPayment: amount,
       mortgage: fc.constantFrom('fixed' as const, 'variable' as const, 'none' as const),
       rented: fc.boolean(),

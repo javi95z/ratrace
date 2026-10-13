@@ -88,7 +88,7 @@ function Ended({ view }: { view: GameView }) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-8 pt-6">
       <header className="flex items-center gap-3">
-        <span className="frame shrink-0 leading-[0]">
+        <span className="frame-double my-1.5 ml-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">
           <Well className="size-[68px]">
             <Sprite id={portraitArt(lifeId, 58)} fallback={{ w: 64, h: 64 }} />
           </Well>
@@ -164,7 +164,7 @@ function Ended({ view }: { view: GameView }) {
             ))}
           </ul>
         )}
-        <Link href="/collection" className="pixel frame mt-3 flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
+        <Link href="/collection" className="pixel frame-raised mt-3 flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
           {t('collection')}
         </Link>
       </Panel>

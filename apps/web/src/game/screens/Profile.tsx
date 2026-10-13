@@ -116,7 +116,7 @@ export function Leave() {
   const saving = useSaving();
   return (
     <div className="mt-3">
-      <Link href="/" className="pixel frame flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
+      <Link href="/" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
         {t('leave')}
       </Link>
       {saving ? (

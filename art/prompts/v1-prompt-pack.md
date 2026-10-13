@@ -1,6 +1,6 @@
 # Art prompt pack: v1
 
-Twenty-one sheets cover every v1 sprite. The game is called The Rat Race.
+Twenty-four sheets cover every v1 sprite: the first twenty-one, and three added since (04b homes, 06b icons, 10b portraits). The game is called The Rat Race.
 
 ## How to use
 

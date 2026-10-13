@@ -81,8 +81,8 @@ describe('rent by kind of property', () => {
     const view = viewOf(createGame({ content, start }, 'rentals'));
     const flat = quoteProperty(content, view, 'flat');
     const shop = quoteProperty(content, view, 'shop');
-    expect(flat.rentalOnly).toBe(false);
-    expect(shop.rentalOnly).toBe(true);
+    expect(flat.letOnly).toBe(false);
+    expect(shop.letOnly).toBe(true);
     // Same price, a fifth more rent: 4.5% a year of 250,000 is 11,250.
     expect(shop.price).toBe(flat.price);
     expect(flat.rentAnnual).toBe(1_125_000);

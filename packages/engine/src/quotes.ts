@@ -22,7 +22,7 @@ export interface PropertyQuote extends PropertyTerms {
   /** False until the player has the finance skill to be a landlord. */
   canRentOut: boolean;
   /** True for what nobody can live in: it can only be bought to let. */
-  rentalOnly: boolean;
+  letOnly: boolean;
   /** What it would bring in a year if let, at today's price. */
   rentAnnual: Cents;
 }
@@ -34,7 +34,7 @@ export function quoteProperty(content: Content, view: GameView, typeId: string):
     ...terms,
     canBorrow: view.round >= p.bankruptUntilRound,
     canRentOut: p.life.financeSkill >= content.life.rentOutMinFinanceSkill,
-    rentalOnly: rentalOnly(content, typeId),
+    letOnly: rentalOnly(content, typeId),
     rentAnnual: applyBp(terms.price, rentYieldBp(content, p.cityId, typeId)),
   };
 }

@@ -7,14 +7,18 @@ import { ageAt, headlineText } from '@/game/present';
 import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
-/** One gauge of the economy, as a dial sunk into the panel: an icon, where it stands, and what it is. */
-function Gauge({ icon, label, value }: { icon: string; label: string; value: string }) {
+/**
+ * One gauge of the economy, as a dial sunk into the panel: an icon, where it stands, and what it is.
+ * A gauge that reads as a word takes the whole width: "Desaceleración" does not fit beside another
+ * gauge in a side column, and a reading is never cut short.
+ */
+function Gauge({ icon, label, value, wide = false }: { icon: string; label: string; value: string; wide?: boolean }) {
   return (
-    <div className="sunk flex min-w-0 items-center gap-2 bg-night-900 p-1.5">
+    <div data-gauge className={`sunk flex min-w-0 items-center gap-2 bg-night-900 p-1.5 ${wide ? 'col-span-2' : ''}`}>
       <Sprite id={icon} />
       <div className="min-w-0">
-        <div className="pixel truncate text-[16px]">{value}</div>
-        <div className="truncate text-[11px] text-ink-200">{label}</div>
+        <div className="pixel text-[16px] leading-tight">{value}</div>
+        <div className="text-[11px] leading-tight text-ink-200">{label}</div>
       </div>
     </div>
   );
@@ -64,8 +68,8 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
         <div className="grid grid-cols-2 gap-2">
           <Gauge icon="icon.rates" label={t('rates')} value={fmt.rate(world.policyRateBp)} />
           <Gauge icon="icon.inflation" label={t('inflation')} value={fmt.rate(world.inflationBp)} />
-          <Gauge icon="icon.mood" label={t('economy')} value={text.regimes[world.regime]} />
-          <Gauge icon="icon.crypto" label={t('crypto')} value={text.cryptoPhases[world.cryptoPhase]} />
+          <Gauge icon="icon.mood" label={t('economy')} value={text.regimes[world.regime]} wide />
+          <Gauge icon="icon.crypto" label={t('crypto')} value={text.cryptoPhases[world.cryptoPhase]} wide />
         </div>
       </Panel>
     </div>

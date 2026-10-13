@@ -59,7 +59,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children }: Props)
           />
           <div className="grid grid-cols-3 gap-2">
             {[25, 50, 100].map((pct) => (
-              <button key={pct} type="button" onClick={() => setAmount(Math.floor((max * pct) / 100))} className="pixel frame min-h-11 bg-night-600 text-[15px] text-ink-200">
+              <button key={pct} type="button" onClick={() => setAmount(Math.floor((max * pct) / 100))} className="pixel frame-raised min-h-11 bg-night-600 text-[15px] text-ink-200">
                 {pct}%
               </button>
             ))}
