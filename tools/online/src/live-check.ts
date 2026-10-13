@@ -18,7 +18,9 @@ import type { LoggedRound } from '@ratrace/engine';
 import { createClient } from '@supabase/supabase-js';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
-const envFile = fileURLToPath(new URL('../../../apps/web/.env.local', import.meta.url));
+// The two public values are read from the game's own file. A second checkout of the repository has no such
+// file of its own, and names the first one's instead of holding a copy of it.
+const envFile = process.env.RATRACE_ENV_FILE ?? fileURLToPath(new URL('../../../apps/web/.env.local', import.meta.url));
 
 /** Reads the two public values. Nothing here is printed. */
 function settings(): { url: string; key: string } {
@@ -61,6 +63,7 @@ const check = (ok: boolean, what: string) => results.push({ ok, what });
  */
 interface GameCloud {
   playingGames(): Promise<Array<{ id: string; round: number; status: string; log: unknown }>>;
+  ensureProfile(userId: string, language: string): Promise<void>;
   pushGame(game: { id: string; lifeId: string; engineVersion: string; contentVersion: string; seed: string; round: number; log: unknown; stateHash: string }): Promise<'saved' | 'closed' | 'taken' | 'behind'>;
   abandonGame(id: string): Promise<void>;
   loadProgress(): Promise<unknown>;
@@ -185,6 +188,13 @@ try {
   const a2 = guest();
   await a2.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
   const [phone, laptop, stranger] = [cloudOf(a), cloudOf(a2), cloudOf(b)];
+
+  // The profile, written the way the game writes it on every launch: made, then written again in another language.
+  // A player may write four columns of their profile and no more; this is the write that must fit in them.
+  const written = await phone.ensureProfile(idA, 'en').then(() => stranger.ensureProfile(idB, 'es')).then(() => stranger.ensureProfile(idB, 'en')).then(() => null, (error: unknown) => error);
+  const mine2 = await b.from('profiles').select('language, friend_code').eq('user_id', idB).maybeSingle();
+  check(written === null && mine2.data?.language === 'en', 'the game writes a player\'s profile, and writes it again, within what a player may write');
+  check(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/.test(String(mine2.data?.friend_code)), 'and the server gives the player a friend code');
 
   const early3 = wholeLife('live-check-two-devices', 3);
   const early5 = wholeLife('live-check-two-devices', 5);
