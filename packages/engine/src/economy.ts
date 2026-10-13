@@ -3,7 +3,7 @@ import type { DebtService } from './debt';
 import { cityOf } from './lookup';
 import { applyBp, mulDiv } from './money';
 import type { Cents } from './money';
-import { ownsHome } from './property';
+import { ownsHome, rentYieldBp } from './property';
 import { assetYieldBp, depositRateBp, indexed } from './rates';
 import type { Content, PlayerState, WorldState } from './types';
 
@@ -54,7 +54,7 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
 
   let rent = 0;
   for (const property of p.properties) {
-    if (property.rented) rent += applyBp(property.value, cityOf(content, property.cityId).rentYieldBp * years);
+    if (property.rented) rent += applyBp(property.value, rentYieldBp(content, property.cityId, property.typeId) * years);
   }
 
   return {

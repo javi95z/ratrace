@@ -1,7 +1,9 @@
 @import 'tailwindcss';
 
 /*
- * The look of The Rat Race: a night city in pixels.
+ * The look of The Rat Race: a night city in pixels, drawn the way a boxed game of the nineties
+ * drew its menus: every surface has a lit edge and a shaded one, titles hang on gold tabs, and
+ * the things that can be pressed stand a few pixels off the page.
  *
  * Only the 31 interface colours of the design spec (section 6) exist here. Tailwind's own palette
  * is switched off, so a colour that is not on the list cannot be used by accident.
@@ -43,8 +45,12 @@
   --color-transparent: transparent;
   --color-current: currentColor;
 
-  /* Pixelify Sans for titles and numbers, Inter for anything read as a sentence. */
-  --font-pixel: var(--font-pixelify), ui-monospace, 'Courier New', monospace;
+  /*
+   * Jersey 15 for titles and numbers, Inter for anything read as a sentence. Jersey's figures are
+   * told apart at a glance (its 5 is not an S, its 2 not a Z), which is why it took Pixelify's place.
+   * A sign Jersey does not draw is borrowed from Inter, not from whatever the device calls monospace.
+   */
+  --font-pixel: var(--font-jersey), var(--font-inter), system-ui, sans-serif;
   --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Three columns from here up. */
@@ -84,7 +90,8 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--color-night-800);
+  /* A weave of single pixels, one shade off the night: enough to say "surface", too little to read as a pattern. */
+  background: var(--color-night-800) radial-gradient(var(--color-night-700) 1px, transparent 1px) 0 0 / 6px 6px;
   color: var(--color-cream);
   font-family: var(--font-sans);
   font-size: 15px;
@@ -108,6 +115,28 @@ body {
 }
 
 /*
+ * The colours a frame is drawn in: its outline, its lit edge, its shaded edge, and the ring of a
+ * double frame. They belong to the element that names them and to nothing inside it. Left to
+ * inherit, a gold panel would gild every button it holds.
+ */
+@property --frame {
+  syntax: '*';
+  inherits: false;
+}
+@property --hi {
+  syntax: '*';
+  inherits: false;
+}
+@property --lo {
+  syntax: '*';
+  inherits: false;
+}
+@property --ring {
+  syntax: '*';
+  inherits: false;
+}
+
+/*
  * A 2px pixel border with notched corners: four hard shadows, one per side, so the corner pixels
  * are left empty the way a hand-drawn pixel frame leaves them.
  */
@@ -119,30 +148,103 @@ body {
     2px 0 0 0 var(--frame, var(--color-night-900));
 }
 
-/* The same frame with a hard drop shadow under it, for things that can be pressed. */
+/*
+ * The frame of a surface that lies on the page: lit along the top and left, shaded along the
+ * bottom and right, as if the light came from the top left like it does in the art.
+ * `--hi` and `--lo` are the two edges; a surface of another colour names its own.
+ */
+@utility bevel {
+  box-shadow:
+    0 -2px 0 0 var(--frame, var(--color-night-900)),
+    0 2px 0 0 var(--frame, var(--color-night-900)),
+    -2px 0 0 0 var(--frame, var(--color-night-900)),
+    2px 0 0 0 var(--frame, var(--color-night-900)),
+    inset 2px 2px 0 0 var(--hi, var(--color-night-500)),
+    inset -2px -2px 0 0 var(--lo, var(--color-night-900));
+}
+
+/* A surface sunk into the page, for things that are shown and not pressed: a sprite, a gauge, a track. */
+@utility sunk {
+  box-shadow:
+    inset 0 2px 0 0 var(--color-night-900),
+    inset 2px 0 0 0 var(--color-night-900);
+}
+
+/*
+ * The frame of something that can be pressed: lit on top, shaded underneath, and standing off the
+ * page on a hard shadow.
+ */
 @utility frame-raised {
   box-shadow:
     0 -2px 0 0 var(--frame, var(--color-night-900)),
     0 2px 0 0 var(--frame, var(--color-night-900)),
     -2px 0 0 0 var(--frame, var(--color-night-900)),
     2px 0 0 0 var(--frame, var(--color-night-900)),
+    inset 0 2px 0 0 var(--hi, var(--color-night-500)),
+    inset 0 -3px 0 0 var(--lo, var(--color-night-800)),
     0 6px 0 -2px var(--frame, var(--color-night-900));
 }
 
 @utility frame-gold {
   --frame: var(--color-gold-900);
+  --hi: var(--color-gold-200);
+  --lo: var(--color-gold-700);
 }
 
 @utility frame-cream {
   --frame: var(--color-ink-900);
+  --hi: var(--color-white);
+  --lo: var(--color-ink-200);
 }
 
-/* Titles and numbers. */
+@utility frame-wine {
+  --hi: var(--color-wine-500);
+  --lo: var(--color-wine-900);
+}
+
+@utility frame-teal {
+  --hi: var(--color-teal-300);
+  --lo: var(--color-teal-800);
+}
+
+/*
+ * Titles and numbers. Jersey 15 is drawn small inside its own size, so it is scaled until its
+ * small letters stand as tall as this share of the font size: a title set at 17px then looks
+ * 17px, and every size in the game keeps its meaning. The share card does the same sum by hand
+ * (`PIXEL_X_HEIGHT` in `game/share.ts`), because a canvas does not know this property.
+ */
 @utility pixel {
   font-family: var(--font-pixel);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.15;
+  font-weight: 400;
+  font-size-adjust: 0.56;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
+/* A lit cell of a pixel bar: bright along the top, deep along the bottom, like a filled lamp. */
+@utility lamp {
+  box-shadow:
+    inset 0 2px 0 0 var(--hi),
+    inset 0 -2px 0 0 var(--lo);
+}
+
+/* Two frames, one inside the other, for the two pictures that say whose life this is: the city and the face. */
+@utility frame-double {
+  box-shadow:
+    0 0 0 2px var(--color-night-900),
+    0 0 0 4px var(--ring, var(--color-gold-700)),
+    0 0 0 6px var(--color-night-900);
+}
+
+/* The gold tab a panel's title hangs on. */
+@utility tab {
+  box-shadow:
+    0 -2px 0 0 var(--color-night-900),
+    0 2px 0 0 var(--color-night-900),
+    -2px 0 0 0 var(--color-night-900),
+    2px 0 0 0 var(--color-night-900),
+    inset 0 2px 0 0 var(--color-gold-200),
+    inset 0 -2px 0 0 var(--color-gold-700);
 }
 
 /* Hides a scrollbar without stopping the scroll, for tab strips. */

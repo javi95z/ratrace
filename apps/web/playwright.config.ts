@@ -5,7 +5,8 @@ import { defineConfig } from '@playwright/test';
  * downloaded. Three screens are covered: a phone, which is the screen the game is designed for;
  * a laptop at the very width where the three columns begin and are tightest; and a wide desktop.
  */
-const PORT = 3100;
+// Another checkout of the game may be running its own tests on this machine: RATRACE_PORT keeps the two apart.
+const PORT = Number(process.env.RATRACE_PORT ?? 3100);
 
 export default defineConfig({
   testDir: './e2e',

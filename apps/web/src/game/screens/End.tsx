@@ -105,8 +105,8 @@ function Ended({ view }: { view: GameView }) {
         </div>
       </header>
 
-      <section role="group" aria-label={t('score')} className="frame frame-gold animate-rise bg-night-700 p-4 text-center">
-        <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{t('score')}</p>
+      <section role="group" aria-label={t('score')} className="bevel frame-gold animate-rise bg-night-700 p-4 text-center">
+        <p className="pixel text-[15px] uppercase tracking-[0.1em] text-gold-200">{t('score')}</p>
         <p className="pixel mt-1 text-[60px] leading-none text-gold-500">{fmt.number(score.total)}</p>
         <div className="mt-4 grid grid-cols-3 gap-2">
           <Part label={t('wealth')} value={fmt.number(score.wealth)} />
@@ -147,8 +147,7 @@ function Ended({ view }: { view: GameView }) {
         <p className="mt-2 text-center text-[12px] text-ink-300">{t('graph')}</p>
       </Panel>
 
-      <section aria-label={t('badges')} className="frame bg-night-700 p-3">
-        <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('badges')}</h2>
+      <Panel title={t('badges')} label={t('badges')}>
         {earned.length === 0 ? (
           <p className="text-[14px] text-ink-300">{t('noBadges')}</p>
         ) : (
@@ -168,7 +167,7 @@ function Ended({ view }: { view: GameView }) {
         <Link href="/collection" className="pixel frame mt-3 flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
           {t('collection')}
         </Link>
-      </section>
+      </Panel>
 
       <div className="mt-auto flex flex-col gap-3 pt-2">
         <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} />

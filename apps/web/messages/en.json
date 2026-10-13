@@ -95,7 +95,14 @@
     "hint": "Headlines are about the next two years. About seven in ten come true.",
     "toCards": "See what life brings",
     "toFinance": "To your finances",
-    "opener": "The headlines beside this are about the next two years. About seven in ten come true."
+    "opener": "The headlines beside this are about the next two years. About seven in ten come true.",
+    "topics": {
+      "regime": "Economy",
+      "crypto": "Crypto",
+      "rates": "Interest rates",
+      "inflation": "Inflation",
+      "property": "Housing"
+    }
   },
   "cards": {
     "progress": "Card {n} of {total}",
@@ -206,10 +213,10 @@
       "nothing": "There is nothing to move."
     },
     "property": {
-      "title": "Homes in {city}",
+      "title": "Property in {city}",
       "status": "Status +{n}",
       "minDown": "From {amount} down",
-      "buyTitle": "Buy a home: {home}",
+      "buyTitle": "Buy: {home}",
       "price": "Price",
       "purchaseTax": "Purchase tax",
       "down": "Down payment",
@@ -233,7 +240,11 @@
       "empty": "Standing empty",
       "startRenting": "Rent it out",
       "stopRenting": "Stop renting it out",
-      "mortgageLeft": "{amount} mortgage left"
+      "mortgageLeft": "{amount} mortgage left",
+      "letOnly": "To let only",
+      "lets": "Lets for {amount} a year",
+      "buyLetTitle": "Buy to let: {home}",
+      "rent": "Rent a year"
     },
     "debt": {
       "none": "You owe nothing.",

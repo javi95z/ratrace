@@ -1,10 +1,16 @@
 import type { DebtParams, LifeRules, PropertyTypeDef, ScoringParams, WorldRules } from '@ratrace/engine';
 import { usd } from './money';
 
-/** Homes scale from the reference flat of each city. Status is for living in one. */
+/**
+ * Property scales from the reference flat of each city, the cheapest first. Status is for living
+ * in one. A parking space and a shop cannot be lived in: they are bought to let, and let for a
+ * little more than a home of the same price, which is all that makes up for being of no other use.
+ */
 export const propertyTypes: PropertyTypeDef[] = [
+  { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 110 },
   { id: 'studio', pricePct: 60, status: 8 },
   { id: 'flat', pricePct: 100, status: 14 },
+  { id: 'shop', pricePct: 130, status: 0, rentalOnly: true, rentPct: 125 },
   { id: 'house', pricePct: 180, status: 24 },
   { id: 'penthouse', pricePct: 400, status: 42 },
   { id: 'villa', pricePct: 800, status: 60 },

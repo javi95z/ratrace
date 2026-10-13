@@ -39,6 +39,17 @@ export function propertyTerms(p: PlayerState, content: Content, world: WorldStat
   };
 }
 
+/** The yearly rent of a property of this type and value in this city, as a share of its value. */
+export function rentYieldBp(content: Content, cityId: string, typeId: string): Bp {
+  const type = content.propertyTypes.find((t) => t.id === typeId);
+  return Math.round((cityOf(content, cityId).rentYieldBp * (type?.rentPct ?? 100)) / 100);
+}
+
+/** True for a type nobody can live in: it is let from the day it is bought to the day it is sold. */
+export function rentalOnly(content: Content, typeId: string): boolean {
+  return content.propertyTypes.find((t) => t.id === typeId)?.rentalOnly === true;
+}
+
 /** True if the player lives in a property they own in their current city. */
 export function ownsHome(p: PlayerState): boolean {
   return p.properties.some((x) => x.cityId === p.cityId && !x.rented);
@@ -58,6 +69,7 @@ export function executeBuyProperty(
   if (order.mortgage !== 'fixed' && order.mortgage !== 'variable' && order.mortgage !== 'none') {
     return 'unknown-mortgage-type';
   }
+  if (rentalOnly(content, order.typeId) && order.rented !== true) return 'not-a-home';
   if (order.rented === true && p.life.financeSkill < content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
   const terms = propertyTerms(p, content, world, order.typeId);
   const { price, purchaseTax: tax } = terms;
@@ -129,6 +141,7 @@ export function executeSetRented(
 ): RejectReason | null {
   const property = p.properties.find((x) => x.id === order.propertyId);
   if (!property) return 'unknown-property';
+  if (rentalOnly(ctx.content, property.typeId) && order.rented !== true) return 'not-a-home';
   if (order.rented === true && p.life.financeSkill < ctx.content.life.rentOutMinFinanceSkill) return 'needs-finance-skill';
   property.rented = order.rented === true;
   return null;

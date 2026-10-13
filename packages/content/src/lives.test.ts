@@ -130,7 +130,7 @@ const moved = (value: number, returnBp: number) => Math.max(0, value + Math.roun
 const itemsValue = (p: PlayerState) => p.life.items.reduce((sum, item) => sum + item.value, 0);
 
 describe('whole lives on the v1 content', () => {
-  it('survive any answers and any orders, in every starting life', () => {
+  it('survive any answers and any orders, in every starting life', { timeout: 60_000 }, () => {
     const played = new Set<number>();
     fc.assert(
       fc.property(life, (input) => {

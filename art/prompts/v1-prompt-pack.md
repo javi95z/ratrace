@@ -135,6 +135,23 @@ Square image. Object sheet: 3 columns by 3 rows, 9 buildings. Every building is 
 9. Small ground-floor shop unit with a striped awning and a lit display window.
 ```
 
+### 04b. Homes B
+
+Save as `art/raw/homes/homes-02.png`
+
+```text
+Square image. Object sheet: 3 columns by 3 rows, 9 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. Left to right, top to bottom:
+1. Converted brick warehouse loft: two tall storeys, huge black-framed factory windows glowing warm, a round water tank on the roof.
+2. Narrow three-storey terraced townhouse: brick front, a bay window, front steps with an iron railing, a lit lantern by the door.
+3. Modern duplex: two stacked glass-fronted floors with a wide terrace, potted olive trees and warm light inside.
+4. Mountain chalet with a steep dark roof, a stone base, a timber balcony, a small lit pool and two pine trees.
+5. Country estate: a long stone farmhouse with a clay-tile roof, a gravel drive lined with cypress trees, a small vineyard patch and a lit porch.
+6. Grand mansion: a symmetrical three-storey palace front with columns, tall arched windows all lit, a round fountain and clipped hedges.
+7. One floor of a glass office building, shown as a single cut slab: rows of desks and glowing screens with abstract shapes behind the glass.
+8. Industrial warehouse unit: a wide corrugated-metal shed with two roller doors, one open and lit, a forklift and stacked pallets.
+9. Whole five-storey apartment block: a modern brick building with twelve small balconies, most windows lit, a glass entrance.
+```
+
 ### 05. Finance icons
 
 Save as `art/raw/icons/icons-01.png`
@@ -181,6 +198,30 @@ Square image. Object sheet: 4 columns by 4 rows, 16 icons. These must stay reada
 14. Gold star.
 15. Grey cog wheel.
 16. Gold trophy cup.
+```
+
+### 06b. Lifestyle icons
+
+Save as `art/raw/icons/icons-03.png`
+
+```text
+Square image. Object sheet: 4 columns by 4 rows, 16 icons. These must stay readable when shrunk to 32 by 32 pixels: very simple, bold, chunky shapes, thick outlines, 3 to 4 colours each, no fine detail. Left to right, top to bottom:
+1. Steaming bowl of noodles with two chopsticks.
+2. Brown paper grocery bag with a baguette and green leaves sticking out.
+3. Glass of red wine beside a silver serving dome.
+4. Champagne bottle with the gold cork flying off.
+5. Single bed with a blue blanket and a white pillow.
+6. Green sofa with a tall floor lamp beside it.
+7. Red heart with a white medical cross in the centre.
+8. Small house under an open red umbrella.
+9. Red and white lifebuoy ring.
+10. Gold balance scales, level.
+11. Alarm clock with a yellow crescent moon behind it.
+12. Black graduation cap resting on a closed blue book.
+13. Magnifying glass over a sheet of paper with plain lines.
+14. Factory with one chimney and a green arrow rising beside it.
+15. Moving van seen from the side, cream body, navy cab.
+16. Open door in a dark wall with warm gold light pouring out.
 ```
 
 ### 07. Achievement badges A
@@ -419,8 +460,10 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 02 | `items/items-02.png` | Travel, memberships, air and sea, education, 5 later items | 64×64 |
 | 03 | `cars/cars-01.png` | 7 cars + 1 later | 96×48 |
 | 04 | `homes/homes-01.png` | 7 homes + 2 later property types | 128×128 |
+| 04b | `homes/homes-02.png` | 9 more kinds of property: 6 homes, 3 to let | 128×128 |
 | 05 | `icons/icons-01.png` | Finance tool icons | 32×32 |
 | 06 | `icons/icons-02.png` | Interface icons | 32×32 |
+| 06b | `icons/icons-03.png` | Lifestyle, rent, insurance and focus icons, the economy, a moving van, the way out | 32×32 |
 | 07 | `badges/badges-01.png` | Achievements 1 to 16 | 64×64 |
 | 08 | `badges/badges-02.png` | Achievements 17 to 30, locked badge, generic star | 64×64 |
 | 09 | `portraits/portraits-01.png` | Nurse, engineer, civil servant, rider | 64×64 |

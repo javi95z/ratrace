@@ -150,7 +150,8 @@ export function validateCards(c: Content): string[] {
       if (!types.includes(deal.typeId as string)) return `names an unknown property type: ${String(deal.typeId)}`;
       if (!within(deal.pricePct, 1, 200)) return 'has a property price outside 1..200 percent';
       if (!within(deal.downPct, 0, 100)) return 'has a down payment outside 0..100 percent';
-      return isFlag(deal.rented) ? null : 'needs true or false for a property being rented';
+      if (!isFlag(deal.rented)) return 'needs true or false for a property being rented';
+      return deal.rented === false && c.propertyTypes.some((x) => x.id === deal.typeId && x.rentalOnly === true) ? `hands over a ${String(deal.typeId)} to live in, and nobody can` : null;
     },
     lose: (value) => {
       const loss = isRecord(value) ? value : {};

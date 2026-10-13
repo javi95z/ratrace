@@ -14,7 +14,14 @@ describe('the v1 content', () => {
     expect(content.assets).toHaveLength(19);
     expect(content.careers).toHaveLength(5);
     expect(content.items).toHaveLength(34);
-    expect(content.propertyTypes).toHaveLength(5);
+    expect(content.propertyTypes.map((type) => type.id)).toEqual(['parking', 'studio', 'flat', 'shop', 'house', 'penthouse', 'villa']);
+    // Two of them are investments only: nobody lives in a parking space or behind a shop counter.
+    expect(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id)).toEqual(['parking', 'shop']);
+    // What cannot be lived in lets for a little more than a home: that is all it is good for.
+    for (const type of content.propertyTypes) expect((type.rentPct ?? 100) > 100, type.id).toBe(type.rentalOnly === true);
+    // Dearest last, so the shop reads as a ladder.
+    const prices = content.propertyTypes.map((type) => type.pricePct);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
     expect(content.cards).toHaveLength(100);
     expect(lives).toHaveLength(6);
   });

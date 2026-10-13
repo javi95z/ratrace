@@ -5,7 +5,7 @@ import { canSellItem, itemTerms, moveCost } from './life/orders';
 import { cityOf, itemOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
-import { ownsHome, propertyTerms } from './property';
+import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { indexed } from './rates';
 import type { Content, GameView, InsuranceKind, LifestyleTier, RentTier } from './types';
@@ -21,14 +21,21 @@ export interface PropertyQuote extends PropertyTerms {
   canBorrow: boolean;
   /** False until the player has the finance skill to be a landlord. */
   canRentOut: boolean;
+  /** True for what nobody can live in: it can only be bought to let. */
+  rentalOnly: boolean;
+  /** What it would bring in a year if let, at today's price. */
+  rentAnnual: Cents;
 }
 
 export function quoteProperty(content: Content, view: GameView, typeId: string): PropertyQuote {
   const p = view.player;
+  const terms = propertyTerms(p, content, view.timeline[view.round], typeId);
   return {
-    ...propertyTerms(p, content, view.timeline[view.round], typeId),
+    ...terms,
     canBorrow: view.round >= p.bankruptUntilRound,
     canRentOut: p.life.financeSkill >= content.life.rentOutMinFinanceSkill,
+    rentalOnly: rentalOnly(content, typeId),
+    rentAnnual: applyBp(terms.price, rentYieldBp(content, p.cityId, typeId)),
   };
 }
 

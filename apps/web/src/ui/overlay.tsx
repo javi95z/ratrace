@@ -92,7 +92,7 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, children 
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="frame pb-safe relative max-h-[88dvh] w-full max-w-md animate-rise overflow-y-auto bg-night-800 p-4 outline-none"
+        className="bevel pb-safe relative max-h-[88dvh] w-full max-w-md animate-rise overflow-y-auto bg-night-800 p-4 outline-none"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <h2 id={titleId} className="pixel pt-1 text-[19px]">
@@ -142,7 +142,7 @@ export function Tabs<T extends string>({ label, tabs, value, onChange, idPrefix 
             aria-selected={on}
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(tab.id)}
-            className={`pixel frame min-h-11 shrink-0 px-3 text-[15px] ${on ? 'bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}
+            className={`pixel frame-raised min-h-11 shrink-0 px-3 text-[15px] ${on ? 'frame-cream bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}
           >
             {tab.label}
           </button>

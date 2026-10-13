@@ -1,26 +1,34 @@
 'use client';
 
-import { cityArt } from '@ratrace/content';
+import { cityArt, topicArt } from '@ratrace/content';
+import type { Headline } from '@ratrace/engine';
 import { headlineHeld } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
-import { Panel, Well } from '@/ui/kit';
+import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 
-/** One gauge of the economy: an icon, what it is, and where it stands. */
+/** One gauge of the economy, as a dial sunk into the panel: an icon, where it stands, and what it is. */
 function Gauge({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <Well className="size-9">
-        <Sprite id={icon} />
-      </Well>
+    <div className="sunk flex min-w-0 items-center gap-2 bg-night-900 p-1.5">
+      <Sprite id={icon} />
       <div className="min-w-0">
-        <div className="pixel truncate text-[15px]">{value}</div>
-        <div className="truncate text-[11px] text-ink-300">{label}</div>
+        <div className="pixel truncate text-[16px]">{value}</div>
+        <div className="truncate text-[11px] text-ink-200">{label}</div>
       </div>
     </div>
   );
 }
+
+/** The colour of the block a clipping's picture sits on, by what the headline is about. */
+const TOPIC: Record<Headline['topic'], string> = {
+  regime: 'bg-gold-500',
+  crypto: 'bg-gold-700',
+  rates: 'bg-sky-300',
+  inflation: 'bg-wine-300',
+  property: 'bg-teal-300',
+};
 
 /** The headlines about the next two years, and the gauges of the economy. */
 export function Headlines({ hint = true }: { hint?: boolean }) {
@@ -33,19 +41,28 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <Panel title={t('title')}>
-        <ul className="flex flex-col gap-2">
+      <Panel title={t('title')} label={t('title')}>
+        <ul className="flex flex-col gap-2.5">
           {world.news.map((h, i) => (
-            <li key={i} className="frame frame-cream bg-cream px-3 py-2 text-[15px] leading-snug text-ink-900">
-              {headlineText(words, h)}
+            // A newspaper clipping: what it is about on the left, in a picture, and the headline beside it.
+            <li key={i} className="frame frame-cream flex bg-cream text-ink-900">
+              <span aria-hidden className={`flex w-11 shrink-0 items-center justify-center ${TOPIC[h.topic]}`}>
+                <Sprite id={topicArt[h.topic]} />
+              </span>
+              <span className="min-w-0 px-2.5 py-2">
+                <span data-topic className="pixel block text-[13px] uppercase tracking-[0.1em] text-ink-500">
+                  {t(`topics.${h.topic}`)}
+                </span>
+                <span className="block text-[15px] font-semibold leading-snug">{headlineText(words, h)}</span>
+              </span>
             </li>
           ))}
         </ul>
-        {hint ? <p className="mt-2 text-[12px] text-ink-300">{t('hint')}</p> : null}
+        {hint ? <p className="mt-2.5 text-[12px] text-ink-200">{t('hint')}</p> : null}
       </Panel>
 
       <Panel>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+        <div className="grid grid-cols-2 gap-2">
           <Gauge icon="icon.rates" label={t('rates')} value={fmt.rate(world.policyRateBp)} />
           <Gauge icon="icon.inflation" label={t('inflation')} value={fmt.rate(world.inflationBp)} />
           <Gauge icon="icon.mood" label={t('economy')} value={text.regimes[world.regime]} />
@@ -108,7 +125,7 @@ export function RoundOpener() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="frame mx-auto flex max-w-full justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
+      <div className="frame-double mx-auto my-1.5 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
         <Sprite id={cityArt(view.player.cityId)} scale="art" alt={names.cities[view.player.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
       </div>
       <Panel className="text-center">

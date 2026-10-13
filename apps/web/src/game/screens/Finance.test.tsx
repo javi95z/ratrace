@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { content } from '@ratrace/content';
 import { previewRound, quoteProperty, viewOf } from '@ratrace/engine';
+import type { GameView } from '@ratrace/engine';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
@@ -109,3 +110,96 @@ describe('the homes a player owns', () => {
     expect(within(owned).getAllByText(/Standing empty/)).toHaveLength(1);
   });
 });
+
+describe('property that is only for letting', () => {
+  it('shows every kind of property on the same dark tile, and says of a parking space what it lets for', async () => {
+    const { services, session } = await inFinance('heir');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Property' }));
+    const market = screen.getByRole('region', { name: 'Property in Madrid' });
+    const tiles = within(market).getAllByRole('button');
+    expect(tiles.map((tile) => tile.querySelector('img')?.getAttribute('src')?.replace(/^.*home\./, '').replace('.png', ''))).toEqual(['parking', 'studio', 'flat', 'shop', 'house', 'penthouse', 'villa']);
+    // No tile is a cream card: property sits on the same navy as everything else that can be bought.
+    for (const tile of tiles) expect(tile.className).not.toMatch(/bg-cream/);
+
+    const parking = quoteProperty(content, session.view(), 'parking');
+    const tile = within(market).getByRole('button', { name: /^Parking space/ });
+    expect(within(tile).getByText('To let only')).toBeTruthy();
+    expect(within(tile).getByText(`Lets for ${fmt.compact(parking.rentAnnual)} a year`)).toBeTruthy();
+    expect(within(tile).queryByText(/^Status/)).toBeNull();
+    // A home says what living in it is worth.
+    expect(within(within(market).getByRole('button', { name: /^Flat/ })).getByText('Status +14')).toBeTruthy();
+  });
+
+  it('does not ask what a parking space is for, and says why someone without the skill cannot buy one', async () => {
+    const { services } = await inFinance('heir');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Property' }));
+    await user.click(screen.getByRole('button', { name: /^Parking space/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking space' });
+    expect(within(sheet).queryByRole('radiogroup', { name: 'What for' })).toBeNull();
+    expect(within(sheet).getByText('Renting out needs finance skill 2')).toBeTruthy();
+    expect((within(sheet).getByRole('button', { name: 'Buy' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('buys a parking space to let, for someone who has the skill', async () => {
+    const { services, session } = await inFinance('heir');
+    // The same life, having learnt what a landlord must know.
+    const skilled = (): GameView => ({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, financeSkill: 2 } } });
+    const landlord: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: skilled, history: () => session.history(), bankruptcies: () => 0, badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: landlord });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Property' }));
+    await user.click(screen.getByRole('button', { name: /^Parking space/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking space' });
+    await user.click(within(sheet).getByRole('radio', { name: /^Pay in full/ }));
+    await user.click(within(sheet).getByRole('button', { name: 'Buy' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    // It is in the basket as a let, and in the list as rented out with nothing to switch off.
+    const owned = screen.getByRole('region', { name: 'Your properties' });
+    expect(within(owned).getByText('Parking space')).toBeTruthy();
+    expect(within(owned).getByText(/Rented out/)).toBeTruthy();
+    expect(within(owned).queryByRole('button', { name: 'Stop renting it out' })).toBeNull();
+  });
+});
+
+describe('a parking space already owned', () => {
+  it('offers to sell it and nothing else: there is no renting to stop', async () => {
+    const { services, session } = await inFinance('heir');
+    // The same life, with a parking space bought in an earlier round, and beside it a flat that is let.
+    const owning = (): GameView => {
+      const view = session.view();
+      const let_ = (id: string, typeId: string) => ({ id, cityId: view.player.cityId, typeId, value: 4_000_000, basis: 4_000_000, rented: true, mortgageId: null });
+      return { ...view, player: { ...view.player, properties: [...view.player.properties, let_('property-8', 'parking'), let_('property-9', 'flat')] } };
+    };
+    const landlord: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: owning, history: () => session.history(), bankruptcies: () => 0, badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: landlord });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Property' }));
+    const owned = screen.getByRole('region', { name: 'Your properties' });
+    // The flat can be taken off the market; the parking space cannot.
+    expect(within(owned).getAllByRole('button', { name: 'Stop renting it out' })).toHaveLength(1);
+    expect(within(owned).getAllByRole('button', { name: /^Sell for/ }).length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('the lifestyle tab', () => {
+  it('draws a picture on every choice: how to work, how to live, where, and each insurance', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    const pictured = (control: HTMLElement) => control.querySelector('img') !== null;
+    for (const group of ['How you live', 'Where you live']) {
+      for (const choice of within(screen.getByRole('radiogroup', { name: group })).getAllByRole('radio')) expect(pictured(choice), `${group}: ${choice.textContent}`).toBe(true);
+    }
+    const switches = screen.getAllByRole('switch');
+    expect(switches).toHaveLength(3 + 4);
+    for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
+  });
+});
+

@@ -50,22 +50,22 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
   return (
     <header className="flex flex-col gap-2 px-3 pt-3">
       {skyline ? (
-        <div className="frame mx-auto flex max-w-full justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
+        <div className="frame-double mx-auto mb-1.5 mt-1 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
           <Sprite id={cityArt(p.cityId)} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
         </div>
       ) : null}
 
       <div className="flex items-center gap-3">
         {onProfile ? (
-          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame shrink-0 leading-[0]">
+          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame-double m-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">
             {portrait}
           </button>
         ) : (
-          <span className="frame shrink-0 leading-[0]">{portrait}</span>
+          <span className="frame-double m-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
         )}
         <div className="min-w-0 flex-1">
-          <div className="pixel text-[20px]">{common('age', { age })}</div>
-          <div className="truncate text-[13px] text-ink-300">
+          <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>
+          <div className="mt-1 truncate text-[13px] text-ink-200">
             {common('round', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}
             {p.life.career ? ` · ${text.careers[p.life.career.id].levels[p.life.career.level]}` : ''}
           </div>
@@ -83,11 +83,11 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
       <div title={t('ratRaceHint')}>
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
           <span className="pixel">{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
-          <span className="text-ink-300">
+          <span className="pixel text-[14px] text-ink-200">
             {fmt.compact(Math.floor(escape.passiveAfterTax / years))} / {fmt.compact(Math.floor(escape.outgoings / years))}
           </span>
         </div>
-        <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} />
+        <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
       </div>
     </header>
   );

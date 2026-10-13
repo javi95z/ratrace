@@ -34,8 +34,8 @@ export function Guide() {
   const leave = () => note.current?.closest<HTMLElement>('main')?.focus({ preventScroll: true });
 
   return (
-    <aside ref={note} role="note" aria-label={t('title')} className="frame frame-gold mx-3 mb-3 animate-rise bg-night-700 p-3">
-      <p className="pixel mb-1 text-[12px] uppercase tracking-wider text-gold-500">{t('title')}</p>
+    <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold mx-3 mb-3 animate-rise bg-night-700 p-3">
+      <p className="pixel mb-1 text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
       <p className="text-[14px] leading-snug">{t(tip)}</p>
       <div className="mt-3 flex gap-2">
         <Button

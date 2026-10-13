@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, itemArt, propertyArt } from '@ratrace/content';
+import { assetKind, itemArt, propertyArt, focusArt, insuranceArt, lifestyleArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
@@ -8,7 +8,7 @@ import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, orderLabel, priceHistory } from '@/game/present';
-import { Bar, Button, Panel, Row, Segmented, Tag, TickerBadge, Toggle, Well } from '@/ui/kit';
+import { Bar, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle, Well } from '@/ui/kit';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
@@ -208,23 +208,27 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const quote = quoteProperty(content, shown, typeId);
   const [mortgage, setMortgage] = useState<'fixed' | 'variable' | 'none'>(quote.canBorrow ? 'fixed' : 'none');
   const [down, setDown] = useState(quote.minDown);
-  const [rented, setRented] = useState(false);
+  // What nobody can live in is bought to let, and there is nothing to choose.
+  const [rented, setRented] = useState(quote.rentalOnly);
   const cashDown = mortgage === 'none' ? quote.price : down;
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
 
   return (
-    <Sheet open onClose={onClose} title={t('buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
+    <Sheet open onClose={onClose} title={t(quote.rentalOnly ? 'buyLetTitle' : 'buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
-        <div className="frame frame-cream mx-auto bg-cream leading-[0]">
-          <Sprite id={propertyArt(typeId)} fallback={{ w: 128, h: 128 }} />
+        <div className="flex justify-center">
+          <Well className="p-1 leading-[0]">
+            <Sprite id={propertyArt(typeId)} fallback={{ w: 128, h: 128 }} />
+          </Well>
         </div>
         <Panel>
           <Row left={t('price')} right={fmt.money(quote.price)} />
           <Row left={t('purchaseTax')} right={fmt.money(quote.purchaseTax)} />
+          {rented ? <Row left={t('rent')} right={<span className="text-teal-300">{fmt.signed(quote.rentAnnual)}</span>} /> : null}
         </Panel>
 
         <div>
-          <h3 className="pixel mb-1.5 text-[13px] uppercase tracking-wider text-ink-300">{t('mortgage')}</h3>
+          <h3 className="pixel mb-1.5 text-[14px] uppercase tracking-wider text-ink-200">{t('mortgage')}</h3>
           <Segmented<'fixed' | 'variable' | 'none'>
             label={t('mortgage')}
             value={mortgage}
@@ -240,7 +244,7 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
         {mortgage === 'none' ? null : (
           <div>
             <div className="flex items-baseline justify-between">
-              <h3 className="pixel text-[13px] uppercase tracking-wider text-ink-300">{t('down')}</h3>
+              <h3 className="pixel text-[14px] uppercase tracking-wider text-ink-200">{t('down')}</h3>
               <span className="pixel text-[17px]">{fmt.money(down)}</span>
             </div>
             <input
@@ -257,23 +261,29 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
         )}
 
         <div>
-          <h3 className="pixel mb-1.5 text-[13px] uppercase tracking-wider text-ink-300">{t('use')}</h3>
-          <Segmented<'live' | 'rent'>
-            label={t('use')}
-            value={rented ? 'rent' : 'live'}
-            onChange={(value) => setRented(value === 'rent')}
-            options={[
-              { value: 'live', label: t('liveIn') },
-              { value: 'rent', label: t('rentOut'), disabled: !quote.canRentOut },
-            ]}
-          />
-          {quote.canRentOut ? null : <p className="mt-1.5 text-[12px] text-ink-300">{t('rentOutLocked', { level: content.life.rentOutMinFinanceSkill })}</p>}
+          {quote.rentalOnly ? null : (
+            <>
+              <h3 className="pixel mb-1.5 text-[14px] uppercase tracking-wider text-ink-200">{t('use')}</h3>
+              <Segmented<'live' | 'rent'>
+                label={t('use')}
+                value={rented ? 'rent' : 'live'}
+                onChange={(value) => setRented(value === 'rent')}
+                options={[
+                  { value: 'live', label: t('liveIn') },
+                  { value: 'rent', label: t('rentOut'), disabled: !quote.canRentOut },
+                ]}
+              />
+            </>
+          )}
+          {quote.canRentOut ? null : <p className="mt-1.5 text-[13px] text-ink-200">{t('rentOutLocked', { level: content.life.rentOutMinFinanceSkill })}</p>}
         </div>
 
         <p className="pixel text-center text-[17px] text-gold-500">{t('payNow', { amount: fmt.money(cashDown + quote.purchaseTax) })}</p>
         <Button
           variant="primary"
           wide
+          // Something only a landlord can own is not for sale to anyone else: the line above says why.
+          disabled={quote.rentalOnly && !quote.canRentOut}
           onClick={() => {
             if (addOrder({ type: 'buyProperty', typeId, downPayment: mortgage === 'none' ? 0 : down, mortgage, rented })) onClose();
           }}
@@ -301,8 +311,7 @@ function PropertyTab() {
 
   return (
     <div className="flex flex-col gap-3">
-      <section aria-label={t('owned')} className="frame bg-night-700 p-3">
-        <h2 className="pixel mb-2 text-[13px] uppercase tracking-wider text-ink-300">{t('owned')}</h2>
+      <Panel title={t('owned')} label={t('owned')}>
         {listed.length === 0 ? <p className="text-[14px] text-ink-300">{t('ownedNone')}</p> : null}
         {listed.map((property) => {
           const original = view.player.properties.find((x) => x.id === property.id);
@@ -311,6 +320,7 @@ function PropertyTab() {
           // Which home the player lives in is the engine's to say: it is one, however many they own in town.
           const state = property.rented ? t('rented') : home?.id === property.id ? t('livedIn') : t('empty');
           const same = (order: Order) => order.type === 'setRented' && order.propertyId === property.id;
+          const letOnly = content.propertyTypes.some((type) => type.id === property.typeId && type.rentalOnly === true);
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               <div className="flex items-center gap-3">
@@ -332,10 +342,13 @@ function PropertyTab() {
                   {t('selling')}
                 </Button>
               ) : original ? (
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Button onClick={() => setOrder(same, original.rented === !property.rented ? null : { type: 'setRented', propertyId: property.id, rented: !property.rented })}>
-                    {property.rented ? t('stopRenting') : t('startRenting')}
-                  </Button>
+                <div className={`mt-2 grid gap-2 ${letOnly ? '' : 'grid-cols-2'}`}>
+                  {/* What nobody can live in is let for as long as it is owned: there is nothing to switch. */}
+                  {letOnly ? null : (
+                    <Button onClick={() => setOrder(same, original.rented === !property.rented ? null : { type: 'setRented', propertyId: property.id, rented: !property.rented })}>
+                      {property.rented ? t('stopRenting') : t('startRenting')}
+                    </Button>
+                  )}
                   <Button variant="danger" onClick={() => addOrder({ type: 'sellProperty', propertyId: property.id })}>
                     {t('sell', { amount: fmt.compact(property.value) })}
                   </Button>
@@ -344,20 +357,30 @@ function PropertyTab() {
             </div>
           );
         })}
-      </section>
+      </Panel>
 
-      <Panel title={t('title', { city: names.cities[p.cityId] })}>
-        {/* Two homes side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
+      <Panel title={t('title', { city: names.cities[p.cityId] })} label={t('title', { city: names.cities[p.cityId] })}>
+        {/* Two side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
         <div className="grid grid-cols-2 gap-2 @min-[560px]:grid-cols-3">
           {content.propertyTypes.map((type) => {
             const quote = quoteProperty(content, shown, type.id);
             return (
-              <button key={type.id} type="button" onClick={() => setBuying(type.id)} className="frame-raised frame-cream flex min-h-11 flex-col items-center gap-1 bg-cream p-2 text-center text-ink-900 transition-transform active:translate-y-[2px]">
-                <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
-                <span className="text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
-                <span className="pixel text-[15px]">{fmt.compact(quote.price)}</span>
-                <span className="text-[11px] leading-tight text-ink-500">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
-                <Tag tone="good">{t('status', { n: type.status })}</Tag>
+              <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
+                <Well className="w-full py-1">
+                  <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
+                </Well>
+                <span className="mt-0.5 text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
+                <span className="pixel text-[18px] text-gold-500">{fmt.compact(quote.price)}</span>
+                <span className="text-[11px] leading-tight text-ink-200">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
+                {/* A home says what living in it is worth; what cannot be lived in says what it lets for. */}
+                {quote.rentalOnly ? (
+                  <>
+                    <span className="text-[11px] leading-tight text-teal-300">{t('lets', { amount: fmt.compact(quote.rentAnnual) })}</span>
+                    <Tag>{t('letOnly')}</Tag>
+                  </>
+                ) : (
+                  <Tag tone="good">{t('status', { n: type.status })}</Tag>
+                )}
               </button>
             );
           })}
@@ -505,9 +528,9 @@ function Lifestyle() {
         {career ? (
           <div className="flex flex-col gap-2">
             <p className="text-[13px] text-ink-300">{t('focusLeft', { left, total: p.life.focusBase })}</p>
-            <Toggle on={has('overtime')} onChange={focus('overtime')} disabled={!has('overtime') && left < 1} label={t('overtime')} hint={t('overtimeHint', { pct: career.overtimePct })} />
-            <Toggle on={has('studyCareer')} onChange={focus('studyCareer')} disabled={!has('studyCareer') && left < 1} label={t('study')} hint={t('studyHint', { n: content.life.studySkill })} />
-            <Toggle on={has('jobHunt')} onChange={focus('jobHunt')} disabled={!has('jobHunt') && left < 1} label={t('hunt')} hint={t('huntHint', { pct: content.life.jobHuntChancePct })} />
+            <Toggle on={has('overtime')} onChange={focus('overtime')} disabled={!has('overtime') && left < 1} label={t('overtime')} hint={t('overtimeHint', { pct: career.overtimePct })} icon={focusArt.overtime} />
+            <Toggle on={has('studyCareer')} onChange={focus('studyCareer')} disabled={!has('studyCareer') && left < 1} label={t('study')} hint={t('studyHint', { n: content.life.studySkill })} icon={focusArt.studyCareer} />
+            <Toggle on={has('jobHunt')} onChange={focus('jobHunt')} disabled={!has('jobHunt') && left < 1} label={t('hunt')} hint={t('huntHint', { pct: content.life.jobHuntChancePct })} icon={focusArt.jobHunt} />
           </div>
         ) : (
           <p className="text-[14px] text-ink-300">{t('noJob')}</p>
@@ -522,6 +545,7 @@ function Lifestyle() {
           options={([0, 1, 2, 3] as const).map((tier) => ({
             value: tier,
             label: text.lifestyleTiers[tier],
+            icon: lifestyleArt[tier],
             hint: perYear(living.tiers[tier]),
             disabled: tier < p.life.minLifestyleTier,
           }))}
@@ -535,7 +559,7 @@ function Lifestyle() {
             label={t('home')}
             value={p.life.rentTier}
             onChange={(tier) => setOrder((order) => order.type === 'setRentTier', tier === view.player.life.rentTier ? null : { type: 'setRentTier', tier })}
-            options={([0, 1] as const).map((tier) => ({ value: tier, label: text.rentTiers[tier], hint: perYear(living.rentTiers?.[tier] ?? 0) }))}
+            options={([0, 1] as const).map((tier) => ({ value: tier, label: text.rentTiers[tier], icon: rentTierIcon[tier], hint: perYear(living.rentTiers?.[tier] ?? 0) }))}
           />
         ) : (
           <p className="text-[14px] text-ink-300">{t('ownerNote')}</p>
@@ -552,6 +576,7 @@ function Lifestyle() {
                 setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, on === view.player.life.insurance[kind] ? null : { type: 'setInsurance', insurance: kind, on })
               }
               label={text.insurance[kind]}
+              icon={insuranceArt[kind]}
               hint={common('perYear', { amount: fmt.money(living.insurance[kind]) })}
             />
           ))}
@@ -559,8 +584,15 @@ function Lifestyle() {
       </Panel>
 
       <Panel title={t('city')}>
-        <div className="pixel text-[17px]">{names.cities[p.cityId]}</div>
-        <p className="mb-2 text-[13px] text-ink-300">{text.cities[p.cityId].tagline}</p>
+        <div className="mb-2 flex items-center gap-3">
+          <Well className="size-9">
+            <Sprite id="icon.city" />
+          </Well>
+          <div className="min-w-0">
+            <div className="pixel text-[18px]">{names.cities[p.cityId]}</div>
+            <p className="text-[13px] leading-snug text-ink-200">{text.cities[p.cityId].tagline}</p>
+          </div>
+        </div>
         {p.life.movingTo ? (
           <>
             <p className="mb-2 text-[14px] text-gold-500">{t('moving', { city: names.cities[p.life.movingTo] })}</p>
@@ -603,8 +635,10 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
   return (
     <Sheet open onClose={onClose} title={names.items[item.id]} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
-        <div className="frame frame-cream mx-auto bg-cream p-2 leading-[0]">
-          <Sprite id={itemArt(item.id)} scale={2} fallback={{ w: 64, h: 64 }} />
+        <div className="flex justify-center">
+          <Well className="p-2 leading-[0]">
+            <Sprite id={itemArt(item.id)} scale={2} fallback={{ w: 64, h: 64 }} />
+          </Well>
         </div>
         <div className="flex flex-wrap justify-center gap-1.5">
           <Tag tone="good">{t('status', { n: item.status })}</Tag>
@@ -657,11 +691,14 @@ function Shop() {
               .map((item) => {
                 const owned = p.life.items.some((x) => x.itemId === item.id);
                 return (
-                  <button key={item.id} type="button" onClick={() => setOpen(item)} className="frame frame-cream flex flex-col items-center gap-1 bg-cream p-2 text-center text-ink-900">
-                    <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
-                    <span className="line-clamp-2 min-h-[2.4em] text-[13px] leading-tight">{names.items[item.id]}</span>
-                    <span className="pixel text-[14px]">{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
-                    <span className="pixel bg-teal-800 px-1.5 text-[11px] text-cream">{t('status', { n: item.status })}</span>
+                  // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
+                  <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${TILE} ${owned ? 'frame-gold' : ''}`}>
+                    <Well className="w-full py-1.5">
+                      <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
+                    </Well>
+                    <span className="mt-0.5 line-clamp-2 min-h-[2.4em] text-[13px] leading-tight">{names.items[item.id]}</span>
+                    <span className={`pixel text-[16px] ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
+                    <Tag tone="good">{t('status', { n: item.status })}</Tag>
                   </button>
                 );
               })}

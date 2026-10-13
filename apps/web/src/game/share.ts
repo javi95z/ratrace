@@ -8,6 +8,13 @@ import { worthBars } from './present';
  */
 export const CARD = { w: 270, h: 337, scale: 4 } as const;
 
+/**
+ * How tall the small letters of the pixel typeface stand, as a share of the font size. The page
+ * scales Jersey 15 to this with `font-size-adjust` (see `pixel` in globals.css, which must say the
+ * same number); a canvas has no such property, so whoever draws the card does the sum.
+ */
+export const PIXEL_X_HEIGHT = 0.56;
+
 export interface ShareInput {
   title: string;
   life: string;

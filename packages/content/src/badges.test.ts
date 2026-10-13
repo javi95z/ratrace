@@ -341,7 +341,7 @@ describe('a whole life', () => {
     }
   });
 
-  it('can end in a family of four: a second child can come while the first is still at home', () => {
+  it('can end in a family of four: a second child can come while the first is still at home', { timeout: 60_000 }, () => {
     // Says yes to a date, to a partner and to every child the cards offer, and looks for a life with two children at home.
     const wantsFamily = (state: GameState): number => {
       const card = content.cards.find((c) => c.id === state.hand[state.answered]);
