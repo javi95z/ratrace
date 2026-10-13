@@ -25,6 +25,7 @@ beforeEach(() => setWidth('phone'));
 afterEach(cleanup);
 
 const fmt = formatFor('en');
+const { names } = textFor('en');
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
 /** A life taken to the finances of its current round, without the screen. */
@@ -260,6 +261,41 @@ describe('a thing the player owns, in the shop', () => {
     const notMine = screen.getByRole('dialog', { name: 'Soho House' });
     expect(within(notMine).queryByText(/It cost you/)).toBeNull();
     expect(within(notMine).queryByText(/Sell it today/)).toBeNull();
+  });
+});
+
+describe('what a thing is good for', () => {
+  it('is said on its sheet in the shop, and nothing is said of a thing that is status and nothing else', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+
+    const uses = async (name: RegExp, title: string) => {
+      await user.click(button(name));
+      const sheet = screen.getByRole('dialog', { name: title });
+      const region = within(sheet).queryByRole('region', { name: 'Good for' });
+      const lines = region ? within(region).getAllByRole('listitem').map((li) => li.textContent) : null;
+      await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+      return lines;
+    };
+    expect(await uses(/SEAT Ibiza/, 'SEAT Ibiza')).toEqual(['Moving city costs 30% less']);
+    expect(await uses(/Rolex Submariner/, 'Rolex Submariner')).toEqual(['+6 points of chance on a job hunt']);
+    expect(await uses(/MacBook|Laptop/i, names.items.tech_laptop)).toEqual(['+1 career skill when you study']);
+    expect(await uses(/Soho House/, 'Soho House')).toEqual(['+6 points of chance on a job hunt']);
+    expect(await uses(new RegExp(names.items.travel_safari), names.items.travel_safari)).toEqual(['+1 focus in the round after']);
+    expect(await uses(new RegExp(names.items.travel_weekend), names.items.travel_weekend)).toBeNull();
+    expect(await uses(new RegExp(names.items.art_photo), names.items.art_photo)).toBeNull();
+  });
+
+  it('shows in the focus of the round: a laptop owned makes study worth more', async () => {
+    const { services, session } = await inFinance('nurse');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'tech_laptop' }] });
+    await toFinance(session);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    expect(screen.getByRole('switch', { name: /^Study/ }).textContent).toContain(`+${content.life.studySkill + 1} career skill`);
   });
 });
 

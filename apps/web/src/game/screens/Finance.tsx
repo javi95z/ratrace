@@ -2,7 +2,7 @@
 
 import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -14,6 +14,7 @@ import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
+import { ItemUses } from './ItemUses';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'debt', 'lifestyle', 'shop', 'taxes'];
@@ -594,6 +595,8 @@ function Lifestyle() {
   const focus = (action: FocusAction) => (on: boolean) =>
     setOrder((order) => order.type === 'focus' && order.action === action, on ? { type: 'focus', action } : null);
   const left = focusLeft(p);
+  // What each use of focus is worth to this player, counting what they own.
+  const work = quoteWork(content, shown);
   const moveOrdered = orders.some((order) => order.type === 'moveCity');
   const common = useT('common');
   const perYear = (cents: number) => common('perYear', { amount: fmt.compact(cents) });
@@ -603,10 +606,10 @@ function Lifestyle() {
       <Panel title={t('work')}>
         {career ? (
           <div className="flex flex-col gap-2">
-            <p className="text-[13px] text-ink-300">{t('focusLeft', { left, total: p.life.focusBase })}</p>
+            <p className="text-[13px] text-ink-300">{t('focusLeft', { left, total: work.focus.total })}</p>
             <Toggle on={has('overtime')} onChange={focus('overtime')} disabled={!has('overtime') && left < 1} label={t('overtime')} hint={t('overtimeHint', { pct: career.overtimePct })} icon={focusArt.overtime} />
-            <Toggle on={has('studyCareer')} onChange={focus('studyCareer')} disabled={!has('studyCareer') && left < 1} label={t('study')} hint={t('studyHint', { n: content.life.studySkill })} icon={focusArt.studyCareer} />
-            <Toggle on={has('jobHunt')} onChange={focus('jobHunt')} disabled={!has('jobHunt') && left < 1} label={t('hunt')} hint={t('huntHint', { pct: content.life.jobHuntChancePct })} icon={focusArt.jobHunt} />
+            <Toggle on={has('studyCareer')} onChange={focus('studyCareer')} disabled={!has('studyCareer') && left < 1} label={t('study')} hint={t('studyHint', { n: work.studySkill })} icon={focusArt.studyCareer} />
+            <Toggle on={has('jobHunt')} onChange={focus('jobHunt')} disabled={!has('jobHunt') && left < 1} label={t('hunt')} hint={t('huntHint', { pct: work.jobHuntChancePct })} icon={focusArt.jobHunt} />
           </div>
         ) : (
           <p className="text-[14px] text-ink-300">{t('noJob')}</p>
@@ -735,6 +738,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{t('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {item.kind === 'experience' ? <Tag>{t('lasts', { years: item.boostRounds * years })}</Tag> : null}
         </div>
+        <ItemUses item={item} />
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
         {item.kind === 'durable' && !held && quote.forSale ? <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(quote.resale) })}</p> : null}
         <ItemCost quote={quote} />

@@ -131,14 +131,27 @@ for (const city of content.cities) {
 say(
   '## Objetos',
   'Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.',
+  '«Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.',
   '«Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.',
   `A plazos se vende lo que dura y cuesta ${usd(content.life.itemFinanceMinPrice)} o más: un ${content.life.itemFinanceDownPct} % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.`,
 );
+/** What an item is good for beyond its status, in words. */
+function uses(item: ItemDef): string {
+  const perks = item.perks ?? {};
+  const out: string[] = [];
+  if (perks.moveCostOffPct) out.push(`Mudarse cuesta un ${perks.moveCostOffPct} % menos`);
+  if (perks.studySkill) out.push(`+${perks.studySkill} de experiencia al estudiar`);
+  if (perks.salaryPct) out.push(`+${perks.salaryPct} % de sueldo`);
+  if (perks.jobHuntPct) out.push(`+${perks.jobHuntPct} puntos al buscar trabajo`);
+  if (perks.focus) out.push(`+${perks.focus} de foco la ronda siguiente`);
+  return out.join('. ');
+}
+
 for (const [ladder, items] of itemsByLadder) {
   say(
     `### ${text.ladders[ladder]}`,
     table(
-      ['', 'Objeto', 'Precio', 'Mantenimiento', 'Estatus', 'Reventa', 'Notas'],
+      ['', 'Objeto', 'Precio', 'Mantenimiento', 'Estatus', 'Reventa', 'Sirve para', 'Notas'],
       items.map((item) => {
         const notes: string[] = [];
         if (item.kind === 'membership') notes.push('Cuota mientras lo tengas');
@@ -152,6 +165,7 @@ for (const [ladder, items] of itemsByLadder) {
           item.upkeepAnnual > 0 ? `${usd(item.upkeepAnnual)}/año` : '',
           signed(item.status),
           item.kind === 'durable' && !item.cardOnly ? `${item.resaleStartPct} %, ${signed(item.resaleDriftBp / 100)} % por ronda` : '',
+          uses(item),
           notes.join('. '),
         ];
       }),

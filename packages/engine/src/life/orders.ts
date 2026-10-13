@@ -4,7 +4,7 @@ import { mulDiv } from '../money';
 import { indexed } from '../rates';
 import type { Cents } from '../money';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, WorldState } from '../types';
-import { INSURANCE_KINDS } from './derive';
+import { INSURANCE_KINDS, perksOf } from './derive';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt'];
 
@@ -15,7 +15,12 @@ export type LifeOrder = Extract<
 
 /** Focus points the player can still spend this round. */
 export function focusLeft(p: PlayerState): number {
-  return Math.max(0, p.life.focusBase - p.life.focusUsed);
+  return Math.max(0, focusTotal(p) - p.life.focusUsed);
+}
+
+/** Focus points the player has for this round in all: their own, and what a rest gave them. */
+export function focusTotal(p: PlayerState): number {
+  return p.life.focusBase + p.life.focusBonus;
 }
 
 function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): RejectReason | null {
@@ -48,9 +53,10 @@ export function lapsingIn(content: Content, p: PlayerState, cityId: string): str
     .map((owned) => owned.itemId);
 }
 
-/** What moving to a city costs today. */
-export function moveCost(content: Content, world: WorldState, city: CityDef): Cents {
-  return mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+/** What moving to a city costs this player today: less for someone with a car to carry their life in. */
+export function moveCost(content: Content, world: WorldState, city: CityDef, p: PlayerState): Cents {
+  const full = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+  return mulDiv(full, Math.max(0, 100 - perksOf(p, content).moveCostOffPct), 100);
 }
 
 /**
@@ -134,7 +140,7 @@ function executeMoveCity(p: PlayerState, cityId: string, ctx: OrderContext): Rej
   if (cityId === p.cityId) return 'same-city';
   if (p.life.movingTo !== null) return 'already-moving';
   if (focusLeft(p) < 1) return 'no-focus';
-  const cost = moveCost(ctx.content, ctx.world, city);
+  const cost = moveCost(ctx.content, ctx.world, city, p);
   if (cost > p.cash) return 'not-enough-cash';
   p.cash -= cost;
   ctx.tally.movingCost += cost;

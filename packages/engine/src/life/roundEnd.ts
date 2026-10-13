@@ -1,8 +1,14 @@
 import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
-import type { Content, FinanceSkill, GameEvent, PlayerState, RoundTally, WorldState } from '../types';
+import type { Content, FinanceSkill, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
+import { perksOf } from './derive';
 import { lapsingIn } from './orders';
+
+/** The chance in percent that a job hunt ends in a raise: the rule's own, and what the player's things add to it. */
+export function jobHuntChance(content: Content, perks: Required<ItemPerks>): number {
+  return Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct);
+}
 
 /**
  * What a round of living does to the player, once its money has settled:
@@ -20,9 +26,11 @@ export function ageLife(
 ): void {
   const life = p.life;
   const rules = content.life;
+  const perks = perksOf(p, content);
 
   if (life.career !== null) {
-    life.careerSkill += rules.workSkill + (tally.focusActions.includes('studyCareer') ? rules.studySkill : 0);
+    // What the player owns counts as it stood while the round was lived: before anything fades or lapses.
+    life.careerSkill += rules.workSkill + (tally.focusActions.includes('studyCareer') ? rules.studySkill + perks.studySkill : 0);
     const next = careerOf(content, life.career.id).levels[life.career.level + 1];
     if (next !== undefined && life.careerSkill >= next.minSkill) {
       life.career.level += 1;
@@ -30,7 +38,7 @@ export function ageLife(
     }
   }
   if (tally.focusActions.includes('jobHunt')) {
-    const success = rng.chance(rules.jobHuntChancePct);
+    const success = rng.chance(jobHuntChance(content, perks));
     if (success) life.salaryModPct += rules.jobHuntRaisePct;
     events.push({ kind: 'jobHunt', success });
   }
@@ -77,5 +85,7 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
     for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });
   }
   life.focusUsed = 0;
+  // A rest taken shows in the round after: counted now, from what is still held once the old round has closed.
+  life.focusBonus = perksOf(p, content).focus;
   life.salaryBoostPct = 0;
 }

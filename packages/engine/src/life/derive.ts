@@ -1,7 +1,8 @@
 import { cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, mulDiv } from '../money';
 import type { Cents } from '../money';
-import type { Content, InsuranceKind, PlayerState, Property } from '../types';
+import { ITEM_PERKS } from '../types';
+import type { Content, InsuranceKind, ItemPerks, PlayerState, Property } from '../types';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -20,14 +21,42 @@ export function homeOf(p: PlayerState, content: Content): Property | null {
   return home;
 }
 
-/** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */
-export function deriveSalary(p: PlayerState, content: Content): Cents {
+/**
+ * What the things the player owns are good for, added up. Within a ladder only the best of each
+ * perk counts, so a second car moves no more boxes than the first; across ladders they add.
+ */
+export function perksOf(p: PlayerState, content: Content): Required<ItemPerks> {
+  const total: Required<ItemPerks> = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 };
+  const best = new Map<string, Required<ItemPerks>>();
+  for (const owned of p.life.items) {
+    const item = itemOf(content, owned.itemId);
+    if (item.perks === undefined) continue;
+    let ladder = best.get(item.ladder);
+    if (!ladder) best.set(item.ladder, (ladder = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 }));
+    for (const perk of ITEM_PERKS) ladder[perk] = Math.max(ladder[perk], item.perks[perk] ?? 0);
+  }
+  for (const ladder of best.values()) for (const perk of ITEM_PERKS) total[perk] += ladder[perk];
+  return total;
+}
+
+/**
+ * The player's own yearly pay in start-of-game dollars, without a partner's: the rung of the career
+ * in their city, with every lasting and passing change to it. `level` asks what another rung of
+ * the same career would pay them as they stand.
+ */
+export function ownPay(p: PlayerState, content: Content, level?: number): Cents {
   const life = p.life;
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
-  const base = life.career ? mulDiv(median, levelOf(content, life.career).salaryPct, 100) : life.baseSalaryAnnual;
-  const own = mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct), 100);
-  const partner = life.partner ? mulDiv(median, life.partnerSalaryPct, 100) : 0;
-  return own + partner;
+  const rung = life.career ? levelOf(content, level === undefined ? life.career : { id: life.career.id, level }) : null;
+  const base = rung ? mulDiv(median, rung.salaryPct, 100) : life.baseSalaryAnnual;
+  return mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
+}
+
+/** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */
+export function deriveSalary(p: PlayerState, content: Content): Cents {
+  const median = cityOf(content, p.cityId).medianSalaryAnnual;
+  const partner = p.life.partner ? mulDiv(median, p.life.partnerSalaryPct, 100) : 0;
+  return ownPay(p, content) + partner;
 }
 
 /** Yearly expenses beyond living cost and debt, in start-of-game dollars. */

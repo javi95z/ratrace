@@ -101,10 +101,12 @@ export const cards: Record<string, CardText> = {
   biz_freelance_gig: c('A freelance gig', 'An old client needs a job done over three weekends.', [
     'Pass',
     'Take it',
+    'Take it, and the one at their other site by car',
   ]),
   biz_self_employed: c('Go it alone', 'You could do your job for three clients instead of one boss.', [
     'Keep the payslip',
     ['Go self-employed', 'Clients queue up. You raise your rates.', 'It works out about the same, with more paperwork.', 'Two clients pay late and one not at all.'],
+    ['Start with people from where you are a member', 'They recommend you to each other. You raise your rates.', 'It works out about the same, with more paperwork.', 'Many pats on the back and few orders.'],
   ]),
   biz_bar: c('A bar of your own', 'The bar on the corner is for sale. The owner wants out by spring.', [
     'Walk past',

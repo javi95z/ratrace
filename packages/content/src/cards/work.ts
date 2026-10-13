@@ -102,12 +102,20 @@ export const businessCards: CardDef[] = [
   card('biz_freelance_gig', 'business', { cooldown: 2 }, [
     {},
     { effects: { focus: 1, cash: usd(2_500), careerSkill: 1 } },
+    // With a car the client's other site, an hour out of town, is within reach too.
+    { when: { ownsLadder: 'car' }, effects: { focus: 1, cash: usd(4_500), careerSkill: 1 } },
   ]),
   card('biz_self_employed', 'business', { once: true, when: { employed: true, minLevel: 1, minFinanceSkill: 1 } }, [
     {},
     {
       effects: { focus: 2, setFlags: ['self_employed'] },
       outcomes: [{ weight: 40, effects: { salaryModPct: 15 } }, { weight: 35, effects: { salaryModPct: 4 } }, { weight: 25, effects: { salaryModPct: -10 } }],
+    },
+    // Someone who is a member somewhere starts with people who already know them: the same leap, with better odds.
+    {
+      when: { ownsLadder: 'membership' },
+      effects: { focus: 2, setFlags: ['self_employed'] },
+      outcomes: [{ weight: 60, effects: { salaryModPct: 15 } }, { weight: 30, effects: { salaryModPct: 4 } }, { weight: 10, effects: { salaryModPct: -10 } }],
     },
   ]),
   card('biz_bar', 'business', { cooldown: 8, when: { minFinanceSkill: 2, minRound: 2, notFlags: ['has_business'] } }, [

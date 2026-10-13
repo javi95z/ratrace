@@ -49,7 +49,7 @@ describe('what the player owns, in the profile', () => {
     expect(within(watch).getByText('Watches')).toBeTruthy();
     expect(within(watch).getByText('Status +1')).toBeTruthy();
     expect(within(watch).getByText(/^Would sell for \$\d+ today$/)).toBeTruthy();
-    expect(within(watch).getByText('Sell or cancel it in the Shop tab.')).toBeTruthy();
+    expect(within(watch).getByText('It is sold or cancelled during the finances: here or in the Shop tab.')).toBeTruthy();
     // What it cost is beside what it would fetch, and the gap between the two is spelled out.
     expect(casio.paid).toBe(content.items.find((item) => item.id === 'watch_casio')?.price);
     expect(casio.value).toBeLessThan(casio.paid);
@@ -69,6 +69,35 @@ describe('what the player owns, in the profile', () => {
     // What was paid to join is shown, with no gain or loss: there is nothing to sell.
     expect(within(gym).getByText(`It cost you ${fmt.money(gymPass.paid)}`)).toBeTruthy();
     expect(within(gym).queryByText(/Sell it today/)).toBeNull();
+  });
+
+  it('sells a thing or cancels a membership from its own sheet while the finances are open', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = await withThings();
+    const { session } = await services.sessions.resume();
+    if (!session) throw new Error('no life to resume');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    const [casio] = session.view().player.life.items;
+    renderGame(<Play />, services);
+    await screen.findByRole('tablist', { name: 'Your finances' });
+    const orders = () => screen.queryAllByRole('button', { name: /^Remove: /, hidden: true }).map((b) => (b.getAttribute('aria-label') ?? '').replace('Remove: ', ''));
+
+    await user.click(screen.getByRole('button', { name: 'Casio F-91W' }));
+    const watch = screen.getByRole('dialog', { name: 'Casio F-91W' });
+    await user.click(within(watch).getByRole('button', { name: `Sell for ${fmt.money(casio.value)}` }));
+    // The order is given and the sheet closes: the watch is no longer among her things.
+    expect(screen.queryByRole('dialog', { name: 'Casio F-91W' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Casio F-91W' })).toBeNull();
+    expect(orders()).toEqual(['Sell Casio F-91W']);
+
+    await user.click(screen.getByRole('button', { name: 'Basic-Fit' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Basic-Fit' })).getByRole('button', { name: 'Cancel it' }));
+    expect(orders()).toEqual(['Sell Casio F-91W', 'Cancel Basic-Fit']);
+
+    await user.click(screen.getByRole('button', { name: 'Play the round' }));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    expect(((await services.store.loadGame()) as SavedGame).state.player.life.items).toEqual([]);
   });
 
   it('opens from the side column of a wide screen too', async () => {

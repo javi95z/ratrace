@@ -1,6 +1,7 @@
 import { idAllowed, isCount, isFiniteNumber, isRecord, isRecurring, isWhole, notNegative, within } from './checks';
 import { validateCards } from './life/cardRules';
 import { INSURANCE_KINDS } from './life/derive';
+import { ITEM_PERKS } from './types';
 import type { Content, CryptoPhase, DebtKind, Regime, StartConfig } from './types';
 
 type Transitions = Record<string, ReadonlyArray<readonly [string, number]>>;
@@ -156,6 +157,10 @@ export function validateContent(c: Content): string[] {
     }
     if (item.kind === 'experience' && !(isWhole(item.boostRounds) && item.boostRounds >= 1)) {
       errors.push(`experience ${item.id} needs at least one round of boost`);
+    }
+    if (item.perks !== undefined) {
+      if (!isRecord(item.perks) || Object.keys(item.perks).some((key) => !(ITEM_PERKS as readonly string[]).includes(key))) errors.push(`item ${item.id} has a perk the game does not know`);
+      else if (Object.values(item.perks).some((value) => !isCount(value) || value > 100)) errors.push(`item ${item.id} needs each perk to be a whole number from 0 to 100`);
     }
     if (item.cities !== undefined) {
       if (!Array.isArray(item.cities) || item.cities.length === 0) errors.push(`item ${item.id} needs at least one city, or none at all`);

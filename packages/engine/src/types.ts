@@ -117,6 +117,25 @@ export interface CareerDef {
 
 export type ItemKind = 'durable' | 'membership' | 'experience';
 
+/**
+ * What owning a thing is good for, beyond its status. Within a ladder only the best of each counts,
+ * as with status; across ladders they add up.
+ */
+export interface ItemPerks {
+  /** Percent off the cost of moving to another city. */
+  moveCostOffPct?: number;
+  /** Career skill gained on top by a round of study. */
+  studySkill?: number;
+  /** Lasting rise in the player's own pay while it is owned, in percent. */
+  salaryPct?: number;
+  /** Points added to the chance that a job hunt succeeds, in percent. */
+  jobHuntPct?: number;
+  /** Focus points on top in the round after one in which it is held. */
+  focus?: number;
+}
+
+export const ITEM_PERKS = ['moveCostOffPct', 'studySkill', 'salaryPct', 'jobHuntPct', 'focus'] as const satisfies ReadonlyArray<keyof ItemPerks>;
+
 export interface ItemDef {
   id: string;
   /** Items in one ladder compete: the best counts in full, the rest in part. */
@@ -141,6 +160,8 @@ export interface ItemDef {
    * anywhere else, so it lapses when the player moves out of them; anything else goes along.
    */
   cities?: readonly string[];
+  /** What it is good for, if anything. */
+  perks?: ItemPerks;
 }
 
 /** The numbers behind family, insurance, housing and effort. */
@@ -571,6 +592,8 @@ export interface LifeState {
   /** Rounds in which the player held an investment. */
   investedRounds: number;
   focusBase: number;
+  /** Focus on top this round, from what the player held when it opened: a long trip rests them for the round after. */
+  focusBonus: number;
   focusUsed: number;
   partner: boolean;
   /** The partner's salary as a percent of the city median. Zero when not working. */

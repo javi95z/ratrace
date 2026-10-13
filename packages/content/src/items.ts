@@ -1,4 +1,4 @@
-import type { ItemDef } from '@ratrace/engine';
+import type { ItemDef, ItemPerks } from '@ratrace/engine';
 import { usd } from './money';
 
 type Row = [id: string, price: number, upkeepAnnual: number, status: number, resaleStartPct: number, resaleDriftBp: number];
@@ -31,7 +31,7 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
  * the years, but nothing is worth on day one what it cost: there is always a dealer's margin to
  * earn back, so buying and selling in the same round can only lose money.
  */
-export const items: ItemDef[] = [
+const catalogue: ItemDef[] = [
   ...durables('car', [
     ['car_seat_ibiza', 18_000, 1_500, 4, 80, -2_200],
     ['car_toyota_corolla', 26_000, 1_600, 6, 82, -2_000],
@@ -116,3 +116,46 @@ export const items: ItemDef[] = [
     resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 0, cardOnly: true,
   },
 ];
+
+/** Any car carries a life to another city for less; a dearer one carries no more. */
+const CAR: ItemPerks = { moveCostOffPct: 30 };
+/** A long trip is a rest: a point of focus in the round after. A weekend away is over too soon to be one. */
+const REST: ItemPerks = { focus: 1 };
+
+/**
+ * What a thing is good for beyond its status, so that owning is a decision and not only a display.
+ * The right watch and the right clothes help in an interview; a laptop is something to study on; a
+ * club or a seat is where the people who hire are met; a degree is paid for every month after.
+ * Art, boats and the rest are status and nothing else.
+ */
+const PERKS: Record<string, ItemPerks> = {
+  watch_tissot: { jobHuntPct: 2 },
+  watch_omega: { jobHuntPct: 4 },
+  watch_rolex: { jobHuntPct: 6 },
+  watch_ap: { jobHuntPct: 8 },
+  watch_patek: { jobHuntPct: 10 },
+  fashion_blazer: { jobHuntPct: 3 },
+  fashion_loafers: { jobHuntPct: 4 },
+  fashion_suit: { jobHuntPct: 10 },
+  fashion_birkin: { jobHuntPct: 6 },
+  fashion_coat: { jobHuntPct: 8 },
+  tech_laptop: { studySkill: 1 },
+  member_club: { jobHuntPct: 6 },
+  member_platinum_card: { jobHuntPct: 2 },
+  member_season_seat: { jobHuntPct: 3 },
+  member_seat_london: { jobHuntPct: 3 },
+  member_seat_new_york: { jobHuntPct: 4 },
+  member_beach_dubai: { jobHuntPct: 4 },
+  member_paddock_singapore: { jobHuntPct: 5 },
+  member_ringside_bangkok: { jobHuntPct: 2 },
+  travel_business_class: REST,
+  travel_safari: REST,
+  travel_maldives: REST,
+  travel_world_first: REST,
+  edu_mba: { salaryPct: 10 },
+};
+
+export const items: ItemDef[] = catalogue.map((item) => {
+  const perks = item.ladder === 'car' ? CAR : PERKS[item.id];
+  return perks ? { ...item, perks } : item;
+});

@@ -101,10 +101,12 @@ export const cards: Record<string, CardText> = {
   biz_freelance_gig: c('Un encargo por tu cuenta', 'Un antiguo cliente necesita un trabajo que te ocupará tres fines de semana.', [
     'Pasar',
     'Aceptarlo',
+    'Aceptarlo, y el de su otra sede en coche',
   ]),
   biz_self_employed: c('Trabajar por tu cuenta', 'Podrías hacer tu trabajo para tres clientes en vez de para un jefe.', [
     'Seguir con la nómina',
     ['Darte de alta por tu cuenta', 'Los clientes hacen cola. Subes tus tarifas.', 'Sale más o menos igual, con más papeleo.', 'Dos clientes pagan tarde y uno no paga.'],
+    ['Empezar con gente de donde eres socio', 'Te recomiendan unos a otros. Subes tus tarifas.', 'Sale más o menos igual, con más papeleo.', 'Mucha palmada en la espalda y pocos encargos.'],
   ]),
   biz_bar: c('Un bar propio', 'Se traspasa el bar de la esquina. El dueño quiere dejarlo antes de primavera.', [
     'Pasar de largo',

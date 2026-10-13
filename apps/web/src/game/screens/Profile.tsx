@@ -1,20 +1,22 @@
 'use client';
 
 import { familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
-import { cashflow, focusLeft, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
+import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useSaving, useT, useWords } from '@/game/context';
 import { ageAt, insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
-import { Bare, Panel, Row, Tag } from '@/ui/kit';
+import { Bare, Button, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
+import { ItemUses } from './ItemUses';
+import { WorkPanel } from './Work';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -29,8 +31,6 @@ export function ProfileBody() {
   const p = shown.player;
   const life = p.life;
 
-  const career = life.career ? content.careers.find((c) => c.id === life.career?.id) : undefined;
-  const next = career && life.career ? career.levels.at(life.career.level + 1) : undefined;
   const home = homeOf(p, content);
   // One word each: the full names of four insurances do not fit on a line, and the sheet behind the row has them.
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => t(`insuranceShort.${kind}`));
@@ -52,15 +52,7 @@ export function ProfileBody() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Panel title={t('job')}>
-        <Row
-          left={<span className="pixel text-[17px]">{life.career ? text.careers[life.career.id].levels[life.career.level] : t('noJob')}</span>}
-          sub={life.career ? text.careers[life.career.id].name : undefined}
-        />
-        {life.career ? <Row left={t('careerSkill')} sub={next ? t('nextLevel', { skill: next.minSkill }) : t('topLevel')} right={fmt.number(life.careerSkill)} /> : null}
-        <Row left={t('financeSkill')} right={`${life.financeSkill}/2`} />
-        <Row left={t('focus')} right={`${focusLeft(p)}/${life.focusBase}`} />
-      </Panel>
+      <WorkPanel shown={shown} />
 
       <Panel title={t('family')}>
         <Row
@@ -75,13 +67,13 @@ export function ProfileBody() {
           }
           right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
         {/* Each of these opens what it is, what it costs and what it gives. Changing it is done in the finances. */}
-        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('lifestyle')} className="block w-full text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('lifestyle')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row left={t('lifestyle')} right={<>{text.lifestyleTiers[p.lifestyleTier]}<More /></>} />
         </button>
-        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('home')} className="block w-full text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('home')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row left={t('home')} sub={names.cities[p.cityId]} right={<>{home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]}<More /></>} />
         </button>
-        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('insurance')} className="block w-full text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('insurance')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row left={t('insurance')} right={<>{insured.length > 0 ? insured.join(' · ') : t('uninsured')}<More /></>} />
         </button>
       </Panel>
@@ -105,14 +97,14 @@ export function ProfileBody() {
             ['things', t('things'), fmt.money(things)],
           ] as const
         ).map(([line, label, amount]) => (
-          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="block w-full text-left">
+          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="flex min-h-11 w-full flex-col justify-center text-left">
             <Row left={label} right={<>{amount}<More /></>} />
           </button>
         ))}
-        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="block w-full text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row left={t('debts')} right={<><span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span><More /></>} />
         </button>
-        <button type="button" aria-haspopup="dialog" onClick={() => setLine('netWorth')} className="block w-full text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('netWorth')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row
             className="mt-1 border-t-2 border-night-900 pt-2"
             left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
@@ -304,6 +296,8 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
   const shop = useT('finance.shop');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
+  const setOrder = useGame((state) => state.setOrder);
+  const canOrder = useGame((state) => state.stage) === 'finance';
   const item = content.items.find((x) => x.id === owned.itemId);
   if (!item) return null;
   const quote = quoteItem(content, shown, item.id);
@@ -321,11 +315,28 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
           <Tag tone="good">{shop('status', { n: item.status })}</Tag>
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
         </div>
+        <ItemUses item={item} />
         {item.kind === 'durable' ? <p className="text-center text-[14px]">{t('itemWorth', { amount: fmt.money(quote.resale) })}</p> : null}
         <ItemCost quote={quote} />
         {owned.roundsLeft !== null ? <p className="text-center text-[14px] text-ink-300">{shop('spent', { years: owned.roundsLeft * content.yearsPerRound })}</p> : null}
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{shop('local', { city: names.cities[shown.player.cityId] })}</p> : null}
-        <p className="text-center text-[12px] text-ink-300">{t(quote.sellable ? 'itemWhere' : 'itemKept')}</p>
+        {/* Selling or cancelling is an order like any other, given here while the finances are open. Once given, the thing is no longer among the player's: the order is taken back from the basket. */}
+        {quote.sellable && canOrder ? (
+          <>
+            <Button
+              variant="danger"
+              wide
+              onClick={() => {
+                if (setOrder((order) => order.type === 'sellItem' && order.itemId === item.id, { type: 'sellItem', itemId: item.id })) onClose();
+              }}
+            >
+              {item.kind === 'membership' ? shop('cancel') : shop('sell', { amount: fmt.money(quote.resale) })}
+            </Button>
+            <p className="text-center text-[12px] text-ink-300">{t('itemUndo')}</p>
+          </>
+        ) : (
+          <p className="text-center text-[12px] text-ink-300">{t(quote.sellable ? 'itemWhen' : 'itemKept')}</p>
+        )}
       </div>
     </Sheet>
   );

@@ -19,6 +19,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     financeSkill: from?.financeSkill ?? 0,
     investedRounds: 0,
     focusBase: from?.focus ?? DEFAULT_FOCUS,
+    focusBonus: 0,
     focusUsed: 0,
     partner: false,
     partnerSalaryPct: 0,

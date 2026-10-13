@@ -4,6 +4,7 @@ import {
   debtRateBp,
   effectiveTax,
   focusLeft,
+  focusTotal,
   headlineHeld,
   homeOf,
   indexed,
@@ -92,7 +93,7 @@ export function me(pen: Pen, state: GameState): string[] {
       `${ui.netWorth} ${fmt.money(netWorth(p))}   ${ui.status} ${p.statusPoints}`,
     `  ${ui.salary} ${fmt.money(flow.salaryAnnual)}${ui.perYear}   ${ui.passive} ${fmt.money(flow.passiveAnnual)}${ui.perYear}   ` +
       `${ui.expenses} ${fmt.money(flow.expensesAnnual)}${ui.perYear}`,
-    `  ${ui.focus} ${focusLeft(p)}/${life.focusBase}   ${ui.careerSkill} ${life.careerSkill}   ${ui.financeSkill} ${life.financeSkill}   ` +
+    `  ${ui.focus} ${focusLeft(p)}/${focusTotal(p)}   ${ui.careerSkill} ${life.careerSkill}   ${ui.financeSkill} ${life.financeSkill}   ` +
       `${ui.lifestyle}: ${text.lifestyleTiers[p.lifestyleTier]}   ${ui.home}: ${home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]}`,
   ];
   const family: string[] = [];

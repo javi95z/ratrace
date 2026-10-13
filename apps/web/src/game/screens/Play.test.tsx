@@ -142,7 +142,7 @@ describe('the play screen', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Open your profile' }));
     const profile = screen.getByRole('dialog', { name: 'Your life' });
-    for (const label of ['Job', 'Career skill', 'Finance skill', 'Income statement, per year', 'Balance sheet', 'Net worth']) {
+    for (const label of ['Work', 'Money sense', 'Focus this round', 'Income statement, per year', 'Balance sheet', 'Net worth']) {
       expect(within(profile).getByText(label), label).toBeTruthy();
     }
     expect(within(profile).getByRole('link', { name: /Leave to the home screen/ }).getAttribute('href')).toBe('/');

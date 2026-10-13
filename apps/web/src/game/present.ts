@@ -1,7 +1,7 @@
 import { cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
-import { indexed } from '@ratrace/engine';
-import type { Content, Debt, Effects, GameEvent, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
+import { indexed, ITEM_PERKS } from '@ratrace/engine';
+import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -51,6 +51,12 @@ export interface EffectTag {
 const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 const toneOf = (n: number): Tone => (n > 0 ? 'good' : 'bad');
 
+/** What a thing is good for beyond its status, a line for each use. `t` translates the `effects` section. */
+export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] {
+  if (perks === undefined) return [];
+  return ITEM_PERKS.filter((perk) => (perks[perk] ?? 0) > 0).map((perk) => t(`perks.${perk}`, { n: perks[perk] ?? 0 }));
+}
+
 /** What a debt is called: its kind, and the thing it bought when it was taken to buy one. */
 export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem'>): string {
   const kind = words.text.debts[debt.kind];
@@ -98,6 +104,7 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     if (item) {
       if (item.status > 0) add('good', item.kind === 'experience' ? t('itemStatusFor', { n: item.status, years: item.boostRounds * content.yearsPerRound }) : t('itemStatus', { n: item.status }));
       if (item.upkeepAnnual > 0) add('bad', t('yearlyCost', { amount: dollars(item.upkeepAnnual) }));
+      for (const line of perkLines(t, item.perks)) add('good', line);
       if (pricePct < 100) add('plain', t('itemUsual', { amount: dollars(item.price) }));
     }
   }

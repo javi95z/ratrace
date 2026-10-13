@@ -1,14 +1,15 @@
 import { debtRateBp, loanRoom, personalLoanRateBp } from './debt';
 import { livingCostAnnual } from './economy';
-import { homeOf, INSURANCE_KINDS, rentStatusAt } from './life/derive';
-import { canSellItem, financeLock, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
-import { cityOf, itemOf, propertyTypeOf } from './lookup';
+import { homeOf, INSURANCE_KINDS, ownPay, perksOf, rentStatusAt } from './life/derive';
+import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
+import { jobHuntChance } from './life/roundEnd';
+import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { indexed } from './rates';
-import type { Content, GameView, InsuranceKind, LifestyleTier, RejectReason, RentTier } from './types';
+import type { Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, RejectReason, RentTier } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -153,7 +154,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
 
 export function quoteMove(content: Content, view: GameView, cityId: string): { cost: Cents; lapses: string[] } {
   return {
-    cost: moveCost(content, view.timeline[view.round], cityOf(content, cityId)),
+    cost: moveCost(content, view.timeline[view.round], cityOf(content, cityId), view.player),
     // The memberships the move would end, by item id.
     lapses: lapsingIn(content, view.player, cityId),
   };
@@ -210,5 +211,56 @@ export function quoteLiving(content: Content, view: GameView): LivingQuote {
     roomLateFromRound: view.round < content.life.roomLateRound && content.life.roomLateRound < content.rounds ? content.life.roomLateRound : null,
     roomLateStatus: content.life.roomLateStatus,
     insurance: Object.fromEntries(INSURANCE_KINDS.map((kind) => [kind, premium(kind)])) as Record<InsuranceKind, Cents>,
+  };
+}
+
+export interface WorkQuote {
+  /** Every rung of the player's career, lowest first, or none without a career. */
+  ladder: Array<{
+    level: number;
+    /** What the rung would pay this player a year, at today's prices: their own pay, with every raise and cut they carry. */
+    payAnnual: Cents;
+    status: number;
+    /** Career skill needed to hold it. */
+    minSkill: number;
+  }>;
+  /** The rung held now, or null without a career. */
+  level: number | null;
+  /** The player's own pay a year at today's prices, without a partner's. */
+  payAnnual: Cents;
+  skill: number;
+  /** Career skill a round of work adds, and what a round of study adds on top, counting what the player owns. */
+  workSkill: number;
+  studySkill: number;
+  /** Extra pay for a round of overtime, in percent. Zero without a career. */
+  overtimePct: number;
+  /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
+  jobHuntChancePct: number;
+  jobHuntRaisePct: number;
+  focus: { left: number; total: number; bonus: number };
+  /** What the things owned add, by perk. */
+  perks: Required<ItemPerks>;
+}
+
+/** The player's working life in figures: the ladder they are on and what each way of spending focus is worth to them. */
+export function quoteWork(content: Content, view: GameView): WorkQuote {
+  const p = view.player;
+  const world = view.timeline[view.round];
+  const job = p.life.career;
+  const perks = perksOf(p, content);
+  return {
+    ladder: job
+      ? careerOf(content, job.id).levels.map((rung, level) => ({ level, payAnnual: indexed(ownPay(p, content, level), world), status: rung.status, minSkill: rung.minSkill }))
+      : [],
+    level: job ? job.level : null,
+    payAnnual: indexed(ownPay(p, content), world),
+    skill: p.life.careerSkill,
+    workSkill: content.life.workSkill,
+    studySkill: content.life.studySkill + perks.studySkill,
+    overtimePct: job ? careerOf(content, job.id).overtimePct : 0,
+    jobHuntChancePct: jobHuntChance(content, perks),
+    jobHuntRaisePct: content.life.jobHuntRaisePct,
+    focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus },
+    perks,
   };
 }

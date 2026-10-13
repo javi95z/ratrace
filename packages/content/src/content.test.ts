@@ -98,6 +98,36 @@ describe('the v1 content', () => {
     expect(content.life.rentTierStatus).toEqual([0, 3]);
   });
 
+  it('makes the things that are good for something good for what their kind is', () => {
+    const by = (ladder: string) => content.items.filter((item) => item.ladder === ladder);
+    // Every car moves a life for less, and the dearest no more than the cheapest.
+    expect(new Set(by('car').map((item) => item.perks?.moveCostOffPct))).toEqual(new Set([30]));
+    // Watches, clothes and memberships help in a job hunt, more as they go up; nothing else does.
+    for (const item of content.items) if (item.perks?.jobHuntPct) expect(['watch', 'fashion', 'membership'], item.id).toContain(item.ladder);
+    const watches = by('watch').map((item) => item.perks?.jobHuntPct ?? 0);
+    expect(watches).toEqual([...watches].sort((a, b) => a - b));
+    // A rest needs a trip that is still going when the round ends: one that lasts a single round would promise what it cannot give.
+    for (const item of content.items) if (item.perks?.focus) expect(item.kind === 'experience' && item.boostRounds >= 2, item.id).toBe(true);
+    expect(by('travel').filter((item) => item.boostRounds >= 2).every((item) => item.perks?.focus === 1)).toBe(true);
+    expect(content.items.find((item) => item.id === 'tech_laptop')?.perks).toEqual({ studySkill: 1 });
+    expect(content.items.find((item) => item.id === 'edu_mba')?.perks).toEqual({ salaryPct: 10 });
+    // Art and boats are status and nothing else.
+    for (const item of [...by('art'), ...by('charter')]) expect(item.perks, item.id).toBeUndefined();
+  });
+
+  it('opens a better way through a card to someone with a car, and to someone who is a member somewhere', () => {
+    const option = (id: string, index: number) => content.cards.find((card) => card.id === id)?.options[index];
+    expect(option('biz_freelance_gig', 2)?.when).toEqual({ ownsLadder: 'car' });
+    expect(option('biz_freelance_gig', 2)?.effects?.cash).toBeGreaterThan(option('biz_freelance_gig', 1)?.effects?.cash ?? 0);
+    const odds = (index: number) => {
+      const outcomes = option('biz_self_employed', index)?.outcomes ?? [];
+      const total = outcomes.reduce((sum, outcome) => sum + outcome.weight, 0);
+      return outcomes.reduce((sum, outcome) => sum + outcome.weight * (outcome.effects.salaryModPct ?? 0), 0) / total;
+    };
+    expect(option('biz_self_employed', 2)?.when).toEqual({ ownsLadder: 'membership' });
+    expect(odds(2)).toBeGreaterThan(odds(1));
+  });
+
   it('gives every insurance a card that it softens or opens', () => {
     const used = new Set<string>();
     for (const card of content.cards) {
