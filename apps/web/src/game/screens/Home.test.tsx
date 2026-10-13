@@ -3,8 +3,15 @@ import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, AccountLife, AccountSaves, AccountState } from '@/online/types';
+import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
+import { rankedNote, RankedSessions } from '@/session/ranked';
+import type { RankedApi } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
+import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Home } from './Home';
 
@@ -91,6 +98,31 @@ describe('the front door', () => {
     const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
     renderGame(<Home />, { ...memoryServices(), account });
     expect((await screen.findByRole('link', { name: 'Rankings' })).getAttribute('href')).toBe('/rankings');
+  });
+
+  it('shows the ranked life the device has only a note of, once there is someone signed in to ask the server for it', async () => {
+    // The page opens before anyone is signed in. A note the account left here, never opened, has nothing to show yet.
+    const server = rankedServer();
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const deps = { newId: () => 'local-1', newSeed: () => 'seed-1', now: () => 1 };
+    const elsewhere = new MemoryStore();
+    const there = await new GameSessions(elsewhere, new LocalSessions(elsewhere, content, lives, deps), new RankedSessions(() => server.api, elsewhere, content, lives, versions, deps), versions).start('nurse', { ranked: true });
+    const store = new MemoryStore();
+    await store.saveGame(rankedNote({ gameId: there.gameId, lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION }));
+    let api: RankedApi | null = null;
+    let state: AccountState = { kind: 'offline' };
+    const watching = new Set<() => void>();
+    const account: Account = { state: () => state, subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)), start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => api, store, content, lives, versions, deps), versions);
+    renderGame(<Home />, { sessions, store, account, tapGuardMs: 0 });
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
+    // Sign-in lands, a moment after the page opened.
+    api = server.api;
+    state = { kind: 'guest', userId: 'u', notice: null };
+    act(() => watching.forEach((listener) => listener()));
+    expect(await screen.findByRole('link', { name: /Continue your life/ })).toBeTruthy();
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
   });
 
   it('offers the life in progress first, with who and where', async () => {

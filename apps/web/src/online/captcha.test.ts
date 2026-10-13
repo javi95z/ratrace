@@ -148,6 +148,29 @@ describe('the guard at the door', () => {
     expect(document.body.children).toHaveLength(0);
   });
 
+  it('does not wait for ever for a script that never comes, and asks for it again the next time', async () => {
+    vi.useFakeTimers();
+    const ask = turnstile('site-key', 5_000);
+    const word = ask();
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(scripts()).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await word).toBeNull();
+    expect(scripts()).toEqual([]);
+    // The next time it is fetched afresh, and one that comes in time is used.
+    const { api, drawn } = widgets();
+    const again = ask();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(scripts()).toHaveLength(1);
+    arrives(api);
+    await vi.advanceTimersByTimeAsync(0);
+    drawn[0].options.callback('in-time');
+    expect(await again).toBe('in-time');
+    // And the wait for the script that came is over with it: nothing is taken away later.
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(scripts()).toHaveLength(1);
+  });
+
   it('does not wait for ever for an answer', async () => {
     vi.useFakeTimers();
     const { api, drawn, removed } = widgets();

@@ -163,10 +163,21 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       else if (what === 'renamed') void made.game.getState().boot();
       else refresh();
     });
+    // The page asks the device for its life before anyone is signed in. A ranked life the device has only a note of
+    // has nothing to show until the server can be asked for it: the device is asked again when someone signs in,
+    // unless a life is already open.
+    let signedIn = made.account.state().kind !== 'offline';
+    const stopAccount = made.account.subscribe(() => {
+      const now = made.account.state().kind !== 'offline';
+      const landed = now && !signedIn;
+      signedIn = now;
+      if (landed && made.game.getState().status !== 'playing') void made.game.getState().boot();
+    });
     return () => {
       mounted = false;
       stop();
       stopSaves();
+      stopAccount();
     };
   }, [made]);
 

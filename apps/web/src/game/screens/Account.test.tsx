@@ -182,6 +182,7 @@ describe('the account in the settings', () => {
       listRuns: async () => [],
       finishRun: async () => 'done',
       rankedLife: async () => null,
+    giveUpRanked: async () => {},
       ranked: {} as Cloud['ranked'],
       community: {} as Cloud['community'],
     };

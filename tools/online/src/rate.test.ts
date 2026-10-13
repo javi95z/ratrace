@@ -35,9 +35,12 @@ describe('counting calls', () => {
     await expect(allowed(counter({ data: null, error: { message: 'the database is away' } }).db, 'u', 'finish')).rejects.toThrow('the database is away');
   });
 
-  it('lets a whole life be played at a brisk pace, and the lives of a first sync be finished', () => {
-    // About a hundred steps in a life; a first sync asks for five finished lives every five seconds.
-    expect(LIMITS['ranked-step'][0]).toBeGreaterThanOrEqual(200);
-    expect(LIMITS.finish[0] / LIMITS.finish[1]).toBeGreaterThanOrEqual(5 / 5 / 2);
+  it('lets a whole life be played at a brisk pace, and the lives of a first sync be finished as fast as they are sent', () => {
+    // About a hundred steps in a life, and a fast player takes them in well under a minute.
+    const [steps, stepSeconds] = LIMITS['ranked-step'];
+    expect(steps / stepSeconds).toBeGreaterThanOrEqual(200 / 60);
+    // A first sync asks for five finished lives every five seconds, for as long as it has any: one a second.
+    const [finishes, finishSeconds] = LIMITS.finish;
+    expect(finishes / finishSeconds).toBeGreaterThanOrEqual(5 / 5);
   });
 });

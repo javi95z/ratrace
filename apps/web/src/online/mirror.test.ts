@@ -35,6 +35,8 @@ function fakeCloud(world: World = { owners: new Map() }) {
     holds: new Set([`${ENGINE_VERSION}/${CONTENT_VERSION}`]),
     /** The ranked life the player has in progress on the server, if any. */
     ranked: null as { id: string; lifeId: string; engineVersion: string; contentVersion: string } | null,
+    /** True while the server of ranked lives cannot be reached, whatever the rest of the account does. */
+    rankedAway: false,
     held: new Map<string, Promise<void>>(),
   };
   /** Makes one kind of request wait until the function it returns is called. */
@@ -91,6 +93,11 @@ function fakeCloud(world: World = { owners: new Map() }) {
     async rankedLife() {
       await guard('ranked', 'read ranked');
       return state.ranked;
+    },
+    async giveUpRanked(id) {
+      await guard('give up ranked', `give up ranked ${id}`);
+      if (state.rankedAway) throw new Error('the ranked function did not answer');
+      if (state.ranked?.id === id) state.ranked = null;
     },
     async finishRun(gameId) {
       await guard('finish', `finish ${gameId}`);
@@ -1034,6 +1041,110 @@ describe('the mirror', { timeout: 60_000 }, () => {
     await d.mirror.sync();
     expect(await d.store.loadGame()).toMatchObject({ ranked: true, gameId: 'ranked-9' });
     expect(d.mirror.offer()).toMatchObject({ gameId: 'elsewhere-1' });
+  });
+
+  /** The note of a ranked life this device has shown its player: it has a view, and the life is not over. */
+  const seen = (gameId: string, over: Partial<RankedGame> = {}): RankedGame => ({
+    format: 1, ranked: true, gameId, lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, step: 3,
+    view: { finished: false, round: 0, timeline: [{}], player: {} } as never, history: [], bankruptcies: 0, journal: { earned: [] } as never, updatedAt: 7, ...over,
+  });
+  const givenUp = (asked: string[]) => asked.filter((line) => line.startsWith('give up ranked'));
+
+  it('remembers a ranked life given up with no connection, tells the server when there is one, and does not take the life back', async () => {
+    const { cloud, state } = fakeCloud();
+    state.ranked = { id: 'ranked-1', lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    await d.store.saveGame(seen('ranked-1'));
+    // The player gives the life up with no connection. The server still says it is in progress.
+    state.down = true;
+    await d.mirror.clearGame();
+    await d.later();
+    expect(givenUp(state.asked)).toEqual([]);
+    // The page is closed and opened again before there is a connection: the note of it was kept.
+    const again = device(cloud, 'a', { store: d.store, notes: d.notes });
+    state.down = false;
+    await again.mirror.sync();
+    expect(givenUp(state.asked)).toEqual(['give up ranked ranked-1']);
+    expect(await again.store.loadGame()).toBeNull();
+    // Told once: it is not told again.
+    await again.mirror.sync();
+    expect(givenUp(state.asked)).toHaveLength(1);
+  });
+
+  it('does not hand back a ranked life it has yet to give up, and does not let that hold up anything else', async () => {
+    const { cloud, state } = fakeCloud();
+    state.ranked = { id: 'ranked-1', lifeId: 'engineer', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    await d.store.saveGame(seen('ranked-1'));
+    await d.mirror.clearGame();
+    // The account answers; the server of ranked lives does not.
+    state.rankedAway = true;
+    await d.mirror.sync();
+    expect(await d.store.loadGame()).toBeNull();
+    expect(d.mirror.status()).toBe('saved');
+    // The device goes on being mirrored meanwhile: a casual life begun now goes up.
+    const session = await d.sessions.start('nurse');
+    await d.later();
+    expect(state.games.map((game) => game.id)).toEqual([session.gameId]);
+    // And the ranked life is given up as soon as the server can be told.
+    state.rankedAway = false;
+    await d.mirror.sync();
+    expect(state.ranked).toBeNull();
+    expect(d.notes[0]).toEqual([]);
+  });
+
+  it('gives up a ranked life that gives way to another on this device, and only one the player was shown, still going, of this build', async () => {
+    for (const [note, told] of [
+      [seen('ranked-1'), ['give up ranked ranked-1']],
+      // Nobody opened it here: the player was never asked about it.
+      [seen('ranked-1', { view: null, journal: null }), []],
+      // It is over: its result stands.
+      [seen('ranked-1', { view: { finished: true, round: 20, timeline: [{}], player: {} } as never }), []],
+      // Begun under other rules: another device may still be living it under them.
+      [seen('ranked-1', { engineVersion: '0.1.0' }), []],
+    ] as const) {
+      const { cloud, state } = fakeCloud();
+      const d = device(cloud);
+      await d.store.saveGame(note);
+      await d.sessions.start('nurse');
+      await d.later();
+      expect(givenUp(state.asked), JSON.stringify(note.view)).toEqual(told);
+    }
+    // The same note written again, as every step of the life writes it, gives nothing up.
+    const { cloud, state } = fakeCloud();
+    const d = device(cloud);
+    await d.store.saveGame(seen('ranked-1'));
+    await d.mirror.saveGame(seen('ranked-1', { step: 4, updatedAt: 8 }));
+    await d.later();
+    expect(givenUp(state.asked)).toEqual([]);
+  });
+
+  it('gives up the ranked life this device was living when the player takes the life offered from the account instead', async () => {
+    const { cloud, state } = fakeCloud();
+    const elsewhere = device(cloud, 'elsewhere');
+    await play(await elsewhere.sessions.start('nurse'), 1);
+    await elsewhere.mirror.sync();
+    const d = device(cloud);
+    await d.store.saveGame(seen('ranked-1'));
+    await d.mirror.sync();
+    expect(d.mirror.offer()).toMatchObject({ gameId: 'elsewhere-1' });
+    expect(await d.mirror.takeOffer()).toBe(true);
+    await d.later();
+    expect(givenUp(state.asked)).toEqual(['give up ranked ranked-1']);
+  });
+
+  it('does not put the account\'s ranked life over a life begun while the account was being asked', async () => {
+    const { cloud, state, hold } = fakeCloud();
+    state.ranked = { id: 'ranked-9', lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const d = device(cloud);
+    const release = hold('ranked');
+    const meeting = d.mirror.sync();
+    await vi.waitFor(() => expect(state.asked).toContain('read ranked'));
+    // The answer is on its way, and the player starts a life.
+    const session = await d.sessions.start('nurse');
+    release();
+    await meeting;
+    expect((await saved(d.store))?.gameId).toBe(session.gameId);
   });
 
   it('brings a ranked life finished elsewhere to the records, marked as ranked', async () => {

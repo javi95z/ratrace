@@ -75,7 +75,7 @@ async function wordOf(error: unknown): Promise<string | null> {
 
 /** What a build may say about its cloud beyond where it is. */
 export interface CloudOptions {
-  /** The region the database is in. Named, the functions that use it most are asked for there. */
+  /** The region the database is in, as the platform names it (ap-northeast-1). Named, the function that uses the database most is asked for there. */
   region?: string;
   /** The guard at the door of guest sign-in, where the project has one. */
   captcha?: Captcha;
@@ -93,6 +93,20 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     if (!id) throw new Error('nobody is signed in');
     return id;
   };
+  // A ranked life is played by the `ranked` function. Each step reads and writes the database several times, so the
+  // function is asked for in the database's own region when the build names it: one long hop, not four. The region
+  // goes in the address. The client's own way of naming one adds a header the function's gateway does not let a
+  // browser send, and every ranked call from a page would be refused before it left.
+  const rankedName = region !== undefined && /^[a-z]{2}-[a-z]+-\d$/.test(region) ? `ranked?forceFunctionRegion=${region}` : 'ranked';
+  const ranked = rankedApi(async (body) => {
+    const { data, error } = await client.functions.invoke(rankedName, { body });
+    if (!error) return { status: 200, body: data };
+    const context = (error as { context?: unknown }).context;
+    // The function answered, and said no: its answer is in the response. Anything else never reached it.
+    if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
+    throw error instanceof Error ? error : new Error('the ranked function could not be reached');
+  });
+
   return {
     async currentUser() {
       // A stored session that could not be renewed comes back as no session and an error. That is
@@ -186,16 +200,8 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       const row = data as { id: string; life_id: string; engine_version: string; content_version: string } | null;
       return row === null ? null : { id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version };
     },
-    // A ranked life is played by the `ranked` function. Each step reads and writes the database several times,
-    // so the function is asked for in the database's own region when the build names it: one long hop, not four.
-    ranked: rankedApi(async (body) => {
-      const { data, error } = await client.functions.invoke('ranked', { body, ...(region ? { region: region as never } : {}) });
-      if (!error) return { status: 200, body: data };
-      const context = (error as { context?: unknown }).context;
-      // The function answered, and said no: its answer is in the response. Anything else never reached it.
-      if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
-      throw error instanceof Error ? error : new Error('the ranked function could not be reached');
-    }),
+    giveUpRanked: (id) => ranked.abandon(id),
+    ranked,
     community: {
       async me() {
         try {

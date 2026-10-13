@@ -4,7 +4,8 @@
  */
 export const LIMITS = {
   engine: [30, 60],
-  finish: [30, 60],
+  // A device that meets its account for the first time sends five finished lives every five seconds until it has none left.
+  finish: [60, 60],
   'ranked-start': [20, 3600],
   // A life is about a hundred steps, and a fast player takes several a second for a moment.
   'ranked-step': [240, 60],

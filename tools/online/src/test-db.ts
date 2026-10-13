@@ -15,7 +15,7 @@ const run = spawnSync('supabase', ['db', 'query', '--linked', '--file', file], {
 const output = `${run.stdout}\n${run.stderr}`;
 
 /** How many checks `supabase/tests/security.sql` holds. A run with fewer is a run in which some never happened. */
-const EXPECTED = 115;
+const EXPECTED = 133;
 
 const outcome = outcomeOf(output);
 const { ok, lines } = verdict(outcome, EXPECTED);

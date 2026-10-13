@@ -27,18 +27,21 @@ export function turnstile(siteKey: string, patience = PATIENCE): Captcha {
   const load = (): Promise<Turnstile | null> =>
     (loading ??= new Promise((done) => {
       const script = document.createElement('script');
-      // A script that did not come is asked for again the next time.
+      // A script that did not come is asked for again the next time. One that never answers at all is not waited for for ever.
       const failed = () => {
+        clearTimeout(timer);
         script.remove();
         loading = null;
         done(null);
       };
+      const timer = setTimeout(failed, patience);
       script.src = SCRIPT;
       script.async = true;
       script.onload = () => {
         const api = (window as { turnstile?: Turnstile }).turnstile;
-        if (api) done(api);
-        else failed();
+        if (!api) return failed();
+        clearTimeout(timer);
+        done(api);
       };
       script.onerror = failed;
       document.head.appendChild(script);

@@ -335,10 +335,17 @@ describe('playing a ranked life', { timeout: 120_000 }, () => {
   it('takes one of two steps that arrive at once, and tells the other to look again', async () => {
     const db = fakeDb();
     const at = await begin(db);
+    // Two answers to the same card, sent together: both are read from the same row, and one is written.
+    const both = await Promise.all([ask(db, card(at, 0)), ask(db, card(at, 1))]);
+    expect(both.map((reply) => reply.status).sort()).toEqual([200, 409]);
+    expect(both.find((reply) => reply.status === 409)?.body).toMatchObject({ error: 'out-of-step' });
+    expect(db.state.writes).toBe(1);
+    expect((db.games.get(at.gameId)?.log as LoggedRound[])[0].picks).toHaveLength(1);
+    // And when someone else writes the row between the reading and the writing, nothing is played over it.
+    const next = await ask(db, { action: 'view', gameId: at.gameId });
     db.state.beatenOnce = true;
-    expect(await ask(db, card(at))).toEqual({ status: 409, body: { error: 'out-of-step', step: 0 } });
-    expect(db.games.get(at.gameId)?.log).toEqual([]);
-    expect((await ask(db, card(at))).status).toBe(200);
+    expect(await ask(db, card({ ...at, step: next.body.step as number }))).toEqual({ status: 409, body: { error: 'out-of-step', step: 1 } });
+    expect((db.games.get(at.gameId)?.log as LoggedRound[])[0].picks).toHaveLength(1);
   });
 
   it('plays a choice that is not open as the first, as the engine always has, and refuses orders that are not orders', async () => {

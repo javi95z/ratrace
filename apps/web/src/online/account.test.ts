@@ -14,6 +14,7 @@ const NO_SYNC = {
   listRuns: async () => [],
   finishRun: async () => 'done' as const,
   rankedLife: async () => null,
+  giveUpRanked: async () => {},
   // No test of the account plays a ranked life: that has tests of its own.
   ranked: {} as Cloud['ranked'],
   community: {} as Cloud['community'],

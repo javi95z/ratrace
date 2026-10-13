@@ -298,9 +298,15 @@ try {
 
   const another = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
   const second = (another.data as { gameId: string } | null)?.gameId ?? '';
-  const third = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
+  // A player has one ranked life in progress. Another is not started over it unasked: the server says which is in the way.
+  const refused = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
+  const context = (refused.error as { context?: unknown } | null)?.context;
+  const inTheWay = context instanceof Response ? ((await context.clone().json().catch(() => null)) as { error?: string; gameId?: string } | null) : null;
+  const untouched = await a.from('games').select('status').eq('id', second).maybeSingle();
+  check(statusOf(another) === 200 && statusOf(refused) === 409 && inTheWay?.error === 'in-progress' && inTheWay.gameId === second && untouched.data?.status === 'playing', 'a ranked life in progress is not ended by starting another: the server says which one is in the way');
+  const third = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions, replace: second });
   const firstOfTwo = await a.from('games').select('status').eq('id', second).maybeSingle();
-  check(statusOf(another) === 200 && statusOf(third) === 200 && firstOfTwo.data?.status === 'abandoned', 'starting a ranked life gives up the one in progress');
+  check(statusOf(third) === 200 && firstOfTwo.data?.status === 'abandoned', 'and it is given up for the new one when the request names it');
   const givenUp = await askRanked(a, { action: 'abandon', gameId: (third.data as { gameId: string }).gameId });
   check(statusOf(givenUp) === 200 && statusOf(await askRanked(a, { action: 'view', gameId: (third.data as { gameId: string }).gameId })) === 409, 'and a ranked life can be given up');
 } catch (error) {

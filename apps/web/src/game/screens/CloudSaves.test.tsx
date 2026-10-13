@@ -54,6 +54,7 @@ function accountInTheCloud() {
     listRuns: async () => held.runs,
     finishRun: async () => 'done',
     rankedLife: async () => null,
+    giveUpRanked: async () => {},
     ranked: {} as Cloud['ranked'],
     community: {} as Cloud['community'],
   };

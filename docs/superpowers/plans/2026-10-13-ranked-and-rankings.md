@@ -21,7 +21,7 @@ Not here: the daily challenge (14), rooms (15).
 
 - Today every random stream of a game starts from one 32-bit number derived from the seed. Whoever sees a few rounds of one asset's prices can try all four thousand million starts in seconds and read that asset's future, stream by stream, without ever knowing the seed.
 - Each stream now starts from the first 128 bits of SHA-256 of `seed::stream`. SHA-256 is written out in the engine, which stays pure TypeScript with no platform API. The generator that follows (sfc32) is unchanged.
-- This changes what every seed produces, so it is a new engine version. Lives saved on older versions are "played under older rules", as with any change of rules.
+- This changes what every seed produces, so it is a new engine version (0.12.0, once `dev` had been merged in). Lives saved on older versions are "played under older rules", as with any change of rules.
 - **Ranked lives exist only on versions with the wide seed.** The server refuses to start one on a bundle that does not say it can be ranked.
 - A ranked seed is 32 random bytes made by the server. It never leaves the server, and no hash of the hidden state does either.
 
@@ -32,7 +32,7 @@ Not here: the daily challenge (14), rooms (15).
 
 | Asked | Does | Answers |
 |---|---|---|
-| `start` (life, versions) | gives up any ranked life in progress, makes the game and its seed | the view at round 0, the record |
+| `start` (life, versions, the life to replace) | makes the game and its seed; with a ranked life in the way it says which, and gives it up only if it was named | the view at round 0, the record |
 | `view` (game) | nothing | the whole view, the record, how many steps have been played |
 | `card` (game, step, option) | answers the next card | what changed |
 | `round` (game, step, orders) | plays the round | what changed; the run, if the life ended |
@@ -43,7 +43,7 @@ Not here: the daily challenge (14), rooms (15).
 - What a step answers is small: the player as they now stand, what happened, and the one new world if the round turned. The timeline already held by the client is not sent again.
 - The client works out previews itself, from the view, as it does in a casual life.
 - When the last round is played the server writes the run (`mode = 'ranked'`, `verified = true`) and closes the game.
-- A player has one ranked life in progress. Starting another gives the first up.
+- A player has one ranked life in progress. As first built, starting another gave the first up; the review found that this ended lives on other devices unasked, and it now asks (see the spec, "Ranked solo").
 - Locked lives: the server reads what the player has unlocked and refuses a life they have not. (Unlocks are written by the device, so this keeps the game's own rule, not a secret.)
 
 ### Playing a ranked life
@@ -64,13 +64,13 @@ Not here: the daily challenge (14), rooms (15).
 
 ### Limits
 
-- **Calls.** Each function counts calls per player in a window and refuses beyond it (`429`): the engine and finish functions 30 a minute; ranked steps 240 a minute; new ranked lives 20 an hour. The counter is one row per player and bucket.
+- **Calls.** Each function counts calls per player in a window and refuses beyond it (`429`): the engine function 30 a minute and the finish function 60; ranked steps 240 a minute; new ranked lives 20 an hour. The counter is one row per player and bucket.
 - **Finished casual lives.** A player keeps at most 500; the oldest make room. Rankings read ranked lives only, and the index that served "every verified run" is replaced by one over ranked runs.
 - **CAPTCHA.** The game asks Cloudflare Turnstile for a token before it signs a guest in, when a site key is set in the build. It is off until the owner makes the keys and turns it on in Supabase; with no key nothing is loaded and nothing changes.
 
 ### What is deployed, and when
 
-- There is one Supabase project. The database changes of this step are all additions, and the functions keep answering the game on `main` as before, so they are applied from this branch: the security tests and the live check need them there. The game on `main` does not use any of it until this branch is merged.
+- There is one Supabase project. The database changes of this step leave the game on `main` working as before (most are additions; the others are listed in decision 21 of the spec), and the functions keep answering it, so they are applied from this branch: the security tests and the live check need them there. The game on `main` does not use any of it until this branch is merged.
 
 ### Tests
 
@@ -83,12 +83,12 @@ Not here: the daily challenge (14), rooms (15).
 
 ## Tasks
 
-- [ ] 1. Engine: SHA-256 seeded streams, new version, snapshots
-- [ ] 2. Database: ranked games, rate counters, casual bound, names, friends, the ranking function; SQL tests
-- [ ] 3. Server: the ranked logic and function, rate limits on all three functions; deployed
-- [ ] 4. Client: the ranked session, the chooser between ranked and casual, the device's record, the mirror leaving it alone
-- [ ] 5. Screens: the chooser's line, the ranked mark, a step that did not get through, the records
-- [ ] 6. Names, friends and rankings: the port, the verbs, the screens
-- [ ] 7. CAPTCHA before guest sign-in, off without a key
-- [ ] 8. The live check extended; spec and roadmap brought up to date
-- [ ] 9. Fresh review and one fix pass
+- [x] 1. Engine: SHA-256 seeded streams, new version, snapshots
+- [x] 2. Database: ranked games, rate counters, casual bound, names, friends, the ranking function; SQL tests
+- [x] 3. Server: the ranked logic and function, rate limits on all three functions; deployed
+- [x] 4. Client: the ranked session, the chooser between ranked and casual, the device's record, the mirror leaving it alone
+- [x] 5. Screens: the chooser's line, the ranked mark, a step that did not get through, the records
+- [x] 6. Names, friends and rankings: the port, the verbs, the screens
+- [x] 7. CAPTCHA before guest sign-in, off without a key
+- [x] 8. The live check extended; spec and roadmap brought up to date
+- [x] 9. Fresh review and one fix pass

@@ -24,6 +24,7 @@ declare
   yes3 boolean;
   who uuid[];
   scores int[];
+  nm text;
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -488,6 +489,18 @@ begin
     on conflict (id) do nothing;
   select count(*) into n from public.runs where user_id = b and mode = 'casual';
   if n = 500 then passed := passed + 1; else failed := array_append(failed, format('writing a finished life again left %s casual lives, not 500', n)); end if;
+  -- Ranked lives are bounded too. The oldest make room, but never the player's best: that one is their place in the ranking.
+  -- B's best, of 500, is the oldest of them all here.
+  for i in 1..502 loop
+    insert into public.runs (id, user_id, mode, life_id, engine_version, content_version, score, net_worth, status, bankruptcies, verified, finished_at)
+      values (gen_random_uuid(), b, 'ranked', 'nurse', '0.10.0', '1.9.0', i % 7, 1, 1, 0, true, now() + make_interval(secs => i));
+  end loop;
+  select count(*), max(score) into n, held from public.runs where user_id = b and mode = 'ranked';
+  if n = 500 and held = 500 and (select count(*) from public.runs where user_id = b and mode = 'casual') = 500
+    then passed := passed + 1; else failed := array_append(failed, format('B keeps %s ranked lives, the best of score %s: not five hundred with the best among them', n, held)); end if;
+  -- The ranking is read player by player, best life first: there is an index that hands it over that way.
+  if exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'runs_ranked_best') and not exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'runs_ranked_by_score')
+    then passed := passed + 1; else failed := array_append(failed, 'the ranked runs are not indexed player by player, best first'); end if;
 
   -- ---------------------------------------------------------------- names
   select friend_code into code_a from public.profiles where user_id = a;
@@ -531,6 +544,22 @@ begin
   end;
   update public.profiles set nickname = 'Admiral_Nigeria' where user_id = b;
   update public.profiles set nickname = 'Computadora9' where user_id = b;
+  -- Names that real people have are not refused for a word that happens to be inside them.
+  foreach nm in array array['Yamashita', 'Ishita_K', 'Nazir', 'Siriporn', 'Atwater', 'Torpedo', 'Therapist', 'Zorraquin'] loop
+    begin
+      update public.profiles set nickname = nm where user_id = b;
+      passed := passed + 1;
+    exception when sqlstate 'RR002' then failed := array_append(failed, format('the name %s was refused', nm));
+    end;
+  end loop;
+  -- A name that is nobody's to take is not taken with a number after it, or inside a longer one; nor is a word that is not accepted.
+  foreach nm in array array['Admin1', 'Admin_2', 'Moderator9', 'RatRace_Staff', 'x_Official_x', 'Rat_7', 'shit99', 'Bullsh1t'] loop
+    begin
+      update public.profiles set nickname = nm where user_id = b;
+      failed := array_append(failed, format('the name %s was taken', nm));
+    exception when sqlstate 'RR002' then passed := passed + 1;
+    end;
+  end loop;
   update public.profiles set nickname = 'Rata_Dos' where user_id = b;
   if (select nickname from public.profiles where user_id = b) = 'Rata_Dos' then passed := passed + 1; else failed := array_append(failed, 'an innocent name was refused'); end if;
 

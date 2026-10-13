@@ -281,16 +281,37 @@ describe('what the cloud keeps of a player', () => {
 });
 
 describe('ranked lives, as the cloud is asked for them', () => {
-  it('asks the ranked function, in the region of the database when one is named, and hands back what it answered', async () => {
-    const cloud = await connectSupabase('u', 'k', { region: 'ap-northeast-1' });
-    const standing = { gameId: 'g-1', lifeId: 'nurse', step: 0, view: { round: 0, timeline: [{}], phase: 'cards' }, record: { history: [1], bankruptcies: 0, journal: {} } };
-    client.answers.invoke = { data: standing, error: null };
+  it('asks the ranked function, and hands back what it answered', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.invoke = { data: { gameId: 'g-1', step: 0, view: { timeline: [{}] }, record: {} }, error: null };
     expect(await cloud.ranked.start('nurse', { engine: '0.10.0', content: '1.9.0' })).toMatchObject({ gameId: 'g-1', step: 0 });
-    expect(client.asked).toEqual([['invoke', 'ranked', { body: { action: 'start', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' }, region: 'ap-northeast-1' }]]);
-    // With no region named, the platform chooses.
-    client.asked.length = 0;
-    await (await connectSupabase('u', 'k')).ranked.start('nurse', { engine: '0.10.0', content: '1.9.0' });
     expect(client.asked).toEqual([['invoke', 'ranked', { body: { action: 'start', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' } }]]);
+  });
+
+  it('asks for the ranked function in the region of the database when one is named: in the address, where a browser may say it', async () => {
+    // The client's own way of naming a region adds a header the function's gateway does not let a browser send,
+    // and every ranked call from a page would be refused before it left. The address says the same thing.
+    client.answers.invoke = { data: {}, error: null };
+    await (await connectSupabase('u', 'k', { region: 'ap-northeast-1' })).ranked.abandon('g-1');
+    expect(client.asked).toEqual([['invoke', 'ranked?forceFunctionRegion=ap-northeast-1', { body: { action: 'abandon', gameId: 'g-1' } }]]);
+    // What is not the name of a region is not sent as one: the platform chooses, and ranked lives go on working.
+    for (const region of ['Tokyo', 'ap-northeast1', 'ap-northeast-1&x=1', '']) {
+      client.asked.length = 0;
+      await (await connectSupabase('u', 'k', { region })).ranked.abandon('g-1');
+      expect(client.asked, region).toEqual([['invoke', 'ranked', { body: { action: 'abandon', gameId: 'g-1' } }]]);
+    }
+  });
+
+  it('gives a ranked life up through the function that plays it, and says so when it could not', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.invoke = { data: {}, error: null };
+    await cloud.giveUpRanked('g-1');
+    expect(client.asked).toEqual([['invoke', 'ranked', { body: { action: 'abandon', gameId: 'g-1' } }]]);
+    // A life that is nobody's, or already given up, is given up as far as this device is concerned.
+    client.answers.invoke = { data: null, error: { context: new Response(JSON.stringify({ error: 'unknown-game' }), { status: 404 }) } };
+    await cloud.giveUpRanked('g-1');
+    client.answers.invoke = { data: null, error: { context: new Response('', { status: 503 }) } };
+    await expect(cloud.giveUpRanked('g-1')).rejects.toBeInstanceOf(Unreachable);
   });
 
   it('reads what the function said when it said no, and knows no answer at all from an answer', async () => {
