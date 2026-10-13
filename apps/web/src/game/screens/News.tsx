@@ -2,7 +2,6 @@
 
 import { cityArt, topicArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
-import { headlineHeld } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
 import { Panel } from '@/ui/kit';
@@ -73,46 +72,9 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
   );
 }
 
-/** How last round's headlines turned out. Nothing in the first round. */
-export function LastHeadlines() {
-  const t = useT('news');
-  const words = useWords();
-  const view = useGame((s) => s.view);
-  if (!view || view.round === 0) return null;
-  const world = view.timeline[view.round];
-  const before = view.timeline[view.round - 1];
-  if (before.news.length === 0) return null;
-
-  return (
-    <Panel title={t('lastRound')}>
-      <ul className="flex flex-col gap-1.5 text-[14px]">
-        {before.news.map((h, i) => {
-          const held = headlineHeld(words.content, h, before, world);
-          return (
-            <li key={i} className="flex items-start gap-2">
-              <span aria-hidden className={`pixel mt-0.5 flex size-5 shrink-0 items-center justify-center text-[13px] ${held ? 'bg-teal-800' : 'bg-wine-700'}`}>
-                {held ? '✓' : '✗'}
-              </span>
-              <span className={held ? '' : 'text-ink-300'}>
-                {headlineText(words, h)}
-                <span className="sr-only"> — {held ? t('held') : t('missed')}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
-/** The news as a phone shows it: the headlines, the gauges, and how last round's turned out. */
+/** The news as a phone shows it: the headlines and the gauges. How the last ones turned out is for the player to work out. */
 export function NewsPanel() {
-  return (
-    <div className="flex flex-col gap-3">
-      <Headlines />
-      <LastHeadlines />
-    </div>
-  );
+  return <Headlines />;
 }
 
 /** How a round opens on a wide screen, where the headlines already sit at the side. */
@@ -134,7 +96,6 @@ export function RoundOpener() {
         <p className="mt-1 text-ink-200">{names.cities[view.player.cityId]}</p>
         <p className="mx-auto mt-3 max-w-sm text-[13px] text-ink-300">{t('opener')}</p>
       </Panel>
-      <LastHeadlines />
     </div>
   );
 }

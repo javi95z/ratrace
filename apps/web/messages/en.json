@@ -114,7 +114,7 @@
   },
   "guide": {
     "title": "Guide",
-    "news": "Every round opens with the news. Each headline hints at the next two years, and about seven in ten come true. Read them before you put your money anywhere.",
+    "news": "Every round opens with the news. Each headline hints at the next two years, and not all of them come true. Read them before you put your money anywhere.",
     "cards": "Life deals you a few cards every round. Each choice shows what it costs and what it brings before you pick, with the odds where there are dice. A choice cannot be taken back.",
     "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
     "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
@@ -127,17 +127,14 @@
   },
   "news": {
     "title": "News",
-    "lastRound": "Last round's headlines",
-    "held": "Came true",
-    "missed": "Did not come true",
     "rates": "Rates",
     "inflation": "Inflation",
     "economy": "Economy",
     "crypto": "Crypto",
-    "hint": "Headlines are about the next two years. About seven in ten come true.",
+    "hint": "Headlines are about the next two years.",
     "toCards": "See what life brings",
     "toFinance": "To your finances",
-    "opener": "The headlines beside this are about the next two years. About seven in ten come true.",
+    "opener": "The headlines beside this are about the next two years.",
     "topics": {
       "regime": "Economy",
       "crypto": "Crypto",

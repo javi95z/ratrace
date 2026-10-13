@@ -110,7 +110,9 @@ describe('the play screen', () => {
     await user.click(button('Next round'));
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect(screen.getByText('Age 24')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: "Last round's headlines" })).toBeTruthy();
+    // How last round's headlines turned out is not told: working that out is the player's.
+    expect(screen.queryByRole('heading', { name: "Last round's headlines" })).toBeNull();
+    expect(screen.queryByText(/seven in ten/)).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });
 

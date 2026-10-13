@@ -114,7 +114,7 @@
   },
   "guide": {
     "title": "Guía",
-    "news": "Cada ronda empieza con las noticias. Cada titular da una pista de los próximos dos años, y se cumplen unos siete de cada diez. Léelos antes de mover tu dinero.",
+    "news": "Cada ronda empieza con las noticias. Cada titular da una pista de los próximos dos años, y no todos se cumplen. Léelos antes de mover tu dinero.",
     "cards": "La vida te reparte unas cuantas cartas cada ronda. Cada opción enseña lo que cuesta y lo que trae antes de elegir, con las probabilidades cuando hay dados. Una elección no se puede deshacer.",
     "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, con exactitud, el efectivo que tendrás después. Empieza por Cartera.",
     "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
@@ -127,17 +127,14 @@
   },
   "news": {
     "title": "Noticias",
-    "lastRound": "Los titulares de la ronda pasada",
-    "held": "Se cumplió",
-    "missed": "No se cumplió",
     "rates": "Tipos",
     "inflation": "Inflación",
     "economy": "Economía",
     "crypto": "Cripto",
-    "hint": "Los titulares hablan de los próximos dos años. Se cumplen unos siete de cada diez.",
+    "hint": "Los titulares hablan de los próximos dos años.",
     "toCards": "Ver qué trae la vida",
     "toFinance": "A tus finanzas",
-    "opener": "Los titulares de al lado hablan de los próximos dos años. Se cumplen unos siete de cada diez.",
+    "opener": "Los titulares de al lado hablan de los próximos dos años.",
     "topics": {
       "regime": "Economía",
       "crypto": "Cripto",
