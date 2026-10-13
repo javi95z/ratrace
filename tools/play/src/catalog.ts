@@ -55,6 +55,7 @@ say(
       ['[Inversiones](#inversiones)', `${content.assets.length}`],
       ['[Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco)', '4 + 2 + 4 + 3'],
       ['[Cartas](#cartas)', `${content.cards.length}`],
+      ['[Crisis](#crisis)', `${content.crises.length}`],
       ['[Insignias](#insignias)', `${badges.length}`],
     ],
   ),
@@ -233,6 +234,30 @@ for (const category of categories) {
         const written = text.cards[card.id];
         return [img(cardArt[card.id], written.title), `**${written.title}**<br>${written.body}`, written.options.map((option, i) => `${i + 1}. ${option.label}`).join('<br>')];
       }),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+say(
+  '## Crisis',
+  `Una partida de cada tres, más o menos (${content.world.crisisChancePct} %), tiene una crisis: unas rondas seguidas en las que el mundo se sale de su curso. Nunca antes de los ${22 + content.world.crisisEarliestRound * content.yearsPerRound} años, y nunca más de una por vida.`,
+  'Cada ronda de una crisis cambia primero el mundo en el que se despierta el jugador (economía, tipos, inflación) y luego pesa sobre lo que rinden las inversiones de esa ronda.',
+);
+const shift = (bp: number | undefined, what: string): string | null => (bp ? `${what} ${bp > 0 ? '+' : '−'}${pct(Math.abs(bp))}` : null);
+for (const crisis of content.crises) {
+  const written = text.crises[crisis.id];
+  say(
+    `### ${written.name}`,
+    written.intro,
+    table(
+      ['Año', 'Qué pasa', 'Al llegar', 'Sobre lo que rinde la ronda'],
+      crisis.phases.map((phase, i) => [
+        `${i + 1}`,
+        written.years[i],
+        [phase.regime ? text.regimes[phase.regime] : null, phase.cryptoPhase ? `cripto: ${text.cryptoPhases[phase.cryptoPhase]}` : null, shift(phase.rateBp, 'tipos'), shift(phase.inflationBp, 'inflación')].filter(Boolean).join('; '),
+        [shift(phase.equityBp, 'bolsa'), shift(phase.propertyBp, 'vivienda'), shift(phase.goldBp, 'oro'), shift(phase.cryptoBp, 'cripto')].filter(Boolean).join('; '),
+      ]),
     ),
   );
 }

@@ -1,6 +1,6 @@
 # Art prompt pack: v1
 
-Thirty-nine sheets cover every v1 sprite: the first twenty-one, and eighteen added since (02b city seats, 02c more things, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day, 22 to 30 more card scenes). The game is called The Rat Race.
+Forty-one sheets cover every v1 sprite: the first twenty-one, and twenty added since (31 crisis cards, 32 moments, 02b city seats, 02c more things, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day, 22 to 30 more card scenes). The game is called The Rat Race.
 
 ## How to use
 
@@ -618,6 +618,36 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 6. A night street market with striped awnings, strings of bulbs, crates of fruit and a few small figures browsing.
 ```
 
+### 31. Card scenes 18: the crises
+
+Save as `art/raw/cards/cards-18.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A trading floor at night in panic: every screen showing red falling lines, papers in the air, traders with their heads in their hands.
+2. A whole office standing in a meeting room, facing a grim manager beside a screen with a falling bar chart, one empty chair.
+3. A hallway table with a thick envelope torn open, a long bill unrolling to the floor, a radiator and a wool blanket beside it.
+4. A picket line outside a factory gate at dusk: figures with blank placards, a burning brazier, a closed gate.
+5. A government building with columns under storm clouds, a huge red arrow rising behind it, small figures watching from the square.
+6. A town hall noticeboard with papers pinned to it, a shuttered library and a street lamp switched off beside it.
+```
+
+### 32. Moments
+
+Save as `art/raw/cards/cards-19.png`
+
+These are the pictures of the moments that stop the game. Each is a single strong image with nothing small in it.
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. Dawn over the city seen from a hilltop: a small figure walking away along a path into golden light, and behind them an empty hamster wheel left standing in the grass.
+2. An empty flat at night with pale rectangles on the wall where pictures hung, one bare bulb, a single suitcase by the open door.
+3. A bank vault with its round door wide open and gold light pouring out over stacked gold bars, a small figure standing in the doorway.
+4. A city skyline at night with a giant red line chart crashing down across the sky like lightning, lit windows going dark.
+5. A petrol station at night with a long queue of cars, the price board showing only tall red bars, a single flame from a refinery chimney behind.
+6. The columns of a treasury building cracking down the middle, coins spilling from the crack, a storm sky.
+```
+
 ### Which card each new scene is for
 
 All of these are drawn and wired: every card now has a scene of its own.
@@ -764,6 +794,8 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 10b | `portraits/portraits-03.png` | Second chance, founder, crypto kid, 1 later life | 64×64 |
 | 11 to 18 | `cards/cards-01.png` to `cards-08.png` | 48 card scenes | 288×120 |
 | 22 to 30 | `cards/cards-09.png` to `cards-17.png` | 52 more card scenes, so that no two cards share one, and 2 for later | 288×120 |
+| 31 | `cards/cards-18.png` | The six cards of the crises | 288×120 |
+| 32 | `cards/cards-19.png` | The moments that stop the game: escape, bankruptcy, the first million, and each crisis | 288×120 |
 | 19 to 20 | `skylines/skylines-01.png`, `-02.png` | 6 city skylines | 312×66 |
 | 20b to 20c | `skylines/skylines-03.png`, `-04.png` | The 6 skylines by day | 312×66 |
 | 21 | `brand/brand-01.png` | Logo, wordmark, app icon, mascot | varies |

@@ -145,6 +145,48 @@
       "property": "Vivienda"
     }
   },
+  "crisis": {
+    "label": "Crisis · año {year} de {of}",
+    "year": "Año {n}",
+    "open": "{crisis}: año {year} de {of}. Ver qué es.",
+    "advice": "Una crisis castiga a quien tiene que vender y a quien debe mucho. Quien aguanta suele recuperar parte al salir.",
+    "over": "{crisis} ha terminado.",
+    "overHint": "El mundo vuelve a su curso. Lo que cayó no sube solo: mira qué te queda."
+  },
+  "moments": {
+    "perYear": "{amount}/año",
+    "escape": {
+      "title": "¡Fuera de la rueda!",
+      "kicker": "Lo has conseguido",
+      "body": "A los {age}, tus rentas pagan tu vida entera. Desde hoy, trabajar es una elección.",
+      "passive": "Tus rentas, tras impuestos",
+      "costs": "Lo que cuesta tu vida",
+      "hint": "Cuanto antes se sale, mayor es el bonus de la puntuación. Si tus rentas dejan de cubrir tu vida, la rueda vuelve a girar.",
+      "go": "Seguir, por gusto"
+    },
+    "million": {
+      "title": "Tu primer millón",
+      "kicker": "Descontando la inflación",
+      "body": "A los {age} vales un millón de dólares de verdad: de los que compraban lo mismo cuando empezaste.",
+      "worth": "Patrimonio",
+      "hint": "El segundo suele llegar antes que el primero.",
+      "go": "A por el siguiente"
+    },
+    "bankrupt": {
+      "title": "Quiebra",
+      "kicker": "Lo has perdido todo",
+      "body": "A los {age} tus deudas han podido contigo. Se vende todo lo que tenías y se cancela lo que debías.",
+      "sold": "Vendido a toda prisa",
+      "cleared": "Deudas canceladas",
+      "status": "Estatus, para siempre",
+      "hint": "Ningún banco te prestará hasta que cumplas {age}. Tu plan de pensiones sigue intacto. La vida continúa.",
+      "go": "Empezar de cero"
+    },
+    "crisis": {
+      "kicker": "Crisis · dura {rounds} rondas",
+      "go": "Afrontarla"
+    }
+  },
   "cards": {
     "progress": "Carta {n} de {total}",
     "world": "Suceso mundial",

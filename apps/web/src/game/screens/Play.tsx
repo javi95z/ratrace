@@ -14,6 +14,7 @@ import { End } from './End';
 import { Basket, BasketList, Finance } from './Finance';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
+import { Moments } from './Moments';
 import { Headlines, NewsPanel, RoundOpener } from './News';
 import { Leave, ProfileBody, ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
@@ -245,6 +246,7 @@ export function Play() {
           ) : null}
         </aside>
         {notice}
+        <Moments />
       </div>
     );
   }
@@ -265,6 +267,7 @@ export function Play() {
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       {basketOpen && stage === 'finance' ? <Basket onClose={() => setBasketOpen(false)} /> : null}
       {notice}
+      <Moments />
     </div>
   );
 }

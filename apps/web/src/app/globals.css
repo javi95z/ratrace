@@ -60,6 +60,12 @@
   /* `backwards`, not `both`: once it has risen, the element answers to its own transform again, so a card can be dragged. */
   --animate-rise: rise 0.28s steps(4, end) backwards;
   --animate-blink: blink 1s steps(2, start) infinite;
+  /* A picture uncovered from the left in eight steps, like a blind going up. */
+  --animate-reveal: reveal 0.5s steps(8, end) backwards;
+  /* One piece of confetti: it falls the height of the sheet once, turning, and is gone. */
+  --animate-fall: fall 1.6s steps(16, end) forwards;
+  /* A lamp that pulses: something is wrong and still going on. */
+  --animate-alarm: alarm 1.2s steps(2, start) infinite;
 
   @keyframes rise {
     from {
@@ -74,6 +80,29 @@
   @keyframes blink {
     to {
       visibility: hidden;
+    }
+  }
+  @keyframes reveal {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes fall {
+    from {
+      opacity: 1;
+      transform: translateY(-16px) rotate(0deg);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(340px) rotate(360deg);
+    }
+  }
+  @keyframes alarm {
+    50% {
+      opacity: 0.35;
     }
   }
 }
@@ -269,6 +298,16 @@ body {
 /* The safe area at the bottom of a phone, for bars that sit on the edge. */
 @utility pb-safe {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Confetti is motion and nothing else: with less motion asked for there is none to show, not a frozen handful. */
+@media (prefers-reduced-motion: reduce) {
+  [data-confetti] {
+    display: none;
+  }
+}
+html[data-motion='reduced'] [data-confetti] {
+  display: none;
 }
 
 /* Whoever asks for less motion, in the system or in the game's own settings, gets none. */

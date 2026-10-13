@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.4.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.5.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -13,7 +13,8 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 19 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 100 |
+| [Cartas](#cartas) | 106 |
+| [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 31 |
 
 ## Vidas
@@ -672,7 +673,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.speed_camera.png" alt="Una multa por exceso de velocidad"> | **Una multa por exceso de velocidad**<br>Te llega por correo una foto de tu coche. | 1. Pagarla<br>2. Recurrirla |
 | <img src="../art/clean/cards/card.casino.png" alt="La app de apuestas"> | **La app de apuestas**<br>Una apuesta gratis para empezar. Esta noche juega tu equipo. | 1. Borrar la app<br>2. Una apuesta pequeña<br>3. Ir a por un premio grande |
 
-### Mundo (12)
+### Mundo (18)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -687,6 +688,12 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.server_room.png" alt="El auge de la IA"> | **El auge de la IA**<br>Herramientas nuevas cada semana. La mitad de tu trabajo podría hacerse de otra manera. | 1. Seguir como siempre<br>2. Aprender las herramientas<br>3. Pedir liderar el trabajo de IA |
 | <img src="../art/clean/cards/card.empty_street.png" alt="Pandemia"> | **Pandemia**<br>Se cierran las fronteras y se vacían las calles. Todo el mundo aprende a hacer pan. | 1. Quedarte en casa<br>2. Hacer voluntariado<br>3. Especular desde el sofá |
 | <img src="../art/clean/cards/card.newsroom.png" alt="Reforma fiscal"> | **Reforma fiscal**<br>Unos presupuestos nuevos cambian los tipos en alguna parte. Mira la pestaña Impuestos: puede ser tu ciudad. | 1. Leer el resumen<br>2. Ir a un asesor fiscal |
+| <img src="../art/clean/cards/card.crash_screens.png" alt="Lunes negro"> | **Lunes negro**<br>Las pantallas están en rojo de Tokio a Nueva York. El móvil no deja de vibrar: todos preguntan qué vas a hacer. | 1. No mirar y aguantar<br>2. Comprar mientras todos venden<br>3. Tirar de tu línea de crédito mientras el banco aún presta |
+| <img src="../art/clean/cards/card.packed_box.png" alt="La segunda ola"> | **La segunda ola**<br>Un año después, el crac ha llegado a las nóminas. Tu empresa convoca a toda la plantilla el viernes. | 1. No llamar la atención<br>2. Ofrecerte a cobrar menos<br>3. Aprovechar los meses flojos para formarte |
+| <img src="../art/clean/cards/card.price_tags.png" alt="La factura"> | **La factura**<br>La calefacción, la gasolina y la compra han subido a la vez. El sobre del buzón pesa más que de costumbre. | 1. Pagarla<br>2. Aislar el piso y olvidarte<br>3. Pagarla, y pasar ahorros a oro |
+| <img src="../art/clean/cards/card.empty_street.png" alt="Sueldos contra precios"> | **Sueldos contra precios**<br>Los precios llevan dos años por delante de los sueldos. Se habla de huelga, y de quién cederá antes. | 1. Esperar<br>2. Parar con los demás<br>3. Recortar gastos en casa |
+| <img src="../art/clean/cards/card.central_bank.png" alt="La prima de riesgo"> | **La prima de riesgo**<br>Los prestamistas piden el doble por la deuda de tu gobierno. Todo préstamo que se calcula sobre ella va detrás. | 1. Esperar a ver<br>2. Fijar ya el tipo de tu hipoteca<br>3. Refugiarte en el Bund alemán |
+| <img src="../art/clean/cards/card.receipts.png" alt="Recortes"> | **Recortes**<br>Las cuentas se cuadran por las malas: una derrama, sueldos congelados y gangas para quien tenga efectivo. | 1. Pagar la derrama<br>2. Pagarla, y hacer el trabajo de dos<br>3. Pagarla, y comprar un estudio embargado para alquilar |
 | <img src="../art/clean/cards/card.bank_queue.png" alt="Quiebra un banco"> | **Quiebra un banco**<br>Un banco mediano cierra y se forman colas delante de los demás. | 1. Confiar en la garantía<br>2. Hacer cola y mover tu dinero |
 
 ### Impuestos (6)
@@ -709,6 +716,41 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.sunset_bench.png" alt="Prejubilación"> | **Prejubilación**<br>La empresa ofrece un paquete a quien se vaya este año. | 1. Seguir trabajando<br>2. Aceptar el paquete |
 | <img src="../art/clean/cards/card.small_house.png" alt="Una casa más pequeña"> | **Una casa más pequeña**<br>La casa se ha quedado grande. Bastaría un pisito de alquiler junto al mar. | 1. Quedarte<br>2. Vender y alquilar junto al mar |
 | <img src="../art/clean/cards/card.will_desk.png" alt="Hacer testamento"> | **Hacer testamento**<br>A nadie le apetece la cita. Todo el mundo se alegra después. | 1. Más adelante<br>2. Hacerlo |
+
+## Crisis
+
+Una partida de cada tres, más o menos (30 %), tiene una crisis: unas rondas seguidas en las que el mundo se sale de su curso. Nunca antes de los 30 años, y nunca más de una por vida.
+
+Cada ronda de una crisis cambia primero el mundo en el que se despierta el jugador (economía, tipos, inflación) y luego pesa sobre lo que rinden las inversiones de esa ronda.
+
+### El Gran Crac
+
+Los mercados caen en picado y la vivienda va detrás. Los bancos centrales bajan tipos. Quien tiene que vender es quien más pierde.
+
+| Año | Qué pasa | Al llegar | Sobre lo que rinde la ronda |
+| --- | --- | --- | --- |
+| 1 | Bolsa y vivienda caen con fuerza. | Recesión; cripto: Invierno; tipos −1 % | bolsa −15 %; vivienda −6 % |
+| 2 | Llegan los despidos y los precios siguen bajando. | Recesión; tipos −1 % | bolsa −6 %; vivienda −5 % |
+| 3 | Lo peor ha pasado: los mercados se dan la vuelta. | Recuperación | bolsa +9 % |
+
+### La Crisis Energética
+
+Falta combustible y todos los precios suben tras él. Los tipos suben para frenar la inflación. Pierden el efectivo y los bonos; gana el oro.
+
+| Año | Qué pasa | Al llegar | Sobre lo que rinde la ronda |
+| --- | --- | --- | --- |
+| 1 | Los precios saltan y los tipos van detrás. | Desaceleración; tipos +1 %; inflación +3,5 % | bolsa −5 %; oro +7 % |
+| 2 | Siguen subiendo: la economía se para. | Desaceleración; tipos +1 %; inflación +2,5 % | bolsa −4 %; vivienda −3 %; oro +5 % |
+| 3 | Los precios se calman y el oro devuelve parte. | Recuperación; inflación −1 % | oro −3 % |
+
+### La Crisis de Deuda
+
+Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encarece de golpe y cae todo lo que se compró a crédito.
+
+| Año | Qué pasa | Al llegar | Sobre lo que rinde la ronda |
+| --- | --- | --- | --- |
+| 1 | Saltan los tipos; caen bolsa y vivienda. | Recesión; tipos +2 % | bolsa −7 %; vivienda −7 % |
+| 2 | El crédito sigue caro y la vivienda sigue cayendo. | Desaceleración; tipos +1 % | bolsa −2 %; vivienda −5 % |
 
 ## Insignias
 

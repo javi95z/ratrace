@@ -145,6 +145,48 @@
       "property": "Housing"
     }
   },
+  "crisis": {
+    "label": "Crisis · year {year} of {of}",
+    "year": "Year {n}",
+    "open": "{crisis}: year {year} of {of}. See what it is.",
+    "advice": "A crisis punishes whoever has to sell and whoever owes a lot. Those who hold usually get some of it back on the way out.",
+    "over": "{crisis} is over.",
+    "overHint": "The world is back on its course. What fell does not rise by itself: see what you have left."
+  },
+  "moments": {
+    "perYear": "{amount}/yr",
+    "escape": {
+      "title": "Out of the rat race!",
+      "kicker": "You made it",
+      "body": "At {age}, your income pays for your whole life without you. From today, work is a choice.",
+      "passive": "Your passive income, after tax",
+      "costs": "What your life costs",
+      "hint": "The earlier you get out, the bigger the bonus on your score. If your income stops covering your life, the wheel turns again.",
+      "go": "Carry on, for the fun of it"
+    },
+    "million": {
+      "title": "Your first million",
+      "kicker": "After inflation",
+      "body": "At {age} you are worth a million real dollars: the kind that bought the same when you started.",
+      "worth": "Net worth",
+      "hint": "The second usually comes sooner than the first.",
+      "go": "On to the next"
+    },
+    "bankrupt": {
+      "title": "Bankrupt",
+      "kicker": "You lost it all",
+      "body": "At {age} your debts have beaten you. Everything you owned is sold and everything you owed is cancelled.",
+      "sold": "Sold in a hurry",
+      "cleared": "Debts cancelled",
+      "status": "Status, for good",
+      "hint": "No bank will lend to you until you are {age}. Your pension plan is untouched. Life goes on.",
+      "go": "Start again"
+    },
+    "crisis": {
+      "kicker": "Crisis · lasts {rounds} rounds",
+      "go": "Face it"
+    }
+  },
   "cards": {
     "progress": "Card {n} of {total}",
     "world": "World event",

@@ -165,6 +165,10 @@ export const SHEETS: SheetSpec[] = [
     ['lecture_hall', 'campus_dropoff', 'language_class', 'bootcamp', 'app_launch', 'pitch_napkin'],
     ['will_reading', 'bonus_confetti', 'will_desk', 'dentist_chair', 'pitch_injury', 'school_gate'],
     ['sibling_doorstep', 'beach_wedding', 'private_sale', 'pickpocket', 'courtroom', 'street_market'],
+    // The six cards of the crises. Until this lands they borrow scenes: `CARD_STAND_INS` in the content.
+    ['crisis_black_monday', 'crisis_all_hands', 'crisis_thick_bill', 'crisis_picket', 'crisis_spread', 'crisis_cuts'],
+    // The pictures of the moments that stop the game. Until this lands `momentArt` borrows card scenes.
+    ['moment_escape', 'moment_bankrupt', 'moment_million', 'moment_crash', 'moment_energy', 'moment_debt'],
   ].map((names, i): SheetSpec => ({
     file: `cards/cards-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
     ids: names.map((name) => `card.${name}`),

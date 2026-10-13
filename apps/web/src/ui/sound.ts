@@ -116,8 +116,8 @@ export const SCORE: Record<Cue, Note[]> = {
   // A life ends: a slow cadence that comes home.
   end: [
     ...run('triangle', [pitch('G', 4), C5, E5, G5], 0.22, 0.28, 0, 0.3),
-    ...[C5, E5, G5, C6].map((hz) => ({ wave: 'triangle' as const, hz, at: 0.9, for: 1.2, loud: 0.16 })),
-    { wave: 'triangle', hz: pitch('C', 3), at: 0.9, for: 1.2, loud: 0.3 },
+    ...[C5, E5, G5, C6].map((hz) => ({ wave: 'triangle' as const, hz, at: 0.9, for: 1.1, loud: 0.16 })),
+    { wave: 'triangle', hz: pitch('C', 3), at: 0.9, for: 1.1, loud: 0.3 },
   ],
 };
 

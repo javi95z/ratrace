@@ -232,6 +232,30 @@ describe('a crisis', () => {
     expect(games).toBeLessThan(350);
   });
 
+  it('is one of several by their weights, and every game that is due one gets one', () => {
+    const base = fixtureContent();
+    const several: Content = {
+      ...base,
+      crises: [
+        { id: 'common', weight: 3, phases: [{}, {}] },
+        { id: 'rare', weight: 1, phases: [{}, {}, {}] },
+      ],
+      world: { ...base.world, crisisChancePct: 100, crisisEarliestRound: 3 },
+    };
+    const seen: Record<string, number> = {};
+    for (let s = 0; s < 400; s++) {
+      const during = rounds(generateTimeline(`which-${s}`, several));
+      const id = during[0]?.crisis?.id ?? 'none';
+      seen[id] = (seen[id] ?? 0) + 1;
+      // One crisis, whole: never a round of one and a round of another.
+      expect(new Set(during.map((w) => w.crisis?.id)).size, `which-${s}`).toBe(1);
+      expect(during).toHaveLength(id === 'common' ? 2 : 3);
+    }
+    expect(seen.none).toBeUndefined();
+    expect(seen.common).toBeGreaterThan(260);
+    expect(seen.rare).toBeGreaterThan(60);
+  });
+
   it('with nothing in its phases only puts its name on the rounds', () => {
     const named = generateTimeline('seed-a', withCrisis(quiet));
     const plain = generateTimeline('seed-a', content);

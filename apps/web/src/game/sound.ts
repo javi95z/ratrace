@@ -1,18 +1,22 @@
 import type { Cue } from '@/ui/sound';
+import { momentsOf } from './moments';
+import type { Moment } from './moments';
 import type { RoundState } from './store';
 
 /** What of the round on screen the sounds listen to. */
-export type Heard = Pick<RoundState, 'stage' | 'view' | 'resolved' | 'orders' | 'refusal' | 'earned' | 'badges'>;
+export type Heard = Pick<RoundState, 'stage' | 'view' | 'resolved' | 'orders' | 'refusal' | 'earned' | 'story'>;
+
+/** The sound of each moment that takes the screen. */
+const MOMENT: Record<Moment['kind'], Cue> = { bankrupt: 'bankrupt', escape: 'escape', million: 'million', crisis: 'crisis' };
 
 /** The cues that speak for a whole moment of a life. One of them plays alone. */
 const LONG: readonly Cue[] = ['bankrupt', 'escape', 'million', 'crisis', 'end'];
 
-/** What a round that has just been played sounds like: the biggest thing that happened in it. */
-function roundCue(state: Heard, before: Heard): Cue {
+/** What a round that has just been played sounds like: its moment if it has one, or the biggest news in it. */
+function roundCue(state: Heard): Cue {
+  const [moment] = momentsOf(state);
+  if (moment) return MOMENT[moment.kind];
   const events = state.resolved?.events ?? [];
-  if (events.some((event) => event.kind === 'bankrupt')) return 'bankrupt';
-  if (events.some((event) => event.kind === 'escaped')) return 'escape';
-  if (state.badges.includes('millionaire') && !before.badges.includes('millionaire')) return 'million';
   if (events.some((event) => event.kind === 'promoted')) return 'promote';
   if (events.some((event) => event.kind === 'escapeLost' || event.kind === 'lapsed')) return 'bad';
   return 'round';
@@ -22,11 +26,10 @@ function roundCue(state: Heard, before: Heard): Cue {
 function newsCue(state: Heard): Cue | null {
   const view = state.view;
   if (!view) return null;
-  const now = view.timeline[view.round]?.crisis ?? null;
+  const [moment] = momentsOf(state);
+  if (moment) return MOMENT[moment.kind];
   const was = view.round > 0 ? (view.timeline[view.round - 1]?.crisis ?? null) : null;
-  if (now && now.year === 1) return 'crisis';
-  if (!now && was) return 'calm';
-  return null;
+  return was && !view.timeline[view.round]?.crisis ? 'calm' : null;
 }
 
 /**
@@ -46,7 +49,7 @@ export function cuesFor(state: Heard, before: Heard): Cue[] {
         cues.push('pick');
         break;
       case 'resolve':
-        cues.push(roundCue(state, before));
+        cues.push(roundCue(state));
         break;
       case 'news': {
         const cue = newsCue(state);

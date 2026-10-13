@@ -39,7 +39,8 @@ interface CrisisPlan {
 function planCrisis(seed: string, content: Content): CrisisPlan | null {
   const rng = new Rng(seedRng(seed, 'crisis'));
   if (content.crises.length === 0 || !rng.chance(content.world.crisisChancePct)) return null;
-  const crisis = content.crises.find((c) => c.id === rng.pickWeighted(content.crises.map((c): [string, number] => [c.id, c.weight])));
+  const picked = rng.pickWeighted(content.crises.map((c): [string, number] => [c.id, c.weight]));
+  const crisis = content.crises.find((c) => c.id === picked);
   if (!crisis) return null;
   // Every round of it is one the player plays: it is over by the last round of the life.
   const first = content.world.crisisEarliestRound;
