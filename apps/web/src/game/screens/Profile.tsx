@@ -11,6 +11,8 @@ import { Link } from '@/i18n/navigation';
 import { Bare, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { BalanceSheet } from './Balance';
+import type { BalanceLine } from './Balance';
 import { useShown } from './Hud';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -33,6 +35,7 @@ export function ProfileBody() {
   const flow = cashflow(content, shown);
   const [open, setOpen] = useState<string | null>(null);
   const [about, setAbout] = useState<About | null>(null);
+  const [line, setLine] = useState<BalanceLine | null>(null);
   // Looked up afresh on every draw: a thing sold or lapsed while its sheet is open closes it.
   const opened = life.items.find((owned) => owned.itemId === open);
 
@@ -88,20 +91,35 @@ export function ProfileBody() {
         <Row left={t('expenses')} right={<span className="text-wine-300">{fmt.signed(-flow.expensesAnnual)}</span>} />
       </Panel>
 
-      <Panel title={t('balance')}>
-        <Row left={t('cash')} right={fmt.money(p.cash)} />
-        <Row left={t('savings')} right={fmt.money(p.deposit)} />
-        <Row left={t('pension')} right={fmt.money(p.pension)} />
-        <Row left={t('investments')} right={fmt.money(invested)} />
-        <Row left={t('homes')} right={fmt.money(homes)} />
-        <Row left={t('things')} right={fmt.money(things)} />
-        <Row left={t('debts')} right={<span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span>} />
-        <Row
-          className="mt-1 border-t-2 border-night-900 pt-2"
-          left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
-          right={<span className="text-[19px] text-gold-500">{fmt.money(netWorth(p))}</span>}
-        />
+      <Panel title={t('balance')} label={t('balance')}>
+        {/* Every line opens what it is made of. */}
+        {(
+          [
+            ['cash', t('cash'), fmt.money(p.cash)],
+            ['savings', t('savings'), fmt.money(p.deposit)],
+            ['pension', t('pension'), fmt.money(p.pension)],
+            ['investments', t('investments'), fmt.money(invested)],
+            ['homes', t('homes'), fmt.money(homes)],
+            ['things', t('things'), fmt.money(things)],
+          ] as const
+        ).map(([line, label, amount]) => (
+          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="block w-full text-left">
+            <Row left={label} right={<>{amount}<More /></>} />
+          </button>
+        ))}
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="block w-full text-left">
+          <Row left={t('debts')} right={<><span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span><More /></>} />
+        </button>
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('netWorth')} className="block w-full text-left">
+          <Row
+            className="mt-1 border-t-2 border-night-900 pt-2"
+            left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
+            right={<><span className="text-[19px] text-gold-500">{fmt.money(netWorth(p))}</span><More /></>}
+          />
+        </button>
       </Panel>
+      {/* One of the things owned is opened from the list of them: the list gives way to it. */}
+      {line ? <BalanceSheet line={line} shown={shown} onClose={() => setLine(null)} onItem={(itemId) => (setLine(null), setOpen(itemId))} /> : null}
 
       <Panel title={t('owned')}>
         {life.items.length === 0 ? (

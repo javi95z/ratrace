@@ -483,6 +483,59 @@
     "opens": "Opens a way out on \"{card}\"",
     "changedIn": "It is changed in the Lifestyle tab, during the finances."
   },
+  "balance": {
+    "balance": "Balance",
+    "rate": "{rate} a year",
+    "cash": {
+      "title": "Cash",
+      "about": "The money you have on hand. Your expenses, your purchases and your taxes come out of it.",
+      "note": "It earns nothing, and inflation eats it. Keep what the round needs and put the rest to work."
+    },
+    "savings": {
+      "title": "Savings",
+      "about": "A deposit with no risk. It pays interest that follows the central bank's rate.",
+      "rate": "Interest",
+      "earns": "What it earns",
+      "note": "If you ever run short of cash, the game takes it from here first, before it goes on the credit card."
+    },
+    "pension": {
+      "title": "Pension plan",
+      "about": "Money put aside for the end. What you pay in lowers that round's tax.",
+      "follows": "Follows",
+      "unlocks": "Unlocks at",
+      "note": "It cannot be touched before then, whatever happens. A bankruptcy does not take it either, and it counts in your net worth."
+    },
+    "investments": {
+      "title": "Investments",
+      "about": "What you hold in the markets, at today's price.",
+      "none": "You have no investments yet. They are bought in the Market tab.",
+      "gain": "{amount} gain",
+      "loss": "{amount} loss",
+      "note": "The gain is over what you paid. When you sell, the taxman takes his share of it."
+    },
+    "homes": {
+      "title": "Property",
+      "about": "Your properties, at what they are worth today. The mortgage on each is counted apart, under Debts.",
+      "note": "They are sold and let in the Property tab."
+    },
+    "things": {
+      "title": "Things",
+      "about": "What you own, at what you would get for it today. Tap one to look at it.",
+      "noValue": "No resale",
+      "note": "Nearly everything loses value each year. A few watches, bags and works of art hold it or gain."
+    },
+    "debts": {
+      "title": "Debts",
+      "about": "Everything you owe. Each round you pay interest and repay a part.",
+      "yearly": "What they cost together",
+      "note": "The credit card is the dearest and has no term: it fills by itself when cash runs short. Clear it first."
+    },
+    "netWorth": {
+      "title": "Net worth",
+      "about": "Everything you own less everything you owe. It is half your score; the other half is status.",
+      "realHint": "The one the score counts"
+    }
+  },
   "end": {
     "title": "The end",
     "age": "Age {age}",

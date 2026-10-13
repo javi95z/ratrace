@@ -483,6 +483,59 @@
     "opens": "Abre una salida en «{card}»",
     "changedIn": "Se cambia en la pestaña Vida, en la fase de finanzas."
   },
+  "balance": {
+    "balance": "Saldo",
+    "rate": "{rate} al año",
+    "cash": {
+      "title": "Efectivo",
+      "about": "El dinero que tienes a mano. De aquí salen tus gastos, tus compras y tus impuestos.",
+      "note": "No rinde nada, y la inflación se lo come. Guarda lo justo para la ronda y pon el resto a trabajar."
+    },
+    "savings": {
+      "title": "Ahorro",
+      "about": "Un depósito sin riesgo. Paga un interés que sigue a los tipos del banco central.",
+      "rate": "Interés",
+      "earns": "Lo que renta",
+      "note": "Si un día te falta efectivo, el juego lo saca primero de aquí, antes de cargarlo a la tarjeta."
+    },
+    "pension": {
+      "title": "Plan de pensiones",
+      "about": "Dinero apartado para el final. Lo que aportas reduce los impuestos de esa ronda.",
+      "follows": "Sigue a",
+      "unlocks": "Se desbloquea a los",
+      "note": "No se puede tocar antes, pase lo que pase. Tampoco lo pierdes en una quiebra, y cuenta en tu patrimonio."
+    },
+    "investments": {
+      "title": "Inversiones",
+      "about": "Lo que tienes en los mercados, a su precio de hoy.",
+      "none": "Aún no tienes inversiones. Se compran en la pestaña Mercado.",
+      "gain": "{amount} de ganancia",
+      "loss": "{amount} de pérdida",
+      "note": "La ganancia es sobre lo que pagaste. Al vender, Hacienda se lleva su parte de ella."
+    },
+    "homes": {
+      "title": "Viviendas",
+      "about": "Tus inmuebles, a lo que valen hoy. La hipoteca de cada uno cuenta aparte, en Deudas.",
+      "note": "Se venden y se alquilan en la pestaña Vivienda."
+    },
+    "things": {
+      "title": "Cosas",
+      "about": "Lo que tienes, a lo que te darían hoy por ello. Toca una para verla.",
+      "noValue": "Sin reventa",
+      "note": "Casi todo pierde valor cada año. Unos pocos relojes, bolsos y obras de arte lo guardan o lo ganan."
+    },
+    "debts": {
+      "title": "Deudas",
+      "about": "Todo lo que debes. Cada ronda pagas intereses y devuelves una parte.",
+      "yearly": "Lo que pagas entre todas",
+      "note": "La tarjeta de crédito es la más cara y no tiene plazo: se llena sola cuando falta efectivo. Quítatela la primera."
+    },
+    "netWorth": {
+      "title": "Patrimonio",
+      "about": "Todo lo que tienes menos todo lo que debes. Es la mitad de tu puntuación; la otra es el estatus.",
+      "realHint": "El que cuenta para la puntuación"
+    }
+  },
   "end": {
     "title": "Fin",
     "age": "{age} años",
