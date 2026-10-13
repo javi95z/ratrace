@@ -411,7 +411,10 @@
     "lifestyle": "Estilo de vida",
     "home": "Casa",
     "leave": "Salir a la pantalla de inicio",
-    "leaveHint": "Tu vida se guarda después de cada paso."
+    "leaveHint": "Tu vida se guarda después de cada paso.",
+    "itemWorth": "Hoy se vendería por {amount}",
+    "itemWhere": "Se vende o se cancela en la pestaña Tienda.",
+    "itemKept": "No se puede vender."
   },
   "end": {
     "title": "Fin",

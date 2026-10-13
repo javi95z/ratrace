@@ -411,7 +411,10 @@
     "lifestyle": "Lifestyle",
     "home": "Home",
     "leave": "Leave to the home screen",
-    "leaveHint": "Your life is saved after every step."
+    "leaveHint": "Your life is saved after every step.",
+    "itemWorth": "Would sell for {amount} today",
+    "itemWhere": "Sell or cancel it in the Shop tab.",
+    "itemKept": "It cannot be sold."
   },
   "end": {
     "title": "The end",
