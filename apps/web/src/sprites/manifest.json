@@ -944,6 +944,36 @@
     "w": 64,
     "h": 64
   },
+  "end.escaped": {
+    "src": "cards/end.escaped.png",
+    "w": 288,
+    "h": 120
+  },
+  "end.retired": {
+    "src": "cards/end.retired.png",
+    "w": 288,
+    "h": 120
+  },
+  "end.ruined": {
+    "src": "cards/end.ruined.png",
+    "w": 288,
+    "h": 120
+  },
+  "family.children": {
+    "src": "cards/family.children.png",
+    "w": 288,
+    "h": 120
+  },
+  "family.couple": {
+    "src": "cards/family.couple.png",
+    "w": 288,
+    "h": 120
+  },
+  "family.full_house": {
+    "src": "cards/family.full_house.png",
+    "w": 288,
+    "h": 120
+  },
   "frame.bronze": {
     "src": "icons/frame.bronze.png",
     "w": 80,
@@ -2214,6 +2244,16 @@
     "w": 312,
     "h": 66
   },
+  "skyline.bangkok.boom": {
+    "src": "skylines/skyline.bangkok.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.bangkok.crisis": {
+    "src": "skylines/skyline.bangkok.crisis.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.bangkok.day": {
     "src": "skylines/skyline.bangkok.day.png",
     "w": 312,
@@ -2221,6 +2261,16 @@
   },
   "skyline.dubai": {
     "src": "skylines/skyline.dubai.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.dubai.boom": {
+    "src": "skylines/skyline.dubai.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.dubai.crisis": {
+    "src": "skylines/skyline.dubai.crisis.png",
     "w": 312,
     "h": 66
   },
@@ -2234,6 +2284,16 @@
     "w": 312,
     "h": 66
   },
+  "skyline.london.boom": {
+    "src": "skylines/skyline.london.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.london.crisis": {
+    "src": "skylines/skyline.london.crisis.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.london.day": {
     "src": "skylines/skyline.london.day.png",
     "w": 312,
@@ -2241,6 +2301,16 @@
   },
   "skyline.madrid": {
     "src": "skylines/skyline.madrid.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.madrid.boom": {
+    "src": "skylines/skyline.madrid.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.madrid.crisis": {
+    "src": "skylines/skyline.madrid.crisis.png",
     "w": 312,
     "h": 66
   },
@@ -2254,6 +2324,16 @@
     "w": 312,
     "h": 66
   },
+  "skyline.new_york.boom": {
+    "src": "skylines/skyline.new_york.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.new_york.crisis": {
+    "src": "skylines/skyline.new_york.crisis.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.new_york.day": {
     "src": "skylines/skyline.new_york.day.png",
     "w": 312,
@@ -2261,6 +2341,16 @@
   },
   "skyline.singapore": {
     "src": "skylines/skyline.singapore.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.singapore.boom": {
+    "src": "skylines/skyline.singapore.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.singapore.crisis": {
+    "src": "skylines/skyline.singapore.crisis.png",
     "w": 312,
     "h": 66
   },

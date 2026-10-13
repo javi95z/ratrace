@@ -406,7 +406,7 @@ Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y
 
 ## Ciudades
 
-Cada ciudad tiene su perfil de noche y de día, y un icono.
+Cada ciudad tiene su perfil de noche, de día, en bonanza y en crisis, y un icono.
 
 Mudarse cuesta el 25 % del coste de vida anual del destino y 1 de foco; con pareja, un 50 % más, y un 25 % más por cada hijo. Quien se muda por su cuenta llega 1 puesto por debajo, hasta su siguiente ascenso, y su pareja pasa 2 años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.
 
@@ -415,6 +415,8 @@ Mudarse cuesta el 25 % del coste de vida anual del destino y 1 de foco; con pare
 Un comienzo equilibrado: sueldos justos, precios justos y sobremesas largas.
 
 <img src="../art/clean/skylines/skyline.madrid.png" alt="Madrid de noche"> <img src="../art/clean/skylines/skyline.madrid.day.png" alt="Madrid de día">
+
+<img src="../art/clean/skylines/skyline.madrid.boom.png" alt="Madrid en bonanza"> <img src="../art/clean/skylines/skyline.madrid.crisis.png" alt="Madrid en crisis">
 
 |  |  |
 | --- | --- |
@@ -433,6 +435,8 @@ Donde se hacen las carreras en finanzas y se pagan los alquileres.
 
 <img src="../art/clean/skylines/skyline.london.png" alt="Londres de noche"> <img src="../art/clean/skylines/skyline.london.day.png" alt="Londres de día">
 
+<img src="../art/clean/skylines/skyline.london.boom.png" alt="Londres en bonanza"> <img src="../art/clean/skylines/skyline.london.crisis.png" alt="Londres en crisis">
+
 |  |  |
 | --- | --- |
 | Sueldo medio | 58.000 $ al año |
@@ -449,6 +453,8 @@ Donde se hacen las carreras en finanzas y se pagan los alquileres.
 Los sueldos más altos del juego, y los impuestos más altos.
 
 <img src="../art/clean/skylines/skyline.new_york.png" alt="Nueva York de noche"> <img src="../art/clean/skylines/skyline.new_york.day.png" alt="Nueva York de día">
+
+<img src="../art/clean/skylines/skyline.new_york.boom.png" alt="Nueva York en bonanza"> <img src="../art/clean/skylines/skyline.new_york.crisis.png" alt="Nueva York en crisis">
 
 |  |  |
 | --- | --- |
@@ -467,6 +473,8 @@ Sin impuesto sobre la renta y con mil maneras de gastar lo que te queda.
 
 <img src="../art/clean/skylines/skyline.dubai.png" alt="Dubái de noche"> <img src="../art/clean/skylines/skyline.dubai.day.png" alt="Dubái de día">
 
+<img src="../art/clean/skylines/skyline.dubai.boom.png" alt="Dubái en bonanza"> <img src="../art/clean/skylines/skyline.dubai.crisis.png" alt="Dubái en crisis">
+
 |  |  |
 | --- | --- |
 | Sueldo medio | 56.000 $ al año |
@@ -484,6 +492,8 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 
 <img src="../art/clean/skylines/skyline.singapore.png" alt="Singapur de noche"> <img src="../art/clean/skylines/skyline.singapore.day.png" alt="Singapur de día">
 
+<img src="../art/clean/skylines/skyline.singapore.boom.png" alt="Singapur en bonanza"> <img src="../art/clean/skylines/skyline.singapore.crisis.png" alt="Singapur en crisis">
+
 |  |  |
 | --- | --- |
 | Sueldo medio | 58.000 $ al año |
@@ -500,6 +510,8 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 Tu dinero cunde cuatro veces más. Tus ahorros también.
 
 <img src="../art/clean/skylines/skyline.bangkok.png" alt="Bangkok de noche"> <img src="../art/clean/skylines/skyline.bangkok.day.png" alt="Bangkok de día">
+
+<img src="../art/clean/skylines/skyline.bangkok.boom.png" alt="Bangkok en bonanza"> <img src="../art/clean/skylines/skyline.bangkok.crisis.png" alt="Bangkok en crisis">
 
 |  |  |
 | --- | --- |

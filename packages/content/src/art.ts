@@ -139,7 +139,10 @@ export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? 
 export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 /** The skyline of a city: by night, or in the first light a round opens in. */
-export const cityArt = (cityId: string, light: 'night' | 'day' = 'night'): string => (light === 'day' ? `skyline.${cityId}.day` : `skyline.${cityId}`);
+/** How a city is drawn: by night, by day, in a boom with cranes and fireworks, or in a crisis under the rain. */
+export type CityLight = 'night' | 'day' | 'boom' | 'crisis';
+export const CITY_LIGHTS: readonly CityLight[] = ['night', 'day', 'boom', 'crisis'];
+export const cityArt = (cityId: string, light: CityLight = 'night'): string => (light === 'night' ? `skyline.${cityId}` : `skyline.${cityId}.${light}`);
 /** The landmark that stands for a city where there is only room for an icon. */
 export const cityIcon = (cityId: string): string => `icon.city_${cityId}`;
 
@@ -258,3 +261,12 @@ export type Loop = 'coin' | 'wheel' | 'confetti';
 export const LOOPS: readonly Loop[] = ['coin', 'wheel', 'confetti'];
 export const loopArt = (loop: Loop): string[] => [0, 1, 2, 3].map((frame) => `anim.${loop}.${frame}`);
 
+/** How a life ended: out of the rat race, an ordinary retirement, or with nothing. */
+export type Ending = 'escaped' | 'retired' | 'ruined';
+export const ENDINGS: readonly Ending[] = ['escaped', 'retired', 'ruined'];
+export const endingArt = (ending: Ending): string => `end.${ending}`;
+
+/** The household at home, or null for someone who lives alone: a couple, a family, and a full house from the third child. */
+export const HOME_LIFE_ART = ['family.couple', 'family.children', 'family.full_house'] as const;
+export const homeLifeArt = (home: { partner: boolean; children: number }): string | null =>
+  home.children >= 3 ? HOME_LIFE_ART[2] : home.children >= 1 ? HOME_LIFE_ART[1] : home.partner ? HOME_LIFE_ART[0] : null;

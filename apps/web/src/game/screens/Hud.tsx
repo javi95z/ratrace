@@ -5,7 +5,7 @@ import { cashflow, cashflowLines, escapeProgress, netWorth, scoreBreakdown, stat
 import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, portraitAge } from '@/game/present';
+import { ageAt, cityLight, portraitAge } from '@/game/present';
 import { Bar, Row, Stat, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -162,8 +162,8 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
 
   return (
     <header className={`flex flex-col gap-2 pt-3 ${flush ? '' : 'px-3'}`}>
-      {/* A round opens in the first light and closes at night. */}
-      {skyline ? <CityBanner cityId={p.cityId} light={stage === 'news' ? 'day' : 'night'} /> : null}
+      {/* A round opens in the first light and closes at night; a boom and a crisis each have a sky of their own. */}
+      {skyline ? <CityBanner cityId={p.cityId} light={cityLight(shown.timeline[shown.round], stage === 'news')} /> : null}
 
       <div className="flex items-center gap-3">
         {onProfile ? (

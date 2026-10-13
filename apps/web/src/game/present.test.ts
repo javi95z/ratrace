@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
-import { ageAt, chancePct, debtLabel, effectTags, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -43,6 +43,29 @@ describe('a plan to invest, told after the round', () => {
     const notes = (reason: 'not-enough-cash' | null) => roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'planRan', assetId: 'sp500', amount: 200_000, reason }]);
     expect(notes(null)).toEqual([]);
     expect(notes('not-enough-cash')).toEqual([{ tone: 'bad', icon: 'icon.fund', title: 'Your plan did not buy S&P 500: it needed $2,000.', hint: words('en').text.reasons['not-enough-cash'] }]);
+  });
+});
+
+describe('the last picture of a life', () => {
+  it('is the way out for someone who got out, an empty room for someone with nothing, and a balcony for everyone else', () => {
+    expect(endingOf(true, 5_000_000)).toBe('escaped');
+    expect(endingOf(true, -1)).toBe('escaped');
+    expect(endingOf(false, 0)).toBe('ruined');
+    expect(endingOf(false, -500)).toBe('ruined');
+    expect(endingOf(false, 1)).toBe('retired');
+  });
+});
+
+describe('the sky over the city', () => {
+  it('is rain in a crisis or a recession, fireworks in a boom, and otherwise day for the news and night after', () => {
+    const calm = { regime: 'expansion' as const, crisis: null };
+    expect(cityLight(calm, true)).toBe('day');
+    expect(cityLight(calm, false)).toBe('night');
+    expect(cityLight({ ...calm, regime: 'boom' }, true)).toBe('boom');
+    expect(cityLight({ ...calm, regime: 'boom' }, false)).toBe('boom');
+    expect(cityLight({ ...calm, regime: 'recession' }, true)).toBe('crisis');
+    // A crisis by name darkens the sky whatever the economy is called that round.
+    expect(cityLight({ regime: 'boom', crisis: world.crisis ?? ({ id: 'crash' } as never) }, false)).toBe('crisis');
   });
 });
 

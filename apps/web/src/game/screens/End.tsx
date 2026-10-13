@@ -1,12 +1,12 @@
 'use client';
 
-import { badgeArt, lives, portraitArt } from '@ratrace/content';
+import { badgeArt, endingArt, lives, portraitArt } from '@ratrace/content';
 import { useMemo } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
-import { ageAt } from '@/game/present';
+import { ageAt, endingOf } from '@/game/present';
 import { bestsOf } from '@/game/records';
 import { shareCard } from '@/game/share';
 import type { Best } from '@/game/records';
@@ -62,6 +62,7 @@ function Ended({ view }: { view: GameView }) {
   // The engine's own breakdown: nothing about the score is worked out here.
   const score = scoreBreakdown(content, view);
   const escaped = score.multiplierPct > 100;
+  const ending = endingOf(escaped, netWorth(p));
   const lifeName = text.lives[lifeId]?.name ?? lifeId;
   // The life in three paragraphs: where it began, what happened, how it ended.
   const life = lives.find((candidate) => candidate.id === lifeId);
@@ -112,6 +113,11 @@ function Ended({ view }: { view: GameView }) {
           </p>
         </div>
       </header>
+
+      {/* The last picture of the life: where it ended up. */}
+      <div data-ending={ending} className="frame-double flex justify-center overflow-hidden bg-night-900 leading-[0]">
+        <Sprite id={endingArt(ending)} scale="art" fallback={{ w: 288, h: 120 }} className="max-w-none" />
+      </div>
 
       <section role="group" aria-label={t('score')} className="bevel frame-gold animate-rise bg-night-700 p-4 text-center">
         <p className="pixel text-[15px] uppercase tracking-[0.1em] text-gold-200">{t('score')}</p>

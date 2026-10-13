@@ -6,16 +6,21 @@ import {
   balanceArt,
   cardArt,
   careerArt,
+  CITY_LIGHTS,
   cityArt,
   cityIcon,
   crestArt,
   DEBT_ART,
   debtArt,
+  endingArt,
+  ENDINGS,
   FAMILY_ART,
   familyArt,
   focusArt,
   FRAME_ART,
   frameArt,
+  HOME_LIFE_ART,
+  homeLifeArt,
   insuranceArt,
   itemArt,
   lifestyleArt,
@@ -248,7 +253,7 @@ describe('content art', () => {
       ...content.items.map((item) => itemArt(item.id)),
       ...content.propertyTypes.map((type) => propertyArt(type.id)),
       ...rentTierArt,
-      ...content.cities.flatMap((city) => [cityArt(city.id), cityArt(city.id, 'day'), cityIcon(city.id)]),
+      ...content.cities.flatMap((city) => [...CITY_LIGHTS.map((light) => cityArt(city.id, light)), cityIcon(city.id)]),
       ...FAMILY_ART,
       ...Object.values(momentArt),
       ...lives.flatMap((life) => PORTRAIT_AGES.map((age) => portraitArt(life.id, age))),
@@ -267,10 +272,14 @@ describe('content art', () => {
       ...FRAME_ART,
       ...content.cities.map((city) => crestArt(city.id)),
       ...LOOPS.flatMap((loop) => loopArt(loop)),
+      ...ENDINGS.map((ending) => endingArt(ending)),
+      ...HOME_LIFE_ART,
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 16 * 4 + 5 + (4 + 2 + 4 + 3 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4);
+    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 5 + 8 + 6 + 16 * 4 + 5 + (4 + 2 + 4 + 3 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3);
+    // Nobody is drawn at home with someone who lives alone; a couple, a family and a full house each have their picture.
+    expect([[false, 0], [true, 0], [false, 1], [true, 2], [true, 3]].map(([partner, children]) => homeLifeArt({ partner: partner as boolean, children: children as number }))).toEqual([null, 'family.couple', 'family.children', 'family.children', 'family.full_house']);
     // Every career is drawn at its three stages, and a frame is earned by status, plainest first.
     for (const career of content.careers) expect(new Set(career.levels.map((_, level) => workArt(career.id, level, career.levels.length))).size, career.id).toBe(3);
     expect([0, 24, 25, 59, 60, 99, 100, 500].map((status) => frameArt(status))).toEqual(['frame.plain', 'frame.plain', 'frame.bronze', 'frame.bronze', 'frame.silver', 'frame.silver', 'frame.gold', 'frame.gold']);

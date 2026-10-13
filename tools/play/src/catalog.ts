@@ -131,7 +131,7 @@ say(
 // ---------------------------------------------------------------------------------------------
 say(
   '## Ciudades',
-  'Cada ciudad tiene su perfil de noche y de día, y un icono.',
+  'Cada ciudad tiene su perfil de noche, de día, en bonanza y en crisis, y un icono.',
   `Mudarse cuesta el ${content.life.moveCostPct} % del coste de vida anual del destino y 1 de foco; con pareja, un ${content.life.movePartnerPct} % más, y un ${content.life.moveChildPct} % más por cada hijo. Quien se muda por su cuenta llega ${content.life.moveRungsLost} puesto por debajo, hasta su siguiente ascenso, y su pareja pasa ${content.life.partnerSettlingRounds * content.yearsPerRound} años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.`,
 );
 for (const city of content.cities) {
@@ -139,6 +139,7 @@ for (const city of content.cities) {
     `### ${img(cityIcon(city.id))} ${names.cities[city.id]}`,
     `${text.cities[city.id].tagline}`,
     `${img(cityArt(city.id), `${names.cities[city.id]} de noche`)} ${img(cityArt(city.id, 'day'), `${names.cities[city.id]} de día`)}`,
+    `${img(cityArt(city.id, 'boom'), `${names.cities[city.id]} en bonanza`)} ${img(cityArt(city.id, 'crisis'), `${names.cities[city.id]} en crisis`)}`,
     table(
       ['', ''],
       [

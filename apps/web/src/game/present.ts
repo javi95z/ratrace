@@ -1,5 +1,5 @@
 import { careerArt, cityIcon, START_AGE } from '@ratrace/content';
-import type { ContentText, Names } from '@ratrace/content';
+import type { CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, ITEM_PERKS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
@@ -50,6 +50,21 @@ export interface EffectTag {
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`);
 const toneOf = (n: number): Tone => (n > 0 ? 'good' : 'bad');
+
+/** How a life ended, for its last picture: out of the rat race, with nothing, or simply retired. */
+export function endingOf(escaped: boolean, worth: number): Ending {
+  return escaped ? 'escaped' : worth <= 0 ? 'ruined' : 'retired';
+}
+
+/**
+ * How the player's city is drawn in a round: under the rain in a crisis or a recession, with cranes
+ * and fireworks in a boom, and otherwise by day while the news is read and by night after.
+ */
+export function cityLight(world: Pick<WorldState, 'regime' | 'crisis'>, reading: boolean): CityLight {
+  if (world.crisis || world.regime === 'recession') return 'crisis';
+  if (world.regime === 'boom') return 'boom';
+  return reading ? 'day' : 'night';
+}
 
 /** What a thing is good for beyond its status, a line for each use. `t` translates the `effects` section. */
 export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] {

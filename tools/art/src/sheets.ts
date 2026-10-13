@@ -219,14 +219,21 @@ export const SHEETS: SheetSpec[] = [
   })),
   // Scenes for the newer careers and for what things open.
   { file: 'cards/cards-20', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.out_of_town', 'card.club_contacts', 'card.classroom', 'card.ring_light', 'card.law_office', 'card.bar_tips'] },
+  // How a life ends, and who is at home.
+  { file: 'cards/cards-21', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['end.escaped', 'end.retired', 'end.ruined', 'family.couple', 'family.children', 'family.full_house'] },
   ...WORKPLACES.map((careers, i): SheetSpec => ({
     file: `cards/work-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,
     ids: careers.flatMap((career) => [0, 1, 2].map((stage) => `work.${career}.${stage}`)),
   })),
   { file: 'skylines/skylines-01', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid', 'skyline.london', 'skyline.new_york'] },
   { file: 'skylines/skylines-02', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai', 'skyline.singapore', 'skyline.bangkok'] },
-  // The same six cities by day, for the rounds a life is going well. Not shown anywhere yet.
+  // The same six cities by day, shown while the news of a round is read.
   { file: 'skylines/skylines-03', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid.day', 'skyline.london.day', 'skyline.new_york.day'] },
   { file: 'skylines/skylines-04', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai.day', 'skyline.singapore.day', 'skyline.bangkok.day'] },
+  // The same six again in a boom, with cranes and fireworks, and in a crisis, under rain with half the windows dark.
+  ...(['boom', 'boom', 'crisis', 'crisis'] as const).map((mood, i): SheetSpec => ({
+    file: `skylines/skylines-0${i + 5}`, group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66,
+    ids: (i % 2 === 0 ? ['madrid', 'london', 'new_york'] : ['dubai', 'singapore', 'bangkok']).map((city) => `skyline.${city}.${mood}`),
+  })),
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

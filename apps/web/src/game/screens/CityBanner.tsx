@@ -1,6 +1,7 @@
 'use client';
 
 import { cityArt, cityIcon } from '@ratrace/content';
+import type { CityLight } from '@ratrace/content';
 import { useWords } from '@/game/context';
 import { Sprite, spriteOf } from '@/ui/Sprite';
 
@@ -13,13 +14,13 @@ const EDGES =
  * pixel for pixel in the middle; behind it the same picture, stretched and dimmed, carries its sky
  * and its lights out to both edges, so the banner is never a small strip with empty sides.
  */
-export function CityBanner({ cityId, light = 'night' }: { cityId: string; light?: 'night' | 'day' }) {
+export function CityBanner({ cityId, light = 'night' }: { cityId: string; light?: CityLight }) {
   const { names } = useWords();
   const id = cityArt(cityId, light);
   const sprite = spriteOf(id);
 
   return (
-    <div className="frame-double relative mx-1.5 mb-1.5 mt-1 overflow-hidden bg-night-900 leading-[0]" style={{ height: 'calc(66px * var(--art))' }}>
+    <div data-city-light={light} className="frame-double relative mx-1.5 mb-1.5 mt-1 overflow-hidden bg-night-900 leading-[0]" style={{ height: 'calc(66px * var(--art))' }}>
       {sprite ? (
         <div
           aria-hidden

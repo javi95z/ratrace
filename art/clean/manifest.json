@@ -2191,6 +2191,36 @@
       "width": 288,
       "height": 120
     },
+    "end.escaped": {
+      "file": "cards/end.escaped.png",
+      "width": 288,
+      "height": 120
+    },
+    "end.retired": {
+      "file": "cards/end.retired.png",
+      "width": 288,
+      "height": 120
+    },
+    "end.ruined": {
+      "file": "cards/end.ruined.png",
+      "width": 288,
+      "height": 120
+    },
+    "family.couple": {
+      "file": "cards/family.couple.png",
+      "width": 288,
+      "height": 120
+    },
+    "family.children": {
+      "file": "cards/family.children.png",
+      "width": 288,
+      "height": 120
+    },
+    "family.full_house": {
+      "file": "cards/family.full_house.png",
+      "width": 288,
+      "height": 120
+    },
     "work.healthcare.0": {
       "file": "cards/work.healthcare.0.png",
       "width": 288,
@@ -2428,6 +2458,66 @@
     },
     "skyline.bangkok.day": {
       "file": "skylines/skyline.bangkok.day.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.madrid.boom": {
+      "file": "skylines/skyline.madrid.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.london.boom": {
+      "file": "skylines/skyline.london.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.new_york.boom": {
+      "file": "skylines/skyline.new_york.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.dubai.boom": {
+      "file": "skylines/skyline.dubai.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.singapore.boom": {
+      "file": "skylines/skyline.singapore.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.bangkok.boom": {
+      "file": "skylines/skyline.bangkok.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.madrid.crisis": {
+      "file": "skylines/skyline.madrid.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.london.crisis": {
+      "file": "skylines/skyline.london.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.new_york.crisis": {
+      "file": "skylines/skyline.new_york.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.dubai.crisis": {
+      "file": "skylines/skyline.dubai.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.singapore.crisis": {
+      "file": "skylines/skyline.singapore.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.bangkok.crisis": {
+      "file": "skylines/skyline.bangkok.crisis.png",
       "width": 312,
       "height": 66
     },

@@ -1,6 +1,6 @@
 'use client';
 
-import { balanceArt, familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { balanceArt, familyArt, homeLifeArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
@@ -32,6 +32,7 @@ export function ProfileBody() {
   const life = p.life;
 
   const home = homeOf(p, content);
+  const household = homeLifeArt({ partner: life.partner, children: life.children.length });
   // One word each: the full names of four insurances do not fit on a line, and the sheet behind the row has them.
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => t(`insuranceShort.${kind}`));
   const flow = cashflow(content, shown);
@@ -57,6 +58,12 @@ export function ProfileBody() {
       <WorkPanel shown={shown} />
 
       <Panel title={t('family')}>
+        {/* Who is at home, when someone is. */}
+        {household ? (
+          <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
+            <Sprite id={household} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+          </div>
+        ) : null}
         <Row
           left={
             <span className="flex items-center gap-2">
