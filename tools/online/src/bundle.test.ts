@@ -79,8 +79,16 @@ describe('the game as the server holds it', () => {
 
   it('lists every bundle in the folder under the versions it holds', () => {
     const files = readdirSync(GAME_DIR);
-    expect(readFileSync(join(GAME_DIR, 'index.ts'), 'utf8')).toBe(registrySource(files));
-    expect(registrySource(['v0.3.0-1.2.0.js', 'index.ts', 'types.ts', 'v0.4.0-1.3.0.js'])).toContain("'0.3.0/1.2.0': g0 as unknown as GameModule,\n  '0.4.0/1.3.0': g1 as unknown as GameModule,");
+    expect(readFileSync(join(GAME_DIR, 'index.ts'), 'utf8')).toBe(registrySource(files, `${ENGINE_VERSION}/${CONTENT_VERSION}`));
+    expect(registrySource(['v0.3.0-1.2.0.js', 'index.ts', 'types.ts', 'v0.4.0-1.3.0.js'], '0.4.0/1.3.0')).toContain("'0.3.0/1.2.0': g0 as unknown as GameModule,\n  '0.4.0/1.3.0': g1 as unknown as GameModule,");
+  });
+
+  it('names the versions of this checkout as the ones ranked lives are started on', async () => {
+    // The server holds older rules to finish lives lived under them. A new ranked life begins under today's, and no others.
+    const registry = await import('../../../supabase/functions/_shared/game/index.ts');
+    expect(registry.CURRENT).toBe(`${ENGINE_VERSION}/${CONTENT_VERSION}`);
+    expect(Object.keys(registry.GAMES)).toContain(registry.CURRENT);
+    expect(registrySource(['v0.3.0-1.2.0.js', 'v0.4.0-1.3.0.js'], '0.4.0/1.3.0')).toContain("export const CURRENT = '0.4.0/1.3.0';");
   });
 
   it('plays the same lives to the same end as the source does', { timeout: 60_000 }, async () => {

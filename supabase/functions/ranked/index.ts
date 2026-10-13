@@ -9,11 +9,14 @@
 // the rules that keep players out of ranked games. Who is asking comes from the token, never the body.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { RunRow } from '../_shared/finish.ts';
-import { GAMES } from '../_shared/game/index.ts';
+import { CURRENT, GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { ranked } from '../_shared/ranked.ts';
 import type { RankedGameRow } from '../_shared/ranked.ts';
 import { allowed } from '../_shared/rate.ts';
+
+/** What a ranked life reads of its row. */
+const ROW = 'id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at';
 
 export default {
   fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
@@ -30,6 +33,7 @@ export default {
     const reply = await ranked(
       GAMES,
       {
+        current: CURRENT,
         allow: (user, kind) => allowed(db, user, kind),
         newId: () => crypto.randomUUID(),
         newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
@@ -39,7 +43,9 @@ export default {
           const unlocked = row?.progress?.unlocked;
           return typeof unlocked === 'object' && unlocked !== null ? Object.keys(unlocked) : [];
         },
-        abandonRanked: async (user) => void must(await db.from('games').update({ status: 'abandoned' }).eq('user_id', user).eq('mode', 'ranked').eq('status', 'playing')),
+        // One at most: the database keeps a player to a single ranked game in progress.
+        playingRanked: async (user) =>
+          must(await db.from('games').select(ROW).eq('user_id', user).eq('mode', 'ranked').eq('status', 'playing').limit(1).maybeSingle()) as RankedGameRow | null,
         createGame: async (row, seed) => {
           must(await db.from('games').insert({ ...row, mode: 'ranked' }));
           const kept = await db.from('game_secrets').insert({ game_id: row.id, seed });
@@ -49,8 +55,7 @@ export default {
             throw new Error(kept.error.message);
           }
         },
-        loadGame: async (id) =>
-          must(await db.from('games').select('id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at').eq('id', id).maybeSingle()) as RankedGameRow | null,
+        loadGame: async (id) => must(await db.from('games').select(ROW).eq('id', id).maybeSingle()) as RankedGameRow | null,
         loadSeed: async (id) => (must(await db.from('game_secrets').select('seed').eq('game_id', id).maybeSingle()) as { seed: string } | null)?.seed ?? null,
         // Written only if the row is as it was read: of two steps that arrive at once, one finds it changed.
         saveStep: async (id, asRead, log, round) =>

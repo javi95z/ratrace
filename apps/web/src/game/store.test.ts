@@ -590,17 +590,92 @@ describe('coming back', () => {
 
 describe('a ranked life on screen', { timeout: 60_000 }, () => {
   /** The round store over the sessions of both kinds, and a server of ranked lives the test holds. */
-  function rankedSetup() {
-    const server = rankedServer();
+  function rankedSetup(server = rankedServer(), versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION }) {
     const store = new MemoryStore();
     let ids = 0;
     let clock = 0;
     const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
-    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
     const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
     const game = createGameStore({ sessions, content });
     return { server, store, game, get: game.getState };
   }
+
+  it('starts nothing, and asks, when the player has a ranked life in progress on another device', async () => {
+    const phone = rankedSetup();
+    expect(await phone.get().start('nurse', { ranked: true })).toBe(true);
+    await answerHand(phone.get);
+    await phone.get().play();
+    const there = phone.get().gameId as string;
+    // The desk has only last night's finished life, or nothing: it knows nothing of the one on the phone.
+    const desk = rankedSetup(phone.server);
+    expect(await desk.get().start('engineer', { ranked: true })).toBe(false);
+    expect(desk.get()).toMatchObject({ status: 'booting', elsewhere: { gameId: there, lifeId: 'nurse', round: 1, here: true } });
+    expect(phone.server.games.get(there)?.status).toBe('playing');
+    expect(await desk.store.loadGame()).toBeNull();
+    // Left as it is: the question goes away, and nothing has changed anywhere.
+    desk.get().clearElsewhere();
+    expect(desk.get().elsewhere).toBeNull();
+    expect(phone.server.games.get(there)?.status).toBe('playing');
+    // Asked again, and told to end it: the new life begins and the other is given up.
+    expect(await desk.get().start('engineer', { ranked: true })).toBe(false);
+    expect(await desk.get().start('engineer', { ranked: true, replace: there })).toBe(true);
+    expect(desk.get()).toMatchObject({ status: 'playing', ranked: true, lifeId: 'engineer', elsewhere: null });
+    expect(phone.server.games.get(there)?.status).toBe('abandoned');
+  });
+
+  it('takes up on this device the ranked life in progress elsewhere, when the player would rather go on with it', async () => {
+    const phone = rankedSetup();
+    await phone.get().start('nurse', { ranked: true });
+    await answerHand(phone.get);
+    await phone.get().play();
+    const desk = rankedSetup(phone.server);
+    await desk.get().start('engineer', { ranked: true });
+    expect(await desk.get().continueElsewhere()).toBe('taken');
+    expect(desk.get()).toMatchObject({ status: 'playing', ranked: true, lifeId: 'nurse', gameId: phone.get().gameId, elsewhere: null });
+    expect(desk.get().view).toEqual(phone.get().view);
+    expect(phone.server.games.get(phone.get().gameId as string)?.status).toBe('playing');
+    // With nothing asked about, there is nothing to take up.
+    expect(await desk.get().continueElsewhere()).toBe('gone');
+  });
+
+  it('finds the life in the way gone when it was given up elsewhere meanwhile, and asks no more about it', async () => {
+    const phone = rankedSetup();
+    await phone.get().start('nurse', { ranked: true });
+    const desk = rankedSetup(phone.server);
+    await desk.get().start('engineer', { ranked: true });
+    await phone.get().abandon();
+    expect(await desk.get().continueElsewhere()).toBe('gone');
+    expect(desk.get().elsewhere).toBeNull();
+    expect(desk.get().status).not.toBe('playing');
+    // Nothing is in the way now.
+    expect(await desk.get().start('engineer', { ranked: true })).toBe(true);
+  });
+
+  it('says that a ranked life in progress elsewhere cannot be continued here when it was begun under other rules', async () => {
+    const phone = rankedSetup();
+    await phone.get().start('nurse', { ranked: true });
+    // The same life, as a page of a later build would be told of it.
+    const game = phone.server.games.get(phone.get().gameId as string) as { engine_version: string };
+    game.engine_version = '0.0.1';
+    const desk = rankedSetup(phone.server);
+    expect(await desk.get().start('nurse', { ranked: true })).toBe(false);
+    expect(desk.get().elsewhere).toMatchObject({ here: false });
+    expect(await desk.get().continueElsewhere()).toBe('gone');
+    expect(desk.get().status).not.toBe('playing');
+  });
+
+  it('says so, and changes nothing, when the server could not be reached to take that life up', async () => {
+    const phone = rankedSetup();
+    await phone.get().start('nurse', { ranked: true });
+    const desk = rankedSetup(phone.server);
+    await desk.get().start('engineer', { ranked: true });
+    phone.server.state.down = true;
+    expect(await desk.get().continueElsewhere()).toBe('away');
+    expect(desk.get().status).not.toBe('playing');
+    expect(await desk.store.loadGame()).toBeNull();
+    // The question is still there to be answered when the server is.
+    expect(desk.get().elsewhere).not.toBeNull();
+  });
 
   it('says which kind of life it is, and plays it like any other', async () => {
     const { get, server } = rankedSetup();

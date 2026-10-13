@@ -23,3 +23,24 @@ export class StaleSession extends Error {
     this.name = 'StaleSession';
   }
 }
+
+/** A ranked life in progress, as far as whoever must decide about it needs to know it. */
+export interface RankedLifeInTheWay {
+  gameId: string;
+  lifeId: string;
+  round: number;
+  engineVersion: string;
+  contentVersion: string;
+}
+
+/**
+ * A ranked life could not begin because the player has another in progress, and nobody said it
+ * may be ended: on another device, most often. Nothing was changed. The player is asked, and the
+ * new life is started again naming this one to be replaced, or this one is taken up instead.
+ */
+export class RankedInProgress extends Error {
+  constructor(readonly life: RankedLifeInTheWay) {
+    super('a ranked life is already in progress');
+    this.name = 'RankedInProgress';
+  }
+}

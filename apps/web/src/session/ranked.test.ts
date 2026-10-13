@@ -3,7 +3,7 @@ import { ENGINE_VERSION, finalScore, viewOf } from '@ratrace/engine';
 import type { LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { rankedServer } from '@/testing/rankedServer';
-import { StaleSession, Unreachable } from './errors';
+import { RankedInProgress, StaleSession, Unreachable } from './errors';
 import { LocalSessions } from './local';
 import { MemoryStore } from './memory';
 import { rankedOf, RankedSessions } from './ranked';
@@ -202,7 +202,8 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
     await expect(session.playRound({ orders: [] })).rejects.toBeInstanceOf(StaleSession);
     expect(session.view()).toEqual(before);
     // A card is answered, and the answer brings a world as if the round had turned.
-    const long: RankedApi = { ...server.api, card: async (...asked) => server.api.card(...asked).then((reply) => (reply === 'moved' ? reply : { ...reply, world: before.timeline[0] })) };
+    const elsewhere = rankedServer();
+    const long: RankedApi = { ...elsewhere.api, card: async (...asked) => elsewhere.api.card(...asked).then((reply) => (reply === 'moved' ? reply : { ...reply, world: before.timeline[0] })) };
     const other = await device({ api: long }).sessions.start('nurse', { ranked: true });
     await expect(other.answerCard(0)).rejects.toBeInstanceOf(StaleSession);
     expect(other.view().answered).toBe(0);
@@ -349,19 +350,97 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     expect(await held(d.store)).toBeNull();
   });
 
-  it('cannot continue a ranked life begun under other rules than this build plays: it says so, and gives it up', async () => {
+  it('cannot continue a ranked life begun under older rules than this build plays: it says so, and leaves the life where it is', async () => {
+    // The page can only show and preview a life of its own rules. But another device may still be living this one
+    // under the rules it began with: it is not this page's to end.
+    for (const newer of [{ engine: '99.0.0', content: CONTENT_VERSION }, { engine: ENGINE_VERSION, content: '99.0.0' }]) {
+      const server = rankedServer();
+      const d = device(server);
+      const session = await d.sessions.start('nurse', { ranked: true });
+      server.state.calls.length = 0;
+      expect(await device(server, d.store, newer).sessions.resume()).toEqual({ session: null, lost: 'outdated' });
+      expect(await held(d.store)).toBeNull();
+      expect(server.games.get(session.gameId)?.status).toBe('playing');
+      expect(server.state.calls).toEqual([]);
+    }
+  });
+
+  it('leaves alone a ranked life begun under newer rules than this page plays: the newer page can go on with it', async () => {
+    // A tab left open on yesterday's build meets the note today's build wrote.
+    for (const older of [{ engine: '0.0.1', content: CONTENT_VERSION }, { engine: ENGINE_VERSION, content: '0.0.1' }]) {
+      const server = rankedServer();
+      const d = device(server);
+      const session = await d.sessions.start('nurse', { ranked: true });
+      const note = await held(d.store);
+      server.state.calls.length = 0;
+      expect(await device(server, d.store, older).sessions.resume()).toEqual({ session: null, lost: 'newer' });
+      expect(await held(d.store)).toEqual(note);
+      expect(server.games.get(session.gameId)?.status).toBe('playing');
+      expect(server.state.calls).toEqual([]);
+    }
+  });
+
+  it('asks before it ends a ranked life in progress on another device, and ends the one this device is living unasked', async () => {
+    const server = rankedServer();
+    const phone = device(server);
+    const there = await phone.sessions.start('nurse', { ranked: true });
+    await play(there, 2);
+    // The desk knows nothing of that life: it may not end it by starting another.
+    const desk = device(server);
+    const asked = desk.sessions.start('nurse', { ranked: true });
+    await expect(asked).rejects.toBeInstanceOf(RankedInProgress);
+    await expect(asked).rejects.toMatchObject({ life: { gameId: there.gameId, lifeId: 'nurse', round: 2, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION } });
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(await held(desk.store)).toBeNull();
+    // Told that it may, it does.
+    const here = await desk.sessions.start('nurse', { ranked: true, replace: there.gameId });
+    expect(here.ranked).toBe(true);
+    expect(server.games.get(there.gameId)?.status).toBe('abandoned');
+    // The life this very device is living is the one the player was asked about on the way here: it gives way with no second question.
+    const next = await desk.sessions.start('nurse', { ranked: true });
+    expect(server.games.get(here.gameId)?.status).toBe('abandoned');
+    expect(server.games.get(next.gameId)?.status).toBe('playing');
+  });
+
+  it('does not end unasked a ranked life this device has only a note of and has never shown', async () => {
+    const server = rankedServer();
+    const there = await device(server).sessions.start('nurse', { ranked: true });
+    // The account left the note here, and nobody has opened it yet.
+    const desk = device(server);
+    await desk.store.saveGame({ format: 1, ranked: true, gameId: there.gameId, lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 });
+    await expect(desk.sessions.start('nurse', { ranked: true })).rejects.toBeInstanceOf(RankedInProgress);
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    // Nor does a casual life begun over the note end it: the life is still there to be taken up elsewhere.
+    const casual = await desk.sessions.start('nurse', { ranked: false });
+    expect(casual.ranked).toBe(false);
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+  });
+
+  it('leaves the ranked life in progress as it is when the new one cannot be started at all', async () => {
+    const server = rankedServer();
+    const first = device(server);
+    const living = await first.sessions.start('nurse', { ranked: true });
+    const refusing: RankedApi = {
+      ...server.api,
+      start: async () => {
+        throw new Error('the server refused to start a ranked life: bad-request');
+      },
+    };
+    const d = device({ api: refusing }, first.store);
+    await expect(d.sessions.start('nurse', { ranked: true })).rejects.toThrow('the server refused to start a ranked life');
+    expect(server.games.get(living.gameId)?.status).toBe('playing');
+    expect(((await held(d.store)) as RankedGame).gameId).toBe(living.gameId);
+  });
+
+  it('begins a casual life when the account has not heard yet that the life is unlocked', async () => {
     const server = rankedServer();
     const d = device(server);
-    const session = await d.sessions.start('nurse', { ranked: true });
-    const newer = device(server, d.store, { engine: '99.0.0', content: CONTENT_VERSION });
-    expect(await newer.sessions.resume()).toEqual({ session: null, lost: 'outdated' });
-    expect(await held(d.store)).toBeNull();
-    expect(server.games.get(session.gameId)?.status).toBe('abandoned');
-    // The numbers of the game are rules as much as the engine is.
-    const again = await d.sessions.start('nurse', { ranked: true });
-    const rebalanced = device(server, d.store, { engine: ENGINE_VERSION, content: '99.0.0' });
-    expect(await rebalanced.sessions.resume()).toEqual({ session: null, lost: 'outdated' });
-    expect(server.games.get(again.gameId)?.status).toBe('abandoned');
+    // Unlocked on the device a moment ago. The account still says it is locked.
+    await d.store.saveProfile({ ...(await d.store.loadProfile()), unlocked: { [locked.id]: { at: 1, gameId: 'earlier' } } });
+    const session = await d.sessions.start(locked.id, { ranked: true });
+    expect(session.ranked).toBe(false);
+    expect(session.lifeId).toBe(locked.id);
+    expect(server.games.size).toBe(0);
   });
 
   it('opens a casual life exactly as before', async () => {

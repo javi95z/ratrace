@@ -55,7 +55,14 @@
     "confirmNo": "Seguir con mi vida",
     "ranked": "Vida clasificatoria",
     "rankedHint": "Se juega en el servidor, paso a paso. Cuenta para las clasificaciones y necesita conexión.",
-    "noConnection": "Sin conexión: esta vida no será clasificatoria."
+    "noConnection": "Sin conexión: esta vida no será clasificatoria.",
+    "elsewhereTitle": "Una vida clasificatoria en curso",
+    "elsewhereBody": "{life}, ronda {round} de {total}. La tienes en curso en otro dispositivo, y solo puedes tener una.",
+    "elsewhereOther": "Empezó con otras reglas y no se puede seguir en este dispositivo.",
+    "elsewhereTake": "Seguir con esa vida",
+    "elsewhereEnd": "Terminarla y empezar esta",
+    "elsewhereAway": "El servidor no ha respondido. Inténtalo de nuevo.",
+    "failed": "No se ha podido empezar la vida. Inténtalo de nuevo."
   },
   "hud": {
     "cash": "Efectivo",
@@ -130,8 +137,8 @@
       "finance": "Tus finanzas",
       "resolve": "Dos años después"
     },
-    "unreachable": "El servidor no ha respondido. No se ha jugado nada: inténtalo de nuevo.",
-    "fellBack": "No se ha podido llegar al servidor, así que esta vida no es clasificatoria. Se guarda en este dispositivo."
+    "unreachable": "El servidor no ha respondido. Inténtalo de nuevo.",
+    "fellBack": "Ahora mismo no se ha podido empezar una vida clasificatoria, así que esta no lo es. Se guarda en este dispositivo."
   },
   "guide": {
     "title": "Guía",

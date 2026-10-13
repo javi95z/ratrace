@@ -22,3 +22,6 @@ export const GAMES: Readonly<Record<string, GameModule>> = {
   '0.8.0/1.8.0': g7 as unknown as GameModule,
   '0.9.0/1.9.0': g8 as unknown as GameModule,
 };
+
+/** The rules the game plays now. The others are held to finish lives lived under them. */
+export const CURRENT = '0.12.0/1.11.0';

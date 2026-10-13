@@ -16,25 +16,54 @@ export function NewLife() {
   const { content, text, names, fmt } = useWords();
   const router = useRouter();
   const start = useGame((s) => s.start);
+  const elsewhere = useGame((s) => s.elsewhere);
+  const continueElsewhere = useGame((s) => s.continueElsewhere);
+  const clearElsewhere = useGame((s) => s.clearElsewhere);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
   const living = useGame((s) => s.lifeId);
   const round = useGame((s) => s.view?.round ?? 0);
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
   const [asking, setAsking] = useState(false);
+  /** The last try to start a life came to nothing, for a reason that is not the player's. */
+  const [failed, setFailed] = useState(false);
+  /** The ranked life in progress elsewhere could not be asked for just now. */
+  const [away, setAway] = useState(false);
   // A ranked life is played by the server. It is offered when there is someone to play it for and a way to reach it.
   const ranking = useRanking();
   const [wantRanked, setWantRanked] = useState(true);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
 
-  const begin = async () => {
+  /** Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player has said may end for it. */
+  const begin = async (replace?: string) => {
     setAsking(false);
+    setFailed(false);
+    setAway(false);
     setStarting(true);
     try {
-      await start(chosen, { ranked: ranking === 'yes' && wantRanked });
+      // Nothing began if the player has a ranked life in progress somewhere else: they are asked what to do about it.
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
-      router.replace('/play');
+      if (await start(chosen, { ranked: ranking === 'yes' && wantRanked, replace })) router.replace('/play');
+    } catch (error) {
+      console.error('the life could not be started:', error);
+      setFailed(true);
+    } finally {
+      setStarting(false);
+    }
+  };
+  /** Goes on with the ranked life in progress elsewhere, in place of starting one. */
+  const takeUp = async () => {
+    setAway(false);
+    setStarting(true);
+    try {
+      const answer = await continueElsewhere();
+      if (answer === 'taken') router.replace('/play');
+      // Gone, there is nothing in the way any more, and the sheet has closed by itself.
+      else if (answer === 'away') setAway(true);
+    } catch (error) {
+      console.error('the life could not be taken up:', error);
+      setFailed(true);
     } finally {
       setStarting(false);
     }
@@ -101,6 +130,11 @@ export function NewLife() {
               {t('noConnection')}
             </p>
           ) : null}
+          {failed ? (
+            <p role="alert" className="frame mb-2 bg-wine-900 px-3 py-2 text-center text-[13px]">
+              {t('failed')}
+            </p>
+          ) : null}
           {inProgress ? <p className="mb-2 text-center text-[12px] text-wine-300">{t('replace')}</p> : null}
           {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
           <Button variant="primary" wide disabled={starting} onClick={() => (inProgress ? setAsking(true) : void begin())}>
@@ -120,6 +154,34 @@ export function NewLife() {
             {t('confirmYes')}
           </Button>
         </div>
+      </Sheet>
+
+      {/* A player has one ranked life in progress. One on another device is never ended by starting here: it is asked about. */}
+      <Sheet open={elsewhere !== null} onClose={clearElsewhere} title={t('elsewhereTitle')} closeLabel={common('close')} back={false}>
+        {elsewhere ? (
+          <>
+            <p className="text-[15px] leading-snug text-ink-200">{t('elsewhereBody', { life: text.lives[elsewhere.lifeId]?.name ?? elsewhere.lifeId, round: Math.min(elsewhere.round + 1, content.rounds), total: content.rounds })}</p>
+            {elsewhere.here ? null : <p className="mt-2 text-[14px] leading-snug text-ink-200">{t('elsewhereOther')}</p>}
+            {away ? (
+              <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
+                {t('elsewhereAway')}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-col gap-3">
+              {elsewhere.here ? (
+                <Button variant="primary" wide disabled={starting} onClick={() => void takeUp()}>
+                  {t('elsewhereTake')}
+                </Button>
+              ) : null}
+              <Button variant="danger" wide disabled={starting} onClick={() => void begin(elsewhere.gameId)}>
+                {t('elsewhereEnd')}
+              </Button>
+              <Button variant="quiet" wide onClick={clearElsewhere}>
+                {common('cancel')}
+              </Button>
+            </div>
+          </>
+        ) : null}
       </Sheet>
     </main>
   );

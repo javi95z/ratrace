@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Unreachable } from '@/session/errors';
+import { RankedInProgress, Unreachable } from '@/session/errors';
 import { rankedApi } from './ranked';
 import type { RankedCall } from './ranked';
 
@@ -70,15 +70,30 @@ describe('the server of ranked lives, as the game asks for it', () => {
     for (const word of ['unknown-version', 'cannot-rank']) {
       await expect(server({ status: 409, body: { error: word } }).api.start('nurse', versions), word).rejects.toBeInstanceOf(Unreachable);
     }
-    // A life the player has not unlocked is refused for good, and in the words the device itself uses.
-    const locked = server({ status: 403, body: { error: 'locked-life' } }).api.start('heir', versions);
-    await expect(locked).rejects.toThrow('locked life: heir');
-    await expect(locked).rejects.not.toBeInstanceOf(Unreachable);
+    // So is a life the account has not heard is unlocked: the device opened it, and its word has not got there yet.
+    await expect(server({ status: 403, body: { error: 'locked-life' } }).api.start('heir', versions)).rejects.toBeInstanceOf(Unreachable);
     const refused = server({ status: 400, body: { error: 'bad-request' } }).api.start('nurse', versions);
     await expect(refused).rejects.toThrow('the server refused to start a ranked life: bad-request');
     await expect(refused).rejects.not.toBeInstanceOf(Unreachable);
     // An answer that says yes and holds no life is not a start.
     await expect(server({ status: 200, body: { ...standing } }).api.start('nurse', versions)).rejects.toThrow('the server refused to start a ranked life: 200');
+  });
+
+  it('names the life a new one is to replace, and says which life is in the way when it was not named', async () => {
+    const versions = { engine: '0.10.0', content: '1.9.0' };
+    const taking = server({ status: 200, body: { ...standing, step: 0, gameId: 'g-9' } });
+    await taking.api.start('nurse', versions, 'g-1');
+    await taking.api.start('nurse', versions, null);
+    await taking.api.start('nurse', versions);
+    expect(taking.asked.map((body) => body.replace)).toEqual(['g-1', undefined, undefined]);
+    // A player has one ranked life in progress. The server ends it only when told to, and says which it is.
+    const inTheWay = { error: 'in-progress', gameId: 'g-1', lifeId: 'engineer', round: 8, engineVersion: '0.10.0', contentVersion: '1.9.0' };
+    const asked = server({ status: 409, body: inTheWay }).api.start('nurse', versions);
+    await expect(asked).rejects.toBeInstanceOf(RankedInProgress);
+    await expect(asked).rejects.toMatchObject({ life: { gameId: 'g-1', lifeId: 'engineer', round: 8, engineVersion: '0.10.0', contentVersion: '1.9.0' } });
+    await expect(asked).rejects.not.toBeInstanceOf(Unreachable);
+    // Half an answer to that question is no answer: the life begins on the device meanwhile.
+    await expect(server({ status: 409, body: { error: 'in-progress', gameId: 7 } }).api.start('nurse', versions)).rejects.toBeInstanceOf(Unreachable);
   });
 
   it('shows a life as it stands, with its run once it is over', async () => {

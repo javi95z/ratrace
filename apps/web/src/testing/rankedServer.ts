@@ -1,5 +1,5 @@
 import type { RunRow } from '../../../../supabase/functions/_shared/finish.ts';
-import { GAMES } from '../../../../supabase/functions/_shared/game/index.ts';
+import { CURRENT, GAMES } from '../../../../supabase/functions/_shared/game/index.ts';
 import { ranked } from '../../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rankedApi } from '@/online/ranked';
@@ -17,14 +17,13 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
   const state = { ids: 0, clock: 0, down: false, loseNextAnswer: false, unlocked: [] as string[], calls: [] as string[] };
   const stamp = () => `2026-10-13T12:00:${String((state.clock += 1)).padStart(2, '0')}.000000+00:00`;
   const deps: RankedDeps = {
+    current: CURRENT,
     allow: async () => true,
     newId: () => `00000000-0000-4000-8000-${String((state.ids += 1)).padStart(12, '0')}`,
     newSeed: () => state.ids.toString(16).padStart(2, '0').repeat(32),
     now: () => new Date('2026-10-13T12:00:00.000Z'),
     unlockedLives: async () => state.unlocked,
-    abandonRanked: async (who) => {
-      for (const game of games.values()) if (game.user_id === who && game.mode === 'ranked' && game.status === 'playing') game.status = 'abandoned';
-    },
+    playingRanked: async (who) => structuredClone([...games.values()].find((game) => game.user_id === who && game.mode === 'ranked' && game.status === 'playing') ?? null),
     createGame: async (row, seed) => {
       games.set(row.id, { ...row, mode: 'ranked', round: 0, status: 'playing', log: [], updated_at: stamp() });
       seeds.set(row.id, seed);

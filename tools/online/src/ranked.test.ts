@@ -19,9 +19,10 @@ function fakeDb() {
   const games = new Map<string, RankedGameRow>();
   const seeds = new Map<string, string>();
   const runs: RunRow[] = [];
-  const state = { ids: 0, clock: 0, allowed: true, unlocked: [] as string[], asked: [] as string[], beatenOnce: false, writes: 0 };
+  const state = { ids: 0, clock: 0, allowed: true, unlocked: [] as string[], asked: [] as string[], beatenOnce: false, writes: 0, runsFail: false };
   const stamp = () => `2026-10-13T12:00:${String((state.clock += 1)).padStart(2, '0')}.000000+00:00`;
   const deps: RankedDeps = {
+    current: `${ENGINE_VERSION}/${CONTENT_VERSION}`,
     allow: async (_user, kind) => {
       state.asked.push(kind);
       return state.allowed;
@@ -30,9 +31,7 @@ function fakeDb() {
     newSeed: () => state.ids.toString(16).padStart(2, '0').repeat(32),
     now: () => new Date('2026-10-13T12:00:00.000Z'),
     unlockedLives: async () => state.unlocked,
-    abandonRanked: async (user) => {
-      for (const game of games.values()) if (game.user_id === user && game.mode === 'ranked' && game.status === 'playing') game.status = 'abandoned';
-    },
+    playingRanked: async (user) => structuredClone([...games.values()].find((game) => game.user_id === user && game.mode === 'ranked' && game.status === 'playing') ?? null),
     createGame: async (row, seed) => {
       games.set(row.id, { ...row, mode: 'ranked', round: 0, status: 'playing', log: [], updated_at: stamp() });
       seeds.set(row.id, seed);
@@ -52,6 +51,7 @@ function fakeDb() {
       return true;
     },
     saveRun: async (run) => {
+      if (state.runsFail) throw new Error('the run could not be written');
       if (!runs.some((one) => one.id === run.id)) runs.push(run);
     },
     closeGame: async (id, round, status) => {
@@ -63,7 +63,24 @@ function fakeDb() {
 }
 type Db = ReturnType<typeof fakeDb>;
 
-const ask = (db: Db, body: unknown, user = ME) => ranked(GAMES, db.deps, user, body);
+const ask = (db: Db, body: unknown, user = ME, games = GAMES) => ranked(games, db.deps, user, body);
+/** A life played to its last round, whose run the server could not write: over in all but name. */
+async function overAndUnwritten(db: Db): Promise<Standing> {
+  let at = await begin(db);
+  db.state.runsFail = true;
+  for (;;) {
+    const reply = await ask(db, at.view.phase === 'cards' ? card(at) : round(at));
+    if (reply.status !== 200) {
+      expect(reply).toEqual({ status: 500, body: { error: 'server' } });
+      break;
+    }
+    at = after(at, reply.body);
+  }
+  db.state.runsFail = false;
+  expect(db.games.get(at.gameId)?.status).toBe('playing');
+  expect(db.runs).toEqual([]);
+  return at;
+}
 
 interface Standing {
   gameId: string;
@@ -109,16 +126,54 @@ describe('starting a ranked life', () => {
     expect(record).toMatchObject({ history: [realNetWorth(createGame({ content, start: nurse.start }, seed))], bankruptcies: 0 });
   });
 
-  it('gives up the ranked life in progress: a player has one', async () => {
+  it('ends the ranked life in progress only when told which: a player has one, and is asked before it is given up', async () => {
     const db = fakeDb();
-    const first = await begin(db);
-    const second = await begin(db);
+    let first = await begin(db);
+    for (let i = 0; i < 5; i++) first = (await step(db, first)).at;
+    const playing = db.games.get(first.gameId) as RankedGameRow;
+    // Asked for a new life, the server says which one is in the way, and touches nothing.
+    const question = { status: 409, body: { error: 'in-progress', gameId: first.gameId, lifeId: 'nurse', round: playing.round, ...VERSIONS } };
+    expect(await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS })).toEqual(question);
+    // Naming another life is not an answer to the question.
+    expect(await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS, replace: '99999999-9999-4999-8999-999999999999' })).toEqual(question);
+    expect(await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS, replace: 'that one' })).toEqual({ status: 400, body: { error: 'bad-request', field: 'replace' } });
+    expect(db.games.size).toBe(1);
+    expect(db.games.get(first.gameId)?.status).toBe('playing');
+    // Told which, it gives that one up and makes the new one.
+    const reply = await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS, replace: first.gameId });
+    expect(reply.status).toBe(200);
     expect(db.games.get(first.gameId)?.status).toBe('abandoned');
-    expect(db.games.get(second.gameId)?.status).toBe('playing');
-    // Another player's is not touched.
+    expect(db.games.get(reply.body.gameId as string)?.status).toBe('playing');
+    // Another player's is not touched, and is not in anyone else's way.
     const theirs = await begin(db, 'nurse', OTHER);
-    expect(db.games.get(second.gameId)?.status).toBe('playing');
+    expect(db.games.get(reply.body.gameId as string)?.status).toBe('playing');
     expect(db.games.get(theirs.gameId)?.user_id).toBe(OTHER);
+    // With nothing in progress, a life named to be replaced is no obstacle.
+    await ask(db, { action: 'abandon', gameId: theirs.gameId }, OTHER);
+    expect((await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS, replace: theirs.gameId }, OTHER)).status).toBe(200);
+  });
+
+  it('settles a life that is over, in place of asking about it or giving it up, when its run was never written', async () => {
+    const db = fakeDb();
+    const over = await overAndUnwritten(db);
+    // The new life begins with no question: nothing was in progress, whatever the row said.
+    const reply = await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS });
+    expect(reply.status).toBe(200);
+    expect(db.games.get(over.gameId)?.status).toBe('finished');
+    expect(db.runs.map((run) => run.id)).toEqual([over.gameId]);
+    expect(db.runs[0]).toMatchObject({ mode: 'ranked', verified: true });
+  });
+
+  it('starts a ranked life only under the rules the server plays now, whatever older ones it still holds', async () => {
+    const db = fakeDb();
+    // A later pair of versions is the current one. The pair of this test is still held, and can still be played to its end.
+    const games = { ...GAMES, '99.0.0/99.0.0': GAMES[`${ENGINE_VERSION}/${CONTENT_VERSION}`] };
+    const held = await begin(db);
+    db.deps.current = '99.0.0/99.0.0';
+    expect((await ask(db, card(held), ME, games)).status).toBe(200);
+    expect(await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS, replace: held.gameId }, ME, games)).toEqual({ status: 409, body: { error: 'cannot-rank' } });
+    expect(db.games.get(held.gameId)?.status).toBe('playing');
+    expect((await ask(db, { action: 'start', lifeId: 'nurse', engineVersion: '99.0.0', contentVersion: '99.0.0', replace: held.gameId }, ME, games)).status).toBe(200);
   });
 
   it('refuses versions it does not hold, and versions whose seed could be found by trying', async () => {
@@ -145,6 +200,9 @@ describe('starting a ranked life', () => {
     expect(await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS })).toEqual({ status: 429, body: { error: 'too-many' } });
     expect(db.state.asked).toEqual(['ranked-start']);
     expect(db.games.size).toBe(0);
+    // It is counted before anything is looked up: a life that does not exist, or is locked, costs a call too.
+    expect(await ask(db, { action: 'start', lifeId: 'pirate', ...VERSIONS })).toEqual({ status: 429, body: { error: 'too-many' } });
+    expect(await ask(db, { action: 'start', lifeId: locked.id, ...VERSIONS })).toEqual({ status: 429, body: { error: 'too-many' } });
   });
 
   it('refuses what is not a request, each fault by name', async () => {
@@ -334,6 +392,10 @@ describe('playing a ranked life', { timeout: 120_000 }, () => {
     expect(await ask(db, { action: 'view', gameId: at.gameId })).toEqual({ status: 429, body: { error: 'too-many' } });
     expect(db.state.asked).toEqual(['ranked-step', 'ranked-step']);
     expect(db.games.get(at.gameId)?.log).toEqual([]);
+    // Every call is counted before anything is looked up: giving a life up, and asking about one that does not exist.
+    expect(await ask(db, { action: 'abandon', gameId: at.gameId })).toEqual({ status: 429, body: { error: 'too-many' } });
+    expect(await ask(db, { action: 'view', gameId: '99999999-9999-4999-8999-999999999999' })).toEqual({ status: 429, body: { error: 'too-many' } });
+    expect(db.games.get(at.gameId)?.status).toBe('playing');
   });
 });
 
@@ -382,6 +444,16 @@ describe('looking at a ranked life, and giving it up', { timeout: 120_000 }, () 
     while (!at.view.finished) at = (await step(db, at)).at;
     expect(await ask(db, { action: 'abandon', gameId: at.gameId })).toEqual({ status: 200, body: {} });
     expect(db.games.get(at.gameId)?.status).toBe('finished');
+  });
+
+  it('does not give up a life that is over in all but name: asked to, it writes the run that was never written', async () => {
+    const db = fakeDb();
+    const over = await overAndUnwritten(db);
+    expect(await ask(db, { action: 'abandon', gameId: over.gameId })).toEqual({ status: 200, body: {} });
+    expect(db.games.get(over.gameId)?.status).toBe('finished');
+    expect(db.runs.map((run) => run.id)).toEqual([over.gameId]);
+    // And the device that asks how it stands is told it is over, with its run.
+    expect((await ask(db, { action: 'view', gameId: over.gameId })).body).toMatchObject({ status: 'finished', run: { id: over.gameId } });
   });
 
   it('answers a failure of the database as its own, not as the player\'s mistake', async () => {

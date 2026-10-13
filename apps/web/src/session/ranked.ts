@@ -1,6 +1,7 @@
 import type { Journal, LifeDef, LifeRecord, Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, Order, RoundChoices, WorldState } from '@ratrace/engine';
 import { StaleSession, Unreachable } from './errors';
+import type { RankedLifeInTheWay } from './errors';
 import { tellProfile } from './profile';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, PlayerStore, RankedGame, StepResult } from './types';
@@ -44,7 +45,11 @@ export interface RankedStep {
  * cannot answer just now: nothing has changed then, and the same thing can be asked again.
  */
 export interface RankedApi {
-  start(lifeId: string, versions: { engine: string; content: string }): Promise<RankedStanding & { gameId: string }>;
+  /**
+   * Starts a life. A player has one ranked life in progress: with another in the way this throws
+   * `RankedInProgress`, unless `replace` names that very life, which is then given up.
+   */
+  start(lifeId: string, versions: { engine: string; content: string }, replace?: string | null): Promise<RankedStanding & { gameId: string }>;
   /** The life as it stands. `gone` if it was given up, or is nobody's. */
   view(gameId: string): Promise<(RankedStanding & { run: RankedRun | null }) | 'gone'>;
   /** Answers the next card, as step number `step`. `moved` if the life is not where this client thinks it is. */
@@ -84,6 +89,11 @@ export function rankedOf(raw: unknown): RankedGame | null {
     bankruptcies: typeof bankruptcies === 'number' && Number.isSafeInteger(bankruptcies) && bankruptcies >= 0 ? bankruptcies : 0,
     updatedAt: typeof updatedAt === 'number' && Number.isFinite(updatedAt) ? updatedAt : 0,
   };
+}
+
+/** The note of a ranked life nobody on this device has seen yet: which life it is, and nothing of how it stands. */
+export function rankedNote(life: { gameId: string; lifeId: string; engineVersion: string; contentVersion: string }): RankedGame {
+  return { format: SAVE_FORMAT, ranked: true, gameId: life.gameId, lifeId: life.lifeId, engineVersion: life.engineVersion, contentVersion: life.contentVersion, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 };
 }
 
 type Seen = RankedGame & { view: GameView; journal: Journal };
@@ -255,15 +265,19 @@ export class RankedSessions {
     return this.api() !== null;
   }
 
-  /** Starts a ranked life. Throws `Unreachable` if the server cannot take it now, and the life then begins as a casual one. */
-  async start(lifeId: string): Promise<GameSession> {
+  /**
+   * Starts a ranked life. Throws `Unreachable` if the server cannot take it now, and the life then
+   * begins as a casual one; and `RankedInProgress` if the player has another in progress that is
+   * not the one named in `replace`, which is theirs to decide about.
+   */
+  async start(lifeId: string, replace: string | null = null): Promise<GameSession> {
     const life = this.lives.find((candidate) => candidate.id === lifeId);
     if (!life) throw new Error(`unknown life: ${lifeId}`);
     // Which lives a player may choose is decided here, as for a casual life, and again by the server.
     if (life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
     const api = this.api();
     if (api === null) throw new Unreachable('nobody is signed in');
-    const begun = await api.start(lifeId, this.versions);
+    const begun = await api.start(lifeId, this.versions, replace);
     const session = this.open({ format: SAVE_FORMAT, ranked: true, gameId: begun.gameId, lifeId, engineVersion: this.versions.engine, contentVersion: this.versions.content, updatedAt: this.deps.now() }, begun, false);
     await session.persist();
     return session;
@@ -303,12 +317,28 @@ export class RankedSessions {
     return session;
   }
 
-  /** Gives a ranked life up on the server. Quietly: if it cannot be told now, starting the next ranked life tells it. */
+  /**
+   * Takes up, on this device, a ranked life the player has in progress elsewhere. The server says
+   * where it stands, and the device keeps its note from then on. Null if the life is no longer
+   * there to take; throws `Unreachable`, with nothing changed, if the server cannot say.
+   */
+  async take(life: RankedLifeInTheWay): Promise<GameSession | null> {
+    const api = this.api();
+    if (api === null) throw new Unreachable('nobody is signed in');
+    const now = await api.view(life.gameId);
+    if (now === 'gone') return null;
+    const session = this.open({ ...rankedNote(life), updatedAt: this.deps.now() }, now, false);
+    await session.persist(now.run);
+    void session.learn();
+    return session;
+  }
+
+  /** Gives a ranked life up on the server. Quietly: if it cannot be told now, the account is told when it next can be. */
   async giveUp(gameId: string): Promise<void> {
     try {
       await this.api()?.abandon(gameId);
     } catch {
-      // The server gives up a ranked life in progress whenever a new one is started.
+      // Whoever keeps the account in step with the device remembers the life, and tells the server later.
     }
   }
 

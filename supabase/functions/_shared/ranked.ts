@@ -23,6 +23,8 @@ export type Counted = 'ranked-start' | 'ranked-step';
 
 /** What a ranked life needs of the outside world. The function hands in the real thing; a test, its own. */
 export interface RankedDeps {
+  /** The versions ranked lives are started on, as "engine/content": the rules the game plays now, not any the server still holds. */
+  current: string;
   /** Counts this call for this player. False if it is one too many. */
   allow(userId: string, kind: Counted): Promise<boolean>;
   newId(): string;
@@ -31,8 +33,8 @@ export interface RankedDeps {
   now(): Date;
   /** The lives this player has unlocked, by id. */
   unlockedLives(userId: string): Promise<string[]>;
-  /** Gives up whatever ranked life this player has in progress. */
-  abandonRanked(userId: string): Promise<void>;
+  /** The ranked life this player has in progress, if they have one. A player has one at most. */
+  playingRanked(userId: string): Promise<RankedGameRow | null>;
   /** Makes the game, in progress and with an empty log, and keeps its seed where no player can read it. */
   createGame(row: { id: string; user_id: string; life_id: string; engine_version: string; content_version: string }, seed: string): Promise<void>;
   loadGame(id: string): Promise<RankedGameRow | null>;
@@ -93,6 +95,67 @@ function lastIs(log: readonly LoggedRound[], choice: Choice): boolean {
 }
 
 /**
+ * A ranked game opened to be played: its log, how to play a log from its seed, and how to write the
+ * run of a life that is over. Null if the server cannot open it: it no longer holds the game's
+ * versions, or the game has no seed or no sound log.
+ */
+async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, row: RankedGameRow) {
+  const game = games[`${row.engine_version}/${row.content_version}`];
+  const life = game?.lives.find((one) => one.id === row.life_id);
+  const seed = await deps.loadSeed(row.id);
+  const log = game ? readLog(row.log, game) : null;
+  if (!game || !game.viewOf || !life || log === null || seed === null) return null;
+  const viewOf = game.viewOf;
+  const play = (played: readonly LoggedRound[]) => {
+    let last: ReplayedStep | null = null;
+    const whole = game.replayLife(game.content, life.start, seed, played, (step) => {
+      last = step;
+    });
+    return { ...whole, last: last as ReplayedStep | null };
+  };
+  /** Writes the run of a life that is over and closes its game. Done again, it changes nothing. */
+  const settle = async (played: ReturnType<typeof play>): Promise<RunRow> => {
+    const run: RunRow = {
+      id: row.id,
+      user_id: row.user_id,
+      game_id: row.id,
+      mode: 'ranked',
+      life_id: row.life_id,
+      engine_version: row.engine_version,
+      content_version: row.content_version,
+      score: game.finalScore(game.content, played.state),
+      net_worth: game.realNetWorth(played.state),
+      status: game.livedStatus(played.state),
+      escaped_at_round: played.state.player.escapedAtRound,
+      bankruptcies: played.bankruptcies,
+      badges: played.journal.earned,
+      cities: played.journal.cities,
+      history: played.history,
+      verified: true,
+      finished_at: deps.now().toISOString(),
+    };
+    await deps.saveRun(run);
+    await deps.closeGame(row.id, played.state.round, 'finished');
+    return run;
+  };
+  return { game, viewOf, log, play, settle };
+}
+
+/**
+ * Finishes a game in progress whose last round was already played: the run that was never written
+ * is written now. True if it was such a game. A life that is over is never given up, whatever
+ * stopped the server between its last step and its run.
+ */
+async function settledIfOver(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, row: RankedGameRow): Promise<boolean> {
+  const life = await opened(games, deps, row);
+  if (life === null) return false;
+  const played = life.play(life.log);
+  if (!played.state.finished) return false;
+  await life.settle(played);
+  return true;
+}
+
+/**
  * A ranked life: one the server plays. The client names what it chooses and nothing else; the
  * seed stays here, every card and every round is played here, and the client is told what it may
  * know of the game as it then stands. So the result can be set beside everyone else's.
@@ -117,54 +180,20 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
       choice = raw.action === 'card' ? { card: isCount(raw.option) ? raw.option : 0 } : { orders: raw.orders as unknown[] };
     }
 
+    // Counted before anything is looked up: a call costs the same whatever it turns out to ask for.
+    if (!(await deps.allow(userId, 'ranked-step'))) return tooMany;
     const row = await deps.loadGame(gameId);
     if (row === null || row.user_id !== userId || row.mode !== 'ranked') return unknownGame;
     if (raw.action === 'abandon') {
-      if (row.status === 'playing') await deps.closeGame(row.id, row.round, 'abandoned');
+      if (row.status === 'playing' && !(await settledIfOver(games, deps, row))) await deps.closeGame(row.id, row.round, 'abandoned');
       return { status: 200, body: {} };
     }
     if (row.status === 'abandoned') return closed;
-    if (!(await deps.allow(userId, 'ranked-step'))) return tooMany;
 
-    const game = games[`${row.engine_version}/${row.content_version}`];
-    const life = game?.lives.find((one) => one.id === row.life_id);
-    const seed = await deps.loadSeed(row.id);
-    const log = game ? readLog(row.log, game) : null;
-    // A ranked game the server made itself always has these. One that does not is broken, and that is the server's fault.
-    if (!game || !game.viewOf || !life || log === null || seed === null) throw new Error(`ranked game ${row.id} cannot be opened`);
-    const play = (played: readonly LoggedRound[]) => {
-      let last: ReplayedStep | null = null;
-      const whole = game.replayLife(game.content, life.start, seed, played, (step) => {
-        last = step;
-      });
-      return { ...whole, last: last as ReplayedStep | null };
-    };
-    const runOf = (played: ReturnType<typeof play>): RunRow => ({
-      id: row.id,
-      user_id: userId,
-      game_id: row.id,
-      mode: 'ranked',
-      life_id: row.life_id,
-      engine_version: row.engine_version,
-      content_version: row.content_version,
-      score: game.finalScore(game.content, played.state),
-      net_worth: game.realNetWorth(played.state),
-      status: game.livedStatus(played.state),
-      escaped_at_round: played.state.player.escapedAtRound,
-      bankruptcies: played.bankruptcies,
-      badges: played.journal.earned,
-      cities: played.journal.cities,
-      history: played.history,
-      verified: true,
-      finished_at: deps.now().toISOString(),
-    });
-    /** Writes the run of a life that is over and closes its game. Done again, it changes nothing. */
-    const settle = async (played: ReturnType<typeof play>): Promise<RunRow> => {
-      const run = runOf(played);
-      await deps.saveRun(run);
-      await deps.closeGame(row.id, played.state.round, 'finished');
-      return run;
-    };
+    const life = await opened(games, deps, row);
+    // A ranked game the server made itself can always be opened. One that cannot is broken, and that is the server's fault.
+    if (life === null) throw new Error(`ranked game ${row.id} cannot be opened`);
+    const { game, viewOf, log, play, settle } = life;
     const recordOf = (played: ReturnType<typeof play>) => ({ history: played.history, bankruptcies: played.bankruptcies, journal: played.journal });
 
     const steps = stepsOf(log);
@@ -181,7 +210,7 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
           contentVersion: row.content_version,
           status: played.state.finished ? 'finished' : 'playing',
           step: steps,
-          view: game.viewOf(played.state),
+          view: viewOf(played.state),
           record: recordOf(played),
           ...(run ? { run } : {}),
         },
@@ -190,7 +219,7 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
 
     /** What a step answers: what changed, and no more. The timeline the client holds is not sent again. */
     const answer = async (played: ReturnType<typeof play>, step: number, roundBefore: number): Promise<Reply> => {
-      const view = (game.viewOf as NonNullable<GameModule['viewOf']>)(played.state);
+      const view = viewOf(played.state);
       const { timeline, ...standing } = view;
       const run = played.state.finished ? await settle(played) : null;
       return {
@@ -236,24 +265,39 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
   }
 }
 
+/**
+ * Starts a ranked life. A player has one in progress at most, and it is never ended unasked: with
+ * one in the way the answer says which, and the new life begins only when the request names that
+ * very one in `replace`.
+ */
 async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
-  const { lifeId, engineVersion, contentVersion } = raw;
+  const { lifeId, engineVersion, contentVersion, replace } = raw;
   if (!isText(lifeId, 40)) return bad('lifeId');
   if (!isText(engineVersion, 20)) return bad('engineVersion');
   if (!isText(contentVersion, 20)) return bad('contentVersion');
+  if (replace !== undefined && replace !== null && (typeof replace !== 'string' || !UUID.test(replace))) return bad('replace');
+  // Counted before anything is looked up: a call costs the same whatever it turns out to ask for.
+  if (!(await deps.allow(userId, 'ranked-start'))) return tooMany;
 
   const key = `${engineVersion}/${contentVersion}`;
   if (!Object.hasOwn(games, key)) return { status: 409, body: { error: 'unknown-version', versions: Object.keys(games) } };
   const game = games[key];
   // A version whose random streams could be found by trying can finish a casual life. It must never hold a ranked one.
-  if (!game.viewOf || (game.SEED_BITS ?? 0) < 128) return { status: 409, body: { error: 'cannot-rank' } };
+  // Nor does a ranked life begin under rules the game no longer plays: the server holds them to finish lives, and every
+  // score in a ranking is set beside the others.
+  if (!game.viewOf || (game.SEED_BITS ?? 0) < 128 || key !== deps.current) return { status: 409, body: { error: 'cannot-rank' } };
   const life = game.lives.find((one) => one.id === lifeId);
   if (!life) return { status: 400, body: { error: 'unknown-life' } };
   // Which lives a player may choose is the game's rule, kept here as the device keeps it.
   if (life.unlock !== 'default' && !(await deps.unlockedLives(userId)).includes(life.id)) return { status: 403, body: { error: 'locked-life' } };
-  if (!(await deps.allow(userId, 'ranked-start'))) return tooMany;
 
-  await deps.abandonRanked(userId);
+  const playing = await deps.playingRanked(userId);
+  if (playing !== null && !(await settledIfOver(games, deps, playing))) {
+    if (replace !== playing.id) {
+      return { status: 409, body: { error: 'in-progress', gameId: playing.id, lifeId: playing.life_id, round: playing.round, engineVersion: playing.engine_version, contentVersion: playing.content_version } };
+    }
+    await deps.closeGame(playing.id, playing.round, 'abandoned');
+  }
   const id = deps.newId();
   const seed = deps.newSeed();
   await deps.createGame({ id, user_id: userId, life_id: life.id, engine_version: engineVersion, content_version: contentVersion }, seed);

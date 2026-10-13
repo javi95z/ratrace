@@ -1,4 +1,4 @@
-import { Unreachable } from '@/session/errors';
+import { RankedInProgress, Unreachable } from '@/session/errors';
 import type { RankedApi, RankedRun, RankedStanding, RankedStep } from '@/session/ranked';
 
 /**
@@ -67,14 +67,21 @@ export function rankedApi(call: RankedCall): RankedApi {
   };
 
   return {
-    async start(lifeId, versions) {
-      const reply = await ask({ action: 'start', lifeId, engineVersion: versions.engine, contentVersion: versions.content });
+    async start(lifeId, versions, replace) {
+      const reply = await ask({ action: 'start', lifeId, engineVersion: versions.engine, contentVersion: versions.content, ...(replace ? { replace } : {}) });
       const standing = standingOf(reply.body);
       if (reply.status === 200 && standing !== null && isRecord(reply.body) && typeof reply.body.gameId === 'string') return { ...standing, gameId: reply.body.gameId };
-      // A build newer than the server, for the moment between the two being put out: ranked is not to be had yet.
-      if (reply.status === 409) throw new Unreachable(`the server cannot start a ranked life: ${wordOf(reply.body) ?? reply.status}`);
-      if (wordOf(reply.body) === 'locked-life') throw new Error(`locked life: ${lifeId}`);
-      throw new Error(`the server refused to start a ranked life: ${wordOf(reply.body) ?? reply.status}`);
+      const word = wordOf(reply.body);
+      // The player has another ranked life in progress, and it is theirs to say whether it ends.
+      const inTheWay = word === 'in-progress' && isRecord(reply.body) ? reply.body : null;
+      if (inTheWay && typeof inTheWay.gameId === 'string' && typeof inTheWay.lifeId === 'string' && typeof inTheWay.round === 'number' && typeof inTheWay.engineVersion === 'string' && typeof inTheWay.contentVersion === 'string') {
+        throw new RankedInProgress({ gameId: inTheWay.gameId, lifeId: inTheWay.lifeId, round: inTheWay.round, engineVersion: inTheWay.engineVersion, contentVersion: inTheWay.contentVersion });
+      }
+      // A build newer or older than the server, for the moment between the two being put out: ranked is not to be had yet.
+      if (reply.status === 409) throw new Unreachable(`the server cannot start a ranked life: ${word ?? reply.status}`);
+      // The device opened this life, and the account has not heard of it yet. It will: a ranked one is to be had later.
+      if (word === 'locked-life') throw new Unreachable(`the account does not hold this life as unlocked yet: ${lifeId}`);
+      throw new Error(`the server refused to start a ranked life: ${word ?? reply.status}`);
     },
     async view(gameId) {
       const reply = await ask({ action: 'view', gameId });

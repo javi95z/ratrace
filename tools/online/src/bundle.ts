@@ -58,8 +58,11 @@ export async function bundleGame(): Promise<{ name: string; code: string }> {
   return { name: bundleName(ENGINE_VERSION, CONTENT_VERSION), code: result.outputFiles[0].text };
 }
 
-/** The module that lists every bundle in the folder under the versions it holds. */
-export function registrySource(files: readonly string[]): string {
+/**
+ * The module that lists every bundle in the folder under the versions it holds, and names the
+ * versions of this checkout: the only ones a new ranked life is started on.
+ */
+export function registrySource(files: readonly string[], current: string): string {
   const bundles = [...files].filter((file) => /^v[\w.]+-[\w.]+\.js$/.test(file)).sort();
   const key = (file: string) => file.slice(1, -3).replace('-', '/');
   return [
@@ -71,6 +74,9 @@ export function registrySource(files: readonly string[]): string {
     'export const GAMES: Readonly<Record<string, GameModule>> = {',
     ...bundles.map((file, i) => `  '${key(file)}': g${i} as unknown as GameModule,`),
     '};',
+    '',
+    '/** The rules the game plays now. The others are held to finish lives lived under them. */',
+    `export const CURRENT = '${current}';`,
     '',
   ].join('\n');
 }
@@ -89,7 +95,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(1);
   }
   writeFileSync(join(GAME_DIR, name), code);
-  writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(readdirSync(GAME_DIR)));
+  writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(readdirSync(GAME_DIR), versions));
   // A shipped bundle that was forced is noted as it now is; `--shipped` notes one for the first time.
   if (flags.has('--shipped') || Object.hasOwn(shipped, versions)) keep({ ...shipped, [versions]: fingerprint(code) });
   console.log(`bundled ${name} (${Math.round(code.length / 1024)} KB)${flags.has('--shipped') ? ', noted as shipped' : ''}`);

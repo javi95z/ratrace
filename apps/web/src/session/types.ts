@@ -1,3 +1,4 @@
+import type { RankedLifeInTheWay } from './errors';
 import type { Journal, Milestone } from '@ratrace/content';
 import type { GameEvent, GameState, GameView, Order, RoundChoices } from '@ratrace/engine';
 
@@ -47,11 +48,15 @@ export type Lost = 'outdated' | 'damaged' | 'newer';
 
 export interface Sessions {
   /**
-   * Starts a new life. A life in progress is replaced. `ranked` asks for a life the server plays;
-   * when that cannot be had, with no account or no connection, the life is a casual one, and
-   * `GameSession.ranked` says which it turned out to be.
+   * Starts a new life. A life in progress on this device is replaced. `ranked` asks for a life the
+   * server plays; when that cannot be had, with no account or no connection, the life is a casual
+   * one, and `GameSession.ranked` says which it turned out to be. A player has one ranked life in
+   * progress: with another in the way, on another device, this throws `RankedInProgress` and
+   * changes nothing, unless `replace` names that life, which is then given up.
    */
-  start(lifeId: string, options?: { ranked?: boolean }): Promise<GameSession>;
+  start(lifeId: string, options?: { ranked?: boolean; replace?: string }): Promise<GameSession>;
+  /** Takes up a ranked life in progress elsewhere, where there are ranked lives at all. See `GameSessions.takeUp`. */
+  takeUp?(life: RankedLifeInTheWay): Promise<GameSession | null>;
   /** The life in progress. `lost` says why there is none when a save existed but could not be opened. */
   resume(): Promise<{ session: GameSession | null; lost: Lost | null }>;
   /** Drops the life in progress. */

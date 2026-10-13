@@ -1,9 +1,11 @@
-import { previewCard, previewRound } from '@ratrace/engine';
+import { ENGINE_VERSION, previewCard, previewRound } from '@ratrace/engine';
+import { CONTENT_VERSION } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, OptionPreview, Order, RejectReason, RoundPreview, WorldState } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
-import { StaleSession, Unreachable } from '@/session/errors';
+import { RankedInProgress, StaleSession, Unreachable } from '@/session/errors';
+import type { RankedLifeInTheWay } from '@/session/errors';
 import type { GameSession, Lost, Sessions } from '@/session/types';
 
 /** Where the player is within a round. */
@@ -56,17 +58,31 @@ export interface RoundState {
   fault: boolean;
   /** True for a life the server plays: its result is set beside everyone else's. */
   ranked: boolean;
-  /** True once a life asked for as ranked began as a casual one, because the server could not be reached, until the player has been told. */
+  /** True once a life asked for as ranked began as a casual one, because a ranked one could not be had just then, until the player has been told. */
   fellBack: boolean;
-  /** True when the last step of a ranked life did not get through. Nothing was played, and it can be taken again. */
+  /** True when the last step of a ranked life did not get through. It can be taken again. */
   unreachable: boolean;
+  /**
+   * The ranked life the player has in progress on another device, when a new one was asked for and
+   * could not begin because of it. `here` says whether this page plays its rules, and so could go
+   * on with it. Null once the player has said what to do.
+   */
+  elsewhere: (RankedLifeInTheWay & { here: boolean }) | null;
 }
 
 export interface RoundActions {
   /** Asks the device for a life in progress. */
   boot(): Promise<void>;
   /** Starts a new life. `ranked` asks for one the server plays; `fellBack` says if it could not be had. */
-  start(lifeId: string, options?: { ranked?: boolean }): Promise<void>;
+  start(lifeId: string, options?: { ranked?: boolean; replace?: string }): Promise<boolean>;
+  /**
+   * Takes up the ranked life in progress elsewhere, in place of starting a new one. `taken`: it is
+   * the life on this device now. `away`: the server did not answer, and the question stands.
+   * `gone`: it is no longer there to take, or this page cannot play it; nothing is asked any more.
+   */
+  continueElsewhere(): Promise<'taken' | 'away' | 'gone'>;
+  /** The player leaves things as they are. */
+  clearElsewhere(): void;
   /**
    * The life on the device was changed from outside this page, by the account bringing another
    * device's copy: opens it as it now stands, and says so if a life was on screen.
@@ -127,6 +143,7 @@ const blank: RoundState = {
   ranked: false,
   fellBack: false,
   unreachable: false,
+  elsewhere: null,
 };
 
 export interface GameStoreOptions {
@@ -174,7 +191,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         await get().boot();
         set({ moved: true });
       } else if (error instanceof Unreachable) {
-        // A ranked life is played by the server, and the server did not answer. Nothing was played: the same step can be asked again.
+        // A ranked life is played by the server, and the server did not answer. The same step can be asked again:
+        // if it was taken after all and only its answer was lost, asking again brings that answer.
         set({ unreachable: true });
       } else {
         console.error('the game refused a step:', error);
@@ -226,10 +244,41 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       },
 
       async start(lifeId, options) {
-        const opened = await sessions.start(lifeId, options);
+        let opened: GameSession;
+        try {
+          opened = await sessions.start(lifeId, options);
+        } catch (error) {
+          // The player has a ranked life in progress somewhere else. Nothing began, and nothing ended: it is theirs to say.
+          if (!(error instanceof RankedInProgress)) throw error;
+          set({ elsewhere: { ...error.life, here: error.life.engineVersion === ENGINE_VERSION && error.life.contentVersion === CONTENT_VERSION } });
+          return false;
+        }
         open(opened);
-        // Asked for as ranked, and begun on the device because the server could not be reached: the player is told.
+        set({ elsewhere: null });
+        // Asked for as ranked, and begun on the device because a ranked one could not be had: the player is told.
         if (options?.ranked === true && opened.ranked !== true) set({ fellBack: true });
+        return true;
+      },
+
+      async continueElsewhere() {
+        const life = get().elsewhere;
+        if (life === null || !life.here || !sessions.takeUp) return 'gone';
+        let opened: GameSession | null;
+        try {
+          opened = await sessions.takeUp(life);
+        } catch (error) {
+          // The server did not answer. The question stands, and can be answered again.
+          if (!(error instanceof Unreachable)) throw error;
+          return 'away';
+        }
+        set({ elsewhere: null });
+        if (opened === null) return 'gone';
+        open(opened);
+        return 'taken';
+      },
+
+      clearElsewhere() {
+        set({ elsewhere: null });
       },
 
       async abandon() {

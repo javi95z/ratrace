@@ -3,9 +3,16 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { newProfile } from '@/session/types';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, AccountState } from '@/online/types';
-import type { SavedGame } from '@/session/types';
+import { LocalSessions } from '@/session/local';
+import { MemoryStore } from '@/session/memory';
+import { RankedSessions } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
+import { newProfile } from '@/session/types';
+import type { RankedGame, SavedGame } from '@/session/types';
+import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { NewLife } from './NewLife';
 
@@ -175,3 +182,111 @@ describe('choosing between a ranked life and a casual one', () => {
   });
 });
 
+describe('a ranked life in progress on another device', { timeout: 60_000 }, () => {
+  const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+  /** A device of the player, over a server of ranked lives several devices can share. */
+  function deviceOf(server: ReturnType<typeof rankedServer>, versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION }) {
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    return { sessions, store, account, tapGuardMs: 0 };
+  }
+  /** The phone is a round into a ranked life as a nurse. The desk, which this test draws, knows nothing of it. */
+  async function twoDevices() {
+    const server = rankedServer();
+    const phone = deviceOf(server);
+    const there = await phone.sessions.start('nurse', { ranked: true });
+    while (there.view().phase === 'cards') await there.answerCard(0);
+    await there.playRound({ orders: [] });
+    return { server, there, desk: deviceOf(server) };
+  }
+
+  it('is not ended by starting another: the player is asked, and nothing begins meanwhile', async () => {
+    const { server, there, desk } = await twoDevices();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, desk);
+    await user.click(await screen.findByRole('button', { name: 'Start this life' }));
+    const sheet = await screen.findByRole('dialog', { name: 'A ranked life in progress' });
+    expect(sheet.textContent).toContain('Nurse, round 2 of 20. You have it in progress on another device, and you can have only one.');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(await desk.store.loadGame()).toBeNull();
+    // Left as it is.
+    await user.click(within(sheet).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('is taken up on this device when the player would rather go on with it', async () => {
+    const { server, there, desk } = await twoDevices();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, desk);
+    await user.click(await screen.findByRole('button', { name: 'Start this life' }));
+    await user.click(within(await screen.findByRole('dialog', { name: 'A ranked life in progress' })).getByRole('button', { name: 'Continue that life' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(((await desk.store.loadGame()) as RankedGame).gameId).toBe(there.gameId);
+    expect(server.games.get(there.gameId)?.status).toBe('playing');
+    expect(server.games.size).toBe(1);
+  });
+
+  it('is ended, and the new life begun, only when the player says so', async () => {
+    const { server, there, desk } = await twoDevices();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, desk);
+    await user.click(screen.getByRole('radio', { name: /Software engineer/ }));
+    await user.click(await screen.findByRole('button', { name: 'Start this life' }));
+    await user.click(within(await screen.findByRole('dialog', { name: 'A ranked life in progress' })).getByRole('button', { name: 'End it and start this one' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(server.games.get(there.gameId)?.status).toBe('abandoned');
+    expect((await desk.store.loadGame()) as RankedGame).toMatchObject({ ranked: true, lifeId: 'engineer' });
+  });
+
+  it('cannot be taken up here when it was begun under older rules, and the sheet says so', async () => {
+    const { server, there, desk } = await twoDevices();
+    (server.games.get(there.gameId) as { engine_version: string }).engine_version = '0.0.1';
+    const user = userEvent.setup();
+    renderGame(<NewLife />, desk, 'es');
+    await user.click(await screen.findByRole('button', { name: 'Empezar esta vida' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Una vida clasificatoria en curso' });
+    expect(sheet.textContent).toContain('Empezó con otras reglas y no se puede seguir en este dispositivo.');
+    expect(within(sheet).queryByRole('button', { name: 'Seguir con esa vida' })).toBeNull();
+    expect(within(sheet).getByRole('button', { name: 'Terminarla y empezar esta' })).toBeTruthy();
+  });
+
+  it('says so when that life cannot be taken up just now, and keeps the question open', async () => {
+    const { server, desk } = await twoDevices();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, desk);
+    await user.click(await screen.findByRole('button', { name: 'Start this life' }));
+    const sheet = await screen.findByRole('dialog', { name: 'A ranked life in progress' });
+    server.state.down = true;
+    await user.click(within(sheet).getByRole('button', { name: 'Continue that life' }));
+    expect((await within(sheet).findByRole('alert')).textContent).toBe('The server did not answer. Try again.');
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('a life that cannot be started', () => {
+  it('says so, starts nothing, and can be tried again', async () => {
+    const services = memoryServices();
+    let refuse = true;
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string) => (refuse ? Promise.reject(new Error('the server refused to start a ranked life: bad-request')) : start(lifeId));
+    const user = userEvent.setup();
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderGame(<NewLife />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start this life' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('The life could not be started. Try again.');
+    expect(router.replace).not.toHaveBeenCalled();
+    expect((screen.getByRole('button', { name: 'Start this life' }) as HTMLButtonElement).disabled).toBe(false);
+    refuse = false;
+    await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(screen.queryByRole('alert')).toBeNull();
+    quiet.mockRestore();
+  });
+});

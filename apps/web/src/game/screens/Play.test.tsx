@@ -538,7 +538,7 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
     await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
     server.state.down = true;
     await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
-    expect((await screen.findByRole('alert')).textContent).toBe('The server did not answer. Nothing was played: try again.');
+    expect((await screen.findByRole('alert')).textContent).toBe('The server did not answer. Try again.');
     expect(screen.queryByRole('heading', { name: 'What happened' })).toBeNull();
     server.state.down = false;
     await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
@@ -552,7 +552,7 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
     const user = userEvent.setup();
     renderGame(<><Begin /><Play /></>, services, 'es');
     await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('No se ha podido llegar al servidor, así que esta vida no es clasificatoria. Se guarda en este dispositivo.');
+    expect((await screen.findByRole('alert')).textContent).toBe('Ahora mismo no se ha podido empezar una vida clasificatoria, así que esta no lo es. Se guarda en este dispositivo.');
   });
 
   it('takes each of its notices away once it has had time to be read, and does not show it again', async () => {
