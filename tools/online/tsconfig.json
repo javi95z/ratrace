@@ -6,6 +6,7 @@
   ],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": { "@/*": ["../../apps/web/src/*"] }
   }
 }
