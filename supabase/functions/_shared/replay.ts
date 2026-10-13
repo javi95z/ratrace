@@ -16,7 +16,7 @@ const MAX_PICKS = 20;
 const bad = (field: string): Reply => ({ status: 400, body: { error: 'bad-request', field } });
 
 /** Reads a log, or null if it is not one. Its length is bounded before anything is played. */
-function readLog(raw: unknown, game: GameModule): LoggedRound[] | null {
+export function readLog(raw: unknown, game: GameModule): LoggedRound[] | null {
   if (!Array.isArray(raw) || raw.length > game.content.rounds) return null;
   const log: LoggedRound[] = [];
   for (const entry of raw) {
@@ -70,8 +70,10 @@ export function replayRequest(games: Readonly<Record<string, GameModule>>, raw: 
         status: game.livedStatus(state),
       },
     };
-  } catch {
+  } catch (error) {
     // The engine refuses what could not have happened: a card that was not in the hand, an order that is not one.
+    // It also stops on a broken rule of its own, which is a bug to hear of: the log says which it was.
+    console.error('replay refused:', error instanceof Error ? error.message : error);
     return { status: 422, body: { error: 'cannot-replay' } };
   }
 }

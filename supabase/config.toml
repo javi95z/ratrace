@@ -417,3 +417,7 @@ enabled = true
 # The engine on the server. Only a signed-in player may call it; a guest is one.
 [functions.engine]
 verify_jwt = true
+
+# Finishes a casual life: plays its log again and writes the run. Signed-in players only.
+[functions.finish-run]
+verify_jwt = true
