@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -17,11 +17,25 @@ function filesUnder(dir: string): string[] {
   });
 }
 
-/** Everything a file imports: `[what, from]` for each import statement. */
-function importsOf(path: string): Array<{ names: string; from: string }> {
-  const source = readFileSync(path, 'utf8');
-  return [...source.matchAll(/import\s+(?:type\s+)?([^;]*?)\s+from\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: m[1], from: m[2] }));
+/** Where an import leads, as the rules below name places: a path beside the file becomes the `@/` path it stands for. */
+function placeOf(path: string, from: string): string {
+  if (!from.startsWith('.')) return from;
+  const target = relative(SRC, join(dirname(path), from));
+  return target.startsWith('..') ? from : `@/${target}`;
 }
+
+/**
+ * Everything a file imports: what, and from where, for each import statement, each `import()`
+ * made while the game runs, and each import made only for its effects. However a file reaches
+ * another, it is found here: a relative path or a late import is no way round the wall.
+ */
+function importsIn(path: string, source: string): Array<{ names: string; from: string }> {
+  const named = [...source.matchAll(/import\s+(?:type\s+)?([^;'"]*?)\s+from\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: m[1], from: m[2] }));
+  const late = [...source.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => ({ names: '*', from: m[1] }));
+  const bare = [...source.matchAll(/(?:^|[;\n])\s*import\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: '', from: m[1] }));
+  return [...named, ...late, ...bare].map((one) => ({ names: one.names, from: placeOf(path, one.from) }));
+}
+const importsOf = (path: string) => importsIn(path, readFileSync(path, 'utf8'));
 
 const rel = (path: string) => relative(SRC, path);
 const all = filesUnder(SRC);
@@ -30,6 +44,17 @@ const screens = all.filter((path) => /^(app|ui|game\/screens)\//.test(rel(path))
 const WIRING = ['game/context.tsx', 'testing/render.tsx'];
 
 describe('the wall between the screens and the game', () => {
+  it('sees an import however it is written', () => {
+    const screen = join(SRC, 'game/screens/Anything.tsx');
+    const found = (source: string) => importsIn(screen, source).map((one) => one.from);
+    expect(found("import { MirroredStore } from '@/online/mirror';")).toEqual(['@/online/mirror']);
+    expect(found("import type { Cloud } from '../../online/supabase';")).toEqual(['@/online/supabase']);
+    expect(found("const { connectSupabase } = await import('../../online/connect');")).toEqual(['@/online/connect']);
+    expect(found("import '@/session/indexeddb';\nimport './Home';")).toEqual(['@/session/indexeddb', '@/game/screens/Home']);
+    expect(found("import {\n  applyRound,\n  netWorth,\n} from '@ratrace/engine';")).toEqual(['@ratrace/engine']);
+    expect(importsIn(screen, "import {\n  applyRound,\n} from '@ratrace/engine';")[0].names).toContain('applyRound');
+  });
+
   it('finds the screens', () => {
     expect(screens.length).toBeGreaterThan(20);
     for (const screen of ['game/screens/Collection.tsx', 'game/screens/Records.tsx', 'game/screens/ShareCard.tsx', 'game/screens/Guide.tsx']) expect(screens.map(rel)).toContain(screen);

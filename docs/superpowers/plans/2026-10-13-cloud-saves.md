@@ -18,6 +18,8 @@ Not here: ranked games, where the server holds the seed (13), rankings (13), the
 
 - Everything is written on the device first, exactly as today. The cloud is a mirror that is brought up to date in the background. No screen ever waits for it.
 - A write that could not reach the cloud is not an error and is not queued one by one: the next thing that syncs sends the whole of what the device has. The device is always enough to rebuild the cloud's copy.
+- The account is read when device and account meet: the page opens, the connection comes back, the page is looked at again after a minute or more, someone signs in. Between two meetings a write is only sent, so a card answered costs one request.
+- After a failure the mirror tries again by itself, after 30 seconds and then twice as long each time, up to five minutes.
 - With no account (no project configured, or sign-in failed) none of this exists and the game is what it is today.
 - The store the game writes to is wrapped once more: device, then mirror. Screens still talk to `PlayerStore` and nothing else.
 
@@ -25,9 +27,10 @@ Not here: ranked games, where the server holds the seed (13), rankings (13), the
 
 | Thing | When | How |
 |---|---|---|
-| The life in progress | after every card and every round | the player's own row in `games`: seed, log, round, state hash. Only the latest matters, so a burst of saves sends one |
+| The life in progress | after every card and every round | the player's own row in `games`: seed, log, round, state hash. Only the latest matters, so a burst of saves sends one, and a life that stands as it did when it was last sent is not sent again |
 | What is unlocked (badges, gallery, unlocked lives, the guide) | whenever it changes | the player's own row in `player_progress`, after being merged with what is there |
-| A finished life | once, when it ends | the device asks the server to finish it. The server plays the log again and writes the run itself |
+| A finished life | once, when it ends | the device asks the server to finish it. The server plays the log again and writes the run itself. Lives finished before there was an account go up five at a time. One on versions this build does not play, or one the server will not finish, stays on the device |
+| A life given up | when another takes its place | marked `abandoned` in the account, so it is not offered to other devices. Given up with no connection, it is noted in the browser until the account has been told |
 | Settings (less motion) | never | they belong to the device |
 
 ### A finished life is the server's to write
@@ -48,8 +51,11 @@ This happens when an account starts on a device and when a guest becomes a membe
 - **The life in progress:**
   - The device has none, the cloud has one: the device takes it, and the player finds their life waiting.
   - Both have the same life: the copy with more of it played wins. They are never merged.
-  - They have different lives: the device keeps its own, and nothing is replaced behind the player's back. The front door offers "Continue the life from your account", which asks before it ends the one on the device, as starting a new life does.
-  - A game on versions this build does not have is left alone in the cloud.
+  - They have different lives: the device keeps its own, and nothing is replaced behind the player's back. The front door offers "Continue the life in your account", which asks before it ends the one on the device, as starting a new life does. The player can end the life in the account instead.
+  - The device has a life that is over: it stays there, where its score can still be looked at, and the cloud's is offered.
+  - The device still holds as in progress a life that was lived to the end on another device: it lets go of it, and the result arrives with the finished lives.
+  - A game on versions this build does not have is left alone in the cloud. So is a copy that does not play back to a sound life.
+  - A life given up on one device while another is still playing it is taken up again by that device's next save. "Abandoned" means "offered to nobody", not "closed"; only a life the server has finished is closed.
 - A life taken from the cloud is rebuilt by playing its log again on the device, the same way a save is opened today, so a damaged or tampered copy cannot be opened as if it were sound.
 
 ### Signing in on a second device
@@ -65,9 +71,10 @@ This happens when an account starts on a device and when a guest becomes a membe
 
 ### What the player sees
 
-- Settings, account block: one line of truth about saving. "Saved to your account" when the mirror is up to date; "Saved on this device. Waiting for a connection." when it is not. For a guest the text no longer says lives are saved on this device only.
+- Settings, account block: one line of truth about saving. "Saved to your account" when the mirror is up to date; "Saving to your account…" while a write is on its way; "Saved on this device. Waiting for a connection." when the last try did not get through. A guest is told theirs is "an account that only this browser can open".
 - Records: lives from other devices, without any mark; they are the player's own.
-- Front door: the offer to continue the account's life, only when it differs from the device's.
+- Front door: the offer to continue the account's life, only when it differs from the device's. Taking it asks first; it can be ended instead.
+- A life the account brings from another device while one is on screen opens as it now stands, with the notice a life moved in another tab already had.
 
 ### Tests
 
@@ -75,18 +82,19 @@ This happens when an account starts on a device and when a guest becomes a membe
 - The mirror is tested against a fake cloud: what it sends and when, that a failure changes nothing on the device, that the next sync catches up.
 - The function's logic is tested without a server, as `engine`'s is.
 - The database limit and the new rules are added to the SQL security tests.
-- The live check gains the whole journey: a guest plays and finishes a life, the server writes the run, a second client signed in as the same player sees the life and the progress.
+- The live check gains the whole journey, through the game's own code: a guest saves a life, a second client signed in as the same player finds it, plays it further, gives it up and sees it taken up again; what is unlocked crosses over; the server finishes a life and the other device finds the run.
+- One test runs the real account, mirror and follower together on two devices, with only the network and the page stood in for.
 
 ## Tasks
 
-- [ ] 1. The record of a life moves to the content package; `replayLife`; the bundle exports it
-- [ ] 2. Merge rules: progress, runs, the life in progress
-- [ ] 3. Database: the limit of 50 games, what `verified` means; SQL tests
-- [ ] 4. The `finish-run` function and its logic; deployed
-- [ ] 5. The cloud's new verbs and the mirror store; wired in one place
-- [ ] 6. Pulling down on start and on becoming a member; taking the cloud's life
-- [ ] 7. Signing in to an existing account from a second device
-- [ ] 8. What the player sees: the saving line, the offer on the front door, text in both languages
-- [ ] 9. The live check extended; the end-to-end suite with no cloud still untouched
+- [x] 1. The record of a life moves to the content package; `replayLife`; the bundle exports it
+- [x] 2. Merge rules: progress, runs, the life in progress
+- [x] 3. Database: the limit of 50 games, what `verified` means; SQL tests
+- [x] 4. The `finish-run` function and its logic; deployed
+- [x] 5. The cloud's new verbs and the mirror store; wired in one place
+- [x] 6. Pulling down on start and on becoming a member; taking the cloud's life
+- [x] 7. Signing in to an existing account from a second device
+- [x] 8. What the player sees: the saving line, the offer on the front door, text in both languages
+- [x] 9. The live check extended; the end-to-end suite with no cloud still untouched
 - [ ] 10. Spec and roadmap brought up to date
 - [ ] 11. Fresh review and one fix pass (together with the review of step 11)
