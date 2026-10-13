@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { assetClassArt, cardArt, cityArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
+import { assetClassArt, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
 import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
@@ -154,8 +154,9 @@ describe('content art', () => {
   const manifest = JSON.parse(readFileSync(path, 'utf8')) as { sprites: Record<string, unknown> };
   const has = (sprite: string) => Object.hasOwn(manifest.sprites, sprite);
 
-  it('gives every card a scene, and no scene to a card that does not exist', () => {
+  it('gives every card a scene of its own, and no scene to a card that does not exist', () => {
     expect(keys(cardArt)).toEqual(ids(content.cards));
+    expect(new Set(Object.values(cardArt)).size).toBe(content.cards.length);
   });
 
   it('points only at sprites that exist', () => {
@@ -164,7 +165,8 @@ describe('content art', () => {
       ...content.items.map((item) => itemArt(item.id)),
       ...content.propertyTypes.map((type) => propertyArt(type.id)),
       ...rentTierArt,
-      ...content.cities.map((city) => cityArt(city.id)),
+      ...content.cities.flatMap((city) => [cityArt(city.id), cityArt(city.id, 'day'), cityIcon(city.id)]),
+      ...FAMILY_ART,
       ...lives.flatMap((life) => PORTRAIT_AGES.map((age) => portraitArt(life.id, age))),
       ...Object.values(assetClassArt),
       ...lifestyleArt,
@@ -174,7 +176,22 @@ describe('content art', () => {
       ...Object.values(topicArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(100 + 39 + 16 + 2 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+    expect(wanted.length).toBe(100 + 39 + 16 + 2 + 6 * 3 + 8 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+  });
+
+  it('draws who shares a life: the couple, then the youngest child, and a full house as one picture', () => {
+    const home = (over: Partial<Parameters<typeof familyArt>[0]>) => familyArt({ partner: false, married: false, dating: false, children: [], childRounds: 9, ...over });
+    expect(home({})).toEqual(['icon.single']);
+    expect(home({ dating: true })).toEqual(['icon.dating']);
+    expect(home({ partner: true })).toEqual(['icon.partner']);
+    expect(home({ partner: true, married: true })).toEqual(['icon.married']);
+    expect(home({ children: [9] })).toEqual(['icon.single', 'icon.baby']);
+    expect(home({ partner: true, children: [5] })).toEqual(['icon.partner', 'icon.child']);
+    expect(home({ children: [2] })).toEqual(['icon.single', 'icon.teen']);
+    // The youngest is the one shown.
+    expect(home({ children: [2, 8] })).toEqual(['icon.single', 'icon.baby']);
+    expect(home({ partner: true, married: true, children: [2, 8] })).toEqual(['icon.family_four']);
+    for (const sprite of [home({}), home({ partner: true, children: [5] }), home({ partner: true, children: [1, 1] })].flat()) expect(FAMILY_ART).toContain(sprite);
   });
 
   it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {

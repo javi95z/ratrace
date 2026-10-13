@@ -1,8 +1,8 @@
 'use client';
 
-import { assetKind, itemArt, propertyArt, focusArt, insuranceArt, lifestyleArt, rentTierIcon } from '@ratrace/content';
+import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -293,6 +293,69 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   );
 }
 
+/** One property the player owns, looked at closely: what it is worth, what it brings, what is owed on it and what a sale would leave. */
+function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClose(): void }) {
+  const t = useT('finance.property');
+  const debt = useT('finance.debt');
+  const common = useT('common');
+  const { content, text, names, fmt } = useWords();
+  const { shown, p } = useRound();
+  const property = p.properties.find((x) => x.id === propertyId);
+  const quote = quoteOwnedProperty(content, shown, propertyId);
+  // Sold while its sheet was open: there is nothing left to show.
+  if (!property || !quote) return null;
+  const gain = quote.value - quote.paid;
+
+  return (
+    <Sheet open onClose={onClose} title={text.propertyTypes[property.typeId]} closeLabel={common('close')}>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-center">
+          <Bare className="p-1 leading-[0]">
+            <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
+          </Bare>
+        </div>
+        <p className="pixel text-center text-[13px] uppercase tracking-wider text-ink-300">{names.cities[property.cityId]}</p>
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <Tag tone={quote.rented || quote.livedIn ? 'good' : 'plain'}>{quote.rented ? t('rented') : quote.livedIn ? t('livedIn') : t('empty')}</Tag>
+          {quote.livedIn && quote.status > 0 ? <Tag tone="good">{t('status', { n: quote.status })}</Tag> : null}
+        </div>
+
+        <Panel>
+          <Row left={t('worth')} right={<span className="text-gold-500">{fmt.money(quote.value)}</span>} />
+          <Row left={t('paid')} right={fmt.money(quote.paid)} />
+          <Row left={t('gain')} right={<span className={gain < 0 ? 'text-wine-300' : 'text-teal-300'}>{fmt.signed(gain)}</span>} />
+          {quote.letOnly || quote.rented ? (
+            <Row left={t('rent')} right={<span className="text-teal-300">{fmt.signed(quote.rentAnnual)}</span>} />
+          ) : (
+            <Row left={t('wouldLet')} right={fmt.money(quote.rentAnnual)} />
+          )}
+        </Panel>
+
+        <Panel title={t('mortgage')}>
+          {quote.mortgage ? (
+            <>
+              <Row left={t('owed')} right={<span className="text-wine-300">{fmt.money(quote.mortgage.principal)}</span>} />
+              <Row left={quote.mortgage.variable ? t('variable') : t('fixed')} right={t('rateNow', { rate: fmt.rate(quote.mortgage.rateBp) })} />
+              <Row left={t('term')} right={<span className="font-sans text-[13px]">{debt('left', { rounds: quote.mortgage.roundsLeft })}</span>} />
+            </>
+          ) : (
+            <p className="text-[14px] text-ink-300">{t('ownedOutright')}</p>
+          )}
+        </Panel>
+
+        <div>
+          <Row
+            className="frame bg-night-700 px-3"
+            left={<span className="pixel text-[16px]">{t('netOnSale')}</span>}
+            right={<span className="text-[18px] text-gold-500">{fmt.money(quote.netOnSale)}</span>}
+          />
+          <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('netOnSaleHint')}</p>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+
 function PropertyTab() {
   const t = useT('finance.property');
   const { content, text, names, fmt } = useWords();
@@ -300,6 +363,7 @@ function PropertyTab() {
   const setOrder = useGame((s) => s.setOrder);
   const addOrder = useGame((s) => s.addOrder);
   const [buying, setBuying] = useState<string | null>(null);
+  const [opened, setOpened] = useState<string | null>(null);
   const home = homeOf(p, content);
 
   // A home put up for sale this round stays in its place until the round is played: were it to
@@ -322,20 +386,21 @@ function PropertyTab() {
           const letOnly = quoteProperty(content, shown, property.typeId).letOnly;
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
-              <div className="flex items-center gap-3">
+              {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
+              <button type="button" aria-haspopup="dialog" disabled={sold} onClick={() => setOpened(property.id)} className="flex w-full items-center gap-3 text-left">
                 <Bare className="shrink-0">
                   <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
                 </Bare>
-                <div className="min-w-0 flex-1">
-                  <div className="pixel text-[17px]">{text.propertyTypes[property.typeId]}</div>
-                  <div className="text-[13px] text-ink-200">{names.cities[property.cityId]}</div>
-                  <div className="pixel mt-1 text-[17px] text-gold-500">{fmt.money(property.value)}</div>
-                  <div className="mt-1 text-[12px] text-ink-300">
+                <span className="min-w-0 flex-1">
+                  <span className="pixel block text-[17px]">{text.propertyTypes[property.typeId]}</span>
+                  <span className="block text-[13px] text-ink-200">{names.cities[property.cityId]}</span>
+                  <span className="pixel mt-1 block text-[17px] text-gold-500">{fmt.money(property.value)}</span>
+                  <span className="mt-1 block text-[12px] text-ink-300">
                     {state}
                     {mortgage ? ` · ${t('mortgageLeft', { amount: fmt.money(mortgage.principal) })}` : ''}
-                  </div>
-                </div>
-              </div>
+                  </span>
+                </span>
+              </button>
               {sold ? (
                 <Button className="mt-2" wide disabled>
                   {t('selling')}
@@ -357,6 +422,8 @@ function PropertyTab() {
           );
         })}
       </Panel>
+
+      {opened ? <OwnedPropertySheet propertyId={opened} onClose={() => setOpened(null)} /> : null}
 
       {/* Somewhere to live, and what is only bought to let: two shelves, each with its cheapest first. */}
       {([false, true] as const).map((letOnly) => {
@@ -474,8 +541,11 @@ function MoveSheet({ onClose }: { onClose(): void }) {
           const { cost, lapses } = quoteMove(content, shown, city.id);
           return (
             <Panel key={city.id}>
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="pixel text-[17px]">{names.cities[city.id]}</h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="pixel flex min-w-0 items-center gap-2 text-[17px]">
+                  <Sprite id={cityIcon(city.id)} />
+                  {names.cities[city.id]}
+                </h3>
                 {here ? <Tag tone="good">{t('here')}</Tag> : null}
               </div>
               <p className="mb-2 text-[13px] text-ink-300">{text.cities[city.id].tagline}</p>
@@ -589,7 +659,7 @@ function Lifestyle() {
       <Panel title={t('city')}>
         <div className="mb-2 flex items-center gap-3">
           <Bare className="size-9">
-            <Sprite id="icon.city" />
+            <Sprite id={cityIcon(p.cityId)} />
           </Bare>
           <div className="min-w-0">
             <div className="pixel text-[18px]">{names.cities[p.cityId]}</div>

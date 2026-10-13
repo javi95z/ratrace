@@ -283,7 +283,16 @@
       "lets": "Renta {amount} al año",
       "buyLetTitle": "Comprar para alquilar: {home}",
       "rent": "Renta al año",
-      "letTitle": "Para alquilar en {city}"
+      "letTitle": "Para alquilar en {city}",
+      "worth": "Vale hoy",
+      "paid": "Pagaste",
+      "gain": "Ganancia",
+      "wouldLet": "Alquilado daría al año",
+      "owed": "Pendiente",
+      "term": "Plazo",
+      "ownedOutright": "Es tuyo entero: no debes nada por él.",
+      "netOnSale": "Te quedaría al vender",
+      "netOnSaleHint": "Tras devolver la hipoteca y antes del impuesto sobre la ganancia."
     },
     "debt": {
       "none": "No debes nada.",
@@ -411,7 +420,10 @@
     "lifestyle": "Estilo de vida",
     "home": "Casa",
     "leave": "Salir a la pantalla de inicio",
-    "leaveHint": "Tu vida se guarda después de cada paso."
+    "leaveHint": "Tu vida se guarda después de cada paso.",
+    "itemWorth": "Hoy se vendería por {amount}",
+    "itemWhere": "Se vende o se cancela en la pestaña Tienda.",
+    "itemKept": "No se puede vender."
   },
   "end": {
     "title": "Fin",

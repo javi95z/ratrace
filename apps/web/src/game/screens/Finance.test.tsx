@@ -237,3 +237,30 @@ describe('what belongs to a city', () => {
     expect(within(sheet).getAllByText('Moving ends: Bernabéu season seat.')).toHaveLength(content.cities.length - 1);
   });
 });
+
+describe('a property the player owns', () => {
+  it('opens on a tap: what it is worth, what it would bring, what is owed and what a sale would leave', async () => {
+    // The heir starts with a flat in Madrid, lived in and owned outright.
+    const { services } = await inFinance('heir');
+    const flat = (await stateOf(services)).player.properties[0];
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Property' }));
+    const mine = screen.getByRole('region', { name: 'Your properties' });
+    await user.click(within(mine).getByRole('button', { name: /^Flat/ }));
+
+    const sheet = screen.getByRole('dialog', { name: 'Flat' });
+    expect(within(sheet).getByText('You live here')).toBeTruthy();
+    expect(within(sheet).getByText('Worth today')).toBeTruthy();
+    expect(within(sheet).getAllByText(fmt.money(flat.value)).length).toBeGreaterThanOrEqual(2);
+    expect(within(sheet).getByText('Let, it would bring a year')).toBeTruthy();
+    expect(within(sheet).getByText('It is all yours: nothing is owed on it.')).toBeTruthy();
+    expect(within(sheet).getByText('A sale would leave you')).toBeTruthy();
+
+    // Looking changes nothing: no order was made.
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(button('No orders')).toBeTruthy();
+  });
+});
+

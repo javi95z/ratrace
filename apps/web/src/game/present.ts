@@ -1,4 +1,4 @@
-import { START_AGE } from '@ratrace/content';
+import { cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
 import type { Content, Effects, GameEvent, GameView, Headline, Order, PlayerState, WorldState } from '@ratrace/engine';
@@ -199,7 +199,7 @@ export function roundNotes({ text, names }: Words, t: Translate, events: GameEve
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
         break;
       case 'moved':
-        add(event, { tone: 'plain', icon: 'icon.city', title: t('moved', { city: names.cities[event.cityId] }) });
+        add(event, { tone: 'plain', icon: cityIcon(event.cityId), title: t('moved', { city: names.cities[event.cityId] }) });
         break;
       case 'lapsed':
         add(event, { tone: 'bad', icon: 'icon.city', title: t('lapsed', { item: names.items[event.itemId] }), hint: t('lapsedHint') });

@@ -1,6 +1,6 @@
 # Art prompt pack: v1
 
-Twenty-nine sheets cover every v1 sprite: the first twenty-one, and eight added since (02b city seats, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day). The game is called The Rat Race.
+Thirty-eight sheets cover every v1 sprite: the first twenty-one, and seventeen added since (02b city seats, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day, 22 to 30 more card scenes). The game is called The Rat Race.
 
 ## How to use
 
@@ -468,6 +468,193 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 6. Young adult with a backpack seen from behind, facing a glittering city skyline at dusk.
 ```
 
+### 22. Card scenes 9: work
+
+Save as `art/raw/cards/cards-09.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A dark office corridor at night, a frosted glass door with warm light behind it, a lone figure with a raised hand about to knock.
+2. A glass meeting room at night: one figure standing at a whiteboard of abstract charts, five seated figures around the table looking up.
+3. A laptop glowing on a kitchen table at night beside a coffee mug and a sleeping cat, a city window behind.
+4. The grand marble lobby of a famous company's tower, a huge abstract emblem on the wall, one small figure walking to the reception desk.
+5. An open-plan office at night, a tall figure with crossed arms looming over one desk, a small storm cloud above their head, colleagues ducking behind monitors.
+6. A figure on a rooftop terrace at night taking a phone call, turned away from the office party behind the glass, the skyline beyond.
+```
+
+### 23. Card scenes 10: deals and careers
+
+Save as `art/raw/cards/cards-10.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A long boardroom table with a thick contract and a gold pen, an open briefcase beside it, two chairs pushed back, the skyline in the window.
+2. A bank desk: two figures side by side signing the same sheet of paper, a banker opposite sliding a second form across.
+3. A crossroads on a night street with a signpost of two blank arrows: one way to glass bank towers, the other to a low brick office; a figure with a bag deciding.
+4. An office desk with a framed certificate with an ornate abstract border and a gold seal, an employee lanyard draped over its corner.
+5. A desk with two offer letters side by side: a stack of gold coins on one, a small rising line chart on the other, a pen lying between them.
+6. An aircraft business-class cabin at night: a wide reclined seat with a blanket and a glass of champagne, stars in the oval window.
+```
+
+### 24. Card scenes 11: money and tax
+
+Save as `art/raw/cards/cards-11.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A lawyer's desk with a legal document, two fountain pens and two wedding rings resting on the paper, a green lamp.
+2. A front door at night with an open letterbox, a bright cream envelope sticking out and a few gold coins spilling onto the doormat.
+3. A supermarket shelf at night, a hand sticking a taller red price tag over an older one, a nearly empty shopping basket on the floor.
+4. A small accountant's office: an adviser in glasses behind a desk of tall folder stacks and a calculator, an empty client's chair.
+5. A large ceramic piggy bank on a desk with a gold coin dropping in, an hourglass and a wall calendar of plain squares beside it.
+6. A roadside speed camera flashing white at a car passing at night, motion streaks on the wet road.
+```
+
+### 25. Card scenes 12: investing
+
+Save as `art/raw/cards/cards-12.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A giant soap bubble floating over a tech campus at night with tiny glowing gadgets inside it, a crowd of small figures looking up.
+2. An apartment block cut into coloured jigsaw pieces, many small figures on the street each holding up one piece.
+3. A flashy presenter in sunglasses on a small stage under a ring light, a rented sports car behind him and screens of rising arrows.
+4. A rocket shaped like a gold coin lifting off from a city rooftop at night, a crowd below holding up glowing phones.
+5. A snow-covered city street, a giant gold coin frozen in a block of ice in a snowdrift, icicles hanging from a shuttered kiosk.
+6. A phone glowing on a bedside table in a dark room, a message bubble on its screen with a fish hook in it, a bank card lying next to the phone.
+```
+
+### 26. Card scenes 13: housing
+
+Save as `art/raw/cards/cards-13.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A tidy spare bedroom with a made bed, folded towels, a small welcome card on the pillow and a suitcase by the door.
+2. A letter pinned to an apartment door with a large red upward arrow drawn on it, hallway light, a doormat.
+3. The open door of an emptied flat, a mailbox stuffed with unopened envelopes, a set of keys left on the bare floor.
+4. A row of terraced houses at night, each with a blank sale board and a red downward arrow on it, dark windows, one cracked wall.
+5. An estate agent hammering a blank board with a red diagonal band into the ground outside an apartment building, a tenant watching from a lit window.
+6. A bank desk with brass scales: a padlock on one pan and a wavy arrow on the other, a small model house and papers beside them.
+```
+
+### 27. Card scenes 14: homes and cars
+
+Save as `art/raw/cards/cards-14.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. An older couple in front of a small cosy cottage with a lit window, a large family house and a removal van behind them.
+2. A sales suite with a glossy architectural model of a tower on a table, a brochure, and cranes over the desert through the window.
+3. A car showroom at night, a modest hatchback under spotlights, a salesperson with a clipboard, price cards showing plain bars.
+4. A grey-haired figure lifting a home garage door to reveal a silver sports coupe under a single hanging bulb.
+5. Giant gold scissors cutting a long paper ribbon in front of the columns of a central bank, confetti in the air.
+6. A shop entrance with its shutter half up, a crowd of small figures rushing in with trolleys, red banners with plain stripes.
+```
+
+### 28. Card scenes 15: learning and business
+
+Save as `art/raw/cards/cards-15.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A tiered business-school lecture theatre, a lecturer beside a screen with an abstract bar chart, students with open laptops.
+2. A family car with its boot open and full of boxes in front of a university residence, a teenager carrying a desk lamp.
+3. An evening classroom: a small group at desks wearing headphones, a teacher pointing at a board of plain colour-band flags.
+4. A converted loft classroom late at night, rows of laptops showing coloured bars, tired students, pizza boxes on a table.
+5. A phone standing upright on a desk showing a plain square app tile, a small rocket trail rising out of the screen, sticky notes on the wall.
+6. A café table at night with a napkin covered in an abstract diagram, two coffee cups, one figure leaning in and gesturing.
+```
+
+### 29. Card scenes 16: family and health
+
+Save as `art/raw/cards/cards-16.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A notary's office: an old wooden chest, a framed portrait with a black ribbon across one corner, a sealed document on the desk.
+2. An office desk with a payslip marked by a big gold star, confetti falling, silhouettes of colleagues clapping.
+3. A writing desk with a fountain pen, a sealed envelope with red wax, family photo frames and a warm lamp.
+4. A dentist's chair under a bright round lamp, a tray of instruments and a large model tooth on the counter.
+5. A five-a-side pitch under floodlights, a player sitting on the turf holding an ankle, a ball nearby, a teammate kneeling.
+6. A child with a backpack between two parents at a fork in the path: an ornate school with a crest on one side, a plain modern school on the other.
+```
+
+### 30. Card scenes 17: life, and two for later
+
+Save as `art/raw/cards/cards-17.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A sibling on a doorstep in the rain with a duffel bag and an awkward smile, warm hall light spilling from the open door.
+2. A wedding arch of flowers on a tropical beach at dusk, rows of white chairs, string lights, suitcases to one side.
+3. The back room of a boutique behind a velvet rope: racks of clothes, handbags on lit shelves, a host holding the curtain open.
+4. A crowded metro platform at night, a hooded figure slipping away with a glowing phone, the owner looking at an empty hand.
+5. A wood-panelled courtroom at night, an empty judge's bench with a gavel, two tables facing it, one lamp lit.
+6. A night street market with striped awnings, strings of bulbs, crates of fruit and a few small figures browsing.
+```
+
+### Which card each new scene is for
+
+All of these are drawn and wired: every card now has a scene of its own.
+
+| Scene | Card | Sheet |
+|---|---|---|
+| `card.boss_door` | `career_raise` | cards-09 |
+| `card.meeting_room` | `career_become_manager` | cards-09 |
+| `card.kitchen_laptop` | `biz_freelance_gig` | cards-09 |
+| `card.tower_lobby` | `career_big_offer` | cards-09 |
+| `card.angry_boss` | `career_toxic_boss` | cards-09 |
+| `card.headhunter_call` | `career_headhunter` | cards-09 |
+| `card.contract_signing` | `biz_acquisition` | cards-10 |
+| `card.bank_cosign` | `fam_cosign` | cards-10 |
+| `card.two_ladders` | `career_switch` | cards-10 |
+| `card.share_certificate` | `inv_share_plan` | cards-10 |
+| `card.shares_or_salary` | `career_shares_vs_salary` | cards-10 |
+| `card.business_cabin` | `life_upgrade` | cards-10 |
+| `card.prenup` | `fam_prenup` | cards-11 |
+| `card.tax_refund` | `luck_tax_refund` | cards-11 |
+| `card.price_tags` | `world_inflation` | cards-11 |
+| `card.advisor_office` | `tax_advisor` | cards-11 |
+| `card.piggy_bank` | `tax_pension_topup` | cards-11 |
+| `card.speed_camera` | `luck_speeding_fine` | cards-11 |
+| `card.tech_bubble` | `world_tech_bubble` | cards-12 |
+| `card.crowd_building` | `inv_crowdfunding` | cards-12 |
+| `card.trading_guru` | `inv_guru_course` | cards-12 |
+| `card.crypto_rocket` | `world_crypto_bull` | cards-12 |
+| `card.crypto_winter` | `world_crypto_winter` | cards-12 |
+| `card.phishing` | `luck_phishing` | cards-12 |
+| `card.spare_room` | `biz_airbnb` | cards-13 |
+| `card.rent_letter` | `house_rent_hike` | cards-13 |
+| `card.unpaid_rent` | `house_tenant_default` | cards-13 |
+| `card.for_sale_signs` | `world_housing_crash` | cards-13 |
+| `card.sold_board` | `house_landlord_sells` | cards-13 |
+| `card.mortgage_scales` | `house_refinance` | cards-13 |
+| `card.small_house` | `late_downsizing` | cards-14 |
+| `card.offplan_model` | `inv_offplan_dubai` | cards-14 |
+| `card.car_dealer` | `life_car_finance` | cards-14 |
+| `card.coupe_garage` | `late_porsche` | cards-14 |
+| `card.rate_scissors` | `world_rate_cut` | cards-14 |
+| `card.sale_crowd` | `life_black_friday` | cards-14 |
+| `card.lecture_hall` | `edu_mba` | cards-15 |
+| `card.campus_dropoff` | `late_university` | cards-15 |
+| `card.language_class` | `edu_language` | cards-15 |
+| `card.bootcamp` | `edu_bootcamp` | cards-15 |
+| `card.app_launch` | `biz_app` | cards-15 |
+| `card.pitch_napkin` | `biz_cofounder` | cards-15 |
+| `card.will_reading` | `fam_inheritance` | cards-16 |
+| `card.bonus_confetti` | `luck_bonus` | cards-16 |
+| `card.will_desk` | `late_will` | cards-16 |
+| `card.dentist_chair` | `health_dental` | cards-16 |
+| `card.pitch_injury` | `health_injury` | cards-16 |
+| `card.school_gate` | `fam_school` | cards-16 |
+| `card.sibling_doorstep` | `fam_sibling_loan` | cards-17 |
+| `card.beach_wedding` | `life_wedding_abroad` | cards-17 |
+| `card.private_sale` | `life_designer_sale` | cards-17 |
+| `card.pickpocket` | `luck_stolen_phone` | cards-17 |
+| `card.courtroom` | a later card | cards-17 |
+| `card.street_market` | a later card | cards-17 |
+
 ### 19. Skylines A
 
 Save as `art/raw/skylines/skylines-01.png`
@@ -551,6 +738,7 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 10 | `portraits/portraits-02.png` | Heir, newcomer, banker, doctor | 64×64 |
 | 10b | `portraits/portraits-03.png` | Second chance, founder, crypto kid, 1 later life | 64×64 |
 | 11 to 18 | `cards/cards-01.png` to `cards-08.png` | 48 card scenes | 288×120 |
+| 22 to 30 | `cards/cards-09.png` to `cards-17.png` | 52 more card scenes, so that no two cards share one, and 2 for later | 288×120 |
 | 19 to 20 | `skylines/skylines-01.png`, `-02.png` | 6 city skylines | 312×66 |
 | 20b to 20c | `skylines/skylines-03.png`, `-04.png` | The 6 skylines by day | 312×66 |
 | 21 | `brand/brand-01.png` | Logo, wordmark, app icon, mascot | varies |

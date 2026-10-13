@@ -1,11 +1,12 @@
 'use client';
 
-import { itemArt } from '@ratrace/content';
-import { cashflow, focusLeft, homeOf, netWorth } from '@ratrace/engine';
-import type { InsuranceKind } from '@ratrace/engine';
+import { familyArt, itemArt } from '@ratrace/content';
+import { cashflow, focusLeft, homeOf, netWorth, quoteItem } from '@ratrace/engine';
+import type { GameView, InsuranceKind, OwnedItem } from '@ratrace/engine';
+import { useState } from 'react';
 import { useSaving, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { Bare, Panel, Row } from '@/ui/kit';
+import { Bare, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useShown } from './Hud';
@@ -28,6 +29,9 @@ export function ProfileBody() {
   const home = homeOf(p, content);
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => text.insurance[kind]);
   const flow = cashflow(content, shown);
+  const [open, setOpen] = useState<string | null>(null);
+  // Looked up afresh on every draw: a thing sold or lapsed while its sheet is open closes it.
+  const opened = life.items.find((owned) => owned.itemId === open);
 
   let invested = 0;
   for (const held of Object.values(p.positions)) invested += held.value;
@@ -51,7 +55,16 @@ export function ProfileBody() {
       </Panel>
 
       <Panel title={t('family')}>
-        <Row left={life.partner ? t('partner') : t('single')} right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
+        <Row
+          left={
+            <span className="flex items-center gap-2">
+              {familyArt({ partner: life.partner, married: Object.hasOwn(life.flags, 'married'), dating: Object.hasOwn(life.flags, 'dating'), children: life.children, childRounds: content.life.childRounds }).map((sprite) => (
+                <Sprite key={sprite} id={sprite} />
+              ))}
+              {life.partner ? t('partner') : t('single')}
+            </span>
+          }
+          right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
         <Row left={t('lifestyle')} right={text.lifestyleTiers[p.lifestyleTier]} />
         <Row left={t('home')} sub={names.cities[p.cityId]} right={home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]} />
         <Row left={t('insurance')} right={insured.length > 0 ? <span className="font-sans text-[13px]">{insured.join(', ')}</span> : t('uninsured')} />
@@ -84,16 +97,52 @@ export function ProfileBody() {
         ) : (
           <ul className="grid grid-cols-4 gap-2">
             {life.items.map((owned) => (
-              <li key={owned.itemId} title={names.items[owned.itemId]}>
-                <Bare className="aspect-square w-full overflow-hidden">
-                  <Sprite id={itemArt(owned.itemId)} alt={names.items[owned.itemId]} fallback={{ w: 64, h: 64 }} className="max-w-full" />
-                </Bare>
+              <li key={owned.itemId}>
+                {/* A tap opens what the thing is, what it gives and what it is worth. Buying and selling stay in the shop. */}
+                <button type="button" aria-haspopup="dialog" title={names.items[owned.itemId]} onClick={() => setOpen(owned.itemId)} className="block w-full">
+                  <Bare className="aspect-square w-full overflow-hidden">
+                    <Sprite id={itemArt(owned.itemId)} alt={names.items[owned.itemId]} fallback={{ w: 64, h: 64 }} className="max-w-full" />
+                  </Bare>
+                </button>
               </li>
             ))}
           </ul>
         )}
       </Panel>
+      {opened ? <OwnedSheet owned={opened} shown={shown} onClose={() => setOpen(null)} /> : null}
     </div>
+  );
+}
+
+/** One thing the player owns, looked at closely: what it is, what it gives, what it costs to keep and what it would fetch. */
+function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameView; onClose(): void }) {
+  const t = useT('profile');
+  const shop = useT('finance.shop');
+  const common = useT('common');
+  const { content, text, names, fmt } = useWords();
+  const item = content.items.find((x) => x.id === owned.itemId);
+  if (!item) return null;
+  const quote = quoteItem(content, shown, item.id);
+
+  return (
+    <Sheet open onClose={onClose} title={names.items[item.id]} closeLabel={common('close')}>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-center">
+          <Bare className="p-2 leading-[0]">
+            <Sprite id={itemArt(item.id)} scale={2} fallback={{ w: 64, h: 64 }} />
+          </Bare>
+        </div>
+        <p className="pixel text-center text-[13px] uppercase tracking-wider text-ink-300">{text.ladders[item.ladder]}</p>
+        <div className="flex flex-wrap justify-center gap-1.5">
+          <Tag tone="good">{shop('status', { n: item.status })}</Tag>
+          {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
+        </div>
+        {item.kind === 'durable' ? <p className="text-center text-[14px]">{t('itemWorth', { amount: fmt.money(quote.resale) })}</p> : null}
+        {owned.roundsLeft !== null ? <p className="text-center text-[14px] text-ink-300">{shop('spent', { years: owned.roundsLeft * content.yearsPerRound })}</p> : null}
+        {quote.local ? <p className="text-center text-[13px] text-ink-300">{shop('local', { city: names.cities[shown.player.cityId] })}</p> : null}
+        <p className="text-center text-[12px] text-ink-300">{t(quote.sellable ? 'itemWhere' : 'itemKept')}</p>
+      </div>
+    </Sheet>
   );
 }
 

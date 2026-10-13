@@ -26,5 +26,5 @@ export { replayLog } from './replayLog';
 export type { LoggedRound, ReplayStep } from './replayLog';
 export { assertInvariants, assertViewInvariants, findInvariantBreaks, findViewBreaks } from './invariants';
 export { viewOf } from './view';
-export { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteProperty } from './quotes';
-export type { ItemQuote, LivingQuote, LoanQuote, PropertyQuote } from './quotes';
+export { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
+export type { ItemQuote, LivingQuote, LoanQuote, OwnedPropertyQuote, PropertyQuote } from './quotes';

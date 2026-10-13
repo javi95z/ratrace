@@ -107,7 +107,7 @@ export const SHEETS: SheetSpec[] = [
   {
     // Who shares the life: not shown anywhere yet.
     file: 'icons/icons-04', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 32, height: 32,
-    ids: ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family'],
+    ids: ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family_four'],
   },
   {
     // A landmark for each city, to stand where the globe of `icon.city` stands today.
@@ -144,8 +144,18 @@ export const SHEETS: SheetSpec[] = [
     ['hospital', 'gym', 'burnout', 'lottery', 'breakdown', 'cash_envelope'],
     ['casino', 'crash_screens', 'central_bank', 'empty_street', 'server_room', 'bank_queue'],
     ['receipts', 'inspector', 'sunset_bench', 'newsroom', 'sunrise_balcony', 'city_arrival'],
+    // Nine more sheets, so that no two cards share a scene. The prompt pack says which card each is for.
+    ['boss_door', 'meeting_room', 'kitchen_laptop', 'tower_lobby', 'angry_boss', 'headhunter_call'],
+    ['contract_signing', 'bank_cosign', 'two_ladders', 'share_certificate', 'shares_or_salary', 'business_cabin'],
+    ['prenup', 'tax_refund', 'price_tags', 'advisor_office', 'piggy_bank', 'speed_camera'],
+    ['tech_bubble', 'crowd_building', 'trading_guru', 'crypto_rocket', 'crypto_winter', 'phishing'],
+    ['spare_room', 'rent_letter', 'unpaid_rent', 'for_sale_signs', 'sold_board', 'mortgage_scales'],
+    ['small_house', 'offplan_model', 'car_dealer', 'coupe_garage', 'rate_scissors', 'sale_crowd'],
+    ['lecture_hall', 'campus_dropoff', 'language_class', 'bootcamp', 'app_launch', 'pitch_napkin'],
+    ['will_reading', 'bonus_confetti', 'will_desk', 'dentist_chair', 'pitch_injury', 'school_gate'],
+    ['sibling_doorstep', 'beach_wedding', 'private_sale', 'pickpocket', 'courtroom', 'street_market'],
   ].map((names, i): SheetSpec => ({
-    file: `cards/cards-0${i + 1}`, group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    file: `cards/cards-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
     ids: names.map((name) => `card.${name}`),
   })),
   { file: 'skylines/skylines-01', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid', 'skyline.london', 'skyline.new_york'] },
