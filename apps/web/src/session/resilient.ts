@@ -4,7 +4,8 @@ import type { FinishedRun, PlayerStore, Profile, SavedGame } from './types';
 /** What the device has not taken yet. The game and the profile are whole records, so only the latest of each matters. */
 interface Pending {
   game?: { save: SavedGame } | { clear: true };
-  runs: FinishedRun[];
+  /** What was done to the finished lives, in the order it was done: a life put in, or one taken out by id. */
+  runs: Array<{ add: FinishedRun } | { remove: string }>;
   profile?: Profile;
 }
 
@@ -55,8 +56,11 @@ export class ResilientStore implements PlayerStore {
   private flush(): Promise<void> {
     const run = async () => {
       try {
+        // The list is only ever added to at its end, so the one being offered is still the first when the device has taken it.
         while (this.pending.runs.length > 0) {
-          await this.primary.addRun(this.pending.runs[0]);
+          const next = this.pending.runs[0];
+          if ('add' in next) await this.primary.addRun(next.add);
+          else await this.primary.removeRun(next.remove);
           this.pending.runs.shift();
         }
         const game = this.pending.game;
@@ -125,7 +129,12 @@ export class ResilientStore implements PlayerStore {
   };
 
   addRun = (run: FinishedRun): Promise<void> => {
-    this.pending.runs.push(structuredClone(run));
+    this.pending.runs.push({ add: structuredClone(run) });
+    return this.flush();
+  };
+
+  removeRun = (runId: string): Promise<void> => {
+    this.pending.runs.push({ remove: runId });
     return this.flush();
   };
 
@@ -135,8 +144,13 @@ export class ResilientStore implements PlayerStore {
       () => this.primary.listRuns(),
       () => [],
     );
-    const waiting = this.pending.runs.filter((run) => !stored.some((other) => other.runId === run.runId));
-    return structuredClone([...stored, ...waiting]).sort((a, b) => b.finishedAt - a.finishedAt);
+    // What the device has, with what it has not taken yet done to it in the same order.
+    const runs = new Map(stored.map((run) => [run.runId, run]));
+    for (const next of this.pending.runs) {
+      if ('add' in next) runs.set(next.add.runId, next.add);
+      else runs.delete(next.remove);
+    }
+    return structuredClone([...runs.values()]).sort((a, b) => b.finishedAt - a.finishedAt);
   };
 
   loadProfile = async (): Promise<Profile> => {

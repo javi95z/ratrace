@@ -25,6 +25,10 @@ export class MemoryStore implements PlayerStore {
     this.runs.set(run.runId, structuredClone(run));
   };
 
+  removeRun = async (runId: string): Promise<void> => {
+    this.runs.delete(runId);
+  };
+
   listRuns = async (): Promise<FinishedRun[]> => readRuns(structuredClone([...this.runs.values()]));
 
   loadProfile = async (): Promise<Profile> => readProfile(structuredClone(this.profile));

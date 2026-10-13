@@ -10,11 +10,12 @@ const run = (runId: string, finishedAt: number) => ({ format: 1, runId, lifeId: 
 /** A device store that can be told to refuse, and counts what it was asked. */
 function device() {
   const primary = new MemoryStore();
-  const real = { saveGame: primary.saveGame, loadGame: primary.loadGame, addRun: primary.addRun, clearGame: primary.clearGame, saveProfile: primary.saveProfile, listRuns: primary.listRuns };
+  const real = { saveGame: primary.saveGame, loadGame: primary.loadGame, addRun: primary.addRun, removeRun: primary.removeRun, clearGame: primary.clearGame, saveProfile: primary.saveProfile, listRuns: primary.listRuns };
   const down = { writes: false, reads: false };
   const refuse = () => Promise.reject(new Error('disk full'));
   primary.saveGame = (g) => (down.writes ? refuse() : real.saveGame(g));
   primary.addRun = (r) => (down.writes ? refuse() : real.addRun(r));
+  primary.removeRun = (id) => (down.writes ? refuse() : real.removeRun(id));
   primary.clearGame = () => (down.writes ? refuse() : real.clearGame());
   primary.saveProfile = (p) => (down.writes ? refuse() : real.saveProfile(p));
   primary.loadGame = () => (down.reads ? refuse() : real.loadGame());
@@ -97,6 +98,43 @@ describe('ResilientStore', () => {
     expect(await primary.loadGame()).toEqual(game(2));
     expect((await primary.listRuns()).map((r) => r.runId)).toEqual(['a']);
     expect((await new ResilientStore(Object.assign(new MemoryStore(), primary)).loadGame())).toEqual(game(2));
+  });
+
+  it('takes a finished life out, on the device when it can and in what this visit reads back when it cannot', async () => {
+    const { primary, down, store } = device();
+    await store.addRun(run('a', 10));
+    await store.addRun(run('b', 20));
+    await store.removeRun('a');
+    expect((await primary.listRuns()).map((r) => r.runId)).toEqual(['b']);
+    // The device refuses: the life is gone from what the game reads all the same, and from the device once it takes writes again.
+    down.writes = true;
+    await store.addRun(run('c', 30));
+    await store.removeRun('b');
+    await store.removeRun('c');
+    expect(store.degraded).toBe(true);
+    expect((await store.listRuns()).map((r) => r.runId)).toEqual([]);
+    down.writes = false;
+    await store.addRun(run('d', 40));
+    expect(store.degraded).toBe(false);
+    expect((await primary.listRuns()).map((r) => r.runId)).toEqual(['d']);
+    expect((await store.listRuns()).map((r) => r.runId)).toEqual(['d']);
+  });
+
+  it('keeps what was done to the finished lives in the order it was done, whatever the device was doing meanwhile', async () => {
+    const { primary, down, store } = device();
+    // Taken out and put back: it is there. Put in and taken out: it is not.
+    down.writes = true;
+    await store.addRun(run('a', 10));
+    await store.removeRun('a');
+    await store.addRun(run('a', 11));
+    await store.addRun(run('b', 20));
+    await store.removeRun('b');
+    expect((await store.listRuns()).map((r) => [r.runId, r.finishedAt])).toEqual([['a', 11]]);
+    down.writes = false;
+    // Three more in one breath, while the device is still taking the ones before: none is lost or doubled.
+    await Promise.all([store.addRun(run('c', 30)), store.removeRun('a'), store.addRun(run('e', 50))]);
+    expect((await primary.listRuns()).map((r) => r.runId)).toEqual(['e', 'c']);
+    expect((await store.listRuns()).map((r) => r.runId)).toEqual(['e', 'c']);
   });
 
   it('remembers that the game was cleared, too', async () => {

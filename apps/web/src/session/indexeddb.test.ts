@@ -56,6 +56,15 @@ describe.each(stores)('%s', (_name, make) => {
     expect(runs[2].score).toBe(999);
   });
 
+  it('takes a finished life out of the list, and thinks nothing of one that is not there', async () => {
+    const store = make();
+    await store.addRun({ format: 1, runId: 'a', lifeId: 'nurse', finishedAt: 10 } as never);
+    await store.addRun({ format: 1, runId: 'b', lifeId: 'nurse', finishedAt: 20 } as never);
+    await store.removeRun('a');
+    await store.removeRun('never-there');
+    expect((await store.listRuns()).map((run) => run.runId)).toEqual(['b']);
+  });
+
   it('lists only finished lives that can be shown, and mends the ones from before badges were recorded', async () => {
     const store = make();
     const old = { ...run('old', 5) } as Record<string, unknown>;

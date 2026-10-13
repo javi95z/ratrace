@@ -45,6 +45,10 @@ export class LocalStore implements PlayerStore {
     await (await this.db()).put(RUNS, run);
   }
 
+  async removeRun(runId: string): Promise<void> {
+    await (await this.db()).delete(RUNS, runId);
+  }
+
   async listRuns(): Promise<FinishedRun[]> {
     return readRuns(await (await this.db()).getAll(RUNS));
   }

@@ -154,6 +154,8 @@ export interface PlayerStore {
   saveGame(game: SavedGame): Promise<void>;
   clearGame(): Promise<void>;
   addRun(run: FinishedRun): Promise<void>;
+  /** Takes a finished life out. One that is not there is not an error. */
+  removeRun(runId: string): Promise<void>;
   /** Finished lives, the latest first. */
   listRuns(): Promise<FinishedRun[]>;
   loadProfile(): Promise<Profile>;

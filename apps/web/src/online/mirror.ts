@@ -178,6 +178,8 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     this.poke();
   };
 
+  readonly removeRun = (runId: string): Promise<void> => this.device.removeRun(runId);
+
   readonly saveProfile = async (profile: Profile): Promise<void> => {
     await this.device.saveProfile(profile);
     this.poke();
