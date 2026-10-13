@@ -1,4 +1,4 @@
-import type { LifeDef } from '@ratrace/content';
+import type { LifeDef, Milestone } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameView, RoundChoices } from '@ratrace/engine';
@@ -67,6 +67,10 @@ class LocalSession implements GameSession {
 
   badges(): string[] {
     return [...this.save.journal.earned, ...this.ofGallery];
+  }
+
+  story(): Milestone[] {
+    return this.save.journal.story.milestones;
   }
 
   answerCard(option: number): Promise<StepResult> {

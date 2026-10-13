@@ -10,7 +10,7 @@ const step = (over: Partial<Parameters<typeof profileAfter>[3]> = {}) => ({ game
 
 describe('reading a profile', () => {
   it('starts a new player with nothing but the default settings', () => {
-    expect(newProfile()).toEqual({ format: 1, settings: { reducedMotion: false }, badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false } });
+    expect(newProfile()).toEqual({ format: 1, settings: { reducedMotion: false, sound: true }, badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false } });
     for (const junk of [null, undefined, 'profile', 7, [], {}, { format: 2 }, { format: 1, settings: null }, { format: 1, settings: {} }]) {
       // Not a profile at all, or one with nothing in it but broken settings: a fresh one either way.
       expect(readProfile(junk), JSON.stringify(junk)).toEqual(newProfile());
@@ -18,7 +18,7 @@ describe('reading a profile', () => {
   });
 
   it('opens a profile from before badges existed, and keeps its settings', () => {
-    expect(readProfile({ format: 1, settings: { reducedMotion: true } })).toEqual({ ...newProfile(), settings: { reducedMotion: true } });
+    expect(readProfile({ format: 1, settings: { reducedMotion: true, sound: true } })).toEqual({ ...newProfile(), settings: { reducedMotion: true, sound: true } });
   });
 
   it('keeps what is sound and drops what is not, part by part', () => {
@@ -33,7 +33,7 @@ describe('reading a profile', () => {
     };
     expect(readProfile(stored)).toEqual({
       format: 1,
-      settings: { reducedMotion: true },
+      settings: { reducedMotion: true, sound: true },
       badges: { millionaire: { at: 5, gameId: 'g' } },
       gallery: ['watch_rolex', 'car_bmw_m3'],
       unlocked: { rider: { at: 9, gameId: 'g' } },
@@ -44,7 +44,7 @@ describe('reading a profile', () => {
   it('keeps every badge when only the settings are damaged', () => {
     const stored = { ...newProfile(), badges: { millionaire: { at: 5, gameId: 'g' } }, gallery: ['watch_rolex'], unlocked: { rider: { at: 9, gameId: 'g' } } };
     for (const settings of [null, 'loud', {}, { reducedMotion: 'yes' }]) {
-      expect(readProfile({ ...stored, settings }), JSON.stringify(settings)).toEqual({ ...stored, settings: { reducedMotion: false } });
+      expect(readProfile({ ...stored, settings }), JSON.stringify(settings)).toEqual({ ...stored, settings: { reducedMotion: false, sound: true } });
     }
   });
 
@@ -67,8 +67,8 @@ describe('changing a profile', () => {
   it('reads, changes and writes back, so that one change never erases another', async () => {
     const store = new MemoryStore();
     await updateProfile(store, (p) => ({ ...p, gallery: ['watch_rolex'] }));
-    await updateProfile(store, (p) => ({ ...p, settings: { reducedMotion: true } }));
-    expect(await store.loadProfile()).toEqual({ ...newProfile(), settings: { reducedMotion: true }, gallery: ['watch_rolex'] });
+    await updateProfile(store, (p) => ({ ...p, settings: { reducedMotion: true, sound: true } }));
+    expect(await store.loadProfile()).toEqual({ ...newProfile(), settings: { reducedMotion: true, sound: true }, gallery: ['watch_rolex'] });
   });
 
   it('applies changes asked for at the same moment one after another, losing none', async () => {

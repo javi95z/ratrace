@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { assetClassArt, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
+import { assetClassArt, CARD_STAND_INS, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, momentArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
 import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
@@ -55,6 +55,8 @@ describe.each(LOCALES)('content text: %s', (locale) => {
 
   it('has text for every card, with a label for each option and a line for each outcome', () => {
     expect(keys(text.cards)).toEqual(ids(content.cards));
+    expect(keys(text.crises)).toEqual(ids(content.crises));
+    for (const crisis of content.crises) expect(text.crises[crisis.id].years, `${locale} ${crisis.id}`).toHaveLength(crisis.phases.length);
     for (const card of content.cards) {
       const written = text.cards[card.id];
       expect(written.options, card.id).toHaveLength(card.options.length);
@@ -156,7 +158,10 @@ describe('content art', () => {
 
   it('gives every card a scene of its own, and no scene to a card that does not exist', () => {
     expect(keys(cardArt)).toEqual(ids(content.cards));
-    expect(new Set(Object.values(cardArt)).size).toBe(content.cards.length);
+    // No two cards share a scene, but for those still waiting for their own.
+    const drawn = content.cards.filter((card) => !CARD_STAND_INS.includes(card.id));
+    expect(new Set(drawn.map((card) => cardArt[card.id])).size).toBe(drawn.length);
+    for (const id of CARD_STAND_INS) expect(keys(cardArt)).toContain(id);
   });
 
   it('points only at sprites that exist', () => {
@@ -167,6 +172,7 @@ describe('content art', () => {
       ...rentTierArt,
       ...content.cities.flatMap((city) => [cityArt(city.id), cityArt(city.id, 'day'), cityIcon(city.id)]),
       ...FAMILY_ART,
+      ...Object.values(momentArt),
       ...lives.flatMap((life) => PORTRAIT_AGES.map((age) => portraitArt(life.id, age))),
       ...Object.values(assetClassArt),
       ...lifestyleArt,
@@ -176,7 +182,7 @@ describe('content art', () => {
       ...Object.values(topicArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(100 + 55 + 16 + 2 + 6 * 3 + 8 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+    expect(wanted.length).toBe(106 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
   });
 
   it('draws who shares a life: the couple, then the youngest child, and a full house as one picture', () => {

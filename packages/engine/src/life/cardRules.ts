@@ -83,6 +83,12 @@ export function validateCards(c: Content): string[] {
     regimeBegan: listOf(REGIMES, 'regime'), regimes: listOf(REGIMES, 'regime'), cryptoBegan: listOf(PHASES, 'crypto phase'),
     rateChangeAtLeastBp: whole, rateChangeAtMostBp: whole, inflationAtLeastBp: whole, anyPropertyReturnAtMostBp: whole,
     taxReform: flag,
+    crisis: (value) => {
+      if (!isRecord(value)) return 'needs a crisis and one of its rounds';
+      const crisis = (c.crises ?? []).find((x) => x.id === value.id);
+      if (!crisis) return `names an unknown crisis: ${String(value.id)}`;
+      return isWhole(value.year) && value.year >= 1 && value.year <= crisis.phases.length ? null : `names a round crisis ${crisis.id} does not have: ${String(value.year)}`;
+    },
   };
 
   const jobCheck: Check = (value) => {

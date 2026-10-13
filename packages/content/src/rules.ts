@@ -89,4 +89,7 @@ export const world: WorldRules = {
   taxReformsPerGame: 2,
   taxReformStepsBp: [-300, -200, 200, 300],
   quietWeight: 30,
+  // About one life in three lives through a crisis, and never before 30: by then there is something to lose.
+  crisisChancePct: 30,
+  crisisEarliestRound: 4,
 };

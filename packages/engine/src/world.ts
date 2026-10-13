@@ -3,7 +3,7 @@ import { clamp, round } from './money';
 import { applyTaxReforms, writeNews } from './news';
 import { INDEX_START, PRICE_LEVEL_START } from './rates';
 import { Rng, seedRng } from './rng';
-import type { Content, CryptoPhase, WorldState } from './types';
+import type { Content, CrisisPhase, CryptoPhase, WorldState } from './types';
 
 const MIN_ASSET_RETURN_BP = -9_500;
 const MIN_PROPERTY_RETURN_BP = -5_000;
@@ -25,26 +25,60 @@ interface Streams {
   cities: Rng[];
 }
 
+/** The crisis of a game: which one, and the round it opens in. */
+interface CrisisPlan {
+  id: string;
+  start: number;
+  phases: ReadonlyArray<CrisisPhase>;
+}
+
+/**
+ * Whether this game has a crisis, which, and when. It has a random stream of its own, so a world
+ * without a crisis is the same world it was before crises existed.
+ */
+function planCrisis(seed: string, content: Content): CrisisPlan | null {
+  const rng = new Rng(seedRng(seed, 'crisis'));
+  if (content.crises.length === 0 || !rng.chance(content.world.crisisChancePct)) return null;
+  const crisis = content.crises.find((c) => c.id === rng.pickWeighted(content.crises.map((c): [string, number] => [c.id, c.weight])));
+  if (!crisis) return null;
+  // Every round of it is one the player plays: it is over by the last round of the life.
+  const first = content.world.crisisEarliestRound;
+  const last = content.rounds - crisis.phases.length;
+  if (last < first) return null;
+  return { id: crisis.id, start: first + rng.int(last - first + 1), phases: crisis.phases };
+}
+
+/** The phase of the crisis a round is played under, or null. */
+function phaseAt(plan: CrisisPlan | null, round: number): CrisisPhase | null {
+  if (!plan) return null;
+  return plan.phases[round - plan.start] ?? null;
+}
+
 function nextIndex(index: number, returnBp: number): number {
   return Math.max(1, round((index * (10_000 + returnBp)) / 10_000));
 }
 
-function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldState {
+function stepWorld(prev: WorldState, content: Content, streams: Streams, plan: CrisisPlan | null): WorldState {
   const m = content.market;
   const macro = streams.macro;
+  // A crisis acts twice: on the state it arrives in, and on the returns of the round played under it.
+  const arriving = phaseAt(plan, prev.round + 1);
+  const leaving = phaseAt(plan, prev.round);
 
-  const regime = macro.pickWeighted(m.regimeTransitions[prev.regime]);
+  // The draws are always made, so that a crisis changes what happens and never what is rolled after it.
+  const drawnRegime = macro.pickWeighted(m.regimeTransitions[prev.regime]);
+  const regime = arriving?.regime ?? drawnRegime;
   const drawnPhase = macro.pickWeighted(m.cryptoTransitions[prev.cryptoPhase]);
   const chilled = macro.chance(m.recessionWinterChancePct);
-  const cryptoPhase: CryptoPhase = regime === 'recession' && chilled ? 'winter' : drawnPhase;
+  const cryptoPhase: CryptoPhase = arriving?.cryptoPhase ?? (regime === 'recession' && chilled ? 'winter' : drawnPhase);
 
   const policyRateBp = clamp(
-    prev.policyRateBp + m.rateDriftBp[regime] + round(m.rateNoiseBp * macro.normal()),
+    prev.policyRateBp + m.rateDriftBp[regime] + round(m.rateNoiseBp * macro.normal()) + (arriving?.rateBp ?? 0),
     0,
     MAX_RATE_BP,
   );
   const inflationBp = clamp(
-    round((prev.inflationBp + m.inflationTargetBp[regime]) / 2) + round(m.inflationNoiseBp * macro.normal()),
+    round((prev.inflationBp + m.inflationTargetBp[regime]) / 2) + round(m.inflationNoiseBp * macro.normal()) + (arriving?.inflationBp ?? 0),
     MIN_INFLATION_BP,
     MAX_INFLATION_BP,
   );
@@ -73,7 +107,8 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldS
           : asset.class === 'crypto'
             ? m.cryptoMeanBp[cryptoPhase]
             : m.goldMeanBp[regime] + (inflationBp - NEUTRAL_INFLATION_BP) * content.yearsPerRound;
-      ret = mean + round((classShock[asset.class] * asset.betaPct) / 100) + own;
+      const crisis = asset.class === 'equity' ? leaving?.equityBp : asset.class === 'crypto' ? leaving?.cryptoBp : leaving?.goldBp;
+      ret = mean + round((classShock[asset.class] * asset.betaPct) / 100) + own + (crisis ?? 0);
     }
     if (crashed) ret = CRASH_RETURN_BP;
     ret = Math.max(ret, MIN_ASSET_RETURN_BP);
@@ -89,7 +124,7 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldS
     const momentum = round((prev.propertyReturnBp[city.id] * city.propertyMomentumPct) / 100);
     const ret = Math.max(
       MIN_PROPERTY_RETURN_BP,
-      city.propertyGrowthBp + momentum - city.propertyRateSensitivity * rateChangeBp + shock,
+      city.propertyGrowthBp + momentum - city.propertyRateSensitivity * rateChangeBp + shock + (leaving?.propertyBp ?? 0),
     );
     propertyReturnBp[city.id] = ret;
     propertyIndex[city.id] = nextIndex(prev.propertyIndex[city.id], ret);
@@ -109,6 +144,7 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams): WorldS
     taxShiftBp: prev.taxShiftBp,
     news: [],
     eventCardId: null,
+    crisis: plan && arriving ? { id: plan.id, year: prev.round + 1 - plan.start + 1, of: plan.phases.length } : null,
   };
 }
 
@@ -135,9 +171,11 @@ export function generateTimeline(seed: string, content: Content): WorldState[] {
       taxShiftBp: Object.fromEntries(content.cities.map((c) => [c.id, 0])),
       news: [],
       eventCardId: null,
+      crisis: null,
     },
   ];
-  for (let r = 1; r <= content.rounds; r++) timeline.push(stepWorld(timeline[r - 1], content, streams));
+  const plan = planCrisis(seed, content);
+  for (let r = 1; r <= content.rounds; r++) timeline.push(stepWorld(timeline[r - 1], content, streams, plan));
   // Each of these has its own random stream and reads prices without changing them.
   applyTaxReforms(seed, content, timeline);
   chooseWorldCards(seed, content, timeline);

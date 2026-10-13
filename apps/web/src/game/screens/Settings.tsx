@@ -17,7 +17,7 @@ const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
 export function Preferences() {
   const t = useT('settings');
   const home = useT('home');
-  const { reducedMotion, setReducedMotion, locale } = useSettings();
+  const { reducedMotion, setReducedMotion, sound, setSound, locale } = useSettings();
   const guide = useGuide();
   const pathname = usePathname();
   return (
@@ -35,6 +35,7 @@ export function Preferences() {
           </Link>
         ))}
       </div>
+      <Toggle on={sound} onChange={setSound} label={t('sound')} hint={t('soundHint')} />
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
     </div>

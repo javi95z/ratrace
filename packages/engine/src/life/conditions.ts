@@ -99,5 +99,8 @@ export function triggerHolds(trigger: WorldTrigger | undefined, prev: WorldState
     const reformed = Object.keys(now.taxShiftBp).some((cityId) => now.taxShiftBp[cityId] !== prev.taxShiftBp[cityId]);
     if (trigger.taxReform !== reformed) return false;
   }
+  if (trigger.crisis !== undefined) {
+    if (now.crisis === null || now.crisis.id !== trigger.crisis.id || now.crisis.year !== trigger.crisis.year) return false;
+  }
   return true;
 }

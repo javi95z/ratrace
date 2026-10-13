@@ -144,6 +144,37 @@ export const worldCards: CardDef[] = [
     {},
     { when: { notFlags: ['tax_advisor'] }, effects: { cash: usd(-600), setFlags: ['tax_advisor'] } },
   ]),
+  // A crisis deals a card of its own in each of its first two rounds. The weight leaves the quiet round no chance.
+  card('crisis_crash_panic', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'crash', year: 1 } } }, [
+    {},
+    { effects: { invest: { assetId: 'msci_world', amount: usd(8_000) } } },
+    { effects: { loan: usd(8_000) } },
+  ]),
+  card('crisis_crash_layoffs', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'crash', year: 2 } } }, [
+    { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { salaryModPct: -8 } }] },
+    { when: { employed: true }, effects: { salaryModPct: -4 } },
+    { effects: { focus: 2, careerSkill: 2 } },
+  ]),
+  card('crisis_energy_bills', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 1 } } }, [
+    { effects: { cashSalaryPct: -6 } },
+    { effects: { cash: usd(-3_000), status: 1 } },
+    { effects: { cashSalaryPct: -6, invest: { assetId: 'gold', amount: usd(4_000) } } },
+  ]),
+  card('crisis_energy_wages', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 2 } } }, [
+    {},
+    { when: { employed: true }, effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { salaryModPct: 6 } }, { weight: 40, effects: { salaryBoostPct: -10 } }] },
+    { effects: { lifestyleFloor: 0, cashSalaryPct: 3 } },
+  ]),
+  card('crisis_debt_spreads', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'debt', year: 1 } } }, [
+    {},
+    { when: { hasMortgage: true }, effects: { cash: usd(-1_200), refinance: 'fixed' } },
+    { effects: { invest: { assetId: 'bund', amount: usd(5_000) } } },
+  ]),
+  card('crisis_debt_austerity', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'debt', year: 2 } } }, [
+    { effects: { cashSalaryPct: -4 } },
+    { effects: { cashSalaryPct: -4, focus: 1, careerSkill: 1 } },
+    { when: { minFinanceSkill: 2 }, effects: { cashSalaryPct: -4, property: { typeId: 'studio', pricePct: 80, downPct: 25, rented: true } } },
+  ]),
   card('world_bank_failure', 'world', { weight: 12, once: true, trigger: { regimes: ['slowdown', 'recession'] } }, [
     { outcomes: [{ weight: 85, effects: {} }, { weight: 15, effects: { lose: { what: 'deposit', pct: 15 } } }] },
     { effects: { focus: 1 } },

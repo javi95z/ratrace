@@ -1,5 +1,5 @@
-import { content, lives } from '@ratrace/content';
-import { applyCard, applyRound, createGame, realNetWorth } from '@ratrace/engine';
+import { content, journalStart, lives } from '@ratrace/content';
+import { applyCard, applyRound, createGame, realNetWorth, viewOf } from '@ratrace/engine';
 import type { GameState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { recordStart, recordStep } from './record';
@@ -32,7 +32,8 @@ function play(rounds: number, orders: Parameters<typeof applyRound>[2]['orders']
 describe('the record of a life', () => {
   it('starts with the net worth the life begins with, no bankruptcy, and a fresh journal', () => {
     const state = createGame({ content, start: nurse }, 'record');
-    expect(recordStart(content, state)).toEqual({ history: [realNetWorth(state)], bankruptcies: 0, journal: { cities: ['madrid'], cardUsed: false, kinds: [], earned: [] } });
+    expect(recordStart(content, state)).toEqual({ history: [realNetWorth(state)], bankruptcies: 0, journal: journalStart(content, viewOf(state)) });
+    expect(recordStart(content, state).journal).toMatchObject({ cities: ['madrid'], cardUsed: false, kinds: [], earned: [], story: { milestones: [] } });
   });
 
   it('adds one net worth for every round played, and none for a card', () => {

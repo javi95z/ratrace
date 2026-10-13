@@ -70,7 +70,7 @@ describe.each(stores)('%s', (_name, make) => {
 
   it('keeps the profile', async () => {
     const store = make();
-    const mine = { ...newProfile(), settings: { reducedMotion: true }, gallery: ['watch_rolex'], badges: { millionaire: { at: 3, gameId: 'g' } } };
+    const mine = { ...newProfile(), settings: { reducedMotion: true, sound: true }, gallery: ['watch_rolex'], badges: { millionaire: { at: 3, gameId: 'g' } } };
     await store.saveProfile(mine);
     expect(await store.loadProfile()).toEqual(mine);
   });
@@ -81,7 +81,7 @@ describe('LocalStore', () => {
     const first = new LocalStore('ratrace-test-reopen');
     await first.saveGame(game());
     await first.addRun(run('a', 10));
-    await first.saveProfile({ ...newProfile(), settings: { reducedMotion: true } });
+    await first.saveProfile({ ...newProfile(), settings: { reducedMotion: true, sound: true } });
     const second = new LocalStore('ratrace-test-reopen');
     expect(await second.loadGame()).toEqual(game());
     expect(await second.listRuns()).toHaveLength(1);

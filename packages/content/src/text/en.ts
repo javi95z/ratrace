@@ -128,6 +128,23 @@ export const en: ContentText = {
       unlock: 'Hold your coins through a crypto winter.',
     },
   },
+  crises: {
+    crash: {
+      name: 'The Great Crash',
+      intro: 'Markets are in free fall and homes follow them down. Central banks cut rates. Those who must sell lose most.',
+      years: ['Shares and homes fall hard.', 'Jobs go, and prices keep sliding.', 'The worst is over: markets turn.'],
+    },
+    energy: {
+      name: 'The Energy Shock',
+      intro: 'Fuel is scarce and every price follows it up. Rates rise to catch inflation. Cash and bonds lose; gold gains.',
+      years: ['Prices leap and rates follow.', 'Still climbing: growth stalls.', 'Prices settle, and gold gives some back.'],
+    },
+    debt: {
+      name: 'The Debt Crisis',
+      intro: 'Lenders have stopped trusting governments. Borrowing costs jump, and whatever was bought on credit falls.',
+      years: ['Rates jump; shares and homes fall.', 'Dearer credit still, and homes keep falling.'],
+    },
+  },
   categories: {
     career: 'Career',
     education: 'Education',

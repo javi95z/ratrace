@@ -3,6 +3,8 @@ import type { Content, GameEvent, GameView, Order, PlayerState, Position } from 
 import { assetKind } from './art';
 import type { AssetKind } from './art';
 import { usd } from './money';
+import { storyAfter, storyStart } from './story';
+import type { Story } from './story';
 
 /** A life begins at 22 and ages by the years of a round. */
 export const START_AGE = 22;
@@ -62,6 +64,8 @@ export interface Journal {
   kinds: string[];
   /** Badges earned in this life, in the order they came. */
   earned: string[];
+  /** What happened that is worth telling when the life is over. */
+  story: Story;
 }
 
 /** One step of a life as the badges see it: the answer to a card, or a round. */
@@ -92,8 +96,8 @@ function kindsHeld(content: Content, p: PlayerState): Kind[] {
   return [...kinds];
 }
 
-export function journalStart(_content: Content, view: GameView): Journal {
-  return { cities: [view.player.cityId], cardUsed: false, kinds: [], earned: [] };
+export function journalStart(content: Content, view: GameView): Journal {
+  return { cities: [view.player.cityId], cardUsed: false, kinds: [], earned: [], story: storyStart(content, view) };
 }
 
 /** The journal after a step. Badges are not added here: `badgesEarned` says which are new, and the caller records them. */
@@ -105,6 +109,7 @@ export function journalAfter(content: Content, journal: Journal, after: GameView
     cardUsed: journal.cardUsed || events.some((e) => e.kind === 'ledger' && e.line === 'creditCardDraw' && e.amount !== 0),
     kinds: [...kinds],
     earned: journal.earned,
+    story: storyAfter(content, journal.story, after, events),
   };
 }
 

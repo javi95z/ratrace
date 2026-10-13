@@ -96,7 +96,9 @@
     "guide": "Consejos de la guía",
     "guideHint": "Notas que explican cada pantalla durante tu primera vida.",
     "home": "Volver al inicio",
-    "homeHint": "Tu vida te espera tal como la dejas."
+    "homeHint": "Tu vida te espera tal como la dejas.",
+    "sound": "Sonido",
+    "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla."
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña. Así está ahora.",
@@ -450,6 +452,41 @@
     "collection": "Ver tu colección",
     "again": "Vivir otra vida",
     "home": "Inicio"
+  },
+  "epilogue": {
+    "title": "Tu vida, contada",
+    "opening": {
+      "job": "Empezaste a los {age} en {city}, de {job}, con {cash} en el bolsillo.",
+      "none": "Empezaste a los {age} en {city}, sin trabajo y con {cash} en el bolsillo."
+    },
+    "quiet": "Fue una vida tranquila: sin mudanzas, sin sobresaltos y sin grandes apuestas. Año tras año, lo mismo y a tiempo.",
+    "told": {
+      "top": "A los {age} llegaste a lo más alto: {title}.",
+      "promoted": "A los {age} ya eras {title}.",
+      "career": "A los {age} lo dejaste todo por otra carrera: {career}.",
+      "jobLost": "A los {age} te quedaste sin trabajo.",
+      "moved": "A los {age} hiciste las maletas y te fuiste a {city}.",
+      "partner": "A los {age} dejaste de vivir a solas.",
+      "split": "A los {age} volviste a estar por tu cuenta.",
+      "firstChild": "A los {age} nació tu primer hijo.",
+      "child": "A los {age} la familia creció otra vez.",
+      "home": "A los {age} compraste tu primera casa: {home}.",
+      "business": "A los {age} montaste un negocio.",
+      "soldBusiness": "A los {age} lo vendiste por una buena suma.",
+      "escaped": "A los {age} saliste de la rueda: tus rentas ya pagaban tu vida.",
+      "escapeLost": "A los {age} la rueda te volvió a atrapar.",
+      "bankrupt": "A los {age} lo perdiste todo y empezaste de cero.",
+      "crisis": "A los {age} te pilló {crisis}.",
+      "hundred": "A los {age} juntaste tus primeros cien mil.",
+      "million": "A los {age} eras millonario.",
+      "tenMillion": "A los {age} pasaste de los diez millones."
+    },
+    "closing": {
+      "free": "Terminaste a los {age} en {city}, libre, con {worth} y {score} puntos. Trabajar hacía tiempo que era una elección.",
+      "rich": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Rico, sí; pero la rueda nunca dejó de girar.",
+      "through": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Una vida entera de madrugar, y la rueda girando hasta el final.",
+      "broke": "Terminaste a los {age} en {city} con {worth} y {score} puntos. No salió como esperabas. La siguiente vida empieza de nuevo a los 22."
+    }
   },
   "badges": {
     "earned": "Insignia conseguida",

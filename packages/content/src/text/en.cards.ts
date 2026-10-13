@@ -429,6 +429,36 @@ export const cards: Record<string, CardText> = {
     'Read the summary',
     'See a tax advisor',
   ]),
+  crisis_crash_panic: c('Black Monday', 'Screens are red from Tokyo to New York. Your phone will not stop buzzing with people asking what you are going to do.', [
+    'Look away and hold',
+    'Buy while everyone sells',
+    'Draw on your credit line while the bank still lends',
+  ]),
+  crisis_crash_layoffs: c('The second wave', 'A year in, the crash has reached the payroll. Your employer calls an all-hands meeting for Friday.', [
+    ['Keep your head down', 'Your job and your pay survive.', 'You keep the job, on less pay.'],
+    'Offer to take a pay cut',
+    'Use the quiet months to retrain',
+  ]),
+  crisis_energy_bills: c('The bill', 'Heating, petrol and the weekly shop have all jumped at once. The envelope on the mat is thicker than usual.', [
+    'Pay it',
+    'Insulate the flat and be done with it',
+    'Pay it, and put savings into gold',
+  ]),
+  crisis_energy_wages: c('Wages against prices', 'Prices have run two years ahead of pay. There is talk of a strike, and of who will blink first.', [
+    'Wait it out',
+    ['Walk out with the others', 'The raise is won.', 'The strike fails and the days are docked.'],
+    'Cut back at home instead',
+  ]),
+  crisis_debt_spreads: c('The spread', 'Lenders want twice as much to hold your government\'s debt. Every loan priced off it is about to follow.', [
+    'Wait and see',
+    'Lock your mortgage rate now',
+    'Flee to {asset:bund}',
+  ]),
+  crisis_debt_austerity: c('Cuts', 'The budget is balanced the hard way: a one-off levy, frozen pay, and bargains for anyone with cash.', [
+    'Pay the levy',
+    'Pay it, and take on the work of two',
+    'Pay it, and buy a repossessed studio to let',
+  ]),
   world_bank_failure: c('A bank fails', 'A mid-sized bank closes its doors and queues form outside the others.', [
     ['Trust the guarantee', 'Your savings are safe.', 'Part of your savings was over the limit.'],
     'Queue and move your money',

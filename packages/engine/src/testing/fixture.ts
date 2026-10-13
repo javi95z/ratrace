@@ -178,7 +178,10 @@ const base: Content = {
     taxReformsPerGame: 2,
     taxReformStepsBp: [-300, -200, 200, 300],
     quietWeight: 10,
+    crisisChancePct: 0,
+    crisisEarliestRound: 3,
   },
+  crises: [],
   cards: [],
 };
 

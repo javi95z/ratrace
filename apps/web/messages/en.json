@@ -96,7 +96,9 @@
     "guide": "Tips from the guide",
     "guideHint": "Notes that explain each screen during your first life.",
     "home": "Back to the home screen",
-    "homeHint": "Your life waits for you just as you leave it."
+    "homeHint": "Your life waits for you just as you leave it.",
+    "sound": "Sound",
+    "soundHint": "Coins, cards and fanfares. It plays once you touch the screen."
   },
   "play": {
     "moved": "This life was played on in another tab. Here is where it stands now.",
@@ -450,6 +452,41 @@
     "collection": "See your collection",
     "again": "Live another life",
     "home": "Home"
+  },
+  "epilogue": {
+    "title": "Your life, told",
+    "opening": {
+      "job": "You started at {age} in {city}, as a {job}, with {cash} to your name.",
+      "none": "You started at {age} in {city}, with no job and {cash} to your name."
+    },
+    "quiet": "It was a quiet life: no moves, no shocks and no big bets. Year after year, the same, and on time.",
+    "told": {
+      "top": "At {age} you reached the top: {title}.",
+      "promoted": "By {age} you were {title}.",
+      "career": "At {age} you left it all for another career: {career}.",
+      "jobLost": "At {age} you lost your job.",
+      "moved": "At {age} you packed your bags for {city}.",
+      "partner": "At {age} you stopped living alone.",
+      "split": "At {age} you were on your own again.",
+      "firstChild": "At {age} your first child was born.",
+      "child": "At {age} the family grew again.",
+      "home": "At {age} you bought your first home: a {home}.",
+      "business": "At {age} you started a business.",
+      "soldBusiness": "At {age} you sold it for a good sum.",
+      "escaped": "At {age} you left the rat race: your income paid for your life without you.",
+      "escapeLost": "At {age} the rat race caught you again.",
+      "bankrupt": "At {age} you lost everything and started from nothing.",
+      "crisis": "At {age} {crisis} found you.",
+      "hundred": "At {age} you had your first hundred thousand.",
+      "million": "At {age} you were a millionaire.",
+      "tenMillion": "At {age} you passed ten million."
+    },
+    "closing": {
+      "free": "You finished at {age} in {city}, free, with {worth} and {score} points. Work had long been a choice.",
+      "rich": "You finished at {age} in {city} with {worth} and {score} points. Rich, yes; but the wheel never stopped turning.",
+      "through": "You finished at {age} in {city} with {worth} and {score} points. A lifetime of early mornings, and the wheel turning to the end.",
+      "broke": "You finished at {age} in {city} with {worth} and {score} points. It did not go as you hoped. The next life starts again at 22."
+    }
   },
   "badges": {
     "earned": "Badge earned",

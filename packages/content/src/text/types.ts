@@ -37,6 +37,8 @@ export interface ContentText {
   focusActions: Record<FocusAction, string>;
   debts: Record<DebtKind, string>;
   lives: Record<string, { name: string; perk: string; handicap: string; unlock: string }>;
+  /** A crisis: its name, what it is in two lines, and one line for each of its rounds. */
+  crises: Record<string, { name: string; intro: string; years: string[] }>;
   categories: Record<CardCategory, string>;
   cards: Record<string, CardText>;
   regimes: Record<Regime, string>;

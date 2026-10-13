@@ -14,7 +14,10 @@ import { updateProfile } from '@/session/profile';
 import { ResilientStore } from '@/session/resilient';
 import { newProfile } from '@/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions } from '@/session/types';
+import { createSoundBoard } from '@/ui/sound';
+import type { Cue, SoundBoard } from '@/ui/sound';
 import type { Translate, Words } from './present';
+import { cuesFor } from './sound';
 import { createGameStore } from './store';
 import type { GameStore, RoundActions, RoundState } from './store';
 
@@ -32,6 +35,8 @@ export interface Services {
   /** How long after a change of screen a tap is ignored. See `GameStoreOptions.guardMs`. */
   tapGuardMs?: number;
   saving?: Saving;
+  /** What plays the sounds. Left out, a test hears nothing. */
+  sound?: SoundBoard;
 }
 
 /** Long enough for the second tap of a double tap or a double click, short enough that nobody waits for it. */
@@ -42,6 +47,7 @@ interface Game {
   game: GameStore;
   store: PlayerStore;
   saving: Saving;
+  sound: SoundBoard;
   words: Words;
   locale: Locale;
   profile: Profile;
@@ -73,19 +79,23 @@ function browserServices(): Services {
     now: () => Date.now(),
     onSaveError: (error) => console.warn('could not save the game:', error),
   });
-  return { sessions, store, saving };
+  return { sessions, store, saving, sound: createSoundBoard() };
 }
+
+/** Anything a tap is meant for: it answers with a tick. */
+const PRESSABLE = 'button, a[href], [role="tab"], [role="radio"], [role="switch"]';
 
 /** Everything one page load makes once: the round store and the two services behind it. */
 interface Made {
   game: GameStore;
   store: PlayerStore;
   saving: Saving;
+  sound: SoundBoard;
 }
 
-function make({ sessions, store, saving, tapGuardMs }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, sound }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, sound: sound ?? createSoundBoard(() => null) };
 }
 
 /**
@@ -134,11 +144,32 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     else delete document.documentElement.dataset.motion;
   }, [reducedMotion]);
 
+  // The sounds follow the round on screen, and every press answers with a tick.
+  const soundOn = profile.settings.sound;
+  useEffect(() => {
+    made.sound.setOn(soundOn);
+  }, [made, soundOn]);
+  useEffect(() => {
+    const stop = made.game.subscribe((state, before) => {
+      for (const cue of cuesFor(state, before)) made.sound.play(cue);
+    });
+    const onClick = (event: MouseEvent) => {
+      const pressed = event.target instanceof Element ? event.target.closest(PRESSABLE) : null;
+      if (pressed && !(pressed as HTMLButtonElement).disabled) made.sound.play('tap');
+    };
+    document.addEventListener('click', onClick, true);
+    return () => {
+      stop();
+      document.removeEventListener('click', onClick, true);
+    };
+  }, [made]);
+
   const value = useMemo<Game>(
     () => ({
       game: made.game,
       store: made.store,
       saving: made.saving,
+      sound: made.sound,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
       profile,
@@ -174,8 +205,16 @@ export const useSettings = () => {
   return {
     reducedMotion: profile.settings.reducedMotion,
     setReducedMotion: (reducedMotion: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, reducedMotion } })),
+    sound: profile.settings.sound,
+    setSound: (sound: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, sound } })),
     locale,
   };
+};
+
+/** Plays a cue. For the few sounds that belong to a screen and not to a change of the round. */
+export const useSound = (): ((cue: Cue) => void) => {
+  const { sound } = useGameContext();
+  return (cue) => sound.play(cue);
 };
 
 /** What belongs to the player rather than to one life: badges, the gallery, the lives unlocked. */

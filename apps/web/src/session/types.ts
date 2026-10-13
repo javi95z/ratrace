@@ -1,4 +1,4 @@
-import type { Journal } from '@ratrace/content';
+import type { Journal, Milestone } from '@ratrace/content';
 import type { GameEvent, GameState, GameView, Order, RoundChoices } from '@ratrace/engine';
 
 /** What one answer or one round gives back: the game as it now stands, and what happened on the way. */
@@ -26,6 +26,8 @@ export interface GameSession {
   bankruptcies(): number;
   /** The badges earned in this life so far, in the order they came. */
   badges(): string[];
+  /** What has happened in this life that is worth telling, in the order it came. */
+  story(): Milestone[];
   /**
    * Answers the next card of the hand with the option given, and returns what that card did.
    * Cards are answered one at a time: the next one is judged as the player stands after this one.
@@ -112,6 +114,8 @@ export interface FinishedRun {
 export interface Settings {
   /** Turns off roll-ups and particles, whatever the system setting says. */
   reducedMotion: boolean;
+  /** False for a silent game. */
+  sound: boolean;
 }
 
 /** When something was earned for the first time, and in which life. */
@@ -136,7 +140,7 @@ export interface Profile {
 
 export const newProfile = (): Profile => ({
   format: SAVE_FORMAT,
-  settings: { reducedMotion: false },
+  settings: { reducedMotion: false, sound: true },
   badges: {},
   gallery: [],
   unlocked: {},

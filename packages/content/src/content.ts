@@ -3,11 +3,12 @@ import { assets, market } from './assets';
 import { cards } from './cards';
 import { careers } from './careers';
 import { cities } from './cities';
+import { crises } from './crises';
 import { items } from './items';
 import { debt, life, propertyTypes, scoring, world } from './rules';
 
 /** Bumped whenever a number or a card changes, so a saved game knows which rules it was played under. */
-export const CONTENT_VERSION = '1.4.0';
+export const CONTENT_VERSION = '1.5.0';
 
 /** Everything the engine needs to run a v1 game: 20 rounds of two years, from age 22 to 62. */
 export const content: Content = {
@@ -28,5 +29,6 @@ export const content: Content = {
   items,
   life,
   world,
+  crises,
   cards,
 };

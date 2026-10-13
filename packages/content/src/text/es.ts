@@ -128,6 +128,23 @@ export const es: ContentText = {
       unlock: 'Mantén tus criptomonedas durante un invierno cripto.',
     },
   },
+  crises: {
+    crash: {
+      name: 'El Gran Crac',
+      intro: 'Los mercados caen en picado y la vivienda va detrás. Los bancos centrales bajan tipos. Quien tiene que vender es quien más pierde.',
+      years: ['Bolsa y vivienda caen con fuerza.', 'Llegan los despidos y los precios siguen bajando.', 'Lo peor ha pasado: los mercados se dan la vuelta.'],
+    },
+    energy: {
+      name: 'La Crisis Energética',
+      intro: 'Falta combustible y todos los precios suben tras él. Los tipos suben para frenar la inflación. Pierden el efectivo y los bonos; gana el oro.',
+      years: ['Los precios saltan y los tipos van detrás.', 'Siguen subiendo: la economía se para.', 'Los precios se calman y el oro devuelve parte.'],
+    },
+    debt: {
+      name: 'La Crisis de Deuda',
+      intro: 'Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encarece de golpe y cae todo lo que se compró a crédito.',
+      years: ['Saltan los tipos; caen bolsa y vivienda.', 'El crédito sigue caro y la vivienda sigue cayendo.'],
+    },
+  },
   categories: {
     career: 'Carrera',
     education: 'Formación',

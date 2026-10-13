@@ -175,7 +175,7 @@ describe('openSave', () => {
     expect(opened.save.bankruptcies).toBe(0);
     expect(opened.save.updatedAt).toBe(0);
     // A save from before the journal existed, or one whose journal is not a journal, gets it back from the log.
-    for (const journal of [undefined, null, 'none', { cities: [] }, { cities: ['madrid'], cardUsed: 'no', kinds: [], earned: [] }]) {
+    for (const journal of [undefined, null, 'none', { cities: [] }, { cities: ['madrid'], cardUsed: 'no', kinds: [], earned: [] }, { cities: ['madrid'], cardUsed: false, kinds: [], earned: [] }, { cities: ['madrid'], cardUsed: false, kinds: [], earned: [], story: { milestones: [{ kind: 'moved' }], last: {} } }]) {
       const rebuilt = open({ ...save, journal });
       if (!rebuilt.ok) throw new Error('expected the save to open');
       expect(rebuilt.repaired, JSON.stringify(journal)).toBe(true);

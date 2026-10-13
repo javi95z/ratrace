@@ -275,7 +275,7 @@ describe('the badges', () => {
 
 describe('the journal of a life', () => {
   it('starts with the city the life begins in and nothing else', () => {
-    expect(journalStart(content, fresh())).toEqual({ cities: ['madrid'], cardUsed: false, kinds: [], earned: [] });
+    expect(journalStart(content, fresh())).toMatchObject({ cities: ['madrid'], cardUsed: false, kinds: [], earned: [], story: { milestones: [] } });
     const abroad = viewOf(createGame({ content, start: lives[5].start }, 'badges'));
     expect(journalStart(content, abroad).cities).toEqual(['london']);
   });
