@@ -145,3 +145,11 @@ Settled when phase 1 was built:
 8. A CAPTCHA in front of guest sign-in waits for the step that puts the game in front of strangers. Until then Supabase's limit applies: 30 guest sign-ins an hour per address.
 
 Still open: free-tier limits. A free Supabase project pauses after a week without use.
+
+Settled when phase 2 was built:
+
+9. Decision 7 has its answer: on a second device the notice offers "Use that account on this device". The player signs in as the account their Google already has, and what the guest had on the device joins it: what is unlocked is joined, finished lives go up, and a life in progress is kept beside the account's.
+10. A different life in the account is offered on the front door, never imposed. The player can continue it, which asks before it ends the one on the device, or end it.
+11. A game is given up, never deleted, and a life that was given up can be taken up again by a device still playing it. Only a life the server has finished is closed.
+12. Settings such as less motion belong to the device, not the account.
+13. Every finished life in an account was finished by the server from its log. A device cannot write a run.
