@@ -123,11 +123,69 @@ describe('drawing the share card', () => {
     const fontOf = (line: string) => (fake.calls.find(([k, , text]) => k === 'text' && text === line) as [string, string])[1];
     expect(fontOf('Медсестра')).toBe('400 84px JerseyOfThePage, PixelCyrillicOfThePage');
     expect(fontOf('62 года · Мадрид')).toBe('400 36px ChakraOfThePage, ReadingCyrillicOfThePage');
-    // A canvas draws with what has arrived. Each list is asked for with the very words it will write, so that the
-    // face holding their letters is fetched before the first of them is drawn.
+    // A canvas draws with what has arrived. Each typeface is asked for with the very letters it will draw (and the
+    // one it is measured by), so that the face holding them is fetched before the first is drawn; and the Cyrillic
+    // ones are asked for their Cyrillic only, so that they fetch nothing they will not draw.
     expect(waited).toEqual([
-      ['16px JerseyOfThePage, PixelCyrillicOfThePage', 'xМедсестра'],
-      ['16px ChakraOfThePage, ReadingCyrillicOfThePage', '62 года · Мадрид'],
+      ['16px JerseyOfThePage', 'xМедсестра'],
+      ['16px PixelCyrillicOfThePage', 'хМедсестра'],
+      ['16px ChakraOfThePage', '62 года · Мадрид'],
+      ['16px ReadingCyrillicOfThePage', 'годаМадрид'],
+    ]);
+  });
+
+  it('asks for no Cyrillic typeface where there is no Cyrillic to draw', async () => {
+    const waited: string[] = [];
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load: async (font: string) => void waited.push(font) } });
+    document.documentElement.style.setProperty('--font-jersey', 'JerseyOfThePage');
+    document.documentElement.style.setProperty('--font-chakra', 'ChakraOfThePage');
+    document.documentElement.style.setProperty('--font-pixel-cyrillic', 'PixelCyrillicOfThePage');
+    document.documentElement.style.setProperty('--font-reading-cyrillic', 'ReadingCyrillicOfThePage');
+    try {
+      await drawCard(ops, async () => sprite);
+    } finally {
+      document.documentElement.removeAttribute('style');
+      delete (document as { fonts?: unknown }).fonts;
+    }
+    expect(waited).toEqual(['16px JerseyOfThePage', '16px ChakraOfThePage']);
+  });
+
+  it('draws Cyrillic as large as the page shows it, which is not as large as the Latin beside it is drawn', async () => {
+    // The page brings each typeface to the same height of small letters. Here the Latin pixel face stands 0.4 of its
+    // size tall, and the Cyrillic one 0.5: left at one size, the Russian would be a quarter taller than the figures.
+    fake.ctx.measureText = (text: string) => {
+      const px = Number(/(\d+)px/.exec(fake.ctx.font)?.[1] ?? 10);
+      return { width: text.length * px * 0.5, actualBoundingBoxAscent: px * (/[\u0400-\u04ff]/.test(text) ? 0.5 : 0.4) } as never;
+    };
+    document.documentElement.style.setProperty('--font-jersey', 'J');
+    document.documentElement.style.setProperty('--font-chakra', 'C');
+    document.documentElement.style.setProperty('--font-pixel-cyrillic', 'JC');
+    document.documentElement.style.setProperty('--font-reading-cyrillic', 'CC');
+    try {
+      await drawCard(
+        [
+          { kind: 'text', text: 'ОЧКИ', x: 10, y: 10, size: 15, font: 'pixel', color: '#fff', align: 'left', maxWidth: 400 },
+          { kind: 'text', text: 'Значки · 5', x: 10, y: 30, size: 15, font: 'pixel', color: '#fff', align: 'left', maxWidth: 400 },
+          { kind: 'text', text: 'Раунд 5', x: 100, y: 50, size: 15, font: 'pixel', color: '#fff', align: 'right', maxWidth: 400 },
+          { kind: 'text', text: '62 года', x: 10, y: 70, size: 9, font: 'sans', color: '#fff', align: 'left', maxWidth: 400 },
+        ],
+        async () => sprite,
+      );
+    } finally {
+      document.documentElement.removeAttribute('style');
+    }
+    const texts = fake.calls.filter(([k]) => k === 'text').map(([, font, text, x, y]) => [font, text, x, y]);
+    expect(texts).toEqual([
+      // 15 on the grid is 60px on the canvas: grown by 0.56 / 0.5 for Cyrillic, by 0.56 / 0.4 for Latin.
+      ['400 67px J, JC', 'ОЧКИ', 40, 40],
+      // One line, two sizes, each piece beginning where the last one ended.
+      ['400 67px J, JC', 'Значки', 40, 120],
+      ['400 84px J, JC', ' · 5', 40 + 6 * 67 * 0.5, 120],
+      // From the right: the whole line is measured first.
+      ['400 67px J, JC', 'Раунд', 400 - (5 * 67 * 0.5 + 2 * 84 * 0.5), 200],
+      ['400 84px J, JC', ' 5', 400 - 2 * 84 * 0.5, 200],
+      // The typeface for sentences is not scaled on the page, and is not here.
+      ['400 36px C, CC', '62 года', 40, 280],
     ]);
   });
 

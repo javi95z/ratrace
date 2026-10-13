@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { routing } from './routing';
 
@@ -30,13 +31,16 @@ const translated = { es, ru };
  */
 const WITHOUT_YO = new RegExp(
   `(?<![а-яё])(?:${[
-    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
+    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'ребенок', 'ребенка', 'ребенку', 'ребенком', 'ребенке', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
     'прием', 'приема', 'приему', 'приемом', 'приеме', 'объем[а-я]*', 'счет', 'отчет[а-я]*', 'расчет[а-я]*', 'самолет[а-я]*', 'перелет[а-я]*', 'полет[а-я]*', 'вперед',
     'идешь', 'живешь', 'берешь', 'даешь', 'ждешь', 'придешь', 'уйдешь', 'найдешь', 'начнешь', 'вернешь', 'поймешь', 'продаешь', 'отдаешь', 'сдаешь', 'остаешься', 'вернешься',
     'идет', 'живет', 'дает', 'ждет', 'придет', 'уйдет', 'растет', 'несет', 'ведет', 'продает', 'отдает', 'сдает', 'остается', 'придется', 'удается', 'вернется', 'начнется', 'найдется',
   ].join('|')})(?![а-яё])`,
   'i',
 );
+
+/** Short adjectives, participles and pronouns that say «ты» is a man, or a woman. */
+const GENDERED = /(?<![а-яё])ты (?:[а-яё]+ ){0,2}(?:готов|должен|рад|уволен|принят|обязан|согласен|уверен|виноват|свободен|женат|богат|беден|здоров|болен|сам|сама|одинок)(?![а-яё])|(?<![а-яё])(?:замужем|женат)(?![а-яё])/i;
 
 describe('interface text', () => {
   it('exists for every language the game is routed in', () => {
@@ -87,16 +91,58 @@ describe('interface text', () => {
 
   it('counts in Russian with every form the language has', () => {
     // 1 год, 2 года, 5 лет, and 2,5 года: a count with a form missing is shown with nothing after its number.
-    const counted = [...ru].filter(([, sentence]) => /, plural,/.test(sentence));
-    expect(counted.length).toBeGreaterThanOrEqual([...en].filter(([, sentence]) => /, plural,/.test(sentence)).length);
-    for (const [key, sentence] of counted) {
-      for (const form of ['one', 'few', 'many', 'other']) expect(sentence, `${key}: ${form}`).toMatch(new RegExp(`[, ]${form} \\{`));
+    // Each count on its own: a sentence may hold two, and a form missing from one is not made up for by the other.
+    const counts = (sentence: string): string[] => {
+      const found: string[] = [];
+      for (let from = sentence.indexOf(', plural,'); from >= 0; from = sentence.indexOf(', plural,', from + 1)) {
+        let depth = 1;
+        let end = from;
+        while (depth > 0 && end < sentence.length - 1) {
+          end += 1;
+          if (sentence[end] === '{') depth += 1;
+          else if (sentence[end] === '}') depth -= 1;
+        }
+        found.push(sentence.slice(from, end));
+      }
+      return found;
+    };
+    const counted = [...ru].flatMap(([key, sentence]) => counts(sentence).map((count) => [key, count] as const));
+    // Every sentence English counts, Russian counts too; and it counts many that English can leave alone.
+    for (const [key, sentence] of en) if (/, plural,/.test(sentence)) expect(ru.get(key), key).toMatch(/, plural,/);
+    for (const [key, count] of counted) {
+      for (const form of ['one', 'few', 'many', 'other']) expect(count, `${key}: ${form}`).toMatch(new RegExp(`[, ]${form} \\{`));
+    }
+  });
+
+  it('can be filled by the page: every sentence takes its values, for every count a language tells apart', () => {
+    // A brace out of place, or a form the language does not have, is an error on the screen and nowhere else.
+    for (const [locale, map] of [['en', en], ['es', es], ['ru', ru]] as const) {
+      const t = createTranslator({
+        locale,
+        messages: read(locale) as never,
+        onError: (error) => {
+          throw error;
+        },
+      }) as unknown as (key: string, values: Record<string, number>) => string;
+      for (const [key, sentence] of map) {
+        for (const count of [0, 1, 2, 5, 11, 21, 22, 1.5]) {
+          const filled = t(key, Object.fromEntries(params(sentence).map((name) => [name, count])));
+          expect(filled, `${locale} ${key} with ${count}`).not.toMatch(/[{}]|undefined|NaN/);
+          expect(filled.trim().length, `${locale} ${key} with ${count}`).toBeGreaterThan(0);
+        }
+      }
     }
   });
 
   it('never tells a Russian player whether they are a man or a woman', () => {
-    // The two giveaways a reader can be searched for: an ending offered both ways, and «ты» with a verb in the past.
-    const telling = [...ru].filter(([, sentence]) => /\((?:а|ла|ая|на)\)|[а-яё]\/[а-яё]{1,3}(?![а-яё])/i.test(sentence) || /(?<![а-яё])ты (?:не )?(?:уже |ещё |так и не |сам[а-я]* )?[а-яё]+(?:л|ла|лся|лась)(?![а-яё])/i.test(sentence));
+    // The giveaways a reader can be searched for: an ending offered both ways, and «ты» with a verb or a short word that agrees with it.
+    const telling = [...ru].filter(
+      ([, sentence]) =>
+        /\((?:а|ла|ая|на)\)|[а-яё]\/[а-яё]{1,3}(?![а-яё])/i.test(sentence) ||
+        /(?<![а-яё])ты (?:не )?(?:уже |ещё |так и не |сам[а-я]* )?[а-яё]+(?:л|ла|лся|лась)(?![а-яё])/i.test(sentence) ||
+        // And the short words that agree with «ты» as a verb in the past does: «ты готов», «ты уволен», «ты сама».
+        GENDERED.test(sentence),
+    );
     expect(telling.map(([key]) => key)).toEqual([]);
   });
 

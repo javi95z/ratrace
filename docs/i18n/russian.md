@@ -1,6 +1,6 @@
 # Russian: how the game is written
 
-For whoever adds or changes Russian text: `apps/web/messages/ru.json`, `packages/content/src/text/ru*.ts`, the Russian names in `packages/content/src/names.ts`, and the Russian terminal strings in `tools/play`. The tests hold the mechanical rules (keys, placeholders, plurals, typesetting, lengths). This page holds the ones a test cannot check.
+For whoever adds or changes Russian text: `apps/web/messages/ru.json`, `packages/content/src/text/ru*.ts`, the Russian names in `packages/content/src/names.ts`, and the Russian terminal strings in `tools/play`. The tests hold the mechanical rules: the same keys and placeholders as the English, every plural with its four forms, every sentence fillable by the page, typesetting, «ё» in the commonest words, the lengths of card text, and the crudest ways of giving the player a gender. This page holds the rules a test cannot check, and the words.
 
 ## Voice
 
@@ -37,11 +37,15 @@ A name the code puts into a placeholder arrives as it is, in the nominative: a c
 - A dash is ` — ` (em dash with spaces), never a spaced hyphen. An ellipsis is one character: `…`.
 - **ё** is always written: всё, ещё, жильё, партнёр, заём, учёба.
 - The percent sign stands against its number: `{pct}%`, 10%.
-- Money, rates and big numbers are formatted by the code (`1 200 $`, `2,5%`, `948 тыс. $`): never write a currency sign or a thousands separator by hand around a placeholder. Fixed amounts inside a sentence are written the Russian way: `1 000 000 $` with a no-break space (U+00A0) between groups and before the sign.
+- Money, rates and big numbers are formatted by the code (`1 200 $`, `2,5%`, `948K $`): never write a currency sign or a thousands separator by hand around a placeholder. Fixed amounts inside a sentence are written the Russian way: `1 000 000 $` with a no-break space (U+00A0) between groups and before the sign.
 - «в год» for "a year" and "per year"; the short form after an amount is `{amount}/год`.
 - No full stop at the end of a label, a button or a title. Sentences end with one.
 - Brand and product names stay in Latin letters as the name pack gives them (Rolex, Tesla, S&P 500). Cities are Russian: Мадрид, Лондон, Нью-Йорк, Дубай, Сингапур, Бангкок.
 - The game's own name stays **The Rat Race**.
+- A name, a job title or a card's title inside a sentence stands in «ёлочки» when it would otherwise put a capital letter in the middle of it: «твоя должность — «{title}»».
+- A full stop goes after the closing quote, not before it: «Только до лета».
+- A percentage comes after its noun: «Шанс {pct}%», not «{pct}% шанс».
+- A player's name in the rankings takes Latin letters only, and the rule says so.
 
 ## Words
 
@@ -68,9 +72,12 @@ One English word, one Russian word, everywhere.
 | wealth (part of the score) | богатство | |
 | status | статус | |
 | score | очки | never «счёт»: in a game about money that is a bank account |
+| points of status or wealth (in an explanation) | баллы | |
+| percentage points | пункты | «+5 пунктов к шансу» |
+| a unit of focus | единица фокуса | «четыре единицы фокуса на раунд» |
 | focus | фокус | uncountable: «+1 к фокусу», «фокуса осталось: 2 из 3» |
 | career skill | карьерный навык | |
-| finance skill | финансовый навык | |
+| finance skill, "money sense" | финансовый навык | one word for both of the English ones |
 | salary / pay | зарплата | |
 | overtime | сверхурочные | |
 | study | учёба | button: «Учиться» |
@@ -83,6 +90,7 @@ One English word, one Russian word, everywhere.
 | property | недвижимость | |
 | rent (you pay) | аренда | |
 | to rent out / let | сдавать | «Сдаётся», «Сдать» |
+| tenant | жилец, арендатор | «жилец» in a flat; «арендатор» where the let may be a shop, an office or a garage |
 | mortgage | ипотека | fixed: «фиксированная», variable: «плавающая» |
 | down payment | первый взнос | |
 | personal loan | потребительский кредит | short: «кредит» |
@@ -93,6 +101,8 @@ One English word, one Russian word, everywhere.
 | index fund | индексный фонд | |
 | government bonds | гособлигации | |
 | stocks / shares | акции | |
+| gain, loss (investments) | прибыль, убыток | |
+| gain (the rise in a property's value) | прирост | |
 | crypto | крипта | |
 | gold | золото | |
 | portfolio | портфель | |
@@ -116,5 +126,11 @@ One English word, one Russian word, everywhere.
 | name (nickname) | имя | |
 | partner | партнёр | |
 | child / children | ребёнок / дети | |
-| escape (the rat race) | выход из бегов | «вне бегов с {age} …» needs a plural |
+| escape (the rat race) | выход из бегов | «вне бегов с {age} …» needs a plural. «Выход» means nothing else in the game: another way through a card is «ещё один вариант» |
+| raise | прибавка | |
+| rung (of a career) | ступень | |
+| ladder (of things) | категория | |
+| lifestyle tiers | Эконом, Стандарт, Комфорт, Люкс | nouns, so that nothing agrees with the player |
+| connection | связь | «Нет связи» |
+| nameless player in the rankings | Крыса {tag} | |
 | the end | конец | |

@@ -4,7 +4,7 @@ import type { ContentText } from './types';
 export const ru: ContentText = {
   cities: {
     madrid: { tagline: 'Ровный старт: зарплаты средние, цены средние, обеды долгие.' },
-    london: { tagline: 'Здесь делают карьеру в финансах и платят за аренду.' },
+    london: { tagline: 'Здесь делают карьеру в финансах, а зарплату отдают за аренду.' },
     new_york: { tagline: 'Самые высокие зарплаты в игре — и самые высокие налоги.' },
     dubai: { tagline: 'Подоходного налога нет, зато способов потратить оставшееся — хоть отбавляй.' },
     singapore: { tagline: 'Низкие налоги, высокая аренда, а прибыль от инвестиций не облагается вовсе.' },
@@ -216,7 +216,7 @@ export const ru: ContentText = {
     index_only: { name: 'Индекс и ничего больше', how: 'Выйди из крысиных бегов, не имея недвижимости и ни разу не вложив ни во что, кроме индексных фондов.' },
     first_luxury_watch: { name: 'Первые люксовые часы', how: 'Обзаведись часами не хуже, чем {item:watch_omega}.' },
     supercar: { name: 'Суперкар', how: 'Обзаведись суперкаром: {item:car_lamborghini_aventador}.' },
-    shipowner: { name: 'Судовладелец', how: 'Обзаведись собственным судном: подойдёт {item:sea_sailboat} или {item:sea_motor_yacht}.' },
+    shipowner: { name: 'Судовладелец', how: 'Обзаведись собственным судном: подойдёт «{item:sea_sailboat}» или «{item:sea_motor_yacht}».' },
     penthouse: { name: 'Пентхаус', how: 'Купи пентхаус.' },
     status_100: { name: 'Статус 100', how: 'Доведи статус до 100.' },
     twenty_items: { name: 'Двадцать вещей', how: 'Собери двадцать разных вещей за все свои жизни.' },

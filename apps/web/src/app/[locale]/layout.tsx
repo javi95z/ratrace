@@ -31,6 +31,8 @@ const RUSSIAN = {
   '--font-pixel-cyrillic': alone(pixelCyrillic),
   '--font-reading-cyrillic': alone(readingCyrillic),
 } as CSSProperties;
+/** On every page: the Cyrillic pixel typeface by itself, for the one Russian word a page of another language shows, the name of the language. */
+const EVERYWHERE = { '--font-pixel-cyrillic-alone': alone(pixelCyrillic) } as CSSProperties;
 
 type Props = { children: ReactNode; params: Promise<{ locale: string }> };
 
@@ -63,7 +65,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className={`${pixel.variable} ${reading.variable} ${pixelCyrillic.variable} ${readingCyrillic.variable}`} style={locale === 'ru' ? RUSSIAN : undefined}>
+    <html lang={locale} className={`${pixel.variable} ${reading.variable} ${pixelCyrillic.variable} ${readingCyrillic.variable}`} style={locale === 'ru' ? { ...EVERYWHERE, ...RUSSIAN } : EVERYWHERE}>
       <body>
         <NextIntlClientProvider>
           <GameProvider>{children}</GameProvider>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
@@ -15,8 +15,8 @@ import { Play } from './Play';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, className, locale, ...rest }: { href: string; children: ReactNode; className?: string; locale?: string; 'aria-current'?: 'true' }) => (
-    <a href={locale ? `/${locale}${href}` : href} className={className} aria-current={rest['aria-current']}>
+  Link: ({ href, children, className, locale, ...rest }: { href: string; children: ReactNode; className?: string; locale?: string; 'aria-current'?: 'true'; lang?: string; style?: CSSProperties }) => (
+    <a href={locale ? `/${locale}${href}` : href} className={className} aria-current={rest['aria-current']} lang={rest.lang} style={rest.style}>
       {children}
     </a>
   ),
@@ -118,6 +118,11 @@ describe('the settings of a life in progress', () => {
       ['Español', '/es/play', null],
       ['Русский', '/ru/play', null],
     ]);
+    // Each name is written in its own language, and says so to whoever reads the page aloud.
+    expect(languages.map((link) => link.getAttribute('lang'))).toEqual(['en', 'es', 'ru']);
+    // The two typefaces of the game draw no Cyrillic, and on this English page what stands in for them while they
+    // load would draw «Русский» in a system face among pixel labels. That one name asks for the Cyrillic pixel face itself.
+    expect(languages.map((link) => link.style.fontFamily)).toEqual(['', '', 'var(--font-pixel-cyrillic-alone), var(--font-pixel)']);
   });
 
   it('lead back to the front door, and close without leaving', async () => {

@@ -196,9 +196,9 @@ describe('the badges', () => {
     expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 7, 7, 6, 1]);
   });
 
-  it('each have a name, a way to earn them, and a picture, in both languages', () => {
+  it('each have a name, a way to earn them, and a picture, in every language', () => {
     const manifest = JSON.parse(readFileSync(fileURLToPath(new URL('../../../art/clean/manifest.json', import.meta.url)), 'utf8')) as { sprites: Record<string, unknown> };
-    for (const locale of ['en', 'es'] as const) {
+    for (const locale of ['en', 'es', 'ru'] as const) {
       const { text } = textFor(locale);
       expect(Object.keys(text.badges).sort(), locale).toEqual(badges.map((b) => b.id).sort());
       expect(Object.keys(text.badgeGroups).sort(), locale).toEqual(['escape', 'investing', 'life', 'misfortune', 'status', 'wealth']);

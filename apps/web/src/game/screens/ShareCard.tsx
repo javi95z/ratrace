@@ -25,16 +25,25 @@ const browserLoader: SpriteLoader = (id) => {
   });
 };
 
-/**
- * The two typefaces of the game, by the names the page gave them, each followed by the one the
- * page keeps for the letters it does not draw: neither has Cyrillic.
- */
-function families(): Record<'pixel' | 'sans', string> {
+/** A typeface of the game by the name the page gave it, and the one the page keeps for the Cyrillic it does not draw, if it keeps one. */
+interface Family {
+  own: string;
+  cyrillic: string;
+}
+
+function families(): Record<'pixel' | 'sans', Family> {
   const style = getComputedStyle(document.documentElement);
   const named = (name: string) => style.getPropertyValue(name).trim();
-  const list = (first: string, second: string, otherwise: string) => [named(first) || otherwise, named(second)].filter(Boolean).join(', ');
-  return { pixel: list('--font-jersey', '--font-pixel-cyrillic', 'monospace'), sans: list('--font-chakra', '--font-reading-cyrillic', 'sans-serif') };
+  return {
+    pixel: { own: named('--font-jersey') || 'monospace', cyrillic: named('--font-pixel-cyrillic') },
+    sans: { own: named('--font-chakra') || 'sans-serif', cyrillic: named('--font-reading-cyrillic') },
+  };
 }
+
+const CYRILLIC = /[\u0400-\u052f]+/g;
+const cyrillicOf = (text: string) => (text.match(CYRILLIC) ?? []).join('');
+/** A line as the pieces each typeface draws: the Cyrillic, and everything else. */
+const piecesOf = (text: string) => text.split(/([\u0400-\u052f]+)/).filter((piece) => piece !== '').map((piece) => ({ text: piece, cyrillic: /[\u0400-\u052f]/.test(piece) }));
 
 /**
  * Draws the list on a canvas four times the size of the grid, with no smoothing, so every art
@@ -51,16 +60,30 @@ export async function drawCard(ops: DrawOp[], load: SpriteLoader = browserLoader
 
   const fonts = families();
   const weight = { pixel: '400', sans: '400' };
+  const listed = (font: 'pixel' | 'sans') => [fonts[font].own, fonts[font].cyrillic].filter(Boolean).join(', ');
   // The typefaces are on the page already; this only waits until the canvas may use them. Each is asked for
-  // with the very words it will write (and the "x" it is measured by), so that the face holding their letters
-  // has arrived: a page of English never fetched the Cyrillic one.
+  // with the very letters it will draw (and the one it is measured by), so that the face holding them has
+  // arrived: a page of English never fetched the Cyrillic ones, and still does not.
   const written = (font: 'pixel' | 'sans') => ops.map((op) => (op.kind === 'text' && op.font === font ? op.text : '')).join('');
-  await Promise.all([document.fonts?.load(`16px ${fonts.pixel}`, `x${written('pixel')}`), document.fonts?.load(`16px ${fonts.sans}`, written('sans'))].map((loading) => loading?.catch(() => undefined)));
-  // The pixel typeface is drawn small inside its own size. The page scales it until its small letters
-  // stand as tall as `PIXEL_X_HEIGHT` of the size asked for, and so does the card.
-  ctx.font = `${weight.pixel} 100px ${fonts.pixel}`;
-  const small = ctx.measureText('x').actualBoundingBoxAscent;
-  const grow = { pixel: small > 0 ? (PIXEL_X_HEIGHT * 100) / small : 1, sans: 1 };
+  const russian = { pixel: fonts.pixel.cyrillic ? cyrillicOf(written('pixel')) : '', sans: fonts.sans.cyrillic ? cyrillicOf(written('sans')) : '' };
+  await Promise.all(
+    [
+      document.fonts?.load(`16px ${fonts.pixel.own}`, `x${written('pixel')}`),
+      russian.pixel ? document.fonts?.load(`16px ${fonts.pixel.cyrillic}`, `х${russian.pixel}`) : undefined,
+      document.fonts?.load(`16px ${fonts.sans.own}`, written('sans')),
+      russian.sans ? document.fonts?.load(`16px ${fonts.sans.cyrillic}`, russian.sans) : undefined,
+    ].map((loading) => loading?.catch(() => undefined)),
+  );
+  // A pixel typeface is drawn small inside its own size. The page scales each one until its small letters stand
+  // as tall as `PIXEL_X_HEIGHT` of the size asked for, and so does the card: the Latin one by its "x", and the
+  // Cyrillic one, whose letters stand taller in their size, by its own «х».
+  const growBy = (family: string, letter: string, otherwise: number) => {
+    ctx.font = `${weight.pixel} 100px ${family}`;
+    const small = ctx.measureText(letter).actualBoundingBoxAscent;
+    return small > 0 ? (PIXEL_X_HEIGHT * 100) / small : otherwise;
+  };
+  const latin = growBy(fonts.pixel.own, 'x', 1);
+  const grow = { pixel: latin, cyrillic: russian.pixel ? growBy(fonts.pixel.cyrillic, 'х', latin) : latin, sans: 1 };
   const pictures = new Map<string, Drawable | null>();
   for (const op of ops) if (op.kind === 'sprite' && !pictures.has(op.id)) pictures.set(op.id, await load(op.id));
 
@@ -72,18 +95,42 @@ export async function drawCard(ops: DrawOp[], load: SpriteLoader = browserLoader
       const picture = pictures.get(op.id);
       if (picture) ctx.drawImage(picture, op.x * scale, op.y * scale, op.w * scale, op.h * scale);
     } else {
-      let size = Math.round(op.size * scale * grow[op.font]);
-      const font = (px: number) => `${weight[op.font]} ${px}px ${fonts[op.font]}`;
-      ctx.font = font(size);
+      const font = (px: number) => `${weight[op.font]} ${px}px ${listed(op.font)}`;
+      // Each typeface at its own size: in pixel text the Cyrillic and the rest are separate pieces of the line.
+      const pieces = (op.font === 'pixel' && grow.cyrillic !== grow.pixel ? piecesOf(op.text) : [{ text: op.text, cyrillic: false }]).map((piece) => ({
+        ...piece,
+        size: Math.round(op.size * scale * (op.font === 'sans' ? grow.sans : piece.cyrillic ? grow.cyrillic : grow.pixel)),
+      }));
+      const measured = () =>
+        pieces.map((piece) => {
+          ctx.font = font(piece.size);
+          return ctx.measureText(piece.text).width;
+        });
+      let widths = measured();
+      let width = widths.reduce((sum, one) => sum + one, 0);
       // A name too long for its place is written smaller, never cut and never over the edge.
-      const width = ctx.measureText(op.text).width;
       const room = op.maxWidth * scale;
-      if (width > room && width > 0) size = Math.max(8, Math.floor((size * room) / width));
-      ctx.font = font(size);
+      if (width > room && width > 0) {
+        for (const piece of pieces) piece.size = Math.max(8, Math.floor((piece.size * room) / width));
+        widths = measured();
+        width = widths.reduce((sum, one) => sum + one, 0);
+      }
       ctx.fillStyle = op.color;
-      ctx.textAlign = op.align;
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(op.text, op.x * scale, op.y * scale);
+      if (pieces.length === 1) {
+        ctx.font = font(pieces[0].size);
+        ctx.textAlign = op.align;
+        ctx.fillText(op.text, op.x * scale, op.y * scale);
+      } else {
+        // Piece by piece from the left, each beginning where the last one ended.
+        ctx.textAlign = 'left';
+        let at = op.x * scale - (op.align === 'left' ? 0 : op.align === 'center' ? width / 2 : width);
+        pieces.forEach((piece, i) => {
+          ctx.font = font(piece.size);
+          ctx.fillText(piece.text, at, op.y * scale);
+          at += widths[i];
+        });
+      }
     }
   }
   return canvas;

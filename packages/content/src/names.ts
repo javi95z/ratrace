@@ -165,7 +165,7 @@ export const names: Record<Locale, Names> = {
       ...assets,
       treasury_short: { name: 'Облигации США, 2 года', ticker: 'UST2' },
       treasury_long: { name: 'Облигации США, 10 лет', ticker: 'UST10' },
-      bund: { name: 'Немецкие бунды', ticker: 'BUND' },
+      bund: { name: 'Облигации Германии', ticker: 'BUND' },
       gold: { name: 'Золото', ticker: 'XAU' },
     },
     items: {
@@ -181,7 +181,7 @@ export const names: Record<Locale, Names> = {
       art_photo: 'Фотография ограниченного тиража',
       art_bronze: 'Бронзовая скульптура',
       art_old_master: 'Картина старого мастера',
-      travel_interrail: 'Билет Interrail',
+      travel_interrail: 'Проездной Interrail',
       travel_ski: 'Неделя на лыжах в Церматте',
       travel_safari: 'Сафари в Масаи-Мара',
       travel_world_first: 'Кругосветка первым классом',

@@ -145,7 +145,7 @@ describe('the rankings', () => {
     const field = within(you).getByRole('textbox', { name: 'Name' });
     await user.type(field, 'a b');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
-    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters, digits or underscores.');
+    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters from A to Z, digits or underscores.');
     expect(asked.filter((line) => line.startsWith('rename'))).toEqual([]);
     await user.clear(field);
     await user.type(field, 'Rata_Uno');
@@ -224,7 +224,7 @@ describe('the rankings', () => {
     const field = within(you).getByRole('textbox', { name: 'Name' });
     await user.type(field, 'ab');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
-    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters, digits or underscores.');
+    expect(within(you).getByRole('alert').textContent).toBe('3 to 16 letters from A to Z, digits or underscores.');
     // The field takes no more than a name can hold.
     await user.clear(field);
     await user.type(field, 'abcdefghijklmnopq');

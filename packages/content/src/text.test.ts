@@ -18,7 +18,7 @@ const TRANSLATED: Locale[] = ['es', 'ru'];
  */
 const WITHOUT_YO = new RegExp(
   `(?<![а-яё])(?:${[
-    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
+    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'ребенок', 'ребенка', 'ребенку', 'ребенком', 'ребенке', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
     'прием', 'приема', 'приему', 'приемом', 'приеме', 'объем[а-я]*', 'счет', 'отчет[а-я]*', 'расчет[а-я]*', 'самолет[а-я]*', 'перелет[а-я]*', 'полет[а-я]*', 'вперед',
     'идешь', 'живешь', 'берешь', 'даешь', 'ждешь', 'придешь', 'уйдешь', 'найдешь', 'начнешь', 'вернешь', 'поймешь', 'продаешь', 'отдаешь', 'сдаешь', 'остаешься', 'вернешься',
     'идет', 'живет', 'дает', 'ждет', 'придет', 'уйдет', 'растет', 'несет', 'ведет', 'продает', 'отдает', 'сдает', 'остается', 'придется', 'удается', 'вернется', 'начнется', 'найдется',
@@ -128,6 +128,11 @@ describe.each(LOCALES)('content text: %s', (locale) => {
       expect(broken((s) => /\p{L}/u.test(s.replace(/\{[^{}]*\}/g, '')) && !/[а-яё]/i.test(s))).toEqual([]);
       // And it never tells the player whether they are a man or a woman: no ending offered both ways, no «ты» with a verb in the past.
       expect(broken((s) => /\((?:а|ла|ая|на)\)|[а-яё]\/[а-яё]{1,3}(?![а-яё])/i.test(s) || /(?<![а-яё])ты (?:не )?(?:уже |ещё |так и не |сам[а-я]* )?[а-яё]+(?:л|ла|лся|лась)(?![а-яё])/i.test(s))).toEqual([]);
+      // Nor with the short words that agree with «ты» as a verb in the past does: «ты готов», «ты уволен», «ты сама».
+      expect(broken((s) => /(?<![а-яё])ты (?:[а-яё]+ ){0,2}(?:готов|должен|рад|уволен|принят|обязан|согласен|уверен|виноват|свободен|женат|богат|беден|здоров|болен|сам|сама|одинок)(?![а-яё])|(?<![а-яё])(?:замужем|женат)(?![а-яё])/i.test(s))).toEqual([]);
+      // The names it gives to things are held to the same typesetting as its sentences.
+      const named = strings(pack).filter(([, name]) => /["“”‘’']/.test(name) || WITHOUT_YO.test(name)).map(([path]) => path);
+      expect(named).toEqual([]);
     } else {
       // Spanish: angle quotes, a space before the percent sign, and a question or an exclamation opened as well as closed.
       expect(broken((s) => /["“”]/.test(s))).toEqual([]);
@@ -138,7 +143,8 @@ describe.each(LOCALES)('content text: %s', (locale) => {
   });
 
   it('keeps titles and option labels short enough for a phone', () => {
-    for (const card of Object.values(text.cards)) {
+    // As the player reads them: with every name written out, which may be longer than the placeholder that stands for it.
+    for (const card of Object.values(textFor(locale).text.cards)) {
       expect(card.title.length, card.title).toBeLessThanOrEqual(45);
       expect(card.body.length, card.title).toBeLessThanOrEqual(140);
       for (const option of card.options) {

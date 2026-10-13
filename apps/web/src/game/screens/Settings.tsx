@@ -14,6 +14,12 @@ import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
 const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español', ru: 'Русский' };
+/**
+ * The game's pixel typeface draws no Cyrillic. On a page of another language, what stands in for
+ * it while it loads would draw a Cyrillic name in a system face: such a name asks for the
+ * Cyrillic pixel typeface by itself first.
+ */
+const CYRILLIC = { fontFamily: 'var(--font-pixel-cyrillic-alone), var(--font-pixel)' };
 
 /**
  * Who is playing, as the cloud knows them, and whether what they have is in their account yet. A
@@ -113,6 +119,8 @@ function LanguagePick() {
           key={code}
           href={pathname}
           locale={code}
+          lang={code}
+          style={/[\u0400-\u04ff]/.test(LANGUAGES[code]) ? CYRILLIC : undefined}
           aria-current={code === locale ? 'true' : undefined}
           className={`pixel frame-raised flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'frame-cream bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
         >

@@ -83,6 +83,16 @@ describe('the front door', () => {
     expect(within(sheet).getByRole('switch', { name: /^Sound/ }).getAttribute('aria-checked')).toBe('false');
   });
 
+  it('is drawn in Russian too, with every word of it', async () => {
+    renderGame(<Home />, memoryServices(), 'ru');
+    expect((await screen.findByRole('link', { name: 'Новая жизнь' })).getAttribute('href')).toBe('/new');
+    expect(screen.getByRole('link', { name: 'Коллекция' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Рекорды' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Язык' })).toBeTruthy();
+    // Nothing of another language is left on it, but the game's own name and the names of the languages.
+    expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
+  });
+
   it('leads to the collection and to the records', async () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');

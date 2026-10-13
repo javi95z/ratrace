@@ -524,7 +524,7 @@ begin
   -- The game speaks three languages, and a profile may say any of them. (One it does not speak is refused: see A's, above.)
   begin
     update public.profiles set language = 'ru' where user_id = b;
-    passed := passed + 1;
+    if (select language from public.profiles where user_id = b) = 'ru' then passed := passed + 1; else failed := array_append(failed, 'a profile written in Russian did not keep it'); end if;
   exception when check_violation then failed := array_append(failed, 'a profile could not be written in Russian');
   end;
   -- A name is refused for what it says, however it is spelled, and for whose it is.

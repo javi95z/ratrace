@@ -833,7 +833,7 @@
     "name": "Name",
     "save": "Save",
     "cancel": "Cancel",
-    "invalid": "3 to 16 letters, digits or underscores.",
+    "invalid": "3 to 16 letters from A to Z, digits or underscores.",
     "taken": "Someone already has that name.",
     "refused": "That name is not accepted.",
     "failed": "The name could not be saved. Try again.",
