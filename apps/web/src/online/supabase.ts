@@ -78,6 +78,8 @@ export class SupabaseAccount implements Account {
   private starting: Promise<void> | null = null;
   private notice: AccountNotice | null = null;
   private stopListening: (() => void) | null = null;
+  /** The language the account was last started in, for trying again. */
+  private language: string | null = null;
 
   /**
    * `connect` loads the client, so a game that never goes online never downloads it.
@@ -102,6 +104,7 @@ export class SupabaseAccount implements Account {
   };
 
   readonly start = (language: string): Promise<void> => {
+    this.language = language;
     // Already signed in: there is nothing to start. Asked while starting: the same start answers.
     if (this.current.kind !== 'offline') return Promise.resolve();
     return (this.starting ??= this.begin(language).finally(() => {
@@ -109,6 +112,12 @@ export class SupabaseAccount implements Account {
       this.starting = null;
     }));
   };
+
+  /**
+   * Starts again as it was last started, if nobody is signed in: for when the connection comes
+   * back to a page that was opened without one. Never started, there is nothing to try again.
+   */
+  readonly again = (): Promise<void> => (this.language === null ? Promise.resolve() : this.start(this.language));
 
   private async begin(language: string): Promise<void> {
     try {

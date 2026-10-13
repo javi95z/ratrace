@@ -127,6 +127,27 @@ describe('an account in the cloud', () => {
     expect(calls.filter((call) => call === 'guest')).toHaveLength(1);
   });
 
+  it('tries again in the language it was started in, when asked to, and only if nobody is signed in', async () => {
+    let network = false;
+    const { cloud, calls } = fakeCloud();
+    const account = new SupabaseAccount(async () => {
+      if (!network) throw new Error('no network');
+      return cloud;
+    }, () => 'http://localhost/es', () => {});
+    // Never started: there is nothing to try again.
+    await account.again();
+    expect(account.state()).toEqual({ kind: 'offline' });
+    await account.start('es');
+    expect(account.state()).toEqual({ kind: 'offline' });
+    network = true;
+    await account.again();
+    expect(account.state()).toMatchObject({ kind: 'guest', userId: 'user-1' });
+    expect(calls).toEqual(['guest', 'profile user-1 es']);
+    // Signed in: asked again, it makes no second guest.
+    await account.again();
+    expect(calls.filter((call) => call === 'guest')).toHaveLength(1);
+  });
+
   it('can be handed to whoever watches it as loose functions', async () => {
     const { cloud } = fakeCloud();
     const account = accountOn(cloud);

@@ -23,7 +23,8 @@ export function Home() {
   const moved = useGame((s) => s.moved);
   const saving = useSaving();
   const { offer, takeOffer, declineOffer } = useAccountSaves();
-  const [asking, setAsking] = useState(false);
+  // The life in the account the player has asked about, by its id: the question is never open for another one.
+  const [asking, setAsking] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const inProgress = status === 'playing' && view !== null && lifeId !== null && stage !== 'end';
@@ -37,7 +38,7 @@ export function Home() {
       .then(then)
       .finally(() => {
         setBusy(false);
-        setAsking(false);
+        setAsking(null);
       });
   };
 
@@ -63,7 +64,7 @@ export function Home() {
               </Link>
             ) : null}
             {offer ? (
-              <button type="button" onClick={() => setAsking(true)} className="pixel frame-raised flex min-h-12 flex-col items-center justify-center bg-night-600 px-4 py-2 text-center text-cream">
+              <button type="button" onClick={() => setAsking(offer.gameId)} className="pixel frame-raised flex min-h-12 flex-col items-center justify-center bg-night-600 px-4 py-2 text-center text-cream">
                 <span className="text-[16px]">{t('accountLife')}</span>
                 <span className="font-sans text-[13px] font-normal text-ink-200">
                   {t('continueDetail', { life: text.lives[offer.lifeId]?.name ?? '', age: ageAt(content, offer.round), city: names.cities[offer.cityId] ?? '' })}
@@ -111,7 +112,7 @@ export function Home() {
       </Panel>
 
       {/* Saying yes leaves this page for the game, so the sheet keeps no entry of its own in the history. */}
-      <Sheet open={asking && offer !== null} onClose={() => setAsking(false)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>
+      <Sheet open={offer !== null && asking === offer.gameId} onClose={() => setAsking(null)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>
         {offer ? (
           <>
             <p className="text-[15px] leading-snug text-ink-200">

@@ -4,20 +4,20 @@ import type { FinishedRun, Profile } from '@/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 
-const progress = (over: Partial<Progress> = {}): Progress => ({ badges: {}, gallery: [], unlocked: {}, guide: { seen: [], off: false }, ...over });
+const progress = (over: Partial<Progress> = {}): Progress => ({ badges: {}, gallery: [], unlocked: {}, guide: { seen: [] }, ...over });
 const earned = (at: number, gameId = 'g') => ({ at, gameId });
 
 describe('what is unlocked, from two places', () => {
   it('keeps everything either side has: a badge earned anywhere is earned', () => {
-    const device = progress({ badges: { first_100k: earned(10) }, gallery: ['watch_casio', 'car_seat_ibiza'], unlocked: { rider: earned(5) }, guide: { seen: ['news'], off: false } });
-    const cloud = progress({ badges: { millionaire: earned(20) }, gallery: ['car_seat_ibiza', 'watch_rolex'], unlocked: { heir: earned(20) }, guide: { seen: ['cards', 'news'], off: true } });
+    const device = progress({ badges: { first_100k: earned(10) }, gallery: ['watch_casio', 'car_seat_ibiza'], unlocked: { rider: earned(5) }, guide: { seen: ['news'] } });
+    const cloud = progress({ badges: { millionaire: earned(20) }, gallery: ['car_seat_ibiza', 'watch_rolex'], unlocked: { heir: earned(20) }, guide: { seen: ['cards', 'news'] } });
     expect(mergeProgress(device, cloud)).toEqual({
       badges: { first_100k: earned(10), millionaire: earned(20) },
       // The device's order first, then what only the cloud had.
       gallery: ['watch_casio', 'car_seat_ibiza', 'watch_rolex'],
       unlocked: { rider: earned(5), heir: earned(20) },
-      // A tip seen anywhere is seen; a guide turned off anywhere is off.
-      guide: { seen: ['news', 'cards'], off: true },
+      // A tip seen anywhere is seen.
+      guide: { seen: ['news', 'cards'] },
     });
   });
 
@@ -28,7 +28,7 @@ describe('what is unlocked, from two places', () => {
   });
 
   it('is the same whichever side is named first, but for the order of the gallery, and changes neither', () => {
-    const a = progress({ badges: { x: earned(1) }, gallery: ['one'], guide: { seen: ['news'], off: false } });
+    const a = progress({ badges: { x: earned(1) }, gallery: ['one'], guide: { seen: ['news'] } });
     const b = progress({ badges: { y: earned(2) }, gallery: ['two'], unlocked: { heir: earned(2) } });
     const before = JSON.stringify([a, b]);
     const ab = mergeProgress(a, b);
@@ -44,15 +44,24 @@ describe('what is unlocked, from two places', () => {
     expect(sameProgress(progress({ gallery: ['a', 'b'] }), progress({ gallery: ['b', 'a'] }))).toBe(true);
     expect(sameProgress(progress({ gallery: ['a'] }), progress({ gallery: ['a', 'b'] }))).toBe(false);
     expect(sameProgress(progress({ badges: { x: earned(1) } }), progress({ badges: { x: earned(2) } }))).toBe(false);
-    expect(sameProgress(progress({ guide: { seen: [], off: true } }), progress())).toBe(false);
+    expect(sameProgress(progress({ guide: { seen: ['news'] } }), progress())).toBe(false);
   });
 
   it('reads what the cloud holds, and makes nothing of what is not progress', () => {
     expect(readProgress(null)).toEqual(progress());
     expect(readProgress('nonsense')).toEqual(progress());
     expect(readProgress({ badges: { ok: earned(1), bad: { at: 'yesterday' } }, gallery: ['a', 7, 'a'], unlocked: [], guide: { seen: ['news', null], off: 'yes' } })).toEqual(
-      progress({ badges: { ok: earned(1) }, gallery: ['a'], guide: { seen: ['news'], off: false } }),
+      progress({ badges: { ok: earned(1) }, gallery: ['a'], guide: { seen: ['news'] } }),
     );
+  });
+
+  it('leaves whether the guide is on to the device: turned off on one is not turned off on another, and it can be turned back on', () => {
+    // It was once joined like a badge, "off anywhere is off": the switch in the settings then went back to off by itself.
+    const here: Profile = { ...newProfile(), guide: { seen: ['news'], off: false } };
+    expect(progressOf(here)).toEqual(progress({ guide: { seen: ['news'] } }));
+    const joined = withProgress(here, mergeProgress(progressOf(here), readProgress({ guide: { seen: ['cards'], off: true } })));
+    expect(joined.guide).toEqual({ seen: ['news', 'cards'], off: false });
+    expect(withProgress({ ...here, guide: { seen: [], off: true } }, progress({ guide: { seen: ['news'] } })).guide).toEqual({ seen: ['news'], off: true });
   });
 
   it('is the profile without what belongs to the device, and goes back into it leaving the settings alone', () => {

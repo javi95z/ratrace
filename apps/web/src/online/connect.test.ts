@@ -32,7 +32,9 @@ const client = vi.hoisted(() => {
         }
         builder.then = (resolve: (answer: unknown) => unknown, reject: (error: unknown) => unknown) => {
           asked.push(question);
-          return Promise.resolve(answers[table]).then(resolve, reject);
+          // An answer may depend on the question: a table is asked more than one thing in a row.
+          const answer = answers[table];
+          return Promise.resolve(typeof answer === 'function' ? (answer as (q: unknown[]) => unknown)(question) : answer).then(resolve, reject);
         };
         return builder;
       },
@@ -127,14 +129,14 @@ describe('the cloud, made from the Supabase client', () => {
 
 describe('what the cloud keeps of a player', () => {
   const signedIn = { data: { session: { user: { id: 'u-1', is_anonymous: true } } }, error: null };
-  const gameRow = { id: 'g-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], updated_at: '2026-10-13T10:00:00Z' };
+  const gameRow = { id: 'g-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], state_hash: 'h-1', updated_at: '2026-10-13T10:00:00Z' };
   const upload = { id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, log: [{ picks: [0], orders: [] }], stateHash: 'h-1' };
 
   it('reads the lives still being played, the latest first, as the game names them', async () => {
     client.answers.games = { data: [gameRow], error: null };
     const cloud = await connectSupabase('u', 'k');
-    expect(await cloud.playingGames()).toEqual([{ id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], updatedAt: '2026-10-13T10:00:00Z' }]);
-    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, seed, round, status, log, updated_at'], ['eq', 'mode', 'casual'], ['eq', 'status', 'playing'], ['order', 'updated_at', { ascending: false }], ['limit', 5]]]);
+    expect(await cloud.playingGames()).toEqual([{ id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], stateHash: 'h-1', updatedAt: '2026-10-13T10:00:00Z' }]);
+    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at'], ['eq', 'mode', 'casual'], ['eq', 'status', 'playing'], ['order', 'updated_at', { ascending: false }], ['limit', 5]]]);
     client.answers.games = { data: null, error: new Error('offline') };
     await expect(cloud.playingGames()).rejects.toThrow('offline');
   });
@@ -149,12 +151,34 @@ describe('what the cloud keeps of a player', () => {
     expect((client.asked[0][1] as unknown[])[1]).toMatchObject({ state_hash: null });
   });
 
-  it('says a life is closed when the rules of the database refuse it, and fails for any other reason', async () => {
+  /** The table refuses the save; asked whether the player holds a game of that id, it answers with `own`. */
+  const refusedThen = (own: unknown) => (question: unknown[]) =>
+    (question[1] as unknown[])[0] === 'upsert' ? { error: { code: '42501', message: 'new row violates row-level security policy' } } : { data: own, error: null };
+
+  it('says a life is closed when the rules refuse the save and the game is the player\'s own: the server has finished it', async () => {
     const cloud = await connectSupabase('u', 'k');
-    client.answers.games = { error: { code: '42501', message: 'new row violates row-level security policy' } };
+    client.answers.games = refusedThen({ status: 'finished' });
     expect(await cloud.pushGame(upload)).toBe('closed');
+    expect(client.asked[1]).toEqual(['games', ['select', 'status'], ['eq', 'id', 'g-1'], ['maybeSingle']]);
+  });
+
+  it('says the id is taken when the rules refuse the save and the player holds no such game: it is another account\'s', async () => {
+    // Most often the guest this device was before its player signed in as someone who already had an account.
+    // Read as "closed", this was the life never reaching the account while the game said it had.
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.games = refusedThen(null);
+    expect(await cloud.pushGame(upload)).toBe('taken');
+  });
+
+  it('says the account is further along when the table refuses to go backwards, and fails for any other reason', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.games = { error: { code: 'RR001', message: 'the account holds more of this life than this save does' } };
+    expect(await cloud.pushGame(upload)).toBe('behind');
     client.answers.games = { error: { code: '23514', message: 'a player holds fifty games at most' } };
     await expect(cloud.pushGame(upload)).rejects.toMatchObject({ code: '23514' });
+    // Not being able to ask whose the game is, is a failure too, not an answer.
+    client.answers.games = (question: unknown[]) => ((question[1] as unknown[])[0] === 'upsert' ? { error: { code: '42501' } } : { data: null, error: new Error('offline') });
+    await expect(cloud.pushGame(upload)).rejects.toThrow('offline');
   });
 
   it('gives up a life that is being played, and no other', async () => {
@@ -195,7 +219,7 @@ describe('what the cloud keeps of a player', () => {
     client.answers.runs = { data: [{ id: 'r-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', score: 321, net_worth: 9_000_000, status: 30, escaped_at_round: null, bankruptcies: 1, badges: ['escaped'], cities: null, history: ['1', 2], finished_at: '2026-10-01T08:00:00Z' }], error: null };
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.listRuns()).toEqual([{ id: 'r-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', score: 321, netWorth: 9_000_000, status: 30, escapedAtRound: null, bankruptcies: 1, badges: ['escaped'], cities: [], history: [1, 2], finishedAt: '2026-10-01T08:00:00Z' }]);
-    expect(client.asked[0].slice(2)).toEqual([['eq', 'user_id', 'u-1'], ['order', 'finished_at', { ascending: false }], ['limit', 200]]);
+    expect(client.asked[0].slice(2)).toEqual([['eq', 'user_id', 'u-1'], ['order', 'finished_at', { ascending: false }], ['limit', 1000]]);
     client.answers.runs = { data: null, error: new Error('offline') };
     await expect(cloud.listRuns()).rejects.toThrow('offline');
   });
@@ -204,15 +228,38 @@ describe('what the cloud keeps of a player', () => {
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.finishRun('g-1')).toBe('done');
     expect(client.asked).toEqual([['invoke', 'finish-run', { body: { gameId: 'g-1' } }]]);
-    // The function's own answers: asking again would get the same one.
-    for (const status of [400, 404, 409, 422]) {
-      client.answers.invoke = { data: null, error: { context: { status } } };
-      expect(await cloud.finishRun('g-1')).toBe('refused');
+    // The function's own answers, each by its name: asking again would get the same one.
+    const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
+    for (const [status, error] of [[400, 'bad-request'], [404, 'unknown-game'], [409, 'not-finished'], [409, 'not-casual'], [422, 'cannot-replay']] as const) {
+      client.answers.invoke = said(status, { error });
+      expect(await cloud.finishRun('g-1'), error).toBe('refused');
     }
-    // Not signed in just now, too many requests, the server down, no network: all worth another try.
-    for (const context of [{ status: 401 }, { status: 429 }, { status: 500 }, { status: 503 }, undefined, new TypeError('failed to fetch')]) {
+    // It does not hold the versions of this life: no life on them is worth sending.
+    client.answers.invoke = said(409, { error: 'unknown-version', versions: ['0.5.0/1.5.0'] });
+    expect(await cloud.finishRun('g-1')).toBe('unknown-version');
+    // Not the function's own word: it is not there, the player is not signed in just now, there are too many
+    // requests, the server is down, there is no network. All worth another try, and none is "it said no".
+    for (const context of [new Response('Not Found', { status: 404 }), new Response('{"message":"no such function"}', { status: 404 }), new Response('{}', { status: 401 }), new Response('{"error":"server"}', { status: 500 }), new Response('', { status: 503 }), { status: 409 }, undefined, new TypeError('failed to fetch')]) {
       client.answers.invoke = { data: null, error: { context } };
       expect(await cloud.finishRun('g-1')).toBe('failed');
+    }
+  });
+
+  it('gives up on a request that gets no answer, so that one stuck request does not stop everything after it', async () => {
+    await connectSupabase('u', 'k');
+    const through = (client.created[0][2] as { global: { fetch: typeof fetch } }).global.fetch;
+    const seen: Array<RequestInit | undefined> = [];
+    vi.stubGlobal('fetch', async (_input: unknown, init?: RequestInit) => (seen.push(init), new Response('{}')));
+    try {
+      await through('https://project.supabase.co/rest/v1/games', { method: 'GET' });
+      expect(seen[0]?.method).toBe('GET');
+      expect(seen[0]?.signal).toBeInstanceOf(AbortSignal);
+      // A caller that brings its own way to stop is left with it.
+      const own = new AbortController().signal;
+      await through('https://project.supabase.co/rest/v1/games', { signal: own });
+      expect(seen[1]?.signal).toBe(own);
+    } finally {
+      vi.unstubAllGlobals();
     }
   });
 });

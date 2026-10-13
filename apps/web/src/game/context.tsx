@@ -145,9 +145,11 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     const stop = made.game.subscribe((state, before) => {
       if (state.view !== before.view || state.status !== before.status) refresh();
     });
-    // What the account brings from another device: a life is opened as the device now has it, the rest is read again.
+    // What the account brings from another device: a life is opened as the device now has it, the rest is read
+    // again. The same life under a new id is opened too, with nothing to tell the player: nothing of it changed.
     const stopSaves = made.saves.onDeviceChanged((what) => {
       if (what === 'game') void made.game.getState().reopen();
+      else if (what === 'renamed') void made.game.getState().boot();
       else refresh();
     });
     return () => {

@@ -15,6 +15,7 @@ function setup(initial: AccountState = { kind: 'offline' }) {
         watching.add(listener);
         return () => watching.delete(listener);
       },
+      again: async () => void asked.push('sign in again'),
     },
     { sync: async () => void asked.push('sync'), accountChanged: async () => void asked.push('account changed') },
     {
@@ -78,6 +79,24 @@ describe('keeping the account\'s copy in step with the page', () => {
     page.at = 130_000;
     fire(page.shown);
     expect(asked).toEqual(['sync', 'sync']);
+  });
+
+  it('tries to sign in again when the connection returns, or the page is looked at again, while nobody is signed in', () => {
+    // A page opened with no connection stayed signed out until it was reloaded, connection or no connection.
+    const { asked, fire, page, become } = setup();
+    fire(page.online);
+    expect(asked).toEqual(['sign in again']);
+    page.at = 10_000;
+    fire(page.shown);
+    expect(asked).toEqual(['sign in again']);
+    page.at = 70_000;
+    fire(page.shown);
+    expect(asked).toEqual(['sign in again', 'sign in again']);
+    // Once someone is signed in, there is an account to read instead.
+    become(guest('u-1'));
+    asked.length = 0;
+    fire(page.online);
+    expect(asked).toEqual(['sync']);
   });
 
   it('lets go of everything when told to stop', () => {

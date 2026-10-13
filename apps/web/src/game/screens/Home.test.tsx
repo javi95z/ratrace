@@ -166,6 +166,21 @@ describe('the front door', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('does not open the question by itself for another life, after the one it was asked about went away under it', async () => {
+    const { saves, offer } = accountWith(elsewhere);
+    const user = userEvent.setup();
+    renderGame(<Home />, { ...memoryServices(), saves });
+    await user.click(await screen.findByRole('button', { name: /Continue the life in your account/ }));
+    expect(screen.getByRole('dialog', { name: 'A life in your account' })).toBeTruthy();
+    // The other device ends that life while the sheet is open.
+    act(() => offer(null));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    // Later the account brings another. It is offered; "End that life" is not put in front of anyone unasked.
+    act(() => offer({ ...elsewhere, gameId: 'g-11', lifeId: 'nurse' }));
+    expect(screen.getByRole('button', { name: /Continue the life in your account/ }).textContent).toContain('Nurse');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   it('shows the life the account brings after the page has opened', async () => {
     const { saves, offer } = accountWith(null);
     renderGame(<Home />, { ...memoryServices(), saves });

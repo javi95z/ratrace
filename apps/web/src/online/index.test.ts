@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@/session/memory';
-import { browserOnline } from './index';
+import { browserOnline, browserPage, givenUpIn } from './index';
 import { offlineAccount } from './offline';
 
 const connected = vi.hoisted(() => [] as unknown[][]);
@@ -52,12 +52,67 @@ describe('the cloud of this browser', () => {
     expect(online.account.state()).toEqual({ kind: 'offline' });
   });
 
-  it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', async () => {
+  it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', () => {
+    const note = givenUpIn(() => window.localStorage);
+    expect(note.read()).toEqual([]);
+    note.write(['a-1', 'a-2']);
+    // Another page of the same browser reads what this one wrote.
+    expect(givenUpIn(() => window.localStorage).read()).toEqual(['a-1', 'a-2']);
+    window.localStorage.setItem('ratrace:given-up', '{not json');
+    expect(note.read()).toEqual([]);
+    window.localStorage.setItem('ratrace:given-up', JSON.stringify(['a-1', 7, null, 'a-3']));
+    expect(note.read()).toEqual(['a-1', 'a-3']);
+    window.localStorage.setItem('ratrace:given-up', JSON.stringify({ not: 'a list' }));
+    expect(note.read()).toEqual([]);
+  });
+
+  it('plays on in a browser that keeps nothing: the note is simply not kept', () => {
+    const none = givenUpIn(() => {
+      throw new Error('storage is disabled');
+    });
+    expect(none.read()).toEqual([]);
+    expect(() => none.write(['a-1'])).not.toThrow();
+  });
+
+  it('notes a life given up while there is nobody to tell, through the store the game writes to', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
-    window.localStorage.setItem('ratrace:given-up', '{not json');
-    expect(() => browserOnline(new MemoryStore())).not.toThrow();
-    window.localStorage.setItem('ratrace:given-up', JSON.stringify(['a-1', 7, null]));
-    expect(() => browserOnline(new MemoryStore())).not.toThrow();
+    const { content, lives } = await import('@ratrace/content');
+    const { LocalSessions } = await import('@/session/local');
+    const online = browserOnline(new MemoryStore());
+    let ids = 0;
+    const sessions = new LocalSessions(online.store, content, lives, { newId: () => `life-${(ids += 1)}`, newSeed: () => 'seed', now: () => ids });
+    await sessions.start('nurse');
+    await sessions.start('engineer');
+    expect(givenUpIn(() => window.localStorage).read()).toEqual(['life-1']);
+  });
+});
+
+describe('what the page tells of itself', () => {
+  it('says when the connection comes back, until told to stop', () => {
+    let heard = 0;
+    const stop = browserPage.onOnline(() => (heard += 1));
+    window.dispatchEvent(new Event('online'));
+    expect(heard).toBe(1);
+    stop();
+    window.dispatchEvent(new Event('online'));
+    expect(heard).toBe(1);
+  });
+
+  it('says when the page comes back to the front, and not when it goes to the back', () => {
+    let heard = 0;
+    let state = 'hidden';
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => state as DocumentVisibilityState);
+    const stop = browserPage.onShown(() => (heard += 1));
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(heard).toBe(0);
+    state = 'visible';
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(heard).toBe(1);
+    stop();
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(heard).toBe(1);
+    visibility.mockRestore();
+    expect(browserPage.now()).toBeGreaterThan(1_700_000_000_000);
   });
 });

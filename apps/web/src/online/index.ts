@@ -30,6 +30,8 @@ export interface OnlineParts {
   /** Where the lives given up are noted until the account has been told. */
   remember: { read(): string[]; write(ids: string[]): void };
   schedule?(run: () => Promise<void>, ms: number): void;
+  /** Makes an id for a life the account will not take under its own. */
+  newId(): string;
 }
 
 /**
@@ -39,32 +41,38 @@ export interface OnlineParts {
  */
 export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
-  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule });
+  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule, newId: parts.newId });
   follow(account, mirror, parts.page);
   return { account, store: mirror, saves: mirror };
 }
 
-/** Where the lives given up are noted in a browser. One that keeps nothing forgets them with the page. */
+/**
+ * Where the lives given up are noted in a browser, until the account has been told: a list of ids
+ * under one key. A browser that keeps nothing forgets them with the page, and the game plays on.
+ */
 const GIVEN_UP = 'ratrace:given-up';
-const givenUp = {
-  read(): string[] {
-    try {
-      const noted: unknown = JSON.parse(window.localStorage.getItem(GIVEN_UP) ?? '[]');
-      return Array.isArray(noted) ? noted.filter((id): id is string => typeof id === 'string') : [];
-    } catch {
-      return [];
-    }
-  },
-  write(ids: string[]): void {
-    try {
-      window.localStorage.setItem(GIVEN_UP, JSON.stringify(ids));
-    } catch {
-      // Nothing to do: the life is given up in the account if the page lives long enough to say so.
-    }
-  },
-};
+export function givenUpIn(storage: () => Storage): { read(): string[]; write(ids: string[]): void } {
+  return {
+    read() {
+      try {
+        const noted: unknown = JSON.parse(storage().getItem(GIVEN_UP) ?? '[]');
+        return Array.isArray(noted) ? noted.filter((id): id is string => typeof id === 'string') : [];
+      } catch {
+        return [];
+      }
+    },
+    write(ids) {
+      try {
+        storage().setItem(GIVEN_UP, JSON.stringify(ids));
+      } catch {
+        // Nothing to do: the life is given up in the account if the page lives long enough to say so.
+      }
+    },
+  };
+}
 
-const browserPage: Page = {
+/** What the browser tells of the page. */
+export const browserPage: Page = {
   onOnline: (listener) => {
     window.addEventListener('online', listener);
     return () => window.removeEventListener('online', listener);
@@ -94,6 +102,7 @@ export function browserOnline(device: PlayerStore): Online {
     address: () => window.location.href,
     clean: (address) => window.history.replaceState(window.history.state, '', address),
     page: browserPage,
-    remember: givenUp,
+    remember: givenUpIn(() => window.localStorage),
+    newId: () => crypto.randomUUID(),
   });
 }

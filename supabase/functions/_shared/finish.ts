@@ -11,6 +11,7 @@ export interface GameRow {
   engine_version: string;
   content_version: string;
   seed: string | null;
+  round: number;
   status: string;
   log: unknown;
 }
@@ -64,9 +65,13 @@ export async function finishRun(games: Readonly<Record<string, GameModule>>, dep
 
   try {
     const done = await deps.loadRun(gameId);
-    if (done !== null && done.user_id === userId) return { status: 200, body: { run: done } };
-
     const row = await deps.loadGame(gameId);
+    if (done !== null && done.user_id === userId) {
+      // The run was written before. If its game was left open then, by a failure between the two
+      // writes, it is closed now: an open game is a life offered to the player's other devices.
+      if (row !== null && row.user_id === userId && row.status !== 'finished') await deps.closeGame(row.id, row.round);
+      return { status: 200, body: { run: done } };
+    }
     if (row === null || row.user_id !== userId) return { status: 404, body: { error: 'unknown-game' } };
     // A ranked life is played by the server round by round; it is never finished from a log a device kept.
     if (row.mode !== 'casual') return { status: 409, body: { error: 'not-casual' } };

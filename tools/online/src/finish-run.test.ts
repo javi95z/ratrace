@@ -28,7 +28,7 @@ const WHOLE = lived('finished-life', content.rounds);
 const GAME = '11111111-1111-4111-8111-111111111111';
 const ME = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const game = (over: Partial<GameRow> = {}): GameRow => ({
-  id: GAME, user_id: ME, mode: 'casual', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION, seed: 'finished-life', status: 'playing', log: WHOLE, ...over,
+  id: GAME, user_id: ME, mode: 'casual', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION, seed: 'finished-life', round: content.rounds, status: 'playing', log: WHOLE, ...over,
 });
 
 /** A database of one game and whatever runs get written, remembering what was asked of it. */
@@ -86,6 +86,33 @@ describe('finishing a life on the server', { timeout: 60_000 }, () => {
     const none = await finishRun(GAMES, fakeDb(null).deps, ME, { gameId: GAME });
     expect(theirs).toEqual({ status: 404, body: { error: 'unknown-game' } });
     expect(none).toEqual(theirs);
+  });
+
+  it('closes a game that was left open when its run was written: asked again, it finishes the job', async () => {
+    // The run was written and the database failed before the game was marked. Left so, the life would stand
+    // in the account for ever as one being played, and be offered to the player's other devices.
+    const first = fakeDb(game());
+    await finishRun(GAMES, first.deps, ME, { gameId: GAME });
+    const again = fakeDb(game({ status: 'playing' }), first.runs);
+    const reply = await finishRun(GAMES, again.deps, ME, { gameId: GAME });
+    expect(reply).toEqual({ status: 200, body: { run: first.runs[0] } });
+    expect(again.closed.map((one) => one.id)).toEqual([GAME]);
+    expect(again.runs).toHaveLength(1);
+    // One that is closed already is left alone.
+    const done = fakeDb(game({ status: 'finished' }), first.runs);
+    await finishRun(GAMES, done.deps, ME, { gameId: GAME });
+    expect(done.closed).toEqual([]);
+  });
+
+  it('does not answer with someone else\'s run, whatever id is asked for', async () => {
+    const theirs = fakeDb(game({ user_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }));
+    await finishRun(GAMES, theirs.deps, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', { gameId: GAME });
+    expect(theirs.runs).toHaveLength(1);
+    // The run exists, and so does the game; neither is the caller's.
+    const reply = await finishRun(GAMES, theirs.deps, ME, { gameId: GAME });
+    expect(reply).toEqual({ status: 404, body: { error: 'unknown-game' } });
+    expect(theirs.runs).toHaveLength(1);
+    expect(theirs.closed).toHaveLength(1);
   });
 
   it('does not finish a life that is not over', async () => {

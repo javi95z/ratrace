@@ -1,15 +1,18 @@
 // @vitest-environment jsdom
 import { content, lives } from '@ratrace/content';
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useGame } from '@/game/context';
 import type { Services } from '@/game/context';
 import { onlineOver } from '@/online';
 import type { CloudGame, Progress } from '@/online/merge';
 import type { CloudRun } from '@/online/mirror';
 import type { Cloud } from '@/online/supabase';
+import type { AccountSaves, DeviceChange } from '@/online/types';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
+import type { SavedGame } from '@/session/types';
 import { renderGame } from '@/testing/render';
 import { Home } from './Home';
 
@@ -69,6 +72,7 @@ function deviceOf(cloud: Cloud, name: string) {
     page: { onOnline: () => () => {}, onShown: () => () => {}, now: () => 0 },
     remember: { read: () => noted, write: (ids) => (noted = ids) },
     schedule: (run) => scheduled.push(run),
+    newId: () => 'never',
   });
   let ids = 0;
   let clock = 1_000;
@@ -110,3 +114,60 @@ describe('a player with an account, on two devices', { timeout: 60_000 }, () => 
     expect(screen.queryByRole('button', { name: /Continue the life in your account/ })).toBeNull();
   });
 });
+
+describe('what the account changes on the device, as the game shows it', { timeout: 60_000 }, () => {
+  /** The game with an account's copy that the test moves by hand. */
+  function game() {
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 1_000;
+    const sessions = new LocalSessions(store, content, lives, { newId: () => `life-${(ids += 1)}`, newSeed: () => 'seed', now: () => (clock += 1) });
+    const changed = new Set<(what: DeviceChange) => void>();
+    const saves: AccountSaves = {
+      status: () => 'saved',
+      offer: () => null,
+      subscribe: () => () => {},
+      onDeviceChanged: (listener) => (changed.add(listener), () => changed.delete(listener)),
+      takeOffer: async () => false,
+      declineOffer: async () => {},
+    };
+    const tell = (what: DeviceChange) => act(() => [...changed].forEach((listener) => listener(what)));
+    return { store, sessions, saves, tell, changed };
+  }
+  function Standing() {
+    const gameId = useGame((s) => s.gameId);
+    const moved = useGame((s) => s.moved);
+    const round = useGame((s) => s.view?.round ?? null);
+    return <p data-testid="standing">{`${gameId} round ${round}${moved ? ' moved' : ''}`}</p>;
+  }
+
+  it('opens a life that was given a new id as the same life, with nothing to explain', async () => {
+    const g = game();
+    await g.sessions.start('nurse');
+    renderGame(<Standing />, { sessions: g.sessions, store: g.store, saves: g.saves, tapGuardMs: 0 });
+    await waitFor(() => expect(screen.getByTestId('standing').textContent).toBe('life-1 round 0'));
+    await g.store.saveGame({ ...((await g.store.loadGame()) as SavedGame), gameId: 'life-renamed' });
+    g.tell('renamed');
+    await waitFor(() => expect(screen.getByTestId('standing').textContent).toBe('life-renamed round 0'));
+  });
+
+  it('opens a life the account brought further along as it now stands, and says that it moved', async () => {
+    const g = game();
+    const session = await g.sessions.start('nurse');
+    renderGame(<Standing />, { sessions: g.sessions, store: g.store, saves: g.saves, tapGuardMs: 0 });
+    await waitFor(() => expect(screen.getByTestId('standing').textContent).toBe('life-1 round 0'));
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [] });
+    g.tell('game');
+    await waitFor(() => expect(screen.getByTestId('standing').textContent).toBe('life-1 round 1 moved'));
+  });
+
+  it('stops listening to the account when the game leaves the screen', async () => {
+    const g = game();
+    const { unmount } = renderGame(<Standing />, { sessions: g.sessions, store: g.store, saves: g.saves, tapGuardMs: 0 });
+    await waitFor(() => expect(g.changed.size).toBe(1));
+    unmount();
+    expect(g.changed.size).toBe(0);
+  });
+});
+

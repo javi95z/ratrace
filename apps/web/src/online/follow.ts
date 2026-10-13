@@ -15,9 +15,14 @@ const NOT_AGAIN_FOR = 60_000;
 /**
  * Has the account's copy read at the moments it may have changed without this page knowing:
  * someone is signed in, or someone else is; the connection is back; the page is looked at again
- * after a while, perhaps after playing on another device. Returns how to stop.
+ * after a while, perhaps after playing on another device. At those last two, if nobody is signed
+ * in, it is the signing in that is tried again. Returns how to stop.
  */
-export function follow(account: Pick<Account, 'state' | 'subscribe'>, mirror: { sync(): Promise<void>; accountChanged(): Promise<void> }, page: Page): () => void {
+export function follow(
+  account: Pick<Account, 'state' | 'subscribe'> & { again(): Promise<void> },
+  mirror: { sync(): Promise<void>; accountChanged(): Promise<void> },
+  page: Page,
+): () => void {
   const who = (): string | null => {
     const state = account.state();
     return state.kind === 'offline' ? null : state.userId;
@@ -35,12 +40,16 @@ export function follow(account: Pick<Account, 'state' | 'subscribe'>, mirror: { 
     read(mirror.accountChanged);
   };
 
+  // With nobody signed in there is no account to read: the thing to try again is signing in. A page
+  // opened with no connection is signed out, and would stay so until it was opened anew.
+  const again = () => read(who() === null ? account.again : mirror.sync);
+
   look();
   const stops = [
     account.subscribe(look),
-    page.onOnline(() => read(mirror.sync)),
+    page.onOnline(again),
     page.onShown(() => {
-      if (page.now() - last >= NOT_AGAIN_FOR) read(mirror.sync);
+      if (page.now() - last >= NOT_AGAIN_FOR) again();
     }),
   ];
   return () => {

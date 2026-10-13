@@ -27,7 +27,7 @@ export default {
     const reply = await finishRun(
       GAMES,
       {
-        loadGame: async (id) => must(await db.from('games').select('id, user_id, mode, life_id, engine_version, content_version, seed, status, log').eq('id', id).maybeSingle()) as GameRow | null,
+        loadGame: async (id) => must(await db.from('games').select('id, user_id, mode, life_id, engine_version, content_version, seed, round, status, log').eq('id', id).maybeSingle()) as GameRow | null,
         loadRun: async (id) => must(await db.from('runs').select('*').eq('id', id).maybeSingle()) as RunRow | null,
         saveRun: async (run) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
         closeGame: async (id, round) => void must(await db.from('games').update({ status: 'finished', round }).eq('id', id)),

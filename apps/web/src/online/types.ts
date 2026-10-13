@@ -47,8 +47,11 @@ export interface Account {
  */
 export type CloudSaving = 'off' | 'sending' | 'waiting' | 'saved';
 
-/** What the account changed on the device, for whoever shows it. */
-export type DeviceChange = 'game' | 'profile' | 'runs';
+/**
+ * What the account changed on the device, for whoever shows it. `renamed`: the life on the device
+ * is the same life under a new id, because the account would not take it under its own.
+ */
+export type DeviceChange = 'game' | 'renamed' | 'profile' | 'runs';
 
 /** A different life in progress waiting in the account, as far as a screen needs to know it. */
 export interface AccountLife {

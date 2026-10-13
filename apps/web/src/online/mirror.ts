@@ -3,7 +3,7 @@ import { stateHash } from '@ratrace/engine';
 import type { Content } from '@ratrace/engine';
 import { openSave } from '@/session/save';
 import { SAVE_FORMAT } from '@/session/types';
-import type { FinishedRun, PlayerStore, Profile, SavedGame } from '@/session/types';
+import type { Earned, FinishedRun, PlayerStore, Profile, SavedGame } from '@/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 import type { AccountLife, AccountSaves, CloudSaving, DeviceChange } from './types';
@@ -43,24 +43,30 @@ export interface SyncCloud {
   playingGames(): Promise<CloudGame[]>;
   /**
    * Saves the player's own life as one being played, which takes up again one that was given up.
-   * `closed` if the server has finished it: that one stays as it is.
+   * `closed`: the server has finished it, and it stays as it is. `taken`: the id is another
+   * account's. `behind`: the account holds more of this life than this save does, and keeps it.
    */
-  pushGame(game: GameUpload): Promise<'saved' | 'closed'>;
+  pushGame(game: GameUpload): Promise<'saved' | 'closed' | 'taken' | 'behind'>;
   /** Gives up a life that is being played. It is no longer offered to the player's other devices. */
   abandonGame(id: string): Promise<void>;
   loadProgress(): Promise<unknown>;
   saveProgress(progress: Progress): Promise<void>;
   /** The player's finished lives. */
   listRuns(): Promise<CloudRun[]>;
-  /** Has the server finish a life it has been sent. `refused` if it would not; `failed` if it could not be asked. */
-  finishRun(gameId: string): Promise<'done' | 'refused' | 'failed'>;
+  /**
+   * Has the server finish a life it has been sent. `refused` if it would not; `unknown-version` if
+   * it does not hold the versions the life was lived on; `failed` if it could not be asked.
+   */
+  finishRun(gameId: string): Promise<'done' | 'refused' | 'unknown-version' | 'failed'>;
 }
 
 interface Options {
   content: Content;
   lives: ReadonlyArray<LifeDef>;
-  /** The versions this build plays. A life on others is left alone in the account. */
+  /** The versions this build plays. A life in progress on others is left alone in the account. */
   versions: { engine: string; content: string };
+  /** Makes an id for a life the account will not take under its own. */
+  newId(): string;
   /** Does `run` in `ms` milliseconds. A test hands in its own, and runs it when it likes. */
   schedule?(run: () => Promise<void>, ms: number): void;
   /** How many finished lives one go asks the server to finish. The rest follow a little later. */
@@ -141,6 +147,8 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   private sent: string | null = null;
   /** Finished lives the server would not take. They are not sent to it again until the page is opened anew. */
   private readonly refused = new Set<string>();
+  /** Pairs of versions the server said it does not hold. No life on them is sent until the page is opened anew. */
+  private readonly unheld = new Set<string>();
 
   private running: Promise<void> | null = null;
   /** What has been asked for and not begun: nothing, sending what the device has, or reading the account first. */
@@ -250,11 +258,13 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    */
   readonly sync = (): Promise<void> => this.run('meet');
 
-  /** Someone else is signed in now: nothing is assumed about what their account holds. */
-  readonly accountChanged = async (): Promise<void> => {
-    while (this.running !== null) await this.running;
+  /**
+   * Someone else is signed in now: nothing is assumed about what their account holds. It is read,
+   * and what the device has goes up to it. What it will not take under its own id, because the
+   * account this device was before still holds that id, gets a new one.
+   */
+  readonly accountChanged = (): Promise<void> => {
     this.known = null;
-    this.sent = null;
     this.refused.clear();
     this.setOffer(null);
     return this.run('meet');
@@ -300,9 +310,15 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     if (this.state === 'off') this.set('sending');
     try {
       await this.giveUpThere(cloud);
-      if (meet || this.known === null) this.known = await this.meet(cloud);
-      const outcome = await this.send(cloud, this.known, meet);
-      if (outcome === 'failed') throw new Error('the server could not be asked');
+      const met = meet || this.known === null;
+      const known = met ? (this.known = await this.meet(cloud)) : (this.known as Known);
+      const outcome = await this.send(cloud, known, met);
+      if (outcome === 'failed') throw new Error('the account did not take it');
+      if (outcome === 'meet') {
+        // The account knows something this device does not. It is read before anything is called saved.
+        this.wanted = 'meet';
+        return;
+      }
       this.failures = 0;
       this.set(outcome === 'more' ? 'sending' : 'saved');
       if (outcome === 'more') this.later(() => this.run('send'), NEXT_FEW);
@@ -367,7 +383,11 @@ export class MirroredStore implements PlayerStore, AccountSaves {
 
   /** Reads the account, and gives the device what it lacks: a life in progress, and the lives finished elsewhere. */
   private async meet(cloud: SyncCloud): Promise<Known> {
+    // Everything is asked of the account first, and the device is looked at only then: what the
+    // player did while the answers were on their way is not decided over.
     const runs = await cloud.listRuns();
+    const playing = await cloud.playingGames();
+    const progress = readProgress(await cloud.loadProgress());
     const finished = new Set(runs.map((run) => run.id));
     let moved = false;
 
@@ -380,9 +400,11 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       moved = true;
     }
 
-    // Which life is played here. A copy that does not play back to a sound life is passed over, and the next is tried.
-    let games = await cloud.playingGames();
+    // Which life is played here. One the player has given up since the account answered is not one to
+    // take or to offer; a copy that does not play back to a sound life is passed over, and the next is tried.
+    let games = playing.filter((game) => !this.abandoned.has(game.id));
     let waiting: SavedGame | null = null;
+    let taken: SavedGame | null = null;
     for (;;) {
       const choice = chooseGame(current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished }, games, this.options.versions);
       const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
@@ -395,14 +417,17 @@ export class MirroredStore implements PlayerStore, AccountSaves {
         break;
       }
       await this.device.saveGame(save);
-      this.sent = standing(uploadOf(save));
-      current = save;
+      current = taken = save;
       moved = true;
     }
+    // What the device holds goes up next, unless the account has that very copy: the one just taken
+    // from it, or one that stands there exactly as it does here. A copy written over it there since
+    // this device last sent does not stand.
+    const mine = current === null ? null : uploadOf(current);
+    const theirs = playing.find((game) => game.id === current?.gameId);
+    this.sent = mine !== null && (current === taken || theirs?.stateHash === mine.stateHash) ? standing(mine) : null;
     this.setOffer(waiting);
     if (moved) this.tell('game');
-
-    const progress = readProgress(await cloud.loadProgress());
 
     const { added } = mergeRuns(await this.device.listRuns(), runs.map(asRun));
     for (const run of added) await this.device.addRun(run);
@@ -411,50 +436,114 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   }
 
   /**
-   * Sends what the device has that the account, as far as is known, lacks. `more` if there are
-   * finished lives left for another go; `failed` if the server could not be asked to finish one.
+   * Gives a life of the device a new id, wherever the device keeps it: the life in progress, its
+   * record among the finished lives, and what it earned. Returns the id. For a life the account
+   * will not take under its own: an id belongs to whoever saved it first, and that was the account
+   * this device was before, most often a guest whose player has since signed in as someone else.
    */
-  private async send(cloud: SyncCloud, known: Known, justMet: boolean): Promise<'all' | 'more' | 'failed'> {
+  private async renamed(oldId: string): Promise<string> {
+    const id = this.options.newId();
+    const game = this.open(await this.device.loadGame());
+    if (game?.gameId === oldId) await this.device.saveGame({ ...game, gameId: id });
+    const run = (await this.device.listRuns()).find((one) => one.runId === oldId);
+    if (run) {
+      // In under its new id before it is out under the old one: never neither.
+      await this.device.addRun({ ...run, runId: id });
+      await this.device.removeRun(oldId);
+    }
+    const profile = await this.device.loadProfile();
+    const pointed = (earned: Record<string, Earned>): Record<string, Earned> =>
+      Object.fromEntries(Object.entries(earned).map(([what, entry]) => [what, entry.gameId === oldId ? { ...entry, gameId: id } : entry]));
+    await this.device.saveProfile({ ...profile, badges: pointed(profile.badges), unlocked: pointed(profile.unlocked) });
+    this.tell('renamed');
+    return id;
+  }
+
+  /**
+   * Sends what the device has that the account, as far as is known, lacks. `more` if there are
+   * finished lives left for another go; `meet` if the account turned out to know something this
+   * device does not, and must be read first; `failed` if it could not take what it was sent.
+   */
+  private async send(cloud: SyncCloud, known: Known, justMet: boolean): Promise<'all' | 'more' | 'meet' | 'failed'> {
     // The life in progress, unless it stands exactly as it did when it was last sent.
-    const current = this.open(await this.device.loadGame());
+    let current = this.open(await this.device.loadGame());
     if (current !== null && !known.finished.has(current.gameId)) {
-      const upload = uploadOf(current);
+      let upload = uploadOf(current);
       if (standing(upload) !== this.sent) {
-        // Closed means the server has finished this life, and that is news: the account is read again.
-        if ((await cloud.pushGame(upload)) === 'closed' && !justMet) this.wanted = 'meet';
+        let answer = await cloud.pushGame(upload);
+        if (answer === 'taken') {
+          await this.renamed(current.gameId);
+          current = this.open(await this.device.loadGame());
+          if (current === null) return 'failed';
+          upload = uploadOf(current);
+          answer = await cloud.pushGame(upload);
+        }
+        // The account holds more of this life, or the server has finished it. That is news: the
+        // account is read before anything is called saved. If it has just been read and still
+        // will not take the life, there is nothing to do but wait and try again.
+        if (answer === 'behind' || answer === 'taken') return justMet ? 'failed' : 'meet';
+        if (answer === 'closed' && !justMet) return 'meet';
         this.sent = standing(upload);
       }
     }
 
-    // What is unlocked: both sides end with everything either had.
+    // Finished lives the server has not seen: it is sent the whole game, and finishes it itself.
+    const { finishPerSync = 5 } = this.options;
+    const versionsOf = (run: FinishedRun) => `${run.engineVersion}/${run.contentVersion}`;
+    // One known only by its result has no log to send; one the server would not take is not sent again.
+    const unseen = (await this.device.listRuns()).filter((run) => !known.finished.has(run.runId) && !this.refused.has(run.runId) && run.seed !== '');
+    let asked = 0;
+    let more = false;
+    for (const run of unseen) {
+      // The server said it does not hold these versions: no life on them is worth sending.
+      if (this.unheld.has(versionsOf(run))) continue;
+      // The rest wait for another go; what is unlocked does not wait for them.
+      if (asked === finishPerSync) {
+        more = true;
+        break;
+      }
+      asked += 1;
+      let id = run.runId;
+      // The life still on the device has just gone up.
+      if (id !== current?.gameId) {
+        const whole = (as: string): GameUpload => ({ id: as, lifeId: run.lifeId, engineVersion: run.engineVersion, contentVersion: run.contentVersion, seed: run.seed, round: this.options.content.rounds, log: run.log, stateHash: '' });
+        if ((await cloud.pushGame(whole(id))) === 'taken') {
+          id = await this.renamed(id);
+          await cloud.pushGame(whole(id));
+        }
+      }
+      const answer = await cloud.finishRun(id);
+      if (answer === 'failed') return 'failed';
+      if (answer === 'done') {
+        known.finished.add(id);
+        continue;
+      }
+      // It answered, and would not: asking again will not change its mind. What it will not finish
+      // is not left in the account as a life being played, where another device would be offered it.
+      if (answer === 'unknown-version') this.unheld.add(versionsOf(run));
+      else this.refused.add(id);
+      await cloud.abandonGame(id);
+    }
+
+    // What is unlocked: both sides end with everything either had. Another device may have added to
+    // the account since it was last read, so it is read again before it is written over.
     const profile = await this.device.loadProfile();
     const here = progressOf(profile);
-    const both = mergeProgress(here, known.progress);
+    let both = mergeProgress(here, known.progress);
+    if (!sameProgress(both, known.progress)) {
+      if (!justMet) {
+        known.progress = readProgress(await cloud.loadProgress());
+        both = mergeProgress(here, known.progress);
+      }
+      if (!sameProgress(both, known.progress)) {
+        await cloud.saveProgress(both);
+        known.progress = both;
+      }
+    }
     if (!sameProgress(both, here)) {
       await this.device.saveProfile(withProgress(profile, both));
       this.tell('profile');
     }
-    if (!sameProgress(both, known.progress)) {
-      await cloud.saveProgress(both);
-      known.progress = both;
-    }
-
-    // Finished lives the server has not seen: it is sent the whole game, and finishes it itself.
-    const { versions, finishPerSync = 5 } = this.options;
-    const unseen = (await this.device.listRuns()).filter(
-      (run) => !known.finished.has(run.runId) && !this.refused.has(run.runId) && run.seed !== '' && run.engineVersion === versions.engine && run.contentVersion === versions.content,
-    );
-    for (const run of unseen.slice(0, finishPerSync)) {
-      // The life still on the device has just gone up.
-      if (run.runId !== current?.gameId) {
-        await cloud.pushGame({ id: run.runId, lifeId: run.lifeId, engineVersion: run.engineVersion, contentVersion: run.contentVersion, seed: run.seed, round: this.options.content.rounds, log: run.log, stateHash: '' });
-      }
-      const answer = await cloud.finishRun(run.runId);
-      if (answer === 'failed') return 'failed';
-      if (answer === 'done') known.finished.add(run.runId);
-      // It answered, and would not: asking again will not change its mind.
-      else this.refused.add(run.runId);
-    }
-    return unseen.length > finishPerSync ? 'more' : 'all';
+    return more ? 'more' : 'all';
   }
 }

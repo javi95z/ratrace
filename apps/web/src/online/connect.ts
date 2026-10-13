@@ -14,6 +14,7 @@ interface GameRow {
   round: number;
   status: string;
   log: unknown;
+  state_hash: string | null;
   updated_at: string;
 }
 interface RunRow {
@@ -33,17 +34,37 @@ interface RunRow {
 }
 
 const gameOf = (row: GameRow): CloudGame => ({
-  id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, seed: row.seed, round: row.round, status: row.status, log: row.log, updatedAt: row.updated_at,
+  id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, seed: row.seed, round: row.round, status: row.status, log: row.log, stateHash: row.state_hash, updatedAt: row.updated_at,
 });
 const runOf = (row: RunRow): CloudRun => ({
   id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
   escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
 });
 
-/** The database's own word for "the rules of this table do not let you": a life the server has finished, for one. */
+/** The database's own word for "the rules of this table do not let you". */
 const NOT_ALLOWED = '42501';
-/** The answers the `finish-run` function gives of its own accord. Asked again, it would give the same. */
-const REFUSALS = new Set([400, 404, 409, 422]);
+/** The word of the `games` table for a save with less of a life played than the account holds. */
+const BEHIND = 'RR001';
+/** The answers the `finish-run` function gives of its own accord, by name. Asked again, it would give the same. */
+const REFUSALS = new Set(['bad-request', 'unknown-game', 'not-casual', 'not-finished', 'cannot-replay']);
+/** How long a request may go unanswered before it is given up. */
+const PATIENCE = 20_000;
+
+/**
+ * Why the function would not, in its own word, or null if the answer is not the function's at
+ * all: no network, a gateway that does not know it, a session that has run out.
+ */
+async function wordOf(error: unknown): Promise<string | null> {
+  const context = (error as { context?: unknown }).context;
+  if (!(context instanceof Response)) return null;
+  try {
+    const body: unknown = await context.clone().json();
+    const word = typeof body === 'object' && body !== null ? (body as { error?: unknown }).error : null;
+    return typeof word === 'string' ? word : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * The cloud, made from a Supabase client. Every table it touches is guarded in the database: a
@@ -91,7 +112,7 @@ export function cloudOf(client: SupabaseClient): Cloud {
     async playingGames() {
       const { data, error } = await client
         .from('games')
-        .select('id, life_id, engine_version, content_version, seed, round, status, log, updated_at')
+        .select('id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at')
         .eq('mode', 'casual')
         .eq('status', 'playing')
         .order('updated_at', { ascending: false })
@@ -106,9 +127,15 @@ export function cloudOf(client: SupabaseClient): Cloud {
         { onConflict: 'id' },
       );
       if (!error) return 'saved';
-      // The server has finished this life: it is closed to its owner, and that is not a failure.
-      if (error.code === NOT_ALLOWED) return 'closed';
-      throw error;
+      // The account holds more of this life than this save does: the table does not go backwards.
+      if (error.code === BEHIND) return 'behind';
+      if (error.code !== NOT_ALLOWED) throw error;
+      // The rules refused. Either this is the player's own life and the server has finished it, or
+      // the id is not this player's at all: a player sees their own games and nobody else's, so
+      // asking for it tells the two apart.
+      const own = await client.from('games').select('status').eq('id', game.id).maybeSingle();
+      if (own.error) throw own.error;
+      return own.data === null ? 'taken' : 'closed';
     },
     async abandonGame(id) {
       const { error } = await client.from('games').update({ status: 'abandoned' }).eq('id', id).eq('status', 'playing');
@@ -130,17 +157,19 @@ export function cloudOf(client: SupabaseClient): Cloud {
         .select('id, life_id, engine_version, content_version, score, net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at')
         .eq('user_id', await me())
         .order('finished_at', { ascending: false })
-        .limit(200);
+        .limit(1000);
       if (error) throw error;
       return ((data ?? []) as RunRow[]).map(runOf);
     },
     async finishRun(gameId) {
       const { error } = await client.functions.invoke('finish-run', { body: { gameId } });
       if (!error) return 'done';
-      // The function said no: asking again will not change its mind. Anything else (no network, the
-      // server down, a session that has just run out) is worth another try.
-      const status = (error as { context?: { status?: unknown } }).context?.status;
-      return typeof status === 'number' && REFUSALS.has(status) ? 'refused' : 'failed';
+      // The function said no, in its own word: asking again will not change its mind. Anything else
+      // (no network, the server down, a gateway that does not know the function, a session that has
+      // just run out) is worth another try.
+      const word = await wordOf(error);
+      if (word === 'unknown-version') return 'unknown-version';
+      return word !== null && REFUSALS.has(word) ? 'refused' : 'failed';
     },
   };
 }
@@ -152,5 +181,7 @@ export function cloudOf(client: SupabaseClient): Cloud {
  */
 export async function connectSupabase(url: string, key: string): Promise<Cloud> {
   const { createClient } = await import('@supabase/supabase-js');
-  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }));
+  // A request that never gets an answer would hold up everything after it: the mirror sends one thing at a time.
+  const patient: typeof fetch = (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(PATIENCE) });
+  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }));
 }

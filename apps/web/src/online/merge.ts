@@ -8,18 +8,29 @@ import type { Earned, FinishedRun, Profile } from '@/session/types';
  * by id; and of a life in progress, one copy is taken whole, never a mix of two.
  */
 
-/** What a player has unlocked: the profile without what belongs to the device (its settings). */
+/**
+ * What a player has unlocked: the profile without what belongs to the device. That is its
+ * settings, and whether the guide is on: a switch the player can turn either way on each device,
+ * which joined like a badge ("off anywhere is off") could never be turned back on.
+ */
 export interface Progress {
   badges: Record<string, Earned>;
   gallery: string[];
   unlocked: Record<string, Earned>;
-  guide: { seen: string[]; off: boolean };
+  /** The tips of the guide already read. */
+  guide: { seen: string[] };
 }
 
-export const progressOf = (profile: Profile): Progress => ({ badges: profile.badges, gallery: profile.gallery, unlocked: profile.unlocked, guide: profile.guide });
+export const progressOf = (profile: Profile): Progress => ({ badges: profile.badges, gallery: profile.gallery, unlocked: profile.unlocked, guide: { seen: profile.guide.seen } });
 
-/** The profile with this progress in it. The device's settings are left as they are. */
-export const withProgress = (profile: Profile, progress: Progress): Profile => ({ ...profile, ...progress });
+/** The profile with this progress in it. What belongs to the device is left as it is. */
+export const withProgress = (profile: Profile, progress: Progress): Profile => ({
+  ...profile,
+  badges: progress.badges,
+  gallery: progress.gallery,
+  unlocked: progress.unlocked,
+  guide: { ...profile.guide, seen: progress.guide.seen },
+});
 
 /** Reads progress as the cloud holds it, checked part by part like a stored profile. What is not progress is none. */
 export function readProgress(raw: unknown): Progress {
@@ -39,15 +50,15 @@ const joined = (a: readonly string[], b: readonly string[]): string[] => [...new
 
 /**
  * Two copies of what a player has unlocked, as one. A badge earned anywhere is earned, an item
- * owned anywhere is in the gallery, a tip seen anywhere is seen, and a guide turned off anywhere
- * is off. Nothing is ever taken away, so it can be done as often as two devices meet.
+ * owned anywhere is in the gallery, and a tip seen anywhere is seen. Nothing is ever taken away,
+ * so it can be done as often as two devices meet.
  */
 export function mergeProgress(a: Progress, b: Progress): Progress {
   return {
     badges: earliest(a.badges, b.badges),
     gallery: joined(a.gallery, b.gallery),
     unlocked: earliest(a.unlocked, b.unlocked),
-    guide: { seen: joined(a.guide.seen, b.guide.seen), off: a.guide.off || b.guide.off },
+    guide: { seen: joined(a.guide.seen, b.guide.seen) },
   };
 }
 
@@ -57,7 +68,7 @@ const sameSet = (a: readonly string[], b: readonly string[]): boolean => a.lengt
 
 /** True if two copies hold the same, in whatever order: there is then nothing to write. */
 export function sameProgress(a: Progress, b: Progress): boolean {
-  return sameEarned(a.badges, b.badges) && sameEarned(a.unlocked, b.unlocked) && sameSet(a.gallery, b.gallery) && sameSet(a.guide.seen, b.guide.seen) && a.guide.off === b.guide.off;
+  return sameEarned(a.badges, b.badges) && sameEarned(a.unlocked, b.unlocked) && sameSet(a.gallery, b.gallery) && sameSet(a.guide.seen, b.guide.seen);
 }
 
 /**
@@ -80,6 +91,8 @@ export interface CloudGame {
   round: number;
   status: string;
   log: unknown;
+  /** How the life stood when it was saved, in a word. Two copies with the same one are the same. */
+  stateHash?: string | null;
   updatedAt: string;
 }
 
