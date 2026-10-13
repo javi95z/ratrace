@@ -1,7 +1,7 @@
 import { loanRoom } from './debt';
 import { livingCostAnnual } from './economy';
 import { INSURANCE_KINDS } from './life/derive';
-import { canSellItem, itemTerms, moveCost } from './life/orders';
+import { canSellItem, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { cityOf, itemOf } from './lookup';
 import { applyBp } from './money';
 import type { Bp, Cents } from './money';
@@ -48,6 +48,10 @@ export interface ItemQuote {
   owned: boolean;
   /** False for something only a card can give. */
   forSale: boolean;
+  /** False where the shops of the player's city do not sell it. */
+  soldHere: boolean;
+  /** True for a membership of certain cities only: it ends the day the player moves out of them. */
+  local: boolean;
   /** True if the player owns it and may sell or cancel it. False for an experience already spent and for what only a card gives. */
   sellable: boolean;
 }
@@ -63,12 +67,18 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     upkeepAnnual: indexed(item.upkeepAnnual, world),
     owned: held !== undefined,
     forSale: item.cardOnly !== true,
+    soldHere: soldIn(item, view.player.cityId),
+    local: item.kind === 'membership' && item.cities !== undefined,
     sellable: held !== undefined && canSellItem(content, held),
   };
 }
 
-export function quoteMove(content: Content, view: GameView, cityId: string): { cost: Cents } {
-  return { cost: moveCost(content, view.timeline[view.round], cityOf(content, cityId)) };
+export function quoteMove(content: Content, view: GameView, cityId: string): { cost: Cents; lapses: string[] } {
+  return {
+    cost: moveCost(content, view.timeline[view.round], cityOf(content, cityId)),
+    // The memberships the move would end, by item id.
+    lapses: lapsingIn(content, view.player, cityId),
+  };
 }
 
 export interface LoanQuote {

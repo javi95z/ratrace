@@ -301,7 +301,7 @@ export function applyRound(
   const bankruptcy = checkBankruptcy(p, content, now, annualIncome, completed);
   if (bankruptcy) events.push({ kind: 'bankrupt', ...bankruptcy });
 
-  turnPage(p, events);
+  turnPage(p, content, events);
   refreshDerived(p, content);
   next.round = completed;
   next.finished = completed >= content.rounds;

@@ -322,7 +322,8 @@
       "incomeTax": "Impuesto sobre la renta",
       "gainsTax": "Impuesto sobre ganancias",
       "here": "Vives aquí",
-      "moveHere": "Mudarte aquí"
+      "moveHere": "Mudarte aquí",
+      "moveLapses": "Al mudarte pierdes: {items}."
     },
     "shop": {
       "status": "Estatus +{n}",
@@ -334,7 +335,8 @@
       "lasts": "El estatus dura {years} años",
       "cardOnly": "Aquí no se vende. Te lo tiene que ofrecer la vida.",
       "resale": "Mañana se revendería por unos {amount}",
-      "spent": "Ya disfrutado. El estatus se apaga en {years} años."
+      "spent": "Ya disfrutado. El estatus se apaga en {years} años.",
+      "local": "Solo en {city}. Si te mudas, lo pierdes."
     },
     "taxes": {
       "income": "Lo que entra",
@@ -372,7 +374,9 @@
     "bankruptHint": "Se vende todo y se cancelan todas las deudas. Los bancos se acordarán.",
     "refused": "No se hizo: {reason}",
     "next": "Siguiente ronda",
-    "finish": "Ver cómo acabó"
+    "finish": "Ver cómo acabó",
+    "lapsed": "Has perdido {item}.",
+    "lapsedHint": "Era de la ciudad que dejas. No se devuelve nada."
   },
   "profile": {
     "title": "Tu vida",

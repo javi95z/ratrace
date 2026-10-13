@@ -122,7 +122,10 @@ export const cardArt: Record<string, string> = {
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
+/** City seats whose own picture is not drawn yet wear Madrid's. A seat leaves this list when sheet items-03 lands. */
+const ITEM_STAND_IN: readonly string[] = ['member_seat_london', 'member_seat_new_york', 'member_beach_dubai', 'member_paddock_singapore', 'member_ringside_bangkok'];
+export const itemArt = (itemId: string): string =>
+  itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${ITEM_STAND_IN.includes(itemId) ? 'member_season_seat' : itemId}`;
 
 export const propertyArt = (typeId: string): string => `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];

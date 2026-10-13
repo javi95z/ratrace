@@ -1,6 +1,6 @@
 # Art prompt pack: v1
 
-Twenty-four sheets cover every v1 sprite: the first twenty-one, and three added since (04b homes, 06b icons, 10b portraits). The game is called The Rat Race.
+Twenty-nine sheets cover every v1 sprite: the first twenty-one, and eight added since (02b city seats, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day). The game is called The Rat Race.
 
 ## How to use
 
@@ -98,6 +98,20 @@ Square image. Object sheet: 4 columns by 4 rows, 16 objects. Left to right, top 
 14. Pair of high-top basketball sneakers in red, black and white.
 15. Leather golf bag with club heads showing.
 16. Wooden crate holding three dark wine bottles with cream labels.
+```
+
+### 02b. City seats
+
+Save as `art/raw/items/items-03.png`
+
+```text
+Landscape 3:2 image. Object sheet: 3 columns by 2 rows, 6 objects, each shown front-on. Each is a small still life that says "a regular's seat" in one city. Left to right, top to bottom:
+1. London football: a red stadium seat with a red and white knitted scarf draped over it and a classic football resting against its leg.
+2. New York basketball: two courtside folding chairs in royal blue with orange trim, an orange basketball on one of them.
+3. Dubai beach club: a white sun lounger with a striped gold and white towel, under a cream parasol, a small patch of pale sand with a hard edge beneath it.
+4. Singapore grand prix: a red and white racing helmet resting on a folded chequered flag, with a gold lanyard pass beside it.
+5. Bangkok muay thai: a pair of red boxing gloves hanging by their laces from a corner post of a ring, with a braided blue and gold headband on top of the post.
+6. Opera house: a red velvet theatre armchair with a gold frame, a pair of small brass opera glasses on its seat.
 ```
 
 ### 03. Cars
@@ -222,6 +236,36 @@ Square image. Object sheet: 4 columns by 4 rows, 16 icons. These must stay reada
 14. Factory with one chimney and a green arrow rising beside it.
 15. Moving van seen from the side, cream body, navy cab.
 16. Open door in a dark wall with warm gold light pouring out.
+```
+
+### 06c. Family icons
+
+Save as `art/raw/icons/icons-04.png`
+
+```text
+Landscape 2:1 image. Object sheet: 4 columns by 2 rows, 8 icons. These must stay readable when shrunk to 32 by 32 pixels: very simple, bold, chunky shapes, thick outlines, 3 to 4 colours each, no fine detail. People are shown as plain bust silhouettes with a round head and shoulders, no faces. Left to right, top to bottom:
+1. One bust in navy with a cream collar, alone.
+2. Two busts side by side, one navy and one emerald, with a small red heart between their heads.
+3. Two busts side by side, one navy and one emerald, shoulders overlapping, no heart.
+4. Two interlocked gold wedding rings, one with a small white gem.
+5. A baby's feeding bottle in cream and glass blue with a gold teat cap.
+6. A small child's bust in gold with a red school backpack strap over one shoulder.
+7. A taller, thin bust in emerald wearing grey headphones.
+8. Four busts in a row, two tall at the sides and two small between them, in navy, emerald, gold and red.
+```
+
+### 06d. City icons
+
+Save as `art/raw/icons/icons-05.png`
+
+```text
+Landscape 3:2 image. Object sheet: 3 columns by 2 rows, 6 icons. These must stay readable when shrunk to 32 by 32 pixels: very simple, bold, chunky shapes, thick outlines, 3 to 4 colours each, no fine detail. Each icon is one landmark, seen front-on, with gold lit windows where it has any. Left to right, top to bottom:
+1. Madrid: the Puerta de Alcalá, a cream stone gate with three round arches and two square side openings.
+2. London: the Elizabeth Tower clock tower, cream stone with a gold clock face showing plain tick marks.
+3. New York: the Statue of Liberty from the waist up, pale emerald, torch raised with a gold flame.
+4. Dubai: the Burj Al Arab hotel, a white sail-shaped tower with a glass blue edge.
+5. Singapore: the three Marina Bay Sands towers in grey joined by a long navy deck across the top.
+6. Bangkok: the Wat Arun temple spire, cream with red and gold bands, stepped and pointed.
 ```
 
 ### 07. Achievement badges A
@@ -448,6 +492,28 @@ Landscape 3:2 image. Scene sheet: 1 column by 3 rows, 3 very wide panoramic pane
 
 If the three strips come out uneven or merged, generate one city per image with the same wording and save them as `skylines-01a.png`, `skylines-01b.png` and so on.
 
+### 20b. Skylines by day A
+
+Save as `art/raw/skylines/skylines-03.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 1 column by 3 rows, 3 very wide panoramic panels. Each panel is a city skyline in the golden hour just after sunrise, seen from across the water or a park: a pale gold and peach sky with a few flat cream clouds, buildings in warm cream, terracotta and grey with glass blue windows, long navy shadows, and buildings fading to solid dark navy #141b33 along the bottom edge. Same buildings, same order and same framing as the night skylines. Top to bottom:
+1. Madrid: the domed Metropolis building, the four tall towers of the business district, the Cibeles palace, terracotta rooftops.
+2. London: the Elizabeth Tower clock tower, the London Eye wheel, the Shard, Tower Bridge, the Gherkin.
+3. New York: the Empire State Building, the Chrysler Building, One World Trade Center, the Brooklyn Bridge.
+```
+
+### 20c. Skylines by day B
+
+Save as `art/raw/skylines/skylines-04.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 1 column by 3 rows, 3 very wide panoramic panels. Each panel is a city skyline in the golden hour just after sunrise, seen from across the water or a park: a pale gold and peach sky with a few flat cream clouds, buildings in warm cream, terracotta and grey with glass blue windows, long navy shadows, and buildings fading to solid dark navy #141b33 along the bottom edge. Same buildings, same order and same framing as the night skylines. Top to bottom:
+1. Dubai: the Burj Khalifa needle tower, the sail-shaped Burj Al Arab hotel, the Dubai Frame, a cluster of marina towers.
+2. Singapore: the three Marina Bay Sands towers joined by a ship-shaped deck, the Supertree Grove, the lotus-shaped museum, the Singapore Flyer wheel.
+3. Bangkok: the Wat Arun temple spire, the pixel-notched MahaNakhon tower, the Baiyoke tower, a long-tail boat on the river.
+```
+
 ## Brand sheet
 
 ### 21. Logo, wordmark, app icon, mascot
@@ -470,12 +536,15 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 |---|---|---|---|
 | 01 | `items/items-01.png` | Watches, tech, fashion, art | 64×64 |
 | 02 | `items/items-02.png` | Travel, memberships, air and sea, education, 5 later items | 64×64 |
+| 02b | `items/items-03.png` | A seat for each city besides Madrid, 1 later item | 64×64 |
 | 03 | `cars/cars-01.png` | 7 cars + 1 later | 96×48 |
 | 04 | `homes/homes-01.png` | 7 homes + 2 later property types | 128×128 |
 | 04b | `homes/homes-02.png` | 9 more kinds of property: 6 homes, 3 to let | 128×128 |
 | 05 | `icons/icons-01.png` | Finance tool icons | 32×32 |
 | 06 | `icons/icons-02.png` | Interface icons | 32×32 |
 | 06b | `icons/icons-03.png` | Lifestyle, rent, insurance and focus icons, the economy, a moving van, the way out | 32×32 |
+| 06c | `icons/icons-04.png` | Family: single, dating, partner, married, baby, child, teenager, family | 32×32 |
+| 06d | `icons/icons-05.png` | A landmark for each city | 32×32 |
 | 07 | `badges/badges-01.png` | Achievements 1 to 16 | 64×64 |
 | 08 | `badges/badges-02.png` | Achievements 17 to 30, locked badge, generic star | 64×64 |
 | 09 | `portraits/portraits-01.png` | Nurse, engineer, civil servant, rider | 64×64 |
@@ -483,6 +552,7 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 10b | `portraits/portraits-03.png` | Second chance, founder, crypto kid, 1 later life | 64×64 |
 | 11 to 18 | `cards/cards-01.png` to `cards-08.png` | 48 card scenes | 288×120 |
 | 19 to 20 | `skylines/skylines-01.png`, `-02.png` | 6 city skylines | 312×66 |
+| 20b to 20c | `skylines/skylines-03.png`, `-04.png` | The 6 skylines by day | 312×66 |
 | 21 | `brand/brand-01.png` | Logo, wordmark, app icon, mascot | varies |
 
 The share card needs no sheet. It is composed in code from a skyline, the logo and the player's numbers.

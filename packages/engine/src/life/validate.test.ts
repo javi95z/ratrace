@@ -11,6 +11,13 @@ describe('validateContent: life data', () => {
     expect(validateContent(fixtureContent())).toEqual([]);
   });
 
+  it('checks the cities an item is sold in', () => {
+    const item = c.items[0];
+    expect(errors({ items: [{ ...item, cities: [] }] })).toContain(`item ${item.id} needs at least one city, or none at all`);
+    expect(errors({ items: [{ ...item, cities: ['atlantis'] }] })).toContain(`item ${item.id} names an unknown city: atlantis`);
+    expect(errors({ items: [{ ...item, cities: [c.cities[0].id] }] })).toEqual([]);
+  });
+
   it('checks careers', () => {
     const career = c.careers[0];
     expect(errors({ careers: [{ ...career, levels: [] }] })).toContain('career office needs at least one level');

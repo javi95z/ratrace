@@ -13,7 +13,7 @@ describe('the v1 content', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(19);
     expect(content.careers).toHaveLength(6);
-    expect(content.items).toHaveLength(34);
+    expect(content.items).toHaveLength(39);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
@@ -135,6 +135,18 @@ describe('the v1 content', () => {
       // The newcomer's language is worth two points of experience, short of the next rung.
       if (levels[job.level + 1]) expect(skill, life.id).toBeLessThan(levels[job.level + 1].minSkill);
     }
+  });
+
+  it('gives every city one seat of its own, sold nowhere else, and ties nothing else to a city', () => {
+    const local = content.items.filter((item) => item.cities !== undefined);
+    expect(local.map((item) => item.cities).flat().sort()).toEqual(content.cities.map((city) => city.id).sort());
+    for (const item of local) {
+      expect(item.kind, item.id).toBe('membership');
+      expect(item.cities, item.id).toHaveLength(1);
+    }
+    // A card hands a thing over wherever the player is, so no card may give what belongs to one city.
+    const given = content.cards.flatMap((card) => card.options.flatMap((option) => [option.effects, ...(option.outcomes ?? []).map((o) => o.effects)])).map((effects) => effects?.buyItem?.itemId);
+    for (const item of local) expect(given, item.id).not.toContain(item.id);
   });
 
   it('starts every life cleanly', () => {

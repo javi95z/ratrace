@@ -12,12 +12,14 @@ const experience = (id: string, ladder: string, price: number, status: number, b
   id, ladder, kind: 'experience', price: usd(price), upkeepAnnual: 0, status, resaleStartPct: 0, resaleDriftBp: 0, boostRounds,
 });
 
-const membership = (id: string, joining: number, upkeepAnnual: number, status: number): ItemDef => ({
+const membership = (id: string, joining: number, upkeepAnnual: number, status: number, cities?: string[]): ItemDef => ({
   id, ladder: 'membership', kind: 'membership', price: usd(joining), upkeepAnnual: usd(upkeepAnnual), status, resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 0,
+  ...(cities ? { cities } : {}),
 });
 
 /**
- * Thirty-four status items in nine ladders. With the seven homes they are the 41 of spec Appendix B.
+ * Thirty-nine status items in nine ladders: the 34 of spec Appendix B, and a seat of its own for
+ * each city besides Madrid.
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
  * price, and the change in resale value each round, in bp, on top of inflation.
@@ -69,8 +71,15 @@ export const items: ItemDef[] = [
 
   membership('member_gym', 50, 360, 1),
   membership('member_platinum_card', 0, 800, 5),
-  membership('member_season_seat', 1_000, 1_800, 6),
   membership('member_club', 500, 3_000, 8),
+
+  // One seat a city: sold only there, and gone the day you move away. Each is priced as its city is.
+  membership('member_season_seat', 1_000, 1_800, 6, ['madrid']),
+  membership('member_seat_london', 1_500, 2_600, 7, ['london']),
+  membership('member_seat_new_york', 2_500, 4_500, 9, ['new_york']),
+  membership('member_beach_dubai', 3_000, 5_000, 10, ['dubai']),
+  membership('member_paddock_singapore', 4_000, 6_000, 11, ['singapore']),
+  membership('member_ringside_bangkok', 150, 400, 3, ['bangkok']),
 
   // An MBA takes two focus points and builds skill, so it is earned through its card, not bought in the shop.
   {

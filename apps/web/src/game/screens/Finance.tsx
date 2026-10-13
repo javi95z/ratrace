@@ -471,7 +471,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
         {content.cities.map((city) => {
           const here = city.id === p.cityId;
           const tax = effectiveTax(city, world);
-          const { cost } = quoteMove(content, shown, city.id);
+          const { cost, lapses } = quoteMove(content, shown, city.id);
           return (
             <Panel key={city.id}>
               <div className="flex items-baseline justify-between gap-2">
@@ -486,6 +486,10 @@ function MoveSheet({ onClose }: { onClose(): void }) {
               {here ? null : (
                 <>
                   <p className="mb-2 mt-1 text-[12px] text-ink-300">{t('moveCost', { amount: fmt.money(cost) })}</p>
+                  {lapses.length > 0 ? (
+                    // Said before the move is ordered: what belongs to this city does not come along.
+                    <p className="frame mb-2 bg-wine-900 px-2 py-1.5 text-[13px] leading-snug">{t('moveLapses', { items: lapses.map((id) => names.items[id]).join(', ') })}</p>
+                  ) : null}
                   <Button
                     wide
                     onClick={() => {
@@ -645,6 +649,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{t('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {item.kind === 'experience' ? <Tag>{t('lasts', { years: item.boostRounds * years })}</Tag> : null}
         </div>
+        {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
         {item.kind === 'durable' && !held && quote.forSale ? <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(quote.resale) })}</p> : null}
 
         {inBasket ? (
@@ -687,7 +692,8 @@ function Shop() {
         <Panel key={ladder} title={text.ladders[ladder]}>
           <div className="grid grid-cols-2 gap-2">
             {content.items
-              .filter((item) => item.ladder === ladder)
+              // The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
+              .filter((item) => item.ladder === ladder && quoteItem(content, shown, item.id).soldHere)
               .map((item) => {
                 const owned = p.life.items.some((x) => x.itemId === item.id);
                 return (

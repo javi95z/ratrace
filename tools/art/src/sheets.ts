@@ -45,6 +45,14 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // One seat a city. Until it lands, `ITEM_STAND_IN` in the content lends each of them Madrid's. The last cell is for a later item.
+    file: 'items/items-03', group: 'items', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64,
+    ids: [
+      'item.member_seat_london', 'item.member_seat_new_york', 'item.member_beach_dubai',
+      'item.member_paddock_singapore', 'item.member_ringside_bangkok', 'item.member_opera',
+    ],
+  },
+  {
     file: 'cars/cars-01', group: 'cars', kind: 'objects', cols: 2, rows: 4, width: 96, height: 48,
     ids: [
       'car.seat_ibiza', 'car.toyota_corolla', 'car.vw_golf_gti', 'car.tesla_model_3',
@@ -97,6 +105,16 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // Who shares the life: not shown anywhere yet.
+    file: 'icons/icons-04', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 32, height: 32,
+    ids: ['icon.single', 'icon.dating', 'icon.partner', 'icon.married', 'icon.baby', 'icon.child', 'icon.teen', 'icon.family'],
+  },
+  {
+    // A landmark for each city, to stand where the globe of `icon.city` stands today.
+    file: 'icons/icons-05', group: 'icons', kind: 'objects', cols: 3, rows: 2, width: 32, height: 32,
+    ids: ['icon.city_madrid', 'icon.city_london', 'icon.city_new_york', 'icon.city_dubai', 'icon.city_singapore', 'icon.city_bangkok'],
+  },
+  {
     file: 'badges/badges-01', group: 'badges', kind: 'objects', cols: 4, rows: 4, width: 64, height: 64,
     ids: [
       'badge.first_100k', 'badge.millionaire', 'badge.millionaire_by_35', 'badge.ten_million',
@@ -132,5 +150,8 @@ export const SHEETS: SheetSpec[] = [
   })),
   { file: 'skylines/skylines-01', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid', 'skyline.london', 'skyline.new_york'] },
   { file: 'skylines/skylines-02', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai', 'skyline.singapore', 'skyline.bangkok'] },
+  // The same six cities by day, for the rounds a life is going well. Not shown anywhere yet.
+  { file: 'skylines/skylines-03', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid.day', 'skyline.london.day', 'skyline.new_york.day'] },
+  { file: 'skylines/skylines-04', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai.day', 'skyline.singapore.day', 'skyline.bangkok.day'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

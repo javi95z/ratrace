@@ -207,3 +207,33 @@ describe('the lifestyle tab', () => {
   });
 });
 
+describe('what belongs to a city', () => {
+  it('is on the shelf only in that city, and says it will not come along', async () => {
+    // The nurse lives in Madrid.
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    expect(button(/Bernabéu season seat/)).toBeTruthy();
+    for (const elsewhere of [/Arsenal season ticket/, /Knicks season seats/, /Jumeirah beach club/, /Paddock Club/, /Rajadamnern/]) expect(screen.queryByRole('button', { name: elsewhere })).toBeNull();
+    // What is sold everywhere is still there.
+    expect(button(/Soho House/)).toBeTruthy();
+
+    await user.click(button(/Bernabéu season seat/));
+    expect(within(screen.getByRole('dialog', { name: 'Bernabéu season seat' })).getByText('Only in Madrid. Move away and it is gone.')).toBeTruthy();
+  });
+
+  it('is named before a move that would end it, and only for the cities that would', async () => {
+    const { services, session } = await inFinance('nurse');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'member_season_seat' }] });
+    await toFinance(session);
+    expect((await stateOf(services)).player.life.items.map((owned) => owned.itemId)).toEqual(['member_season_seat']);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+    const sheet = screen.getByRole('dialog', { name: 'Move to another city' });
+    // One warning for each of the five cities that are not Madrid.
+    expect(within(sheet).getAllByText('Moving ends: Bernabéu season seat.')).toHaveLength(content.cities.length - 1);
+  });
+});

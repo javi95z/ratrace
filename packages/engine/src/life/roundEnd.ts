@@ -2,6 +2,7 @@ import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, FinanceSkill, GameEvent, PlayerState, RoundTally, WorldState } from '../types';
+import { lapsingIn } from './orders';
 
 /**
  * What a round of living does to the player, once its money has settled:
@@ -61,13 +62,19 @@ export function ageLife(
   }
 }
 
-/** Turns the page on a round: a pending move happens, and focus and this round's pay boost reset. */
-export function turnPage(p: PlayerState, events: GameEvent[]): void {
+/**
+ * Turns the page on a round: a pending move happens, and focus and this round's pay boost reset.
+ * A move ends the memberships that belong to the city left behind.
+ */
+export function turnPage(p: PlayerState, content: Content, events: GameEvent[]): void {
   const life = p.life;
   if (life.movingTo !== null) {
     p.cityId = life.movingTo;
     life.movingTo = null;
     events.push({ kind: 'moved', cityId: p.cityId });
+    const lapsed = lapsingIn(content, p, p.cityId);
+    life.items = life.items.filter((owned) => !lapsed.includes(owned.itemId));
+    for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });
   }
   life.focusUsed = 0;
   life.salaryBoostPct = 0;

@@ -56,6 +56,7 @@ export interface Ui {
   jobHunt: [yes: string, no: string];
   financeSkillUp: string;
   moved: string;
+  lapsed: string;
   escaped: string;
   escapeLost: string;
   bankrupt: string;
@@ -160,6 +161,7 @@ const en: Ui = {
   jobHunt: ['The job hunt paid off: a lasting raise.', 'The job hunt led nowhere this time.'],
   financeSkillUp: 'Experience pays: your finance skill is now',
   moved: 'You moved to',
+  lapsed: 'Left behind with the move:',
   escaped: 'You are out of the rat race. Your passive income covers your life.',
   escapeLost: 'Back in the rat race: your passive income no longer covers your life.',
   bankrupt: 'Bankrupt. Everything is sold and every debt is cleared.',
@@ -281,6 +283,7 @@ const es: Ui = {
   jobHunt: ['La búsqueda dio fruto: una subida para siempre.', 'Esta vez la búsqueda no llevó a nada.'],
   financeSkillUp: 'La experiencia cuenta: tu nivel de finanzas es ahora',
   moved: 'Te has mudado a',
+  lapsed: 'Se queda atrás con la mudanza:',
   escaped: 'Has salido de la rueda. Tus ingresos pasivos pagan tu vida.',
   escapeLost: 'De vuelta a la rueda: tus ingresos pasivos ya no pagan tu vida.',
   bankrupt: 'Quiebra. Se vende todo y se cancelan todas las deudas.',

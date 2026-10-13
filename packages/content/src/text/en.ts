@@ -245,6 +245,7 @@ export const en: ContentText = {
     'no-job': 'You need a job for that.',
     'unknown-item': 'That item does not exist.',
     'not-for-sale': 'That is not for sale here.',
+    'not-sold-here': 'That is not sold in your city.',
     'already-owned': 'You already own that.',
     'not-owned': 'You do not own that.',
     'cannot-sell': 'An experience cannot be sold.',

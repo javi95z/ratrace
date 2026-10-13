@@ -35,6 +35,18 @@ export function itemTerms(item: ItemDef, world: WorldState): { price: Cents; res
   return { price, resale: item.kind === 'durable' ? mulDiv(price, item.resaleStartPct, 100) : 0 };
 }
 
+/** True where the shops of a city sell the item. */
+export function soldIn(item: ItemDef, cityId: string): boolean {
+  return item.cities === undefined || item.cities.includes(cityId);
+}
+
+/** What the player owns that a move to the city would end: memberships that only mean something elsewhere. */
+export function lapsingIn(content: Content, p: PlayerState, cityId: string): string[] {
+  return p.life.items
+    .filter((owned) => content.items.some((item) => item.id === owned.itemId && item.kind === 'membership' && !soldIn(item, cityId)))
+    .map((owned) => owned.itemId);
+}
+
 /** What moving to a city costs today. */
 export function moveCost(content: Content, world: WorldState, city: CityDef): Cents {
   return mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
@@ -44,6 +56,7 @@ function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): Reje
   const item = ctx.content.items.find((i) => i.id === itemId);
   if (!item) return 'unknown-item';
   if (item.cardOnly === true) return 'not-for-sale';
+  if (!soldIn(item, p.cityId)) return 'not-sold-here';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
   const { price, resale } = itemTerms(item, ctx.world);
   if (price > p.cash) return 'not-enough-cash';

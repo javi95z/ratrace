@@ -171,6 +171,7 @@ describe('roundNotes', () => {
       { kind: 'promoted', careerId: 'tech', level: 2 },
       { kind: 'financeSkill', level: 1 },
       { kind: 'moved', cityId: 'dubai' },
+      { kind: 'lapsed', itemId: 'member_season_seat' },
       { kind: 'escaped', round: 7 },
     ]);
     expect(told.map((note) => note.title)).toEqual([
@@ -179,6 +180,7 @@ describe('roundNotes', () => {
       'Experience pays: finance skill 1.',
       'The job hunt paid off: a lasting raise.',
       'You moved to Dubai.',
+      'You lost Bernabéu season seat.',
       'Not done: You do not have enough cash.',
     ]);
     expect(told[0]).toMatchObject({ tone: 'gold', hint: 'Your passive income covers your life. From here on, work is a choice.' });

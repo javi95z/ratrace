@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { debtRateBp } from '../debt';
 import { applyRound, createGame, previewRound } from '../game';
+import { cityOf } from '../lookup';
 import { executeOrder } from '../orders';
+import { quoteItem, quoteMove } from '../quotes';
 import { newTally } from '../tally';
 import { fixtureContent, fixturePlayer, fixtureStart } from '../testing/fixture';
 import type { Content, GameEvent, LedgerLine, LifeStart, OrderContext, StartConfig } from '../types';
+import { viewOf } from '../view';
 import { generateTimeline } from '../world';
 
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3 };
@@ -255,6 +258,62 @@ describe('moving city', () => {
     expect(state.player.life.movingTo).toBeNull();
     expect(state.player.salaryAnnual).toBe(4_800_000);
     expect(state.player.statusPoints).toBe(5 + 2);
+  });
+});
+
+describe('things that belong to a city', () => {
+  /** The fixture, with its club sold only in the city the life starts in. */
+  const local = (): Content => {
+    const content = fixtureContent();
+    content.items = content.items.map((item) => (item.id === 'club' ? { ...item, cities: ['home'] } : item));
+    return content;
+  };
+
+  it('are sold only in their cities, and the quote says so before the order is tried', () => {
+    const content = local();
+    const here = setup({}, {}, content);
+    expect(here.run({ type: 'buyItem', itemId: 'club' })).toBeNull();
+    const away = setup({ cityId: 'haven' }, {}, content);
+    expect(away.run({ type: 'buyItem', itemId: 'club' })).toBe('not-sold-here');
+    expect(away.p.life.items).toEqual([]);
+    expect(away.p.cash).toBe(5_000_000);
+
+    const view = (cityId: string) => viewOf(createGame({ content, start: start({ cityId }) }, 'sold'));
+    expect(quoteItem(content, view('home'), 'club')).toMatchObject({ soldHere: true, local: true });
+    expect(quoteItem(content, view('haven'), 'club').soldHere).toBe(false);
+    // Something with no cities is sold everywhere.
+    expect(quoteItem(content, view('haven'), 'car_basic').soldHere).toBe(true);
+  });
+
+  it('end with the move when they are memberships: no more upkeep, no more status, nothing paid back', () => {
+    const content = local();
+    const game = createGame({ content, start: start() }, 'lapse');
+    const joined = applyRound(content, game, { orders: [{ type: 'buyItem', itemId: 'club' }, { type: 'buyItem', itemId: 'watch_gold' }] }).state;
+    expect(joined.player.life.items.map((owned) => owned.itemId)).toEqual(['club', 'watch_gold']);
+    expect(quoteMove(content, viewOf(joined), 'haven').lapses).toEqual(['club']);
+    expect(quoteMove(content, viewOf(joined), 'home').lapses).toEqual([]);
+
+    const { state, events } = applyRound(content, joined, { orders: [{ type: 'moveCity', cityId: 'haven' }] });
+    expect(events.filter((e) => e.kind === 'moved' || e.kind === 'lapsed')).toEqual([{ kind: 'moved', cityId: 'haven' }, { kind: 'lapsed', itemId: 'club' }]);
+    // What is owned goes along. The club stays behind, and so do its fee and its status.
+    expect(state.player.life.items.map((owned) => owned.itemId)).toEqual(['watch_gold']);
+    expect(state.player.life.collection).toEqual(['club', 'watch_gold']);
+    expect(state.player.extraExpensesAnnual).toBe(0);
+    expect(state.player.statusPoints).toBe(joined.player.statusPoints - 5 + (cityOf(content, 'haven').prestige - cityOf(content, 'home').prestige));
+  });
+
+  it('stay when the move is between two of their cities, or when they have no city at all', () => {
+    const content = fixtureContent();
+    content.items = content.items.map((item) => (item.id === 'club' ? { ...item, cities: ['home', 'haven'] } : item));
+    const game = createGame({ content, start: start() }, 'stay');
+    const joined = applyRound(content, game, { orders: [{ type: 'buyItem', itemId: 'club' }] }).state;
+    const { state, events } = applyRound(content, joined, { orders: [{ type: 'moveCity', cityId: 'haven' }] });
+    expect(state.player.life.items.map((owned) => owned.itemId)).toEqual(['club']);
+    expect(events.some((e) => e.kind === 'lapsed')).toBe(false);
+
+    const plain = fixtureContent();
+    const anywhere = applyRound(plain, createGame({ content: plain, start: start() }, 'any'), { orders: [{ type: 'buyItem', itemId: 'club' }] }).state;
+    expect(applyRound(plain, anywhere, { orders: [{ type: 'moveCity', cityId: 'haven' }] }).state.player.life.items).toHaveLength(1);
   });
 });
 
