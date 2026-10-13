@@ -206,9 +206,9 @@ export function Segmented<T extends string | number>({
             )}
           >
             {option.icon ? (
-              <Well className="mb-1 size-9">
+              <span className="mb-1 inline-flex size-9 shrink-0 items-center justify-center">
                 <Sprite id={option.icon} />
-              </Well>
+              </span>
             ) : null}
             <span className="pixel text-[14px]">{option.label}</span>
             {option.hint ? <span className={join('text-[11px] leading-tight', on ? 'text-ink-500' : 'text-ink-200')}>{option.hint}</span> : null}
@@ -231,9 +231,9 @@ export function Toggle({ on, onChange, label, hint, disabled, icon }: { on: bool
       className={join('frame-raised flex min-h-11 w-full items-center gap-3 bg-night-600 py-2 pr-3 text-left disabled:opacity-40', icon ? 'pl-2' : 'pl-3')}
     >
       {icon ? (
-        <Well className="size-9">
+        <span className="inline-flex size-9 shrink-0 items-center justify-center">
           <Sprite id={icon} />
-        </Well>
+        </span>
       ) : null}
       <span className="min-w-0 flex-1">
         <span className="pixel block text-[15px]">{label}</span>

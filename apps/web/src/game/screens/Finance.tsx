@@ -585,9 +585,9 @@ function Lifestyle() {
 
       <Panel title={t('city')}>
         <div className="mb-2 flex items-center gap-3">
-          <Well className="size-9">
+          <span className="inline-flex size-9 shrink-0 items-center justify-center">
             <Sprite id="icon.city" />
-          </Well>
+          </span>
           <div className="min-w-0">
             <div className="pixel text-[18px]">{names.cities[p.cityId]}</div>
             <p className="text-[13px] leading-snug text-ink-200">{text.cities[p.cityId].tagline}</p>
