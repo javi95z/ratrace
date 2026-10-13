@@ -57,7 +57,7 @@ Only the tables this step and the next one use. The others arrive with the step 
 
 - Edge Functions run on Deno, which wants import paths the packages do not use. So the engine and one version of the content are bundled into a single file per version pair, and a test fails if a bundle is stale against its source.
 - One function, `engine`, with one job in this step: given a seed, a starting life and a choice log, replay it and return the score and the state hash. It requires a signed-in player and writes nothing.
-- Versions: the function holds a table of the version pairs it can run. A pair it does not know gets a clear refusal, and the game says "update the game" instead of failing.
+- Versions: the function holds a table of the version pairs it can run. A pair it does not know gets a clear refusal. (As built: the game does not say "update the game"; a life on versions the server does not hold simply stays on its device.)
 - Parity is proved, not assumed: lives recorded by the browser engine are replayed by the deployed function and must give the same hash at the end.
 
 ### Working without a local Supabase
@@ -88,4 +88,4 @@ Only the tables this step and the next one use. The others arrive with the step 
 - [x] 5. The game with no Supabase configured: unchanged, proved by the existing end-to-end suite (35 passed)
 - [x] 6. Spec and roadmap brought up to date
 - [x] 6b. The live check (`pnpm online:live-check`): two real guests through the public API, and a whole life replayed by the deployed function. 17 checks held on 2026-10-13, and the two guests were removed afterwards
-- [ ] 7. Fresh review and one fix pass
+- [x] 7. Fresh review and one fix pass. The review found the page breaking once the project's values were set, a stored guest that a failed renewal could replace, no way back into a kept account from a second device, and that Supabase grants new tables and functions to every client by default; all fixed, with what cloud saves needed of the database, in the commits of step 12

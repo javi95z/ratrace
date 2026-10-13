@@ -1,7 +1,7 @@
 # The Rat Race: Online Design
 
 Date: 2026-10-13
-Status: phase 1 (foundation) built on 2026-10-13; see `docs/superpowers/plans/2026-10-13-online-foundation.md`. The later phases are still design. Each phase gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
+Status: phases 1 (foundation) and 2 (cloud saves) built on 2026-10-13; see `docs/superpowers/plans/2026-10-13-online-foundation.md` and `2026-10-13-cloud-saves.md`. Where what was built differs from what was designed, this document says what was built. The later phases are still design. Each phase gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
 
 ## 1. Goal
 
@@ -69,7 +69,7 @@ As built in phase 1:
 |---|---|---|---|
 | `profiles` | Nickname (optional, unique whatever its capitals), portrait, language | Everyone signed in | Owner |
 | `player_progress` | Unlocked lives, achievements, collection, totals | Owner | Owner for casual progress; server for ranked |
-| `games` | Mode, life, versions, start, round, status, choice log, state hash | Owner | Owner for casual; server for ranked |
+| `games` | Mode, life, versions, start, round, status, choice log, state hash | Owner | Owner for casual, until the server finishes the life; server for ranked. Never deleted by a player; fifty a player at most |
 | `game_secrets` | Seed and full server state of ranked games | Nobody | Server |
 | `runs` | One row per finished life: score, net worth, escape round, verified flag | Everyone signed in | Server |
 | `daily_challenges` | Day, scenario, content version | Everyone signed in | Server |
@@ -87,7 +87,9 @@ Rankings are views over `runs` and `daily_entries`: all-time best per player, th
 
 ## 7. Flows
 
-**Casual sync.** The device plays. After each round it saves the choice log, round number and state hash to `games`. When the life ends, a function replays the log and writes a verified row to `runs`. If two devices have the same game, the one with more rounds wins; games are never merged.
+**Casual sync.** The device plays, and writes to itself first; the account follows. After each card and each round the device saves the seed, the choice log, the round and the state hash to its own row in `games`. When the life ends, the `finish-run` function plays the log again with the engine of the game's versions and writes the row in `runs` itself: no figure of a run comes from a device.
+
+When a device meets its account (the page opens, the connection returns, someone signs in) the two are brought together. What is unlocked is joined, and nothing is ever taken away. Finished lives are joined by id. Of a life in progress one copy is taken whole: the account's if the device has none; the one with more of it played if both have the same life; and if they have different lives the device keeps its own and the account's is offered, never imposed. A life given up is marked `abandoned`, which means it is offered to nobody; a device still playing it takes it up again. Only a life the server has finished is closed.
 
 **Ranked solo.** `start-game` creates the seed, stores it in `game_secrets` and returns the view at round 0. Each round the client calls `submit-round` with its choices; the server runs `applyRound`, stores the result and returns the events and the next view. A repeated call for the same round returns the stored result. The preview needs no server call, because it reads only the current world.
 
@@ -99,13 +101,22 @@ Rankings are views over `runs` and `daily_entries`: all-time best per player, th
 
 - Ranked play: the client cannot see the future or alter its state.
 - Casual play: a player can peek on their own device, so casual results stay off global rankings.
-- Functions are rate-limited. The engine already caps orders per round and rejects malformed ones.
-- Nicknames are unique, short and filtered.
+- A casual run is `verified` in one sense only: the server played its log itself, so its figures are the engine's. Whether the future was secret is what `mode` says.
+- What a player can store is bounded in the database: fifty games, a log of 128 KB, progress of 64 KB. The engine caps orders per round and rejects malformed ones.
+- Nicknames are unique and short. Filtering them comes with the rankings that first show them.
 - Deleting an account deletes its rows.
+
+Still to build before strangers play, and not built by phases 1 and 2:
+
+- **A rate limit on the functions.** A signed-in guest can call `engine` and `finish-run` as often as they like. Each call is milliseconds of work, and guests cost nothing to make: a limit, and a CAPTCHA on guest sign-in, come with phase 3.
+- **A wider seed.** The engine's random stream is seeded with 32 bits, and the state hash covers the seed. In casual play that is harmless, because the seed is on the device anyway. In ranked play the secret would be a seed that can be searched in seconds from the rounds already seen. Phase 3 must widen it, under a new engine version, before the first ranked game.
+- **Removing abandoned guests.** A guest who never comes back leaves an account and its rows.
 
 ## 9. Versions
 
 Every game records the engine and content versions it started with and finishes on them. Functions bundle every version still in play. Once a version is retired, its finished games can be viewed but not replayed.
+
+The server's copy of the game is one file for each pair of versions (`pnpm online:bundle`). A pair that has shipped is noted with the fingerprint of its file, and a test holds the file to it: a change to the rules needs a new version, not a new bundle, or the server would play players' saved lives to another end than the device that lived them. A life on versions the server does not hold is refused, not guessed at; it stays on its device.
 
 ## 10. Phases
 
