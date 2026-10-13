@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen, waitFor } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -102,10 +102,15 @@ describe('the account in the settings', () => {
     const user = userEvent.setup();
     show(account);
     // Most often it is the same player on another device: the way in is offered, and nothing is lost by taking it.
-    expect(screen.getByRole('alert').textContent).toBe('That Google account already has a player in this game. If it is you, use it here: what you have on this device joins it.');
-    await user.click(screen.getByRole('button', { name: 'Use that account on this device' }));
+    const notice = screen.getByRole('alert');
+    expect(within(notice).getByText('You already have an account here')).toBeTruthy();
+    expect(within(notice).getByText('That Google account already has a player in this game. If it is you, sign in with it: what you have on this device joins your account and nothing is lost.')).toBeTruthy();
+    // One thing is asked at a time: the offer to a guest waits behind it, and each button has the whole width to be read in.
+    expect(screen.queryByRole('button', { name: 'Keep it with Google' })).toBeNull();
+    for (const button of within(notice).getAllByRole('button')) expect(button.className).toContain('w-full');
+    await user.click(within(notice).getByRole('button', { name: 'Sign in with my account' }));
     expect(asked).toContain(`use ${window.location.href}`);
-    expect((screen.getByRole('button', { name: 'Use that account on this device' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Sign in with my account' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('lets the notice be put away, and is then a guest as before', async () => {

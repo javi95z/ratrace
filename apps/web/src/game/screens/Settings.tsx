@@ -62,31 +62,38 @@ function AccountBlock() {
         </>
       ) : (
         <>
-          <p className="text-[14px] leading-snug">{t('guest')}</p>
-          {saved}
-          {state.notice ? (
-            <div className="frame flex flex-col gap-2 bg-wine-900 p-2">
-              <p role="alert" className="text-[13px] leading-snug">
-                {t(state.notice)}
-              </p>
-              <div className="flex gap-2">
-                {state.notice === 'taken' ? (
-                  <Button variant="primary" className="flex-1 text-[15px]" disabled={leaving} onClick={leaveWith(useExistingAccount)}>
-                    {t('useExisting')}
-                  </Button>
-                ) : null}
-                <Button variant="quiet" className="text-[14px]" onClick={dismissNotice}>
-                  {t(state.notice === 'taken' ? 'notNow' : 'dismiss')}
-                </Button>
-              </div>
+          {state.notice === 'taken' ? (
+            // Not a fault but good news: the player is already known. It takes the place of everything a guest is told, so one thing is asked at a time.
+            <div role="alert" className="bevel frame-gold flex flex-col gap-2 bg-night-700 p-3">
+              <p className="pixel text-[16px] leading-tight text-gold-200">{t('takenTitle')}</p>
+              <p className="text-[13px] leading-snug">{t('taken')}</p>
+              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(useExistingAccount)}>
+                {t('useExisting')}
+              </Button>
+              <Button variant="quiet" wide className="text-[14px]" onClick={dismissNotice}>
+                {t('notNow')}
+              </Button>
             </div>
-          ) : null}
-          {state.notice === 'taken' ? null : (
-            <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
-              {t('keep')}
-            </Button>
+          ) : (
+            <>
+              <p className="text-[14px] leading-snug">{t('guest')}</p>
+              {state.notice ? (
+                <div className="frame flex items-center gap-2 bg-wine-900 p-2">
+                  <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug">
+                    {t(state.notice)}
+                  </p>
+                  <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
+                    {t('dismiss')}
+                  </Button>
+                </div>
+              ) : null}
+              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
+                {t('keep')}
+              </Button>
+              <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
+            </>
           )}
-          <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
+          {saved}
         </>
       )}
     </section>
