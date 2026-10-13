@@ -81,10 +81,11 @@ Only the tables this step and the next one use. The others arrive with the step 
 
 ## Tasks
 
-- [ ] 1. Project wiring: `supabase/` config, link, `.env.example`, the `Account` interface with its offline form, the architecture test extended
-- [ ] 2. Schema: the five tables, policies, grants, indexes; SQL tests and the two-guests script; advisors clean
-- [ ] 3. The engine bundle, the `engine` function, the version table, the parity test
-- [ ] 4. The game signs in as a guest; the profile row; the account block in settings; keeping it with Google; text in both languages
-- [ ] 5. The game with no Supabase configured: unchanged, proved by the existing end-to-end suite
-- [ ] 6. Spec and roadmap brought up to date
+- [x] 1. Project wiring: `supabase/` config, link, `.env.example`, the `Account` interface with its offline form, the architecture test extended
+- [x] 2. Schema: the five tables, policies, grants, indexes; SQL tests (45 checks, `pnpm online:test-db`); advisors: only the four notices that guests are let in, which is the design
+- [x] 3. The engine bundle (`pnpm online:bundle`), the `engine` function (deployed), the version table, parity proved on three whole lives
+- [x] 4. The game signs in as a guest; the profile row; the account block in settings; keeping it with Google; text in both languages
+- [x] 5. The game with no Supabase configured: unchanged, proved by the existing end-to-end suite (35 passed)
+- [x] 6. Spec and roadmap brought up to date
+- [ ] 6b. The live check (`pnpm online:live-check`): two real guests through the public API, and a whole life replayed by the deployed function. Written; it waits for `apps/web/.env.local`
 - [ ] 7. Fresh review and one fix pass

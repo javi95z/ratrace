@@ -513,5 +513,16 @@
     "insureOn": "Asegurar: {kind}",
     "insureOff": "Cancelar: {kind}",
     "move": "Mudarte a {city}"
+  },
+  "account": {
+    "title": "Cuenta",
+    "guest": "Juegas como invitado. Tu cuenta vive en este navegador.",
+    "keep": "Conservarla con Google",
+    "keepHint": "La cuenta pasa a ser tuya en cualquier dispositivo. Tus vidas siguen guardándose solo en este dispositivo.",
+    "member": "Conservada con Google",
+    "memberAs": "Has entrado como {email}",
+    "taken": "Esa cuenta de Google ya tiene un jugador en este juego. No se ha cambiado nada.",
+    "failed": "No se ha podido llegar a Google. Sigues como invitado: inténtalo más tarde.",
+    "dismiss": "Vale"
   }
 }

@@ -76,6 +76,17 @@ describe('the wall between the screens and the game', () => {
     expect(wires.filter((file) => !file.startsWith('session/')).sort()).toEqual(WIRING);
   });
 
+  it('lets no screen reach the cloud: who is playing comes through the account, and the account is wired in one place', () => {
+    // A screen may know the shape of an account. The client that talks to Supabase is behind it.
+    const reaches = (path: string) => importsOf(path).filter((i) => i.from === '@supabase/supabase-js' || /^@\/online(\/(?!types$).*)?$/.test(i.from));
+    expect(screens.flatMap((path) => reaches(path).map((i) => `${rel(path)}: ${i.from}`))).toEqual([]);
+    const wires = all.filter((path) => !rel(path).startsWith('online/') && reaches(path).length > 0).map(rel);
+    expect(wires.sort()).toEqual(['game/context.tsx']);
+    // And the client library is named in exactly one file, which loads it only when an account starts.
+    const named = all.filter((path) => importsOf(path).some((i) => i.from === '@supabase/supabase-js') || /import\('@supabase\/supabase-js'\)/.test(readFileSync(path, 'utf8'))).map(rel);
+    expect(named).toEqual(['online/connect.ts']);
+  });
+
   it('keeps the engine and the content out of the browser database code', () => {
     const idb = importsOf(join(SRC, 'session/indexeddb.ts')).map((i) => i.from);
     expect(idb).not.toContain('@ratrace/engine');

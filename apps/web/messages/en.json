@@ -513,5 +513,16 @@
     "insureOn": "Insure: {kind}",
     "insureOff": "Cancel: {kind}",
     "move": "Move to {city}"
+  },
+  "account": {
+    "title": "Account",
+    "guest": "You are playing as a guest. Your account lives in this browser.",
+    "keep": "Keep it with Google",
+    "keepHint": "The account becomes yours on any device. Your lives are still saved on this device only.",
+    "member": "Kept with Google",
+    "memberAs": "Signed in as {email}",
+    "taken": "That Google account already has a player in this game. Nothing was changed.",
+    "failed": "Google could not be reached. You are still a guest: try again later.",
+    "dismiss": "OK"
   }
 }

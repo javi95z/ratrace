@@ -1,13 +1,13 @@
 # The Rat Race: Online Design
 
 Date: 2026-10-13
-Status: draft for review. Each phase below gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
+Status: phase 1 (foundation) built on 2026-10-13; see `docs/superpowers/plans/2026-10-13-online-foundation.md`. The later phases are still design. Each phase gets its own detailed plan before it is built. Supabase features named here were checked against the current docs; exact APIs are checked again at build time.
 
 ## 1. Goal
 
 Everything a player has lives online: their account, saved games, history, unlocks, rankings, daily challenges and rooms with friends. Solo play still works with no connection and syncs when one returns.
 
-Nothing in this document is built in v1. Its purpose is to make sure v1 is built in a way that needs no rewrite.
+Its first purpose was to make sure v1 was built in a way that needs no rewrite. From phase 1 on it is also the record of what is built.
 
 ## 2. Principles
 
@@ -54,13 +54,20 @@ These are constraints on the milestones that come before any backend exists.
 | Realtime | One private channel per room: who is present, and each round's results |
 | Cron | Create each day's challenge, roll weekly rankings, resolve abandoned rooms |
 
-The web app stays on Vercel. Supabase is added through the Vercel Marketplace integration so its keys arrive as environment variables. The service key is used only inside Edge Functions and never reaches the browser.
+The web app stays on Vercel. The browser is given two public values, the project address and the publishable key; locally they are in `apps/web/.env.local`, which is never committed. The secret key is used only inside Edge Functions, where the platform provides it, and never reaches the browser or this repository. With the two values missing the game has no cloud and plays exactly as it does offline.
+
+As built in phase 1:
+
+- The project is "RatRace", in Tokyo. There is no local Supabase: the project is the development database, migrations in `supabase/migrations` are pushed with the CLI, and the security rules are tried by `supabase/tests/security.sql` as two players, a visitor and the server.
+- A new table is not reachable through the Data API until it is granted. Every table has row-level security; `authenticated` is granted only the verbs a table needs; nothing is granted to a visitor with no account. A guest is `authenticated`.
+- The engine reaches the functions as one bundled file per pair of engine and content versions, kept in `supabase/functions/_shared/game`. A test fails if the bundle of the current versions is stale, and the function refuses a pair it does not hold.
+- Screens learn who is playing through an `Account` and nothing else. The Supabase client is loaded in one file, only when an account starts.
 
 ## 6. Data
 
 | Table | Holds | Who can read | Who can write |
 |---|---|---|---|
-| `profiles` | Nickname, portrait, language | Everyone signed in | Owner |
+| `profiles` | Nickname (optional, unique whatever its capitals), portrait, language | Everyone signed in | Owner |
 | `player_progress` | Unlocked lives, achievements, collection, totals | Owner | Owner for casual progress; server for ranked |
 | `games` | Mode, life, versions, start, round, status, choice log, state hash | Owner | Owner for casual; server for ranked |
 | `game_secrets` | Seed and full server state of ranked games | Nobody | Server |
@@ -119,4 +126,11 @@ Settled on 2026-10-13:
 3. Friends are added with a shareable code or link.
 4. The database region is the one nearest most players, chosen when the project is created.
 
-Still to confirm when the project is created: free-tier limits. A free Supabase project may pause when idle.
+Settled when phase 1 was built:
+
+5. Only `profiles`, `player_progress`, `games`, `game_secrets` and `runs` exist so far. The other tables arrive with the phase that uses them.
+6. A player's profile row is made by the player's own first write, not by a trigger on the users table: a trigger that fails would stop sign-ups.
+7. If the Google account a guest chooses already belongs to another player, the game says so and changes nothing. Which progress wins is phase 2's question.
+8. A CAPTCHA in front of guest sign-in waits for the step that puts the game in front of strangers. Until then Supabase's limit applies: 30 guest sign-ins an hour per address.
+
+Still open: free-tier limits. A free Supabase project pauses after a week without use.

@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "test-db": "tsx src/test-db.ts",
-    "bundle": "tsx src/bundle.ts"
+    "bundle": "tsx src/bundle.ts",
+    "live-check": "tsx src/live-check.ts"
   },
   "dependencies": {
     "@ratrace/content": "workspace:*",
     "@ratrace/engine": "workspace:*"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "2.117.2",
     "esbuild": "0.28.2"
   }
 }

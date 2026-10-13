@@ -7,6 +7,9 @@ import { createContext, useContext, useEffect, useMemo, useState, useSyncExterna
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { formatFor } from '@/lib/format';
+import { browserAccount } from '@/online';
+import { offlineAccount } from '@/online/offline';
+import type { Account, AccountState } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
@@ -25,13 +28,15 @@ export interface Saving {
   subscribe(listener: () => void): () => void;
 }
 
-/** The two things a screen may talk to (spec 8.9, rule 1), and how they are set up. Tests pass their own. */
+/** The things a screen may talk to (spec 8.9, rule 1), and how they are set up. Tests pass their own. */
 export interface Services {
   sessions: Sessions;
   store: PlayerStore;
   /** How long after a change of screen a tap is ignored. See `GameStoreOptions.guardMs`. */
   tapGuardMs?: number;
   saving?: Saving;
+  /** Who is playing, as the cloud knows them. Left out, the game has no cloud: nobody is signed in. */
+  account?: Account;
 }
 
 /** Long enough for the second tap of a double tap or a double click, short enough that nobody waits for it. */
@@ -42,6 +47,7 @@ interface Game {
   game: GameStore;
   store: PlayerStore;
   saving: Saving;
+  account: Account;
   words: Words;
   locale: Locale;
   profile: Profile;
@@ -73,7 +79,7 @@ function browserServices(): Services {
     now: () => Date.now(),
     onSaveError: (error) => console.warn('could not save the game:', error),
   });
-  return { sessions, store, saving };
+  return { sessions, store, saving, account: browserAccount() };
 }
 
 /** Everything one page load makes once: the round store and the two services behind it. */
@@ -81,11 +87,12 @@ interface Made {
   game: GameStore;
   store: PlayerStore;
   saving: Saving;
+  account: Account;
 }
 
-function make({ sessions, store, saving, tapGuardMs }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount };
 }
 
 /**
@@ -128,6 +135,13 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     };
   }, [made]);
 
+  // The player is signed in as a guest in the background. The game does not wait for it and does not need it.
+  useEffect(() => {
+    void made.account.start(locale);
+    // Once for the page: a change of language is not a new player.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [made]);
+
   const reducedMotion = profile.settings.reducedMotion;
   useEffect(() => {
     if (reducedMotion) document.documentElement.dataset.motion = 'reduced';
@@ -139,6 +153,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       game: made.game,
       store: made.store,
       saving: made.saving,
+      account: made.account,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
       profile,
@@ -197,6 +212,20 @@ export function useGuide() {
 
 /** Finished lives, the latest first, or null while the device has not answered yet. */
 export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
+
+const NOBODY: AccountState = { kind: 'offline' };
+
+/** Who is playing, as the cloud knows them, and the two things a player can do about it. */
+export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; dismissNotice(): void } {
+  const { account } = useGameContext();
+  const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  return {
+    state,
+    // Back to the very page the player is on, without whatever a sign-in left after the hash.
+    keepWithGoogle: () => account.keepWithGoogle(window.location.href.split('#')[0]),
+    dismissNotice: () => account.dismissNotice(),
+  };
+}
 
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
 export function useSaving(): boolean {

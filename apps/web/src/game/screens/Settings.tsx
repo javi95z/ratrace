@@ -3,15 +3,68 @@
 import { portraitArt } from '@ratrace/content';
 import { netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
+import { useState } from 'react';
+import { useAccount, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { ageAt, portraitAge } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
-import { Bar, Panel, Stat, Toggle, Well } from '@/ui/kit';
+import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
 const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
+
+/**
+ * Who is playing, as the cloud knows them. A guest can keep the account with Google; nothing is
+ * shown at all where the game has no cloud behind it, or could not reach it.
+ */
+function AccountBlock() {
+  const t = useT('account');
+  const { state, keepWithGoogle, dismissNotice } = useAccount();
+  const [leaving, setLeaving] = useState(false);
+  if (state.kind === 'offline') return null;
+
+  return (
+    <section aria-label={t('title')} className="bevel flex flex-col gap-2 bg-night-600 p-3">
+      <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
+      {state.kind === 'member' ? (
+        <>
+          <p className="pixel text-[16px] text-teal-300">{t('member')}</p>
+          {state.email ? <p className="break-all text-[13px] text-ink-200">{t('memberAs', { email: state.email })}</p> : null}
+        </>
+      ) : (
+        <>
+          <p className="text-[14px] leading-snug">{t('guest')}</p>
+          {state.notice ? (
+            <div className="frame flex items-start gap-2 bg-wine-900 p-2">
+              <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug">
+                {t(state.notice)}
+              </p>
+              <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
+                {t('dismiss')}
+              </Button>
+            </div>
+          ) : null}
+          <Button
+            variant="primary"
+            wide
+            // The page is about to leave for Google. If it could not, the button is there to try again.
+            disabled={leaving}
+            onClick={() => {
+              setLeaving(true);
+              void keepWithGoogle().then((begun) => {
+                if (!begun) setLeaving(false);
+              });
+            }}
+          >
+            {t('keep')}
+          </Button>
+          <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
+        </>
+      )}
+    </section>
+  );
+}
 
 /** What the player can set: the language, less motion, and the tips of the guide. The same on the front door and in a life. */
 export function Preferences() {
@@ -37,6 +90,7 @@ export function Preferences() {
       </div>
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
+      <AccountBlock />
     </div>
   );
 }
