@@ -2,8 +2,25 @@ import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, FinanceSkill, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
-import { perksOf } from './derive';
+import { focusBonusOf, perksOf } from './derive';
 import { lapsingIn } from './orders';
+
+/**
+ * What a move costs beyond its price, as the player lands. Moved by their own choice they start a
+ * rung or so down, where nobody knows them yet, and a partner is without pay while they look for
+ * work; the rung comes back with the next promotion if the experience is there. A transfer costs
+ * none of it. The order and the quote both ask here.
+ */
+export function landingOf(p: PlayerState, content: Content, transfer: boolean): { level: number | null; rungsLost: number; partnerSettling: number } {
+  const job = p.life.career;
+  if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  const level = job ? Math.max(0, job.level - content.life.moveRungsLost) : null;
+  return {
+    level,
+    rungsLost: job && level !== null ? job.level - level : 0,
+    partnerSettling: p.life.partner ? Math.max(p.life.partnerSettling, content.life.partnerSettlingRounds) : p.life.partnerSettling,
+  };
+}
 
 /** The chance in percent that a job hunt ends in a raise: the rule's own, and what the player's things add to it. */
 export function jobHuntChance(content: Content, perks: Required<ItemPerks>): number {
@@ -76,16 +93,21 @@ export function ageLife(
  */
 export function turnPage(p: PlayerState, content: Content, events: GameEvent[]): void {
   const life = p.life;
+  if (life.partnerSettling > 0) life.partnerSettling -= 1;
   if (life.movingTo !== null) {
     p.cityId = life.movingTo;
     life.movingTo = null;
-    events.push({ kind: 'moved', cityId: p.cityId });
+    const landing = landingOf(p, content, life.movingTransfer);
+    life.movingTransfer = false;
+    if (life.career) life.career.level = landing.level ?? life.career.level;
+    life.partnerSettling = landing.partnerSettling;
+    events.push({ kind: 'moved', cityId: p.cityId, rungsLost: landing.rungsLost, partnerIdle: landing.partnerSettling > 0 });
     const lapsed = lapsingIn(content, p, p.cityId);
     life.items = life.items.filter((owned) => !lapsed.includes(owned.itemId));
     for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });
   }
   life.focusUsed = 0;
   // A rest taken shows in the round after: counted now, from what is still held once the old round has closed.
-  life.focusBonus = perksOf(p, content).focus;
+  life.focusBonus = focusBonusOf(p, content);
   life.salaryBoostPct = 0;
 }

@@ -126,7 +126,7 @@ A player has one ranked life in progress; starting another gives the first up. T
 Built by phase 3, having been owed before strangers play:
 
 - **A rate limit on the functions.** Each function counts calls per player and refuses beyond its limit.
-- **A wider seed.** Every random stream of a game used to start from one 32-bit number derived from the seed: whoever saw a few rounds of one asset's prices could try every start in seconds and read that asset's future. Each stream now starts from the first 128 bits of SHA-256 of the seed and the stream's name, from engine 0.10.0 on. SHA-256 is written out in the engine, which stays pure TypeScript. The server starts a ranked life only on a version whose bundle says its seed is that wide, and a ranked seed never leaves the server, nor does any hash of the hidden state.
+- **A wider seed.** Every random stream of a game used to start from one 32-bit number derived from the seed: whoever saw a few rounds of one asset's prices could try every start in seconds and read that asset's future. Each stream now starts from the first 128 bits of SHA-256 of the seed and the stream's name, from engine 0.12.0 on. SHA-256 is written out in the engine, which stays pure TypeScript. The server starts a ranked life only on a version whose bundle says its seed is that wide, and a ranked seed never leaves the server, nor does any hash of the hidden state.
 - **A bound on finished lives, and rankings that know what they rank.** A player keeps 500 casual runs at most, and the rankings read `mode = 'ranked'` only.
 - **A CAPTCHA on guest sign-in.** Built, and off until the owner sets its two keys.
 

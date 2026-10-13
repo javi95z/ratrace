@@ -1,8 +1,8 @@
-import { cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
+import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemPerks, PlayerState, Property } from '../types';
+import type { Content, InsuranceKind, ItemPerks, PlayerState, Property, Regime } from '../types';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -40,6 +40,26 @@ export function perksOf(p: PlayerState, content: Content): Required<ItemPerks> {
 }
 
 /**
+ * What the player's career does to their pay in a round, in percent: what the economy adds or takes
+ * in a trade that follows it, and what age takes in a trade for the young. Nothing without a career.
+ */
+export function careerSwing(p: PlayerState, content: Content, regime: Regime, round: number): { cyclePct: number; fadePct: number } {
+  const job = p.life.career;
+  if (job === null) return { cyclePct: 0, fadePct: 0 };
+  const career = careerOf(content, job.id);
+  const fade = career.fade;
+  return {
+    cyclePct: career.cyclePct?.[regime] ?? 0,
+    fadePct: fade && round >= fade.fromRound ? -Math.min(fade.maxPct, fade.pctPerRound * (round - fade.fromRound + 1)) : 0,
+  };
+}
+
+/** Focus on top in a round: what the things held give, and what the career leaves over. */
+export function focusBonusOf(p: PlayerState, content: Content): number {
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0);
+}
+
+/**
  * The player's own yearly pay in start-of-game dollars, without a partner's: the rung of the career
  * in their city, with every lasting and passing change to it. `level` asks what another rung of
  * the same career would pay them as they stand.
@@ -48,14 +68,17 @@ export function ownPay(p: PlayerState, content: Content, level?: number): Cents 
   const life = p.life;
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
   const rung = life.career ? levelOf(content, level === undefined ? life.career : { id: life.career.id, level }) : null;
-  const base = rung ? mulDiv(median, rung.salaryPct, 100) : life.baseSalaryAnnual;
+  // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.
+  const here = life.career ? (cityOf(content, p.cityId).careerPayPct?.[life.career.id] ?? 100) : 100;
+  const base = rung ? mulDiv(mulDiv(median, rung.salaryPct, 100), here, 100) : life.baseSalaryAnnual;
   return mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
 }
 
 /** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */
 export function deriveSalary(p: PlayerState, content: Content): Cents {
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
-  const partner = p.life.partner ? mulDiv(median, p.life.partnerSalaryPct, 100) : 0;
+  // A partner who has just followed the player to a new city earns nothing until they have found work there.
+  const partner = p.life.partner && p.life.partnerSettling === 0 ? mulDiv(median, p.life.partnerSalaryPct, 100) : 0;
   return ownPay(p, content) + partner;
 }
 

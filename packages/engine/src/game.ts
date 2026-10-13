@@ -3,7 +3,7 @@ import type { RoundExpenses, RoundIncome } from './economy';
 import { flowsOf } from './flows';
 import { assertInvariants, assertViewInvariants } from './invariants';
 import { answerNext, answerRest, drawHand } from './life/cards';
-import { refreshDerived } from './life/derive';
+import { careerSwing, refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
 import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
@@ -64,6 +64,12 @@ function beginRound(content: Content, state: GameState, rng: Rng): void {
   if (hasFlag(life.flags, FLAG_UNSTABLE_PAY)) {
     const range = content.life.unstablePayPct;
     life.salaryBoostPct += rng.int(2 * range + 1) - range;
+    refreshDerived(state.player, content, state.round);
+  }
+  // A trade that follows the economy, or that pays the young, is paid this round as the round finds it.
+  const swing = careerSwing(state.player, content, state.timeline[state.round].regime, state.round);
+  if (swing.cyclePct + swing.fadePct !== 0) {
+    life.salaryBoostPct += swing.cyclePct + swing.fadePct;
     refreshDerived(state.player, content, state.round);
   }
   state.hand = drawHand(state, content, rng);

@@ -85,6 +85,8 @@ export interface CityDef {
   tax: TaxProfile;
   /** Status points for living here. */
   prestige: number;
+  /** What each career pays here against the usual, in percent: a city is the place for some trades. Absent: 100. */
+  careerPayPct?: Readonly<Record<string, number>>;
 }
 
 export interface PropertyTypeDef {
@@ -113,6 +115,15 @@ export interface CareerDef {
   levels: CareerLevel[];
   /** Extra salary for a round of overtime, in percent. */
   overtimePct: number;
+  /** Pay that follows the economy: percent on top of the pay, or off it, in each state of it. Absent: none. */
+  cyclePct?: Partial<Record<Regime, number>>;
+  /**
+   * A trade for the young. From `fromRound` on the pay falls by `pctPerRound` each round, that
+   * round included, until it is `maxPct` down.
+   */
+  fade?: { fromRound: number; pctPerRound: number; maxPct: number };
+  /** Focus points on top each round: a job that leaves time over. */
+  focus?: number;
 }
 
 export type ItemKind = 'durable' | 'membership' | 'experience';
@@ -191,6 +202,13 @@ export interface LifeRules {
   lesserItemPct: number;
   /** Cost of moving, as a percent of the destination's yearly living cost. */
   moveCostPct: number;
+  /** Moving a partner costs this percent more, and each child this percent more again. */
+  movePartnerPct: number;
+  moveChildPct: number;
+  /** Rungs of the career lost by moving of one's own accord: nobody knows the newcomer yet. A transfer loses none. */
+  moveRungsLost: number;
+  /** Rounds a partner goes without pay after such a move, while they find work of their own. */
+  partnerSettlingRounds: number;
   /** Career skill gained by a round of work. */
   workSkill: number;
   /** Career skill gained on top by a round of study. */
@@ -615,6 +633,10 @@ export interface LifeState {
   bonusStatus: number;
   /** City the player moves to when this round has resolved. */
   movingTo: string | null;
+  /** True when that move is a transfer a card offered: an employer places the player, so it costs the career nothing. */
+  movingTransfer: boolean;
+  /** Rounds the partner still goes without pay, after a move of the player's own. */
+  partnerSettling: number;
 }
 
 export interface PlayerState {
@@ -798,7 +820,8 @@ export type GameEvent =
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
-  | { kind: 'moved'; cityId: string }
+  /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
+  | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean }
   /** A membership of the city just left ended with the move. Nothing is paid back. */
   | { kind: 'lapsed'; itemId: string };
 

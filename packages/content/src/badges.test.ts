@@ -158,12 +158,12 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   penthouse: { earns: { player: home('penthouse') }, misses: [{ player: home('villa') }] },
   status_100: { earns: { player: (p) => (p.statusPoints = 100) }, misses: [{ player: (p) => (p.statusPoints = 99) }] },
   three_cities: {
-    earns: { events: [{ kind: 'moved', cityId: 'dubai' }], player: (p) => (p.cityId = 'dubai'), journal: { cities: ['madrid', 'london', 'dubai'] } },
-    misses: [{ events: [{ kind: 'moved', cityId: 'dubai' }], player: (p) => (p.cityId = 'dubai') }],
+    earns: { events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai'), journal: { cities: ['madrid', 'london', 'dubai'] } },
+    misses: [{ events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai') }],
   },
   moved_to_dubai: {
-    earns: { events: [{ kind: 'moved', cityId: 'dubai' }], player: (p) => (p.cityId = 'dubai') },
-    misses: [{ events: [{ kind: 'moved', cityId: 'london' }], player: (p) => (p.cityId = 'london') }],
+    earns: { events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai') },
+    misses: [{ events: [{ kind: 'moved', cityId: 'london', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'london') }],
   },
   family_of_four: {
     earns: { player: (p) => Object.assign(p.life, { partner: true, children: [6, 8] }) },
@@ -283,7 +283,7 @@ describe('the journal of a life', () => {
   it('remembers every city lived in, once each, in the order they came', () => {
     let journal = journalStart(content, fresh());
     const moveTo = (cityId: string) => {
-      const s = step({ events: [{ kind: 'moved', cityId }], player: (p) => (p.cityId = cityId) });
+      const s = step({ events: [{ kind: 'moved', cityId, rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = cityId) });
       journal = journalAfter(content, journal, s.after, s.events);
     };
     moveTo('london');
@@ -312,7 +312,7 @@ describe('the journal of a life', () => {
   it('does not change the journal it was given', () => {
     const journal = journalStart(content, fresh());
     const copy = structuredClone(journal);
-    journalAfter(content, journal, step({ player: hold('bitcoin'), events: [{ kind: 'moved', cityId: 'dubai' }] }).after, [{ kind: 'ledger', line: 'creditCardDraw', amount: 1 }]);
+    journalAfter(content, journal, step({ player: hold('bitcoin'), events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }] }).after, [{ kind: 'ledger', line: 'creditCardDraw', amount: 1 }]);
     expect(journal).toEqual(copy);
   });
 });

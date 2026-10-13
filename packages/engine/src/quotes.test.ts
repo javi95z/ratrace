@@ -199,7 +199,7 @@ describe('quoteMove', () => {
       expect(move(cost).reason).toBeNull();
       expect(move(cost - 1).reason).toBe('not-enough-cash');
     }
-    expect(quoteMove(content, viewOf(game(0)), 'haven')).toEqual({ cost: 800_000, lapses: [] });
+    expect(quoteMove(content, viewOf(game(0)), 'haven')).toMatchObject({ cost: 800_000, lapses: [], rungsLost: 0, partnerIdleRounds: 0 });
   });
 });
 

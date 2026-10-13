@@ -5,6 +5,11 @@ const BUSINESSES = ['bar', 'shop', 'app'];
 
 /** A private employer in tech or finance comes with a share plan, and without a public servant's job for life. */
 const NEW_EMPLOYER = { setFlags: ['share_plan'], clearFlags: ['layoff_proof'] };
+/** A new trade with no share plan and no job for life: what is left behind on the way into one. */
+const FRESH_START = { clearFlags: ['layoff_proof', 'share_plan'] };
+const CAREERS = ['healthcare', 'tech', 'public', 'service', 'finance', 'medicine', 'law', 'education', 'influencer', 'hospitality', 'sales'];
+/** Every career but the one named: who a way into it is offered to. */
+const outside = (...ids: string[]) => CAREERS.filter((id) => !ids.includes(id));
 
 export const careerCards: CardDef[] = [
   card('career_raise', 'career', { cooldown: 3, when: { employed: true } }, [
@@ -42,6 +47,20 @@ export const careerCards: CardDef[] = [
       effects: { focus: 1, cash: usd(-4_000) },
       outcomes: [{ weight: 60, effects: { job: { career: 'finance', level: 0 }, ...NEW_EMPLOYER } }, { weight: 40, effects: {} }],
     },
+  ]),
+  // The two doors that open onto a street: the firm that takes clerks, and the market where anyone can sell or serve.
+  card('career_law_firm', 'career', { once: true, when: { careers: outside('law', 'medicine'), maxRound: 8 } }, [
+    {},
+    { effects: { focus: 2, careerSkill: -6, job: { career: 'law', level: 0 }, ...FRESH_START } },
+    {
+      effects: { focus: 1, cash: usd(-6_000) },
+      outcomes: [{ weight: 55, effects: { job: { career: 'law', level: 0 }, careerSkill: -3, ...FRESH_START } }, { weight: 45, effects: {} }],
+    },
+  ]),
+  card('career_market', 'career', { cooldown: 8, when: { careers: outside('sales', 'hospitality', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+    {},
+    { effects: { focus: 1, careerSkill: -4, job: { career: 'sales', level: 0 }, ...FRESH_START } },
+    { effects: { focus: 1, careerSkill: -4, job: { career: 'hospitality', level: 0 }, ...FRESH_START } },
   ]),
   card('career_big_offer', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
     {},
@@ -95,6 +114,8 @@ export const educationCards: CardDef[] = [
   card('edu_language', 'education', { once: true, when: { notFlags: ['bilingual'] } }, [
     {},
     { effects: { focus: 1, cash: usd(-600), careerSkill: 1, status: 1, setFlags: ['bilingual'] } },
+    // The teacher is leaving, and the school needs someone for her classes.
+    { when: { careers: outside('education', 'medicine', 'law', 'finance') }, effects: { focus: 2, cash: usd(-600), careerSkill: -4, job: { career: 'education', level: 0 }, setFlags: ['bilingual', 'layoff_proof'], clearFlags: ['share_plan'] } },
   ]),
 ];
 

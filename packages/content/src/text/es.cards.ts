@@ -63,6 +63,16 @@ export const cards: Record<string, CardText> = {
     'Seguir en lo técnico',
     'Aceptar el equipo',
   ]),
+  career_law_firm: c('El bufete busca pasantes', 'Un despacho contrata pasantes. Las horas son largas y la escalera, la más alta de la ciudad.', [
+    'Quedarte donde estás',
+    'Empezar desde abajo en derecho',
+    ['Pagar el curso de acceso', 'Apruebas. El despacho llama el lunes.', 'Suspendes el examen por cuatro puntos.'],
+  ]),
+  career_market: c('Sábado en el mercado', 'Un puesto necesita quien venda, y el bar de la esquina, quien sirva. Nadie pide currículum.', [
+    'Seguir andando',
+    'Vender en el puesto',
+    'Servir en el bar',
+  ]),
   career_headhunter: c('Llama un cazatalentos', '«¿Tienes un rato para un café confidencial?»', [
     'No me interesa',
     ['Ir a la reunión', 'Mejores condiciones en una empresa mejor.', 'Un café agradable y nada más.'],
@@ -95,6 +105,7 @@ export const cards: Record<string, CardText> = {
   edu_language: c('Un idioma nuevo', 'Una profesora da clases por las tardes a dos calles de casa.', [
     'Quizá el año que viene',
     'Apuntarte',
+    'Apuntarte, y quedarte con sus clases',
   ]),
 
   // Negocios
@@ -234,6 +245,7 @@ export const cards: Record<string, CardText> = {
   life_new_phone: c('El nuevo {item:tech_phone}', 'El tuyo funciona. Este tiene mejor cámara.', [
     'Seguir con el viejo',
     'Comprarlo',
+    'Comprarlo y empezar a grabar',
   ]),
   life_wedding_abroad: c('Una boda en el extranjero', 'Tu amiga se casa junto a un lago: cuatro días y etiqueta «elegante».', [
     'Mandar un regalo',

@@ -77,6 +77,12 @@ export const life: LifeRules = {
   itemFinanceMinPrice: usd(5_000),
   lesserItemPct: 25,
   moveCostPct: 25,
+  // A household is dearer to move, and a move of one's own costs a rung and a partner's pay for a round:
+  // the cheap way to another city is to be sent there.
+  movePartnerPct: 50,
+  moveChildPct: 25,
+  moveRungsLost: 1,
+  partnerSettlingRounds: 1,
   workSkill: 1,
   studySkill: 1,
   jobHuntChancePct: 20,

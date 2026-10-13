@@ -39,6 +39,11 @@ export const en: ContentText = {
     service: { name: 'Services', levels: ['Rider', 'Shift lead', 'Store manager', 'Area manager', 'Operations director'] },
     finance: { name: 'Finance', levels: ['Analyst', 'Associate', 'Vice president', 'Director', 'Managing director'] },
     medicine: { name: 'Medicine', levels: ['Resident doctor', 'Attending doctor', 'Specialist', 'Head of department'] },
+    law: { name: 'Law', levels: ['Paralegal', 'Junior associate', 'Associate', 'Partner', 'Managing partner'] },
+    education: { name: 'Education', levels: ['Supply teacher', 'Teacher', 'Head of department', 'Head teacher'] },
+    influencer: { name: 'Influencer', levels: ['New creator', 'Creator', 'Influencer', 'Star'] },
+    hospitality: { name: 'Hospitality', levels: ['Waiter', 'Head waiter', 'Restaurant manager', 'Hotel director', 'Chain director'] },
+    sales: { name: 'Sales', levels: ['Sales rep', 'Account executive', 'Key account manager', 'Sales director', 'Head of sales'] },
   },
   ladders: {
     car: 'Cars',

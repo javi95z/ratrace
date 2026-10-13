@@ -38,6 +38,16 @@ describe('headlineText', () => {
   });
 });
 
+describe('a move, told after the round', () => {
+  it('says what it cost besides its price, and nothing when it cost nothing', () => {
+    const note = (rungsLost: number, partnerIdle: boolean) =>
+      roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'moved', cityId: 'london', rungsLost, partnerIdle }])[0];
+    expect(note(0, false)).toMatchObject({ title: 'You moved to London.', hint: undefined });
+    expect(note(1, false).hint).toBe('You start a rung down, until your next promotion.');
+    expect(note(1, true).hint).toBe('You start a rung down, until your next promotion. Your partner is looking for work: a round without their pay.');
+  });
+});
+
 describe('debtLabel', () => {
   it('names a debt by its kind, and by the thing it bought when it bought one', () => {
     expect(debtLabel(words('en'), { kind: 'personalLoan' })).toBe('Personal loan');
@@ -201,7 +211,7 @@ describe('roundNotes', () => {
       { kind: 'jobHunt', success: true },
       { kind: 'promoted', careerId: 'tech', level: 2 },
       { kind: 'financeSkill', level: 1 },
-      { kind: 'moved', cityId: 'dubai' },
+      { kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false },
       { kind: 'lapsed', itemId: 'member_season_seat' },
       { kind: 'escaped', round: 7 },
     ]);

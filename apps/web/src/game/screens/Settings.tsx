@@ -52,7 +52,8 @@ function AccountBlock() {
     );
 
   return (
-    <section aria-label={t('title')} className="bevel flex flex-col gap-2 bg-night-600 p-3">
+    // A part of the panel it stands in, set off by a rule: never a box inside a box.
+    <section aria-label={t('title')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
       <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
       {state.kind === 'member' ? (
         <>
@@ -62,63 +63,111 @@ function AccountBlock() {
         </>
       ) : (
         <>
-          <p className="text-[14px] leading-snug">{t('guest')}</p>
-          {saved}
-          {state.notice ? (
-            <div className="frame flex flex-col gap-2 bg-wine-900 p-2">
-              <p role="alert" className="text-[13px] leading-snug">
-                {t(state.notice)}
-              </p>
-              <div className="flex gap-2">
-                {state.notice === 'taken' ? (
-                  <Button variant="primary" className="flex-1 text-[15px]" disabled={leaving} onClick={leaveWith(useExistingAccount)}>
-                    {t('useExisting')}
-                  </Button>
-                ) : null}
-                <Button variant="quiet" className="text-[14px]" onClick={dismissNotice}>
-                  {t(state.notice === 'taken' ? 'notNow' : 'dismiss')}
-                </Button>
-              </div>
+          {state.notice === 'taken' ? (
+            // Not a fault but good news: the player is already known. It takes the place of everything a guest is told, so one thing is asked at a time.
+            <div role="alert" className="flex flex-col gap-2">
+              <p className="pixel text-[16px] leading-tight text-gold-200">{t('takenTitle')}</p>
+              <p className="text-[13px] leading-snug">{t('taken')}</p>
+              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(useExistingAccount)}>
+                {t('useExisting')}
+              </Button>
+              <Button variant="quiet" wide className="text-[14px]" onClick={dismissNotice}>
+                {t('notNow')}
+              </Button>
             </div>
-          ) : null}
-          {state.notice === 'taken' ? null : (
-            <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
-              {t('keep')}
-            </Button>
+          ) : (
+            <>
+              <p className="text-[14px] leading-snug">{t('guest')}</p>
+              {state.notice ? (
+                <div className="flex items-center gap-2">
+                  <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug text-wine-300">
+                    {t(state.notice)}
+                  </p>
+                  <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
+                    {t('dismiss')}
+                  </Button>
+                </div>
+              ) : null}
+              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
+                {t('keep')}
+              </Button>
+              <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
+            </>
           )}
-          <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
+          {saved}
         </>
       )}
     </section>
   );
 }
 
-/** What the player can set: the language, less motion, and the tips of the guide. The same on the front door and in a life. */
-export function Preferences() {
-  const t = useT('settings');
+/** The two languages, the one in use marked. */
+function LanguagePick() {
   const home = useT('home');
-  const { reducedMotion, setReducedMotion, sound, setSound, locale } = useSettings();
-  const guide = useGuide();
+  const { locale } = useSettings();
   const pathname = usePathname();
   return (
+    <div role="group" aria-label={home('language')} className="grid grid-cols-2 gap-2">
+      {routing.locales.map((code) => (
+        <Link
+          key={code}
+          href={pathname}
+          locale={code}
+          aria-current={code === locale ? 'true' : undefined}
+          className={`pixel frame-raised flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'frame-cream bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
+        >
+          {LANGUAGES[code]}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+/** What is switched on or off: sound, less motion, and the tips of the guide. */
+function Switches() {
+  const t = useT('settings');
+  const home = useT('home');
+  const { reducedMotion, setReducedMotion, sound, setSound } = useSettings();
+  const guide = useGuide();
+  return (
     <div className="flex flex-col gap-2">
-      <div role="group" aria-label={home('language')} className="grid grid-cols-2 gap-2">
-        {routing.locales.map((code) => (
-          <Link
-            key={code}
-            href={pathname}
-            locale={code}
-            aria-current={code === locale ? 'true' : undefined}
-            className={`pixel frame-raised flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'frame-cream bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
-          >
-            {LANGUAGES[code]}
-          </Link>
-        ))}
-      </div>
       <Toggle on={sound} onChange={setSound} label={t('sound')} hint={t('soundHint')} />
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
+    </div>
+  );
+}
+
+/** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */
+export function Preferences() {
+  return (
+    <div className="flex flex-col gap-2">
+      <LanguagePick />
+      <Switches />
       <AccountBlock />
+    </div>
+  );
+}
+
+/**
+ * The same on the front door, where there is a game to get to: the language and the account in
+ * sight, and the switches a tap away behind one button.
+ */
+export function HomePreferences() {
+  const t = useT('settings');
+  const common = useT('common');
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      <LanguagePick />
+      <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        <Sprite id="icon.settings" />
+        {t('title')}
+      </Button>
+      <AccountBlock />
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
+        <Switches />
+      </Sheet>
     </div>
   );
 }

@@ -62,6 +62,20 @@ describe('the front door', () => {
     expect(screen.getByText('Your life is saved on this device after every step.')).toBeTruthy();
   });
 
+  it('keeps the switches a tap away, behind the settings, and the language in sight', async () => {
+    const user = userEvent.setup();
+    renderGame(<Home />, memoryServices());
+    await screen.findByRole('link', { name: 'New life' });
+    expect(within(screen.getByRole('group', { name: 'Language' })).getAllByRole('link')).toHaveLength(2);
+    expect(screen.queryAllByRole('switch')).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    const sheet = screen.getByRole('dialog', { name: 'Settings' });
+    expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true']);
+    // What is switched there is switched for good.
+    await user.click(within(sheet).getByRole('switch', { name: /^Sound/ }));
+    expect(within(sheet).getByRole('switch', { name: /^Sound/ }).getAttribute('aria-checked')).toBe('false');
+  });
+
   it('leads to the collection and to the records', async () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'Collection' })).getAttribute('href')).toBe('/collection');

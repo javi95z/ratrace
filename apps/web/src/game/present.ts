@@ -228,7 +228,13 @@ export function roundNotes({ text, names }: Words, t: Translate, events: GameEve
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
         break;
       case 'moved':
-        add(event, { tone: 'plain', icon: cityIcon(event.cityId), title: t('moved', { city: names.cities[event.cityId] }) });
+        add(event, {
+          tone: 'plain',
+          icon: cityIcon(event.cityId),
+          title: t('moved', { city: names.cities[event.cityId] }),
+          // What the move cost besides its price, said once it has happened.
+          hint: [event.rungsLost > 0 ? t('movedRung') : '', event.partnerIdle ? t('movedPartner') : ''].filter(Boolean).join(' ') || undefined,
+        });
         break;
       case 'lapsed':
         add(event, { tone: 'bad', icon: 'icon.city', title: t('lapsed', { item: names.items[event.itemId] }), hint: t('lapsedHint') });

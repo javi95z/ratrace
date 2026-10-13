@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteOwnedProperty, quoteProperty, viewOf } from '@ratrace/engine';
+import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -216,6 +216,68 @@ describe('the lifestyle tab', () => {
     const switches = screen.getAllByRole('switch');
     expect(switches).toHaveLength(3 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
+  });
+});
+
+describe('moving to another city', () => {
+  it('sets the year there beside the year here, city by city, in the engine\'s own figures', async () => {
+    const { services } = await inFinance('nurse');
+    const view = viewOf(await stateOf(services));
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+    const sheet = screen.getByRole('dialog', { name: 'Move to another city' });
+
+    // Where she lives: her year as it is, with nothing to compare it to and nowhere to move.
+    const madrid = within(sheet).getByRole('region', { name: 'Madrid' });
+    const here = quoteMove(content, view, 'london').here;
+    expect(within(madrid).getByText('You live here')).toBeTruthy();
+    expect(within(madrid).getByText(fmt.money(here.payAnnual))).toBeTruthy();
+    expect(within(madrid).getByText(fmt.money(here.leftAnnual))).toBeTruthy();
+    expect(within(madrid).queryByRole('button')).toBeNull();
+    // Madrid pays her trade above the usual, and says so.
+    expect(within(madrid).getByText('Healthcare +10%')).toBeTruthy();
+
+    for (const city of content.cities.filter((x) => x.id !== 'madrid')) {
+      const quote = quoteMove(content, view, city.id);
+      const card = within(sheet).getByRole('region', { name: names.cities[city.id] });
+      const line = (label: string) => (within(card).getByText(label).parentElement?.textContent ?? '').replace(label, '');
+      expect(line('Your pay'), city.id).toBe(`${fmt.compact(quote.here.payAnnual)}→${fmt.compact(quote.there.payAnnual)}`);
+      expect(line('Income tax'), city.id).toBe(`${fmt.compact(quote.here.taxAnnual)}→${fmt.compact(quote.there.taxAnnual)}`);
+      expect(line('Left over a year'), city.id).toBe(`${fmt.compact(quote.here.leftAnnual)}→${fmt.compact(quote.there.leftAnnual)}`);
+      expect(within(card).getByText(`Status +${city.prestige}`)).toBeTruthy();
+      expect(within(card).getByText(`Moving costs ${fmt.money(quote.cost)} and 1 focus`)).toBeTruthy();
+      // A nurse on the first rung, alone: nothing more to lose by going.
+      expect(within(card).queryByText(/^You arrive as/)).toBeNull();
+      expect(within(card).queryByText(/^Your partner will go/)).toBeNull();
+    }
+  });
+
+  it('says what going of one\'s own accord would cost someone with a rung to lose', async () => {
+    // The comeback starts two rungs up a career.
+    const services = memoryServices();
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { comeback: { at: 1, gameId: 'earlier' } } });
+    const session = await services.sessions.start('comeback');
+    await toFinance(session);
+    const view = viewOf(await stateOf(services));
+    const job = view.player.life.career;
+    if (!job || job.level < 1) throw new Error('the comeback starts above the first rung');
+    const elsewhere = content.cities.find((city) => city.id !== view.player.cityId);
+    if (!elsewhere) throw new Error('there is another city');
+    const quote = quoteMove(content, view, elsewhere.id);
+    expect(quote.rungsLost).toBe(1);
+
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+    const card = within(screen.getByRole('dialog', { name: 'Move to another city' })).getByRole('region', { name: names.cities[elsewhere.id] });
+    const { text } = textFor('en');
+    expect(within(card).getByText(`You arrive as ${text.careers[job.id].levels[job.level - 1]}: a rung down, until your next promotion.`)).toBeTruthy();
+    // The pay shown there is the pay of the rung below, in that city.
+    expect((within(card).getByText('Your pay').parentElement?.textContent ?? '').endsWith(`→${fmt.compact(quote.there.payAnnual)}`)).toBe(true);
+    expect(quote.there.level).toBe(job.level - 1);
   });
 });
 

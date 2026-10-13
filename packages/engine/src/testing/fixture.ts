@@ -164,6 +164,11 @@ const base: Content = {
     itemFinanceMinPrice: 500_000,
     lesserItemPct: 25,
     moveCostPct: 20,
+    // Nothing by default, so tests of anything else move as before. Tests of a move's cost set their own.
+    movePartnerPct: 0,
+    moveChildPct: 0,
+    moveRungsLost: 0,
+    partnerSettlingRounds: 0,
     workSkill: 1,
     studySkill: 1,
     jobHuntChancePct: 35,

@@ -6,6 +6,7 @@ import type { FinanceSkill, GameView, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useT, useWords } from '@/game/context';
+import { ageAt } from '@/game/present';
 import { Bar, Bare, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -71,9 +72,10 @@ export function WorkPanel({ shown }: { shown: GameView }) {
             {next ? (
               <>
                 <Bar value={work.skill - rung.minSkill} max={next.minSkill - rung.minSkill} label={t('toNext', { title: titles[next.level] })} tone="teal" />
+                {/* The count never wraps; the name of the next job gives way to it and is cut short if it must be. */}
                 <div className="mt-1 flex items-baseline justify-between gap-3 text-[12px] text-ink-300">
-                  <span>{t('skillOf', { skill: work.skill, need: next.minSkill })}</span>
-                  <span className="truncate text-right">
+                  <span className="shrink-0 whitespace-nowrap">{t('skillOf', { skill: work.skill, need: next.minSkill })}</span>
+                  <span className="min-w-0 truncate text-right">
                     {t('nextIs', { title: titles[next.level] })} · <span className="text-gold-500">{perYear(next.payAnnual)}</span>
                   </span>
                 </div>
@@ -88,7 +90,7 @@ export function WorkPanel({ shown }: { shown: GameView }) {
         <Row className="border-t-2 border-night-900" left={t('finance')} sub={t('financeSub')} right={<>{`${life.financeSkill}/2`}<More /></>} />
       </Opener>
       <Opener onOpen={() => setAbout('focus')}>
-        <Row className="border-t-2 border-night-900" left={t('focus')} sub={work.focus.bonus > 0 ? t('focusRested', { n: work.focus.bonus }) : t('focusSub')} right={<>{`${work.focus.left}/${work.focus.total}`}<More /></>} />
+        <Row className="border-t-2 border-night-900" left={t('focus')} sub={work.focus.bonus === 0 ? t('focusSub') : work.traits.focus === 0 ? t('focusRested', { n: work.focus.bonus }) : work.traits.focus === work.focus.bonus ? t('focusJob', { n: work.focus.bonus }) : t('focusExtra', { n: work.focus.bonus })} right={<>{`${work.focus.left}/${work.focus.total}`}<More /></>} />
       </Opener>
 
       {about ? (
@@ -106,8 +108,9 @@ export function WorkPanel({ shown }: { shown: GameView }) {
 function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
   const t = useT('work');
   const common = useT('common');
-  const { text, names, fmt } = useWords();
+  const { content, text, names, fmt } = useWords();
   const job = shown.player.life.career;
+  const traits = work.traits;
   if (!job || work.level === null) return <p className="text-[14px] leading-snug">{t('noJobAbout')}</p>;
   const titles = text.careers[job.id].levels;
   const level = work.level;
@@ -115,6 +118,20 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
   return (
     <>
       <p className="text-[14px] leading-snug">{t('careerAbout', { career: text.careers[job.id].name, work: work.workSkill, study: work.studySkill })}</p>
+      {/* What sets this career apart from the others, in the figures of this round. */}
+      {traits.follows || traits.fade || traits.focus > 0 ? (
+        <ul aria-label={t('traits')} className="flex flex-col gap-1 border-l-4 border-gold-500 pl-3 text-[13px] leading-snug">
+          {traits.follows ? <li>{t(traits.cyclePct > 0 ? 'cycleUp' : traits.cyclePct < 0 ? 'cycleDown' : 'cycleFlat', { pct: Math.abs(traits.cyclePct) })}</li> : null}
+          {traits.fade ? (
+            <li>
+              {traits.fadePct < 0
+                ? t('fadeNow', { pct: -traits.fadePct, max: traits.fade.maxPct })
+                : t('fadeLater', { age: ageAt(content, traits.fade.fromRound), pct: traits.fade.pctPerRound, max: traits.fade.maxPct })}
+            </li>
+          ) : null}
+          {traits.focus > 0 ? <li>{t('jobFocus', { n: traits.focus })}</li> : null}
+        </ul>
+      ) : null}
       <ol reversed className="flex flex-col-reverse gap-2">
         {work.ladder.map((rung) => {
           const here = rung.level === level;
@@ -184,7 +201,8 @@ function FocusUses({ work }: { work: WorkQuote }) {
   return (
     <>
       <p className="text-[14px] leading-snug">
-        {t('focusAbout', { total: work.focus.total })} {work.focus.bonus > 0 ? t('focusBonus', { n: work.focus.bonus }) : ''}
+        {t('focusAbout', { total: work.focus.total })} {work.traits.focus > 0 ? t('focusFromJob', { n: work.traits.focus }) : ''}{' '}
+        {work.focus.bonus > work.traits.focus ? t('focusBonus', { n: work.focus.bonus - work.traits.focus }) : ''}
       </p>
       <div className="frame bg-night-800 px-3 py-2 text-center">
         <span className="pixel text-[22px] text-gold-500">{`${work.focus.left}/${work.focus.total}`}</span>

@@ -13,7 +13,7 @@ describe('the v1 content', () => {
   it('has the size the spec sets', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(19);
-    expect(content.careers).toHaveLength(6);
+    expect(content.careers).toHaveLength(11);
     expect(content.items).toHaveLength(55);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
@@ -32,7 +32,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(106);
+    expect(content.cards).toHaveLength(108);
     expect(lives).toHaveLength(11);
   });
 
@@ -40,7 +40,7 @@ describe('the v1 content', () => {
     const count: Record<string, number> = {};
     for (const card of content.cards) count[card.category] = (count[card.category] ?? 0) + 1;
     expect(count).toEqual({
-      career: 12, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 10,
+      career: 14, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 10,
       family: 10, health: 5, luck: 8, world: 18, tax: 6, laterLife: 5,
     });
   });
@@ -96,6 +96,48 @@ describe('the v1 content', () => {
     expect(START_AGE + content.life.roomLateRound * content.yearsPerRound).toBe(26);
     expect(content.life.roomLateStatus).toBe(-3);
     expect(content.life.rentTierStatus).toEqual([0, 3]);
+  });
+
+  it('gives every city a trade or two it pays above the usual, and every career a city to go to', () => {
+    const paid = new Set<string>();
+    for (const city of content.cities) {
+      const trades = Object.entries(city.careerPayPct ?? {});
+      expect(trades.length, city.id).toBeGreaterThanOrEqual(1);
+      expect(trades.length, city.id).toBeLessThanOrEqual(4);
+      for (const [career, share] of trades) {
+        expect(share, `${city.id} ${career}`).toBeGreaterThan(100);
+        expect(share, `${city.id} ${career}`).toBeLessThanOrEqual(125);
+        paid.add(career);
+      }
+    }
+    expect([...paid].sort()).toEqual(content.careers.map((career) => career.id).sort());
+    // Moving of one's own accord has a price beyond the fare.
+    expect(content.life).toMatchObject({ moveRungsLost: 1, movePartnerPct: 50, moveChildPct: 25, partnerSettlingRounds: 1 });
+  });
+
+  it('makes the five newer careers each a different bet, and gives each a way in', () => {
+    const career = (id: string) => content.careers.find((x) => x.id === id);
+    const top = (id: string) => career(id)?.levels.at(-1)?.salaryPct ?? 0;
+    // Law is the tallest ladder of all, and the slowest to climb.
+    expect(top('law')).toBe(Math.max(...content.careers.map((x) => top(x.id))));
+    expect(career('law')?.levels.at(-1)?.minSkill).toBe(Math.max(...content.careers.map((x) => x.levels.at(-1)?.minSkill ?? 0)));
+    // Teaching pays little and leaves time; selling follows the economy both ways; an audience does not last.
+    expect(career('education')).toMatchObject({ focus: 1 });
+    expect(top('education')).toBe(Math.min(...content.careers.map((x) => top(x.id))));
+    expect(career('sales')?.cyclePct).toMatchObject({ boom: 25, recession: -25 });
+    expect(START_AGE + (career('influencer')?.fade?.fromRound ?? 0) * content.yearsPerRound).toBe(34);
+    // Nothing pays overtime like a bar.
+    expect(career('hospitality')?.overtimePct).toBe(Math.max(...content.careers.map((x) => x.overtimePct)));
+    // Each can be reached from a card, by someone who is not already in it.
+    const leads = new Set<string>();
+    for (const card of content.cards) {
+      for (const option of card.options) {
+        for (const effects of [option.effects ?? {}, ...(option.outcomes ?? []).map((outcome) => outcome.effects)]) {
+          if (effects.job?.career) leads.add(effects.job.career);
+        }
+      }
+    }
+    for (const id of ['law', 'education', 'influencer', 'hospitality', 'sales']) expect(leads, id).toContain(id);
   });
 
   it('makes the things that are good for something good for what their kind is', () => {
