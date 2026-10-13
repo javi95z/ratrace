@@ -257,6 +257,14 @@ describe('playing a ranked life', { timeout: 120_000 }, () => {
     const log = structuredClone(db.games.get(at.gameId)?.log);
     // The same step again, with another answer: the first one stands.
     expect(await ask(db, card(at, 1))).toEqual({ status: 409, body: { error: 'out-of-step', step: 1 } });
+    // The same for a round: other orders are another choice, not the same step asked for again.
+    {
+      const other = fakeDb();
+      let now = await begin(other);
+      while (now.view.phase === 'cards') now = (await step(other, now)).at;
+      expect((await ask(other, round(now, []))).status).toBe(200);
+      expect(await ask(other, round(now, [{ type: 'depositIn', amount: 1 }]))).toEqual({ status: 409, body: { error: 'out-of-step', step: now.step + 1 } });
+    }
     // A step from the future, and one from further back than the last.
     expect(await ask(db, card({ ...at, step: 5 }))).toEqual({ status: 409, body: { error: 'out-of-step', step: 1 } });
     const next = after(at, taken.body);
@@ -366,6 +374,14 @@ describe('looking at a ranked life, and giving it up', { timeout: 120_000 }, () 
     expect(await ask(db, { action: 'view', gameId: at.gameId })).toEqual({ status: 409, body: { error: 'closed' } });
     // Asked again, it is still given up, and that is not an error.
     expect(await ask(db, { action: 'abandon', gameId: at.gameId })).toEqual({ status: 200, body: {} });
+  });
+
+  it('does not give up a life that is over: its result stands', async () => {
+    const db = fakeDb();
+    let at = await begin(db);
+    while (!at.view.finished) at = (await step(db, at)).at;
+    expect(await ask(db, { action: 'abandon', gameId: at.gameId })).toEqual({ status: 200, body: {} });
+    expect(db.games.get(at.gameId)?.status).toBe('finished');
   });
 
   it('answers a failure of the database as its own, not as the player\'s mistake', async () => {
