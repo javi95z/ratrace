@@ -1,6 +1,6 @@
 import type { Locale } from '@ratrace/content';
 
-const TAGS: Record<Locale, string> = { en: 'en-US', es: 'es-ES' };
+const TAGS: Record<Locale, string> = { en: 'en-US', es: 'es-ES', ru: 'ru-RU' };
 
 export interface Format {
   /** Cents as whole dollars: $12,345. */
@@ -12,6 +12,8 @@ export interface Format {
   /** Basis points as a signed whole percentage: -2200 → −22%. */
   change(bp: number): string;
   number(value: number): string;
+  /** A number with a set count of decimals and the decimal mark of the language: 1.25, or 1,25. */
+  fixed(value: number, decimals: number): string;
 }
 
 export function formatFor(locale: Locale): Format {
@@ -22,22 +24,29 @@ export function formatFor(locale: Locale): Format {
   // Whole dollars, and never a negative zero: forty cents owed is "$0", not "−$0".
   const whole = (cents: number) => Math.round(cents / 100) || 0;
   const money = (cents: number) => dollars.format(whole(cents)).replace('-', '−');
+  const mark = decimal.formatToParts(0.5).find((part) => part.type === 'decimal')?.value ?? '.';
   return {
     money,
     signed: (cents) => (whole(cents) > 0 ? `+${money(cents)}` : money(cents)),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${bp >= 0 ? '+' : '−'}${plain.format(Math.abs(Math.round(bp / 100)))}%`,
     number: (value) => plain.format(value),
+    fixed: (value, decimals) => value.toFixed(decimals).replace('.', mark),
   };
 }
 
-/** Lower-case letters and digits only, without accents, so that "Dubái", "dubai" and "DUBAI" all match. */
+/**
+ * Lower-case letters and digits only, without accents, so that "Dubái", "dubai" and "DUBAI" all match.
+ * Russian letters stay: ё is read as е, since it is typed either way, and й keeps its breve, since it
+ * is a letter of its own and no и with an accent.
+ */
 export function plain(text: string): string {
   return text
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/(?<![иИ])\u0306|[\u0300-\u0305\u0307-\u036f]/g, '')
+    .normalize('NFC')
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+    .replace(/[^a-z0-9а-я]/g, '');
 }
 
 /** Pads on the right to a width, counting characters. */

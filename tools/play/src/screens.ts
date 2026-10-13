@@ -107,7 +107,7 @@ export function me(pen: Pen, state: GameState): string[] {
   if (p.debts.length > 0) {
     lines.push(`  ${ui.headers.debts}:`);
     p.debts.forEach((d, i) => {
-      const term = d.kind === 'creditCard' ? '' : `, ${d.roundsLeft} ${ui.columns.roundsLeft}`;
+      const term = d.kind === 'creditCard' ? '' : `, ${ui.columns.roundsLeft(d.roundsLeft)}`;
       lines.push(`    ${i + 1}. ${text.debts[d.kind]}  ${fmt.money(d.principal)}  ${fmt.rate(debtRateBp(d, content, world, p))}${term}`);
     });
   }
@@ -293,7 +293,7 @@ export function card(pen: Pen, state: GameState, def: CardDef, position: number,
     for (const outcome of preview.outcomes) weight += outcome.weight;
     (option.outcomes ?? []).forEach((outcome, k) => {
       const share = (preview.outcomes[k].weight * 100) / weight;
-      const chance = share >= 1 ? `${Math.round(share)}%` : `${share.toFixed(share >= 0.1 ? 1 : 3)}%`;
+      const chance = share >= 1 ? `${Math.round(share)}%` : `${pen.fmt.fixed(share, share >= 0.1 ? 1 : 3)}%`;
       lines.push(`        ${padStart(chance, 7)}  ${joined(preview.outcomes[k].cash, effectPhrases(pen, state, outcome.effects), pen)}`);
     });
   });
@@ -304,7 +304,7 @@ export function card(pen: Pen, state: GameState, def: CardDef, position: number,
 export function cardResult(pen: Pen, event: Extract<GameEvent, { kind: 'card' }>): string[] {
   const { ui, text, fmt } = pen;
   const written = text.cards[event.cardId];
-  const lines = [`  ${written.title}: ${ui.youChose.toLowerCase()} “${written.options[event.option].label}”${event.cash !== 0 ? `  ${fmt.signed(event.cash)}` : ''}`];
+  const lines = [`  ${written.title}: ${ui.youChose.toLowerCase()} ${ui.quoted(written.options[event.option].label)}${event.cash !== 0 ? `  ${fmt.signed(event.cash)}` : ''}`];
   if (event.outcome !== null) lines.push(`    → ${written.options[event.option].outcomes[event.outcome]}`);
   return lines;
 }
@@ -363,8 +363,8 @@ export function ending(pen: Pen, state: GameState): string[] {
     RULE,
     `  ${ui.netWorth}: ${fmt.money(netWorth(p))}`,
     `  ${ui.realNetWorth}: ${fmt.money(realNetWorth(state))}`,
-    `  ${p.escapedAtRound === null ? ui.neverEscaped : `${ui.escapedAtAge} ${ageAt(pen, p.escapedAtRound)}.`}`,
-    `  ${ui.score}: (${ui.wealthPoints} ${score.wealth} + ${ui.statusPoints} ${score.status}) × ${(score.multiplierPct / 100).toFixed(2)} ${ui.escapeBonus.toLowerCase()} = ${fmt.number(score.total)}`,
+    `  ${p.escapedAtRound === null ? ui.neverEscaped : ui.escapedAtAge(ageAt(pen, p.escapedAtRound))}`,
+    `  ${ui.score}: (${ui.wealthPoints} ${score.wealth} + ${ui.statusPoints} ${score.status}) × ${fmt.fixed(score.multiplierPct / 100, 2)} ${ui.escapeBonus.toLowerCase()} = ${fmt.number(score.total)}`,
     `  ${ui.statusNote}`,
   ];
 }

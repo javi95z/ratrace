@@ -164,6 +164,109 @@ describe('the terminal game', () => {
     expect(shown).not.toMatch(/undefined|NaN|\{[a-z_:]+\}/);
   });
 
+  it('plays in Russian, with Russian orders', async () => {
+    const servant = lives.find((life) => life.id === 'civil_servant');
+    if (!servant) throw new Error('no civil servant');
+    const hand = createGame({ content, start: servant.start }, 'ru-1').hand;
+    // The first round is typed out; in every round after it the player looks at the news, studies and plays.
+    const first = [
+      ...hand.map(() => ''),
+      'помощь',
+      'я',
+      'отложить 500',
+      'учиться',
+      'учиться',
+      'танцевать',
+      'купить msci 999 999 999',
+      'планы',
+      'отменить',
+      'учиться',
+      'снять всё',
+      'налоги',
+      'рынок',
+      'портфель',
+      'магазин',
+      'недвижимость',
+      'города',
+      'готово',
+    ];
+    const out: string[] = [];
+    const later: string[] = [];
+    const io: Io = {
+      print: (line) => out.push(line),
+      ask: (prompt) => {
+        if (first.length > 0) return Promise.resolve(first.shift() as string);
+        if (/\(1[-–]\d/.test(prompt)) return Promise.resolve('1');
+        if (later.length === 0) later.push('новости', 'учиться', 'готово');
+        return Promise.resolve(later.shift() as string);
+      },
+    };
+    const state = await runGame(io, { locale: 'ru', lifeId: 'civil_servant', seed: 'ru-1' });
+    expect(state?.finished).toBe(true);
+    expect(state?.round).toBe(20);
+    const shown = text(out);
+    expect(shown).toContain('THE RAT RACE');
+    expect(shown).toContain('Возраст 22 · Раунд 1 из 20 · Мадрид');
+    expect(shown).toContain('Возраст 60 · Раунд 20 из 20');
+    expect(shown).toContain('НОВОСТИ');
+    expect(shown).toContain('ТЫ  Госслужащий · Госслужба (Специалист)');
+    expect(shown).toMatch(/КАРТА 1 из \d/);
+    expect(shown).toMatch(/: твой выбор — «[^»]+»/);
+    expect(shown).toContain('КОМАНДЫ');
+    expect(shown).toContain('купить <актив> <сумма>');
+    expect(shown).toContain('✓ отложить 500 (добавлено)');
+    expect(shown).toContain('✓ учиться (добавлено)');
+    expect(shown).toContain('Нельзя: В этом раунде ты это уже делаешь.');
+    expect(shown).toContain('Не знаю такой команды. Набери «помощь».');
+    expect(shown).toContain('Нельзя: Не хватает наличных.');
+    expect(shown).toContain('ПЛАНЫ НА РАУНД\n  1. отложить 500\n  2. учиться');
+    expect(shown).toContain('− учиться (убрано)');
+    // Undone for real: in the first round the same plan is taken again, where a second copy would be refused.
+    expect(shown.slice(0, shown.indexOf('ИТОГИ РАУНДА')).split('✓ учиться (добавлено)').length - 1).toBe(2);
+    expect(shown).toContain('✓ снять всё (добавлено)');
+    expect(shown).toContain('ЭТОТ РАУНД');
+    expect(shown).toContain('Тест на выход');
+    expect(shown).toContain('Зарплата');
+    expect(shown).toContain('MSCI   MSCI World');
+    expect(shown).toContain('XAU    Золото');
+    expect(shown).toContain('нужен финансовый навык 2');
+    expect(shown).toContain('ПОРТФЕЛЬ');
+    expect(shown).toContain('Rolex Submariner');
+    expect(shown).toContain('НЕДВИЖИМОСТЬ · Мадрид');
+    expect(shown).toContain('Пентхаус');
+    expect(shown).toContain('Дубай — Подоходного налога нет');
+    expect(shown).toContain('ИТОГИ РАУНДА · Возраст 22 → 24');
+    expect(shown).toContain('КОНЕЦ · Возраст 62');
+    expect(shown).toContain('Сыграть эту жизнь ещё раз: pnpm play --life civil_servant --seed ru-1 --lang ru');
+    // Money and rates as Russian writes them: 1 200 $ and 2,5%, never $1,200 or 2.5%.
+    expect(shown).toMatch(/\d\u00A0\$/);
+    expect(shown).not.toMatch(/\$\d/);
+    expect(shown).toMatch(/\d,\d%/);
+    expect(shown).not.toMatch(/\d\.\d/);
+    expect(shown).not.toMatch(/undefined|NaN|\{[a-z_:]+\}/);
+    // Nothing of the other two languages is left in what the terminal itself says.
+    expect(shown).not.toMatch(/\b(?:Age|Round|Cash|Savings|Salary|Refused|added|You chose|Edad|Ronda|Efectivo|Sueldo)\b/);
+    expect(shown).not.toMatch(/[“”"]/);
+  });
+
+  it('leaves in Russian when asked to', async () => {
+    const hand = createGame({ content, start: lives[0].start }, 'quit').hand;
+    const { io, out } = scripted([...hand.map(() => ''), 'выйти']);
+    expect(await runGame(io, { locale: 'ru', lifeId: 'nurse', seed: 'quit' })).toBeNull();
+    expect(out[out.length - 1]).toBe(' До следующей жизни.');
+  });
+
+  it('asks in Russian which life to live', async () => {
+    const { io, out, asked } = scripted(['2']);
+    const engineer = await runGame(io, { locale: 'ru', seed: 'choose' });
+    expect(engineer?.player.life.lifeId).toBe('engineer');
+    expect(text(out)).toContain('Выбери жизнь');
+    expect(text(out)).toContain('1. Медсестра');
+    expect(text(out)).toContain('11. Дитя крипты');
+    expect(asked[0]).toBe('Жизнь (1–11) > ');
+    expect(asked.filter((prompt) => prompt.includes('Твой выбор (1–')).length).toBeGreaterThanOrEqual(content.rounds * content.life.cardsPerRound - 3);
+  });
+
   it('settles each card before it shows the next', async () => {
     const { text: written } = textFor('en');
     const start = createGame({ content, start: lives[1].start }, 'one-by-one');
@@ -178,26 +281,32 @@ describe('the terminal game', () => {
     expect(second).toBeGreaterThan(result);
   });
 
-  it('plays every life to the end in both languages without a hole in the text', async () => {
+  it('plays every life to the end in every language without a hole in the text', async () => {
+    // Every screen, then the word that plays the round, as each language types them.
+    const typed = {
+      en: ['me', 'market', 'port', 'shop', 'homes', 'cities', 'tax', 'orders', 'help', 'done'],
+      es: ['me', 'market', 'port', 'shop', 'homes', 'cities', 'tax', 'orders', 'help', 'listo'],
+      ru: ['я', 'рынок', 'портфель', 'магазин', 'недвижимость', 'города', 'налоги', 'планы', 'помощь', 'готово'],
+    };
     for (const lifeId of ['nurse', 'engineer', 'civil_servant', 'rider', 'heir', 'newcomer', 'banker', 'doctor', 'comeback', 'founder', 'crypto_kid']) {
-      for (const locale of ['en', 'es'] as const) {
+      for (const locale of ['en', 'es', 'ru'] as const) {
         // Take the last option of every card where it is open, to walk through as much text as possible,
         // look at every screen once a round, and play the round.
         const out: string[] = [];
         const queue: string[] = [];
         let cards = 0;
         let rounds = 0;
-        const done = locale === 'en' ? 'done' : 'listo';
         const io: Io = {
           print: (line) => out.push(line),
           ask: (prompt) => {
-            if (/\(1-\d/.test(prompt)) {
+            // The range in the prompt is written with a hyphen or, in Russian, with a dash.
+            if (/\(1[-–]\d/.test(prompt)) {
               cards += 1;
               return Promise.resolve('3');
             }
             if (queue.length === 0) {
               rounds += 1;
-              queue.push('me', 'market', 'port', 'shop', 'homes', 'cities', 'tax', 'orders', 'help', done);
+              queue.push(...typed[locale]);
             }
             return Promise.resolve(queue.shift() as string);
           },

@@ -7,7 +7,7 @@ import type { Io } from './game';
 /**
  * The Rat Race in a terminal.
  *
- *   pnpm play [--lang en|es] [--life nurse|engineer|civil_servant|rider|heir|newcomer|banker|doctor|comeback|founder|crypto_kid] [--seed text]
+ *   pnpm play [--lang en|es|ru] [--life nurse|engineer|civil_servant|rider|heir|newcomer|banker|doctor|comeback|founder|crypto_kid] [--seed text]
  *
  * Answers can also be piped in, one per line: the game plays itself on first options once they run out.
  */
@@ -16,7 +16,9 @@ function flag(name: string): string | undefined {
   return at >= 0 ? process.argv[at + 1] : undefined;
 }
 
-const locale: Locale = flag('lang') === 'es' ? 'es' : 'en';
+// Any other language, or none, is English.
+const lang = flag('lang');
+const locale: Locale = lang === 'es' || lang === 'ru' ? lang : 'en';
 const seed = flag('seed') ?? randomBytes(4).toString('hex');
 
 const reader = createInterface({ input: process.stdin, output: process.stdout, terminal: process.stdin.isTTY === true });
