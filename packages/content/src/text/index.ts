@@ -4,6 +4,8 @@ import { en } from './en';
 import { after as enAfter } from './en.after';
 import { es } from './es';
 import { after as esAfter } from './es.after';
+import { ru } from './ru';
+import { after as ruAfter } from './ru.after';
 import type { ContentText } from './types';
 
 export type { CardText, ContentText } from './types';
@@ -17,7 +19,7 @@ function withAfter(text: ContentText, after: Record<string, ReadonlyArray<string
   return { ...text, cards: Object.fromEntries(cards) as ContentText['cards'] };
 }
 
-const raw: Record<Locale, ContentText> = { en: withAfter(en, enAfter), es: withAfter(es, esAfter) };
+const raw: Record<Locale, ContentText> = { en: withAfter(en, enAfter), es: withAfter(es, esAfter), ru: withAfter(ru, ruAfter) };
 
 /** Placeholders that the name pack fills: {item:watch_rolex}, {asset:tesla}, {city:london}, {brand:google}. */
 const PLACEHOLDER = /\{(item|asset|city|brand):([a-z0-9_]+)\}/g;

@@ -8,7 +8,23 @@ import { names } from './names';
 import type { Locale } from './names';
 import { fillNames, rawText, textFor } from './text';
 
-const LOCALES: Locale[] = ['en', 'es'];
+const LOCALES: Locale[] = ['en', 'es', 'ru'];
+/** Every language the text was translated into, from the English it is written in. */
+const TRANSLATED: Locale[] = ['es', 'ru'];
+
+/**
+ * Russian words that are written with ё and here are not. The letter is optional in a newspaper
+ * and not in this game. Only forms that are never right with е are listed.
+ */
+const WITHOUT_YO = new RegExp(
+  `(?<![а-яё])(?:${[
+    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
+    'прием', 'приема', 'приему', 'приемом', 'приеме', 'объем[а-я]*', 'счет', 'отчет[а-я]*', 'расчет[а-я]*', 'самолет[а-я]*', 'перелет[а-я]*', 'полет[а-я]*', 'вперед',
+    'идешь', 'живешь', 'берешь', 'даешь', 'ждешь', 'придешь', 'уйдешь', 'найдешь', 'начнешь', 'вернешь', 'поймешь', 'продаешь', 'отдаешь', 'сдаешь', 'остаешься', 'вернешься',
+    'идет', 'живет', 'дает', 'ждет', 'придет', 'уйдет', 'растет', 'несет', 'ведет', 'продает', 'отдает', 'сдает', 'остается', 'придется', 'удается', 'вернется', 'начнется', 'найдется',
+  ].join('|')})(?![а-яё])`,
+  'i',
+);
 const ids = (list: ReadonlyArray<{ id: string }>) => list.map((x) => x.id).sort();
 const keys = (record: object) => Object.keys(record).sort();
 
@@ -101,6 +117,17 @@ describe.each(LOCALES)('content text: %s', (locale) => {
       // English: straight apostrophes and quotes, and a percent sign against its number.
       expect(broken((s) => /[‘’“”«»]/.test(s))).toEqual([]);
       expect(broken((s) => /\d %/.test(s))).toEqual([]);
+    } else if (locale === 'ru') {
+      // Russian: angle quotes, a percent sign against its number, a dash that is a dash, and ё wherever it belongs.
+      expect(broken((s) => /["“”‘’']/.test(s))).toEqual([]);
+      expect(broken((s) => /\d %/.test(s))).toEqual([]);
+      expect(broken((s) => /[¿¡]/.test(s))).toEqual([]);
+      expect(broken((s) => /[а-яё] – | -- /i.test(s))).toEqual([]);
+      expect(broken((s) => WITHOUT_YO.test(s))).toEqual([]);
+      // Written in its own letters: a sentence with words has Cyrillic ones, unless it is a name the name pack fills in.
+      expect(broken((s) => /\p{L}/u.test(s.replace(/\{[^{}]*\}/g, '')) && !/[а-яё]/i.test(s))).toEqual([]);
+      // And it never tells the player whether they are a man or a woman: no ending offered both ways, no «ты» with a verb in the past.
+      expect(broken((s) => /\((?:а|ла|ая|на)\)|[а-яё]\/[а-яё]{1,3}(?![а-яё])/i.test(s) || /(?<![а-яё])ты (?:не )?(?:уже |ещё |так и не |сам[а-я]* )?[а-яё]+(?:л|ла|лся|лась)(?![а-яё])/i.test(s))).toEqual([]);
     } else {
       // Spanish: angle quotes, a space before the percent sign, and a question or an exclamation opened as well as closed.
       expect(broken((s) => /["“”]/.test(s))).toEqual([]);
@@ -144,25 +171,28 @@ describe.each(LOCALES)('content text: %s', (locale) => {
   });
 });
 
-describe('content text: the two languages together', () => {
-  it('have the same shape, key for key', () => {
-    expect(shape(rawText('es'))).toEqual(shape(rawText('en')));
-    expect(shape(names.es)).toEqual(shape(names.en));
+describe.each(TRANSLATED)('content text: %s beside the English', (locale) => {
+  it('has the same shape, key for key', () => {
+    expect(shape(rawText(locale))).toEqual(shape(rawText('en')));
+    expect(shape(names[locale])).toEqual(shape(names.en));
   });
 
-  it('use the same placeholders in the same sentences', () => {
+  it('uses the same placeholders in the same sentences', () => {
     const placeholders = (sentence: string) => (sentence.match(/\{[^}]*\}/g) ?? []).sort();
-    const spanish = new Map(strings(rawText('es')));
+    const translated = new Map(strings(rawText(locale)));
     for (const [path, sentence] of strings(rawText('en'))) {
-      expect(placeholders(spanish.get(path) ?? ''), path).toEqual(placeholders(sentence));
+      expect(placeholders(translated.get(path) ?? ''), path).toEqual(placeholders(sentence));
     }
   });
 
-  it('are really two languages: Spanish card text is not a copy of the English', () => {
-    /** Words that are the same in both languages. */
-    const same = new Set(['cards.life_ibiza.title', 'cards.life_black_friday.title', 'cards.luck_lottery.title', 'cards.career_remote_work.options.2.outcomes.1']);
-    const spanish = new Map(strings(rawText('es').cards, 'cards'));
-    const copies = strings(rawText('en').cards, 'cards').filter(([path, sentence]) => spanish.get(path) === sentence && !same.has(path));
+  it('is really another language: its card text is not a copy of the English', () => {
+    /** Words that are the same in English and in this language. */
+    const same: Record<string, Set<string>> = {
+      es: new Set(['cards.life_ibiza.title', 'cards.life_black_friday.title', 'cards.luck_lottery.title', 'cards.career_remote_work.options.2.outcomes.1']),
+      ru: new Set(),
+    };
+    const translated = new Map(strings(rawText(locale).cards, 'cards'));
+    const copies = strings(rawText('en').cards, 'cards').filter(([path, sentence]) => translated.get(path) === sentence && !same[locale].has(path));
     expect(copies).toEqual([]);
   });
 });

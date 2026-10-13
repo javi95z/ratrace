@@ -21,9 +21,9 @@ export interface Format {
   day(ms: number): string;
 }
 
-const TAGS: Record<string, string> = { en: 'en-US', es: 'es-ES' };
-/** Days are written day first in both languages; American English would put the month first. */
-const DAY_TAGS: Record<string, string> = { en: 'en-GB', es: 'es-ES' };
+const TAGS: Record<string, string> = { en: 'en-US', es: 'es-ES', ru: 'ru-RU' };
+/** Days are written day first in every language; American English would put the month first. */
+const DAY_TAGS: Record<string, string> = { en: 'en-GB', es: 'es-ES', ru: 'ru-RU' };
 const MINUS = '−';
 
 export function formatFor(locale: string): Format {
@@ -38,8 +38,10 @@ export function formatFor(locale: string): Format {
   const before = parts.slice(0, digit).map((part) => part.value).join('');
   const after = parts.slice(digit + 1).map((part) => part.value).join('');
   // English counts thousands, millions and billions. A Spanish "B" would be read as a billón, a
-  // million millions, so Spanish stops at millions and writes thousands of them out.
-  const units: ReadonlyArray<readonly [number, string]> = tag === TAGS.es ? [[1e3, 'K'], [1e6, 'M']] : [[1e3, 'K'], [1e6, 'M'], [1e9, 'B']];
+  // million millions, and a Russian reader knows no "B" at all, so every other language stops at
+  // millions and writes thousands of them out. Russian's own words for the units (тыс., млн) are
+  // a character or two too long for the HUD of a phone.
+  const units: ReadonlyArray<readonly [number, string]> = tag === TAGS.en ? [[1e3, 'K'], [1e6, 'M'], [1e9, 'B']] : [[1e3, 'K'], [1e6, 'M']];
 
   /** A large amount as three figures and a unit. Intl's own short form runs to "14,3 mil $", too long for a phone's HUD. */
   const shortened = (wholeDollars: number): string => {

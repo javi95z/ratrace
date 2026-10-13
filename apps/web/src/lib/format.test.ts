@@ -3,6 +3,7 @@ import { formatFor } from './format';
 
 const en = formatFor('en');
 const es = formatFor('es');
+const ru = formatFor('ru');
 /** Intl uses narrow and non-breaking spaces; the tests should not care which. */
 const plain = (text: string) => text.replace(/[  ]/g, ' ');
 
@@ -13,6 +14,9 @@ describe('formatFor', () => {
     expect(en.money(-30_000)).toBe('−$300');
     expect(plain(es.money(1_234_567))).toBe('12.346 $');
     expect(plain(es.money(300_000))).toBe('3.000 $');
+    expect(plain(ru.money(1_234_567))).toBe('12 346 $');
+    expect(plain(ru.money(-30_000))).toBe('−300 $');
+    expect(plain(ru.signed(120_000))).toBe('+1 200 $');
   });
 
   it('writes a day as the clock of the player has it, not as London does', () => {
@@ -23,6 +27,7 @@ describe('formatFor', () => {
       const late = Date.UTC(2026, 9, 13, 23, 30);
       expect(formatFor('en').day(late)).toBe('14 Oct 2026');
       expect(plain(formatFor('es').day(late))).toBe('14 oct 2026');
+      expect(plain(formatFor('ru').day(late))).toBe('14 окт. 2026 г.');
     } finally {
       if (zone === undefined) delete process.env.TZ;
       else process.env.TZ = zone;
@@ -97,8 +102,21 @@ describe('formatFor', () => {
     expect(plain(es.compact(123_400))).toBe('1.234 $');
   });
 
+  it('keeps a shortened amount short in Russian, where the words for the units would not fit', () => {
+    // «14,3 тыс. $» and «1,23 млн $» are how a newspaper writes them, and one or two characters too many for the HUD.
+    expect(plain(ru.compact(1_430_000))).toBe('14,3K $');
+    expect(plain(ru.compact(28_846_700))).toBe('288K $');
+    expect(plain(ru.compact(123_400_000))).toBe('1,23M $');
+    expect(plain(ru.compact(-5_000_000))).toBe('−50K $');
+    // A "B" is a billion only to an English reader: a Russian one reads a миллиард as thousands of millions.
+    expect(plain(ru.compact(987_654_321_000))).toBe('9 880M $');
+    expect(plain(ru.compact(123_400))).toBe('1 234 $');
+    expect(plain(ru.brief(705_400))).toBe('7,1k $');
+    expect(plain(ru.brief(250_000_000_000))).toBe('2 500M $');
+  });
+
   it('writes no shortened amount longer than nine characters, sign included, up to a billion dollars', () => {
-    for (const fmt of [en, es]) {
+    for (const fmt of [en, es, ru]) {
       for (let exponent = 0; exponent <= 10; exponent++) {
         for (const lead of [1, 1.234, 4.5678, 9.999, 9.9999]) {
           const cents = Math.round(lead * 10 ** exponent);
@@ -111,6 +129,9 @@ describe('formatFor', () => {
   it('writes rates and changes', () => {
     expect(en.rate(250)).toBe('2.5%');
     expect(es.rate(250)).toBe('2,5%');
+    expect(ru.rate(250)).toBe('2,5%');
+    expect(ru.change(-2_200)).toBe('−22%');
+    expect(plain(ru.number(-1234))).toBe('−1 234');
     expect(en.change(-2_200)).toBe('−22%');
     expect(en.change(1_450)).toBe('+15%');
     expect(en.change(0)).toBe('+0%');
@@ -121,6 +142,7 @@ describe('formatFor', () => {
     expect(en.factor(100)).toBe('1.00');
     expect(en.factor(161)).toBe('1.61');
     expect(es.factor(125)).toBe('1,25');
+    expect(ru.factor(161)).toBe('1,61');
   });
 
   it('falls back to English for a language it does not know', () => {

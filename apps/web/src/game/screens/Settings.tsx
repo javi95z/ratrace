@@ -13,7 +13,7 @@ import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
-const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
+const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español', ru: 'Русский' };
 
 /**
  * Who is playing, as the cloud knows them, and whether what they have is in their account yet. A
@@ -101,13 +101,13 @@ function AccountBlock() {
   );
 }
 
-/** The two languages, the one in use marked. */
+/** The languages the game speaks, each under its own name, the one in use marked. */
 function LanguagePick() {
   const home = useT('home');
   const { locale } = useSettings();
   const pathname = usePathname();
   return (
-    <div role="group" aria-label={home('language')} className="grid grid-cols-2 gap-2">
+    <div role="group" aria-label={home('language')} className="grid grid-cols-3 gap-2">
       {routing.locales.map((code) => (
         <Link
           key={code}

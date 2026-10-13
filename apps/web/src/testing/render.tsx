@@ -8,6 +8,7 @@ import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
+import ru from '../../messages/ru.json';
 
 /**
  * The game's services with nothing behind them but memory, and ids, seeds and a clock that never change.
@@ -21,9 +22,11 @@ export function memoryServices(store = new MemoryStore(), options: { tapGuardMs?
 }
 
 /** Draws a screen inside everything the real pages give it: the language, its text, and the game. */
-export function renderGame(ui: ReactElement, services: Services, locale: 'en' | 'es' = 'en') {
+const MESSAGES = { en, es, ru };
+
+export function renderGame(ui: ReactElement, services: Services, locale: keyof typeof MESSAGES = 'en') {
   return render(
-    <NextIntlClientProvider locale={locale} messages={locale === 'en' ? en : es} timeZone="UTC">
+    <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]} timeZone="UTC">
       <GameProvider services={services}>{ui}</GameProvider>
     </NextIntlClientProvider>,
   );

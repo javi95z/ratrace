@@ -521,6 +521,12 @@ begin
   -- The way the game writes a profile on every launch still works.
   insert into public.profiles (user_id, language) values (b, 'es') on conflict (user_id) do update set user_id = excluded.user_id, language = excluded.language;
   if (select language from public.profiles where user_id = b) = 'es' then passed := passed + 1; else failed := array_append(failed, 'the game could not write the language of a profile'); end if;
+  -- The game speaks three languages, and a profile may say any of them. (One it does not speak is refused: see A's, above.)
+  begin
+    update public.profiles set language = 'ru' where user_id = b;
+    passed := passed + 1;
+  exception when check_violation then failed := array_append(failed, 'a profile could not be written in Russian');
+  end;
   -- A name is refused for what it says, however it is spelled, and for whose it is.
   begin
     update public.profiles set nickname = 'Sh1t_head' where user_id = b;

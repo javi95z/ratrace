@@ -18,6 +18,13 @@ export const WORDS = {
     continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
     tabs: ['Cartera', 'Mercado', 'Vivienda', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Clasificaciones', guide: 'Guía', skipGuide: 'Quitar la guía',
   },
+  ru: {
+    newLife: 'Новая жизнь', start: 'Начать эту жизнь', toCards: 'Что приготовила жизнь', nextCard: 'Следующая карта', toFinance: 'К финансам',
+    play: 'Сыграть раунд', nextRound: 'Следующий раунд', finish: 'Чем всё закончилось', theEnd: 'Конец', news: 'Новости', choices: /^Твои варианты/,
+    happened: 'Что случилось', later: 'Два года спустя', card: (n: number) => new RegExp(`^Карта ${n} из \\d`), round: (n: number) => `Раунд ${n} из 20`,
+    continue: /Продолжить жизнь/, yourLife: 'Твоя жизнь', orders: 'Планы на раунд', again: 'Ещё одна жизнь',
+    tabs: ['Портфель', 'Рынок', 'Недвижимость', 'Долги', 'Жизнь', 'Магазин', 'Налоги'], openProfile: 'Открыть профиль', collection: 'Коллекция', records: 'Рекорды', rankings: 'Рейтинги', guide: 'Подсказки', skipGuide: 'Без подсказок',
+  },
 } as const;
 
 export type Lang = keyof typeof WORDS;

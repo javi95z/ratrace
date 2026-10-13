@@ -97,6 +97,40 @@ describe('drawing the share card', () => {
     expect(fontOf('Age 62 · Madrid')).toBe('400 36px ChakraOfThePage');
   });
 
+  it('writes what the two typefaces cannot draw in the ones the page keeps for Cyrillic, and waits for them', async () => {
+    fake.ctx.measureText = (text: string) => {
+      const px = Number(/(\d+)px/.exec(fake.ctx.font)?.[1] ?? 10);
+      return { width: text.length * px * 0.3, actualBoundingBoxAscent: px * 0.4 } as never;
+    };
+    const waited: Array<[string, string | undefined]> = [];
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { load: async (font: string, text?: string) => void waited.push([font, text]) } });
+    document.documentElement.style.setProperty('--font-jersey', 'JerseyOfThePage');
+    document.documentElement.style.setProperty('--font-chakra', 'ChakraOfThePage');
+    document.documentElement.style.setProperty('--font-pixel-cyrillic', 'PixelCyrillicOfThePage');
+    document.documentElement.style.setProperty('--font-reading-cyrillic', 'ReadingCyrillicOfThePage');
+    try {
+      await drawCard(
+        [
+          { kind: 'text', text: 'Медсестра', x: 10, y: 10, size: 15, font: 'pixel', color: '#fff', align: 'left', maxWidth: 200 },
+          { kind: 'text', text: '62 года · Мадрид', x: 10, y: 30, size: 9, font: 'sans', color: '#fff', align: 'left', maxWidth: 200 },
+        ],
+        async () => sprite,
+      );
+    } finally {
+      document.documentElement.removeAttribute('style');
+      delete (document as { fonts?: unknown }).fonts;
+    }
+    const fontOf = (line: string) => (fake.calls.find(([k, , text]) => k === 'text' && text === line) as [string, string])[1];
+    expect(fontOf('Медсестра')).toBe('400 84px JerseyOfThePage, PixelCyrillicOfThePage');
+    expect(fontOf('62 года · Мадрид')).toBe('400 36px ChakraOfThePage, ReadingCyrillicOfThePage');
+    // A canvas draws with what has arrived. Each list is asked for with the very words it will write, so that the
+    // face holding their letters is fetched before the first of them is drawn.
+    expect(waited).toEqual([
+      ['16px JerseyOfThePage, PixelCyrillicOfThePage', 'xМедсестра'],
+      ['16px ChakraOfThePage, ReadingCyrillicOfThePage', '62 года · Мадрид'],
+    ]);
+  });
+
   it('agrees with the page on how large that is', () => {
     const css = readFileSync(join(__dirname, '../../app/globals.css'), 'utf8');
     expect(css).toContain(`font-size-adjust: ${PIXEL_X_HEIGHT};`);

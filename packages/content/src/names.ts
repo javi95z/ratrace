@@ -5,7 +5,7 @@
  * without touching a sentence (spec 8.6).
  */
 
-export type Locale = 'en' | 'es';
+export type Locale = 'en' | 'es' | 'ru';
 
 export interface Names {
   cities: Record<string, string>;
@@ -154,6 +154,56 @@ export const names: Record<Locale, Names> = {
       member_paddock_singapore: 'Paddock Club del GP de Singapur',
       member_ringside_bangkok: 'Pase de ringside en Rajadamnern',
       edu_mba: 'MBA en el IESE',
+    },
+    brands,
+  },
+  // Brands, cars, watches and coins keep their own letters. What is described, not named, is in Russian. A name is put
+  // into a sentence as it stands here, undeclined: the ones cards use read well that way.
+  ru: {
+    cities: { madrid: 'Мадрид', london: 'Лондон', new_york: 'Нью-Йорк', dubai: 'Дубай', singapore: 'Сингапур', bangkok: 'Бангкок' },
+    assets: {
+      ...assets,
+      treasury_short: { name: 'Облигации США, 2 года', ticker: 'UST2' },
+      treasury_long: { name: 'Облигации США, 10 лет', ticker: 'UST10' },
+      bund: { name: 'Немецкие бунды', ticker: 'BUND' },
+      gold: { name: 'Золото', ticker: 'XAU' },
+    },
+    items: {
+      ...items,
+      fashion_blazer: 'Пиджак Zara',
+      fashion_polo: 'Поло Ralph Lauren',
+      fashion_loafers: 'Лоферы Gucci',
+      fashion_duffel: 'Сумка Louis Vuitton Keepall',
+      fashion_sunglasses: 'Очки Persol',
+      fashion_suit: 'Костюм с Сэвил-Роу',
+      fashion_coat: 'Пальто Chanel от кутюр',
+      art_local_print: 'Авторский принт с подписью',
+      art_photo: 'Фотография ограниченного тиража',
+      art_bronze: 'Бронзовая скульптура',
+      art_old_master: 'Картина старого мастера',
+      travel_interrail: 'Билет Interrail',
+      travel_ski: 'Неделя на лыжах в Церматте',
+      travel_safari: 'Сафари в Масаи-Мара',
+      travel_world_first: 'Кругосветка первым классом',
+      sea_sailing_course: 'Курс яхтинга',
+      air_helicopter: 'Полёт на вертолёте',
+      sea_sailboat: 'Парусная яхта Beneteau',
+      sea_motor_yacht: 'Моторная яхта Sunseeker',
+      art_stencil: 'Принт Бэнкси',
+      art_cubist: 'Литография Пикассо',
+      travel_weekend: 'Выходные с Ryanair',
+      travel_ibiza: 'Лето на Ибице',
+      travel_business_class: 'Бизнес-класс Emirates',
+      travel_maldives: 'Курорт на Мальдивах',
+      sea_yacht_charter: 'Неделя на арендованной яхте',
+      air_jet_charter: 'Чартер NetJets',
+      member_season_seat: 'Абонемент на «Бернабеу»',
+      member_seat_london: 'Абонемент «Арсенала»',
+      member_seat_new_york: 'Абонемент «Никс»',
+      member_beach_dubai: 'Пляжный клуб в Джумейре',
+      member_paddock_singapore: 'Paddock Club Гран-при Сингапура',
+      member_ringside_bangkok: 'Место у ринга на «Раджадамнерне»',
+      edu_mba: 'MBA в IESE',
     },
     brands,
   },

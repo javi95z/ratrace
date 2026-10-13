@@ -73,7 +73,7 @@ describe('the front door', () => {
     const user = userEvent.setup();
     renderGame(<Home />, memoryServices());
     await screen.findByRole('link', { name: 'New life' });
-    expect(within(screen.getByRole('group', { name: 'Language' })).getAllByRole('link')).toHaveLength(2);
+    expect(within(screen.getByRole('group', { name: 'Language' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['English', 'Español', 'Русский']);
     expect(screen.queryAllByRole('switch')).toEqual([]);
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const sheet = screen.getByRole('dialog', { name: 'Settings' });

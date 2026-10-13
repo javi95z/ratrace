@@ -116,6 +116,7 @@ describe('the settings of a life in progress', () => {
     expect(languages.map((link) => [link.textContent, link.getAttribute('href'), link.getAttribute('aria-current')])).toEqual([
       ['English', '/en/play', 'true'],
       ['Español', '/es/play', null],
+      ['Русский', '/ru/play', null],
     ]);
   });
 

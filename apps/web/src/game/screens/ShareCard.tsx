@@ -25,11 +25,15 @@ const browserLoader: SpriteLoader = (id) => {
   });
 };
 
-/** The two typefaces of the game, by the names the page gave them. */
+/**
+ * The two typefaces of the game, by the names the page gave them, each followed by the one the
+ * page keeps for the letters it does not draw: neither has Cyrillic.
+ */
 function families(): Record<'pixel' | 'sans', string> {
   const style = getComputedStyle(document.documentElement);
-  const named = (name: string, otherwise: string) => style.getPropertyValue(name).trim() || otherwise;
-  return { pixel: named('--font-jersey', 'monospace'), sans: named('--font-chakra', 'sans-serif') };
+  const named = (name: string) => style.getPropertyValue(name).trim();
+  const list = (first: string, second: string, otherwise: string) => [named(first) || otherwise, named(second)].filter(Boolean).join(', ');
+  return { pixel: list('--font-jersey', '--font-pixel-cyrillic', 'monospace'), sans: list('--font-chakra', '--font-reading-cyrillic', 'sans-serif') };
 }
 
 /**
@@ -47,8 +51,11 @@ export async function drawCard(ops: DrawOp[], load: SpriteLoader = browserLoader
 
   const fonts = families();
   const weight = { pixel: '400', sans: '400' };
-  // The typefaces are on the page already; this only waits until the canvas may use them.
-  await Promise.all(Object.values(fonts).map((family) => document.fonts?.load(`16px ${family}`).catch(() => undefined)));
+  // The typefaces are on the page already; this only waits until the canvas may use them. Each is asked for
+  // with the very words it will write (and the "x" it is measured by), so that the face holding their letters
+  // has arrived: a page of English never fetched the Cyrillic one.
+  const written = (font: 'pixel' | 'sans') => ops.map((op) => (op.kind === 'text' && op.font === font ? op.text : '')).join('');
+  await Promise.all([document.fonts?.load(`16px ${fonts.pixel}`, `x${written('pixel')}`), document.fonts?.load(`16px ${fonts.sans}`, written('sans'))].map((loading) => loading?.catch(() => undefined)));
   // The pixel typeface is drawn small inside its own size. The page scales it until its small letters
   // stand as tall as `PIXEL_X_HEIGHT` of the size asked for, and so does the card.
   ctx.font = `${weight.pixel} 100px ${fonts.pixel}`;

@@ -213,8 +213,30 @@ test('the game plays in Spanish', async ({ page }, info) => {
   expect(problems).toEqual([]);
 });
 
+test('the game plays in Russian', async ({ page }, info) => {
+  const problems = watch(page);
+  const w = WORDS.ru;
+  await startLife(page, 'ru', 'Медсестра');
+  await expect(page.getByRole('heading', { name: w.news })).toBeVisible();
+  await expect(page.getByText('22 года').first()).toBeVisible();
+  await playRound(page, 'ru');
+  await expect(page.getByText('С 22 до 24 лет')).toBeVisible();
+  await page.getByRole('button', { name: w.nextRound }).click();
+  await expect(page.getByText(w.round(2)).first()).toBeVisible();
+  await shot(page, 'news-ru', info.project.name);
+  // Nothing in English or Spanish is left on a Russian screen.
+  await expect(page.getByText(/Round \d|Net worth|Cash after|Ronda \d|Patrimonio/)).toHaveCount(0);
+  // And its letters are drawn by the typefaces kept for them, not by whatever the device has: the pixel one for titles, the other for sentences.
+  const drawn = await page.evaluate(async () => {
+    await document.fonts.ready;
+    return [...document.fonts].filter((face) => face.status === 'loaded' && /U\+4[0-9A-F]{2}/i.test(face.unicodeRange)).map((face) => face.family.replace(/["']/g, '')).sort();
+  });
+  expect([...new Set(drawn)]).toEqual(['Exo 2', 'Handjet']);
+  expect(problems).toEqual([]);
+});
+
 test('a first visit follows the language of the browser', async ({ browser }) => {
-  for (const [locale, path] of [['es-ES', '/es'], ['en-GB', '/en'], ['fr-FR', '/en']] as const) {
+  for (const [locale, path] of [['es-ES', '/es'], ['ru-RU', '/ru'], ['en-GB', '/en'], ['fr-FR', '/en']] as const) {
     const context = await browser.newContext({ locale });
     const page = await context.newPage();
     await page.goto('/');
@@ -342,6 +364,12 @@ test('the smallest phone, in Spanish, where the words are longest: every screen 
   expect(await measure(page, 'es', false, (name) => shot(page, `${name}-es-360`, info.project.name))).toEqual([]);
 });
 
+test('the smallest phone, in Russian, where the words are longer still: every screen still fits', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'a phone is where space runs out');
+  await page.setViewportSize({ width: 360, height: 740 });
+  expect(await measure(page, 'ru', false, (name) => shot(page, `${name}-ru-360`, info.project.name))).toEqual([]);
+});
+
 test('a double tap never does a second thing: no card answered, no round played, no ledger skipped', async ({ page }) => {
   const problems = watch(page);
   const w = WORDS.en;
@@ -461,9 +489,10 @@ test('the figures of the HUD are never cut short, in either language, on a small
   const longest = {
     en: ['+$9,999', '−$9,999', '+$99.9K', '−$999K', '+$9.99M', '−$9.99M', '$1.23B'],
     es: ['+9.999\u00a0$', '−9.999\u00a0$', '+99,9K\u00a0$', '−999K\u00a0$', '+9,99M\u00a0$', '−9,99M\u00a0$', '9.880M\u00a0$'],
+    ru: ['+9\u00a0999\u00a0$', '−9\u00a0999\u00a0$', '+99,9K\u00a0$', '−999K\u00a0$', '+9,99M\u00a0$', '−9,99M\u00a0$', '9\u00a0880M\u00a0$'],
   } as const;
   await startLife(page, 'en', 'Nurse');
-  for (const lang of ['en', 'es'] as const) {
+  for (const lang of ['en', 'es', 'ru'] as const) {
     // The same life, read in each language.
     await page.goto(`/${lang}/play`);
     await expect(page.getByRole('button', { name: WORDS[lang].toCards })).toBeVisible();
@@ -492,7 +521,7 @@ test('the figures of the HUD are never cut short, in either language, on a small
 test('a gauge of the economy is never cut short, at the width where the side column is tightest', async ({ page }, info) => {
   test.skip(info.project.name !== 'laptop', 'the side column is tightest at 1024px');
   await startLife(page, 'en', 'Nurse');
-  for (const lang of ['en', 'es'] as const) {
+  for (const lang of ['en', 'es', 'ru'] as const) {
     await page.goto(`/${lang}/play`);
     await expect(page.getByRole('button', { name: WORDS[lang].toCards })).toBeVisible();
     // The longest reading either language has, put on every gauge.
@@ -508,7 +537,7 @@ test('a gauge of the economy is never cut short, at the width where the side col
         value.textContent = original;
       }
       return { gauges: gauges.length, found };
-    }, lang === 'es' ? 'Desaceleración' : 'Stagflation');
+    }, { en: 'Stagflation', es: 'Desaceleración', ru: 'Восстановление' }[lang]);
     expect(cut.gauges, lang).toBe(4);
     expect(cut.found, lang).toEqual([]);
   }

@@ -19,22 +19,42 @@ const params = (sentence: string) => [...sentence.matchAll(/\{(\w+)[,}]/g)].map(
 
 const en = new Map(sentences(read('en')));
 const es = new Map(sentences(read('es')));
+const ru = new Map(sentences(read('ru')));
+/** Every language the game was translated into, from the English it is written in. */
+const translated = { es, ru };
+
+/**
+ * Russian words that are written with ё and here are not. The letter is optional in a newspaper
+ * and not in this game. Only forms that are never right with е are listed: «счета» (the accounts)
+ * and «в жилье» are, and are not here.
+ */
+const WITHOUT_YO = new RegExp(
+  `(?<![а-яё])(?:${[
+    'еще', 'ее', 'нее', 'мое', 'твое', 'свое', 'твоем', 'своем', 'партнер[а-я]*', 'учеба', 'учебы', 'учебе', 'учебу', 'учебой', 'заем', 'наем',
+    'прием', 'приема', 'приему', 'приемом', 'приеме', 'объем[а-я]*', 'счет', 'отчет[а-я]*', 'расчет[а-я]*', 'самолет[а-я]*', 'перелет[а-я]*', 'полет[а-я]*', 'вперед',
+    'идешь', 'живешь', 'берешь', 'даешь', 'ждешь', 'придешь', 'уйдешь', 'найдешь', 'начнешь', 'вернешь', 'поймешь', 'продаешь', 'отдаешь', 'сдаешь', 'остаешься', 'вернешься',
+    'идет', 'живет', 'дает', 'ждет', 'придет', 'уйдет', 'растет', 'несет', 'ведет', 'продает', 'отдает', 'сдает', 'остается', 'придется', 'удается', 'вернется', 'начнется', 'найдется',
+  ].join('|')})(?![а-яё])`,
+  'i',
+);
 
 describe('interface text', () => {
   it('exists for every language the game is routed in', () => {
-    expect([...routing.locales]).toEqual(['en', 'es']);
+    expect([...routing.locales]).toEqual(['en', 'es', 'ru']);
   });
 
-  it('has the same keys in both languages', () => {
-    expect([...es.keys()].sort()).toEqual([...en.keys()].sort());
+  it('has the same keys in every language', () => {
+    for (const [language, map] of Object.entries(translated)) expect([...map.keys()].sort(), language).toEqual([...en.keys()].sort());
   });
 
-  it('expects the same values in both languages', () => {
-    for (const [key, sentence] of en) expect(params(es.get(key) ?? ''), key).toEqual(params(sentence));
+  it('expects the same values in every language', () => {
+    for (const [language, map] of Object.entries(translated)) {
+      for (const [key, sentence] of en) expect(params(map.get(key) ?? ''), `${language}: ${key}`).toEqual(params(sentence));
+    }
   });
 
   it('has no empty sentence and no stray space', () => {
-    for (const map of [en, es]) {
+    for (const map of [en, es, ru]) {
       for (const [key, sentence] of map) {
         expect(sentence.trim().length, key).toBeGreaterThan(0);
         expect(sentence, key).toBe(sentence.trim());
@@ -44,7 +64,7 @@ describe('interface text', () => {
 
   it('is typeset one way throughout', () => {
     const broken = (all: Map<string, string>, test: (sentence: string) => boolean) => [...all].filter(([, sentence]) => test(sentence)).map(([path]) => path);
-    for (const all of [en, es]) {
+    for (const all of [en, es, ru]) {
       expect(broken(all, (s) => s.includes('...'))).toEqual([]);
       expect(broken(all, (s) => / - /.test(s))).toEqual([]);
       expect(broken(all, (s) => / [,.;!?](\s|$)/.test(s))).toEqual([]);
@@ -57,6 +77,27 @@ describe('interface text', () => {
     expect(broken(es, (s) => /[\d}]%/.test(s))).toEqual([]);
     expect(broken(es, (s) => (s.match(/\?/g)?.length ?? 0) !== (s.match(/¿/g)?.length ?? 0))).toEqual([]);
     expect(broken(es, (s) => (s.match(/!/g)?.length ?? 0) !== (s.match(/¡/g)?.length ?? 0))).toEqual([]);
+    // Russian: angle quotes, a percent sign against its number, a dash that is a dash, and ё wherever it belongs.
+    expect(broken(ru, (s) => /["“”‘’]/.test(s))).toEqual([]);
+    expect(broken(ru, (s) => /[\d}] %/.test(s))).toEqual([]);
+    expect(broken(ru, (s) => /[¿¡]/.test(s))).toEqual([]);
+    expect(broken(ru, (s) => /[а-яё] – | -- /i.test(s))).toEqual([]);
+    expect(broken(ru, (s) => WITHOUT_YO.test(s))).toEqual([]);
+  });
+
+  it('counts in Russian with every form the language has', () => {
+    // 1 год, 2 года, 5 лет, and 2,5 года: a count with a form missing is shown with nothing after its number.
+    const counted = [...ru].filter(([, sentence]) => /, plural,/.test(sentence));
+    expect(counted.length).toBeGreaterThanOrEqual([...en].filter(([, sentence]) => /, plural,/.test(sentence)).length);
+    for (const [key, sentence] of counted) {
+      for (const form of ['one', 'few', 'many', 'other']) expect(sentence, `${key}: ${form}`).toMatch(new RegExp(`[, ]${form} \\{`));
+    }
+  });
+
+  it('never tells a Russian player whether they are a man or a woman', () => {
+    // The two giveaways a reader can be searched for: an ending offered both ways, and «ты» with a verb in the past.
+    const telling = [...ru].filter(([, sentence]) => /\((?:а|ла|ая|на)\)|[а-яё]\/[а-яё]{1,3}(?![а-яё])/i.test(sentence) || /(?<![а-яё])ты (?:не )?(?:уже |ещё |так и не |сам[а-я]* )?[а-яё]+(?:л|ла|лся|лась)(?![а-яё])/i.test(sentence));
+    expect(telling.map(([key]) => key)).toEqual([]);
   });
 
   it('holds no sentence that nothing on screen uses', () => {
@@ -79,10 +120,19 @@ describe('interface text', () => {
     expect(unused).toEqual([]);
   });
 
-  it('is really translated: Spanish is not a copy of the English', () => {
-    /** Words that are the same in both languages. */
-    const same = new Set(['meta.title', 'effects.get', 'finance.market.crypto', 'finance.property.variable', 'news.crypto']);
-    const copies = [...en].filter(([key, sentence]) => es.get(key) === sentence && !same.has(key)).map(([key]) => key);
-    expect(copies).toEqual([]);
+  it('is really translated: no language is a copy of the English', () => {
+    /** Words that are the same in English and in another language. A sentence of placeholders and signs alone is the same in all. */
+    const same: Record<string, Set<string>> = {
+      es: new Set(['meta.title', 'finance.market.crypto', 'finance.property.variable', 'news.crypto']),
+      ru: new Set(['meta.title']),
+    };
+    const worded = (sentence: string) => /\p{L}/u.test(sentence.replace(/\{[^{}]*\}/g, ''));
+    for (const [language, map] of Object.entries(translated)) {
+      const copies = [...en].filter(([key, sentence]) => worded(sentence) && map.get(key) === sentence && !same[language].has(key)).map(([key]) => key);
+      expect(copies, language).toEqual([]);
+    }
+    // And Russian is written in its own letters: a sentence with words has Cyrillic ones.
+    const latinOnly = [...ru].filter(([key, sentence]) => worded(sentence) && !/[а-яё]/i.test(sentence) && !same.ru.has(key)).map(([key]) => key);
+    expect(latinOnly).toEqual([]);
   });
 });
