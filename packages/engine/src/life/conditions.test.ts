@@ -121,7 +121,7 @@ describe('conditionHolds', () => {
     const p = player((x) => {
       x.deposit = 5;
       x.positions.coin_major = { value: 5, basis: 5 };
-      x.life.items.push({ itemId: 'car_basic', value: 1, roundsLeft: null });
+      x.life.items.push({ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 });
     });
     expect(holds({ holds: 'deposit' }, p)).toBe(true);
     expect(holds({ holds: 'deposit' })).toBe(false);
@@ -129,6 +129,9 @@ describe('conditionHolds', () => {
     expect(holds({ holds: 'gold' }, p)).toBe(false);
     expect(holds({ ownsLadder: 'car' }, p)).toBe(true);
     expect(holds({ ownsLadder: 'watch' }, p)).toBe(false);
+    expect(holds({ lacksLadder: 'car' }, p)).toBe(false);
+    expect(holds({ lacksLadder: 'watch' }, p)).toBe(true);
+    expect(holds({ lacksLadder: 'car' })).toBe(true);
     expect(holds({ notItems: ['watch_gold'] }, p)).toBe(true);
     expect(holds({ notItems: ['watch_gold', 'car_basic'] }, p)).toBe(false);
   });

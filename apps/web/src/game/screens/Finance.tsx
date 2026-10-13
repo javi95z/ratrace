@@ -13,6 +13,7 @@ import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { useShown } from './Hud';
+import { ItemCost } from './ItemCost';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'debt', 'lifestyle', 'shop', 'taxes'];
@@ -721,6 +722,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
         </div>
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
         {item.kind === 'durable' && !held && quote.forSale ? <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(quote.resale) })}</p> : null}
+        <ItemCost quote={quote} />
 
         {inBasket ? (
           <Button wide onClick={() => done(setOrder((order) => order.type === 'buyItem' && order.itemId === item.id, null))}>
@@ -837,7 +839,10 @@ function Taxes() {
 
 // ------------------------------------------------------------------------------------------------
 
-/** The orders of the round so far, in the order they will run, each removable. */
+/**
+ * The orders of the round so far, in the order they will run, each removable. A move already
+ * decided on a card heads the list: it happens with the round like the rest, and cannot be undone.
+ */
 export function BasketList() {
   const t = useT('finance');
   const labels = useT('orders');
@@ -846,10 +851,20 @@ export function BasketList() {
   const orders = useGame((s) => s.orders);
   const removeOrder = useGame((s) => s.removeOrder);
   if (!view) return null;
-  if (orders.length === 0) return <p className="py-1 text-[14px] text-ink-300">{t('basketEmpty')}</p>;
+  const moving = view.player.life.movingTo;
+  if (orders.length === 0 && !moving) return <p className="py-1 text-[14px] text-ink-300">{t('basketEmpty')}</p>;
 
   return (
     <ol aria-label={t('basketTitle')} className="flex flex-col gap-2">
+      {moving ? (
+        <li className="frame flex min-h-11 items-center justify-between gap-3 bg-night-600 px-3 py-1">
+          <span className="flex min-w-0 items-center gap-2">
+            <Sprite id={cityIcon(moving)} />
+            <span className="min-w-0 truncate">{labels('move', { city: words.names.cities[moving] })}</span>
+          </span>
+          <Tag>{t('decided')}</Tag>
+        </li>
+      ) : null}
       {orders.map((order, i) => {
         const label = orderLabel(words, labels, view.player, order);
         return (

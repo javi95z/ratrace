@@ -53,6 +53,22 @@ describe.each(LOCALES)('content text: %s', (locale) => {
     expect(keys(text.assetClasses)).toEqual([...new Set(content.assets.map((a) => a.class))].sort());
   });
 
+  it('says what follows every choice the dice do not decide, and leaves the rest to the dice', () => {
+    for (const card of content.cards) {
+      card.options.forEach((option, i) => {
+        const written = text.cards[card.id].options[i];
+        const dice = (option.outcomes ?? []).length > 0;
+        if (dice) expect(written.after, `${locale} ${card.id} ${i}`).toBeUndefined();
+        else {
+          expect(written.after?.length ?? 0, `${locale} ${card.id} ${i}`).toBeGreaterThan(12);
+          // Short enough to read at a glance under the card.
+          expect(written.after?.length ?? 0, `${locale} ${card.id} ${i}`).toBeLessThanOrEqual(90);
+          expect(written.after, `${locale} ${card.id} ${i}`).toMatch(/[.!?]$/);
+        }
+      });
+    }
+  });
+
   it('has text for every card, with a label for each option and a line for each outcome', () => {
     expect(keys(text.cards)).toEqual(ids(content.cards));
     expect(keys(text.crises)).toEqual(ids(content.crises));

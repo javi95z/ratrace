@@ -75,7 +75,7 @@ export function validateCards(c: Content): string[] {
     minNetWorth: whole, maxNetWorth: whole, cityPropertyReturnAtMostBp: whole,
     minFinanceSkill: skill, maxFinanceSkill: skill,
     flags: flagList, notFlags: flagList,
-    holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
+    holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
     insured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
   };

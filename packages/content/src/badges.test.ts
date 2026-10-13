@@ -58,7 +58,7 @@ const hold = (assetId: string, value = usd(1_000), basis = value) => (p: PlayerS
   p.positions[assetId] = { value, basis };
 };
 const own = (...itemIds: string[]) => (p: PlayerState) => {
-  for (const itemId of itemIds) p.life.items.push({ itemId, value: 0, roundsLeft: null });
+  for (const itemId of itemIds) p.life.items.push({ itemId, value: 0, roundsLeft: null, paid: 0 });
 };
 const home = (typeId: string, rented = false) => (p: PlayerState) => {
   p.properties.push({ id: `p-${p.properties.length}`, cityId: p.cityId, typeId, value: usd(100_000), basis: usd(100_000), rented, mortgageId: null });

@@ -2,7 +2,7 @@
 
 import { cardArt } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
-import type { CardDef, GameEvent, OptionPreview } from '@ratrace/engine';
+import type { CardDef, GameEvent, OptionPreview, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useMemo } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
@@ -30,13 +30,11 @@ function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: Effec
   );
 }
 
-/** One option of a card: its label, what it costs and does, and the odds of each thing it may bring. */
-function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean }) {
+/** What one option of a card offers: its label, what it costs and does, and the odds of each thing it may bring. */
+function Offer({ def, index, preview, world }: { def: CardDef; index: number; preview: OptionPreview; world: WorldState }) {
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
-  const world = useGame((s) => s.view?.timeline[s.view.round]);
-  if (!world) return null;
   const option = def.options[index];
   const written = words.text.cards[def.id].options[index];
   let total = 0;
@@ -45,12 +43,7 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
   const dim = preview.available ? '' : 'opacity-50';
 
   return (
-    <button
-      type="button"
-      onClick={onPick}
-      disabled={disabled || !preview.available}
-      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
-    >
+    <>
       <span className="flex items-start justify-between gap-2">
         <span className={`pixel text-[16px] ${dim}`}>{written.label}</span>
         {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
@@ -64,6 +57,22 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
           <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects)} empty={t('nothing')} />
         </span>
       ))}
+    </>
+  );
+}
+
+/** One option of a card, to be chosen. */
+function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean }) {
+  const world = useGame((s) => s.view?.timeline[s.view.round]);
+  if (!world) return null;
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      disabled={disabled || !preview.available}
+      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
+    >
+      <Offer def={def} index={index} preview={preview} world={world} />
     </button>
   );
 }
@@ -133,11 +142,18 @@ export function CardStage() {
   );
 }
 
-/** What the card just answered did: the choice made, what the dice said, and the money. */
+/**
+ * What the card just answered did: its picture again, the choice made and what followed from it,
+ * what the dice said when there were dice, and everything it changed. Nothing is worked out
+ * here: the figures are the engine's.
+ */
 export function Outcome() {
   const t = useT('cards');
-  const { text, fmt } = useWords();
+  const effects = useT('effects');
+  const words = useWords();
+  const { content, text, fmt } = words;
   const events = useGame((s) => s.cardEvents);
+  const offered = useGame((s) => s.offered);
   const cards = events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
   const money = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
 
@@ -146,17 +162,45 @@ export function Outcome() {
       <h2 className="pixel text-center text-[20px] text-gold-500">{t('results')}</h2>
       <Celebrations />
       {cards.map((event) => {
+        const def = content.cards.find((card) => card.id === event.cardId);
         const written = text.cards[event.cardId];
         const option = written.options[event.option];
+        const chosen = def?.options[event.option];
+        const rolled = event.outcome === null ? undefined : chosen?.outcomes?.[event.outcome];
+        // The card as it stood when it was answered. Without it, as after a reload, the result is told without the odds.
+        const was = offered && offered.cardId === event.cardId ? offered : null;
+        const world = was?.world;
+        const odds = was?.options[event.option]?.outcomes ?? [];
+        let total = 0;
+        for (const outcome of odds) total += outcome.weight;
+        const tags = world ? [...effectTags(words, effects, world, chosen?.effects), ...effectTags(words, effects, world, rolled?.effects)] : [];
+
         return (
-          <Panel key={event.cardId} className="animate-rise">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="pixel text-[16px]">{written.title}</h3>
-              {event.cash !== 0 ? <Tag tone={event.cash > 0 ? 'good' : 'bad'}>{fmt.signed(event.cash)}</Tag> : null}
-            </div>
-            <p className="mt-1 text-[13px] text-ink-300">{t('chose', { label: option.label })}</p>
-            {event.outcome !== null ? <p className="mt-1.5 text-[15px] leading-snug">{option.outcomes[event.outcome]}</p> : null}
-          </Panel>
+          <div key={event.cardId} className="flex flex-col gap-3">
+            {/* As wide as its picture, like the card it was. */}
+            <article className="frame frame-cream mx-auto max-w-full animate-rise bg-cream text-ink-900" style={{ width: 'calc(288px * var(--art) + 4px)' }}>
+              <div className="border-2 border-cream leading-[0]">
+                <Sprite id={cardArt[event.cardId] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
+              </div>
+              <div className="px-3 pb-3 pt-2">
+                <h3 className="pixel text-[19px]">{written.title}</h3>
+                <p className="pixel mt-0.5 text-[13px] uppercase tracking-wider text-ink-500">{t('chose', { label: option.label })}</p>
+                {/* What followed: the line of the outcome the dice gave, or the line of the choice itself. */}
+                <p className="mt-2 text-[15px] leading-snug">{event.outcome !== null ? option.outcomes[event.outcome] : option.after}</p>
+                {event.outcome !== null && total > 0 ? (
+                  <p className="mt-2 flex items-center gap-2 text-[13px] text-ink-700">
+                    <span className="pixel bg-ink-900 px-1.5 py-0.5 text-[13px] text-gold-500">{t('chance', { pct: chancePct(odds[event.outcome]?.weight ?? 0, total) })}</span>
+                    {t('rolled')}
+                  </p>
+                ) : null}
+              </div>
+            </article>
+
+            <Panel title={t('changes')} label={t('changes')} className="animate-rise">
+              <Tags cash={event.cash} tags={tags} empty={t('nothing')} />
+            </Panel>
+
+          </div>
         );
       })}
       {money.length > 0 ? (

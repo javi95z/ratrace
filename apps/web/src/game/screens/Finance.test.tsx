@@ -238,6 +238,31 @@ describe('what belongs to a city', () => {
   });
 });
 
+describe('a thing the player owns, in the shop', () => {
+  it('shows what it cost beside the price to sell it at, and nothing of the kind for a thing not owned', async () => {
+    const { services, session } = await inFinance('nurse');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    await toFinance(session);
+    const [casio] = (await stateOf(services)).player.life.items;
+    expect(casio.paid).toBe(content.items.find((item) => item.id === 'watch_casio')?.price);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+
+    await user.click(button(/Casio F-91W/));
+    const mine = screen.getByRole('dialog', { name: 'Casio F-91W' });
+    expect(within(mine).getByRole('button', { name: `Sell for ${fmt.money(casio.value)}` })).toBeTruthy();
+    expect(within(mine).getByText(`It cost you ${fmt.money(casio.paid)}`)).toBeTruthy();
+    expect(within(mine).getByText(`Sell it today and you lose ${fmt.money(casio.paid - casio.value)}`)).toBeTruthy();
+    await user.click(within(mine).getByRole('button', { name: 'Close' }));
+
+    await user.click(button(/Soho House/));
+    const notMine = screen.getByRole('dialog', { name: 'Soho House' });
+    expect(within(notMine).queryByText(/It cost you/)).toBeNull();
+    expect(within(notMine).queryByText(/Sell it today/)).toBeNull();
+  });
+});
+
 describe('a property the player owns', () => {
   it('opens on a tap: what it is worth, what it would bring, what is owed and what a sale would leave', async () => {
     // The heir starts with a flat in Madrid, lived in and owned outright.
@@ -261,6 +286,45 @@ describe('a property the player owns', () => {
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(button('No orders')).toBeTruthy();
+  });
+});
+
+describe("this round's orders", () => {
+  it('list a move the player orders, which can be taken back', async () => {
+    const { services } = await inFinance('heir');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+    const cities = screen.getByRole('dialog', { name: 'Move to another city' });
+    await user.click(within(cities).getAllByRole('button', { name: 'Move here' })[0]);
+
+    await user.click(button('1 order'));
+    const orders = screen.getByRole('dialog', { name: "This round's orders" });
+    expect(within(orders).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(orders).getByText(/^Move to /)).toBeTruthy();
+    await user.click(within(orders).getByRole('button', { name: /^Remove: Move to / }));
+    expect(within(orders).getByText(/^Nothing yet/)).toBeTruthy();
+  });
+
+  it('list a move a card already decided, at the top and with no way to take it back', async () => {
+    const { services, session } = await inFinance('nurse');
+    // The same life, having said yes on a card to a job in London.
+    const moving = (): GameView => ({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, movingTo: 'london' } } });
+    const leaving: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: moving, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: leaving });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await screen.findByRole('tab', { name: 'Lifestyle' });
+
+    // The basket still counts only what the player ordered: the move is not theirs to remove.
+    await user.click(button('No orders'));
+    const orders = screen.getByRole('dialog', { name: "This round's orders" });
+    const [move] = within(orders).getAllByRole('listitem');
+    expect(within(move).getByText('Move to London')).toBeTruthy();
+    expect(within(move).getByText('Already decided')).toBeTruthy();
+    expect(within(move).queryByRole('button')).toBeNull();
+    expect(within(orders).queryByText(/^Nothing yet/)).toBeNull();
   });
 });
 

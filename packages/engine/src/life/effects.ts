@@ -53,11 +53,13 @@ function buyItem(p: PlayerState, order: NonNullable<Effects['buyItem']>, at: Sit
   if (p.life.items.some((owned) => owned.itemId === order.itemId)) return;
   const item = itemOf(at.content, order.itemId);
   const price = indexed(item.price, at.world);
-  p.cash -= mulDiv(price, order.pricePct, 100);
+  const paid = mulDiv(price, order.pricePct, 100);
+  p.cash -= paid;
   p.life.items.push({
     itemId: item.id,
     value: item.kind === 'durable' ? mulDiv(price, item.resaleStartPct, 100) : 0,
     roundsLeft: item.kind === 'experience' ? item.boostRounds : null,
+    paid,
   });
   if (!p.life.collection.includes(item.id)) p.life.collection.push(item.id);
 }

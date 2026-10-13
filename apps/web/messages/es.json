@@ -204,7 +204,9 @@
     "toFinance": "A tus finanzas",
     "next": "Siguiente carta",
     "swipe": "Desliza la carta o toca una opción",
-    "choices": "Tus opciones: {title}"
+    "choices": "Tus opciones: {title}",
+    "changes": "Lo que cambia",
+    "rolled": "de probabilidad de que saliera esto"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -395,7 +397,11 @@
       "cardOnly": "Aquí no se vende. Te lo tiene que ofrecer la vida.",
       "resale": "Mañana se revendería por unos {amount}",
       "spent": "Ya disfrutado. El estatus se apaga en {years} años.",
-      "local": "Solo en {city}. Si te mudas, lo pierdes."
+      "local": "Solo en {city}. Si te mudas, lo pierdes.",
+      "paid": "Te costó {amount}",
+      "gift": "No te costó nada",
+      "sellLoss": "Si lo vendes hoy, pierdes {amount}",
+      "sellGain": "Si lo vendes hoy, ganas {amount}"
     },
     "taxes": {
       "income": "Lo que entra",
@@ -411,7 +417,8 @@
       "shortfall": "Si falta dinero, sale primero de tu ahorro y después va a la tarjeta de crédito.",
       "escapeTitle": "Prueba de salida",
       "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales."
-    }
+    },
+    "decided": "Ya decidido"
   },
   "resolve": {
     "title": "Dos años después",
@@ -473,7 +480,71 @@
     "leaveHint": "Tu vida se guarda después de cada paso.",
     "itemWorth": "Hoy se vendería por {amount}",
     "itemWhere": "Se vende o se cancela en la pestaña Tienda.",
-    "itemKept": "No se puede vender."
+    "itemKept": "No se puede vender.",
+    "dating": "Saliendo con alguien",
+    "married": "En matrimonio",
+    "yours": "Así vives",
+    "insured": "Contratado",
+    "aboutLifestyle": "Tu estilo de vida multiplica lo que te cuesta vivir cada año. Los dos más altos dan estatus.",
+    "aboutRent": "Mientras no tengas casa propia en {city}, vives de alquiler. Elegir entre habitación y piso cambia el gasto y el estatus.",
+    "rentCost": "El coste es el de tu vida entera con ese alquiler, al estilo de vida que llevas.",
+    "aboutInsurance": "Pagas una prima cada año. A cambio, cuando llega una carta mala, el seguro paga parte de la factura.",
+    "pays": "Paga el {pct} % en «{card}»",
+    "opens": "Abre una salida en «{card}»",
+    "changedIn": "Se cambia en la pestaña Vida, en la fase de finanzas."
+  },
+  "balance": {
+    "balance": "Saldo",
+    "rate": "{rate} al año",
+    "cash": {
+      "title": "Efectivo",
+      "about": "El dinero que tienes a mano. De aquí salen tus gastos, tus compras y tus impuestos.",
+      "note": "No rinde nada, y la inflación se lo come. Guarda lo justo para la ronda y pon el resto a trabajar."
+    },
+    "savings": {
+      "title": "Ahorro",
+      "about": "Un depósito sin riesgo. Paga un interés que sigue a los tipos del banco central.",
+      "rate": "Interés",
+      "earns": "Lo que renta",
+      "note": "Si un día te falta efectivo, el juego lo saca primero de aquí, antes de cargarlo a la tarjeta."
+    },
+    "pension": {
+      "title": "Plan de pensiones",
+      "about": "Dinero apartado para el final. Lo que aportas reduce los impuestos de esa ronda.",
+      "follows": "Sigue a",
+      "unlocks": "Se desbloquea a los",
+      "note": "No se puede tocar antes, pase lo que pase. Tampoco lo pierdes en una quiebra, y cuenta en tu patrimonio."
+    },
+    "investments": {
+      "title": "Inversiones",
+      "about": "Lo que tienes en los mercados, a su precio de hoy.",
+      "none": "Aún no tienes inversiones. Se compran en la pestaña Mercado.",
+      "gain": "{amount} de ganancia",
+      "loss": "{amount} de pérdida",
+      "note": "La ganancia es sobre lo que pagaste. Al vender, Hacienda se lleva su parte de ella."
+    },
+    "homes": {
+      "title": "Viviendas",
+      "about": "Tus inmuebles, a lo que valen hoy. La hipoteca de cada uno cuenta aparte, en Deudas.",
+      "note": "Se venden y se alquilan en la pestaña Vivienda."
+    },
+    "things": {
+      "title": "Cosas",
+      "about": "Lo que tienes, a lo que te darían hoy por ello. Toca una para verla.",
+      "noValue": "Sin reventa",
+      "note": "Casi todo pierde valor cada año. Unos pocos relojes, bolsos y obras de arte lo guardan o lo ganan."
+    },
+    "debts": {
+      "title": "Deudas",
+      "about": "Todo lo que debes. Cada ronda pagas intereses y devuelves una parte.",
+      "yearly": "Lo que pagas entre todas",
+      "note": "La tarjeta de crédito es la más cara y no tiene plazo: se llena sola cuando falta efectivo. Quítatela la primera."
+    },
+    "netWorth": {
+      "title": "Patrimonio",
+      "about": "Todo lo que tienes menos todo lo que debes. Es la mitad de tu puntuación; la otra es el estatus.",
+      "realHint": "El que cuenta para la puntuación"
+    }
   },
   "end": {
     "title": "Fin",

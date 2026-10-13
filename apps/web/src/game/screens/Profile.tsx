@@ -1,15 +1,20 @@
 'use client';
 
-import { familyArt, itemArt } from '@ratrace/content';
-import { cashflow, focusLeft, homeOf, netWorth, quoteItem } from '@ratrace/engine';
+import { familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { cashflow, focusLeft, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, OwnedItem } from '@ratrace/engine';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useSaving, useT, useWords } from '@/game/context';
+import { insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { BalanceSheet } from './Balance';
+import type { BalanceLine } from './Balance';
 import { useShown } from './Hud';
+import { ItemCost } from './ItemCost';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -30,6 +35,8 @@ export function ProfileBody() {
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => text.insurance[kind]);
   const flow = cashflow(content, shown);
   const [open, setOpen] = useState<string | null>(null);
+  const [about, setAbout] = useState<About | null>(null);
+  const [line, setLine] = useState<BalanceLine | null>(null);
   // Looked up afresh on every draw: a thing sold or lapsed while its sheet is open closes it.
   const opened = life.items.find((owned) => owned.itemId === open);
 
@@ -61,14 +68,23 @@ export function ProfileBody() {
               {familyArt({ partner: life.partner, married: Object.hasOwn(life.flags, 'married'), dating: Object.hasOwn(life.flags, 'dating'), children: life.children, childRounds: content.life.childRounds }).map((sprite) => (
                 <Sprite key={sprite} id={sprite} />
               ))}
-              {life.partner ? t('partner') : t('single')}
+              {/* The words follow the picture: seeing someone is not yet living with them, and neither is being married. */}
+              {t(life.partner ? (Object.hasOwn(life.flags, 'married') ? 'married' : 'partner') : Object.hasOwn(life.flags, 'dating') ? 'dating' : 'single')}
             </span>
           }
           right={life.children.length > 0 ? t('children', { count: life.children.length }) : undefined} />
-        <Row left={t('lifestyle')} right={text.lifestyleTiers[p.lifestyleTier]} />
-        <Row left={t('home')} sub={names.cities[p.cityId]} right={home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]} />
-        <Row left={t('insurance')} right={insured.length > 0 ? <span className="font-sans text-[13px]">{insured.join(', ')}</span> : t('uninsured')} />
+        {/* Each of these opens what it is, what it costs and what it gives. Changing it is done in the finances. */}
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('lifestyle')} className="block w-full text-left">
+          <Row left={t('lifestyle')} right={<>{text.lifestyleTiers[p.lifestyleTier]}<More /></>} />
+        </button>
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('home')} className="block w-full text-left">
+          <Row left={t('home')} sub={names.cities[p.cityId]} right={<>{home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]}<More /></>} />
+        </button>
+        <button type="button" aria-haspopup="dialog" onClick={() => setAbout('insurance')} className="block w-full text-left">
+          <Row left={t('insurance')} right={<>{insured.length > 0 ? <span className="font-sans text-[13px]">{insured.join(', ')}</span> : t('uninsured')}<More /></>} />
+        </button>
       </Panel>
+      {about ? <AboutSheet about={about} shown={shown} onClose={() => setAbout(null)} /> : null}
 
       <Panel title={t('income')}>
         <Row left={t('salary')} right={<span className="text-teal-300">{fmt.signed(flow.salaryAnnual)}</span>} />
@@ -76,20 +92,35 @@ export function ProfileBody() {
         <Row left={t('expenses')} right={<span className="text-wine-300">{fmt.signed(-flow.expensesAnnual)}</span>} />
       </Panel>
 
-      <Panel title={t('balance')}>
-        <Row left={t('cash')} right={fmt.money(p.cash)} />
-        <Row left={t('savings')} right={fmt.money(p.deposit)} />
-        <Row left={t('pension')} right={fmt.money(p.pension)} />
-        <Row left={t('investments')} right={fmt.money(invested)} />
-        <Row left={t('homes')} right={fmt.money(homes)} />
-        <Row left={t('things')} right={fmt.money(things)} />
-        <Row left={t('debts')} right={<span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span>} />
-        <Row
-          className="mt-1 border-t-2 border-night-900 pt-2"
-          left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
-          right={<span className="text-[19px] text-gold-500">{fmt.money(netWorth(p))}</span>}
-        />
+      <Panel title={t('balance')} label={t('balance')}>
+        {/* Every line opens what it is made of. */}
+        {(
+          [
+            ['cash', t('cash'), fmt.money(p.cash)],
+            ['savings', t('savings'), fmt.money(p.deposit)],
+            ['pension', t('pension'), fmt.money(p.pension)],
+            ['investments', t('investments'), fmt.money(invested)],
+            ['homes', t('homes'), fmt.money(homes)],
+            ['things', t('things'), fmt.money(things)],
+          ] as const
+        ).map(([line, label, amount]) => (
+          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="block w-full text-left">
+            <Row left={label} right={<>{amount}<More /></>} />
+          </button>
+        ))}
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="block w-full text-left">
+          <Row left={t('debts')} right={<><span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span><More /></>} />
+        </button>
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('netWorth')} className="block w-full text-left">
+          <Row
+            className="mt-1 border-t-2 border-night-900 pt-2"
+            left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
+            right={<><span className="text-[19px] text-gold-500">{fmt.money(netWorth(p))}</span><More /></>}
+          />
+        </button>
       </Panel>
+      {/* One of the things owned is opened from the list of them: the list gives way to it. */}
+      {line ? <BalanceSheet line={line} shown={shown} onClose={() => setLine(null)} onItem={(itemId) => (setLine(null), setOpen(itemId))} /> : null}
 
       <Panel title={t('owned')}>
         {life.items.length === 0 ? (
@@ -111,6 +142,129 @@ export function ProfileBody() {
       </Panel>
       {opened ? <OwnedSheet owned={opened} shown={shown} onClose={() => setOpen(null)} /> : null}
     </div>
+  );
+}
+
+type About = 'lifestyle' | 'home' | 'insurance';
+
+/** The mark of a row that opens. */
+const More = () => (
+  <span aria-hidden className="ml-1.5 text-[11px] text-ink-300">
+    ▸
+  </span>
+);
+
+/** One choice among several, as a line: its picture, its name, what it costs a year and what it gives. */
+function Choice({ icon, name, cost, status, on, onLabel, children }: { icon: string; name: string; cost: string; status?: number; on: boolean; onLabel: string; children?: ReactNode }) {
+  const shop = useT('finance.shop');
+  return (
+    <li aria-current={on ? 'true' : undefined} className={`flex items-start gap-3 px-2.5 py-2 ${on ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'}`}>
+      <Bare className="size-9">
+        <Sprite id={icon} />
+      </Bare>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="pixel text-[16px]">{name}</span>
+          <span className="pixel shrink-0 text-[15px] text-gold-500">{cost}</span>
+        </div>
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          {on ? <Tag tone="good">{onLabel}</Tag> : null}
+          {status ? <Tag tone="good">{shop('status', { n: status })}</Tag> : null}
+        </div>
+        {children}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * How the player lives, where, and what they are insured against: every choice there is, what
+ * each costs a year and what it gives, the one in force marked. To be read; the finances change it.
+ */
+function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; onClose(): void }) {
+  const t = useT('profile');
+  const common = useT('common');
+  const life = useT('finance.lifestyle');
+  const estate = useT('finance.property');
+  const { content, text, names, fmt } = useWords();
+  const p = shown.player;
+  const living = quoteLiving(content, shown);
+  const perYear = (cents: number) => common('perYear', { amount: fmt.money(cents) });
+  const home = homeOf(p, content);
+
+  let body: ReactNode;
+  if (about === 'lifestyle') {
+    body = (
+      <>
+        <p className="text-[14px] leading-snug">{t('aboutLifestyle')}</p>
+        <ul className="flex flex-col gap-2">
+          {text.lifestyleTiers.map((name, tier) => (
+            <Choice key={tier} icon={lifestyleArt[tier]} name={name} cost={perYear(living.tiers[tier])} status={content.life.lifestyleStatus[tier]} on={tier === p.lifestyleTier} onLabel={t('yours')}>
+              {tier < p.life.minLifestyleTier ? <p className="mt-1 text-[12px] text-wine-300">{life('tierFloor')}</p> : null}
+            </Choice>
+          ))}
+        </ul>
+      </>
+    );
+  } else if (about === 'home') {
+    const owned = home ? quoteOwnedProperty(content, shown, home.id) : null;
+    body = home && owned ? (
+      <>
+        <div className="flex justify-center">
+          <Bare className="p-1 leading-[0]">
+            <Sprite id={propertyArt(home.typeId)} fallback={{ w: 128, h: 128 }} />
+          </Bare>
+        </div>
+        <p className="text-center text-[14px] leading-snug">{life('ownerNote')}</p>
+        <Panel>
+          <Row left={text.propertyTypes[home.typeId]} sub={names.cities[home.cityId]} right={owned.status > 0 ? <Tag tone="good">{estate('status', { n: owned.status })}</Tag> : undefined} />
+          <Row left={estate('worth')} right={<span className="text-gold-500">{fmt.money(owned.value)}</span>} />
+          <Row left={estate('owed')} right={<span className={owned.mortgage ? 'text-wine-300' : ''}>{fmt.money(owned.mortgage?.principal ?? 0)}</span>} />
+        </Panel>
+      </>
+    ) : (
+      <>
+        <p className="text-[14px] leading-snug">{t('aboutRent', { city: names.cities[p.cityId] })}</p>
+        <ul className="flex flex-col gap-2">
+          {text.rentTiers.map((name, tier) => (
+            <Choice key={tier} icon={rentTierIcon[tier]} name={name} cost={living.rentTiers ? perYear(living.rentTiers[tier]) : ''} status={content.life.rentTierStatus[tier]} on={tier === p.life.rentTier} onLabel={t('yours')} />
+          ))}
+        </ul>
+        <p className="text-[12px] text-ink-300">{t('rentCost')}</p>
+      </>
+    );
+  } else {
+    body = (
+      <>
+        <p className="text-[14px] leading-snug">{t('aboutInsurance')}</p>
+        <ul className="flex flex-col gap-2">
+          {INSURANCES.map((kind) => {
+            const cover = insuranceCover(content, kind);
+            return (
+              <Choice key={kind} icon={insuranceArt[kind]} name={text.insurance[kind]} cost={perYear(living.insurance[kind])} on={p.life.insurance[kind]} onLabel={t('insured')}>
+                <ul className="mt-1.5 flex flex-col gap-0.5 text-[13px] leading-snug text-ink-200">
+                  {cover.pays.map(({ cardId, pct }) => (
+                    <li key={cardId}>{t('pays', { pct, card: text.cards[cardId].title })}</li>
+                  ))}
+                  {cover.opens.map((cardId) => (
+                    <li key={cardId}>{t('opens', { card: text.cards[cardId].title })}</li>
+                  ))}
+                </ul>
+              </Choice>
+            );
+          })}
+        </ul>
+      </>
+    );
+  }
+
+  return (
+    <Sheet open onClose={onClose} title={t(about === 'lifestyle' ? 'lifestyle' : about === 'home' ? 'home' : 'insurance')} closeLabel={common('close')}>
+      <div className="flex flex-col gap-3">
+        {body}
+        <p className="text-center text-[12px] text-ink-300">{t('changedIn')}</p>
+      </div>
+    </Sheet>
   );
 }
 
@@ -138,6 +292,7 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
         </div>
         {item.kind === 'durable' ? <p className="text-center text-[14px]">{t('itemWorth', { amount: fmt.money(quote.resale) })}</p> : null}
+        <ItemCost quote={quote} />
         {owned.roundsLeft !== null ? <p className="text-center text-[14px] text-ink-300">{shop('spent', { years: owned.roundsLeft * content.yearsPerRound })}</p> : null}
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{shop('local', { city: names.cities[shown.player.cityId] })}</p> : null}
         <p className="text-center text-[12px] text-ink-300">{t(quote.sellable ? 'itemWhere' : 'itemKept')}</p>

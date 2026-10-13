@@ -66,6 +66,7 @@ function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): Reje
     itemId,
     value: resale,
     roundsLeft: item.kind === 'experience' ? item.boostRounds : null,
+    paid: price,
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
   return null;

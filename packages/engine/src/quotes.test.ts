@@ -103,14 +103,14 @@ describe('quoteItem', () => {
       expect(buy(quote.price).player.life.items[0].value).toBe(quote.resale);
       expect(quote).toMatchObject({ owned: false, forSale: true });
     }
-    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, forSale: true, soldHere: true, local: false, sellable: false });
+    expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toEqual({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, paid: null, forSale: true, soldHere: true, local: false, sellable: false });
   });
 
   it('says whether the owner may sell it, exactly as the sell order will decide', () => {
     const special = fixtureContent();
     special.items = special.items.map((item) => (item.id === 'watch_gold' ? { ...item, cardOnly: true } : item));
     const base = createGame({ content: special, start: fixtureStart() }, 'quotes');
-    const owning = (itemId: string, roundsLeft: number | null) => withPlayer(special, base, {}, { items: [{ itemId, value: 100_000, roundsLeft }], collection: [itemId] });
+    const owning = (itemId: string, roundsLeft: number | null) => withPlayer(special, base, {}, { items: [{ itemId, value: 100_000, roundsLeft, paid: 150_000 }], collection: [itemId] });
     const cases: Array<[GameState, string]> = [
       [owning('car_basic', null), 'car_basic'],
       [owning('club', null), 'club'],
@@ -128,7 +128,7 @@ describe('quoteItem', () => {
   });
 
   it('says what an item already owned would sell for, and what a card-only item is', () => {
-    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null }], collection: ['car_basic'] });
+    const owner = withPlayer(content, game(0), {}, { items: [{ itemId: 'car_basic', value: 700_000, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
     expect(quoteItem(content, viewOf(owner), 'car_basic')).toMatchObject({ owned: true, resale: 700_000 });
     const special = fixtureContent();
     special.items = special.items.map((item) => (item.id === 'trip' ? { ...item, cardOnly: true } : item));

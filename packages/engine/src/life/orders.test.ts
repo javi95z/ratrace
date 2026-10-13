@@ -89,7 +89,7 @@ describe('item orders', () => {
     const { p, run } = setup();
     expect(run({ type: 'buyItem', itemId: 'car_basic' })).toBeNull();
     expect(p.cash).toBe(3_800_000);
-    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null }]);
+    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 1_200_000 }]);
     expect(p.life.collection).toEqual(['car_basic']);
   });
 
@@ -107,8 +107,8 @@ describe('item orders', () => {
     expect(run({ type: 'buyItem', itemId: 'trip' })).toBeNull();
     expect(p.cash).toBe(5_000_000 - 50_000 - 300_000);
     expect(p.life.items).toEqual([
-      { itemId: 'club', value: 0, roundsLeft: null },
-      { itemId: 'trip', value: 0, roundsLeft: 2 },
+      { itemId: 'club', value: 0, roundsLeft: null, paid: 50_000 },
+      { itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000 },
     ]);
   });
 
@@ -154,7 +154,7 @@ describe('item orders', () => {
     expect(run({ type: 'sellItem', itemId: 'car_basic' })).toBe('not-owned');
     expect(run({ type: 'sellItem', itemId: null })).toBe('bad-order');
     expect(p.cash).toBe(cash);
-    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2 }]);
+    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 300_000 }]);
   });
 
   it('reports what was spent on and raised from items in the ledger, and charges upkeep', () => {

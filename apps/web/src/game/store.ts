@@ -1,6 +1,6 @@
-import { previewRound } from '@ratrace/engine';
+import { previewCard, previewRound } from '@ratrace/engine';
 import type { Milestone } from '@ratrace/content';
-import type { Content, GameEvent, GameView, Order, RejectReason, RoundPreview } from '@ratrace/engine';
+import type { Content, GameEvent, GameView, OptionPreview, Order, RejectReason, RoundPreview, WorldState } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { StaleSession } from '@/session/errors';
@@ -33,6 +33,11 @@ export interface RoundState {
   stage: Stage;
   /** What the card just answered did, while its result is on screen. The card to answer next is `view.hand[view.answered]`. */
   cardEvents: GameEvent[];
+  /**
+   * The card just answered as it stood when it was answered: what each of its options offered, and
+   * the world they were offered in. Kept with the result, to say how likely what came up was.
+   */
+  offered: { cardId: string; options: OptionPreview[]; world: WorldState } | null;
   /** The basket: orders for this round, in the order they will run. None of them will be refused. */
   orders: Order[];
   /** What the round will pay and charge with the basket as it is. Null outside the finance phase. */
@@ -101,6 +106,7 @@ const blank: RoundState = {
   unlocked: [],
   stage: 'news',
   cardEvents: [],
+  offered: null,
   orders: [],
   preview: null,
   refusal: null,
@@ -216,7 +222,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       leaveNews() {
         const { view, stage } = get();
         if (!view || stage !== 'news' || !settled()) return;
-        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [] });
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], offered: null });
         else get().toFinance();
       },
 
@@ -225,8 +231,11 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         if (!view || !session || busy || stage !== 'cards' || !settled()) return;
         set({ busy: true });
         try {
+          // What every option offered is asked before the answer: afterwards the card is no longer in the hand to be judged.
+          const cardId = view.hand[view.answered];
+          const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
           const result = await session.answerCard(option);
-          set({ view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
+          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
         } catch (error) {
           await refused(error);
         } finally {
@@ -237,9 +246,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       afterCard() {
         const { view, stage } = get();
         if (!view || stage !== 'outcome' || !settled()) return;
-        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], earned: [], unlocked: [] });
+        if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], offered: null, earned: [], unlocked: [] });
         else {
-          set({ cardEvents: [], earned: [], unlocked: [] });
+          set({ cardEvents: [], offered: null, earned: [], unlocked: [] });
           get().toFinance();
         }
       },
@@ -323,7 +332,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       next() {
         const { view, stage } = get();
         if (!view || stage !== 'resolve' || !settled()) return;
-        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], resolved: null, earned: [], unlocked: [] });
+        set({ stage: view.finished ? 'end' : 'news', cardEvents: [], offered: null, resolved: null, earned: [], unlocked: [] });
       },
     };
   });

@@ -64,6 +64,10 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
     const owned = life.items.some((x) => content.items.some((item) => item.id === x.itemId && item.ladder === ladder));
     if (!owned) return false;
   }
+  if (when.lacksLadder !== undefined) {
+    const ladder = when.lacksLadder;
+    if (life.items.some((x) => content.items.some((item) => item.id === x.itemId && item.ladder === ladder))) return false;
+  }
   if (when.notItems !== undefined && life.items.some((x) => when.notItems?.includes(x.itemId))) return false;
   if (when.insured !== undefined && !life.insurance[when.insured]) return false;
 

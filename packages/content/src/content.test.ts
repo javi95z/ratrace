@@ -71,6 +71,13 @@ describe('the v1 content', () => {
     expect(flips).toEqual([]);
   });
 
+  it('deals a card set at work only to someone with a job, and the first car only to someone with none', () => {
+    const when = (id: string) => content.cards.find((card) => card.id === id)?.when ?? {};
+    // Each of these speaks of an office, an employer or a new job in its text.
+    for (const id of ['luck_lottery', 'life_car_finance', 'world_ai_boom', 'crisis_crash_layoffs']) expect(when(id).employed, id).toBe(true);
+    expect(when('life_car_finance').lacksLadder).toBe('car');
+  });
+
   it('gives every insurance a card that it softens or opens', () => {
     const used = new Set<string>();
     for (const card of content.cards) {

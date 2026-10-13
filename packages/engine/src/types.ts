@@ -275,6 +275,8 @@ export interface Condition {
   holds?: AssetClass | 'deposit';
   /** Owns an item in this ladder. */
   ownsLadder?: string;
+  /** Owns nothing in this ladder: no car at all, for one. */
+  lacksLadder?: string;
   /** Owns none of these items. */
   notItems?: string[];
   /** Holds this insurance. */
@@ -529,6 +531,8 @@ export interface OwnedItem {
   value: Cents;
   /** Experiences: rounds of status left. Otherwise null. */
   roundsLeft: number | null;
+  /** What was paid for it, at the prices of the day it was bought. Zero for a gift. */
+  paid: Cents;
 }
 
 export interface Recurring {
@@ -751,6 +755,12 @@ export type GameEvent =
    * rolled outcome, or null. `cash` is the change in the player's cash.
    */
   | { kind: 'card'; cardId: string; picked: number | null; option: number; outcome: number | null; cash: Cents }
+  /**
+   * A card still waiting in the hand stopped making sense, because of what an earlier card of the
+   * round did, and was taken out. `replacedBy` is the card dealt in its place, or null when no
+   * other card was open to the player.
+   */
+  | { kind: 'cardWithdrawn'; cardId: string; replacedBy: string | null }
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }

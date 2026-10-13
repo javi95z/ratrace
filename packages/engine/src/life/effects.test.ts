@@ -225,7 +225,7 @@ describe('applyEffects: things bought through a card', () => {
   it('buys an item at a share of its price, worth its usual resale value', () => {
     const p = after({ buyItem: { itemId: 'car_basic', pricePct: 50 } });
     expect(p.cash).toBe(10_000_000 - 600_000);
-    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null }]);
+    expect(p.life.items).toEqual([{ itemId: 'car_basic', value: 960_000, roundsLeft: null, paid: 600_000 }]);
     expect(p.life.collection).toEqual(['car_basic']);
     expect(p.statusPoints).toBe(4 + 2);
   });
@@ -233,7 +233,7 @@ describe('applyEffects: things bought through a card', () => {
   it('gives an item for nothing, and does not charge for one already owned', () => {
     const p = after({ buyItem: { itemId: 'trip', pricePct: 0 } });
     expect(p.cash).toBe(10_000_000);
-    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2 }]);
+    expect(p.life.items).toEqual([{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }]);
     after({ buyItem: { itemId: 'trip', pricePct: 100 } }, p);
     expect(p.cash).toBe(10_000_000);
     expect(p.life.items).toHaveLength(1);
