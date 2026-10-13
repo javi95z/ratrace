@@ -74,7 +74,7 @@ export const lifestyleCards: CardDef[] = [
     { effects: { buyItem: { itemId: 'fashion_loafers', pricePct: 60 } } },
     { effects: { buyItem: { itemId: 'fashion_duffel', pricePct: 60 } } },
   ]),
-  card('life_car_finance', 'lifestyle', { cooldown: 6, when: { notItems: ['car_tesla_model_3'] } }, [
+  card('life_car_finance', 'lifestyle', { cooldown: 6, when: { employed: true, lacksLadder: 'car' } }, [
     {},
     { effects: { buyItem: { itemId: 'car_toyota_corolla', pricePct: 100 } } },
     { effects: { loan: usd(48_000), buyItem: { itemId: 'car_tesla_model_3', pricePct: 100 } } },

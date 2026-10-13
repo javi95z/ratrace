@@ -48,7 +48,7 @@ describe('other expenses and passive income', () => {
       partner: true,
       children: [11, 4],
       insurance: { health: true, home: false, life: true, liability: false },
-      items: [{ itemId: 'car_basic', value: 0, roundsLeft: null }, { itemId: 'club', value: 0, roundsLeft: null }],
+      items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'club', value: 0, roundsLeft: null, paid: 0 }],
       recurring: [
         { tag: 'school', kind: 'expense', annual: 100_000, roundsLeft: 3 },
         { tag: 'bar', kind: 'passive', annual: 700_000, roundsLeft: null },
@@ -67,8 +67,8 @@ describe('other expenses and passive income', () => {
 
 describe('status', () => {
   it('counts the best item of a ladder in full and the rest in part', () => {
-    const one = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null }] });
-    const two = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null }, { itemId: 'car_sports', value: 0, roundsLeft: null }] });
+    const one = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }] });
+    const two = life({}, { items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'car_sports', value: 0, roundsLeft: null, paid: 0 }] });
     expect(deriveStatus(one.player, content)).toBe(4 + 2);
     expect(deriveStatus(two.player, content)).toBe(40 + 1 + 2);
   });
@@ -78,7 +78,7 @@ describe('status', () => {
     expect(deriveStatus(base.player, content)).toBe(6);
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,
-      items: [{ itemId: 'trip', value: 0, roundsLeft: 2 }],
+      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
     expect(deriveStatus(fancy.player, content)).toBe(6 + 2 + 5 + 9 + 7 + 10);
   });
@@ -90,7 +90,7 @@ describe('status', () => {
   it('says where it comes from, part by part', () => {
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,
-      items: [{ itemId: 'trip', value: 0, roundsLeft: 2 }],
+      items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
     expect(statusParts(fancy.player, content)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
     // A loss from a card shows as it is, though the status itself stops at zero.

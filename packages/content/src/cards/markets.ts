@@ -130,7 +130,7 @@ export const worldCards: CardDef[] = [
     {},
     { effects: { invest: { assetId: 'nvidia', amount: usd(5_000) } } },
   ]),
-  card('world_ai_boom', 'world', { weight: 8, once: true, trigger: { regimes: ['expansion', 'boom'] } }, [
+  card('world_ai_boom', 'world', { weight: 8, once: true, when: { employed: true }, trigger: { regimes: ['expansion', 'boom'] } }, [
     {},
     { effects: { focus: 1, careerSkill: 2 } },
     { when: { careers: ['tech'] }, outcomes: [{ weight: 50, effects: { salaryModPct: 10 } }, { weight: 50, effects: {} }] },
@@ -150,9 +150,9 @@ export const worldCards: CardDef[] = [
     { effects: { invest: { assetId: 'msci_world', amount: usd(8_000) } } },
     { effects: { loan: usd(8_000) } },
   ]),
-  card('crisis_crash_layoffs', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'crash', year: 2 } } }, [
+  card('crisis_crash_layoffs', 'world', { weight: 1_000, once: true, when: { employed: true }, trigger: { crisis: { id: 'crash', year: 2 } } }, [
     { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { salaryModPct: -8 } }] },
-    { when: { employed: true }, effects: { salaryModPct: -4 } },
+    { effects: { salaryModPct: -4 } },
     { effects: { focus: 2, careerSkill: 2 } },
   ]),
   card('crisis_energy_bills', 'world', { weight: 1_000, once: true, trigger: { crisis: { id: 'energy', year: 1 } } }, [

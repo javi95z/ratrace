@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCards, applyRound, createGame, previewRound } from '../game';
+import { applyCard, applyCards, applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import { withPlayer } from '../testing/patch';
 import type { CardDef, Content, GameEvent, GameState, LedgerLine, LifeStart, StartConfig } from '../types';
@@ -241,7 +241,7 @@ describe('applyCards', () => {
     const flat = card('flat', { options: [{}, { effects: { property: { typeId: 'studio', pricePct: 50, downPct: 5, rented: false } } }] });
     const outright = card('outright', { options: [{}, { effects: { property: { typeId: 'studio', pricePct: 1, downPct: 100, rented: false } } }] });
     const { content, state } = one([car, flat, outright], { cash: 5_000_000 });
-    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null }], collection: ['car_basic'] });
+    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
     const locked = withPlayer(content, owner, { bankruptUntilRound: 3 });
     const events = cardEvents(applyCards(content, locked, { car: 1, flat: 1, outright: 1 }).events);
     const byId = Object.fromEntries(events.map((e) => [e.kind === 'card' ? e.cardId : '', e]));
@@ -315,6 +315,86 @@ describe('applyCards', () => {
   });
 });
 
+describe('a card that no longer fits', () => {
+  // `leave` can end the thing `boss` is about. `spare` is only open once that has happened, so it is never dealt at the start.
+  const leave = card('leave', { weight: 1_000_000, options: [{}, { effects: { setFlags: ['gone'] } }] });
+  const boss = card('boss', { when: { notFlags: ['gone'] }, options: [{ effects: { status: 9 } }, {}] });
+  const spare = card('spare', { when: { flags: ['gone'] }, options: [{ effects: { cash: 5 } }, {}] });
+  const dealt = (cards: CardDef[]) => {
+    const content = contentWith(cards, (c) => {
+      c.life.cardsPerRound = 2;
+    });
+    let state = createGame({ content, start: start() }, 'fit');
+    for (let i = 0; state.hand[0] !== 'leave'; i++) state = createGame({ content, start: start() }, `fit-${i}`);
+    expect(state.hand).toEqual(['leave', 'boss']);
+    return { content, state };
+  };
+  const withdrawn = (events: GameEvent[]) => events.filter((e) => e.kind === 'cardWithdrawn');
+
+  it('is withdrawn when an earlier answer undid its condition, and another open card takes its place', () => {
+    const { content, state } = dealt([leave, boss, spare]);
+    const one = applyCard(content, state, 1);
+    expect(one.state.hand).toEqual(['leave', 'spare']);
+    expect(withdrawn(one.events)).toEqual([{ kind: 'cardWithdrawn', cardId: 'boss', replacedBy: 'spare' }]);
+    // The card taken out was never played, so it may be dealt another round; the one put in has been.
+    expect(one.state.player.life.seen).toEqual({ leave: 0, spare: 0 });
+    expect(one.state.phase).toBe('cards');
+
+    const two = applyCard(content, one.state, 0);
+    expect(cardEvents(two.events)).toMatchObject([{ cardId: 'spare' }]);
+    expect(two.state.player.life.bonusStatus).toBe(0);
+    expect(two.state.phase).toBe('finance');
+  });
+
+  it('leaves the hand a card shorter when nothing else is open, and ends the phase if it was the last', () => {
+    const { content, state } = dealt([leave, boss]);
+    const one = applyCard(content, state, 1);
+    expect(one.state.hand).toEqual(['leave']);
+    expect(withdrawn(one.events)).toEqual([{ kind: 'cardWithdrawn', cardId: 'boss', replacedBy: null }]);
+    expect(one.state.player.life.seen).toEqual({ leave: 0 });
+    expect(one.state.phase).toBe('finance');
+    expect(one.state.player.life.bonusStatus).toBe(0);
+  });
+
+  it('stays when its condition still holds', () => {
+    const { content, state } = dealt([leave, boss, spare]);
+    const one = applyCard(content, state, 0);
+    expect(one.state.hand).toEqual(['leave', 'boss']);
+    expect(withdrawn(one.events)).toEqual([]);
+    expect(applyCard(content, one.state, 0).state.player.life.bonusStatus).toBe(9);
+  });
+
+  it('is withdrawn the same way when the whole hand is answered at once', () => {
+    const { content, state } = dealt([leave, boss, spare]);
+    const all = applyCards(content, state, { leave: 1, boss: 0, spare: 0 });
+    expect(cardEvents(all.events).map((e) => (e.kind === 'card' ? e.cardId : ''))).toEqual(['leave', 'spare']);
+    expect(all.state.player.life.bonusStatus).toBe(0);
+    const step = applyCard(content, applyCard(content, state, 1).state, 0);
+    expect(all.state).toEqual(step.state);
+  });
+
+  it('never puts back a card already dealt this round, nor one that is resting or spent', () => {
+    const rested = card('rested', { when: { flags: ['gone'] }, cooldown: 5 });
+    const { content, state } = dealt([leave, boss, rested]);
+    const resting = withPlayer(content, state, {}, { seen: { ...state.player.life.seen, rested: 0 } });
+    const one = applyCard(content, resting, 1);
+    expect(one.state.hand).toEqual(['leave']);
+  });
+
+  it('withdraws one card after another until one fits', () => {
+    const chief = card('chief', { when: { notFlags: ['gone'] } });
+    const content = contentWith([leave, boss, chief], (c) => {
+      c.life.cardsPerRound = 3;
+    });
+    let state = createGame({ content, start: start() }, 'chain');
+    for (let i = 0; state.hand[0] !== 'leave'; i++) state = createGame({ content, start: start() }, `chain-${i}`);
+    const one = applyCard(content, state, 1);
+    expect(one.state.hand).toEqual(['leave']);
+    expect(withdrawn(one.events)).toHaveLength(2);
+    expect(one.state.phase).toBe('finance');
+  });
+});
+
 describe('the two phases of a round', () => {
   const layoff = card('layoff', { options: [{ effects: { salaryBoostPct: -50 } }, { effects: { focus: 3 } }] });
 
@@ -385,7 +465,7 @@ describe('previewCard', () => {
 
     // Single, with a million in cash and three focus: no partner, no nine focus, no five million.
     expect(locks(state)).toEqual([null, 'condition', 'focus', null, null, 'cash', null, null, null]);
-    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null }], collection: ['car_basic'] });
+    const owner = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 0 }], collection: ['car_basic'] });
     expect(locks(owner)[4]).toBe('owned');
     expect(locks(withPlayer(content, state, { bankruptUntilRound: 3 }))[7]).toBe('bankruptcy');
     const owing = withPlayer(content, state, { cash: 300_000, debts: [{ id: 'debt-1', kind: 'personalLoan', principal: 250_000, fixedRateBp: 700, roundsLeft: 2 }], nextId: 1 });

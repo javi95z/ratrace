@@ -101,6 +101,8 @@ describe('validateContent: cards', () => {
     expect(when({ cities: 'home' })).toEqual(['card offer condition needs a list for cities']);
     expect(when({ careers: ['pirate'] })).toEqual(['card offer condition names an unknown career: pirate']);
     expect(when({ ownsLadder: 'boat' })).toEqual(['card offer condition names an unknown ladder: boat']);
+    expect(when({ lacksLadder: 'boat' })).toEqual(['card offer condition names an unknown ladder: boat']);
+    expect(when({ lacksLadder: 'car' })).toEqual([]);
     expect(when({ notItems: ['jetpack'] })).toEqual(['card offer condition names an unknown item: jetpack']);
     expect(when({ holds: 'land' })).toEqual(['card offer condition names an unknown holding: land']);
     expect(when({ regimes: ['panic'] })).toEqual(['card offer condition names an unknown regime: panic']);

@@ -14,6 +14,7 @@ import { Sprite } from '@/ui/Sprite';
 import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
 import { useShown } from './Hud';
+import { ItemCost } from './ItemCost';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -291,6 +292,7 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
         </div>
         {item.kind === 'durable' ? <p className="text-center text-[14px]">{t('itemWorth', { amount: fmt.money(quote.resale) })}</p> : null}
+        <ItemCost quote={quote} />
         {owned.roundsLeft !== null ? <p className="text-center text-[14px] text-ink-300">{shop('spent', { years: owned.roundsLeft * content.yearsPerRound })}</p> : null}
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{shop('local', { city: names.cities[shown.player.cityId] })}</p> : null}
         <p className="text-center text-[12px] text-ink-300">{t(quote.sellable ? 'itemWhere' : 'itemKept')}</p>

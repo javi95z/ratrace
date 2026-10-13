@@ -13,6 +13,7 @@ import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { useShown } from './Hud';
+import { ItemCost } from './ItemCost';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'debt', 'lifestyle', 'shop', 'taxes'];
@@ -721,6 +722,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
         </div>
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
         {item.kind === 'durable' && !held && quote.forSale ? <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(quote.resale) })}</p> : null}
+        <ItemCost quote={quote} />
 
         {inBasket ? (
           <Button wide onClick={() => done(setOrder((order) => order.type === 'buyItem' && order.itemId === item.id, null))}>

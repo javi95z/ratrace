@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
+import { content } from '@ratrace/content';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { formatFor } from '@/lib/format';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
 
@@ -18,6 +20,8 @@ vi.mock('@/i18n/navigation', () => ({
 
 afterEach(cleanup);
 
+const fmt = formatFor('en');
+
 /** A nurse who bought a watch and joined a gym in her first round. */
 async function withThings() {
   const services = memoryServices();
@@ -25,14 +29,16 @@ async function withThings() {
   while (session.view().phase === 'cards') await session.answerCard(0);
   await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }, { type: 'buyItem', itemId: 'member_gym' }] });
   expect(session.view().player.life.items.map((owned) => owned.itemId)).toEqual(['watch_casio', 'member_gym']);
-  return services;
+  return Object.assign(services, { items: session.view().player.life.items });
 }
 
 describe('what the player owns, in the profile', () => {
   it('opens on a tap: what it is, what it gives, what it would fetch, and where to sell it', async () => {
     setWidth('phone');
     const user = userEvent.setup();
-    renderGame(<Play />, await withThings());
+    const services = await withThings();
+    const [casio, gymPass] = services.items;
+    renderGame(<Play />, services);
     await screen.findByRole('heading', { name: 'News' });
     await user.click(screen.getByRole('button', { name: 'Open your profile' }));
     const profile = screen.getByRole('dialog', { name: 'Your life' });
@@ -43,6 +49,11 @@ describe('what the player owns, in the profile', () => {
     expect(within(watch).getByText('Status +1')).toBeTruthy();
     expect(within(watch).getByText(/^Would sell for \$\d+ today$/)).toBeTruthy();
     expect(within(watch).getByText('Sell or cancel it in the Shop tab.')).toBeTruthy();
+    // What it cost is beside what it would fetch, and the gap between the two is spelled out.
+    expect(casio.paid).toBe(content.items.find((item) => item.id === 'watch_casio')?.price);
+    expect(casio.value).toBeLessThan(casio.paid);
+    expect(within(watch).getByText(`It cost you ${fmt.money(casio.paid)}`)).toBeTruthy();
+    expect(within(watch).getByText(`Sell it today and you lose ${fmt.money(casio.paid - casio.value)}`)).toBeTruthy();
 
     // Closing it leaves the profile where it was.
     await user.click(within(watch).getByRole('button', { name: 'Close' }));
@@ -54,6 +65,9 @@ describe('what the player owns, in the profile', () => {
     const gym = screen.getByRole('dialog', { name: 'Basic-Fit' });
     expect(within(gym).getByText(/a year upkeep|\/yr|upkeep/)).toBeTruthy();
     expect(within(gym).queryByText(/Would sell for/)).toBeNull();
+    // What was paid to join is shown, with no gain or loss: there is nothing to sell.
+    expect(within(gym).getByText(`It cost you ${fmt.money(gymPass.paid)}`)).toBeTruthy();
+    expect(within(gym).queryByText(/Sell it today/)).toBeNull();
   });
 
   it('opens from the side column of a wide screen too', async () => {

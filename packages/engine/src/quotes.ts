@@ -87,6 +87,8 @@ export interface ItemQuote {
   /** Yearly upkeep at today's prices. */
   upkeepAnnual: Cents;
   owned: boolean;
+  /** What the player paid for it, at the prices of that day, or null if they do not own it. */
+  paid: Cents | null;
   /** False for something only a card can give. */
   forSale: boolean;
   /** False where the shops of the player's city do not sell it. */
@@ -107,6 +109,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     resale: held ? held.value : terms.resale,
     upkeepAnnual: indexed(item.upkeepAnnual, world),
     owned: held !== undefined,
+    paid: held ? held.paid : null,
     forSale: item.cardOnly !== true,
     soldHere: soldIn(item, view.player.cityId),
     local: item.kind === 'membership' && item.cities !== undefined,

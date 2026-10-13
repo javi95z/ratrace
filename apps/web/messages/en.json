@@ -391,7 +391,11 @@
       "cardOnly": "Not sold here. Life has to offer it to you.",
       "resale": "Would resell for about {amount} tomorrow",
       "spent": "Spent. The status fades in {years} years.",
-      "local": "Only in {city}. Move away and it is gone."
+      "local": "Only in {city}. Move away and it is gone.",
+      "paid": "It cost you {amount}",
+      "gift": "It cost you nothing",
+      "sellLoss": "Sell it today and you lose {amount}",
+      "sellGain": "Sell it today and you gain {amount}"
     },
     "taxes": {
       "income": "Coming in",

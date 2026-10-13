@@ -39,7 +39,7 @@ const lottery = (stake: number): CardOutcome[] => [
 ];
 
 export const luckCards: CardDef[] = [
-  card('luck_lottery', 'luck', { cooldown: 2 }, [
+  card('luck_lottery', 'luck', { cooldown: 2, when: { employed: true } }, [
     {},
     { effects: { cash: usd(-25) }, outcomes: lottery(25) },
     { effects: { cash: usd(-250) }, outcomes: lottery(250) },

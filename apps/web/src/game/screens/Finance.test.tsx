@@ -238,6 +238,31 @@ describe('what belongs to a city', () => {
   });
 });
 
+describe('a thing the player owns, in the shop', () => {
+  it('shows what it cost beside the price to sell it at, and nothing of the kind for a thing not owned', async () => {
+    const { services, session } = await inFinance('nurse');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    await toFinance(session);
+    const [casio] = (await stateOf(services)).player.life.items;
+    expect(casio.paid).toBe(content.items.find((item) => item.id === 'watch_casio')?.price);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+
+    await user.click(button(/Casio F-91W/));
+    const mine = screen.getByRole('dialog', { name: 'Casio F-91W' });
+    expect(within(mine).getByRole('button', { name: `Sell for ${fmt.money(casio.value)}` })).toBeTruthy();
+    expect(within(mine).getByText(`It cost you ${fmt.money(casio.paid)}`)).toBeTruthy();
+    expect(within(mine).getByText(`Sell it today and you lose ${fmt.money(casio.paid - casio.value)}`)).toBeTruthy();
+    await user.click(within(mine).getByRole('button', { name: 'Close' }));
+
+    await user.click(button(/Soho House/));
+    const notMine = screen.getByRole('dialog', { name: 'Soho House' });
+    expect(within(notMine).queryByText(/It cost you/)).toBeNull();
+    expect(within(notMine).queryByText(/Sell it today/)).toBeNull();
+  });
+});
+
 describe('a property the player owns', () => {
   it('opens on a tap: what it is worth, what it would bring, what is owed and what a sale would leave', async () => {
     // The heir starts with a flat in Madrid, lived in and owned outright.

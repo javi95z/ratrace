@@ -54,6 +54,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
       continue;
     }
     owned.add(item.id);
+    if (!isCount(held.paid)) breaks.push(`item ${item.id} was paid for with something that is not a non-negative whole number: ${held.paid}`);
     if (!isCount(held.value)) breaks.push(`item ${item.id} value is not a non-negative whole number: ${held.value}`);
     else {
       const shaped =

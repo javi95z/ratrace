@@ -391,7 +391,11 @@
       "cardOnly": "Aquí no se vende. Te lo tiene que ofrecer la vida.",
       "resale": "Mañana se revendería por unos {amount}",
       "spent": "Ya disfrutado. El estatus se apaga en {years} años.",
-      "local": "Solo en {city}. Si te mudas, lo pierdes."
+      "local": "Solo en {city}. Si te mudas, lo pierdes.",
+      "paid": "Te costó {amount}",
+      "gift": "No te costó nada",
+      "sellLoss": "Si lo vendes hoy, pierdes {amount}",
+      "sellGain": "Si lo vendes hoy, ganas {amount}"
     },
     "taxes": {
       "income": "Lo que entra",

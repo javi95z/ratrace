@@ -228,12 +228,12 @@ describe('what was raised from Minor', () => {
       content,
       createGame({ content, start: { ...fixtureStart(), salaryAnnual: 0 } }, 'degree'),
       { debts: [{ id: 'debt-1', kind: 'creditCard', principal: 9_000_000, fixedRateBp: 0, roundsLeft: 0 }], nextId: 1 },
-      { items: [{ itemId: 'degree', value: 0, roundsLeft: null }, { itemId: 'watch_gold', value: 500_000, roundsLeft: null }], collection: ['degree', 'watch_gold'] },
+      { items: [{ itemId: 'degree', value: 0, roundsLeft: null, paid: 0 }, { itemId: 'watch_gold', value: 500_000, roundsLeft: null, paid: 0 }], collection: ['degree', 'watch_gold'] },
     );
     const refused = applyRound(content, broke, { orders: [{ type: 'sellItem', itemId: 'degree' }] });
     expect(refused.events).toContainEqual({ kind: 'orderRejected', order: { type: 'sellItem', itemId: 'degree' }, reason: 'cannot-sell' });
     expect(refused.events.some((e) => e.kind === 'bankrupt')).toBe(true);
-    expect(refused.state.player.life.items).toEqual([{ itemId: 'degree', value: 0, roundsLeft: null }]);
+    expect(refused.state.player.life.items).toEqual([{ itemId: 'degree', value: 0, roundsLeft: null, paid: 0 }]);
   });
 
   it('writes a false regime headline about a regime that could have followed', () => {

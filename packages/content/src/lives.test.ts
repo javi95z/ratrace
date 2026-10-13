@@ -1,4 +1,5 @@
 import {
+  applyCard,
   applyCards,
   applyRound,
   createGame,
@@ -102,11 +103,11 @@ function play(
     let answered = state;
     let cardEvents: GameEvent[] = [];
     if (state.phase === 'cards') {
-      const hand = state.hand;
       const cards = applyCards(content, state, picksFor(state, round.picks));
       answered = cards.state;
       cardEvents = cards.events;
-      expect(cardEvents.filter((e) => e.kind === 'card').map((e) => (e.kind === 'card' ? e.cardId : ''))).toEqual(hand);
+      // The cards answered are the hand as it ended: a card withdrawn on the way is in neither.
+      expect(cardEvents.filter((e) => e.kind === 'card').map((e) => (e.kind === 'card' ? e.cardId : ''))).toEqual(answered.hand);
     }
     const result = applyRound(content, answered, { orders: round.orders });
     expect(findInvariantBreaks(content, result.state)).toEqual([]);
@@ -282,6 +283,47 @@ describe('whole lives on the v1 content', () => {
       { numRuns: 60, seed: SEED },
     );
     expect(hands).toBeGreaterThan(1_000);
+  });
+
+  it('never ask someone with no job about their job, whatever an earlier card of the round did', () => {
+    const needsJob = (id: string) => {
+      const when = content.cards.find((card) => card.id === id)?.when;
+      return when?.employed === true || when?.careers !== undefined || when?.minLevel !== undefined;
+    };
+    let withdrawn = 0;
+    let asked = 0;
+    fc.assert(
+      fc.property(life, (input) => {
+        let state = begin(input);
+        for (const round of input.rounds) {
+          const dealt = [...state.hand];
+          const gone: string[] = [];
+          for (let i = 0; state.phase === 'cards'; i++) {
+            const waiting = state.hand[state.answered];
+            if (needsJob(waiting)) {
+              expect(state.player.life.career).not.toBeNull();
+              asked += 1;
+            }
+            const step = applyCard(content, state, round.picks[i] ?? 0);
+            for (const e of step.events) {
+              if (e.kind !== 'cardWithdrawn') continue;
+              withdrawn += 1;
+              gone.push(e.cardId);
+              // A card taken out was never played: it is free to come back another round.
+              expect(Object.hasOwn(step.state.player.life.seen, e.cardId)).toBe(false);
+              if (e.replacedBy !== null) expect(dealt).not.toContain(e.replacedBy);
+            }
+            state = step.state;
+          }
+          for (const id of gone) expect(state.hand).not.toContain(id);
+          expect(new Set(state.hand).size).toBe(state.hand.length);
+          state = applyRound(content, state, { orders: round.orders }).state;
+        }
+      }),
+      { numRuns: 60, seed: SEED },
+    );
+    expect(asked).toBeGreaterThan(500);
+    expect(withdrawn).toBeGreaterThan(0);
   });
 
   it('leave Object.prototype untouched', () => {
