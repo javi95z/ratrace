@@ -3,7 +3,7 @@ import { createGame } from '../game';
 import { findInvariantBreaks } from '../invariants';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import type { GameState, LifeStart, LifeState } from '../types';
-import { deriveExpenses, derivePassive, deriveSalary, deriveStatus, refreshDerived } from './derive';
+import { deriveExpenses, derivePassive, deriveSalary, deriveStatus, refreshDerived, statusParts } from './derive';
 
 const content = fixtureContent();
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3 };
@@ -85,6 +85,16 @@ describe('status', () => {
 
   it('is never negative', () => {
     expect(deriveStatus(life({}, { bonusStatus: -50 }).player, content)).toBe(0);
+  });
+
+  it('says where it comes from, part by part', () => {
+    const fancy = life({ career: { id: 'office', level: 2 } }, {
+      bonusStatus: 7,
+      items: [{ itemId: 'trip', value: 0, roundsLeft: 2 }],
+    }, { cityId: 'haven', lifestyleTier: 3 });
+    expect(statusParts(fancy.player, content)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
+    // A loss from a card shows as it is, though the status itself stops at zero.
+    expect(statusParts(life({}, { bonusStatus: -50 }).player, content).bonus).toBe(-50);
   });
 
   it('counts the home the player owns and lives in, instead of the rent tier', () => {

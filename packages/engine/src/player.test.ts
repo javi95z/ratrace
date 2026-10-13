@@ -21,6 +21,12 @@ describe('player', () => {
     expect(p.debts).toEqual([{ id: 'debt-1', kind: 'personalLoan', principal: 900_000, fixedRateBp: 600, roundsLeft: 3 }]);
   });
 
+  it('holds on day one what the life starts with, at what it is worth', () => {
+    const asset = fixtureContent().assets[0].id;
+    const p = fixturePlayer({ life: { lifeId: 'tester', career: null, careerSkill: 0, financeSkill: 0, focus: 3, holdings: [{ assetId: asset, value: 250_000 }] } });
+    expect(p.positions).toEqual({ [asset]: { value: 250_000, basis: 250_000 } });
+  });
+
   it('mints increasing ids', () => {
     const p = fixturePlayer();
     expect(newId(p, 'property')).toBe('property-1');

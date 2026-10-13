@@ -21,6 +21,7 @@ export interface SheetSpec {
 
 const LIVES_A = ['nurse', 'engineer', 'civil_servant', 'rider'];
 const LIVES_B = ['heir', 'newcomer', 'banker', 'doctor'];
+const LIVES_C = ['comeback', 'founder', 'crypto_kid', 'nomad'];
 const AGES = [22, 32, 45, 58];
 const portraits = (lives: string[]) => lives.flatMap((life) => AGES.map((age) => `portrait.${life}.${age}`));
 
@@ -96,6 +97,7 @@ export const SHEETS: SheetSpec[] = [
   },
   { file: 'portraits/portraits-01', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_A) },
   { file: 'portraits/portraits-02', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_B) },
+  { file: 'portraits/portraits-03', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_C) },
   ...[
     ['office_desk', 'handshake', 'packed_box', 'airport', 'library', 'graduation'],
     ['online_course', 'shopfront', 'bar', 'garage_startup', 'parcels', 'phone_chart'],

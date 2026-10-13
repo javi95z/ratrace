@@ -277,6 +277,14 @@ function lifeStartErrors(content: Content, start: StartConfig): string[] {
     }
     if (typeof entry.rented !== 'boolean') errors.push(`life property ${i} needs rented to be true or false`);
   });
+  const held = new Set<unknown>();
+  list(life.holdings).forEach((holding, i) => {
+    const entry = isRecord(holding) ? holding : {};
+    if (!content.assets.some((asset) => asset.id === entry.assetId)) errors.push(`life holding ${i} has an unknown asset: ${String(entry.assetId)}`);
+    else if (held.has(entry.assetId)) errors.push(`life holding ${i} repeats an asset: ${String(entry.assetId)}`);
+    held.add(entry.assetId);
+    if (!isWhole(entry.value) || entry.value <= 0) errors.push(`life holding ${i} needs a positive whole value`);
+  });
   list(life.recurring).forEach((entry, i) => {
     if (!isRecurring(entry)) errors.push(`life recurring entry ${i} is not valid`);
   });

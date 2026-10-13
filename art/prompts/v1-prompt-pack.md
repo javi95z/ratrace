@@ -255,6 +255,18 @@ Row 3: a junior banker. Man with East Asian features and neat black hair, white 
 Row 4: a doctor. Woman with medium-brown skin and wavy black hair tied back, white coat over blue shirt. By 58: grey-streaked hair, glasses, white coat.
 ```
 
+### 10b. Portraits C
+
+Save as `art/raw/portraits/portraits-03.png`
+
+```text
+Square image. Object sheet: 4 columns by 4 rows, 16 bust portraits (head and shoulders), each turned slightly to the right with a calm, friendly expression. Each ROW is one person shown at four ages, left to right: about 22, 32, 45 and 58. Along a row, face shape, skin tone and key features stay identical; only signs of age, hairstyle and clothes change.
+Row 1: a man starting over after going broke. Man with tan skin, short brown curly hair and light stubble, worn olive work jacket over a plain grey t-shirt, tired but determined eyes. By 58: grey curls, trimmed grey beard, clean navy overshirt, relaxed smile.
+Row 2: a startup founder. Woman with warm brown skin and a short black pixie cut, mustard turtleneck, small gold hoop earrings, a laptop sticker pin on her collar. By 58: silver pixie cut, round glasses, black blazer over the turtleneck.
+Row 3: a crypto trader kid. Young man with South-East Asian features, bleached blond undercut, black oversized hoodie with a small orange coin logo, thin chain necklace, wireless earbuds. By 58: natural black hair greying at the sides, no earbuds, dark bomber jacket over a white t-shirt.
+Row 4: a digital nomad. Woman with freckled fair skin and long auburn hair in a loose ponytail, linen shirt with rolled sleeves, sunglasses pushed up on her head, light tan. By 58: grey-streaked auburn hair cut to the shoulders, light scarf, linen blazer.
+```
+
 ## Scene sheets
 
 Card scenes use a landscape image with 2 columns and 3 rows. Each panel is roughly 2.4 times wider than tall.
@@ -424,7 +436,8 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 07 | `badges/badges-01.png` | Achievements 1 to 16 | 64×64 |
 | 08 | `badges/badges-02.png` | Achievements 17 to 30, locked badge, generic star | 64×64 |
 | 09 | `portraits/portraits-01.png` | Nurse, engineer, civil servant, rider | 64×64 |
-| 10 | `portraits/portraits-02.png` | Heir, newcomer, 2 later lives | 64×64 |
+| 10 | `portraits/portraits-02.png` | Heir, newcomer, banker, doctor | 64×64 |
+| 10b | `portraits/portraits-03.png` | Second chance, founder, crypto kid, 1 later life | 64×64 |
 | 11 to 18 | `cards/cards-01.png` to `cards-08.png` | 48 card scenes | 288×120 |
 | 19 to 20 | `skylines/skylines-01.png`, `-02.png` | 6 city skylines | 312×66 |
 | 21 | `brand/brand-01.png` | Logo, wordmark, app icon, mascot | varies |

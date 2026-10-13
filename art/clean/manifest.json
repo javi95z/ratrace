@@ -726,6 +726,86 @@
       "width": 64,
       "height": 64
     },
+    "portrait.comeback.22": {
+      "file": "portraits/portrait.comeback.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.comeback.32": {
+      "file": "portraits/portrait.comeback.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.comeback.45": {
+      "file": "portraits/portrait.comeback.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.comeback.58": {
+      "file": "portraits/portrait.comeback.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.founder.22": {
+      "file": "portraits/portrait.founder.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.founder.32": {
+      "file": "portraits/portrait.founder.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.founder.45": {
+      "file": "portraits/portrait.founder.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.founder.58": {
+      "file": "portraits/portrait.founder.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.crypto_kid.22": {
+      "file": "portraits/portrait.crypto_kid.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.crypto_kid.32": {
+      "file": "portraits/portrait.crypto_kid.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.crypto_kid.45": {
+      "file": "portraits/portrait.crypto_kid.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.crypto_kid.58": {
+      "file": "portraits/portrait.crypto_kid.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nomad.22": {
+      "file": "portraits/portrait.nomad.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nomad.32": {
+      "file": "portraits/portrait.nomad.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nomad.45": {
+      "file": "portraits/portrait.nomad.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.nomad.58": {
+      "file": "portraits/portrait.nomad.58.png",
+      "width": 64,
+      "height": 64
+    },
     "card.office_desk": {
       "file": "cards/card.office_desk.png",
       "width": 288,

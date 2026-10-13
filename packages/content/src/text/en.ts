@@ -38,6 +38,7 @@ export const en: ContentText = {
     public: { name: 'Civil service', levels: ['Clerk', 'Officer', 'Senior officer', 'Head of unit'] },
     service: { name: 'Services', levels: ['Rider', 'Shift lead', 'Store manager', 'Area manager', 'Operations director'] },
     finance: { name: 'Finance', levels: ['Analyst', 'Associate', 'Vice president', 'Director', 'Managing director'] },
+    medicine: { name: 'Medicine', levels: ['Resident doctor', 'Attending doctor', 'Specialist', 'Head of department'] },
   },
   ladders: {
     car: 'Cars',
@@ -92,6 +93,36 @@ export const en: ContentText = {
       perk: 'Four focus points and a second language.',
       handicap: 'Little cash, and money sent home every year.',
       unlock: 'Live in three cities in one life.',
+    },
+    banker: {
+      name: 'Investment banker',
+      perk: 'The best-paid ladder there is, and every market open from day one.',
+      handicap: 'Cannot live modestly, and starts with a business-school loan.',
+      unlock: 'Earn an MBA.',
+    },
+    doctor: {
+      name: 'Doctor',
+      perk: 'Cannot be laid off, and ends up very well paid.',
+      handicap: 'Two focus points a round, and a long student loan.',
+      unlock: 'Leave the rat race.',
+    },
+    comeback: {
+      name: 'Second chance',
+      perk: 'Years of experience: starts two rungs up the ladder.',
+      handicap: 'Nothing in the bank, and an expensive debt.',
+      unlock: 'Go bankrupt in any life.',
+    },
+    founder: {
+      name: 'Founder',
+      perk: 'A small business that pays from day one, and can be sold.',
+      handicap: 'The day job that keeps it going pays little.',
+      unlock: 'Build a business and sell it.',
+    },
+    crypto_kid: {
+      name: 'Crypto kid',
+      perk: 'Starts with $20,000 in Bitcoin, and every market open.',
+      handicap: 'Almost no cash, and low pay in an expensive city.',
+      unlock: 'Hold your coins through a crypto winter.',
     },
   },
   categories: {

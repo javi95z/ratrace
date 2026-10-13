@@ -25,6 +25,9 @@ export function unlockedLives(lives: ReadonlyArray<LifeDef>, played: Played): st
           return played.badges.includes('millionaire');
         case 'three_cities':
           return played.badges.includes('three_cities');
+        default:
+          // Every other goal is the badge of the same name.
+          return played.badges.includes(life.unlock);
       }
     })
     .map((life) => life.id);

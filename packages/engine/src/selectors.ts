@@ -1,5 +1,7 @@
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import { flowsOf } from './flows';
+import { statusParts } from './life/derive';
+import type { StatusParts } from './life/derive';
 import type { Cents } from './money';
 import { PRICE_LEVEL_START } from './rates';
 import { escapeMultiplier, wealthPoints } from './scoring';
@@ -73,4 +75,41 @@ export function cashflow(
     passiveAnnual: Math.floor(passiveOf(income) / years),
     expensesAnnual: Math.floor(outgoingsOf(expenses) / years),
   };
+}
+
+export interface CashflowLines {
+  salary: Cents;
+  dividends: Cents;
+  interest: Cents;
+  rent: Cents;
+  otherPassive: Cents;
+  living: Cents;
+  /** Family, insurance, upkeep and whatever else recurs. */
+  other: Cents;
+  /** Interest and repayment together. */
+  debt: Cents;
+}
+
+/** The yearly figures of `cashflow`, line by line, so that an interface can show what they are made of. */
+export function cashflowLines(content: Content, state: GameView): CashflowLines {
+  const world = state.timeline[state.round];
+  const years = content.yearsPerRound;
+  const income = incomeForRound(state.player, content, world);
+  const expenses = expensesForRound(state.player, content, world);
+  const yearly = (cents: Cents) => Math.floor(cents / years);
+  return {
+    salary: yearly(income.salary),
+    dividends: yearly(income.dividends),
+    interest: yearly(income.interest),
+    rent: yearly(income.rent),
+    otherPassive: yearly(income.otherPassive),
+    living: yearly(expenses.living),
+    other: yearly(expenses.other),
+    debt: yearly(expenses.debtInterest + expenses.debtPrincipal),
+  };
+}
+
+/** Status as it stands now, by where it comes from, beside the status the score counts. */
+export function statusBreakdown(content: Content, state: GameView): StatusParts & { total: number; lived: number } {
+  return { ...statusParts(state.player, content), total: state.player.statusPoints, lived: livedStatus(state) };
 }

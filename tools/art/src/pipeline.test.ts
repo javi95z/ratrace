@@ -83,6 +83,24 @@ describe('cutting a sheet', () => {
     expect(pixel(bottom.image, 10, 19)).toEqual([74, 50, 40, 255]);
   });
 
+  it('cuts portraits apart when white rules are drawn between their cells', () => {
+    const sheet = blank(100, 200, MAGENTA);
+    // Each bust runs down to the rule under it, as a drawn sheet does.
+    paint(sheet, { x0: 10, y0: 30, x1: 90, y1: 98 }, [232, 183, 150, 255]);
+    paint(sheet, { x0: 0, y0: 98, x1: 100, y1: 102 }, [255, 255, 255, 255]);
+    paint(sheet, { x0: 30, y0: 130, x1: 70, y1: 200 }, [74, 50, 40, 255]);
+    const [top, bottom] = cutSheet(sheet, spec({ kind: 'portraits', cols: 1, rows: 2, width: 20, height: 20 }));
+    const colours = (image: typeof top.image) => {
+      const seen = new Set<string>();
+      for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) if (pixel(image, x, y)[3]) seen.add(pixel(image, x, y).join());
+      return [...seen];
+    };
+    expect(colours(top.image)).toEqual(['232,183,150,255']);
+    expect(colours(bottom.image)).toEqual(['74,50,40,255']);
+    expect(top.flags).toEqual([]);
+    expect(bottom.flags).toEqual([]);
+  });
+
   it('cuts scenes at their dividers, crops them to shape and keeps them opaque', () => {
     const sheet = blank(205, 60, [20, 27, 51, 255]);
     paint(sheet, { x0: 100, y0: 0, x1: 105, y1: 60 }, [255, 255, 255, 255]);

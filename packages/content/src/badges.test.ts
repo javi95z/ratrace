@@ -341,7 +341,7 @@ describe('a whole life', () => {
     }
   });
 
-  it('can end in a family of four: a second child can come while the first is still at home', () => {
+  it('can end in a family of four: a second child can come while the first is still at home', { timeout: 60_000 }, () => {
     // Says yes to a date, to a partner and to every child the cards offer, and looks for a life with two children at home.
     const wantsFamily = (state: GameState): number => {
       const card = content.cards.find((c) => c.id === state.hand[state.answered]);
@@ -384,6 +384,16 @@ describe('unlocking lives', () => {
     expect(unlockedLives(lives, { finished: 0, badges: ['millionaire'] })).toEqual(['heir']);
     expect(unlockedLives(lives, { finished: 0, badges: ['three_cities'] })).toEqual(['newcomer']);
     expect(unlockedLives(lives, { finished: 3, badges: ['first_100k', 'millionaire', 'three_cities'] })).toEqual(['rider', 'heir', 'newcomer']);
+  });
+
+  it('opens each of the later lives with the badge its goal names, and with no other', () => {
+    const later: Record<string, string> = { banker: 'mba', doctor: 'escaped', comeback: 'bankrupt', founder: 'sold_business', crypto_kid: 'crypto_winter' };
+    for (const [life, badge] of Object.entries(later)) {
+      expect(badges.map((b) => b.id), life).toContain(badge);
+      expect(lives.find((x) => x.id === life)?.unlock).toBe(badge);
+      expect(unlockedLives(lives, { finished: 0, badges: [badge] })).toEqual([life]);
+    }
+    expect(unlockedLives(lives, { finished: 0, badges: badges.map((b) => b.id).filter((id) => !Object.values(later).includes(id) && id !== 'millionaire' && id !== 'three_cities') })).toEqual([]);
   });
 
   it('never lists a life that was open from the start', () => {

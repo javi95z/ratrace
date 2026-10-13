@@ -1,7 +1,7 @@
 import type { CareerDef } from '@ratrace/engine';
 
 /**
- * Five career ladders. A level pays a share of the median salary of the player's city,
+ * Six career ladders. A level pays a share of the median salary of the player's city,
  * so the same job pays more in New York than in Bangkok.
  *
  * A round of work adds one point of career skill, and a round of study one more. So the top of a
@@ -55,7 +55,7 @@ export const careers: CareerDef[] = [
     ],
   },
   {
-    // The highest ceiling. No life starts here; it is reached by switching careers.
+    // The highest ceiling. Reached by switching careers, or by the one life that starts here.
     id: 'finance',
     overtimePct: 6,
     levels: [
@@ -64,6 +64,17 @@ export const careers: CareerDef[] = [
       { salaryPct: 200, minSkill: 10, status: 15 },
       { salaryPct: 260, minSkill: 18, status: 23 },
       { salaryPct: 350, minSkill: 28, status: 30 },
+    ],
+  },
+  {
+    // Long hours and a slow first step, then pay only finance beats. Nothing leads here: it is where the doctor starts.
+    id: 'medicine',
+    overtimePct: 8,
+    levels: [
+      { salaryPct: 110, minSkill: 0, status: 5 },
+      { salaryPct: 150, minSkill: 6, status: 10 },
+      { salaryPct: 200, minSkill: 14, status: 17 },
+      { salaryPct: 260, minSkill: 24, status: 26 },
     ],
   },
 ];

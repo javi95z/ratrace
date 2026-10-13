@@ -864,6 +864,46 @@
     "w": 64,
     "h": 64
   },
+  "portrait.comeback.22": {
+    "src": "portraits/portrait.comeback.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.comeback.32": {
+    "src": "portraits/portrait.comeback.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.comeback.45": {
+    "src": "portraits/portrait.comeback.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.comeback.58": {
+    "src": "portraits/portrait.comeback.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.crypto_kid.22": {
+    "src": "portraits/portrait.crypto_kid.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.crypto_kid.32": {
+    "src": "portraits/portrait.crypto_kid.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.crypto_kid.45": {
+    "src": "portraits/portrait.crypto_kid.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.crypto_kid.58": {
+    "src": "portraits/portrait.crypto_kid.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.doctor.22": {
     "src": "portraits/portrait.doctor.22.png",
     "w": 64,
@@ -904,6 +944,26 @@
     "w": 64,
     "h": 64
   },
+  "portrait.founder.22": {
+    "src": "portraits/portrait.founder.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.founder.32": {
+    "src": "portraits/portrait.founder.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.founder.45": {
+    "src": "portraits/portrait.founder.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.founder.58": {
+    "src": "portraits/portrait.founder.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.heir.22": {
     "src": "portraits/portrait.heir.22.png",
     "w": 64,
@@ -941,6 +1001,26 @@
   },
   "portrait.newcomer.58": {
     "src": "portraits/portrait.newcomer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nomad.22": {
+    "src": "portraits/portrait.nomad.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nomad.32": {
+    "src": "portraits/portrait.nomad.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nomad.45": {
+    "src": "portraits/portrait.nomad.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.nomad.58": {
+    "src": "portraits/portrait.nomad.58.png",
     "w": 64,
     "h": 64
   },

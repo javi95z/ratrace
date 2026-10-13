@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyRound, createGame, previewRound } from './game';
 import { PRICE_LEVEL_START } from './rates';
-import { cashflow, finalScore, netWorth, realNetWorth } from './selectors';
+import { cashflow, cashflowLines, finalScore, livedStatus, netWorth, realNetWorth, statusBreakdown } from './selectors';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import { passive, withPlayer as patched } from './testing/patch';
 import type { GameEvent, GameState, LedgerLine } from './types';
@@ -370,5 +370,23 @@ describe('selectors', () => {
   it('reports annual cashflow at the current rates', () => {
     const state = withPlayer(createGame({ content, start: fixtureStart() }, 'c'), { deposit: 1_000_000 });
     expect(cashflow(content, state)).toEqual({ salaryAnnual: 3_000_000, passiveAnnual: 15_000, expensesAnnual: 1_800_000 });
+  });
+
+  it('reports the same cashflow line by line', () => {
+    const state = withPlayer(createGame({ content, start: fixtureStart() }, 'c'), { deposit: 1_000_000 });
+    const lines = cashflowLines(content, state);
+    expect(lines).toEqual({ salary: 3_000_000, dividends: 0, interest: 15_000, rent: 0, otherPassive: 0, living: 1_800_000, other: 0, debt: 0 });
+    const whole = cashflow(content, state);
+    expect(lines.dividends + lines.interest + lines.rent + lines.otherPassive).toBe(whole.passiveAnnual);
+    expect(lines.living + lines.other + lines.debt).toBe(whole.expensesAnnual);
+  });
+
+  it('reports status by source, beside the status the score counts', () => {
+    const state = withPlayer(createGame({ content, start: fixtureStart() }, 'c'), {}, { bonusStatus: 48 });
+    const status = statusBreakdown(content, state);
+    expect(status.bonus).toBe(48);
+    expect(status.items + status.home + status.job + status.city + status.lifestyle + status.bonus).toBe(status.total);
+    expect(status.total).toBe(state.player.statusPoints);
+    expect(status.lived).toBe(livedStatus(state));
   });
 });

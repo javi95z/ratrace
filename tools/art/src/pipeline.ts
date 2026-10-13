@@ -66,11 +66,17 @@ const PORTRAIT_SIDE_TRIM = 6;
 /**
  * Portraits fill their cells and their shoulders can touch across a row, so they are cut on the
  * fixed grid rather than by outline. A shape only counts for the row its centre lies in, which keeps
- * the hair of the portrait below from showing at the bottom of the one above.
+ * the hair of the portrait below from showing at the bottom of the one above. White rules drawn
+ * between the cells are taken out first: left in, they join every portrait they touch into one shape.
  */
 function cutPortraits(sheet: Image, spec: SheetSpec): Sprite[] {
   const { width, height } = sheet;
   const mask = erode(keyMask(sheet), width, height);
+  const columns = dividerFlags(sheet, 'x', 'white');
+  const lines = dividerFlags(sheet, 'y', 'white');
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) if (columns[x] || lines[y]) mask[y * width + x] = 0;
+  }
   const { blobs, labels } = labelBlobs(mask, width, height);
   const rowOf = blobs.map((blob) => Math.min(spec.rows - 1, Math.floor(blob.cy / (height / spec.rows))));
 

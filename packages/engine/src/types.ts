@@ -722,6 +722,8 @@ export interface LifeStart {
   rentTier?: RentTier;
   /** Homes owned on day one, bought at the round-0 price with no mortgage. */
   properties?: Array<{ typeId: string; rented: boolean }>;
+  /** Investments held on day one, as if just bought for what they are worth. The finance skill is not asked. */
+  holdings?: Array<{ assetId: string; value: Cents }>;
   recurring?: Recurring[];
   flags?: string[];
 }

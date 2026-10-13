@@ -12,11 +12,11 @@ describe('the v1 content', () => {
   it('has the size the spec sets', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(19);
-    expect(content.careers).toHaveLength(5);
+    expect(content.careers).toHaveLength(6);
     expect(content.items).toHaveLength(34);
     expect(content.propertyTypes).toHaveLength(5);
     expect(content.cards).toHaveLength(100);
-    expect(lives).toHaveLength(6);
+    expect(lives).toHaveLength(11);
   });
 
   it('has the number of cards the spec sets for each category', () => {
@@ -95,6 +95,30 @@ describe('the v1 content', () => {
     expect(content.lifestyleMultiplierPct).toEqual([70, 100, 140, 200]);
     // A crypto winter takes three quarters: the one number that holds the gambler's band (spec 3.7).
     expect(content.market.cryptoMeanBp.winter).toBe(-7_500);
+  });
+
+  it('starts the crypto kid with a coin no order of his could not have bought, and the founder with a business to sell', () => {
+    const kid = createGame({ content, start: lives.find((life) => life.id === 'crypto_kid')!.start }, 'kid');
+    expect(kid.player.positions).toEqual({ bitcoin: { value: 2_000_000, basis: 2_000_000 } });
+    expect(kid.player.life.financeSkill).toBe(content.assets.find((asset) => asset.id === 'bitcoin')?.minFinanceSkill);
+
+    const founder = createGame({ content, start: lives.find((life) => life.id === 'founder')!.start }, 'founder');
+    expect(founder.player.extraPassiveAnnual).toBe(600_000);
+    // The card that buys a business out ends it by its tag, and asks for the flag.
+    expect(Object.keys(founder.player.life.flags)).toEqual(['has_business']);
+    expect(founder.player.life.recurring.map((entry) => entry.tag)).toEqual(['shop']);
+  });
+
+  it('starts every life at a rung its experience holds, so the first round neither promotes nor demotes', () => {
+    for (const life of lives) {
+      const job = life.start.life?.career;
+      if (!job) continue;
+      const levels = content.careers.find((career) => career.id === job.id)!.levels;
+      const skill = life.start.life?.careerSkill ?? 0;
+      expect(skill, life.id).toBeGreaterThanOrEqual(levels[job.level].minSkill);
+      // The newcomer's language is worth two points of experience, short of the next rung.
+      if (levels[job.level + 1]) expect(skill, life.id).toBeLessThan(levels[job.level + 1].minSkill);
+    }
   });
 
   it('starts every life cleanly', () => {

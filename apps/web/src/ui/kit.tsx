@@ -68,10 +68,11 @@ export function Well({ children, className }: { children: ReactNode; className?:
 /**
  * One figure of the HUD: an icon, a number, and what the number is. Inside a container too narrow
  * for three of them side by side, the icon steps aside so the number is never cut short.
+ * With `onOpen` it is a button that opens the sheet of what the figure means.
  */
-export function Stat({ icon, value, label, tone, hint }: { icon: string; value: string; label: string; tone?: 'good' | 'bad'; hint?: string }) {
-  return (
-    <div className="frame flex min-w-0 items-center gap-1.5 bg-night-700 p-1 @max-[330px]:px-2" title={hint}>
+export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string; value: string; label: string; tone?: 'good' | 'bad'; hint?: string; onOpen?: () => void }) {
+  const body = (
+    <>
       {/* The well is exactly the icon: three figures side by side on a 360px phone leave no pixel to spare. */}
       <Well className="size-8 @max-[330px]:hidden">
         <Sprite id={icon} />
@@ -80,7 +81,24 @@ export function Stat({ icon, value, label, tone, hint }: { icon: string; value: 
         <div className={join('pixel truncate text-[14px]', tone === 'good' && 'text-teal-300', tone === 'bad' && 'text-wine-300')}>{value}</div>
         <div className="truncate text-[11px] leading-tight text-ink-300">{label}</div>
       </div>
-    </div>
+    </>
+  );
+  const box = 'frame flex min-w-0 items-center gap-1.5 bg-night-700 p-1 @max-[330px]:px-2';
+  if (!onOpen) {
+    return (
+      <div className={box} title={hint}>
+        {body}
+      </div>
+    );
+  }
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={onOpen} title={hint} className={join(box, 'relative min-h-11 text-left')}>
+      {body}
+      {/* Out of the flow, so it takes no width from the number. */}
+      <span aria-hidden className="pixel absolute bottom-0.5 right-1 text-[10px] leading-none text-ink-300">
+        ▸
+      </span>
+    </button>
   );
 }
 

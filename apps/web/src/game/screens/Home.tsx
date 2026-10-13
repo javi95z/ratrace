@@ -1,13 +1,11 @@
 'use client';
 
-import { useGame, useSaving, useSettings, useT, useWords } from '@/game/context';
+import { useGame, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
-import { Link, usePathname } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
-import { Panel, Toggle } from '@/ui/kit';
+import { Link } from '@/i18n/navigation';
+import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-
-const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español' };
+import { Preferences } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
@@ -15,8 +13,6 @@ export function Home() {
   const meta = useT('meta');
   const common = useT('common');
   const { content, text, names } = useWords();
-  const { reducedMotion, setReducedMotion, locale } = useSettings();
-  const pathname = usePathname();
   const status = useGame((s) => s.status);
   const lost = useGame((s) => s.lost);
   const view = useGame((s) => s.view);
@@ -79,20 +75,7 @@ export function Home() {
       </div>
 
       <Panel className="mt-auto w-full" title={t('language')}>
-        <div className="mb-3 grid grid-cols-2 gap-2">
-          {routing.locales.map((code) => (
-            <Link
-              key={code}
-              href={pathname}
-              locale={code}
-              aria-current={code === locale ? 'true' : undefined}
-              className={`pixel frame flex min-h-11 items-center justify-center text-[15px] ${code === locale ? 'bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
-            >
-              {LANGUAGES[code]}
-            </Link>
-          ))}
-        </div>
-        <Toggle on={reducedMotion} onChange={setReducedMotion} label={t('motion')} hint={t('motionHint')} />
+        <Preferences />
         {saving ? (
           <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p>
         ) : (

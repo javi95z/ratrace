@@ -57,11 +57,19 @@ export function derivePassive(p: PlayerState): Cents {
   return total;
 }
 
-/**
- * Status points. Within one ladder the best item counts in full and the others in part.
- * Home, job title, city, lifestyle and lasting bonuses from cards are added. Never negative.
- */
-export function deriveStatus(p: PlayerState, content: Content): number {
+/** Where status comes from. The parts can add up to less than zero; the status itself never does. */
+export interface StatusParts {
+  items: number;
+  home: number;
+  job: number;
+  city: number;
+  lifestyle: number;
+  /** Lasting bonuses and losses from cards. */
+  bonus: number;
+}
+
+/** Status by source. Within one ladder the best item counts in full and the others in part. */
+export function statusParts(p: PlayerState, content: Content): StatusParts {
   const life = p.life;
   const rules = content.life;
 
@@ -72,22 +80,30 @@ export function deriveStatus(p: PlayerState, content: Content): number {
     if (group) group.push(item.status);
     else ladders.set(item.ladder, [item.status]);
   }
-  let total = 0;
+  let items = 0;
   for (const group of ladders.values()) {
     let best = 0;
     for (const status of group) best = Math.max(best, status);
     let lesser = -mulDiv(best, rules.lesserItemPct, 100);
     for (const status of group) lesser += mulDiv(status, rules.lesserItemPct, 100);
-    total += best + lesser;
+    items += best + lesser;
   }
 
   const home = homeOf(p, content);
-  total += home ? propertyTypeOf(content, home.typeId).status : rules.rentTierStatus[life.rentTier];
-  if (life.career) total += levelOf(content, life.career).status;
-  total += cityOf(content, p.cityId).prestige;
-  total += rules.lifestyleStatus[p.lifestyleTier];
-  total += life.bonusStatus;
-  return Math.max(0, total);
+  return {
+    items,
+    home: home ? propertyTypeOf(content, home.typeId).status : rules.rentTierStatus[life.rentTier],
+    job: life.career ? levelOf(content, life.career).status : 0,
+    city: cityOf(content, p.cityId).prestige,
+    lifestyle: rules.lifestyleStatus[p.lifestyleTier],
+    bonus: life.bonusStatus,
+  };
+}
+
+/** Status points: items, home, job title, city, lifestyle and lasting bonuses from cards. Never negative. */
+export function deriveStatus(p: PlayerState, content: Content): number {
+  const parts = statusParts(p, content);
+  return Math.max(0, parts.items + parts.home + parts.job + parts.city + parts.lifestyle + parts.bonus);
 }
 
 /** Brings the derived fields of the player back in step with their life. Call after anything changes it. */

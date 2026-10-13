@@ -45,7 +45,7 @@ describe('bots', () => {
     expect(bots.map((b) => b.id)).toEqual(['saver', 'indexer', 'gambler', 'chaser', 'landlord', 'random']);
   });
 
-  it('play every life to the end without writing an order the game cannot read', () => {
+  it('play every life to the end without writing an order the game cannot read', { timeout: 60_000 }, () => {
     for (const b of bots) {
       for (const life of lives) {
         const refused = watch(b, life.id, 'bots-1');

@@ -67,6 +67,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
       mortgageId: null,
     });
   }
+  for (const held of from?.holdings ?? []) p.positions[held.assetId] = { value: held.value, basis: held.value };
   refreshDerived(p, content);
   return p;
 }

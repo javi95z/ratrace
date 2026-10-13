@@ -38,6 +38,7 @@ export const es: ContentText = {
     public: { name: 'Función pública', levels: ['Auxiliar', 'Administrativo', 'Técnico superior', 'Jefe de unidad'] },
     service: { name: 'Servicios', levels: ['Repartidor', 'Jefe de turno', 'Encargado de tienda', 'Jefe de zona', 'Director de operaciones'] },
     finance: { name: 'Finanzas', levels: ['Analista', 'Asociado', 'Vicepresidente', 'Director', 'Director general'] },
+    medicine: { name: 'Medicina', levels: ['Médica residente', 'Médica adjunta', 'Especialista', 'Jefa de servicio'] },
   },
   ladders: {
     car: 'Coches',
@@ -92,6 +93,36 @@ export const es: ContentText = {
       perk: 'Cuatro puntos de foco y un segundo idioma.',
       handicap: 'Poco dinero, y cada año manda una parte a casa.',
       unlock: 'Vive en tres ciudades en una misma vida.',
+    },
+    banker: {
+      name: 'Banquero de inversión',
+      perk: 'La carrera mejor pagada que hay, y todos los mercados abiertos desde el primer día.',
+      handicap: 'No sabe vivir con poco, y empieza con el préstamo de la escuela de negocios.',
+      unlock: 'Consigue un MBA.',
+    },
+    doctor: {
+      name: 'Médica',
+      perk: 'No la pueden despedir, y acaba cobrando muy bien.',
+      handicap: 'Dos puntos de foco por ronda, y un préstamo de estudios largo.',
+      unlock: 'Sal de la rueda.',
+    },
+    comeback: {
+      name: 'Segunda oportunidad',
+      perk: 'Años de experiencia: empieza dos escalones más arriba.',
+      handicap: 'Nada en el banco, y una deuda cara.',
+      unlock: 'Quiebra en cualquier vida.',
+    },
+    founder: {
+      name: 'Fundadora',
+      perk: 'Un pequeño negocio que da dinero desde el primer día, y que se puede vender.',
+      handicap: 'El trabajo con el que lo mantiene paga poco.',
+      unlock: 'Monta un negocio y véndelo.',
+    },
+    crypto_kid: {
+      name: 'Joven cripto',
+      perk: 'Empieza con 20.000 $ en Bitcoin, y con todos los mercados abiertos.',
+      handicap: 'Casi sin efectivo, y un sueldo bajo en una ciudad cara.',
+      unlock: 'Mantén tus criptomonedas durante un invierno cripto.',
     },
   },
   categories: {

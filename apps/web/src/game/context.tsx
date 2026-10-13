@@ -190,6 +190,8 @@ export function useGuide() {
     read: (tip: string) => changeProfile((current) => (current.guide.seen.includes(tip) ? current : { ...current, guide: { ...current.guide, seen: [...current.guide.seen, tip] } })),
     /** Turns the guide off for good. */
     turnOff: () => changeProfile((current) => ({ ...current, guide: { ...current.guide, off: true } })),
+    /** Turns the guide off, or back on: the tips not yet read then show again. */
+    setOff: (off: boolean) => changeProfile((current) => ({ ...current, guide: { ...current.guide, off } })),
   };
 }
 

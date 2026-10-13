@@ -140,6 +140,10 @@ describe('validateStart: the life', () => {
     expect(check({ rentTier: 2 })).toEqual(['life.rentTier must be 0 or 1']);
     expect(check({ properties: [{ typeId: 'castle', rented: false }] })).toEqual(['life property 0 has an unknown type: castle']);
     expect(check({ properties: [{ typeId: 'flat', rented: 'yes' }] })).toEqual(['life property 0 needs rented to be true or false']);
+    expect(check({ holdings: [{ assetId: 'tulips', value: 100 }] })).toEqual(['life holding 0 has an unknown asset: tulips']);
+    expect(check({ holdings: [{ assetId: 'bond_long', value: 0 }] })).toEqual(['life holding 0 needs a positive whole value']);
+    expect(check({ holdings: [{ assetId: 'bond_long', value: 100 }, { assetId: 'bond_long', value: 100 }] })).toEqual(['life holding 1 repeats an asset: bond_long']);
+    expect(check({ holdings: [{ assetId: 'bond_long', value: 100 }] })).toEqual([]);
     expect(check({ recurring: [{ tag: 'x', kind: 'bribe', annual: 1, roundsLeft: null }] })).toEqual(['life recurring entry 0 is not valid']);
     expect(check({ recurring: [{ tag: 'x', kind: 'expense', annual: -1, roundsLeft: null }] })).toEqual(['life recurring entry 0 is not valid']);
     expect(check({ recurring: [{ tag: 'x', kind: 'expense', annual: 1, roundsLeft: 0 }] })).toEqual(['life recurring entry 0 is not valid']);

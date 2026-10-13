@@ -45,7 +45,8 @@ describe('the terminal game', () => {
     expect(engineer?.player.life.lifeId).toBe('engineer');
     expect(text(first.out)).toContain('1. Nurse');
     expect(text(first.out)).toContain('6. Newcomer abroad');
-    expect(first.asked[0]).toBe('Life (1-6) > ');
+    expect(text(first.out)).toContain('11. Crypto kid');
+    expect(first.asked[0]).toBe('Life (1-11) > ');
 
     const byName = scripted(['99', 'heir']);
     expect((await runGame(byName.io, { locale: 'en', seed: 'choose' }))?.player.life.lifeId).toBe('heir');
@@ -174,7 +175,7 @@ describe('the terminal game', () => {
   });
 
   it('plays every life to the end in both languages without a hole in the text', async () => {
-    for (const lifeId of ['nurse', 'engineer', 'civil_servant', 'rider', 'heir', 'newcomer']) {
+    for (const lifeId of ['nurse', 'engineer', 'civil_servant', 'rider', 'heir', 'newcomer', 'banker', 'doctor', 'comeback', 'founder', 'crypto_kid']) {
       for (const locale of ['en', 'es'] as const) {
         // Take the last option of every card where it is open, to walk through as much text as possible,
         // look at every screen once a round, and play the round.

@@ -169,6 +169,6 @@ describe('content art', () => {
       ...Object.values(assetClassArt),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(100 + 34 + 5 + 2 + 6 + 24 + 5);
+    expect(wanted.length).toBe(100 + 34 + 5 + 2 + 6 + 44 + 5);
   });
 });

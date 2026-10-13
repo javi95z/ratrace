@@ -6,8 +6,9 @@ export { createGame, applyCard, applyCards, applyRound, previewRound } from './g
 export type { RejectedOrder, RoundPreview } from './game';
 export type { RoundExpenses, RoundIncome } from './economy';
 export type { TaxBill } from './tax';
-export { netWorth, realNetWorth, finalScore, cashflow, escapeProgress, livedStatus, scoreBreakdown } from './selectors';
-export type { ScoreBreakdown } from './selectors';
+export { netWorth, realNetWorth, finalScore, cashflow, cashflowLines, escapeProgress, livedStatus, scoreBreakdown, statusBreakdown } from './selectors';
+export type { CashflowLines, ScoreBreakdown } from './selectors';
+export type { StatusParts } from './life/derive';
 export { wealthPoints, escapeMultiplier } from './scoring';
 export { livingCostAnnual } from './economy';
 export { validateContent, validateStart } from './validate';
