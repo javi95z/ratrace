@@ -139,6 +139,36 @@ export const es: ContentText = {
       handicap: 'Casi sin efectivo, y un sueldo bajo en una ciudad cara.',
       unlock: 'Mantén tus criptomonedas durante un invierno cripto.',
     },
+    lawyer: {
+      name: 'Abogada',
+      perk: 'La escalera más alta del juego: nadie acaba cobrando más.',
+      handicap: 'La subida es la más lenta, y empieza con un préstamo de estudios.',
+      unlock: 'Compra tu primer reloj de lujo.',
+    },
+    teacher: {
+      name: 'Profesor',
+      perk: 'No lo pueden despedir, y tiene un punto de foco más cada ronda.',
+      handicap: 'El techo salarial más bajo de todas las carreras.',
+      unlock: 'Llega al final de una vida teniendo solo fondos indexados.',
+    },
+    influencer: {
+      name: 'Influencer',
+      perk: 'Estatus desde el primer día, y dinero rápido poco después.',
+      handicap: 'Desde los 34 años el público se va, y el sueldo con él.',
+      unlock: 'Llega a 100 de estatus.',
+    },
+    waiter: {
+      name: 'Camarero',
+      perk: 'Cuatro de foco por ronda, y las mejores horas extra del juego.',
+      handicap: 'El sueldo de entrada más bajo de todos, y un camino largo hasta arriba.',
+      unlock: 'Compra tu primera acción.',
+    },
+    salesperson: {
+      name: 'Comercial',
+      perk: 'Un cuarto más de sueldo cuando la economía va en auge.',
+      handicap: 'Un cuarto menos cuando se encoge.',
+      unlock: 'Compra mientras todo cae.',
+    },
   },
   crises: {
     crash: {

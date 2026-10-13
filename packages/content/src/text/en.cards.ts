@@ -68,10 +68,26 @@ export const cards: Record<string, CardText> = {
     'Start at the bottom in law',
     ['Pay for the entrance course', 'You pass. The firm calls on Monday.', 'You fail the exam by four points.'],
   ]),
-  career_market: c('Saturday at the market', 'A stallholder needs a seller, and the bar on the corner a waiter. Neither asks for a CV.', [
+  career_market: c('Saturday at the market', 'A stallholder needs someone to sell. Nobody asks for a CV.', [
     'Walk on',
     'Sell at the stall',
-    'Serve at the bar',
+  ]),
+  career_bar: c('Staff wanted', 'The bar on the corner cannot keep up, and the tips jar is full.', [
+    'Walk past',
+    'Put on the apron',
+  ]),
+  career_teaching: c('A teacher is needed', 'The school down the road has lost a teacher in the middle of the year. Your degree will do.', [
+    'It is not for you',
+    'Take the class',
+  ]),
+  career_creator: c('The video that travelled', 'You filmed it in your bedroom and a hundred thousand people have watched it. Brands are writing to you.', [
+    'Keep your job',
+    'Make this your job',
+  ]),
+  career_out_of_town: c('An offer forty minutes away', 'A firm on the industrial estate pays better. There is no train: you would drive.', [
+    'Stay where you are',
+    'Take it',
+    ['Ask for more', 'They agree.', 'They hire someone else.'],
   ]),
   career_headhunter: c('A headhunter calls', '"Are you free for a confidential coffee?"', [
     'Not interested',
@@ -105,7 +121,6 @@ export const cards: Record<string, CardText> = {
   edu_language: c('A new language', 'A teacher two streets away gives evening classes.', [
     'Maybe next year',
     'Sign up',
-    'Sign up, and take over her classes',
   ]),
 
   // Business
@@ -245,7 +260,6 @@ export const cards: Record<string, CardText> = {
   life_new_phone: c('The new {item:tech_phone}', 'Yours still works. This one has a better camera.', [
     'Keep the old one',
     'Buy it',
-    'Buy it and start filming',
   ]),
   life_wedding_abroad: c('A wedding abroad', 'Your friend is getting married on a lake, four days, dress code "elegant".', [
     'Send a gift',
@@ -270,6 +284,11 @@ export const cards: Record<string, CardText> = {
     'Keep taking the metro',
     'Buy a {item:car_toyota_corolla} outright',
     'Finance a {item:car_tesla_model_3}',
+  ]),
+  life_club_contacts: c('At the bar of the club', 'Someone you nod to every week leans over with an opportunity.', [
+    'Change the subject',
+    ['Ask if they are hiring', 'They introduce you to the one who hires. You leave with a raise.', 'Kind words and nothing more.'],
+    ['Go into their deal', 'It works. Your share arrives every year.', 'You never see that money again.'],
   ]),
   life_bottle_service: c('Bottle service', 'Someone suggests a table. The waiter is already holding the menu.', [
     'Go home early',

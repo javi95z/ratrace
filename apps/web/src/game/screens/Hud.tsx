@@ -1,6 +1,6 @@
 'use client';
 
-import { portraitArt } from '@ratrace/content';
+import { frameArt, portraitArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
@@ -146,9 +146,18 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   // Where the profile is already on screen, as on a wide one, the portrait opens nothing and is no button.
   const portrait = (
     // A sprite is never drawn at a fraction of its size: the small portrait is the face, cut out of the whole.
-    <Well className={compact ? 'size-11 items-start overflow-hidden' : 'size-[68px]'}>
+    <Well className={compact ? 'size-11 items-start overflow-hidden' : 'size-16'}>
       <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className={compact ? '-mt-1 max-w-none' : ''} />
     </Well>
+  );
+  // At full size the portrait hangs in a frame, plain at first and richer as status grows. The small one keeps its gold line.
+  const framed = compact ? (
+    <span className="frame-double my-1.5 ml-1.5 inline-flex shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
+  ) : (
+    <span className="relative inline-flex size-20 shrink-0 items-center justify-center leading-[0]" data-frame={frameArt(p.statusPoints)}>
+      {portrait}
+      <Sprite id={frameArt(p.statusPoints)} fallback={{ w: 80, h: 80 }} className="pointer-events-none absolute inset-0" />
+    </span>
   );
 
   return (
@@ -158,11 +167,11 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
 
       <div className="flex items-center gap-3">
         {onProfile ? (
-          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="frame-double my-1.5 ml-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">
-            {portrait}
+          <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="shrink-0 leading-[0]">
+            {framed}
           </button>
         ) : (
-          <span className="frame-double my-1.5 ml-1.5 shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
+          framed
         )}
         <div className="min-w-0 flex-1">
           <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>

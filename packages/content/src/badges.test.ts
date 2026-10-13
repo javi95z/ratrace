@@ -390,7 +390,11 @@ describe('unlocking lives', () => {
   });
 
   it('opens each of the later lives with the badge its goal names, and with no other', () => {
-    const later: Record<string, string> = { banker: 'mba', doctor: 'escaped', comeback: 'bankrupt', founder: 'sold_business', crypto_kid: 'crypto_winter' };
+    const later: Record<string, string> = {
+      banker: 'mba', doctor: 'escaped', comeback: 'bankrupt', founder: 'sold_business', crypto_kid: 'crypto_winter',
+      // One for each of the five newer careers.
+      lawyer: 'first_luxury_watch', teacher: 'index_only', influencer: 'status_100', waiter: 'first_share', salesperson: 'bought_the_dip',
+    };
     for (const [life, badge] of Object.entries(later)) {
       expect(badges.map((b) => b.id), life).toContain(badge);
       expect(lives.find((x) => x.id === life)?.unlock).toBe(badge);

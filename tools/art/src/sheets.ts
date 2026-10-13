@@ -22,7 +22,12 @@ export interface SheetSpec {
 const LIVES_A = ['nurse', 'engineer', 'civil_servant', 'rider'];
 const LIVES_B = ['heir', 'newcomer', 'banker', 'doctor'];
 const LIVES_C = ['comeback', 'founder', 'crypto_kid', 'nomad'];
+const LIVES_D = ['lawyer', 'teacher', 'influencer', 'waiter'];
+// The salesperson, and three lives for careers the game does not have yet.
+const LIVES_E = ['salesperson', 'electrician', 'pilot', 'scientist'];
 const AGES = [22, 32, 45, 58];
+/** A workplace for each career, two to a sheet, each at three stages: starting out, established, at the top. The last is for a trade to come. */
+const WORKPLACES = [['healthcare', 'tech'], ['public', 'service'], ['finance', 'medicine'], ['law', 'education'], ['influencer', 'hospitality'], ['sales', 'trades']];
 const portraits = (lives: string[]) => lives.flatMap((life) => AGES.map((age) => `portrait.${life}.${age}`));
 
 export const SHEETS: SheetSpec[] = [
@@ -146,6 +151,45 @@ export const SHEETS: SheetSpec[] = [
   { file: 'portraits/portraits-01', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_A) },
   { file: 'portraits/portraits-02', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_B) },
   { file: 'portraits/portraits-03', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_C) },
+  { file: 'portraits/portraits-04', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_D) },
+  { file: 'portraits/portraits-05', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_E) },
+  {
+    // A sign for each career, and five for careers to come.
+    file: 'icons/icons-06', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
+    ids: [
+      'icon.career_healthcare', 'icon.career_tech', 'icon.career_public', 'icon.career_service',
+      'icon.career_finance', 'icon.career_medicine', 'icon.career_law', 'icon.career_education',
+      'icon.career_influencer', 'icon.career_hospitality', 'icon.career_sales', 'icon.career_trades',
+      'icon.career_construction', 'icon.career_science', 'icon.career_aviation', 'icon.career_creative',
+    ],
+  },
+  {
+    // What a thing is good for, the kinds of debt, and the lines of the balance sheet.
+    file: 'icons/icons-07', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
+    ids: [
+      'icon.use_move', 'icon.use_study', 'icon.use_pay', 'icon.use_hunt',
+      'icon.use_focus', 'icon.debt_mortgage', 'icon.debt_loan', 'icon.debt_card',
+      'icon.debt_instalments', 'icon.bal_cash', 'icon.bal_savings', 'icon.bal_pension',
+      'icon.bal_investments', 'icon.bal_property', 'icon.bal_things', 'icon.bal_debts',
+    ],
+  },
+  // The frame of the portrait, by status: plain, bronze, silver, gold. The middle of each is clear.
+  // Frames and loops share the icons' palette, though not their size: a group of their own would need every palette rebuilt.
+  { file: 'icons/frames-01', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 80, height: 80, ids: ['frame.plain', 'frame.bronze', 'frame.silver', 'frame.gold'] },
+  {
+    // Four loops of four frames: a coin turning, the wheel, confetti, an arrow going up.
+    file: 'icons/anim-01', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 48, height: 48,
+    ids: ['coin', 'wheel', 'confetti', 'arrow'].flatMap((name) => [0, 1, 2, 3].map((frame) => `anim.${name}.${frame}`)),
+  },
+  {
+    // Four rims for badges by rarity, a crest for each city, and two spare.
+    file: 'badges/badges-03', group: 'badges', kind: 'objects', cols: 4, rows: 3, width: 64, height: 64,
+    ids: [
+      'rim.bronze', 'rim.silver', 'rim.gold', 'rim.gem',
+      'crest.madrid', 'crest.london', 'crest.new_york', 'crest.dubai',
+      'crest.singapore', 'crest.bangkok', 'crest.compass', 'crest.wheel',
+    ],
+  },
   ...[
     ['office_desk', 'handshake', 'packed_box', 'airport', 'library', 'graduation'],
     ['online_course', 'shopfront', 'bar', 'garage_startup', 'parcels', 'phone_chart'],
@@ -172,6 +216,12 @@ export const SHEETS: SheetSpec[] = [
   ].map((names, i): SheetSpec => ({
     file: `cards/cards-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
     ids: names.map((name) => `card.${name}`),
+  })),
+  // Scenes for the newer careers and for what things open.
+  { file: 'cards/cards-20', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.out_of_town', 'card.club_contacts', 'card.classroom', 'card.ring_light', 'card.law_office', 'card.bar_tips'] },
+  ...WORKPLACES.map((careers, i): SheetSpec => ({
+    file: `cards/work-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,
+    ids: careers.flatMap((career) => [0, 1, 2].map((stage) => `work.${career}.${stage}`)),
   })),
   { file: 'skylines/skylines-01', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid', 'skyline.london', 'skyline.new_york'] },
   { file: 'skylines/skylines-02', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai', 'skyline.singapore', 'skyline.bangkok'] },

@@ -1,4 +1,4 @@
-import { cityIcon, START_AGE } from '@ratrace/content';
+import { careerArt, cityIcon, START_AGE } from '@ratrace/content';
 import type { ContentText, Names } from '@ratrace/content';
 import { indexed, ITEM_PERKS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -221,6 +221,8 @@ export interface RoundNote {
   icon: string;
   title: string;
   hint?: string;
+  /** Something to celebrate: drawn with a burst of confetti in place of its sprite. */
+  cheer?: boolean;
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
@@ -242,7 +244,7 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         add(event, { tone: 'bad', icon: 'icon.loan', title: t('bankrupt'), hint: t('bankruptHint') });
         break;
       case 'promoted':
-        add(event, { tone: 'good', icon: 'icon.job', title: t('promoted', { title: text.careers[event.careerId].levels[event.level] }) });
+        add(event, { tone: 'good', icon: careerArt(event.careerId), title: t('promoted', { title: text.careers[event.careerId].levels[event.level] }), cheer: true });
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });

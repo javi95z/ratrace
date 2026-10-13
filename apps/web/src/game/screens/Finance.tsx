@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
@@ -654,6 +654,9 @@ function DebtTab() {
         {p.debts.length === 0 ? <p className="text-[14px] text-ink-300">{t('none')}</p> : <Row left={t('total')} right={fmt.money(total)} />}
         {p.debts.map((debt) => (
           <div key={debt.id} className="flex items-center gap-3 border-t-2 border-night-900 py-2">
+            <Bare className="size-8">
+              <Sprite id={debtArt(debt)} />
+            </Bare>
             <div className="min-w-0 flex-1">
               <div className="truncate">{debtLabel(words, debt, p.properties)}</div>
               <div className="text-[12px] text-ink-300">
@@ -753,7 +756,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
             <Panel key={city.id} label={names.cities[city.id]}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="pixel flex min-w-0 items-center gap-2 text-[17px]">
-                  <Sprite id={cityIcon(city.id)} />
+                  <Sprite id={crestArt(city.id)} fallback={{ w: 64, h: 64 }} />
                   {names.cities[city.id]}
                 </h3>
                 {here ? <Tag tone="good">{t('here')}</Tag> : null}

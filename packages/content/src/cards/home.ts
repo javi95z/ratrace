@@ -54,8 +54,6 @@ export const lifestyleCards: CardDef[] = [
   card('life_new_phone', 'lifestyle', { cooldown: 3, when: { notItems: ['tech_phone'] } }, [
     {},
     { effects: { buyItem: { itemId: 'tech_phone', pricePct: 100 } } },
-    // The better camera is a way to earn a living, for someone young enough for an audience.
-    { when: { careers: ['service', 'hospitality', 'sales', 'tech', 'healthcare', 'public', 'education'], maxRound: 5 }, effects: { focus: 2, careerSkill: -6, buyItem: { itemId: 'tech_phone', pricePct: 100 }, job: { career: 'influencer', level: 0 }, clearFlags: ['layoff_proof', 'share_plan'] } },
   ]),
   card('life_wedding_abroad', 'lifestyle', { cooldown: 5 }, [
     { effects: { cash: usd(-150), status: -1 } },
@@ -80,6 +78,12 @@ export const lifestyleCards: CardDef[] = [
     {},
     { effects: { buyItem: { itemId: 'car_toyota_corolla', pricePct: 100 } } },
     { effects: { loan: usd(48_000), buyItem: { itemId: 'car_tesla_model_3', pricePct: 100 } } },
+  ]),
+  // Where a member is known, the people who hire and the people with a deal to offer are at the next table.
+  card('life_club_contacts', 'lifestyle', { cooldown: 5, when: { ownsLadder: 'membership', minRound: 1 } }, [
+    {},
+    { when: { employed: true }, outcomes: [{ weight: 60, effects: { salaryModPct: 6 } }, { weight: 40, effects: {} }] },
+    { effects: { cash: usd(-5_000) }, outcomes: [{ weight: 45, effects: { recurring: [yearly('club_deal', 'passive', 1_200, null)] } }, { weight: 55, effects: {} }] },
   ]),
   card('life_bottle_service', 'lifestyle', { cooldown: 3 }, [
     {},

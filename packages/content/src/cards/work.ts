@@ -56,10 +56,29 @@ export const careerCards: CardDef[] = [
       outcomes: [{ weight: 55, effects: { job: { career: 'law', level: 0 }, careerSkill: -3, ...FRESH_START } }, { weight: 45, effects: {} }],
     },
   ]),
-  card('career_market', 'career', { cooldown: 8, when: { careers: outside('sales', 'hospitality', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+  card('career_market', 'career', { cooldown: 8, when: { careers: outside('sales', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
     {},
     { effects: { focus: 1, careerSkill: -4, job: { career: 'sales', level: 0 }, ...FRESH_START } },
+  ]),
+  // A way into each of the other newer careers, each with a scene of its own.
+  card('career_bar', 'career', { cooldown: 8, when: { careers: outside('hospitality', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+    {},
     { effects: { focus: 1, careerSkill: -4, job: { career: 'hospitality', level: 0 }, ...FRESH_START } },
+  ]),
+  card('career_teaching', 'career', { once: true, when: { careers: outside('education', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+    {},
+    { effects: { focus: 2, careerSkill: -4, job: { career: 'education', level: 0 }, setFlags: ['layoff_proof'], clearFlags: ['share_plan'] } },
+  ]),
+  // An audience is for the young: the door closes at thirty-two.
+  card('career_creator', 'career', { cooldown: 6, when: { careers: ['service', 'hospitality', 'sales', 'tech', 'healthcare', 'public', 'education'], maxRound: 5 } }, [
+    {},
+    { effects: { focus: 2, careerSkill: -6, job: { career: 'influencer', level: 0 }, ...FRESH_START } },
+  ]),
+  // The better-paid job nobody without a car can get to.
+  card('career_out_of_town', 'career', { cooldown: 6, when: { employed: true, ownsLadder: 'car', minRound: 1 } }, [
+    {},
+    { effects: { focus: 1, salaryModPct: 7 } },
+    { outcomes: [{ weight: 55, effects: { salaryModPct: 10 } }, { weight: 45, effects: {} }] },
   ]),
   card('career_big_offer', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
     {},
@@ -113,8 +132,6 @@ export const educationCards: CardDef[] = [
   card('edu_language', 'education', { once: true, when: { notFlags: ['bilingual'] } }, [
     {},
     { effects: { focus: 1, cash: usd(-600), careerSkill: 1, status: 1, setFlags: ['bilingual'] } },
-    // The teacher is leaving, and the school needs someone for her classes.
-    { when: { careers: outside('education', 'medicine', 'law', 'finance') }, effects: { focus: 2, cash: usd(-600), careerSkill: -4, job: { career: 'education', level: 0 }, setFlags: ['bilingual', 'layoff_proof'], clearFlags: ['share_plan'] } },
   ]),
 ];
 

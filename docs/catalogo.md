@@ -1,19 +1,19 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.14.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.15.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
 | Qué | Cuántos |
 | --- | --- |
-| [Vidas](#vidas) | 11 |
+| [Vidas](#vidas) | 16 |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 6 |
 | [Objetos](#objetos) | 55, de ellos 7 coches |
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 19 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 108 |
+| [Cartas](#cartas) | 113 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 31 |
 
@@ -185,6 +185,81 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Ventaja | Empieza con 20.000 $ en Bitcoin, y con todos los mercados abiertos. |
 | Desventaja | Casi sin efectivo, y un sueldo bajo en una ciudad cara. |
 | Se desbloquea | Mantén tus criptomonedas durante un invierno cripto. |
+
+### Abogada
+
+<img src="../art/clean/portraits/portrait.lawyer.22.png" alt="Abogada a los 22"> <img src="../art/clean/portraits/portrait.lawyer.32.png" alt="Abogada a los 32"> <img src="../art/clean/portraits/portrait.lawyer.45.png" alt="Abogada a los 45"> <img src="../art/clean/portraits/portrait.lawyer.58.png" alt="Abogada a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Madrid, con 1.000 $ |
+| Trabajo | Pasante (Derecho) |
+| Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Préstamo personal de 24.000 $ al 6 % |
+| Ventaja | La escalera más alta del juego: nadie acaba cobrando más. |
+| Desventaja | La subida es la más lenta, y empieza con un préstamo de estudios. |
+| Se desbloquea | Compra tu primer reloj de lujo. |
+
+### Profesor
+
+<img src="../art/clean/portraits/portrait.teacher.22.png" alt="Profesor a los 22"> <img src="../art/clean/portraits/portrait.teacher.32.png" alt="Profesor a los 32"> <img src="../art/clean/portraits/portrait.teacher.45.png" alt="Profesor a los 45"> <img src="../art/clean/portraits/portrait.teacher.58.png" alt="Profesor a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Madrid, con 4.000 $ |
+| Trabajo | Profesor interino (Educación) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | No lo pueden despedir, y tiene un punto de foco más cada ronda. |
+| Desventaja | El techo salarial más bajo de todas las carreras. |
+| Se desbloquea | Llega al final de una vida teniendo solo fondos indexados. |
+
+### Influencer
+
+<img src="../art/clean/portraits/portrait.influencer.22.png" alt="Influencer a los 22"> <img src="../art/clean/portraits/portrait.influencer.32.png" alt="Influencer a los 32"> <img src="../art/clean/portraits/portrait.influencer.45.png" alt="Influencer a los 45"> <img src="../art/clean/portraits/portrait.influencer.58.png" alt="Influencer a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Madrid, con 500 $ |
+| Trabajo | Creador novato (Influencer) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | Estatus desde el primer día, y dinero rápido poco después. |
+| Desventaja | Desde los 34 años el público se va, y el sueldo con él. |
+| Se desbloquea | Llega a 100 de estatus. |
+
+### Camarero
+
+<img src="../art/clean/portraits/portrait.waiter.22.png" alt="Camarero a los 22"> <img src="../art/clean/portraits/portrait.waiter.32.png" alt="Camarero a los 32"> <img src="../art/clean/portraits/portrait.waiter.45.png" alt="Camarero a los 45"> <img src="../art/clean/portraits/portrait.waiter.58.png" alt="Camarero a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Madrid, con 800 $ |
+| Trabajo | Camarero (Hostelería) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 4 |
+| Modo de vida | Austero |
+| Empieza con | Nada más |
+| Ventaja | Cuatro de foco por ronda, y las mejores horas extra del juego. |
+| Desventaja | El sueldo de entrada más bajo de todos, y un camino largo hasta arriba. |
+| Se desbloquea | Compra tu primera acción. |
+
+### Comercial
+
+<img src="../art/clean/portraits/portrait.salesperson.22.png" alt="Comercial a los 22"> <img src="../art/clean/portraits/portrait.salesperson.32.png" alt="Comercial a los 32"> <img src="../art/clean/portraits/portrait.salesperson.45.png" alt="Comercial a los 45"> <img src="../art/clean/portraits/portrait.salesperson.58.png" alt="Comercial a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Madrid, con 2.500 $ |
+| Trabajo | Comercial júnior (Ventas) |
+| Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | Un cuarto más de sueldo cuando la economía va en auge. |
+| Desventaja | Un cuarto menos cuando se encoge. |
+| Se desbloquea | Compra mientras todo cae. |
 
 ## Carreras
 
@@ -637,7 +712,7 @@ Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durant
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (14)
+### Carrera (18)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -648,8 +723,12 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.packed_box.png" alt="Una ronda de despidos"> | **Una ronda de despidos**<br>En tu calendario aparece una reunión general sin orden del día. | 1. Aceptar la indemnización<br>2. Pelear por tu puesto<br>3. Formarte mientras buscas |
 | <img src="../art/clean/cards/card.angry_boss.png" alt="El jefe nuevo"> | **El jefe nuevo**<br>Correos a medianoche. Elogios en privado, broncas en público. | 1. Aguantar<br>2. Denunciarlo a Recursos Humanos<br>3. Cambiar de equipo |
 | <img src="../art/clean/cards/card.two_ladders.png" alt="Otra escalera"> | **Otra escalera**<br>Un amigo que trabaja en banca dice que buscan gente con «experiencia del mundo real». | 1. Quedarte donde estás<br>2. Empezar desde abajo en finanzas<br>3. Pagar un curso y presentarte |
-| <img src="../art/clean/cards/card.courtroom.png" alt="El bufete busca pasantes"> | **El bufete busca pasantes**<br>Un despacho contrata pasantes. Las horas son largas y la escalera, la más alta de la ciudad. | 1. Quedarte donde estás<br>2. Empezar desde abajo en derecho<br>3. Pagar el curso de acceso |
-| <img src="../art/clean/cards/card.street_market.png" alt="Sábado en el mercado"> | **Sábado en el mercado**<br>Un puesto necesita quien venda, y el bar de la esquina, quien sirva. Nadie pide currículum. | 1. Seguir andando<br>2. Vender en el puesto<br>3. Servir en el bar |
+| <img src="../art/clean/cards/card.law_office.png" alt="El bufete busca pasantes"> | **El bufete busca pasantes**<br>Un despacho contrata pasantes. Las horas son largas y la escalera, la más alta de la ciudad. | 1. Quedarte donde estás<br>2. Empezar desde abajo en derecho<br>3. Pagar el curso de acceso |
+| <img src="../art/clean/cards/card.street_market.png" alt="Sábado en el mercado"> | **Sábado en el mercado**<br>Un puesto necesita quien venda. Nadie pide currículum. | 1. Seguir andando<br>2. Vender en el puesto |
+| <img src="../art/clean/cards/card.bar_tips.png" alt="Se necesita personal"> | **Se necesita personal**<br>El bar de la esquina no da abasto, y el bote de propinas está lleno. | 1. Pasar de largo<br>2. Ponerte el delantal |
+| <img src="../art/clean/cards/card.classroom.png" alt="Buscan profesor"> | **Buscan profesor**<br>El colegio del barrio se ha quedado sin profesor a mitad de curso. Tu título vale. | 1. No es lo tuyo<br>2. Coger la plaza |
+| <img src="../art/clean/cards/card.ring_light.png" alt="El vídeo que se compartió"> | **El vídeo que se compartió**<br>Lo grabaste en tu habitación y lo han visto cien mil personas. Te escriben marcas. | 1. Seguir con tu trabajo<br>2. Dedicarte a esto |
+| <img src="../art/clean/cards/card.out_of_town.png" alt="Una oferta a cuarenta minutos"> | **Una oferta a cuarenta minutos**<br>Una empresa del polígono paga mejor. No hay tren: habría que ir en coche. | 1. Quedarte donde estás<br>2. Aceptarla<br>3. Pedir más |
 | <img src="../art/clean/cards/card.tower_lobby.png" alt="El gran nombre"> | **El gran nombre**<br>Google, Inditex o Goldman Sachs: quien manda en tu sector quiere hablar contigo. | 1. Quedarte<br>2. Aceptar la oferta<br>3. Negociar fuerte |
 | <img src="../art/clean/cards/card.shares_or_salary.png" alt="Acciones o sueldo"> | **Acciones o sueldo**<br>Tu subida puede llegar en efectivo cada mes o en acciones que se liberan en dos años. | 1. Coger el efectivo<br>2. Coger las acciones |
 | <img src="../art/clean/cards/card.sunrise_balcony.png" alt="Teletrabajo aprobado"> | **Teletrabajo aprobado**<br>Puedes trabajar desde casa para siempre, si quieres. | 1. Seguir yendo a la oficina<br>2. Pasarte al teletrabajo<br>3. Pedir a cambio un aumento |
@@ -665,7 +744,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.library.png" alt="Un libro sobre dinero"> | **Un libro sobre dinero**<br>Una compañera te presta el libro que «le cambió la forma de pensar en el dinero». | 1. Dejarlo en la estantería<br>2. Leerlo |
 | <img src="../art/clean/cards/card.lecture_hall.png" alt="El MBA"> | **El MBA**<br>Tienes plaza en el MBA en el IESE. Cuesta una fortuna y se come dos años de tardes. | 1. No es para mí<br>2. Matricularte y pagar<br>3. Matricularte con un préstamo |
 | <img src="../art/clean/cards/card.bootcamp.png" alt="Bootcamp de programación"> | **Bootcamp de programación**<br>Dieciséis semanas para ser programador júnior. Dicen que todos encuentran trabajo. | 1. Pasar<br>2. Apuntarte y pasarte a tecnología |
-| <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte<br>3. Apuntarte, y quedarte con sus clases |
+| <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte |
 
 ### Negocios (8)
 
@@ -708,18 +787,19 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.flooded_room.png" alt="Daños por agua"> | **Daños por agua**<br>Revienta una tubería mientras pasas el fin de semana fuera. El piso es tuyo, y la factura también. | 1. Llamar a una empresa<br>2. Hacerlo casi todo tú |
 | <img src="../art/clean/cards/card.moving_boxes.png" alt="Iros a vivir juntos"> | **Iros a vivir juntos**<br>Dos alquileres, dos neveras, y siempre estás en su casa. | 1. Todavía no<br>2. Iros a vivir juntos |
 
-### Estilo de vida (10)
+### Estilo de vida (11)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
 | <img src="../art/clean/cards/card.sports_car.png" alt="El coche nuevo de un compañero"> | **El coche nuevo de un compañero**<br>Lo aparca ocupando dos plazas. Baja todo el mundo a verlo. | 1. Encogerte de hombros<br>2. Comprarle barato su viejo VW Golf GTI<br>3. Financiar un BMW M3 |
 | <img src="../art/clean/cards/card.beach_club.png" alt="Ibiza"> | **Ibiza**<br>En el grupo ya hay villa, fechas y un plazo para pagar la señal. | 1. Quedarte en casa<br>2. Ir<br>3. Ir, con mesa en la discoteca |
-| <img src="../art/clean/cards/card.phone_launch.png" alt="El nuevo iPhone"> | **El nuevo iPhone**<br>El tuyo funciona. Este tiene mejor cámara. | 1. Seguir con el viejo<br>2. Comprarlo<br>3. Comprarlo y empezar a grabar |
+| <img src="../art/clean/cards/card.phone_launch.png" alt="El nuevo iPhone"> | **El nuevo iPhone**<br>El tuyo funciona. Este tiene mejor cámara. | 1. Seguir con el viejo<br>2. Comprarlo |
 | <img src="../art/clean/cards/card.beach_wedding.png" alt="Una boda en el extranjero"> | **Una boda en el extranjero**<br>Tu amiga se casa junto a un lago: cuatro días y etiqueta «elegante». | 1. Mandar un regalo<br>2. Ir<br>3. Ir a lo grande |
 | <img src="../art/clean/cards/card.watch_boutique.png" alt="La lista de espera"> | **La lista de espera**<br>Llaman de la joyería. Después de dos años, ha llegado tu Rolex Submariner. | 1. Dejarlo pasar<br>2. Comprarlo y llevarlo<br>3. Comprarlo y revenderlo |
 | <img src="../art/clean/cards/card.business_cabin.png" alt="Mejora en la puerta de embarque"> | **Mejora en la puerta de embarque**<br>Por una fracción del billete, el asiento se convierte en cama. | 1. Quedarte en turista<br>2. Aceptar la mejora |
 | <img src="../art/clean/cards/card.private_sale.png" alt="Venta privada"> | **Venta privada**<br>Un cuarenta por ciento menos, solo esta noche y con invitación. | 1. Borrar el correo<br>2. Mocasines de Gucci<br>3. La Louis Vuitton Keepall |
 | <img src="../art/clean/cards/card.car_dealer.png" alt="Necesitas coche"> | **Necesitas coche**<br>El metro cierra a medianoche y tu nuevo trabajo no. | 1. Seguir en metro<br>2. Comprar un Toyota Corolla al contado<br>3. Financiar un Tesla Model 3 |
+| <img src="../art/clean/cards/card.club_contacts.png" alt="En la barra del club"> | **En la barra del club**<br>Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad. | 1. Cambiar de tema<br>2. Preguntar si buscan gente<br>3. Entrar en su negocio |
 | <img src="../art/clean/cards/card.nightclub.png" alt="Mesa con botella"> | **Mesa con botella**<br>Alguien propone coger mesa. El camarero ya tiene la carta en la mano. | 1. Irte pronto a casa<br>2. Poner tu parte<br>3. Pagar la mesa con tu tarjeta |
 | <img src="../art/clean/cards/card.sale_crowd.png" alt="Black Friday"> | **Black Friday**<br>Tienes la cesta llena desde el martes. | 1. Cerrar la pestaña<br>2. La PS5<br>3. El MacBook Pro |
 

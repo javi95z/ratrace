@@ -54,6 +54,10 @@ describe('the work panel of the profile', () => {
     expect(within(panel).getByText('Money sense')).toBeTruthy();
     expect(within(panel).getByText('Focus this round')).toBeTruthy();
     expect(within(panel).getByText(`${work.focus.left}/${work.focus.total}`)).toBeTruthy();
+    // Her ward as it looks from the first rung, and the sign of her trade beside her title.
+    const pictures = [...panel.querySelectorAll('img')].map((img) => img.getAttribute('src') ?? '');
+    expect(pictures.some((src) => src.includes('work.healthcare.0'))).toBe(true);
+    expect(pictures.some((src) => src.includes('icon.career_healthcare'))).toBe(true);
     // Every line is tall enough for a thumb.
     for (const button of within(panel).getAllByRole('button')) expect(button.className).toContain('min-h-11');
   });

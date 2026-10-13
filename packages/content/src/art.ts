@@ -1,4 +1,4 @@
-import type { FocusAction, Headline, InsuranceKind } from '@ratrace/engine';
+import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks } from '@ratrace/engine';
 
 /**
  * Which sprite shows each piece of content. Ids on the right are sprite ids in art/clean/manifest.json.
@@ -20,8 +20,13 @@ export const cardArt: Record<string, string> = {
   career_remote_work: scene('sunrise_balcony'),
   career_become_manager: scene('meeting_room'),
   career_headhunter: scene('headhunter_call'),
-  career_law_firm: scene('courtroom'),
+  career_law_firm: scene('law_office'),
   career_market: scene('street_market'),
+  career_bar: scene('bar_tips'),
+  career_teaching: scene('classroom'),
+  career_creator: scene('ring_light'),
+  career_out_of_town: scene('out_of_town'),
+  life_club_contacts: scene('club_contacts'),
 
   edu_masters: scene('graduation'),
   edu_finance_course: scene('online_course'),
@@ -207,4 +212,49 @@ export const assetClassArt: Record<'bond' | 'fund' | 'stock' | 'crypto' | 'gold'
   crypto: 'icon.crypto',
   gold: 'icon.gold',
 };
+
+/** The sign of a career. */
+export const careerArt = (careerId: string): string => `icon.career_${careerId}`;
+
+/** The workplace of a career as the player rises in it: where they start, the middle of the ladder, and the top. */
+export const workArt = (careerId: string, level: number, levels: number): string => `work.${careerId}.${level <= 0 ? 0 : level >= levels - 1 ? 2 : 1}`;
+
+/** What a thing is good for, each use with its sign. */
+export const perkArt: Record<keyof ItemPerks, string> = {
+  moveCostOffPct: 'icon.use_move',
+  studySkill: 'icon.use_study',
+  salaryPct: 'icon.use_pay',
+  jobHuntPct: 'icon.use_hunt',
+  focus: 'icon.use_focus',
+};
+
+/** The sign of a debt: by its kind, and for a loan that bought a thing on instalments, the thing's key and tag. */
+export const debtArt = (debt: { kind: DebtKind; forItem?: string }): string =>
+  debt.forItem !== undefined ? 'icon.debt_instalments' : debt.kind === 'creditCard' ? 'icon.debt_card' : debt.kind === 'personalLoan' || debt.kind === 'margin' ? 'icon.debt_loan' : 'icon.debt_mortgage';
+export const DEBT_ART = ['icon.debt_mortgage', 'icon.debt_loan', 'icon.debt_card', 'icon.debt_instalments'] as const;
+
+/** A sign for each line of the balance sheet. */
+export const balanceArt = {
+  cash: 'icon.bal_cash',
+  savings: 'icon.bal_savings',
+  pension: 'icon.bal_pension',
+  investments: 'icon.bal_investments',
+  homes: 'icon.bal_property',
+  businesses: 'icon.business',
+  things: 'icon.bal_things',
+  debts: 'icon.bal_debts',
+} as const;
+
+/** The frame of the portrait, plainest first, and the status each begins at. */
+export const FRAME_ART: readonly string[] = ['frame.plain', 'frame.bronze', 'frame.silver', 'frame.gold'];
+export const FRAME_STATUS: readonly number[] = [0, 25, 60, 100];
+export const frameArt = (status: number): string => FRAME_ART[FRAME_STATUS.reduce((best, from, i) => (status >= from ? i : best), 0)];
+
+/** The crest of a city. */
+export const crestArt = (cityId: string): string => `crest.${cityId}`;
+
+/** A loop of four frames. */
+export type Loop = 'coin' | 'wheel' | 'confetti';
+export const LOOPS: readonly Loop[] = ['coin', 'wheel', 'confetti'];
+export const loopArt = (loop: Loop): string[] => [0, 1, 2, 3].map((frame) => `anim.${loop}.${frame}`);
 

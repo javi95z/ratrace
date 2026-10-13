@@ -1,7 +1,36 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { assetClassArt, cardArt, cityArt, cityIcon, FAMILY_ART, familyArt, focusArt, insuranceArt, itemArt, lifestyleArt, momentArt, PORTRAIT_AGES, portraitArt, propertyArt, rentTierArt, rentTierIcon, topicArt } from './art';
+import {
+  assetClassArt,
+  balanceArt,
+  cardArt,
+  careerArt,
+  cityArt,
+  cityIcon,
+  crestArt,
+  DEBT_ART,
+  debtArt,
+  FAMILY_ART,
+  familyArt,
+  focusArt,
+  FRAME_ART,
+  frameArt,
+  insuranceArt,
+  itemArt,
+  lifestyleArt,
+  loopArt,
+  LOOPS,
+  momentArt,
+  perkArt,
+  PORTRAIT_AGES,
+  portraitArt,
+  propertyArt,
+  rentTierArt,
+  rentTierIcon,
+  topicArt,
+  workArt,
+} from './art';
 import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
@@ -229,9 +258,24 @@ describe('content art', () => {
       ...Object.values(insuranceArt),
       ...Object.values(focusArt),
       ...Object.values(topicArt),
+      // A sign and a workplace at each of three stages for every career; a sign for every use of a thing,
+      // every kind of debt and every line of the balance sheet; the frames, the crests and the loops.
+      ...content.careers.flatMap((career) => [careerArt(career.id), ...career.levels.map((_, level) => workArt(career.id, level, career.levels.length))]),
+      ...Object.values(perkArt),
+      ...DEBT_ART,
+      ...Object.values(balanceArt),
+      ...FRAME_ART,
+      ...content.cities.map((city) => crestArt(city.id)),
+      ...LOOPS.flatMap((loop) => loopArt(loop)),
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
-    expect(wanted.length).toBe(108 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 44 + 5 + (4 + 2 + 4 + 3 + 5));
+    const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
+    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 3 + 8 + 6 + 16 * 4 + 5 + (4 + 2 + 4 + 3 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4);
+    // Every career is drawn at its three stages, and a frame is earned by status, plainest first.
+    for (const career of content.careers) expect(new Set(career.levels.map((_, level) => workArt(career.id, level, career.levels.length))).size, career.id).toBe(3);
+    expect([0, 24, 25, 59, 60, 99, 100, 500].map((status) => frameArt(status))).toEqual(['frame.plain', 'frame.plain', 'frame.bronze', 'frame.bronze', 'frame.silver', 'frame.silver', 'frame.gold', 'frame.gold']);
+    expect(debtArt({ kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('icon.debt_instalments');
+    expect(debtArt({ kind: 'mortgageVariable' })).toBe('icon.debt_mortgage');
   });
 
   it('draws who shares a life: the couple, then the youngest child, and a full house as one picture', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { balanceArt, familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
@@ -100,11 +100,17 @@ export function ProfileBody() {
             ['things', t('things'), fmt.money(things)],
           ] as const
         ).map(([line, label, amount]) => (
-          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="flex min-h-11 w-full flex-col justify-center text-left">
+          <button key={line} type="button" aria-haspopup="dialog" onClick={() => setLine(line)} className="flex min-h-11 w-full items-center gap-2 text-left [&>div]:min-w-0 [&>div]:flex-1">
+            <Bare className="size-8">
+              <Sprite id={balanceArt[line]} />
+            </Bare>
             <Row left={label} right={<>{amount}<More /></>} />
           </button>
         ))}
-        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="flex min-h-11 w-full flex-col justify-center text-left">
+        <button type="button" aria-haspopup="dialog" onClick={() => setLine('debts')} className="flex min-h-11 w-full items-center gap-2 text-left [&>div]:min-w-0 [&>div]:flex-1">
+          <Bare className="size-8">
+            <Sprite id={balanceArt.debts} />
+          </Bare>
           <Row left={t('debts')} right={<><span className={owed > 0 ? 'text-wine-300' : ''}>{fmt.money(-owed)}</span><More /></>} />
         </button>
         <button type="button" aria-haspopup="dialog" onClick={() => setLine('netWorth')} className="flex min-h-11 w-full flex-col justify-center text-left">

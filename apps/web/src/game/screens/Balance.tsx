@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, itemArt, propertyArt } from '@ratrace/content';
+import { assetKind, debtArt, itemArt, propertyArt } from '@ratrace/content';
 import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWorth, quoteOwnedProperty, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
@@ -219,8 +219,13 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
           <ul className="flex flex-col gap-2">
             {p.debts.map((debt) => (
               <li key={debt.id} className="frame bg-night-700 px-3 py-2">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="pixel text-[16px]">{debtLabel(words, debt, p.properties)}</span>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Bare className="size-8">
+                      <Sprite id={debtArt(debt)} />
+                    </Bare>
+                    <span className="pixel min-w-0 text-[16px]">{debtLabel(words, debt, p.properties)}</span>
+                  </span>
                   <span className="pixel text-wine-300">{fmt.money(debt.principal)}</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1.5">

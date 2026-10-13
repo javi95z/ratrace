@@ -2,7 +2,17 @@ import type { StartConfig } from '@ratrace/engine';
 import { usd } from './money';
 
 /** Badges that open a life by being earned once, in any life. */
-export type BadgeUnlock = 'mba' | 'escaped' | 'bankrupt' | 'sold_business' | 'crypto_winter';
+export type BadgeUnlock =
+  | 'mba'
+  | 'escaped'
+  | 'bankrupt'
+  | 'sold_business'
+  | 'crypto_winter'
+  | 'first_luxury_watch'
+  | 'index_only'
+  | 'status_100'
+  | 'first_share'
+  | 'bought_the_dip';
 
 /** How a life is unlocked. The interface checks these against the player's history. */
 export type Unlock = 'default' | 'finish_one_life' | 'net_worth_1m' | 'three_cities' | BadgeUnlock;
@@ -14,7 +24,8 @@ export interface LifeDef {
 }
 
 /**
- * Eleven starting lives: the six of spec section 4, then five that each open with a badge. A perk or a handicap is either a number in the start
+ * Sixteen starting lives: the six of spec section 4, five that each open with a badge, and one for each of the five newer careers,
+ * each opened by a badge too. A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
  * `share_plan`, `bilingual` and `has_business` by cards.
  */
@@ -176,6 +187,71 @@ export const lives: LifeDef[] = [
         lifeId: 'crypto_kid', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 2, focus: 3, rentTier: 0,
         holdings: [{ assetId: 'bitcoin', value: usd(20_000) }],
       },
+    },
+  },
+  {
+    // The tallest ladder in the game, climbed slowly and from under a student loan.
+    id: 'lawyer',
+    unlock: 'first_luxury_watch',
+    start: {
+      cityId: 'madrid',
+      cash: usd(1_000),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [{ kind: 'personalLoan', principal: usd(24_000), fixedRateBp: 600, roundsLeft: 6 }],
+      life: { lifeId: 'lawyer', career: { id: 'law', level: 0 }, careerSkill: 0, financeSkill: 1, focus: 3 },
+    },
+  },
+  {
+    // A job for life that leaves the afternoons free: a point of focus more every round, and pay that never goes far.
+    id: 'teacher',
+    unlock: 'index_only',
+    start: {
+      cityId: 'madrid',
+      cash: usd(4_000),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'teacher', career: { id: 'education', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3, flags: ['layoff_proof'] },
+    },
+  },
+  {
+    // Status from the first day and money soon after, on a clock: from thirty-four the audience moves on.
+    id: 'influencer',
+    unlock: 'status_100',
+    start: {
+      cityId: 'madrid',
+      cash: usd(500),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'influencer', career: { id: 'influencer', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3, rentTier: 0 },
+    },
+  },
+  {
+    // The best overtime in the game and four points of focus to spend on it; the pay itself starts lowest of all.
+    id: 'waiter',
+    unlock: 'first_share',
+    start: {
+      cityId: 'madrid',
+      cash: usd(800),
+      salaryAnnual: 0,
+      lifestyleTier: 0,
+      debts: [],
+      life: { lifeId: 'waiter', career: { id: 'hospitality', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 4, rentTier: 0 },
+    },
+  },
+  {
+    // Paid by the economy: a quarter more in a boom, a quarter less in a recession.
+    id: 'salesperson',
+    unlock: 'bought_the_dip',
+    start: {
+      cityId: 'madrid',
+      cash: usd(2_500),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'salesperson', career: { id: 'sales', level: 0 }, careerSkill: 0, financeSkill: 0, focus: 3 },
     },
   },
 ];

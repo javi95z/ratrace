@@ -78,6 +78,14 @@ describe('the figures of the HUD', () => {
     expect(within(score).getByText(/^The score adds the points of your net worth to your average status\./)).toBeTruthy();
   });
 
+  it('hang the portrait in the frame its status has earned', async () => {
+    await open();
+    // A nurse of twenty-two has the status of a job and a city, and a plain frame.
+    const frame = document.querySelector('[data-frame]');
+    expect(frame?.getAttribute('data-frame')).toBe('frame.plain');
+    expect([...(frame?.querySelectorAll('img') ?? [])].some((img) => (img.getAttribute('src') ?? '').includes('frame.plain'))).toBe(true);
+  });
+
   it('close on Escape, and hand the focus back to the figure that was tapped', async () => {
     const user = await open();
     const status = screen.getByRole('button', { name: /Status/ });

@@ -139,6 +139,36 @@ export const en: ContentText = {
       handicap: 'Almost no cash, and low pay in an expensive city.',
       unlock: 'Hold your coins through a crypto winter.',
     },
+    lawyer: {
+      name: 'Lawyer',
+      perk: 'The tallest ladder in the game: nobody ends up paid more.',
+      handicap: 'The climb is the slowest, and it starts under a student loan.',
+      unlock: 'Buy your first luxury watch.',
+    },
+    teacher: {
+      name: 'Teacher',
+      perk: 'Cannot be laid off, and one more point of focus every round.',
+      handicap: 'The lowest ceiling of any career.',
+      unlock: 'Reach the end of a life holding nothing but index funds.',
+    },
+    influencer: {
+      name: 'Influencer',
+      perk: 'Status from the first day, and fast money soon after.',
+      handicap: 'From the age of 34 the audience moves on, and the pay with it.',
+      unlock: 'Reach 100 status.',
+    },
+    waiter: {
+      name: 'Waiter',
+      perk: 'Four focus a round, and the best overtime in the game.',
+      handicap: 'The lowest starting pay of all, and a long way to the top.',
+      unlock: 'Buy your first share.',
+    },
+    salesperson: {
+      name: 'Salesperson',
+      perk: 'A quarter more pay whenever the economy booms.',
+      handicap: 'A quarter less whenever it shrinks.',
+      unlock: 'Buy while everything is falling.',
+    },
   },
   crises: {
     crash: {

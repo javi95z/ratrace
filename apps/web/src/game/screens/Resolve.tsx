@@ -8,6 +8,7 @@ import type { RoundNote } from '@/game/present';
 import { Bare, Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sprite } from '@/ui/Sprite';
+import { Loop } from './Loop';
 
 const NOTE: Record<RoundNote['tone'], string> = {
   gold: 'frame-gold bg-gold-500 text-ink-900',
@@ -43,7 +44,11 @@ export function Resolve() {
   return (
     <div className="flex flex-col gap-3 px-3">
       <div className="text-center">
-        <h2 className="pixel text-[22px] text-gold-500">{t('title')}</h2>
+        {/* Two years go by: the wheel turns. */}
+        <h2 className="pixel flex items-center gap-2 text-[22px] text-gold-500">
+          <Loop name="wheel" />
+          {t('title')}
+        </h2>
         <p className="text-[13px] text-ink-300">{t('ages', { from: ageAt(content, before.round), to: ageAt(content, view.round) })}</p>
       </div>
 
@@ -61,8 +66,9 @@ export function Resolve() {
       ) : null}
       {notes.map((note, i) => (
         <div key={i} role="status" className={`frame flex animate-rise items-center gap-3 p-2 ${NOTE[note.tone]}`}>
-          <Bare className="size-10">
+          <Bare className="relative size-10">
             <Sprite id={note.icon} />
+            {note.cheer ? <Loop name="confetti" className="absolute -inset-1" /> : null}
           </Bare>
           <div className="min-w-0">
             <p className="pixel text-[17px]">{note.title}</p>
@@ -87,7 +93,15 @@ export function Resolve() {
       </Panel>
 
       <Panel>
-        <Row left={t('cashNow')} right={fmt.money(view.player.cash)} />
+        <Row
+          left={
+            <span className="flex items-center gap-2">
+              <Loop name="coin" />
+              {t('cashNow')}
+            </span>
+          }
+          right={fmt.money(view.player.cash)}
+        />
         <Row
           className="mt-1 border-t-2 border-night-900 pt-2"
           left={<span className="pixel text-[17px]">{t('netWorth')}</span>}

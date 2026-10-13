@@ -7,7 +7,7 @@ import type { Io } from './game';
 /**
  * The Rat Race in a terminal.
  *
- *   pnpm play [--lang en|es|ru] [--life nurse|engineer|civil_servant|rider|heir|newcomer|banker|doctor|comeback|founder|crypto_kid] [--seed text]
+ *   pnpm play [--lang en|es|ru] [--life nurse|engineer|…|salesperson] [--seed text]
  *
  * Answers can also be piped in, one per line: the game plays itself on first options once they run out.
  */

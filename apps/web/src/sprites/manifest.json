@@ -1,4 +1,84 @@
 {
+  "anim.arrow.0": {
+    "src": "icons/anim.arrow.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.arrow.1": {
+    "src": "icons/anim.arrow.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.arrow.2": {
+    "src": "icons/anim.arrow.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.arrow.3": {
+    "src": "icons/anim.arrow.3.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.coin.0": {
+    "src": "icons/anim.coin.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.coin.1": {
+    "src": "icons/anim.coin.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.coin.2": {
+    "src": "icons/anim.coin.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.coin.3": {
+    "src": "icons/anim.coin.3.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.confetti.0": {
+    "src": "icons/anim.confetti.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.confetti.1": {
+    "src": "icons/anim.confetti.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.confetti.2": {
+    "src": "icons/anim.confetti.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.confetti.3": {
+    "src": "icons/anim.confetti.3.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel.0": {
+    "src": "icons/anim.wheel.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel.1": {
+    "src": "icons/anim.wheel.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel.2": {
+    "src": "icons/anim.wheel.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel.3": {
+    "src": "icons/anim.wheel.3.png",
+    "w": 48,
+    "h": 48
+  },
   "badge.bankrupt": {
     "src": "badges/badge.bankrupt.png",
     "w": 64,
@@ -259,6 +339,11 @@
     "w": 288,
     "h": 120
   },
+  "card.bar_tips": {
+    "src": "cards/card.bar_tips.png",
+    "w": 288,
+    "h": 120
+  },
   "card.beach_club": {
     "src": "cards/card.beach_club.png",
     "w": 288,
@@ -326,6 +411,16 @@
   },
   "card.city_arrival": {
     "src": "cards/card.city_arrival.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.classroom": {
+    "src": "cards/card.classroom.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.club_contacts": {
+    "src": "cards/card.club_contacts.png",
     "w": 288,
     "h": 120
   },
@@ -479,6 +574,11 @@
     "w": 288,
     "h": 120
   },
+  "card.law_office": {
+    "src": "cards/card.law_office.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lecture_hall": {
     "src": "cards/card.lecture_hall.png",
     "w": 288,
@@ -574,6 +674,11 @@
     "w": 288,
     "h": 120
   },
+  "card.out_of_town": {
+    "src": "cards/card.out_of_town.png",
+    "w": 288,
+    "h": 120
+  },
   "card.packed_box": {
     "src": "cards/card.packed_box.png",
     "w": 288,
@@ -646,6 +751,11 @@
   },
   "card.rent_letter": {
     "src": "cards/card.rent_letter.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.ring_light": {
+    "src": "cards/card.ring_light.png",
     "w": 288,
     "h": 120
   },
@@ -794,6 +904,66 @@
     "w": 288,
     "h": 120
   },
+  "crest.bangkok": {
+    "src": "badges/crest.bangkok.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.compass": {
+    "src": "badges/crest.compass.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.dubai": {
+    "src": "badges/crest.dubai.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.london": {
+    "src": "badges/crest.london.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.madrid": {
+    "src": "badges/crest.madrid.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.new_york": {
+    "src": "badges/crest.new_york.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.singapore": {
+    "src": "badges/crest.singapore.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.wheel": {
+    "src": "badges/crest.wheel.png",
+    "w": 64,
+    "h": 64
+  },
+  "frame.bronze": {
+    "src": "icons/frame.bronze.png",
+    "w": 80,
+    "h": 80
+  },
+  "frame.gold": {
+    "src": "icons/frame.gold.png",
+    "w": 80,
+    "h": 80
+  },
+  "frame.plain": {
+    "src": "icons/frame.plain.png",
+    "w": 80,
+    "h": 80
+  },
+  "frame.silver": {
+    "src": "icons/frame.silver.png",
+    "w": 80,
+    "h": 80
+  },
   "home.block": {
     "src": "homes/home.block.png",
     "w": 128,
@@ -894,6 +1064,41 @@
     "w": 32,
     "h": 32
   },
+  "icon.bal_cash": {
+    "src": "icons/icon.bal_cash.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_debts": {
+    "src": "icons/icon.bal_debts.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_investments": {
+    "src": "icons/icon.bal_investments.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_pension": {
+    "src": "icons/icon.bal_pension.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_property": {
+    "src": "icons/icon.bal_property.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_savings": {
+    "src": "icons/icon.bal_savings.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.bal_things": {
+    "src": "icons/icon.bal_things.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.bond": {
     "src": "icons/icon.bond.png",
     "w": 32,
@@ -911,6 +1116,86 @@
   },
   "icon.card": {
     "src": "icons/icon.card.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_aviation": {
+    "src": "icons/icon.career_aviation.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_construction": {
+    "src": "icons/icon.career_construction.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_creative": {
+    "src": "icons/icon.career_creative.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_education": {
+    "src": "icons/icon.career_education.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_finance": {
+    "src": "icons/icon.career_finance.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_healthcare": {
+    "src": "icons/icon.career_healthcare.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_hospitality": {
+    "src": "icons/icon.career_hospitality.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_influencer": {
+    "src": "icons/icon.career_influencer.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_law": {
+    "src": "icons/icon.career_law.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_medicine": {
+    "src": "icons/icon.career_medicine.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_public": {
+    "src": "icons/icon.career_public.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_sales": {
+    "src": "icons/icon.career_sales.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_science": {
+    "src": "icons/icon.career_science.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_service": {
+    "src": "icons/icon.career_service.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_tech": {
+    "src": "icons/icon.career_tech.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.career_trades": {
+    "src": "icons/icon.career_trades.png",
     "w": 32,
     "h": 32
   },
@@ -971,6 +1256,26 @@
   },
   "icon.dating": {
     "src": "icons/icon.dating.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.debt_card": {
+    "src": "icons/icon.debt_card.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.debt_instalments": {
+    "src": "icons/icon.debt_instalments.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.debt_loan": {
+    "src": "icons/icon.debt_loan.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.debt_mortgage": {
+    "src": "icons/icon.debt_mortgage.png",
     "w": 32,
     "h": 32
   },
@@ -1191,6 +1496,31 @@
   },
   "icon.trophy": {
     "src": "icons/icon.trophy.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.use_focus": {
+    "src": "icons/icon.use_focus.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.use_hunt": {
+    "src": "icons/icon.use_hunt.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.use_move": {
+    "src": "icons/icon.use_move.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.use_pay": {
+    "src": "icons/icon.use_pay.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.use_study": {
+    "src": "icons/icon.use_study.png",
     "w": 32,
     "h": 32
   },
@@ -1559,6 +1889,26 @@
     "w": 64,
     "h": 64
   },
+  "portrait.electrician.22": {
+    "src": "portraits/portrait.electrician.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.electrician.32": {
+    "src": "portraits/portrait.electrician.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.electrician.45": {
+    "src": "portraits/portrait.electrician.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.electrician.58": {
+    "src": "portraits/portrait.electrician.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.engineer.22": {
     "src": "portraits/portrait.engineer.22.png",
     "w": 64,
@@ -1616,6 +1966,46 @@
   },
   "portrait.heir.58": {
     "src": "portraits/portrait.heir.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.influencer.22": {
+    "src": "portraits/portrait.influencer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.influencer.32": {
+    "src": "portraits/portrait.influencer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.influencer.45": {
+    "src": "portraits/portrait.influencer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.influencer.58": {
+    "src": "portraits/portrait.influencer.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.lawyer.22": {
+    "src": "portraits/portrait.lawyer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.lawyer.32": {
+    "src": "portraits/portrait.lawyer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.lawyer.45": {
+    "src": "portraits/portrait.lawyer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.lawyer.58": {
+    "src": "portraits/portrait.lawyer.58.png",
     "w": 64,
     "h": 64
   },
@@ -1679,6 +2069,26 @@
     "w": 64,
     "h": 64
   },
+  "portrait.pilot.22": {
+    "src": "portraits/portrait.pilot.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.pilot.32": {
+    "src": "portraits/portrait.pilot.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.pilot.45": {
+    "src": "portraits/portrait.pilot.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.pilot.58": {
+    "src": "portraits/portrait.pilot.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.rider.22": {
     "src": "portraits/portrait.rider.22.png",
     "w": 64,
@@ -1696,6 +2106,106 @@
   },
   "portrait.rider.58": {
     "src": "portraits/portrait.rider.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.salesperson.22": {
+    "src": "portraits/portrait.salesperson.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.salesperson.32": {
+    "src": "portraits/portrait.salesperson.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.salesperson.45": {
+    "src": "portraits/portrait.salesperson.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.salesperson.58": {
+    "src": "portraits/portrait.salesperson.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.scientist.22": {
+    "src": "portraits/portrait.scientist.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.scientist.32": {
+    "src": "portraits/portrait.scientist.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.scientist.45": {
+    "src": "portraits/portrait.scientist.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.scientist.58": {
+    "src": "portraits/portrait.scientist.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.teacher.22": {
+    "src": "portraits/portrait.teacher.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.teacher.32": {
+    "src": "portraits/portrait.teacher.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.teacher.45": {
+    "src": "portraits/portrait.teacher.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.teacher.58": {
+    "src": "portraits/portrait.teacher.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.waiter.22": {
+    "src": "portraits/portrait.waiter.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.waiter.32": {
+    "src": "portraits/portrait.waiter.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.waiter.45": {
+    "src": "portraits/portrait.waiter.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.waiter.58": {
+    "src": "portraits/portrait.waiter.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "rim.bronze": {
+    "src": "badges/rim.bronze.png",
+    "w": 64,
+    "h": 64
+  },
+  "rim.gem": {
+    "src": "badges/rim.gem.png",
+    "w": 64,
+    "h": 64
+  },
+  "rim.gold": {
+    "src": "badges/rim.gold.png",
+    "w": 64,
+    "h": 64
+  },
+  "rim.silver": {
+    "src": "badges/rim.silver.png",
     "w": 64,
     "h": 64
   },
@@ -1758,5 +2268,185 @@
     "src": "skylines/skyline.singapore.day.png",
     "w": 312,
     "h": 66
+  },
+  "work.education.0": {
+    "src": "cards/work.education.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.education.1": {
+    "src": "cards/work.education.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.education.2": {
+    "src": "cards/work.education.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.finance.0": {
+    "src": "cards/work.finance.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.finance.1": {
+    "src": "cards/work.finance.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.finance.2": {
+    "src": "cards/work.finance.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.healthcare.0": {
+    "src": "cards/work.healthcare.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.healthcare.1": {
+    "src": "cards/work.healthcare.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.healthcare.2": {
+    "src": "cards/work.healthcare.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.hospitality.0": {
+    "src": "cards/work.hospitality.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.hospitality.1": {
+    "src": "cards/work.hospitality.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.hospitality.2": {
+    "src": "cards/work.hospitality.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.influencer.0": {
+    "src": "cards/work.influencer.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.influencer.1": {
+    "src": "cards/work.influencer.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.influencer.2": {
+    "src": "cards/work.influencer.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.law.0": {
+    "src": "cards/work.law.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.law.1": {
+    "src": "cards/work.law.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.law.2": {
+    "src": "cards/work.law.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.medicine.0": {
+    "src": "cards/work.medicine.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.medicine.1": {
+    "src": "cards/work.medicine.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.medicine.2": {
+    "src": "cards/work.medicine.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.public.0": {
+    "src": "cards/work.public.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.public.1": {
+    "src": "cards/work.public.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.public.2": {
+    "src": "cards/work.public.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.sales.0": {
+    "src": "cards/work.sales.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.sales.1": {
+    "src": "cards/work.sales.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.sales.2": {
+    "src": "cards/work.sales.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.service.0": {
+    "src": "cards/work.service.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.service.1": {
+    "src": "cards/work.service.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.service.2": {
+    "src": "cards/work.service.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.tech.0": {
+    "src": "cards/work.tech.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.tech.1": {
+    "src": "cards/work.tech.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.tech.2": {
+    "src": "cards/work.tech.2.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.trades.0": {
+    "src": "cards/work.trades.0.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.trades.1": {
+    "src": "cards/work.trades.1.png",
+    "w": 288,
+    "h": 120
+  },
+  "work.trades.2": {
+    "src": "cards/work.trades.2.png",
+    "w": 288,
+    "h": 120
   }
 }

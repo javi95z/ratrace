@@ -1,6 +1,6 @@
 'use client';
 
-import { focusArt } from '@ratrace/content';
+import { careerArt, focusArt, workArt } from '@ratrace/content';
 import { quoteWork } from '@ratrace/engine';
 import type { FinanceSkill, GameView, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
@@ -50,10 +50,23 @@ export function WorkPanel({ shown }: { shown: GameView }) {
   return (
     <Panel title={t('title')} label={t('title')}>
       <Opener onOpen={() => setAbout('career')}>
+        {/* Where the player works, as it looks from the rung they are on. */}
+        {job && rung ? (
+          <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
+            <Sprite id={workArt(job.id, rung.level, work.ladder.length)} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+          </div>
+        ) : null}
         <div className="flex items-start justify-between gap-3 pt-1">
-          <div className="min-w-0">
-            <div className="pixel truncate text-[17px]">{job && rung ? titles[rung.level] : t('noJob')}</div>
-            <div className="truncate text-[12px] text-ink-300">{job ? text.careers[job.id].name : t('noJobSub')}</div>
+          <div className="flex min-w-0 items-center gap-2">
+            {job ? (
+              <Bare className="size-8">
+                <Sprite id={careerArt(job.id)} />
+              </Bare>
+            ) : null}
+            <div className="min-w-0">
+              <div className="pixel truncate text-[17px]">{job && rung ? titles[rung.level] : t('noJob')}</div>
+              <div className="truncate text-[12px] text-ink-300">{job ? text.careers[job.id].name : t('noJobSub')}</div>
+            </div>
           </div>
           <div className="shrink-0 text-right">
             <div className="pixel text-[16px] text-gold-500">

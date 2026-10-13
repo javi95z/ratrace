@@ -1111,6 +1111,486 @@
       "width": 64,
       "height": 64
     },
+    "portrait.lawyer.22": {
+      "file": "portraits/portrait.lawyer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.lawyer.32": {
+      "file": "portraits/portrait.lawyer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.lawyer.45": {
+      "file": "portraits/portrait.lawyer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.lawyer.58": {
+      "file": "portraits/portrait.lawyer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.teacher.22": {
+      "file": "portraits/portrait.teacher.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.teacher.32": {
+      "file": "portraits/portrait.teacher.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.teacher.45": {
+      "file": "portraits/portrait.teacher.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.teacher.58": {
+      "file": "portraits/portrait.teacher.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.influencer.22": {
+      "file": "portraits/portrait.influencer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.influencer.32": {
+      "file": "portraits/portrait.influencer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.influencer.45": {
+      "file": "portraits/portrait.influencer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.influencer.58": {
+      "file": "portraits/portrait.influencer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.22": {
+      "file": "portraits/portrait.waiter.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.32": {
+      "file": "portraits/portrait.waiter.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.45": {
+      "file": "portraits/portrait.waiter.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.waiter.58": {
+      "file": "portraits/portrait.waiter.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.salesperson.22": {
+      "file": "portraits/portrait.salesperson.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.salesperson.32": {
+      "file": "portraits/portrait.salesperson.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.salesperson.45": {
+      "file": "portraits/portrait.salesperson.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.salesperson.58": {
+      "file": "portraits/portrait.salesperson.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.electrician.22": {
+      "file": "portraits/portrait.electrician.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.electrician.32": {
+      "file": "portraits/portrait.electrician.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.electrician.45": {
+      "file": "portraits/portrait.electrician.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.electrician.58": {
+      "file": "portraits/portrait.electrician.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.22": {
+      "file": "portraits/portrait.pilot.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.32": {
+      "file": "portraits/portrait.pilot.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.45": {
+      "file": "portraits/portrait.pilot.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.pilot.58": {
+      "file": "portraits/portrait.pilot.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.scientist.22": {
+      "file": "portraits/portrait.scientist.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.scientist.32": {
+      "file": "portraits/portrait.scientist.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.scientist.45": {
+      "file": "portraits/portrait.scientist.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.scientist.58": {
+      "file": "portraits/portrait.scientist.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "icon.career_healthcare": {
+      "file": "icons/icon.career_healthcare.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_tech": {
+      "file": "icons/icon.career_tech.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_public": {
+      "file": "icons/icon.career_public.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_service": {
+      "file": "icons/icon.career_service.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_finance": {
+      "file": "icons/icon.career_finance.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_medicine": {
+      "file": "icons/icon.career_medicine.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_law": {
+      "file": "icons/icon.career_law.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_education": {
+      "file": "icons/icon.career_education.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_influencer": {
+      "file": "icons/icon.career_influencer.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_hospitality": {
+      "file": "icons/icon.career_hospitality.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_sales": {
+      "file": "icons/icon.career_sales.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_trades": {
+      "file": "icons/icon.career_trades.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_construction": {
+      "file": "icons/icon.career_construction.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_science": {
+      "file": "icons/icon.career_science.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_aviation": {
+      "file": "icons/icon.career_aviation.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.career_creative": {
+      "file": "icons/icon.career_creative.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.use_move": {
+      "file": "icons/icon.use_move.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.use_study": {
+      "file": "icons/icon.use_study.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.use_pay": {
+      "file": "icons/icon.use_pay.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.use_hunt": {
+      "file": "icons/icon.use_hunt.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.use_focus": {
+      "file": "icons/icon.use_focus.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.debt_mortgage": {
+      "file": "icons/icon.debt_mortgage.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.debt_loan": {
+      "file": "icons/icon.debt_loan.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.debt_card": {
+      "file": "icons/icon.debt_card.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.debt_instalments": {
+      "file": "icons/icon.debt_instalments.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_cash": {
+      "file": "icons/icon.bal_cash.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_savings": {
+      "file": "icons/icon.bal_savings.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_pension": {
+      "file": "icons/icon.bal_pension.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_investments": {
+      "file": "icons/icon.bal_investments.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_property": {
+      "file": "icons/icon.bal_property.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_things": {
+      "file": "icons/icon.bal_things.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.bal_debts": {
+      "file": "icons/icon.bal_debts.png",
+      "width": 32,
+      "height": 32
+    },
+    "frame.plain": {
+      "file": "icons/frame.plain.png",
+      "width": 80,
+      "height": 80
+    },
+    "frame.bronze": {
+      "file": "icons/frame.bronze.png",
+      "width": 80,
+      "height": 80
+    },
+    "frame.silver": {
+      "file": "icons/frame.silver.png",
+      "width": 80,
+      "height": 80
+    },
+    "frame.gold": {
+      "file": "icons/frame.gold.png",
+      "width": 80,
+      "height": 80
+    },
+    "anim.coin.0": {
+      "file": "icons/anim.coin.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.coin.1": {
+      "file": "icons/anim.coin.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.coin.2": {
+      "file": "icons/anim.coin.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.coin.3": {
+      "file": "icons/anim.coin.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.wheel.0": {
+      "file": "icons/anim.wheel.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.wheel.1": {
+      "file": "icons/anim.wheel.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.wheel.2": {
+      "file": "icons/anim.wheel.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.wheel.3": {
+      "file": "icons/anim.wheel.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.confetti.0": {
+      "file": "icons/anim.confetti.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.confetti.1": {
+      "file": "icons/anim.confetti.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.confetti.2": {
+      "file": "icons/anim.confetti.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.confetti.3": {
+      "file": "icons/anim.confetti.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.arrow.0": {
+      "file": "icons/anim.arrow.0.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.arrow.1": {
+      "file": "icons/anim.arrow.1.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.arrow.2": {
+      "file": "icons/anim.arrow.2.png",
+      "width": 48,
+      "height": 48
+    },
+    "anim.arrow.3": {
+      "file": "icons/anim.arrow.3.png",
+      "width": 48,
+      "height": 48
+    },
+    "rim.bronze": {
+      "file": "badges/rim.bronze.png",
+      "width": 64,
+      "height": 64
+    },
+    "rim.silver": {
+      "file": "badges/rim.silver.png",
+      "width": 64,
+      "height": 64
+    },
+    "rim.gold": {
+      "file": "badges/rim.gold.png",
+      "width": 64,
+      "height": 64
+    },
+    "rim.gem": {
+      "file": "badges/rim.gem.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.madrid": {
+      "file": "badges/crest.madrid.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.london": {
+      "file": "badges/crest.london.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.new_york": {
+      "file": "badges/crest.new_york.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.dubai": {
+      "file": "badges/crest.dubai.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.singapore": {
+      "file": "badges/crest.singapore.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.bangkok": {
+      "file": "badges/crest.bangkok.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.compass": {
+      "file": "badges/crest.compass.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.wheel": {
+      "file": "badges/crest.wheel.png",
+      "width": 64,
+      "height": 64
+    },
     "card.office_desk": {
       "file": "cards/card.office_desk.png",
       "width": 288,
@@ -1678,6 +2158,216 @@
     },
     "card.moment_debt": {
       "file": "cards/card.moment_debt.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.out_of_town": {
+      "file": "cards/card.out_of_town.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.club_contacts": {
+      "file": "cards/card.club_contacts.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.classroom": {
+      "file": "cards/card.classroom.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.ring_light": {
+      "file": "cards/card.ring_light.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.law_office": {
+      "file": "cards/card.law_office.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bar_tips": {
+      "file": "cards/card.bar_tips.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.healthcare.0": {
+      "file": "cards/work.healthcare.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.healthcare.1": {
+      "file": "cards/work.healthcare.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.healthcare.2": {
+      "file": "cards/work.healthcare.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.tech.0": {
+      "file": "cards/work.tech.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.tech.1": {
+      "file": "cards/work.tech.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.tech.2": {
+      "file": "cards/work.tech.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.public.0": {
+      "file": "cards/work.public.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.public.1": {
+      "file": "cards/work.public.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.public.2": {
+      "file": "cards/work.public.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.service.0": {
+      "file": "cards/work.service.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.service.1": {
+      "file": "cards/work.service.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.service.2": {
+      "file": "cards/work.service.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.finance.0": {
+      "file": "cards/work.finance.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.finance.1": {
+      "file": "cards/work.finance.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.finance.2": {
+      "file": "cards/work.finance.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.medicine.0": {
+      "file": "cards/work.medicine.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.medicine.1": {
+      "file": "cards/work.medicine.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.medicine.2": {
+      "file": "cards/work.medicine.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.law.0": {
+      "file": "cards/work.law.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.law.1": {
+      "file": "cards/work.law.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.law.2": {
+      "file": "cards/work.law.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.education.0": {
+      "file": "cards/work.education.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.education.1": {
+      "file": "cards/work.education.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.education.2": {
+      "file": "cards/work.education.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.influencer.0": {
+      "file": "cards/work.influencer.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.influencer.1": {
+      "file": "cards/work.influencer.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.influencer.2": {
+      "file": "cards/work.influencer.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.hospitality.0": {
+      "file": "cards/work.hospitality.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.hospitality.1": {
+      "file": "cards/work.hospitality.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.hospitality.2": {
+      "file": "cards/work.hospitality.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.sales.0": {
+      "file": "cards/work.sales.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.sales.1": {
+      "file": "cards/work.sales.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.sales.2": {
+      "file": "cards/work.sales.2.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.trades.0": {
+      "file": "cards/work.trades.0.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.trades.1": {
+      "file": "cards/work.trades.1.png",
+      "width": 288,
+      "height": 120
+    },
+    "work.trades.2": {
+      "file": "cards/work.trades.2.png",
       "width": 288,
       "height": 120
     },

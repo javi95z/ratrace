@@ -46,7 +46,7 @@ describe('the terminal game', () => {
     expect(text(first.out)).toContain('1. Nurse');
     expect(text(first.out)).toContain('6. Newcomer abroad');
     expect(text(first.out)).toContain('11. Crypto kid');
-    expect(first.asked[0]).toBe('Life (1-11) > ');
+    expect(first.asked[0]).toBe('Life (1-16) > ');
 
     const byName = scripted(['99', 'heir']);
     expect((await runGame(byName.io, { locale: 'en', seed: 'choose' }))?.player.life.lifeId).toBe('heir');
@@ -263,7 +263,7 @@ describe('the terminal game', () => {
     expect(text(out)).toContain('Выбери жизнь');
     expect(text(out)).toContain('1. Медсестра');
     expect(text(out)).toContain('11. Дитя крипты');
-    expect(asked[0]).toBe('Жизнь (1–11) > ');
+    expect(asked[0]).toBe('Жизнь (1–16) > ');
     expect(asked.filter((prompt) => prompt.includes('Твой выбор (1–')).length).toBeGreaterThanOrEqual(content.rounds * content.life.cardsPerRound - 3);
   });
 
