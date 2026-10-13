@@ -47,7 +47,12 @@ describe('asking the server to play a game again', () => {
   it('refuses versions it does not hold, and says which it does', () => {
     const reply = ask({ engineVersion: '9.9.9' });
     expect(reply.status).toBe(409);
-    expect(reply.body).toEqual({ error: 'unknown-version', versions: [`${ENGINE_VERSION}/${CONTENT_VERSION}`] });
+    // Every pair the server still holds: the one of this checkout, and the older ones lives were started on.
+    const held = (reply.body as { versions: string[] }).versions;
+    expect(reply.body).toEqual({ error: 'unknown-version', versions: held });
+    expect(held).toContain(`${ENGINE_VERSION}/${CONTENT_VERSION}`);
+    expect(held).toContain('0.4.0/1.3.0');
+    expect(held).not.toContain('9.9.9/' + CONTENT_VERSION);
     // A name that is on every object is not a version.
     expect(ask({ engineVersion: 'constructor', contentVersion: 'prototype' }).status).toBe(409);
   });

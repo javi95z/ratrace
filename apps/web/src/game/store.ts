@@ -1,4 +1,5 @@
 import { previewRound } from '@ratrace/engine';
+import type { Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, Order, RejectReason, RoundPreview } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
@@ -23,6 +24,8 @@ export interface RoundState {
   bankruptcies: number;
   /** The badges earned in this life so far, in the order they came. */
   badges: string[];
+  /** What has happened in this life that is worth telling, in the order it came. */
+  story: Milestone[];
   /** Badges the step on screen earned for the first time ever. Shown with its result, and gone with it. */
   earned: string[];
   /** Lives the step on screen unlocked. */
@@ -93,6 +96,7 @@ const blank: RoundState = {
   history: [],
   bankruptcies: 0,
   badges: [],
+  story: [],
   earned: [],
   unlocked: [],
   stage: 'news',
@@ -169,6 +173,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         history: opened.history(),
         bankruptcies: opened.bankruptcies(),
         badges: opened.badges(),
+        story: opened.story(),
       };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
@@ -221,7 +226,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         set({ busy: true });
         try {
           const result = await session.answerCard(option);
-          set({ view: result.view, cardEvents: result.events, badges: session.badges(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
+          set({ view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
         } catch (error) {
           await refused(error);
         } finally {
@@ -298,6 +303,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
             history: session.history(),
             bankruptcies: session.bankruptcies(),
             badges: session.badges(),
+            story: session.story(),
             earned: result.earned,
             unlocked: result.unlocked,
             resolved: { before: view, events: result.events },

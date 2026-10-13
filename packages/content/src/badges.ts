@@ -3,6 +3,8 @@ import type { Content, GameEvent, GameView, Order, PlayerState, Position } from 
 import { assetKind } from './art';
 import type { AssetKind } from './art';
 import { usd } from './money';
+import { storyAfter, storyStart } from './story';
+import type { Story } from './story';
 
 /** A life begins at 22 and ages by the years of a round. */
 export const START_AGE = 22;
@@ -14,7 +16,7 @@ export interface BadgeDef {
   group: BadgeGroup;
 }
 
-/** The thirty badges of v1, in the order the collection shows them (spec, Appendix C). */
+/** The thirty badges of v1 (spec, Appendix C) and one added since, in the order the collection shows them. */
 export const badges: BadgeDef[] = [
   { id: 'first_100k', group: 'wealth' },
   { id: 'millionaire', group: 'wealth' },
@@ -35,6 +37,7 @@ export const badges: BadgeDef[] = [
   { id: 'index_only', group: 'investing' },
   { id: 'first_luxury_watch', group: 'status' },
   { id: 'supercar', group: 'status' },
+  { id: 'shipowner', group: 'status' },
   { id: 'penthouse', group: 'status' },
   { id: 'status_100', group: 'status' },
   { id: 'twenty_items', group: 'status' },
@@ -61,6 +64,8 @@ export interface Journal {
   kinds: string[];
   /** Badges earned in this life, in the order they came. */
   earned: string[];
+  /** What happened that is worth telling when the life is over. */
+  story: Story;
 }
 
 /** One step of a life as the badges see it: the answer to a card, or a round. */
@@ -91,8 +96,8 @@ function kindsHeld(content: Content, p: PlayerState): Kind[] {
   return [...kinds];
 }
 
-export function journalStart(_content: Content, view: GameView): Journal {
-  return { cities: [view.player.cityId], cardUsed: false, kinds: [], earned: [] };
+export function journalStart(content: Content, view: GameView): Journal {
+  return { cities: [view.player.cityId], cardUsed: false, kinds: [], earned: [], story: storyStart(content, view) };
 }
 
 /** The journal after a step. Badges are not added here: `badgesEarned` says which are new, and the caller records them. */
@@ -104,6 +109,7 @@ export function journalAfter(content: Content, journal: Journal, after: GameView
     cardUsed: journal.cardUsed || events.some((e) => e.kind === 'ledger' && e.line === 'creditCardDraw' && e.amount !== 0),
     kinds: [...kinds],
     earned: journal.earned,
+    story: storyAfter(content, journal.story, after, events),
   };
 }
 
@@ -202,6 +208,7 @@ const RULES: Record<string, (f: Facts) => boolean> = {
 
   first_luxury_watch: (f) => LUXURY_WATCHES.some((watch) => owns(f.p, watch)),
   supercar: (f) => owns(f.p, 'car_lamborghini_aventador'),
+  shipowner: (f) => owns(f.p, 'sea_sailboat') || owns(f.p, 'sea_motor_yacht'),
   penthouse: (f) => f.p.properties.some((property) => property.typeId === 'penthouse'),
   status_100: (f) => f.p.statusPoints >= 100,
 

@@ -31,7 +31,8 @@ export function readProfile(raw: unknown): Profile {
   const guide = isRecord(raw.guide) ? raw.guide : {};
   return {
     format: SAVE_FORMAT,
-    settings: { reducedMotion: settings.reducedMotion === true },
+    // Sound is on unless it was turned off: a profile from before there was any opens with it on.
+    settings: { reducedMotion: settings.reducedMotion === true, sound: settings.sound !== false },
     badges: earnedOf(raw.badges),
     gallery: strings(raw.gallery),
     unlocked: earnedOf(raw.unlocked),

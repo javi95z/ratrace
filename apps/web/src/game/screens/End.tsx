@@ -1,10 +1,11 @@
 'use client';
 
-import { badgeArt, portraitArt } from '@ratrace/content';
+import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { useMemo } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
+import { epilogue } from '@/game/epilogue';
 import { ageAt } from '@/game/present';
 import { bestsOf } from '@/game/records';
 import { shareCard } from '@/game/share';
@@ -35,8 +36,11 @@ export function End() {
 /** The score and the three parts it is made of, what the life earned, the graph of a lifetime, and the way to another. */
 function Ended({ view }: { view: GameView }) {
   const t = useT('end');
-  const { content, text, names, fmt } = useWords();
+  const tale = useT('epilogue');
+  const words = useWords();
+  const { content, text, names, fmt } = words;
   const history = useGame((s) => s.history);
+  const story = useGame((s) => s.story);
   const bankruptcies = useGame((s) => s.bankruptcies);
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const gameId = useGame((s) => s.gameId);
@@ -58,6 +62,9 @@ function Ended({ view }: { view: GameView }) {
   const score = scoreBreakdown(content, view);
   const escaped = score.multiplierPct > 100;
   const lifeName = text.lives[lifeId]?.name ?? lifeId;
+  // The life in three paragraphs: where it began, what happened, how it ended.
+  const life = lives.find((candidate) => candidate.id === lifeId);
+  const told = life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : [];
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave.
   const picture = useMemo(
@@ -115,6 +122,16 @@ function Ended({ view }: { view: GameView }) {
         </div>
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
       </section>
+
+      {told.length > 0 ? (
+        <Panel title={tale('title')} label={tale('title')}>
+          {told.map((paragraph, i) => (
+            <p key={i} className="animate-rise text-[14px] leading-relaxed [&+p]:mt-2.5" style={{ animationDelay: `${300 + i * 350}ms` }}>
+              {paragraph}
+            </p>
+          ))}
+        </Panel>
+      ) : null}
 
       {bests.length > 0 || unlocked.length > 0 ? (
         <div className="flex flex-col gap-2">

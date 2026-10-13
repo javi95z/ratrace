@@ -25,6 +25,7 @@ const ROLL_MS = 80;
  */
 export function Resolve() {
   const t = useT('resolve');
+  const crisis = useT('crisis');
   const words = useWords();
   const { content, text, fmt } = words;
   const resolved = useGame((s) => s.resolved);
@@ -34,6 +35,8 @@ export function Resolve() {
   const { before, events } = resolved;
   const notes = roundNotes(words, t, events);
   const lines = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
+  // A crisis that was on when the round was played and is not now has just ended.
+  const ended = before.timeline[before.round]?.crisis && !view.timeline[view.round]?.crisis ? before.timeline[before.round].crisis : null;
   const worthBefore = netWorth(before.player);
   const worthNow = netWorth(view.player);
 
@@ -45,6 +48,17 @@ export function Resolve() {
       </div>
 
       <Celebrations />
+      {ended ? (
+        <div role="status" className="frame flex animate-rise items-center gap-3 bg-teal-800 p-2">
+          <Bare className="size-10">
+            <Sprite id="icon.economy" />
+          </Bare>
+          <div className="min-w-0">
+            <p className="pixel text-[17px]">{crisis('over', { crisis: text.crises[ended.id].name })}</p>
+            <p className="text-[13px] leading-snug">{crisis('overHint')}</p>
+          </div>
+        </div>
+      ) : null}
       {notes.map((note, i) => (
         <div key={i} role="status" className={`frame flex animate-rise items-center gap-3 p-2 ${NOTE[note.tone]}`}>
           <Bare className="size-10">

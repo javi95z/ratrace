@@ -379,7 +379,7 @@ describe('what a life earns', () => {
 
   it('leaves the settings alone', async () => {
     const { store, sessions } = setup();
-    await store.saveProfile({ ...(await store.loadProfile()), settings: { reducedMotion: true } });
+    await store.saveProfile({ ...(await store.loadProfile()), settings: { reducedMotion: true, sound: true } });
     await live(await sessions.start('nurse'), 3, lavish);
     expect((await store.loadProfile()).settings.reducedMotion).toBe(true);
   });

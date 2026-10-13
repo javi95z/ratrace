@@ -105,6 +105,13 @@ export const cardArt: Record<string, string> = {
   world_ai_boom: scene('server_room'),
   world_pandemic: scene('empty_street'),
   world_tax_reform: scene('newsroom'),
+  // The six cards of the crises wait for sheet cards-18. Until it lands each borrows a scene: see CARD_STAND_INS.
+  crisis_crash_panic: scene('crash_screens'),
+  crisis_crash_layoffs: scene('packed_box'),
+  crisis_energy_bills: scene('price_tags'),
+  crisis_energy_wages: scene('empty_street'),
+  crisis_debt_spreads: scene('central_bank'),
+  crisis_debt_austerity: scene('receipts'),
   world_bank_failure: scene('bank_queue'),
 
   tax_advisor: scene('advisor_office'),
@@ -173,6 +180,22 @@ export const topicArt: Record<Headline['topic'], string> = {
 
 /** A badge, or `locked` for one not earned yet. */
 export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
+
+/** Cards that share a scene with another for want of their own. A test lets these, and only these, do so. */
+export const CARD_STAND_INS: readonly string[] = ['crisis_crash_panic', 'crisis_crash_layoffs', 'crisis_energy_bills', 'crisis_energy_wages', 'crisis_debt_spreads', 'crisis_debt_austerity'];
+
+/**
+ * The picture of a moment that stops the game: leaving the rat race, going bankrupt, the first
+ * million, and the opening of each crisis. Until sheet cards-19 lands each borrows a card's scene.
+ */
+export const momentArt: Record<string, string> = {
+  escape: 'card.sunrise_balcony',
+  bankrupt: 'card.packed_box',
+  million: 'card.contract_signing',
+  crash: 'card.crash_screens',
+  energy: 'card.price_tags',
+  debt: 'card.central_bank',
+};
 
 /** A life is drawn at four ages. */
 export const PORTRAIT_AGES = [22, 32, 45, 58] as const;

@@ -182,6 +182,31 @@ export interface LifeRules {
 }
 
 /** News and tax reforms. Both come from their own random streams, so they never move a price. */
+/**
+ * One round of a crisis. What it does on arriving: the regime and the crypto cycle it forces, and
+ * what it adds to the policy rate and to inflation. What it does to the round then played under
+ * it: what it adds to the return of each kind of asset, on top of everything else.
+ */
+export interface CrisisPhase {
+  regime?: Regime;
+  cryptoPhase?: CryptoPhase;
+  rateBp?: Bp;
+  inflationBp?: Bp;
+  equityBp?: Bp;
+  cryptoBp?: Bp;
+  goldBp?: Bp;
+  propertyBp?: Bp;
+}
+
+/** A crisis with a name: a few rounds in a row in which the world is pushed off its course. At most one in a game. */
+export interface CrisisDef {
+  id: string;
+  /** Relative chance of being the one, when a game has a crisis. */
+  weight: number;
+  /** One entry for each round it lasts. */
+  phases: ReadonlyArray<CrisisPhase>;
+}
+
 export interface WorldRules {
   headlinesPerRound: number;
   /** Chance in percent that a headline is true. */
@@ -198,6 +223,10 @@ export interface WorldRules {
    * trigger holds. Zero means a world card always appears when one can.
    */
   quietWeight: number;
+  /** Chance in percent that a game has a crisis at all. Zero for a world that never has one. */
+  crisisChancePct: number;
+  /** The first round a crisis may open in, so that a life has something to lose by then. */
+  crisisEarliestRound: number;
 }
 
 export type CardCategory =
@@ -269,6 +298,8 @@ export interface WorldTrigger {
   anyPropertyReturnAtMostBp?: Bp;
   /** A tax reform happened this round. */
   taxReform?: boolean;
+  /** This round is that round of that crisis, counted from 1. */
+  crisis?: { id: string; year: number };
 }
 
 /**
@@ -426,6 +457,8 @@ export interface Content {
   items: ReadonlyArray<ItemDef>;
   life: LifeRules;
   world: WorldRules;
+  /** The crises a game may have. Empty for a world without any. */
+  crises: ReadonlyArray<CrisisDef>;
   cards: ReadonlyArray<CardDef>;
 }
 
@@ -459,6 +492,8 @@ export interface WorldState {
   news: Headline[];
   /** The world card of this round, the same for every player, or null. */
   eventCardId: string | null;
+  /** The crisis this round is played under, and which of its rounds this is, counted from 1. Null in ordinary times. */
+  crisis: { id: string; year: number; of: number } | null;
 }
 
 export interface Position {

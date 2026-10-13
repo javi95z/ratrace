@@ -102,7 +102,9 @@
     "guide": "Consejos de la guía",
     "guideHint": "Notas que explican cada pantalla durante tu primera vida.",
     "home": "Volver al inicio",
-    "homeHint": "Tu vida te espera tal como la dejas."
+    "homeHint": "Tu vida te espera tal como la dejas.",
+    "sound": "Sonido",
+    "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla."
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
@@ -147,6 +149,48 @@
       "rates": "Tipos de interés",
       "inflation": "Inflación",
       "property": "Vivienda"
+    }
+  },
+  "crisis": {
+    "label": "Crisis · año {year} de {of}",
+    "year": "Año {n}",
+    "open": "{crisis}: año {year} de {of}. Ver qué es.",
+    "advice": "Una crisis castiga a quien tiene que vender y a quien debe mucho. Quien aguanta suele recuperar parte al salir.",
+    "over": "{crisis} ha terminado.",
+    "overHint": "El mundo vuelve a su curso. Lo que cayó no sube solo: mira qué te queda."
+  },
+  "moments": {
+    "perYear": "{amount}/año",
+    "escape": {
+      "title": "¡Fuera de la rueda!",
+      "kicker": "Lo has conseguido",
+      "body": "A los {age}, tus rentas pagan tu vida entera. Desde hoy, trabajar es una elección.",
+      "passive": "Tus rentas, tras impuestos",
+      "costs": "Lo que cuesta tu vida",
+      "hint": "Cuanto antes se sale, mayor es el bonus de la puntuación. Si tus rentas dejan de cubrir tu vida, la rueda vuelve a girar.",
+      "go": "Seguir, por gusto"
+    },
+    "million": {
+      "title": "Tu primer millón",
+      "kicker": "Descontando la inflación",
+      "body": "A los {age} vales un millón de dólares de verdad: de los que compraban lo mismo cuando empezaste.",
+      "worth": "Patrimonio",
+      "hint": "El segundo suele llegar antes que el primero.",
+      "go": "A por el siguiente"
+    },
+    "bankrupt": {
+      "title": "Quiebra",
+      "kicker": "Lo has perdido todo",
+      "body": "A los {age} tus deudas han podido contigo. Se vende todo lo que tenías y se cancela lo que debías.",
+      "sold": "Vendido a toda prisa",
+      "cleared": "Deudas canceladas",
+      "status": "Estatus, para siempre",
+      "hint": "Ningún banco te prestará hasta que cumplas {age}. Tu plan de pensiones sigue intacto. La vida continúa.",
+      "go": "Empezar de cero"
+    },
+    "crisis": {
+      "kicker": "Crisis · dura {rounds} rondas",
+      "go": "Afrontarla"
     }
   },
   "cards": {
@@ -443,8 +487,8 @@
     "never": "Nunca saliste de la rueda.",
     "escapedAt": "Saliste de la rueda a los {age}.",
     "netWorth": "Patrimonio",
-    "realNetWorth": "En dólares de tus 22 años",
-    "graph": "Tu patrimonio a lo largo de la vida, en dólares de tus 22 años",
+    "realNetWorth": "Descontando la inflación",
+    "graph": "Tu patrimonio a lo largo de la vida, descontando la inflación",
     "bankruptcies": "{count, plural, =0 {Nunca en quiebra} one {Una quiebra} other {# quiebras}}",
     "badges": "Insignias de esta vida",
     "noBadges": "Esta vez, ninguna insignia. En la colección se ve cómo se consigue cada una.",
@@ -456,6 +500,41 @@
     "collection": "Ver tu colección",
     "again": "Vivir otra vida",
     "home": "Inicio"
+  },
+  "epilogue": {
+    "title": "Tu vida, contada",
+    "opening": {
+      "job": "Empezaste a los {age} en {city}, de {job}, con {cash} en el bolsillo.",
+      "none": "Empezaste a los {age} en {city}, sin trabajo y con {cash} en el bolsillo."
+    },
+    "quiet": "Fue una vida tranquila: sin mudanzas, sin sobresaltos y sin grandes apuestas. Año tras año, lo mismo y a tiempo.",
+    "told": {
+      "top": "A los {age} llegaste a lo más alto: {title}.",
+      "promoted": "A los {age} ya eras {title}.",
+      "career": "A los {age} lo dejaste todo por otra carrera: {career}.",
+      "jobLost": "A los {age} te quedaste sin trabajo.",
+      "moved": "A los {age} hiciste las maletas y te fuiste a {city}.",
+      "partner": "A los {age} dejaste de vivir a solas.",
+      "split": "A los {age} volviste a estar por tu cuenta.",
+      "firstChild": "A los {age} nació tu primer hijo.",
+      "child": "A los {age} la familia creció otra vez.",
+      "home": "A los {age} compraste tu primera casa: {home}.",
+      "business": "A los {age} montaste un negocio.",
+      "soldBusiness": "A los {age} lo vendiste por una buena suma.",
+      "escaped": "A los {age} saliste de la rueda: tus rentas ya pagaban tu vida.",
+      "escapeLost": "A los {age} la rueda te volvió a atrapar.",
+      "bankrupt": "A los {age} lo perdiste todo y empezaste de cero.",
+      "crisis": "A los {age} te pilló {crisis}.",
+      "hundred": "A los {age} juntaste tus primeros cien mil.",
+      "million": "A los {age} eras millonario.",
+      "tenMillion": "A los {age} pasaste de los diez millones."
+    },
+    "closing": {
+      "free": "Terminaste a los {age} en {city}, libre, con {worth} y {score} puntos. Trabajar hacía tiempo que era una elección.",
+      "rich": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Rico, sí; pero la rueda nunca dejó de girar.",
+      "through": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Una vida entera de madrugar, y la rueda girando hasta el final.",
+      "broke": "Terminaste a los {age} en {city} con {worth} y {score} puntos. No salió como esperabas. La siguiente vida empieza de nuevo a los 22."
+    }
   },
   "badges": {
     "earned": "Insignia conseguida",
@@ -492,7 +571,7 @@
     "score": "Puntuación {score}",
     "badges": "{count, plural, =0 {Sin insignias} one {1 insignia} other {# insignias}}",
     "graph": "El patrimonio a lo largo de esta vida",
-    "realWorth": "En dólares de tus 22 años"
+    "realWorth": "Descontando la inflación"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -503,7 +582,7 @@
     "drawing": "Dibujando…",
     "alt": "{life}: puntuación {score}",
     "badges": "Insignias",
-    "netWorth": "Patrimonio, en dólares de los 22 años",
+    "netWorth": "Patrimonio, descontando la inflación",
     "never": "Nunca salió de la rueda",
     "escapedAt": "Fuera de la rueda a los {age}"
   },

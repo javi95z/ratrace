@@ -56,10 +56,10 @@ describe('what is unlocked, from two places', () => {
   });
 
   it('is the profile without what belongs to the device, and goes back into it leaving the settings alone', () => {
-    const profile: Profile = { ...newProfile(), settings: { reducedMotion: true }, badges: { x: earned(1) }, gallery: ['a'] };
+    const profile: Profile = { ...newProfile(), settings: { reducedMotion: true, sound: false }, badges: { x: earned(1) }, gallery: ['a'] };
     expect(progressOf(profile)).toEqual(progress({ badges: { x: earned(1) }, gallery: ['a'] }));
     const back = withProgress(profile, progress({ badges: { x: earned(1), y: earned(2) }, gallery: ['a', 'b'] }));
-    expect(back.settings).toEqual({ reducedMotion: true });
+    expect(back.settings).toEqual({ reducedMotion: true, sound: false });
     expect(back.gallery).toEqual(['a', 'b']);
     expect(Object.keys(back.badges)).toEqual(['x', 'y']);
   });

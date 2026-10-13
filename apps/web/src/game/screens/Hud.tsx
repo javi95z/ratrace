@@ -9,6 +9,7 @@ import { ageAt, portraitAge } from '@/game/present';
 import { Bar, Row, Stat, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { CrisisBar } from './Crisis';
 import { SettingsSheet } from './Settings';
 
 /**
@@ -153,6 +154,9 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => setOpen('status')} />
         </div>
       </div>
+
+      {/* Away from the news, where the bar of a crisis is whole, a strip keeps it in sight. */}
+      {compact ? <CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact /> : null}
 
       <div title={t('ratRaceHint')}>
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">

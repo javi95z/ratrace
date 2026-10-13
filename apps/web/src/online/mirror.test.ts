@@ -519,7 +519,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     state.progress = { badges: { millionaire: { at: 5, gameId: 'elsewhere' } }, gallery: ['watch_rolex'], unlocked: { heir: { at: 5, gameId: 'elsewhere' } }, guide: { seen: ['news'], off: false } };
     const d = device(cloud);
     const profile = await d.store.loadProfile();
-    await d.store.saveProfile({ ...profile, settings: { reducedMotion: true }, badges: { first_100k: { at: 9, gameId: 'here' } }, gallery: ['watch_casio'] });
+    await d.store.saveProfile({ ...profile, settings: { reducedMotion: true, sound: false }, badges: { first_100k: { at: 9, gameId: 'here' } }, gallery: ['watch_casio'] });
     const heard: string[] = [];
     d.mirror.onDeviceChanged((what) => heard.push(what));
     await d.mirror.sync();
@@ -527,7 +527,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(Object.keys(after.badges).sort()).toEqual(['first_100k', 'millionaire']);
     expect(after.gallery).toEqual(['watch_casio', 'watch_rolex']);
     expect(Object.keys(after.unlocked)).toEqual(['heir']);
-    expect(after.settings).toEqual({ reducedMotion: true });
+    expect(after.settings).toEqual({ reducedMotion: true, sound: false });
     expect(heard).toContain('profile');
     expect(Object.keys(state.progress?.badges ?? {}).sort()).toEqual(['first_100k', 'millionaire']);
     // Nothing more to say: a second sync writes nothing.
@@ -545,7 +545,7 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(state.progress?.gallery).toEqual(['watch_casio']);
     // Sent once. The next thing the device writes does not send it again.
     state.asked.length = 0;
-    await d.mirror.saveProfile({ ...(await d.mirror.loadProfile()), settings: { reducedMotion: true } });
+    await d.mirror.saveProfile({ ...(await d.mirror.loadProfile()), settings: { reducedMotion: true, sound: false } });
     await d.later();
     expect(state.asked).toEqual([]);
   });

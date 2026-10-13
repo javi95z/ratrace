@@ -196,6 +196,25 @@ export function validateContent(c: Content): string[] {
   if (!within(w.newsTruthPct, 0, 100)) errors.push('world.newsTruthPct must be between 0 and 100');
   if (!isCount(w.flatBandBp)) errors.push('world.flatBandBp must be a whole, non-negative number');
   if (!within(w.taxReformChancePct, 0, 100)) errors.push('world.taxReformChancePct must be between 0 and 100');
+  if (!within(w.crisisChancePct, 0, 100)) errors.push('world.crisisChancePct must be between 0 and 100');
+  if (!isWhole(w.crisisEarliestRound) || w.crisisEarliestRound < 1) errors.push('world.crisisEarliestRound must be a whole number from 1 up');
+  if (!Array.isArray(c.crises)) errors.push('crises must be a list');
+  else {
+    checkIds(c.crises.map((x) => x.id), 'crisis');
+    for (const crisis of c.crises) {
+      if (!(crisis.weight > 0)) errors.push(`crisis ${crisis.id} needs a positive weight`);
+      if (!Array.isArray(crisis.phases) || crisis.phases.length === 0) errors.push(`crisis ${crisis.id} needs at least one round`);
+      else if (w.crisisEarliestRound + crisis.phases.length > c.rounds) errors.push(`crisis ${crisis.id} does not fit in a life`);
+      else {
+        for (const phase of crisis.phases) {
+          for (const key of ['rateBp', 'inflationBp', 'equityBp', 'cryptoBp', 'goldBp', 'propertyBp'] as const) {
+            if (phase[key] !== undefined && !isWhole(phase[key])) errors.push(`crisis ${crisis.id} has a ${key} that is not a whole number`);
+          }
+        }
+      }
+    }
+    if (w.crisisChancePct > 0 && c.crises.length === 0) errors.push('world.crisisChancePct is above zero but there is no crisis');
+  }
   if (!isCount(w.taxReformsPerGame)) errors.push('world.taxReformsPerGame must be a whole, non-negative number');
   if (!Array.isArray(w.taxReformStepsBp) || w.taxReformStepsBp.some((step) => !isWhole(step) || step === 0)) {
     errors.push('world.taxReformStepsBp must be whole numbers other than zero');

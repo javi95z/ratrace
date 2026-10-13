@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "play": "tsx src/cli.ts"
+    "play": "tsx src/cli.ts",
+    "catalog": "tsx src/catalog.ts"
   },
   "dependencies": {
     "@ratrace/content": "workspace:*",

@@ -18,6 +18,23 @@ describe('validateContent: life data', () => {
     expect(errors({ items: [{ ...item, cities: [c.cities[0].id] }] })).toEqual([]);
   });
 
+  it('checks crises, and the cards that wait for one', () => {
+    const crisis = { id: 'crash', weight: 1, phases: [{ equityBp: -500 }, {}] };
+    const world = { ...c.world, crisisChancePct: 50 };
+    expect(errors({ crises: [crisis], world })).toEqual([]);
+    expect(errors({ world })).toContain('world.crisisChancePct is above zero but there is no crisis');
+    expect(errors({ crises: [{ ...crisis, weight: 0 }], world })).toContain('crisis crash needs a positive weight');
+    expect(errors({ crises: [{ ...crisis, phases: [] }], world })).toContain('crisis crash needs at least one round');
+    expect(errors({ crises: [{ ...crisis, phases: [{ equityBp: 0.5 }] }], world })).toContain('crisis crash has a equityBp that is not a whole number');
+    expect(errors({ crises: [{ ...crisis, phases: Array.from({ length: c.rounds }, () => ({})) }], world })).toContain('crisis crash does not fit in a life');
+    expect(errors({ crises: [crisis, crisis], world })).toContain('duplicate crisis id: crash');
+
+    const waiting = (trigger: object) => errors({ crises: [crisis], world, cards: [{ id: 'omen', category: 'world' as const, weight: 1, cooldown: 0, trigger, options: [{}, {}] }] });
+    expect(waiting({ crisis: { id: 'crash', year: 2 } })).toEqual([]);
+    expect(waiting({ crisis: { id: 'crash', year: 3 } })).toContain('card omen trigger names a round crisis crash does not have: 3');
+    expect(waiting({ crisis: { id: 'plague', year: 1 } })).toContain('card omen trigger names an unknown crisis: plague');
+  });
+
   it('checks careers', () => {
     const career = c.careers[0];
     expect(errors({ careers: [{ ...career, levels: [] }] })).toContain('career office needs at least one level');

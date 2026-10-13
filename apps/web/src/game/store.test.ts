@@ -410,7 +410,7 @@ describe('when something goes wrong', () => {
         resume: async () => ({
           lost: null,
           session: {
-            gameId: 'x', lifeId: 'nurse', view: () => get().view as never, history: () => [], bankruptcies: () => 0, badges: () => [],
+            gameId: 'x', lifeId: 'nurse', view: () => get().view as never, history: () => [], bankruptcies: () => 0, story: () => [], badges: () => [],
             answerCard: () => Promise.reject(new Error('invariant broken: cash is not a whole number')),
             playRound: () => Promise.reject(new Error('invariant broken')),
           },
@@ -460,7 +460,7 @@ describe('what a step earned', () => {
         resume: async () => ({
           lost: null,
           session: {
-            gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => ['mba'],
+            gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => ['mba'],
             answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: ['mba'], unlocked: ['heir'] }),
             playRound: (choices) => real.playRound(choices),
           },

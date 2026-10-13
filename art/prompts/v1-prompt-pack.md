@@ -1,6 +1,6 @@
 # Art prompt pack: v1
 
-Thirty-eight sheets cover every v1 sprite: the first twenty-one, and seventeen added since (02b city seats, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day, 22 to 30 more card scenes). The game is called The Rat Race.
+Forty-one sheets cover every v1 sprite: the first twenty-one, and twenty added since (31 crisis cards, 32 moments, 02b city seats, 02c more things, 04b homes, 06b, 06c and 06d icons, 10b portraits, 20b and 20c skylines by day, 22 to 30 more card scenes). The game is called The Rat Race.
 
 ## How to use
 
@@ -112,6 +112,30 @@ Landscape 3:2 image. Object sheet: 3 columns by 2 rows, 6 objects, each shown fr
 4. Singapore grand prix: a red and white racing helmet resting on a folded chequered flag, with a gold lanyard pass beside it.
 5. Bangkok muay thai: a pair of red boxing gloves hanging by their laces from a corner post of a ring, with a braided blue and gold headband on top of the post.
 6. Opera house: a red velvet theatre armchair with a gold frame, a pair of small brass opera glasses on its seat.
+```
+
+### 02c. Travel, air and sea, art, fashion
+
+Save as `art/raw/items/items-04.png`
+
+```text
+Square image. Object sheet: 4 columns by 4 rows, 16 objects, each shown front-on unless stated. Left to right, top to bottom:
+1. A rail pass: a cream travel card with a small blue train drawn on it, lying on a folded paper map with a red dotted route.
+2. A pair of red skis and two poles crossed, with ski goggles and a woollen bobble hat in front of them.
+3. A khaki safari hat resting on a pair of binoculars and a camera with a long lens.
+4. A desk globe on a brass stand with a tiny gold aeroplane circling it on a thin wire.
+5. An orange life jacket with a coiled white rope and a brass compass in front of it.
+6. A small helicopter, side-on, navy body with a gold stripe and glass blue cockpit.
+7. A sailing yacht, side-on: white hull, tall mast, two white sails full of wind, a small patch of blue water with a hard edge beneath it.
+8. A large motor yacht, side-on: long white hull with three decks, dark windows and a radar arch, a small patch of blue water with a hard edge beneath it.
+9. A small abstract print in a plain light wooden frame: three flat colour shapes on cream paper.
+10. A photograph in a thin black frame with a wide white mount: a lone tree on a hill in black, white and grey.
+11. An abstract bronze sculpture of a reclining figure with a hole through it, on a grey stone plinth.
+12. An ornate gilded frame holding a dark oil painting: a still life of fruit, a jug and a candle.
+13. Tortoiseshell sunglasses with dark green lenses, resting on a brown leather case.
+14. A charcoal two-piece suit on a wooden hanger, a yellow tailor's tape measure draped over one shoulder.
+15. A long cream wool coat with black trim and gold buttons on a headless dressmaker's mannequin.
+16. A round medallion with a gold rim and a dark navy enamel centre, and in the centre a gold ship's wheel with a small white sail behind it.
 ```
 
 ### 03. Cars
@@ -594,6 +618,36 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 6. A night street market with striped awnings, strings of bulbs, crates of fruit and a few small figures browsing.
 ```
 
+### 31. Card scenes 18: the crises
+
+Save as `art/raw/cards/cards-18.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A trading floor at night in panic: every screen showing red falling lines, papers in the air, traders with their heads in their hands.
+2. A whole office standing in a meeting room, facing a grim manager beside a screen with a falling bar chart, one empty chair.
+3. A hallway table with a thick envelope torn open, a long bill unrolling to the floor, a radiator and a wool blanket beside it.
+4. A picket line outside a factory gate at dusk: figures with blank placards, a burning brazier, a closed gate.
+5. A government building with columns under storm clouds, a huge red arrow rising behind it, small figures watching from the square.
+6. A town hall noticeboard with papers pinned to it, a shuttered library and a street lamp switched off beside it.
+```
+
+### 32. Moments
+
+Save as `art/raw/cards/cards-19.png`
+
+These are the pictures of the moments that stop the game. Each is a single strong image with nothing small in it.
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. Dawn over the city seen from a hilltop: a small figure walking away along a path into golden light, and behind them an empty hamster wheel left standing in the grass.
+2. An empty flat at night with pale rectangles on the wall where pictures hung, one bare bulb, a single suitcase by the open door.
+3. A bank vault with its round door wide open and gold light pouring out over stacked gold bars, a small figure standing in the doorway.
+4. A city skyline at night with a giant red line chart crashing down across the sky like lightning, lit windows going dark.
+5. A petrol station at night with a long queue of cars, the price board showing only tall red bars, a single flame from a refinery chimney behind.
+6. The columns of a treasury building cracking down the middle, coins spilling from the crack, a storm sky.
+```
+
 ### Which card each new scene is for
 
 All of these are drawn and wired: every card now has a scene of its own.
@@ -724,6 +778,7 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 01 | `items/items-01.png` | Watches, tech, fashion, art | 64×64 |
 | 02 | `items/items-02.png` | Travel, memberships, air and sea, education, 5 later items | 64×64 |
 | 02b | `items/items-03.png` | A seat for each city besides Madrid, 1 later item | 64×64 |
+| 02c | `items/items-04.png` | 15 more things: travel, air and sea, art, fashion; and the shipowner's badge | 64×64 |
 | 03 | `cars/cars-01.png` | 7 cars + 1 later | 96×48 |
 | 04 | `homes/homes-01.png` | 7 homes + 2 later property types | 128×128 |
 | 04b | `homes/homes-02.png` | 9 more kinds of property: 6 homes, 3 to let | 128×128 |
@@ -739,6 +794,8 @@ Check the spelling of THE RAT RACE letter by letter before handing it over.
 | 10b | `portraits/portraits-03.png` | Second chance, founder, crypto kid, 1 later life | 64×64 |
 | 11 to 18 | `cards/cards-01.png` to `cards-08.png` | 48 card scenes | 288×120 |
 | 22 to 30 | `cards/cards-09.png` to `cards-17.png` | 52 more card scenes, so that no two cards share one, and 2 for later | 288×120 |
+| 31 | `cards/cards-18.png` | The six cards of the crises | 288×120 |
+| 32 | `cards/cards-19.png` | The moments that stop the game: escape, bankruptcy, the first million, and each crisis | 288×120 |
 | 19 to 20 | `skylines/skylines-01.png`, `-02.png` | 6 city skylines | 312×66 |
 | 20b to 20c | `skylines/skylines-03.png`, `-04.png` | The 6 skylines by day | 312×66 |
 | 21 | `brand/brand-01.png` | Logo, wordmark, app icon, mascot | varies |

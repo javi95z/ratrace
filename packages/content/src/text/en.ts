@@ -128,6 +128,23 @@ export const en: ContentText = {
       unlock: 'Hold your coins through a crypto winter.',
     },
   },
+  crises: {
+    crash: {
+      name: 'The Great Crash',
+      intro: 'Markets are in free fall and homes follow them down. Central banks cut rates. Those who must sell lose most.',
+      years: ['Shares and homes fall hard.', 'Jobs go, and prices keep sliding.', 'The worst is over: markets turn.'],
+    },
+    energy: {
+      name: 'The Energy Shock',
+      intro: 'Fuel is scarce and every price follows it up. Rates rise to catch inflation. Cash and bonds lose; gold gains.',
+      years: ['Prices leap and rates follow.', 'Still climbing: growth stalls.', 'Prices settle, and gold gives some back.'],
+    },
+    debt: {
+      name: 'The Debt Crisis',
+      intro: 'Lenders have stopped trusting governments. Borrowing costs jump, and whatever was bought on credit falls.',
+      years: ['Rates jump; shares and homes fall.', 'Dearer credit still, and homes keep falling.'],
+    },
+  },
   categories: {
     career: 'Career',
     education: 'Education',
@@ -175,10 +192,10 @@ export const en: ContentText = {
     },
   },
   badges: {
-    first_100k: { name: 'First 100k', how: 'Be worth $100,000, counted in the dollars of age 22.' },
-    millionaire: { name: 'Millionaire', how: 'Be worth a million, counted in the dollars of age 22.' },
-    millionaire_by_35: { name: 'Millionaire by 35', how: 'Be worth a million by the age of 35, counted in the dollars of age 22.' },
-    ten_million: { name: 'Ten million', how: 'Be worth ten million, counted in the dollars of age 22.' },
+    first_100k: { name: 'First 100k', how: 'Be worth $100,000 after inflation.' },
+    millionaire: { name: 'Millionaire', how: 'Be worth a million after inflation.' },
+    millionaire_by_35: { name: 'Millionaire by 35', how: 'Be worth a million by the age of 35 after inflation.' },
+    ten_million: { name: 'Ten million', how: 'Be worth ten million after inflation.' },
     debt_free_at_40: { name: 'Debt-free at 40', how: 'Owe nothing at all on the day you turn 40, without ever having gone bankrupt.' },
     no_credit_card: { name: 'Never on the card', how: 'Live a whole life without a single shortfall going on the credit card.' },
     escaped: { name: 'Out of the rat race', how: 'Cover what your life costs with passive income, two rounds running.' },
@@ -194,6 +211,7 @@ export const en: ContentText = {
     index_only: { name: 'Index and nothing else', how: 'Leave the rat race having never held any investment but index funds, and owning no property.' },
     first_luxury_watch: { name: 'First luxury watch', how: 'Own an {item:watch_omega} or anything finer.' },
     supercar: { name: 'Supercar owner', how: 'Own a {item:car_lamborghini_aventador}.' },
+    shipowner: { name: 'Shipowner', how: 'Own a boat of your own: the {item:sea_sailboat} or the {item:sea_motor_yacht}.' },
     penthouse: { name: 'Penthouse', how: 'Own a penthouse.' },
     status_100: { name: 'Status 100', how: 'Reach 100 status.' },
     twenty_items: { name: 'Twenty items', how: 'Own twenty different things, counted across all your lives.' },

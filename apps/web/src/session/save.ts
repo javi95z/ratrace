@@ -61,7 +61,9 @@ const isStrings = (x: unknown): x is string[] => Array.isArray(x) && x.every((en
 
 /** True if a stored journal has the shape of one. What it says is not checked: replaying the log is what proves it. */
 function isJournal(x: unknown): x is LifeRecord['journal'] {
-  return isRecord(x) && isStrings(x.cities) && x.cities.length > 0 && typeof x.cardUsed === 'boolean' && isStrings(x.kinds) && isStrings(x.earned);
+  if (!(isRecord(x) && isStrings(x.cities) && x.cities.length > 0 && typeof x.cardUsed === 'boolean' && isStrings(x.kinds) && isStrings(x.earned))) return false;
+  const story = x.story;
+  return isRecord(story) && Array.isArray(story.milestones) && story.milestones.every((m) => isRecord(m) && typeof m.kind === 'string' && isCount(m.round)) && isRecord(story.last);
 }
 
 export type Opened = { ok: true; save: SavedGame; repaired: boolean } | { ok: false; lost: Lost };

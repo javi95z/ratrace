@@ -6,6 +6,7 @@ import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
 import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { CrisisBar } from './Crisis';
 
 /**
  * One gauge of the economy, as a dial sunk into the panel: an icon, where it stands, and what it is.
@@ -44,6 +45,7 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
 
   return (
     <div className="flex flex-col gap-3">
+      <CrisisBar crisis={world.crisis} />
       <Panel title={t('title')} label={t('title')}>
         <ul className="flex flex-col gap-2.5">
           {world.news.map((h, i) => (

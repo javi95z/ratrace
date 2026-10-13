@@ -102,7 +102,9 @@
     "guide": "Tips from the guide",
     "guideHint": "Notes that explain each screen during your first life.",
     "home": "Back to the home screen",
-    "homeHint": "Your life waits for you just as you leave it."
+    "homeHint": "Your life waits for you just as you leave it.",
+    "sound": "Sound",
+    "soundHint": "Coins, cards and fanfares. It plays once you touch the screen."
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
@@ -147,6 +149,48 @@
       "rates": "Interest rates",
       "inflation": "Inflation",
       "property": "Housing"
+    }
+  },
+  "crisis": {
+    "label": "Crisis · year {year} of {of}",
+    "year": "Year {n}",
+    "open": "{crisis}: year {year} of {of}. See what it is.",
+    "advice": "A crisis punishes whoever has to sell and whoever owes a lot. Those who hold usually get some of it back on the way out.",
+    "over": "{crisis} is over.",
+    "overHint": "The world is back on its course. What fell does not rise by itself: see what you have left."
+  },
+  "moments": {
+    "perYear": "{amount}/yr",
+    "escape": {
+      "title": "Out of the rat race!",
+      "kicker": "You made it",
+      "body": "At {age}, your income pays for your whole life without you. From today, work is a choice.",
+      "passive": "Your passive income, after tax",
+      "costs": "What your life costs",
+      "hint": "The earlier you get out, the bigger the bonus on your score. If your income stops covering your life, the wheel turns again.",
+      "go": "Carry on, for the fun of it"
+    },
+    "million": {
+      "title": "Your first million",
+      "kicker": "After inflation",
+      "body": "At {age} you are worth a million real dollars: the kind that bought the same when you started.",
+      "worth": "Net worth",
+      "hint": "The second usually comes sooner than the first.",
+      "go": "On to the next"
+    },
+    "bankrupt": {
+      "title": "Bankrupt",
+      "kicker": "You lost it all",
+      "body": "At {age} your debts have beaten you. Everything you owned is sold and everything you owed is cancelled.",
+      "sold": "Sold in a hurry",
+      "cleared": "Debts cancelled",
+      "status": "Status, for good",
+      "hint": "No bank will lend to you until you are {age}. Your pension plan is untouched. Life goes on.",
+      "go": "Start again"
+    },
+    "crisis": {
+      "kicker": "Crisis · lasts {rounds} rounds",
+      "go": "Face it"
     }
   },
   "cards": {
@@ -443,8 +487,8 @@
     "never": "You never left the rat race.",
     "escapedAt": "You left the rat race at {age}.",
     "netWorth": "Net worth",
-    "realNetWorth": "In the dollars of age 22",
-    "graph": "Your net worth through life, in the dollars of age 22",
+    "realNetWorth": "After inflation",
+    "graph": "Your net worth through life, after inflation",
     "bankruptcies": "{count, plural, =0 {Never bankrupt} one {Bankrupt once} other {Bankrupt # times}}",
     "badges": "Badges of this life",
     "noBadges": "No badge this time. The collection shows how each is earned.",
@@ -456,6 +500,41 @@
     "collection": "See your collection",
     "again": "Live another life",
     "home": "Home"
+  },
+  "epilogue": {
+    "title": "Your life, told",
+    "opening": {
+      "job": "You started at {age} in {city}, as a {job}, with {cash} to your name.",
+      "none": "You started at {age} in {city}, with no job and {cash} to your name."
+    },
+    "quiet": "It was a quiet life: no moves, no shocks and no big bets. Year after year, the same, and on time.",
+    "told": {
+      "top": "At {age} you reached the top: {title}.",
+      "promoted": "By {age} you were {title}.",
+      "career": "At {age} you left it all for another career: {career}.",
+      "jobLost": "At {age} you lost your job.",
+      "moved": "At {age} you packed your bags for {city}.",
+      "partner": "At {age} you stopped living alone.",
+      "split": "At {age} you were on your own again.",
+      "firstChild": "At {age} your first child was born.",
+      "child": "At {age} the family grew again.",
+      "home": "At {age} you bought your first home: a {home}.",
+      "business": "At {age} you started a business.",
+      "soldBusiness": "At {age} you sold it for a good sum.",
+      "escaped": "At {age} you left the rat race: your income paid for your life without you.",
+      "escapeLost": "At {age} the rat race caught you again.",
+      "bankrupt": "At {age} you lost everything and started from nothing.",
+      "crisis": "At {age} {crisis} found you.",
+      "hundred": "At {age} you had your first hundred thousand.",
+      "million": "At {age} you were a millionaire.",
+      "tenMillion": "At {age} you passed ten million."
+    },
+    "closing": {
+      "free": "You finished at {age} in {city}, free, with {worth} and {score} points. Work had long been a choice.",
+      "rich": "You finished at {age} in {city} with {worth} and {score} points. Rich, yes; but the wheel never stopped turning.",
+      "through": "You finished at {age} in {city} with {worth} and {score} points. A lifetime of early mornings, and the wheel turning to the end.",
+      "broke": "You finished at {age} in {city} with {worth} and {score} points. It did not go as you hoped. The next life starts again at 22."
+    }
   },
   "badges": {
     "earned": "Badge earned",
@@ -492,7 +571,7 @@
     "score": "Score {score}",
     "badges": "{count, plural, =0 {No badges} one {1 badge} other {# badges}}",
     "graph": "Net worth through this life",
-    "realWorth": "In the dollars of age 22"
+    "realWorth": "After inflation"
   },
   "share": {
     "open": "Share this life",
@@ -503,7 +582,7 @@
     "drawing": "Drawing…",
     "alt": "{life}: score {score}",
     "badges": "Badges",
-    "netWorth": "Net worth, in the dollars of age 22",
+    "netWorth": "Net worth, after inflation",
     "never": "Never left the rat race",
     "escapedAt": "Out of the rat race at {age}"
   },

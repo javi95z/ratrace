@@ -429,6 +429,36 @@ export const cards: Record<string, CardText> = {
     'Leer el resumen',
     'Ir a un asesor fiscal',
   ]),
+  crisis_crash_panic: c('Lunes negro', 'Las pantallas están en rojo de Tokio a Nueva York. El móvil no deja de vibrar: todos preguntan qué vas a hacer.', [
+    'No mirar y aguantar',
+    'Comprar mientras todos venden',
+    'Tirar de tu línea de crédito mientras el banco aún presta',
+  ]),
+  crisis_crash_layoffs: c('La segunda ola', 'Un año después, el crac ha llegado a las nóminas. Tu empresa convoca a toda la plantilla el viernes.', [
+    ['No llamar la atención', 'Conservas el puesto y el sueldo.', 'Conservas el puesto, con menos sueldo.'],
+    'Ofrecerte a cobrar menos',
+    'Aprovechar los meses flojos para formarte',
+  ]),
+  crisis_energy_bills: c('La factura', 'La calefacción, la gasolina y la compra han subido a la vez. El sobre del buzón pesa más que de costumbre.', [
+    'Pagarla',
+    'Aislar el piso y olvidarte',
+    'Pagarla, y pasar ahorros a oro',
+  ]),
+  crisis_energy_wages: c('Sueldos contra precios', 'Los precios llevan dos años por delante de los sueldos. Se habla de huelga, y de quién cederá antes.', [
+    'Esperar',
+    ['Parar con los demás', 'Se gana la subida.', 'La huelga fracasa y te descuentan los días.'],
+    'Recortar gastos en casa',
+  ]),
+  crisis_debt_spreads: c('La prima de riesgo', 'Los prestamistas piden el doble por la deuda de tu gobierno. Todo préstamo que se calcula sobre ella va detrás.', [
+    'Esperar a ver',
+    'Fijar ya el tipo de tu hipoteca',
+    'Refugiarte en el {asset:bund}',
+  ]),
+  crisis_debt_austerity: c('Recortes', 'Las cuentas se cuadran por las malas: una derrama, sueldos congelados y gangas para quien tenga efectivo.', [
+    'Pagar la derrama',
+    'Pagarla, y hacer el trabajo de dos',
+    'Pagarla, y comprar un estudio embargado para alquilar',
+  ]),
   world_bank_failure: c('Quiebra un banco', 'Un banco mediano cierra y se forman colas delante de los demás.', [
     ['Confiar en la garantía', 'Tus ahorros están a salvo.', 'Parte de tus ahorros superaba el límite.'],
     'Hacer cola y mover tu dinero',

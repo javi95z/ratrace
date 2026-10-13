@@ -128,6 +128,23 @@ export const es: ContentText = {
       unlock: 'Mantén tus criptomonedas durante un invierno cripto.',
     },
   },
+  crises: {
+    crash: {
+      name: 'El Gran Crac',
+      intro: 'Los mercados caen en picado y la vivienda va detrás. Los bancos centrales bajan tipos. Quien tiene que vender es quien más pierde.',
+      years: ['Bolsa y vivienda caen con fuerza.', 'Llegan los despidos y los precios siguen bajando.', 'Lo peor ha pasado: los mercados se dan la vuelta.'],
+    },
+    energy: {
+      name: 'La Crisis Energética',
+      intro: 'Falta combustible y todos los precios suben tras él. Los tipos suben para frenar la inflación. Pierden el efectivo y los bonos; gana el oro.',
+      years: ['Los precios saltan y los tipos van detrás.', 'Siguen subiendo: la economía se para.', 'Los precios se calman y el oro devuelve parte.'],
+    },
+    debt: {
+      name: 'La Crisis de Deuda',
+      intro: 'Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encarece de golpe y cae todo lo que se compró a crédito.',
+      years: ['Saltan los tipos; caen bolsa y vivienda.', 'El crédito sigue caro y la vivienda sigue cayendo.'],
+    },
+  },
   categories: {
     career: 'Carrera',
     education: 'Formación',
@@ -175,10 +192,10 @@ export const es: ContentText = {
     },
   },
   badges: {
-    first_100k: { name: 'Primeros 100.000', how: 'Ten un patrimonio de 100.000 $, contado en dólares de tus 22 años.' },
-    millionaire: { name: 'Millonario', how: 'Ten un patrimonio de un millón, contado en dólares de tus 22 años.' },
-    millionaire_by_35: { name: 'Millonario a los 35', how: 'Ten un patrimonio de un millón a los 35 años o antes, contado en dólares de tus 22 años.' },
-    ten_million: { name: 'Diez millones', how: 'Ten un patrimonio de diez millones, contado en dólares de tus 22 años.' },
+    first_100k: { name: 'Primeros 100.000', how: 'Ten un patrimonio de 100.000 $, descontando la inflación.' },
+    millionaire: { name: 'Millonario', how: 'Ten un patrimonio de un millón, descontando la inflación.' },
+    millionaire_by_35: { name: 'Millonario a los 35', how: 'Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación.' },
+    ten_million: { name: 'Diez millones', how: 'Ten un patrimonio de diez millones, descontando la inflación.' },
     debt_free_at_40: { name: 'Sin deudas a los 40', how: 'No debas nada de nada el día que cumplas 40, sin haber quebrado nunca.' },
     no_credit_card: { name: 'Ni una vez la tarjeta', how: 'Vive una vida entera sin que nada acabe cargado a la tarjeta de crédito.' },
     escaped: { name: 'Fuera de la rueda', how: 'Paga lo que cuesta tu vida con ingresos pasivos, dos rondas seguidas.' },
@@ -194,6 +211,7 @@ export const es: ContentText = {
     index_only: { name: 'Solo indexados', how: 'Sal de la rueda sin haber tenido nunca otra inversión que fondos indexados, y sin ninguna vivienda.' },
     first_luxury_watch: { name: 'Primer reloj de lujo', how: 'Ten un {item:watch_omega} o algo mejor.' },
     supercar: { name: 'Superdeportivo', how: 'Ten un {item:car_lamborghini_aventador}.' },
+    shipowner: { name: 'Armador', how: 'Ten barco propio: el {item:sea_sailboat} o el {item:sea_motor_yacht}.' },
     penthouse: { name: 'Ático', how: 'Ten un ático en propiedad.' },
     status_100: { name: 'Estatus 100', how: 'Llega a 100 de estatus.' },
     twenty_items: { name: 'Veinte cosas', how: 'Ten veinte cosas distintas, contando todas tus vidas.' },

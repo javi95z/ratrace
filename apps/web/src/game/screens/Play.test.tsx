@@ -295,7 +295,7 @@ describe('the play screen', () => {
     services.sessions.resume = async () => ({
       lost: null,
       session: {
-        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => [],
+        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [],
         answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: [], unlocked: ['heir'] }),
         playRound: (choices) => real.playRound(choices),
       },
@@ -317,7 +317,7 @@ describe('the play screen', () => {
     services.sessions.resume = async () => ({
       lost: null,
       session: {
-        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => ['millionaire'],
+        gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => ['millionaire'],
         answerCard: (option: number) => real.answerCard(option),
         playRound: async (choices) => ({ ...(await real.playRound(choices)), earned: ['millionaire'], unlocked: ['heir'] }),
       },
@@ -450,7 +450,7 @@ describe('the play screen', () => {
     const real = await services.sessions.start('nurse');
     services.sessions.resume = async () => ({
       lost: null,
-      session: { ...real, gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, badges: () => [], answerCard: () => Promise.reject(new Error('broken')), playRound: () => Promise.reject(new Error('broken')) },
+      session: { ...real, gameId: real.gameId, lifeId: real.lifeId, view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: () => Promise.reject(new Error('broken')), playRound: () => Promise.reject(new Error('broken')) },
     });
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const user = userEvent.setup();

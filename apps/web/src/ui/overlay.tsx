@@ -14,10 +14,12 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
  * It takes the focus while it is open, keeps Tab inside it, closes on Escape, a tap outside or
  * the Back button of a phone, and gives the focus back to whatever opened it.
  *
+ * `tone` frames it in gold or in wine, for a sheet that carries news and not a choice.
+ *
  * `back={false}` leaves the history alone. It is for a sheet whose answer replaces the page: an
  * entry of its own would be the one replaced, and the page it meant to leave would stay behind.
  */
-export function Sheet({ open, onClose, title, closeLabel, back = true, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; children: ReactNode }) {
+export function Sheet({ open, onClose, title, closeLabel, back = true, tone, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
   // The latest `onClose`, so that a parent which makes a new one on every draw does not reopen the effect below.
@@ -92,7 +94,8 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, children 
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="bevel pb-safe relative max-h-[88dvh] w-full max-w-md animate-rise overflow-y-auto bg-night-800 p-4 outline-none"
+        data-tone={tone}
+        className={`bevel pb-safe relative max-h-[88dvh] w-full max-w-md animate-rise overflow-y-auto bg-night-800 p-4 outline-none ${tone === 'gold' ? 'frame-gold' : tone === 'wine' ? 'frame-wine' : ''}`}
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <h2 id={titleId} className="pixel pt-1 text-[19px]">

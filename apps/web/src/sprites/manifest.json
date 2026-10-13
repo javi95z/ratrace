@@ -124,6 +124,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.shipowner": {
+    "src": "items/badge.shipowner.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.sold_business": {
     "src": "badges/badge.sold_business.png",
     "w": 64,
@@ -1129,13 +1134,38 @@
     "w": 32,
     "h": 32
   },
+  "item.air_helicopter": {
+    "src": "items/item.air_helicopter.png",
+    "w": 64,
+    "h": 64
+  },
   "item.air_jet_charter": {
     "src": "items/item.air_jet_charter.png",
     "w": 64,
     "h": 64
   },
+  "item.art_bronze": {
+    "src": "items/item.art_bronze.png",
+    "w": 64,
+    "h": 64
+  },
   "item.art_cubist": {
     "src": "items/item.art_cubist.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_local_print": {
+    "src": "items/item.art_local_print.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_old_master": {
+    "src": "items/item.art_old_master.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.art_photo": {
+    "src": "items/item.art_photo.png",
     "w": 64,
     "h": 64
   },
@@ -1164,6 +1194,11 @@
     "w": 64,
     "h": 64
   },
+  "item.fashion_coat": {
+    "src": "items/item.fashion_coat.png",
+    "w": 64,
+    "h": 64
+  },
   "item.fashion_duffel": {
     "src": "items/item.fashion_duffel.png",
     "w": 64,
@@ -1181,6 +1216,16 @@
   },
   "item.fashion_sneakers": {
     "src": "items/item.fashion_sneakers.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_suit": {
+    "src": "items/item.fashion_suit.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.fashion_sunglasses": {
+    "src": "items/item.fashion_sunglasses.png",
     "w": 64,
     "h": 64
   },
@@ -1239,6 +1284,21 @@
     "w": 64,
     "h": 64
   },
+  "item.sea_motor_yacht": {
+    "src": "items/item.sea_motor_yacht.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.sea_sailboat": {
+    "src": "items/item.sea_sailboat.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.sea_sailing_course": {
+    "src": "items/item.sea_sailing_course.png",
+    "w": 64,
+    "h": 64
+  },
   "item.sea_yacht_charter": {
     "src": "items/item.sea_yacht_charter.png",
     "w": 64,
@@ -1279,13 +1339,33 @@
     "w": 64,
     "h": 64
   },
+  "item.travel_interrail": {
+    "src": "items/item.travel_interrail.png",
+    "w": 64,
+    "h": 64
+  },
   "item.travel_maldives": {
     "src": "items/item.travel_maldives.png",
     "w": 64,
     "h": 64
   },
+  "item.travel_safari": {
+    "src": "items/item.travel_safari.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_ski": {
+    "src": "items/item.travel_ski.png",
+    "w": 64,
+    "h": 64
+  },
   "item.travel_weekend": {
     "src": "items/item.travel_weekend.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.travel_world_first": {
+    "src": "items/item.travel_world_first.png",
     "w": 64,
     "h": 64
   },
