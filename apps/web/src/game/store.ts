@@ -3,7 +3,7 @@ import type { Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, OptionPreview, Order, RejectReason, RoundPreview, WorldState } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
-import { StaleSession } from '@/session/errors';
+import { StaleSession, Unreachable } from '@/session/errors';
 import type { GameSession, Lost, Sessions } from '@/session/types';
 
 /** Where the player is within a round. */
@@ -54,17 +54,24 @@ export interface RoundState {
   moved: boolean;
   /** True when the game itself refused a step. The life cannot go on from here; the screen says so. */
   fault: boolean;
+  /** True for a life the server plays: its result is set beside everyone else's. */
+  ranked: boolean;
+  /** True once a life asked for as ranked began as a casual one, because the server could not be reached, until the player has been told. */
+  fellBack: boolean;
+  /** True when the last step of a ranked life did not get through. Nothing was played, and it can be taken again. */
+  unreachable: boolean;
 }
 
 export interface RoundActions {
   /** Asks the device for a life in progress. */
   boot(): Promise<void>;
+  /** Starts a new life. `ranked` asks for one the server plays; `fellBack` says if it could not be had. */
+  start(lifeId: string, options?: { ranked?: boolean }): Promise<void>;
   /**
    * The life on the device was changed from outside this page, by the account bringing another
    * device's copy: opens it as it now stands, and says so if a life was on screen.
    */
   reopen(): Promise<void>;
-  start(lifeId: string): Promise<void>;
   abandon(): Promise<void>;
   /** From the news to the cards, or straight to the finances when there are none. */
   leaveNews(): void;
@@ -85,6 +92,8 @@ export interface RoundActions {
   clearRefusal(): void;
   clearAlsoRemoved(): void;
   clearMoved(): void;
+  clearFellBack(): void;
+  clearUnreachable(): void;
   play(): Promise<void>;
   /** From the ledger to the next round, or to the end. */
   next(): void;
@@ -115,6 +124,9 @@ const blank: RoundState = {
   busy: false,
   moved: false,
   fault: false,
+  ranked: false,
+  fellBack: false,
+  unreachable: false,
 };
 
 export interface GameStoreOptions {
@@ -161,6 +173,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         session = null;
         await get().boot();
         set({ moved: true });
+      } else if (error instanceof Unreachable) {
+        // A ranked life is played by the server, and the server did not answer. Nothing was played: the same step can be asked again.
+        set({ unreachable: true });
       } else {
         console.error('the game refused a step:', error);
         set({ fault: true });
@@ -180,6 +195,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         bankruptcies: opened.bankruptcies(),
         badges: opened.badges(),
         story: opened.story(),
+        ranked: opened.ranked === true,
       };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
@@ -209,8 +225,11 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         if (shown) set({ moved: true });
       },
 
-      async start(lifeId) {
-        open(await sessions.start(lifeId));
+      async start(lifeId, options) {
+        const opened = await sessions.start(lifeId, options);
+        open(opened);
+        // Asked for as ranked, and begun on the device because the server could not be reached: the player is told.
+        if (options?.ranked === true && opened.ranked !== true) set({ fellBack: true });
       },
 
       async abandon() {
@@ -235,7 +254,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
           const cardId = view.hand[view.answered];
           const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
           const result = await session.answerCard(option);
-          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome' });
+          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', unreachable: false });
         } catch (error) {
           await refused(error);
         } finally {
@@ -301,6 +320,14 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         set({ moved: false });
       },
 
+      clearFellBack() {
+        set({ fellBack: false });
+      },
+
+      clearUnreachable() {
+        set({ unreachable: false });
+      },
+
       async play() {
         const { view, orders, busy, stage } = get();
         if (!view || !session || busy || stage !== 'finance' || !settled()) return;
@@ -321,6 +348,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
             refusal: null,
             alsoRemoved: 0,
             stage: 'resolve',
+            unreachable: false,
           });
         } catch (error) {
           await refused(error);

@@ -2,10 +2,10 @@
 
 import { lives, portraitArt } from '@ratrace/content';
 import { useState } from 'react';
-import { useGame, useProfile, useT, useWords } from '@/game/context';
+import { useGame, useProfile, useRanking, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Button, Tag, Well } from '@/ui/kit';
+import { Button, Tag, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
@@ -22,6 +22,9 @@ export function NewLife() {
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
   const [asking, setAsking] = useState(false);
+  // A ranked life is played by the server. It is offered when there is someone to play it for and a way to reach it.
+  const ranking = useRanking();
+  const [wantRanked, setWantRanked] = useState(true);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
 
@@ -29,7 +32,7 @@ export function NewLife() {
     setAsking(false);
     setStarting(true);
     try {
-      await start(chosen);
+      await start(chosen, { ranked: ranking === 'yes' && wantRanked });
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
       router.replace('/play');
     } finally {
@@ -38,7 +41,7 @@ export function NewLife() {
   };
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-3 pb-28 pt-4">
+    <main className={`mx-auto flex min-h-dvh w-full max-w-md flex-col px-3 pt-4 ${ranking === 'yes' ? 'pb-52' : ranking === 'offline' ? 'pb-36' : 'pb-28'}`}>
       <div className="mb-3 flex items-center gap-2">
         <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 items-center justify-center bg-night-700 text-[18px] text-ink-200">
           ←
@@ -88,6 +91,16 @@ export function NewLife() {
 
       <div className="pb-safe fixed inset-x-0 bottom-0 z-10 bg-night-900 px-3 pt-3">
         <div className="mx-auto w-full max-w-md">
+          {ranking === 'yes' ? (
+            <div className="mb-2">
+              <Toggle on={wantRanked} onChange={setWantRanked} label={t('ranked')} hint={t('rankedHint')} />
+            </div>
+          ) : null}
+          {ranking === 'offline' ? (
+            <p role="status" className="mb-2 text-center text-[12px] text-ink-200">
+              {t('noConnection')}
+            </p>
+          ) : null}
           {inProgress ? <p className="mb-2 text-center text-[12px] text-wine-300">{t('replace')}</p> : null}
           {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
           <Button variant="primary" wide disabled={starting} onClick={() => (inProgress ? setAsking(true) : void begin())}>

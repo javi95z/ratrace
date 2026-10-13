@@ -47,9 +47,21 @@ describe('the cloud of this browser', () => {
     expect((await device.loadProfile()).gallery).toEqual(['watch_casio']);
 
     await online.account.start('en');
-    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x']]);
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', undefined]]);
+    // Nobody is signed in: there is no server of ranked lives to ask.
+    expect(online.ranked()).toBeNull();
     // It could not connect: the game is offline, and plays.
     expect(online.account.state()).toEqual({ kind: 'offline' });
+  });
+
+  it('names the region of the database to the connection when the build names it, and offers no ranked lives with no project', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_REGION', 'ap-northeast-1');
+    await browserOnline(new MemoryStore()).account.start('en');
+    expect(connected).toEqual([['https://project.supabase.co', 'sb_publishable_x', 'ap-northeast-1']]);
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '');
+    expect(browserOnline(new MemoryStore()).ranked()).toBeNull();
   });
 
   it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', () => {

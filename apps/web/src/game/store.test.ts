@@ -1,7 +1,11 @@
-import { content, lives } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { GameEvent, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { LocalSessions } from '@/session/local';
+import { RankedSessions } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
+import { rankedServer } from '@/testing/rankedServer';
 import { MemoryStore } from '@/session/memory';
 import type { SavedGame } from '@/session/types';
 import { createGameStore } from './store';
@@ -583,3 +587,87 @@ describe('coming back', () => {
     expect(await store.loadGame()).toBeNull();
   });
 });
+
+describe('a ranked life on screen', { timeout: 60_000 }, () => {
+  /** The round store over the sessions of both kinds, and a server of ranked lives the test holds. */
+  function rankedSetup() {
+    const server = rankedServer();
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    const game = createGameStore({ sessions, content });
+    return { server, store, game, get: game.getState };
+  }
+
+  it('says which kind of life it is, and plays it like any other', async () => {
+    const { get, server } = rankedSetup();
+    await get().start('nurse', { ranked: true });
+    expect(get()).toMatchObject({ status: 'playing', ranked: true, fellBack: false, unreachable: false, lifeId: 'nurse' });
+    await answerHand(get);
+    expect(get().stage).toBe('finance');
+    await get().play();
+    expect(get()).toMatchObject({ stage: 'resolve', ranked: true });
+    expect(get().view?.round).toBe(1);
+    expect(server.games.get(get().gameId as string)?.round).toBe(1);
+    // A life the device plays is not one.
+    await get().start('nurse', { ranked: false });
+    expect(get().ranked).toBe(false);
+  });
+
+  it('says so when a life asked for as ranked began as a casual one, once', async () => {
+    const { get, server } = rankedSetup();
+    server.state.down = true;
+    await get().start('nurse', { ranked: true });
+    expect(get()).toMatchObject({ status: 'playing', ranked: false, fellBack: true });
+    get().clearFellBack();
+    expect(get().fellBack).toBe(false);
+    // Asked for as casual, there is nothing to say.
+    await get().start('nurse', { ranked: false });
+    expect(get().fellBack).toBe(false);
+  });
+
+  it('does not take a step that did not get through for a fault: it says so, and the step can be taken again', async () => {
+    const { get, server } = rankedSetup();
+    await get().start('nurse', { ranked: true });
+    get().leaveNews();
+    const before = get().view;
+    server.state.down = true;
+    await get().pick(0);
+    expect(get()).toMatchObject({ unreachable: true, fault: false, busy: false, stage: 'cards', moved: false });
+    expect(get().view).toBe(before);
+    server.state.down = false;
+    await get().pick(0);
+    expect(get()).toMatchObject({ unreachable: false, stage: 'outcome' });
+    expect(get().view?.answered).toBe(1);
+    // The same for a round.
+    get().afterCard();
+    while (get().stage === 'cards') {
+      await get().pick(0);
+      get().afterCard();
+    }
+    server.state.down = true;
+    await get().play();
+    expect(get()).toMatchObject({ unreachable: true, fault: false, stage: 'finance' });
+    get().clearUnreachable();
+    expect(get().unreachable).toBe(false);
+    server.state.down = false;
+    await get().play();
+    expect(get()).toMatchObject({ stage: 'resolve', unreachable: false });
+  });
+
+  it('opens the life as it stands, and says it moved, when the server is further along than the screen', async () => {
+    const { get, server, store } = rankedSetup();
+    await get().start('nurse', { ranked: true });
+    get().leaveNews();
+    // Another device takes a step of the same life.
+    await server.call({ action: 'card', gameId: get().gameId, step: 0, option: 0 });
+    await get().pick(1);
+    expect(get()).toMatchObject({ status: 'playing', moved: true, fault: false, unreachable: false });
+    expect(get().view?.answered).toBe(1);
+    expect(((await store.loadGame()) as { step: number }).step).toBe(1);
+  });
+});
+

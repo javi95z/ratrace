@@ -43,6 +43,7 @@ function Ended({ view }: { view: GameView }) {
   const story = useGame((s) => s.story);
   const bankruptcies = useGame((s) => s.bankruptcies);
   const lifeId = useGame((s) => s.lifeId) ?? '';
+  const ranked = useGame((s) => s.ranked);
   const gameId = useGame((s) => s.gameId);
   const earned = useGame((s) => s.badges);
   const badges = useT('badges');
@@ -121,6 +122,14 @@ function Ended({ view }: { view: GameView }) {
           <Part label={escaped ? t('bonus', { multiplier: fmt.factor(score.multiplierPct) }) : t('noBonus')} value={`×${fmt.factor(score.multiplierPct)}`} />
         </div>
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
+        {ranked ? (
+          <p className="mt-3 text-[13px] text-teal-300">
+            {t('ranked')}{' '}
+            <Link href="/rankings" className="underline">
+              {t('rankings')}
+            </Link>
+          </p>
+        ) : null}
       </section>
 
       {told.length > 0 ? (

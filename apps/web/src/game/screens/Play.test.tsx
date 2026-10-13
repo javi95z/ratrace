@@ -3,9 +3,15 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { content, textFor } from '@ratrace/content';
-import { previewCard } from '@ratrace/engine';
+import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
+import { ENGINE_VERSION, previewCard } from '@ratrace/engine';
+import { useGame } from '@/game/context';
+import { LocalSessions } from '@/session/local';
+import { MemoryStore } from '@/session/memory';
+import { RankedSessions } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
 import type { GameSession, SavedGame } from '@/session/types';
+import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
 
@@ -501,3 +507,52 @@ describe('the play screen on a wide screen', () => {
     expect(within(world).getByText(/Nothing yet/)).toBeTruthy();
   });
 });
+
+describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
+  /** The game over sessions of both kinds, a server of ranked lives the test holds, and a button that starts a ranked life. */
+  function rankedGame() {
+    const server = rankedServer();
+    const store = new MemoryStore();
+    let ids = 0;
+    let clock = 0;
+    const deps = { newId: () => `local-${(ids += 1)}`, newSeed: () => `seed-${ids}`, now: () => (clock += 1) };
+    const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+    const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => server.api, store, content, lives, versions, deps), versions);
+    function Begin() {
+      const start = useGame((s) => s.start);
+      const status = useGame((s) => s.status);
+      return status === 'playing' ? null : (
+        <button type="button" onClick={() => void start('nurse', { ranked: true })}>
+          begin ranked
+        </button>
+      );
+    }
+    return { server, services: { sessions, store, tapGuardMs: 0 }, Begin };
+  }
+
+  it('says so when the server did not answer a step, plays nothing, and takes the step when asked again', async () => {
+    const { server, services, Begin } = rankedGame();
+    const user = userEvent.setup();
+    renderGame(<><Begin /><Play /></>, services);
+    await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
+    await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    server.state.down = true;
+    await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
+    expect((await screen.findByRole('alert')).textContent).toBe('The server did not answer. Nothing was played: try again.');
+    expect(screen.queryByRole('heading', { name: 'What happened' })).toBeNull();
+    server.state.down = false;
+    await user.click(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button')[0]);
+    expect(await screen.findByRole('heading', { name: 'What happened' })).toBeTruthy();
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+
+  it('says so when a life asked for as ranked had to begin on the device', async () => {
+    const { server, services, Begin } = rankedGame();
+    server.state.down = true;
+    const user = userEvent.setup();
+    renderGame(<><Begin /><Play /></>, services, 'es');
+    await user.click(await screen.findByRole('button', { name: 'begin ranked' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('No se ha podido llegar al servidor, así que esta vida no es clasificatoria. Se guarda en este dispositivo.');
+  });
+});
+

@@ -39,7 +39,8 @@
     "accountLifeBody": "{life}, age {age}, in {city}. You left it on another device.",
     "accountLifeEnds": "Continuing it ends the life you have on this device: {life}, age {age}.",
     "accountLifeTake": "Continue that life",
-    "accountLifeEnd": "End that life"
+    "accountLifeEnd": "End that life",
+    "rankings": "Rankings"
   },
   "newLife": {
     "title": "Choose a life",
@@ -50,7 +51,10 @@
     "confirmTitle": "End the life you are living?",
     "confirmBody": "{life}, age {age}. It ends here and is not recorded.",
     "confirmYes": "End it and start this one",
-    "confirmNo": "Keep my life"
+    "confirmNo": "Keep my life",
+    "ranked": "Ranked life",
+    "rankedHint": "Played on the server, one step at a time. It counts for the rankings and needs a connection.",
+    "noConnection": "No connection: this life will not be ranked."
   },
   "hud": {
     "cash": "Cash",
@@ -109,7 +113,8 @@
     "home": "Back to the home screen",
     "homeHint": "Your life waits for you just as you leave it.",
     "sound": "Sound",
-    "soundHint": "Coins, cards and fanfares. It plays once you touch the screen."
+    "soundHint": "Coins, cards and fanfares. It plays once you touch the screen.",
+    "ranked": "Ranked life"
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
@@ -123,7 +128,9 @@
       "outcome": "What happened",
       "finance": "Your finances",
       "resolve": "Two years later"
-    }
+    },
+    "unreachable": "The server did not answer. Nothing was played: try again.",
+    "fellBack": "The server could not be reached, so this life is not ranked. It is saved on this device."
   },
   "guide": {
     "title": "Guide",
@@ -604,7 +611,9 @@
     "bestStatus": "Most status yet",
     "collection": "See your collection",
     "again": "Live another life",
-    "home": "Home"
+    "home": "Home",
+    "ranked": "A ranked life: it is in the rankings.",
+    "rankings": "See the rankings"
   },
   "epilogue": {
     "title": "Your life, told",
@@ -676,7 +685,8 @@
     "score": "Score {score}",
     "badges": "{count, plural, =0 {No badges} one {1 badge} other {# badges}}",
     "graph": "Net worth through this life",
-    "realWorth": "After inflation"
+    "realWorth": "After inflation",
+    "ranked": "Ranked"
   },
   "share": {
     "open": "Share this life",

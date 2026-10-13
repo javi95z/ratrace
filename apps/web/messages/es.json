@@ -39,7 +39,8 @@
     "accountLifeBody": "{life}, {age} años, en {city}. La dejaste en otro dispositivo.",
     "accountLifeEnds": "Continuarla termina la vida que tienes en este dispositivo: {life}, {age} años.",
     "accountLifeTake": "Continuar esa vida",
-    "accountLifeEnd": "Terminar esa vida"
+    "accountLifeEnd": "Terminar esa vida",
+    "rankings": "Clasificaciones"
   },
   "newLife": {
     "title": "Elige una vida",
@@ -50,7 +51,10 @@
     "confirmTitle": "¿Terminar la vida que estás viviendo?",
     "confirmBody": "{life}, {age} años. Termina aquí y no queda registrada.",
     "confirmYes": "Terminarla y empezar esta",
-    "confirmNo": "Seguir con mi vida"
+    "confirmNo": "Seguir con mi vida",
+    "ranked": "Vida clasificatoria",
+    "rankedHint": "Se juega en el servidor, paso a paso. Cuenta para las clasificaciones y necesita conexión.",
+    "noConnection": "Sin conexión: esta vida no será clasificatoria."
   },
   "hud": {
     "cash": "Efectivo",
@@ -109,7 +113,8 @@
     "home": "Volver al inicio",
     "homeHint": "Tu vida te espera tal como la dejas.",
     "sound": "Sonido",
-    "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla."
+    "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla.",
+    "ranked": "Vida clasificatoria"
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
@@ -123,7 +128,9 @@
       "outcome": "Qué ha pasado",
       "finance": "Tus finanzas",
       "resolve": "Dos años después"
-    }
+    },
+    "unreachable": "El servidor no ha respondido. No se ha jugado nada: inténtalo de nuevo.",
+    "fellBack": "No se ha podido llegar al servidor, así que esta vida no es clasificatoria. Se guarda en este dispositivo."
   },
   "guide": {
     "title": "Guía",
@@ -604,7 +611,9 @@
     "bestStatus": "Más estatus que nunca",
     "collection": "Ver tu colección",
     "again": "Vivir otra vida",
-    "home": "Inicio"
+    "home": "Inicio",
+    "ranked": "Vida clasificatoria: está en las clasificaciones.",
+    "rankings": "Ver las clasificaciones"
   },
   "epilogue": {
     "title": "Tu vida, contada",
@@ -676,7 +685,8 @@
     "score": "Puntuación {score}",
     "badges": "{count, plural, =0 {Sin insignias} one {1 insignia} other {# insignias}}",
     "graph": "El patrimonio a lo largo de esta vida",
-    "realWorth": "Descontando la inflación"
+    "realWorth": "Descontando la inflación",
+    "ranked": "Clasificatoria"
   },
   "share": {
     "open": "Compartir esta vida",

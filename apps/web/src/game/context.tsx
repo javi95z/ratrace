@@ -1,6 +1,7 @@
 'use client';
 
-import { content, lives, textFor } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Locale } from '@ratrace/content';
 import { useLocale, useTranslations } from 'next-intl';
 import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
@@ -12,6 +13,8 @@ import { offlineAccount } from '@/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
+import { RankedSessions } from '@/session/ranked';
+import { GameSessions } from '@/session/sessions';
 import { MemoryStore } from '@/session/memory';
 import { updateProfile } from '@/session/profile';
 import { ResilientStore } from '@/session/resilient';
@@ -76,7 +79,7 @@ function browserServices(): Services {
     if (degraded) console.warn('this browser is not saving:', error);
     for (const listener of listeners) listener();
   });
-  const { account, store, saves } = browserOnline(kept);
+  const { account, store, saves, ranked } = browserOnline(kept);
   const saving: Saving = {
     degraded: () => kept.degraded,
     subscribe: (listener) => {
@@ -84,12 +87,16 @@ function browserServices(): Services {
       return () => listeners.delete(listener);
     },
   };
-  const sessions = new LocalSessions(store, content, lives, {
+  const deps = {
     newId: () => crypto.randomUUID(),
-    newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(8)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
+    // Thirty-two bytes: every random stream of a game starts from 128 bits of it.
+    newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
     now: () => Date.now(),
-    onSaveError: (error) => console.warn('could not save the game:', error),
-  });
+    onSaveError: (error: unknown) => console.warn('could not save the game:', error),
+  };
+  const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+  // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
+  const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
   return { sessions, store, saving, account, saves, sound: createSoundBoard() };
 }
 
@@ -281,6 +288,29 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
   };
+}
+
+/** Tells of every change of whether the browser has a connection. Returns how to stop. */
+function watchConnection(listener: () => void): () => void {
+  window.addEventListener('online', listener);
+  window.addEventListener('offline', listener);
+  return () => {
+    window.removeEventListener('online', listener);
+    window.removeEventListener('offline', listener);
+  };
+}
+
+/**
+ * Whether a new life can be a ranked one, played by the server: `yes` when someone is signed in
+ * and there is a connection; `offline` when someone is signed in and there is none, which the
+ * player is told before the life begins; `no` where there is no account at all.
+ */
+export function useRanking(): 'yes' | 'offline' | 'no' {
+  const { account } = useGameContext();
+  const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  const connected = useSyncExternalStore(watchConnection, () => window.navigator.onLine, () => true);
+  if (state.kind === 'offline') return 'no';
+  return connected ? 'yes' : 'offline';
 }
 
 /**

@@ -1,5 +1,6 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
+import type { RankedApi } from '@/session/ranked';
 import type { PlayerStore } from '@/session/types';
 import { connectSupabase } from './connect';
 import { follow } from './follow';
@@ -17,6 +18,8 @@ export interface Online {
   store: PlayerStore;
   /** Null where there is no account to save to. */
   saves: AccountSaves | null;
+  /** The server of ranked lives while someone is signed in, and null otherwise. */
+  ranked(): RankedApi | null;
 }
 
 /** What the cloud is made of. The browser's own in the game; a test hands in stand-ins for the network and the page. */
@@ -43,7 +46,7 @@ export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
   const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule, newId: parts.newId });
   follow(account, mirror, parts.page);
-  return { account, store: mirror, saves: mirror };
+  return { account, store: mirror, saves: mirror, ranked: () => account.cloud()?.ranked ?? null };
 }
 
 /**
@@ -96,9 +99,11 @@ export function browserOnline(device: PlayerStore): Online {
   // Named in full, because the build writes these two values into the page only where it sees them so.
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null };
+  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null };
+  // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
+  const region = process.env.NEXT_PUBLIC_SUPABASE_REGION || undefined;
   return onlineOver(device, {
-    connect: () => connectSupabase(url, key),
+    connect: () => connectSupabase(url, key, region),
     address: () => window.location.href,
     clean: (address) => window.history.replaceState(window.history.state, '', address),
     page: browserPage,

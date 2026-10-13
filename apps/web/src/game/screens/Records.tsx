@@ -6,7 +6,7 @@ import { ageAt } from '@/game/present';
 import { recordsOf } from '@/game/records';
 import { Link } from '@/i18n/navigation';
 import type { FinishedRun } from '@/session/types';
-import { Well } from '@/ui/kit';
+import { Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { WorthGraph } from './WorthGraph';
 
@@ -70,7 +70,10 @@ export function Records() {
                       </Well>
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="pixel text-[17px]">{lifeName(run)}</p>
+                      <p className="pixel flex flex-wrap items-center gap-x-2 text-[17px]">
+                        {lifeName(run)}
+                        {run.ranked ? <Tag tone="good">{t('ranked')}</Tag> : null}
+                      </p>
                       <p className="text-[12px] text-ink-300">
                         {fmt.day(run.finishedAt)} · {run.cities.map((city) => names.cities[city] ?? city).join(' · ')}
                       </p>

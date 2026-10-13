@@ -170,6 +170,10 @@ export function Play() {
   const moved = useGame((s) => s.moved);
   const fault = useGame((s) => s.fault);
   const clearMoved = useGame((s) => s.clearMoved);
+  const unreachable = useGame((s) => s.unreachable);
+  const clearUnreachable = useGame((s) => s.clearUnreachable);
+  const fellBack = useGame((s) => s.fellBack);
+  const clearFellBack = useGame((s) => s.clearFellBack);
   const play = useT('play');
   const cards = useT('cards');
   const { content, text } = useWords();
@@ -202,7 +206,11 @@ export function Play() {
   if (stage === 'end') return <End />;
 
   // Another tab played this life on: the store has already opened it as it now stands, and the player is told why the screen changed.
-  const notice = <Toast message={moved ? play('moved') : null} onDone={clearMoved} ms={6_000} />;
+  // A ranked life is played by the server. When it did not answer, nothing was played, and the player is told to try again;
+  // and when it could not be reached at the start, the life began on the device, and the player is told that too.
+  const said = moved ? 'moved' : unreachable ? 'unreachable' : fellBack ? 'fellBack' : null;
+  const heard = said === 'moved' ? clearMoved : said === 'unreachable' ? clearUnreachable : clearFellBack;
+  const notice = <Toast message={said ? play(said) : null} onDone={heard} ms={6_000} />;
 
   const actions = <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
   const hasActions = stage !== 'cards';

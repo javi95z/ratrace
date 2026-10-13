@@ -79,4 +79,16 @@ describe('the records', () => {
     expect(lives[1].textContent).toContain('Never escaped');
     expect(lives[1].textContent).toContain('1 badge');
   });
+
+  it('marks the lives the server played, which are the ones in the rankings', async () => {
+    const services = memoryServices();
+    await services.store.addRun(run('casual-1', { finishedAt: Date.UTC(2026, 9, 12) }));
+    await services.store.addRun(run('ranked-1', { ranked: true, seed: '', finishedAt: Date.UTC(2026, 9, 13) }));
+    renderGame(<Records />, services);
+    const lives = within(await screen.findByRole('region', { name: 'Past lives' })).getAllByRole('listitem');
+    expect(lives).toHaveLength(2);
+    expect(within(lives[0]).getByText('Ranked')).toBeTruthy();
+    expect(within(lives[1]).queryByText('Ranked')).toBeNull();
+  });
 });
+

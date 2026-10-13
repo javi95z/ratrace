@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newProfile } from '@/session/types';
+import type { Account, AccountState } from '@/online/types';
 import type { SavedGame } from '@/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { NewLife } from './NewLife';
@@ -112,3 +113,65 @@ describe('choosing a life', () => {
     expect((await saved(services))?.state.finished).toBe(false);
   });
 });
+
+describe('choosing between a ranked life and a casual one', () => {
+  /** Someone is signed in, and the services remember how each life was asked for. */
+  function signedIn(state: AccountState = { kind: 'guest', userId: 'u', notice: null }) {
+    const services = memoryServices();
+    const asked: Array<{ ranked?: boolean } | undefined> = [];
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string, options?: { ranked?: boolean }) => {
+      asked.push(options);
+      return start(lifeId);
+    };
+    const account: Account = { state: () => state, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    return { services: { ...services, account }, asked };
+  }
+
+  it('offers a ranked life to a player who is signed in, on by default, and says what it means', async () => {
+    const { services, asked } = signedIn();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    const ranked = await screen.findByRole('switch', { name: /^Ranked life/ });
+    expect(ranked.getAttribute('aria-checked')).toBe('true');
+    expect(ranked.textContent).toContain('It counts for the rankings and needs a connection.');
+    await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    await waitFor(() => expect(asked).toEqual([{ ranked: true }]));
+  });
+
+  it('starts a casual life when the player turns it off', async () => {
+    const { services, asked } = signedIn();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    await user.click(await screen.findByRole('switch', { name: /^Ranked life/ }));
+    await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    await waitFor(() => expect(asked).toEqual([{ ranked: false }]));
+  });
+
+  it('offers no ranked life where nobody is signed in, and asks for none', async () => {
+    const { services, asked } = signedIn({ kind: 'offline' });
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    await screen.findAllByRole('radio');
+    expect(screen.queryByRole('switch', { name: /Ranked life/ })).toBeNull();
+    expect(screen.queryByText(/will not be ranked/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Start this life' }));
+    await waitFor(() => expect(asked).toEqual([{ ranked: false }]));
+  });
+
+  it('says so, before the life begins, when there is an account and no connection', async () => {
+    const online = vi.spyOn(window.navigator, 'onLine', 'get').mockReturnValue(false);
+    try {
+      const { services, asked } = signedIn();
+      const user = userEvent.setup();
+      renderGame(<NewLife />, services, 'es');
+      expect(await screen.findByText('Sin conexión: esta vida no será clasificatoria.')).toBeTruthy();
+      expect(screen.queryByRole('switch', { name: /Vida clasificatoria/ })).toBeNull();
+      await user.click(screen.getByRole('button', { name: 'Empezar esta vida' }));
+      await waitFor(() => expect(asked).toEqual([{ ranked: false }]));
+    } finally {
+      online.mockRestore();
+    }
+  });
+});
+
