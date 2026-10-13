@@ -1,3 +1,4 @@
+import { loanRoom, takePersonalLoan } from '../debt';
 import { careerOf } from '../lookup';
 import { mulDiv } from '../money';
 import { indexed } from '../rates';
@@ -52,14 +53,49 @@ export function moveCost(content: Content, world: WorldState, city: CityDef): Ce
   return mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
 }
 
-function executeBuyItem(p: PlayerState, itemId: string, ctx: OrderContext): RejectReason | null {
+/**
+ * The terms on which a shop sells an item on instalments today: what is paid down and what is
+ * borrowed. Null for what no shop finances: only a thing that lasts, and costs enough to be worth
+ * a contract, is sold this way.
+ */
+export function itemFinance(item: ItemDef, content: Content, world: WorldState): { down: Cents; loan: Cents } | null {
+  const { price } = itemTerms(item, world);
+  if (item.kind !== 'durable' || item.cardOnly === true || price < indexed(content.life.itemFinanceMinPrice, world)) return null;
+  const down = mulDiv(price, content.life.itemFinanceDownPct, 100);
+  return price > down ? { down, loan: price - down } : null;
+}
+
+/**
+ * Why the player may not buy an item on instalments today, or null when they may. The loan is a
+ * personal loan like any other: it needs a bank willing to lend and room under the usual limit.
+ */
+export function financeLock(p: PlayerState, plan: { down: Cents; loan: Cents }, content: Content, world: WorldState, round: number): RejectReason | null {
+  if (round < p.bankruptUntilRound) return 'no-credit';
+  if (plan.loan > loanRoom(p, content, world)) return 'over-loan-limit';
+  if (plan.down > p.cash) return 'not-enough-cash';
+  return null;
+}
+
+/**
+ * Buys an item from the shop. Paid in full from cash, or, on instalments, with a share paid down
+ * and the rest as a personal loan: the item is the player's at once either way, and so is the debt,
+ * which stays even if the item is sold.
+ */
+function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyItem' }>, ctx: OrderContext): RejectReason | null {
+  const { itemId } = order;
   const item = ctx.content.items.find((i) => i.id === itemId);
   if (!item) return 'unknown-item';
   if (item.cardOnly === true) return 'not-for-sale';
   if (!soldIn(item, p.cityId)) return 'not-sold-here';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
   const { price, resale } = itemTerms(item, ctx.world);
-  if (price > p.cash) return 'not-enough-cash';
+  if (order.financed === true) {
+    const plan = itemFinance(item, ctx.content, ctx.world);
+    if (plan === null) return 'cannot-finance';
+    const lock = financeLock(p, plan, ctx.content, ctx.world, ctx.round);
+    if (lock !== null) return lock;
+    takePersonalLoan(p, plan.loan, ctx.content, ctx.world);
+  } else if (price > p.cash) return 'not-enough-cash';
   p.cash -= price;
   ctx.tally.itemsBought += price;
   p.life.items.push({
@@ -116,7 +152,7 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
     case 'focus':
       return executeFocus(p, order.action, ctx);
     case 'buyItem':
-      return executeBuyItem(p, order.itemId, ctx);
+      return executeBuyItem(p, order, ctx);
     case 'sellItem':
       return executeSellItem(p, order.itemId, ctx);
     case 'setLifestyle':

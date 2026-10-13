@@ -246,6 +246,7 @@ export const es: ContentText = {
     'over-pension-limit': 'Supera el límite del plan de pensiones de esta ronda.',
     'would-be-insolvent': 'No puedes aportar al plan de pensiones mientras debas más de lo que tienes.',
     'no-credit': 'Tras tu quiebra, ningún banco te presta todavía.',
+    'cannot-finance': 'Esto no se vende a plazos.',
     'over-loan-limit': 'Es más de lo que puedes pedir con tu sueldo.',
     'unknown-debt': 'Esa deuda no existe.',
     'exceeds-debt': 'Es más de lo que debes.',

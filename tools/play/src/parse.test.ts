@@ -141,6 +141,8 @@ describe('parse', () => {
     expect(orderOf('get watch_rolex')).toEqual({ type: 'buyItem', itemId: 'watch_rolex' });
     expect(orderOf('get rolex submariner')).toEqual({ type: 'buyItem', itemId: 'watch_rolex' });
     expect(orderOf('drop porsche')).toEqual({ type: 'sellItem', itemId: 'car_porsche_911' });
+    expect(orderOf('finance porsche')).toEqual({ type: 'buyItem', itemId: 'car_porsche_911', financed: true });
+    expect(orderOf('financiar porsche')).toEqual({ type: 'buyItem', itemId: 'car_porsche_911', financed: true });
     expect(run('get jetpack')).toEqual({ kind: 'error', problem: 'unknown-item' });
   });
 

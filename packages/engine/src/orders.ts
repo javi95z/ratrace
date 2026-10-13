@@ -47,6 +47,7 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
     case 'focus':
       return isText(fields.action);
     case 'buyItem':
+      return isText(fields.itemId) && (fields.financed === undefined || isFlag(fields.financed));
     case 'sellItem':
       return isText(fields.itemId);
     case 'setInsurance':

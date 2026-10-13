@@ -87,6 +87,19 @@ describe('status', () => {
     expect(deriveStatus(life({}, { bonusStatus: -50 }).player, content)).toBe(0);
   });
 
+  it('loses what a way of living below the ordinary takes, and shows that part as it is', () => {
+    const lean = fixtureContent();
+    lean.life.lifestyleStatus = [-4, 0, 0, 9];
+    const at = (lifestyleTier: 0 | 1) => {
+      const p = structuredClone(life({ career: { id: 'office', level: 2 }, rentTier: 0 }).player);
+      p.lifestyleTier = lifestyleTier;
+      return p;
+    };
+    expect(deriveStatus(at(1), lean)).toBe(6);
+    expect(deriveStatus(at(0), lean)).toBe(2);
+    expect(statusParts(at(0), lean).lifestyle).toBe(-4);
+  });
+
   it('says where it comes from, part by part', () => {
     const fancy = life({ career: { id: 'office', level: 2 } }, {
       bonusStatus: 7,

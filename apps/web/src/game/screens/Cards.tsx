@@ -20,7 +20,7 @@ function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: Effec
   if (cash === 0 && tags.length === 0) return empty ? <span className={`text-[12px] text-ink-300 ${className}`}>{empty}</span> : null;
   return (
     <span className={`flex flex-wrap gap-1 ${className}`}>
-      {cash !== 0 ? <Tag tone={cash > 0 ? 'good' : 'bad'}>{fmt.signed(cash)}</Tag> : null}
+      {cash !== 0 ? <Tag tone={cash > 0 ? 'good' : 'bad'}>{fmt.briefSigned(cash)}</Tag> : null}
       {tags.map((tag, i) => (
         <Tag key={i} tone={tag.tone}>
           {tag.text}

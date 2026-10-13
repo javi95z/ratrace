@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { content } from '@ratrace/content';
-import { previewRound, quoteProperty, viewOf } from '@ratrace/engine';
+import { content, textFor } from '@ratrace/content';
+import { previewRound, quoteItem, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -260,6 +260,67 @@ describe('a thing the player owns, in the shop', () => {
     const notMine = screen.getByRole('dialog', { name: 'Soho House' });
     expect(within(notMine).queryByText(/It cost you/)).toBeNull();
     expect(within(notMine).queryByText(/Sell it today/)).toBeNull();
+  });
+});
+
+describe('buying on instalments', () => {
+  it('offers a thing that lasts for a share down and a loan, says what the loan costs, and buys it that way', async () => {
+    // The civil servant starts with the fifth of a small car in hand, and pay enough for the loan.
+    const { services } = await inFinance('civil_servant');
+    const before = await stateOf(services);
+    const plan = quoteItem(content, viewOf(before), 'car_seat_ibiza').finance;
+    if (plan === null || plan.lock !== null) throw new Error('a civil servant can buy a small car on instalments');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+
+    await user.click(button(/SEAT Ibiza/));
+    const sheet = screen.getByRole('dialog', { name: 'SEAT Ibiza' });
+    const years = plan.termRounds * content.yearsPerRound;
+    expect(within(sheet).getByText(new RegExp(`The rest, \\${fmt.money(plan.loan)}, is a loan at ${fmt.rate(plan.rateBp)} over ${years} years: about \\${fmt.money(plan.annual)} a year at first\\. Sell it and the debt stays with you\\.`))).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: `On instalments · ${fmt.money(plan.down)} down` }));
+
+    // It waits in the basket under its own name, and the round then takes the down payment and opens the loan.
+    await user.click(button('1 order'));
+    const basket = screen.getByRole('dialog', { name: "This round's orders" });
+    expect(within(basket).getByRole('button', { name: 'Remove: Buy SEAT Ibiza on instalments' })).toBeTruthy();
+    await user.click(within(basket).getByRole('button', { name: 'Close' }));
+    await user.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    const after = await stateOf(services);
+    expect(after.player.life.items.map((owned) => owned.itemId)).toContain('car_seat_ibiza');
+    expect(after.player.debts.filter((debt) => debt.kind === 'personalLoan')).toHaveLength(before.player.debts.filter((debt) => debt.kind === 'personalLoan').length + 1);
+  });
+
+  it('is not offered for what is used up or costs little, and says why when the bank will not lend', async () => {
+    // A nurse's pay does not stretch to the loan a sports car needs.
+    const { services } = await inFinance('nurse');
+    const view = viewOf(await stateOf(services));
+    const porsche = quoteItem(content, view, 'car_porsche_911').finance;
+    if (porsche === null || porsche.lock === null) throw new Error('a nurse cannot have a Porsche on instalments');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+
+    await user.click(button(/Casio F-91W/));
+    const casio = screen.getByRole('dialog', { name: 'Casio F-91W' });
+    expect(within(casio).queryByRole('button', { name: /^On instalments/ })).toBeNull();
+    await user.click(within(casio).getByRole('button', { name: 'Close' }));
+
+    await user.click(button(/Porsche 911/));
+    const sheet = screen.getByRole('dialog', { name: 'Porsche 911' });
+    expect((within(sheet).getByRole('button', { name: /^On instalments/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(within(sheet).getByText(textFor('en').text.reasons[porsche.lock])).toBeTruthy();
+  });
+});
+
+describe('how the player lives, in the lifestyle tab', () => {
+  it('says what each way of living does to status, the frugal one taking it away', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    expect(screen.getByText('Status: Frugal −3 · Normal 0 · Comfortable +3 · Lavish +8')).toBeTruthy();
   });
 });
 

@@ -156,8 +156,12 @@ export interface LifeRules {
   /** Share of the housing cost paid at each rent tier, in percent. */
   rentTierHousingPct: readonly [number, number];
   rentTierStatus: readonly [number, number];
-  /** Status for each lifestyle tier. */
+  /** Status for each lifestyle tier. Living below the ordinary may take status away. */
   lifestyleStatus: readonly [number, number, number, number];
+  /** Buying a thing that lasts on instalments: this percent of the price is paid down, and the rest is a personal loan. */
+  itemFinanceDownPct: number;
+  /** The least a thing must cost, at the prices of the start, to be sold on instalments. */
+  itemFinanceMinPrice: Cents;
   /** How much of its status an item gives when a better one in its ladder is owned, in percent. */
   lesserItemPct: number;
   /** Cost of moving, as a percent of the destination's yearly living cost. */
@@ -636,7 +640,7 @@ export type Order =
   | { type: 'sellProperty'; propertyId: string }
   | { type: 'setRented'; propertyId: string; rented: boolean }
   | { type: 'focus'; action: FocusAction }
-  | { type: 'buyItem'; itemId: string }
+  | { type: 'buyItem'; itemId: string; financed?: boolean }
   | { type: 'sellItem'; itemId: string }
   | { type: 'setLifestyle'; tier: LifestyleTier }
   | { type: 'setRentTier'; tier: RentTier }
@@ -708,6 +712,7 @@ export type RejectReason =
   | 'not-for-sale'
   | 'not-sold-here'
   | 'already-owned'
+  | 'cannot-finance'
   | 'not-owned'
   | 'cannot-sell'
   | 'bad-tier'

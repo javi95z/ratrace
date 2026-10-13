@@ -228,6 +228,9 @@
     "partnerOut": "You separate",
     "children": "{count, plural, one {A child} other {# children}}",
     "get": "{item}",
+    "itemStatus": "Status +{n}",
+    "itemStatusFor": "Status +{n} for {years} years",
+    "itemUsual": "Usually {amount}",
     "invest": "{amount} into {asset}",
     "pension": "+{amount} pension",
     "loan": "Loan of {amount}",
@@ -369,6 +372,7 @@
       "noJob": "You have no job, so there is nothing to put your focus into.",
       "tier": "How you live",
       "tierFloor": "Your life does not allow less than this.",
+      "tierStatus": "Status:",
       "home": "Where you live",
       "ownerNote": "You live in a home you own, so you pay no rent.",
       "insurance": "Insurance",
@@ -401,7 +405,11 @@
       "paid": "It cost you {amount}",
       "gift": "It cost you nothing",
       "sellLoss": "Sell it today and you lose {amount}",
-      "sellGain": "Sell it today and you gain {amount}"
+      "sellGain": "Sell it today and you gain {amount}",
+      "statusDown": "Status −{n}",
+      "finance": "On instalments · {amount} down",
+      "financeTerms": "The rest, {loan}, is a loan at {rate} over {years} years: about {annual} a year at first.",
+      "financeKept": "Sell it and the debt stays with you."
     },
     "taxes": {
       "income": "Coming in",
@@ -485,13 +493,14 @@
     "married": "Married",
     "yours": "Yours",
     "insured": "Insured",
-    "aboutLifestyle": "Your lifestyle multiplies what living costs you each year. The top two give status.",
+    "aboutLifestyle": "Your lifestyle multiplies what living costs you each year. Living on little shows and takes status away; the top two give it.",
     "aboutRent": "Until you own a home in {city}, you rent. A room or a flat changes what you spend and your status.",
     "rentCost": "The cost is that of your whole life with that rent, at the lifestyle you lead.",
     "aboutInsurance": "You pay a premium every year. In return, when a bad card comes, the insurance pays part of the bill.",
     "pays": "Pays {pct}% on \"{card}\"",
     "opens": "Opens a way out on \"{card}\"",
-    "changedIn": "It is changed in the Lifestyle tab, during the finances."
+    "changedIn": "It is changed during the finances: here or in the Lifestyle tab.",
+    "pickHere": "Tap to choose. It takes effect when the round is played."
   },
   "balance": {
     "balance": "Balance",
@@ -674,6 +683,7 @@
     "study": "Study",
     "hunt": "Job hunt",
     "buyItem": "Buy {item}",
+    "financeItem": "Buy {item} on instalments",
     "sellItem": "Sell {item}",
     "cancelItem": "Cancel {item}",
     "lifestyle": "Live: {tier}",

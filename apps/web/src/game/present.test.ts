@@ -64,8 +64,8 @@ describe('effectTags', () => {
         ],
       }),
     ).toEqual([
-      { tone: 'good', text: '+$14,000/yr' },
-      { tone: 'bad', text: '−$7,000/yr for 12 years' },
+      { tone: 'good', text: '+$14k/yr' },
+      { tone: 'bad', text: '−$7k/yr for 12 years' },
     ]);
   });
 
@@ -78,8 +78,8 @@ describe('effectTags', () => {
         lose: { what: 'crypto', pct: 40 }, lifestyleFloor: 1,
       }).map((tag) => tag.text),
     ).toEqual([
-      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', '$2,000 into Tesla', '+$4,000 pension', 'Loan of $12,000',
-      'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +$20,000', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
+      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', 'Status +18', '−$150/yr', '$2k into Tesla', '+$4k pension', 'Loan of $12k',
+      'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +$20k', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
     ]);
     expect(tags({ job: { leave: true }, partner: null, sellHome: true, lose: { what: 'deposit', pct: 15 } }).map((tag) => tag.text)).toEqual([
       'You stop working', 'You separate', 'You sell your home', 'Lose 15% of your savings',
@@ -88,9 +88,23 @@ describe('effectTags', () => {
     expect(tags({ job: { levelDelta: -1 } })[0]).toEqual({ tone: 'bad', text: 'A step down' });
   });
 
+  it('says what a thing offered gives: its status, how long that lasts, and the price it is usually sold at', () => {
+    // An upgrade at the gate: a trip, at two fifths of its price.
+    expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } })).toEqual([
+      { tone: 'plain', text: 'Emirates business class' },
+      { tone: 'good', text: 'Status +9 for 4 years' },
+      { tone: 'plain', text: 'Usually $6k' },
+    ]);
+    // At full price there is no bargain to name, and a thing that lasts gives its status for good.
+    expect(tags({ buyItem: { itemId: 'watch_casio', pricePct: 100 } }).map((tag) => tag.text)).toEqual(['Casio F-91W', 'Status +1']);
+    expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } }, 'es').map((tag) => tag.text.replace(/\u00a0/g, ' '))).toEqual([
+      'Business de Emirates', 'Estatus +9 durante 4 años', 'Precio normal 6k $',
+    ]);
+  });
+
   it('writes a renovation at today\u2019s prices, as the engine will add it', () => {
     const later = { ...world, priceLevel: world.priceLevel * 2 };
-    expect(effectTags(words('en'), t('en', 'effects'), later, { homeValue: 2_000_000 })).toEqual([{ tone: 'good', text: 'Home value +$40,000' }]);
+    expect(effectTags(words('en'), t('en', 'effects'), later, { homeValue: 2_000_000 })).toEqual([{ tone: 'good', text: 'Home value +$40k' }]);
   });
 
   it('speaks Spanish', () => {
@@ -133,6 +147,7 @@ describe('orderLabel', () => {
     expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Study');
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
+    expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');
     expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Basic-Fit');
     expect(label({ type: 'setLifestyle', tier: 0 })).toBe('Live: Frugal');

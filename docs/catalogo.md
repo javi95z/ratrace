@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.6.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.7.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -365,6 +365,8 @@ Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cua
 
 «Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.
 
+A plazos se vende lo que dura y cuesta 5.000 $ o más: un 20 % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.
+
 ### Coches
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Notas |
@@ -525,7 +527,7 @@ El nivel de finanzas dice qué se puede comprar por cuenta propia. Una carta pue
 
 |  | Modo de vida | Coste de vida | Estatus |
 | --- | --- | --- | --- |
-| <img src="../art/clean/icons/icon.life_frugal.png" alt=""> | Austero | 70 % | 0 |
+| <img src="../art/clean/icons/icon.life_frugal.png" alt=""> | Austero | 70 % | -3 |
 | <img src="../art/clean/icons/icon.life_normal.png" alt=""> | Normal | 100 % | 0 |
 | <img src="../art/clean/icons/icon.life_comfortable.png" alt=""> | Cómodo | 140 % | +3 |
 | <img src="../art/clean/icons/icon.life_lavish.png" alt=""> | Lujoso | 200 % | +8 |

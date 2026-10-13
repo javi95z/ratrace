@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { formatFor } from '@/lib/format';
+import type { SavedGame } from '@/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Play } from './Play';
 
@@ -121,12 +122,13 @@ describe('what the player owns, in the profile', () => {
     expect(choices.map((li) => li.getAttribute('aria-current'))).toEqual([null, 'true', null, null]);
     expect(within(choices[1]).getByText('Normal')).toBeTruthy();
     expect(within(choices[1]).getByText('Yours')).toBeTruthy();
-    // Each says what a year of it costs, dearer as it goes up, and the top two give status.
+    // Each says what a year of it costs, dearer as it goes up; the top two give status, and the frugal one takes it.
     const costs = choices.map((li) => Number((li.textContent ?? '').match(/\$([\d,]+)\/yr/)?.[1].replace(/,/g, '')));
     expect(costs).toEqual([...costs].sort((a, b) => a - b));
     expect(within(choices[3]).getByText('Status +8')).toBeTruthy();
-    expect(within(choices[0]).queryByText(/^Status/)).toBeNull();
-    expect(within(sheet).getByText('It is changed in the Lifestyle tab, during the finances.')).toBeTruthy();
+    expect(within(choices[0]).getByText('Status −3')).toBeTruthy();
+    expect(within(choices[1]).queryByText(/^Status/)).toBeNull();
+    expect(within(sheet).getByText('It is changed during the finances: here or in the Lifestyle tab.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
 
     await user.click(screen.getByRole('button', { name: /^Home/ }));
@@ -145,6 +147,66 @@ describe('what the player owns, in the profile', () => {
     expect(within(sheet).getByText('Opens a way out on "A serious illness"')).toBeTruthy();
     expect(within(sheet).queryByText('Insured')).toBeNull();
     expect(within(sheet).getAllByText(/^\$\d+\/yr$/)).toHaveLength(4);
+  });
+
+  it('is only to be read until the finances open, and there each line is the choice itself', async () => {
+    setWidth('desk');
+    const user = userEvent.setup();
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+
+    // During the news there is nothing to press but the way out.
+    await user.click(screen.getByRole('button', { name: /^Lifestyle/ }));
+    expect(within(screen.getByRole('dialog', { name: 'Lifestyle' })).getAllByRole('button').map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Close']);
+    cleanup();
+
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    renderGame(<Play />, services);
+    await screen.findByRole('tablist', { name: 'Your finances' });
+    // The orders waiting, as the basket of a wide screen lists them.
+    const orders = () => screen.queryAllByRole('button', { name: /^Remove: /, hidden: true }).map((b) => (b.getAttribute('aria-label') ?? '').replace('Remove: ', ''));
+
+    await user.click(screen.getByRole('button', { name: /^Lifestyle/ }));
+    let sheet = screen.getByRole('dialog', { name: 'Lifestyle' });
+    expect(within(sheet).getByText('Tap to choose. It takes effect when the round is played.')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: /^Comfortable/ }));
+    // The sheet shows the life as it will be, and the order waits with the others.
+    expect(within(sheet).getAllByRole('listitem').map((li) => li.getAttribute('aria-current'))).toEqual([null, null, 'true', null]);
+    expect(within(sheet).getByRole('button', { name: /^Comfortable/ }).getAttribute('aria-pressed')).toBe('true');
+    expect(orders()).toEqual(['Live: Comfortable']);
+    // Choosing again what is already so takes the order back.
+    await user.click(within(sheet).getByRole('button', { name: /^Normal/ }));
+    expect(orders()).toEqual([]);
+    expect(within(sheet).getAllByRole('listitem').map((li) => li.getAttribute('aria-current'))).toEqual([null, 'true', null, null]);
+    await user.click(within(sheet).getByRole('button', { name: /^Frugal/ }));
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+
+    await user.click(screen.getByRole('button', { name: /^Home/ }));
+    sheet = screen.getByRole('dialog', { name: 'Home' });
+    await user.click(within(sheet).getByRole('button', { name: /^Rented flat/ }));
+    expect(within(sheet).getAllByRole('listitem').map((li) => li.getAttribute('aria-current'))).toEqual([null, 'true']);
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+
+    await user.click(screen.getByRole('button', { name: /^Insurance/ }));
+    sheet = screen.getByRole('dialog', { name: 'Insurance' });
+    await user.click(within(sheet).getByRole('button', { name: /^Health/ }));
+    expect(within(sheet).getByText('Insured')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: /^Home/ }));
+    await user.click(within(sheet).getByRole('button', { name: /^Home/ }));
+    expect(within(sheet).getAllByText('Insured')).toHaveLength(1);
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+
+    expect(orders()).toHaveLength(3);
+    expect(orders()[0]).toBe('Live: Frugal');
+    await user.click(screen.getByRole('button', { name: 'Play the round' }));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    // The screen plays its own copy of the life: what it did is read from what was saved.
+    const after = ((await services.store.loadGame()) as SavedGame).state.player;
+    expect(after.lifestyleTier).toBe(0);
+    expect(after.life.rentTier).toBe(1);
+    expect(after.life.insurance).toMatchObject({ health: true, home: false });
   });
 
   it('shows the home itself, and no rent, to someone who owns where they live', async () => {

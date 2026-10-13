@@ -1,4 +1,4 @@
-import { mortgageSpreadBp, removePaidDebts } from '../debt';
+import { mortgageSpreadBp, removePaidDebts, takePersonalLoan } from '../debt';
 import { newId } from '../ids';
 import { careerOf, cityOf, itemOf } from '../lookup';
 import { clamp, mulDiv } from '../money';
@@ -131,15 +131,7 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   p.cash += moneyOf(p, effects, at);
 
   if (effects.loan !== undefined) {
-    const amount = indexed(effects.loan, world);
-    p.debts.push({
-      id: newId(p, 'debt'),
-      kind: 'personalLoan',
-      principal: amount,
-      fixedRateBp: world.policyRateBp + content.debt.personalLoanSpreadBp,
-      roundsLeft: content.debt.personalLoanTermRounds,
-    });
-    p.cash += amount;
+    takePersonalLoan(p, indexed(effects.loan, world), content, world);
   }
   if (effects.pension !== undefined) p.pension += indexed(effects.pension, world);
   if (effects.lose !== undefined) lose(p, effects.lose, at);

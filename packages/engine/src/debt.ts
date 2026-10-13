@@ -67,6 +67,23 @@ export function loanRoom(p: PlayerState, content: Content, world: WorldState): C
   return Math.max(0, limit - existing);
 }
 
+/** The yearly rate a personal loan taken today carries for its whole term. */
+export function personalLoanRateBp(content: Content, world: WorldState): Bp {
+  return world.policyRateBp + content.debt.personalLoanSpreadBp;
+}
+
+/** Pays a personal loan out in cash, at today's rate and for the usual term. Whether the player may have it is the caller's to judge. */
+export function takePersonalLoan(p: PlayerState, amount: Cents, content: Content, world: WorldState): void {
+  p.debts.push({
+    id: newId(p, 'debt'),
+    kind: 'personalLoan',
+    principal: amount,
+    fixedRateBp: personalLoanRateBp(content, world),
+    roundsLeft: content.debt.personalLoanTermRounds,
+  });
+  p.cash += amount;
+}
+
 export function executeBorrow(
   p: PlayerState,
   order: Extract<Order, { type: 'borrow' }>,
@@ -75,14 +92,7 @@ export function executeBorrow(
   if (!isAmount(order.amount)) return 'bad-amount';
   if (ctx.round < p.bankruptUntilRound) return 'no-credit';
   if (order.amount > loanRoom(p, ctx.content, ctx.world)) return 'over-loan-limit';
-  p.debts.push({
-    id: newId(p, 'debt'),
-    kind: 'personalLoan',
-    principal: order.amount,
-    fixedRateBp: ctx.world.policyRateBp + ctx.content.debt.personalLoanSpreadBp,
-    roundsLeft: ctx.content.debt.personalLoanTermRounds,
-  });
-  p.cash += order.amount;
+  takePersonalLoan(p, order.amount, ctx.content, ctx.world);
   return null;
 }
 

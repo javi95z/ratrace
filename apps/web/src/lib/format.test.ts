@@ -50,6 +50,26 @@ describe('formatFor', () => {
     expect(en.number(-0)).toBe('0');
   });
 
+  it('writes an amount for a tag in as little as will do: exact under a thousand, about two figures above', () => {
+    expect(en.brief(85_000)).toBe('$850');
+    expect(en.brief(99_900)).toBe('$999');
+    expect(en.brief(100_000)).toBe('$1k');
+    expect(en.brief(705_400)).toBe('$7.1k');
+    expect(en.brief(700_000)).toBe('$7k');
+    expect(en.brief(999_900)).toBe('$10k');
+    expect(en.brief(20_340_000)).toBe('$203k');
+    expect(en.brief(99_960_000)).toBe('$1M');
+    expect(en.brief(123_400_000)).toBe('$1.2M');
+    expect(en.brief(-705_400)).toBe('−$7.1k');
+    expect(en.briefSigned(705_400)).toBe('+$7.1k');
+    expect(en.briefSigned(-20_340_000)).toBe('−$203k');
+    expect(en.briefSigned(0)).toBe('$0');
+    expect(es.brief(705_400).replace(/\u00a0/g, ' ')).toBe('7,1k $');
+    expect(es.brief(20_340_000).replace(/\u00a0/g, ' ')).toBe('203k $');
+    // Spanish stops at millions, as everywhere else.
+    expect(es.brief(250_000_000_000).replace(/\u00a0/g, ' ')).toBe('2500M $');
+  });
+
   it('shortens large amounts to three figures for small spaces, and leaves small ones whole', () => {
     expect(en.compact(123_400)).toBe('$1,234');
     expect(en.compact(999_900)).toBe('$9,999');
