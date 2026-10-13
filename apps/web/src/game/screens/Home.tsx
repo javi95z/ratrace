@@ -7,7 +7,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
-import { Preferences } from './Settings';
+import { HomePreferences } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
@@ -101,7 +101,7 @@ export function Home() {
       </div>
 
       <Panel className="mt-auto w-full" title={t('language')}>
-        <Preferences />
+        <HomePreferences />
         {saving ? (
           <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p>
         ) : (
