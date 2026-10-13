@@ -33,5 +33,9 @@ export default defineConfig({
     // Set RATRACE_REUSE=1 to skip the build while working on the tests themselves.
     reuseExistingServer: process.env.RATRACE_REUSE === '1',
     timeout: 240_000,
+    // The game under test has no cloud, whatever this checkout's `.env.local` says: these tests
+    // are about the game on its device, and must never write to a real project. The build puts
+    // these two values into the page, so blank here is blank in the browser.
+    env: { NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' },
   },
 });

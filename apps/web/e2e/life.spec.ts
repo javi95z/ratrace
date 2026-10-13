@@ -670,3 +670,22 @@ test('a first life is guided, one tip at a time, until the player says enough', 
   await expect(page.getByRole('button', { name: w.play })).toBeVisible();
   await expect(tip).toHaveCount(0);
 });
+
+test('the game under test has no account behind it: it says nothing of one, and asks nothing of any other server', async ({ page, baseURL }) => {
+  const home = new URL(baseURL ?? '').origin;
+  const elsewhere: string[] = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith('http') && url.origin !== home) elsewhere.push(request.url());
+  });
+  const w = WORDS.en;
+  await startLife(page, 'en', 'Nurse');
+  await page.getByRole('button', { name: w.toCards }).click();
+  await answerHand(page, 'en');
+  await page.goto('/en');
+  await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Account' })).toHaveCount(0);
+  await expect(page.getByText('Your life is saved on this device after every step.')).toBeVisible();
+  expect(elsewhere).toEqual([]);
+});
+
