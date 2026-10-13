@@ -1,6 +1,6 @@
 'use client';
 
-import { cityArt, portraitArt } from '@ratrace/content';
+import { portraitArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeProgress, netWorth, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { ageAt, portraitAge } from '@/game/present';
 import { Bar, Row, Stat, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
 import { SettingsSheet } from './Settings';
 
@@ -120,12 +121,8 @@ export function Hud({ compact = false, skyline = !compact, onProfile }: { compac
 
   return (
     <header className="flex flex-col gap-2 px-3 pt-3">
-      {skyline ? (
-        <div className="frame-double mx-auto mb-1.5 mt-1 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
-          {/* A round opens in the first light and closes at night. */}
-          <Sprite id={cityArt(p.cityId, stage === 'news' ? 'day' : 'night')} scale="art" alt={names.cities[p.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
-        </div>
-      ) : null}
+      {/* A round opens in the first light and closes at night. */}
+      {skyline ? <CityBanner cityId={p.cityId} light={stage === 'news' ? 'day' : 'night'} /> : null}
 
       <div className="flex items-center gap-3">
         {onProfile ? (

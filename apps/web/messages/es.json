@@ -485,7 +485,7 @@
     "graph": "Tu patrimonio a lo largo de la vida, descontando la inflación",
     "bankruptcies": "{count, plural, =0 {Nunca en quiebra} one {Una quiebra} other {# quiebras}}",
     "badges": "Insignias de esta vida",
-    "noBadges": "Esta vez, ninguna insignia. En la colección se ve cómo se consigue cada una.",
+    "noBadges": "Esta vez, ninguna insignia. En la colección están todas las que hay por conseguir.",
     "unlocked": "Nueva vida desbloqueada: {life}",
     "bestScore": "Nueva mejor puntuación",
     "bestNetWorth": "Tu vida más rica hasta ahora",

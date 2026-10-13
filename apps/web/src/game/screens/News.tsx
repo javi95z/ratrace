@@ -1,11 +1,12 @@
 'use client';
 
-import { cityArt, topicArt } from '@ratrace/content';
+import { topicArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
 import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
 
 /**
@@ -93,9 +94,7 @@ export function RoundOpener() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="frame-double mx-auto my-1.5 flex max-w-[calc(100%-12px)] justify-center overflow-hidden bg-night-900 leading-[0]" style={{ width: 'calc(312px * var(--art))' }}>
-        <Sprite id={cityArt(view.player.cityId, 'day')} scale="art" alt={names.cities[view.player.cityId]} fallback={{ w: 312, h: 66 }} className="max-w-none" />
-      </div>
+      <CityBanner cityId={view.player.cityId} light="day" />
       <Panel className="text-center">
         <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{common('round', { n: view.round + 1, total: content.rounds })}</p>
         <p className="pixel mt-1 text-[32px] leading-none text-gold-500">{common('age', { age: ageAt(content, view.round) })}</p>

@@ -485,7 +485,7 @@
     "graph": "Your net worth through life, after inflation",
     "bankruptcies": "{count, plural, =0 {Never bankrupt} one {Bankrupt once} other {Bankrupt # times}}",
     "badges": "Badges of this life",
-    "noBadges": "No badge this time. The collection shows how each is earned.",
+    "noBadges": "No badge this time. The collection lists every one there is to earn.",
     "unlocked": "New life unlocked: {life}",
     "bestScore": "New best score",
     "bestNetWorth": "Your richest life yet",

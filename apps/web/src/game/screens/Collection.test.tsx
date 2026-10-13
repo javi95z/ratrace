@@ -44,7 +44,7 @@ describe('the collection', () => {
     for (const group of ['Cars', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
   });
 
-  it('shows every badge with how each is earned, and marks the ones earned with the day', async () => {
+  it('shows every badge, tells how it is earned only of those earned, and marks them with the day', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: Date.UTC(2026, 9, 13, 12), gameId: 'g' }, bankrupt: { at: Date.UTC(2026, 0, 2, 12), gameId: 'g' } } });
     const user = userEvent.setup();
@@ -63,7 +63,8 @@ describe('the collection', () => {
 
     const waiting = within(panel).getByText('Ten million').closest('li') as HTMLElement;
     expect(within(waiting).getByText('Not earned yet')).toBeTruthy();
-    expect(within(waiting).getByText(/Be worth ten million/)).toBeTruthy();
+    // How to earn it is not told until it has been earned: the name is the clue.
+    expect(within(waiting).queryByText(/Be worth ten million/)).toBeNull();
     expect(waiting.querySelector('img')?.getAttribute('src')).toContain('badge.locked');
   });
 

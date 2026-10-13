@@ -70,7 +70,8 @@ function Badges() {
                     <Sprite id={badgeArt(got ? badge.id : 'locked')} fallback={{ w: 64, h: 64 }} />
                     <div className="min-w-0 flex-1">
                       <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{text.badges[badge.id].name}</p>
-                      <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p>
+                      {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
+                      {got ? <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p> : null}
                       <p className={`mt-0.5 text-[12px] ${got ? 'text-teal-300' : 'text-ink-300'}`}>{got ? labels('earnedOn', { date: fmt.day(got.at) }) : labels('notYet')}</p>
                     </div>
                   </li>
