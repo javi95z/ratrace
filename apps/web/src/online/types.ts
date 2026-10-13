@@ -40,3 +40,39 @@ export interface Account {
   /** The player has read the notice. */
   dismissNotice(): void;
 }
+
+/**
+ * Where what is on the device stands with the account: there is no account; it is on its way; the
+ * last try did not get through; or everything is there.
+ */
+export type CloudSaving = 'off' | 'sending' | 'waiting' | 'saved';
+
+/** What the account changed on the device, for whoever shows it. */
+export type DeviceChange = 'game' | 'profile' | 'runs';
+
+/** A different life in progress waiting in the account, as far as a screen needs to know it. */
+export interface AccountLife {
+  gameId: string;
+  lifeId: string;
+  round: number;
+  cityId: string;
+}
+
+/**
+ * The account's copy of what the player has, as the game is told of it. The device is always
+ * written first and is always enough; this says how far the account is behind it, and holds the
+ * one thing a player is asked: what to do with a different life waiting there.
+ */
+export interface AccountSaves {
+  status(): CloudSaving;
+  /** A different life in progress waiting in the account, if there is one. The same object until it changes. */
+  offer(): AccountLife | null;
+  /** Calls `listener` when the status or the offer changes. Returns how to stop. */
+  subscribe(listener: () => void): () => void;
+  /** Calls `listener` when the account has changed what the device holds. Returns how to stop. */
+  onDeviceChanged(listener: (what: DeviceChange) => void): () => void;
+  /** Takes the offered life in place of the device's own, which is given up. False if there was none. */
+  takeOffer(): Promise<boolean>;
+  /** Ends the offered life in the account instead. */
+  declineOffer(): Promise<void>;
+}

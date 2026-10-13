@@ -1,3 +1,4 @@
+import type { SyncCloud } from './mirror';
 import type { Account, AccountNotice, AccountState } from './types';
 
 /** A signed-in player as the cloud describes them. */
@@ -12,7 +13,7 @@ export interface CloudUser {
  * `connect.ts`; a test hands in its own. Any of these may fail: the account treats a failure as
  * having no network.
  */
-export interface Cloud {
+export interface Cloud extends SyncCloud {
   /** Whoever this browser is already signed in as, or null. Fails if it could not find out: that is not "nobody". */
   currentUser(): Promise<CloudUser | null>;
   /** Makes a guest account with no form. Null if the cloud would not. */

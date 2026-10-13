@@ -111,15 +111,17 @@ export type GameChoice =
 /**
  * Which life the device plays, given what it has and what the account holds (the latest first).
  *
- * - No life in progress on the device: it takes the account's.
+ * - No life on the device: it takes the account's.
  * - The same life on both: the copy with more of it played. Two copies are never mixed.
  * - A different life on each: the device keeps its own. The account's is offered, never imposed.
+ * - A life that is over on the device stays there, where its score can still be looked at, and
+ *   the account's is offered.
  *
  * A game this build could not play is left alone: one on other versions, one that is over, one with no seed.
  */
 export function chooseGame(device: DeviceGame | null, cloud: readonly CloudGame[], versions: { engine: string; content: string }): GameChoice {
   const playable = cloud.filter((game) => game.status === 'playing' && game.seed !== null && game.engineVersion === versions.engine && game.contentVersion === versions.content);
-  if (device === null || device.finished) return playable.length > 0 ? { take: 'cloud', game: playable[0] } : { take: 'device', offer: null };
+  if (device === null) return playable.length > 0 ? { take: 'cloud', game: playable[0] } : { take: 'device', offer: null };
 
   const same = playable.find((game) => game.id === device.gameId);
   if (same && stepsOf(same.log) > device.steps) return { take: 'cloud', game: same };

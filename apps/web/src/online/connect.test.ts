@@ -22,9 +22,23 @@ const client = vi.hoisted(() => {
           return { data: { subscription: { unsubscribe: () => listeners.splice(listeners.indexOf(listener), 1) } } };
         },
       },
-      from: (table: string) => ({
-        upsert: async (...a: unknown[]) => (asked.push(['upsert', table, ...a]), answers.upsert),
-      }),
+      // A question to a table is built a word at a time and asked when it is awaited. Each one is
+      // remembered whole, and answered with what the test has set for its table.
+      from: (table: string) => {
+        const question: unknown[] = [table];
+        const builder: Record<string, unknown> = {};
+        for (const word of ['select', 'eq', 'order', 'limit', 'update', 'upsert', 'maybeSingle']) {
+          builder[word] = (...a: unknown[]) => (question.push([word, ...a]), builder);
+        }
+        builder.then = (resolve: (answer: unknown) => unknown, reject: (error: unknown) => unknown) => {
+          asked.push(question);
+          return Promise.resolve(answers[table]).then(resolve, reject);
+        };
+        return builder;
+      },
+      functions: {
+        invoke: async (...a: unknown[]) => (asked.push(['invoke', ...a]), answers.invoke),
+      },
     }),
   };
 });
@@ -40,7 +54,11 @@ beforeEach(() => {
     signInAnonymously: { data: { user }, error: null },
     linkIdentity: { data: {}, error: null },
     signInWithOAuth: { data: {}, error: null },
-    upsert: { error: null },
+    profiles: { error: null },
+    games: { data: [], error: null },
+    player_progress: { data: null, error: null },
+    runs: { data: [], error: null },
+    invoke: { data: { run: {} }, error: null },
   });
 });
 
@@ -90,8 +108,8 @@ describe('the cloud, made from the Supabase client', () => {
   it('writes the player\'s profile with the language of the page every time, so a change of language is kept', async () => {
     const cloud = await connectSupabase('u', 'k');
     await cloud.ensureProfile('u-1', 'es');
-    expect(client.asked).toEqual([['upsert', 'profiles', { user_id: 'u-1', language: 'es' }, { onConflict: 'user_id' }]]);
-    client.answers.upsert = { error: new Error('offline') };
+    expect(client.asked).toEqual([['profiles', ['upsert', { user_id: 'u-1', language: 'es' }, { onConflict: 'user_id' }]]]);
+    client.answers.profiles = { error: new Error('offline') };
     await expect(cloud.ensureProfile('u-1', 'es')).rejects.toThrow('offline');
   });
 
@@ -104,5 +122,97 @@ describe('the cloud, made from the Supabase client', () => {
     expect(heard).toEqual([{ id: 'u-3', is_anonymous: false, email: 'b@example.com' }, null]);
     stop();
     expect(client.listeners).toHaveLength(0);
+  });
+});
+
+describe('what the cloud keeps of a player', () => {
+  const signedIn = { data: { session: { user: { id: 'u-1', is_anonymous: true } } }, error: null };
+  const gameRow = { id: 'g-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], updated_at: '2026-10-13T10:00:00Z' };
+  const upload = { id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, log: [{ picks: [0], orders: [] }], stateHash: 'h-1' };
+
+  it('reads the lives still being played, the latest first, as the game names them', async () => {
+    client.answers.games = { data: [gameRow], error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.playingGames()).toEqual([{ id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], updatedAt: '2026-10-13T10:00:00Z' }]);
+    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, seed, round, status, log, updated_at'], ['eq', 'mode', 'casual'], ['eq', 'status', 'playing'], ['order', 'updated_at', { ascending: false }], ['limit', 5]]]);
+    client.answers.games = { data: null, error: new Error('offline') };
+    await expect(cloud.playingGames()).rejects.toThrow('offline');
+  });
+
+  it('saves a life in progress as the player\'s own casual game, being played', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.pushGame(upload)).toBe('saved');
+    // Being played: a life another device gave up is taken up again by the one that still plays it.
+    expect(client.asked).toEqual([['games', ['upsert', { id: 'g-1', mode: 'casual', status: 'playing', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, log: upload.log, state_hash: 'h-1' }, { onConflict: 'id' }]]]);
+    client.asked.length = 0;
+    await cloud.pushGame({ ...upload, stateHash: '' });
+    expect((client.asked[0][1] as unknown[])[1]).toMatchObject({ state_hash: null });
+  });
+
+  it('says a life is closed when the rules of the database refuse it, and fails for any other reason', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    client.answers.games = { error: { code: '42501', message: 'new row violates row-level security policy' } };
+    expect(await cloud.pushGame(upload)).toBe('closed');
+    client.answers.games = { error: { code: '23514', message: 'a player holds fifty games at most' } };
+    await expect(cloud.pushGame(upload)).rejects.toMatchObject({ code: '23514' });
+  });
+
+  it('gives up a life that is being played, and no other', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    await cloud.abandonGame('g-1');
+    expect(client.asked).toEqual([['games', ['update', { status: 'abandoned' }], ['eq', 'id', 'g-1'], ['eq', 'status', 'playing']]]);
+    client.answers.games = { error: new Error('offline') };
+    await expect(cloud.abandonGame('g-1')).rejects.toThrow('offline');
+  });
+
+  it('reads what the player has unlocked, or nothing if they have never saved any', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.loadProgress()).toBeNull();
+    client.answers.player_progress = { data: { progress: { gallery: ['watch_casio'] } }, error: null };
+    expect(await cloud.loadProgress()).toEqual({ gallery: ['watch_casio'] });
+    expect(client.asked[1]).toEqual(['player_progress', ['select', 'progress'], ['maybeSingle']]);
+    client.answers.player_progress = { data: null, error: new Error('offline') };
+    await expect(cloud.loadProgress()).rejects.toThrow('offline');
+  });
+
+  it('writes what the player has unlocked as their own row', async () => {
+    client.answers.getSession = signedIn;
+    const cloud = await connectSupabase('u', 'k');
+    const progress = { badges: {}, gallery: ['watch_casio'], unlocked: {}, guide: { seen: [], off: false } };
+    await cloud.saveProgress(progress);
+    expect(client.asked).toEqual([['player_progress', ['upsert', { user_id: 'u-1', progress }, { onConflict: 'user_id' }]]]);
+    client.answers.player_progress = { error: new Error('offline') };
+    await expect(cloud.saveProgress(progress)).rejects.toThrow('offline');
+    // With nobody signed in there is no row to write, and it does not ask.
+    client.asked.length = 0;
+    client.answers.getSession = { data: { session: null }, error: null };
+    await expect(cloud.saveProgress(progress)).rejects.toThrow('nobody is signed in');
+    expect(client.asked).toEqual([]);
+  });
+
+  it('reads the player\'s own finished lives, though every player\'s can be read', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.runs = { data: [{ id: 'r-1', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', score: 321, net_worth: 9_000_000, status: 30, escaped_at_round: null, bankruptcies: 1, badges: ['escaped'], cities: null, history: ['1', 2], finished_at: '2026-10-01T08:00:00Z' }], error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.listRuns()).toEqual([{ id: 'r-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', score: 321, netWorth: 9_000_000, status: 30, escapedAtRound: null, bankruptcies: 1, badges: ['escaped'], cities: [], history: [1, 2], finishedAt: '2026-10-01T08:00:00Z' }]);
+    expect(client.asked[0].slice(2)).toEqual([['eq', 'user_id', 'u-1'], ['order', 'finished_at', { ascending: false }], ['limit', 200]]);
+    client.answers.runs = { data: null, error: new Error('offline') };
+    await expect(cloud.listRuns()).rejects.toThrow('offline');
+  });
+
+  it('asks the server to finish a life, and tells a refusal from a failure to ask', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.finishRun('g-1')).toBe('done');
+    expect(client.asked).toEqual([['invoke', 'finish-run', { body: { gameId: 'g-1' } }]]);
+    // The function's own answers: asking again would get the same one.
+    for (const status of [400, 404, 409, 422]) {
+      client.answers.invoke = { data: null, error: { context: { status } } };
+      expect(await cloud.finishRun('g-1')).toBe('refused');
+    }
+    // Not signed in just now, too many requests, the server down, no network: all worth another try.
+    for (const context of [{ status: 401 }, { status: 429 }, { status: 500 }, { status: 503 }, undefined, new TypeError('failed to fetch')]) {
+      client.answers.invoke = { data: null, error: { context } };
+      expect(await cloud.finishRun('g-1')).toBe('failed');
+    }
   });
 });

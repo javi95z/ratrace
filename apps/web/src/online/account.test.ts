@@ -4,6 +4,16 @@ import { noticeIn, SupabaseAccount } from './supabase';
 import type { Cloud, CloudUser } from './supabase';
 
 const guest: CloudUser = { id: 'user-1', is_anonymous: true, email: undefined };
+/** The account tests are about who is signed in; what syncs is the mirror's business and has its own tests. */
+const NO_SYNC = {
+  playingGames: async () => [],
+  pushGame: async () => 'saved' as const,
+  abandonGame: async () => {},
+  loadProgress: async () => null,
+  saveProgress: async () => {},
+  listRuns: async () => [],
+  finishRun: async () => 'done' as const,
+};
 const member: CloudUser = { id: 'user-1', is_anonymous: false, email: 'ana@example.com' };
 
 /** A cloud that remembers what it was asked, and answers as told. */
@@ -33,6 +43,7 @@ function fakeCloud(over: Partial<Cloud> = {}) {
         onChange = () => {};
       };
     },
+    ...NO_SYNC,
     ...over,
   };
   return { cloud, calls, tell: (user: CloudUser | null) => onChange(user) };

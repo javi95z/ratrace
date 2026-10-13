@@ -97,9 +97,13 @@ describe('the life in progress, from two places', () => {
     expect(stepsOf('not a log')).toBe(0);
   });
 
-  it('takes the account\'s life when the device has none, or only one that is over', () => {
+  it('takes the account\'s life when the device has none', () => {
     expect(chooseGame(null, [cloudGame('x', 3)], VERSIONS)).toEqual({ take: 'cloud', game: cloudGame('x', 3) });
-    expect(chooseGame({ gameId: 'old', steps: 40, finished: true }, [cloudGame('x', 3)], VERSIONS)).toEqual({ take: 'cloud', game: cloudGame('x', 3) });
+  });
+
+  it('leaves a life that is over on the device, where its score can still be looked at, and offers the account\'s', () => {
+    expect(chooseGame({ gameId: 'old', steps: 40, finished: true }, [cloudGame('x', 3)], VERSIONS)).toEqual({ take: 'device', offer: cloudGame('x', 3) });
+    expect(chooseGame({ gameId: 'old', steps: 40, finished: true }, [], VERSIONS)).toEqual({ take: 'device', offer: null });
   });
 
   it('keeps the device\'s life when the account has none', () => {

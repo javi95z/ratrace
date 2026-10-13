@@ -6,6 +6,7 @@ import { SAVE_FORMAT } from '@/session/types';
 import type { FinishedRun, PlayerStore, Profile, SavedGame } from '@/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
+import type { AccountLife, AccountSaves, CloudSaving, DeviceChange } from './types';
 
 /** A life in progress, as it is sent to the account. */
 export interface GameUpload {
@@ -40,8 +41,12 @@ export interface CloudRun {
 export interface SyncCloud {
   /** The player's lives still being played, the latest first. */
   playingGames(): Promise<CloudGame[]>;
-  /** Saves the player's own life in progress. `closed` if the account holds it as abandoned or finished. */
+  /**
+   * Saves the player's own life as one being played, which takes up again one that was given up.
+   * `closed` if the server has finished it: that one stays as it is.
+   */
   pushGame(game: GameUpload): Promise<'saved' | 'closed'>;
+  /** Gives up a life that is being played. It is no longer offered to the player's other devices. */
   abandonGame(id: string): Promise<void>;
   loadProgress(): Promise<unknown>;
   saveProgress(progress: Progress): Promise<void>;
@@ -51,22 +56,33 @@ export interface SyncCloud {
   finishRun(gameId: string): Promise<'done' | 'refused' | 'failed'>;
 }
 
-/** Whether what is on the device is also in the account: there is no account, not yet, or yes. */
-export type CloudSaving = 'off' | 'pending' | 'saved';
-
-/** What a sync changed on the device, for whoever shows it. */
-export type DeviceChange = 'game' | 'profile' | 'runs';
-
 interface Options {
   content: Content;
   lives: ReadonlyArray<LifeDef>;
   /** The versions this build plays. A life on others is left alone in the account. */
   versions: { engine: string; content: string };
-  /** Asks for a sync a little later. Many writes in a row ask many times and are answered by one sync. */
-  schedule?(run: () => void): void;
-  /** How many finished lives one sync asks the server to finish. The rest wait for the next. */
+  /** Does `run` in `ms` milliseconds. A test hands in its own, and runs it when it likes. */
+  schedule?(run: () => Promise<void>, ms: number): void;
+  /** How many finished lives one go asks the server to finish. The rest follow a little later. */
   finishPerSync?: number;
+  /** Where the lives given up are noted until the account has been told, so that closing the page does not forget them. */
+  remember?: { read(): string[]; write(ids: string[]): void };
 }
+
+/** What the account held when it was last read, kept up with what has been sent to it since. */
+interface Known {
+  /** The lives the server has finished. */
+  finished: Set<string>;
+  progress: Progress;
+}
+
+/** How long after a write it is sent: long enough for a burst of writes to go as one. */
+const SOON = 1_500;
+/** How long before the next few finished lives are sent, when there are more than one go takes. */
+const NEXT_FEW = 5_000;
+/** How long after a failure the first new try comes. Each one after waits twice as long, up to the longest. */
+const RETRY = 30_000;
+const LONGEST_RETRY = 300_000;
 
 const asRun = (run: CloudRun): FinishedRun => ({
   format: SAVE_FORMAT,
@@ -89,7 +105,7 @@ const asRun = (run: CloudRun): FinishedRun => ({
   verified: false,
 });
 
-const uploadOf = (save: Pick<SavedGame, 'gameId' | 'lifeId' | 'engineVersion' | 'contentVersion' | 'seed' | 'log' | 'state'>): GameUpload => ({
+const uploadOf = (save: SavedGame): GameUpload => ({
   id: save.gameId,
   lifeId: save.lifeId,
   engineVersion: save.engineVersion,
@@ -99,33 +115,46 @@ const uploadOf = (save: Pick<SavedGame, 'gameId' | 'lifeId' | 'engineVersion' | 
   log: save.log,
   stateHash: stateHash(save.state),
 });
+/** A life and how it stands, in a word: two of these are equal when there is nothing new to send. */
+const standing = (upload: GameUpload): string => `${upload.id} ${upload.stateHash}`;
 
 /**
  * The player's store, with the account as its mirror.
  *
  * The device is written first and is always enough: every read comes from it, and no write waits
- * for the network. A sync then brings the two together. It takes down what the device lacks,
- * sends up what the account lacks, and never fails: with no connection it leaves the device as it
- * is and tries again when asked. Nothing is queued write by write, because a sync sends the whole
- * of what the device has.
+ * for the network. The account follows. When the two meet (the page opens, the connection comes
+ * back, someone signs in) the account is read, and the device takes what it lacks. After that
+ * every write is sent, and the account is not read again for it. Nothing is queued write by
+ * write, because what is sent is always the whole of what the device has; and nothing here ever
+ * fails: with no connection the device is simply ahead for a while.
  */
-export class MirroredStore implements PlayerStore {
+export class MirroredStore implements PlayerStore, AccountSaves {
   private state: CloudSaving = 'off';
   private readonly watchers = new Set<() => void>();
   private readonly changes = new Set<(what: DeviceChange) => void>();
-  /** Lives the device gave up for another one, still to be marked so in the account. */
-  private readonly abandoned = new Set<string>();
-  private offered: CloudGame | null = null;
-  private running: Promise<void> | null = null;
-  private again = false;
-  /** The game last sent and how it stood, so that a sync with nothing new to say about it says nothing. */
+  /** Lives the device gave up, still to be marked so in the account. */
+  private readonly abandoned: Set<string>;
+  /** A different life waiting in the account: the save it would open as, and what a screen is told of it. */
+  private offered: { save: SavedGame; life: AccountLife } | null = null;
+  private known: Known | null = null;
+  /** The life last sent and how it stood, so that nothing is sent when there is nothing new to say. */
   private sent: string | null = null;
+  /** Finished lives the server would not take. They are not sent to it again until the page is opened anew. */
+  private readonly refused = new Set<string>();
+
+  private running: Promise<void> | null = null;
+  /** What has been asked for and not begun: nothing, sending what the device has, or reading the account first. */
+  private wanted: 'nothing' | 'send' | 'meet' = 'nothing';
+  private failures = 0;
+  private retrying = false;
 
   constructor(
     private readonly device: PlayerStore,
     private readonly cloud: () => SyncCloud | null,
     private readonly options: Options,
-  ) {}
+  ) {
+    this.abandoned = new Set(options.remember?.read() ?? []);
+  }
 
   // ------------------------------------------------------------------ the device, as it always was
   readonly loadGame = (): Promise<unknown> => this.device.loadGame();
@@ -154,15 +183,21 @@ export class MirroredStore implements PlayerStore {
     this.poke();
   };
 
-  /** A life in progress that is about to give way to another is abandoned in the account too. */
+  /** A life in progress that is about to give way to another is given up in the account too. */
   private async noteReplaced(next: string | null): Promise<void> {
     const current = this.open(await this.device.loadGame().catch(() => null));
-    if (current !== null && current.gameId !== next && !current.state.finished) this.abandoned.add(current.gameId);
+    if (current !== null && current.gameId !== next && !current.state.finished) this.giveUp(current.gameId);
+  }
+
+  private giveUp(id: string): void {
+    this.abandoned.add(id);
+    this.options.remember?.write([...this.abandoned]);
   }
 
   // ------------------------------------------------------------------ what whoever shows it can ask
   readonly status = (): CloudSaving => this.state;
 
+  /** Calls `listener` when the status or the offer changes. Returns how to stop. */
   readonly subscribe = (listener: () => void): (() => void) => {
     this.watchers.add(listener);
     return () => {
@@ -170,7 +205,7 @@ export class MirroredStore implements PlayerStore {
     };
   };
 
-  /** Calls `listener` when a sync has changed what the device holds. Returns how to stop. */
+  /** Calls `listener` when the account has changed what the device holds. Returns how to stop. */
   readonly onDeviceChanged = (listener: (what: DeviceChange) => void): (() => void) => {
     this.changes.add(listener);
     return () => {
@@ -179,53 +214,122 @@ export class MirroredStore implements PlayerStore {
   };
 
   /** A different life in progress waiting in the account, if there is one. It is never taken unasked. */
-  readonly offer = (): { gameId: string; lifeId: string; round: number } | null =>
-    this.offered === null ? null : { gameId: this.offered.id, lifeId: this.offered.lifeId, round: this.offered.round };
+  readonly offer = (): AccountLife | null => this.offered?.life ?? null;
 
-  /** Takes the offered life in place of the device's own, which is abandoned. False if there was none, or it could not be opened. */
+  /**
+   * Takes the offered life in place of the device's own, which is given up. False if there was none.
+   * Whoever asked is not told that the device changed: they know. The account is then read again,
+   * so if the life has been played further since it was offered, it is the further copy that stays.
+   */
   readonly takeOffer = async (): Promise<boolean> => {
     const offered = this.offered;
     if (offered === null) return false;
-    const save = this.adopt(offered);
-    if (save === null) return false;
-    await this.noteReplaced(save.gameId);
-    await this.device.saveGame(save);
-    this.offered = null;
-    this.tell('game');
-    this.poke();
+    await this.noteReplaced(offered.save.gameId);
+    await this.device.saveGame(offered.save);
+    this.sent = standing(uploadOf(offered.save));
+    this.setOffer(null);
+    this.later(() => this.sync(), 0);
     return true;
   };
 
-  /**
-   * Brings the device and the account together. Never throws. One runs at a time; asked again
-   * meanwhile, it runs once more when the first is done, so the latest writes are not missed.
-   */
-  readonly sync = (): Promise<void> => {
-    if (this.running !== null) {
-      this.again = true;
-      return this.running;
-    }
-    this.running = (async () => {
-      do {
-        this.again = false;
-        await this.pass();
-      } while (this.again);
-    })().finally(() => {
-      this.running = null;
-    });
-    return this.running;
+  /** Ends the offered life in the account instead. The life on the device is left as it is. */
+  readonly declineOffer = async (): Promise<void> => {
+    const offered = this.offered;
+    if (offered === null) return;
+    this.giveUp(offered.save.gameId);
+    this.setOffer(null);
+    this.poke();
   };
 
-  // ------------------------------------------------------------------ the sync itself
-  private poke(): void {
-    if (this.cloud() === null) return;
-    this.set('pending');
-    (this.options.schedule ?? ((run) => setTimeout(run, 1_500)))(() => void this.sync());
+  /**
+   * Brings the device and the account together: reads the account, takes what the device lacks,
+   * sends what the account lacks. Never throws. One runs at a time; asked again meanwhile, it runs
+   * once more when the first is done, so the latest writes are not missed.
+   */
+  readonly sync = (): Promise<void> => this.run('meet');
+
+  /** Someone else is signed in now: nothing is assumed about what their account holds. */
+  readonly accountChanged = async (): Promise<void> => {
+    while (this.running !== null) await this.running;
+    this.known = null;
+    this.sent = null;
+    this.refused.clear();
+    this.setOffer(null);
+    return this.run('meet');
+  };
+
+  // ------------------------------------------------------------------ when it runs
+  private later(run: () => Promise<void>, ms: number): void {
+    (this.options.schedule ?? ((go, wait) => void setTimeout(() => void go(), wait)))(run, ms);
   }
 
+  /** The device has written something: it is sent a little later, with whatever else is written until then. */
+  private poke(): void {
+    if (this.cloud() === null) return;
+    if (this.state !== 'waiting') this.set('sending');
+    this.later(() => this.run('send'), SOON);
+  }
+
+  private run(what: 'send' | 'meet'): Promise<void> {
+    if (what === 'meet' || this.wanted === 'nothing') this.wanted = what;
+    return (this.running ??= this.drain());
+  }
+
+  private async drain(): Promise<void> {
+    // Not in the same breath as whoever asked: `running` is theirs to read before the first pass begins.
+    await Promise.resolve();
+    try {
+      while (this.wanted !== 'nothing') {
+        const meet = this.wanted === 'meet';
+        this.wanted = 'nothing';
+        await this.pass(meet);
+      }
+    } finally {
+      this.running = null;
+    }
+  }
+
+  private async pass(meet: boolean): Promise<void> {
+    const cloud = this.cloud();
+    if (cloud === null) {
+      this.set('off');
+      return;
+    }
+    if (this.state === 'off') this.set('sending');
+    try {
+      await this.giveUpThere(cloud);
+      if (meet || this.known === null) this.known = await this.meet(cloud);
+      const outcome = await this.send(cloud, this.known, meet);
+      if (outcome === 'failed') throw new Error('the server could not be asked');
+      this.failures = 0;
+      this.set(outcome === 'more' ? 'sending' : 'saved');
+      if (outcome === 'more') this.later(() => this.run('send'), NEXT_FEW);
+    } catch {
+      // No connection, or the account would not answer. The device has everything, and what it has is sent
+      // whole by the next try: one comes by itself, later each time, and any write or return of the connection is one too.
+      this.set('waiting');
+      if (!this.retrying) {
+        this.retrying = true;
+        const wait = Math.min(RETRY * 2 ** this.failures, LONGEST_RETRY);
+        this.failures += 1;
+        this.later(() => {
+          this.retrying = false;
+          return this.run('meet');
+        }, wait);
+      }
+    }
+  }
+
+  // ------------------------------------------------------------------ what it does
   private set(next: CloudSaving): void {
     if (this.state === next) return;
     this.state = next;
+    for (const watcher of this.watchers) watcher();
+  }
+
+  private setOffer(next: SavedGame | null): void {
+    if ((this.offered?.save.gameId ?? null) === (next?.gameId ?? null) && this.offered?.save.state.round === next?.state.round) return;
+    this.offered = next === null ? null : { save: next, life: { gameId: next.gameId, lifeId: next.lifeId, round: next.state.round, cityId: next.state.player.cityId } };
     for (const watcher of this.watchers) watcher();
   }
 
@@ -239,84 +343,116 @@ export class MirroredStore implements PlayerStore {
     return opened.ok ? opened.save : null;
   }
 
-  /** A life from the account as a save of this device: rebuilt by playing its log again, so a bad copy cannot be opened as sound. */
+  /**
+   * A life from the account as a save of this device: rebuilt by playing its log again, so a copy
+   * that has been damaged or tampered with cannot be opened as sound. Null if it cannot, or if it is over.
+   */
   private adopt(game: CloudGame): SavedGame | null {
-    return this.open({ format: SAVE_FORMAT, gameId: game.id, engineVersion: game.engineVersion, contentVersion: game.contentVersion, lifeId: game.lifeId, seed: game.seed, log: game.log, updatedAt: Date.parse(game.updatedAt) || 0 });
+    const save = this.open({ format: SAVE_FORMAT, gameId: game.id, engineVersion: game.engineVersion, contentVersion: game.contentVersion, lifeId: game.lifeId, seed: game.seed, log: game.log, updatedAt: Date.parse(game.updatedAt) || 0 });
+    return save === null || save.state.finished ? null : save;
   }
 
-  /** Sends the life in progress, unless it stands exactly as it did when it was last sent. */
-  private async send(cloud: SyncCloud, upload: GameUpload): Promise<void> {
-    const standing = `${upload.id} ${upload.stateHash}`;
-    if (standing === this.sent) return;
-    await cloud.pushGame(upload);
-    this.sent = standing;
+  /** Marks in the account the lives the device gave up. First of all, or they would come back as lives waiting there. */
+  private async giveUpThere(cloud: SyncCloud): Promise<void> {
+    if (this.abandoned.size === 0) return;
+    const current = this.open(await this.device.loadGame());
+    for (const id of [...this.abandoned]) {
+      if (id !== current?.gameId) await cloud.abandonGame(id);
+      this.abandoned.delete(id);
+      this.options.remember?.write([...this.abandoned]);
+    }
   }
 
-  private async pass(): Promise<void> {
-    const cloud = this.cloud();
-    if (cloud === null) {
-      this.set('off');
-      return;
+  /** Reads the account, and gives the device what it lacks: a life in progress, and the lives finished elsewhere. */
+  private async meet(cloud: SyncCloud): Promise<Known> {
+    const runs = await cloud.listRuns();
+    const finished = new Set(runs.map((run) => run.id));
+    let moved = false;
+
+    let current = this.open(await this.device.loadGame());
+    // A life this device was still living that has been lived to the end elsewhere is over here too.
+    // Its result is among the finished lives.
+    if (current !== null && !current.state.finished && finished.has(current.gameId)) {
+      await this.device.clearGame();
+      current = null;
+      moved = true;
     }
-    this.set('pending');
-    try {
-      const cloudRuns = await cloud.listRuns();
-      const finishedThere = new Set(cloudRuns.map((run) => run.id));
 
-      // The life in progress: which copy is played here. What the device gave up is marked so first,
-      // or it would come back as a life waiting in the account.
-      let current = this.open(await this.device.loadGame());
-      for (const id of [...this.abandoned]) {
-        if (id !== current?.gameId) await cloud.abandonGame(id);
-        this.abandoned.delete(id);
+    // Which life is played here. A copy that does not play back to a sound life is passed over, and the next is tried.
+    let games = await cloud.playingGames();
+    let waiting: SavedGame | null = null;
+    for (;;) {
+      const choice = chooseGame(current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished }, games, this.options.versions);
+      const candidate = choice.take === 'cloud' ? choice.game : choice.offer;
+      if (candidate === null) break;
+      games = games.filter((game) => game !== candidate);
+      const save = this.adopt(candidate);
+      if (save === null) continue;
+      if (choice.take === 'device') {
+        waiting = save;
+        break;
       }
-      const choice = chooseGame(current === null ? null : { gameId: current.gameId, steps: stepsOf(current.log), finished: current.state.finished }, await cloud.playingGames(), this.options.versions);
-      if (choice.take === 'cloud') {
-        const taken = this.adopt(choice.game);
-        if (taken !== null) {
-          await this.device.saveGame(taken);
-          current = taken;
-          this.tell('game');
-        }
-        this.offered = null;
-      } else {
-        this.offered = choice.offer;
-        // A life the server has already finished is closed in the account: there is nothing to send.
-        if (current !== null && !finishedThere.has(current.gameId)) await this.send(cloud, uploadOf(current));
-      }
-
-      // What is unlocked: both sides end with everything either had.
-      const profile = await this.device.loadProfile();
-      const here = progressOf(profile);
-      const there = readProgress(await cloud.loadProgress());
-      const both = mergeProgress(here, there);
-      if (!sameProgress(both, here)) {
-        await this.device.saveProfile(withProgress(profile, both));
-        this.tell('profile');
-      }
-      if (!sameProgress(both, there)) await cloud.saveProgress(both);
-
-      // Finished lives: the server finishes the ones it has not seen, and the device learns of the ones it has not lived.
-      const mine = await this.device.listRuns();
-      const { versions, finishPerSync = 5 } = this.options;
-      const unfinished = mine.filter((run) => !finishedThere.has(run.runId) && run.seed !== '' && run.engineVersion === versions.engine && run.contentVersion === versions.content);
-      let behind = unfinished.length > finishPerSync;
-      for (const run of unfinished.slice(0, finishPerSync)) {
-        // The server finishes a life from the game it has been sent: the whole of it goes up first,
-        // unless it is the life still on the device, which has just gone.
-        if (run.runId !== current?.gameId) {
-          await cloud.pushGame({ id: run.runId, lifeId: run.lifeId, engineVersion: run.engineVersion, contentVersion: run.contentVersion, seed: run.seed, round: this.options.content.rounds, log: run.log, stateHash: '' });
-        }
-        if ((await cloud.finishRun(run.runId)) === 'failed') behind = true;
-      }
-      const { added } = mergeRuns(mine, cloudRuns.map(asRun));
-      for (const run of added) await this.device.addRun(run);
-      if (added.length > 0) this.tell('runs');
-
-      this.set(behind ? 'pending' : 'saved');
-    } catch {
-      // No connection, or the account would not answer. The device has everything; the next sync sends it.
-      this.set('pending');
+      await this.device.saveGame(save);
+      this.sent = standing(uploadOf(save));
+      current = save;
+      moved = true;
     }
+    this.setOffer(waiting);
+    if (moved) this.tell('game');
+
+    const progress = readProgress(await cloud.loadProgress());
+
+    const { added } = mergeRuns(await this.device.listRuns(), runs.map(asRun));
+    for (const run of added) await this.device.addRun(run);
+    if (added.length > 0) this.tell('runs');
+    return { finished, progress };
+  }
+
+  /**
+   * Sends what the device has that the account, as far as is known, lacks. `more` if there are
+   * finished lives left for another go; `failed` if the server could not be asked to finish one.
+   */
+  private async send(cloud: SyncCloud, known: Known, justMet: boolean): Promise<'all' | 'more' | 'failed'> {
+    // The life in progress, unless it stands exactly as it did when it was last sent.
+    const current = this.open(await this.device.loadGame());
+    if (current !== null && !known.finished.has(current.gameId)) {
+      const upload = uploadOf(current);
+      if (standing(upload) !== this.sent) {
+        // Closed means the server has finished this life, and that is news: the account is read again.
+        if ((await cloud.pushGame(upload)) === 'closed' && !justMet) this.wanted = 'meet';
+        this.sent = standing(upload);
+      }
+    }
+
+    // What is unlocked: both sides end with everything either had.
+    const profile = await this.device.loadProfile();
+    const here = progressOf(profile);
+    const both = mergeProgress(here, known.progress);
+    if (!sameProgress(both, here)) {
+      await this.device.saveProfile(withProgress(profile, both));
+      this.tell('profile');
+    }
+    if (!sameProgress(both, known.progress)) {
+      await cloud.saveProgress(both);
+      known.progress = both;
+    }
+
+    // Finished lives the server has not seen: it is sent the whole game, and finishes it itself.
+    const { versions, finishPerSync = 5 } = this.options;
+    const unseen = (await this.device.listRuns()).filter(
+      (run) => !known.finished.has(run.runId) && !this.refused.has(run.runId) && run.seed !== '' && run.engineVersion === versions.engine && run.contentVersion === versions.content,
+    );
+    for (const run of unseen.slice(0, finishPerSync)) {
+      // The life still on the device has just gone up.
+      if (run.runId !== current?.gameId) {
+        await cloud.pushGame({ id: run.runId, lifeId: run.lifeId, engineVersion: run.engineVersion, contentVersion: run.contentVersion, seed: run.seed, round: this.options.content.rounds, log: run.log, stateHash: '' });
+      }
+      const answer = await cloud.finishRun(run.runId);
+      if (answer === 'failed') return 'failed';
+      if (answer === 'done') known.finished.add(run.runId);
+      // It answered, and would not: asking again will not change its mind.
+      else this.refused.add(run.runId);
+    }
+    return unseen.length > finishPerSync ? 'more' : 'all';
   }
 }
