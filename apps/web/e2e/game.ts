@@ -86,14 +86,33 @@ export async function answerHand(page: Page, lang: Lang, pick = 0) {
   }
 }
 
-/** Plays one whole round from its news: the cards, no orders, the ledger. Leaves the page on the ledger. */
+/**
+ * Moves on from whatever moment has stopped the game: a crisis opening on the news, or a
+ * bankruptcy, the first million or the way out on a round's result. Each has the screen to itself
+ * until its own button is pressed, and one may follow another. A round that brings none is left as it is.
+ */
+export async function pastMoments(page: Page) {
+  const moment = page.locator('[data-moment]');
+  const title = page.getByRole('dialog').getByRole('heading');
+  while (await moment.isVisible()) {
+    const shown = await title.textContent();
+    await moment.getByRole('button').click();
+    // Gone, or the next one in its place.
+    await expect.poll(async () => !(await moment.isVisible()) || (await title.textContent()) !== shown).toBe(true);
+    await settle(page);
+  }
+}
+
+/** Plays one whole round from its news: the cards, no orders, the ledger. Leaves the page on the ledger, with nothing in front of it. */
 export async function playRound(page: Page, lang: Lang, pick = 0) {
   const w = WORDS[lang];
+  await pastMoments(page);
   await page.getByRole('button', { name: w.toCards }).click();
   await answerHand(page, lang, pick);
   await page.getByRole('button', { name: w.play }).click();
   await expect(page.getByRole('heading', { name: w.later })).toBeVisible();
   await settle(page);
+  await pastMoments(page);
 }
 
 /**
