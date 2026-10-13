@@ -10,12 +10,17 @@
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import { GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
+import { allowed } from '../_shared/rate.ts';
 import { replayRequest } from '../_shared/replay.ts';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req: Request) => {
+  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+    const userId = ctx.userClaims?.id;
+    if (typeof userId !== 'string') return json(401, { error: 'no-player' });
     const read = await readJson(req);
     if ('refusal' in read) return read.refusal;
+    // Every call plays a life again: a player may ask so often and no more.
+    if (!(await allowed(ctx.supabaseAdmin, userId, 'engine'))) return json(429, { error: 'too-many' });
     const reply = replayRequest(GAMES, read.value);
     return json(reply.status, reply.body);
   }),

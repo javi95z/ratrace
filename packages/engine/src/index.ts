@@ -1,5 +1,6 @@
 export * from './types';
 export { ENGINE_VERSION } from './version';
+export { SEED_BITS } from './rng';
 export type { RngState } from './rng';
 export type { Bp, Cents } from './money';
 export { createGame, applyCard, applyCards, applyRound, previewRound } from './game';

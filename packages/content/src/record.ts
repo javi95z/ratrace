@@ -44,15 +44,25 @@ export interface Replayed extends LifeRecord {
   state: GameState;
 }
 
+/** One step of a life being played again: what happened in it, the badges it earned, and the record after it. */
+export interface ReplayedStep {
+  events: GameEvent[];
+  earned: string[];
+  record: LifeRecord;
+}
+
 /**
  * Plays a life again from its seed and the log of what the player chose, keeping its record
  * alongside. The engine is deterministic, so this gives back exactly the life that was lived.
- * It throws on a log that cannot have been played.
+ * It throws on a log that cannot have been played. `onStep` hears of every card and every round,
+ * which is how a server that plays a life finds what its last step did.
  */
-export function replayLife(content: Content, start: StartConfig, seed: string, log: readonly LoggedRound[]): Replayed {
+export function replayLife(content: Content, start: StartConfig, seed: string, log: readonly LoggedRound[], onStep?: (step: ReplayedStep) => void): Replayed {
   let record: LifeRecord | null = null;
   const state = replayLog(content, start, seed, log, (before, result, orders) => {
-    record = recordStep(content, record ?? recordStart(content, before), before, result.state, result.events, orders ?? []).record;
+    const step = recordStep(content, record ?? recordStart(content, before), before, result.state, result.events, orders ?? []);
+    record = step.record;
+    onStep?.({ events: result.events, earned: step.earned, record: step.record });
   });
   // A life not begun has taken no step: its record is the one it starts with.
   return { state, ...((record as LifeRecord | null) ?? recordStart(content, state)) };

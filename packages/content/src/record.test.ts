@@ -132,4 +132,18 @@ describe('a life played again from its log', () => {
     const { start, log } = lived('bad', 1);
     expect(() => replayLife(content, start, 'bad', [{ picks: [], orders: null }, log[0]])).toThrow('the log goes on after a round that was never played');
   });
+
+  it('tells of every step as it is played again: what happened, what it earned, and the record so far', () => {
+    // A server that plays a ranked life answers each step with these, and so must find the last one.
+    const { log, record } = lived('steps', 3);
+    const start = lives.find((life) => life.id === 'nurse')?.start;
+    if (!start) throw new Error('no nurse');
+    const heard: Array<{ events: number; earned: string[]; rounds: number }> = [];
+    const again = replayLife(content, start, 'steps', log, (step) => heard.push({ events: step.events.length, earned: step.earned, rounds: step.record.history.length - 1 }));
+    expect(heard).toHaveLength(log.reduce((steps, round) => steps + round.picks.length + 1, 0));
+    expect(heard[heard.length - 1].rounds).toBe(3);
+    expect(heard.every((step) => step.events > 0)).toBe(true);
+    expect(heard.flatMap((step) => step.earned)).toEqual(record.journal.earned);
+    expect(again.history).toEqual(record.history);
+  });
 });

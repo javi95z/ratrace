@@ -20,18 +20,33 @@ export interface Replayed {
   /** Net worth in start-of-game cents at the start and after every round. */
   history: number[];
   bankruptcies: number;
-  journal: { cities: string[]; earned: string[] };
+  journal: { cities: string[]; earned: string[] } & Record<string, unknown>;
+}
+
+/** One step of a life being played again. */
+export interface ReplayedStep {
+  events: unknown[];
+  /** The badges that step earned in this life. */
+  earned: string[];
 }
 
 export interface GameModule {
   ENGINE_VERSION: string;
   CONTENT_VERSION: string;
+  /**
+   * How many bits of a seed reach each random stream. Missing from the versions whose streams
+   * could be found by trying, which can finish a casual life but must never hold a ranked one.
+   */
+  SEED_BITS?: number;
   content: { rounds: number; maxOrdersPerRound: number };
-  lives: ReadonlyArray<{ id: string; start: unknown }>;
+  /** `unlock` is `default` for a life open from the start. Missing from the older versions. */
+  lives: ReadonlyArray<{ id: string; start: unknown; unlock?: unknown }>;
+  /** What a client may hold of a game: no seed, no saved random stream, no world to come. Missing from the older versions. */
+  viewOf?(state: unknown): { round: number; timeline: unknown[] } & Record<string, unknown>;
   /** Plays a game again from its seed and its log. Throws on a log that cannot have been played. */
   replayLog(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[]): GameState;
-  /** The same, keeping the record of the life alongside. */
-  replayLife(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[]): Replayed;
+  /** The same, keeping the record of the life alongside. The newer versions tell of every step as it is played. */
+  replayLife(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[], onStep?: (step: ReplayedStep) => void): Replayed;
   stateHash(state: unknown): string;
   finalScore(content: unknown, state: unknown): number;
   realNetWorth(state: unknown): number;

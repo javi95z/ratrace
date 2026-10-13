@@ -240,6 +240,69 @@ try {
   await phone.abandonGame(other);
   const theirs = [await stranger.playingGames(), await stranger.listRuns()] as const;
   check(theirs[0].length === 0 && !theirs[1].some((one) => one.id === whole) && (await stranger.loadProgress()) === null, 'another player finds none of it in their own account');
+
+  // A ranked life: the server keeps the seed and plays every step. Played here to its end, a step at a time.
+  type Answer = { data: Record<string, unknown> | null; error: unknown };
+  const askRanked = (who: typeof a, body: Record<string, unknown>) => who.functions.invoke('ranked', { body }) as Promise<Answer>;
+  const versions = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+  const given = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
+  const first = given.data as { gameId: string; step: number; view: { phase: string; finished: boolean; round: number; timeline: unknown[] } } | null;
+  check(statusOf(given) === 200 && first?.step === 0 && first.view.timeline.length === 1 && !('seed' in first.view) && !('rng' in first.view), 'the server starts a ranked life, and answers a view with no seed, no dice and no world to come');
+  if (!first) throw new Error('no ranked life was started');
+  const rankedId = first.gameId;
+  const row = await a.from('games').select('mode, seed, status, log').eq('id', rankedId).maybeSingle();
+  const hidden = await a.from('game_secrets').select('seed').eq('game_id', rankedId);
+  check(row.data?.mode === 'ranked' && row.data.seed === null && hidden.error !== null, 'its player can see the game and not its seed');
+  const forced = await a.from('games').update({ round: 19, log: [] }).eq('id', rankedId).select('id');
+  check((forced.data ?? []).length === 0, 'and cannot write to it');
+  check(statusOf(await askRanked(b, { action: 'view', gameId: rankedId })) === 404, 'another player knows nothing of it');
+
+  let standing = first.view;
+  let at = 0;
+  const once = await askRanked(a, { action: 'card', gameId: rankedId, step: 0, option: 0 });
+  const twice = await askRanked(a, { action: 'card', gameId: rankedId, step: 0, option: 0 });
+  check(statusOf(once) === 200 && isDeepStrictEqual(once.data, twice.data), 'a step asked for twice is played once, and answered the same');
+  check(statusOf(await askRanked(a, { action: 'card', gameId: rankedId, step: 7, option: 0 })) === 409, 'a step that is not the next is refused');
+  const take = (answer: Answer) => {
+    const body = answer.data as { step: number; view: typeof standing; world: unknown | null };
+    at = body.step;
+    standing = { ...body.view, timeline: body.world ? [...standing.timeline, body.world] : standing.timeline };
+  };
+  take(once);
+  let leaked = false;
+  let lastAnswer: Answer = once;
+  for (let guard = 0; guard < 400 && !standing.finished; guard++) {
+    lastAnswer = await askRanked(a, standing.phase === 'cards' ? { action: 'card', gameId: rankedId, step: at, option: 0 } : { action: 'round', gameId: rankedId, step: at, orders: [] });
+    if (statusOf(lastAnswer) !== 200) throw new Error(`a ranked step was refused with ${statusOf(lastAnswer)}`);
+    take(lastAnswer);
+    // What a client holds never runs ahead of the round it is in.
+    if (standing.timeline.length !== standing.round + 1) leaked = true;
+  }
+  const rankedRun = (lastAnswer.data as { run?: { id: string; mode: string; verified: boolean; score: number; history: number[] } } | null)?.run;
+  check(standing.finished && !leaked && rankedRun?.mode === 'ranked' && rankedRun.verified === true && rankedRun.history.length === content.rounds + 1, 'the life is played to its end on the server, which writes the run as a ranked one');
+  const closedNow = await a.from('games').select('status, round').eq('id', rankedId).maybeSingle();
+  check(closedNow.data?.status === 'finished' && closedNow.data.round === content.rounds, 'and closes the game');
+
+  // Names and friends, and the ranking that reads them.
+  const badName = await a.from('profiles').update({ nickname: 'Sh1t_head' }).eq('user_id', idA);
+  const goodName = await a.from('profiles').update({ nickname: `check_${idA.slice(0, 8)}` }).eq('user_id', idA);
+  check((badName.error as { code?: string } | null)?.code === 'RR002' && goodName.error === null, 'a name is refused for what it says, and an innocent one is taken');
+  const codeOfA = (await a.from('profiles').select('friend_code').eq('user_id', idA).maybeSingle()).data?.friend_code as string;
+  const followed = await b.rpc('add_friend', { code: codeOfA.toLowerCase() });
+  check(followed.data === 'ok' && (await b.rpc('add_friend', { code: 'ZZZZZZZZ' })).data === 'unknown', 'a player follows another by their code, and nobody by a code that is nobody\'s');
+  const board = await b.rpc('ranking', { period: 'week', friends: true });
+  const placed = ((board.data ?? []) as Array<{ user_id: string; score: number; nickname: string | null; place: number }>).find((one) => one.user_id === idA);
+  check(board.error === null && placed?.score === rankedRun?.score && placed?.nickname === `check_${idA.slice(0, 8)}`, 'the ranked life is in the ranking of the week among friends, under its player\'s name');
+  const everyone = await a.rpc('ranking', { top: 100 });
+  check(everyone.error === null && ((everyone.data ?? []) as Array<{ user_id: string }>).some((one) => one.user_id === idA) && (await nobody.rpc('ranking')).error !== null, 'and in the ranking of all time, which a visitor with no account cannot read');
+
+  const another = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
+  const second = (another.data as { gameId: string } | null)?.gameId ?? '';
+  const third = await askRanked(a, { action: 'start', lifeId: 'nurse', ...versions });
+  const firstOfTwo = await a.from('games').select('status').eq('id', second).maybeSingle();
+  check(statusOf(another) === 200 && statusOf(third) === 200 && firstOfTwo.data?.status === 'abandoned', 'starting a ranked life gives up the one in progress');
+  const givenUp = await askRanked(a, { action: 'abandon', gameId: (third.data as { gameId: string }).gameId });
+  check(statusOf(givenUp) === 200 && statusOf(await askRanked(a, { action: 'view', gameId: (third.data as { gameId: string }).gameId })) === 409, 'and a ranked life can be given up');
 } catch (error) {
   check(false, error instanceof Error ? error.message : String(error));
 } finally {

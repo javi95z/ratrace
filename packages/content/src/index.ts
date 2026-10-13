@@ -9,7 +9,7 @@ export { assetClassArt, badgeArt, cardArt, momentArt, cityArt, cityIcon, FAMILY_
 export { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE } from './badges';
 export type { BadgeDef, BadgeGroup, Journal, Step } from './badges';
 export { recordStart, recordStep, replayLife } from './record';
-export type { LifeRecord, Replayed } from './record';
+export type { LifeRecord, Replayed, ReplayedStep } from './record';
 export { WORTH_MARKS } from './story';
 export type { Milestone, Story } from './story';
 export { unlockedLives } from './unlocks';

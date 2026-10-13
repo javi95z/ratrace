@@ -11,6 +11,7 @@ import { finishRun } from '../_shared/finish.ts';
 import type { GameRow, RunRow } from '../_shared/finish.ts';
 import { GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
+import { allowed } from '../_shared/rate.ts';
 
 export default {
   fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
@@ -20,6 +21,8 @@ export default {
     if ('refusal' in read) return read.refusal;
 
     const db = ctx.supabaseAdmin;
+    // Every call plays a life again: a player may ask so often and no more. The game sends the rest later.
+    if (!(await allowed(db, userId, 'finish'))) return json(429, { error: 'too-many' });
     const must = <T>(result: { data: T; error: { message: string } | null }): T => {
       if (result.error) throw new Error(result.error.message);
       return result.data;

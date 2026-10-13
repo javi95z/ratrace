@@ -6,6 +6,201 @@ var ITEM_PERKS = ["moveCostOffPct", "studySkill", "salaryPct", "jobHuntPct", "fo
 // packages/engine/src/version.ts
 var ENGINE_VERSION = "0.10.0";
 
+// packages/engine/src/sha256.ts
+var K = [
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+];
+function utf8(text) {
+  const bytes = [];
+  for (let i = 0; i < text.length; i++) {
+    let code = text.charCodeAt(i);
+    if (code >= 55296 && code <= 56319) {
+      const low = i + 1 < text.length ? text.charCodeAt(i + 1) : 0;
+      if (low >= 56320 && low <= 57343) {
+        code = 65536 + (code - 55296 << 10) + (low - 56320);
+        i += 1;
+      } else code = 65533;
+    } else if (code >= 56320 && code <= 57343) code = 65533;
+    if (code < 128) bytes.push(code);
+    else if (code < 2048) bytes.push(192 | code >> 6, 128 | code & 63);
+    else if (code < 65536) bytes.push(224 | code >> 12, 128 | code >> 6 & 63, 128 | code & 63);
+    else bytes.push(240 | code >> 18, 128 | code >> 12 & 63, 128 | code >> 6 & 63, 128 | code & 63);
+  }
+  return bytes;
+}
+var rotr = (x, n) => x >>> n | x << 32 - n;
+function sha256(text) {
+  const bytes = utf8(text);
+  const bits = bytes.length * 8;
+  bytes.push(128);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  const high = Math.floor(bits / 4294967296);
+  const low = bits >>> 0;
+  bytes.push(high >>> 24 & 255, high >>> 16 & 255, high >>> 8 & 255, high & 255, low >>> 24 & 255, low >>> 16 & 255, low >>> 8 & 255, low & 255);
+  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
+  const w = new Array(64).fill(0);
+  for (let block = 0; block < bytes.length; block += 64) {
+    for (let t = 0; t < 16; t++) {
+      const at = block + t * 4;
+      w[t] = bytes[at] << 24 | bytes[at + 1] << 16 | bytes[at + 2] << 8 | bytes[at + 3] | 0;
+    }
+    for (let t = 16; t < 64; t++) {
+      const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ w[t - 15] >>> 3;
+      const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ w[t - 2] >>> 10;
+      w[t] = w[t - 16] + s0 + w[t - 7] + s1 | 0;
+    }
+    let [a, b, c, d, e, f, g, hh] = h;
+    for (let t = 0; t < 64; t++) {
+      const big1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const choose = e & f ^ ~e & g;
+      const t1 = hh + big1 + choose + K[t] + w[t] | 0;
+      const big0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const majority = a & b ^ a & c ^ b & c;
+      const t2 = big0 + majority | 0;
+      hh = g;
+      g = f;
+      f = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = t1 + t2 | 0;
+    }
+    h[0] = h[0] + a | 0;
+    h[1] = h[1] + b | 0;
+    h[2] = h[2] + c | 0;
+    h[3] = h[3] + d | 0;
+    h[4] = h[4] + e | 0;
+    h[5] = h[5] + f | 0;
+    h[6] = h[6] + g | 0;
+    h[7] = h[7] + hh | 0;
+  }
+  return h.map((word) => word >>> 0);
+}
+
+// packages/engine/src/rng.ts
+var SEED_BITS = 128;
+function seedRng(seed, stream) {
+  const [a, b, c, d] = sha256(`${seed}::${stream}`);
+  return [a, b, c, d];
+}
+var Rng = class {
+  a;
+  b;
+  c;
+  d;
+  constructor(state) {
+    [this.a, this.b, this.c, this.d] = state;
+  }
+  u32() {
+    this.a |= 0;
+    this.b |= 0;
+    this.c |= 0;
+    this.d |= 0;
+    const t = (this.a + this.b | 0) + this.d | 0;
+    this.d = this.d + 1 | 0;
+    this.a = this.b ^ this.b >>> 9;
+    this.b = this.c + (this.c << 3) | 0;
+    this.c = this.c << 21 | this.c >>> 11;
+    this.c = this.c + t | 0;
+    return t >>> 0;
+  }
+  /** Uniform in [0, 1). */
+  float() {
+    return this.u32() / 4294967296;
+  }
+  /** Uniform integer in [0, n). */
+  int(n) {
+    return Math.floor(this.float() * n);
+  }
+  /** True with the given probability in percent. */
+  chance(pct) {
+    return this.float() * 100 < pct;
+  }
+  /** Approximately standard normal: twelve uniforms summed, minus six. Range [-6, 6]. */
+  normal() {
+    let sum = 0;
+    for (let i = 0; i < 12; i++) sum += this.float();
+    return sum - 6;
+  }
+  pickWeighted(items2) {
+    let total = 0;
+    for (const [, weight] of items2) total += weight;
+    let r = this.float() * total;
+    for (const [item, weight] of items2) {
+      if (r < weight) return item;
+      r -= weight;
+    }
+    return items2[items2.length - 1][0];
+  }
+  snapshot() {
+    return [this.a >>> 0, this.b >>> 0, this.c >>> 0, this.d >>> 0];
+  }
+};
+
 // packages/engine/src/ids.ts
 function newId(p, prefix) {
   p.nextId += 1;
@@ -2167,200 +2362,6 @@ function newPlayer(content2, start, world2) {
   return p;
 }
 
-// packages/engine/src/sha256.ts
-var K = [
-  1116352408,
-  1899447441,
-  3049323471,
-  3921009573,
-  961987163,
-  1508970993,
-  2453635748,
-  2870763221,
-  3624381080,
-  310598401,
-  607225278,
-  1426881987,
-  1925078388,
-  2162078206,
-  2614888103,
-  3248222580,
-  3835390401,
-  4022224774,
-  264347078,
-  604807628,
-  770255983,
-  1249150122,
-  1555081692,
-  1996064986,
-  2554220882,
-  2821834349,
-  2952996808,
-  3210313671,
-  3336571891,
-  3584528711,
-  113926993,
-  338241895,
-  666307205,
-  773529912,
-  1294757372,
-  1396182291,
-  1695183700,
-  1986661051,
-  2177026350,
-  2456956037,
-  2730485921,
-  2820302411,
-  3259730800,
-  3345764771,
-  3516065817,
-  3600352804,
-  4094571909,
-  275423344,
-  430227734,
-  506948616,
-  659060556,
-  883997877,
-  958139571,
-  1322822218,
-  1537002063,
-  1747873779,
-  1955562222,
-  2024104815,
-  2227730452,
-  2361852424,
-  2428436474,
-  2756734187,
-  3204031479,
-  3329325298
-];
-function utf8(text) {
-  const bytes = [];
-  for (let i = 0; i < text.length; i++) {
-    let code = text.charCodeAt(i);
-    if (code >= 55296 && code <= 56319) {
-      const low = i + 1 < text.length ? text.charCodeAt(i + 1) : 0;
-      if (low >= 56320 && low <= 57343) {
-        code = 65536 + (code - 55296 << 10) + (low - 56320);
-        i += 1;
-      } else code = 65533;
-    } else if (code >= 56320 && code <= 57343) code = 65533;
-    if (code < 128) bytes.push(code);
-    else if (code < 2048) bytes.push(192 | code >> 6, 128 | code & 63);
-    else if (code < 65536) bytes.push(224 | code >> 12, 128 | code >> 6 & 63, 128 | code & 63);
-    else bytes.push(240 | code >> 18, 128 | code >> 12 & 63, 128 | code >> 6 & 63, 128 | code & 63);
-  }
-  return bytes;
-}
-var rotr = (x, n) => x >>> n | x << 32 - n;
-function sha256(text) {
-  const bytes = utf8(text);
-  const bits = bytes.length * 8;
-  bytes.push(128);
-  while (bytes.length % 64 !== 56) bytes.push(0);
-  const high = Math.floor(bits / 4294967296);
-  const low = bits >>> 0;
-  bytes.push(high >>> 24 & 255, high >>> 16 & 255, high >>> 8 & 255, high & 255, low >>> 24 & 255, low >>> 16 & 255, low >>> 8 & 255, low & 255);
-  const h = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225];
-  const w = new Array(64).fill(0);
-  for (let block = 0; block < bytes.length; block += 64) {
-    for (let t = 0; t < 16; t++) {
-      const at = block + t * 4;
-      w[t] = bytes[at] << 24 | bytes[at + 1] << 16 | bytes[at + 2] << 8 | bytes[at + 3] | 0;
-    }
-    for (let t = 16; t < 64; t++) {
-      const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ w[t - 15] >>> 3;
-      const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ w[t - 2] >>> 10;
-      w[t] = w[t - 16] + s0 + w[t - 7] + s1 | 0;
-    }
-    let [a, b, c, d, e, f, g, hh] = h;
-    for (let t = 0; t < 64; t++) {
-      const big1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-      const choose = e & f ^ ~e & g;
-      const t1 = hh + big1 + choose + K[t] + w[t] | 0;
-      const big0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-      const majority = a & b ^ a & c ^ b & c;
-      const t2 = big0 + majority | 0;
-      hh = g;
-      g = f;
-      f = e;
-      e = d + t1 | 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 | 0;
-    }
-    h[0] = h[0] + a | 0;
-    h[1] = h[1] + b | 0;
-    h[2] = h[2] + c | 0;
-    h[3] = h[3] + d | 0;
-    h[4] = h[4] + e | 0;
-    h[5] = h[5] + f | 0;
-    h[6] = h[6] + g | 0;
-    h[7] = h[7] + hh | 0;
-  }
-  return h.map((word) => word >>> 0);
-}
-
-// packages/engine/src/rng.ts
-function seedRng(seed, stream) {
-  const [a, b, c, d] = sha256(`${seed}::${stream}`);
-  return [a, b, c, d];
-}
-var Rng = class {
-  a;
-  b;
-  c;
-  d;
-  constructor(state) {
-    [this.a, this.b, this.c, this.d] = state;
-  }
-  u32() {
-    this.a |= 0;
-    this.b |= 0;
-    this.c |= 0;
-    this.d |= 0;
-    const t = (this.a + this.b | 0) + this.d | 0;
-    this.d = this.d + 1 | 0;
-    this.a = this.b ^ this.b >>> 9;
-    this.b = this.c + (this.c << 3) | 0;
-    this.c = this.c << 21 | this.c >>> 11;
-    this.c = this.c + t | 0;
-    return t >>> 0;
-  }
-  /** Uniform in [0, 1). */
-  float() {
-    return this.u32() / 4294967296;
-  }
-  /** Uniform integer in [0, n). */
-  int(n) {
-    return Math.floor(this.float() * n);
-  }
-  /** True with the given probability in percent. */
-  chance(pct) {
-    return this.float() * 100 < pct;
-  }
-  /** Approximately standard normal: twelve uniforms summed, minus six. Range [-6, 6]. */
-  normal() {
-    let sum = 0;
-    for (let i = 0; i < 12; i++) sum += this.float();
-    return sum - 6;
-  }
-  pickWeighted(items2) {
-    let total = 0;
-    for (const [, weight] of items2) total += weight;
-    let r = this.float() * total;
-    for (const [item, weight] of items2) {
-      if (r < weight) return item;
-      r -= weight;
-    }
-    return items2[items2.length - 1][0];
-  }
-  snapshot() {
-    return [this.a >>> 0, this.b >>> 0, this.c >>> 0, this.d >>> 0];
-  }
-};
-
 // packages/engine/src/news.ts
 var REGIMES3 = ["expansion", "boom", "slowdown", "recession", "recovery"];
 var PHASES3 = ["accumulation", "bull", "mania", "winter"];
@@ -4371,16 +4372,19 @@ function recordStep(content2, record, before, after, events, orders) {
     }
   };
 }
-function replayLife(content2, start, seed, log) {
+function replayLife(content2, start, seed, log, onStep) {
   let record = null;
   const state = replayLog(content2, start, seed, log, (before, result, orders) => {
-    record = recordStep(content2, record ?? recordStart(content2, before), before, result.state, result.events, orders ?? []).record;
+    const step = recordStep(content2, record ?? recordStart(content2, before), before, result.state, result.events, orders ?? []);
+    record = step.record;
+    onStep?.({ events: result.events, earned: step.earned, record: step.record });
   });
   return { state, ...record ?? recordStart(content2, state) };
 }
 export {
   CONTENT_VERSION,
   ENGINE_VERSION,
+  SEED_BITS,
   content,
   finalScore,
   livedStatus,
@@ -4388,5 +4392,6 @@ export {
   realNetWorth,
   replayLife,
   replayLog,
-  stateHash
+  stateHash,
+  viewOf
 };

@@ -426,3 +426,7 @@ verify_jwt = true
 # Finishes a casual life: plays its log again and writes the run. Signed-in players only.
 [functions.finish-run]
 verify_jwt = true
+
+# A ranked life: the server keeps the seed and plays every step. Signed-in players only.
+[functions.ranked]
+verify_jwt = true

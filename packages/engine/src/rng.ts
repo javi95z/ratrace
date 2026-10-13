@@ -3,6 +3,12 @@ import { sha256 } from './sha256';
 export type RngState = [number, number, number, number];
 
 /**
+ * How many bits of a seed reach each random stream. A game whose future must stay secret, a ranked
+ * one, needs a seed nobody can find by trying: a server asks for this before it starts one.
+ */
+export const SEED_BITS = 128;
+
+/**
  * Where a named stream of a game begins: the first 128 bits of SHA-256 of the seed and the
  * stream's name, which is the whole of the generator's state.
  *
