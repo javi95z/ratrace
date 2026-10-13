@@ -300,5 +300,6 @@ export const ru: ContentText = {
     depositDraw: 'Снято со сбережений',
     creditCardDraw: 'Легло на кредитную карту',
     creditCardRepay: 'Погашение кредитной карты',
+    dividendsReinvested: 'Дивиденды реинвестированы',
   },
 };
