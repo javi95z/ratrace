@@ -1,9 +1,44 @@
 import { applyBp, isAmount, mulDiv } from './money';
+import type { Cents } from './money';
 import { assetYieldBp, indexed } from './rates';
 import { ownedOutsidePension, totalOwed } from './solvency';
 import type { Content, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
 
 export type PortfolioOrder = Extract<Order, { type: 'buy' | 'sell' | 'depositIn' | 'depositOut' | 'pensionIn' }>;
+
+/**
+ * Sets, changes or ends the plan to buy an asset every round. Whether the asset may be bought is
+ * judged as for a purchase; whether there will be cash for it is each round's to find out.
+ */
+export function executeSetPlan(p: PlayerState, order: Extract<Order, { type: 'setPlan' }>, ctx: OrderContext): RejectReason | null {
+  if (order.amount !== 0 && !isAmount(order.amount)) return 'bad-amount';
+  const at = p.plans.findIndex((plan) => plan.assetId === order.assetId);
+  if (order.amount === 0) {
+    if (at >= 0) p.plans.splice(at, 1);
+    return null;
+  }
+  const asset = ctx.content.assets.find((a) => a.id === order.assetId);
+  if (!asset) return 'unknown-asset';
+  if ((asset.minFinanceSkill ?? 0) > p.life.financeSkill) return 'needs-finance-skill';
+  if (at >= 0) p.plans[at].amount = order.amount;
+  else p.plans.push({ assetId: order.assetId, amount: order.amount, invested: 0, rounds: 0 });
+  return null;
+}
+
+/**
+ * Runs the player's plans for the round, in the order they were made, each as a purchase like any
+ * other. A plan the round cannot pay for buys nothing this once and stays: nothing is borrowed for it.
+ */
+export function runPlans(p: PlayerState, ctx: OrderContext): Array<{ assetId: string; amount: Cents; reason: RejectReason | null }> {
+  return p.plans.map((plan) => {
+    const reason = executePortfolioOrder(p, { type: 'buy', assetId: plan.assetId, amount: plan.amount }, ctx);
+    if (reason === null) {
+      plan.invested += plan.amount;
+      plan.rounds += 1;
+    }
+    return { assetId: plan.assetId, amount: plan.amount, reason };
+  });
+}
 
 /**
  * Returns the reason for rejection, or null when the order was executed.

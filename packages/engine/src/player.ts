@@ -43,6 +43,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     deposit: 0,
     pension: 0,
     positions: {},
+    plans: [],
     properties: [],
     debts: [],
     lifestyleTier: start.lifestyleTier,

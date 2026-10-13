@@ -36,6 +36,15 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
   for (const [id, held] of Object.entries(p.positions)) {
     money.push([`position ${id} value`, held.value], [`position ${id} basis`, held.basis]);
   }
+  if (!Array.isArray(p.plans)) breaks.push('plans is not a list');
+  else {
+    for (const plan of p.plans) {
+      money.push([`plan ${plan.assetId} invested`, plan.invested], [`plan ${plan.assetId} rounds`, plan.rounds]);
+      if (!isCount(plan.amount) || plan.amount === 0) breaks.push(`plan ${plan.assetId} amount is not a positive whole number: ${plan.amount}`);
+      if (!content.assets.some((asset) => asset.id === plan.assetId)) breaks.push(`plan names an unknown asset: ${plan.assetId}`);
+    }
+    if (new Set(p.plans.map((plan) => plan.assetId)).size !== p.plans.length) breaks.push('two plans name the same asset');
+  }
   for (const property of p.properties) {
     money.push([`property ${property.id} value`, property.value], [`property ${property.id} basis`, property.basis]);
   }

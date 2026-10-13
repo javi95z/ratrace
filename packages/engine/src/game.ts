@@ -9,7 +9,7 @@ import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
 import { newPlayer } from './player';
-import { growPortfolio, pensionRoom } from './portfolio';
+import { growPortfolio, pensionRoom, runPlans } from './portfolio';
 import { growProperties } from './property';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
@@ -138,6 +138,13 @@ export interface RejectedOrder {
 }
 
 /** What a round will pay and charge, worked out without moving prices. */
+/** What a plan did, or would do, in a round: `reason` is null when it bought. */
+export interface PlanRun {
+  assetId: string;
+  amount: Cents;
+  reason: RejectReason | null;
+}
+
 export interface RoundPreview {
   /** The player as they will stand once the orders have executed, before the round resolves. */
   player: PlayerState;
@@ -149,6 +156,8 @@ export interface RoundPreview {
   purchaseTaxPaid: Cents;
   /** Cash after income, expenses and tax. If negative, the deposit and then the credit card cover it. */
   cashAfter: Cents;
+  /** What each plan will do this round, after the orders: buy, or not and why. */
+  plans: PlanRun[];
   /** How much more may be paid into the pension this round, after the orders so far. */
   pensionRoom: Cents;
   /**
@@ -173,7 +182,7 @@ function executeChoices(
   now: WorldState,
   round: number,
   choices: RoundChoices,
-): { tally: RoundTally; rejected: RejectedOrder[] } {
+): { tally: RoundTally; rejected: RejectedOrder[]; plans: PlanRun[] } {
   const tally = newTally();
   const ctx: OrderContext = { content, world: now, round, tally };
   const rejected: RejectedOrder[] = [];
@@ -181,8 +190,10 @@ function executeChoices(
     const reason = index < content.maxOrdersPerRound ? executeOrder(p, order, ctx) : 'too-many-orders';
     if (reason !== null) rejected.push({ index, order, reason });
   });
+  // The plans come last: what the player ordered by hand this round is served first, and a plan takes what is left.
+  const plans = runPlans(p, ctx);
   refreshDerived(p, content, round);
-  return { tally, rejected };
+  return { tally, rejected, plans };
 }
 
 /**
@@ -196,7 +207,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
   if (state.phase === 'cards') throw new Error('previewRound: answer the cards first');
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
-  const { tally, rejected } = executeChoices(content, player, now, state.round, choices);
+  const { tally, rejected, plans } = executeChoices(content, player, now, state.round, choices);
   const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, player, now, tally);
   return {
     player,
@@ -213,6 +224,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
     pensionRoom: pensionRoom(player, content, now, tally.pensionContribution),
     escape,
     rejected,
+    plans,
   };
 }
 
@@ -248,8 +260,9 @@ export function applyRound(
 
   if (next.phase === 'cards') resolveHand(content, next, { rest: {} }, events);
 
-  const { tally, rejected } = executeChoices(content, p, now, next.round, choices);
+  const { tally, rejected, plans } = executeChoices(content, p, now, next.round, choices);
   for (const { order, reason } of rejected) events.push({ kind: 'orderRejected', order, reason });
+  for (const plan of plans) events.push({ kind: 'planRan', ...plan });
 
   // The status this round was lived with: after the cards and the orders, before anything ages.
   p.statusSum += p.statusPoints;

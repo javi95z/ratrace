@@ -153,6 +153,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('withdraw', { amount: fmt.money(order.amount) });
     case 'pensionIn':
       return t('pension', { amount: fmt.money(order.amount) });
+    case 'setPlan':
+      return t(order.amount > 0 ? 'planOn' : 'planOff', { name: names.assets[order.assetId]?.name ?? order.assetId, amount: fmt.money(order.amount) });
     case 'borrow':
       return t('borrow', { amount: fmt.money(order.amount) });
     case 'repay': {
@@ -201,10 +203,10 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
-export function roundNotes({ text, names }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
+export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
   const told: Array<{ rank: number; note: RoundNote }> = [];
   const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
   for (const event of events) {
@@ -223,6 +225,12 @@ export function roundNotes({ text, names }: Words, t: Translate, events: GameEve
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'planRan':
+        // A plan that bought is in the ledger with every other purchase. One that could not is news.
+        if (event.reason !== null) {
+          add(event, { tone: 'bad', icon: 'icon.fund', title: t('planMissed', { name: names.assets[event.assetId]?.name ?? event.assetId, amount: fmt.money(event.amount) }), hint: text.reasons[event.reason] });
+        }
         break;
       case 'jobHunt':
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });

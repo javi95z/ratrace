@@ -2,8 +2,8 @@
 
 import { assetKind, cityIcon, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty, quoteWork } from '@ratrace/engine';
-import type { AssetDef, Debt, FocusAction, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteWork } from '@ratrace/engine';
+import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -106,8 +106,101 @@ function Portfolio() {
           );
         })}
       </Panel>
+      <Plans />
       {sheet}
     </div>
+  );
+}
+
+/** The order that leaves a plan at `amount` a round, or none when that is what it already is. */
+function planOrder(view: GameView, assetId: string, amount: number): Order | null {
+  const now = view.player.plans.find((plan) => plan.assetId === assetId)?.amount ?? 0;
+  return amount === now ? null : { type: 'setPlan', assetId, amount };
+}
+const isPlanFor = (assetId: string) => (order: Order) => order.type === 'setPlan' && order.assetId === assetId;
+/** The most a plan can be set to: what a round's pay would cover, or the cash in hand if that is more. */
+const planMax = (cash: number, salary: number) => Math.max(cash, salary);
+
+/**
+ * The player's standing plans to invest: what each buys a round, what it has put in, how today's
+ * price stands to the average paid, and whether this round can pay for it. A tap changes or ends one.
+ */
+function Plans() {
+  const t = useT('finance.plans');
+  const { content, names, fmt } = useWords();
+  const { view, shown, p, preview } = useRound();
+  const setOrder = useGame((s) => s.setOrder);
+  const [editing, setEditing] = useState<string | null>(null);
+  const plans = quotePlans(shown);
+  const open = plans.find((plan) => plan.assetId === editing);
+  let total = 0;
+  for (const plan of plans) total += plan.amount;
+
+  return (
+    <Panel title={t('title')} label={t('title')}>
+      {plans.length === 0 ? (
+        <p className="text-[14px] leading-snug text-ink-300">{t('none')}</p>
+      ) : (
+        <p className="mb-1 text-[13px] text-ink-200">{t('total', { amount: fmt.money(total) })}</p>
+      )}
+      <ul className="flex flex-col">
+        {plans.map((plan) => {
+          const run = preview.plans.find((x) => x.assetId === plan.assetId);
+          const missed = run !== undefined && run.reason !== null;
+          const standing = view.player.plans.some((x) => x.assetId === plan.assetId);
+          const edge = plan.priceVsAverageBp;
+          return (
+            <li key={plan.assetId} className="border-t-2 border-night-900 first:border-t-0">
+              <button type="button" aria-haspopup="dialog" onClick={() => setEditing(plan.assetId)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
+                <TickerBadge ticker={names.assets[plan.assetId].ticker} kind={content.assets.find((asset) => asset.id === plan.assetId)?.class ?? 'equity'} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{names.assets[plan.assetId].name}</span>
+                  <span className="block text-[12px] text-ink-300">{plan.rounds > 0 ? t('putIn', { amount: fmt.money(plan.invested), rounds: plan.rounds }) : t('starts')}</span>
+                  {edge !== null && edge !== 0 ? (
+                    <span className={`block text-[12px] ${edge > 0 ? 'text-teal-300' : 'text-wine-300'}`}>{t(edge > 0 ? 'priceAbove' : 'priceBelow', { pct: fmt.rate(Math.abs(edge)) })}</span>
+                  ) : null}
+                  {missed ? <span className="block text-[12px] text-wine-300">{t('missed')}</span> : !standing ? <span className="block text-[12px] text-gold-200">{t('new')}</span> : null}
+                </span>
+                <span className="shrink-0 text-right">
+                  <span className="pixel block text-gold-500">{fmt.money(plan.amount)}</span>
+                  <span className="block text-[11px] text-ink-300">{t('aRound')}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {open ? (
+        <AmountSheet
+          title={t('edit', { name: names.assets[open.assetId].name })}
+          // What the plan takes this round is cash again once the plan is being changed.
+          max={planMax(p.cash + (preview.plans.find((x) => x.assetId === open.assetId)?.reason === null ? open.amount : 0), preview.income.salary)}
+          start={open.amount}
+          onClose={() => setEditing(null)}
+          onConfirm={(amount) => setOrder(isPlanFor(open.assetId), planOrder(view, open.assetId, amount))}
+          footer={
+            <Button
+              className="mt-2"
+              variant="danger"
+              wide
+              onClick={() => {
+                if (setOrder(isPlanFor(open.assetId), planOrder(view, open.assetId, 0))) setEditing(null);
+              }}
+            >
+              {t('stop')}
+            </Button>
+          }
+        >
+          <p className="mb-2 text-[14px] leading-snug text-ink-200">{t('editHint')}</p>
+          {open.basis > 0 ? (
+            <div className="mb-3 text-[14px]">
+              <Row left={t('held')} right={fmt.money(open.value)} />
+              <Row left={t('cost')} right={fmt.money(open.basis)} />
+            </div>
+          ) : null}
+        </AmountSheet>
+      ) : null}
+    </Panel>
   );
 }
 
@@ -141,7 +234,13 @@ function Market() {
   const { content, text, names, fmt } = useWords();
   const { view, p, world } = useRound();
   const addOrder = useGame((s) => s.addOrder);
+  const setOrder = useGame((s) => s.setOrder);
+  const plans = useT('finance.plans');
+  const { shown, preview } = useRound();
   const [buying, setBuying] = useState<AssetDef | null>(null);
+  // The same sheet buys once or sets what is bought every round.
+  const [each, setEach] = useState(false);
+  const planned = buying ? shown.player.plans.find((plan) => plan.assetId === buying.id) : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -159,7 +258,10 @@ function Market() {
                   key={asset.id}
                   type="button"
                   disabled={locked}
-                  onClick={() => setBuying(asset)}
+                  onClick={() => {
+                    setEach(false);
+                    setBuying(asset);
+                  }}
                   className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left"
                 >
                   {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
@@ -181,11 +283,26 @@ function Market() {
 
       {buying ? (
         <AmountSheet
-          title={amount('buy', { name: names.assets[buying.id].name })}
-          max={p.cash}
+          // A new sheet for each way of buying: the amount starts over, and so does what it can be.
+          key={each ? 'each' : 'once'}
+          title={each ? plans('edit', { name: names.assets[buying.id].name }) : amount('buy', { name: names.assets[buying.id].name })}
+          max={each ? planMax(p.cash, preview.income.salary) : p.cash}
+          start={each ? (planned?.amount ?? 0) : 0}
           onClose={() => setBuying(null)}
-          onConfirm={(a) => addOrder({ type: 'buy', assetId: buying.id, amount: a })}
+          onConfirm={(a) => (each ? setOrder(isPlanFor(buying.id), planOrder(view, buying.id, a)) : addOrder({ type: 'buy', assetId: buying.id, amount: a }))}
         >
+          <div className="mb-3">
+            <Segmented<'once' | 'each'>
+              label={plans('how')}
+              value={each ? 'each' : 'once'}
+              onChange={(how) => setEach(how === 'each')}
+              options={[
+                { value: 'once', label: plans('once'), hint: plans('onceHint') },
+                { value: 'each', label: plans('each'), hint: plans('eachHint') },
+              ]}
+            />
+          </div>
+          {each ? <p className="mb-2 text-[13px] leading-snug text-ink-200">{planned ? plans('already', { amount: fmt.money(planned.amount) }) : plans('editHint')}</p> : null}
           <p className="mb-2 text-[14px] text-ink-200">{text.assets[buying.id].blurb}</p>
           <Sparkline values={priceHistory(view, buying.id)} label={t('history')} />
           <div className="mb-3 mt-1 flex justify-between text-[12px] text-ink-300">

@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quoteProperty, viewOf } from '@ratrace/engine';
+import { previewRound, quoteItem, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { cleanup, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -216,6 +216,90 @@ describe('the lifestyle tab', () => {
     const switches = screen.getAllByRole('switch');
     expect(switches).toHaveLength(3 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
+  });
+});
+
+describe('investing every round', () => {
+  const plansPanel = () => screen.getByRole('region', { name: 'Regular investing' });
+  const setAmount = async (sheet: HTMLElement, cents: number) => {
+    fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: String(cents) } });
+  };
+
+  it('is set from the market in the sheet that buys, and from then on buys by itself', async () => {
+    const { services } = await inFinance('civil_servant');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    // Nothing yet, and the panel says how to begin.
+    await screen.findByRole('region', { name: 'Regular investing' });
+    expect(within(plansPanel()).getByText(/^Nothing yet\. In the Market/)).toBeTruthy();
+
+    await user.click(screen.getByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    let sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
+    await user.click(within(sheet).getByRole('radio', { name: /^Every round/ }));
+    sheet = screen.getByRole('dialog', { name: 'Invest in S&P 500 every round' });
+    expect(within(sheet).getByText(/it never borrows for you\.$/)).toBeTruthy();
+    await setAmount(sheet, 100_000);
+    await user.click(within(sheet).getByRole('button', { name: 'Confirm $1,000' }));
+
+    // It is an order of this round, and already counted: the plan is listed and what it buys is held.
+    await user.click(screen.getByRole('tab', { name: 'Portfolio' }));
+    const row = within(plansPanel()).getByRole('button', { name: /S&P 500/ });
+    expect(row.textContent).toContain('$1,000');
+    expect(row.textContent).toContain('New plan');
+    expect(within(plansPanel()).getByText('Each round you invest $1,000 without lifting a finger.')).toBeTruthy();
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Invest $1,000 every round in S&P 500' })).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Close' }));
+
+    await user.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    const state = await stateOf(services);
+    expect(state.player.plans).toEqual([{ assetId: 'sp500', amount: 100_000, invested: 100_000, rounds: 1 }]);
+    expect(state.player.positions.sp500.basis).toBe(100_000);
+  });
+
+  it('shows what a plan has built, warns when a round cannot pay for it, and is changed or ended on a tap', async () => {
+    const { services, session } = await inFinance('civil_servant');
+    await session.playRound({ orders: [{ type: 'setPlan', assetId: 'sp500', amount: 100_000 }] });
+    await toFinance(session);
+    await session.playRound({ orders: [] });
+    await toFinance(session);
+    const state = await stateOf(services);
+    const [plan] = quotePlans(viewOf(state));
+    expect(plan).toMatchObject({ invested: 200_000, rounds: 2 });
+    const preview = previewRound(content, viewOf(state), { orders: [] });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const panel = await screen.findByRole('region', { name: 'Regular investing' });
+    const row = within(panel).getByRole('button', { name: /S&P 500/ });
+
+    // The row counts this round's purchase too, as every figure of the finances does.
+    const buys = preview.plans[0].reason === null;
+    expect(row.textContent).toContain(buys ? 'Put in $3,000 over 3 rounds' : 'Put in $2,000 over 2 rounds');
+    expect(row.textContent?.includes('No cash for it this round')).toBe(!buys);
+    // How today's price stands to the average paid, the engine's own figure.
+    const [shown] = quotePlans({ ...viewOf(state), player: preview.player });
+    if (shown.priceVsAverageBp !== null && shown.priceVsAverageBp !== 0) {
+      expect(row.textContent).toContain(`Worth ${fmt.rate(Math.abs(shown.priceVsAverageBp))} ${shown.priceVsAverageBp > 0 ? 'more' : 'less'} today than your average price`);
+    }
+
+    // Changed: the sheet opens on what the plan is, and a new amount is an order.
+    await user.click(row);
+    let sheet = screen.getByRole('dialog', { name: 'Invest in S&P 500 every round' });
+    expect(within(sheet).getByRole('status').textContent).toBe('$1,000');
+    await setAmount(sheet, 50_000);
+    await user.click(within(sheet).getByRole('button', { name: 'Confirm $500' }));
+    expect(within(panel).getByRole('button', { name: /S&P 500/ }).textContent).toContain('$500');
+
+    // Ended: the plan is gone from the list, and what it bought stays in the holdings.
+    await user.click(within(panel).getByRole('button', { name: /S&P 500/ }));
+    sheet = screen.getByRole('dialog', { name: 'Invest in S&P 500 every round' });
+    await user.click(within(sheet).getByRole('button', { name: 'Stop investing' }));
+    expect(screen.queryByRole('dialog', { name: 'Invest in S&P 500 every round' })).toBeNull();
+    expect(within(panel).queryByRole('button', { name: /S&P 500/ })).toBeNull();
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Stop investing in S&P 500' })).toBeTruthy();
   });
 });
 

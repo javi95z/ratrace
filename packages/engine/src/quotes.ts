@@ -5,7 +5,7 @@ import { careerSwing, homeOf, INSURANCE_KINDS, ownPay, perksOf, refreshDerived, 
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
 import { jobHuntChance, landingOf } from './life/roundEnd';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
-import { applyBp } from './money';
+import { applyBp, BP, mulDiv } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
@@ -345,4 +345,38 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
       focus: career?.focus ?? 0,
     },
   };
+}
+
+export interface PlanQuote {
+  assetId: string;
+  /** What the plan buys each round. */
+  amount: Cents;
+  /** What it has put in so far, and in how many rounds. */
+  invested: Cents;
+  rounds: number;
+  /** What the player holds of the asset today, however it was bought, and what all of it cost. */
+  value: Cents;
+  basis: Cents;
+  /**
+   * How far today's price stands from the average price paid, in bp of that average: above zero the
+   * player bought cheaper than today on the whole, below it dearer. Null with nothing held.
+   */
+  priceVsAverageBp: Bp | null;
+}
+
+/** The player's standing plans to invest, each beside what it has built. */
+export function quotePlans(view: GameView): PlanQuote[] {
+  const p = view.player;
+  return p.plans.map((plan) => {
+    const held = Object.hasOwn(p.positions, plan.assetId) ? p.positions[plan.assetId] : { value: 0, basis: 0 };
+    return {
+      assetId: plan.assetId,
+      amount: plan.amount,
+      invested: plan.invested,
+      rounds: plan.rounds,
+      value: held.value,
+      basis: held.basis,
+      priceVsAverageBp: held.basis > 0 ? mulDiv(held.value - held.basis, BP, held.basis) : null,
+    };
+  });
 }
