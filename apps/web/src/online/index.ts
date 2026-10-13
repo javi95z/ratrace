@@ -3,9 +3,11 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import type { PlayerStore } from '@/session/types';
 import { connectSupabase } from './connect';
 import { follow } from './follow';
+import type { Page } from './follow';
 import { MirroredStore } from './mirror';
 import { offlineAccount } from './offline';
 import { SupabaseAccount } from './supabase';
+import type { Cloud } from './supabase';
 import type { Account, AccountSaves } from './types';
 
 /** What the game gets of the cloud: who is playing, the store to write to, and how the account's copy stands. */
@@ -17,7 +19,32 @@ export interface Online {
   saves: AccountSaves | null;
 }
 
-/** Where the lives given up are noted until the account has been told. A browser that keeps nothing forgets them with the page. */
+/** What the cloud is made of. The browser's own in the game; a test hands in stand-ins for the network and the page. */
+export interface OnlineParts {
+  /** Loads the client and connects. */
+  connect(): Promise<Cloud>;
+  /** Where the page is, and how to replace that once a notice has been read from it. */
+  address(): string;
+  clean(address: string): void;
+  page: Page;
+  /** Where the lives given up are noted until the account has been told. */
+  remember: { read(): string[]; write(ids: string[]): void };
+  schedule?(run: () => Promise<void>, ms: number): void;
+}
+
+/**
+ * The player's account around the store of a device: who is playing, the store with the account
+ * as its mirror, and the follower that has the account read when it may have changed. It lasts as
+ * long as the page does.
+ */
+export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
+  const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
+  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule });
+  follow(account, mirror, parts.page);
+  return { account, store: mirror, saves: mirror };
+}
+
+/** Where the lives given up are noted in a browser. One that keeps nothing forgets them with the page. */
 const GIVEN_UP = 'ratrace:given-up';
 const givenUp = {
   read(): string[] {
@@ -37,6 +64,21 @@ const givenUp = {
   },
 };
 
+const browserPage: Page = {
+  onOnline: (listener) => {
+    window.addEventListener('online', listener);
+    return () => window.removeEventListener('online', listener);
+  },
+  onShown: (listener) => {
+    const shown = () => {
+      if (document.visibilityState === 'visible') listener();
+    };
+    document.addEventListener('visibilitychange', shown);
+    return () => document.removeEventListener('visibilitychange', shown);
+  },
+  now: () => Date.now(),
+};
+
 /**
  * The cloud of this browser, around the store of this device. With no Supabase project in the
  * build's settings there is none: the store is the device's own, and the game is exactly what it
@@ -47,27 +89,11 @@ export function browserOnline(device: PlayerStore): Online {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null };
-
-  const account = new SupabaseAccount(
-    () => connectSupabase(url, key),
-    () => window.location.href,
-    (address) => window.history.replaceState(window.history.state, '', address),
-  );
-  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: givenUp });
-  // For as long as the page lives: there is nothing to stop.
-  follow(account, mirror, {
-    onOnline: (listener) => {
-      window.addEventListener('online', listener);
-      return () => window.removeEventListener('online', listener);
-    },
-    onShown: (listener) => {
-      const shown = () => {
-        if (document.visibilityState === 'visible') listener();
-      };
-      document.addEventListener('visibilitychange', shown);
-      return () => document.removeEventListener('visibilitychange', shown);
-    },
-    now: () => Date.now(),
+  return onlineOver(device, {
+    connect: () => connectSupabase(url, key),
+    address: () => window.location.href,
+    clean: (address) => window.history.replaceState(window.history.state, '', address),
+    page: browserPage,
+    remember: givenUp,
   });
-  return { account, store: mirror, saves: mirror };
 }
