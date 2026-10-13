@@ -891,7 +891,7 @@
     "name": "Nombre",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "invalid": "De 3 a 16 letras sin tilde ni ñ, cifras o guiones bajos.",
+    "invalid": "De 3 a 16 letras, cifras o guiones bajos.",
     "taken": "Alguien ya tiene ese nombre.",
     "refused": "Ese nombre no se acepta.",
     "failed": "No se ha podido guardar el nombre. Inténtalo de nuevo.",
