@@ -6,6 +6,10 @@ export interface Format {
   signed(cents: number): string;
   /** Cents in a few characters, for small spaces: $12.4K, $1.23M. Three figures at most, and whole dollars under ten thousand. */
   compact(cents: number): string;
+  /** Cents in as few characters as will do, for a tag: $850, $7.1k, $203k, $1.2M. Exact under a thousand, about two figures above. */
+  brief(cents: number): string;
+  /** The same with a sign, as a change: +$7.1k or −$203k. */
+  briefSigned(cents: number): string;
   /** Basis points as a percentage with one decimal: 250 → 2.5%. */
   rate(bp: number): string;
   /** Basis points as a signed whole percentage: -2200 → −22%. */
@@ -45,6 +49,17 @@ export function formatFor(locale: string): Format {
     const [scale, unit] = units[at];
     return `${wholeDollars < 0 ? MINUS : ''}${before}${figures.format(Number((size / scale).toPrecision(3)))}${unit}${after}`;
   };
+  const tenths = new Intl.NumberFormat(tag, { maximumFractionDigits: 1 });
+  /** A large amount as a tag has room for: one decimal under ten of a unit, none above, and a small k as people write it. */
+  const brief = (wholeDollars: number): string => {
+    const size = Math.abs(wholeDollars);
+    if (size < 1000) return fix(dollars.format(wholeDollars));
+    const rounded = (scale: number) => (size / scale < 9.95 ? Math.round((size / scale) * 10) / 10 : Math.round(size / scale));
+    let at = 0;
+    while (at < units.length - 1 && rounded(units[at][0]) >= 1000) at += 1;
+    const [scale, unit] = units[at];
+    return `${wholeDollars < 0 ? MINUS : ''}${before}${tenths.format(rounded(scale))}${unit === 'K' ? 'k' : unit}${after}`;
+  };
   const whole = new Intl.NumberFormat(tag, { maximumFractionDigits: 0, useGrouping: 'always' });
   const decimal = new Intl.NumberFormat(tag, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const hundredths = new Intl.NumberFormat(tag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -59,6 +74,8 @@ export function formatFor(locale: string): Format {
     money,
     signed: (cents) => (round(cents / 100) > 0 ? `+${money(cents)}` : money(cents)),
     compact: (cents) => (Math.abs(round(cents / 100)) < 10_000 ? money(cents) : shortened(round(cents / 100))),
+    brief: (cents) => brief(round(cents / 100)),
+    briefSigned: (cents) => (round(cents / 100) > 0 ? `+${brief(round(cents / 100))}` : brief(round(cents / 100))),
     rate: (bp) => `${decimal.format(bp / 100)}%`,
     change: (bp) => `${round(bp / 100) >= 0 ? '+' : MINUS}${whole.format(Math.abs(round(bp / 100)))}%`,
     number: (value) => fix(whole.format(round(value))),

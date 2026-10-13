@@ -35,11 +35,18 @@ describe('the collection', () => {
     expect(casio.querySelector('img')?.getAttribute('alt')).toBe('');
     expect(within(casio).queryByText('Not owned yet')).toBeNull();
     expect((within(things).getByText('SEAT Ibiza').closest('li') as HTMLElement).querySelector('img')?.getAttribute('src')).toContain('car.seat_ibiza');
-    // Not owned: its name is there to aim for, its picture is a shadow.
-    const rolex = within(things).getByText('Rolex Submariner').closest('li') as HTMLElement;
-    expect(within(rolex).queryByRole('img')).toBeNull();
-    expect(within(rolex).getByText('Not owned yet')).toBeTruthy();
-    expect(rolex.querySelector('[data-silhouette]')).not.toBeNull();
+    // Not owned: a shadow and no name. What it is, the player finds out by owning it.
+    expect(within(things).queryByText('Rolex Submariner')).toBeNull();
+    const hidden = within(things).getAllByText('Not owned yet');
+    expect(hidden).toHaveLength(content.items.length - 2);
+    for (const label of hidden) {
+      // Said to a screen reader, never drawn.
+      expect(label.className).toContain('sr-only');
+      const tile = label.closest('li') as HTMLElement;
+      expect(within(tile).queryByRole('img')).toBeNull();
+      expect(tile.querySelector('[data-silhouette]')).not.toBeNull();
+      expect(tile.textContent).toBe('Not owned yet');
+    }
     // Grouped as the shop groups them.
     for (const group of ['Cars', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
   });

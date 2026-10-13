@@ -2,10 +2,10 @@
 
 import { familyArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import { cashflow, focusLeft, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
-import type { GameView, InsuranceKind, OwnedItem } from '@ratrace/engine';
+import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useSaving, useT, useWords } from '@/game/context';
+import { useGame, useSaving, useT, useWords } from '@/game/context';
 import { insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Panel, Row, Tag } from '@/ui/kit';
@@ -155,10 +155,11 @@ const More = () => (
 );
 
 /** One choice among several, as a line: its picture, its name, what it costs a year and what it gives. */
-function Choice({ icon, name, cost, status, on, onLabel, children }: { icon: string; name: string; cost: string; status?: number; on: boolean; onLabel: string; children?: ReactNode }) {
+function Choice({ icon, name, cost, status, on, onLabel, onPick, disabled = false, children }: { icon: string; name: string; cost: string; status?: number; on: boolean; onLabel: string; onPick?: () => void; disabled?: boolean; children?: ReactNode }) {
   const shop = useT('finance.shop');
-  return (
-    <li aria-current={on ? 'true' : undefined} className={`flex items-start gap-3 px-2.5 py-2 ${on ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'}`}>
+  const look = `flex w-full items-start gap-3 px-2.5 py-2 text-left ${on ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'}`;
+  const body = (
+    <>
       <Bare className="size-9">
         <Sprite id={icon} />
       </Bare>
@@ -173,6 +174,18 @@ function Choice({ icon, name, cost, status, on, onLabel, children }: { icon: str
         </div>
         {children}
       </div>
+    </>
+  );
+  // While the finances are open the line is the choice itself; at any other time it is only to be read.
+  return (
+    <li aria-current={on ? 'true' : undefined}>
+      {onPick ? (
+        <button type="button" aria-pressed={on} disabled={disabled} onClick={onPick} className={`${look} transition-transform active:translate-y-[2px] disabled:opacity-50`}>
+          {body}
+        </button>
+      ) : (
+        <div className={look}>{body}</div>
+      )}
     </li>
   );
 }
@@ -191,6 +204,12 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
   const living = quoteLiving(content, shown);
   const perYear = (cents: number) => common('perYear', { amount: fmt.money(cents) });
   const home = homeOf(p, content);
+  // A choice is an order like any other: it can be given only while the finances are open, and it
+  // is judged against the life as it is, so choosing what is already so takes the order back.
+  const view = useGame((s) => s.view);
+  const stage = useGame((s) => s.stage);
+  const setOrder = useGame((s) => s.setOrder);
+  const now = stage === 'finance' && view ? view.player : null;
 
   let body: ReactNode;
   if (about === 'lifestyle') {
@@ -199,7 +218,10 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
         <p className="text-[14px] leading-snug">{t('aboutLifestyle')}</p>
         <ul className="flex flex-col gap-2">
           {text.lifestyleTiers.map((name, tier) => (
-            <Choice key={tier} icon={lifestyleArt[tier]} name={name} cost={perYear(living.tiers[tier])} status={content.life.lifestyleStatus[tier]} on={tier === p.lifestyleTier} onLabel={t('yours')}>
+            <Choice key={tier} icon={lifestyleArt[tier]} name={name} cost={perYear(living.tiers[tier])} status={content.life.lifestyleStatus[tier]} on={tier === p.lifestyleTier} onLabel={t('yours')}
+              disabled={tier < p.life.minLifestyleTier}
+              onPick={now ? () => setOrder((order) => order.type === 'setLifestyle', tier === now.lifestyleTier ? null : { type: 'setLifestyle', tier: tier as LifestyleTier }) : undefined}
+            >
               {tier < p.life.minLifestyleTier ? <p className="mt-1 text-[12px] text-wine-300">{life('tierFloor')}</p> : null}
             </Choice>
           ))}
@@ -227,7 +249,9 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
         <p className="text-[14px] leading-snug">{t('aboutRent', { city: names.cities[p.cityId] })}</p>
         <ul className="flex flex-col gap-2">
           {text.rentTiers.map((name, tier) => (
-            <Choice key={tier} icon={rentTierIcon[tier]} name={name} cost={living.rentTiers ? perYear(living.rentTiers[tier]) : ''} status={content.life.rentTierStatus[tier]} on={tier === p.life.rentTier} onLabel={t('yours')} />
+            <Choice key={tier} icon={rentTierIcon[tier]} name={name} cost={living.rentTiers ? perYear(living.rentTiers[tier]) : ''} status={content.life.rentTierStatus[tier]} on={tier === p.life.rentTier} onLabel={t('yours')}
+              onPick={now ? () => setOrder((order) => order.type === 'setRentTier', tier === now.life.rentTier ? null : { type: 'setRentTier', tier: tier as RentTier }) : undefined}
+            />
           ))}
         </ul>
         <p className="text-[12px] text-ink-300">{t('rentCost')}</p>
@@ -241,7 +265,9 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
           {INSURANCES.map((kind) => {
             const cover = insuranceCover(content, kind);
             return (
-              <Choice key={kind} icon={insuranceArt[kind]} name={text.insurance[kind]} cost={perYear(living.insurance[kind])} on={p.life.insurance[kind]} onLabel={t('insured')}>
+              <Choice key={kind} icon={insuranceArt[kind]} name={text.insurance[kind]} cost={perYear(living.insurance[kind])} on={p.life.insurance[kind]} onLabel={t('insured')}
+                onPick={now ? () => setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, !p.life.insurance[kind] === now.life.insurance[kind] ? null : { type: 'setInsurance', insurance: kind, on: !p.life.insurance[kind] }) : undefined}
+              >
                 <ul className="mt-1.5 flex flex-col gap-0.5 text-[13px] leading-snug text-ink-200">
                   {cover.pays.map(({ cardId, pct }) => (
                     <li key={cardId}>{t('pays', { pct, card: text.cards[cardId].title })}</li>
@@ -262,7 +288,7 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
     <Sheet open onClose={onClose} title={t(about === 'lifestyle' ? 'lifestyle' : about === 'home' ? 'home' : 'insurance')} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         {body}
-        <p className="text-center text-[12px] text-ink-300">{t('changedIn')}</p>
+        <p className="text-center text-[12px] text-ink-300">{now && !(about === 'home' && home) ? t('pickHere') : t('changedIn')}</p>
       </div>
     </Sheet>
   );

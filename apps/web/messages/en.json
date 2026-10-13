@@ -493,7 +493,8 @@
     "aboutInsurance": "You pay a premium every year. In return, when a bad card comes, the insurance pays part of the bill.",
     "pays": "Pays {pct}% on \"{card}\"",
     "opens": "Opens a way out on \"{card}\"",
-    "changedIn": "It is changed in the Lifestyle tab, during the finances."
+    "changedIn": "It is changed during the finances: here or in the Lifestyle tab.",
+    "pickHere": "Tap to choose. It takes effect when the round is played."
   },
   "balance": {
     "balance": "Balance",

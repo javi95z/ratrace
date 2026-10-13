@@ -493,7 +493,8 @@
     "aboutInsurance": "Pagas una prima cada año. A cambio, cuando llega una carta mala, el seguro paga parte de la factura.",
     "pays": "Paga el {pct} % en «{card}»",
     "opens": "Abre una salida en «{card}»",
-    "changedIn": "Se cambia en la pestaña Vida, en la fase de finanzas."
+    "changedIn": "Se cambia en la fase de finanzas: aquí mismo o en la pestaña Vida.",
+    "pickHere": "Toca para elegir. Se aplica al jugar la ronda."
   },
   "balance": {
     "balance": "Saldo",
