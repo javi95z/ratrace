@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Chakra_Petch, Exo_2, Handjet, Jersey_15 } from 'next/font/google';
+import { Chakra_Petch, Exo_2, Jersey_15, Oswald } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -14,7 +14,7 @@ const reading = Chakra_Petch({ subsets: ['latin', 'latin-ext'], weight: ['400', 
 
 // Neither draws Cyrillic. In Russian each gives way, letter by letter, to one that does; the figures and the Latin
 // names stay in Jersey and Chakra. They are not fetched ahead: a page with no Cyrillic on it never asks for them.
-const pixelCyrillic = Handjet({ subsets: ['cyrillic'], weight: '600', variable: '--font-pixel-cyrillic', display: 'swap', preload: false });
+const pixelCyrillic = Oswald({ subsets: ['cyrillic'], weight: '500', variable: '--font-pixel-cyrillic', display: 'swap', preload: false });
 const readingCyrillic = Exo_2({ subsets: ['cyrillic'], weight: ['400', '600'], variable: '--font-reading-cyrillic', display: 'swap', preload: false });
 
 /** A typeface by its own name alone, without the stand-in that is named after it for while it loads. */

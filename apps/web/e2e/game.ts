@@ -111,6 +111,21 @@ export async function auditOf(page: Page): Promise<string[]> {
 export const fitsWidth = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 /**
+ * Titles and buttons whose words do not fit the room they were given: cut short, or spilling out
+ * of their box. A page can fit the screen and still hold one. A strip of tabs scrolls on purpose,
+ * and a line marked to end in "…" is cut on purpose: neither is one.
+ */
+export const cutLabels = (page: Page) =>
+  page.evaluate(() => {
+    const found: string[] = [];
+    for (const el of document.querySelectorAll<HTMLElement>('.pixel, button, a, [role=tab], [role=radio], [role=switch]')) {
+      if (el.offsetParent === null || el.closest('[role=tablist], .truncate, [aria-hidden=true]')) continue;
+      if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1) found.push(`${(el.textContent ?? '').trim().slice(0, 40)} needs ${el.scrollWidth}px, has ${el.clientWidth}px`);
+    }
+    return [...new Set(found)];
+  });
+
+/**
  * Buttons, links and switches on screen that a thumb would miss: smaller than 44px both ways.
  * Returns what each one says, so a failure names the culprit.
  */

@@ -50,9 +50,11 @@
    * corners repeat the geometry of the pixels, so the two read as one family. Jersey's figures are
    * told apart at a glance (its 5 is not an S, its 2 not a Z), which is why it took Pixelify's place.
    * A sign Jersey does not draw is borrowed from Chakra, not from whatever the device calls monospace.
-   * Neither draws Cyrillic: each is followed by a typeface that does (Handjet, Exo 2), which the
-   * browser turns to letter by letter. Handjet is the pixel typeface whose Russian reads as Russian: Pixelify
-   * draws several of its small letters at the height of capitals. `font-size-adjust` on `pixel` brings the
+   * Neither draws Cyrillic: each is followed by a typeface that does (Oswald, Exo 2), which the
+   * browser turns to letter by letter. Oswald is not a pixel typeface, on purpose: the pixel ones that
+   * have Cyrillic (Handjet, Pixelify, Tiny5, Press Start 2P) were each tried, and Russian set in them is
+   * hard to read. Oswald has Jersey's build, tall, narrow and heavy, so a Russian title takes the room an
+   * English one does, and the figures beside it stay Jersey's. `font-size-adjust` on `pixel` brings the
    * borrowed letters to the same height as Jersey's.
    */
   --font-pixel: var(--font-jersey), var(--font-pixel-cyrillic), var(--font-chakra), var(--font-reading-cyrillic), system-ui, sans-serif;
@@ -267,6 +269,15 @@ body {
   font-size-adjust: 0.56;
   letter-spacing: 0.03em;
   line-height: 1.1;
+}
+
+/*
+ * In Russian the letters of a title are Oswald's and the space between its words is still Jersey's,
+ * which is cut for wide pixel letters and then scaled up with them: twice what Oswald leaves. It is
+ * taken back in.
+ */
+:lang(ru) .pixel {
+  word-spacing: -0.16em;
 }
 
 /* A lit cell of a pixel bar: bright along the top, deep along the bottom, like a filled lamp. */

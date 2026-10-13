@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { answerHand, auditOf, fitsWidth, playRound, settle, smallTargets, startLife, watch, WORDS } from './game';
+import { answerHand, auditOf, cutLabels, fitsWidth, playRound, settle, smallTargets, startLife, watch, WORDS } from './game';
 import type { Lang } from './game';
 
 /** Set RATRACE_SHOTS to a folder to keep a picture of every screen the tests pass through. */
@@ -231,7 +231,7 @@ test('the game plays in Russian', async ({ page }, info) => {
     await document.fonts.ready;
     return [...document.fonts].filter((face) => face.status === 'loaded' && /U\+4[0-9A-F]{2}/i.test(face.unicodeRange)).map((face) => face.family.replace(/["']/g, '')).sort();
   });
-  expect([...new Set(drawn)]).toEqual(['Exo 2', 'Handjet']);
+  expect([...new Set(drawn)]).toEqual(['Exo 2', 'Oswald']);
   expect(problems).toEqual([]);
 });
 
@@ -361,13 +361,27 @@ async function measure(page: Page, lang: Lang, wide: boolean, also: (name: strin
 test('the smallest phone, in Spanish, where the words are longest: every screen still fits', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'a phone is where space runs out');
   await page.setViewportSize({ width: 360, height: 740 });
-  expect(await measure(page, 'es', false, (name) => shot(page, `${name}-es-360`, info.project.name))).toEqual([]);
+  const cut: string[] = [];
+  const look = async (name: string) => {
+    for (const label of await cutLabels(page)) cut.push(`${name}: ${label}`);
+    await shot(page, `${name}-es-360`, info.project.name);
+  };
+  expect(await measure(page, 'es', false, look)).toEqual([]);
+  // A page can fit the screen and still hold a title or a button whose words do not fit their own place.
+  expect(cut).toEqual([]);
 });
 
 test('the smallest phone, in Russian, where the words are longer still: every screen still fits', async ({ page }, info) => {
   test.skip(info.project.name !== 'phone', 'a phone is where space runs out');
   await page.setViewportSize({ width: 360, height: 740 });
-  expect(await measure(page, 'ru', false, (name) => shot(page, `${name}-ru-360`, info.project.name))).toEqual([]);
+  const cut: string[] = [];
+  const look = async (name: string) => {
+    for (const label of await cutLabels(page)) cut.push(`${name}: ${label}`);
+    await shot(page, `${name}-ru-360`, info.project.name);
+  };
+  expect(await measure(page, 'ru', false, look)).toEqual([]);
+  // A page can fit the screen and still hold a title or a button whose words do not fit their own place.
+  expect(cut).toEqual([]);
 });
 
 test('a double tap never does a second thing: no card answered, no round played, no ledger skipped', async ({ page }) => {
