@@ -220,4 +220,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   late_early_retirement: ['Sigues trabajando. Aún te gusta, o aún lo necesitas.', 'Recoges la mesa, coges el cheque y no vuelves a poner el despertador.'],
   late_downsizing: ['Te quedas. Demasiadas habitaciones, demasiados recuerdos.', 'Vendes la casa. Desde el piso nuevo se oye el mar.'],
   late_will: ['Más adelante. Como todo el mundo.', 'Una hora en la notaría, y un peso menos.'],
+  career_restructuring: ['Firmas, coges la indemnización y buscas qué hacer con tus mañanas.', 'Mesa más pequeña y sueldo más pequeño. Pero sigues dentro.', null],
+  late_gift: ['Lo tuyo sigue siendo tuyo. Ya lo heredarán.', 'Firmáis en la notaría. Su primer piso lleva un poco de ti.', 'Repartes en vida y les ves disfrutarlo, que era la idea.'],
+  late_business_handover: ['Sigues abriendo cada mañana. Nadie lo lleva como tú.', 'Firmas la venta. El cartel sigue; el nombre ya no es tuyo.', 'Les das las llaves y miras sin opinar. Casi.'],
+  late_parents_care: ['Tus hermanos se ocupan. En las comidas familiares se nota.', 'Una buena residencia, con jardín. Les visitas los domingos.', 'Reduces horas y estás con ellos. Cansa, y no lo cambiarías.'],
 };

@@ -17,7 +17,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
     }
   }
 
-  const counts = ['baseSalaryAnnual', 'careerSkill', 'investedRounds', 'financePoints', 'focusBase', 'focusBonus', 'focusUsed', 'partnerSettling', 'partnerSalaryPct'] as const;
+  const counts = ['baseSalaryAnnual', 'careerSkill', 'investedRounds', 'financePoints', 'focusBase', 'focusBonus', 'focusUsed', 'partnerSettling', 'partnerSalaryPct', 'legacy'] as const;
   for (const field of counts) {
     if (!isCount(life[field])) breaks.push(`life.${field} is not a non-negative whole number: ${life[field]}`);
   }
@@ -57,6 +57,9 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
   for (const kind of INSURANCE_KINDS) {
     if (typeof life.insurance[kind] !== 'boolean') breaks.push(`life.insurance.${kind} is not true or false`);
   }
+  // Health cover has the round it was taken out in, and only health cover held has one.
+  if (life.insurance.health === true ? !isCount(life.healthCoverSince) : life.insurance.health === false && life.healthCoverSince !== null) breaks.push(`life.healthCoverSince does not match the health cover: ${life.healthCoverSince}`);
+  if (life.retiredAtRound !== null && !isCount(life.retiredAtRound)) breaks.push(`life.retiredAtRound is not a round: ${life.retiredAtRound}`);
 
   const owned = new Set<string>();
   for (const held of life.items) {

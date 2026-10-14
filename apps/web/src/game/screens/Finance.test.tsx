@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { content, textFor } from '@ratrace/content';
-import { previewRound, quoteItem, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
+import { content, lives, textFor } from '@ratrace/content';
+import { createGame, previewRound, quoteItem, quoteLiving, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { formatFor } from '@/lib/format';
 import type { GameSession, SavedGame } from '@/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
+import { HealthCoverNote } from './HealthCover';
 import { Play } from './Play';
 
 vi.mock('@/i18n/navigation', () => ({
@@ -714,6 +715,35 @@ describe('how the player lives, in the lifestyle tab', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
     expect(screen.getByText('Status: Frugal −2 · Normal 0 · Comfortable +3 · Lavish +8 · From 26, living frugally costs 4 status.')).toBeTruthy();
+  });
+
+  it('says that cover renews by itself, that health cover costs more taken out later, and the age a cover held was priced at', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    expect(screen.getByText('Every cover renews by itself each round until you end it.')).toBeTruthy();
+    expect(screen.getByText('Health cover taken out from 32 costs more.')).toBeTruthy();
+    await user.click(screen.getByRole('switch', { name: /^Health insurance/ }));
+    // Ordered this round, it is priced at the age of this round.
+    expect(screen.getByText('Health cover priced at the age you took it out: 22.')).toBeTruthy();
+  });
+});
+
+describe('the note under health cover', () => {
+  const living = (health: { since: number | null; dearerFrom: { fromRound: number; pct: number } | null; refused: boolean }) =>
+    ({ ...quoteLiving(content, viewOf(createGame({ content, start: lives[0].start }, 'note'))), health });
+
+  it('says no insurer will take on someone who has been seriously ill, before anything else', async () => {
+    renderGame(<HealthCoverNote living={living({ since: null, dearerFrom: { fromRound: 5, pct: 130 }, refused: true })} />, memoryServices());
+    expect(await screen.findByText('No insurer will cover your health: you have already had a serious illness.')).toBeTruthy();
+    expect(screen.queryByText(/costs more/)).toBeNull();
+  });
+
+  it('says nothing of a dearer age once no dearer step is left', async () => {
+    renderGame(<HealthCoverNote living={living({ since: null, dearerFrom: null, refused: false })} />, memoryServices());
+    expect(await screen.findByText('Every cover renews by itself each round until you end it.')).toBeTruthy();
+    expect(screen.queryByText(/costs more|priced at/)).toBeNull();
   });
 });
 

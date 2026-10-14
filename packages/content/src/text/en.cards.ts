@@ -551,4 +551,24 @@ export const cards: Record<string, CardText> = {
     'Later',
     'Write it',
   ]),
+  career_restructuring: c('Restructuring', 'The company is reviewing who costs the most. Your name is on the list.', [
+    'Take the way out with a payoff',
+    'Accept a lower post',
+    ['Fight for your post', 'You stay. This time.', 'You lose the fight and leave with a smaller payoff.'],
+  ]),
+  late_gift: c('Giving in life', 'Your children are at the age when a push helps most. Whatever you give pays the gift tax now.', [
+    'Let them wait for the inheritance',
+    'Help with a deposit on a flat',
+    'Share out half now',
+  ]),
+  late_business_handover: c('The future of the business', 'Years at the helm. A buyer is asking about it, and someone at home would like to carry on.', [
+    'Stay in charge',
+    'Sell to the buyer',
+    'Hand it to your children',
+  ]),
+  late_parents_care: c('Your parents cannot manage alone', 'Your mother fell last month. Someone has to keep an eye on them, and a phone call is not enough.', [
+    'Leave it to your siblings',
+    'Pay for a care home',
+    'Look after them yourself',
+  ]),
 };

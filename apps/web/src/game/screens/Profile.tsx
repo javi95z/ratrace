@@ -10,6 +10,7 @@ import { ageAt, insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Button, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
+import { HealthCoverNote } from './HealthCover';
 import { Sprite } from '@/ui/Sprite';
 import { BalanceSheet } from './Balance';
 import type { BalanceLine } from './Balance';
@@ -279,7 +280,7 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
             const cover = insuranceCover(content, kind);
             return (
               <Choice key={kind} icon={insuranceArt[kind]} name={text.insurance[kind]} cost={perYear(living.insurance[kind])} on={p.life.insurance[kind]} onLabel={t('insured')}
-                onPick={now ? () => setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, !p.life.insurance[kind] === now.life.insurance[kind] ? null : { type: 'setInsurance', insurance: kind, on: !p.life.insurance[kind] }) : undefined}
+                onPick={now && !(kind === 'health' && living.health.refused && !p.life.insurance.health) ? () => setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, !p.life.insurance[kind] === now.life.insurance[kind] ? null : { type: 'setInsurance', insurance: kind, on: !p.life.insurance[kind] }) : undefined}
               >
                 <ul className="mt-1.5 flex flex-col gap-0.5 text-[13px] leading-snug text-ink-200">
                   {cover.pays.map(({ cardId, pct }) => (
@@ -293,6 +294,7 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
             );
           })}
         </ul>
+        <HealthCoverNote living={living} />
       </>
     );
   }

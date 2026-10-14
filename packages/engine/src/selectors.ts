@@ -43,7 +43,8 @@ export interface ScoreBreakdown {
 
 /** The score and the three parts it is made of, so that no interface has to work them out again. */
 export function scoreBreakdown(content: Content, state: GameView): ScoreBreakdown {
-  const wealth = wealthPoints(realNetWorth(state), content.scoring.wealthBreakpoints);
+  // What was given to the children in life is still the family's, and counts as the player's own.
+  const wealth = wealthPoints(realNetWorth(state) + state.player.life.legacy, content.scoring.wealthBreakpoints);
   const status = livedStatus(state);
   const multiplierPct = escapeMultiplier(state.player.escapedAtRound, content.rounds, content.scoring);
   return { wealth, status, multiplierPct, total: Math.floor(((wealth + status) * multiplierPct) / 100) };

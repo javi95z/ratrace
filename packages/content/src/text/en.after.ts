@@ -232,4 +232,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   late_early_retirement: ['You keep working. You still like it, or still need it.', 'You clear your desk, take the cheque and never set the alarm again.'],
   late_downsizing: ['You stay. Too many rooms, too many memories.', 'You sell the house. From the new flat you can hear the sea.'],
   late_will: ['Later. Like everyone.', 'An hour at the notary, and a weight off.'],
+  career_restructuring: ['You sign, take the payoff and look for something to do with your mornings.', 'A smaller desk and a smaller salary. But you are still in.', null],
+  late_gift: ['What is yours stays yours. They will inherit it.', 'You sign at the notary. Their first flat has a bit of you in it.', 'You share it out while you are here to watch them enjoy it.'],
+  late_business_handover: ['You open up every morning. Nobody runs it like you.', 'You sign the sale. The sign stays; the name is no longer yours.', 'You hand over the keys and watch without a word. Almost.'],
+  late_parents_care: ['Your siblings take care of it. It shows at family dinners.', 'A good care home with a garden. You visit on Sundays.', 'You cut your hours and are there for them. Tiring, and worth it.'],
 };

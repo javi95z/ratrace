@@ -21,6 +21,7 @@ function weight(m: Milestone): number {
       return m.mark >= 100_000_000 ? 8 : 3;
     case 'career':
     case 'soldBusiness':
+    case 'retired':
       return 7;
     case 'promoted':
       return m.top ? 7 : 2;
@@ -31,6 +32,7 @@ function weight(m: Milestone): number {
     case 'partner':
     case 'home':
     case 'business':
+    case 'gift':
       return 5;
     case 'child':
       return m.first ? 5 : 3;

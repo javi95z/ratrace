@@ -77,8 +77,10 @@ export function WorkPanel({ shown }: { shown: GameView }) {
               </Bare>
             ) : null}
             <div className="min-w-0">
-              <div className="pixel truncate text-[17px]">{job && rung ? titles[rung.level] : t('noJob')}</div>
-              <div className="truncate text-[12px] text-ink-300">{job ? text.careers[job.id].name : t('noJobSub')}</div>
+              <div className="pixel truncate text-[17px]">{job && rung ? titles[rung.level] : work.retirement.retired ? t('retiredTitle') : t('noJob')}</div>
+              <div className="truncate text-[12px] text-ink-300">
+                {job ? text.careers[job.id].name : work.retirement.retired ? t('retiredSub', { focus: work.retirement.focus, status: work.retirement.status }) : t('noJobSub')}
+              </div>
             </div>
           </div>
           <div className="shrink-0 text-right">
@@ -137,7 +139,10 @@ export function WorkPanel({ shown }: { shown: GameView }) {
             {isSkill(about) ? (
               <SkillLevels skill={skills.skills.find((s) => s.skill === about) as SkillQuote} />
             ) : about === 'career' ? (
-              <CareerLadder work={work} shown={shown} />
+              <>
+                <CareerLadder work={work} shown={shown} />
+                <Retirement shown={shown} />
+              </>
             ) : about === 'finance' ? (
               <FinanceLevels finance={skills.finance} />
             ) : (
@@ -273,7 +278,10 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
   const { content, text, names, fmt } = useWords();
   const job = shown.player.life.career;
   const traits = work.traits;
-  if (!job || work.level === null) return <p className="text-[14px] leading-snug">{t('noJobAbout')}</p>;
+  if (!job || work.level === null) {
+    const since = shown.player.life.retiredAtRound;
+    return <p className="text-[14px] leading-snug">{since === null ? t('noJobAbout') : t('retiredAbout', { age: ageAt(content, since), focus: work.retirement.focus, status: work.retirement.status })}</p>;
+  }
   const titles = text.careers[job.id].levels;
   const level = work.level;
 
@@ -319,6 +327,37 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
       </ol>
       <p className="text-[12px] text-ink-300">{t('ladderNote', { city: names.cities[shown.player.cityId] })}</p>
     </>
+  );
+}
+
+/**
+ * Retiring, below the ladder: when it opens, and what it gives while no career is taken up again.
+ * While the finances are open it is a switch, an order like any other, and it can be taken back
+ * until the round is played. Judged by the life as it stands, not by the round as ordered.
+ */
+function Retirement({ shown }: { shown: GameView }) {
+  const t = useT('work');
+  const { content } = useWords();
+  const stage = useGame((s) => s.stage);
+  const view = useGame((s) => s.view);
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  const standing = view ?? shown;
+  const plan = quoteWork(content, standing).retirement;
+  if (standing.player.life.career === null) return null;
+  const ordered = orders.some((order) => order.type === 'retire');
+  const gives = t('retireGives', { focus: plan.focus, status: plan.status });
+  return (
+    <section aria-label={t('retireTitle')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
+      <p className="pixel text-[12px] uppercase tracking-wider text-gold-200">{t('retireTitle')}</p>
+      {!plan.open ? (
+        <p className="text-[13px] leading-snug text-ink-200">{`${t('retireLater', { age: ageAt(content, plan.fromRound) })} ${gives}`}</p>
+      ) : stage === 'finance' && view !== null ? (
+        <Toggle on={ordered} onChange={(on) => setOrder((order) => order.type === 'retire', on ? { type: 'retire' } : null)} label={t('retire')} hint={gives} />
+      ) : (
+        <p className="text-[13px] leading-snug text-ink-200">{`${t('retireOpen')} ${gives}`}</p>
+      )}
+    </section>
   );
 }
 

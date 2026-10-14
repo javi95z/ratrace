@@ -5,8 +5,10 @@ import type { Rng } from '../rng';
 import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, OptionLock, PlayerState } from '../types';
 import { conditionHolds } from './conditions';
 import type { Situation } from './conditions';
+import { pctStepAt } from './derive';
 import { applyEffects } from './effects';
 import { focusLeft } from './orders';
+import { skillLevel, tradeSkillLevel } from './skills';
 import { ownedOutsidePension, totalOwed } from '../solvency';
 
 const situationOf = (content: Content, state: GameView): Situation => ({
@@ -77,6 +79,19 @@ export function drawHand(state: GameState, content: Content, rng: Rng): string[]
 }
 
 /**
+ * How likely a card is to be dealt. A misfortune of the body or of work grows likelier with age, and
+ * less likely with the skill that guards against it: health for the body, and for work the best of the
+ * skills the player's own career practises. Never below one, so nothing that can happen is ruled out.
+ */
+export function weightOf(card: CardDef, p: PlayerState, content: Content, round: number): number {
+  if (card.risk === undefined) return card.weight;
+  const rules = content.life;
+  const aged = pctStepAt(rules.riskByAge[card.risk], round);
+  const off = card.risk === 'health' ? skillLevel(p, 'health', content) * rules.skills.healthRiskOffPct : tradeSkillLevel(p, content) * rules.skills.jobRiskOffPct;
+  return Math.max(1, Math.round((card.weight * aged * Math.max(0, 100 - off)) / 10_000));
+}
+
+/**
  * The personal cards that could be dealt to the player as they stand: those whose condition holds
  * and that are not resting after a recent appearance, each with its weight. A card of the hand is
  * resting from the moment it is dealt, so it is never dealt twice in a round.
@@ -92,7 +107,7 @@ function openCards(state: GameState, content: Content, at: Situation, rested = f
       // With `rested`, a card still resting may come back early, but never one of this very round, nor one that comes once in a life.
       if (card.once === true || since === 0 || (!rested && since <= card.cooldown)) continue;
     }
-    if (conditionHolds(card.when, p, at)) pool.push([card.id, card.weight]);
+    if (conditionHolds(card.when, p, at)) pool.push([card.id, weightOf(card, p, content, state.round)]);
   }
   return pool;
 }

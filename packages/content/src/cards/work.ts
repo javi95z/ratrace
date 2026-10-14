@@ -31,10 +31,16 @@ export const careerCards: CardDef[] = [
     { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { salaryModPct: -2 } }] },
     { effects: { focus: 1, cashSalaryPct: 12, careerSkill: 1 } },
   ]),
-  card('career_layoff', 'career', { cooldown: 6, when: { employed: true, notFlags: ['layoff_proof'], regimes: ['slowdown', 'recession'] } }, [
+  card('career_layoff', 'career', { cooldown: 6, risk: 'job', when: { employed: true, notFlags: ['layoff_proof'], regimes: ['slowdown', 'recession'] } }, [
     { effects: { salaryBoostPct: -40, cashSalaryPct: 25, salaryModPct: -5 } },
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -50, cashSalaryPct: 10, salaryModPct: -5 } }] },
     { effects: { focus: 2, salaryBoostPct: -50, cashSalaryPct: 25, careerSkill: 3 } },
+  ]),
+  // From 50 a firm looks again at who it pays most: a way out with a cheque, a step down, or a fight for the post.
+  card('career_restructuring', 'career', { weight: 8, cooldown: 6, risk: 'job', when: { employed: true, minRound: 14 } }, [
+    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
+    { effects: { job: { levelDelta: -1 }, salaryModPct: -8 } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: { job: { leave: true }, cashSalaryPct: 100 } }] },
   ]),
   card('career_toxic_boss', 'career', { cooldown: 6, when: { employed: true } }, [
     { effects: { focus: 1 } },

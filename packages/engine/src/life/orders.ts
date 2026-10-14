@@ -6,13 +6,14 @@ import type { Cents } from '../money';
 import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorldState } from '../types';
 import { INSURANCE_KINDS, perksOf } from './derive';
+import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
 import { isStudy, skillLevel } from './skills';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
 export type LifeOrder = Extract<
   Order,
-  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' }
+  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' }
 >;
 
 /** Focus points the player can still spend this round. */
@@ -246,6 +247,29 @@ function executeMoveCity(p: PlayerState, cityId: string, ctx: OrderContext): Rej
 }
 
 /**
+ * Takes out or ends a cover. Health cover is priced by the age it is taken out at, for as long as it
+ * is kept: ending it and taking it out again later costs the premium of the later age. And no insurer
+ * takes on an illness it would already be paying for.
+ */
+function executeSetInsurance(p: PlayerState, order: Extract<Order, { type: 'setInsurance' }>, ctx: OrderContext): RejectReason | null {
+  if (!INSURANCE_KINDS.includes(order.insurance as InsuranceKind)) return 'unknown-insurance';
+  const life = p.life;
+  if (order.insurance === 'health' && order.on !== life.insurance.health) {
+    if (order.on && hasFlag(life.flags, FLAG_HAD_ILLNESS)) return 'preexisting-condition';
+    life.healthCoverSince = order.on ? ctx.round : null;
+  }
+  life.insurance[order.insurance] = order.on;
+  return null;
+}
+
+/** Leaves the career for good. The pay of the round ends with it, as when a card ends a job. */
+export function retire(p: PlayerState, round: number): void {
+  p.life.career = null;
+  p.life.baseSalaryAnnual = 0;
+  p.life.retiredAtRound = round;
+}
+
+/**
  * Executes an order about the player's life. Returns the reason for rejection, or null.
  * A rejected order changes nothing.
  */
@@ -267,10 +291,13 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
       p.life.rentTier = order.tier;
       return null;
     case 'setInsurance':
-      if (!INSURANCE_KINDS.includes(order.insurance as InsuranceKind)) return 'unknown-insurance';
-      p.life.insurance[order.insurance] = order.on;
-      return null;
+      return executeSetInsurance(p, order, ctx);
     case 'moveCity':
       return executeMoveCity(p, order.cityId, ctx);
+    case 'retire':
+      if (p.life.career === null) return 'no-job';
+      if (ctx.round < ctx.content.life.retireFromRound) return 'too-young-to-retire';
+      retire(p, ctx.round);
+      return null;
   }
 }

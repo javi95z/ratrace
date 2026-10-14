@@ -134,6 +134,12 @@ export function validateCards(c: Content): string[] {
     children: (value) => (isWhole(value) && value >= 1 && value <= 4 ? null : 'needs children from 1 to 4'),
     lifestyleFloor: (value) => ([0, 1, 2, 3].includes(value as number) ? null : 'has a lifestyle floor that is not 0, 1, 2 or 3'),
     sellHome: flag,
+    retire: flag,
+    gift: (value) => {
+      if (!isRecord(value) || (value.liquidPct === undefined && value.businesses === undefined)) return 'gives nothing to the children';
+      if (value.liquidPct !== undefined && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return 'gives a share of savings that is not a whole percentage from 1 to 100';
+      return value.businesses === undefined || value.businesses === true ? null : 'gives businesses with something other than true';
+    },
     refinance: (value) => (value === 'fixed' || value === 'variable' ? null : `has an unknown refinance kind: ${String(value)}`),
     protection: (value) => {
       if (!isRecord(value)) return 'has a protection that names neither an insurance nor a flag';
@@ -211,6 +217,7 @@ export function validateCards(c: Content): string[] {
     if (!CATEGORIES.includes(card.category)) errors.push(`${name} has an unknown category: ${card.category}`);
     if (!(typeof card.weight === 'number' && Number.isFinite(card.weight) && card.weight > 0)) errors.push(`${name} needs a positive weight`);
     if (!isCount(card.cooldown)) errors.push(`${name} needs a whole, non-negative cooldown`);
+    if (card.risk !== undefined && card.risk !== 'health' && card.risk !== 'job') errors.push(`${name} has an unknown risk: ${String(card.risk)}`);
 
     if (card.category === 'world') {
       if (!isRecord(card.trigger)) errors.push(`${name} is a world card and needs a trigger`);

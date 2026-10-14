@@ -90,6 +90,35 @@ export const life: LifeRules = {
       { fromRound: 9, status: -11 },
     ],
   },
+  // The body and the job grow riskier with the years: half as likely again from 40, twice from 50,
+  // three times from 56 for the body; work holds until 50.
+  riskByAge: {
+    health: [
+      { fromRound: 0, pct: 100 },
+      { fromRound: 9, pct: 150 },
+      { fromRound: 14, pct: 200 },
+      { fromRound: 17, pct: 300 },
+    ],
+    job: [
+      { fromRound: 0, pct: 100 },
+      { fromRound: 14, pct: 150 },
+      { fromRound: 17, pct: 200 },
+    ],
+  },
+  // Health cover is priced by the age it is taken out at: from 32, from 40, from 50 and from 56.
+  healthPremiumByAge: [
+    { fromRound: 0, pct: 100 },
+    { fromRound: 5, pct: 130 },
+    { fromRound: 9, pct: 170 },
+    { fromRound: 14, pct: 230 },
+    { fromRound: 17, pct: 300 },
+  ],
+  // From 56 the player may stop working: two points of focus more a round, and the standing of a
+  // life of one's own, worth a middle rung of most careers.
+  retireFromRound: 17,
+  retiredFocus: 2,
+  retiredStatus: 8,
+  giftTaxPct: 8,
   // A fifth down and the rest on a personal loan, for anything a dealer would write a contract for.
   itemFinanceDownPct: 20,
   itemFinanceMinPrice: usd(5_000),
@@ -148,6 +177,9 @@ export const life: LifeRules = {
     managementExtraFrom: 3,
     healthPremiumOffPct: 20,
     healthFocusFrom: 3,
+    // Each level takes 15 % off the chance of the misfortunes the skill guards against.
+    healthRiskOffPct: 15,
+    jobRiskOffPct: 15,
   },
 };
 

@@ -157,6 +157,8 @@ function Ended({ view }: { view: GameView }) {
           <Part label={escaped ? t('bonus', { multiplier: fmt.factor(score.multiplierPct) }) : t('noBonus')} value={`×${fmt.factor(score.multiplierPct)}`} />
         </div>
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
+        {/* What was given to the children in life is counted in the wealth as the player's own. */}
+        {p.life.legacy > 0 ? <p className="mt-1 text-[12px] text-teal-300">{t('legacy', { amount: fmt.money(p.life.legacy) })}</p> : null}
         {standing ? (
           <p role="status" className="mt-3 flex items-center justify-center gap-2 text-[13px] text-teal-300">
             <Sprite id={PERCENTILE_ART} />

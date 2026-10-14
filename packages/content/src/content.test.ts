@@ -32,7 +32,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(113);
+    expect(content.cards).toHaveLength(117);
     expect(lives).toHaveLength(16);
   });
 
@@ -40,8 +40,8 @@ describe('the v1 content', () => {
     const count: Record<string, number> = {};
     for (const card of content.cards) count[card.category] = (count[card.category] ?? 0) + 1;
     expect(count).toEqual({
-      career: 18, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 11,
-      family: 10, health: 5, luck: 8, world: 18, tax: 6, laterLife: 5,
+      career: 19, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 11,
+      family: 10, health: 5, luck: 8, world: 18, tax: 6, laterLife: 8,
     });
   });
 
@@ -338,5 +338,32 @@ describe('the v1 content', () => {
       expect(state.timeline[state.round].assetIndex.treasury_bills).toBe(INDEX_START);
       expect(state.player.positions.treasury_bills).toEqual({ value: 5_000_000, basis: 5_000_000 });
     }
+  });
+
+  it('buys Treasury bills every round on a plan, as any other investment', () => {
+    let state = createGame({ content, start: lives[0].start }, 'bills plan');
+    state.player.cash = 10_000_000;
+    state.player.life.financeSkill = 1;
+    state = applyRound(content, state, { orders: [{ type: 'setPlan', assetId: 'treasury_bills', amount: 100_000 }] }).state;
+    state = applyRound(content, state, { orders: [] }).state;
+    expect(state.player.positions.treasury_bills).toEqual({ value: 200_000, basis: 200_000 });
+    expect(state.player.plans).toEqual([{ assetId: 'treasury_bills', amount: 100_000, invested: 200_000, rounds: 2 }]);
+  });
+
+  it('makes the misfortunes of the body and of work grow with age, and offers the choices of a working life ending only at its end', () => {
+    const card = (id: string) => content.cards.find((each) => each.id === id)!;
+    expect(content.cards.filter((each) => each.risk === 'health').map((each) => each.id)).toEqual(['health_illness', 'health_burnout', 'health_dental', 'health_injury']);
+    expect(content.cards.filter((each) => each.risk === 'job').map((each) => each.id).sort()).toEqual(['career_layoff', 'career_restructuring']);
+    // Every way an illness is met leaves it on the record for an insurer.
+    expect(card('health_illness').options.every((option) => option.effects?.setFlags?.includes('had_illness'))).toBe(true);
+    // Retiring is open from 56, and the late cards come then too.
+    expect(START_AGE + content.life.retireFromRound * content.yearsPerRound).toBe(56);
+    for (const id of ['late_early_retirement', 'late_gift', 'late_business_handover']) expect(card(id).when?.minRound, id).toBe(content.life.retireFromRound);
+    expect(card('late_early_retirement').options[1].effects).toMatchObject({ retire: true });
+    expect(card('late_gift').when).toMatchObject({ minChildren: 1 });
+    expect(card('late_business_handover').options[2]).toMatchObject({ when: { minChildren: 1 }, effects: { gift: { businesses: true } } });
+    // From 50 the body is twice as likely to fail, and three times from 56; skill takes it back down.
+    expect(content.life.riskByAge.health.map(({ fromRound, pct }) => [START_AGE + fromRound * content.yearsPerRound, pct])).toEqual([[22, 100], [40, 150], [50, 200], [56, 300]]);
+    expect(content.life.skills.healthRiskOffPct * 3).toBeLessThan(100);
   });
 });

@@ -48,6 +48,11 @@ describe('invariants of the life', () => {
     expect(breaks((s) => (s.player.life.children = [3, 0]))).toEqual(['life.children holds something other than rounds left: 0']);
     expect(breaks((s) => (s.player.life.children = 'two'))).toEqual(['life.children is not a list']);
     expect(breaks((s) => (s.player.life.insurance.health = 1))).toEqual(['life.insurance.health is not true or false']);
+    // Health cover carries the round its premium was set in, and only cover that is held does.
+    expect(breaks((s) => (s.player.life.insurance.health = true))).toEqual(['life.healthCoverSince does not match the health cover: null']);
+    expect(breaks((s) => (s.player.life.healthCoverSince = 2))).toEqual(['life.healthCoverSince does not match the health cover: 2']);
+    expect(breaks((s) => (s.player.life.retiredAtRound = -1))).toEqual(['life.retiredAtRound is not a round: -1']);
+    expect(breaks((s) => (s.player.life.legacy = -5))).toEqual(['life.legacy is not a non-negative whole number: -5']);
   });
 
   it('checks items and the collection', () => {

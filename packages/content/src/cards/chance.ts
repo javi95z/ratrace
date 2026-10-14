@@ -1,24 +1,28 @@
 import type { CardDef, CardOutcome } from '@ratrace/engine';
 import { card, usd, yearly } from './build';
 
+/** The flag a serious illness leaves, which the engine reads when health cover is asked for. */
+const ILL = 'had_illness';
+
 export const healthCards: CardDef[] = [
-  // Not before the fourth year: a player needs a chance to have bought insurance first.
-  card('health_illness', 'health', { weight: 6, cooldown: 6, when: { minRound: 2 } }, [
-    { effects: { focus: 2, cash: usd(-1_500), protection: { insurance: 'health', coverPct: 90 } } },
-    { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 } } },
+  // Not before the fourth year: a player needs a chance to have bought insurance first. An illness is
+  // on the record for good: no insurer takes on health cover for it afterwards.
+  card('health_illness', 'health', { weight: 6, cooldown: 6, risk: 'health', when: { minRound: 2 } }, [
+    { effects: { focus: 2, cash: usd(-1_500), protection: { insurance: 'health', coverPct: 90 }, setFlags: [ILL] } },
+    { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 }, setFlags: [ILL] } },
     // Life cover pays out on a serious illness.
-    { when: { insured: 'life' }, effects: { focus: 2, cash: usd(9_000) } },
+    { when: { insured: 'life' }, effects: { focus: 2, cash: usd(9_000), setFlags: [ILL] } },
   ]),
-  card('health_burnout', 'health', { cooldown: 6, when: { employed: true, minRound: 3, notFlags: ['fit'] } }, [
+  card('health_burnout', 'health', { cooldown: 6, risk: 'health', when: { employed: true, minRound: 3, notFlags: ['fit'] } }, [
     { effects: { focus: 2 } },
     { effects: { salaryBoostPct: -10 } },
     { effects: { focus: 1, cash: usd(-2_500) } },
   ]),
-  card('health_dental', 'health', { cooldown: 5 }, [
+  card('health_dental', 'health', { cooldown: 5, risk: 'health' }, [
     { effects: { cash: usd(-2_200), protection: { insurance: 'health', coverPct: 50 } } },
     { outcomes: [{ weight: 65, effects: { cash: usd(-700) } }, { weight: 35, effects: { cash: usd(-3_200) } }] },
   ]),
-  card('health_injury', 'health', { cooldown: 6 }, [
+  card('health_injury', 'health', { cooldown: 6, risk: 'health' }, [
     { effects: { focus: 1, cash: usd(-1_800), protection: { insurance: 'health', coverPct: 80 } } },
     { effects: { focus: 2 } },
     // A body that is used to work heals faster, and for nothing.
@@ -91,7 +95,26 @@ export const laterLifeCards: CardDef[] = [
   // Offered in the last six years only: three and a half years of pay, and some standing, for at most six of work.
   card('late_early_retirement', 'laterLife', { once: true, when: { employed: true, minRound: 17 } }, [
     {},
-    { effects: { job: { leave: true }, cashSalaryPct: 350, status: 6 } },
+    { effects: { retire: true, cashSalaryPct: 350, status: 6 } },
+  ]),
+  // Giving in life: a little now for a home of their own, or half of what is saved. The gift tax is paid now,
+  // and what is given still counts as the family's.
+  card('late_gift', 'laterLife', { once: true, when: { minChildren: 1, minRound: 17 } }, [
+    {},
+    { effects: { gift: { liquidPct: 20 }, status: 4 } },
+    { effects: { gift: { liquidPct: 50 }, status: 8 } },
+  ]),
+  // What becomes of a business at the end of a working life: kept, sold whole to a buyer, or handed to the children.
+  card('late_business_handover', 'laterLife', { once: true, when: { hasBusiness: true, minRound: 17 } }, [
+    {},
+    { effects: { sellBusinesses: { pricePct: 100 } } },
+    { when: { minChildren: 1 }, effects: { gift: { businesses: true }, status: 6 } },
+  ]),
+  // Ageing parents: someone has to look after them.
+  card('late_parents_care', 'laterLife', { once: true, when: { minRound: 14, maxRound: 19 } }, [
+    { effects: { status: -3 } },
+    { effects: { recurring: [yearly('parents_care', 'expense', 14_000, 3)] } },
+    { effects: { focus: 2, salaryBoostPct: -15, status: 3 } },
   ]),
   card('late_downsizing', 'laterLife', { once: true, when: { ownsHome: true, minRound: 13 } }, [
     {},

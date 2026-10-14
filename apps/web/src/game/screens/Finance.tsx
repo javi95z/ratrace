@@ -10,6 +10,7 @@ import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, debtLabel, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
+import { HealthCoverNote } from './HealthCover';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { BusinessTab } from './Business';
@@ -934,11 +935,13 @@ function Lifestyle() {
               onChange={(on) =>
                 setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, on === view.player.life.insurance[kind] ? null : { type: 'setInsurance', insurance: kind, on })
               }
+              disabled={kind === 'health' && living.health.refused && !p.life.insurance.health}
               label={text.insurance[kind]}
               icon={insuranceArt[kind]}
               hint={common('perYear', { amount: fmt.money(living.insurance[kind]) })}
             />
           ))}
+          <HealthCoverNote living={living} />
         </div>
       </Panel>
 

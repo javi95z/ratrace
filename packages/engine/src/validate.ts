@@ -241,6 +241,21 @@ export function validateContent(c: Content): string[] {
     else if ((steps as Array<{ status: number }>)[0].status !== starts[kind]) errors.push(`life.agedStatus.${kind} must start at the status of the start`);
   }
   if (!listOf(life.lifestyleStatus, 4, isWhole)) errors.push('life.lifestyleStatus must be four whole numbers');
+  // Steps of a share: from round 0 at 100, each later and never lower.
+  const pctSteps = (steps: unknown) =>
+    Array.isArray(steps) &&
+    steps.length > 0 &&
+    steps.every((step, i) => isRecord(step) && isCount(step.fromRound) && isWhole(step.pct) && (i === 0 ? step.fromRound === 0 && step.pct === 100 : step.fromRound > (steps[i - 1] as { fromRound: number }).fromRound && step.pct >= (steps[i - 1] as { pct: number }).pct));
+  const risks = isRecord(life.riskByAge) ? life.riskByAge : {};
+  for (const risk of ['health', 'job'] as const) {
+    if (!pctSteps(risks[risk])) errors.push(`life.riskByAge.${risk} must be steps from round 0 at 100, later and never lower`);
+  }
+  if (!pctSteps(life.healthPremiumByAge)) errors.push('life.healthPremiumByAge must be steps from round 0 at 100, later and never lower');
+  if (!(isCount(life.retireFromRound) && (life.retireFromRound as number) < c.rounds)) errors.push('life.retireFromRound must be a round of the game');
+  for (const field of ['retiredFocus', 'retiredStatus'] as const) {
+    if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
+  }
+  if (!(isCount(life.giftTaxPct) && (life.giftTaxPct as number) <= 100)) errors.push('life.giftTaxPct must be a whole number from 0 to 100');
   if (!(isCount(life.itemFinanceDownPct) && life.itemFinanceDownPct <= 100)) errors.push('life.itemFinanceDownPct must be a whole number from 0 to 100');
   if (!isCount(life.itemFinanceMinPrice)) errors.push('life.itemFinanceMinPrice must be a whole, non-negative amount');
   for (const kind of INSURANCE_KINDS) {
@@ -291,7 +306,7 @@ export function validateContent(c: Content): string[] {
     if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
       errors.push('life.skills.levelPoints must be three rising positive whole numbers');
     }
-    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct'] as const) {
+    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct', 'healthRiskOffPct', 'jobRiskOffPct'] as const) {
       if (!(isWhole(skills[field]) && (skills[field] as number) >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
     }
     for (const field of ['languagesKeepRungFrom', 'languagesPartnerFrom', 'managementExtraFrom', 'healthFocusFrom'] as const) {

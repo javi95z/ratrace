@@ -49,6 +49,15 @@ export function skillLevels(p: PlayerState, content: Content): Record<SkillId, S
   return Object.fromEntries(SKILLS.map((skill) => [skill, skillLevel(p, skill, content)])) as Record<SkillId, SkillLevel>;
 }
 
+/** The level of the best of the skills the player's own career practises: none without a career, or in one that practises none. */
+export function tradeSkillLevel(p: PlayerState, content: Content): number {
+  const career = p.life.career?.id;
+  if (career === undefined) return 0;
+  let best = 0;
+  for (const skill of SKILLS) if ((content.life.skills.practiceCareers[skill] ?? []).includes(career)) best = Math.max(best, skillLevel(p, skill, content));
+  return best;
+}
+
 /**
  * Where the player practised each skill in a round, by living it rather than studying it: a trade
  * that uses it, a job hunt for negotiation, a city not their own for its language, a club for

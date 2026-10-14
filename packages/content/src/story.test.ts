@@ -48,6 +48,27 @@ describe('the story of a life', () => {
     ]);
   });
 
+  it('tells a retirement as one, not as a job lost, and each gift to the children', () => {
+    const state = life('nurse');
+    let story = storyStart(content, viewOf(state));
+    story = step(story, state, (v) => {
+      v.player.life.career = null;
+      v.player.life.retiredAtRound = 0;
+    });
+    story = step(story, state, (v) => {
+      v.player.life.career = null;
+      v.player.life.retiredAtRound = 0;
+      v.player.life.legacy = 500_000;
+    });
+    // Nothing more is given: nothing more is told.
+    story = step(story, state, (v) => {
+      v.player.life.career = null;
+      v.player.life.retiredAtRound = 0;
+      v.player.life.legacy = 500_000;
+    });
+    expect(kinds(story)).toEqual(['retired', 'gift']);
+  });
+
   it('tells of a partner, of each child, of a split, and of the first home only', () => {
     const state = life('nurse');
     let story = storyStart(content, viewOf(state));

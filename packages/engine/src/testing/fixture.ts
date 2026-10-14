@@ -194,6 +194,13 @@ const base: Content = {
     lifestyleStatus: [0, 0, 0, 9],
     // Nothing changes with age, so that tests of anything else never meet it. Tests of ageing set their own steps.
     agedStatus: { room: [{ fromRound: 0, status: 0 }], frugal: [{ fromRound: 0, status: 0 }] },
+    // Age changes nothing here, retiring is open from the start and gives nothing, and a gift is untaxed.
+    riskByAge: { health: [{ fromRound: 0, pct: 100 }], job: [{ fromRound: 0, pct: 100 }] },
+    healthPremiumByAge: [{ fromRound: 0, pct: 100 }],
+    retireFromRound: 0,
+    retiredFocus: 0,
+    retiredStatus: 0,
+    giftTaxPct: 0,
     itemFinanceDownPct: 20,
     itemFinanceMinPrice: 500_000,
     lesserItemPct: 25,
@@ -237,6 +244,8 @@ const base: Content = {
       managementExtraFrom: 3,
       healthPremiumOffPct: 0,
       healthFocusFrom: 3,
+      healthRiskOffPct: 0,
+      jobRiskOffPct: 0,
     },
   },
   // No reforms and no cards by default, so tests of money are not disturbed. Tests of either add their own.

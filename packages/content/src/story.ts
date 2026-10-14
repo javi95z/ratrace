@@ -10,6 +10,8 @@ export type Milestone =
   | { round: number; kind: 'promoted'; careerId: string; level: number; top: boolean }
   | { round: number; kind: 'career'; careerId: string }
   | { round: number; kind: 'jobLost' }
+  | { round: number; kind: 'retired' }
+  | { round: number; kind: 'gift' }
   | { round: number; kind: 'moved'; cityId: string }
   | { round: number; kind: 'partner' }
   | { round: number; kind: 'split' }
@@ -40,6 +42,9 @@ export interface Story {
     ownsHome: boolean;
     business: boolean;
     soldBusiness: boolean;
+    retired: boolean;
+    /** What has been given to the children in life, in start-of-game cents. */
+    legacy: number;
     /** How many of `WORTH_MARKS` the life has been worth. */
     marks: number;
     /** The crisis the life is in or has been through, or null. */
@@ -57,6 +62,8 @@ function standing(content: Content, view: GameView, marks: number, crisisId: str
     ownsHome: homeOf(p, content) !== null,
     business: p.businesses.length > 0,
     soldBusiness: Object.hasOwn(p.life.flags, 'sold_business'),
+    retired: p.life.retiredAtRound !== null,
+    legacy: p.life.legacy,
     marks: Math.max(marks, WORTH_MARKS.filter((mark) => worth >= mark).length),
     crisisId: view.timeline[view.round]?.crisis?.id ?? crisisId,
   };
@@ -78,7 +85,10 @@ export function storyAfter(content: Content, story: Story, after: GameView, even
   if (now.crisisId !== null && now.crisisId !== was.crisisId) told.push({ round, kind: 'crisis', crisisId: now.crisisId });
   if (events.some((event) => event.kind === 'bankrupt')) told.push({ round, kind: 'bankrupt' });
 
-  if (now.careerId !== was.careerId) told.push(now.careerId === null ? { round, kind: 'jobLost' } : { round, kind: 'career', careerId: now.careerId });
+  // A career left to retire is a retirement, not a job lost.
+  if (now.retired && !was.retired) told.push({ round, kind: 'retired' });
+  else if (now.careerId !== was.careerId) told.push(now.careerId === null ? { round, kind: 'jobLost' } : { round, kind: 'career', careerId: now.careerId });
+  if (now.legacy > was.legacy) told.push({ round, kind: 'gift' });
   // Two promotions in one step are one piece of news: the rung reached.
   const rose = events.filter((event): event is Extract<GameEvent, { kind: 'promoted' }> => event.kind === 'promoted').at(-1);
   if (rose) {

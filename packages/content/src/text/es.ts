@@ -340,6 +340,8 @@ export const es: ContentText = {
     'bad-tier': 'Esa opción no existe.',
     'below-lifestyle-floor': 'No puedes vivir con menos que eso.',
     'unknown-insurance': 'Ese seguro no existe.',
+    'preexisting-condition': 'Ninguna aseguradora cubre una enfermedad que ya has tenido.',
+    'too-young-to-retire': 'Aún es pronto para jubilarte.',
     'unknown-city': 'Esa ciudad no existe.',
     'same-city': 'Ya vives allí.',
     'already-moving': 'Ya te estás mudando esta ronda.',

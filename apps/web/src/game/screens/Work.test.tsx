@@ -212,4 +212,42 @@ describe('the work panel of the profile', () => {
     await user.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
     expect(within(screen.getByRole('dialog', { name: 'Focus' })).getByText(/^Without a job there is no overtime/)).toBeTruthy();
   });
+
+  it('says from when the player may retire, and then lets them, as an order, saying what it gives', async () => {
+    setWidth('desk');
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    // Living to 56 in work: every card answered without leaving the job.
+    const keepJob: Record<string, number> = { career_restructuring: 1 };
+    const toFinance = async () => {
+      while (session.view().phase === 'cards') await session.answerCard(keepJob[session.view().hand[session.view().answered]] ?? 0);
+    };
+    await toFinance();
+    const user = userEvent.setup();
+    const young = renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    await user.click(within(screen.getByRole('region', { name: 'Work' })).getByRole('button', { name: /^Nurse/ }));
+    const early = screen.getByRole('dialog', { name: 'Your career' });
+    expect(within(early).getByText(/^You can retire from 56\. You leave work for good: no more salary\./)).toBeTruthy();
+    expect(within(early).queryByRole('switch', { name: /Retire this round/ })).toBeNull();
+    young.unmount();
+    cleanup();
+
+    while (session.view().round < content.life.retireFromRound) {
+      await session.playRound({ orders: [] });
+      await toFinance();
+    }
+    expect(session.view().player.life.career).not.toBeNull();
+    renderGame(<Play />, services);
+    await screen.findAllByRole('heading', { name: 'News' });
+    const panel = screen.getByRole('region', { name: 'Work' });
+    // The first line of the panel is the job, whatever rung the years have brought her to.
+    await user.click(within(panel).getAllByRole('button')[0]);
+    const sheet = screen.getByRole('dialog', { name: 'Your career' });
+    const toggle = within(sheet).getByRole('switch', { name: /Retire this round/ });
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    expect(within(sheet).getByText(`You leave work for good: no more salary. While you take up no career, +${content.life.retiredFocus} focus every round and ${content.life.retiredStatus} status.`)).toBeTruthy();
+    await user.click(toggle);
+    expect(within(screen.getByRole('dialog', { name: 'Your career' })).getByRole('switch', { name: /Retire this round/ }).getAttribute('aria-checked')).toBe('true');
+  });
 });

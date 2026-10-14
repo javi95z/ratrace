@@ -308,7 +308,11 @@
     "openBusiness": "Abres un negocio: {name}",
     "sellBusinesses": "Vendes tus negocios al {pct} % de lo que valen",
     "skill": "{skill} {value}",
-    "coversInspection": "Paga el {pct} % de una inspección de Hacienda"
+    "coversInspection": "Paga el {pct} % de una inspección de Hacienda",
+    "retire": "Te jubilas, para siempre",
+    "giftSavings": "El {pct} % de tu efectivo y ahorro, para tus hijos",
+    "giftBusinesses": "Tus negocios, para tus hijos",
+    "giftCounts": "Sigue contando en tu puntuación, menos un {pct} % de impuesto"
   },
   "finance": {
     "tabs": {
@@ -472,7 +476,11 @@
       "learn": "Aprender",
       "learnAbout": "Cada una cuesta 1 de foco y no necesita trabajo. Gestión solo se aprende llevando un negocio.",
       "learnHint": "+{n} de {skill} · nivel {level}",
-      "frugalLate": "Desde los {age} años, el estilo austero resta {n}."
+      "frugalLate": "Desde los {age} años, el estilo austero resta {n}.",
+      "healthRefused": "Ninguna aseguradora te cubre la salud: ya tuviste una enfermedad grave.",
+      "healthLocked": "Seguro de salud con el precio de la edad a la que lo contrataste: {age}.",
+      "healthDearer": "Contratar el seguro de salud a partir de los {age} cuesta más.",
+      "insuranceRenews": "Cada seguro se renueva solo cada ronda hasta que lo canceles."
     },
     "shop": {
       "status": "Estatus +{n}",
@@ -869,7 +877,8 @@
     "rankings": "Ver las clasificaciones",
     "compare": "Mejor que el {pct} % de las vidas de {life} que han jugado otros ({total}).",
     "rareBadge": "¡Insignia rara: {name}!",
-    "legendaryBadge": "¡Insignia legendaria: {name}!"
+    "legendaryBadge": "¡Insignia legendaria: {name}!",
+    "legacy": "Incluye {amount} que diste a tus hijos en vida."
   },
   "epilogue": {
     "title": "Tu vida, contada",
@@ -897,7 +906,9 @@
       "crisis": "A los {age} te pilló {crisis}.",
       "hundred": "A los {age} juntaste tus primeros cien mil.",
       "million": "A los {age} eras millonario.",
-      "tenMillion": "A los {age} pasaste de los diez millones."
+      "tenMillion": "A los {age} pasaste de los diez millones.",
+      "retired": "A los {age} te jubilaste, y los días pasaron a ser tuyos.",
+      "gift": "A los {age} diste a tus hijos parte de lo tuyo, en vida."
     },
     "closing": {
       "free": "Terminaste a los {age} en {city}, libre, con {worth} y {score} puntos. Trabajar hacía tiempo que era una elección.",
@@ -1018,7 +1029,8 @@
     "evasionShellOn": "Abrir sociedad en un paraíso fiscal",
     "evasionShellOff": "Cerrar la sociedad en el paraíso fiscal",
     "evasionCryptoOn": "No declarar la cripto",
-    "evasionCryptoOff": "Declarar la cripto"
+    "evasionCryptoOff": "Declarar la cripto",
+    "retire": "Jubilarte"
   },
   "account": {
     "title": "Cuenta",
@@ -1122,7 +1134,15 @@
     },
     "learnGives": "+{n} de {skill}",
     "focusPick": "Toca para elegir. Cuenta cuando se juegue la ronda.",
-    "financeLiving": "Tienes dinero invertido: +{n} al acabar esta ronda."
+    "financeLiving": "Tienes dinero invertido: +{n} al acabar esta ronda.",
+    "retiredTitle": "Jubilación",
+    "retiredSub": "+{focus} de foco por ronda · estatus {status}",
+    "retiredAbout": "Te jubilaste a los {age}. Mientras no vuelvas a una carrera, tienes +{focus} de foco cada ronda y {status} de estatus por una vida propia.",
+    "retireTitle": "Jubilación",
+    "retire": "Jubilarte esta ronda",
+    "retireGives": "Dejas de trabajar para siempre: sin sueldo. Mientras no vuelvas a una carrera, +{focus} de foco cada ronda y {status} de estatus.",
+    "retireLater": "Podrás jubilarte a partir de los {age} años.",
+    "retireOpen": "Ya puedes jubilarte, desde tus finanzas."
   },
   "rankings": {
     "title": "Clasificaciones",

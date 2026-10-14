@@ -5,13 +5,14 @@ import { careerOf, cityOf, itemOf } from '../lookup';
 import { clamp, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { propertyPrice } from '../property';
-import { indexed } from '../rates';
+import { indexed, PRICE_LEVEL_START } from '../rates';
 import { netWorth } from '../selectors';
 import { effectiveTax, purchaseTax } from '../tax';
 import type { Effects, FinanceSkill, LifestyleTier, PlayerState } from '../types';
 import type { Situation } from './conditions';
 import { homeOf, refreshDerived } from './derive';
 import { FLAG_SOLD_BUSINESS, hasFlag } from './flags';
+import { retire } from './orders';
 import { addSkillPoints, maxBusinessesOf, pointsOfLevel } from './skills';
 
 /** The one-off money of an effect, in the dollars of the round, after any protection the player holds. */
@@ -122,6 +123,28 @@ function lose(p: PlayerState, loss: NonNullable<Effects['lose']>, at: Situation)
 }
 
 /**
+ * Gives to the children: a share of the cash and savings, cash first, and every business at what is
+ * in it. The gift tax is taken from what is given; the rest is the family's, kept in the dollars of
+ * the start so that it counts as it would have on the day.
+ */
+function giveToChildren(p: PlayerState, gift: NonNullable<Effects['gift']>, at: Situation): void {
+  let given = 0;
+  if (gift.liquidPct !== undefined) {
+    const amount = mulDiv(Math.max(0, p.cash) + p.deposit, gift.liquidPct, 100);
+    const fromCash = Math.min(amount, Math.max(0, p.cash));
+    p.cash -= fromCash;
+    p.deposit -= amount - fromCash;
+    given += amount;
+  }
+  if (gift.businesses === true) {
+    for (const business of p.businesses) given += business.capital;
+    p.businesses = [];
+  }
+  const kept = given - mulDiv(given, at.content.life.giftTaxPct, 100);
+  p.life.legacy += mulDiv(kept, PRICE_LEVEL_START, at.world.priceLevel);
+}
+
+/**
  * Applies the effects of a card option or of one of its outcomes to the player.
  * Cash may go negative here; the caller settles it once the whole hand is answered.
  * The derived fields are back in step when this returns.
@@ -171,6 +194,8 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   for (const flag of effects.clearFlags ?? []) delete life.flags[flag];
 
   if (effects.job !== undefined) changeJob(p, effects.job, at);
+  if (effects.retire === true && life.career !== null) retire(p, round);
+  if (effects.gift !== undefined) giveToChildren(p, effects.gift, at);
   if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) {
     life.movingTo = effects.moveCity;
     // A move a card offers comes with a place to go to.

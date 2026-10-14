@@ -551,4 +551,24 @@ export const cards: Record<string, CardText> = {
     'Más adelante',
     'Hacerlo',
   ]),
+  career_restructuring: c('Reestructuración', 'La empresa revisa quién cobra más. Tu nombre está en la lista.', [
+    'Aceptar la salida con indemnización',
+    'Aceptar un puesto por debajo',
+    ['Pelear tu puesto', 'Te quedas. Esta vez.', 'Pierdes la pelea: sales con una indemnización menor.'],
+  ]),
+  late_gift: c('Herencia en vida', 'Tus hijos están en la edad en que más ayuda un empujón. Lo que des paga hoy el impuesto de donaciones.', [
+    'Que esperen a la herencia',
+    'Ayudarles con la entrada de un piso',
+    'Repartir la mitad en vida',
+  ]),
+  late_business_handover: c('El futuro del negocio', 'Llevas años al frente. Un comprador pregunta por él, y en casa alguien querría seguir.', [
+    'Seguir al frente',
+    'Vendérselo al comprador',
+    'Dárselo a tus hijos',
+  ]),
+  late_parents_care: c('Tus padres ya no pueden solos', 'Tu madre se cayó el mes pasado. Alguien tiene que estar pendiente, y no basta con una llamada.', [
+    'Que se ocupen tus hermanos',
+    'Pagar una residencia',
+    'Cuidarlos tú',
+  ]),
 };

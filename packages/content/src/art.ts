@@ -7,12 +7,24 @@ import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId
 
 const scene = (name: string) => `card.${name}`;
 
+/**
+ * Card scenes not drawn yet, each with the drawn scene shown in its place until `cards-22` is cut.
+ * A scene here is the only one a card may share.
+ */
+export const SCENE_STAND_INS: Record<string, string> = {
+  career_restructuring: scene('packed_box'),
+  late_gift: scene('family_dinner'),
+  late_business_handover: scene('contract_signing'),
+  late_parents_care: scene('family_dinner'),
+};
+
 export const cardArt: Record<string, string> = {
   career_raise: scene('boss_door'),
   career_competitor_offer: scene('handshake'),
   career_relocation: scene('airport'),
   career_overtime_crunch: scene('office_desk'),
   career_layoff: scene('packed_box'),
+  career_restructuring: SCENE_STAND_INS.career_restructuring,
   career_toxic_boss: scene('angry_boss'),
   career_switch: scene('two_ladders'),
   career_big_offer: scene('tower_lobby'),
@@ -132,6 +144,9 @@ export const cardArt: Record<string, string> = {
   late_early_retirement: scene('sunset_bench'),
   late_downsizing: scene('small_house'),
   late_will: scene('will_desk'),
+  late_gift: SCENE_STAND_INS.late_gift,
+  late_business_handover: SCENE_STAND_INS.late_business_handover,
+  late_parents_care: SCENE_STAND_INS.late_parents_care,
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */

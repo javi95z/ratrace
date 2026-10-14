@@ -240,3 +240,25 @@ Square image. Object sheet: 3 columns by 1 row, 3 objects, each standing alone a
 | 61 | `items/items-05.png` | `item.edu_certificate`, `item.edu_coach`, `item.edu_language_school` | 64×64 |
 
 Cut and wired.
+
+## The end of a working life
+
+### 62. Four late-life cards, a retirement and a weekly challenge
+
+Save as `art/raw/cards/cards-22.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A glass-walled meeting room at dusk: two managers across a table with a thick folder marked only with a red sticker, an empty chair waiting on the near side, a city skyline behind.
+2. A notary's desk in warm lamplight: an older hand passing a small set of house keys and a signed paper to a young couple's open hands.
+3. A small family shop at closing time, its shutter half down: an older owner handing a ring of keys to a younger person in an apron beneath the lit shop sign, the sign kept blank.
+4. A bright care-home garden in the afternoon: an elderly couple on a bench beside a walking frame, a younger figure crouching beside them holding a thermos, flowerbeds and a white building behind.
+5. A sunny allotment garden: a retired figure in a straw hat watering tomatoes, a folding chair and a radio beside a shed, an empty hamster wheel overgrown with ivy in the corner.
+6. A starting line painted on a running track at dawn, a row of small hamster wheels set along it like starting blocks, a big calendar page with one week circled on a board above, confetti in the air.
+```
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 62 | `cards/cards-22.png` | `card.restructuring`, `card.keys_to_children`, `card.shop_handover`, `card.care_home`, `scene.retired`, `scene.challenge` | 288×120 |
+
+Until it is cut, the four cards show a stand-in (`SCENE_STAND_INS` in `packages/content/src/art.ts`).

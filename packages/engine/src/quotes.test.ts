@@ -255,6 +255,7 @@ describe('quoteLiving', () => {
       lifestyleStatus: [0, 0, 0, 9],
       worse: { room: null, frugal: null },
       insurance: { health: 72_000, home: 54_000, life: 36_000, liability: 18_000 },
+      health: { since: null, dearerFrom: null, refused: false },
     });
   });
 

@@ -118,6 +118,10 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     if (entry.roundsLeft === null) add(income ? 'good' : 'bad', t(income ? 'yearlyIncome' : 'yearlyCost', { amount }));
     else add(income ? 'good' : 'bad', t(income ? 'yearlyIncomeFor' : 'yearlyCostFor', { amount, years: entry.roundsLeft * content.yearsPerRound }));
   }
+  if (effects.retire) add('plain', t('retire'));
+  if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
+  if (effects.gift?.businesses) add('bad', t('giftBusinesses'));
+  if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));
   if (effects.job?.leave) add('plain', t('leaveJob'));
   else if (effects.job?.career) add('plain', t('newCareer', { career: text.careers[effects.job.career].name }));
   else if ((effects.job?.levelDelta ?? 0) > 0) add('good', t('promotion'));
@@ -236,6 +240,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t(order.on ? 'insureOn' : 'insureOff', { kind: text.insurance[order.insurance] });
     case 'moveCity':
       return t('move', { city: names.cities[order.cityId] });
+    case 'retire':
+      return t('retire');
   }
 }
 

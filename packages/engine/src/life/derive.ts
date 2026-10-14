@@ -2,7 +2,7 @@ import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemDef, ItemPerks, PlayerState, Property, Regime, StatusStep } from '../types';
+import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep } from '../types';
 import { skillLevel } from './skills';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -68,10 +68,11 @@ export function careerSwing(p: PlayerState, content: Content, regime: Regime, ro
   };
 }
 
-/** Focus on top in a round: what the things held give, and what the career leaves over. */
+/** Focus on top in a round: what the things held give, what the career leaves over, and the time retirement gives. */
 export function focusBonusOf(p: PlayerState, content: Content): number {
   const fit = skillLevel(p, 'health', content) >= content.life.skills.healthFocusFrom ? 1 : 0;
-  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit;
+  const retired = isRetired(p) ? content.life.retiredFocus : 0;
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired;
 }
 
 /**
@@ -97,6 +98,25 @@ export function deriveSalary(p: PlayerState, content: Content): Cents {
   return ownPay(p, content) + partner;
 }
 
+/**
+ * The yearly premium of a cover, in start-of-game dollars, for cover taken out in the round `since`.
+ * Health cover is dearer the older it is taken out, and cheaper for a body looked after and one that
+ * goes to the gym.
+ */
+export function insurancePremium(p: PlayerState, content: Content, kind: InsuranceKind, since: number): Cents {
+  const rules = content.life;
+  const premium = applyBp(cityOf(content, p.cityId).livingCostAnnual, rules.insurancePremiumBp[kind]);
+  if (kind !== 'health') return premium;
+  const aged = mulDiv(premium, pctStepAt(rules.healthPremiumByAge, since), 100);
+  const off = skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct + perksOf(p, content).healthCoverOffPct;
+  return mulDiv(aged, Math.max(0, 100 - off), 100);
+}
+
+/** True for a player who has retired and taken up no career since. */
+export function isRetired(p: PlayerState): boolean {
+  return p.life.retiredAtRound !== null && p.life.career === null;
+}
+
 /** Yearly expenses beyond living cost and debt, in start-of-game dollars. */
 export function deriveExpenses(p: PlayerState, content: Content): Cents {
   const life = p.life;
@@ -106,11 +126,7 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
   let total = life.children.length * mulDiv(living, rules.childCostPct, 100);
   if (life.partner) total += mulDiv(living, rules.partnerCostPct, 100);
   for (const kind of INSURANCE_KINDS) {
-    if (!life.insurance[kind]) continue;
-    const premium = applyBp(living, rules.insurancePremiumBp[kind]);
-    // A body looked after is cheaper to insure, and so is one that goes to the gym.
-    const off = kind === 'health' ? skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct + perksOf(p, content).healthCoverOffPct : 0;
-    total += mulDiv(premium, Math.max(0, 100 - off), 100);
+    if (life.insurance[kind]) total += insurancePremium(p, content, kind, life.healthCoverSince ?? 0);
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
   // An offshore company has its fee, year after year, whatever it saves.
@@ -149,6 +165,13 @@ export function statusStepAt(steps: readonly StatusStep[], round: number): numbe
   let status = steps[0]?.status ?? 0;
   for (const step of steps) if (round >= step.fromRound) status = step.status;
   return status;
+}
+
+/** The percent of a step list in a round: the last step that has begun, or 100 before any. */
+export function pctStepAt(steps: readonly PctStep[], round: number): number {
+  let pct = 100;
+  for (const step of steps) if (round >= step.fromRound) pct = step.pct;
+  return pct;
 }
 
 /** The next step of a list after a round, or null when none is left. */
@@ -192,7 +215,8 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
   return {
     items,
     home: home ? propertyTypeOf(content, home.typeId).status : rentStatusAt(content, round)[life.rentTier],
-    job: life.career ? levelOf(content, life.career).status : 0,
+    // A life of one's own after work is a standing too.
+    job: life.career ? levelOf(content, life.career).status : isRetired(p) ? rules.retiredStatus : 0,
     city: cityOf(content, p.cityId).prestige,
     lifestyle: lifestyleStatusAt(content, round)[p.lifestyleTier],
     bonus: life.bonusStatus,

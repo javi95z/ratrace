@@ -1,4 +1,4 @@
-import type { CardCategory, CardDef, CardOption, Condition, Recurring, WorldTrigger } from '@ratrace/engine';
+import type { CardCategory, CardDef, CardOption, CardRisk, Condition, Recurring, WorldTrigger } from '@ratrace/engine';
 import { usd } from '../money';
 
 interface Spec {
@@ -7,6 +7,8 @@ interface Spec {
   /** Rounds before the card can come back. Defaults to 4, which is eight years. */
   cooldown?: number;
   once?: boolean;
+  /** A misfortune that grows likelier with age. */
+  risk?: CardRisk;
   when?: Condition;
   trigger?: WorldTrigger;
 }

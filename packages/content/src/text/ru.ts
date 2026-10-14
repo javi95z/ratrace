@@ -340,6 +340,8 @@ export const ru: ContentText = {
     'bad-tier': 'Такого варианта не существует.',
     'below-lifestyle-floor': 'Скромнее жить у тебя не получится.',
     'unknown-insurance': 'Такой страховки не существует.',
+    'preexisting-condition': 'Ни одна страховая не берёт на себя уже перенесённую болезнь.',
+    'too-young-to-retire': 'Для пенсии ещё рано.',
     'unknown-city': 'Такого города не существует.',
     'same-city': 'Ты уже там живёшь.',
     'already-moving': 'Ты уже переезжаешь в этом раунде.',

@@ -32,6 +32,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'setInsurance',
   'moveCity',
   'setEvasion',
+  'retire',
 ]);
 
 const isText = (x: unknown): x is string => typeof x === 'string';
@@ -130,6 +131,7 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'setRentTier':
     case 'setInsurance':
     case 'moveCity':
+    case 'retire':
       return executeLifeOrder(p, order, ctx);
     case 'setEvasion':
       return executeSetEvasion(p, order, ctx);

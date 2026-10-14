@@ -4,8 +4,9 @@ import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
-import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
+import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
 import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
 import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
@@ -16,7 +17,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -316,8 +317,10 @@ export interface LivingQuote {
   lifestyleStatus: [number, number, number, number];
   /** When a rented room and the frugal way of living next cost more status, and how much, or null once they cost the most. */
   worse: { room: StatusStep | null; frugal: StatusStep | null };
-  /** Yearly premium of each insurance on its own, at today's prices. */
+  /** Yearly premium of each insurance on its own, at today's prices: what is paid for a cover held, and what one taken out now would cost. */
   insurance: Record<InsuranceKind, Cents>;
+  /** The health cover: the round its premium was set in, or null without one; when cover taken out later next costs more, or null; and whether an insurer will take the player on at all. */
+  health: { since: number | null; dearerFrom: PctStep | null; refused: boolean };
 }
 
 export function quoteLiving(content: Content, view: GameView): LivingQuote {
@@ -330,8 +333,8 @@ export function quoteLiving(content: Content, view: GameView): LivingQuote {
   const world = view.timeline[view.round];
   const atTier = (lifestyleTier: LifestyleTier) => livingCostAnnual({ ...p, lifestyleTier }, content, world);
   const atRent = (rentTier: RentTier) => livingCostAnnual({ ...p, life: { ...p.life, rentTier } }, content, world);
-  const living = cityOf(content, p.cityId).livingCostAnnual;
-  const premium = (kind: InsuranceKind) => indexed(applyBp(living, content.life.insurancePremiumBp[kind]), world);
+  const premium = (kind: InsuranceKind) => indexed(insurancePremium(p, content, kind, kind === 'health' && p.life.healthCoverSince !== null ? p.life.healthCoverSince : view.round), world);
+  const dearer = content.life.healthPremiumByAge.find((step) => step.fromRound > view.round && step.fromRound < content.rounds) ?? null;
   return {
     tiers: [atTier(0), atTier(1), atTier(2), atTier(3)],
     rentTiers: ownsHome(p) ? null : [atRent(0), atRent(1)],
@@ -339,6 +342,7 @@ export function quoteLiving(content: Content, view: GameView): LivingQuote {
     lifestyleStatus: lifestyleStatusAt(content, view.round),
     worse: { room: soon(content.life.agedStatus.room), frugal: soon(content.life.agedStatus.frugal) },
     insurance: Object.fromEntries(INSURANCE_KINDS.map((kind) => [kind, premium(kind)])) as Record<InsuranceKind, Cents>,
+    health: { since: p.life.healthCoverSince, dearerFrom: dearer, refused: !p.life.insurance.health && hasFlag(p.life.flags, FLAG_HAD_ILLNESS) },
   };
 }
 
@@ -376,6 +380,11 @@ export interface WorkQuote {
    * All nothing for an ordinary career.
    */
   traits: { cyclePct: number; follows: boolean; fadePct: number; fade: { fromRound: number; pctPerRound: number; maxPct: number } | null; focus: number };
+  /**
+   * Retiring: the round from which it is open, whether it is open now, whether the player has
+   * retired, and what it gives while no career is taken up: focus on top each round, and status.
+   */
+  retirement: { fromRound: number; open: boolean; retired: boolean; focus: number; status: number };
 }
 
 /** The player's working life in figures: the ladder they are on and what each way of spending focus is worth to them. */
@@ -405,6 +414,13 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
       follows: career?.cyclePct !== undefined,
       fade: career?.fade ?? null,
       focus: career?.focus ?? 0,
+    },
+    retirement: {
+      fromRound: content.life.retireFromRound,
+      open: p.life.career !== null && view.round >= content.life.retireFromRound,
+      retired: isRetired(p),
+      focus: content.life.retiredFocus,
+      status: content.life.retiredStatus,
     },
   };
 }

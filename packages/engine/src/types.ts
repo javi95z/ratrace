@@ -21,6 +21,15 @@ export interface StatusStep {
   status: number;
 }
 
+/** A share, in percent, that holds from a round on. */
+export interface PctStep {
+  fromRound: number;
+  pct: number;
+}
+
+/** A misfortune that grows likelier with age: of the body, or of work. */
+export type CardRisk = 'health' | 'job';
+
 /**
  * What not paying tax is worth, and what it risks. Every way of doing it saves tax this round and
  * raises suspicion; each round an inspection may come, as likely as the suspicion is high, and it
@@ -128,6 +137,10 @@ export interface SkillRules {
   healthPremiumOffPct: number;
   /** Health: from this level a point of focus more every round. */
   healthFocusFrom: SkillLevel;
+  /** Health: taken off the chance of a misfortune of the body, in percent per level. */
+  healthRiskOffPct: number;
+  /** The skills a career practises: taken off the chance of a misfortune at work, in percent per level of the best of them. */
+  jobRiskOffPct: number;
 }
 export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
 /** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
@@ -322,6 +335,23 @@ export interface LifeRules {
    * noticed more and more after. The first step of each is at round 0, with the status of the start.
    */
   agedStatus: { room: readonly StatusStep[]; frugal: readonly StatusStep[] };
+  /**
+   * How much likelier the misfortunes of the body and of work grow with age, in percent of a card's
+   * weight: each step holds from its round on, and the first is at round 0, at 100.
+   */
+  riskByAge: Record<CardRisk, readonly PctStep[]>;
+  /**
+   * The health premium, in percent, by the round the cover was taken out in: signed young, paid
+   * young, for as long as it is kept. The first step is at round 0, at 100.
+   */
+  healthPremiumByAge: readonly PctStep[];
+  /** The first round in which the player may retire of their own accord. */
+  retireFromRound: number;
+  /** While retired and in no career: focus on top every round, and the status of a life of one's own. */
+  retiredFocus: number;
+  retiredStatus: number;
+  /** The tax on what is given to the children in life, in percent of it. */
+  giftTaxPct: number;
   /** Buying a thing that lasts on instalments: this percent of the price is paid down, and the rest is a personal loan. */
   itemFinanceDownPct: number;
   /** The least a thing must cost, at the prices of the start, to be sold on instalments. */
@@ -559,6 +589,13 @@ export interface Effects {
   lose?: { what: AssetClass | 'deposit'; pct: number };
   /** Raises the lowest lifestyle tier the player can choose. */
   lifestyleFloor?: LifestyleTier;
+  /** Ends the career for good: the player is retired. Any one-off money is worked out on the pay before it ends. */
+  retire?: boolean;
+  /**
+   * Gives to the children in life: a percent of the cash and savings, every business, or both. What
+   * is given, less the gift tax, is the family's and counts towards the score as the player's own.
+   */
+  gift?: { liquidPct?: number; businesses?: boolean };
 }
 
 export interface CardOutcome {
@@ -590,6 +627,8 @@ export interface CardDef {
   cooldown: number;
   /** Drawn at most once in a life. */
   once?: boolean;
+  /** A misfortune whose weight grows with age and shrinks with the skill that guards against it. */
+  risk?: CardRisk;
   when?: Condition;
   /** World cards only. */
   trigger?: WorldTrigger;
@@ -843,6 +882,12 @@ export interface LifeState {
   /** One entry per child: rounds of dependence left. */
   children: number[];
   insurance: Record<InsuranceKind, boolean>;
+  /** The round the health cover was taken out in, which sets its premium; null without one. */
+  healthCoverSince: number | null;
+  /** The round the player retired in, or null. */
+  retiredAtRound: number | null;
+  /** What has been given to the children, less the gift tax, in start-of-game dollars. */
+  legacy: Cents;
   rentTier: RentTier;
   minLifestyleTier: LifestyleTier;
   items: OwnedItem[];
@@ -956,7 +1001,9 @@ export type Order =
   | { type: 'setLifestyle'; tier: LifestyleTier }
   | { type: 'setRentTier'; tier: RentTier }
   | { type: 'setInsurance'; insurance: InsuranceKind; on: boolean }
-  | { type: 'moveCity'; cityId: string };
+  | { type: 'moveCity'; cityId: string }
+  /** Leaves the career for good, from the round the rules allow. */
+  | { type: 'retire' };
 
 /** Each costs one focus point and can be done once a round. */
 export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'studyFinance' | StudyAction;
@@ -1046,6 +1093,8 @@ export type RejectReason =
   | 'bad-tier'
   | 'below-lifestyle-floor'
   | 'unknown-insurance'
+  | 'preexisting-condition'
+  | 'too-young-to-retire'
   | 'unknown-city'
   | 'same-city'
   | 'already-moving';

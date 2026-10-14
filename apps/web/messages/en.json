@@ -308,7 +308,11 @@
     "openBusiness": "You open a business: {name}",
     "sellBusinesses": "You sell your businesses for {pct}% of what they are worth",
     "skill": "{skill} {value}",
-    "coversInspection": "Pays {pct}% of a tax inspection"
+    "coversInspection": "Pays {pct}% of a tax inspection",
+    "retire": "You retire, for good",
+    "giftSavings": "{pct}% of your cash and savings to your children",
+    "giftBusinesses": "Your businesses to your children",
+    "giftCounts": "Still counts in your score, less {pct}% gift tax"
   },
   "finance": {
     "tabs": {
@@ -472,7 +476,11 @@
       "learn": "Learn",
       "learnAbout": "Each costs 1 focus and needs no job. Management is learnt only by running a business.",
       "learnHint": "+{n} {skill} · level {level}",
-      "frugalLate": "From {age}, living frugally costs {n} status."
+      "frugalLate": "From {age}, living frugally costs {n} status.",
+      "healthRefused": "No insurer will cover your health: you have already had a serious illness.",
+      "healthLocked": "Health cover priced at the age you took it out: {age}.",
+      "healthDearer": "Health cover taken out from {age} costs more.",
+      "insuranceRenews": "Every cover renews by itself each round until you end it."
     },
     "shop": {
       "status": "Status +{n}",
@@ -869,7 +877,8 @@
     "rankings": "See the rankings",
     "compare": "Better than {pct}% of the {life} lives others have played ({total}).",
     "rareBadge": "A rare badge: {name}!",
-    "legendaryBadge": "A legendary badge: {name}!"
+    "legendaryBadge": "A legendary badge: {name}!",
+    "legacy": "Includes {amount} given to your children in life."
   },
   "epilogue": {
     "title": "Your life, told",
@@ -897,7 +906,9 @@
       "crisis": "At {age} {crisis} found you.",
       "hundred": "At {age} you had your first hundred thousand.",
       "million": "At {age} you were a millionaire.",
-      "tenMillion": "At {age} you passed ten million."
+      "tenMillion": "At {age} you passed ten million.",
+      "retired": "At {age} you retired, and the days became your own.",
+      "gift": "At {age} you gave your children part of what you had, while you could watch."
     },
     "closing": {
       "free": "You finished at {age} in {city}, free, with {worth} and {score} points. Work had long been a choice.",
@@ -1018,7 +1029,8 @@
     "evasionShellOn": "Open an offshore company",
     "evasionShellOff": "Close the offshore company",
     "evasionCryptoOn": "Hide crypto gains",
-    "evasionCryptoOff": "Declare crypto gains"
+    "evasionCryptoOff": "Declare crypto gains",
+    "retire": "Retire"
   },
   "account": {
     "title": "Account",
@@ -1122,7 +1134,15 @@
     },
     "learnGives": "+{n} {skill}",
     "focusPick": "Tap to choose. It takes effect when the round is played.",
-    "financeLiving": "You have money invested: +{n} when this round ends."
+    "financeLiving": "You have money invested: +{n} when this round ends.",
+    "retiredTitle": "Retired",
+    "retiredSub": "+{focus} focus a round · status {status}",
+    "retiredAbout": "You retired at {age}. While you take up no career, you have +{focus} focus every round and {status} status for a life of your own.",
+    "retireTitle": "Retirement",
+    "retire": "Retire this round",
+    "retireGives": "You leave work for good: no more salary. While you take up no career, +{focus} focus every round and {status} status.",
+    "retireLater": "You can retire from {age}.",
+    "retireOpen": "You can retire now, from your finances."
   },
   "rankings": {
     "title": "Rankings",

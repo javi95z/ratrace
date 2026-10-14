@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.22.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.23.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -13,7 +13,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 20 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 113 |
+| [Cartas](#cartas) | 117 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 35 |
 
@@ -762,7 +762,7 @@ La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (18)
+### Carrera (19)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -771,6 +771,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.airport.png" alt="Un ascenso con letra pequeña"> | **Un ascenso con letra pequeña**<br>El ascenso es tuyo. La mesa está en Londres. | 1. Rechazarlo<br>2. Hacer las maletas |
 | <img src="../art/clean/cards/card.office_desk.png" alt="Semanas de entrega"> | **Semanas de entrega**<br>Han adelantado la fecha. Alguien tiene que quedarse hasta tarde un mes. | 1. Hacer lo justo<br>2. Echar horas |
 | <img src="../art/clean/cards/card.packed_box.png" alt="Una ronda de despidos"> | **Una ronda de despidos**<br>En tu calendario aparece una reunión general sin orden del día. | 1. Aceptar la indemnización<br>2. Pelear por tu puesto<br>3. Formarte mientras buscas |
+| <img src="../art/clean/cards/card.packed_box.png" alt="Reestructuración"> | **Reestructuración**<br>La empresa revisa quién cobra más. Tu nombre está en la lista. | 1. Aceptar la salida con indemnización<br>2. Aceptar un puesto por debajo<br>3. Pelear tu puesto |
 | <img src="../art/clean/cards/card.angry_boss.png" alt="El jefe nuevo"> | **El jefe nuevo**<br>Correos a medianoche. Elogios en privado, broncas en público. | 1. Aguantar<br>2. Denunciarlo a Recursos Humanos<br>3. Cambiar de equipo |
 | <img src="../art/clean/cards/card.two_ladders.png" alt="Otra escalera"> | **Otra escalera**<br>Un amigo que trabaja en banca dice que buscan gente con «experiencia del mundo real». | 1. Quedarte donde estás<br>2. Empezar desde abajo en finanzas<br>3. Pagar un curso y presentarte |
 | <img src="../art/clean/cards/card.law_office.png" alt="El bufete busca pasantes"> | **El bufete busca pasantes**<br>Un despacho contrata pasantes. Las horas son largas y la escalera, la más alta de la ciudad. | 1. Quedarte donde estás<br>2. Empezar desde abajo en derecho<br>3. Pagar el curso de acceso |
@@ -925,13 +926,16 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.cash_envelope.png" alt="En negro"> | **En negro**<br>Un cliente te ofrece pagar más si no hay factura. | 1. Facturarlo como es debido<br>2. Coger el sobre |
 | <img src="../art/clean/cards/card.city_arrival.png" alt="Cambiar de residencia fiscal"> | **Cambiar de residencia fiscal**<br>Un asesor te enseña lo que conservarías si vivieras en Dubái. | 1. Quedarte<br>2. Mudarte a Dubái<br>3. Pagar antes un buen asesoramiento |
 
-### Madurez (5)
+### Madurez (8)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
 | <img src="../art/clean/cards/card.coupe_garage.png" alt="Un Porsche 911"> | **Un Porsche 911**<br>Pasas por delante del concesionario todos los días. Hoy entras. | 1. Volver a salir<br>2. Comprarlo<br>3. Financiarlo |
 | <img src="../art/clean/cards/card.campus_dropoff.png" alt="La universidad"> | **La universidad**<br>A tu hijo lo han admitido en una buena universidad extranjera. | 1. La universidad pública de aquí<br>2. La buena, en el extranjero<br>3. Que pida un préstamo de estudios |
 | <img src="../art/clean/cards/card.sunset_bench.png" alt="Prejubilación"> | **Prejubilación**<br>La empresa ofrece un paquete a quien se vaya este año. | 1. Seguir trabajando<br>2. Aceptar el paquete |
+| <img src="../art/clean/cards/card.family_dinner.png" alt="Herencia en vida"> | **Herencia en vida**<br>Tus hijos están en la edad en que más ayuda un empujón. Lo que des paga hoy el impuesto de donaciones. | 1. Que esperen a la herencia<br>2. Ayudarles con la entrada de un piso<br>3. Repartir la mitad en vida |
+| <img src="../art/clean/cards/card.contract_signing.png" alt="El futuro del negocio"> | **El futuro del negocio**<br>Llevas años al frente. Un comprador pregunta por él, y en casa alguien querría seguir. | 1. Seguir al frente<br>2. Vendérselo al comprador<br>3. Dárselo a tus hijos |
+| <img src="../art/clean/cards/card.family_dinner.png" alt="Tus padres ya no pueden solos"> | **Tus padres ya no pueden solos**<br>Tu madre se cayó el mes pasado. Alguien tiene que estar pendiente, y no basta con una llamada. | 1. Que se ocupen tus hermanos<br>2. Pagar una residencia<br>3. Cuidarlos tú |
 | <img src="../art/clean/cards/card.small_house.png" alt="Una casa más pequeña"> | **Una casa más pequeña**<br>La casa se ha quedado grande. Bastaría un pisito de alquiler junto al mar. | 1. Quedarte<br>2. Vender y alquilar junto al mar |
 | <img src="../art/clean/cards/card.will_desk.png" alt="Hacer testamento"> | **Hacer testamento**<br>A nadie le apetece la cita. Todo el mundo se alegra después. | 1. Más adelante<br>2. Hacerlo |
 
