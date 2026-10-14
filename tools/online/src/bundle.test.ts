@@ -47,8 +47,7 @@ describe('the game as the server holds it', () => {
   });
 
   it('holds the rules and nothing of how the game looks: a change of pictures or words is not a change of the server\'s copy', async () => {
-    const { code } = await bundleGame();
-    const sources = [...code.matchAll(/^\/\/ (packages\/[\w/.-]+)$/gm)].map((m) => m[1]);
+    const { sources } = await bundleGame();
     expect(sources).toContain('packages/content/src/record.ts');
     expect(sources).toContain('packages/content/src/badges.ts');
     for (const look of ['art.ts', 'names.ts', 'text/', 'text.ts']) expect(sources.filter((file) => file.includes(`content/src/${look}`)), look).toEqual([]);
