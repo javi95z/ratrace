@@ -12,10 +12,11 @@ export type AccountState =
 
 /**
  * Something the player should be told once about keeping their account.
- * `taken`: the Google account they chose already belongs to a player of this game, most often
- * themselves on another device. `failed`: nothing was linked, whatever the reason.
+ * `joining`: the Google account they chose already belongs to a player of this game, most often
+ * themselves on another device, and the game is taking them into it on its own. `failed`: nothing
+ * was linked, whatever the reason.
  */
-export type AccountNotice = 'taken' | 'failed';
+export type AccountNotice = 'joining' | 'failed';
 
 /** The one way the screens learn who is playing and ask to keep the account. */
 export interface Account {

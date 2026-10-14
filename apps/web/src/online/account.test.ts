@@ -169,13 +169,20 @@ describe('an account in the cloud', () => {
     stop();
   });
 
-  it('signs in as the player a Google account already belongs to, when asked', async () => {
+  it('takes a guest whose Google account already has a player straight into it, back to the same page, with nothing more to click', async () => {
     const { cloud, calls } = fakeCloud({ currentUser: async () => guest });
+    const account = new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en/play?error_code=identity_already_exists', () => {});
+    await account.start('en');
+    expect(account.state()).toMatchObject({ kind: 'guest', notice: 'joining' });
+    await vi.waitFor(() => expect(calls).toContain('sign-in http://localhost:3000/en/play'));
+    expect(calls.filter((call) => call.startsWith('link'))).toEqual([]);
+  });
+
+  it('says so when it cannot take the player into their account, and is a guest as before', async () => {
+    const { cloud } = fakeCloud({ currentUser: async () => guest, signInWithGoogle: async () => false });
     const account = new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en?error_code=identity_already_exists', () => {});
     await account.start('en');
-    expect(account.state()).toMatchObject({ kind: 'guest', notice: 'taken' });
-    expect(await account.useExistingAccount('http://localhost:3000/en')).toBe(true);
-    expect(calls).toContain('sign-in http://localhost:3000/en');
+    await vi.waitFor(() => expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' }));
   });
 
   it('is still a guest when the profile cannot be written: the row is made on a later launch', async () => {
@@ -222,12 +229,12 @@ describe('an account in the cloud', () => {
     expect(account.state()).toEqual({ kind: 'offline' });
   });
 
-  it('tells a guest, once, that the Google account they chose already has a player, and clears the address', async () => {
+  it('reads from the address, once, that the Google account they chose already has a player, and clears it', async () => {
     const cleaned: string[] = [];
     const { cloud } = fakeCloud({ currentUser: async () => guest });
     const account = new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en?error=server_error&error_code=identity_already_exists&error_description=Identity+is+already+linked+to+another+user', (url) => cleaned.push(url));
     await account.start('en');
-    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'taken' });
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'joining' });
     expect(cleaned).toEqual(['http://localhost:3000/en']);
     account.dismissNotice();
     expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });

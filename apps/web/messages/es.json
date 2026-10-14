@@ -931,20 +931,17 @@
   },
   "account": {
     "title": "Cuenta",
-    "guest": "Juegas como invitado. Tu vida solo está en este navegador.",
-    "keep": "Guardar con Google",
-    "keepHint": "La tendrás en todos tus dispositivos, y no se perderá si borras el navegador.",
+    "guest": "Juegas como invitado.",
+    "keep": "Entrar con Google",
+    "keepHint": "Guarda tu vida en tu cuenta y sigue en cualquier dispositivo.",
     "member": "Conectada con Google",
     "memberAs": "{email}",
-    "takenTitle": "Ya tienes cuenta en este juego",
-    "taken": "Ese Google ya tiene un jugador aquí. Si eres tú, entra con él: lo que tienes en este dispositivo se suma a tu cuenta y no se pierde nada.",
-    "useExisting": "Entrar con mi cuenta",
-    "notNow": "Ahora no",
-    "failed": "No se ha vinculado nada. Sigues como invitado.",
+    "failed": "No se ha podido entrar. Sigues como invitado.",
     "dismiss": "Vale",
     "saved": "Todo guardado",
     "sending": "Guardando…",
-    "waiting": "Sin conexión: guardado solo aquí"
+    "waiting": "Sin conexión: guardado solo aquí",
+    "joining": "Ya tienes cuenta. Entrando…"
   },
   "work": {
     "title": "Trabajo",

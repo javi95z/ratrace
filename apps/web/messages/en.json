@@ -931,20 +931,17 @@
   },
   "account": {
     "title": "Account",
-    "guest": "You're playing as a guest. Your life is only saved in this browser.",
-    "keep": "Save with Google",
-    "keepHint": "Play on any device, and keep your life even if this browser is cleared.",
+    "guest": "You're playing as a guest.",
+    "keep": "Sign in with Google",
+    "keepHint": "Keep your life in your account and carry on from any device.",
     "member": "Linked to Google",
     "memberAs": "{email}",
-    "takenTitle": "You already have an account here",
-    "taken": "That Google account already has a player in this game. If it is you, sign in with it: what you have on this device joins your account and nothing is lost.",
-    "useExisting": "Sign in with my account",
-    "notNow": "Not now",
-    "failed": "Nothing was linked. You are still a guest.",
+    "failed": "Could not sign in. You are still a guest.",
     "dismiss": "OK",
     "saved": "All saved",
     "sending": "Saving…",
-    "waiting": "Offline: saved on this device only"
+    "waiting": "Offline: saved on this device only",
+    "joining": "You already have an account. Signing you in…"
   },
   "work": {
     "title": "Work",

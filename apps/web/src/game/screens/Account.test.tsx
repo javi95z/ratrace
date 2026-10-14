@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -82,45 +82,28 @@ describe('the account in the settings', () => {
     show(account);
     const block = screen.getByRole('region', { name: 'Account' });
     expect(block.textContent).toContain("You're playing as a guest");
-    expect(block.textContent).toContain('Play on any device');
-    await user.click(screen.getByRole('button', { name: 'Save with Google' }));
+    expect(block.textContent).toContain('carry on from any device');
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
     expect(asked).toContain(`keep ${window.location.href}`);
     // On its way to Google: a second press must not start a second journey.
-    expect((screen.getByRole('button', { name: 'Save with Google' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Sign in with Google' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('lets a guest try again when the journey could not begin', async () => {
     const { account } = fakeAccount({ kind: 'guest', userId: 'u', notice: null }, false);
     const user = userEvent.setup();
     show(account);
-    await user.click(screen.getByRole('button', { name: 'Save with Google' }));
-    await waitFor(() => expect((screen.getByRole('button', { name: 'Save with Google' }) as HTMLButtonElement).disabled).toBe(false));
+    await user.click(screen.getByRole('button', { name: 'Sign in with Google' }));
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Sign in with Google' }) as HTMLButtonElement).disabled).toBe(false));
   });
 
-  it('offers a second device the account its Google already has, and can be told to leave it', async () => {
-    const { account, asked } = fakeAccount({ kind: 'guest', userId: 'u', notice: 'taken' });
-    const user = userEvent.setup();
+  it('says a player whose Google account already has one is being taken into it, and asks nothing', () => {
+    const { account } = fakeAccount({ kind: 'guest', userId: 'u', notice: 'joining' });
     show(account);
-    // Most often it is the same player on another device: the way in is offered, and nothing is lost by taking it.
-    const notice = screen.getByRole('alert');
-    expect(within(notice).getByText('You already have an account here')).toBeTruthy();
-    expect(within(notice).getByText('That Google account already has a player in this game. If it is you, sign in with it: what you have on this device joins your account and nothing is lost.')).toBeTruthy();
-    // One thing is asked at a time: the offer to a guest waits behind it, and each button has the whole width to be read in.
-    expect(screen.queryByRole('button', { name: 'Save with Google' })).toBeNull();
-    for (const button of within(notice).getAllByRole('button')) expect(button.className).toContain('w-full');
-    await user.click(within(notice).getByRole('button', { name: 'Sign in with my account' }));
-    expect(asked).toContain(`use ${window.location.href}`);
-    expect((screen.getByRole('button', { name: 'Sign in with my account' }) as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it('lets the notice be put away, and is then a guest as before', async () => {
-    const { account, asked } = fakeAccount({ kind: 'guest', userId: 'u', notice: 'taken' });
-    const user = userEvent.setup();
-    show(account);
-    await user.click(screen.getByRole('button', { name: 'Not now' }));
-    expect(asked).toContain('dismiss');
+    // Most often it is the same player on another device: the game takes them in on its own, with nothing to click.
+    expect(screen.getByRole('status', { name: '' }).textContent).toBe('You already have an account. Signing you in…');
+    expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Save with Google' })).toBeTruthy();
   });
 
   it('says where the player\'s things are: in the account, on their way to it, or waiting for a connection', () => {
@@ -145,12 +128,12 @@ describe('the account in the settings', () => {
 
   it('tells a guest that the account is in the cloud, and that only this browser can open it', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account);
-    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain("You're playing as a guest. Your life is only saved in this browser.");
+    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain("You're playing as a guest.");
   });
 
   it('says plainly when nothing was linked, whatever the reason', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: 'failed' }).account);
-    expect(screen.getByRole('alert').textContent).toBe('Nothing was linked. You are still a guest.');
+    expect(screen.getByRole('alert').textContent).toBe('Could not sign in. You are still a guest.');
     expect(screen.queryByRole('button', { name: 'Use that account on this device' })).toBeNull();
   });
 
@@ -161,7 +144,7 @@ describe('the account in the settings', () => {
     // The settings are also drawn on the front door, where anyone beside the player can read them.
     expect(block.textContent).toContain('an•••@example.com');
     expect(block.textContent).not.toContain('ana.garcia');
-    expect(screen.queryByRole('button', { name: 'Save with Google' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Sign in with Google' })).toBeNull();
   });
 
   it('works over the real account, not only over a stand-in: a guest signs in, and is shown as one', async () => {
@@ -193,6 +176,6 @@ describe('the account in the settings', () => {
   it('speaks Spanish', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account, 'es');
     expect(screen.getByRole('region', { name: 'Cuenta' }).textContent).toContain('Juegas como invitado');
-    expect(screen.getByRole('button', { name: 'Guardar con Google' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Entrar con Google' })).toBeTruthy();
   });
 });

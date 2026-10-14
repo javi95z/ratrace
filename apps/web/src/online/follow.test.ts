@@ -31,7 +31,7 @@ function setup(initial: AccountState = { kind: 'offline' }) {
   const fire = (set: Set<() => void>) => [...set].forEach((listener) => listener());
   return { asked, become, page, fire, stop, watching };
 }
-const guest = (userId: string, notice: 'taken' | null = null): AccountState => ({ kind: 'guest', userId, notice });
+const guest = (userId: string, notice: 'joining' | null = null): AccountState => ({ kind: 'guest', userId, notice });
 
 describe('keeping the account\'s copy in step with the page', () => {
   it('does nothing while nobody is signed in', () => {
@@ -44,7 +44,7 @@ describe('keeping the account\'s copy in step with the page', () => {
     become(guest('u-1'));
     expect(asked).toEqual(['account changed']);
     // The same player with something new to be told is not someone else.
-    become(guest('u-1', 'taken'));
+    become(guest('u-1', 'joining'));
     become({ kind: 'member', userId: 'u-1', email: 'ana@example.com' });
     expect(asked).toEqual(['account changed']);
     become({ kind: 'member', userId: 'u-2', email: 'ana@example.com' });

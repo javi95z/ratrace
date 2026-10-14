@@ -49,7 +49,7 @@ function failureParams(address: string): { url: URL; query: URLSearchParams; has
  * What the address the player came back to says about keeping their account, or null if it says
  * nothing. Google's answer comes back through the cloud as `error` and `error_code` in the address.
  */
-export function noticeIn(address: string): AccountNotice | null {
+export function noticeIn(address: string): 'taken' | 'failed' | null {
   const parts = failureParams(address);
   if (!parts) return null;
   for (const params of [parts.query, parts.hash]) {
@@ -129,9 +129,11 @@ export class SupabaseAccount implements Account {
       const cloud = this.link ?? (await this.connect());
       const here = this.address();
       const said = noticeIn(here);
+      const back = withoutFailure(here);
       if (said !== null) {
-        this.notice = said;
-        this.clean(withoutFailure(here));
+        // A Google account that already has a player is the player's own, most often: they are taken into it, not asked again.
+        this.notice = said === 'taken' ? 'joining' : 'failed';
+        this.clean(back);
       }
 
       // A failure to find out who is signed in is not "nobody": making a guest then would write
@@ -143,6 +145,9 @@ export class SupabaseAccount implements Account {
       this.stopListening ??= cloud.onUser((next) => this.show(next));
       // The profile row is the player's own first write. If it cannot be made now, the next launch makes it.
       void cloud.ensureProfile(user.id, language).catch(() => undefined);
+      // Sent back from Google to a guest whose Google account is already a player's: straight on into it.
+      // What is on this device joins that account, as it does for any sign-in.
+      if (said === 'taken' && user.is_anonymous) void this.leaveFor((c) => c.signInWithGoogle(back));
     } catch {
       this.set({ kind: 'offline' });
     }

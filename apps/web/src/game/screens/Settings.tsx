@@ -29,7 +29,7 @@ const CYRILLIC = { fontFamily: 'var(--font-pixel-cyrillic-alone), var(--font-pix
  */
 function AccountBlock() {
   const t = useT('account');
-  const { state, keepWithGoogle, useExistingAccount, dismissNotice } = useAccount();
+  const { state, keepWithGoogle, dismissNotice } = useAccount();
   const { status } = useAccountSaves();
   const [leaving, setLeaving] = useState(false);
   // A page brought back from Google by the Back button is the page as it was left, button pressed and all.
@@ -69,18 +69,11 @@ function AccountBlock() {
         </>
       ) : (
         <>
-          {state.notice === 'taken' ? (
-            // Not a fault but good news: the player is already known. It takes the place of everything a guest is told, so one thing is asked at a time.
-            <div role="alert" className="flex flex-col gap-2">
-              <p className="pixel text-[16px] leading-tight text-gold-200">{t('takenTitle')}</p>
-              <p className="text-[13px] leading-snug">{t('taken')}</p>
-              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(useExistingAccount)}>
-                {t('useExisting')}
-              </Button>
-              <Button variant="quiet" wide className="text-[14px]" onClick={dismissNotice}>
-                {t('notNow')}
-              </Button>
-            </div>
+          {state.notice === 'joining' ? (
+            // Not a fault but good news: the player is already known, and is being taken into their account.
+            <p role="status" className="pixel animate-blink text-[15px] leading-snug text-gold-200">
+              {t('joining')}
+            </p>
           ) : (
             <>
               <p className="text-[14px] leading-snug">{t('guest')}</p>
