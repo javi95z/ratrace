@@ -548,7 +548,7 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/cars/car.seat_ibiza.png" alt="SEAT Ibiza"> | SEAT Ibiza | 18.000 $ | 1.500 $/año | +4 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.seat_ibiza.png" alt="Ducati Monster"> | Ducati Monster | 22.000 $ | 1.200 $/año | +9 | 80 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.motorbike.png" alt="Ducati Monster"> | Ducati Monster | 22.000 $ | 1.200 $/año | +9 | 80 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
 | <img src="../art/clean/cars/car.toyota_corolla.png" alt="Toyota Corolla"> | Toyota Corolla | 26.000 $ | 1.600 $/año | +6 | 82 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
 | <img src="../art/clean/cars/car.vw_golf_gti.png" alt="VW Golf GTI"> | VW Golf GTI | 42.000 $ | 2.200 $/año | +10 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
 | <img src="../art/clean/cars/car.tesla_model_3.png" alt="Tesla Model 3"> | Tesla Model 3 | 48.000 $ | 1.800 $/año | +14 | 78 %, -24 % por ronda | Mudarse cuesta un 30 % menos |  |
@@ -628,7 +628,7 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.member_gym.png" alt="Un perro adoptado"> | Un perro adoptado | 300 $ | 1.200 $/año | +2 | 0 %, 0 % por ronda |  |  |
+| <img src="../art/clean/items/item.pet_dog.png" alt="Un perro adoptado"> | Un perro adoptado | 300 $ | 1.200 $/año | +2 | 0 %, 0 % por ronda |  |  |
 
 ### Clubes y abonos
 
@@ -792,7 +792,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.sunrise_balcony.png" alt="Teletrabajo aprobado"> | **Teletrabajo aprobado**<br>Puedes trabajar desde casa para siempre, si quieres. | 1. Seguir yendo a la oficina<br>2. Pasarte al teletrabajo<br>3. Pedir a cambio un aumento |
 | <img src="../art/clean/cards/card.meeting_room.png" alt="Dirigir el equipo"> | **Dirigir el equipo**<br>Tu responsable se va y ha propuesto tu nombre. | 1. Seguir en lo técnico<br>2. Aceptar el equipo |
 | <img src="../art/clean/cards/card.headhunter_call.png" alt="Llama un cazatalentos"> | **Llama un cazatalentos**<br>«¿Tienes un rato para un café confidencial?» | 1. No me interesa<br>2. Ir a la reunión<br>3. Aceptar el puesto en Nueva York |
-| <img src="../art/clean/cards/card.packed_box.png" alt="Semana de cuatro días"> | **Semana de cuatro días**<br>La empresa prueba la jornada de cuatro días: un 20 % menos de sueldo a cambio de un día libre más, para siempre. | 1. Seguir a jornada completa<br>2. Pasar a cuatro días |
+| <img src="../art/clean/cards/card.four_day_week.png" alt="Semana de cuatro días"> | **Semana de cuatro días**<br>La empresa prueba la jornada de cuatro días: un 20 % menos de sueldo a cambio de un día libre más, para siempre. | 1. Seguir a jornada completa<br>2. Pasar a cuatro días |
 
 ### Formación (7)
 
@@ -804,7 +804,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.lecture_hall.png" alt="El MBA"> | **El MBA**<br>Tienes plaza en el MBA en el IESE. Cuesta una fortuna y se come dos años de tardes. | 1. No es para mí<br>2. Matricularte y pagar<br>3. Matricularte con un préstamo |
 | <img src="../art/clean/cards/card.bootcamp.png" alt="Bootcamp de programación"> | **Bootcamp de programación**<br>Dieciséis semanas para ser programador júnior. Dicen que todos encuentran trabajo. | 1. Pasar<br>2. Apuntarte y pasarte a tecnología |
 | <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte |
-| <img src="../art/clean/cards/card.lecture_hall.png" alt="Un curso pagado por la empresa"> | **Un curso pagado por la empresa**<br>Te pagan un curso caro. La letra pequeña: dos años de permanencia o lo devuelves. | 1. No, gracias<br>2. Aceptar, con dos años de permanencia<br>3. Pagártelo tú, sin ataduras |
+| <img src="../art/clean/cards/card.company_course.png" alt="Un curso pagado por la empresa"> | **Un curso pagado por la empresa**<br>Te pagan un curso caro. La letra pequeña: dos años de permanencia o lo devuelves. | 1. No, gracias<br>2. Aceptar, con dos años de permanencia<br>3. Pagártelo tú, sin ataduras |
 
 ### Negocios (11)
 
@@ -818,9 +818,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.app_launch.png" alt="Lanzar una app"> | **Lanzar una app**<br>Llevas un año con la idea. Te costaría todas las noches de seis meses. | 1. Dejarla en el cajón<br>2. Hacerla |
 | <img src="../art/clean/cards/card.pitch_napkin.png" alt="La propuesta del socio"> | **La propuesta del socio**<br>Un excompañero brillante monta una empresa y te quiere dentro. | 1. Desearle suerte<br>2. Poner dinero<br>3. Entrar en el equipo fundador |
 | <img src="../art/clean/cards/card.contract_signing.png" alt="Una oferta por el negocio"> | **Una oferta por el negocio**<br>Una empresa más grande quiere comprarte. La cifra va en serio. | 1. Quedarte con el negocio<br>2. Vender<br>3. Pedir más |
-| <img src="../art/clean/cards/card.contract_signing.png" alt="Abre la competencia al lado"> | **Abre la competencia al lado**<br>Un local idéntico al tuyo acaba de abrir en la misma calle, y con inauguración. | 1. Aguantar y ver<br>2. Bajar precios<br>3. Reformar el local |
-| <img src="../art/clean/cards/card.contract_signing.png" alt="Una reseña se hace viral"> | **Una reseña se hace viral**<br>Alguien ha escrito sobre tu negocio y medio barrio lo ha compartido. Aún no sabes en qué tono. | 1. Dejarlo correr<br>2. Responder con mimo<br>3. Comprar reseñas falsas |
-| <img src="../art/clean/cards/card.contract_signing.png" alt="Inspección de trabajo"> | **Inspección de trabajo**<br>Un inspector pide los contratos, los horarios y las nóminas de tu negocio. | 1. Que vengan<br>2. Llamar antes a una asesoría laboral |
+| <img src="../art/clean/cards/card.rival_shop.png" alt="Abre la competencia al lado"> | **Abre la competencia al lado**<br>Un local idéntico al tuyo acaba de abrir en la misma calle, y con inauguración. | 1. Aguantar y ver<br>2. Bajar precios<br>3. Reformar el local |
+| <img src="../art/clean/cards/card.viral_review.png" alt="Una reseña se hace viral"> | **Una reseña se hace viral**<br>Alguien ha escrito sobre tu negocio y medio barrio lo ha compartido. Aún no sabes en qué tono. | 1. Dejarlo correr<br>2. Responder con mimo<br>3. Comprar reseñas falsas |
+| <img src="../art/clean/cards/card.labour_inspector.png" alt="Inspección de trabajo"> | **Inspección de trabajo**<br>Un inspector pide los contratos, los horarios y las nóminas de tu negocio. | 1. Que vengan<br>2. Llamar antes a una asesoría laboral |
 
 ### Inversión (12)
 
@@ -836,8 +836,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.offplan_model.png" alt="Sobre plano en Dubái"> | **Sobre plano en Dubái**<br>Un folleto brillante, una torre que aún no existe y un plan de pagos. | 1. Tirar el folleto<br>2. Reservar una unidad |
 | <img src="../art/clean/cards/card.trading_guru.png" alt="El gurú del trading"> | **El gurú del trading**<br>Publica desde un deportivo alquilado y su curso está «casi agotado». | 1. Pasar de largo<br>2. Comprar el curso |
 | <img src="../art/clean/cards/card.crowd_building.png" alt="Crowdfunding inmobiliario"> | **Crowdfunding inmobiliario**<br>Una plataforma te deja comprar un trozo de un edificio en alquiler. | 1. Pasar<br>2. Comprar una parte |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="Un producto «garantizado»"> | **Un producto «garantizado»**<br>Tu banco te ofrece un bono a dos años «sin riesgo». Comisión de entrada incluida, en letra pequeña. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado sin comisión |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="Un fondo que multiplica por tres"> | **Un fondo que multiplica por tres**<br>Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo. | 1. Pasar<br>2. Meter 3.000 $ |
+| <img src="../art/clean/cards/card.bank_product.png" alt="Un producto «garantizado»"> | **Un producto «garantizado»**<br>Tu banco te ofrece un bono a dos años «sin riesgo». Comisión de entrada incluida, en letra pequeña. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado sin comisión |
+| <img src="../art/clean/cards/card.leveraged_chart.png" alt="Un fondo que multiplica por tres"> | **Un fondo que multiplica por tres**<br>Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo. | 1. Pasar<br>2. Meter 3.000 $ |
 
 ### Vivienda (11)
 
@@ -851,9 +851,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.scaffolding.png" alt="Reformar"> | **Reformar**<br>La cocina es de otro siglo y el baño gotea. | 1. Poner parches<br>2. Hacerlo bien<br>3. Reforma de lujo |
 | <img src="../art/clean/cards/card.flooded_room.png" alt="Daños por agua"> | **Daños por agua**<br>Revienta una tubería mientras pasas el fin de semana fuera. El piso es tuyo, y la factura también. | 1. Llamar a una empresa<br>2. Hacerlo casi todo tú |
 | <img src="../art/clean/cards/card.moving_boxes.png" alt="Iros a vivir juntos"> | **Iros a vivir juntos**<br>Dos alquileres, dos neveras, y siempre estás en su casa. | 1. Todavía no<br>2. Iros a vivir juntos |
-| <img src="../art/clean/cards/card.small_house.png" alt="Vecinos ruidosos"> | **Vecinos ruidosos**<br>Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir. | 1. Aguantar<br>2. Insonorizar el piso<br>3. Buscar otro piso de alquiler |
-| <img src="../art/clean/cards/card.small_house.png" alt="Derrama en la comunidad"> | **Derrama en la comunidad**<br>Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes. | 1. Pagar tu parte<br>2. Recurrirla |
-| <img src="../art/clean/cards/card.small_house.png" alt="Alquilar una habitación"> | **Alquilar una habitación**<br>Te sobra una habitación y una amiga busca dónde vivir. Pagaría bien. | 1. Mejor no<br>2. Alquilársela |
+| <img src="../art/clean/cards/card.noisy_neighbours.png" alt="Vecinos ruidosos"> | **Vecinos ruidosos**<br>Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir. | 1. Aguantar<br>2. Insonorizar el piso<br>3. Buscar otro piso de alquiler |
+| <img src="../art/clean/cards/card.building_levy.png" alt="Derrama en la comunidad"> | **Derrama en la comunidad**<br>Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes. | 1. Pagar tu parte<br>2. Recurrirla |
+| <img src="../art/clean/cards/card.lodger_room.png" alt="Alquilar una habitación"> | **Alquilar una habitación**<br>Te sobra una habitación y una amiga busca dónde vivir. Pagaría bien. | 1. Mejor no<br>2. Alquilársela |
 
 ### Estilo de vida (12)
 
@@ -870,7 +870,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.club_contacts.png" alt="En la barra del club"> | **En la barra del club**<br>Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad. | 1. Cambiar de tema<br>2. Preguntar si buscan gente<br>3. Entrar en su negocio<br>4. Pedir que te presente a quien decide |
 | <img src="../art/clean/cards/card.nightclub.png" alt="Mesa con botella"> | **Mesa con botella**<br>Alguien propone coger mesa. El camarero ya tiene la carta en la mano. | 1. Irte pronto a casa<br>2. Poner tu parte<br>3. Pagar la mesa con tu tarjeta |
 | <img src="../art/clean/cards/card.sale_crowd.png" alt="Black Friday"> | **Black Friday**<br>Tienes la cesta llena desde el martes. | 1. Cerrar la pestaña<br>2. La PS5<br>3. El MacBook Pro |
-| <img src="../art/clean/cards/card.family_dinner.png" alt="Una boda en Bali"> | **Una boda en Bali**<br>Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar. | 1. Excusarte<br>2. Ir a Bali |
+| <img src="../art/clean/cards/card.bali_wedding.png" alt="Una boda en Bali"> | **Una boda en Bali**<br>Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar. | 1. Excusarte<br>2. Ir a Bali |
 
 ### Familia (12)
 
@@ -886,8 +886,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.will_reading.png" alt="Una herencia"> | **Una herencia**<br>Tu abuela te ha dejado algo, y una nota que dice «usa la cabeza». | 1. Coger el dinero<br>2. Meterlo todo en un fondo indexado<br>3. Usarlo de entrada para un piso de alquiler |
 | <img src="../art/clean/cards/card.torn_photo.png" alt="Divorcio"> | **Divorcio**<br>Se veía venir desde hace tiempo. | 1. Llegar a un acuerdo discreto<br>2. Contratar a un buen abogado<br>3. Probar terapia de pareja |
 | <img src="../art/clean/cards/card.school_gate.png" alt="Qué colegio"> | **Qué colegio**<br>El colegio del barrio está bien. El otro tiene lista de espera y uniforme. | 1. El colegio del barrio<br>2. Un colegio privado<br>3. El colegio internacional |
-| <img src="../art/clean/cards/card.family_dinner.png" alt="Un perro en la protectora"> | **Un perro en la protectora**<br>Un perro de tres años te mira desde la jaula como si ya te conociera. | 1. Mejor no<br>2. Adoptarlo |
-| <img src="../art/clean/cards/card.family_dinner.png" alt="Tu pareja quiere emprender"> | **Tu pareja quiere emprender**<br>Tu pareja quiere dejar su trabajo para montar algo propio. Necesita tu apoyo, y un tiempo sin sueldo. | 1. Pedirle que no lo haga<br>2. Apoyarle |
+| <img src="../art/clean/cards/card.shelter_dog.png" alt="Un perro en la protectora"> | **Un perro en la protectora**<br>Un perro de tres años te mira desde la jaula como si ya te conociera. | 1. Mejor no<br>2. Adoptarlo |
+| <img src="../art/clean/cards/card.partner_startup.png" alt="Tu pareja quiere emprender"> | **Tu pareja quiere emprender**<br>Tu pareja quiere dejar su trabajo para montar algo propio. Necesita tu apoyo, y un tiempo sin sueldo. | 1. Pedirle que no lo haga<br>2. Apoyarle |
 
 ### Salud (5)
 
@@ -945,8 +945,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.inspector.png" alt="Una inspección de Hacienda"> | **Una inspección de Hacienda**<br>Una carta certificada. Quieren tres años de papeles. | 1. Pagar lo que piden<br>2. Recurrir |
 | <img src="../art/clean/cards/card.cash_envelope.png" alt="En negro"> | **En negro**<br>Un cliente te ofrece pagar más si no hay factura. | 1. Facturarlo como es debido<br>2. Coger el sobre |
 | <img src="../art/clean/cards/card.city_arrival.png" alt="Cambiar de residencia fiscal"> | **Cambiar de residencia fiscal**<br>Un asesor te enseña lo que conservarías si vivieras en Dubái. | 1. Quedarte<br>2. Mudarte a Dubái<br>3. Pagar antes un buen asesoramiento |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="¿Sin IVA?"> | **¿Sin IVA?**<br>Un cliente te propone pagarte en efectivo y sin factura. Para los dos sale más barato. | 1. Con factura y con IVA<br>2. Sin IVA, en mano |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="Amnistía fiscal"> | **Amnistía fiscal**<br>El Gobierno anuncia una amnistía: quien regularice ahora paga un 10 % de lo que no declaró y queda limpio. | 1. Arriesgarte<br>2. Regularizar |
+| <img src="../art/clean/cards/card.cash_no_invoice.png" alt="¿Sin IVA?"> | **¿Sin IVA?**<br>Un cliente te propone pagarte en efectivo y sin factura. Para los dos sale más barato. | 1. Con factura y con IVA<br>2. Sin IVA, en mano |
+| <img src="../art/clean/cards/card.tax_amnesty.png" alt="Amnistía fiscal"> | **Amnistía fiscal**<br>El Gobierno anuncia una amnistía: quien regularice ahora paga un 10 % de lo que no declaró y queda limpio. | 1. Arriesgarte<br>2. Regularizar |
 
 ### Madurez (11)
 
@@ -960,9 +960,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.care_home.png" alt="Tus padres ya no pueden solos"> | **Tus padres ya no pueden solos**<br>Tu madre se cayó el mes pasado. Alguien tiene que estar pendiente, y no basta con una llamada. | 1. Que se ocupen tus hermanos<br>2. Pagar una residencia<br>3. Cuidarlos tú |
 | <img src="../art/clean/cards/card.small_house.png" alt="Una casa más pequeña"> | **Una casa más pequeña**<br>La casa se ha quedado grande. Bastaría un pisito de alquiler junto al mar. | 1. Quedarte<br>2. Vender y alquilar junto al mar |
 | <img src="../art/clean/cards/card.will_desk.png" alt="Hacer testamento"> | **Hacer testamento**<br>A nadie le apetece la cita. Todo el mundo se alegra después. | 1. Más adelante<br>2. Hacerlo |
-| <img src="../art/clean/cards/card.sunset_bench.png" alt="Una moto, a tu edad"> | **Una moto, a tu edad**<br>Una Ducati en el escaparate y la sensación de que la vida se pasa. | 1. Ni hablar<br>2. Comprarla<br>3. Comprarla a plazos |
-| <img src="../art/clean/cards/card.sunset_bench.png" alt="Ser mentor"> | **Ser mentor**<br>Una asociación busca jubilados que guíen a jóvenes que empiezan. Unas horas a la semana. | 1. Prefieres tu huerto<br>2. Ser mentor |
-| <img src="../art/clean/cards/card.will_desk.png" alt="Un mensaje urgente"> | **Un mensaje urgente**<br>«Mamá, papá, se me ha roto el móvil. Este es mi número nuevo. Necesito 3.000 $ hoy.» | 1. Ignorarlo<br>2. Hacer la transferencia<br>3. Llamar al número de siempre<br>4. Reconocer la estafa al vuelo |
+| <img src="../art/clean/cards/card.motorbike_window.png" alt="Una moto, a tu edad"> | **Una moto, a tu edad**<br>Una Ducati en el escaparate y la sensación de que la vida se pasa. | 1. Ni hablar<br>2. Comprarla<br>3. Comprarla a plazos |
+| <img src="../art/clean/cards/card.mentor_session.png" alt="Ser mentor"> | **Ser mentor**<br>Una asociación busca jubilados que guíen a jóvenes que empiezan. Unas horas a la semana. | 1. Prefieres tu huerto<br>2. Ser mentor |
+| <img src="../art/clean/cards/card.scam_message.png" alt="Un mensaje urgente"> | **Un mensaje urgente**<br>«Mamá, papá, se me ha roto el móvil. Este es mi número nuevo. Necesito 3.000 $ hoy.» | 1. Ignorarlo<br>2. Hacer la transferencia<br>3. Llamar al número de siempre<br>4. Reconocer la estafa al vuelo |
 
 ## Crisis
 

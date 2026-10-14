@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART } from '@ratrace/content';
+import { assetKind, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
@@ -531,7 +531,12 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
         <div>
           <Row
             className="frame bg-night-700 px-3"
-            left={<span className="pixel text-[16px]">{t('netOnSale')}</span>}
+            left={
+              <span className="pixel flex items-center gap-2 text-[16px]">
+                <Sprite id={saleSignArt(property.cityId)} className="!h-8 !w-8" />
+                {t('netOnSale')}
+              </span>
+            }
             right={<span className="text-[18px] text-gold-500">{fmt.money(quote.netOnSale)}</span>}
           />
           <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('netOnSaleHint')}</p>
@@ -591,6 +596,7 @@ function PropertyTab() {
               </button>
               {sold ? (
                 <Button className="mt-2" wide disabled>
+                  <Sprite id={saleSignArt(property.cityId)} className="!h-8 !w-8" />
                   {t('selling')}
                 </Button>
               ) : original ? (

@@ -339,6 +339,11 @@
     "w": 96,
     "h": 48
   },
+  "car.motorbike": {
+    "src": "cars/car.motorbike.png",
+    "w": 96,
+    "h": 48
+  },
   "car.porsche_911": {
     "src": "cars/car.porsche_911.png",
     "w": 96,
@@ -384,8 +389,18 @@
     "w": 288,
     "h": 120
   },
+  "card.bali_wedding": {
+    "src": "cards/card.bali_wedding.png",
+    "w": 288,
+    "h": 120
+  },
   "card.bank_cosign": {
     "src": "cards/card.bank_cosign.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.bank_product": {
+    "src": "cards/card.bank_product.png",
     "w": 288,
     "h": 120
   },
@@ -434,6 +449,11 @@
     "w": 288,
     "h": 120
   },
+  "card.building_levy": {
+    "src": "cards/card.building_levy.png",
+    "w": 288,
+    "h": 120
+  },
   "card.burnout": {
     "src": "cards/card.burnout.png",
     "w": 288,
@@ -464,6 +484,11 @@
     "w": 288,
     "h": 120
   },
+  "card.cash_no_invoice": {
+    "src": "cards/card.cash_no_invoice.png",
+    "w": 288,
+    "h": 120
+  },
   "card.casino": {
     "src": "cards/card.casino.png",
     "w": 288,
@@ -486,6 +511,11 @@
   },
   "card.club_contacts": {
     "src": "cards/card.club_contacts.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.company_course": {
+    "src": "cards/card.company_course.png",
     "w": 288,
     "h": 120
   },
@@ -589,6 +619,11 @@
     "w": 288,
     "h": 120
   },
+  "card.four_day_week": {
+    "src": "cards/card.four_day_week.png",
+    "w": 288,
+    "h": 120
+  },
   "card.frozen_vault": {
     "src": "cards/card.frozen_vault.png",
     "w": 288,
@@ -639,6 +674,11 @@
     "w": 288,
     "h": 120
   },
+  "card.labour_inspector": {
+    "src": "cards/card.labour_inspector.png",
+    "w": 288,
+    "h": 120
+  },
   "card.language_class": {
     "src": "cards/card.language_class.png",
     "w": 288,
@@ -654,8 +694,18 @@
     "w": 288,
     "h": 120
   },
+  "card.leveraged_chart": {
+    "src": "cards/card.leveraged_chart.png",
+    "w": 288,
+    "h": 120
+  },
   "card.library": {
     "src": "cards/card.library.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lodger_room": {
+    "src": "cards/card.lodger_room.png",
     "w": 288,
     "h": 120
   },
@@ -671,6 +721,11 @@
   },
   "card.meme_coin": {
     "src": "cards/card.meme_coin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.mentor_session": {
+    "src": "cards/card.mentor_session.png",
     "w": 288,
     "h": 120
   },
@@ -709,6 +764,11 @@
     "w": 288,
     "h": 120
   },
+  "card.motorbike_window": {
+    "src": "cards/card.motorbike_window.png",
+    "w": 288,
+    "h": 120
+  },
   "card.moving_boxes": {
     "src": "cards/card.moving_boxes.png",
     "w": 288,
@@ -721,6 +781,11 @@
   },
   "card.nightclub": {
     "src": "cards/card.nightclub.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.noisy_neighbours": {
+    "src": "cards/card.noisy_neighbours.png",
     "w": 288,
     "h": 120
   },
@@ -756,6 +821,11 @@
   },
   "card.parcels": {
     "src": "cards/card.parcels.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.partner_startup": {
+    "src": "cards/card.partner_startup.png",
     "w": 288,
     "h": 120
   },
@@ -839,6 +909,11 @@
     "w": 288,
     "h": 120
   },
+  "card.rival_shop": {
+    "src": "cards/card.rival_shop.png",
+    "w": 288,
+    "h": 120
+  },
   "card.sale_crowd": {
     "src": "cards/card.sale_crowd.png",
     "w": 288,
@@ -846,6 +921,11 @@
   },
   "card.scaffolding": {
     "src": "cards/card.scaffolding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.scam_message": {
+    "src": "cards/card.scam_message.png",
     "w": 288,
     "h": 120
   },
@@ -871,6 +951,11 @@
   },
   "card.shares_or_salary": {
     "src": "cards/card.shares_or_salary.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.shelter_dog": {
+    "src": "cards/card.shelter_dog.png",
     "w": 288,
     "h": 120
   },
@@ -929,6 +1014,11 @@
     "w": 288,
     "h": 120
   },
+  "card.tax_amnesty": {
+    "src": "cards/card.tax_amnesty.png",
+    "w": 288,
+    "h": 120
+  },
   "card.tax_refund": {
     "src": "cards/card.tax_refund.png",
     "w": 288,
@@ -966,6 +1056,11 @@
   },
   "card.unpaid_rent": {
     "src": "cards/card.unpaid_rent.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.viral_review": {
+    "src": "cards/card.viral_review.png",
     "w": 288,
     "h": 120
   },
@@ -2306,6 +2401,11 @@
   },
   "item.member_seat_new_york": {
     "src": "items/item.member_seat_new_york.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.pet_dog": {
+    "src": "items/item.pet_dog.png",
     "w": 64,
     "h": 64
   },

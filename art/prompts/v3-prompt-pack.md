@@ -261,7 +261,7 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 | --- | --- | --- | --- |
 | 62 | `cards/cards-22.png` | `card.restructuring`, `card.keys_to_children`, `card.shop_handover`, `card.care_home`, `card.retired_garden`, `card.weekly_challenge` | 288×120 |
 
-Until it is cut, the four cards show a stand-in (`SCENE_STAND_INS` in `packages/content/src/art.ts`).
+Cut and wired.
 
 ## Signs for the end of a working life and the weekly challenge
 
@@ -361,4 +361,4 @@ Square image. One object, centred: a scruffy, friendly mid-sized mixed-breed dog
 | 67 | `cars/cars-02.png` | `car.motorbike` | 96×48 |
 | 68 | `items/items-06.png` | `item.pet_dog` | 64×64 |
 
-Until they are cut, the cards, the motorbike and the dog show a stand-in (`SCENE_STAND_INS` and `ITEM_STAND_INS` in `packages/content/src/art.ts`).
+Cut and wired.

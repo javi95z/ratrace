@@ -286,6 +286,11 @@
       "width": 64,
       "height": 64
     },
+    "item.pet_dog": {
+      "file": "items/item.pet_dog.png",
+      "width": 64,
+      "height": 64
+    },
     "car.seat_ibiza": {
       "file": "cars/car.seat_ibiza.png",
       "width": 96,
@@ -323,6 +328,11 @@
     },
     "car.mercedes_g_class": {
       "file": "cars/car.mercedes_g_class.png",
+      "width": 96,
+      "height": 48
+    },
+    "car.motorbike": {
+      "file": "cars/car.motorbike.png",
       "width": 96,
       "height": 48
     },
@@ -2823,6 +2833,96 @@
     },
     "card.weekly_challenge": {
       "file": "cards/card.weekly_challenge.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.four_day_week": {
+      "file": "cards/card.four_day_week.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.company_course": {
+      "file": "cards/card.company_course.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.rival_shop": {
+      "file": "cards/card.rival_shop.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.viral_review": {
+      "file": "cards/card.viral_review.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.labour_inspector": {
+      "file": "cards/card.labour_inspector.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bank_product": {
+      "file": "cards/card.bank_product.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.leveraged_chart": {
+      "file": "cards/card.leveraged_chart.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.noisy_neighbours": {
+      "file": "cards/card.noisy_neighbours.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.building_levy": {
+      "file": "cards/card.building_levy.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lodger_room": {
+      "file": "cards/card.lodger_room.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.bali_wedding": {
+      "file": "cards/card.bali_wedding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.shelter_dog": {
+      "file": "cards/card.shelter_dog.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.partner_startup": {
+      "file": "cards/card.partner_startup.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.cash_no_invoice": {
+      "file": "cards/card.cash_no_invoice.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.tax_amnesty": {
+      "file": "cards/card.tax_amnesty.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.motorbike_window": {
+      "file": "cards/card.motorbike_window.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.mentor_session": {
+      "file": "cards/card.mentor_session.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.scam_message": {
+      "file": "cards/card.scam_message.png",
       "width": 288,
       "height": 120
     },

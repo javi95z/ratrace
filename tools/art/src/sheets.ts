@@ -73,6 +73,8 @@ export const SHEETS: SheetSpec[] = [
     file: 'items/items-05', group: 'items', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64,
     ids: ['item.edu_certificate', 'item.edu_coach', 'item.edu_language_school'],
   },
+  // A dog from the shelter.
+  { file: 'items/items-06', group: 'items', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['item.pet_dog'] },
   {
     file: 'cars/cars-01', group: 'cars', kind: 'objects', cols: 2, rows: 4, width: 96, height: 48,
     ids: [
@@ -80,6 +82,8 @@ export const SHEETS: SheetSpec[] = [
       'car.bmw_m3', 'car.porsche_911', 'car.lamborghini_aventador', 'car.mercedes_g_class',
     ],
   },
+  // Two wheels, kept with the cars.
+  { file: 'cars/cars-02', group: 'cars', kind: 'objects', cols: 1, rows: 1, width: 96, height: 48, ids: ['car.motorbike'] },
   {
     file: 'homes/homes-01', group: 'homes', kind: 'objects', cols: 3, rows: 3, width: 128, height: 128,
     ids: [
@@ -146,7 +150,7 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
-    // A picture for every choice of the lifestyle tab. Until it lands, `STAND_INS` in the content lends each one an older icon.
+    // A picture for every choice of the lifestyle tab.
     file: 'icons/icons-03', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
     ids: [
       'icon.life_frugal', 'icon.life_normal', 'icon.life_comfortable', 'icon.life_lavish',
@@ -289,6 +293,19 @@ export const SHEETS: SheetSpec[] = [
   {
     file: 'cards/cards-22', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
     ids: ['card.restructuring', 'card.keys_to_children', 'card.shop_handover', 'card.care_home', 'card.retired_garden', 'card.weekly_challenge'],
+  },
+  // Eighteen cards more: work, learning and business; money and home; family, tax and later life.
+  {
+    file: 'cards/cards-23', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['card.four_day_week', 'card.company_course', 'card.rival_shop', 'card.viral_review', 'card.labour_inspector', 'card.bank_product'],
+  },
+  {
+    file: 'cards/cards-24', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['card.leveraged_chart', 'card.noisy_neighbours', 'card.building_levy', 'card.lodger_room', 'card.bali_wedding', 'card.shelter_dog'],
+  },
+  {
+    file: 'cards/cards-25', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['card.partner_startup', 'card.cash_no_invoice', 'card.tax_amnesty', 'card.motorbike_window', 'card.mentor_session', 'card.scam_message'],
   },
   ...WORKPLACES.map((careers, i): SheetSpec => ({
     file: `cards/work-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,

@@ -1,6 +1,6 @@
 'use client';
 
-import { businessArt } from '@ratrace/content';
+import { businessArt, HANDOVER_ART } from '@ratrace/content';
 import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
@@ -310,6 +310,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
                   if (setOrder((order) => order.type === 'sellBusiness' && order.businessId === business.id, { type: 'sellBusiness', businessId: business.id })) onClose();
                 }}
               >
+                <Sprite id={HANDOVER_ART} />
                 {t('sell', { amount: fmt.compact(business.salePrice) })}
               </Button>
             </div>
