@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
+import { useAccount, useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
@@ -14,6 +14,8 @@ export function Home() {
   const t = useT('home');
   const meta = useT('meta');
   const common = useT('common');
+  const settings = useT('settings');
+  const { state: account } = useAccount();
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
   const lost = useGame((s) => s.lost);
@@ -108,10 +110,11 @@ export function Home() {
         )}
       </div>
 
-      <Panel className="mt-auto w-full" title={t('language')}>
+      <Panel className="mt-auto w-full" label={settings('title')}>
         <HomePreferences />
+        {/* With an account, its own line says where the life is saved. */}
         {saving ? (
-          <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p>
+          account.kind === 'offline' ? <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p> : null
         ) : (
           <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
             {common('notSaved')}

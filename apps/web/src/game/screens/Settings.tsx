@@ -64,7 +64,7 @@ function AccountBlock() {
       {state.kind === 'member' ? (
         <>
           <p className="pixel text-[16px] text-teal-300">{t('member')}</p>
-          {state.email ? <p className="break-all text-[13px] text-ink-200">{t('memberAs', { email: maskEmail(state.email) })}</p> : null}
+          {state.email ? <p className="break-all text-[13px] text-ink-300">{t('memberAs', { email: maskEmail(state.email) })}</p> : null}
           {saved}
         </>
       ) : (
@@ -158,8 +158,8 @@ export function Preferences() {
 }
 
 /**
- * The same on the front door, where there is a game to get to: the language and the account in
- * sight, and the switches a tap away behind one button.
+ * The same on the front door, where there is a game to get to: the account in sight, and the
+ * language and the switches a tap away behind one button.
  */
 export function HomePreferences() {
   const t = useT('settings');
@@ -167,14 +167,16 @@ export function HomePreferences() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <LanguagePick />
       <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <Sprite id="icon.settings" />
         {t('title')}
       </Button>
       <AccountBlock />
       <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
-        <Switches />
+        <div className="flex flex-col gap-2">
+          <LanguagePick />
+          <Switches />
+        </div>
       </Sheet>
     </div>
   );

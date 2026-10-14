@@ -66,17 +66,18 @@ describe('the front door', () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'New life' })).getAttribute('href')).toBe('/new');
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-    expect(screen.getByText('Your life is saved on this device after every step.')).toBeTruthy();
+    expect(screen.getByText('Your life saves itself after every step.')).toBeTruthy();
   });
 
-  it('keeps the switches a tap away, behind the settings, and the language in sight', async () => {
+  it('keeps the language and the switches a tap away, behind the settings', async () => {
     const user = userEvent.setup();
     renderGame(<Home />, memoryServices());
     await screen.findByRole('link', { name: 'New life' });
-    expect(within(screen.getByRole('group', { name: 'Language' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['English', 'Español', 'Русский']);
+    expect(screen.queryByRole('group', { name: 'Language' })).toBeNull();
     expect(screen.queryAllByRole('switch')).toEqual([]);
     await user.click(screen.getByRole('button', { name: 'Settings' }));
     const sheet = screen.getByRole('dialog', { name: 'Settings' });
+    expect(within(within(sheet).getByRole('group', { name: 'Language' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['English', 'Español', 'Русский']);
     expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true']);
     // What is switched there is switched for good.
     await user.click(within(sheet).getByRole('switch', { name: /^Sound/ }));
@@ -88,7 +89,7 @@ describe('the front door', () => {
     expect((await screen.findByRole('link', { name: 'Новая жизнь' })).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Коллекция' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Рекорды' })).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Язык' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Настройки' })).toBeTruthy();
     // Nothing of another language is left on it, but the game's own name and the names of the languages.
     expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
   });

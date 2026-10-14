@@ -95,15 +95,15 @@ describe('a player with an account, on two devices', { timeout: 60_000 }, () => 
     const phone = deviceOf(cloud, 'phone');
     renderGame(<Home />, phone.services);
     // Signed in with no form, and nothing yet to save: everything there is, is in the account.
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Saved to your account'));
-    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain('You are playing as a guest');
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('All saved'));
+    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain("You're playing as a guest");
 
     const session = await phone.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);
     await session.playRound({ orders: [] });
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Saving to your account…'));
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Saving…'));
     await phone.later();
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Saved to your account'));
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('All saved'));
     expect(held.games).toHaveLength(1);
     expect(held.games[0]).toMatchObject({ id: 'phone-1', lifeId: 'nurse', round: 1 });
     cleanup();

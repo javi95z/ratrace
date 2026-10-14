@@ -681,7 +681,11 @@ test('the round on screen survives a change of language', async ({ page }, info)
   if (info.project.name === 'phone') await page.getByRole('button', { name: w.openProfile }).click();
   await page.getByRole('link', { name: 'Leave to the home screen' }).click();
   await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
+  // The language is in the settings; once it is picked, the sheet is put away.
+  await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('link', { name: 'Español' }).click();
+  await expect(page).toHaveURL(/\/es(\/|$)/);
+  if (await page.getByRole('dialog').isVisible()) await page.keyboard.press('Escape');
   await page.getByRole('link', { name: WORDS.es.continue }).click();
   await expect(page.getByRole('button', { name: WORDS.es.play })).toBeVisible();
   // The order placed in English is still in the basket.
@@ -734,7 +738,7 @@ test('the game under test has no account behind it: it says nothing of one, and 
   await page.goto('/en');
   await expect(page.getByRole('link', { name: w.continue })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Account' })).toHaveCount(0);
-  await expect(page.getByText('Your life is saved on this device after every step.')).toBeVisible();
+  await expect(page.getByText('Your life saves itself after every step.')).toBeVisible();
   expect(elsewhere).toEqual([]);
 });
 
