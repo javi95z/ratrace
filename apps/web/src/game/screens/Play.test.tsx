@@ -185,7 +185,8 @@ describe('the play screen', () => {
     const [run] = await services.store.listRuns();
     expect(run.history).toHaveLength(21);
     const score = screen.getByRole('group', { name: 'Score' });
-    expect(within(score).getByText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
+    // The score counts up as it is shown; it is read out as it ends.
+    expect(within(score).getByLabelText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
     expect(within(score).getByText('Wealth')).toBeTruthy();
     expect(within(score).getByText('Status')).toBeTruthy();
     expect(within(score).getByText(String(run.status))).toBeTruthy();
@@ -225,7 +226,7 @@ describe('the play screen', () => {
     cleanup();
     renderGame(<Play />, memoryServices(services.store));
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Score' })).getByLabelText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -592,8 +593,7 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
     await playRounds(await ranked.services.sessions.start('nurse', { ranked: true }), content.rounds);
     renderGame(<Play />, ranked.services);
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
-    const note = screen.getByText(/A ranked life: it is in the rankings\./);
-    expect(within(note).getByRole('link', { name: 'See the rankings' }).getAttribute('href')).toBe('/rankings');
+    expect(screen.getByRole('link', { name: 'This life is ranked: see the rankings' }).getAttribute('href')).toBe('/rankings');
     cleanup();
 
     const casual = rankedGame();
@@ -601,7 +601,7 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
     renderGame(<Play />, casual.services);
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(screen.queryByText(/in the rankings/)).toBeNull();
-    expect(screen.queryByRole('link', { name: 'See the rankings' })).toBeNull();
+    expect(screen.queryByRole('link', { name: /see the rankings/ })).toBeNull();
   });
 });
 
