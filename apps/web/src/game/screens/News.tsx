@@ -35,6 +35,9 @@ const TOPIC: Record<Headline['topic'], string> = {
   property: 'bg-teal-300',
 };
 
+/** How many columns of opinion there are to take turns. */
+const GOSSIP = 8;
+
 /** The headlines about the next two years, and the gauges of the economy. */
 export function Headlines({ hint = true }: { hint?: boolean }) {
   const t = useT('news');
@@ -64,6 +67,11 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
             </li>
           ))}
         </ul>
+        {/* One column of opinion under the news, for a smile: it is not news, and says nothing of what is coming. */}
+        <p className="mt-2.5 border-l-4 border-ink-500 pl-2.5 text-[13px] leading-snug">
+          <span className="pixel block text-[12px] uppercase tracking-[0.1em] text-ink-300">{t('gossip.label')}</span>
+          <span className="italic text-ink-200">{t(`gossip.${view.round % GOSSIP}`)}</span>
+        </p>
         {hint ? <p className="mt-2.5 text-[12px] text-ink-200">{t('hint')}</p> : null}
       </Panel>
 

@@ -5,6 +5,7 @@ import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
+import { reviewStars } from '@/game/quips';
 import { Bare, Button, Panel, Row, Segmented, Tag, Toggle } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -139,6 +140,21 @@ export function BusinessTab() {
   );
 }
 
+/** What the customers write about it online. It is said, not counted: the stars follow how it is run. */
+function Review({ business }: { business: Owned }) {
+  const t = useT('finance.business');
+  const stars = reviewStars(business);
+  return (
+    <p className="text-[12px] leading-snug">
+      <span role="img" aria-label={t('review.stars', { n: stars })} className="mr-1.5 tracking-widest text-gold-500">
+        {'★'.repeat(stars)}
+        <span className="text-ink-500">{'★'.repeat(5 - stars)}</span>
+      </span>
+      <span className="italic text-ink-200">{t(`review.${stars}`)}</span>
+    </p>
+  );
+}
+
 /** One business, looked at closely: what this round makes of it, and everything that can be done with it. */
 function BusinessSheet({ business, view, quote, onClose }: { business: Owned; view: GameView; quote: BusinessesQuote; onClose(): void }) {
   const t = useT('finance.business');
@@ -178,6 +194,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
           </div>
         </div>
         <p className={`text-[13px] ${run.tone}`}>{run.text}</p>
+        <Review business={business} />
 
         <Panel label={t('thisRound')}>
           <p className="pixel mb-1 text-[12px] uppercase tracking-wider text-gold-200">{t('thisRound')}</p>

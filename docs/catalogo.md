@@ -15,7 +15,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 113 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 31 |
+| [Insignias](#insignias) | 35 |
 
 ## Vidas
 
@@ -627,7 +627,7 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.member_gym.png" alt="Basic-Fit"> | Basic-Fit | 50 $ | 360 $/año | +1 |  |  | Cuota mientras lo tengas |
+| <img src="../art/clean/items/item.member_gym.png" alt="Gimnasio"> | Gimnasio | 50 $ | 360 $/año | +1 |  |  | Cuota mientras lo tengas |
 | <img src="../art/clean/items/item.member_platinum_card.png" alt="Amex Platinum"> | Amex Platinum | 0 $ | 800 $/año | +5 |  | +2 puntos al buscar trabajo | Cuota mientras lo tengas |
 | <img src="../art/clean/items/item.member_club.png" alt="Soho House"> | Soho House | 500 $ | 3.000 $/año | +8 |  | +6 puntos al buscar trabajo | Cuota mientras lo tengas |
 | <img src="../art/clean/items/item.member_season_seat.png" alt="Abono del Bernabéu"> | Abono del Bernabéu | 1.000 $ | 1.800 $/año | +6 |  | +3 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Madrid; se pierde al mudarse |
@@ -673,7 +673,7 @@ Quien no tiene casa propia vive de alquiler:
 | <img src="../art/clean/homes/home.rented_room.png" alt=""> | Habitación alquilada | 55 % | 0 |
 | <img src="../art/clean/homes/home.rented_flat.png" alt=""> | Piso alquilado | 100 % | +3 |
 
-Con los años, la habitación alquilada y el modo de vida austero restan más estatus: 22 años 0, 26 años -3, 32 años -6, 40 años -10 la habitación; 22 años -2, 26 años -3, 32 años -4, 40 años -6 el modo austero.
+Con los años, la habitación alquilada y el modo de vida austero restan más estatus: 22 años 0, 26 años -3, 32 años -6, 40 años -10 la habitación; 22 años -2, 26 años -4, 32 años -7, 40 años -11 el modo austero.
 
 ## Inversiones
 
@@ -872,7 +872,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.burnout.png" alt="Agotamiento"> | **Agotamiento**<br>Llevas una hora mirando el mismo correo. | 1. Seguir tirando<br>2. Pedir un permiso sin sueldo<br>3. Ir a terapia |
 | <img src="../art/clean/cards/card.dentist_chair.png" alt="Una urgencia dental"> | **Una urgencia dental**<br>Se te parte una muela con un hueso de aceituna. | 1. Arreglarlo bien<br>2. Buscar una clínica barata |
 | <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo<br>3. Recuperarte entrenando |
-| <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un Basic-Fit abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
+| <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un gimnasio abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
 
 ### Suerte (8)
 
@@ -999,6 +999,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.three_rentals.png" alt="Tres alquileres"> | Tres alquileres | Ten tres inmuebles alquilados a la vez. Las plazas de garaje no cuentan. |
 | <img src="../art/clean/badges/badge.bond_ladder.png" alt="Escalera de bonos"> | Escalera de bonos | Ten los tres bonos del Estado a la vez. |
 | <img src="../art/clean/badges/badge.index_only.png" alt="Solo indexados"> | Solo indexados | Sal de la rueda sin haber tenido nunca otra inversión que fondos indexados, y sin ninguna vivienda. |
+| <img src="../art/clean/badges/badge.crypto_winter.png" alt="Compraste en máximos"> | Compraste en máximos | Ten una inversión que valga la mitad o menos de lo que pagaste. |
 
 ### Estatus
 
@@ -1011,6 +1012,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.status_100.png" alt="Estatus 100"> | Estatus 100 | Llega a 100 de estatus. |
 | <img src="../art/clean/badges/badge.twenty_items.png" alt="Veinte cosas"> | Veinte cosas | Ten veinte cosas distintas, contando todas tus vidas. |
 | <img src="../art/clean/badges/badge.every_car.png" alt="Todos los coches"> | Todos los coches | Ten en algún momento todos los coches del juego, contando todas tus vidas. |
+| <img src="../art/clean/badges/badge.supercar.png" alt="Más coches que plazas"> | Más coches que plazas | Ten una plaza de garaje y más coches que plazas. |
 
 ### Vida
 
@@ -1028,3 +1030,5 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 |  | Insignia | Cómo se consigue |
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.bankrupt.png" alt="Quiebra"> | Quiebra | Quiebra. Les pasa a los mejores. |
+| <img src="../art/clean/badges/badge.three_rentals.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
+| <img src="../art/clean/badges/badge.bankrupt.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |

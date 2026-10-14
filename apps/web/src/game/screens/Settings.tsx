@@ -1,7 +1,7 @@
 'use client';
 
-import { portraitArt } from '@ratrace/content';
-import { netWorth, scoreBreakdown } from '@ratrace/engine';
+import { CONTENT_VERSION, portraitArt } from '@ratrace/content';
+import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
 import { useAccount, useAccountSaves, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
@@ -150,6 +150,12 @@ export function Preferences() {
   );
 }
 
+/** Which game this is, for a report of something amiss: small, and out of the way at the foot. */
+function Version() {
+  const t = useT('settings');
+  return <p className="text-center text-[11px] text-ink-300 opacity-70">{t('version', { content: CONTENT_VERSION, engine: ENGINE_VERSION })}</p>;
+}
+
 /**
  * The same on the front door, where there is a game to get to: the account in sight, and the
  * language and the switches a tap away behind one button.
@@ -169,6 +175,7 @@ export function HomePreferences() {
         <div className="flex flex-col gap-2">
           <LanguagePick />
           <Switches />
+          <Version />
         </div>
       </Sheet>
     </div>
@@ -255,6 +262,7 @@ export function SettingsSheet({ open, onClose, shown }: { open: boolean; onClose
           </Link>
           <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('homeHint')}</p>
         </div>
+        <Version />
       </div>
     </Sheet>
   );

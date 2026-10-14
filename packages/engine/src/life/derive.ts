@@ -40,13 +40,13 @@ export function itemStatus(item: ItemDef, age: number, content: Content): number
  * perk counts, so a second car moves no more boxes than the first; across ladders they add.
  */
 export function perksOf(p: PlayerState, content: Content): Required<ItemPerks> {
-  const total: Required<ItemPerks> = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 };
+  const total: Required<ItemPerks> = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0, healthCoverOffPct: 0 };
   const best = new Map<string, Required<ItemPerks>>();
   for (const owned of p.life.items) {
     const item = itemOf(content, owned.itemId);
     if (item.perks === undefined) continue;
     let ladder = best.get(item.ladder);
-    if (!ladder) best.set(item.ladder, (ladder = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 }));
+    if (!ladder) best.set(item.ladder, (ladder = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0, healthCoverOffPct: 0 }));
     for (const perk of ITEM_PERKS) ladder[perk] = Math.max(ladder[perk], item.perks[perk] ?? 0);
   }
   for (const ladder of best.values()) for (const perk of ITEM_PERKS) total[perk] += ladder[perk];
@@ -108,8 +108,9 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
   for (const kind of INSURANCE_KINDS) {
     if (!life.insurance[kind]) continue;
     const premium = applyBp(living, rules.insurancePremiumBp[kind]);
-    // A body looked after is cheaper to insure.
-    total += kind === 'health' ? mulDiv(premium, Math.max(0, 100 - skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct), 100) : premium;
+    // A body looked after is cheaper to insure, and so is one that goes to the gym.
+    const off = kind === 'health' ? skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct + perksOf(p, content).healthCoverOffPct : 0;
+    total += mulDiv(premium, Math.max(0, 100 - off), 100);
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
   // An offshore company has its fee, year after year, whatever it saves.

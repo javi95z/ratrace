@@ -110,6 +110,7 @@
     "openSettings": "Open settings"
   },
   "settings": {
+    "version": "Version {content} · engine {engine}",
     "title": "Settings",
     "game": "Your game",
     "progress": "How far along your life is",
@@ -172,6 +173,17 @@
       "rates": "Interest rates",
       "inflation": "Inflation",
       "property": "Housing"
+    },
+    "gossip": {
+      "label": "Opinion",
+      "0": "Experts agree: this time is different",
+      "1": "Twenty-somethings stop buying homes to buy avocados instead, says study",
+      "2": "Man explains crypto at dinner; nobody asks a second question",
+      "3": "Economist predicts nine of the last two recessions",
+      "4": "Influencer quits job to live off passive income; sells course on it",
+      "5": "\"Property never goes down,\" says man who sells property",
+      "6": "Survey: everyone is middle class, especially the rich",
+      "7": "Bank raises fees to celebrate record profits"
     }
   },
   "crisis": {
@@ -274,6 +286,8 @@
       "salaryPct": "+{n}% pay while you own it",
       "jobHuntPct": "+{n} points of chance on a job hunt",
       "focus": "+{n} focus in the round after",
+      "healthCoverOffPct": "Health insurance costs {n}% less",
+      "trains": "Trains {skill}: +{n} point every round",
       "best": "Within a ladder only the best you own counts."
     },
     "openBusiness": "You open a business: {name}",
@@ -601,7 +615,16 @@
       "sellGain": "You will pay tax on a gain of {amount}.",
       "opensNow": "It opens when the round is played. From the next one you can run it, grow it or sell it.",
       "needsCash": "You are {amount} in cash short of opening it.",
-      "moreLater": "{n, plural, one {One more kind of business opens} other {# more kinds of business open}} with money sense {level}."
+      "moreLater": "{n, plural, one {One more kind of business opens} other {# more kinds of business open}} with money sense {level}.",
+      "review": {
+        "title": "Reviews",
+        "stars": "{n} of 5 stars",
+        "1": "\"Not even the owner turns up here.\"",
+        "2": "\"You can tell they are losing money. Even the plant looks sad.\"",
+        "3": "\"Fine. The manager has no idea who the owner is.\"",
+        "4": "\"Good. I will be back if nothing else is open.\"",
+        "5": "\"The owner counts every penny, but everything works.\""
+      }
     },
     "evasion": {
       "title": "What you do not declare",
@@ -621,7 +644,15 @@
       "suspicion": "The tax office's suspicion",
       "chance": "Chance of an inspection when the round is played: {pct}%",
       "bill": "An inspection would cost {total}: {evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice.",
-      "limit": "What is hidden can be claimed for {years} years. An inspection also costs {status} status, and ends it all."
+      "limit": "What is hidden can be claimed for {years} years. An inspection also costs {status} status, and ends it all.",
+      "advisor": {
+        "title": "Your adviser",
+        "clean": "\"All in order. Frankly, a bit boring.\"",
+        "low": "\"That dinner, we will call it a business expense.\"",
+        "mid": "\"If anyone asks, the cash was a gift from an aunt. Do you have an aunt?\"",
+        "high": "\"I would stop answering unknown numbers, if I were you.\"",
+        "max": "\"I have never met you. Who are you? Please leave.\""
+      }
     }
   },
   "resolve": {
@@ -659,7 +690,25 @@
     "skill": "{skill} up: level {level}.",
     "repair": "Repair for your {item}: {amount}.",
     "audit": "Tax inspection: you pay {amount}.",
-    "auditHint": "{evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice. Nothing is hidden any more."
+    "auditHint": "{evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice. Nothing is hidden any more.",
+    "bank": {
+      "title": "Your bank",
+      "card": "\"We have covered your shortfall with your credit card. No need to thank us. The interest will.\"",
+      "idle": "\"We noticed a lot of money doing nothing. Our fund charges only 2% a year to do the same.\"",
+      "fell": "\"We see your net worth has had a difficult couple of years. Have you considered a loan?\"",
+      "rich": "\"Your private banker would love a coffee. Your private banker is new, and likes you very much.\""
+    },
+    "family": {
+      "title": "At the Christmas dinner",
+      "room": "\"Still in the room? Your cousin has a flat already. Two, actually.\"",
+      "frugal": "Your mother slips a lunchbox into your bag. And another one.",
+      "car": "Your brother-in-law asks what the car cost. Then asks again, in case it changed.",
+      "lavish": "An aunt asks, very quietly, whether you won the lottery.",
+      "single": "\"And a partner, for when?\"",
+      "kids": "The children open their presents in four minutes. The bill took you two years.",
+      "rich": "Suddenly everyone remembers your birthday.",
+      "plain": "Someone brings up politics. You leave before dessert."
+    }
   },
   "profile": {
     "title": "Your life",
@@ -839,6 +888,18 @@
       "rich": "You finished at {age} in {city} with {worth} and {score} points. Rich, yes; but the wheel never stopped turning.",
       "through": "You finished at {age} in {city} with {worth} and {score} points. A lifetime of early mornings, and the wheel turning to the end.",
       "broke": "You finished at {age} in {city} with {worth} and {score} points. It did not go as you hoped. The next life starts again at 22."
+    },
+    "obituary": {
+      "title": "Obituary",
+      "cars": "Leaves {n} cars and nobody to drive them.",
+      "things": "Leaves more things than money, and a cupboard that will not close.",
+      "miser": "Died rich, without ever once turning on the heating.",
+      "room": "Leaves a room in a shared flat, and a deposit nobody will give back.",
+      "free": "Worked less than anyone, and was never once in a hurry.",
+      "broke": "Owed money to people who no longer remember the name.",
+      "heirs": "Leaves a fortune, and a family that will argue over it for years.",
+      "alone": "Leaves a fortune, and nobody to argue over it.",
+      "plain": "Paid every bill on time. Nobody mentions it."
     }
   },
   "badges": {

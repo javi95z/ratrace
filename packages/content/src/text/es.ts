@@ -277,6 +277,10 @@ export const es: ContentText = {
     sold_business: { name: 'Negocio vendido', how: 'Monta un negocio y véndelo.' },
     rode_out_recession: { name: 'Aguantar la recesión', how: 'Mantén tus inversiones durante una recesión sin vender ninguna.' },
     bankrupt: { name: 'Quiebra', how: 'Quiebra. Les pasa a los mejores.' },
+    audited: { name: 'Hacienda somos todos', how: 'Que te pille una inspección de Hacienda.' },
+    room_at_40: { name: 'Una habitación a los 40', how: 'Cumple 40 años viviendo aún en una habitación alquilada.' },
+    more_cars_than_spaces: { name: 'Más coches que plazas', how: 'Ten una plaza de garaje y más coches que plazas.' },
+    bought_the_top: { name: 'Compraste en máximos', how: 'Ten una inversión que valga la mitad o menos de lo que pagaste.' },
   },
   badgeGroups: { wealth: 'Riqueza', escape: 'Salida', investing: 'Inversión', status: 'Estatus', life: 'Vida', misfortune: 'Mala suerte' },
   optionLocks: {

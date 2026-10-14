@@ -6,6 +6,7 @@ import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
+import { obituary } from '@/game/quips';
 import { ageAt, endingOf, prizedBadge } from '@/game/present';
 import { bestsOf } from '@/game/records';
 import { shareCard } from '@/game/share';
@@ -92,6 +93,7 @@ function Ended({ view }: { view: GameView }) {
   // The life in three paragraphs: where it began, what happened, how it ended.
   const life = lives.find((candidate) => candidate.id === lifeId);
   const told = life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : [];
+  const dead = obituary(content, view, bankruptcies);
   const standing = useStanding(lifeId, score.total);
   const prized = prizedBadge(earned.filter(isNew));
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
@@ -178,6 +180,11 @@ function Ended({ view }: { view: GameView }) {
               {paragraph}
             </p>
           ))}
+          {/* The life in one dry line, as a newspaper would have it, set off by a rule. */}
+          <p className="mt-3 animate-rise border-t-2 border-night-900 pt-2.5 text-[13px] leading-snug" style={{ animationDelay: `${300 + told.length * 350}ms` }}>
+            <span className="pixel uppercase tracking-wider text-ink-300">{tale('obituary.title')}: </span>
+            <span className="italic">{tale(`obituary.${dead.key}`, { n: dead.n ?? 0 })}</span>
+          </p>
         </Panel>
       ) : null}
 

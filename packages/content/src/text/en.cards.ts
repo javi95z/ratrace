@@ -371,7 +371,7 @@ export const cards: Record<string, CardText> = {
     'Rest it',
     'Train your way back',
   ]),
-  health_gym_habit: c('Join the gym', 'There is a {item:member_gym} downstairs and you get out of breath on the stairs.', [
+  health_gym_habit: c('Join the gym', 'There is a gym downstairs and you get out of breath on the stairs.', [
     'Maybe next year',
     'Join, and actually go',
   ]),

@@ -266,9 +266,11 @@ export interface ItemPerks {
   jobHuntPct?: number;
   /** Focus points on top in the round after one in which it is held. */
   focus?: number;
+  /** Percent off the health insurance premium while it is held. */
+  healthCoverOffPct?: number;
 }
 
-export const ITEM_PERKS = ['moveCostOffPct', 'studySkill', 'salaryPct', 'jobHuntPct', 'focus'] as const satisfies ReadonlyArray<keyof ItemPerks>;
+export const ITEM_PERKS = ['moveCostOffPct', 'studySkill', 'salaryPct', 'jobHuntPct', 'focus', 'healthCoverOffPct'] as const satisfies ReadonlyArray<keyof ItemPerks>;
 
 export interface ItemDef {
   id: string;

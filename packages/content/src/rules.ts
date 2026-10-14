@@ -85,9 +85,9 @@ export const life: LifeRules = {
     ],
     frugal: [
       { fromRound: 0, status: -2 },
-      { fromRound: 2, status: -3 },
-      { fromRound: 5, status: -4 },
-      { fromRound: 9, status: -6 },
+      { fromRound: 2, status: -4 },
+      { fromRound: 5, status: -7 },
+      { fromRound: 9, status: -11 },
     ],
   },
   // A fifth down and the rest on a personal loan, for anything a dealer would write a contract for.

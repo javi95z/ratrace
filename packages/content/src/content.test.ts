@@ -97,7 +97,7 @@ describe('the v1 content', () => {
     // A rented room and a frugal life cost more status each decade: from 26, from 32 and from 40.
     const ages = (steps: ReadonlyArray<{ fromRound: number; status: number }>) => steps.map((step) => [START_AGE + step.fromRound * content.yearsPerRound, step.status]);
     expect(ages(content.life.agedStatus.room)).toEqual([[22, 0], [26, -3], [32, -6], [40, -10]]);
-    expect(ages(content.life.agedStatus.frugal)).toEqual([[22, -2], [26, -3], [32, -4], [40, -6]]);
+    expect(ages(content.life.agedStatus.frugal)).toEqual([[22, -2], [26, -4], [32, -7], [40, -11]]);
   });
 
   it('gives every city a trade or two it pays above the usual, and every career a city to go to', () => {

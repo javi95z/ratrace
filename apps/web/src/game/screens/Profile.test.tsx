@@ -64,8 +64,8 @@ describe('what the player owns, in the profile', () => {
     expect(screen.getByRole('dialog', { name: 'Your life' })).toBeTruthy();
 
     // A membership has a fee and no resale value.
-    await user.click(within(screen.getByRole('dialog', { name: 'Your life' })).getByRole('button', { name: 'Basic-Fit' }));
-    const gym = screen.getByRole('dialog', { name: 'Basic-Fit' });
+    await user.click(within(screen.getByRole('dialog', { name: 'Your life' })).getByRole('button', { name: 'Gym' }));
+    const gym = screen.getByRole('dialog', { name: 'Gym' });
     expect(within(gym).getByText(/a year upkeep|\/yr|upkeep/)).toBeTruthy();
     expect(within(gym).queryByText(/Would sell for/)).toBeNull();
     // What was paid to join is shown, with no gain or loss: there is nothing to sell.
@@ -93,9 +93,9 @@ describe('what the player owns, in the profile', () => {
     expect(screen.queryByRole('button', { name: 'Casio F-91W' })).toBeNull();
     expect(orders()).toEqual(['Sell Casio F-91W']);
 
-    await user.click(screen.getByRole('button', { name: 'Basic-Fit' }));
-    await user.click(within(screen.getByRole('dialog', { name: 'Basic-Fit' })).getByRole('button', { name: 'Cancel it' }));
-    expect(orders()).toEqual(['Sell Casio F-91W', 'Cancel Basic-Fit']);
+    await user.click(screen.getByRole('button', { name: 'Gym' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Gym' })).getByRole('button', { name: 'Cancel it' }));
+    expect(orders()).toEqual(['Sell Casio F-91W', 'Cancel Gym']);
 
     await user.click(screen.getByRole('button', { name: 'Play the round' }));
     await screen.findByRole('heading', { name: 'Two years later' });
@@ -178,7 +178,7 @@ describe('what the player owns, in the profile', () => {
     expect(within(choices[3]).getByText('Status +8')).toBeTruthy();
     expect(within(choices[0]).getByText('Status −2')).toBeTruthy();
     // And says when the frugal way will cost more: from 26.
-    expect(within(choices[0]).getByText('From 26, living frugally costs 3 status.')).toBeTruthy();
+    expect(within(choices[0]).getByText('From 26, living frugally costs 4 status.')).toBeTruthy();
     expect(within(choices[1]).queryByText(/^Status/)).toBeNull();
     expect(within(sheet).getByText('It is changed during the finances: here or in the Lifestyle tab.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));

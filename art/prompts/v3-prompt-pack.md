@@ -190,3 +190,34 @@ Where each goes: in every sheet, cells 1 to 11 are `home.<city>.studio`, `.flat`
 | # | File | What | Cell |
 | --- | --- | --- | --- |
 | 53–58 | `homes/homes-<city>.png` | 11 homes as the city builds them, and its "for sale" sign | 128×128 |
+
+## The rat dresses as it lives, and four new badges
+
+### 59. The rat in the wheel, dressed two more ways
+
+Save as `art/raw/icons/anim-02.png`
+
+```text
+Square image. Object sheet: 4 columns by 2 rows, 8 frames of animation. Each ROW is the same hamster wheel as the rat-in-a-suit wheel, in four successive frames, left to right, drawn at exactly the same size and position in its cell so the frames can be played in a loop. Only the rat's clothes change between the rows; the wheel, the pose and the running are the same.
+Row 1: the rat in a baggy grey tracksuit with white stripes and cheap white trainers, a sweatband on its head, running a little hunched: the wheel's spokes and the rat's legs advance a quarter turn each frame.
+Row 2: the rat in a black tuxedo with a bow tie, a gold watch and a top hat that bobs as it runs: the wheel's spokes and the rat's legs advance a quarter turn each frame.
+```
+
+### 60. Four new badges
+
+Save as `art/raw/badges/badges-04.png`
+
+```text
+Square image. Object sheet: 2 columns by 2 rows, 4 badges. Every badge is a round medallion of identical size with a dark navy enamel centre, a gold rim, and one simple bold symbol in the centre. Left to right, top to bottom:
+1. A small figure standing proudly on the very peak of a red price chart, the line falling steeply away behind it.
+2. Three tiny cars squeezed nose to tail into a single parking bay marked with a white P.
+3. A single bed under a slanted attic window with a "40" birthday candle on the pillow.
+4. A magnifying glass over a stack of coins, with a small official rubber stamp beside it.
+```
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 59 | `icons/anim-02.png` | The wheel with the rat in a tracksuit (row 1) and a tuxedo (row 2): `anim.wheel_tracksuit.0–3`, `anim.wheel_tuxedo.0–3` | 48×48 |
+| 60 | `badges/badges-04.png` | `badge.bought_the_top`, `badge.more_cars_than_spaces`, `badge.room_at_40`, `badge.audited` | 64×64 |
+
+Until these are cut, the wheel keeps the rat in its suit and the four badges show a stand-in (`BADGE_STAND_INS` in `packages/content/src/art.ts`). When they are cut: add the sheets to `tools/art/src/sheets.ts`, the outfits to `RAT_OUTFITS_DRAWN`, and empty `BADGE_STAND_INS`.

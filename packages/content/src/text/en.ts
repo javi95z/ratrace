@@ -277,6 +277,10 @@ export const en: ContentText = {
     sold_business: { name: 'Sold a business', how: 'Build a business and sell it.' },
     rode_out_recession: { name: 'Rode it out', how: 'Hold your investments through a recession without selling any.' },
     bankrupt: { name: 'Bankrupt', how: 'Go bankrupt. It happens to the best.' },
+    audited: { name: 'Taxes are for everyone', how: 'Be caught by a tax inspection.' },
+    room_at_40: { name: 'A room at forty', how: 'Turn 40 still renting a room in a shared flat.' },
+    more_cars_than_spaces: { name: 'More cars than spaces', how: 'Own a parking space, and more cars than parking spaces.' },
+    bought_the_top: { name: 'Bought the top', how: 'Hold an investment worth half or less of what you paid for it.' },
   },
   badgeGroups: { wealth: 'Wealth', escape: 'Escape', investing: 'Investing', status: 'Status', life: 'Life', misfortune: 'Misfortune' },
   optionLocks: {

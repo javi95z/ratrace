@@ -713,7 +713,7 @@ describe('how the player lives, in the lifestyle tab', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
-    expect(screen.getByText('Status: Frugal −2 · Normal 0 · Comfortable +3 · Lavish +8 · From 26, living frugally costs 3 status.')).toBeTruthy();
+    expect(screen.getByText('Status: Frugal −2 · Normal 0 · Comfortable +3 · Lavish +8 · From 26, living frugally costs 4 status.')).toBeTruthy();
   });
 });
 

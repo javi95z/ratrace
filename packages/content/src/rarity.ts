@@ -33,6 +33,7 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   three_rentals: { rarity: 'uncommon' },
   bond_ladder: { rarity: 'rare', judged: true },
   index_only: { rarity: 'rare' },
+  bought_the_top: { rarity: 'common' },
   first_luxury_watch: { rarity: 'uncommon' },
   supercar: { rarity: 'rare' },
   shipowner: { rarity: 'rare' },
@@ -40,6 +41,7 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   status_100: { rarity: 'uncommon' },
   twenty_items: { rarity: 'rare', judged: true },
   every_car: { rarity: 'legendary', judged: true },
+  more_cars_than_spaces: { rarity: 'rare', judged: true },
   three_cities: { rarity: 'rare', judged: true },
   moved_to_dubai: { rarity: 'uncommon', judged: true },
   family_of_four: { rarity: 'uncommon', judged: true },
@@ -47,6 +49,8 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   sold_business: { rarity: 'rare' },
   rode_out_recession: { rarity: 'common' },
   bankrupt: { rarity: 'uncommon' },
+  room_at_40: { rarity: 'uncommon' },
+  audited: { rarity: 'rare', judged: true },
 };
 
 /** A badge's rarity: common for one this list does not name. */

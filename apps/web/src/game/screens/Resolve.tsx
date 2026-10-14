@@ -4,6 +4,7 @@ import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, roundNotes } from '@/game/present';
+import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
 import type { RoundNote } from '@/game/present';
 import { Bare, Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
@@ -40,13 +41,15 @@ export function Resolve() {
   const ended = before.timeline[before.round]?.crisis && !view.timeline[view.round]?.crisis ? before.timeline[before.round].crisis : null;
   const worthBefore = netWorth(before.player);
   const worthNow = netWorth(view.player);
+  const bank = bankQuip(before, view, events);
+  const family = familyQuip(content, before, view);
 
   return (
     <div className="flex flex-col gap-3 px-3">
       <div className="text-center">
         {/* Two years go by: the wheel turns. */}
         <h2 className="pixel flex items-center gap-2 text-[22px] text-gold-500">
-          <Loop name="wheel" />
+          <Loop name="wheel" outfit={ratOutfit(view)} />
           {t('title')}
         </h2>
         <p className="text-[13px] text-ink-300">{t('ages', { from: ageAt(content, before.round), to: ageAt(content, view.round) })}</p>
@@ -108,6 +111,22 @@ export function Resolve() {
           sub={t('was', { amount: fmt.money(worthBefore), change: fmt.signed(worthNow - worthBefore) })}
           right={<span className="text-[19px] text-gold-500">{fmt.money(worthNow)}</span>}
         />
+      </Panel>
+
+      {/* What is said of the two years, by the bank and at the family's table: for a smile, it changes nothing. */}
+      <Panel>
+        <dl className="flex flex-col gap-2 text-[13px] leading-snug">
+          {bank ? (
+            <div>
+              <dt className="pixel text-[12px] uppercase tracking-wider text-gold-200">{t('bank.title')}</dt>
+              <dd className="italic text-ink-200">{t(`bank.${bank}`)}</dd>
+            </div>
+          ) : null}
+          <div>
+            <dt className="pixel text-[12px] uppercase tracking-wider text-gold-200">{t('family.title')}</dt>
+            <dd className="italic text-ink-200">{t(`family.${family}`)}</dd>
+          </div>
+        </dl>
       </Panel>
     </div>
   );

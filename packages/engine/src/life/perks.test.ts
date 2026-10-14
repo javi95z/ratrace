@@ -35,10 +35,10 @@ describe('what the things owned are good for', () => {
       club: { salaryPct: 5 },
     });
     const none = game(content);
-    expect(perksOf(none.player, content)).toEqual({ moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 });
+    expect(perksOf(none.player, content)).toEqual({ moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0, healthCoverOffPct: 0 });
     // Two cars: the better discount of the two and the better chance of the two, not their sum. The watch adds to it.
     const all = holding(content, none, 'car_basic', 'car_sports', 'watch_gold', 'club');
-    expect(perksOf(all.player, content)).toEqual({ moveCostOffPct: 30, studySkill: 0, salaryPct: 5, jobHuntPct: 12, focus: 0 });
+    expect(perksOf(all.player, content)).toEqual({ moveCostOffPct: 30, studySkill: 0, salaryPct: 5, jobHuntPct: 12, focus: 0, healthCoverOffPct: 0 });
     // A thing good for nothing changes nothing.
     expect(perksOf(holding(content, none, 'trip').player, content).focus).toBe(0);
   });

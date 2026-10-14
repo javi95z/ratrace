@@ -2,7 +2,7 @@
 
 // packages/engine/src/types.ts
 var SKILLS = ["negotiation", "languages", "network", "management", "health"];
-var ITEM_PERKS = ["moveCostOffPct", "studySkill", "salaryPct", "jobHuntPct", "focus"];
+var ITEM_PERKS = ["moveCostOffPct", "studySkill", "salaryPct", "jobHuntPct", "focus", "healthCoverOffPct"];
 
 // packages/engine/src/version.ts
 var ENGINE_VERSION = "0.22.0";
@@ -555,13 +555,13 @@ function itemStatus(item, age, content2) {
   return Math.floor((item.status * Math.max(share, floor) + BP / 2) / BP);
 }
 function perksOf(p, content2) {
-  const total = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 };
+  const total = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0, healthCoverOffPct: 0 };
   const best = /* @__PURE__ */ new Map();
   for (const owned of p.life.items) {
     const item = itemOf(content2, owned.itemId);
     if (item.perks === void 0) continue;
     let ladder = best.get(item.ladder);
-    if (!ladder) best.set(item.ladder, ladder = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0 });
+    if (!ladder) best.set(item.ladder, ladder = { moveCostOffPct: 0, studySkill: 0, salaryPct: 0, jobHuntPct: 0, focus: 0, healthCoverOffPct: 0 });
     for (const perk of ITEM_PERKS) ladder[perk] = Math.max(ladder[perk], item.perks[perk] ?? 0);
   }
   for (const ladder of best.values()) for (const perk of ITEM_PERKS) total[perk] += ladder[perk];
@@ -603,7 +603,8 @@ function deriveExpenses(p, content2) {
   for (const kind of INSURANCE_KINDS) {
     if (!life2.insurance[kind]) continue;
     const premium = applyBp(living, rules.insurancePremiumBp[kind]);
-    total += kind === "health" ? mulDiv(premium, Math.max(0, 100 - skillLevel(p, "health", content2) * rules.skills.healthPremiumOffPct), 100) : premium;
+    const off = kind === "health" ? skillLevel(p, "health", content2) * rules.skills.healthPremiumOffPct + perksOf(p, content2).healthCoverOffPct : 0;
+    total += mulDiv(premium, Math.max(0, 100 - off), 100);
   }
   for (const owned of life2.items) total += itemOf(content2, owned.itemId).upkeepAnnual;
   if (life2.evasion.shell) total += content2.evasion.shellFeeAnnual;
@@ -4767,6 +4768,8 @@ var PERKS = {
   fashion_birkin: { jobHuntPct: 6 },
   fashion_coat: { jobHuntPct: 8 },
   tech_laptop: { studySkill: 1 },
+  // A gym is where health is practised, and an insurer charges less for a member.
+  member_gym: { healthCoverOffPct: 25 },
   member_club: { jobHuntPct: 6 },
   member_platinum_card: { jobHuntPct: 2 },
   member_season_seat: { jobHuntPct: 3 },
@@ -4857,9 +4860,9 @@ var life = {
     ],
     frugal: [
       { fromRound: 0, status: -2 },
-      { fromRound: 2, status: -3 },
-      { fromRound: 5, status: -4 },
-      { fromRound: 9, status: -6 }
+      { fromRound: 2, status: -4 },
+      { fromRound: 5, status: -7 },
+      { fromRound: 9, status: -11 }
     ]
   },
   // A fifth down and the rest on a personal loan, for anything a dealer would write a contract for.
@@ -5314,6 +5317,7 @@ var badges = [
   { id: "three_rentals", group: "investing" },
   { id: "bond_ladder", group: "investing" },
   { id: "index_only", group: "investing" },
+  { id: "bought_the_top", group: "investing" },
   { id: "first_luxury_watch", group: "status" },
   { id: "supercar", group: "status" },
   { id: "shipowner", group: "status" },
@@ -5321,13 +5325,16 @@ var badges = [
   { id: "status_100", group: "status" },
   { id: "twenty_items", group: "status" },
   { id: "every_car", group: "status" },
+  { id: "more_cars_than_spaces", group: "status" },
   { id: "three_cities", group: "life" },
   { id: "moved_to_dubai", group: "life" },
   { id: "family_of_four", group: "life" },
   { id: "mba", group: "life" },
   { id: "sold_business", group: "life" },
   { id: "rode_out_recession", group: "life" },
-  { id: "bankrupt", group: "misfortune" }
+  { id: "bankrupt", group: "misfortune" },
+  { id: "room_at_40", group: "misfortune" },
+  { id: "audited", group: "misfortune" }
 ];
 function holdings(content2, p) {
   return content2.assets.filter((asset) => Object.hasOwn(p.positions, asset.id) && p.positions[asset.id].value > 0).map((asset) => ({ id: asset.id, kind: assetKind(asset), position: p.positions[asset.id] }));
@@ -5404,18 +5411,28 @@ var RULES = {
     return bonds.length > 0 && bonds.every((bond) => f.held.some((held) => held.id === bond.id));
   },
   index_only: (f) => f.escapedAtAge !== null && f.held.length > 0 && f.held.every((held) => held.kind === "fund") && f.p.properties.length === 0 && f.journal.kinds.every((kind) => kind === "fund"),
+  // Something on the market worth half what was paid for it, and still held: the top, bought.
+  bought_the_top: (f) => f.held.some((held) => held.position.basis > 0 && held.position.value * 2 <= held.position.basis),
   first_luxury_watch: (f) => LUXURY_WATCHES.some((watch) => owns(f.p, watch)),
   supercar: (f) => owns(f.p, "car_lamborghini_aventador"),
   shipowner: (f) => owns(f.p, "sea_sailboat") || owns(f.p, "sea_motor_yacht"),
   penthouse: (f) => f.p.properties.some((property) => property.typeId === "penthouse"),
   status_100: (f) => f.p.statusPoints >= 100,
+  more_cars_than_spaces: (f) => {
+    const cars = f.p.life.items.filter((owned) => owned.itemId.startsWith("car_")).length;
+    const spaces = f.p.properties.filter((property) => property.typeId === "parking").length;
+    return spaces > 0 && cars > spaces;
+  },
   three_cities: (f) => f.journal.cities.length >= 3,
   moved_to_dubai: (f) => f.events.some((e) => e.kind === "moved" && e.cityId === "dubai"),
   family_of_four: (f) => f.p.life.partner && f.p.life.children.length >= 2,
   mba: (f) => owns(f.p, "edu_mba"),
   sold_business: (f) => Object.hasOwn(f.p.life.flags, "sold_business"),
   rode_out_recession: (f) => f.round && f.world.regime === "recession" && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),
-  bankrupt: (f) => f.events.some((e) => e.kind === "bankrupt")
+  bankrupt: (f) => f.events.some((e) => e.kind === "bankrupt"),
+  // Forty, and still in a room of a shared flat: no home of one's own and none rented whole.
+  room_at_40: (f) => f.round && f.age === 40 && homeOf(f.p, f.content) === null && f.p.life.rentTier === 0,
+  audited: (f) => f.events.some((e) => e.kind === "audit")
 };
 function badgesEarned(step) {
   const facts = factsOf(step);

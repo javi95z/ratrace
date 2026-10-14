@@ -215,8 +215,15 @@ export const topicArt: Record<Headline['topic'], string> = {
   property: 'icon.property',
 };
 
+/** Badges whose own picture is not drawn yet, and the nearest one drawn, shown until it is. Emptied as `badges-04` is cut. */
+export const BADGE_STAND_INS: Record<string, string> = {
+  bought_the_top: 'crypto_winter',
+  more_cars_than_spaces: 'supercar',
+  room_at_40: 'three_rentals',
+  audited: 'bankrupt',
+};
 /** A badge, or `locked` for one not earned yet. */
-export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
+export const badgeArt = (badgeId: string): string => `badge.${BADGE_STAND_INS[badgeId] ?? badgeId}`;
 /** The rim a badge is set in, by its rarity: bronze, silver, a laurel of gold, and the gem. */
 export const RIM_ART = { common: 'rim.bronze', uncommon: 'rim.silver', rare: 'rim.gold', legendary: 'rim.gem' } as const;
 
@@ -259,6 +266,7 @@ export const perkArt: Record<keyof ItemPerks, string> = {
   salaryPct: 'icon.use_pay',
   jobHuntPct: 'icon.use_hunt',
   focus: 'icon.use_focus',
+  healthCoverOffPct: 'icon.insure_health',
 };
 
 /** The sign of a debt: by its kind, and for a loan that bought a thing on instalments, the thing's key and tag. */
@@ -290,6 +298,14 @@ export const crestArt = (cityId: string): string => `crest.${cityId}`;
 export type Loop = 'coin' | 'wheel' | 'confetti';
 export const LOOPS: readonly Loop[] = ['coin', 'wheel', 'confetti'];
 export const loopArt = (loop: Loop): string[] => [0, 1, 2, 3].map((frame) => `anim.${loop}.${frame}`);
+
+/** What the rat in the wheel wears: a tracksuit for a frugal life, the suit of the logo, and a tuxedo for a rich one. */
+export type RatOutfit = 'tracksuit' | 'suit' | 'tuxedo';
+/** The outfits drawn so far, besides the suit of the plain wheel. Filled as `anim-02` is cut. */
+export const RAT_OUTFITS_DRAWN: readonly RatOutfit[] = [];
+/** The wheel turning with the rat in an outfit, or the plain wheel while that outfit is not drawn. */
+export const wheelArt = (outfit: RatOutfit): string[] =>
+  RAT_OUTFITS_DRAWN.includes(outfit) ? [0, 1, 2, 3].map((frame) => `anim.wheel_${outfit}.${frame}`) : loopArt('wheel');
 
 /** How a life ended: out of the rat race, an ordinary retirement, or with nothing. */
 export type Ending = 'escaped' | 'retired' | 'ruined';

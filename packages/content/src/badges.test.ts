@@ -183,17 +183,35 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     ],
   },
   bankrupt: { earns: { events: [{ kind: 'bankrupt', proceeds: 0, debtsCleared: 100 }] }, misses: [{}] },
+  bought_the_top: {
+    earns: { player: hold('bitcoin', usd(2_500), usd(5_000)) },
+    misses: [{ player: hold('bitcoin', usd(2_501), usd(5_000)) }, { player: hold('bitcoin', 0, 0) }],
+  },
+  more_cars_than_spaces: {
+    earns: { player: all(own('car_seat_ibiza', 'car_bmw_m3'), home('parking')) },
+    misses: [{ player: all(own('car_seat_ibiza'), home('parking')) }, { player: own('car_seat_ibiza', 'car_bmw_m3') }],
+  },
+  room_at_40: {
+    earns: { round: 9, player: (p) => (p.life.rentTier = 0) },
+    misses: [
+      { round: 8, player: (p) => (p.life.rentTier = 0) },
+      { round: 9, player: (p) => (p.life.rentTier = 1) },
+      { round: 9, player: all((p) => (p.life.rentTier = 0), home('flat')) },
+      { round: 9, card: true, player: (p) => (p.life.rentTier = 0) },
+    ],
+  },
+  audited: { earns: { events: [{ kind: 'audit', evaded: 100, fine: 50, goods: 0 }] }, misses: [{}] },
 };
 
 /** Badges that are about the gallery of every life, not about one step. */
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and the shipowner, each in one of six groups', () => {
-    expect(badges).toHaveLength(31);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(31);
+  it('are the thirty of the spec and five since, each in one of six groups', () => {
+    expect(badges).toHaveLength(35);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(35);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 7, 7, 6, 1]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 8, 8, 6, 3]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {

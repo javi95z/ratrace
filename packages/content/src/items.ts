@@ -140,6 +140,8 @@ const PERKS: Record<string, ItemPerks> = {
   fashion_birkin: { jobHuntPct: 6 },
   fashion_coat: { jobHuntPct: 8 },
   tech_laptop: { studySkill: 1 },
+  // A gym is where health is practised, and an insurer charges less for a member.
+  member_gym: { healthCoverOffPct: 25 },
   member_club: { jobHuntPct: 6 },
   member_platinum_card: { jobHuntPct: 2 },
   member_season_seat: { jobHuntPct: 3 },

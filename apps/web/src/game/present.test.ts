@@ -278,7 +278,7 @@ describe('orderLabel', () => {
     expect(label({ type: 'setEvasion', blackPct: 0, shell: false }, 'es')).toBe('Sueldo en negro: 0 % · Cerrar la sociedad en el paraíso fiscal');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');
-    expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Basic-Fit');
+    expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Gym');
     expect(label({ type: 'setLifestyle', tier: 0 })).toBe('Live: Frugal');
     expect(label({ type: 'setRentTier', tier: 0 })).toBe('Home: Rented room');
     expect(label({ type: 'setInsurance', insurance: 'health', on: true })).toBe('Insure: Health insurance');

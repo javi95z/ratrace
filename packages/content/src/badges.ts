@@ -1,4 +1,4 @@
-import { escapeProgress, realNetWorth } from '@ratrace/engine';
+import { escapeProgress, homeOf, realNetWorth } from '@ratrace/engine';
 import type { Content, GameEvent, GameView, Order, PlayerState, Position } from '@ratrace/engine';
 import { assetKind } from './kinds';
 import type { AssetKind } from './kinds';
@@ -16,7 +16,7 @@ export interface BadgeDef {
   group: BadgeGroup;
 }
 
-/** The thirty badges of v1 (spec, Appendix C) and one added since, in the order the collection shows them. */
+/** The thirty badges of v1 (spec, Appendix C) and five added since, in the order the collection shows them. */
 export const badges: BadgeDef[] = [
   { id: 'first_100k', group: 'wealth' },
   { id: 'millionaire', group: 'wealth' },
@@ -35,6 +35,7 @@ export const badges: BadgeDef[] = [
   { id: 'three_rentals', group: 'investing' },
   { id: 'bond_ladder', group: 'investing' },
   { id: 'index_only', group: 'investing' },
+  { id: 'bought_the_top', group: 'investing' },
   { id: 'first_luxury_watch', group: 'status' },
   { id: 'supercar', group: 'status' },
   { id: 'shipowner', group: 'status' },
@@ -42,6 +43,7 @@ export const badges: BadgeDef[] = [
   { id: 'status_100', group: 'status' },
   { id: 'twenty_items', group: 'status' },
   { id: 'every_car', group: 'status' },
+  { id: 'more_cars_than_spaces', group: 'status' },
   { id: 'three_cities', group: 'life' },
   { id: 'moved_to_dubai', group: 'life' },
   { id: 'family_of_four', group: 'life' },
@@ -49,6 +51,8 @@ export const badges: BadgeDef[] = [
   { id: 'sold_business', group: 'life' },
   { id: 'rode_out_recession', group: 'life' },
   { id: 'bankrupt', group: 'misfortune' },
+  { id: 'room_at_40', group: 'misfortune' },
+  { id: 'audited', group: 'misfortune' },
 ];
 
 /**
@@ -205,12 +209,19 @@ const RULES: Record<string, (f: Facts) => boolean> = {
     f.held.every((held) => held.kind === 'fund') &&
     f.p.properties.length === 0 &&
     f.journal.kinds.every((kind) => kind === 'fund'),
+  // Something on the market worth half what was paid for it, and still held: the top, bought.
+  bought_the_top: (f) => f.held.some((held) => held.position.basis > 0 && held.position.value * 2 <= held.position.basis),
 
   first_luxury_watch: (f) => LUXURY_WATCHES.some((watch) => owns(f.p, watch)),
   supercar: (f) => owns(f.p, 'car_lamborghini_aventador'),
   shipowner: (f) => owns(f.p, 'sea_sailboat') || owns(f.p, 'sea_motor_yacht'),
   penthouse: (f) => f.p.properties.some((property) => property.typeId === 'penthouse'),
   status_100: (f) => f.p.statusPoints >= 100,
+  more_cars_than_spaces: (f) => {
+    const cars = f.p.life.items.filter((owned) => owned.itemId.startsWith('car_')).length;
+    const spaces = f.p.properties.filter((property) => property.typeId === 'parking').length;
+    return spaces > 0 && cars > spaces;
+  },
 
   three_cities: (f) => f.journal.cities.length >= 3,
   moved_to_dubai: (f) => f.events.some((e) => e.kind === 'moved' && e.cityId === 'dubai'),
@@ -220,6 +231,9 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   rode_out_recession: (f) => f.round && f.world.regime === 'recession' && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),
 
   bankrupt: (f) => f.events.some((e) => e.kind === 'bankrupt'),
+  // Forty, and still in a room of a shared flat: no home of one's own and none rented whole.
+  room_at_40: (f) => f.round && f.age === 40 && homeOf(f.p, f.content) === null && f.p.life.rentTier === 0,
+  audited: (f) => f.events.some((e) => e.kind === 'audit'),
 };
 
 /**

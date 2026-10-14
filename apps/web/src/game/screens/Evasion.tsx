@@ -3,6 +3,7 @@
 import { quoteEvasion } from '@ratrace/engine';
 import type { GameView, Order, RoundPreview } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
+import { adviserQuip } from '@/game/quips';
 import { Bar, Panel, Segmented, Toggle } from '@/ui/kit';
 
 type Want = { blackPct: number; shell: boolean; hideCrypto: boolean };
@@ -65,6 +66,10 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
             </p>
           ) : null}
           <p className="text-[12px] leading-snug text-ink-300">{t('limit', { years: quote.limitationYears, status: content.evasion.auditStatus })}</p>
+          <p className="text-[12px] leading-snug">
+            <span className="pixel uppercase tracking-wider text-gold-200">{t('advisor.title')}: </span>
+            <span className="italic text-ink-200">{t(`advisor.${adviserQuip(quote.suspicionAfter)}`)}</span>
+          </p>
         </section>
       </div>
     </Panel>

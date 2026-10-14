@@ -110,6 +110,7 @@
     "openSettings": "Abrir ajustes"
   },
   "settings": {
+    "version": "Versión {content} · motor {engine}",
     "title": "Ajustes",
     "game": "Tu partida",
     "progress": "Lo que llevas de vida",
@@ -172,6 +173,17 @@
       "rates": "Tipos de interés",
       "inflation": "Inflación",
       "property": "Vivienda"
+    },
+    "gossip": {
+      "label": "Opinión",
+      "0": "Los expertos coinciden: esta vez es distinto",
+      "1": "Un estudio dice que los jóvenes no compran casa por gastar en aguacates",
+      "2": "Un hombre explica las criptomonedas en una cena; nadie hace una segunda pregunta",
+      "3": "Un economista predice nueve de las dos últimas recesiones",
+      "4": "Un influencer deja su trabajo para vivir de rentas; vende un curso sobre ello",
+      "5": "«La vivienda nunca baja», asegura un hombre que vende viviendas",
+      "6": "Encuesta: todo el mundo es de clase media, sobre todo los ricos",
+      "7": "El banco sube las comisiones para celebrar sus beneficios récord"
     }
   },
   "crisis": {
@@ -274,6 +286,8 @@
       "salaryPct": "+{n} % de sueldo mientras lo tengas",
       "jobHuntPct": "+{n} puntos de probabilidad al buscar trabajo",
       "focus": "+{n} de foco en la ronda siguiente",
+      "healthCoverOffPct": "El seguro de salud cuesta un {n} % menos",
+      "trains": "Entrena {skill}: +{n} punto cada ronda",
       "best": "De cada gama solo cuenta lo mejor que tengas."
     },
     "openBusiness": "Abres un negocio: {name}",
@@ -601,7 +615,16 @@
       "sellGain": "Pagarás impuestos por {amount} de ganancia.",
       "opensNow": "Se abre al jugar la ronda. Desde la siguiente podrás llevarlo, hacerlo crecer o venderlo.",
       "needsCash": "Te faltan {amount} en efectivo para montarlo.",
-      "moreLater": "{n, plural, one {Otro tipo de negocio se abre} other {# tipos de negocio más se abren}} con cultura financiera {level}."
+      "moreLater": "{n, plural, one {Otro tipo de negocio se abre} other {# tipos de negocio más se abren}} con cultura financiera {level}.",
+      "review": {
+        "title": "Reseñas",
+        "stars": "{n} de 5 estrellas",
+        "1": "«Aquí no aparece ni el dueño».",
+        "2": "«Se nota que pierden dinero. Hasta la planta está triste».",
+        "3": "«Correcto. El encargado no sabe quién es el dueño».",
+        "4": "«Bien. Volveré si no hay otra cosa abierta».",
+        "5": "«El dueño cuenta los céntimos, pero todo funciona»."
+      }
     },
     "evasion": {
       "title": "Lo que no declaras",
@@ -621,7 +644,15 @@
       "suspicion": "Sospecha de Hacienda",
       "chance": "Probabilidad de inspección al jugar la ronda: {pct} %",
       "bill": "Si te inspeccionan pagas {total}: {evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura.",
-      "limit": "Lo oculto prescribe a los {years} años. Una inspección también cuesta {status} de estatus y lo cancela todo."
+      "limit": "Lo oculto prescribe a los {years} años. Una inspección también cuesta {status} de estatus y lo cancela todo.",
+      "advisor": {
+        "title": "Tu gestor",
+        "clean": "«Todo en regla. Sinceramente, un poco aburrido».",
+        "low": "«Esa cena la ponemos como gasto de representación».",
+        "mid": "«Si alguien pregunta, el efectivo fue un regalo de una tía. ¿Tienes una tía?».",
+        "high": "«Yo dejaría de coger números desconocidos».",
+        "max": "«No te conozco. ¿Quién eres? Vete, por favor»."
+      }
     }
   },
   "resolve": {
@@ -659,7 +690,25 @@
     "skill": "Mejoras en {skill}: nivel {level}.",
     "repair": "Reparación de tu {item}: {amount}.",
     "audit": "Inspección de Hacienda: pagas {amount}.",
-    "auditHint": "{evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura. Ya no ocultas nada."
+    "auditHint": "{evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura. Ya no ocultas nada.",
+    "bank": {
+      "title": "Tu banco",
+      "card": "«Hemos cubierto tu descubierto con la tarjeta de crédito. No hace falta que nos des las gracias. Ya lo harán los intereses».",
+      "idle": "«Vemos mucho dinero sin hacer nada. Nuestro fondo cobra solo un 2 % al año por hacer lo mismo».",
+      "fell": "«Vemos que tu patrimonio ha tenido un par de años difíciles. ¿Has pensado en un préstamo?».",
+      "rich": "«Tu banquero privado quiere invitarte a un café. Es nuevo y te aprecia muchísimo»."
+    },
+    "family": {
+      "title": "En la cena de Navidad",
+      "room": "«¿Sigues en la habitación? Tu primo ya tiene piso. Dos, de hecho».",
+      "frugal": "Tu madre te mete un táper en la maleta. Y otro.",
+      "car": "Tu cuñado pregunta cuánto te costó el coche. Y luego lo pregunta otra vez, por si ha cambiado.",
+      "lavish": "Una tía te pregunta, muy bajito, si te ha tocado la lotería.",
+      "single": "«¿Y la pareja, para cuándo?».",
+      "kids": "Los niños abren los regalos en cuatro minutos. Pagarlos te ha llevado dos años.",
+      "rich": "De repente todo el mundo se acuerda de tu cumpleaños.",
+      "plain": "Alguien saca la política. Te vas antes del postre."
+    }
   },
   "profile": {
     "title": "Tu vida",
@@ -839,6 +888,18 @@
       "rich": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Rico, sí; pero la rueda nunca dejó de girar.",
       "through": "Terminaste a los {age} en {city} con {worth} y {score} puntos. Una vida entera de madrugar, y la rueda girando hasta el final.",
       "broke": "Terminaste a los {age} en {city} con {worth} y {score} puntos. No salió como esperabas. La siguiente vida empieza de nuevo a los 22."
+    },
+    "obituary": {
+      "title": "Esquela",
+      "cars": "Deja {n} coches y nadie que los conduzca.",
+      "things": "Deja más cosas que dinero, y un armario que no cierra.",
+      "miser": "Murió rico sin haber encendido nunca la calefacción.",
+      "room": "Deja una habitación en un piso compartido y una fianza que nadie devolverá.",
+      "free": "Trabajó menos que nadie y nunca tuvo prisa.",
+      "broke": "Debía dinero a gente que ya no recuerda su nombre.",
+      "heirs": "Deja una fortuna y una familia que discutirá por ella durante años.",
+      "alone": "Deja una fortuna y nadie con quien discutir por ella.",
+      "plain": "Pagó todas las facturas a tiempo. Nadie lo menciona."
     }
   },
   "badges": {
