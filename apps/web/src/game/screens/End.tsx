@@ -1,10 +1,10 @@
 'use client';
 
 import { badgeArt, endingArt, lives, portraitArt } from '@ratrace/content';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
+import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
 import { ageAt, endingOf } from '@/game/present';
 import { bestsOf } from '@/game/records';
@@ -15,6 +15,29 @@ import { Panel, Row, Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { ShareCard } from './ShareCard';
 import { WorthGraph } from './WorthGraph';
+
+/** Fewer lives than this to compare with say nothing yet: a share of three is not a standing. */
+export const COMPARE_MIN = 5;
+
+/**
+ * Where a score stands among the lives other players finished from the same start, as a share of
+ * them that did worse. Nothing while it is being asked, with nobody to ask, or with too few to tell.
+ */
+function useStanding(lifeId: string, score: number): { pct: number; total: number } | null {
+  const community = useCommunity();
+  const [standing, setStanding] = useState<{ pct: number; total: number } | null>(null);
+  useEffect(() => {
+    if (community === null || lifeId === '') return;
+    let live = true;
+    void community.compare({ lifeId, score }).then((found) => {
+      if (live && found !== null && found.total >= COMPARE_MIN) setStanding({ pct: Math.floor((found.below * 100) / found.total), total: found.total });
+    });
+    return () => {
+      live = false;
+    };
+  }, [community, lifeId, score]);
+  return standing;
+}
 
 const BEST: Record<Best, string> = { score: 'bestScore', netWorth: 'bestNetWorth', escape: 'bestEscape', status: 'bestStatus' };
 
@@ -67,6 +90,7 @@ function Ended({ view }: { view: GameView }) {
   // The life in three paragraphs: where it began, what happened, how it ended.
   const life = lives.find((candidate) => candidate.id === lifeId);
   const told = life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : [];
+  const standing = useStanding(lifeId, score.total);
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave.
   const picture = useMemo(
@@ -128,6 +152,12 @@ function Ended({ view }: { view: GameView }) {
           <Part label={escaped ? t('bonus', { multiplier: fmt.factor(score.multiplierPct) }) : t('noBonus')} value={`×${fmt.factor(score.multiplierPct)}`} />
         </div>
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
+        {standing ? (
+          <p role="status" className="mt-3 flex items-center justify-center gap-2 text-[13px] text-teal-300">
+            <Sprite id="icon.trophy" />
+            {t('compare', { pct: standing.pct, life: lifeName, total: standing.total })}
+          </p>
+        ) : null}
         {ranked ? (
           <p className="mt-3 text-[13px] text-teal-300">
             {t('ranked')}{' '}

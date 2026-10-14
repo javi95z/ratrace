@@ -761,7 +761,8 @@
     "again": "Vivir otra vida",
     "home": "Inicio",
     "ranked": "Vida clasificatoria: está en las clasificaciones.",
-    "rankings": "Ver las clasificaciones"
+    "rankings": "Ver las clasificaciones",
+    "compare": "Mejor que el {pct} % de las vidas de {life} que han jugado otros ({total})."
   },
   "epilogue": {
     "title": "Tu vida, contada",

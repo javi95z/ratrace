@@ -118,6 +118,11 @@ export interface Community {
   /** The first fifty, and the asker's own line if it is further down. */
   ranking(query: RankingQuery): Promise<RankingRow[] | null>;
   friends(): Promise<Friend[] | null>;
+  /**
+   * How a score stands among the lives other players have finished from the same start: how many
+   * of them scored less, and how many there are. Ranked and casual alike; the asker's own are left out.
+   */
+  compare(query: { lifeId: string; score: number }): Promise<{ below: number; total: number } | null>;
   /** Follows the player a friend code belongs to. `full`: the player follows as many as one may. */
   follow(code: string): Promise<'ok' | 'unknown' | 'self' | 'full' | 'failed'>;
   unfollow(userId: string): Promise<boolean>;

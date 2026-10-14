@@ -41,6 +41,7 @@ function community(over: Partial<Community> = {}) {
       return state.board(query);
     },
     friends: async () => state.friends,
+    compare: async () => null,
     follow: async (code) => {
       asked.push(`follow ${code}`);
       state.friends = [{ userId: 'aaaa1111-0000', nickname: 'Otra_Rata' }, ...state.friends];

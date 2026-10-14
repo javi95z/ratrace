@@ -28,7 +28,7 @@ const client = vi.hoisted(() => {
       from: (table: string) => {
         const question: unknown[] = [table];
         const builder: Record<string, unknown> = {};
-        for (const word of ['select', 'eq', 'in', 'order', 'limit', 'update', 'upsert', 'delete', 'maybeSingle']) {
+        for (const word of ['select', 'eq', 'neq', 'lt', 'in', 'order', 'limit', 'update', 'upsert', 'delete', 'maybeSingle']) {
           builder[word] = (...a: unknown[]) => (question.push([word, ...a]), builder);
         }
         builder.then = (resolve: (answer: unknown) => unknown, reject: (error: unknown) => unknown) => {
@@ -367,6 +367,19 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
       client.answers.profiles = { error: { code, message: 'no' } };
       expect(await cloud.community.rename('Rata_Uno'), code).toBe(word);
     }
+  });
+
+  it('counts the lives of others from the same start, and those of them that scored less, without reading a row', async () => {
+    client.answers.getSession = signedIn;
+    // The question that asks for the lower scores says so; the other counts them all.
+    client.answers.runs = (question: unknown[]) => ({ count: question.some((word) => Array.isArray(word) && word[0] === 'lt') ? 31 : 40, error: null });
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.compare({ lifeId: 'nurse', score: 420 })).toEqual({ below: 31, total: 40 });
+    const others = ['runs', ['select', 'id', { count: 'exact', head: true }], ['eq', 'life_id', 'nurse'], ['neq', 'user_id', 'u-1']];
+    expect(client.asked).toEqual(expect.arrayContaining([others, [...others, ['lt', 'score', 420]]]));
+    // Anything it cannot count is no comparison at all.
+    client.answers.runs = { count: null, error: { code: '42501', message: 'denied' } };
+    expect(await cloud.community.compare({ lifeId: 'nurse', score: 420 })).toBeNull();
   });
 
   it('asks the database for a ranking, and says which line is the player\'s own', async () => {

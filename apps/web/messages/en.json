@@ -761,7 +761,8 @@
     "again": "Live another life",
     "home": "Home",
     "ranked": "A ranked life: it is in the rankings.",
-    "rankings": "See the rankings"
+    "rankings": "See the rankings",
+    "compare": "Better than {pct}% of the {life} lives others have played ({total})."
   },
   "epilogue": {
     "title": "Your life, told",

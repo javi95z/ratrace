@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
 import { ENGINE_VERSION, previewCard } from '@ratrace/engine';
 import { useGame } from '@/game/context';
+import type { Community } from '@/online/types';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
 import { RankedSessions } from '@/session/ranked';
@@ -13,6 +14,7 @@ import { GameSessions } from '@/session/sessions';
 import type { GameSession, SavedGame } from '@/session/types';
 import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
+import { COMPARE_MIN } from './End';
 import { Play } from './Play';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
@@ -603,3 +605,44 @@ describe('a ranked life on the play screen', { timeout: 60_000 }, () => {
   });
 });
 
+describe('the end of a life, beside the lives of others', () => {
+  /** A community that answers the comparison as told, and nothing else. */
+  const others = (answer: { below: number; total: number } | null, asked: unknown[]): Community => ({
+    me: async () => null,
+    rename: async () => 'failed',
+    ranking: async () => null,
+    friends: async () => null,
+    compare: async (query) => (asked.push(query), answer),
+    follow: async () => 'failed',
+    unfollow: async () => false,
+  });
+  const ended = async (answer: { below: number; total: number } | null) => {
+    const asked: unknown[] = [];
+    const services = { ...memoryServices(), community: () => others(answer, asked) };
+    await playRounds(await services.sessions.start('nurse'), content.rounds);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    const [run] = await services.store.listRuns();
+    return { asked, run };
+  };
+
+  it('says how many of the lives others played from the same start scored less', async () => {
+    const { asked, run } = await ended({ below: 31, total: 40 });
+    const score = screen.getByRole('group', { name: 'Score' });
+    expect(await within(score).findByText('Better than 77% of the Nurse lives others have played (40).')).toBeTruthy();
+    // Asked of this life and its score, however many times the screen is drawn.
+    expect(asked.length).toBeGreaterThan(0);
+    for (const query of asked) expect(query).toEqual({ lifeId: 'nurse', score: run.score });
+  });
+
+  it('says nothing with too few to compare with, or with nobody to ask', async () => {
+    await ended({ below: 3, total: COMPARE_MIN - 1 });
+    // The answer has come and gone: there is still nothing to say.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByText(/lives others have played/)).toBeNull();
+    cleanup();
+    await ended(null);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.queryByText(/lives others have played/)).toBeNull();
+  });
+});

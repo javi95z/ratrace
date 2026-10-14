@@ -235,6 +235,18 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return null;
         }
       },
+      async compare({ lifeId, score }) {
+        try {
+          const mine = await me();
+          // Two counts and no rows: how many lives like this one there are, and how many of them did worse.
+          const others = () => client.from('runs').select('id', { count: 'exact', head: true }).eq('life_id', lifeId).neq('user_id', mine);
+          const [all, below] = await Promise.all([others(), others().lt('score', score)]);
+          if (all.error || below.error || all.count === null || below.count === null) return null;
+          return { below: below.count, total: all.count };
+        } catch {
+          return null;
+        }
+      },
       async friends() {
         try {
           const followed = await client.from('friendships').select('followed').eq('follower', await me()).order('created_at', { ascending: false });
