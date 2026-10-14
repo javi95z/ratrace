@@ -262,3 +262,31 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 | 62 | `cards/cards-22.png` | `card.restructuring`, `card.keys_to_children`, `card.shop_handover`, `card.care_home`, `scene.retired`, `scene.challenge` | 288×120 |
 
 Until it is cut, the four cards show a stand-in (`SCENE_STAND_INS` in `packages/content/src/art.ts`).
+
+## Signs for the end of a working life and the weekly challenge
+
+### 63. Twelve small signs
+
+Save as `art/raw/icons/icons-09.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 small icons. Each is one bold simple object with a dark outline, readable at very small size. No letters or words anywhere. Left to right, top to bottom:
+1. A small pie chart in three calm blue and green slices, inside a thin gold ring.
+2. A credit card with a bold red diagonal line across it.
+3. A cardboard moving box with a bold red diagonal line across it.
+4. A small house with a "for sale" board in front of it and a bold red diagonal line across both.
+5. A heavy iron ball on a chain, a few coins spilling from a split bag beside it.
+6. A wall calendar page with one row of seven days circled in gold.
+7. A small gold laurel wreath around an empty centre.
+8. A hamster wheel standing still, a pair of slippers and a cup of tea in front of it.
+9. A small wrapped present with a house key tied to its ribbon.
+10. A shop door key on a ring passing from a larger hand to a smaller one.
+11. A heart with a small white medical cross and a downward arrow beside it.
+12. A pair of training cones with a stopwatch: a practice run.
+```
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 63 | `icons/icons-09.png` | `icon.rule_index_only`, `icon.rule_no_loans`, `icon.rule_no_moving`, `icon.rule_no_property`, `icon.rule_start_in_debt`, `icon.challenge`, `icon.top_tenth`, `icon.retired`, `icon.gift`, `icon.handover`, `icon.health_risk`, `icon.practice` | 32×32 |
+
+What each is for: the five rules of the challenge, shown beside the rule's name; the challenge itself, on its panel and its tab; the best tenth of its ranking; the retired player in the Work panel; the two gifts to the children on their cards' tags; the warning that health costs more with age; and a practice, as against the attempt that counts.
