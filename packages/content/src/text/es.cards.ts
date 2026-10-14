@@ -501,8 +501,8 @@ export const cards: Record<string, CardText> = {
   ]),
 
   // Impuestos
-  tax_advisor: c('¿Te llevas la renta a una gestoría?', 'Cobra por hacerte la renta. Suele encontrar deducciones que pagan su factura y, si te inspecciona Hacienda, te ahorra casi toda la multa.', [
-    'Seguir haciéndola tú',
+  tax_advisor: c('¿Te llevas la renta a una gestoría?', 'Hacerla tú cuesta un programa, un fin de semana y algún error. La gestoría cobra más, pero halla deducciones y te cubre ante Hacienda.', [
+    ['Seguir haciéndola tú', 'La presentas a tiempo, con tres pestañas abiertas y un café.', 'Un error en una casilla: Hacienda te cobra un recargo.'],
     ['Contratar la gestoría', 'Encuentra deducciones que no sabías que existían: se paga sola y sobra.', 'Este año no encuentra nada que deducir, pero ya tienes quien te defienda ante Hacienda.'],
   ]),
   tax_pension_topup: c('Aportación al plan de pensiones', 'Este año tu empresa iguala lo que aportes a tu plan.', [

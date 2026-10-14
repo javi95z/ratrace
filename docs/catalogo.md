@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.21.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.22.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -11,7 +11,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Ciudades](#ciudades) | 6 |
 | [Objetos](#objetos) | 58, de ellos 7 coches |
 | [Inmuebles](#inmuebles) | 16 |
-| [Inversiones](#inversiones) | 19 |
+| [Inversiones](#inversiones) | 20 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 113 |
 | [Crisis](#crisis) | 3 |
@@ -641,9 +641,9 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.edu_mba.png" alt="Certificación PMP"> | Certificación PMP | 4.000 $ |  | +4 | 0 %, 0 % por ronda | +3 % de sueldo. +8 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.member_club.png" alt="Coach ejecutivo"> | Coach ejecutivo | 0 $ | 6.000 $/año | +2 |  | +2 % de sueldo | Cuota mientras lo tengas |
-| <img src="../art/clean/items/item.travel_interrail.png" alt="Escuela de idiomas en el extranjero"> | Escuela de idiomas en el extranjero | 6.000 $ |  | +4 |  |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.edu_certificate.png" alt="Certificación PMP"> | Certificación PMP | 4.000 $ |  | +4 | 0 %, 0 % por ronda | +3 % de sueldo. +8 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.edu_coach.png" alt="Coach ejecutivo"> | Coach ejecutivo | 0 $ | 6.000 $/año | +2 |  | +2 % de sueldo | Cuota mientras lo tengas |
+| <img src="../art/clean/items/item.edu_language_school.png" alt="Escuela de idiomas en el extranjero"> | Escuela de idiomas en el extranjero | 6.000 $ |  | +4 |  |  | El estatus dura 4 años |
 | <img src="../art/clean/items/item.edu_mba.png" alt="MBA en el IESE"> | MBA en el IESE | 95.000 $ |  | +15 |  | +10 % de sueldo | Solo lo da una carta |
 
 ## Inmuebles
@@ -684,6 +684,7 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 
 | Inversión | Ticker | Clase | Cultura financiera | Renta | Qué es |
 | --- | --- | --- | --- | --- | --- |
+| Letras del Tesoro EE. UU. | TBILL | Bonos | 1 | Cupón según los tipos | Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve. |
 | Bono EE. UU. 2 años | UST2 | Bonos | 1 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
 | Bono EE. UU. 10 años | UST10 | Bonos | 1 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
 | Bund alemán | BUND | Bonos | 1 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
@@ -917,7 +918,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 
 |  | Carta | Opciones |
 | --- | --- | --- |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="¿Te llevas la renta a una gestoría?"> | **¿Te llevas la renta a una gestoría?**<br>Cobra por hacerte la renta. Suele encontrar deducciones que pagan su factura y, si te inspecciona Hacienda, te ahorra casi toda la multa. | 1. Seguir haciéndola tú<br>2. Contratar la gestoría |
+| <img src="../art/clean/cards/card.advisor_office.png" alt="¿Te llevas la renta a una gestoría?"> | **¿Te llevas la renta a una gestoría?**<br>Hacerla tú cuesta un programa, un fin de semana y algún error. La gestoría cobra más, pero halla deducciones y te cubre ante Hacienda. | 1. Seguir haciéndola tú<br>2. Contratar la gestoría |
 | <img src="../art/clean/cards/card.piggy_bank.png" alt="Aportación al plan de pensiones"> | **Aportación al plan de pensiones**<br>Este año tu empresa iguala lo que aportes a tu plan. | 1. Pasar<br>2. Aportar un poco<br>3. Aportar el máximo |
 | <img src="../art/clean/cards/card.receipts.png" alt="La declaración de la renta"> | **La declaración de la renta**<br>Una caja de zapatos llena de facturas y una fecha límite. | 1. Presentarla como siempre<br>2. Repasar todas las facturas |
 | <img src="../art/clean/cards/card.inspector.png" alt="Una inspección de Hacienda"> | **Una inspección de Hacienda**<br>Una carta certificada. Quieren tres años de papeles. | 1. Pagar lo que piden<br>2. Recurrir |
@@ -1000,9 +1001,9 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.bought_the_dip.png" alt="Comprar en la caída"> | Comprar en la caída | Compra un fondo indexado o una acción en plena recesión. |
 | <img src="../art/clean/badges/badge.crypto_winter.png" alt="Aguantar el invierno"> | Aguantar el invierno | Mantén tus criptomonedas durante un invierno cripto sin vender ni una. |
 | <img src="../art/clean/badges/badge.three_rentals.png" alt="Tres alquileres"> | Tres alquileres | Ten tres inmuebles alquilados a la vez. Las plazas de garaje no cuentan. |
-| <img src="../art/clean/badges/badge.bond_ladder.png" alt="Escalera de bonos"> | Escalera de bonos | Ten los tres bonos del Estado a la vez. |
+| <img src="../art/clean/badges/badge.bond_ladder.png" alt="Escalera de bonos"> | Escalera de bonos | Ten a la vez todos los bonos del Estado, de las letras al de diez años. |
 | <img src="../art/clean/badges/badge.index_only.png" alt="Solo indexados"> | Solo indexados | Sal de la rueda sin haber tenido nunca otra inversión que fondos indexados, y sin ninguna vivienda. |
-| <img src="../art/clean/badges/badge.crypto_winter.png" alt="Compraste en máximos"> | Compraste en máximos | Ten una inversión que valga la mitad o menos de lo que pagaste. |
+| <img src="../art/clean/badges/badge.bought_the_top.png" alt="Compraste en máximos"> | Compraste en máximos | Ten una inversión que valga la mitad o menos de lo que pagaste. |
 
 ### Estatus
 
@@ -1015,7 +1016,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.status_100.png" alt="Estatus 100"> | Estatus 100 | Llega a 100 de estatus. |
 | <img src="../art/clean/badges/badge.twenty_items.png" alt="Veinte cosas"> | Veinte cosas | Ten veinte cosas distintas, contando todas tus vidas. |
 | <img src="../art/clean/badges/badge.every_car.png" alt="Todos los coches"> | Todos los coches | Ten en algún momento todos los coches del juego, contando todas tus vidas. |
-| <img src="../art/clean/badges/badge.supercar.png" alt="Más coches que plazas"> | Más coches que plazas | Ten una plaza de garaje y más coches que plazas. |
+| <img src="../art/clean/badges/badge.more_cars_than_spaces.png" alt="Más coches que plazas"> | Más coches que plazas | Ten una plaza de garaje y más coches que plazas. |
 
 ### Vida
 
@@ -1033,5 +1034,5 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 |  | Insignia | Cómo se consigue |
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.bankrupt.png" alt="Quiebra"> | Quiebra | Quiebra. Les pasa a los mejores. |
-| <img src="../art/clean/badges/badge.three_rentals.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
-| <img src="../art/clean/badges/badge.bankrupt.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |
+| <img src="../art/clean/badges/badge.room_at_40.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
+| <img src="../art/clean/badges/badge.audited.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |

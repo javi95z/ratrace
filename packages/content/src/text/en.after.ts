@@ -205,7 +205,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'You pay, and buy a repossessed studio. Someone was going to.',
   ],
   world_bank_failure: [null, 'Two hours in the queue. Your money sleeps at another bank.'],
-  tax_advisor: ['You do it yourself, with three tabs open and a coffee.', null],
+  tax_advisor: [null, null],
   tax_pension_topup: [
     'You pass up the money your employer would have added.',
     'A little of yours, and the same again from your employer.',

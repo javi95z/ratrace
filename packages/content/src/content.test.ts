@@ -1,4 +1,4 @@
-import { applyRound, businessRound, createGame, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
+import { applyRound, assetYieldBp, businessRound, createGame, depositRateBp, INDEX_START, quoteItem, validateContent, validateStart, viewOf } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { assetKind } from './kinds';
 import { START_AGE } from './badges';
@@ -12,7 +12,7 @@ describe('the v1 content', () => {
 
   it('has the size the spec sets', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
-    expect(content.assets).toHaveLength(19);
+    expect(content.assets).toHaveLength(20);
     expect(content.careers).toHaveLength(11);
     expect(content.items).toHaveLength(58);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
@@ -49,7 +49,7 @@ describe('the v1 content', () => {
     const groups: Record<string, string[]> = {};
     for (const asset of content.assets) (groups[assetKind(asset)] ??= []).push(asset.id);
     expect(groups.fund).toEqual(['sp500', 'msci_world']);
-    expect(groups.bond).toEqual(['treasury_short', 'treasury_long', 'bund']);
+    expect(groups.bond).toEqual(['treasury_bills', 'treasury_short', 'treasury_long', 'bund']);
     expect(groups.crypto).toEqual(['bitcoin', 'ethereum', 'dogecoin']);
     expect(groups.gold).toEqual(['gold']);
     expect(groups.stock).toHaveLength(10);
@@ -320,6 +320,23 @@ describe('the v1 content', () => {
       const state = createGame({ content, start: life.start }, `start-${life.id}`);
       expect(state.hand.length, life.id).toBeGreaterThan(0);
       expect(applyRound(content, state, { orders: [] }).state.round).toBe(1);
+    }
+  });
+
+  it('sells Treasury bills that keep their price, pay a little under the rate of the day and more than savings', () => {
+    const bills = content.assets.find((asset) => asset.id === 'treasury_bills')!;
+    let state = createGame({ content, start: lives[0].start }, 'bills');
+    state.player.cash = 10_000_000;
+    state.player.life.financeSkill = bills.minFinanceSkill;
+    for (let round = 0; round < content.rounds && !state.finished; round++) {
+      const orders = round === 0 ? [{ type: 'buy' as const, assetId: 'treasury_bills', amount: 5_000_000 }] : [];
+      const world = state.timeline[state.round];
+      expect(assetYieldBp(bills, world)).toBe(Math.max(0, world.policyRateBp - 25));
+      expect(assetYieldBp(bills, world)).toBeGreaterThanOrEqual(depositRateBp(content, world));
+      state = applyRound(content, state, { orders }).state;
+      // Whatever the rates did, a bill is worth what was paid for it.
+      expect(state.timeline[state.round].assetIndex.treasury_bills).toBe(INDEX_START);
+      expect(state.player.positions.treasury_bills).toEqual({ value: 5_000_000, basis: 5_000_000 });
     }
   });
 });

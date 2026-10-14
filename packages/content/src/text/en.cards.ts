@@ -501,8 +501,8 @@ export const cards: Record<string, CardText> = {
   ]),
 
   // Tax
-  tax_advisor: c('Hire a tax advisor?', 'They charge to do your tax return, often find deductions that cover the fee, and save you most of the fine if the tax office inspects you.', [
-    'Keep doing it yourself',
+  tax_advisor: c('Hire a tax advisor?', 'Doing it yourself costs software, a weekend and the odd mistake. An advisor costs more, but finds deductions and covers you if inspected.', [
+    ['Keep doing it yourself', 'You file on time, with three tabs open and a coffee.', 'A wrong box: the tax office charges a surcharge.'],
     ['Hire the advisor', 'They find deductions you never knew existed: the fee pays for itself and then some.', 'Nothing to deduct this year, but now someone will stand up for you to the tax office.'],
   ]),
   tax_pension_topup: c('Pension top-up', 'Your employer will match what you add to your pension this year.', [

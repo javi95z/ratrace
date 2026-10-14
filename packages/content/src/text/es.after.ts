@@ -197,7 +197,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'Pagas, y compras un estudio embargado. Alguien iba a hacerlo.',
   ],
   world_bank_failure: [null, 'Dos horas de cola. Tu dinero duerme en otro banco.'],
-  tax_advisor: ['La haces tú, con tres pestañas abiertas y un café.', null],
+  tax_advisor: [null, null],
   tax_pension_topup: [
     'Dejas pasar el dinero que ponía tu empresa.',
     'Un poco tuyo, y otro tanto de la empresa.',

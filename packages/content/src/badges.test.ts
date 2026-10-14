@@ -138,8 +138,8 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     misses: [{ player: all(home('studio', true), home('studio', true), home('flat', false)) }, { player: all(home('studio', true), home('flat', true), home('parking', true), home('parking', true)) }],
   },
   bond_ladder: {
-    earns: { player: all(hold('treasury_short'), hold('treasury_long'), hold('bund')) },
-    misses: [{ player: all(hold('treasury_short'), hold('treasury_long')) }],
+    earns: { player: all(hold('treasury_bills'), hold('treasury_short'), hold('treasury_long'), hold('bund')) },
+    misses: [{ player: all(hold('treasury_short'), hold('treasury_long'), hold('bund')) }],
   },
   index_only: {
     earns: { events: [escaped(10)], round: 12, player: hold('msci_world', usd(900_000)) },

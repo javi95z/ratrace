@@ -12,6 +12,7 @@ export const en: ContentText = {
     bangkok: { tagline: 'Your money goes four times as far. So do your savings.' },
   },
   assets: {
+    treasury_bills: { blurb: 'Short loans to the US government, rolled over each round. Pays a little under the going rate, and its price never moves.' },
     treasury_short: { blurb: 'Lends to the US government for two years. Pays the going rate and barely moves.' },
     treasury_long: { blurb: 'Ten years of US government coupons. Its price falls hard when rates rise.' },
     bund: { blurb: 'German government debt. Pays a little less, sleeps a little better.' },
@@ -261,7 +262,7 @@ export const en: ContentText = {
     bought_the_dip: { name: 'Bought the dip', how: 'Buy an index fund or a stock in the middle of a recession.' },
     crypto_winter: { name: 'Through the winter', how: 'Hold your coins through a crypto winter without selling one.' },
     three_rentals: { name: 'Three rentals', how: 'Rent out three properties at once. Parking spaces do not count.' },
-    bond_ladder: { name: 'Bond ladder', how: 'Hold all three government bonds at once.' },
+    bond_ladder: { name: 'Bond ladder', how: 'Hold every government bond at once, from bills to ten years.' },
     index_only: { name: 'Index and nothing else', how: 'Leave the rat race having never held any investment but index funds, and owning no property.' },
     first_luxury_watch: { name: 'First luxury watch', how: 'Own an {item:watch_omega} or anything finer.' },
     supercar: { name: 'Supercar owner', how: 'Own a {item:car_lamborghini_aventador}.' },

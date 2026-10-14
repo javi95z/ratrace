@@ -1,7 +1,7 @@
 import type { AssetDef, MarketParams } from '@ratrace/engine';
 
 /**
- * Nineteen assets. Returns are per round of two years, in basis points.
+ * Twenty assets. Returns are per round of two years, in basis points.
  * Every equity shares the class mean of the regime; beta scales how hard the class shock hits,
  * drift sets the long-run difference between archetypes, and yield is paid out as taxable income.
  *
@@ -9,6 +9,8 @@ import type { AssetDef, MarketParams } from '@ratrace/engine';
  */
 export const assets: AssetDef[] = [
   // Government bonds: coupon follows the policy rate; price falls when rates rise.
+  // Bills are paid back within the round: the rate of the day, a little under it, and a price that never moves.
+  { id: 'treasury_bills', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 0, yieldSpreadBp: -25, minFinanceSkill: 1 },
   { id: 'treasury_short', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 2, yieldSpreadBp: 0, minFinanceSkill: 1 },
   { id: 'treasury_long', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 9, yieldSpreadBp: 80, minFinanceSkill: 1 },
   { id: 'bund', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 7, yieldSpreadBp: -50, minFinanceSkill: 1 },

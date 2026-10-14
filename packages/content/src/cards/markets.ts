@@ -63,8 +63,10 @@ export const investingCards: CardDef[] = [
 
 export const taxCards: CardDef[] = [
   card('tax_advisor', 'tax', { cooldown: 5, when: { minRound: 2, notFlags: ['tax_advisor'] } }, [
-    {},
-    { effects: { cash: usd(-1_500), setFlags: ['tax_advisor'] }, outcomes: [{ weight: 60, effects: { cash: usd(2_500) } }, { weight: 40, effects: {} }] },
+    // Doing it yourself costs a program and a weekend, and now and then a mistake that the tax office charges for.
+    { effects: { cash: usd(-300) }, outcomes: [{ weight: 75, effects: {} }, { weight: 25, effects: { cash: usd(-1_000) } }] },
+    // An advisor costs more, usually finds more than the fee, and stands by the player in an inspection.
+    { effects: { cash: usd(-2_000), setFlags: ['tax_advisor'] }, outcomes: [{ weight: 80, effects: { cash: usd(3_000) } }, { weight: 20, effects: {} }] },
   ]),
   card('tax_pension_topup', 'tax', { when: { employed: true } }, [
     {},

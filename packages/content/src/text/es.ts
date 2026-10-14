@@ -12,6 +12,7 @@ export const es: ContentText = {
     bangkok: { tagline: 'Tu dinero cunde cuatro veces más. Tus ahorros también.' },
   },
   assets: {
+    treasury_bills: { blurb: 'Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve.' },
     treasury_short: { blurb: 'Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve.' },
     treasury_long: { blurb: 'Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos.' },
     bund: { blurb: 'Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor.' },
@@ -261,7 +262,7 @@ export const es: ContentText = {
     bought_the_dip: { name: 'Comprar en la caída', how: 'Compra un fondo indexado o una acción en plena recesión.' },
     crypto_winter: { name: 'Aguantar el invierno', how: 'Mantén tus criptomonedas durante un invierno cripto sin vender ni una.' },
     three_rentals: { name: 'Tres alquileres', how: 'Ten tres inmuebles alquilados a la vez. Las plazas de garaje no cuentan.' },
-    bond_ladder: { name: 'Escalera de bonos', how: 'Ten los tres bonos del Estado a la vez.' },
+    bond_ladder: { name: 'Escalera de bonos', how: 'Ten a la vez todos los bonos del Estado, de las letras al de diez años.' },
     index_only: { name: 'Solo indexados', how: 'Sal de la rueda sin haber tenido nunca otra inversión que fondos indexados, y sin ninguna vivienda.' },
     first_luxury_watch: { name: 'Primer reloj de lujo', how: 'Ten un {item:watch_omega} o algo mejor.' },
     supercar: { name: 'Superdeportivo', how: 'Ten un {item:car_lamborghini_aventador}.' },

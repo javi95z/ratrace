@@ -15,6 +15,7 @@ export interface Names {
 }
 
 const assets: Names['assets'] = {
+  treasury_bills: { name: 'US Treasury bills', ticker: 'TBILL' },
   treasury_short: { name: 'US Treasury 2Y', ticker: 'UST2' },
   treasury_long: { name: 'US Treasury 10Y', ticker: 'UST10' },
   bund: { name: 'German Bund', ticker: 'BUND' },
@@ -117,6 +118,7 @@ export const names: Record<Locale, Names> = {
     cities: { madrid: 'Madrid', london: 'Londres', new_york: 'Nueva York', dubai: 'Dubái', singapore: 'Singapur', bangkok: 'Bangkok' },
     assets: {
       ...assets,
+      treasury_bills: { name: 'Letras del Tesoro EE. UU.', ticker: 'TBILL' },
       treasury_short: { name: 'Bono EE. UU. 2 años', ticker: 'UST2' },
       treasury_long: { name: 'Bono EE. UU. 10 años', ticker: 'UST10' },
       bund: { name: 'Bund alemán', ticker: 'BUND' },
@@ -170,6 +172,7 @@ export const names: Record<Locale, Names> = {
     cities: { madrid: 'Мадрид', london: 'Лондон', new_york: 'Нью-Йорк', dubai: 'Дубай', singapore: 'Сингапур', bangkok: 'Бангкок' },
     assets: {
       ...assets,
+      treasury_bills: { name: 'Казначейские векселя США', ticker: 'TBILL' },
       treasury_short: { name: 'Облигации США, 2 года', ticker: 'UST2' },
       treasury_long: { name: 'Облигации США, 10 лет', ticker: 'UST10' },
       bund: { name: 'Облигации Германии', ticker: 'BUND' },
