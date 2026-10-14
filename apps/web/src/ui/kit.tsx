@@ -1,5 +1,5 @@
-import { useId } from 'react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { forwardRef, useId, useRef } from 'react';
+import type { ButtonHTMLAttributes, KeyboardEvent, ReactNode } from 'react';
 import type { Tone } from '@/game/present';
 import { Sprite } from './Sprite';
 
@@ -28,9 +28,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /** A pixel button. Never smaller than 44px, so a thumb can hit it. */
-export function Button({ variant = 'secondary', wide = false, className, type = 'button', children, ...rest }: ButtonProps) {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = 'secondary', wide = false, className, type = 'button', children, ...rest }, ref) {
   return (
     <button
+      ref={ref}
       type={type}
       className={join(
         'pixel frame-raised inline-flex min-h-11 select-none items-center justify-center gap-2 px-4 py-2 text-center text-[17px]',
@@ -44,7 +45,7 @@ export function Button({ variant = 'secondary', wide = false, className, type = 
       {children}
     </button>
   );
-}
+});
 
 /** The title of a panel: a gold tab that hangs over its top edge. */
 export function TabTitle({ children, as: Heading = 'h2', id }: { children: ReactNode; as?: 'h2' | 'h3'; id?: string }) {
@@ -194,6 +195,7 @@ export function Segmented<T extends string | number>({
   value,
   onChange,
   gridClassName,
+  orientation = 'horizontal',
 }: {
   label: string;
   /** `icon` is a sprite drawn above the label. */
@@ -202,9 +204,24 @@ export function Segmented<T extends string | number>({
   onChange(value: T): void;
   /** A responsive grid for long sets; by default every choice stays on one equal row. */
   gridClassName?: string;
+  orientation?: 'horizontal' | 'vertical';
 }) {
+  const group = useRef<HTMLDivElement>(null);
+  const move = (event: KeyboardEvent<HTMLDivElement>) => {
+    const forward = orientation === 'horizontal' ? event.key === 'ArrowRight' : event.key === 'ArrowDown';
+    const backward = orientation === 'horizontal' ? event.key === 'ArrowLeft' : event.key === 'ArrowUp';
+    if (!forward && !backward && event.key !== 'Home' && event.key !== 'End') return;
+    event.preventDefault();
+    const enabled = options.filter((option) => !option.disabled);
+    if (enabled.length === 0) return;
+    const at = Math.max(0, enabled.findIndex((option) => option.value === value));
+    const step = forward ? 1 : -1;
+    const next = event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled.at(-1)! : enabled[(at + step + enabled.length) % enabled.length];
+    onChange(next.value);
+    group.current?.querySelector<HTMLElement>(`[data-segment="${String(next.value)}"]`)?.focus();
+  };
   return (
-    <div role="radiogroup" aria-label={label} className={join('grid gap-2', gridClassName)} style={gridClassName ? undefined : { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div ref={group} role="radiogroup" aria-label={label} aria-orientation={orientation} onKeyDown={move} className={join('grid gap-2', gridClassName)} style={gridClassName ? undefined : { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((option) => {
         const on = option.value === value;
         return (
@@ -213,6 +230,8 @@ export function Segmented<T extends string | number>({
             type="button"
             role="radio"
             aria-checked={on}
+            tabIndex={on ? 0 : -1}
+            data-segment={String(option.value)}
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
             className={join(

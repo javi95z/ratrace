@@ -11,6 +11,7 @@ import { maskEmail } from '@/lib/mask';
 import { routing } from '@/i18n/routing';
 import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
+import { KeyboardGuide } from '@/ui/keyboard';
 import { Sprite } from '@/ui/Sprite';
 
 const LANGUAGES: Record<string, string> = { en: 'English', es: 'Español', ru: 'Русский' };
@@ -145,6 +146,7 @@ export function Preferences() {
     <div className="flex flex-col gap-2">
       <LanguagePick />
       <Switches />
+      <KeyboardGuide />
       <AccountBlock />
     </div>
   );

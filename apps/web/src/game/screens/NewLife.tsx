@@ -1,16 +1,19 @@
 'use client';
 
 import { lives, portraitArt } from '@ratrace/content';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useGame, useProfile, useRanking, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { useKeyboardContext } from '@/ui/keyboard';
 
 /** Choose who to be. A locked life shows what unlocks it. */
 export function NewLife() {
+  useKeyboardContext('new-life');
   const t = useT('newLife');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
@@ -32,8 +35,41 @@ export function NewLife() {
   // A ranked life is played by the server. It is offered when there is someone to play it for and a way to reach it.
   const ranking = useRanking();
   const [wantRanked, setWantRanked] = useState(true);
+  const lifeList = useRef<HTMLDivElement>(null);
+  const typed = useRef('');
+  const typeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (typeTimer.current) clearTimeout(typeTimer.current);
+  }, []);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
+  const available = lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id));
+  const chooseAndFocus = (id: string) => {
+    setChosen(id);
+    const button = lifeList.current?.querySelector<HTMLElement>(`[data-life="${id}"]`);
+    button?.focus();
+    button?.scrollIntoView?.({ block: 'nearest' });
+  };
+  const moveLife = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.altKey || event.ctrlKey || event.metaKey || available.length === 0) return;
+    const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+    if (direction || event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      const at = Math.max(0, available.findIndex((life) => life.id === chosen));
+      const next = event.key === 'Home' ? available[0] : event.key === 'End' ? available.at(-1)! : available[(at + direction + available.length) % available.length];
+      chooseAndFocus(next.id);
+      return;
+    }
+    if (event.key.length !== 1 || !/[\p{L}\p{N}]/u.test(event.key)) return;
+    typed.current += event.key.toLocaleLowerCase();
+    if (typeTimer.current) clearTimeout(typeTimer.current);
+    typeTimer.current = setTimeout(() => { typed.current = ''; }, 700);
+    const match = available.find((life) => text.lives[life.id].name.toLocaleLowerCase().startsWith(typed.current));
+    if (match) {
+      event.preventDefault();
+      chooseAndFocus(match.id);
+    }
+  };
   /**
    * Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player
    * has said may end for it.
@@ -81,7 +117,7 @@ export function NewLife() {
         <h1 className="pixel text-[24px] text-gold-500">{t('title')}</h1>
       </div>
 
-      <div role="radiogroup" aria-label={t('title')} className="flex flex-col gap-3">
+      <div ref={lifeList} role="radiogroup" aria-label={t('title')} aria-orientation="vertical" onKeyDown={moveLife} className="flex flex-col gap-3">
         {lives.map((life) => {
           const written = text.lives[life.id];
           const locked = life.unlock !== 'default' && !Object.hasOwn(unlocked, life.id);
@@ -92,6 +128,8 @@ export function NewLife() {
               type="button"
               role="radio"
               aria-checked={on}
+              tabIndex={on ? 0 : -1}
+              data-life={life.id}
               disabled={locked}
               onClick={() => setChosen(life.id)}
               className={`frame-raised flex gap-3 p-2 text-left ${on ? 'frame-gold bg-night-600' : 'bg-night-700'} ${locked ? 'opacity-60' : ''}`}

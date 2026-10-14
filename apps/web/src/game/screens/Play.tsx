@@ -9,6 +9,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
 import { Toast } from '@/ui/overlay';
 import { useIsDesk } from '@/ui/useMedia';
+import { KeyboardHint, useKeyboardContext, useKeyboardScope } from '@/ui/keyboard';
 import { CardStage, Outcome } from './Cards';
 import { End } from './End';
 import { Basket, BasketList, Finance } from './Finance';
@@ -43,14 +44,16 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
   switch (stage) {
     case 'news':
       return (
-        <Button variant="primary" wide onClick={leaveNews}>
+        <Button variant="primary" wide data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={leaveNews}>
           {cardsWait ? news('toCards') : news('toFinance')}
+          <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
         </Button>
       );
     case 'outcome':
       return (
-        <Button variant="primary" wide onClick={afterCard}>
+        <Button variant="primary" wide data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={afterCard}>
           {cardsWait ? cards('next') : cards('toFinance')}
+          <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
         </Button>
       );
     case 'finance':
@@ -68,16 +71,18 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
                 {finance('basket', { count: orders.length })}
               </Button>
             )}
-            <Button variant="primary" wide disabled={busy} onClick={() => void play()}>
+            <Button variant="primary" wide disabled={busy} data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={() => void play()}>
               {finance('play')}
+              <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
             </Button>
           </div>
         </div>
       );
     case 'resolve':
       return (
-        <Button variant="primary" wide onClick={next}>
+        <Button variant="primary" wide data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={next}>
           {view.finished ? resolve('finish') : resolve('next')}
+          <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
         </Button>
       );
     default:
@@ -162,6 +167,7 @@ export function Play() {
   const profile = useT('profile');
   const news = useT('news');
   const finance = useT('finance');
+  const keyboard = useT('keyboard.skip');
   const router = useRouter();
   const desk = useIsDesk();
   const status = useGame((s) => s.status);
@@ -181,6 +187,17 @@ export function Play() {
   const stageRef = useRef<HTMLElement>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [basketOpen, setBasketOpen] = useState(false);
+  useKeyboardContext(stage === 'cards' ? 'cards' : stage === 'finance' ? 'finance' : 'play');
+  useKeyboardScope(
+    (event) => {
+      if (event.repeat || event.key !== 'Enter' || (!event.ctrlKey && !event.metaKey) || document.querySelector('[role="dialog"]')) return false;
+      const action = document.querySelector<HTMLButtonElement>('[data-primary-action]:not(:disabled)');
+      if (!action) return false;
+      action.click();
+      return true;
+    },
+    { active: status === 'playing', priority: 10 },
+  );
 
   // No life to play: the front door is where one is started.
   useEffect(() => {
@@ -218,12 +235,22 @@ export function Play() {
   // What the stage is called, for someone who cannot see it change.
   const stageName =
     stage === 'news' ? news('title') : stage === 'cards' ? cards('progress', { n: Math.min(view.answered + 1, view.hand.length), total: view.hand.length }) : play(`stages.${stage}`);
+  const skipLinks = (
+    <nav aria-label={keyboard('stage')} className="skip-links">
+      <a href="#round-stage" className="pixel frame-raised bg-gold-500 px-3 py-2 text-ink-900">{keyboard('stage')}</a>
+      {desk ? <a href="#player-profile" className="pixel frame-raised bg-gold-500 px-3 py-2 text-ink-900">{keyboard('profile')}</a> : null}
+      {desk ? <a href="#round-news" className="pixel frame-raised bg-gold-500 px-3 py-2 text-ink-900">{keyboard('news')}</a> : null}
+      {desk && stage === 'finance' ? <a href="#round-orders" className="pixel frame-raised bg-gold-500 px-3 py-2 text-ink-900">{keyboard('orders')}</a> : null}
+      {hasActions ? <a href="#round-actions" className="pixel frame-raised bg-gold-500 px-3 py-2 text-ink-900">{keyboard('actions')}</a> : null}
+    </nav>
+  );
 
   if (desk) {
     // The side columns give way first on a narrow desktop, so the round in the middle never drops below a phone's width.
     return (
       <div className="mx-auto grid min-h-dvh w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
-        <aside aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden pb-5 pt-2">
+        {skipLinks}
+        <aside id="player-profile" tabIndex={-1} aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden pb-5 pt-2">
           {heading}
           {/* No negative margin to line it up: a column that scrolls down would then scroll sideways too. */}
           <Hud skyline={false} flush />
@@ -233,23 +260,21 @@ export function Play() {
 
         <div className="@container flex min-h-dvh min-w-0 flex-col">
           {/* Art is drawn at twice its size only where the column has room for a card that wide. */}
-          <main ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
+          <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
             <StageView stage={stage} desk />
           </main>
           {hasActions ? (
             // The finances are long, so their button stays in reach at the bottom. Everywhere else it follows what was just read.
-            <div className={stage === 'finance' ? 'sticky bottom-0 z-20 bg-night-800 pb-5 pt-3' : 'pb-8'}>
+            <div id="round-actions" tabIndex={-1} className={stage === 'finance' ? 'sticky bottom-0 z-20 bg-night-800 pb-5 pt-3' : 'pb-8'}>
               <div className="mx-auto w-full max-w-md px-3">{actions}</div>
             </div>
           ) : null}
         </div>
 
-        <aside aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
+        <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
           <Headlines hint={false} />
           {stage === 'finance' ? (
-            <Panel title={finance('basketTitle')}>
-              <BasketList />
-            </Panel>
+            <div id="round-orders" tabIndex={-1}><Panel title={finance('basketTitle')}><BasketList /></Panel></div>
           ) : null}
         </aside>
         {notice}
@@ -260,14 +285,15 @@ export function Play() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+      {skipLinks}
       {heading}
       {/* The skyline opens and closes a round. In between, the room goes to the cards and the finances. */}
       <Hud compact={stage !== 'news' && stage !== 'resolve'} onProfile={() => setProfileOpen(true)} />
-      <main ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
+      <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
         <StageView stage={stage} desk={false} />
       </main>
       {hasActions ? (
-        <div className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 px-3 pt-3">
+        <div id="round-actions" tabIndex={-1} className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 px-3 pt-3">
           <div className="mx-auto w-full max-w-md">{actions}</div>
         </div>
       ) : null}

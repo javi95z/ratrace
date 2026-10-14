@@ -383,6 +383,8 @@
       "repay": "Repay: {name}",
       "available": "Up to {amount}",
       "amount": "Amount",
+    "exact": "Exact amount",
+    "keyboardHelp": "Arrow keys adjust one step. Hold Shift for ten steps; Page Up and Page Down move about 10%.",
       "confirm": "Confirm {amount}",
       "nothing": "There is nothing to move."
     },
@@ -1211,6 +1213,30 @@
     "runCities": "Lived in",
     "runBadges": "Badges of this life",
     "challenge": "This week's challenge"
+  },
+  "keyboard": {
+    "title": "Keyboard controls",
+    "open": "Keyboard controls",
+    "settingsHint": "Play without a mouse. Press the question-mark key at any time for the relevant controls.",
+    "intro": "Only the controls that apply here are shown. Shortcuts never run while you are typing in a field.",
+    "help": {
+      "tab": "Move to the next control.",
+      "shiftTab": "Move to the previous control.",
+      "escape": "Close the open window and return to what opened it.",
+      "question": "Open this keyboard reference.",
+      "life": "Move through available lives; Home and End jump to the first and last.",
+      "cards": "Move through available choices; number keys focus a choice without selecting it.",
+      "tabs": "Move through finance tabs; Home and End jump to either edge.",
+      "amount": "Adjust money faster in an amount slider.",
+      "primary": "Use the current safe main action. It never confirms a destructive choice."
+    },
+    "skip": {
+      "stage": "Skip to the round",
+      "profile": "Skip to profile",
+      "news": "Skip to news",
+      "orders": "Skip to orders",
+      "actions": "Skip to round actions"
+    }
   },
   "challenge": {
     "title": "Weekly challenge",

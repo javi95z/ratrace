@@ -22,6 +22,7 @@ import { newProfile } from '@/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions } from '@/session/types';
 import { createSoundBoard } from '@/ui/sound';
 import type { Cue, SoundBoard } from '@/ui/sound';
+import { KeyboardProvider } from '@/ui/keyboard';
 import type { Translate, Words } from './present';
 import { cuesFor } from './sound';
 import { createGameStore } from './store';
@@ -236,7 +237,11 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     }),
     [made, locale, profile, runs],
   );
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  return (
+    <GameContext.Provider value={value}>
+      <KeyboardProvider>{children}</KeyboardProvider>
+    </GameContext.Provider>
+  );
 }
 
 function useGameContext(): Game {

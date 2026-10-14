@@ -37,6 +37,22 @@ afterEach(cleanup);
 const saved = async (services: ReturnType<typeof memoryServices>) => (await services.store.loadGame()) as SavedGame | null;
 
 describe('choosing a life', () => {
+  it('moves through unlocked lives with arrows and finds one by typing its name', async () => {
+    const user = userEvent.setup();
+    renderGame(<NewLife />, memoryServices());
+    const nurse = await screen.findByRole('radio', { name: /^Nurse/ });
+    nurse.focus();
+    expect(screen.getAllByRole('radio').filter((radio) => radio.tabIndex === 0)).toEqual([nurse]);
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Software engineer/ }));
+    await user.keyboard('{End}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Civil servant/ }));
+    await user.keyboard('{Home}');
+    expect(document.activeElement).toBe(nurse);
+    await user.keyboard('sof');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Software engineer/ }));
+  });
+
   it('offers the three starting lives, and shows what unlocks the others', async () => {
     renderGame(<NewLife />, memoryServices());
     expect(screen.queryByText('Weekly challenge')).toBeNull();

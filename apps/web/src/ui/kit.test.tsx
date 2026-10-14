@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Bar, Panel, Segmented, Toggle } from './kit';
 
@@ -68,6 +70,27 @@ describe('Bar', () => {
 });
 
 describe('choices with pictures', () => {
+  it('uses one Tab stop and moves selection with the appropriate arrows, Home and End', async () => {
+    const user = userEvent.setup();
+    function Choices() {
+      const [value, setValue] = useState('a');
+      return <Segmented<string> label="How" value={value} onChange={setValue} options={[{ value: 'a', label: 'A' }, { value: 'b', label: 'B', disabled: true }, { value: 'c', label: 'C' }]} />;
+    }
+    render(<Choices />);
+    const radios = () => screen.getAllByRole('radio');
+    radios()[0].focus();
+    expect(radios().map((radio) => radio.tabIndex)).toEqual([0, -1, -1]);
+    await user.keyboard('{ArrowRight}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'C' }));
+    expect(radios().map((radio) => radio.getAttribute('aria-checked'))).toEqual(['false', 'false', 'true']);
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'C' }));
+    await user.keyboard('{Home}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'A' }));
+    await user.keyboard('{End}');
+    expect(document.activeElement).toBe(screen.getByRole('radio', { name: 'C' }));
+  });
+
   it('draws the picture of each choice that has one', () => {
     render(<Segmented label="How" value="a" onChange={() => {}} options={[{ value: 'a', label: 'A', icon: 'icon.cash' }, { value: 'b', label: 'B' }]} />);
     const [a, b] = screen.getAllByRole('radio');

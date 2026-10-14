@@ -4,8 +4,8 @@ import { assetKind, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceAr
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
-import { useId, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useId, useRef, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, debtLabel, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
@@ -182,7 +182,7 @@ function Plans() {
           const edge = plan.priceVsAverageBp;
           return (
             <li key={plan.assetId} className="border-t-2 border-night-900 first:border-t-0">
-              <button type="button" aria-haspopup="dialog" onClick={() => setEditing(plan.assetId)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
+              <button type="button" data-finance-item aria-haspopup="dialog" onClick={() => setEditing(plan.assetId)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
                 <TickerBadge ticker={names.assets[plan.assetId].ticker} kind={content.assets.find((asset) => asset.id === plan.assetId)?.class ?? 'equity'} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{names.assets[plan.assetId].name}</span>
@@ -293,6 +293,7 @@ function Market() {
                 <button
                   key={asset.id}
                   type="button"
+                  data-finance-item
                   disabled={locked}
                   onClick={() => {
                     setEach(false);
@@ -579,7 +580,7 @@ function PropertyTab() {
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
-              <button type="button" aria-haspopup="dialog" disabled={sold} onClick={() => setOpened(property.id)} className="flex w-full items-center gap-3 text-left">
+              <button type="button" data-finance-item aria-haspopup="dialog" disabled={sold} onClick={() => setOpened(property.id)} className="flex w-full items-center gap-3 text-left">
                 <Bare className="shrink-0">
                   <Sprite id={propertyArt(property.typeId, property.cityId)} fallback={{ w: 128, h: 128 }} />
                 </Bare>
@@ -630,7 +631,7 @@ function PropertyTab() {
                 const quote = quoteProperty(content, shown, type.id);
                 if (quote.letOnly !== letOnly) return null;
                 return (
-                  <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
+                  <button key={type.id} type="button" data-finance-item onClick={() => setBuying(type.id)} className={TILE}>
                     <Bare className="w-full py-1">
                       <Sprite id={propertyArt(type.id, p.cityId)} fallback={{ w: 128, h: 128 }} />
                     </Bare>
@@ -1154,7 +1155,7 @@ function Shop() {
                 return (
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
                   // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
-                  <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
+                  <button key={item.id} type="button" data-finance-item onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
                     {/* As tall as a watch, as wide as the thing needs: a car is twice as wide as it is tall. */}
                     <Bare className="h-16 min-w-16">
                       <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
@@ -1295,13 +1296,32 @@ export function Finance() {
   const clearAlsoRemoved = useGame((s) => s.clearAlsoRemoved);
   const [tab, setTab] = useState<TabId>('portfolio');
   const ids = useId();
+  const panel = useRef<HTMLDivElement>(null);
+  const navigateItems = (event: KeyboardEvent<HTMLDivElement>) => {
+    const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-finance-item]') : null;
+    if (!target) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      document.getElementById(`${ids}-tab-${tab}`)?.focus();
+      return;
+    }
+    const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+    if (!direction && event.key !== 'Home' && event.key !== 'End') return;
+    const items = [...(panel.current?.querySelectorAll<HTMLElement>('[data-finance-item]:not(:disabled)') ?? [])];
+    if (items.length === 0) return;
+    event.preventDefault();
+    const at = Math.max(0, items.indexOf(target));
+    const next = event.key === 'Home' ? items[0] : event.key === 'End' ? items.at(-1)! : items[(at + direction + items.length) % items.length];
+    next.focus();
+    next.scrollIntoView?.({ block: 'nearest' });
+  };
 
   return (
     <div>
       <div className="sticky top-0 z-10 bg-night-800">
         <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
       </div>
-      <div role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} className="px-3 pt-1">
+      <div ref={panel} role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} onKeyDown={navigateItems} className="px-3 pt-1">
         {tab === 'portfolio' ? <Portfolio /> : null}
         {tab === 'market' ? <Market /> : null}
         {tab === 'property' ? <PropertyTab /> : null}
