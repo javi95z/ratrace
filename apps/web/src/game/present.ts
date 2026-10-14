@@ -124,7 +124,7 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.suspicion) add(toneOf(-effects.suspicion), t('suspicion', { value: signed(effects.suspicion) }));
   if (effects.amnesty) add('plain', t('amnesty', { pct: effects.amnesty.pct }));
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
-  if (effects.gift?.businesses) add('bad', t('giftBusinesses'));
+  if (effects.gift?.business) add('bad', t('giftBusiness'));
   if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));
   if (effects.job?.leave) add('plain', t('leaveJob'));
   else if (effects.job?.career) add('plain', t('newCareer', { career: text.careers[effects.job.career].name }));
@@ -147,7 +147,7 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     }
   }
   if (effects.business) add('plain', t('openBusiness', { name: text.businessTypes[effects.business.typeId]?.name ?? effects.business.typeId }));
-  if (effects.sellBusinesses) add('good', t('sellBusinesses', { pct: effects.sellBusinesses.pricePct }));
+  if (effects.sellBusiness) add('good', t('sellBusiness', { pct: effects.sellBusiness.pricePct }));
   if (effects.invest) add('plain', t('invest', { amount: dollars(effects.invest.amount), asset: names.assets[effects.invest.assetId].name }));
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));
   if (effects.loan) add('bad', t('loan', { amount: dollars(effects.loan) }));

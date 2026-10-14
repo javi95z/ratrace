@@ -579,8 +579,8 @@ export interface Effects {
   loan?: Cents;
   /** Opens a business of a kind with this much in it, in start-of-game dollars. Nothing happens to someone who already runs as many as the rules allow. */
   business?: { typeId: string; capital: Cents };
-  /** Sells every business the player owns to a buyer, for this percent of what is in each. */
-  sellBusinesses?: { pricePct: number };
+  /** Sells the player's largest business to a buyer, for this percent of what is in it. */
+  sellBusiness?: { pricePct: number };
   /**
    * Buys a property in the player's city at `pricePct` percent of the market price,
    * paying `downPct` percent of that in cash and the rest with a fixed mortgage.
@@ -608,10 +608,10 @@ export interface Effects {
   /** Settles with the tax office: this percent of the tax evaded that it can still claim is paid, and nothing more is owed or suspected. */
   amnesty?: { pct: number };
   /**
-   * Gives to the children in life: a percent of the cash and savings, every business, or both. What
-   * is given, less the gift tax, is the family's and counts towards the score as the player's own.
+   * Gives to the children in life: a percent of the cash and savings, the largest business, or both.
+   * What is given, less the gift tax, is the family's and counts towards the score as the player's own.
    */
-  gift?: { liquidPct?: number; businesses?: boolean };
+  gift?: { liquidPct?: number; business?: boolean };
 }
 
 export interface CardOutcome {
@@ -710,6 +710,8 @@ export interface BusinessTypeDef {
   /** The share of the profit a manager takes for running it, in percent. */
   managerPct: number;
   minFinanceSkill: FinanceSkill;
+  /** One of this kind at most: a trade of one's own is one practice, however many clients it has. */
+  onlyOne?: boolean;
 }
 
 export interface BusinessRules {

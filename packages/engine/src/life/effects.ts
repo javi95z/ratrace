@@ -1,4 +1,4 @@
-import { openBusiness } from '../business';
+import { largestBusiness, onlyOneHeld, openBusiness } from '../business';
 import { honestEvasion } from '../evasion';
 import { mortgageSpreadBp, removePaidDebts, takePersonalLoan } from '../debt';
 import { newId } from '../ids';
@@ -124,7 +124,7 @@ function lose(p: PlayerState, loss: NonNullable<Effects['lose']>, at: Situation)
 }
 
 /**
- * Gives to the children: a share of the cash and savings, cash first, and every business at what is
+ * Gives to the children: a share of the cash and savings, cash first, and the largest business at what is
  * in it. The gift tax is taken from what is given; the rest is the family's, kept in the dollars of
  * the start so that it counts as it would have on the day.
  */
@@ -137,9 +137,10 @@ function giveToChildren(p: PlayerState, gift: NonNullable<Effects['gift']>, at: 
     p.deposit -= amount - fromCash;
     given += amount;
   }
-  if (gift.businesses === true) {
-    for (const business of p.businesses) given += business.capital;
-    p.businesses = [];
+  const handed = gift.business === true ? largestBusiness(p) : null;
+  if (handed !== null) {
+    given += handed.capital;
+    p.businesses = p.businesses.filter((business) => business !== handed);
   }
   const kept = given - mulDiv(given, at.content.life.giftTaxPct, 100);
   p.life.legacy += mulDiv(kept, PRICE_LEVEL_START, at.world.priceLevel);
@@ -161,12 +162,15 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     takePersonalLoan(p, indexed(effects.loan, world), content, world);
   }
   if (effects.pension !== undefined) p.pension += indexed(effects.pension, world);
-  if (effects.sellBusinesses !== undefined) {
-    for (const business of p.businesses) p.cash += mulDiv(business.capital, effects.sellBusinesses.pricePct, 100);
-    if (p.businesses.length > 0) life.flags[FLAG_SOLD_BUSINESS] = round;
-    p.businesses = [];
+  if (effects.sellBusiness !== undefined) {
+    const sold = largestBusiness(p);
+    if (sold !== null) {
+      p.cash += mulDiv(sold.capital, effects.sellBusiness.pricePct, 100);
+      life.flags[FLAG_SOLD_BUSINESS] = round;
+      p.businesses = p.businesses.filter((business) => business !== sold);
+    }
   }
-  if (effects.business !== undefined && p.businesses.length < maxBusinessesOf(p, content)) {
+  if (effects.business !== undefined && p.businesses.length < maxBusinessesOf(p, content) && !onlyOneHeld(p, content, effects.business.typeId)) {
     openBusiness(p, effects.business.typeId, indexed(effects.business.capital, world), content);
   }
   if (effects.lose !== undefined) lose(p, effects.lose, at);

@@ -126,8 +126,6 @@ describe('the work panel of the profile', () => {
     expect(within(sheet).getByText(`+${work.studySkill} career skill, on top of what working gives.`)).toBeTruthy();
     expect(within(sheet).getByText(`${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBeTruthy();
     expect(within(sheet).getByText(/^Moving city takes 1 focus/)).toBeTruthy();
-    // She owns nothing that changes these figures, so nothing says she does.
-    expect(within(sheet).queryByText('What you own is already counted in these figures.')).toBeNull();
   });
 
   it('counts what the player owns: a laptop teaches more, a watch helps the hunt, a long trip rests', async () => {
@@ -151,7 +149,6 @@ describe('the work panel of the profile', () => {
     await user.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
     const sheet = screen.getByRole('dialog', { name: 'Focus' });
     expect(within(sheet).getByText(`${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBeTruthy();
-    expect(within(sheet).getByText('What you own is already counted in these figures.')).toBeTruthy();
     expect(within(sheet).getByText(/1 is from the rest your last trip gave you\.$/)).toBeTruthy();
   });
 

@@ -454,6 +454,11 @@
     "w": 288,
     "h": 120
   },
+  "card.care_home": {
+    "src": "cards/card.care_home.png",
+    "w": 288,
+    "h": 120
+  },
   "card.cash_envelope": {
     "src": "cards/card.cash_envelope.png",
     "w": 288,
@@ -621,6 +626,11 @@
   },
   "card.inspector": {
     "src": "cards/card.inspector.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.keys_to_children": {
+    "src": "cards/card.keys_to_children.png",
     "w": 288,
     "h": 120
   },
@@ -814,6 +824,16 @@
     "w": 288,
     "h": 120
   },
+  "card.restructuring": {
+    "src": "cards/card.restructuring.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.retired_garden": {
+    "src": "cards/card.retired_garden.png",
+    "w": 288,
+    "h": 120
+  },
   "card.ring_light": {
     "src": "cards/card.ring_light.png",
     "w": 288,
@@ -851,6 +871,11 @@
   },
   "card.shares_or_salary": {
     "src": "cards/card.shares_or_salary.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.shop_handover": {
+    "src": "cards/card.shop_handover.png",
     "w": 288,
     "h": 120
   },
@@ -951,6 +976,11 @@
   },
   "card.wedding": {
     "src": "cards/card.wedding.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.weekly_challenge": {
+    "src": "cards/card.weekly_challenge.png",
     "w": 288,
     "h": 120
   },
@@ -1684,6 +1714,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.challenge": {
+    "src": "icons/icon.challenge.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.child": {
     "src": "icons/icon.child.png",
     "w": 32,
@@ -1804,8 +1839,23 @@
     "w": 32,
     "h": 32
   },
+  "icon.gift": {
+    "src": "icons/icon.gift.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.gold": {
     "src": "icons/icon.gold.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.handover": {
+    "src": "icons/icon.handover.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.health_risk": {
+    "src": "icons/icon.health_risk.png",
     "w": 32,
     "h": 32
   },
@@ -1914,6 +1964,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.practice": {
+    "src": "icons/icon.practice.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.property": {
     "src": "icons/icon.property.png",
     "w": 32,
@@ -1946,6 +2001,36 @@
   },
   "icon.repair_watch": {
     "src": "icons/icon.repair_watch.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.retired": {
+    "src": "icons/icon.retired.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_index_only": {
+    "src": "icons/icon.rule_index_only.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_no_loans": {
+    "src": "icons/icon.rule_no_loans.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_no_moving": {
+    "src": "icons/icon.rule_no_moving.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_no_property": {
+    "src": "icons/icon.rule_no_property.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_start_in_debt": {
+    "src": "icons/icon.rule_start_in_debt.png",
     "w": 32,
     "h": 32
   },
@@ -2016,6 +2101,11 @@
   },
   "icon.teen": {
     "src": "icons/icon.teen.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.top_tenth": {
+    "src": "icons/icon.top_tenth.png",
     "w": 32,
     "h": 32
   },

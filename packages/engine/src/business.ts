@@ -84,9 +84,22 @@ export function businessSalePrice(business: Business, content: Content, world: W
 /** Why the player may not open a business of a kind today, whatever the capital, or null when they may. */
 export function businessLock(p: PlayerState, type: BusinessTypeDef, content: Content): RejectReason | null {
   if (type.minFinanceSkill > p.life.financeSkill) return 'needs-finance-skill';
+  if (onlyOneHeld(p, content, type.id)) return 'already-owned';
   if (p.businesses.length >= maxBusinessesOf(p, content)) return 'too-many-businesses';
   if (focusLeft(p) < 1) return 'no-focus';
   return null;
+}
+
+/** True if the player already owns one of a kind there may be only one of. */
+export function onlyOneHeld(p: PlayerState, content: Content, typeId: string): boolean {
+  return content.business.types.some((type) => type.id === typeId && type.onlyOne === true) && p.businesses.some((business) => business.typeId === typeId);
+}
+
+/** The business with the most in it, the first of two that tie; null for someone who owns none. */
+export function largestBusiness(p: PlayerState): Business | null {
+  let largest: Business | null = null;
+  for (const business of p.businesses) if (largest === null || business.capital > largest.capital) largest = business;
+  return largest;
 }
 
 /** Opens a business with the given capital. It is run by its owner on the day it opens, and pays out half until told otherwise. */

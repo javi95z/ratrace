@@ -220,10 +220,10 @@ export const businessCards: CardDef[] = [
   // A buyer pays for what a business could become, which no sale from the tab ever does: well over what is in it.
   card('biz_acquisition', 'business', { cooldown: 6, when: { hasBusiness: true } }, [
     {},
-    { effects: { sellBusinesses: { pricePct: 170 }, status: 4 } },
+    { effects: { sellBusiness: { pricePct: 170 }, status: 4 } },
     {
       outcomes: [
-        { weight: 40, effects: { sellBusinesses: { pricePct: 250 }, status: 4 } },
+        { weight: 40, effects: { sellBusiness: { pricePct: 250 }, status: 4 } },
         { weight: 60, effects: {} },
       ],
     },

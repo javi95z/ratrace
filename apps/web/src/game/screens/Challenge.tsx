@@ -1,6 +1,6 @@
 'use client';
 
-import { CHALLENGE_DEBT, challengeOf, lives, portraitArt, weekOf, weekStart } from '@ratrace/content';
+import { CHALLENGE_ART, CHALLENGE_DEBT, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useCommunity, useRanking, useT, useWords } from '@/game/context';
@@ -69,15 +69,24 @@ export function WeeklyChallenge({ onStart, starting }: { onStart(challenge: Chal
           <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} />
         </Well>
         <span className="min-w-0 flex-1">
-          <span className="pixel block text-[12px] uppercase tracking-wider text-gold-500">{t('title')}</span>
+          <span className="pixel flex items-center gap-1 text-[12px] uppercase tracking-wider text-gold-500">
+            <Sprite id={CHALLENGE_ART.icon} />
+            {t('title')}
+          </span>
           <span className="pixel block truncate text-[17px]">{lifeName}</span>
-          <span className="block truncate text-[12px] text-ink-200">{rule.name}</span>
+          <span className="flex items-center gap-1 truncate text-[12px] text-ink-200">
+            <Sprite id={ruleArt[week.rule]} />
+            {rule.name}
+          </span>
         </span>
         {entry?.score !== null && entry?.score !== undefined ? <span className="pixel shrink-0 text-[15px] text-teal-300">{fmt.number(entry.score)}</span> : null}
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
         <div className="flex flex-col gap-3">
+          <div className="frame-double flex justify-center overflow-hidden bg-night-900 leading-[0]">
+            <Sprite id={CHALLENGE_ART.scene} scale="art" fallback={{ w: 288, h: 120 }} className="max-w-none" />
+          </div>
           <div className="flex items-center gap-3">
             <Well className="size-[68px]">
               <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 64, h: 64 }} />
@@ -88,7 +97,10 @@ export function WeeklyChallenge({ onStart, starting }: { onStart(challenge: Chal
             </div>
           </div>
           <section aria-label={t('rule')} className="border-l-4 border-gold-500 pl-3">
-            <p className="pixel text-[16px] text-gold-200">{rule.name}</p>
+            <p className="pixel flex items-center gap-2 text-[16px] text-gold-200">
+              <Sprite id={ruleArt[week.rule]} />
+              {rule.name}
+            </p>
             <p className="text-[13px] leading-snug text-ink-200">{rule.about}</p>
           </section>
           <p className="text-[13px] leading-snug">{t('about')}</p>
@@ -121,6 +133,7 @@ export function WeeklyChallenge({ onStart, starting }: { onStart(challenge: Chal
                 onStart(week, false);
               }}
             >
+              <Sprite id={CHALLENGE_ART.practice} />
               {t('practice')}
             </Button>
           </div>
@@ -168,7 +181,10 @@ export function ChallengeBoard({ community }: { community: Community }) {
         </Well>
         <div className="min-w-0">
           <p className="pixel truncate text-[17px]">{text.lives[week.lifeId]?.name ?? week.lifeId}</p>
-          <p className="truncate text-[12px] text-ink-200">{ruleText(week.rule).name}</p>
+          <p className="flex items-center gap-1 truncate text-[12px] text-ink-200">
+            <Sprite id={ruleArt[week.rule]} />
+            {ruleText(week.rule).name}
+          </p>
         </div>
       </div>
       {board === undefined ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
@@ -189,7 +205,12 @@ export function ChallengeBoard({ community }: { community: Community }) {
                   <span className="block truncate text-[15px]">{row.nickname ?? t('nameless')}</span>
                   <span className="block truncate text-[12px] text-ink-300">{fmt.day(row.finishedAt)}</span>
                 </span>
-                {row.place <= top ? <Tag tone="good">{t('topTenth')}</Tag> : null}
+                {row.place <= top ? (
+                  <span className="flex shrink-0 items-center gap-1">
+                    <Sprite id={CHALLENGE_ART.topTenth} />
+                    <Tag tone="good">{t('topTenth')}</Tag>
+                  </span>
+                ) : null}
                 <span className="pixel shrink-0 text-[18px]">{fmt.number(row.score)}</span>
               </li>
             ))}
@@ -238,7 +259,8 @@ export function ChallengeResult({ week }: { week: string }) {
     <Panel title={t('title')} label={t('title')}>
       <div className="flex flex-col gap-2">
         {mine && board ? (
-          <p className="pixel text-[16px] text-gold-200">
+          <p className="pixel flex items-center gap-2 text-[16px] text-gold-200">
+            {mine.place <= topTenth(board.entrants) ? <Sprite id={CHALLENGE_ART.topTenth} /> : null}
             {t('place', { place: mine.place, n: board.entrants })}
             {mine.place <= topTenth(board.entrants) ? ` · ${t('topTenth')}` : ''}
           </p>

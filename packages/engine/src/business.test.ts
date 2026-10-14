@@ -208,7 +208,7 @@ describe('a business and the rest of a life', () => {
 
   it('can be opened and sold by a card, and can be what a card asks for', () => {
     const open: CardDef = { id: 'open', category: 'business', weight: 10, cooldown: 0, when: { hasBusiness: false }, options: [{}, { effects: { cash: -500_000, business: { typeId: 'stall', capital: 500_000 } } }] };
-    const offer: CardDef = { id: 'offer', category: 'business', weight: 10, cooldown: 0, when: { hasBusiness: true }, options: [{}, { effects: { sellBusinesses: { pricePct: 180 } } }] };
+    const offer: CardDef = { id: 'offer', category: 'business', weight: 10, cooldown: 0, when: { hasBusiness: true }, options: [{}, { effects: { sellBusiness: { pricePct: 180 } } }] };
     const cards = fixtureContent();
     cards.cards = [open, offer];
     const state = game(5_000_000, 0, cards);
@@ -224,8 +224,31 @@ describe('a business and the rest of a life', () => {
     expect(sold.player.businesses).toEqual([]);
     expect(sold.player.cash).toBe(next.player.cash + Math.floor((capital * 180) / 100));
     expect(validateContent(cards)).toEqual([]);
+    // With more than one, the buyer takes the largest and leaves the rest.
+    const two = withPlayer(cards, next, {
+      businesses: [
+        { id: 'small', typeId: 'stall', capital: 100_000, basis: 100_000, payoutPct: 50, manager: false, tended: false },
+        { id: 'big', typeId: 'stall', capital: 900_000, basis: 900_000, payoutPct: 50, manager: false, tended: false },
+      ],
+    });
+    const one = applyCard(cards, two, 1).state;
+    expect(one.player.businesses.map((business) => business.id)).toEqual(['small']);
+    expect(one.player.cash).toBe(two.player.cash + 1_620_000);
     cards.cards = [{ ...open, options: [{}, { effects: { business: { typeId: 'casino', capital: 1 } } }] }];
     expect(validateContent(cards)).toContain('card open option 1 opens a business of an unknown kind: casino');
+  });
+
+  it('is one at most of a kind there may be only one of, opened by order or by a card', () => {
+    const only = fixtureContent();
+    only.business.types = only.business.types.map((type) => (type.id === 'stall' ? { ...type, onlyOne: true } : type));
+    only.cards = [{ id: 'gig', category: 'business', weight: 10, cooldown: 0, options: [{}, { effects: { business: { typeId: 'stall', capital: 100_000 } } }] }];
+    const state = withPlayer(only, game(5_000_000, 0, only), {
+      businesses: [{ id: 'mine', typeId: 'stall', capital: 200_000, basis: 200_000, payoutPct: 50, manager: false, tended: false }],
+    });
+    const { events } = applyRound(only, { ...state, phase: 'finance', hand: [], answered: 0 }, { orders: [{ type: 'startBusiness', typeId: 'stall', capital: 200_000 }] });
+    expect(events.flatMap((e) => (e.kind === 'orderRejected' ? [e.reason] : []))).toEqual(['already-owned']);
+    const dealt = { ...state, phase: 'cards' as const, hand: ['gig'], answered: 0 };
+    expect(applyCard(only, dealt, 1).state.player.businesses.map((business) => business.id)).toEqual(['mine']);
   });
 
   it('can be what a life starts with, at the prices of the first day', () => {

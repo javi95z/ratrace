@@ -938,9 +938,18 @@ function businessSalePrice(business2, content2, world2, negotiation = 0) {
 }
 function businessLock(p, type, content2) {
   if (type.minFinanceSkill > p.life.financeSkill) return "needs-finance-skill";
+  if (onlyOneHeld(p, content2, type.id)) return "already-owned";
   if (p.businesses.length >= maxBusinessesOf(p, content2)) return "too-many-businesses";
   if (focusLeft(p) < 1) return "no-focus";
   return null;
+}
+function onlyOneHeld(p, content2, typeId) {
+  return content2.business.types.some((type) => type.id === typeId && type.onlyOne === true) && p.businesses.some((business2) => business2.typeId === typeId);
+}
+function largestBusiness(p) {
+  let largest = null;
+  for (const business2 of p.businesses) if (largest === null || business2.capital > largest.capital) largest = business2;
+  return largest;
 }
 function openBusiness(p, typeId, capital, content2) {
   const business2 = { id: newId(p, "business"), typeId, capital, basis: capital, payoutPct: content2.business.payouts[Math.floor(content2.business.payouts.length / 2)], manager: false, tended: true };
@@ -1645,7 +1654,7 @@ function validateCards(c) {
       if (!isRecord(value) || !c.business.types.some((type) => type.id === value.typeId)) return `opens a business of an unknown kind: ${String(isRecord(value) ? value.typeId : value)}`;
       return isWhole(value.capital) && value.capital > 0 ? null : "opens a business with a capital that is not a positive whole number";
     },
-    sellBusinesses: (value) => isRecord(value) && isWhole(value.pricePct) && value.pricePct > 0 ? null : "sells businesses for a share that is not a positive whole percentage",
+    sellBusiness: (value) => isRecord(value) && isWhole(value.pricePct) && value.pricePct > 0 ? null : "sells a business for a share that is not a positive whole percentage",
     focus: (value) => isWhole(value) && value >= 0 && value <= 10 ? null : "needs focus from 0 to 10",
     children: (value) => isWhole(value) && value >= 1 && value <= 4 ? null : "needs children from 1 to 4",
     lifestyleFloor: (value) => [0, 1, 2, 3].includes(value) ? null : "has a lifestyle floor that is not 0, 1, 2 or 3",
@@ -1656,9 +1665,9 @@ function validateCards(c) {
     suspicion: (value) => isWhole(value) && value !== 0 && within(value, -100, 100) ? null : "needs a change of suspicion from -100 to 100",
     amnesty: (value) => isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : "needs a whole percentage from 0 to 100 for an amnesty",
     gift: (value) => {
-      if (!isRecord(value) || value.liquidPct === void 0 && value.businesses === void 0) return "gives nothing to the children";
+      if (!isRecord(value) || value.liquidPct === void 0 && value.business === void 0) return "gives nothing to the children";
       if (value.liquidPct !== void 0 && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return "gives a share of savings that is not a whole percentage from 1 to 100";
-      return value.businesses === void 0 || value.businesses === true ? null : "gives businesses with something other than true";
+      return value.business === void 0 || value.business === true ? null : "gives a business with something other than true";
     },
     refinance: (value) => value === "fixed" || value === "variable" ? null : `has an unknown refinance kind: ${String(value)}`,
     protection: (value) => {
@@ -2647,9 +2656,10 @@ function giveToChildren(p, gift, at) {
     p.deposit -= amount - fromCash;
     given += amount;
   }
-  if (gift.businesses === true) {
-    for (const business2 of p.businesses) given += business2.capital;
-    p.businesses = [];
+  const handed = gift.business === true ? largestBusiness(p) : null;
+  if (handed !== null) {
+    given += handed.capital;
+    p.businesses = p.businesses.filter((business2) => business2 !== handed);
   }
   const kept = given - mulDiv(given, at.content.life.giftTaxPct, 100);
   p.life.legacy += mulDiv(kept, PRICE_LEVEL_START, at.world.priceLevel);
@@ -2663,12 +2673,15 @@ function applyEffects(p, effects, at) {
     takePersonalLoan(p, indexed(effects.loan, world2), content2, world2);
   }
   if (effects.pension !== void 0) p.pension += indexed(effects.pension, world2);
-  if (effects.sellBusinesses !== void 0) {
-    for (const business2 of p.businesses) p.cash += mulDiv(business2.capital, effects.sellBusinesses.pricePct, 100);
-    if (p.businesses.length > 0) life2.flags[FLAG_SOLD_BUSINESS] = round2;
-    p.businesses = [];
+  if (effects.sellBusiness !== void 0) {
+    const sold = largestBusiness(p);
+    if (sold !== null) {
+      p.cash += mulDiv(sold.capital, effects.sellBusiness.pricePct, 100);
+      life2.flags[FLAG_SOLD_BUSINESS] = round2;
+      p.businesses = p.businesses.filter((business2) => business2 !== sold);
+    }
   }
-  if (effects.business !== void 0 && p.businesses.length < maxBusinessesOf(p, content2)) {
+  if (effects.business !== void 0 && p.businesses.length < maxBusinessesOf(p, content2) && !onlyOneHeld(p, content2, effects.business.typeId)) {
     openBusiness(p, effects.business.typeId, indexed(effects.business.capital, world2), content2);
   }
   if (effects.lose !== void 0) lose(p, effects.lose, at);
@@ -3890,8 +3903,8 @@ var laterLifeCards = [
   // What becomes of a business at the end of a working life: kept, sold whole to a buyer, or handed to the children.
   card("late_business_handover", "laterLife", { once: true, when: { hasBusiness: true, minRound: 17 } }, [
     {},
-    { effects: { sellBusinesses: { pricePct: 100 } } },
-    { when: { minChildren: 1 }, effects: { gift: { businesses: true }, status: 6 } }
+    { effects: { sellBusiness: { pricePct: 100 } } },
+    { when: { minChildren: 1 }, effects: { gift: { business: true }, status: 6 } }
   ]),
   // Ageing parents: someone has to look after them.
   card("late_parents_care", "laterLife", { once: true, when: { minRound: 14, maxRound: 19 } }, [
@@ -4566,10 +4579,10 @@ var businessCards = [
   // A buyer pays for what a business could become, which no sale from the tab ever does: well over what is in it.
   card("biz_acquisition", "business", { cooldown: 6, when: { hasBusiness: true } }, [
     {},
-    { effects: { sellBusinesses: { pricePct: 170 }, status: 4 } },
+    { effects: { sellBusiness: { pricePct: 170 }, status: 4 } },
     {
       outcomes: [
-        { weight: 40, effects: { sellBusinesses: { pricePct: 250 }, status: 4 } },
+        { weight: 40, effects: { sellBusiness: { pricePct: 250 }, status: 4 } },
         { weight: 60, effects: {} }
       ]
     }
@@ -4605,7 +4618,7 @@ var cards = [
 var business = {
   types: [
     // The player's own trade for their own clients: open to anyone, cheap to start, quick to pay, and never large.
-    { id: "services", minCapital: usd(2e3), yieldBp: 2200, scale: usd(3e4), cyclePct: { boom: 15, slowdown: -15, recession: -40 }, managerPct: 50, minFinanceSkill: 0 },
+    { id: "services", minCapital: usd(2e3), yieldBp: 2200, scale: usd(3e4), cyclePct: { boom: 15, slowdown: -15, recession: -40 }, managerPct: 50, minFinanceSkill: 0, onlyOne: true },
     { id: "shop", minCapital: usd(5e3), yieldBp: 2e3, scale: usd(8e4), cyclePct: { boom: 25, expansion: 5, slowdown: -25, recession: -70 }, managerPct: 40, minFinanceSkill: 2 },
     // The best margins and the wildest swings.
     { id: "app", minCapital: usd(3e3), yieldBp: 2600, scale: usd(12e4), cyclePct: { boom: 40, slowdown: -30, recession: -90, recovery: 10 }, managerPct: 45, minFinanceSkill: 2 },

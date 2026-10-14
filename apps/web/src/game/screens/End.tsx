@@ -1,6 +1,6 @@
 'use client';
 
-import { badgeArt, endingArt, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
+import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { useEffect, useMemo, useState } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
@@ -160,7 +160,12 @@ function Ended({ view }: { view: GameView }) {
         </div>
         <p className="mt-3 text-[12px] text-ink-300">{t('statusHint')}</p>
         {/* What was given to the children in life is counted in the wealth as the player's own. */}
-        {p.life.legacy > 0 ? <p className="mt-1 text-[12px] text-teal-300">{t('legacy', { amount: fmt.money(p.life.legacy) })}</p> : null}
+        {p.life.legacy > 0 ? (
+          <p className="mt-1 flex items-center justify-center gap-1 text-[12px] text-teal-300">
+            <Sprite id={GIFT_ART} />
+            {t('legacy', { amount: fmt.money(p.life.legacy) })}
+          </p>
+        ) : null}
         {standing ? (
           <p role="status" className="mt-3 flex items-center justify-center gap-2 text-[13px] text-teal-300">
             <Sprite id={PERCENTILE_ART} />

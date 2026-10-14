@@ -131,7 +131,7 @@ export function validateCards(c: Content): string[] {
       if (!isRecord(value) || !c.business.types.some((type) => type.id === value.typeId)) return `opens a business of an unknown kind: ${String(isRecord(value) ? value.typeId : value)}`;
       return isWhole(value.capital) && value.capital > 0 ? null : 'opens a business with a capital that is not a positive whole number';
     },
-    sellBusinesses: (value) => (isRecord(value) && isWhole(value.pricePct) && value.pricePct > 0 ? null : 'sells businesses for a share that is not a positive whole percentage'),
+    sellBusiness: (value) => (isRecord(value) && isWhole(value.pricePct) && value.pricePct > 0 ? null : 'sells a business for a share that is not a positive whole percentage'),
     focus: (value) => (isWhole(value) && value >= 0 && value <= 10 ? null : 'needs focus from 0 to 10'),
     children: (value) => (isWhole(value) && value >= 1 && value <= 4 ? null : 'needs children from 1 to 4'),
     lifestyleFloor: (value) => ([0, 1, 2, 3].includes(value as number) ? null : 'has a lifestyle floor that is not 0, 1, 2 or 3'),
@@ -142,9 +142,9 @@ export function validateCards(c: Content): string[] {
     suspicion: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a change of suspicion from -100 to 100'),
     amnesty: (value) => (isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for an amnesty'),
     gift: (value) => {
-      if (!isRecord(value) || (value.liquidPct === undefined && value.businesses === undefined)) return 'gives nothing to the children';
+      if (!isRecord(value) || (value.liquidPct === undefined && value.business === undefined)) return 'gives nothing to the children';
       if (value.liquidPct !== undefined && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return 'gives a share of savings that is not a whole percentage from 1 to 100';
-      return value.businesses === undefined || value.businesses === true ? null : 'gives businesses with something other than true';
+      return value.business === undefined || value.business === true ? null : 'gives a business with something other than true';
     },
     refinance: (value) => (value === 'fixed' || value === 'variable' ? null : `has an unknown refinance kind: ${String(value)}`),
     protection: (value) => {

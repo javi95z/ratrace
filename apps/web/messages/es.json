@@ -308,17 +308,17 @@
       "best": "De cada gama solo cuenta lo mejor que tengas."
     },
     "openBusiness": "Abres un negocio: {name}",
-    "sellBusinesses": "Vendes tus negocios al {pct} % de lo que valen",
     "skill": "{skill} {value}",
     "coversInspection": "Paga el {pct} % de una inspección de Hacienda",
     "retire": "Te jubilas, para siempre",
     "giftSavings": "El {pct} % de tu efectivo y ahorro, para tus hijos",
-    "giftBusinesses": "Tus negocios, para tus hijos",
     "giftCounts": "Sigue contando en tu puntuación, menos un {pct} % de impuesto",
     "focusBase": "{value} de foco cada ronda, para siempre",
     "businessesPct": "Tus negocios {value} %",
     "suspicion": "Sospecha de Hacienda {value}",
-    "amnesty": "Pagas el {pct} % de lo que ocultaste y empiezas de cero"
+    "amnesty": "Pagas el {pct} % de lo que ocultaste y empiezas de cero",
+    "sellBusiness": "Vendes tu negocio más grande por el {pct} % de lo que vale",
+    "giftBusiness": "Tu negocio más grande, para tus hijos"
   },
   "finance": {
     "tabs": {
@@ -1106,7 +1106,6 @@
     "hunt": "Buscar trabajo",
     "huntGives": "{pct} % de probabilidad de una subida del {raise} % para siempre.",
     "focusAlso": "Mudarte de ciudad cuesta 1 de foco, y algunas cartas piden 1 o 2 para elegir su mejor opción.",
-    "focusThings": "Lo que tienes ya cuenta en estas cifras.",
     "focusWhere": "Se gasta en la pestaña Vida, en la fase de finanzas.",
     "traits": "Lo propio de esta carrera",
     "cycleUp": "Tu sueldo sigue a la economía: esta ronda cobras un {pct} % más.",

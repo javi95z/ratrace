@@ -13,7 +13,7 @@ import { usd } from './money';
 export const business: BusinessRules = {
   types: [
     // The player's own trade for their own clients: open to anyone, cheap to start, quick to pay, and never large.
-    { id: 'services', minCapital: usd(2_000), yieldBp: 2_200, scale: usd(30_000), cyclePct: { boom: 15, slowdown: -15, recession: -40 }, managerPct: 50, minFinanceSkill: 0 },
+    { id: 'services', minCapital: usd(2_000), yieldBp: 2_200, scale: usd(30_000), cyclePct: { boom: 15, slowdown: -15, recession: -40 }, managerPct: 50, minFinanceSkill: 0, onlyOne: true },
     { id: 'shop', minCapital: usd(5_000), yieldBp: 2_000, scale: usd(80_000), cyclePct: { boom: 25, expansion: 5, slowdown: -25, recession: -70 }, managerPct: 40, minFinanceSkill: 2 },
     // The best margins and the wildest swings.
     { id: 'app', minCapital: usd(3_000), yieldBp: 2_600, scale: usd(120_000), cyclePct: { boom: 40, slowdown: -30, recession: -90, recovery: 10 }, managerPct: 45, minFinanceSkill: 2 },

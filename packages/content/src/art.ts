@@ -1,3 +1,4 @@
+import type { ChallengeRule } from './challenges';
 import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId } from '@ratrace/engine';
 
 /**
@@ -8,14 +9,10 @@ import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId
 const scene = (name: string) => `card.${name}`;
 
 /**
- * Card scenes not drawn yet, each with the drawn scene shown in its place until `cards-22` to `cards-25` are cut.
+ * Card scenes not drawn yet, each with the drawn scene shown in its place until `cards-23` to `cards-25` are cut.
  * A scene here is the only one a card may share.
  */
 export const SCENE_STAND_INS: Record<string, string> = {
-  career_restructuring: scene('packed_box'),
-  late_gift: scene('family_dinner'),
-  late_business_handover: scene('contract_signing'),
-  late_parents_care: scene('family_dinner'),
   career_four_day_week: scene('packed_box'),
   edu_company_course: scene('lecture_hall'),
   biz_rival: scene('contract_signing'),
@@ -42,7 +39,7 @@ export const cardArt: Record<string, string> = {
   career_relocation: scene('airport'),
   career_overtime_crunch: scene('office_desk'),
   career_layoff: scene('packed_box'),
-  career_restructuring: SCENE_STAND_INS.career_restructuring,
+  career_restructuring: scene('restructuring'),
   career_toxic_boss: scene('angry_boss'),
   career_switch: scene('two_ladders'),
   career_big_offer: scene('tower_lobby'),
@@ -162,9 +159,9 @@ export const cardArt: Record<string, string> = {
   late_early_retirement: scene('sunset_bench'),
   late_downsizing: scene('small_house'),
   late_will: scene('will_desk'),
-  late_gift: SCENE_STAND_INS.late_gift,
-  late_business_handover: SCENE_STAND_INS.late_business_handover,
-  late_parents_care: SCENE_STAND_INS.late_parents_care,
+  late_gift: scene('keys_to_children'),
+  late_business_handover: scene('shop_handover'),
+  late_parents_care: scene('care_home'),
   career_four_day_week: SCENE_STAND_INS.career_four_day_week,
   edu_company_course: SCENE_STAND_INS.edu_company_course,
   biz_rival: SCENE_STAND_INS.biz_rival,
@@ -365,3 +362,20 @@ export const endingArt = (ending: Ending): string => `end.${ending}`;
 export const HOME_LIFE_ART = ['family.couple', 'family.children', 'family.full_house'] as const;
 export const homeLifeArt = (home: { partner: boolean; children: number }): string | null =>
   home.children >= 3 ? HOME_LIFE_ART[2] : home.children >= 1 ? HOME_LIFE_ART[1] : home.partner ? HOME_LIFE_ART[0] : null;
+
+/** The sign of each rule of the weekly challenge. */
+export const ruleArt: Record<ChallengeRule, string> = {
+  indexOnly: 'icon.rule_index_only',
+  noLoans: 'icon.rule_no_loans',
+  noMoving: 'icon.rule_no_moving',
+  noProperty: 'icon.rule_no_property',
+  startInDebt: 'icon.rule_start_in_debt',
+};
+/** The weekly challenge: its sign, its picture, the mark of its best tenth, and the sign of a practice. */
+export const CHALLENGE_ART = { icon: 'icon.challenge', scene: 'card.weekly_challenge', topTenth: 'icon.top_tenth', practice: 'icon.practice' } as const;
+/** A life after work: its sign, and its picture where a workplace would be. */
+export const RETIRED_ART = { icon: 'icon.retired', scene: 'card.retired_garden' } as const;
+/** What is given to the children, a business handed on, and the risk of the years. */
+export const GIFT_ART = 'icon.gift';
+export const HANDOVER_ART = 'icon.handover';
+export const HEALTH_RISK_ART = 'icon.health_risk';

@@ -1886,6 +1886,66 @@
       "width": 32,
       "height": 32
     },
+    "icon.rule_index_only": {
+      "file": "icons/icon.rule_index_only.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_no_loans": {
+      "file": "icons/icon.rule_no_loans.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_no_moving": {
+      "file": "icons/icon.rule_no_moving.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_no_property": {
+      "file": "icons/icon.rule_no_property.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_start_in_debt": {
+      "file": "icons/icon.rule_start_in_debt.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.challenge": {
+      "file": "icons/icon.challenge.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.top_tenth": {
+      "file": "icons/icon.top_tenth.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.retired": {
+      "file": "icons/icon.retired.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.gift": {
+      "file": "icons/icon.gift.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.handover": {
+      "file": "icons/icon.handover.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.health_risk": {
+      "file": "icons/icon.health_risk.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.practice": {
+      "file": "icons/icon.practice.png",
+      "width": 32,
+      "height": 32
+    },
     "frame.plain": {
       "file": "icons/frame.plain.png",
       "width": 80,
@@ -2733,6 +2793,36 @@
     },
     "family.full_house": {
       "file": "cards/family.full_house.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.restructuring": {
+      "file": "cards/card.restructuring.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.keys_to_children": {
+      "file": "cards/card.keys_to_children.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.shop_handover": {
+      "file": "cards/card.shop_handover.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.care_home": {
+      "file": "cards/card.care_home.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.retired_garden": {
+      "file": "cards/card.retired_garden.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.weekly_challenge": {
+      "file": "cards/card.weekly_challenge.png",
       "width": 288,
       "height": 120
     },

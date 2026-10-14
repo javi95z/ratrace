@@ -162,17 +162,20 @@ describe('giving to the children in life', () => {
     expect(p.life.legacy).toBe(mulDiv(108_000, PRICE_LEVEL_START, state.timeline[state.round].priceLevel));
   });
 
-  it('gives from savings alone when the cash is short, and every business at what is in it', () => {
+  it('gives from savings alone when the cash is short, and the largest business at what is in it', () => {
     const content = laterRules();
     const state = game(content);
     const p = structuredClone(state.player);
     p.cash = -5_000;
     p.deposit = 40_000;
-    p.businesses = [{ id: 'b1', typeId: 'stall', capital: 60_000, basis: 60_000, payoutPct: 50, manager: false, tended: false }];
-    applyEffects(p, { gift: { liquidPct: 50, businesses: true } }, situation(content, state));
+    p.businesses = [
+      { id: 'b0', typeId: 'stall', capital: 10_000, basis: 10_000, payoutPct: 50, manager: false, tended: false },
+      { id: 'b1', typeId: 'stall', capital: 60_000, basis: 60_000, payoutPct: 50, manager: false, tended: false },
+    ];
+    applyEffects(p, { gift: { liquidPct: 50, business: true } }, situation(content, state));
     expect(p.cash).toBe(-5_000);
     expect(p.deposit).toBe(20_000);
-    expect(p.businesses).toEqual([]);
+    expect(p.businesses.map((business) => business.id)).toEqual(['b0']);
     // At the prices of the start, what is given less a tenth is kept as it is.
     expect(p.life.legacy).toBe(72_000);
   });

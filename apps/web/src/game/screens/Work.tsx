@@ -1,6 +1,6 @@
 'use client';
 
-import { careerArt, focusArt, skillArt, workArt } from '@ratrace/content';
+import { careerArt, focusArt, RETIRED_ART, skillArt, workArt } from '@ratrace/content';
 import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
 import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
@@ -68,12 +68,21 @@ export function WorkPanel({ shown }: { shown: GameView }) {
           <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
             <Sprite id={workArt(job.id, rung.level, work.ladder.length)} fallback={{ w: 288, h: 120 }} className="max-w-none" />
           </div>
+        ) : work.retirement.retired ? (
+          // A life after work, where the workplace was.
+          <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
+            <Sprite id={RETIRED_ART.scene} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+          </div>
         ) : null}
         <div className="flex items-start justify-between gap-3 pt-1">
           <div className="flex min-w-0 items-center gap-2">
             {job ? (
               <Bare className="size-8">
                 <Sprite id={careerArt(job.id)} />
+              </Bare>
+            ) : work.retirement.retired ? (
+              <Bare className="size-8">
+                <Sprite id={RETIRED_ART.icon} />
               </Bare>
             ) : null}
             <div className="min-w-0">
@@ -462,7 +471,6 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
         </ul>
       )}
       <p className="text-[13px] leading-snug text-ink-200">{t('focusAlso')}</p>
-      {work.perks.studySkill > 0 || work.perks.jobHuntPct > 0 ? <p className="text-[12px] text-teal-300">{t('focusThings')}</p> : null}
       <p className="text-center text-[12px] text-ink-300">{open ? t('focusPick') : t('focusWhere')}</p>
     </>
   );

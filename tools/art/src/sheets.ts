@@ -218,6 +218,15 @@ export const SHEETS: SheetSpec[] = [
       'icon.repair_car', 'icon.repair', 'icon.repair_watch', 'icon.percentile',
     ],
   },
+  {
+    // The five rules of the weekly challenge, the challenge and its best tenth, retiring, the gifts to the children, the risk of age, and practice.
+    file: 'icons/icons-09', group: 'icons', kind: 'objects', cols: 4, rows: 3, width: 32, height: 32,
+    ids: [
+      'icon.rule_index_only', 'icon.rule_no_loans', 'icon.rule_no_moving', 'icon.rule_no_property',
+      'icon.rule_start_in_debt', 'icon.challenge', 'icon.top_tenth', 'icon.retired',
+      'icon.gift', 'icon.handover', 'icon.health_risk', 'icon.practice',
+    ],
+  },
   // The frame of the portrait, by status: plain, bronze, silver, gold. The middle of each is clear.
   // Frames and loops share the icons' palette, though not their size: a group of their own would need every palette rebuilt.
   { file: 'icons/frames-01', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 80, height: 80, ids: ['frame.plain', 'frame.bronze', 'frame.silver', 'frame.gold'] },
@@ -276,6 +285,11 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-20', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.out_of_town', 'card.club_contacts', 'card.classroom', 'card.ring_light', 'card.law_office', 'card.bar_tips'] },
   // How a life ends, and who is at home.
   { file: 'cards/cards-21', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['end.escaped', 'end.retired', 'end.ruined', 'family.couple', 'family.children', 'family.full_house'] },
+  // The end of a working life, and the weekly challenge.
+  {
+    file: 'cards/cards-22', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120,
+    ids: ['card.restructuring', 'card.keys_to_children', 'card.shop_handover', 'card.care_home', 'card.retired_garden', 'card.weekly_challenge'],
+  },
   ...WORKPLACES.map((careers, i): SheetSpec => ({
     file: `cards/work-${String(i + 1).padStart(2, '0')}`, group: 'cards', kind: 'scenes', cols: 3, rows: 2, width: 288, height: 120,
     ids: careers.flatMap((career) => [0, 1, 2].map((stage) => `work.${career}.${stage}`)),

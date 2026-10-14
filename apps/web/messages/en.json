@@ -308,17 +308,17 @@
       "best": "Within a ladder only the best you own counts."
     },
     "openBusiness": "You open a business: {name}",
-    "sellBusinesses": "You sell your businesses for {pct}% of what they are worth",
     "skill": "{skill} {value}",
     "coversInspection": "Pays {pct}% of a tax inspection",
     "retire": "You retire, for good",
     "giftSavings": "{pct}% of your cash and savings to your children",
-    "giftBusinesses": "Your businesses to your children",
     "giftCounts": "Still counts in your score, less {pct}% gift tax",
     "focusBase": "{value} focus every round, for good",
     "businessesPct": "Your businesses {value}%",
     "suspicion": "Tax office suspicion {value}",
-    "amnesty": "Pay {pct}% of what you hid, and start clean"
+    "amnesty": "Pay {pct}% of what you hid, and start clean",
+    "sellBusiness": "You sell your largest business for {pct}% of what it is worth",
+    "giftBusiness": "Your largest business to your children"
   },
   "finance": {
     "tabs": {
@@ -1106,7 +1106,6 @@
     "hunt": "Job hunt",
     "huntGives": "{pct}% chance of a {raise}% raise for good.",
     "focusAlso": "Moving city takes 1 focus, and some cards ask for 1 or 2 to take their best option.",
-    "focusThings": "What you own is already counted in these figures.",
     "focusWhere": "It is spent in the Lifestyle tab, during the finances.",
     "traits": "What sets this career apart",
     "cycleUp": "Your pay follows the economy: this round you earn {pct}% more.",

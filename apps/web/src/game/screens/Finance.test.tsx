@@ -50,6 +50,28 @@ async function toFinance(session: GameSession) {
 }
 const stateOf = async (services: ReturnType<typeof memoryServices>) => ((await services.store.loadGame()) as SavedGame).state;
 
+describe('selling what is held', () => {
+  it('sells all of it, when a plan buys more of the same later in the round', async () => {
+    const { services, session } = await inFinance('heir', { taught: true });
+    // Held, and on a plan: the plan's purchase of this round comes after every order.
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'setPlan', assetId: 'sp500', amount: 200_000 }] });
+    await toFinance(session);
+    const held = (await stateOf(services)).player.positions.sp500.value;
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const holdings = await screen.findByRole('region', { name: 'Your investments' });
+    const row = within(holdings).getByText('S&P 500').closest('div.flex') as HTMLElement;
+    await user.click(within(row).getByRole('button', { name: 'Sell' }));
+    const sheet = screen.getByRole('dialog', { name: 'Sell S&P 500' });
+    // The most is what is held now, not what will be held once the plan has bought.
+    expect(within(sheet).getByText(`Up to ${fmt.money(held)}`)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: '100%' }));
+    await user.click(within(sheet).getByRole('button', { name: /^Confirm/ }));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(button('1 order')).toBeTruthy();
+  });
+});
+
 describe('the pension', () => {
   it('offers exactly what the round still allows, and the whole of that is accepted', async () => {
     // The heir has more cash than a round's pension cap, so the room is the cap and not the cash.

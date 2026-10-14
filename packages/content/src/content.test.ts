@@ -164,7 +164,7 @@ describe('the v1 content', () => {
     expect(byCost[0].managerPct).toBe(Math.min(...kinds.map((type) => type.managerPct)));
     // No sale from the tab pays more than is in the business; only a buyer's card does.
     for (const share of Object.values(content.business.salePct)) expect(share).toBeLessThanOrEqual(100);
-    const offer = content.cards.find((card) => card.id === 'biz_acquisition')?.options[1].effects?.sellBusinesses?.pricePct ?? 0;
+    const offer = content.cards.find((card) => card.id === 'biz_acquisition')?.options[1].effects?.sellBusiness?.pricePct ?? 0;
     expect(offer).toBeGreaterThan(100);
     // Three cards open one, each of a kind that exists.
     const opened = content.cards.flatMap((card) => card.options.flatMap((option) => (option.outcomes ?? []).map((outcome) => outcome.effects.business?.typeId))).filter(Boolean);
@@ -361,7 +361,7 @@ describe('the v1 content', () => {
     for (const id of ['late_early_retirement', 'late_gift', 'late_business_handover']) expect(card(id).when?.minRound, id).toBe(content.life.retireFromRound);
     expect(card('late_early_retirement').options[1].effects).toMatchObject({ retire: true });
     expect(card('late_gift').when).toMatchObject({ minChildren: 1 });
-    expect(card('late_business_handover').options[2]).toMatchObject({ when: { minChildren: 1 }, effects: { gift: { businesses: true } } });
+    expect(card('late_business_handover').options[2]).toMatchObject({ when: { minChildren: 1 }, effects: { gift: { business: true } } });
     // From 50 the body is twice as likely to fail, and three times from 56; skill takes it back down.
     expect(content.life.riskByAge.health.map(({ fromRound, pct }) => [START_AGE + fromRound * content.yearsPerRound, pct])).toEqual([[22, 100], [40, 150], [50, 200], [56, 300]]);
     expect(content.life.skills.healthRiskOffPct * 3).toBeLessThan(100);

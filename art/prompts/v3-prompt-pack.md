@@ -259,7 +259,7 @@ Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, 
 
 | # | File | What | Cell |
 | --- | --- | --- | --- |
-| 62 | `cards/cards-22.png` | `card.restructuring`, `card.keys_to_children`, `card.shop_handover`, `card.care_home`, `scene.retired`, `scene.challenge` | 288×120 |
+| 62 | `cards/cards-22.png` | `card.restructuring`, `card.keys_to_children`, `card.shop_handover`, `card.care_home`, `card.retired_garden`, `card.weekly_challenge` | 288×120 |
 
 Until it is cut, the four cards show a stand-in (`SCENE_STAND_INS` in `packages/content/src/art.ts`).
 

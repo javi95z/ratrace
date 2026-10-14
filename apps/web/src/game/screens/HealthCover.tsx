@@ -1,8 +1,10 @@
 'use client';
 
+import { HEALTH_RISK_ART } from '@ratrace/content';
 import type { LivingQuote } from '@ratrace/engine';
 import { useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
+import { Sprite } from '@/ui/Sprite';
 
 /**
  * What sets the price of health cover, under its switch: the age it was taken out at, for cover
@@ -22,7 +24,12 @@ export function HealthCoverNote({ living }: { living: LivingQuote }) {
         : null;
   return (
     <div className="flex flex-col gap-1 text-[12px] leading-snug">
-      {line ? <p className={line.tone}>{line.text}</p> : null}
+      {line ? (
+        <p className={`flex items-center gap-2 ${line.tone}`}>
+          {since === null ? <Sprite id={HEALTH_RISK_ART} /> : null}
+          {line.text}
+        </p>
+      ) : null}
       <p className="text-ink-300">{t('insuranceRenews')}</p>
     </div>
   );

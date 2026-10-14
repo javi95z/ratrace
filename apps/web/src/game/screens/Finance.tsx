@@ -50,6 +50,13 @@ function Portfolio() {
   const held = content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id));
   // The most the pension takes this round, from the engine: its cap, the cash there is, and solvency.
   const pensionRoom = preview.pensionRoom;
+  // What can be sold this round: what is held once the orders so far have run, without what a plan buys after them.
+  // A plan buys when the round is played, after every order: the order cannot sell what it has not bought yet.
+  const sellable = (assetId: string): number => {
+    let planned = 0;
+    for (const run of preview.plans) if (run.assetId === assetId && run.reason === null) planned += run.amount;
+    return Math.max(0, (p.positions[assetId]?.value ?? 0) - planned);
+  };
 
   const sheet = (() => {
     if (!move) return null;
@@ -61,7 +68,7 @@ function Portfolio() {
     return (
       <AmountSheet
         title={amount('sell', { name })}
-        max={p.positions[move.asset.id]?.value ?? 0}
+        max={sellable(move.asset.id)}
         onClose={close}
         onConfirm={(a) => addOrder({ type: 'sell', assetId: move.asset.id, amount: a })}
       />

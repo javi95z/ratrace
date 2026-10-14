@@ -107,8 +107,8 @@ export const laterLifeCards: CardDef[] = [
   // What becomes of a business at the end of a working life: kept, sold whole to a buyer, or handed to the children.
   card('late_business_handover', 'laterLife', { once: true, when: { hasBusiness: true, minRound: 17 } }, [
     {},
-    { effects: { sellBusinesses: { pricePct: 100 } } },
-    { when: { minChildren: 1 }, effects: { gift: { businesses: true }, status: 6 } },
+    { effects: { sellBusiness: { pricePct: 100 } } },
+    { when: { minChildren: 1 }, effects: { gift: { business: true }, status: 6 } },
   ]),
   // Ageing parents: someone has to look after them.
   card('late_parents_care', 'laterLife', { once: true, when: { minRound: 14, maxRound: 19 } }, [
