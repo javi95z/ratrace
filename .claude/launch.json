@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ratrace-web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use >/dev/null && pnpm --filter @ratrace/web dev"
+      ],
+      "port": 3010
+    }
+  ]
+}
