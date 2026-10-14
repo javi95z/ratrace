@@ -66,11 +66,12 @@ begin
     then passed := passed + 1; else failed := array_append(failed, 'a function made without a grant can be called by clients'); end if;
   drop function public.probe_function();
   drop table public.probe_table;
-  -- A visitor with no account can call nothing. A player can call two things: the ranking, and following someone by their code.
+  -- A visitor with no account can call nothing. A player can call four things: the ranking, following someone by their
+  -- code, and the ranking and the sums of choices of a week's challenge.
   select count(*) into n from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('anon', p.oid, 'execute');
   if n = 0 then passed := passed + 1; else failed := array_append(failed, format('%s functions of the game can be called with no account', n)); end if;
-  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'ranking']
-    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the ranking and following by code'); end if;
+  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'challenge_choices', 'challenge_ranking', 'ranking']
+    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the rankings, the choices of a challenge, and following by code'); end if;
 
   -- ---------------------------------------------------------------- player A
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
