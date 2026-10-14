@@ -327,7 +327,7 @@ describe('the v1 content', () => {
     const bills = content.assets.find((asset) => asset.id === 'treasury_bills')!;
     let state = createGame({ content, start: lives[0].start }, 'bills');
     state.player.cash = 10_000_000;
-    state.player.life.financeSkill = bills.minFinanceSkill;
+    state.player.life.financeSkill = 1;
     for (let round = 0; round < content.rounds && !state.finished; round++) {
       const orders = round === 0 ? [{ type: 'buy' as const, assetId: 'treasury_bills', amount: 5_000_000 }] : [];
       const world = state.timeline[state.round];
