@@ -1,4 +1,4 @@
-import type { DebtParams, LifeRules, PropertyTypeDef, ScoringParams, WorldRules } from '@ratrace/engine';
+import type { DebtParams, EvasionRules, LifeRules, PropertyTypeDef, ScoringParams, WorldRules } from '@ratrace/engine';
 import { usd } from './money';
 
 /**
@@ -149,4 +149,33 @@ export const world: WorldRules = {
   // About one life in three lives through a crisis, and never before 30: by then there is something to lose.
   crisisChancePct: 30,
   crisisEarliestRound: 4,
+};
+
+/**
+ * Hiding from the tax office. Every way saves tax this round and draws suspicion; the chance of an
+ * inspection each round is the suspicion itself, up to sixty in a hundred. An inspection takes back
+ * the last four years of what was hidden with half as much again, a share of what was bought
+ * without an invoice, and the player's good name. A quarter of the salary under the table is
+ * suspected at six points a round, so a few quiet rounds pay and a careless decade does not.
+ */
+export const evasion: EvasionRules = {
+  blackPcts: [0, 25, 50],
+  blackSuspicionPer100: 24,
+  // An offshore company is for someone who knows money well, and costs a salary's worth of fees.
+  shellMinFinanceSkill: 3,
+  shellFeeAnnual: usd(6_000),
+  shellTaxCutPct: 80,
+  shellSuspicion: 8,
+  // From thirty-eight the exchanges tell the tax office what their customers made.
+  cryptoSuspicion: 6,
+  cryptoReportRound: 8,
+  noInvoiceLadders: ['art', 'watch'],
+  noInvoiceDiscountPct: 20,
+  noInvoiceSaleSuspicion: 15,
+  suspicionDecay: 5,
+  auditMaxPct: 60,
+  auditFinePct: 50,
+  auditGoodsPct: 30,
+  auditStatus: -8,
+  limitationRounds: 2,
 };

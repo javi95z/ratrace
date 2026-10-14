@@ -94,6 +94,18 @@ describe('debts named for what they bought', () => {
   });
 });
 
+describe('an inspection, told after the round', () => {
+  it('says what it took in all, and what of it was tax, fine and goods', () => {
+    const [note] = roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'audit', evaded: 300_000, fine: 150_000, goods: 50_000 }]);
+    expect(note).toMatchObject({
+      tone: 'bad',
+      icon: 'icon.tax',
+      title: 'Tax inspection: you pay $5,000.',
+      hint: '$3,000 of tax, a $1,500 fine and $500 for what you bought without an invoice. Nothing is hidden any more.',
+    });
+  });
+});
+
 describe('a repair, told after the round', () => {
   it('names the thing bought second hand and what its repair cost, as bad news', () => {
     const [note] = roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'repair', itemId: 'car_seat_ibiza', amount: 144_000 }]);
@@ -250,6 +262,11 @@ describe('orderLabel', () => {
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', used: true })).toBe('Buy Rolex Submariner second hand');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', used: true }, 'es')).toBe('Comprar Rolex Submariner de segunda mano');
+    expect(label({ type: 'buyItem', itemId: 'watch_rolex', noInvoice: true })).toBe('Buy Rolex Submariner without an invoice');
+    // What is hidden: one part for each thing the order changes.
+    expect(label({ type: 'setEvasion', blackPct: 25 })).toBe('Pay under the table: 25%');
+    expect(label({ type: 'setEvasion', shell: true, hideCrypto: false })).toBe('Open an offshore company · Declare crypto gains');
+    expect(label({ type: 'setEvasion', blackPct: 0, shell: false }, 'es')).toBe('Sueldo en negro: 0 % · Cerrar la sociedad en el paraíso fiscal');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');
     expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Basic-Fit');

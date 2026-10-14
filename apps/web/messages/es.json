@@ -475,7 +475,11 @@
       "usedFrom": "Usado: {amount}",
       "ownedUsed": "Tuyo · usado",
       "usedTag": "De segunda mano",
-      "usedOwned": "Lo compraste usado: cada ronda, un {pct} % de probabilidad de una reparación."
+      "usedOwned": "Lo compraste usado: cada ronda, un {pct} % de probabilidad de una reparación.",
+      "noInvoiceTitle": "Sin factura",
+      "noInvoiceRisk": "Un {pct} % más barato, al contado. Al venderlo te preguntarán de dónde salió (+{suspicion} de sospecha), y en una inspección se llevan el {goods} % de su valor.",
+      "buyNoInvoice": "Comprar sin factura por {amount}",
+      "noInvoiceTag": "Sin factura"
     },
     "taxes": {
       "income": "Lo que entra",
@@ -594,6 +598,26 @@
       "opensNow": "Se abre al jugar la ronda. Desde la siguiente podrás llevarlo, hacerlo crecer o venderlo.",
       "needsCash": "Te faltan {amount} en efectivo para montarlo.",
       "moreLater": "{n, plural, one {Otro tipo de negocio se abre} other {# tipos de negocio más se abren}} con cultura financiera {level}."
+    },
+    "evasion": {
+      "title": "Lo que no declaras",
+      "about": "Pagar menos a Hacienda ahorra ahora y despierta sospechas. Cuanta más sospecha, más fácil una inspección.",
+      "black": "Sueldo en negro",
+      "blackNone": "Nada",
+      "blackPct": "{pct} %",
+      "blackHint": "Parte del sueldo sin declarar: pagas menos IRPF.",
+      "blackNoJob": "Sin trabajo no hay sueldo que cobrar en negro.",
+      "shell": "Sociedad en un paraíso fiscal",
+      "shellHint": "Ahorra el {pct} % del impuesto de tus inversiones. Cuota {fee} al año.",
+      "crypto": "No declarar la cripto",
+      "cryptoHint": "Las ganancias en cripto no pagan impuestos.",
+      "saved": "Esta ronda ahorras {amount}.",
+      "savedNothing": "Esta ronda no ahorras nada.",
+      "risk": "El riesgo",
+      "suspicion": "Sospecha de Hacienda",
+      "chance": "Probabilidad de inspección al jugar la ronda: {pct} %",
+      "bill": "Si te inspeccionan pagas {total}: {evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura.",
+      "limit": "Lo oculto prescribe a los {years} años. Una inspección también cuesta {status} de estatus y lo cancela todo."
     }
   },
   "resolve": {
@@ -629,7 +653,9 @@
     "businessClosed": "Tu negocio ha cerrado: {name}.",
     "businessClosedHint": "Ya no quedaba nada dentro.",
     "skill": "Mejoras en {skill}: nivel {level}.",
-    "repair": "Reparación de tu {item}: {amount}."
+    "repair": "Reparación de tu {item}: {amount}.",
+    "audit": "Inspección de Hacienda: pagas {amount}.",
+    "auditHint": "{evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura. Ya no ocultas nada."
   },
   "profile": {
     "title": "Tu vida",
@@ -895,7 +921,13 @@
     "setBusiness": "Cambiar cómo llevas {name}",
     "tendBusiness": "Dedicar foco a {name}",
     "sellBusiness": "Vender {name}",
-    "buyUsedItem": "Comprar {item} de segunda mano"
+    "buyUsedItem": "Comprar {item} de segunda mano",
+    "buyNoInvoiceItem": "Comprar {item} sin factura",
+    "evasionBlack": "Sueldo en negro: {pct} %",
+    "evasionShellOn": "Abrir sociedad en un paraíso fiscal",
+    "evasionShellOff": "Cerrar la sociedad en el paraíso fiscal",
+    "evasionCryptoOn": "No declarar la cripto",
+    "evasionCryptoOff": "Declarar la cripto"
   },
   "account": {
     "title": "Cuenta",

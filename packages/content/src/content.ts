@@ -6,7 +6,7 @@ import { careers } from './careers';
 import { cities } from './cities';
 import { crises } from './crises';
 import { items } from './items';
-import { debt, life, propertyTypes, scoring, world } from './rules';
+import { debt, evasion, life, propertyTypes, scoring, world } from './rules';
 
 /** Bumped whenever a number or a card changes, so a saved game knows which rules it was played under. */
 export const CONTENT_VERSION = '1.19.0';
@@ -30,6 +30,7 @@ export const content: Content = {
   business,
   items,
   life,
+  evasion,
   world,
   crises,
   cards,

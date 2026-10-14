@@ -475,7 +475,11 @@
       "usedFrom": "Used: {amount}",
       "ownedUsed": "Yours · used",
       "usedTag": "Second hand",
-      "usedOwned": "You bought it used: each round, a {pct}% chance of a repair."
+      "usedOwned": "You bought it used: each round, a {pct}% chance of a repair.",
+      "noInvoiceTitle": "Without an invoice",
+      "noInvoiceRisk": "{pct}% cheaper, in cash. Sell it and you will be asked where it came from (+{suspicion} suspicion); an inspection takes {goods}% of its value.",
+      "buyNoInvoice": "Buy without an invoice for {amount}",
+      "noInvoiceTag": "No invoice"
     },
     "taxes": {
       "income": "Coming in",
@@ -594,6 +598,26 @@
       "opensNow": "It opens when the round is played. From the next one you can run it, grow it or sell it.",
       "needsCash": "You are {amount} in cash short of opening it.",
       "moreLater": "{n, plural, one {One more kind of business opens} other {# more kinds of business open}} with money sense {level}."
+    },
+    "evasion": {
+      "title": "What you do not declare",
+      "about": "Paying the tax office less saves money now and draws suspicion. The more it suspects, the likelier an inspection.",
+      "black": "Pay under the table",
+      "blackNone": "None",
+      "blackPct": "{pct}%",
+      "blackHint": "Part of your pay undeclared: you pay less income tax.",
+      "blackNoJob": "Without a job there is no pay to take under the table.",
+      "shell": "Offshore company",
+      "shellHint": "Saves {pct}% of the tax on your investments. A fee of {fee} a year.",
+      "crypto": "Hide crypto gains",
+      "cryptoHint": "Gains on crypto pay no tax.",
+      "saved": "This round you save {amount}.",
+      "savedNothing": "This round you save nothing.",
+      "risk": "The risk",
+      "suspicion": "The tax office's suspicion",
+      "chance": "Chance of an inspection when the round is played: {pct}%",
+      "bill": "An inspection would cost {total}: {evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice.",
+      "limit": "What is hidden can be claimed for {years} years. An inspection also costs {status} status, and ends it all."
     }
   },
   "resolve": {
@@ -629,7 +653,9 @@
     "businessClosed": "Your business has closed: {name}.",
     "businessClosedHint": "There was nothing left in it.",
     "skill": "{skill} up: level {level}.",
-    "repair": "Repair for your {item}: {amount}."
+    "repair": "Repair for your {item}: {amount}.",
+    "audit": "Tax inspection: you pay {amount}.",
+    "auditHint": "{evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice. Nothing is hidden any more."
   },
   "profile": {
     "title": "Your life",
@@ -895,7 +921,13 @@
     "setBusiness": "Change how {name} is run",
     "tendBusiness": "Give your focus to {name}",
     "sellBusiness": "Sell {name}",
-    "buyUsedItem": "Buy {item} second hand"
+    "buyUsedItem": "Buy {item} second hand",
+    "buyNoInvoiceItem": "Buy {item} without an invoice",
+    "evasionBlack": "Pay under the table: {pct}%",
+    "evasionShellOn": "Open an offshore company",
+    "evasionShellOff": "Close the offshore company",
+    "evasionCryptoOn": "Hide crypto gains",
+    "evasionCryptoOff": "Declare crypto gains"
   },
   "account": {
     "title": "Account",

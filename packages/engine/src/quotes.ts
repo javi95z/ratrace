@@ -5,7 +5,7 @@ import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, overtimeOf, soldIn, usedTerms } from './life/orders';
+import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
 import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
@@ -14,8 +14,9 @@ import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
+import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StudyAction, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StudyAction, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -117,6 +118,10 @@ export interface ItemQuote {
   used: UsedQuote | null;
   /** True if the one the player owns was bought second hand. */
   ownedUsed: boolean;
+  /** The terms of buying it without an invoice today, or null where it is not sold so or is owned already. */
+  noInvoice: { price: Cents; resale: Cents; discountPct: number; lock: RejectReason | null } | null;
+  /** True if the one the player owns was bought without an invoice. */
+  ownedNoInvoice: boolean;
 }
 
 export interface UsedQuote {
@@ -156,6 +161,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   // Nothing is sold twice: there are no terms for what the player already owns.
   const plan = held ? null : itemFinance(item, content, world);
   const second = held || item.cardOnly === true || !soldIn(item, view.player.cityId) ? null : usedTerms(item, content, world);
+  const blank = held || !soldIn(item, view.player.cityId) ? null : noInvoiceTerms(item, content, world);
   const rateBp = personalLoanRateBp(content, world);
   const termRounds = content.debt.personalLoanTermRounds;
   const years = content.yearsPerRound;
@@ -197,6 +203,8 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
             lock: second.price > view.player.cash ? 'not-enough-cash' : null,
           },
     ownedUsed: held?.used === true,
+    noInvoice: blank === null ? null : { ...blank, discountPct: content.evasion.noInvoiceDiscountPct, lock: blank.price > view.player.cash ? 'not-enough-cash' : null },
+    ownedNoInvoice: held?.noInvoice === true,
   };
 }
 
@@ -633,5 +641,59 @@ export function quoteSkills(content: Content, view: GameView): SkillsQuote {
     }),
     // A level a card gave is where the count starts, though the points may be short of it.
     finance: { level: life.financeSkill, points: Math.max(life.financePoints, pointsOfLevel(life.financeSkill, content)), ...step(life.financeSkill), practice: investing ? rules.skills.investingPoints : 0 },
+  };
+}
+
+export interface EvasionQuote {
+  blackPct: number;
+  shell: boolean;
+  hideCrypto: boolean;
+  /** The shares of salary that may go under the table, and whether there is a salary to take them from. */
+  blackPcts: number[];
+  canBlack: boolean;
+  /** Why an offshore company may not be opened, or null; its yearly fee today, and the share of investment tax it saves. */
+  shellLock: RejectReason | null;
+  shellFeeAnnual: Cents;
+  shellTaxCutPct: number;
+  /** Suspicion now, what this round adds or takes, and the chance of an inspection when it is played. */
+  suspicion: number;
+  suspicionAfter: number;
+  auditChancePct: number;
+  /** What an inspection would take once this round is played: the tax evaded and not yet past the limit, its fine, and the goods. */
+  bill: { evaded: Cents; fine: Cents; goods: Cents; total: Cents };
+  /** What this round hides, by way of hiding it. */
+  evaded: Evaded;
+  /** Years after which evaded tax can no longer be claimed. */
+  limitationYears: number;
+}
+
+/**
+ * What the player hides from the tax office and what it risks, as this round will play: `evaded`
+ * and `noInvoiceSold` are the preview's, so the figures follow the orders given so far.
+ */
+export function quoteEvasion(content: Content, view: GameView, evaded: Evaded, noInvoiceSold: number): EvasionQuote {
+  const p = view.player;
+  const rules = content.evasion;
+  const state = p.life.evasion;
+  const world = view.timeline[view.round];
+  const after = suspicionAfter(content, p, evaded, noInvoiceSold, view.round);
+  // The bill as it would stand after this round: what is past the limit falls away, and this round's evasion is added.
+  const kept = state.evaded.filter((entry) => entry.round + rules.limitationRounds > view.round);
+  const later = { ...p, life: { ...p.life, evasion: { ...state, evaded: [...kept, ...(evaded.total > 0 ? [{ round: view.round, amount: evaded.total }] : [])] } } };
+  return {
+    blackPct: state.blackPct,
+    shell: state.shell,
+    hideCrypto: state.hideCrypto,
+    blackPcts: [...rules.blackPcts],
+    canBlack: p.life.career !== null,
+    shellLock: state.shell || p.life.financeSkill >= rules.shellMinFinanceSkill ? null : 'needs-finance-skill',
+    shellFeeAnnual: indexed(rules.shellFeeAnnual, world),
+    shellTaxCutPct: rules.shellTaxCutPct,
+    suspicion: state.suspicion,
+    suspicionAfter: after,
+    auditChancePct: auditChance(content, after),
+    bill: auditBill(content, later),
+    evaded,
+    limitationYears: rules.limitationRounds * content.yearsPerRound,
   };
 }

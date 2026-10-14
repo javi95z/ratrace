@@ -3,7 +3,7 @@
 import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
-import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
+import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -16,6 +16,7 @@ import { BusinessTab } from './Business';
 import { Payouts, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
+import { EvasionPanel } from './Evasion';
 import { ItemUses } from './ItemUses';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
@@ -993,6 +994,27 @@ function SecondHand({ used, onBought }: { used: UsedQuote; onBought(): void }) {
   );
 }
 
+/**
+ * The same thing without an invoice, set off by a rule: cheaper, in cash, and a question asked when
+ * it is sold or the tax office inspects.
+ */
+function NoInvoice({ offer, onBought }: { offer: NonNullable<ItemQuote['noInvoice']>; onBought(): void }) {
+  const t = useT('finance.shop');
+  const { content, text, fmt } = useWords();
+  return (
+    <section aria-label={t('noInvoiceTitle')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
+      <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-200">{t('noInvoiceTitle')}</p>
+      <p className="text-center text-[13px] leading-snug text-ink-300">
+        {t('noInvoiceRisk', { pct: offer.discountPct, suspicion: content.evasion.noInvoiceSaleSuspicion, goods: content.evasion.auditGoodsPct })}
+      </p>
+      <Button wide disabled={offer.lock !== null} onClick={onBought}>
+        {t('buyNoInvoice', { amount: fmt.money(offer.price) })}
+      </Button>
+      {offer.lock !== null ? <p className="text-center text-[13px] text-wine-300">{text.reasons[offer.lock]}</p> : null}
+    </section>
+  );
+}
+
 function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
   const t = useT('finance.shop');
   const common = useT('common');
@@ -1065,6 +1087,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
               </div>
             ) : null}
             {quote.used ? <SecondHand used={quote.used} onBought={() => done(addOrder({ type: 'buyItem', itemId: item.id, used: true }))} /> : null}
+            {quote.noInvoice ? <NoInvoice offer={quote.noInvoice} onBought={() => done(addOrder({ type: 'buyItem', itemId: item.id, noInvoice: true }))} /> : null}
           </>
         ) : (
           <p className="text-center text-[14px] text-ink-300">{t('cardOnly')}</p>
@@ -1135,7 +1158,7 @@ function Shop() {
 function Taxes() {
   const t = useT('finance.taxes');
   const { text, fmt } = useWords();
-  const { preview, p } = useRound();
+  const { preview, p, shown } = useRound();
   const line = (label: ReactNode, amount: number, key: string) => (amount === 0 ? null : <Row key={key} left={label} right={fmt.signed(amount)} />);
   const { income, expenses, tax, escape } = preview;
 
@@ -1160,6 +1183,7 @@ function Taxes() {
         <Row left={t('propertyTax')} right={fmt.signed(-tax.property)} />
         {preview.purchaseTaxPaid > 0 ? <Row left={t('purchaseTax')} right={fmt.signed(-preview.purchaseTaxPaid)} /> : null}
       </Panel>
+      <EvasionPanel shown={shown} preview={preview} />
       <Panel>
         <Row left={t('cashNow')} right={fmt.money(p.cash)} />
         <Row left={<span className="pixel text-[17px]">{t('cashAfter')}</span>} right={<span className={`text-[19px] ${preview.cashAfter < 0 ? 'text-wine-300' : 'text-gold-500'}`}>{fmt.money(preview.cashAfter)}</span>} />

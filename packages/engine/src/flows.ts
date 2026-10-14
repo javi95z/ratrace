@@ -5,7 +5,8 @@ import type { Cents } from './money';
 import { indexed } from './rates';
 import { computeTax, effectiveTax } from './tax';
 import type { TaxBill } from './tax';
-import type { Content, PlayerState, RoundTally, WorldState } from './types';
+import { declaredTax } from './evasion';
+import type { Content, Evaded, PlayerState, RoundTally, WorldState } from './types';
 
 export interface Flows {
   income: RoundIncome;
@@ -19,6 +20,8 @@ export interface Flows {
    */
   escape: { passiveAfterTax: Cents; outgoings: Cents };
   bill: TaxBill;
+  /** What the bill leaves out that the honest one would have had, by way of leaving it out. */
+  evaded: Evaded;
 }
 
 /**
@@ -41,16 +44,19 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
     rent: income.rent,
     propertyValueOwned,
   };
-  const bill = computeTax(tax, median, content.yearsPerRound, {
-    ...earned,
-    salary: income.salary,
-    pensionContribution: tally.pensionContribution,
-    realisedGains: tally.realisedGains,
-  });
+  // The tax as declared: what is hidden from the office is left out of it.
+  const { bill, evaded } = declaredTax(
+    content,
+    p,
+    tax,
+    median,
+    { ...earned, salary: income.salary, pensionContribution: tally.pensionContribution, realisedGains: tally.realisedGains },
+    tally.realisedCryptoGains,
+  );
   // The same income with no salary and nothing sold: the tax a life of leisure would pay.
   const idle = computeTax(tax, median, content.yearsPerRound, { ...earned, salary: 0, pensionContribution: 0, realisedGains: 0 });
   const passive = passiveOf(income);
   const outgoings = outgoingsOf(expenses);
   const escape = { passiveAfterTax: passive - idle.income - idle.investment, outgoings: outgoings + idle.property };
-  return { income, expenses, passive, outgoings, escape, bill };
+  return { income, expenses, passive, outgoings, escape, bill, evaded };
 }

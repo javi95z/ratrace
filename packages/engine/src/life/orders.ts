@@ -124,7 +124,8 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
   if (item.cardOnly === true) return 'not-for-sale';
   if (!soldIn(item, p.cityId)) return 'not-sold-here';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
-  if (order.used === true) return buyUsed(p, item, ctx, order.financed === true);
+  if (order.used === true) return order.noInvoice === true ? 'not-sold-without-invoice' : buyUsed(p, item, ctx, order.financed === true);
+  if (order.noInvoice === true) return buyWithoutInvoice(p, item, ctx, order.financed === true);
   const { price, resale } = itemTerms(item, ctx.world);
   if (order.financed === true) {
     const plan = itemFinance(item, ctx.content, ctx.world);
@@ -143,6 +144,34 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
     age: 0,
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
+  return null;
+}
+
+/** True where a thing is sold without an invoice: only new, only in the ladders the rules name. */
+export function soldWithoutInvoice(item: ItemDef, content: Content): boolean {
+  return item.kind === 'durable' && item.cardOnly !== true && content.evasion.noInvoiceLadders.includes(item.ladder);
+}
+
+/**
+ * What a thing costs without an invoice today, and what it is worth the moment it is bought, or
+ * null where it is not sold so. Worth the same share of what it cost as one bought properly.
+ */
+export function noInvoiceTerms(item: ItemDef, content: Content, world: WorldState): { price: Cents; resale: Cents } | null {
+  if (!soldWithoutInvoice(item, content)) return null;
+  const price = mulDiv(itemTerms(item, world).price, 100 - content.evasion.noInvoiceDiscountPct, 100);
+  return { price, resale: mulDiv(price, item.resaleStartPct, 100) };
+}
+
+/** Buys a thing without an invoice: in cash, cheaper, and marked, so that a sale or an inspection asks about it. */
+function buyWithoutInvoice(p: PlayerState, item: ItemDef, ctx: OrderContext, financed: boolean): RejectReason | null {
+  const terms = noInvoiceTerms(item, ctx.content, ctx.world);
+  if (terms === null) return 'not-sold-without-invoice';
+  if (financed) return 'cannot-finance';
+  if (terms.price > p.cash) return 'not-enough-cash';
+  p.cash -= terms.price;
+  ctx.tally.itemsBought += terms.price;
+  p.life.items.push({ itemId: item.id, value: terms.resale, roundsLeft: null, paid: terms.price, age: 0, noInvoice: true });
+  if (!p.life.collection.includes(item.id)) p.life.collection.push(item.id);
   return null;
 }
 
@@ -194,6 +223,8 @@ function executeSellItem(p: PlayerState, itemId: string, ctx: OrderContext): Rej
   if (!canSellItem(ctx.content, owned)) return 'cannot-sell';
   p.cash += owned.value;
   ctx.tally.itemsSold += owned.value;
+  // A buyer asks where something bought without an invoice came from.
+  if (owned.noInvoice === true) ctx.tally.noInvoiceSold += 1;
   p.life.items.splice(index, 1);
   return null;
 }

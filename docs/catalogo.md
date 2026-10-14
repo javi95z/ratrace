@@ -741,6 +741,19 @@ Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durant
 
 <img src="../art/clean/icons/icon.single.png" alt=""> <img src="../art/clean/icons/icon.dating.png" alt=""> <img src="../art/clean/icons/icon.partner.png" alt=""> <img src="../art/clean/icons/icon.married.png" alt=""> <img src="../art/clean/icons/icon.baby.png" alt=""> <img src="../art/clean/icons/icon.child.png" alt=""> <img src="../art/clean/icons/icon.teen.png" alt=""> <img src="../art/clean/icons/icon.family_four.png" alt="">
 
+## Lo que no se declara
+
+Cada forma de ocultar algo a Hacienda ahorra impuestos esa ronda y suma sospecha. Al jugar cada ronda, la probabilidad de una inspección es la sospecha misma, hasta un tope. Sin ocultar nada, la sospecha baja.
+
+| Forma | Qué ahorra | Sospecha | Notas |
+| --- | --- | --- | --- |
+| Sueldo en negro | El IRPF de esa parte del sueldo | 25 %: +6, 50 %: +12 por ronda | Hace falta trabajo |
+| Sociedad en un paraíso fiscal | El 80 % del impuesto de las inversiones | +8 por ronda | Cultura financiera 3; cuota de 6.000 $ al año |
+| No declarar la cripto | El impuesto de las ganancias en cripto | +6 por ronda con ganancias; el doble desde los 38 años | Los exchanges informan a Hacienda |
+| Comprar sin factura | Un 20 % del precio | +15 al venderlo | Arte y Relojes |
+
+La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección nunca pasa del 60 %. Una inspección cobra lo ocultado en los últimos 4 años más un 50 % de multa y el 30 % del valor de lo comprado sin factura; resta 8 de estatus y lo cancela todo.
+
 ## Cartas
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.

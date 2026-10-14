@@ -1,5 +1,6 @@
 import { executeBusinessOrder } from './business';
 import { executeBorrow, executeRepay } from './debt';
+import { executeSetEvasion } from './evasion';
 import { executeLifeOrder } from './life/orders';
 import { executePortfolioOrder, executeSetPlan } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
@@ -30,6 +31,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'setRentTier',
   'setInsurance',
   'moveCity',
+  'setEvasion',
 ]);
 
 const isText = (x: unknown): x is string => typeof x === 'string';
@@ -56,7 +58,7 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
     case 'focus':
       return isText(fields.action);
     case 'buyItem':
-      return isText(fields.itemId) && (fields.financed === undefined || isFlag(fields.financed));
+      return isText(fields.itemId) && [fields.financed, fields.used, fields.noInvoice].every((flag) => flag === undefined || isFlag(flag));
     case 'sellItem':
       return isText(fields.itemId);
     case 'setInsurance':
@@ -73,6 +75,8 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
       return isText(fields.businessId) && (fields.manager === undefined || isFlag(fields.manager)) && (fields.payoutPct === undefined || typeof fields.payoutPct === 'number');
     case 'moveCity':
       return isText(fields.cityId);
+    case 'setEvasion':
+      return (fields.blackPct === undefined || typeof fields.blackPct === 'number') && [fields.shell, fields.hideCrypto].every((flag) => flag === undefined || isFlag(flag));
     default:
       return true;
   }
@@ -127,5 +131,7 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'setInsurance':
     case 'moveCity':
       return executeLifeOrder(p, order, ctx);
+    case 'setEvasion':
+      return executeSetEvasion(p, order, ctx);
   }
 }

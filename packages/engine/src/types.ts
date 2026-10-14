@@ -16,6 +16,63 @@ export type SkillId = (typeof SKILLS)[number];
 export type SkillLevel = 0 | 1 | 2 | 3;
 
 /**
+ * What not paying tax is worth, and what it risks. Every way of doing it saves tax this round and
+ * raises suspicion; each round an inspection may come, as likely as the suspicion is high, and it
+ * takes back every evasion not yet past the time limit, with a fine, and the player's good name.
+ */
+export interface EvasionRules {
+  /** The shares of salary that may be taken under the table, in percent. The first is nothing. */
+  blackPcts: readonly number[];
+  /** Suspicion a round from taking pay under the table: this many points for every full share of a hundred. */
+  blackSuspicionPer100: number;
+  /** An offshore company: the money sense it takes, its yearly fee in start-of-game dollars, the share of investment tax it saves, and the suspicion it draws each round. */
+  shellMinFinanceSkill: FinanceSkill;
+  shellFeeAnnual: Cents;
+  shellTaxCutPct: number;
+  shellSuspicion: number;
+  /** Suspicion a round in which crypto gains go undeclared, and the round from which the exchanges report, doubling it. */
+  cryptoSuspicion: number;
+  cryptoReportRound: number;
+  /** The ladders whose things are sold without an invoice, and the discount for paying that way. */
+  noInvoiceLadders: readonly string[];
+  noInvoiceDiscountPct: number;
+  /** Suspicion when something bought without an invoice is sold: the buyer asks where it came from. */
+  noInvoiceSaleSuspicion: number;
+  /** Suspicion lost each round with nothing hidden. */
+  suspicionDecay: number;
+  /** The chance of an inspection never passes this, in percent, however high the suspicion. */
+  auditMaxPct: number;
+  /** An inspection: the fine on the tax evaded, in percent of it; the share of the value of things bought without an invoice taken; and the status lost. */
+  auditFinePct: number;
+  auditGoodsPct: number;
+  auditStatus: number;
+  /** Rounds after which evaded tax can no longer be claimed. */
+  limitationRounds: number;
+}
+
+/** What the player hides from the tax office, and how much the office suspects. */
+export interface EvasionState {
+  /** The share of salary taken under the table, in percent. */
+  blackPct: number;
+  /** True while an offshore company holds the player's investments. */
+  shell: boolean;
+  /** True while gains on crypto go undeclared. */
+  hideCrypto: boolean;
+  /** From 0 to 100. */
+  suspicion: number;
+  /** Tax not paid, round by round, until it is claimed or past the time limit. */
+  evaded: Array<{ round: number; amount: Cents }>;
+}
+
+/** What a round hid from the tax office, by way of hiding it. */
+export interface Evaded {
+  black: Cents;
+  shell: Cents;
+  crypto: Cents;
+  total: Cents;
+}
+
+/**
  * Buying a thing second hand: cheaper, already some rounds old, and each round it may need a repair.
  * What it fetches on the day is its price less the dealer's usual margin, as for a new one.
  */
@@ -641,6 +698,7 @@ export interface Content {
   business: BusinessRules;
   items: ReadonlyArray<ItemDef>;
   life: LifeRules;
+  evasion: EvasionRules;
   world: WorldRules;
   /** The crises a game may have. Empty for a world without any. */
   crises: ReadonlyArray<CrisisDef>;
@@ -724,6 +782,8 @@ export interface OwnedItem {
   age: number;
   /** True for a thing bought second hand: older on the day, and now and then in need of a repair. */
   used?: boolean;
+  /** True for a thing bought without an invoice: cheaper, and a question when it is sold or inspected. */
+  noInvoice?: boolean;
 }
 
 export interface Recurring {
@@ -751,6 +811,8 @@ export interface LifeState {
   financeSkill: FinanceSkill;
   /** Points in each of the other skills. */
   skills: Record<SkillId, number>;
+  /** What is hidden from the tax office, and how much it suspects. */
+  evasion: EvasionState;
   /** The city the life began in: anywhere else, its language is practised. */
   homeCityId: string;
   /** Rounds in which the player held an investment. */
@@ -876,7 +938,9 @@ export type Order =
   | { type: 'sellProperty'; propertyId: string }
   | { type: 'setRented'; propertyId: string; rented: boolean }
   | { type: 'focus'; action: FocusAction }
-  | { type: 'buyItem'; itemId: string; financed?: boolean; used?: boolean }
+  | { type: 'buyItem'; itemId: string; financed?: boolean; used?: boolean; noInvoice?: boolean }
+  /** What is hidden from the tax office from this round on. What is left out stays as it is. */
+  | { type: 'setEvasion'; blackPct?: number; shell?: boolean; hideCrypto?: boolean }
   | { type: 'sellItem'; itemId: string }
   | { type: 'setLifestyle'; tier: LifestyleTier }
   | { type: 'setRentTier'; tier: RentTier }
@@ -907,6 +971,10 @@ export interface RoundTally {
   itemsBought: Cents;
   itemsSold: Cents;
   movingCost: Cents;
+  /** The part of `realisedGains` made on crypto. */
+  realisedCryptoGains: Cents;
+  /** Things bought without an invoice sold this round: each one is a question asked. */
+  noInvoiceSold: number;
   /** Businesses sold by order this round, for the record of the round. */
   businessesSold: Array<{ typeId: string; capital: Cents; price: Cents }>;
 }
@@ -960,6 +1028,8 @@ export type RejectReason =
   | 'already-owned'
   | 'cannot-finance'
   | 'not-sold-used'
+  | 'not-sold-without-invoice'
+  | 'bad-share'
   | 'not-owned'
   | 'cannot-sell'
   | 'bad-tier'
@@ -991,7 +1061,8 @@ export type LedgerLine =
   | 'creditCardRepay'
   | 'business'
   | 'dividendsReinvested'
-  | 'repairs';
+  | 'repairs'
+  | 'taxAudit';
 
 /**
  * What happened in a round. Ledger amounts are signed from the point of view of the player's cash:
@@ -1020,6 +1091,8 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
   | { kind: 'skill'; skill: SkillId; level: SkillLevel }
+  /** The tax office inspected: the tax evaded and its fine, and what was taken of things bought without an invoice. */
+  | { kind: 'audit'; evaded: Cents; fine: Cents; goods: Cents }
   /** Something bought second hand needed a repair, paid this round. */
   | { kind: 'repair'; itemId: string; amount: Cents }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */

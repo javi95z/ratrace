@@ -241,6 +241,27 @@ export function validateContent(c: Content): string[] {
     }
   }
   if (![0, 1, 2].includes(life.rentOutMinFinanceSkill as number)) errors.push('life.rentOutMinFinanceSkill must be 0, 1 or 2');
+  const evasion = c.evasion as unknown as Record<string, unknown>;
+  if (!isRecord(evasion)) errors.push('evasion must be a record');
+  else {
+    const shares = evasion.blackPcts as unknown;
+    if (!(Array.isArray(shares) && shares[0] === 0 && shares.every((x, i) => isWhole(x) && x >= 0 && x < 100 && (i === 0 || x > shares[i - 1])))) {
+      errors.push('evasion.blackPcts must start at 0 and rise in whole percentages below 100');
+    }
+    for (const field of ['blackSuspicionPer100', 'shellFeeAnnual', 'shellSuspicion', 'cryptoSuspicion', 'cryptoReportRound', 'noInvoiceSaleSuspicion', 'suspicionDecay', 'limitationRounds']) {
+      if (!isCount(evasion[field])) errors.push(`evasion.${field} must be a whole, non-negative number`);
+    }
+    for (const field of ['shellTaxCutPct', 'noInvoiceDiscountPct', 'auditMaxPct', 'auditGoodsPct']) {
+      if (!(isWhole(evasion[field]) && within(evasion[field], 0, 100))) errors.push(`evasion.${field} must be a whole number from 0 to 100`);
+    }
+    if (!isCount(evasion.auditFinePct)) errors.push('evasion.auditFinePct must be a whole, non-negative number');
+    if (!(isWhole(evasion.auditStatus) && (evasion.auditStatus as number) <= 0)) errors.push('evasion.auditStatus must be a whole number, zero or less');
+    if (![0, 1, 2, 3].includes(evasion.shellMinFinanceSkill as number)) errors.push('evasion.shellMinFinanceSkill must be 0, 1, 2 or 3');
+    for (const ladder of Array.isArray(evasion.noInvoiceLadders) ? evasion.noInvoiceLadders : [null]) {
+      const things = c.items.filter((item) => item.ladder === ladder);
+      if (things.length === 0 || things.some((item) => item.kind !== 'durable')) errors.push(`evasion.noInvoiceLadders names a ladder that is not one of durables: ${String(ladder)}`);
+    }
+  }
   const used = life.used;
   if (!isRecord(used)) errors.push('life.used must be a record');
   else {

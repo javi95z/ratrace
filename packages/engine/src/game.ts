@@ -7,6 +7,7 @@ import { assertInvariants, assertViewInvariants } from './invariants';
 import { answerNext, answerRest, drawHand } from './life/cards';
 import { careerSwing, refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
+import { settleEvasion } from './evasion';
 import { repairUsed } from './life/orders';
 import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
@@ -17,21 +18,7 @@ import { growProperties } from './property';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
 import type { TaxBill } from './tax';
-import type {
-  CardPicks,
-  Content,
-  GameConfig,
-  GameEvent,
-  GameState,
-  GameView,
-  LedgerLine,
-  OrderContext,
-  PlayerState,
-  RejectReason,
-  RoundChoices,
-  RoundTally,
-  WorldState,
-} from './types';
+import type { CardPicks, Content, Evaded, GameConfig, GameEvent, GameState, GameView, LedgerLine, OrderContext, PlayerState, RejectReason, RoundChoices, RoundTally, WorldState } from './types';
 import { validateContent, validateStart } from './validate';
 import { generateTimeline } from './world';
 
@@ -155,6 +142,10 @@ export interface RoundPreview {
   expenses: Pick<RoundExpenses, 'living' | 'other' | 'debtInterest' | 'debtPrincipal'>;
   /** The tax bill at resolve. It is exact, not an estimate. */
   tax: TaxBill;
+  /** What that bill leaves out that the honest one would have had. */
+  evaded: Evaded;
+  /** Things bought without an invoice that the orders sell: each one a question asked. */
+  noInvoiceSold: number;
   /** Property purchase tax the orders paid from cash. */
   purchaseTaxPaid: Cents;
   /** Cash after income, expenses and tax. If negative, the deposit and then the credit card cover it. */
@@ -213,7 +204,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
   const { tally, rejected, plans } = executeChoices(content, player, now, state.round, choices);
-  const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, player, now, tally);
+  const { income, expenses, passive, outgoings, escape, bill, evaded } = flowsOf(content, player, now, tally);
   const cashAfter = player.cash + income.salary + passive - outgoings - bill.total;
   // The same rule the round then follows: all of it, if the cash is there once the bills are met.
   const reinvested = player.reinvest && income.dividends > 0 && cashAfter >= income.dividends ? income.dividends : 0;
@@ -227,6 +218,8 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
       debtPrincipal: expenses.debtPrincipal,
     },
     tax: bill,
+    evaded,
+    noInvoiceSold: tally.noInvoiceSold,
     purchaseTaxPaid: tally.purchaseTaxPaid,
     cashAfter: cashAfter - reinvested,
     reinvested,
@@ -276,7 +269,7 @@ export function applyRound(
   // The status this round was lived with: after the cards and the orders, before anything ages.
   p.statusSum += p.statusPoints;
 
-  const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content, p, now, tally);
+  const { income, expenses, passive, outgoings, escape, bill, evaded } = flowsOf(content, p, now, tally);
   const paid = dividendsByAsset(p, content, now);
 
   growPortfolio(p, content, now, after);
@@ -295,6 +288,8 @@ export function applyRound(
     repaired += repair.amount;
     events.push({ kind: 'repair', ...repair });
   }
+  // What was hidden from the tax office is written down, and an inspection may come for it.
+  const audited = settleEvasion(content, p, evaded, tally.noInvoiceSold, next.round, rng, events);
   // After every bill of the round, and before spare cash goes to the credit card: the player asked for this first.
   const reinvested = reinvestDividends(p, paid);
   // The round's prices are in: a holding bought with borrowed money that has fallen too far is sold now, loan first.
@@ -324,6 +319,7 @@ export function applyRound(
     ['creditCardRepay', -settled.repaid],
     ['dividendsReinvested', -reinvested],
     ['repairs', -repaired],
+    ['taxAudit', -audited],
   ];
   for (const [line, amount] of lines) {
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });

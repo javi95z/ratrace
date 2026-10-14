@@ -1,6 +1,7 @@
 import { openBusiness } from './business';
 import { newId } from './ids';
 import { focusBonusOf, refreshDerived } from './life/derive';
+import { honestEvasion } from './evasion';
 import { pointsOfLevel } from './life/skills';
 import { propertyPrice } from './property';
 import { indexed } from './rates';
@@ -23,6 +24,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     financeSkill: from?.financeSkill ?? 0,
     skills: Object.fromEntries(SKILLS.map((skill) => [skill, from?.skills?.[skill] ?? 0])) as LifeState['skills'],
     homeCityId: start.cityId,
+    evasion: honestEvasion(),
     investedRounds: 0,
     financePoints: pointsOfLevel(from?.financeSkill ?? 0, content),
     focusBase: from?.focus ?? DEFAULT_FOCUS,

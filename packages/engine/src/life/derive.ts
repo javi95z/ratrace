@@ -112,6 +112,8 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
     total += kind === 'health' ? mulDiv(premium, Math.max(0, 100 - skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct), 100) : premium;
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
+  // An offshore company has its fee, year after year, whatever it saves.
+  if (life.evasion.shell) total += content.evasion.shellFeeAnnual;
   for (const entry of life.recurring) {
     if (entry.kind === 'expense') total += entry.annual;
   }

@@ -287,6 +287,25 @@ say(
 );
 
 // ---------------------------------------------------------------------------------------------
+{
+  const e = content.evasion;
+  say(
+    '## Lo que no se declara',
+    'Cada forma de ocultar algo a Hacienda ahorra impuestos esa ronda y suma sospecha. Al jugar cada ronda, la probabilidad de una inspección es la sospecha misma, hasta un tope. Sin ocultar nada, la sospecha baja.',
+    table(
+      ['Forma', 'Qué ahorra', 'Sospecha', 'Notas'],
+      [
+        ['Sueldo en negro', 'El IRPF de esa parte del sueldo', `${e.blackPcts.slice(1).map((pct) => `${pct} %: +${Math.floor((pct * e.blackSuspicionPer100) / 100)}`).join(', ')} por ronda`, 'Hace falta trabajo'],
+        ['Sociedad en un paraíso fiscal', `El ${e.shellTaxCutPct} % del impuesto de las inversiones`, `+${e.shellSuspicion} por ronda`, `Cultura financiera ${e.shellMinFinanceSkill}; cuota de ${usd(e.shellFeeAnnual)} al año`],
+        ['No declarar la cripto', 'El impuesto de las ganancias en cripto', `+${e.cryptoSuspicion} por ronda con ganancias; el doble desde los ${START_AGE + e.cryptoReportRound * content.yearsPerRound} años`, 'Los exchanges informan a Hacienda'],
+        ['Comprar sin factura', `Un ${e.noInvoiceDiscountPct} % del precio`, `+${e.noInvoiceSaleSuspicion} al venderlo`, e.noInvoiceLadders.map((ladder) => text.ladders[ladder]).join(' y ')],
+      ],
+    ),
+    `La sospecha baja ${e.suspicionDecay} por ronda sin ocultar nada, y la probabilidad de inspección nunca pasa del ${e.auditMaxPct} %. Una inspección cobra lo ocultado en los últimos ${e.limitationRounds * content.yearsPerRound} años más un ${e.auditFinePct} % de multa y el ${e.auditGoodsPct} % del valor de lo comprado sin factura; resta ${-e.auditStatus} de estatus y lo cancela todo.`,
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
 say('## Cartas', `Cada ronda reparte ${content.life.cardsPerRound}. La primera opción de cada carta es la que no cuesta ni compra nada.`);
 const categories = [...new Set(content.cards.map((card) => card.category))];
 for (const category of categories) {

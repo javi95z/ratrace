@@ -332,6 +332,7 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
           {quote.status < quote.statusNew ? <Tag>{shop('statusWas', { n: quote.statusNew })}</Tag> : null}
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {quote.ownedUsed ? <Tag>{shop('usedTag')}</Tag> : null}
+          {quote.ownedNoInvoice ? <Tag tone="bad">{shop('noInvoiceTag')}</Tag> : null}
         </div>
         {quote.ownedUsed ? <p className="text-center text-[13px] text-ink-300">{shop('usedOwned', { pct: content.life.used[item.ladder]?.repairChancePct ?? 0 })}</p> : null}
         <ItemUses item={item} />

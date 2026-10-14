@@ -105,6 +105,7 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
       const basisSold =
         order.amount === held.value ? held.basis : Math.min(held.basis, mulDiv(held.basis, order.amount, held.value));
       ctx.tally.realisedGains += order.amount - basisSold;
+      if (ctx.content.assets.some((a) => a.id === order.assetId && a.class === 'crypto')) ctx.tally.realisedCryptoGains += order.amount - basisSold;
       p.cash += order.amount;
       if (order.amount === held.value) {
         delete p.positions[order.assetId];

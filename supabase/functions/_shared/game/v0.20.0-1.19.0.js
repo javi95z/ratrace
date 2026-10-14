@@ -605,6 +605,7 @@ function deriveExpenses(p, content2) {
     total += kind === "health" ? mulDiv(premium, Math.max(0, 100 - skillLevel(p, "health", content2) * rules.skills.healthPremiumOffPct), 100) : premium;
   }
   for (const owned of life2.items) total += itemOf(content2, owned.itemId).upkeepAnnual;
+  if (life2.evasion.shell) total += content2.evasion.shellFeeAnnual;
   for (const entry of life2.recurring) {
     if (entry.kind === "expense") total += entry.annual;
   }
@@ -728,7 +729,8 @@ function executeBuyItem(p, order, ctx) {
   if (item.cardOnly === true) return "not-for-sale";
   if (!soldIn(item, p.cityId)) return "not-sold-here";
   if (p.life.items.some((owned) => owned.itemId === itemId)) return "already-owned";
-  if (order.used === true) return buyUsed(p, item, ctx, order.financed === true);
+  if (order.used === true) return order.noInvoice === true ? "not-sold-without-invoice" : buyUsed(p, item, ctx, order.financed === true);
+  if (order.noInvoice === true) return buyWithoutInvoice(p, item, ctx, order.financed === true);
   const { price, resale } = itemTerms(item, ctx.world);
   if (order.financed === true) {
     const plan = itemFinance(item, ctx.content, ctx.world);
@@ -747,6 +749,25 @@ function executeBuyItem(p, order, ctx) {
     age: 0
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
+  return null;
+}
+function soldWithoutInvoice(item, content2) {
+  return item.kind === "durable" && item.cardOnly !== true && content2.evasion.noInvoiceLadders.includes(item.ladder);
+}
+function noInvoiceTerms(item, content2, world2) {
+  if (!soldWithoutInvoice(item, content2)) return null;
+  const price = mulDiv(itemTerms(item, world2).price, 100 - content2.evasion.noInvoiceDiscountPct, 100);
+  return { price, resale: mulDiv(price, item.resaleStartPct, 100) };
+}
+function buyWithoutInvoice(p, item, ctx, financed) {
+  const terms = noInvoiceTerms(item, ctx.content, ctx.world);
+  if (terms === null) return "not-sold-without-invoice";
+  if (financed) return "cannot-finance";
+  if (terms.price > p.cash) return "not-enough-cash";
+  p.cash -= terms.price;
+  ctx.tally.itemsBought += terms.price;
+  p.life.items.push({ itemId: item.id, value: terms.resale, roundsLeft: null, paid: terms.price, age: 0, noInvoice: true });
+  if (!p.life.collection.includes(item.id)) p.life.collection.push(item.id);
   return null;
 }
 function buyUsed(p, item, ctx, financed) {
@@ -783,6 +804,7 @@ function executeSellItem(p, itemId, ctx) {
   if (!canSellItem(ctx.content, owned)) return "cannot-sell";
   p.cash += owned.value;
   ctx.tally.itemsSold += owned.value;
+  if (owned.noInvoice === true) ctx.tally.noInvoiceSold += 1;
   p.life.items.splice(index, 1);
   return null;
 }
@@ -1154,6 +1176,87 @@ function outgoingsOf(expenses) {
   return expenses.living + expenses.other + expenses.debtInterest + expenses.debtPrincipal;
 }
 
+// packages/engine/src/evasion.ts
+function honestEvasion() {
+  return { blackPct: 0, shell: false, hideCrypto: false, suspicion: 0, evaded: [] };
+}
+function hiding(state) {
+  return state.blackPct > 0 || state.shell || state.hideCrypto;
+}
+function declaredTax(content2, p, tax, median, input, cryptoGains) {
+  const years = content2.yearsPerRound;
+  const state = p.life.evasion;
+  const honest = computeTax(tax, median, years, input);
+  const salary = state.blackPct > 0 ? mulDiv(input.salary, 100 - state.blackPct, 100) : input.salary;
+  const hidden = state.hideCrypto ? Math.max(0, cryptoGains) : 0;
+  const declared = computeTax(tax, median, years, { ...input, salary, realisedGains: input.realisedGains - hidden });
+  const shell = state.shell ? mulDiv(declared.investment, content2.evasion.shellTaxCutPct, 100) : 0;
+  const investment = declared.investment - shell;
+  const bill = { income: declared.income, investment, property: declared.property, total: declared.income + investment + declared.property };
+  const black = Math.max(0, honest.income - declared.income);
+  const crypto = Math.max(0, honest.investment - declared.investment);
+  return { bill, evaded: { black, shell, crypto, total: black + shell + crypto } };
+}
+function executeSetEvasion(p, order, ctx) {
+  const rules = ctx.content.evasion;
+  const state = p.life.evasion;
+  if (order.blackPct !== void 0) {
+    if (!rules.blackPcts.includes(order.blackPct)) return "bad-share";
+    if (order.blackPct > 0 && p.life.career === null) return "no-job";
+  }
+  if (order.shell === true && !state.shell && p.life.financeSkill < rules.shellMinFinanceSkill) return "needs-finance-skill";
+  if (order.blackPct !== void 0) state.blackPct = order.blackPct;
+  if (order.shell !== void 0) state.shell = order.shell;
+  if (order.hideCrypto !== void 0) state.hideCrypto = order.hideCrypto;
+  return null;
+}
+function suspicionGained(content2, p, evaded, noInvoiceSold, round2) {
+  const rules = content2.evasion;
+  const state = p.life.evasion;
+  let gained = Math.floor(state.blackPct * rules.blackSuspicionPer100 / 100);
+  if (state.shell) gained += rules.shellSuspicion;
+  if (evaded.crypto > 0) gained += round2 >= rules.cryptoReportRound ? rules.cryptoSuspicion * 2 : rules.cryptoSuspicion;
+  return gained + noInvoiceSold * rules.noInvoiceSaleSuspicion;
+}
+function suspicionAfter(content2, p, evaded, noInvoiceSold, round2) {
+  const state = p.life.evasion;
+  const gained = suspicionGained(content2, p, evaded, noInvoiceSold, round2);
+  return Math.min(100, gained > 0 || hiding(state) ? state.suspicion + gained : Math.max(0, state.suspicion - content2.evasion.suspicionDecay));
+}
+function auditChance(content2, suspicion) {
+  return Math.min(content2.evasion.auditMaxPct, Math.max(0, suspicion));
+}
+function auditBill(content2, p) {
+  const rules = content2.evasion;
+  let evaded = 0;
+  for (const entry of p.life.evasion.evaded) evaded += entry.amount;
+  let goods = 0;
+  for (const owned of p.life.items) if (owned.noInvoice === true) goods += mulDiv(owned.value, rules.auditGoodsPct, 100);
+  const fine = mulDiv(evaded, rules.auditFinePct, 100);
+  return { evaded, fine, goods, total: evaded + fine + goods };
+}
+function settleEvasion(content2, p, evaded, noInvoiceSold, round2, rng, events) {
+  const rules = content2.evasion;
+  const state = p.life.evasion;
+  if (p.life.career === null) state.blackPct = 0;
+  if (evaded.total > 0) state.evaded.push({ round: round2, amount: evaded.total });
+  state.suspicion = suspicionAfter(content2, p, evaded, noInvoiceSold, round2);
+  let taken = 0;
+  if (state.suspicion > 0 && rng.chance(auditChance(content2, state.suspicion))) {
+    const bill = auditBill(content2, p);
+    if (bill.total > 0 || hiding(state)) {
+      taken = bill.total;
+      p.cash -= taken;
+      events.push({ kind: "audit", evaded: bill.evaded, fine: bill.fine, goods: bill.goods });
+      p.life.bonusStatus += rules.auditStatus;
+      Object.assign(state, honestEvasion());
+      for (const owned of p.life.items) delete owned.noInvoice;
+    }
+  }
+  state.evaded = state.evaded.filter((entry) => entry.round + rules.limitationRounds > round2 + 1);
+  return taken;
+}
+
 // packages/engine/src/flows.ts
 function flowsOf(content2, p, now, tally) {
   const income = incomeForRound(p, content2, now);
@@ -1170,17 +1273,19 @@ function flowsOf(content2, p, now, tally) {
     rent: income.rent,
     propertyValueOwned
   };
-  const bill = computeTax(tax, median, content2.yearsPerRound, {
-    ...earned,
-    salary: income.salary,
-    pensionContribution: tally.pensionContribution,
-    realisedGains: tally.realisedGains
-  });
+  const { bill, evaded } = declaredTax(
+    content2,
+    p,
+    tax,
+    median,
+    { ...earned, salary: income.salary, pensionContribution: tally.pensionContribution, realisedGains: tally.realisedGains },
+    tally.realisedCryptoGains
+  );
   const idle = computeTax(tax, median, content2.yearsPerRound, { ...earned, salary: 0, pensionContribution: 0, realisedGains: 0 });
   const passive = passiveOf(income);
   const outgoings = outgoingsOf(expenses);
   const escape = { passiveAfterTax: passive - idle.income - idle.investment, outgoings: outgoings + idle.property };
-  return { income, expenses, passive, outgoings, escape, bill };
+  return { income, expenses, passive, outgoings, escape, bill, evaded };
 }
 
 // packages/engine/src/checks.ts
@@ -1246,6 +1351,14 @@ function lifeBreaks(content2, state) {
       if (!isCount(life2.skills[skill])) breaks.push(`life.skills.${skill} is not a non-negative whole number: ${life2.skills[skill]}`);
     }
   }
+  const evasion2 = life2.evasion;
+  if (typeof evasion2 !== "object" || evasion2 === null) breaks.push("life.evasion is not a record");
+  else {
+    if (!content2.evasion.blackPcts.includes(evasion2.blackPct)) breaks.push(`life.evasion.blackPct is not a share the rules allow: ${evasion2.blackPct}`);
+    if (typeof evasion2.shell !== "boolean" || typeof evasion2.hideCrypto !== "boolean") breaks.push("life.evasion needs shell and hideCrypto to be true or false");
+    if (!(isCount(evasion2.suspicion) && evasion2.suspicion <= 100)) breaks.push(`life.evasion.suspicion is not a whole number from 0 to 100: ${evasion2.suspicion}`);
+    if (!Array.isArray(evasion2.evaded) || evasion2.evaded.some((entry) => !isCount(entry.round) || !isCount(entry.amount) || entry.amount === 0)) breaks.push("life.evasion.evaded holds something other than rounds and positive amounts");
+  }
   if (!content2.cities.some((city) => city.id === life2.homeCityId)) breaks.push(`life.homeCityId is not a known city: ${life2.homeCityId}`);
   if (life2.rentTier !== 0 && life2.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life2.rentTier}`);
   if (![0, 1, 2, 3].includes(life2.minLifestyleTier)) {
@@ -1276,6 +1389,7 @@ function lifeBreaks(content2, state) {
     }
     if (held.used !== void 0 && typeof held.used !== "boolean") breaks.push(`item ${item.id} has a used mark that is not true or false`);
     if (held.used === true && (item.kind !== "durable" || content2.life.used[item.ladder] === void 0)) breaks.push(`item ${item.id} is marked used, and nothing of its kind is sold second hand`);
+    if (held.noInvoice !== void 0 && (held.noInvoice !== true || !content2.evasion.noInvoiceLadders.includes(item.ladder))) breaks.push(`item ${item.id} is marked bought without an invoice, and it is not sold that way`);
     owned.add(item.id);
     if (!isCount(held.age)) breaks.push(`item ${item.id} has an age that is not a non-negative whole number: ${held.age}`);
     if (!isCount(held.paid)) breaks.push(`item ${item.id} was paid for with something that is not a non-negative whole number: ${held.paid}`);
@@ -1822,6 +1936,27 @@ function validateContent(c) {
     }
   }
   if (![0, 1, 2].includes(life2.rentOutMinFinanceSkill)) errors.push("life.rentOutMinFinanceSkill must be 0, 1 or 2");
+  const evasion2 = c.evasion;
+  if (!isRecord(evasion2)) errors.push("evasion must be a record");
+  else {
+    const shares = evasion2.blackPcts;
+    if (!(Array.isArray(shares) && shares[0] === 0 && shares.every((x, i) => isWhole(x) && x >= 0 && x < 100 && (i === 0 || x > shares[i - 1])))) {
+      errors.push("evasion.blackPcts must start at 0 and rise in whole percentages below 100");
+    }
+    for (const field of ["blackSuspicionPer100", "shellFeeAnnual", "shellSuspicion", "cryptoSuspicion", "cryptoReportRound", "noInvoiceSaleSuspicion", "suspicionDecay", "limitationRounds"]) {
+      if (!isCount(evasion2[field])) errors.push(`evasion.${field} must be a whole, non-negative number`);
+    }
+    for (const field of ["shellTaxCutPct", "noInvoiceDiscountPct", "auditMaxPct", "auditGoodsPct"]) {
+      if (!(isWhole(evasion2[field]) && within(evasion2[field], 0, 100))) errors.push(`evasion.${field} must be a whole number from 0 to 100`);
+    }
+    if (!isCount(evasion2.auditFinePct)) errors.push("evasion.auditFinePct must be a whole, non-negative number");
+    if (!(isWhole(evasion2.auditStatus) && evasion2.auditStatus <= 0)) errors.push("evasion.auditStatus must be a whole number, zero or less");
+    if (![0, 1, 2, 3].includes(evasion2.shellMinFinanceSkill)) errors.push("evasion.shellMinFinanceSkill must be 0, 1, 2 or 3");
+    for (const ladder of Array.isArray(evasion2.noInvoiceLadders) ? evasion2.noInvoiceLadders : [null]) {
+      const things = c.items.filter((item) => item.ladder === ladder);
+      if (things.length === 0 || things.some((item) => item.kind !== "durable")) errors.push(`evasion.noInvoiceLadders names a ladder that is not one of durables: ${String(ladder)}`);
+    }
+  }
   const used = life2.used;
   if (!isRecord(used)) errors.push("life.used must be a record");
   else {
@@ -2151,7 +2286,7 @@ function escapeMultiplier(escapedAtRound, rounds, scoring2) {
 
 // packages/engine/src/tally.ts
 function newTally() {
-  return { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0, focusActions: [], itemsBought: 0, itemsSold: 0, movingCost: 0, businessesSold: [] };
+  return { realisedGains: 0, pensionContribution: 0, purchaseTaxPaid: 0, focusActions: [], itemsBought: 0, itemsSold: 0, movingCost: 0, realisedCryptoGains: 0, noInvoiceSold: 0, businessesSold: [] };
 }
 
 // packages/engine/src/selectors.ts
@@ -2706,6 +2841,7 @@ function executePortfolioOrder(p, order, ctx) {
       if (order.amount > held.value) return "exceeds-position";
       const basisSold = order.amount === held.value ? held.basis : Math.min(held.basis, mulDiv(held.basis, order.amount, held.value));
       ctx.tally.realisedGains += order.amount - basisSold;
+      if (ctx.content.assets.some((a) => a.id === order.assetId && a.class === "crypto")) ctx.tally.realisedCryptoGains += order.amount - basisSold;
       p.cash += order.amount;
       if (order.amount === held.value) {
         delete p.positions[order.assetId];
@@ -2794,7 +2930,8 @@ var ORDER_TYPES = /* @__PURE__ */ new Set([
   "setLifestyle",
   "setRentTier",
   "setInsurance",
-  "moveCity"
+  "moveCity",
+  "setEvasion"
 ]);
 var isText = (x) => typeof x === "string";
 var isFlag2 = (x) => typeof x === "boolean";
@@ -2815,7 +2952,7 @@ function hasValidFields(fields) {
     case "focus":
       return isText(fields.action);
     case "buyItem":
-      return isText(fields.itemId) && (fields.financed === void 0 || isFlag2(fields.financed));
+      return isText(fields.itemId) && [fields.financed, fields.used, fields.noInvoice].every((flag) => flag === void 0 || isFlag2(flag));
     case "sellItem":
       return isText(fields.itemId);
     case "setInsurance":
@@ -2832,6 +2969,8 @@ function hasValidFields(fields) {
       return isText(fields.businessId) && (fields.manager === void 0 || isFlag2(fields.manager)) && (fields.payoutPct === void 0 || typeof fields.payoutPct === "number");
     case "moveCity":
       return isText(fields.cityId);
+    case "setEvasion":
+      return (fields.blackPct === void 0 || typeof fields.blackPct === "number") && [fields.shell, fields.hideCrypto].every((flag) => flag === void 0 || isFlag2(flag));
     default:
       return true;
   }
@@ -2879,6 +3018,8 @@ function executeOrder(p, raw, ctx) {
     case "setInsurance":
     case "moveCity":
       return executeLifeOrder(p, order, ctx);
+    case "setEvasion":
+      return executeSetEvasion(p, order, ctx);
   }
 }
 
@@ -2896,6 +3037,7 @@ function newPlayer(content2, start, world2) {
     financeSkill: from?.financeSkill ?? 0,
     skills: Object.fromEntries(SKILLS.map((skill) => [skill, from?.skills?.[skill] ?? 0])),
     homeCityId: start.cityId,
+    evasion: honestEvasion(),
     investedRounds: 0,
     financePoints: pointsOfLevel(from?.financeSkill ?? 0, content2),
     focusBase: from?.focus ?? DEFAULT_FOCUS,
@@ -3283,7 +3425,7 @@ function applyRound(content2, state, choices) {
   for (const { order, reason } of rejected) events.push({ kind: "orderRejected", order, reason });
   for (const plan of plans) events.push({ kind: "planRan", ...plan });
   p.statusSum += p.statusPoints;
-  const { income, expenses, passive, outgoings, escape, bill } = flowsOf(content2, p, now, tally);
+  const { income, expenses, passive, outgoings, escape, bill, evaded } = flowsOf(content2, p, now, tally);
   const paid = dividendsByAsset(p, content2, now);
   growPortfolio(p, content2, now, after);
   growProperties(p, after);
@@ -3298,6 +3440,7 @@ function applyRound(content2, state, choices) {
     repaired += repair.amount;
     events.push({ kind: "repair", ...repair });
   }
+  const audited = settleEvasion(content2, p, evaded, tally.noInvoiceSold, next.round, rng, events);
   const reinvested = reinvestDividends(p, paid);
   for (const call of callMargins(p, content2)) events.push({ kind: "marginCall", ...call });
   const settled = settleCash(p);
@@ -3323,7 +3466,8 @@ function applyRound(content2, state, choices) {
     ["creditCardDraw", settled.drawn],
     ["creditCardRepay", -settled.repaid],
     ["dividendsReinvested", -reinvested],
-    ["repairs", -repaired]
+    ["repairs", -repaired],
+    ["taxAudit", -audited]
   ];
   for (const [line, amount] of lines) {
     if (amount !== 0) events.push({ kind: "ledger", line, amount });
@@ -4762,6 +4906,27 @@ var world = {
   crisisChancePct: 30,
   crisisEarliestRound: 4
 };
+var evasion = {
+  blackPcts: [0, 25, 50],
+  blackSuspicionPer100: 24,
+  // An offshore company is for someone who knows money well, and costs a salary's worth of fees.
+  shellMinFinanceSkill: 3,
+  shellFeeAnnual: usd(6e3),
+  shellTaxCutPct: 80,
+  shellSuspicion: 8,
+  // From thirty-eight the exchanges tell the tax office what their customers made.
+  cryptoSuspicion: 6,
+  cryptoReportRound: 8,
+  noInvoiceLadders: ["art", "watch"],
+  noInvoiceDiscountPct: 20,
+  noInvoiceSaleSuspicion: 15,
+  suspicionDecay: 5,
+  auditMaxPct: 60,
+  auditFinePct: 50,
+  auditGoodsPct: 30,
+  auditStatus: -8,
+  limitationRounds: 2
+};
 
 // packages/content/src/content.ts
 var CONTENT_VERSION = "1.19.0";
@@ -4783,6 +4948,7 @@ var content = {
   business,
   items,
   life,
+  evasion,
   world,
   crises,
   cards

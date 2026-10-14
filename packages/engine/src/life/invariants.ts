@@ -31,6 +31,14 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
       if (!isCount(life.skills[skill])) breaks.push(`life.skills.${skill} is not a non-negative whole number: ${life.skills[skill]}`);
     }
   }
+  const evasion = life.evasion;
+  if (typeof evasion !== 'object' || evasion === null) breaks.push('life.evasion is not a record');
+  else {
+    if (!content.evasion.blackPcts.includes(evasion.blackPct)) breaks.push(`life.evasion.blackPct is not a share the rules allow: ${evasion.blackPct}`);
+    if (typeof evasion.shell !== 'boolean' || typeof evasion.hideCrypto !== 'boolean') breaks.push('life.evasion needs shell and hideCrypto to be true or false');
+    if (!(isCount(evasion.suspicion) && evasion.suspicion <= 100)) breaks.push(`life.evasion.suspicion is not a whole number from 0 to 100: ${evasion.suspicion}`);
+    if (!Array.isArray(evasion.evaded) || evasion.evaded.some((entry) => !isCount(entry.round) || !isCount(entry.amount) || entry.amount === 0)) breaks.push('life.evasion.evaded holds something other than rounds and positive amounts');
+  }
   if (!content.cities.some((city) => city.id === life.homeCityId)) breaks.push(`life.homeCityId is not a known city: ${life.homeCityId}`);
   if (life.rentTier !== 0 && life.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life.rentTier}`);
   if (![0, 1, 2, 3].includes(life.minLifestyleTier)) {
@@ -63,6 +71,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
     }
     if (held.used !== undefined && typeof held.used !== 'boolean') breaks.push(`item ${item.id} has a used mark that is not true or false`);
     if (held.used === true && (item.kind !== 'durable' || content.life.used[item.ladder] === undefined)) breaks.push(`item ${item.id} is marked used, and nothing of its kind is sold second hand`);
+    if (held.noInvoice !== undefined && (held.noInvoice !== true || !content.evasion.noInvoiceLadders.includes(item.ladder))) breaks.push(`item ${item.id} is marked bought without an invoice, and it is not sold that way`);
     owned.add(item.id);
     if (!isCount(held.age)) breaks.push(`item ${item.id} has an age that is not a non-negative whole number: ${held.age}`);
     if (!isCount(held.paid)) breaks.push(`item ${item.id} was paid for with something that is not a non-negative whole number: ${held.paid}`);

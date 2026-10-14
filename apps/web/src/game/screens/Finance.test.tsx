@@ -870,3 +870,67 @@ describe('the second-hand shop', () => {
     expect(within(sheet).getByText(`You bought it used: each round, a ${content.life.used.watch?.repairChancePct}% chance of a repair.`)).toBeTruthy();
   });
 });
+
+describe('what is not declared', () => {
+  const openTaxes = async (lifeId: string) => {
+    setWidth('desk');
+    const { services, session } = await inFinance(lifeId);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Taxes' }));
+    return { services, session, user, panel: screen.getByRole('region', { name: 'What you do not declare' }) };
+  };
+
+  it('takes pay under the table by order: the income tax falls by what is saved, and suspicion rises with it', async () => {
+    const { services, user, panel } = await openTaxes('nurse');
+    const state = await stateOf(services);
+    const honest = previewRound(content, state, { orders: [] });
+    const black = previewRound(content, state, { orders: [{ type: 'setEvasion', blackPct: 25 }] });
+    expect(within(panel).getByText(/^Chance of an inspection when the round is played: 0%/)).toBeTruthy();
+    await user.click(within(panel).getByRole('radio', { name: /^25%/ }));
+    expect(within(panel).getByText(`This round you save ${fmt.money(black.evaded.black)}.`)).toBeTruthy();
+    expect(screen.getByText(fmt.signed(-black.tax.income))).toBeTruthy();
+    expect(black.tax.income).toBeLessThan(honest.tax.income);
+    // A quarter of the pay is a few points of suspicion a round, and that is the chance of an inspection.
+    const points = Math.floor((25 * content.evasion.blackSuspicionPer100) / 100);
+    expect(within(panel).getByText(`Chance of an inspection when the round is played: ${points}%`)).toBeTruthy();
+    expect(screen.getByText('Pay under the table: 25%')).toBeTruthy();
+    // Choosing nothing again takes the order back.
+    await user.click(within(panel).getByRole('radio', { name: /^None/ }));
+    expect(screen.queryByText('Pay under the table: 25%')).toBeNull();
+  });
+
+  it('opens an offshore company only to someone who knows money well, and says why not', async () => {
+    const { panel } = await openTaxes('nurse');
+    const shell = within(panel).getByRole('switch', { name: /^Offshore company/ });
+    expect((shell as HTMLButtonElement).disabled).toBe(true);
+    expect(shell.textContent).toContain('You need more money sense for that.');
+  });
+
+  it('hides crypto gains by order, and says nothing is saved in a round with nothing sold', async () => {
+    const { user, panel } = await openTaxes('crypto_kid');
+    await user.click(within(panel).getByRole('switch', { name: /^Hide crypto gains/ }));
+    expect(within(panel).getByRole('switch', { name: /^Hide crypto gains/ }).textContent).toContain('This round you save nothing.');
+    // Once on the switch, once among the round's orders.
+    expect(screen.getAllByText('Hide crypto gains')).toHaveLength(2);
+  });
+
+  it('sells a watch without an invoice, and marks it so among what the player owns', async () => {
+    setWidth('desk');
+    const { services } = await inFinance('heir');
+    const quote = quoteItem(content, viewOf(await stateOf(services)), 'watch_omega');
+    const offer = quote.noInvoice;
+    if (!offer) throw new Error('a watch is sold without an invoice');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /Omega Speedmaster/ }));
+    const part = within(screen.getByRole('dialog', { name: 'Omega Speedmaster' })).getByRole('region', { name: 'Without an invoice' });
+    expect(within(part).getByText(new RegExp(`^${offer.discountPct}% cheaper, in cash\\.`))).toBeTruthy();
+    await user.click(within(part).getByRole('button', { name: `Buy without an invoice for ${fmt.money(offer.price)}` }));
+    expect(screen.getByText('Buy Omega Speedmaster without an invoice')).toBeTruthy();
+    // A car is not sold so.
+    await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /SEAT Ibiza/ }));
+    expect(within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).queryByRole('region', { name: 'Without an invoice' })).toBeNull();
+  });
+});

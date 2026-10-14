@@ -65,6 +65,14 @@ const order: fc.Arbitrary<Order> = fc.oneof(
   { weight: 3, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, financed: fc.constantFrom(true, false, 'yes' as never) }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, used: fc.constantFrom(true, false, 'yes' as never) }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, noInvoice: fc.constantFrom(true, false, 'yes' as never) }) },
+  {
+    weight: 3,
+    arbitrary: fc.record(
+      { type: fc.constant('setEvasion' as const), blackPct: fc.constantFrom(0, 25, 50, 30), shell: fc.boolean(), hideCrypto: fc.boolean() },
+      { requiredKeys: ['type'] },
+    ),
+  },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('sellItem' as const), itemId }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setLifestyle' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as const, 3 as const, 7 as never) }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setRentTier' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as never) }) },
@@ -282,10 +290,10 @@ describe('whole lives on the v1 content', () => {
     const state = rich.phase === 'cards' ? applyCards(content, rich, {}).state : rich;
     for (const item of content.items) {
       // New or second hand: the dealer's margin is the same.
-      for (const used of [false, true]) {
-        const orders: Order[] = [{ type: 'buyItem', itemId: item.id, used }, { type: 'sellItem', itemId: item.id }];
+      for (const way of [{}, { used: true }, { noInvoice: true }]) {
+        const orders: Order[] = [{ type: 'buyItem', itemId: item.id, ...way }, { type: 'sellItem', itemId: item.id }];
         const after = previewRound(content, state, { orders }).player;
-        expect(after.cash, `${item.id}${used ? ' used' : ''}`).toBeLessThanOrEqual(state.player.cash);
+        expect(after.cash, `${item.id} ${JSON.stringify(way)}`).toBeLessThanOrEqual(state.player.cash);
       }
     }
   });
