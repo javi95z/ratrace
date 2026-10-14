@@ -2,12 +2,12 @@
 
 import { careerArt, focusArt, skillArt, workArt } from '@ratrace/content';
 import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
-import type { Content, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
+import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useT, useWords } from '@/game/context';
+import { useGame, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
-import { Bar, Bare, Panel, Row, Tag } from '@/ui/kit';
+import { Bar, Bare, Panel, Row, Tag, Toggle } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
@@ -351,18 +351,27 @@ function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
   );
 }
 
-/** What a round's focus can be spent on, and what each use is worth to this player as they stand. */
+/**
+ * What a round's focus can be spent on, and what each use is worth to this player as they stand.
+ * While the finances are open each use is a switch, as in the Lifestyle tab: an order like any other.
+ */
 function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const t = useT('work');
   const { text } = useWords();
-  const job: Array<{ icon: string; name: string; gives: string }> = [
-    { icon: focusArt.overtime, name: t('overtime'), gives: t('overtimeGives', { pct: work.overtimePct }) },
-    { icon: focusArt.studyCareer, name: t('study'), gives: t('studyGives', { n: work.studySkill }) },
-    { icon: focusArt.jobHunt, name: t('hunt'), gives: t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct }) },
+  const stage = useGame((s) => s.stage);
+  const view = useGame((s) => s.view);
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  const open = stage === 'finance' && view !== null;
+  const has = (action: FocusAction) => orders.some((order) => order.type === 'focus' && order.action === action);
+  const job: Array<{ action: FocusAction; name: string; gives: string }> = [
+    { action: 'overtime', name: t('overtime'), gives: t('overtimeGives', { pct: work.overtimePct }) },
+    { action: 'studyCareer', name: t('study'), gives: t('studyGives', { n: work.studySkill }) },
+    { action: 'jobHunt', name: t('hunt'), gives: t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct }) },
   ];
   // Learning needs no job: it is on the list whatever the player does for a living.
   const learning = skills.skills.flatMap((skill) =>
-    skill.study === null ? [] : [{ icon: focusArt[skill.study], name: text.focusActions[skill.study], gives: t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }) }],
+    skill.study === null ? [] : [{ action: skill.study as FocusAction, name: text.focusActions[skill.study], gives: t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }) }],
   );
   const uses = [...(work.level === null ? [] : job), ...learning];
 
@@ -377,22 +386,38 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
         <p className="text-[12px] text-ink-300">{t('focusLeft')}</p>
       </div>
       {work.level === null ? <p className="text-[14px] leading-snug text-ink-200">{t('focusNoJob')}</p> : null}
-      <ul className="flex flex-col gap-2">
-        {uses.map((use) => (
-          <li key={use.name} className="frame flex items-start gap-3 bg-night-700 px-2.5 py-2">
-            <Bare className="size-9">
-              <Sprite id={use.icon} />
-            </Bare>
-            <div className="min-w-0">
-              <div className="pixel text-[16px]">{use.name}</div>
-              <p className="text-[13px] leading-snug text-ink-200">{use.gives}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {open ? (
+        <div className="flex flex-col gap-2">
+          {uses.map((use) => (
+            <Toggle
+              key={use.action}
+              on={has(use.action)}
+              onChange={(on) => setOrder((order) => order.type === 'focus' && order.action === use.action, on ? { type: 'focus', action: use.action } : null)}
+              disabled={!has(use.action) && work.focus.left < 1}
+              label={use.name}
+              hint={use.gives}
+              icon={focusArt[use.action]}
+            />
+          ))}
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {uses.map((use) => (
+            <li key={use.action} className="frame flex items-start gap-3 bg-night-700 px-2.5 py-2">
+              <Bare className="size-9">
+                <Sprite id={focusArt[use.action]} />
+              </Bare>
+              <div className="min-w-0">
+                <div className="pixel text-[16px]">{use.name}</div>
+                <p className="text-[13px] leading-snug text-ink-200">{use.gives}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="text-[13px] leading-snug text-ink-200">{t('focusAlso')}</p>
       {work.perks.studySkill > 0 || work.perks.jobHuntPct > 0 ? <p className="text-[12px] text-teal-300">{t('focusThings')}</p> : null}
-      <p className="text-center text-[12px] text-ink-300">{t('focusWhere')}</p>
+      <p className="text-center text-[12px] text-ink-300">{open ? t('focusPick') : t('focusWhere')}</p>
     </>
   );
 }

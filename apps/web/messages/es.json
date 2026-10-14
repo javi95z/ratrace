@@ -555,7 +555,6 @@
       "yield": "Rinde hasta un {rate} al año",
       "economy": "La economía ahora: {pct} %",
       "managerShare": "Encargado: {pct} % del beneficio",
-      "needsSkill": "Necesitas cultura financiera {level}.",
       "start": "Montarlo",
       "startTitle": "Montar: {name}",
       "startHint": "Hace falta poner al menos {min}. Cuanto más crece por encima de {scale}, menos rinde cada dólar que metes.",
@@ -583,7 +582,8 @@
       "sellHint": "En esta economía un comprador paga el {pct} % de lo que hay dentro.",
       "sellGain": "Pagarás impuestos por {amount} de ganancia.",
       "opensNow": "Se abre al jugar la ronda. Desde la siguiente podrás llevarlo, hacerlo crecer o venderlo.",
-      "needsCash": "Te faltan {amount} en efectivo para montarlo."
+      "needsCash": "Te faltan {amount} en efectivo para montarlo.",
+      "moreLater": "{n, plural, one {Otro tipo de negocio se abre} other {# tipos de negocio más se abren}} con cultura financiera {level}."
     }
   },
   "resolve": {
@@ -994,7 +994,8 @@
       "healthFocus": "+1 de foco cada ronda.",
       "negotiationCards": "Al pedir un aumento puedes negociarlo en serio."
     },
-    "learnGives": "+{n} de {skill}"
+    "learnGives": "+{n} de {skill}",
+    "focusPick": "Toca para elegir. Cuenta cuando se juegue la ronda."
   },
   "rankings": {
     "title": "Clasificaciones",

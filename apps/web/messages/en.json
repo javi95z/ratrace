@@ -555,7 +555,6 @@
       "yield": "Makes up to {rate} a year",
       "economy": "The economy now: {pct}%",
       "managerShare": "Manager: {pct}% of the profit",
-      "needsSkill": "It takes money sense {level}.",
       "start": "Open it",
       "startTitle": "Open: {name}",
       "startHint": "It takes at least {min}. The further it grows past {scale}, the less each dollar you put in makes.",
@@ -583,7 +582,8 @@
       "sellHint": "In this economy a buyer pays {pct}% of what is in it.",
       "sellGain": "You will pay tax on a gain of {amount}.",
       "opensNow": "It opens when the round is played. From the next one you can run it, grow it or sell it.",
-      "needsCash": "You are {amount} in cash short of opening it."
+      "needsCash": "You are {amount} in cash short of opening it.",
+      "moreLater": "{n, plural, one {One more kind of business opens} other {# more kinds of business open}} with money sense {level}."
     }
   },
   "resolve": {
@@ -994,7 +994,8 @@
       "healthFocus": "+1 focus every round.",
       "negotiationCards": "When you ask for a raise, you can negotiate it properly."
     },
-    "learnGives": "+{n} {skill}"
+    "learnGives": "+{n} {skill}",
+    "focusPick": "Tap to choose. It takes effect when the round is played."
   },
   "rankings": {
     "title": "Rankings",

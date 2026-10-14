@@ -1043,6 +1043,9 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
   );
 }
 
+/** A thing on the shelf: the tile of the game, laid out in a row. */
+const SHELF = 'frame-raised flex min-h-11 items-center gap-2 bg-night-600 p-1.5 text-left text-cream transition-transform active:translate-y-[2px]';
+
 function Shop() {
   const t = useT('finance.shop');
   const { content, text, names, fmt } = useWords();
@@ -1054,7 +1057,9 @@ function Shop() {
     <div className="flex flex-col gap-3">
       {ladders.map((ladder) => (
         <Panel key={ladder} title={text.ladders[ladder]}>
-          <div className="grid grid-cols-2 gap-2">
+          {/* One a row in a narrow column, two on a phone held normally, three where there is room. */}
+          <div className="@container">
+          <div className="grid grid-cols-1 gap-2 @min-[360px]:grid-cols-2 @min-[620px]:grid-cols-3">
             {content.items
               // The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
               .filter((item) => item.ladder === ladder && quoteItem(content, shown, item.id).soldHere)
@@ -1062,16 +1067,24 @@ function Shop() {
                 const owned = p.life.items.some((x) => x.itemId === item.id);
                 return (
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
-                  <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${TILE} ${owned ? 'frame-gold' : ''}`}>
-                    <Bare className="w-full py-1.5">
+                  // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
+                  <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
+                    <Bare className="size-16">
                       <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
                     </Bare>
-                    <span className="mt-0.5 line-clamp-2 min-h-[2.4em] text-[13px] leading-tight">{names.items[item.id]}</span>
-                    <span className={`pixel text-[16px] ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
-                    <Tag tone="good">{t('status', { n: quoteItem(content, shown, item.id).status })}</Tag>
+                    <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                      <span className="line-clamp-2 text-[13px] leading-tight">{names.items[item.id]}</span>
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
+                        <span className="whitespace-nowrap">
+                          <Tag tone="good">{t('status', { n: quoteItem(content, shown, item.id).status })}</Tag>
+                        </span>
+                      </span>
+                    </span>
                   </button>
                 );
               })}
+          </div>
           </div>
         </Panel>
       ))}

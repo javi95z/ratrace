@@ -50,6 +50,10 @@ export function BusinessTab() {
   const [open, setOpen] = useState<string | null>(null);
   const [starting, setStarting] = useState<Kind | null>(null);
   const quote = quoteBusinesses(content, shown);
+  // Only what the player could open: a kind that needs more money sense is not offered, only said to be coming.
+  const offered = quote.kinds.filter((kind) => kind.lock !== 'needs-finance-skill');
+  const later = quote.kinds.filter((kind) => kind.lock === 'needs-finance-skill');
+  const nextSkill = later.length > 0 ? Math.min(...later.map((kind) => kind.minFinanceSkill)) : null;
   // Looked up afresh on every draw: a business sold while its sheet is open closes it.
   const opened = quote.owned.find((business) => business.id === open);
   if (!view) return null;
@@ -87,7 +91,7 @@ export function BusinessTab() {
         <p className="mb-2 text-[13px] leading-snug text-ink-200">{t('openAbout', { max: quote.max })}</p>
         {/* Set off by rules, not boxed: the panel is the only box. */}
         <ul className="flex flex-col">
-          {quote.kinds.map((kind) => (
+          {offered.map((kind) => (
             <li key={kind.typeId} className="border-t-2 border-night-900 py-3 first:border-t-0 first:pt-0 last:pb-0">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="pixel text-[16px]">{text.businessTypes[kind.typeId].name}</span>
@@ -100,7 +104,7 @@ export function BusinessTab() {
                 <Tag>{t('managerShare', { pct: kind.managerPct })}</Tag>
               </div>
               {kind.lock !== null ? (
-                <p className="mt-1.5 text-[12px] leading-snug text-gold-200">{kind.lock === 'needs-finance-skill' ? t('needsSkill', { level: kind.minFinanceSkill }) : text.reasons[kind.lock]}</p>
+                <p className="mt-1.5 text-[12px] leading-snug text-gold-200">{text.reasons[kind.lock]}</p>
               ) : shown.player.cash < kind.minCapital ? (
                 <p className="mt-1.5 text-[12px] leading-snug text-gold-200">{t('needsCash', { amount: fmt.money(kind.minCapital - shown.player.cash) })}</p>
               ) : (
@@ -111,6 +115,7 @@ export function BusinessTab() {
             </li>
           ))}
         </ul>
+        {nextSkill !== null ? <p className="mt-2 text-[12px] leading-snug text-ink-300">{t('moreLater', { n: later.length, level: nextSkill })}</p> : null}
       </Panel>
 
       {starting ? (

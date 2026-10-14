@@ -763,3 +763,21 @@ describe("this round's orders", () => {
   });
 });
 
+
+describe('focus from the work panel', () => {
+  it('is spent from the sheet of focus as from the Lifestyle tab, while the finances are open', async () => {
+    setWidth('desk');
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const work = await screen.findByRole('region', { name: 'Work' });
+    await user.click(within(work).getByText('Focus this round'));
+    const sheet = screen.getByRole('dialog', { name: 'Focus' });
+    expect(within(sheet).getByText('Tap to choose. It takes effect when the round is played.')).toBeTruthy();
+    // Three ways to work and four to learn.
+    expect(within(sheet).getAllByRole('switch')).toHaveLength(7);
+    await user.click(within(sheet).getByRole('switch', { name: /^Exercise/ }));
+    expect(within(sheet).getByRole('switch', { name: /^Exercise/ }).getAttribute('aria-checked')).toBe('true');
+    expect(within(sheet).getByText('2/3')).toBeTruthy();
+  });
+});

@@ -44,7 +44,7 @@ async function inFinance(lifeId: string) {
 const openTab = async (user: ReturnType<typeof userEvent.setup>) => user.click(await screen.findByRole('tab', { name: 'Business' }));
 
 describe('the business tab', () => {
-  it('shows each kind there is: what it asks for, what it makes, how the economy treats it now, and why it cannot be opened', async () => {
+  it('shows each kind the player could open: what it asks for, what it makes, how the economy treats it now; and how many more open later', async () => {
     const { services } = await inFinance('civil_servant');
     const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
     const user = userEvent.setup();
@@ -52,23 +52,20 @@ describe('the business tab', () => {
     await openTab(user);
     expect(within(screen.getByRole('region', { name: 'Your businesses' })).getByText(/^You have none yet\./)).toBeTruthy();
 
-    const kinds = within(screen.getByRole('region', { name: 'Open a business' })).getAllByRole('listitem');
-    expect(kinds).toHaveLength(content.business.types.length);
-    quote.kinds.forEach((kind, i) => {
-      const row = within(kinds[i]);
-      expect(row.getByText(text.businessTypes[kind.typeId].name)).toBeTruthy();
-      expect(row.getByText(`from ${fmt.compact(kind.minCapital)}`)).toBeTruthy();
-      expect(row.getByText(`Makes up to ${fmt.rate(kind.yieldBp)} a year`)).toBeTruthy();
-      expect(row.getByText(`Manager: ${kind.managerPct}% of the profit`)).toBeTruthy();
-      expect(row.getByText(/^The economy now: /)).toBeTruthy();
-    });
-    // A civil servant knows too little about money for anything but her own practice, and the others say so.
+    // A civil servant knows too little about money for anything but her own practice: the others are not offered.
     expect(quote.kinds.map((kind) => kind.lock)).toEqual([null, 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill']);
-    expect(within(kinds[0]).getByRole('button', { name: 'Open it' })).toBeTruthy();
-    for (const locked of kinds.slice(1)) {
-      expect(within(locked).queryByRole('button')).toBeNull();
-      expect(within(locked).getByText('It takes money sense 2.')).toBeTruthy();
-    }
+    const panel = screen.getByRole('region', { name: 'Open a business' });
+    const kinds = within(panel).getAllByRole('listitem');
+    expect(kinds).toHaveLength(1);
+    const [kind] = quote.kinds;
+    const row = within(kinds[0]);
+    expect(row.getByText(text.businessTypes[kind.typeId].name)).toBeTruthy();
+    expect(row.getByText(`from ${fmt.compact(kind.minCapital)}`)).toBeTruthy();
+    expect(row.getByText(`Makes up to ${fmt.rate(kind.yieldBp)} a year`)).toBeTruthy();
+    expect(row.getByText(`Manager: ${kind.managerPct}% of the profit`)).toBeTruthy();
+    expect(row.getByText(/^The economy now: /)).toBeTruthy();
+    expect(row.getByRole('button', { name: 'Open it' })).toBeTruthy();
+    expect(within(panel).getByText('4 more kinds of business open with money sense 2.')).toBeTruthy();
   });
 
   it('says how much cash is missing instead of offering what cannot be paid for', async () => {
