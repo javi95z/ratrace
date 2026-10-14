@@ -6,6 +6,50 @@ export type CryptoPhase = 'accumulation' | 'bull' | 'mania' | 'winter';
 export type AssetClass = 'bond' | 'equity' | 'crypto' | 'gold';
 export type LifestyleTier = 0 | 1 | 2 | 3;
 export type FinanceSkill = 0 | 1 | 2 | 3;
+
+/**
+ * The skills of a life beyond its career and its money sense. Each is learnt in points, by study
+ * or by living it, and its level (0 to 3) is how many of the rules' thresholds the points have passed.
+ */
+export const SKILLS = ['negotiation', 'languages', 'network', 'management', 'health'] as const;
+export type SkillId = (typeof SKILLS)[number];
+export type SkillLevel = 0 | 1 | 2 | 3;
+
+/** What the skills do, level by level, and how they are learnt. Every "per level" figure is multiplied by the level. */
+export interface SkillRules {
+  /** Points that reach levels 1, 2 and 3. */
+  levelPoints: readonly [number, number, number];
+  /** Points from a round spent studying a skill with a point of focus. */
+  studyPoints: number;
+  /** Points from a round of living it: a trade that uses it, a city not the player's own, a club. */
+  practicePoints: number;
+  /** Careers whose daily work practises a skill. */
+  practiceCareers: Partial<Record<SkillId, readonly string[]>>;
+  /** Things owned whose use practises a skill: a gym for health. */
+  practiceItems: Partial<Record<SkillId, readonly string[]>>;
+  /** Negotiation: added to the raise of a successful job hunt, and to pay at each promotion, in percent per level. */
+  negotiationHuntRaisePct: number;
+  negotiationPromotionPct: number;
+  /** Negotiation: added to what a business fetches when sold, in percent of its price per level. Never above its capital. */
+  negotiationSalePct: number;
+  /** Languages: taken off the cost of a move, in percent per level. */
+  languagesMoveOffPct: number;
+  /** Languages: from this level a move of one's own costs no rung, and from the next a partner finds work at once. */
+  languagesKeepRungFrom: SkillLevel;
+  languagesPartnerFrom: SkillLevel;
+  /** Network: added to the chance of a job hunt, in points per level, and to status, per level. */
+  networkHuntPct: number;
+  networkStatus: number;
+  /** Management: added to a run business's profit, and taken off a manager's share, in percent per level. */
+  managementProfitPct: number;
+  managementManagerOffPct: number;
+  /** Management: from this level one more business can be owned. */
+  managementExtraFrom: SkillLevel;
+  /** Health: taken off the health insurance premium, in percent per level. */
+  healthPremiumOffPct: number;
+  /** Health: from this level a point of focus more every round. */
+  healthFocusFrom: SkillLevel;
+}
 export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
 /** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
 export type RentTier = 0 | 1;
@@ -236,6 +280,7 @@ export interface LifeRules {
   cheapMortgageBp: Bp;
   /** Personal cards drawn each round. */
   cardsPerRound: number;
+  skills: SkillRules;
 }
 
 /** News and tax reforms. Both come from their own random streams, so they never move a price. */
@@ -326,6 +371,8 @@ export interface Condition {
   maxNetWorth?: Cents;
   minFinanceSkill?: FinanceSkill;
   maxFinanceSkill?: FinanceSkill;
+  /** Each of these skills is at this level or above. */
+  minSkills?: Partial<Record<SkillId, SkillLevel>>;
   /** All of these flags are set. */
   flags?: string[];
   /** None of these flags is set. */
@@ -382,6 +429,8 @@ export interface Effects {
   salaryBoostPct?: number;
   careerSkill?: number;
   financeSkill?: number;
+  /** Points added to skills. */
+  skills?: Partial<Record<SkillId, number>>;
   /** Lasting status. */
   status?: number;
   /** Focus points this takes this round. */
@@ -440,7 +489,7 @@ export interface CardOutcome {
  * bankruptcy lock; not enough focus; the thing is already owned; not enough cash and savings;
  * or it would fill the pension of someone who owes more than they own.
  */
-export type OptionLock = 'condition' | 'bankruptcy' | 'focus' | 'owned' | 'cash' | 'insolvent';
+export type OptionLock = 'condition' | 'skill' | 'bankruptcy' | 'focus' | 'owned' | 'cash' | 'insolvent';
 
 export interface CardOption {
   /** The option is locked unless this holds. Never set on the first option. */
@@ -684,6 +733,10 @@ export interface LifeState {
   salaryBoostPct: number;
   careerSkill: number;
   financeSkill: FinanceSkill;
+  /** Points in each of the other skills. */
+  skills: Record<SkillId, number>;
+  /** The city the life began in: anywhere else, its language is practised. */
+  homeCityId: string;
   /** Rounds in which the player held an investment. */
   investedRounds: number;
   focusBase: number;
@@ -810,7 +863,9 @@ export type Order =
   | { type: 'moveCity'; cityId: string };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt';
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | StudyAction;
+/** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
+export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
 export interface RoundChoices {
   orders: Order[];
@@ -941,6 +996,7 @@ export type GameEvent =
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
+  | { kind: 'skill'; skill: SkillId; level: SkillLevel }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
   /** A business was sold by its owner, or closed with nothing left in it. */
   /** `capital` is what was in it, and `price` what it fetched. */
@@ -961,6 +1017,8 @@ export interface LifeStart {
   career: { id: string; level: number } | null;
   careerSkill: number;
   financeSkill: FinanceSkill;
+  /** Points in other skills on day one. */
+  skills?: Partial<Record<SkillId, number>>;
   focus: number;
   minLifestyleTier?: LifestyleTier;
   rentTier?: RentTier;

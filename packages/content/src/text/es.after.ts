@@ -3,7 +3,7 @@
  * de las opciones de la carta. `null` donde hablan los dados, que ya tienen su frase por resultado.
  */
 export const after: Record<string, ReadonlyArray<string | null>> = {
-  career_raise: ['La evaluación pasa sin pena ni gloria. El alquiler, no.', null, null],
+  career_raise: ['La evaluación pasa sin pena ni gloria. El alquiler, no.', null, null, null],
   career_competitor_offer: ['Te quedas. Tu jefe nunca sabrá lo cerca que estuvo.', 'Mesa nueva, tarjeta nueva y todo por aprender otra vez.', null],
   career_relocation: ['El ascenso se lo lleva otra persona. Tú conservas tu barrio.', 'Cajas, un billete de ida y un cargo nuevo en la tarjeta.'],
   career_overtime_crunch: [null, 'Un mes de cenas frías. La entrega sale, y se nota en la nómina.'],
@@ -20,7 +20,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_teaching: ['La clase se queda con un desconocido.', 'En primavera quien está en la pizarra eres tú.'],
   career_creator: ['No subes nada más. El vídeo se olvida en una semana.', 'Tu segundo vídeo tiene cuarenta visitas. Treinta son de tu madre.'],
   career_out_of_town: ['Te quedas. El puesto se lo lleva alguien con coche.', 'Cuarenta minutos de ida y otros tantos de vuelta, y una nómina que lo compensa.', null],
-  life_club_contacts: ['Habláis del tiempo.', null, null],
+  life_club_contacts: ['Habláis del tiempo.', null, null, null],
   career_headhunter: ['Cuelgas con educación. El café se queda sin tomar.', null, 'Nueva York. Más sueldo, más ruido y un alquiler que asusta.'],
   edu_masters: ['Las tardes siguen siendo tuyas.', 'Dos años de tardes después, hay un título en la pared.', 'El título llega antes que la última cuota.'],
   edu_finance_course: ['Los bonos seguirán siendo un misterio un tiempo más.', 'Doce tardes después, las noticias económicas empiezan a tener sentido.'],
@@ -141,7 +141,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'Una hora a la semana para decir en voz alta lo que pasa.',
   ],
   health_dental: ['Una corona nueva. Muerdes sin miedo.', null],
-  health_injury: ['Ocho sesiones y unas gomas elásticas. La rodilla responde.', 'Hielo, sofá y paciencia. Cura sola, despacio.'],
+  health_injury: ['Ocho sesiones y unas gomas elásticas. La rodilla responde.', 'Hielo, sofá y paciencia. Cura sola, despacio.', 'Conoces tu cuerpo. Dos semanas con cuidado y vuelves a correr.'],
   health_gym_habit: ['El año que viene. Las escaleras siguen ahí.', 'Tres mañanas por semana. Ya subes las escaleras hablando.'],
   luck_lottery: ['No juegas. Si toca, lo oirás toda la vida.', null, null],
   luck_car_breakdown: ['Taller oficial, recambio original y factura con membrete.', null],

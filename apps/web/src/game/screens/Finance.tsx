@@ -2,7 +2,7 @@
 
 import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteWork } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -744,7 +744,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
   return (
     <Sheet open onClose={onClose} title={t('moveTitle')} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
-        <p className="text-[13px] leading-snug text-ink-200">{t('moveAbout')}</p>
+        <p className="text-[13px] leading-snug text-ink-200">{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</p>
         {content.cities.map((city) => {
           const here = city.id === p.cityId;
           const tax = effectiveTax(city, world);
@@ -831,6 +831,7 @@ function Lifestyle() {
   const left = focusLeft(p);
   // What each use of focus is worth to this player, counting what they own.
   const work = quoteWork(content, shown);
+  const skills = quoteSkills(content, shown);
   const moveOrdered = orders.some((order) => order.type === 'moveCity');
   const common = useT('common');
   const perYear = (cents: number) => common('perYear', { amount: fmt.compact(cents) });
@@ -848,6 +849,26 @@ function Lifestyle() {
         ) : (
           <p className="text-[14px] text-ink-300">{t('noJob')}</p>
         )}
+      </Panel>
+
+      {/* Skills of one's own: each a point of focus, and no job needed. */}
+      <Panel title={t('learn')}>
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] text-ink-300">{t('learnAbout')}</p>
+          {skills.skills.map((skill) =>
+            skill.study === null ? null : (
+              <Toggle
+                key={skill.skill}
+                on={has(skill.study)}
+                onChange={focus(skill.study)}
+                disabled={!has(skill.study) && left < 1}
+                label={text.focusActions[skill.study]}
+                hint={t('learnHint', { n: skill.studyPoints, skill: text.skills[skill.skill], level: skill.level })}
+                icon={focusArt[skill.study]}
+              />
+            ),
+          )}
+        </div>
       </Panel>
 
       <Panel title={t('tier')}>

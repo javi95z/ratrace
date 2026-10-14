@@ -58,9 +58,10 @@ describe('validateContent: cards', () => {
     expect(problems((c) => (c.weight = NaN))).toEqual(['card offer needs a positive weight']);
     expect(problems((c) => (c.cooldown = -1))).toEqual(['card offer needs a whole, non-negative cooldown']);
     expect(problems((c) => (c.cooldown = 1.5))).toEqual(['card offer needs a whole, non-negative cooldown']);
-    expect(problems((c) => (c.options = [{}]))).toEqual(['card offer needs two or three options']);
-    expect(problems((c) => (c.options = [{}, {}, {}, {}]))).toEqual(['card offer needs two or three options']);
-    expect(problems((c) => (c.options = 'none'))).toEqual(['card offer needs two or three options']);
+    expect(problems((c) => (c.options = [{}]))).toEqual(['card offer needs two to four options']);
+    expect(problems((c) => (c.options = [{}, {}, {}, {}]))).toEqual(['card offer has a fourth option open to everyone']);
+    expect(problems((c) => (c.options = [{}, {}, {}, {}, {}]))).toEqual(['card offer needs two to four options']);
+    expect(problems((c) => (c.options = 'none'))).toEqual(['card offer needs two to four options']);
   });
 
   it('keeps the first option safe for an absent player', () => {

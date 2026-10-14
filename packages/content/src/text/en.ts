@@ -70,7 +70,16 @@ export const en: ContentText = {
   rentTiers: ['Rented room', 'Rented flat'],
   lifestyleTiers: ['Frugal', 'Normal', 'Comfortable', 'Lavish'],
   insurance: { health: 'Health insurance', home: 'Home insurance', life: 'Life insurance', liability: 'Liability insurance' },
-  focusActions: { overtime: 'Work overtime', studyCareer: 'Study for your career', jobHunt: 'Look for a better job' },
+  focusActions: {
+    overtime: 'Work overtime',
+    studyCareer: 'Study for your career',
+    jobHunt: 'Look for a better job',
+    studyNegotiation: 'Take a negotiation course',
+    studyLanguages: 'Take language classes',
+    networking: 'Go out and meet people',
+    exercise: 'Exercise',
+  },
+  skills: { negotiation: 'Negotiation', languages: 'Languages', network: 'Network', management: 'Management', health: 'Health' },
   debts: { mortgageFixed: 'Fixed mortgage', mortgageVariable: 'Variable mortgage', personalLoan: 'Personal loan', creditCard: 'Credit card', margin: 'Margin loan' },
   lives: {
     nurse: {
@@ -268,6 +277,7 @@ export const en: ContentText = {
   },
   badgeGroups: { wealth: 'Wealth', escape: 'Escape', investing: 'Investing', status: 'Status', life: 'Life', misfortune: 'Misfortune' },
   optionLocks: {
+    skill: 'You are not practised enough for this yet.',
     condition: 'Not open to you as things stand.',
     bankruptcy: 'No bank lends to you so soon after a bankruptcy.',
     focus: 'You have no focus left for it this round.',
@@ -304,7 +314,7 @@ export const en: ContentText = {
     'down-payment-too-low': 'The bank wants a larger down payment.',
     'down-payment-too-high': 'That covers the whole price. Buy without a mortgage instead.',
     'unknown-property': 'You do not own that property.',
-    'needs-finance-skill': 'You need more finance skill for that.',
+    'needs-finance-skill': 'You need more money sense for that.',
     'not-a-home': 'Nobody can live there. It can only be let.',
     'unknown-action': 'That action does not exist.',
     'no-focus': 'You have no focus left this round.',

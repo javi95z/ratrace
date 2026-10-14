@@ -3,6 +3,7 @@ import { newId } from './ids';
 import { focusBonusOf, refreshDerived } from './life/derive';
 import { propertyPrice } from './property';
 import { indexed } from './rates';
+import { SKILLS } from './types';
 import type { Content, LifeState, PlayerState, StartConfig, WorldState } from './types';
 
 /** Focus points of a life that does not say. */
@@ -19,6 +20,8 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     salaryBoostPct: 0,
     careerSkill: from?.careerSkill ?? 0,
     financeSkill: from?.financeSkill ?? 0,
+    skills: Object.fromEntries(SKILLS.map((skill) => [skill, from?.skills?.[skill] ?? 0])) as LifeState['skills'],
+    homeCityId: start.cityId,
     investedRounds: 0,
     focusBase: from?.focus ?? DEFAULT_FOCUS,
     focusBonus: 0,

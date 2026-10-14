@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.15.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.17.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -72,7 +72,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 0 $ |
+| Empieza en | Bangkok, con 0 $ |
 | Trabajo | Repartidor (Servicios) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 4 |
 | Modo de vida | Austero |
@@ -87,7 +87,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 60.000 $ |
+| Empieza en | Dubái, con 60.000 $ |
 | Trabajo | Repartidor (Servicios) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Cómodo (no puede bajar de Cómodo) |
@@ -132,7 +132,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 1.000 $ |
+| Empieza en | Londres, con 1.000 $ |
 | Trabajo | Médica residente (Medicina) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 2 |
 | Modo de vida | Normal |
@@ -162,7 +162,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 3.000 $ |
+| Empieza en | Nueva York, con 3.000 $ |
 | Trabajo | Repartidor (Servicios) |
 | Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
 | Modo de vida | Austero |
@@ -192,7 +192,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 1.000 $ |
+| Empieza en | Nueva York, con 1.000 $ |
 | Trabajo | Pasante (Derecho) |
 | Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
 | Modo de vida | Normal |
@@ -207,7 +207,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 4.000 $ |
+| Empieza en | Singapur, con 4.000 $ |
 | Trabajo | Profesor interino (Educación) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
@@ -222,7 +222,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 500 $ |
+| Empieza en | Bangkok, con 500 $ |
 | Trabajo | Creador novato (Influencer) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
@@ -237,7 +237,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 800 $ |
+| Empieza en | Bangkok, con 800 $ |
 | Trabajo | Camarero (Hostelería) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 4 |
 | Modo de vida | Austero |
@@ -252,7 +252,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 2.500 $ |
+| Empieza en | Bangkok, con 2.500 $ |
 | Trabajo | Comercial júnior (Ventas) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
@@ -396,7 +396,7 @@ Horas extra: +8 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +25 
 
 Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el 50 % y pierde un 8 % de su capital. Se pueden llevar hasta 3. Vendido desde la pestaña vale entre el 70 % y el 100 % de lo que tiene dentro, según la economía; solo una carta paga más.
 
-| Negocio | Capital mínimo | Rinde al año | Hecho para | Con la economía | Encargado | Saber financiero |
+| Negocio | Capital mínimo | Rinde al año | Hecho para | Con la economía | Encargado | Cultura financiera |
 | --- | --- | --- | --- | --- | --- | --- |
 | Tu oficio por tu cuenta | 2.000 $ | hasta 22 % | 30.000 $ | Auge +15 %, Desaceleración -15 %, Recesión -40 % | 50 % del beneficio | 0 |
 | Tienda online | 5.000 $ | hasta 20 % | 80.000 $ | Auge +25 %, Expansión +5 %, Desaceleración -25 %, Recesión -70 % | 40 % del beneficio | 2 |
@@ -670,9 +670,9 @@ Desde los 26 años, la habitación alquilada pasa a dar -3 de estatus.
 
 ## Inversiones
 
-El nivel de finanzas dice qué se puede comprar por cuenta propia. Una carta puede dar algo de un nivel más alto.
+La cultura financiera dice qué se puede comprar por cuenta propia. Una carta puede dar algo de un nivel más alto.
 
-| Inversión | Ticker | Clase | Finanzas | Renta | Qué es |
+| Inversión | Ticker | Clase | Cultura financiera | Renta | Qué es |
 | --- | --- | --- | --- | --- | --- |
 | Bono EE. UU. 2 años | UST2 | Bonos | 1 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
 | Bono EE. UU. 10 años | UST10 | Bonos | 1 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
@@ -715,6 +715,20 @@ El nivel de finanzas dice qué se puede comprar por cuenta propia. Una carta pue
 | <img src="../art/clean/icons/icon.focus_overtime.png" alt=""> | Hacer horas extra | Más sueldo esa ronda, según la carrera |
 | <img src="../art/clean/icons/icon.focus_study.png" alt=""> | Formarte para tu carrera | +1 de experiencia, además del +1 por trabajar |
 | <img src="../art/clean/icons/icon.focus_hunt.png" alt=""> | Buscar un trabajo mejor | 20 % de probabilidad de un +3 % de sueldo para siempre |
+| <img src="../art/clean/icons/icon.career_sales.png" alt=""> | Hacer un curso de negociación | +2 puntos de Negociación |
+| <img src="../art/clean/icons/icon.city.png" alt=""> | Ir a clases de idiomas | +2 puntos de Idiomas |
+| <img src="../art/clean/icons/icon.career_influencer.png" alt=""> | Salir a hacer contactos | +2 puntos de Contactos |
+| <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Hacer deporte | +2 puntos de Salud |
+
+Habilidades: cada una tiene tres niveles, a 2, 5, 9 puntos. Se ganan 2 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
+
+|  | Habilidad | Por nivel | Se practica |
+| --- | --- | --- | --- |
+| <img src="../art/clean/icons/icon.career_sales.png" alt=""> | Negociación | +1 % al buscar trabajo, +2 % por ascenso, negocio vendido un 4 % más caro | Buscando trabajo; Ventas, Derecho, Finanzas |
+| <img src="../art/clean/icons/icon.city.png" alt=""> | Idiomas | Mudanza un 15 % más barata; desde 2 sin perder puesto; desde 3 la pareja trabaja al llegar | Fuera de la ciudad de origen; Hostelería |
+| <img src="../art/clean/icons/icon.career_influencer.png" alt=""> | Contactos | +8 puntos al buscar trabajo, +1 de estatus | Socio de un club; Ventas, Influencer, Hostelería, Función pública |
+| <img src="../art/clean/icons/icon.business.png" alt=""> | Gestión | +6 % de beneficio, encargado 4 puntos más barato; desde 3 un negocio más | Llevando un negocio |
+| <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Salud | Seguro de salud un 20 % más barato; desde 3 +1 de foco | Gimnasio; Sanidad, Medicina |
 
 Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durante 20 años.
 
@@ -728,7 +742,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 
 |  | Carta | Opciones |
 | --- | --- | --- |
-| <img src="../art/clean/cards/card.boss_door.png" alt="Pedir un aumento"> | **Pedir un aumento**<br>La semana que viene tienes la evaluación y el alquiler te ha subido dos veces desde la última. | 1. No decir nada<br>2. Pedirlo<br>3. Preparar bien los argumentos |
+| <img src="../art/clean/cards/card.boss_door.png" alt="Pedir un aumento"> | **Pedir un aumento**<br>La semana que viene tienes la evaluación y el alquiler te ha subido dos veces desde la última. | 1. No decir nada<br>2. Pedirlo<br>3. Preparar bien los argumentos<br>4. Negociarlo en serio |
 | <img src="../art/clean/cards/card.handshake.png" alt="Llama la competencia"> | **Llama la competencia**<br>La empresa rival te quiere, y ofrece más. | 1. Ser leal<br>2. Aceptar el puesto<br>3. Enseñársela a tu jefe |
 | <img src="../art/clean/cards/card.airport.png" alt="Un ascenso con letra pequeña"> | **Un ascenso con letra pequeña**<br>El ascenso es tuyo. La mesa está en Londres. | 1. Rechazarlo<br>2. Hacer las maletas |
 | <img src="../art/clean/cards/card.office_desk.png" alt="Semanas de entrega"> | **Semanas de entrega**<br>Han adelantado la fecha. Alguien tiene que quedarse hasta tarde un mes. | 1. Hacer lo justo<br>2. Echar horas |
@@ -811,7 +825,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.business_cabin.png" alt="Mejora en la puerta de embarque"> | **Mejora en la puerta de embarque**<br>Por una fracción del billete, el asiento se convierte en cama. | 1. Quedarte en turista<br>2. Aceptar la mejora |
 | <img src="../art/clean/cards/card.private_sale.png" alt="Venta privada"> | **Venta privada**<br>Un cuarenta por ciento menos, solo esta noche y con invitación. | 1. Borrar el correo<br>2. Mocasines de Gucci<br>3. La Louis Vuitton Keepall |
 | <img src="../art/clean/cards/card.car_dealer.png" alt="Necesitas coche"> | **Necesitas coche**<br>El metro cierra a medianoche y tu nuevo trabajo no. | 1. Seguir en metro<br>2. Comprar un Toyota Corolla al contado<br>3. Financiar un Tesla Model 3 |
-| <img src="../art/clean/cards/card.club_contacts.png" alt="En la barra del club"> | **En la barra del club**<br>Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad. | 1. Cambiar de tema<br>2. Preguntar si buscan gente<br>3. Entrar en su negocio |
+| <img src="../art/clean/cards/card.club_contacts.png" alt="En la barra del club"> | **En la barra del club**<br>Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad. | 1. Cambiar de tema<br>2. Preguntar si buscan gente<br>3. Entrar en su negocio<br>4. Pedir que te presente a quien decide |
 | <img src="../art/clean/cards/card.nightclub.png" alt="Mesa con botella"> | **Mesa con botella**<br>Alguien propone coger mesa. El camarero ya tiene la carta en la mano. | 1. Irte pronto a casa<br>2. Poner tu parte<br>3. Pagar la mesa con tu tarjeta |
 | <img src="../art/clean/cards/card.sale_crowd.png" alt="Black Friday"> | **Black Friday**<br>Tienes la cesta llena desde el martes. | 1. Cerrar la pestaña<br>2. La PS5<br>3. El MacBook Pro |
 
@@ -837,7 +851,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.hospital.png" alt="Una enfermedad grave"> | **Una enfermedad grave**<br>Pruebas, un diagnóstico y un tratamiento con precio. | 1. Ir por la pública y esperar<br>2. Ir por la privada, ya<br>3. Cobrar tu seguro de vida |
 | <img src="../art/clean/cards/card.burnout.png" alt="Agotamiento"> | **Agotamiento**<br>Llevas una hora mirando el mismo correo. | 1. Seguir tirando<br>2. Pedir un permiso sin sueldo<br>3. Ir a terapia |
 | <img src="../art/clean/cards/card.dentist_chair.png" alt="Una urgencia dental"> | **Una urgencia dental**<br>Se te parte una muela con un hueso de aceituna. | 1. Arreglarlo bien<br>2. Buscar una clínica barata |
-| <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo |
+| <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo<br>3. Recuperarte entrenando |
 | <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un Basic-Fit abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
 
 ### Suerte (8)

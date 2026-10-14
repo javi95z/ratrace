@@ -3,6 +3,7 @@ import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
 import type { Content, InsuranceKind, ItemDef, ItemPerks, PlayerState, Property, Regime } from '../types';
+import { skillLevel } from './skills';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
 
@@ -69,7 +70,8 @@ export function careerSwing(p: PlayerState, content: Content, regime: Regime, ro
 
 /** Focus on top in a round: what the things held give, and what the career leaves over. */
 export function focusBonusOf(p: PlayerState, content: Content): number {
-  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0);
+  const fit = skillLevel(p, 'health', content) >= content.life.skills.healthFocusFrom ? 1 : 0;
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit;
 }
 
 /**
@@ -104,7 +106,10 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
   let total = life.children.length * mulDiv(living, rules.childCostPct, 100);
   if (life.partner) total += mulDiv(living, rules.partnerCostPct, 100);
   for (const kind of INSURANCE_KINDS) {
-    if (life.insurance[kind]) total += applyBp(living, rules.insurancePremiumBp[kind]);
+    if (!life.insurance[kind]) continue;
+    const premium = applyBp(living, rules.insurancePremiumBp[kind]);
+    // A body looked after is cheaper to insure.
+    total += kind === 'health' ? mulDiv(premium, Math.max(0, 100 - skillLevel(p, 'health', content) * rules.skills.healthPremiumOffPct), 100) : premium;
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
   for (const entry of life.recurring) {
@@ -131,6 +136,8 @@ export interface StatusParts {
   lifestyle: number;
   /** Lasting bonuses and losses from cards. */
   bonus: number;
+  /** Who the player knows. */
+  network: number;
 }
 
 /** Status by source. Within one ladder the best item counts in full and the others in part. */
@@ -169,13 +176,14 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     city: cityOf(content, p.cityId).prestige,
     lifestyle: rules.lifestyleStatus[p.lifestyleTier],
     bonus: life.bonusStatus,
+    network: skillLevel(p, 'network', content) * rules.skills.networkStatus,
   };
 }
 
 /** Status points: items, home, job title, city, lifestyle and lasting bonuses from cards. Never negative. */
 export function deriveStatus(p: PlayerState, content: Content, round: number): number {
   const parts = statusParts(p, content, round);
-  return Math.max(0, parts.items + parts.home + parts.job + parts.city + parts.lifestyle + parts.bonus);
+  return Math.max(0, parts.items + parts.home + parts.job + parts.city + parts.lifestyle + parts.bonus + parts.network);
 }
 
 /** Brings the derived fields of the player back in step with their life. Call after anything changes it. */

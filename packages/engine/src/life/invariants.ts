@@ -1,4 +1,5 @@
 import { isCount, isRecurring, isWhole } from '../checks';
+import { SKILLS } from '../types';
 import type { Content, GameView } from '../types';
 import { INSURANCE_KINDS } from './derive';
 
@@ -24,6 +25,13 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
     if (!isWhole(life[field])) breaks.push(`life.${field} is not a whole number: ${life[field]}`);
   }
   if (![0, 1, 2, 3].includes(life.financeSkill)) breaks.push(`life.financeSkill is not 0, 1, 2 or 3: ${life.financeSkill}`);
+  if (typeof life.skills !== 'object' || life.skills === null) breaks.push('life.skills is not a record');
+  else {
+    for (const skill of SKILLS) {
+      if (!isCount(life.skills[skill])) breaks.push(`life.skills.${skill} is not a non-negative whole number: ${life.skills[skill]}`);
+    }
+  }
+  if (!content.cities.some((city) => city.id === life.homeCityId)) breaks.push(`life.homeCityId is not a known city: ${life.homeCityId}`);
   if (life.rentTier !== 0 && life.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life.rentTier}`);
   if (![0, 1, 2, 3].includes(life.minLifestyleTier)) {
     breaks.push(`life.minLifestyleTier is not 0, 1, 2 or 3: ${life.minLifestyleTier}`);

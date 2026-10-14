@@ -3,6 +3,7 @@ import {
   applyCards,
   applyRound,
   businessRound,
+  skillLevel,
   createGame,
   findInvariantBreaks,
   netWorth,
@@ -244,7 +245,7 @@ describe('whole lives on the v1 content', () => {
           let businesses = 0;
           for (const e of result.events) if (e.kind === 'businessSold') businesses += e.price - e.capital;
           for (const owned of held.businesses) {
-            const round = businessRound(owned, content, now);
+            const round = businessRound(owned, content, now, skillLevel(held, 'management', content));
             let capital = owned.capital + round.retained;
             if (round.neglected) capital -= Math.round((Math.max(0, capital) * content.business.neglectDecayBp) / 10_000);
             capital = capital > 0 ? Math.floor((capital * after.priceLevel) / now.priceLevel) : 0;

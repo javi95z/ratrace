@@ -1,16 +1,4 @@
-import type {
-  AssetClass,
-  CardCategory,
-  CryptoPhase,
-  DebtKind,
-  FocusAction,
-  InsuranceKind,
-  LedgerLine,
-  OptionLock,
-  Regime,
-  RejectReason,
-  Trend,
-} from '@ratrace/engine';
+import type { AssetClass, CardCategory, CryptoPhase, DebtKind, FocusAction, InsuranceKind, LedgerLine, OptionLock, Regime, RejectReason, SkillId, Trend } from '@ratrace/engine';
 import type { BadgeGroup } from '../badges';
 
 export interface CardText {
@@ -38,6 +26,8 @@ export interface ContentText {
   lifestyleTiers: [string, string, string, string];
   insurance: Record<InsuranceKind, string>;
   focusActions: Record<FocusAction, string>;
+  /** The skills beyond the career and money sense, by name. */
+  skills: Record<SkillId, string>;
   debts: Record<DebtKind, string>;
   lives: Record<string, { name: string; perk: string; handicap: string; unlock: string }>;
   /** A crisis: its name, what it is in two lines, and one line for each of its rounds. */

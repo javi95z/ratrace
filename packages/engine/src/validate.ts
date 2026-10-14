@@ -1,7 +1,7 @@
 import { idAllowed, isCount, isFiniteNumber, isRecord, isRecurring, isWhole, notNegative, within } from './checks';
 import { validateCards } from './life/cardRules';
 import { INSURANCE_KINDS } from './life/derive';
-import { ITEM_PERKS } from './types';
+import { ITEM_PERKS, SKILLS } from './types';
 import type { Content, CryptoPhase, DebtKind, Regime, StartConfig } from './types';
 
 type Transitions = Record<string, ReadonlyArray<readonly [string, number]>>;
@@ -241,6 +241,28 @@ export function validateContent(c: Content): string[] {
     }
   }
   if (![0, 1, 2].includes(life.rentOutMinFinanceSkill as number)) errors.push('life.rentOutMinFinanceSkill must be 0, 1 or 2');
+  const skills = life.skills;
+  if (!isRecord(skills)) errors.push('life.skills must be a record');
+  else {
+    const steps = skills.levelPoints as unknown;
+    if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
+      errors.push('life.skills.levelPoints must be three rising positive whole numbers');
+    }
+    for (const field of ['studyPoints', 'practicePoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct'] as const) {
+      if (!(isWhole(skills[field]) && (skills[field] as number) >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
+    }
+    for (const field of ['languagesKeepRungFrom', 'languagesPartnerFrom', 'managementExtraFrom', 'healthFocusFrom'] as const) {
+      if (![1, 2, 3].includes(skills[field] as number)) errors.push(`life.skills.${field} must be 1, 2 or 3`);
+    }
+    for (const [skill, things] of Object.entries(isRecord(skills.practiceItems) ? skills.practiceItems : {})) {
+      if (!(SKILLS as readonly string[]).includes(skill)) errors.push(`life.skills.practiceItems names an unknown skill: ${skill}`);
+      for (const id of Array.isArray(things) ? things : []) if (!c.items.some((item) => item.id === id)) errors.push(`life.skills.practiceItems names an unknown item: ${String(id)}`);
+    }
+    for (const [skill, careers] of Object.entries(isRecord(skills.practiceCareers) ? skills.practiceCareers : {})) {
+      if (!(SKILLS as readonly string[]).includes(skill)) errors.push(`life.skills.practiceCareers names an unknown skill: ${skill}`);
+      for (const id of Array.isArray(careers) ? careers : []) if (!c.careers.some((career) => career.id === id)) errors.push(`life.skills.practiceCareers names an unknown career: ${String(id)}`);
+    }
+  }
 
   const w = c.world;
   if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 5)) {
@@ -342,6 +364,15 @@ function lifeStartErrors(content: Content, start: StartConfig): string[] {
   }
   if (!isCount(life.careerSkill)) errors.push('life.careerSkill must be a whole, non-negative number');
   if (![0, 1, 2, 3].includes(life.financeSkill as number)) errors.push('life.financeSkill must be 0, 1, 2 or 3');
+  if (life.skills !== undefined) {
+    if (!isRecord(life.skills)) errors.push('life.skills must be a record');
+    else {
+      for (const [skill, points] of Object.entries(life.skills)) {
+        if (!(SKILLS as readonly string[]).includes(skill)) errors.push(`life.skills names an unknown skill: ${skill}`);
+        else if (!isCount(points)) errors.push(`life.skills.${skill} must be a whole, non-negative number`);
+      }
+    }
+  }
   if (!(isWhole(life.focus) && life.focus >= 1 && life.focus <= 10)) errors.push('life.focus must be a whole number from 1 to 10');
   if (life.minLifestyleTier !== undefined) {
     const floor = life.minLifestyleTier as number;

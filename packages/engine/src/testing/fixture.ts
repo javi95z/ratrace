@@ -197,6 +197,27 @@ const base: Content = {
     unstablePayPct: 30,
     cheapMortgageBp: 50,
     cardsPerRound: 3,
+    // Skills are learnt only by study here, and do nothing: tests of a skill set what they need.
+    skills: {
+      levelPoints: [2, 5, 9],
+      studyPoints: 2,
+      practicePoints: 0,
+      practiceCareers: {},
+      practiceItems: {},
+      negotiationHuntRaisePct: 0,
+      negotiationPromotionPct: 0,
+      negotiationSalePct: 0,
+      languagesMoveOffPct: 0,
+      languagesKeepRungFrom: 3,
+      languagesPartnerFrom: 3,
+      networkHuntPct: 0,
+      networkStatus: 0,
+      managementProfitPct: 0,
+      managementManagerOffPct: 0,
+      managementExtraFrom: 3,
+      healthPremiumOffPct: 0,
+      healthFocusFrom: 3,
+    },
   },
   // No reforms and no cards by default, so tests of money are not disturbed. Tests of either add their own.
   world: {

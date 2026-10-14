@@ -102,6 +102,34 @@ export const life: LifeRules = {
   unstablePayPct: 30,
   cheapMortgageBp: 60,
   cardsPerRound: 3,
+  // A skill takes a round of study to start, three to be good at and five to master; living it gets
+  // there more slowly, and both together faster. Each level is worth about what a point of focus
+  // spent elsewhere would be, so that what to learn is a choice and not a chore.
+  skills: {
+    levelPoints: [2, 5, 9],
+    studyPoints: 2,
+    practicePoints: 1,
+    practiceCareers: {
+      negotiation: ['sales', 'law', 'finance'],
+      languages: ['hospitality'],
+      network: ['sales', 'influencer', 'hospitality', 'public'],
+      health: ['healthcare', 'medicine'],
+    },
+    practiceItems: { health: ['member_gym'] },
+    negotiationHuntRaisePct: 1,
+    negotiationPromotionPct: 2,
+    negotiationSalePct: 4,
+    languagesMoveOffPct: 15,
+    languagesKeepRungFrom: 2,
+    languagesPartnerFrom: 3,
+    networkHuntPct: 8,
+    networkStatus: 1,
+    managementProfitPct: 6,
+    managementManagerOffPct: 4,
+    managementExtraFrom: 3,
+    healthPremiumOffPct: 20,
+    healthFocusFrom: 3,
+  },
 };
 
 export const world: WorldRules = {

@@ -147,7 +147,7 @@
     "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
     "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
     "ratRace": "The bar at the top is the whole game: your passive income against what your life costs. Cover the cost two rounds running and you are out of the rat race.",
-    "invest": "Cash earns nothing. Savings pay a little and are safe. The Market tab has index funds, which anyone can buy, and more opens up as your finance skill grows.",
+    "invest": "Cash earns nothing. Savings pay a little and are safe. The Market tab has index funds, which anyone can buy, and more opens up as your money sense grows.",
     "focus": "The Lifestyle tab holds your focus: study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
     "flow": "Flow, at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
     "gotIt": "Got it",
@@ -226,13 +226,14 @@
     "swipe": "Swipe the card, or tap a choice",
     "choices": "Your choices: {title}",
     "changes": "What changes",
-    "rolled": "chance of this being what came up"
+    "rolled": "chance of this being what came up",
+    "needsSkill": "Needs {skill} {level}."
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
     "salaryBoost": "{value}% pay this round",
     "careerSkill": "{value} career skill",
-    "financeSkill": "{value} finance skill",
+    "financeSkill": "{value} money sense",
     "status": "{value} status",
     "focus": "{value} focus",
     "yearlyIncome": "+{amount}/yr",
@@ -273,7 +274,8 @@
       "best": "Within a ladder only the best you own counts."
     },
     "openBusiness": "You open a business: {name}",
-    "sellBusinesses": "You sell your businesses for {pct}% of what they are worth"
+    "sellBusinesses": "You sell your businesses for {pct}% of what they are worth",
+    "skill": "{skill} {value}"
   },
   "finance": {
     "tabs": {
@@ -321,7 +323,7 @@
       "crypto": "Crypto",
       "gold": "Gold",
       "yield": "Pays {rate}",
-      "needsSkill": "Finance skill {level}",
+      "needsSkill": "Money sense {level}",
       "buy": "Buy",
       "history": "Price since you were 22",
       "youHold": "You hold {amount}"
@@ -355,7 +357,7 @@
       "use": "What for",
       "liveIn": "Live in it",
       "rentOut": "Rent it out",
-      "rentOutLocked": "Renting out needs finance skill {level}",
+      "rentOutLocked": "Renting out needs money sense {level}",
       "payNow": "You pay {amount} now",
       "buy": "Buy",
       "owned": "Your properties",
@@ -403,7 +405,7 @@
       "studyHint": "+{n} career skill",
       "hunt": "Job hunt",
       "huntHint": "{pct}% chance of a lasting raise",
-      "noJob": "You have no job, so there is nothing to put your focus into.",
+      "noJob": "You have no job: no overtime and no job hunt. You can still learn, below.",
       "tier": "How you live",
       "tierFloor": "Your life does not allow less than this.",
       "tierStatus": "Status:",
@@ -421,7 +423,7 @@
       "here": "You live here",
       "moveHere": "Move here",
       "moveLapses": "Moving ends: {items}.",
-      "moveAbout": "Every city, with your year there beside the one you have here. Moving of your own accord costs a rung of your career and, with a partner, their pay for a round; a transfer a card offers costs none of that.",
+      "moveAbout": "Every city, with your year there beside the one you have here. Moving of your own accord costs a rung of your career and, with a partner, their pay for a round; a transfer a card offers costs none of that. With Languages {level} you keep your rung.",
       "cityStatus": "Status +{n}",
       "cityTrade": "{career} +{pct}%",
       "yearHere": "Here",
@@ -432,7 +434,10 @@
       "left": "Left over a year",
       "taxRates": "Income tax bands: {income}. On gains: {gains}.",
       "moveRung": "You arrive as {title}: a rung down, until your next promotion.",
-      "movePartner": "Your partner will go {years} years without pay while they find work."
+      "movePartner": "Your partner will go {years} years without pay while they find work.",
+      "learn": "Learn",
+      "learnAbout": "Each costs 1 focus and needs no job. Management is learnt only by running a business.",
+      "learnHint": "+{n} {skill} · level {level}"
     },
     "shop": {
       "status": "Status +{n}",
@@ -591,7 +596,7 @@
     "promoted": "Promoted: {title}",
     "jobHuntYes": "The job hunt paid off: a lasting raise.",
     "jobHuntNo": "The job hunt led nowhere this time.",
-    "financeSkill": "Experience pays: finance skill {level}.",
+    "financeSkill": "Experience pays: money sense {level}.",
     "moved": "You moved to {city}.",
     "escaped": "You are out of the rat race!",
     "escapedHint": "Your passive income covers your life. From here on, work is a choice.",
@@ -612,14 +617,15 @@
     "marginCallShort": "It fell too far for what you owed. It sold for {sold}, and you had to find another {short}.",
     "businessSold": "You sold your business ({name}) for {amount}.",
     "businessClosed": "Your business has closed: {name}.",
-    "businessClosedHint": "There was nothing left in it."
+    "businessClosedHint": "There was nothing left in it.",
+    "skill": "{skill} up: level {level}."
   },
   "profile": {
     "title": "Your life",
     "job": "Job",
     "noJob": "No job",
     "careerSkill": "Career skill",
-    "financeSkill": "Finance skill",
+    "financeSkill": "Money sense",
     "focus": "Focus",
     "family": "Family",
     "single": "Single",
@@ -905,7 +911,6 @@
     "nextIs": "Next: {title}",
     "top": "At the top of your career. Career skill {skill}.",
     "finance": "Money sense",
-    "financeSub": "What you can buy on your own",
     "focus": "Focus this round",
     "focusSub": "Your time and your energy",
     "focusRested": "+{n} from the rest your trip gave you",
@@ -934,7 +939,7 @@
     "focusAbout": "Focus is your time and your energy for two years. This round you have {total}.",
     "focusBonus": "{n} is from the rest your last trip gave you.",
     "focusLeft": "left this round",
-    "focusNoJob": "Without a job there is no overtime, no study and no hunt: your focus is for moving city and for the cards.",
+    "focusNoJob": "Without a job there is no overtime, no career study and no job hunt: focus is left for learning, for moving and for the cards.",
     "overtime": "Overtime",
     "overtimeGives": "+{pct}% pay this round.",
     "study": "Study",
@@ -955,7 +960,41 @@
     "focusExtra": "+{n} extra this round",
     "focusFromJob": "{n} comes from your job, which leaves time over.",
     "financeMargin": "And buying with money borrowed from the broker.",
-    "financeMaster": "No course gives the last level: it comes after {years} years with money invested."
+    "financeMaster": "No course gives the last level: it comes after {years} years with money invested.",
+    "skills": "Skills",
+    "skillsAbout": "What you can do besides your trade. Each has three levels, reached by studying with focus or by living it.",
+    "skillPoints": "{points}/{next}",
+    "skillTop": "Maxed out",
+    "skillProgress": "Towards level {level}",
+    "skillStudy": "{action}: +{n} a round, for 1 focus in the Lifestyle tab.",
+    "skillLiving": "The way you live now gives +{n} a round without study.",
+    "skillNotLiving": "The way you live now, you do not practise it without study.",
+    "skillNone": "Nothing yet: the first level comes at {n} points.",
+    "financeProgress": "Years with money invested",
+    "financeStuck": "Experience takes it no further: it needs a course or a good book.",
+    "financeIdle": "You have nothing invested right now, so experience does not count.",
+    "skillHow": {
+      "negotiation": "Learnt on a course, by looking for jobs, or by working in sales, law or finance.",
+      "languages": "Learnt in classes, by living away from the city you started in, or by working in hospitality.",
+      "network": "Learnt by going out to meet people, by belonging to a club, or by working in sales, social media, hospitality or public service.",
+      "management": "Learnt only by running a business: a lot if you run it yourself, a little if a manager does.",
+      "health": "Learnt by exercising, by going to the gym, or by working in healthcare or medicine."
+    },
+    "skillDoes": {
+      "negotiation": "A job hunt raises pay {hunt}% more; each promotion, {promo}% more; a business sells for {sale}% more.",
+      "languages": "Moving costs {off}% less.",
+      "languagesRung": "Moving of your own accord costs you no rung.",
+      "languagesPartner": "Your partner finds work the moment you land.",
+      "network": "+{hunt} points of chance on a job hunt, and +{status} status.",
+      "networkCards": "Some cards open a better option for you.",
+      "management": "Your businesses make {profit}% more, and a manager takes {off} points less.",
+      "managementExtra": "You can own one more business.",
+      "health": "Health insurance costs you {off}% less.",
+      "healthCards": "An injury heals with training, no physio bill.",
+      "healthFocus": "+1 focus every round.",
+      "negotiationCards": "When you ask for a raise, you can negotiate it properly."
+    },
+    "learnGives": "+{n} {skill}"
   },
   "rankings": {
     "title": "Rankings",

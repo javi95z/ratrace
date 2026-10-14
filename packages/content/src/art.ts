@@ -1,4 +1,4 @@
-import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks } from '@ratrace/engine';
+import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId } from '@ratrace/engine';
 
 /**
  * Which sprite shows each piece of content. Ids on the right are sprite ids in art/clean/manifest.json.
@@ -173,10 +173,24 @@ export const insuranceArt: Record<InsuranceKind, string> = {
   life: 'icon.insure_life',
   liability: 'icon.insure_liability',
 };
+/** The sign of each skill beyond the career, and of money sense. Drawn from the career signs until skills have their own. */
+export const skillArt: Record<SkillId | 'finance' | 'career', string> = {
+  career: 'icon.skill',
+  finance: 'icon.career_finance',
+  negotiation: 'icon.career_sales',
+  languages: 'icon.city',
+  network: 'icon.career_influencer',
+  management: 'icon.business',
+  health: 'icon.insure_health',
+};
 export const focusArt: Record<FocusAction, string> = {
   overtime: 'icon.focus_overtime',
   studyCareer: 'icon.focus_study',
   jobHunt: 'icon.focus_hunt',
+  studyNegotiation: skillArt.negotiation,
+  studyLanguages: skillArt.languages,
+  networking: skillArt.network,
+  exercise: skillArt.health,
 };
 /** What a headline is about. */
 export const topicArt: Record<Headline['topic'], string> = {

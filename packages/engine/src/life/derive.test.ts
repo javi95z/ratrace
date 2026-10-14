@@ -159,7 +159,7 @@ describe('status', () => {
       bonusStatus: 7,
       items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0, age: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
-    expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10 });
+    expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10, network: 0 });
     // A loss from a card shows as it is, though the status itself stops at zero.
     expect(statusParts(life({}, { bonusStatus: -50 }).player, content, 0).bonus).toBe(-50);
   });

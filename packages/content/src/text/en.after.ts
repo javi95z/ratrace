@@ -3,7 +3,7 @@
  * card's options. `null` where the dice speak, which already have a line for each outcome.
  */
 export const after: Record<string, ReadonlyArray<string | null>> = {
-  career_raise: ['The review comes and goes. The rent does not.', null, null],
+  career_raise: ['The review comes and goes. The rent does not.', null, null, null],
   career_competitor_offer: ['You stay. Your boss will never know how close it was.', 'New desk, new badge, and everything to learn again.', null],
   career_relocation: ['Someone else gets the promotion. You keep your neighbourhood.', 'Boxes, a one-way ticket and a new title on the card.'],
   career_overtime_crunch: [null, 'A month of cold dinners. It ships, and the payslip shows it.'],
@@ -20,7 +20,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_teaching: ['The class gets a stranger instead.', 'By spring you are the one at the blackboard.'],
   career_creator: ['You post nothing else. The video is forgotten in a week.', 'Your second video has forty views. Thirty are your mother.'],
   career_out_of_town: ['You stay. Someone with a car takes the job.', 'Forty minutes each way, and a payslip that makes up for it.', null],
-  life_club_contacts: ['You talk about the weather.', null, null],
+  life_club_contacts: ['You talk about the weather.', null, null, null],
   career_headhunter: ['You hang up politely. The coffee goes undrunk.', null, 'New York. More pay, more noise, and a rent that frightens.'],
   edu_masters: ['Your evenings stay your own.', 'Two years of evenings later, there is a degree on the wall.', 'The degree arrives before the last instalment does.'],
   edu_finance_course: ['Bonds stay a mystery a while longer.', 'Twelve evenings later, the financial news starts to make sense.'],
@@ -145,7 +145,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
     'An hour a week to say out loud what is going on.',
   ],
   health_dental: ['A new crown. You bite without fear.', null],
-  health_injury: ['Eight sessions and some rubber bands. The knee answers.', 'Ice, sofa and patience. It heals by itself, slowly.'],
+  health_injury: ['Eight sessions and some rubber bands. The knee answers.', 'Ice, sofa and patience. It heals by itself, slowly.', 'You know your body. Two weeks of careful work and you are running again.'],
   health_gym_habit: ['Next year. The stairs are still there.', 'Three mornings a week. You climb the stairs still talking.'],
   luck_lottery: ['No ticket. If it wins, you will hear about it for life.', null, null],
   luck_car_breakdown: ['The official garage, original parts and a bill on letterhead.', null],

@@ -14,7 +14,9 @@ export const careerCards: CardDef[] = [
   card('career_raise', 'career', { cooldown: 3, when: { employed: true } }, [
     {},
     { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 40, effects: {} }, { weight: 10, effects: { status: -2 } }] },
-    { effects: { focus: 1 }, outcomes: [{ weight: 70, effects: { salaryModPct: 5 } }, { weight: 30, effects: {} }] },
+    { effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 70, effects: { salaryModPct: 5 } }, { weight: 30, effects: {} }] },
+    // Someone who has learnt to bargain comes with figures nobody can wave away.
+    { when: { minSkills: { negotiation: 2 } }, effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 80, effects: { salaryModPct: 7 } }, { weight: 20, effects: { salaryModPct: 3 } }] },
   ]),
   card('career_competitor_offer', 'career', { cooldown: 5, when: { employed: true, minRound: 2 } }, [
     {},
@@ -23,7 +25,7 @@ export const careerCards: CardDef[] = [
   ]),
   card('career_relocation', 'career', { once: true, when: { employed: true, minLevel: 1, notCities: ['london'] } }, [
     {},
-    { effects: { job: { levelDelta: 1 }, moveCity: 'london', cash: usd(4_000) } },
+    { effects: { job: { levelDelta: 1 }, moveCity: 'london', cash: usd(4_000), skills: { languages: 1 } } },
   ]),
   card('career_overtime_crunch', 'career', { cooldown: 3, when: { employed: true } }, [
     { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { salaryModPct: -2 } }] },
@@ -131,7 +133,7 @@ export const educationCards: CardDef[] = [
   ]),
   card('edu_language', 'education', { once: true, when: { notFlags: ['bilingual'] } }, [
     {},
-    { effects: { focus: 1, cash: usd(-600), careerSkill: 1, status: 1, setFlags: ['bilingual'] } },
+    { effects: { focus: 1, cash: usd(-600), careerSkill: 1, status: 1, setFlags: ['bilingual'], skills: { languages: 3 } } },
   ]),
 ];
 

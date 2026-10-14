@@ -78,7 +78,8 @@ One English word, one Russian word, everywhere.
 | a unit of focus | единица фокуса | «четыре единицы фокуса на раунд» |
 | focus | фокус | uncountable: «+1 к фокусу», «фокуса осталось: 2 из 3» |
 | career skill | карьерный навык | |
-| finance skill, "money sense" | финансовый навык | one word for both of the English ones |
+| money sense (finance skill) | финансовая грамотность | «+1 к финансовой грамотности» |
+| skill (any of the others) | навык | the five: переговоры, языки, связи, управление, здоровье |
 | salary / pay | зарплата | |
 | overtime | сверхурочные | |
 | study | учёба | button: «Учиться» |

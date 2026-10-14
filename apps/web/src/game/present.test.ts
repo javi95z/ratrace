@@ -130,9 +130,16 @@ describe('effectTags', () => {
       { tone: 'good', text: '+5% salary for good' },
       { tone: 'bad', text: '−40% pay this round' },
       { tone: 'good', text: '+3 career skill' },
-      { tone: 'good', text: '+1 finance skill' },
+      { tone: 'good', text: '+1 money sense' },
       { tone: 'bad', text: '−2 status' },
       { tone: 'bad', text: '−2 focus' },
+    ]);
+  });
+
+  it('names the skill a card teaches', () => {
+    expect(tags({ skills: { languages: 3, health: -1 } })).toEqual([
+      { tone: 'good', text: 'Languages +3' },
+      { tone: 'bad', text: 'Health −1' },
     ]);
   });
 
@@ -272,6 +279,7 @@ describe('roundNotes', () => {
       { kind: 'jobHunt', success: true },
       { kind: 'promoted', careerId: 'tech', level: 2 },
       { kind: 'financeSkill', level: 1 },
+      { kind: 'skill', skill: 'negotiation', level: 2 },
       { kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false },
       { kind: 'lapsed', itemId: 'member_season_seat' },
       { kind: 'escaped', round: 7 },
@@ -279,7 +287,8 @@ describe('roundNotes', () => {
     expect(told.map((note) => note.title)).toEqual([
       'You are out of the rat race!',
       `Promoted: ${words('en').text.careers.tech.levels[2]}`,
-      'Experience pays: finance skill 1.',
+      'Experience pays: money sense 1.',
+      'Negotiation up: level 2.',
       'The job hunt paid off: a lasting raise.',
       'You moved to Dubai.',
       'You lost Bernabéu season seat.',
@@ -287,7 +296,7 @@ describe('roundNotes', () => {
     ]);
     expect(told[0]).toMatchObject({ tone: 'gold', hint: 'Your passive income covers your life. From here on, work is a choice.' });
     expect(told[1].tone).toBe('good');
-    expect(told[5].tone).toBe('bad');
+    expect(told[6].tone).toBe('bad');
   });
 
   it('says when the escape is lost, and when the player goes bankrupt', () => {

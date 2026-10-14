@@ -70,7 +70,16 @@ export const es: ContentText = {
   rentTiers: ['Habitación alquilada', 'Piso alquilado'],
   lifestyleTiers: ['Austero', 'Normal', 'Cómodo', 'Lujoso'],
   insurance: { health: 'Seguro de salud', home: 'Seguro de hogar', life: 'Seguro de vida', liability: 'Seguro de responsabilidad civil' },
-  focusActions: { overtime: 'Hacer horas extra', studyCareer: 'Formarte para tu carrera', jobHunt: 'Buscar un trabajo mejor' },
+  focusActions: {
+    overtime: 'Hacer horas extra',
+    studyCareer: 'Formarte para tu carrera',
+    jobHunt: 'Buscar un trabajo mejor',
+    studyNegotiation: 'Hacer un curso de negociación',
+    studyLanguages: 'Ir a clases de idiomas',
+    networking: 'Salir a hacer contactos',
+    exercise: 'Hacer deporte',
+  },
+  skills: { negotiation: 'Negociación', languages: 'Idiomas', network: 'Contactos', management: 'Gestión', health: 'Salud' },
   debts: { mortgageFixed: 'Hipoteca fija', mortgageVariable: 'Hipoteca variable', personalLoan: 'Préstamo personal', creditCard: 'Tarjeta de crédito', margin: 'Préstamo de margen' },
   lives: {
     nurse: {
@@ -269,6 +278,7 @@ export const es: ContentText = {
   badgeGroups: { wealth: 'Riqueza', escape: 'Salida', investing: 'Inversión', status: 'Estatus', life: 'Vida', misfortune: 'Mala suerte' },
   optionLocks: {
     condition: 'No está a tu alcance tal como están las cosas.',
+    skill: 'Te falta soltura para esto.',
     bankruptcy: 'Ningún banco te presta tan pronto después de una quiebra.',
     focus: 'No te queda foco para esto esta ronda.',
     owned: 'Ya lo tienes.',
@@ -304,7 +314,7 @@ export const es: ContentText = {
     'down-payment-too-low': 'El banco pide una entrada mayor.',
     'down-payment-too-high': 'Eso cubre todo el precio. Compra sin hipoteca.',
     'unknown-property': 'Ese inmueble no es tuyo.',
-    'needs-finance-skill': 'Necesitas más conocimientos financieros para eso.',
+    'needs-finance-skill': 'Te falta cultura financiera para eso.',
     'not-a-home': 'Ahí no se puede vivir. Solo se puede alquilar.',
     'unknown-action': 'Esa acción no existe.',
     'no-focus': 'No te queda foco esta ronda.',

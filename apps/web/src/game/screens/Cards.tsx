@@ -2,7 +2,7 @@
 
 import { cardArt } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
-import type { CardDef, GameEvent, OptionPreview, WorldState } from '@ratrace/engine';
+import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useMemo } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
@@ -41,6 +41,11 @@ function Offer({ def, index, preview, world }: { def: CardDef; index: number; pr
   for (const outcome of preview.outcomes) total += outcome.weight;
   // What cannot be chosen is dimmed part by part, not as a whole: the reason it is locked must stay easy to read.
   const dim = preview.available ? '' : 'opacity-50';
+  // A skill the player lacks is named, with the level it takes: it is something to work towards.
+  const lockWords = (lock: NonNullable<OptionPreview['lock']>) => {
+    const wanted = lock === 'skill' ? Object.entries(option.when?.minSkills ?? {})[0] : undefined;
+    return wanted ? t('needsSkill', { skill: words.text.skills[wanted[0] as SkillId], level: wanted[1] }) : words.text.optionLocks[lock];
+  };
 
   return (
     <>
@@ -49,7 +54,7 @@ function Offer({ def, index, preview, world }: { def: CardDef; index: number; pr
         {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
       </span>
       {/* Why it is locked is the engine's to say. */}
-      {preview.lock ? <span className="text-[13px] leading-snug text-cream">{words.text.optionLocks[preview.lock]}</span> : null}
+      {preview.lock ? <span className="text-[13px] leading-snug text-cream">{lockWords(preview.lock)}</span> : null}
       <Tags cash={preview.cash} tags={effectTags(words, effects, world, option.effects)} className={dim} />
       {(option.outcomes ?? []).map((outcome, k) => (
         <span key={k} className={`flex items-start gap-2 ${dim}`}>

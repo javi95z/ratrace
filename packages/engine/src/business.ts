@@ -1,10 +1,11 @@
 import { newId } from './ids';
 import { FLAG_SOLD_BUSINESS } from './life/flags';
 import { focusLeft } from './life/orders';
+import { maxBusinessesOf, skillLevel } from './life/skills';
 import { applyBp, isAmount, mulDiv } from './money';
 import type { Cents } from './money';
 import { indexed } from './rates';
-import type { Business, BusinessTypeDef, Content, Order, OrderContext, PlayerState, RejectReason, WorldState } from './types';
+import type { Business, BusinessTypeDef, Content, Order, OrderContext, PlayerState, RejectReason, SkillLevel, WorldState } from './types';
 
 /** The kind of a business, by id. Throws for one the content does not have: state is checked before it gets here. */
 export function businessTypeOf(content: Content, typeId: string): BusinessTypeDef {
@@ -33,7 +34,7 @@ export interface BusinessRound {
  * economy then moves it, a manager takes a share of what is made, and a business nobody runs
  * makes only part of what it could.
  */
-export function businessRound(business: Business, content: Content, world: WorldState): BusinessRound {
+export function businessRound(business: Business, content: Content, world: WorldState, management: SkillLevel = 0): BusinessRound {
   const type = businessTypeOf(content, business.typeId);
   const rules = content.business;
   const scale = indexed(type.scale, world);
@@ -45,16 +46,24 @@ export function businessRound(business: Business, content: Content, world: World
   const neglected = !business.manager && !business.tended;
   if (profit > 0) {
     if (neglected) profit = mulDiv(profit, rules.neglectProfitPct, 100);
-    if (business.manager) profit -= mulDiv(profit, type.managerPct, 100);
+    // An owner who knows the trade of running things gets more out of it, and pays a manager less.
+    else profit = mulDiv(profit, 100 + management * content.life.skills.managementProfitPct, 100);
+    if (business.manager) profit -= mulDiv(profit, managerShare(type, content, management), 100);
   }
   const payout = profit > 0 ? mulDiv(profit, business.payoutPct, 100) : 0;
   return { neglected, cyclePct, profit, payout, retained: profit - payout };
 }
 
+/** The share of profit a manager takes, in percent, from an owner with this much management. */
+export function managerShare(type: BusinessTypeDef, content: Content, management: SkillLevel): number {
+  return Math.max(0, type.managerPct - management * content.life.skills.managementManagerOffPct);
+}
+
 /** Everything the player's businesses pay out in the round. */
 export function businessIncome(p: PlayerState, content: Content, world: WorldState): Cents {
   let total = 0;
-  for (const business of p.businesses) total += businessRound(business, content, world).payout;
+  const management = skillLevel(p, 'management', content);
+  for (const business of p.businesses) total += businessRound(business, content, world, management).payout;
   return total;
 }
 
@@ -66,14 +75,16 @@ export function businessCapital(p: PlayerState): Cents {
 }
 
 /** What a business would fetch if sold in the given world: its capital, less what a buyer takes off in a poor economy. Never more than is in it. */
-export function businessSalePrice(business: Business, content: Content, world: WorldState): Cents {
-  return mulDiv(business.capital, content.business.salePct[world.regime], 100);
+export function businessSalePrice(business: Business, content: Content, world: WorldState, negotiation: SkillLevel = 0): Cents {
+  // A seller who can bargain gets more, but never more than is in it.
+  const pct = Math.min(100, content.business.salePct[world.regime] + negotiation * content.life.skills.negotiationSalePct);
+  return mulDiv(business.capital, Math.max(pct, content.business.salePct[world.regime]), 100);
 }
 
 /** Why the player may not open a business of a kind today, whatever the capital, or null when they may. */
 export function businessLock(p: PlayerState, type: BusinessTypeDef, content: Content): RejectReason | null {
   if (type.minFinanceSkill > p.life.financeSkill) return 'needs-finance-skill';
-  if (p.businesses.length >= content.business.maxBusinesses) return 'too-many-businesses';
+  if (p.businesses.length >= maxBusinessesOf(p, content)) return 'too-many-businesses';
   if (focusLeft(p) < 1) return 'no-focus';
   return null;
 }
@@ -129,7 +140,7 @@ export function executeBusinessOrder(p: PlayerState, order: BusinessOrder, ctx: 
       business.tended = true;
       return null;
     case 'sellBusiness': {
-      const price = businessSalePrice(business, content, world);
+      const price = businessSalePrice(business, content, world, skillLevel(p, 'negotiation', content));
       p.cash += price;
       // What was made by leaving profit in is a gain like any other, taxed when it is taken.
       ctx.tally.realisedGains += price - business.basis;
@@ -149,8 +160,9 @@ export function executeBusinessOrder(p: PlayerState, order: BusinessOrder, ctx: 
 export function growBusinesses(p: PlayerState, content: Content, now: WorldState, after: WorldState): string[] {
   const closed: string[] = [];
   const kept: Business[] = [];
+  const management = skillLevel(p, 'management', content);
   for (const business of p.businesses) {
-    const round = businessRound(business, content, now);
+    const round = businessRound(business, content, now, management);
     let capital = business.capital + round.retained;
     if (round.neglected) capital -= applyBp(Math.max(0, capital), content.business.neglectDecayBp);
     capital = capital > 0 ? mulDiv(capital, after.priceLevel, now.priceLevel) : 0;

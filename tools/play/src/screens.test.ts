@@ -183,7 +183,7 @@ describe('Russian', () => {
     });
     const money = (cents: number) => russian.fmt.money(indexed(cents, state.timeline[0]));
     expect(phrases).toEqual([
-      '+10% к зарплате навсегда', '−5% к зарплате в этом раунде', '+1 к карьерному навыку', '+1 к финансовому навыку', '−2 к статусу', '−1 к фокусу',
+      '+10% к зарплате навсегда', '−5% к зарплате в этом раунде', '+1 к карьерному навыку', '+1 к финансовой грамотности', '−2 к статусу', '−1 к фокусу',
       `+${money(100_000)}/год на 4 года`, `−${money(50_000)}/год`,
       'переезд в Лондон', '2 ребёнка', 'получаешь: Rolex Submariner', `Золото на ${money(500_000)}`,
       `+${money(100_000)} в пенсионный план`, `кредит на ${money(200_000)}`, 'покупаешь: студия под сдачу', 'ипотека теперь плавающая',
@@ -292,7 +292,7 @@ describe('Russian', () => {
     expect(ru.wealthPoints).toBe('Богатство');
     expect(ru.focus).toBe('Фокус');
     expect(ru.careerSkill).toBe('Карьерный навык');
-    expect(ru.financeSkill).toBe('Финансовый навык');
+    expect(ru.financeSkill).toBe('Финансовая грамотность');
     expect(ru.lifestyle).toBe('Образ жизни');
     expect(ru.home).toBe('Жильё');
     expect(ru.round(3, 20)).toBe('Раунд 3 из 20');

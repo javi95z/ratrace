@@ -45,7 +45,7 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
       if (broken !== null) breaks.push(broken);
     }
     if (new Set(p.businesses.map((business) => business.id)).size !== p.businesses.length) breaks.push('two businesses have the same id');
-    if (p.businesses.length > content.business.maxBusinesses) breaks.push('more businesses than the rules allow');
+    if (p.businesses.length > content.business.maxBusinesses + 1) breaks.push('more businesses than the rules allow');
   }
   if (!Array.isArray(p.plans)) breaks.push('plans is not a list');
   else {

@@ -23,7 +23,11 @@ const situationOf = (content: Content, state: GameView): Situation => ({
 export function optionLock(p: PlayerState, card: CardDef, index: number, at: Situation): OptionLock | null {
   if (index === 0) return null;
   const option = card.options[index];
-  if (!conditionHolds(option.when, p, at)) return 'condition';
+  if (!conditionHolds(option.when, p, at)) {
+    // Said apart when only a skill stands in the way: it is the one thing the player can work towards.
+    const { minSkills, ...rest } = option.when ?? {};
+    return minSkills !== undefined && conditionHolds(rest, p, at) ? 'skill' : 'condition';
+  }
   // No bank lends during the bankruptcy lock, through a card or otherwise, and no bank takes a bankrupt as a guarantor.
   const all = [option.effects ?? {}, ...(option.outcomes ?? []).map((outcome) => outcome.effects)];
   const borrows = all.some((e) => e.loan !== undefined || (e.property !== undefined && e.property.downPct < 100));

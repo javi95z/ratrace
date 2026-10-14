@@ -97,6 +97,22 @@ describe('the work panel of the profile', () => {
     expect(within(sheet).getByText(new RegExp(`after ${content.life.financeExperienceRounds * content.yearsPerRound} years with money invested`))).toBeTruthy();
   });
 
+  it('lists every skill with how far along it is, and opens what each level gives and how it is learnt', async () => {
+    const { panel, user } = await nurse();
+    const skills = within(panel).getByRole('region', { name: 'Skills' });
+    for (const name of ['Money sense', 'Negotiation', 'Languages', 'Network', 'Management', 'Health']) expect(within(skills).getByText(name)).toBeTruthy();
+    expect(within(skills).getAllByText('0/2')).toHaveLength(5);
+    await user.click(within(skills).getByText('Health'));
+    const sheet = screen.getByRole('dialog', { name: 'Health' });
+    expect(within(sheet).getByText('Nothing yet: the first level comes at 2 points.')).toBeTruthy();
+    // Each level counted in full: a fifth off the premium a level, an injury healed by training from the second, and focus at the top.
+    expect(within(sheet).getByText('Health insurance costs you 60% less.')).toBeTruthy();
+    expect(within(sheet).getByText('+1 focus every round.')).toBeTruthy();
+    expect(within(sheet).getByText('Exercise: +2 a round, for 1 focus in the Lifestyle tab.')).toBeTruthy();
+    // A nurse lives it at work.
+    expect(within(sheet).getByText('The way you live now gives +1 a round without study.')).toBeTruthy();
+  });
+
   it('opens what focus is spent on, each use at what it is worth to this player', async () => {
     const { work, user, panel } = await nurse();
     await user.click(within(panel).getByRole('button', { name: /^Focus this round/ }));

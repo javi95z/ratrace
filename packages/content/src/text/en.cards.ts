@@ -16,6 +16,7 @@ export const cards: Record<string, CardText> = {
     'Say nothing',
     ['Ask for it', 'They say yes, and faster than you expected.', 'A warm smile and "not this cycle".', 'It lands badly. People noticed.'],
     ['Build a case first', 'Numbers on the table. They sign.', 'A good case, a frozen budget.'],
+    ['Negotiate it properly', 'You knew your number and you got it.', 'Not all of it. More than they meant to give.'],
   ]),
   career_competitor_offer: c('A competitor calls', 'The rival across town wants you, and they are offering more.', [
     'Stay loyal',
@@ -289,6 +290,7 @@ export const cards: Record<string, CardText> = {
     'Change the subject',
     ['Ask if they are hiring', 'They introduce you to the one who hires. You leave with a raise.', 'Kind words and nothing more.'],
     ['Go into their deal', 'It works. Your share arrives every year.', 'You never see that money again.'],
+    ['Ask to meet the one who decides', 'One dinner later, they offer you the job above yours.', 'They listen with interest. They will call.'],
   ]),
   life_bottle_service: c('Bottle service', 'Someone suggests a table. The waiter is already holding the menu.', [
     'Go home early',
@@ -367,6 +369,7 @@ export const cards: Record<string, CardText> = {
   health_injury: c('A sports injury', 'A five-a-side game, a wet pitch, a knee.', [
     'Physiotherapy',
     'Rest it',
+    'Train your way back',
   ]),
   health_gym_habit: c('Join the gym', 'There is a {item:member_gym} downstairs and you get out of breath on the stairs.', [
     'Maybe next year',

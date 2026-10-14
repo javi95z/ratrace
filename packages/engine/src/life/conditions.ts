@@ -1,8 +1,9 @@
 import { PRICE_LEVEL_START } from '../rates';
 import { netWorth } from '../selectors';
-import type { Condition, Content, PlayerState, WorldState, WorldTrigger } from '../types';
+import type { Condition, Content, PlayerState, SkillId, WorldState, WorldTrigger } from '../types';
 import { homeOf } from './derive';
 import { hasFlag } from './flags';
+import { levelOfPoints } from './skills';
 
 /** Where and when something is being decided. */
 export interface Situation {
@@ -48,6 +49,11 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
   }
   if (when.minFinanceSkill !== undefined && life.financeSkill < when.minFinanceSkill) return false;
   if (when.maxFinanceSkill !== undefined && life.financeSkill > when.maxFinanceSkill) return false;
+  if (when.minSkills !== undefined) {
+    for (const [skill, level] of Object.entries(when.minSkills) as Array<[SkillId, number]>) {
+      if (levelOfPoints(life.skills[skill], content) < level) return false;
+    }
+  }
 
   if (when.flags !== undefined && !when.flags.every((flag) => hasFlag(life.flags, flag))) return false;
   if (when.notFlags !== undefined && when.notFlags.some((flag) => hasFlag(life.flags, flag))) return false;

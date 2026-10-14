@@ -21,10 +21,12 @@ export const healthCards: CardDef[] = [
   card('health_injury', 'health', { cooldown: 6 }, [
     { effects: { focus: 1, cash: usd(-1_800), protection: { insurance: 'health', coverPct: 80 } } },
     { effects: { focus: 2 } },
+    // A body that is used to work heals faster, and for nothing.
+    { when: { minSkills: { health: 2 } }, effects: { focus: 1 } },
   ]),
   card('health_gym_habit', 'health', { when: { notFlags: ['fit'], notItems: ['member_gym'] } }, [
     {},
-    { effects: { focus: 1, buyItem: { itemId: 'member_gym', pricePct: 100 }, setFlags: ['fit'] } },
+    { effects: { focus: 1, buyItem: { itemId: 'member_gym', pricePct: 100 }, setFlags: ['fit'], skills: { health: 2 } } },
   ]),
 ];
 

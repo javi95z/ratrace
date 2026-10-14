@@ -1,10 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  badgeArt, badges, cardArt, cityArt, cityIcon, content, CONTENT_VERSION, FAMILY_ART, focusArt, insuranceArt, itemArt, lifestyleArt,
-  lives, portraitArt, propertyArt, rentTierArt, START_AGE, textFor,
-} from '@ratrace/content';
+import { badgeArt, badges, cardArt, cityArt, cityIcon, content, CONTENT_VERSION, FAMILY_ART, focusArt, insuranceArt, itemArt, lifestyleArt, lives, portraitArt, propertyArt, rentTierArt, skillArt, START_AGE, textFor } from '@ratrace/content';
+import { STUDY_OF } from '@ratrace/engine';
 import type { ItemDef } from '@ratrace/engine';
 
 /**
@@ -115,7 +113,7 @@ say(
   '## Negocios',
   `Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el ${content.business.neglectProfitPct} % y pierde un ${pct(content.business.neglectDecayBp)} de su capital. Se pueden llevar hasta ${content.business.maxBusinesses}. Vendido desde la pestaña vale entre el ${Math.min(...Object.values(content.business.salePct))} % y el ${Math.max(...Object.values(content.business.salePct))} % de lo que tiene dentro, según la economía; solo una carta paga más.`,
   table(
-    ['Negocio', 'Capital mínimo', 'Rinde al año', 'Hecho para', 'Con la economía', 'Encargado', 'Saber financiero'],
+    ['Negocio', 'Capital mínimo', 'Rinde al año', 'Hecho para', 'Con la economía', 'Encargado', 'Cultura financiera'],
     content.business.types.map((type) => [
       text.businessTypes[type.id].name,
       usd(type.minCapital),
@@ -230,9 +228,9 @@ say(
 // ---------------------------------------------------------------------------------------------
 say(
   '## Inversiones',
-  'El nivel de finanzas dice qué se puede comprar por cuenta propia. Una carta puede dar algo de un nivel más alto.',
+  'La cultura financiera dice qué se puede comprar por cuenta propia. Una carta puede dar algo de un nivel más alto.',
   table(
-    ['Inversión', 'Ticker', 'Clase', 'Finanzas', 'Renta', 'Qué es'],
+    ['Inversión', 'Ticker', 'Clase', 'Cultura financiera', 'Renta', 'Qué es'],
     content.assets.map((asset) => [
       names.assets[asset.id].name,
       names.assets[asset.id].ticker,
@@ -243,6 +241,8 @@ say(
     ]),
   ),
 );
+
+const STUDIES = Object.keys(STUDY_OF) as Array<keyof typeof STUDY_OF>;
 
 // ---------------------------------------------------------------------------------------------
 say(
@@ -261,6 +261,18 @@ say(
       [img(focusArt.overtime), text.focusActions.overtime, 'Más sueldo esa ronda, según la carrera'],
       [img(focusArt.studyCareer), text.focusActions.studyCareer, `+${content.life.studySkill} de experiencia, además del +${content.life.workSkill} por trabajar`],
       [img(focusArt.jobHunt), text.focusActions.jobHunt, `${content.life.jobHuntChancePct} % de probabilidad de un +${content.life.jobHuntRaisePct} % de sueldo para siempre`],
+      ...STUDIES.map((action) => [img(focusArt[action]), text.focusActions[action], `+${content.life.skills.studyPoints} puntos de ${text.skills[STUDY_OF[action]]}`]),
+    ],
+  ),
+  `Habilidades: cada una tiene tres niveles, a ${content.life.skills.levelPoints.join(', ')} puntos. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,
+  table(
+    ['', 'Habilidad', 'Por nivel', 'Se practica'],
+    [
+      [img(skillArt.negotiation), text.skills.negotiation, `+${content.life.skills.negotiationHuntRaisePct} % al buscar trabajo, +${content.life.skills.negotiationPromotionPct} % por ascenso, negocio vendido un ${content.life.skills.negotiationSalePct} % más caro`, `Buscando trabajo; ${(content.life.skills.practiceCareers.negotiation ?? []).map((id) => text.careers[id].name).join(', ')}`],
+      [img(skillArt.languages), text.skills.languages, `Mudanza un ${content.life.skills.languagesMoveOffPct} % más barata; desde ${content.life.skills.languagesKeepRungFrom} sin perder puesto; desde ${content.life.skills.languagesPartnerFrom} la pareja trabaja al llegar`, `Fuera de la ciudad de origen; ${(content.life.skills.practiceCareers.languages ?? []).map((id) => text.careers[id].name).join(', ')}`],
+      [img(skillArt.network), text.skills.network, `+${content.life.skills.networkHuntPct} puntos al buscar trabajo, +${content.life.skills.networkStatus} de estatus`, `Socio de un club; ${(content.life.skills.practiceCareers.network ?? []).map((id) => text.careers[id].name).join(', ')}`],
+      [img(skillArt.management), text.skills.management, `+${content.life.skills.managementProfitPct} % de beneficio, encargado ${content.life.skills.managementManagerOffPct} puntos más barato; desde ${content.life.skills.managementExtraFrom} un negocio más`, 'Llevando un negocio'],
+      [img(skillArt.health), text.skills.health, `Seguro de salud un ${content.life.skills.healthPremiumOffPct} % más barato; desde ${content.life.skills.healthFocusFrom} +1 de foco`, `Gimnasio; ${(content.life.skills.practiceCareers.health ?? []).map((id) => text.careers[id].name).join(', ')}`],
     ],
   ),
   `Familia: una pareja añade un ${content.life.partnerCostPct} % del coste de vida, y cada hijo un ${content.life.childCostPct} % durante ${content.life.childRounds * content.yearsPerRound} años.`,

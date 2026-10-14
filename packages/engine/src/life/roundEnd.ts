@@ -4,6 +4,7 @@ import type { Rng } from '../rng';
 import type { Content, FinanceSkill, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf } from './derive';
 import { lapsingIn } from './orders';
+import { learnSkills, skillLevel } from './skills';
 
 /**
  * What a move costs beyond its price, as the player lands. Moved by their own choice they start a
@@ -14,17 +15,31 @@ import { lapsingIn } from './orders';
 export function landingOf(p: PlayerState, content: Content, transfer: boolean): { level: number | null; rungsLost: number; partnerSettling: number } {
   const job = p.life.career;
   if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
-  const level = job ? Math.max(0, job.level - content.life.moveRungsLost) : null;
+  // Someone who speaks the language is known for what they can do from the first day, and their partner too.
+  const languages = skillLevel(p, 'languages', content);
+  const rules = content.life.skills;
+  const lost = languages >= rules.languagesKeepRungFrom ? 0 : content.life.moveRungsLost;
+  const level = job ? Math.max(0, job.level - lost) : null;
   return {
     level,
     rungsLost: job && level !== null ? job.level - level : 0,
-    partnerSettling: p.life.partner ? Math.max(p.life.partnerSettling, content.life.partnerSettlingRounds) : p.life.partnerSettling,
+    partnerSettling: p.life.partner && languages < rules.languagesPartnerFrom ? Math.max(p.life.partnerSettling, content.life.partnerSettlingRounds) : p.life.partnerSettling,
   };
 }
 
-/** The chance in percent that a job hunt ends in a raise: the rule's own, and what the player's things add to it. */
-export function jobHuntChance(content: Content, perks: Required<ItemPerks>): number {
-  return Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct);
+/** The chance in percent that a job hunt ends in a raise: the rule's own, what the player's things add, and who they know. */
+export function jobHuntChance(content: Content, perks: Required<ItemPerks>, p: PlayerState): number {
+  return Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct + skillLevel(p, 'network', content) * content.life.skills.networkHuntPct);
+}
+
+/** The lasting raise a successful job hunt brings, in percent: more for someone who can ask for it. */
+export function jobHuntRaise(content: Content, p: PlayerState): number {
+  return content.life.jobHuntRaisePct + skillLevel(p, 'negotiation', content) * content.life.skills.negotiationHuntRaisePct;
+}
+
+/** What a promotion adds to pay on top of the rung, in percent, for someone who negotiates it. */
+export function promotionRaise(content: Content, p: PlayerState): number {
+  return skillLevel(p, 'negotiation', content) * content.life.skills.negotiationPromotionPct;
 }
 
 /**
@@ -51,14 +66,17 @@ export function ageLife(
     const next = careerOf(content, life.career.id).levels[life.career.level + 1];
     if (next !== undefined && life.careerSkill >= next.minSkill) {
       life.career.level += 1;
+      life.salaryModPct += promotionRaise(content, p);
       events.push({ kind: 'promoted', careerId: life.career.id, level: life.career.level });
     }
   }
   if (tally.focusActions.includes('jobHunt')) {
-    const success = rng.chance(jobHuntChance(content, perks));
-    if (success) life.salaryModPct += rules.jobHuntRaisePct;
+    const success = rng.chance(jobHuntChance(content, perks, p));
+    if (success) life.salaryModPct += jobHuntRaise(content, p);
     events.push({ kind: 'jobHunt', success });
   }
+
+  learnSkills(p, content, tally, events);
 
   const kept = [];
   for (const owned of life.items) {

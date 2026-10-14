@@ -5,8 +5,9 @@ import { indexed } from '../rates';
 import type { Cents } from '../money';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, WorldState } from '../types';
 import { INSURANCE_KINDS, perksOf } from './derive';
+import { isStudy, skillLevel } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
 export type LifeOrder = Extract<
   Order,
@@ -25,14 +26,20 @@ export function focusTotal(p: PlayerState): number {
 
 function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
-  if (p.life.career === null) return 'no-job';
+  // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
+  if (p.life.career === null && !isStudy(action)) return 'no-job';
   if (ctx.tally.focusActions.includes(action)) return 'already-done';
   if (focusLeft(p) < 1) return 'no-focus';
   p.life.focusUsed += 1;
   ctx.tally.focusActions.push(action);
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
-  if (action === 'overtime') p.life.salaryBoostPct += careerOf(ctx.content, p.life.career.id).overtimePct;
+  if (action === 'overtime' && p.life.career !== null) p.life.salaryBoostPct += overtimeOf(p, ctx.content);
   return null;
+}
+
+/** What a round of overtime adds to this round's pay, in percent. Nothing without a career. */
+export function overtimeOf(p: PlayerState, content: Content): number {
+  return p.life.career === null ? 0 : careerOf(content, p.life.career.id).overtimePct;
 }
 
 /** What an item costs in the shop today, and what it is worth the moment it is bought. */
@@ -59,7 +66,9 @@ export function moveCost(content: Content, world: WorldState, city: CityDef, p: 
   // A household is dearer to move than a suitcase: a partner and each child add their share.
   const family = (p.life.partner ? content.life.movePartnerPct : 0) + p.life.children.length * content.life.moveChildPct;
   const full = mulDiv(alone, 100 + family, 100);
-  return mulDiv(full, Math.max(0, 100 - perksOf(p, content).moveCostOffPct), 100);
+  // Someone who speaks the language finds a flat and a removal firm for less.
+  const off = perksOf(p, content).moveCostOffPct + skillLevel(p, 'languages', content) * content.life.skills.languagesMoveOffPct;
+  return mulDiv(full, Math.max(0, 100 - off), 100);
 }
 
 /**

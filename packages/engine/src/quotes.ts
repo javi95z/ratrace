@@ -1,19 +1,21 @@
-import { businessLock, businessRound, businessSalePrice, businessTypeOf } from './business';
+import { businessLock, businessRound, businessSalePrice, businessTypeOf, managerShare } from './business';
 import type { BusinessRound } from './business';
 import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, soldIn } from './life/orders';
-import { jobHuntChance, landingOf } from './life/roundEnd';
+import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, overtimeOf, soldIn } from './life/orders';
+import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
+import { levelOfPoints, maxBusinessesOf, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp, BP, mulDiv } from './money';
 import type { Bp, Cents } from './money';
 import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
-import type { Business, Content, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, WorldState } from './types';
+import { SKILLS } from './types';
+import type { Business, Content, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StudyAction, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -318,6 +320,8 @@ export interface WorkQuote {
   /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
   jobHuntChancePct: number;
   jobHuntRaisePct: number;
+  /** What a promotion adds to pay on top of the rung, in percent: what the player can negotiate. */
+  promotionRaisePct: number;
   focus: { left: number; total: number; bonus: number };
   /** What the things owned add, by perk. */
   perks: Required<ItemPerks>;
@@ -345,9 +349,10 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     skill: p.life.careerSkill,
     workSkill: content.life.workSkill,
     studySkill: content.life.studySkill + perks.studySkill,
-    overtimePct: job ? careerOf(content, job.id).overtimePct : 0,
-    jobHuntChancePct: jobHuntChance(content, perks),
-    jobHuntRaisePct: content.life.jobHuntRaisePct,
+    overtimePct: overtimeOf(p, content),
+    jobHuntChancePct: jobHuntChance(content, perks, p),
+    jobHuntRaisePct: jobHuntRaise(content, p),
+    promotionRaisePct: promotionRaise(content, p),
     focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus },
     perks,
     traits: {
@@ -530,12 +535,13 @@ export interface BusinessesQuote {
 export function quoteBusinesses(content: Content, view: GameView): BusinessesQuote {
   const p = view.player;
   const world = view.timeline[view.round];
+  const management = skillLevel(p, 'management', content);
   return {
     owned: p.businesses.map((business) => ({
       ...business,
-      ...businessRound(business, content, world),
-      salePrice: businessSalePrice(business, content, world),
-      managerPct: businessTypeOf(content, business.typeId).managerPct,
+      ...businessRound(business, content, world, management),
+      salePrice: businessSalePrice(business, content, world, skillLevel(p, 'negotiation', content)),
+      managerPct: managerShare(businessTypeOf(content, business.typeId), content, management),
     })),
     kinds: content.business.types.map((type) => ({
       typeId: type.id,
@@ -547,8 +553,59 @@ export function quoteBusinesses(content: Content, view: GameView): BusinessesQuo
       minFinanceSkill: type.minFinanceSkill,
       lock: businessLock(p, type, content),
     })),
-    max: content.business.maxBusinesses,
+    max: maxBusinessesOf(p, content),
     payouts: [...content.business.payouts],
     focusLeft: focusLeft(p),
+  };
+}
+
+export interface SkillQuote {
+  skill: SkillId;
+  points: number;
+  level: SkillLevel;
+  /** Points at which the level the player is at began, and at which the next begins. Null at the top. */
+  from: number;
+  next: number | null;
+  /** The use of focus that studies it, and what a round of it gives. Null for what is learnt only by doing it. */
+  study: StudyAction | null;
+  studyPoints: number;
+  /** What the player's life as it stands teaches of it in a round, without study. */
+  practice: number;
+}
+
+export interface SkillsQuote {
+  skills: SkillQuote[];
+  /** Money sense: its level, the rounds of investing behind it, and the round count that takes it further by experience. Null when experience takes it no further. */
+  finance: { level: FinanceSkill; investedRounds: number; nextAt: number | null; investing: boolean };
+}
+
+/** Every skill of the player, where it stands and how it grows: study, life as it is lived, and the years with money at work. */
+export function quoteSkills(content: Content, view: GameView): SkillsQuote {
+  const p = view.player;
+  const rules = content.life;
+  const tally = { focusActions: [] } as unknown as Parameters<typeof practised>[2];
+  const living = practised(p, content, tally);
+  const studyOf = Object.fromEntries(Object.entries(STUDY_OF).map(([action, skill]) => [skill, action])) as Partial<Record<SkillId, StudyAction>>;
+  const life = p.life;
+  const investing = Object.keys(p.positions).length > 0 || p.pension > 0;
+  const nextAt =
+    life.financeSkill < 2 ? (life.investedRounds < rules.financeExperienceRounds ? rules.financeExperienceRounds : null) : life.financeSkill === 2 ? rules.financeMasterRounds : null;
+  return {
+    skills: SKILLS.map((skill) => {
+      const points = life.skills[skill];
+      const level = levelOfPoints(points, content);
+      const thresholds = rules.skills.levelPoints;
+      return {
+        skill,
+        points,
+        level,
+        from: level === 0 ? 0 : thresholds[level - 1],
+        next: level === 3 ? null : thresholds[level],
+        study: studyOf[skill] ?? null,
+        studyPoints: rules.skills.studyPoints,
+        practice: living[skill],
+      };
+    }),
+    finance: { level: life.financeSkill, investedRounds: life.investedRounds, nextAt, investing },
   };
 }

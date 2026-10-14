@@ -145,7 +145,7 @@ describe('property that is only for letting', () => {
     await user.click(screen.getByRole('button', { name: /^Parking space/ }));
     const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking space' });
     expect(within(sheet).queryByRole('radiogroup', { name: 'What for' })).toBeNull();
-    expect(within(sheet).getByText('Renting out needs finance skill 2')).toBeTruthy();
+    expect(within(sheet).getByText('Renting out needs money sense 2')).toBeTruthy();
     expect((within(sheet).getByRole('button', { name: 'Buy' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -214,7 +214,8 @@ describe('the lifestyle tab', () => {
       for (const choice of within(screen.getByRole('radiogroup', { name: group })).getAllByRole('radio')) expect(pictured(choice), `${group}: ${choice.textContent}`).toBe(true);
     }
     const switches = screen.getAllByRole('switch');
-    expect(switches).toHaveLength(3 + 4);
+    // Three ways to work, four to learn, four insurances.
+    expect(switches).toHaveLength(3 + 4 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
   });
 });

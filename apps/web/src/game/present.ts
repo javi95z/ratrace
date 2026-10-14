@@ -1,6 +1,6 @@
-import { careerArt, cityIcon, START_AGE } from '@ratrace/content';
+import { careerArt, cityIcon, skillArt, START_AGE } from '@ratrace/content';
 import type { CityLight, ContentText, Ending, Names } from '@ratrace/content';
-import { indexed, ITEM_PERKS } from '@ratrace/engine';
+import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
@@ -101,6 +101,10 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.salaryBoostPct) add(toneOf(effects.salaryBoostPct), t('salaryBoost', { value: signed(effects.salaryBoostPct) }));
   if (effects.careerSkill) add(toneOf(effects.careerSkill), t('careerSkill', { value: signed(effects.careerSkill) }));
   if (effects.financeSkill) add(toneOf(effects.financeSkill), t('financeSkill', { value: signed(effects.financeSkill) }));
+  for (const skill of SKILLS) {
+    const points = effects.skills?.[skill];
+    if (points) add(toneOf(points), t('skill', { skill: text.skills[skill], value: signed(points) }));
+  }
   if (effects.status) add(toneOf(effects.status), t('status', { value: signed(effects.status) }));
   if (effects.focus) add('bad', t('focus', { value: signed(-effects.focus) }));
   for (const entry of effects.recurring ?? []) {
@@ -204,7 +208,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'setRented':
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
-      return t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : 'hunt');
+      return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : 'hunt');
     case 'buyItem':
       return t(order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'sellItem': {
@@ -241,7 +245,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'skill', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -262,7 +266,10 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         add(event, { tone: 'good', icon: careerArt(event.careerId), title: t('promoted', { title: text.careers[event.careerId].levels[event.level] }), cheer: true });
         break;
       case 'financeSkill':
-        add(event, { tone: 'good', icon: 'icon.skill', title: t('financeSkill', { level: event.level }) });
+        add(event, { tone: 'good', icon: skillArt.finance, title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'skill':
+        add(event, { tone: 'good', icon: skillArt[event.skill], title: t('skill', { skill: text.skills[event.skill], level: event.level }) });
         break;
       case 'businessSold':
         add(event, { tone: 'good', icon: 'icon.business', title: t('businessSold', { name: text.businessTypes[event.typeId]?.name ?? event.typeId, amount: fmt.money(event.price) }) });

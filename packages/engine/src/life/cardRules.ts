@@ -1,4 +1,5 @@
 import { idAllowed, isCount, isRecord, isRecurring, isWhole, within } from '../checks';
+import { SKILLS } from '../types';
 import type { Content } from '../types';
 import { INSURANCE_KINDS } from './derive';
 
@@ -74,6 +75,10 @@ export function validateCards(c: Content): string[] {
     employed: flag, partner: flag, ownsHome: flag, landlord: flag, hasMortgage: flag, hasBusiness: flag,
     minNetWorth: whole, maxNetWorth: whole, cityPropertyReturnAtMostBp: whole,
     minFinanceSkill: skill, maxFinanceSkill: skill,
+    minSkills: (value) =>
+      isRecord(value) && Object.entries(value).every(([name, level]) => (SKILLS as readonly string[]).includes(name) && [1, 2, 3].includes(level as number))
+        ? null
+        : 'asks for skills that are unknown or at a level that is not 1, 2 or 3',
     flags: flagList, notFlags: flagList,
     holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
     insured: oneOf(INSURANCE_KINDS, 'insurance'),
@@ -115,6 +120,10 @@ export function validateCards(c: Content): string[] {
   const effectChecks: Record<string, Check> = {
     cash: whole, cashSalaryPct: whole, cashNetWorthPct: whole, salaryModPct: whole, salaryBoostPct: whole,
     careerSkill: whole, financeSkill: whole, status: whole,
+    skills: (value) =>
+      isRecord(value) && Object.entries(value).every(([name, points]) => (SKILLS as readonly string[]).includes(name) && isWhole(points))
+        ? null
+        : 'adds to skills that are unknown, or by something that is not a whole number',
     loan: positive, pension: positive, homeValue: positive,
     business: (value) => {
       if (!isRecord(value) || !c.business.types.some((type) => type.id === value.typeId)) return `opens a business of an unknown kind: ${String(isRecord(value) ? value.typeId : value)}`;
@@ -215,8 +224,13 @@ export function validateCards(c: Content): string[] {
     }
     checkCondition(card.when, name);
 
-    if (!Array.isArray(card.options) || card.options.length < 2 || card.options.length > 3) {
-      errors.push(`${name} needs two or three options`);
+    // A fourth way out is only for those with the skill for it, so most players still see three.
+    if (!Array.isArray(card.options) || card.options.length < 2 || card.options.length > 4) {
+      errors.push(`${name} needs two to four options`);
+      continue;
+    }
+    if (card.options.length === 4 && !isRecord(card.options[3]?.when)) {
+      errors.push(`${name} has a fourth option open to everyone`);
       continue;
     }
     card.options.forEach((option, i) => {

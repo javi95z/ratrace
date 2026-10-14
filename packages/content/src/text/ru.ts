@@ -70,7 +70,16 @@ export const ru: ContentText = {
   rentTiers: ['Съёмная комната', 'Съёмная квартира'],
   lifestyleTiers: ['Эконом', 'Стандарт', 'Комфорт', 'Люкс'],
   insurance: { health: 'Медицинская страховка', home: 'Страховка жилья', life: 'Страховка жизни', liability: 'Страховка ответственности' },
-  focusActions: { overtime: 'Работать сверхурочно', studyCareer: 'Учиться ради карьеры', jobHunt: 'Искать работу получше' },
+  focusActions: {
+    overtime: 'Работать сверхурочно',
+    studyCareer: 'Учиться ради карьеры',
+    jobHunt: 'Искать работу получше',
+    studyNegotiation: 'Пройти курс переговоров',
+    studyLanguages: 'Ходить на языковые курсы',
+    networking: 'Заводить знакомства',
+    exercise: 'Заниматься спортом',
+  },
+  skills: { negotiation: 'Переговоры', languages: 'Языки', network: 'Связи', management: 'Управление', health: 'Здоровье' },
   debts: { mortgageFixed: 'Фиксированная ипотека', mortgageVariable: 'Плавающая ипотека', personalLoan: 'Потребительский кредит', creditCard: 'Кредитная карта', margin: 'Маржинальный кредит' },
   lives: {
     nurse: {
@@ -268,6 +277,7 @@ export const ru: ContentText = {
   },
   badgeGroups: { wealth: 'Богатство', escape: 'Выход из бегов', investing: 'Инвестиции', status: 'Статус', life: 'Жизнь', misfortune: 'Невезение' },
   optionLocks: {
+    skill: 'Для этого пока не хватает навыка.',
     condition: 'При нынешнем раскладе тебе это недоступно.',
     bankruptcy: 'Так скоро после банкротства ни один банк не даст тебе в долг.',
     focus: 'В этом раунде на это не осталось фокуса.',
@@ -304,7 +314,7 @@ export const ru: ContentText = {
     'down-payment-too-low': 'Банк хочет первый взнос побольше.',
     'down-payment-too-high': 'Это покрывает всю цену. Покупай без ипотеки.',
     'unknown-property': 'Эта недвижимость тебе не принадлежит.',
-    'needs-finance-skill': 'Для этого нужен финансовый навык повыше.',
+    'needs-finance-skill': 'Для этого нужна финансовая грамотность повыше.',
     'not-a-home': 'Жить там нельзя. Можно только сдавать.',
     'unknown-action': 'Такого действия не существует.',
     'no-focus': 'В этом раунде фокуса не осталось.',
