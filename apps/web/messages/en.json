@@ -369,7 +369,7 @@
       "yield": "Pays {rate}",
       "needsSkill": "Money sense {level}",
       "buy": "Buy",
-      "history": "Price since you were 22",
+      "history": "Price history",
       "youHold": "You hold {amount}",
       "planned": "Plan: {amount} a round"
     },

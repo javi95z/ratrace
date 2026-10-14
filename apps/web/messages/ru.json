@@ -369,7 +369,7 @@
       "yield": "Выплаты {rate}",
       "needsSkill": "Финансовая грамотность {level}",
       "buy": "Купить",
-      "history": "Цена с твоих 22 лет",
+      "history": "История цены",
       "youHold": "У тебя {amount}",
       "planned": "План: {amount} за раунд"
     },

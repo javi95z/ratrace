@@ -369,7 +369,7 @@
       "yield": "Paga un {rate}",
       "needsSkill": "Cultura financiera {level}",
       "buy": "Comprar",
-      "history": "Precio desde tus 22 años",
+      "history": "Evolución del precio",
       "youHold": "Tienes {amount}",
       "planned": "Plan: {amount} cada ronda"
     },
