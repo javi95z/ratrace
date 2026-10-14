@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties, ReactNode } from 'react';
 import { GameProvider } from '@/game/context';
 import { routing } from '@/i18n/routing';
+import { PwaProvider } from '@/pwa/runtime';
 import '../globals.css';
 
 const pixel = Jersey_15({ subsets: ['latin', 'latin-ext'], weight: '400', variable: '--font-jersey', display: 'swap' });
@@ -48,7 +49,17 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
     // A page gives its own title and the game's name follows it; the front door is the game's name alone.
     title: { default: t('title'), template: `%s · ${t('title')}` },
     description: t('description'),
-    icons: { icon: '/sprites/brand/brand.app_icon.png' },
+    applicationName: t('title'),
+    manifest: '/manifest.webmanifest',
+    appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: t('title') },
+    icons: {
+      icon: [
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      shortcut: [{ url: '/favicon.ico', sizes: '32x32', type: 'image/png' }],
+      apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    },
   };
 }
 
@@ -68,7 +79,9 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} className={`${pixel.variable} ${reading.variable} ${pixelCyrillic.variable} ${readingCyrillic.variable}`} style={locale === 'ru' ? { ...EVERYWHERE, ...RUSSIAN } : EVERYWHERE}>
       <body>
         <NextIntlClientProvider>
-          <GameProvider>{children}</GameProvider>
+          <PwaProvider>
+            <GameProvider>{children}</GameProvider>
+          </PwaProvider>
         </NextIntlClientProvider>
       </body>
     </html>

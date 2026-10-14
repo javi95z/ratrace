@@ -193,15 +193,18 @@ export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
+  gridClassName,
 }: {
   label: string;
   /** `icon` is a sprite drawn above the label. */
   options: Array<{ value: T; label: ReactNode; disabled?: boolean; hint?: ReactNode; icon?: string }>;
   value: T;
   onChange(value: T): void;
+  /** A responsive grid for long sets; by default every choice stays on one equal row. */
+  gridClassName?: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div role="radiogroup" aria-label={label} className={join('grid gap-2', gridClassName)} style={gridClassName ? undefined : { gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((option) => {
         const on = option.value === value;
         return (

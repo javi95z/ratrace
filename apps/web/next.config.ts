@@ -7,6 +7,17 @@ const config: NextConfig = {
   reactStrictMode: true,
   // The engine and the content are TypeScript sources in this workspace.
   transpilePackages: ['@ratrace/engine', '@ratrace/content'],
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(config);

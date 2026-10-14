@@ -1151,7 +1151,7 @@ function Shop() {
                           <Tag tone="good">{t('status', { n: quote.status })}</Tag>
                         </span>
                       </span>
-                      {!owned && quote.used ? <span className="text-[11px] leading-tight text-ink-300">{t('usedFrom', { amount: fmt.compact(quote.used.price) })}</span> : null}
+                      {!owned && quote.used ? <span className="text-[11px] leading-tight text-ink-200">{t('usedFrom', { amount: fmt.compact(quote.used.price) })}</span> : null}
                     </span>
                   </button>
                 );

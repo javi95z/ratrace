@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAccount, useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
+import { InstallApp } from '@/pwa/InstallApp';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -109,6 +110,8 @@ export function Home() {
           </>
         )}
       </div>
+
+      <InstallApp />
 
       <Panel className="mt-auto w-full" label={settings('title')}>
         <HomePreferences />

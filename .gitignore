@@ -13,3 +13,5 @@ test-results/
 .env.*
 !.env.example
 .vercel
+# Generated from the current routes, public assets and production chunks.
+apps/web/public/sw.js

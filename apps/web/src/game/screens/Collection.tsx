@@ -69,6 +69,7 @@ function Badges() {
         label={t('rarity')}
         value={only}
         onChange={setOnly}
+        gridClassName="grid-cols-3 @min-[460px]:grid-cols-5"
         options={[
           { value: 'all', label: t('rarityAll') },
           ...RARITIES.map((rarity) => {

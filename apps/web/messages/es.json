@@ -20,6 +20,21 @@
     "loading": "Cargando…",
     "notSaved": "Este navegador no está guardando ahora mismo. No cierres esta pestaña: perderías lo que has jugado."
   },
+  "install": {
+    "title": "Llévate el juego",
+    "hint": "Ponlo en tu pantalla de inicio y ábrelo como una app.",
+    "action": "Instalar",
+    "howTitle": "Instalar The Rat Race",
+    "iosIntro": "Safari instala el juego desde el menú Compartir:",
+    "iosShare": "Toca Compartir en la barra de Safari.",
+    "iosHome": "Elige Añadir a pantalla de inicio.",
+    "iosAdd": "Comprueba el nombre y toca Añadir.",
+    "browserIntro": "Instala el juego desde tu navegador:",
+    "browserMenu": "Abre el menú del navegador o el icono de instalación de la barra de direcciones.",
+    "browserInstall": "Elige Instalar aplicación o Añadir a pantalla de inicio.",
+    "browserConfirm": "Confirma Instalar. El juego aparecerá junto a tus otras aplicaciones.",
+    "offline": "Cuando el juego ya se ha abierto con conexión, la app instalada puede abrirse y jugar vidas libres sin internet. Las clasificaciones y la sincronización de la cuenta siguen necesitándolo."
+  },
   "home": {
     "continue": "Seguir con tu vida",
     "continueDetail": "{life} · {age} años · {city}",

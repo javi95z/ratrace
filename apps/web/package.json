@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "sprites": "tsx scripts/sprites.ts",
-    "predev": "tsx scripts/sprites.ts",
+    "pwa": "tsx scripts/pwa.ts",
+    "predev": "tsx scripts/sprites.ts && tsx scripts/pwa.ts",
     "dev": "next dev -p 3010",
-    "prebuild": "tsx scripts/sprites.ts",
+    "prebuild": "tsx scripts/sprites.ts && tsx scripts/pwa.ts",
     "build": "next build",
+    "postbuild": "tsx scripts/pwa.ts --build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "playwright test"
