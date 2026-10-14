@@ -7,6 +7,7 @@ import { assertInvariants, assertViewInvariants } from './invariants';
 import { answerNext, answerRest, drawHand } from './life/cards';
 import { careerSwing, refreshDerived } from './life/derive';
 import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
+import { repairUsed } from './life/orders';
 import { ageLife, turnPage } from './life/roundEnd';
 import type { Cents } from './money';
 import { executeOrder } from './orders';
@@ -286,6 +287,14 @@ export function applyRound(
 
   p.cash += income.salary + passive - outgoings - bill.total;
   applyDebtPayments(p, expenses.service);
+  // The player's own dice: what was bought second hand may need a repair, paid with the round's bills.
+  const rng = new Rng(next.rng.cards);
+  const repairs = repairUsed(p, content, now, rng);
+  let repaired = 0;
+  for (const repair of repairs) {
+    repaired += repair.amount;
+    events.push({ kind: 'repair', ...repair });
+  }
   // After every bill of the round, and before spare cash goes to the credit card: the player asked for this first.
   const reinvested = reinvestDividends(p, paid);
   // The round's prices are in: a holding bought with borrowed money that has fallen too far is sold now, loan first.
@@ -314,6 +323,7 @@ export function applyRound(
     ['creditCardDraw', settled.drawn],
     ['creditCardRepay', -settled.repaid],
     ['dividendsReinvested', -reinvested],
+    ['repairs', -repaired],
   ];
   for (const [line, amount] of lines) {
     if (amount !== 0) events.push({ kind: 'ledger', line, amount });
@@ -330,7 +340,6 @@ export function applyRound(
     events.push({ kind: 'escapeLost' });
   }
 
-  const rng = new Rng(next.rng.cards);
   ageLife(p, content, now, after, tally, rng, events);
 
   // The card limit is set by what the player earned in the round that just ended.

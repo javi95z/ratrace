@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.18.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.19.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -535,6 +535,13 @@ Los objetos de coches y tecnología pierden estatus al envejecer, al mismo ritmo
 «Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.
 
 A plazos se vende lo que dura y cuesta 5.000 $ o más: un 20 % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.
+
+De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos años: si es de una gama que envejece, da menos estatus. El día de la compra vale el mismo porcentaje de lo que costó que uno nuevo, así que comprar y vender en la misma ronda nunca gana. La ronda de la compra la cubre la garantía; después, cada ronda puede necesitar una reparación, pagada con las facturas de la ronda.
+
+| Gama | Precio | Años | Reparación |
+| --- | --- | --- | --- |
+| Coches | 55 % del nuevo | 4 | 30 % por ronda, un 8 % del precio nuevo |
+| Relojes | 70 % del nuevo | 4 | 25 % por ronda, un 6 % del precio nuevo |
 
 ### Coches
 

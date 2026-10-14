@@ -241,6 +241,19 @@ export function validateContent(c: Content): string[] {
     }
   }
   if (![0, 1, 2].includes(life.rentOutMinFinanceSkill as number)) errors.push('life.rentOutMinFinanceSkill must be 0, 1 or 2');
+  const used = life.used;
+  if (!isRecord(used)) errors.push('life.used must be a record');
+  else {
+    for (const [ladder, rule] of Object.entries(used)) {
+      const things = c.items.filter((item) => item.ladder === ladder);
+      if (things.length === 0 || things.some((item) => item.kind !== 'durable')) errors.push(`life.used names a ladder that is not one of durables: ${ladder}`);
+      const r = isRecord(rule) ? rule : {};
+      if (!(isWhole(r.pricePct) && (r.pricePct as number) >= 1 && (r.pricePct as number) <= 99)) errors.push(`life.used.${ladder}.pricePct must be a whole number from 1 to 99`);
+      if (!isCount(r.ageRounds)) errors.push(`life.used.${ladder}.ageRounds must be a whole, non-negative number`);
+      if (!within(r.repairChancePct, 0, 100) || !isWhole(r.repairChancePct)) errors.push(`life.used.${ladder}.repairChancePct must be a whole number from 0 to 100`);
+      if (!within(r.repairPct, 0, 100) || !isWhole(r.repairPct)) errors.push(`life.used.${ladder}.repairPct must be a whole number from 0 to 100`);
+    }
+  }
   const skills = life.skills;
   if (!isRecord(skills)) errors.push('life.skills must be a record');
   else {

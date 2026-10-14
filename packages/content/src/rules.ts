@@ -99,6 +99,14 @@ export const life: LifeRules = {
   unstablePayPct: 30,
   cheapMortgageBp: 60,
   cardsPerRound: 3,
+  // A car or a watch second hand: about half or two thirds of the price, a couple of rounds old, and
+  // now and then a repair. A car loses status with those rounds; a watch holds it, so a watch is
+  // dearer second hand and needs a service more often. Over a life the repairs eat a good part of
+  // what was saved, so second hand is a choice of when to pay, not a free lunch.
+  used: {
+    car: { pricePct: 55, ageRounds: 2, repairChancePct: 30, repairPct: 8 },
+    watch: { pricePct: 70, ageRounds: 2, repairChancePct: 25, repairPct: 6 },
+  },
   // Every skill, money sense too, has the same three steps of three points. Study gives two a round
   // and living it one, so both together make a level a round; study alone masters one in five, and
   // years of investing alone make an investor who may be lent to in eighteen.

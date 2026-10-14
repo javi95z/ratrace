@@ -94,6 +94,13 @@ describe('debts named for what they bought', () => {
   });
 });
 
+describe('a repair, told after the round', () => {
+  it('names the thing bought second hand and what its repair cost, as bad news', () => {
+    const [note] = roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'repair', itemId: 'car_seat_ibiza', amount: 144_000 }]);
+    expect(note).toMatchObject({ tone: 'bad', icon: 'car.seat_ibiza', title: 'Repair for your SEAT Ibiza: $1,440.' });
+  });
+});
+
 describe('a move, told after the round', () => {
   it('says what it cost besides its price, and nothing when it cost nothing', () => {
     const note = (rungsLost: number, partnerIdle: boolean) =>
@@ -241,6 +248,8 @@ describe('orderLabel', () => {
     expect(label({ type: 'setReinvest', on: true })).toBe('Reinvest the dividends');
     expect(label({ type: 'setReinvest', on: false })).toBe('Take the dividends as cash');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex' })).toBe('Buy Rolex Submariner');
+    expect(label({ type: 'buyItem', itemId: 'watch_rolex', used: true })).toBe('Buy Rolex Submariner second hand');
+    expect(label({ type: 'buyItem', itemId: 'watch_rolex', used: true }, 'es')).toBe('Comprar Rolex Submariner de segunda mano');
     expect(label({ type: 'buyItem', itemId: 'watch_rolex', financed: true })).toBe('Buy Rolex Submariner on instalments');
     expect(label({ type: 'sellItem', itemId: 'watch_rolex' })).toBe('Sell Rolex Submariner');
     expect(label({ type: 'sellItem', itemId: 'member_gym' })).toBe('Cancel Basic-Fit');

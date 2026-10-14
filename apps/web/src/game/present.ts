@@ -1,4 +1,4 @@
-import { careerArt, cityIcon, skillArt, START_AGE } from '@ratrace/content';
+import { careerArt, cityIcon, itemArt, skillArt, START_AGE } from '@ratrace/content';
 import type { CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -210,7 +210,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'focus':
       return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : 'hunt');
     case 'buyItem':
-      return t(order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
+      return t(order.used === true ? 'buyUsedItem' : order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'sellItem': {
       const kind = content.items.find((item) => item.id === order.itemId)?.kind;
       return t(kind === 'membership' ? 'cancelItem' : 'sellItem', { item: names.items[order.itemId] });
@@ -245,7 +245,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'skill', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -267,6 +267,9 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: skillArt.finance, title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'repair':
+        add(event, { tone: 'bad', icon: itemArt(event.itemId), title: t('repair', { item: names.items[event.itemId], amount: fmt.money(event.amount) }) });
         break;
       case 'skill':
         add(event, { tone: 'good', icon: skillArt[event.skill], title: t('skill', { skill: text.skills[event.skill], level: event.level }) });

@@ -195,6 +195,8 @@ const base: Content = {
     unstablePayPct: 30,
     cheapMortgageBp: 50,
     cardsPerRound: 3,
+    // Nothing is sold second hand here: tests of the used shop set their own terms.
+    used: {},
     // Skills are learnt only by study here, and do nothing: tests of a skill set what they need.
     skills: {
       levelPoints: [3, 6, 9],

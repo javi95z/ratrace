@@ -3,7 +3,7 @@
 import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
-import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier } from '@ratrace/engine';
+import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -968,6 +968,31 @@ function Lifestyle() {
 /** Status points with their sign: +3, −3, 0. */
 const points = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 
+/**
+ * The same thing second hand, set off by a rule under the new one: what it costs, what it gives at
+ * its age, and the repairs that may come. Paid in cash only.
+ */
+function SecondHand({ used, onBought }: { used: UsedQuote; onBought(): void }) {
+  const t = useT('finance.shop');
+  const { content, text, fmt } = useWords();
+  return (
+    <section aria-label={t('usedTitle')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
+      <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-200">{t('usedTitle')}</p>
+      <div className="flex flex-wrap justify-center gap-1.5">
+        <Tag tone="good">{t('status', { n: used.status })}</Tag>
+        <Tag>{t('usedAge', { years: used.ageRounds * content.yearsPerRound })}</Tag>
+      </div>
+      <p className="text-center text-[13px] leading-snug text-ink-300">
+        {t('usedRisk', { pct: used.repairChancePct, amount: fmt.money(used.repairCost) })} {t('usedWarranty')}
+      </p>
+      <Button wide disabled={used.lock !== null} onClick={onBought}>
+        {t('buyUsed', { amount: fmt.money(used.price) })}
+      </Button>
+      {used.lock !== null ? <p className="text-center text-[13px] text-wine-300">{text.reasons[used.lock]}</p> : <p className="text-center text-[13px] text-ink-300">{t('resale', { amount: fmt.money(used.resale) })}</p>}
+    </section>
+  );
+}
+
 function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
   const t = useT('finance.shop');
   const common = useT('common');
@@ -1039,6 +1064,7 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
                 )}
               </div>
             ) : null}
+            {quote.used ? <SecondHand used={quote.used} onBought={() => done(addOrder({ type: 'buyItem', itemId: item.id, used: true }))} /> : null}
           </>
         ) : (
           <p className="text-center text-[14px] text-ink-300">{t('cardOnly')}</p>
@@ -1072,6 +1098,7 @@ function Shop() {
               .filter((item) => item.ladder === ladder && quoteItem(content, shown, item.id).soldHere)
               .map((item) => {
                 const owned = p.life.items.some((x) => x.itemId === item.id);
+                const quote = quoteItem(content, shown, item.id);
                 return (
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
                   // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
@@ -1083,11 +1110,12 @@ function Shop() {
                     <span className="flex min-w-0 flex-1 flex-col items-center gap-0.5 @min-[400px]:items-start">
                       <span className="line-clamp-2 text-[13px] leading-tight">{names.items[item.id]}</span>
                       <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 @min-[400px]:justify-start">
-                        <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
+                        <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t(quote.ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(quote.price)}</span>
                         <span className="whitespace-nowrap">
-                          <Tag tone="good">{t('status', { n: quoteItem(content, shown, item.id).status })}</Tag>
+                          <Tag tone="good">{t('status', { n: quote.status })}</Tag>
                         </span>
                       </span>
+                      {!owned && quote.used ? <span className="text-[11px] leading-tight text-ink-300">{t('usedFrom', { amount: fmt.compact(quote.used.price) })}</span> : null}
                     </span>
                   </button>
                 );

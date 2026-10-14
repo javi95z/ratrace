@@ -466,7 +466,16 @@
       "owedGone": "Lo compraste a plazos y ya no lo tienes. La deuda sigue.",
       "statusWas": "Nuevo daba +{n}",
       "ages": "Pierde estatus con los años, a la vez que valor.",
-      "aged": "Ha perdido estatus con los años. Uno nuevo vuelve a dar todo."
+      "aged": "Ha perdido estatus con los años. Uno nuevo vuelve a dar todo.",
+      "usedTitle": "De segunda mano",
+      "usedAge": "Con {years} años",
+      "usedRisk": "Cada ronda, un {pct} % de probabilidad de una reparación de unos {amount}.",
+      "usedWarranty": "La primera ronda la cubre la garantía.",
+      "buyUsed": "Comprar usado por {amount}",
+      "usedFrom": "Usado: {amount}",
+      "ownedUsed": "Tuyo · usado",
+      "usedTag": "De segunda mano",
+      "usedOwned": "Lo compraste usado: cada ronda, un {pct} % de probabilidad de una reparación."
     },
     "taxes": {
       "income": "Lo que entra",
@@ -619,7 +628,8 @@
     "businessSold": "Has vendido tu negocio ({name}) por {amount}.",
     "businessClosed": "Tu negocio ha cerrado: {name}.",
     "businessClosedHint": "Ya no quedaba nada dentro.",
-    "skill": "Mejoras en {skill}: nivel {level}."
+    "skill": "Mejoras en {skill}: nivel {level}.",
+    "repair": "Reparación de tu {item}: {amount}."
   },
   "profile": {
     "title": "Tu vida",
@@ -884,7 +894,8 @@
     "investBusiness": "Meter {amount} en {name}",
     "setBusiness": "Cambiar cómo llevas {name}",
     "tendBusiness": "Dedicar foco a {name}",
-    "sellBusiness": "Vender {name}"
+    "sellBusiness": "Vender {name}",
+    "buyUsedItem": "Comprar {item} de segunda mano"
   },
   "account": {
     "title": "Cuenta",

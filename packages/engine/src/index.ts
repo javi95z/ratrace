@@ -29,6 +29,6 @@ export type { LoggedRound, ReplayStep } from './replayLog';
 export { assertInvariants, assertViewInvariants, findInvariantBreaks, findViewBreaks } from './invariants';
 export { viewOf } from './view';
 export { quoteBusinesses, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteMargin, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, CONCENTRATION_PCT } from './quotes';
-export type { BusinessesQuote, CityYear, MarginQuote, PlanQuote, PortfolioQuote, WealthKind, ItemFinanceQuote, ItemQuote, MoveQuote, WorkQuote, LivingQuote, LoanQuote, OwnedPropertyQuote, PropertyQuote, SkillQuote, SkillsQuote } from './quotes';
+export type { BusinessesQuote, CityYear, MarginQuote, PlanQuote, PortfolioQuote, WealthKind, ItemFinanceQuote, ItemQuote, UsedQuote, MoveQuote, WorkQuote, LivingQuote, LoanQuote, OwnedPropertyQuote, PropertyQuote, SkillQuote, SkillsQuote } from './quotes';
 export { businessRound, businessSalePrice } from './business';
 export type { BusinessRound } from './business';

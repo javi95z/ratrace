@@ -15,6 +15,20 @@ export const SKILLS = ['negotiation', 'languages', 'network', 'management', 'hea
 export type SkillId = (typeof SKILLS)[number];
 export type SkillLevel = 0 | 1 | 2 | 3;
 
+/**
+ * Buying a thing second hand: cheaper, already some rounds old, and each round it may need a repair.
+ * What it fetches on the day is its price less the dealer's usual margin, as for a new one.
+ */
+export interface UsedRule {
+  /** The price, in percent of a new one's today. */
+  pricePct: number;
+  /** How many rounds old it is the day it is bought: a thing that ages gives that much less status. */
+  ageRounds: number;
+  /** The chance each round, in percent, that it needs a repair, and what one costs, in percent of a new one's price. */
+  repairChancePct: number;
+  repairPct: number;
+}
+
 /** What the skills do, level by level, and how they are learnt. Every "per level" figure is multiplied by the level. */
 export interface SkillRules {
   /** Points that reach levels 1, 2 and 3, for every skill and for money sense alike. */
@@ -279,6 +293,8 @@ export interface LifeRules {
   /** Personal cards drawn each round. */
   cardsPerRound: number;
   skills: SkillRules;
+  /** The ladders whose things are also sold second hand, and on what terms. Paid in cash only. */
+  used: Partial<Record<string, UsedRule>>;
 }
 
 /** News and tax reforms. Both come from their own random streams, so they never move a price. */
@@ -706,6 +722,8 @@ export interface OwnedItem {
   paid: Cents;
   /** Rounds it has been held. A thing that ages gives less status with each. */
   age: number;
+  /** True for a thing bought second hand: older on the day, and now and then in need of a repair. */
+  used?: boolean;
 }
 
 export interface Recurring {
@@ -858,7 +876,7 @@ export type Order =
   | { type: 'sellProperty'; propertyId: string }
   | { type: 'setRented'; propertyId: string; rented: boolean }
   | { type: 'focus'; action: FocusAction }
-  | { type: 'buyItem'; itemId: string; financed?: boolean }
+  | { type: 'buyItem'; itemId: string; financed?: boolean; used?: boolean }
   | { type: 'sellItem'; itemId: string }
   | { type: 'setLifestyle'; tier: LifestyleTier }
   | { type: 'setRentTier'; tier: RentTier }
@@ -941,6 +959,7 @@ export type RejectReason =
   | 'not-sold-here'
   | 'already-owned'
   | 'cannot-finance'
+  | 'not-sold-used'
   | 'not-owned'
   | 'cannot-sell'
   | 'bad-tier'
@@ -971,7 +990,8 @@ export type LedgerLine =
   | 'creditCardDraw'
   | 'creditCardRepay'
   | 'business'
-  | 'dividendsReinvested';
+  | 'dividendsReinvested'
+  | 'repairs';
 
 /**
  * What happened in a round. Ledger amounts are signed from the point of view of the player's cash:
@@ -1000,6 +1020,8 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   | { kind: 'financeSkill'; level: FinanceSkill }
   | { kind: 'skill'; skill: SkillId; level: SkillLevel }
+  /** Something bought second hand needed a repair, paid this round. */
+  | { kind: 'repair'; itemId: string; amount: Cents }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */
   /** A business was sold by its owner, or closed with nothing left in it. */
   /** `capital` is what was in it, and `price` what it fetched. */

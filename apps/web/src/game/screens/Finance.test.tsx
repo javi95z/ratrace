@@ -807,3 +807,66 @@ describe('a plan in the market', () => {
     expect(screen.getByRole('button', { name: /S&P 500/ }).textContent).not.toMatch(/Plan:/);
   });
 });
+
+describe('the second-hand shop', () => {
+  it('offers a car second hand beside the new one, with its age, its status and its repairs, and buys it for cash', async () => {
+    // The heir has the cash for a used car. On a wide screen the round's orders are listed beside the shop.
+    setWidth('desk');
+    const { services } = await inFinance('heir');
+    const quote = quoteItem(content, viewOf(await stateOf(services)), 'car_seat_ibiza');
+    const used = quote.used;
+    if (!used) throw new Error('a car is sold second hand');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    // The shelf says what it costs used, beside the price new.
+    expect(within(button(/SEAT Ibiza/)).getByText(`Used: ${fmt.compact(used.price)}`)).toBeTruthy();
+
+    await user.click(button(/SEAT Ibiza/));
+    const sheet = screen.getByRole('dialog', { name: 'SEAT Ibiza' });
+    const second = within(sheet).getByRole('region', { name: 'Second hand' });
+    expect(within(second).getByText(`Status +${used.status}`)).toBeTruthy();
+    expect(used.status).toBeLessThan(quote.statusNew);
+    expect(within(second).getByText(`${used.ageRounds * content.yearsPerRound} years old`)).toBeTruthy();
+    expect(within(second).getByText(`Each round, a ${used.repairChancePct}% chance of a repair of about ${fmt.money(used.repairCost)}. The warranty covers the first round.`)).toBeTruthy();
+    expect(within(second).getByText(`Would resell for about ${fmt.money(used.resale)} tomorrow`)).toBeTruthy();
+    await user.click(within(second).getByRole('button', { name: `Buy used for ${fmt.money(used.price)}` }));
+    // The order is given, the sheet is put away, and the round's list says what was ordered.
+    expect(screen.queryByRole('dialog', { name: 'SEAT Ibiza' })).toBeNull();
+    expect(screen.getByText('Buy SEAT Ibiza second hand')).toBeTruthy();
+  });
+
+  it('says why a used one cannot be had, and offers none of what is only sold new', async () => {
+    // The nurse has three thousand dollars: not enough for a used car.
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await user.click(button(/SEAT Ibiza/));
+    const second = within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).getByRole('region', { name: 'Second hand' });
+    expect((within(second).getByRole('button', { name: /^Buy used for/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect(within(second).getByText('You do not have enough cash.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    // A phone is only sold new.
+    expect(within(button(/iPhone/)).queryByText(/^Used:/)).toBeNull();
+    await user.click(button(/iPhone/));
+    expect(within(screen.getByRole('dialog', { name: 'iPhone' })).queryByRole('region', { name: 'Second hand' })).toBeNull();
+  });
+
+  it('marks what was bought second hand, on the shelf and among what the player owns', async () => {
+    setWidth('desk');
+    const { services, session } = await inFinance('heir');
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_omega', used: true }] });
+    await toFinance(session);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    const shelf = screen.getByRole('tabpanel', { name: 'Shop' });
+    expect(within(within(shelf).getByRole('button', { name: /Omega Speedmaster/ })).getByText('Yours · used')).toBeTruthy();
+    // Among what the player owns, beside the game: the thing is named by its name alone.
+    await user.click(screen.getByRole('button', { name: 'Omega Speedmaster' }));
+    const sheet = screen.getByRole('dialog', { name: 'Omega Speedmaster' });
+    expect(within(sheet).getByText('Second hand')).toBeTruthy();
+    expect(within(sheet).getByText(`You bought it used: each round, a ${content.life.used.watch?.repairChancePct}% chance of a repair.`)).toBeTruthy();
+  });
+});

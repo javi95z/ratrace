@@ -466,7 +466,16 @@
       "owedGone": "Куплено в рассрочку, и этой вещи у тебя больше нет. Долг остался.",
       "statusWas": "Изначально +{n}",
       "ages": "С годами теряет статус — как и цену.",
-      "aged": "За годы статус упал. Новая вещь вернёт его целиком."
+      "aged": "За годы статус упал. Новая вещь вернёт его целиком.",
+      "usedTitle": "С рук",
+      "usedAge": "Возраст: {years, plural, one {# год} few {# года} many {# лет} other {# года}}",
+      "usedRisk": "Каждый раунд — {pct}% вероятности ремонта примерно на {amount}.",
+      "usedWarranty": "Первый раунд покрывает гарантия.",
+      "buyUsed": "Купить с рук за {amount}",
+      "usedFrom": "С рук: {amount}",
+      "ownedUsed": "Твоё · с рук",
+      "usedTag": "С рук",
+      "usedOwned": "Куплено с рук: каждый раунд — {pct}% вероятности ремонта."
     },
     "taxes": {
       "income": "Приход",
@@ -619,7 +628,8 @@
     "businessSold": "Бизнес продан ({name}) за {amount}.",
     "businessClosed": "Бизнес закрылся: {name}.",
     "businessClosedHint": "В нём уже ничего не оставалось.",
-    "skill": "{skill}: теперь уровень {level}."
+    "skill": "{skill}: теперь уровень {level}.",
+    "repair": "Ремонт ({item}): {amount}."
   },
   "profile": {
     "title": "Твоя жизнь",
@@ -884,7 +894,8 @@
     "investBusiness": "Вложить {amount} в дело: {name}",
     "setBusiness": "Изменить управление делом: {name}",
     "tendBusiness": "Уделить фокус делу: {name}",
-    "sellBusiness": "Продать дело: {name}"
+    "sellBusiness": "Продать дело: {name}",
+    "buyUsedItem": "Купить с рук: {item}"
   },
   "account": {
     "title": "Аккаунт",

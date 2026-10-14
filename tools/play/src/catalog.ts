@@ -162,6 +162,13 @@ say(
   `Los objetos de ${content.life.agingLadders.map((ladder) => text.ladders[ladder].toLowerCase()).join(' y ')} pierden estatus al envejecer, al mismo ritmo que pierden valor, hasta quedarse en el ${content.life.agingFloorPct} % de lo que daban nuevos.`,
   '«Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.',
   `A plazos se vende lo que dura y cuesta ${usd(content.life.itemFinanceMinPrice)} o más: un ${content.life.itemFinanceDownPct} % de entrada y el resto como préstamo personal, dentro del límite de préstamos. Si se vende, la deuda sigue.`,
+  'De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos años: si es de una gama que envejece, da menos estatus. El día de la compra vale el mismo porcentaje de lo que costó que uno nuevo, así que comprar y vender en la misma ronda nunca gana. La ronda de la compra la cubre la garantía; después, cada ronda puede necesitar una reparación, pagada con las facturas de la ronda.',
+  table(
+    ['Gama', 'Precio', 'Años', 'Reparación'],
+    Object.entries(content.life.used).flatMap(([ladder, rule]) =>
+      rule ? [[text.ladders[ladder], `${rule.pricePct} % del nuevo`, `${rule.ageRounds * content.yearsPerRound}`, `${rule.repairChancePct} % por ronda, un ${rule.repairPct} % del precio nuevo`]] : [],
+    ),
+  ),
 );
 /** What an item is good for beyond its status, in words. */
 function uses(item: ItemDef): string {

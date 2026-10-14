@@ -61,6 +61,8 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
       breaks.push(`item ${item.id} is owned twice`);
       continue;
     }
+    if (held.used !== undefined && typeof held.used !== 'boolean') breaks.push(`item ${item.id} has a used mark that is not true or false`);
+    if (held.used === true && (item.kind !== 'durable' || content.life.used[item.ladder] === undefined)) breaks.push(`item ${item.id} is marked used, and nothing of its kind is sold second hand`);
     owned.add(item.id);
     if (!isCount(held.age)) breaks.push(`item ${item.id} has an age that is not a non-negative whole number: ${held.age}`);
     if (!isCount(held.paid)) breaks.push(`item ${item.id} was paid for with something that is not a non-negative whole number: ${held.paid}`);

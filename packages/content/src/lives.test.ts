@@ -64,6 +64,7 @@ const order: fc.Arbitrary<Order> = fc.oneof(
   { weight: 2, arbitrary: fc.record({ type: fc.constant('focus' as const), action: fc.constantFrom('overtime' as const, 'studyCareer' as const, 'jobHunt' as const, 'nap' as never) }) },
   { weight: 3, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, financed: fc.constantFrom(true, false, 'yes' as never) }) },
+  { weight: 2, arbitrary: fc.record({ type: fc.constant('buyItem' as const), itemId, used: fc.constantFrom(true, false, 'yes' as never) }) },
   { weight: 2, arbitrary: fc.record({ type: fc.constant('sellItem' as const), itemId }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setLifestyle' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as const, 3 as const, 7 as never) }) },
   { weight: 1, arbitrary: fc.record({ type: fc.constant('setRentTier' as const), tier: fc.constantFrom(0 as const, 1 as const, 2 as never) }) },
@@ -280,9 +281,12 @@ describe('whole lives on the v1 content', () => {
     const rich = createGame({ content, start: { ...lives[0].start, cash: 100_000_000_00 } }, 'flip');
     const state = rich.phase === 'cards' ? applyCards(content, rich, {}).state : rich;
     for (const item of content.items) {
-      const orders: Order[] = [{ type: 'buyItem', itemId: item.id }, { type: 'sellItem', itemId: item.id }];
-      const after = previewRound(content, state, { orders }).player;
-      expect(after.cash, item.id).toBeLessThanOrEqual(state.player.cash);
+      // New or second hand: the dealer's margin is the same.
+      for (const used of [false, true]) {
+        const orders: Order[] = [{ type: 'buyItem', itemId: item.id, used }, { type: 'sellItem', itemId: item.id }];
+        const after = previewRound(content, state, { orders }).player;
+        expect(after.cash, `${item.id}${used ? ' used' : ''}`).toBeLessThanOrEqual(state.player.cash);
+      }
     }
   });
 

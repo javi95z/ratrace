@@ -3,7 +3,8 @@ import { careerOf } from '../lookup';
 import { mulDiv } from '../money';
 import { indexed } from '../rates';
 import type { Cents } from '../money';
-import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, WorldState } from '../types';
+import type { Rng } from '../rng';
+import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorldState } from '../types';
 import { INSURANCE_KINDS, perksOf } from './derive';
 import { isStudy, skillLevel } from './skills';
 
@@ -71,6 +72,23 @@ export function moveCost(content: Content, world: WorldState, city: CityDef, p: 
   return mulDiv(full, Math.max(0, 100 - off), 100);
 }
 
+/** The rule for buying a thing second hand, or null for what is only sold new: every rule is for durables. */
+export function usedRuleOf(item: ItemDef, content: Content): UsedRule | null {
+  return item.kind === 'durable' && item.cardOnly !== true ? (content.life.used[item.ladder] ?? null) : null;
+}
+
+/**
+ * What a thing costs second hand today and what it is worth the moment it is bought, or null where
+ * it is only sold new. The dealer keeps the same margin as on a new one, so nothing can be bought
+ * second hand and sold the same round for more.
+ */
+export function usedTerms(item: ItemDef, content: Content, world: WorldState): { price: Cents; resale: Cents; rule: UsedRule } | null {
+  const rule = usedRuleOf(item, content);
+  if (rule === null) return null;
+  const price = mulDiv(itemTerms(item, world).price, rule.pricePct, 100);
+  return { price, resale: mulDiv(price, item.resaleStartPct, 100), rule };
+}
+
 /**
  * The terms on which a shop sells an item on instalments today: what is paid down and what is
  * borrowed. Null for what no shop finances: only a thing that lasts, and costs enough to be worth
@@ -106,6 +124,7 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
   if (item.cardOnly === true) return 'not-for-sale';
   if (!soldIn(item, p.cityId)) return 'not-sold-here';
   if (p.life.items.some((owned) => owned.itemId === itemId)) return 'already-owned';
+  if (order.used === true) return buyUsed(p, item, ctx, order.financed === true);
   const { price, resale } = itemTerms(item, ctx.world);
   if (order.financed === true) {
     const plan = itemFinance(item, ctx.content, ctx.world);
@@ -125,6 +144,38 @@ function executeBuyItem(p: PlayerState, order: Extract<LifeOrder, { type: 'buyIt
   });
   if (!p.life.collection.includes(itemId)) p.life.collection.push(itemId);
   return null;
+}
+
+/** Buys a thing second hand: in cash only, older on the day, and marked so that its repairs come round. */
+function buyUsed(p: PlayerState, item: ItemDef, ctx: OrderContext, financed: boolean): RejectReason | null {
+  const terms = usedTerms(item, ctx.content, ctx.world);
+  if (terms === null) return 'not-sold-used';
+  if (financed) return 'cannot-finance';
+  if (terms.price > p.cash) return 'not-enough-cash';
+  p.cash -= terms.price;
+  ctx.tally.itemsBought += terms.price;
+  p.life.items.push({ itemId: item.id, value: terms.resale, roundsLeft: null, paid: terms.price, age: terms.rule.ageRounds, used: true });
+  if (!p.life.collection.includes(item.id)) p.life.collection.push(item.id);
+  return null;
+}
+
+/**
+ * What the things bought second hand cost in repairs this round, each its own roll of the dice. A
+ * repair is priced on what a new one costs today. Taken from cash with the round's other bills. The
+ * round it is bought in, the dealer's warranty covers it: it is still as old as it was sold.
+ */
+export function repairUsed(p: PlayerState, content: Content, world: WorldState, rng: Rng): Array<{ itemId: string; amount: Cents }> {
+  const repairs: Array<{ itemId: string; amount: Cents }> = [];
+  for (const owned of p.life.items) {
+    if (owned.used !== true) continue;
+    const item = content.items.find((x) => x.id === owned.itemId);
+    const rule = item ? usedRuleOf(item, content) : null;
+    if (!item || rule === null || owned.age <= rule.ageRounds || !rng.chance(rule.repairChancePct)) continue;
+    const amount = mulDiv(itemTerms(item, world).price, rule.repairPct, 100);
+    if (amount > 0) repairs.push({ itemId: owned.itemId, amount });
+  }
+  for (const repair of repairs) p.cash -= repair.amount;
+  return repairs;
 }
 
 /**

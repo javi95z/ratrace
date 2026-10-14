@@ -5,7 +5,7 @@ import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, overtimeOf, soldIn } from './life/orders';
+import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
 import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
@@ -113,6 +113,25 @@ export interface ItemQuote {
   sellable: boolean;
   /** The terms of buying it on instalments today, or null for what no shop sells that way. */
   finance: ItemFinanceQuote | null;
+  /** The terms of buying it second hand today, or null for what is only sold new or is owned already. */
+  used: UsedQuote | null;
+  /** True if the one the player owns was bought second hand. */
+  ownedUsed: boolean;
+}
+
+export interface UsedQuote {
+  price: Cents;
+  /** What it would fetch the day it is bought. */
+  resale: Cents;
+  /** The status it gives as it is bought: less than a new one's for a thing that ages. */
+  status: number;
+  /** How many rounds old it is on the day. */
+  ageRounds: number;
+  /** The chance each round that it needs a repair, and what one costs today. */
+  repairChancePct: number;
+  repairCost: Cents;
+  /** Why the player may not buy it so today, or null when they may. */
+  lock: RejectReason | null;
 }
 
 export interface ItemFinanceQuote {
@@ -136,6 +155,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   const terms = itemTerms(item, world);
   // Nothing is sold twice: there are no terms for what the player already owns.
   const plan = held ? null : itemFinance(item, content, world);
+  const second = held || item.cardOnly === true || !soldIn(item, view.player.cityId) ? null : usedTerms(item, content, world);
   const rateBp = personalLoanRateBp(content, world);
   const termRounds = content.debt.personalLoanTermRounds;
   const years = content.yearsPerRound;
@@ -164,6 +184,19 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
             annual: Math.round((applyBp(plan.loan, rateBp * years) + Math.ceil(plan.loan / Math.max(1, termRounds))) / years),
             lock: financeLock(view.player, plan, content, world, view.round),
           },
+    used:
+      second === null
+        ? null
+        : {
+            price: second.price,
+            resale: second.resale,
+            status: itemStatus(item, second.rule.ageRounds, content),
+            ageRounds: second.rule.ageRounds,
+            repairChancePct: second.rule.repairChancePct,
+            repairCost: mulDiv(terms.price, second.rule.repairPct, 100),
+            lock: second.price > view.player.cash ? 'not-enough-cash' : null,
+          },
+    ownedUsed: held?.used === true,
   };
 }
 
