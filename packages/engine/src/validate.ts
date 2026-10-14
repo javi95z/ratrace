@@ -247,7 +247,7 @@ export function validateContent(c: Content): string[] {
     steps.length > 0 &&
     steps.every((step, i) => isRecord(step) && isCount(step.fromRound) && isWhole(step.pct) && (i === 0 ? step.fromRound === 0 && step.pct === 100 : step.fromRound > (steps[i - 1] as { fromRound: number }).fromRound && step.pct >= (steps[i - 1] as { pct: number }).pct));
   const risks = isRecord(life.riskByAge) ? life.riskByAge : {};
-  for (const risk of ['health', 'job'] as const) {
+  for (const risk of ['health', 'job', 'scam'] as const) {
     if (!pctSteps(risks[risk])) errors.push(`life.riskByAge.${risk} must be steps from round 0 at 100, later and never lower`);
   }
   if (!pctSteps(life.healthPremiumByAge)) errors.push('life.healthPremiumByAge must be steps from round 0 at 100, later and never lower');
@@ -306,7 +306,7 @@ export function validateContent(c: Content): string[] {
     if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
       errors.push('life.skills.levelPoints must be three rising positive whole numbers');
     }
-    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct', 'healthRiskOffPct', 'jobRiskOffPct'] as const) {
+    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct', 'healthRiskOffPct', 'jobRiskOffPct', 'scamRiskOffPct'] as const) {
       if (!(isWhole(skills[field]) && (skills[field] as number) >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
     }
     for (const field of ['languagesKeepRungFrom', 'languagesPartnerFrom', 'managementExtraFrom', 'healthFocusFrom'] as const) {

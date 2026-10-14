@@ -116,7 +116,7 @@ describe('what a step of a life adds to the profile', () => {
   });
 
   it('gives the gallery its badges as soon as the gallery has earned them', () => {
-    const cars = content.items.filter((item) => item.ladder === 'car').map((item) => item.id);
+    const cars = content.items.filter((item) => item.ladder === 'car' && item.id !== 'car_motorbike').map((item) => item.id);
     const most = profileAfter(content, lives, newProfile(), step({ collection: cars.slice(0, 6) }));
     expect(most.earned).toEqual([]);
     const all = profileAfter(content, lives, most.profile, step({ gameId: 'g2', at: 7, collection: [cars[6]] }));

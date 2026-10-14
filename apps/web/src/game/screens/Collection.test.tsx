@@ -48,7 +48,7 @@ describe('the collection', () => {
       expect(tile.textContent).toBe('Not owned yet');
     }
     // Grouped as the shop groups them.
-    for (const group of ['Cars', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
+    for (const group of ['Cars and bikes', 'Pets', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
   });
 
   it('shows every badge, tells how it is earned only of those earned, and marks them with the day', async () => {

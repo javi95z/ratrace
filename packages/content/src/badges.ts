@@ -247,10 +247,13 @@ export function badgesEarned(step: Step): string[] {
     .map((badge) => badge.id);
 }
 
+/** What is kept with the cars but is no car: every car is a garage of four wheels. */
+export const TWO_WHEELS: readonly string[] = ['car_motorbike'];
+
 /** The badges that are about everything ever owned, across lives: those this gallery has earned. */
 export function galleryBadges(content: Content, gallery: readonly string[]): string[] {
   const owned = new Set(gallery);
-  const cars = content.items.filter((item) => item.ladder === 'car');
+  const cars = content.items.filter((item) => item.ladder === 'car' && !TWO_WHEELS.includes(item.id));
   const earned: string[] = [];
   if (owned.size >= 20) earned.push('twenty_items');
   if (cars.length > 0 && cars.every((car) => owned.has(car.id))) earned.push('every_car');

@@ -1,6 +1,6 @@
 import type { CardDef } from '@ratrace/engine';
 import { card, usd, yearly } from './build';
-
+import { TRAINING_BOND } from './extra';
 
 /** A private employer in tech or finance comes with a share plan, and without a public servant's job for life. */
 const NEW_EMPLOYER = { setFlags: ['share_plan'], clearFlags: ['layoff_proof'] };
@@ -18,7 +18,7 @@ export const careerCards: CardDef[] = [
     // Someone who has learnt to bargain comes with figures nobody can wave away.
     { when: { minSkills: { negotiation: 2 } }, effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 80, effects: { salaryModPct: 7 } }, { weight: 20, effects: { salaryModPct: 3 } }] },
   ]),
-  card('career_competitor_offer', 'career', { cooldown: 5, when: { employed: true, minRound: 2 } }, [
+  card('career_competitor_offer', 'career', { cooldown: 5, when: { notRecentFlag: TRAINING_BOND, employed: true, minRound: 2 } }, [
     {},
     { effects: { salaryModPct: 6, careerSkill: -1 } },
     { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 35, effects: {} }, { weight: 15, effects: { salaryModPct: -3 } }] },
@@ -36,10 +36,11 @@ export const careerCards: CardDef[] = [
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -50, cashSalaryPct: 10, salaryModPct: -5 } }] },
     { effects: { focus: 2, salaryBoostPct: -50, cashSalaryPct: 25, careerSkill: 3 } },
   ]),
-  // From 50 a firm looks again at who it pays most: a way out with a cheque, a step down, or a fight for the post.
-  card('career_restructuring', 'career', { weight: 8, cooldown: 6, risk: 'job', when: { employed: true, minRound: 14 } }, [
-    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
+  // From 50 a firm looks again at who it pays most: a step down, a way out with a cheque, or a fight for the post.
+  // Whoever answers nothing keeps a job, a rung lower. A post nobody can be dismissed from is never in question.
+  card('career_restructuring', 'career', { weight: 8, cooldown: 6, risk: 'job', when: { employed: true, minRound: 14, notFlags: ['layoff_proof'] } }, [
     { effects: { job: { levelDelta: -1 }, salaryModPct: -8 } },
+    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
     { effects: { focus: 1 }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: { job: { leave: true }, cashSalaryPct: 100 } }] },
   ]),
   card('career_toxic_boss', 'career', { cooldown: 6, when: { employed: true } }, [
@@ -88,7 +89,7 @@ export const careerCards: CardDef[] = [
     { effects: { focus: 1, salaryModPct: 7 } },
     { outcomes: [{ weight: 55, effects: { salaryModPct: 10 } }, { weight: 45, effects: {} }] },
   ]),
-  card('career_big_offer', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
+  card('career_big_offer', 'career', { once: true, when: { notRecentFlag: TRAINING_BOND, employed: true, minLevel: 1, minRound: 3 } }, [
     {},
     { effects: { focus: 1, salaryModPct: 10, status: 6 } },
     { outcomes: [{ weight: 60, effects: { salaryModPct: 15, status: 6 } }, { weight: 40, effects: {} }] },
@@ -107,7 +108,7 @@ export const careerCards: CardDef[] = [
     { effects: { careerSkill: 1 } },
     { effects: { focus: 1, salaryModPct: 5, status: 3 } },
   ]),
-  card('career_headhunter', 'career', { cooldown: 6, when: { employed: true, minLevel: 2 } }, [
+  card('career_headhunter', 'career', { cooldown: 6, when: { notRecentFlag: TRAINING_BOND, employed: true, minLevel: 2 } }, [
     {},
     { effects: { focus: 1 }, outcomes: [{ weight: 45, effects: { salaryModPct: 8 } }, { weight: 55, effects: {} }] },
     { when: { notCities: ['new_york'] }, effects: { moveCity: 'new_york', salaryModPct: 6, cash: usd(5_000) } },

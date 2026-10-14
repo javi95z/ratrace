@@ -104,6 +104,12 @@ export const life: LifeRules = {
       { fromRound: 14, pct: 150 },
       { fromRound: 17, pct: 200 },
     ],
+    // Swindlers call the old more than the young.
+    scam: [
+      { fromRound: 0, pct: 100 },
+      { fromRound: 14, pct: 200 },
+      { fromRound: 17, pct: 300 },
+    ],
   },
   // Health cover is priced by the age it is taken out at: from 32, from 40, from 50 and from 56.
   healthPremiumByAge: [
@@ -163,7 +169,7 @@ export const life: LifeRules = {
       network: ['sales', 'influencer', 'hospitality', 'public'],
       health: ['healthcare', 'medicine'],
     },
-    practiceItems: { health: ['member_gym'], management: ['edu_coach'], languages: ['edu_language_school'] },
+    practiceItems: { health: ['member_gym', 'pet_dog'], management: ['edu_coach'], languages: ['edu_language_school'] },
     negotiationHuntRaisePct: 1,
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,
@@ -180,6 +186,8 @@ export const life: LifeRules = {
     // Each level takes 15 % off the chance of the misfortunes the skill guards against.
     healthRiskOffPct: 15,
     jobRiskOffPct: 15,
+    // A quarter off a swindle for each level of money sense.
+    scamRiskOffPct: 25,
   },
 };
 

@@ -2,6 +2,7 @@ import { PRICE_LEVEL_START } from '../rates';
 import { netWorth } from '../selectors';
 import type { Condition, Content, GameLimits, PlayerState, SkillId, WorldState, WorldTrigger } from '../types';
 import { homeOf } from './derive';
+import { hiding } from '../evasion';
 import { hasFlag } from './flags';
 import { levelOfPoints } from './skills';
 
@@ -79,6 +80,12 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
   }
   if (when.notItems !== undefined && life.items.some((x) => when.notItems?.includes(x.itemId))) return false;
   if (when.insured !== undefined && !life.insurance[when.insured]) return false;
+  if (when.retired !== undefined && when.retired !== (life.retiredAtRound !== null && job === null)) return false;
+  if (when.evading !== undefined && when.evading !== (hiding(life.evasion) || life.evasion.evaded.length > 0)) return false;
+  if (when.notRecentFlag !== undefined) {
+    const { flag, rounds } = when.notRecentFlag;
+    if (hasFlag(life.flags, flag) && round - life.flags[flag] < rounds) return false;
+  }
 
   if (when.regimes !== undefined && !when.regimes.includes(world.regime)) return false;
   if (when.cityPropertyReturnAtMostBp !== undefined) {

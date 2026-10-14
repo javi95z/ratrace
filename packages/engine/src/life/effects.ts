@@ -1,4 +1,5 @@
 import { openBusiness } from '../business';
+import { honestEvasion } from '../evasion';
 import { mortgageSpreadBp, removePaidDebts, takePersonalLoan } from '../debt';
 import { newId } from '../ids';
 import { careerOf, cityOf, itemOf } from '../lookup';
@@ -195,6 +196,18 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
 
   if (effects.job !== undefined) changeJob(p, effects.job, at);
   if (effects.retire === true && life.career !== null) retire(p, round);
+  if (effects.focusBase !== undefined) life.focusBase = Math.max(1, life.focusBase + effects.focusBase);
+  if (effects.businessesPct !== undefined) {
+    for (const business of p.businesses) business.capital = Math.max(0, business.capital + mulDiv(business.capital, effects.businessesPct, 100));
+  }
+  if (effects.suspicion !== undefined) life.evasion.suspicion = clamp(life.evasion.suspicion + effects.suspicion, 0, 100);
+  if (effects.amnesty !== undefined) {
+    // What is owed is paid in part, and the slate is clean: nothing hidden, nothing owed, nothing suspected.
+    let owed = 0;
+    for (const entry of life.evasion.evaded) owed += entry.amount;
+    p.cash -= mulDiv(owed, effects.amnesty.pct, 100);
+    life.evasion = honestEvasion();
+  }
   if (effects.gift !== undefined) giveToChildren(p, effects.gift, at);
   if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) {
     life.movingTo = effects.moveCity;

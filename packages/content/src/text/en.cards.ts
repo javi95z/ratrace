@@ -552,8 +552,8 @@ export const cards: Record<string, CardText> = {
     'Write it',
   ]),
   career_restructuring: c('Restructuring', 'The company is reviewing who costs the most. Your name is on the list.', [
-    'Take the way out with a payoff',
     'Accept a lower post',
+    'Take the way out with a payoff',
     ['Fight for your post', 'You stay. This time.', 'You lose the fight and leave with a smaller payoff.'],
   ]),
   late_gift: c('Giving in life', 'Your children are at the age when a push helps most. Whatever you give pays the gift tax now.', [
@@ -570,5 +570,85 @@ export const cards: Record<string, CardText> = {
     'Leave it to your siblings',
     'Pay for a care home',
     'Look after them yourself',
+  ]),
+  career_four_day_week: c('A four-day week', 'The company is trying a four-day week: a fifth less pay for an extra day off, for good.', [
+    'Stay full-time',
+    'Go to four days',
+  ]),
+  edu_company_course: c('A course the company pays for', 'They will pay for an expensive course. The small print: stay two years, or pay it back.', [
+    'No, thanks',
+    'Accept, with two years\' commitment',
+    'Pay for it yourself, no strings',
+  ]),
+  biz_rival: c('A rival opens next door', 'A place just like yours has opened on the same street, with a grand opening.', [
+    ['Wait and see', 'It takes your customers: your business loses value.', 'Its customers come back to you in a month.'],
+    'Cut your prices',
+    'Refit the place',
+  ]),
+  biz_viral_review: c('A review goes viral', 'Someone wrote about your business and half the neighbourhood shared it. You do not know the tone yet.', [
+    ['Let it run', 'It was good: there is a queue at the door.', 'It was bad, and the till shows it.'],
+    ['Reply with care', 'Your reply is liked more than the review.', 'Nobody reads replies.'],
+    'Buy fake reviews',
+  ]),
+  biz_labour_inspection: c('A labour inspection', 'An inspector asks for the contracts, the hours and the payslips of your business.', [
+    ['Let them come', 'All in order. They leave after a coffee.', 'One contract was wrong: a fine.'],
+    'Call in an employment adviser first',
+  ]),
+  inv_bank_product: c('A "guaranteed" product', 'Your bank offers a two-year bond "with no risk". Entry fee included, in the small print.', [
+    'No, thanks',
+    'Take it',
+    'Ask for an index fund with no fee',
+  ]),
+  inv_leveraged_etf: c('A fund that triples', 'An influencer swears by a leveraged ETF: three times what the market does. Up and down.', [
+    'Pass',
+    ['Put in $3,000', 'The market rose: you triple it.', 'The market fell: it is gone.'],
+  ]),
+  house_noisy_neighbours: c('Noisy neighbours', 'Upstairs practise the drums at dinner time. And at bedtime.', [
+    'Put up with it',
+    'Soundproof the flat',
+    'Find another flat to rent',
+  ]),
+  house_levy: c('A building levy', 'The lift has to be replaced and the residents voted a levy. Your share, due this month.', [
+    'Pay your share',
+    ['Appeal it', 'The judge agrees with you.', 'You lose, and pay with interest.'],
+  ]),
+  house_lodger: c('Let a room', 'You have a spare room and a friend is looking for somewhere to live. She would pay well.', [
+    'Better not',
+    'Let it to her',
+  ]),
+  life_bali_wedding: c('A wedding in Bali', 'Your best friend is getting married in Bali. Flights, hotel, a gift and a week off work.', [
+    'Send your apologies',
+    'Go to Bali',
+  ]),
+  fam_dog: c('A dog at the shelter', 'A three-year-old dog looks at you from its pen as if it already knows you.', [
+    'Better not',
+    'Adopt it',
+  ]),
+  fam_partner_startup: c('Your partner wants to start up', 'Your partner wants to quit to start something of their own. They need your support, and a while with no pay.', [
+    'Ask them not to',
+    ['Back them', 'It works: they earn more than ever.', 'It fails: back to work, for less.'],
+  ]),
+  tax_no_vat: c('Without VAT?', 'A client offers to pay you in cash, with no invoice. Cheaper for both of you.', [
+    'Invoice it, with VAT',
+    'No VAT, cash in hand',
+  ]),
+  tax_amnesty: c('A tax amnesty', 'The government announces an amnesty: whoever comes clean now pays 10% of what they hid, and is clear.', [
+    'Take your chances',
+    'Come clean',
+  ]),
+  late_motorbike: c('A motorbike, at your age', 'A Ducati in the window, and the feeling that life is passing by.', [
+    'No way',
+    'Buy it',
+    'Buy it on instalments',
+  ]),
+  late_mentor: c('Be a mentor', 'A charity is looking for retired people to guide young people starting out. A few hours a week.', [
+    'Your garden comes first',
+    'Be a mentor',
+  ]),
+  late_scam_call: c('An urgent message', '"Mum, Dad, my phone broke. This is my new number. I need $3,000 today."', [
+    ['Ignore it', 'It was a scam. Well done.', 'It was real, and they do not forgive you.'],
+    ['Send the money', 'It was a scam. The money is gone.', 'It was real. They are grateful.'],
+    'Call the number you know',
+    'Spot the scam at once',
   ]),
 };

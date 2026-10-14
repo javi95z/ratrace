@@ -290,3 +290,75 @@ Square image. Object sheet: 4 columns by 3 rows, 12 small icons. Each is one bol
 | 63 | `icons/icons-09.png` | `icon.rule_index_only`, `icon.rule_no_loans`, `icon.rule_no_moving`, `icon.rule_no_property`, `icon.rule_start_in_debt`, `icon.challenge`, `icon.top_tenth`, `icon.retired`, `icon.gift`, `icon.handover`, `icon.health_risk`, `icon.practice` | 32×32 |
 
 What each is for: the five rules of the challenge, shown beside the rule's name; the challenge itself, on its panel and its tab; the best tenth of its ranking; the retired player in the Work panel; the two gifts to the children on their cards' tags; the warning that health costs more with age; and a practice, as against the attempt that counts.
+
+## Eighteen new cards, a motorbike and a dog
+
+Card scenes use a landscape image with 2 columns and 3 rows, as every card sheet does.
+
+### 64. Work, learning and business
+
+Save as `art/raw/cards/cards-23.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. An office calendar on a wall with every Friday crossed out in green, a laptop being closed on a desk on a sunny afternoon, a bicycle helmet hanging by the door.
+2. A training room with a projector screen of simple charts, a handful of employees at desks with lanyards, a thick binder labelled only with a company logo shape.
+3. A street at night with two identical small shops side by side, one with a big "grand opening" balloon arch, the other quiet, its owner watching from the doorway.
+4. A smartphone held up in front of a small café, its screen showing a post bursting with hearts and angry faces at once, a queue forming outside.
+5. A back office with an inspector in a grey jacket reading a folder of contracts, a nervous owner standing beside a filing cabinet.
+6. A bank branch desk: a smiling banker sliding a glossy brochure with a gold "guaranteed" seal shape across the table, small print running down its edge.
+```
+
+### 65. Money and home
+
+Save as `art/raw/cards/cards-24.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A phone screen showing a steep chart with a big "x3" badge, a young influencer's face in a corner bubble, coins flying in both directions off the chart.
+2. A tired person in bed staring at the ceiling, which shakes with music notes and a drum kit drawn faintly through it from the flat above.
+3. A residents' meeting in a building lobby: neighbours on folding chairs, a broken lift door taped off behind them, someone raising a hand to vote.
+4. A tidy spare bedroom being shown to a young woman with a backpack, a set of keys held out to her, a little "for rent" note on the door.
+5. A wedding on a tropical beach at sunset, a flower arch, palm trees and guests in light clothes, a small suitcase in the sand.
+6. An animal shelter: a scruffy, friendly mid-sized dog sitting behind the wire of its pen, looking up hopefully, a lead hanging on a hook.
+```
+
+### 66. Family, tax and later life
+
+Save as `art/raw/cards/cards-25.png`
+
+```text
+Landscape 3:2 image. Scene sheet: 2 columns by 3 rows, 6 panels. Left to right, top to bottom:
+1. A kitchen table at night covered in a business plan, sticky notes and a laptop, one person explaining with enthusiasm, the other listening with a mug.
+2. A hand passing a roll of banknotes over a shop counter, no till receipt, a calculator showing only blank shapes, a nervous glance at the door.
+3. A tax office window with a banner of a big open door and a broom sweeping papers away, a short queue of relieved people.
+4. A shiny red motorbike in a showroom window at dusk, a middle-aged person reflected in the glass, a helmet on a stand beside it.
+5. A bright community centre: an older person in a cardigan beside a young person at a laptop, pointing at the screen, cups of tea on the table.
+6. An older person's hand holding a phone with an urgent message bubble and a red exclamation mark, a warning triangle glowing faintly above it.
+```
+
+### 67. A motorbike
+
+Save as `art/raw/cars/cars-02.png`
+
+```text
+Wide image, twice as wide as tall. One object, centred, side view facing right, drawn at the same scale as a small car: a red naked sports motorbike with a round headlight, a black seat and chrome exhausts, on its stand, standing alone with no ground or background.
+```
+
+### 68. A dog
+
+Save as `art/raw/items/items-06.png`
+
+```text
+Square image. One object, centred: a scruffy, friendly mid-sized mixed-breed dog sitting, tongue out, wearing a red collar with a small round tag, standing alone with no ground or background.
+```
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 64 | `cards/cards-23.png` | `card.four_day_week`, `card.company_course`, `card.rival_shop`, `card.viral_review`, `card.labour_inspector`, `card.bank_product` | 288×120 |
+| 65 | `cards/cards-24.png` | `card.leveraged_chart`, `card.noisy_neighbours`, `card.building_levy`, `card.lodger_room`, `card.bali_wedding`, `card.shelter_dog` | 288×120 |
+| 66 | `cards/cards-25.png` | `card.partner_startup`, `card.cash_no_invoice`, `card.tax_amnesty`, `card.motorbike_window`, `card.mentor_session`, `card.scam_message` | 288×120 |
+| 67 | `cars/cars-02.png` | `car.motorbike` | 96×48 |
+| 68 | `items/items-06.png` | `item.pet_dog` | 64×64 |
+
+Until they are cut, the cards, the motorbike and the dog show a stand-in (`SCENE_STAND_INS` and `ITEM_STAND_INS` in `packages/content/src/art.ts`).

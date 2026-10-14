@@ -14,7 +14,7 @@ describe('the v1 content', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(20);
     expect(content.careers).toHaveLength(11);
-    expect(content.items).toHaveLength(58);
+    expect(content.items).toHaveLength(60);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
@@ -32,7 +32,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(117);
+    expect(content.cards).toHaveLength(135);
     expect(lives).toHaveLength(16);
   });
 
@@ -40,8 +40,8 @@ describe('the v1 content', () => {
     const count: Record<string, number> = {};
     for (const card of content.cards) count[card.category] = (count[card.category] ?? 0) + 1;
     expect(count).toEqual({
-      career: 19, education: 6, business: 8, investing: 10, housing: 8, lifestyle: 11,
-      family: 10, health: 5, luck: 8, world: 18, tax: 6, laterLife: 8,
+      career: 20, education: 7, business: 11, investing: 12, housing: 11, lifestyle: 12,
+      family: 12, health: 5, luck: 8, world: 18, tax: 8, laterLife: 11,
     });
   });
 

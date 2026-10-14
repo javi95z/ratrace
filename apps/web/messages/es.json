@@ -314,7 +314,11 @@
     "retire": "Te jubilas, para siempre",
     "giftSavings": "El {pct} % de tu efectivo y ahorro, para tus hijos",
     "giftBusinesses": "Tus negocios, para tus hijos",
-    "giftCounts": "Sigue contando en tu puntuación, menos un {pct} % de impuesto"
+    "giftCounts": "Sigue contando en tu puntuación, menos un {pct} % de impuesto",
+    "focusBase": "{value} de foco cada ronda, para siempre",
+    "businessesPct": "Tus negocios {value} %",
+    "suspicion": "Sospecha de Hacienda {value}",
+    "amnesty": "Pagas el {pct} % de lo que ocultaste y empiezas de cero"
   },
   "finance": {
     "tabs": {
@@ -650,7 +654,14 @@
         "3": "«Correcto. El encargado no sabe quién es el dueño».",
         "4": "«Bien. Volveré si no hay otra cosa abierta».",
         "5": "«El dueño cuenta los céntimos, pero todo funciona»."
-      }
+      },
+      "paysYou": "{amount} para ti",
+      "neglectedShort": "Nadie lo lleva esta ronda: gana menos y pierde valor.",
+      "quickTend": "Llevarlo tú · 1 foco",
+      "quickManager": "Encargado · {pct} %",
+      "totalWorth": "Valor",
+      "totalProfit": "Beneficio de la ronda",
+      "totalPayout": "Para ti"
     },
     "evasion": {
       "title": "Lo que no declaras",

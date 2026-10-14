@@ -119,6 +119,10 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     else add(income ? 'good' : 'bad', t(income ? 'yearlyIncomeFor' : 'yearlyCostFor', { amount, years: entry.roundsLeft * content.yearsPerRound }));
   }
   if (effects.retire) add('plain', t('retire'));
+  if (effects.focusBase) add(toneOf(effects.focusBase), t('focusBase', { value: signed(effects.focusBase) }));
+  if (effects.businessesPct) add(toneOf(effects.businessesPct), t('businessesPct', { value: signed(effects.businessesPct) }));
+  if (effects.suspicion) add(toneOf(-effects.suspicion), t('suspicion', { value: signed(effects.suspicion) }));
+  if (effects.amnesty) add('plain', t('amnesty', { pct: effects.amnesty.pct }));
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
   if (effects.gift?.businesses) add('bad', t('giftBusinesses'));
   if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));

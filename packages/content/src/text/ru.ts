@@ -55,7 +55,8 @@ export const ru: ContentText = {
     franchise: { name: 'Франшиза', blurb: 'Дорого, скучно и стабильно. Ею владеют, не управляя.' },
   },
   ladders: {
-    car: 'Машины',
+    pet: 'Питомцы',
+    car: 'Машины и мотоциклы',
     watch: 'Часы',
     tech: 'Техника',
     fashion: 'Мода',

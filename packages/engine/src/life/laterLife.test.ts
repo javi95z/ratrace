@@ -33,6 +33,7 @@ function laterRules(change: (c: Content) => void = () => {}): Content {
       { fromRound: 0, pct: 100 },
       { fromRound: 2, pct: 150 },
     ],
+    scam: [{ fromRound: 0, pct: 100 }],
   };
   c.life.healthPremiumByAge = [
     { fromRound: 0, pct: 100 },

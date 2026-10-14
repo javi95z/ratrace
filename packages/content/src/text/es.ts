@@ -55,7 +55,8 @@ export const es: ContentText = {
     franchise: { name: 'Franquicia', blurb: 'Cara, aburrida y estable. La que se tiene sin llevarla.' },
   },
   ladders: {
-    car: 'Coches',
+    pet: 'Mascotas',
+    car: 'Coches y motos',
     watch: 'Relojes',
     tech: 'Tecnología',
     fashion: 'Moda',

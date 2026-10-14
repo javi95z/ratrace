@@ -39,6 +39,8 @@ const assets: Names['assets'] = {
 
 const items: Names['items'] = {
   car_seat_ibiza: 'SEAT Ibiza',
+  car_motorbike: 'Ducati Monster',
+  pet_dog: 'A rescue dog',
   car_toyota_corolla: 'Toyota Corolla',
   car_vw_golf_gti: 'VW Golf GTI',
   car_tesla_model_3: 'Tesla Model 3',
@@ -126,6 +128,7 @@ export const names: Record<Locale, Names> = {
     },
     items: {
       ...items,
+      pet_dog: 'Un perro adoptado',
       fashion_blazer: 'Blazer de Zara',
       fashion_polo: 'Polo Ralph Lauren',
       fashion_loafers: 'Mocasines de Gucci',
@@ -180,6 +183,7 @@ export const names: Record<Locale, Names> = {
     },
     items: {
       ...items,
+      pet_dog: 'Собака из приюта',
       fashion_blazer: 'Пиджак Zara',
       fashion_polo: 'Поло Ralph Lauren',
       fashion_loafers: 'Лоферы Gucci',

@@ -22,7 +22,7 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
 });
 
 /**
- * Fifty-eight status items in nine ladders: the 34 of spec Appendix B, a seat of its own for each
+ * Sixty status items in ten ladders: the 34 of spec Appendix B, a seat of its own for each
  * city besides Madrid, and sixteen more rungs in fashion, art, travel, and air and sea.
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
@@ -34,6 +34,8 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
 const catalogue: ItemDef[] = [
   ...durables('car', [
     ['car_seat_ibiza', 18_000, 1_500, 4, 80, -2_200],
+    // Two wheels: a crisis of the forties, or the cheapest way across a city.
+    ['car_motorbike', 22_000, 1_200, 9, 80, -2_000],
     ['car_toyota_corolla', 26_000, 1_600, 6, 82, -2_000],
     ['car_vw_golf_gti', 42_000, 2_200, 10, 80, -2_200],
     ['car_tesla_model_3', 48_000, 1_800, 14, 78, -2_400],
@@ -97,6 +99,9 @@ const catalogue: ItemDef[] = [
   ...durables('charter', [['sea_sailboat', 180_000, 12_000, 35, 75, -1_200]]),
   // The dearest thing in the game, moored only where there is a marina for it.
   ...onlyIn(['dubai', 'singapore'], durables('charter', [['sea_motor_yacht', 1_200_000, 90_000, 70, 70, -1_500]])),
+
+  // A dog is adopted, not bought, and nobody buys one back: what it costs is its keep, and it is walked every day.
+  ...durables('pet', [['pet_dog', 300, 1_200, 2, 0, 0]]),
 
   membership('member_gym', 50, 360, 1),
   membership('member_platinum_card', 0, 800, 5),

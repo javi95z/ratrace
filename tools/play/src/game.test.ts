@@ -89,7 +89,7 @@ describe('the terminal game', () => {
     const engineer = lives.find((life) => life.id === 'engineer');
     if (!engineer) throw new Error('no engineer');
     // A seed whose first cards leave the engineer the cash this script goes on to spend.
-    const hand = createGame({ content, start: engineer.start }, 'orders-2').hand;
+    const hand = createGame({ content, start: engineer.start }, 'orders-3').hand;
     const { io, out } = scripted([
       ...hand.map(() => ''),
       'save 500',
@@ -114,7 +114,7 @@ describe('the terminal game', () => {
       'help',
       'done',
     ]);
-    const state = await runGame(io, { locale: 'en', lifeId: 'engineer', seed: 'orders-2' });
+    const state = await runGame(io, { locale: 'en', lifeId: 'engineer', seed: 'orders-3' });
     const shown = text(out);
     expect(shown).toContain('✓ save 500 (added)');
     expect(shown).toContain('✓ buy msci 1000 (added)');

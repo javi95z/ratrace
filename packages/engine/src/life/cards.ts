@@ -91,7 +91,12 @@ export function weightOf(card: CardDef, p: PlayerState, content: Content, round:
   if (card.risk === undefined) return card.weight;
   const rules = content.life;
   const aged = pctStepAt(rules.riskByAge[card.risk], round);
-  const off = card.risk === 'health' ? skillLevel(p, 'health', content) * rules.skills.healthRiskOffPct : tradeSkillLevel(p, content) * rules.skills.jobRiskOffPct;
+  const off =
+    card.risk === 'health'
+      ? skillLevel(p, 'health', content) * rules.skills.healthRiskOffPct
+      : card.risk === 'scam'
+        ? p.life.financeSkill * rules.skills.scamRiskOffPct
+        : tradeSkillLevel(p, content) * rules.skills.jobRiskOffPct;
   return Math.max(1, Math.round((card.weight * aged * Math.max(0, 100 - off)) / 10_000));
 }
 

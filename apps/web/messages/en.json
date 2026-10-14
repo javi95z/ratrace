@@ -314,7 +314,11 @@
     "retire": "You retire, for good",
     "giftSavings": "{pct}% of your cash and savings to your children",
     "giftBusinesses": "Your businesses to your children",
-    "giftCounts": "Still counts in your score, less {pct}% gift tax"
+    "giftCounts": "Still counts in your score, less {pct}% gift tax",
+    "focusBase": "{value} focus every round, for good",
+    "businessesPct": "Your businesses {value}%",
+    "suspicion": "Tax office suspicion {value}",
+    "amnesty": "Pay {pct}% of what you hid, and start clean"
   },
   "finance": {
     "tabs": {
@@ -650,7 +654,14 @@
         "3": "\"Fine. The manager has no idea who the owner is.\"",
         "4": "\"Good. I will be back if nothing else is open.\"",
         "5": "\"The owner counts every penny, but everything works.\""
-      }
+      },
+      "paysYou": "{amount} to you",
+      "neglectedShort": "Nobody runs it this round: it makes less and loses value.",
+      "quickTend": "Run it yourself · 1 focus",
+      "quickManager": "Manager · {pct}%",
+      "totalWorth": "Worth",
+      "totalProfit": "Profit this round",
+      "totalPayout": "To you"
     },
     "evasion": {
       "title": "What you do not declare",

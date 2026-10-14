@@ -83,6 +83,8 @@ export function validateCards(c: Content): string[] {
     holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
     insured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
+    retired: flag, evading: flag,
+    notRecentFlag: (value) => (isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && (value.rounds as number) >= 1 ? null : 'needs a flag and a positive number of rounds for notRecentFlag'),
   };
   const triggerChecks: Record<string, Check> = {
     regimeBegan: listOf(REGIMES, 'regime'), regimes: listOf(REGIMES, 'regime'), cryptoBegan: listOf(PHASES, 'crypto phase'),
@@ -135,6 +137,10 @@ export function validateCards(c: Content): string[] {
     lifestyleFloor: (value) => ([0, 1, 2, 3].includes(value as number) ? null : 'has a lifestyle floor that is not 0, 1, 2 or 3'),
     sellHome: flag,
     retire: flag,
+    focusBase: (value) => (isWhole(value) && value !== 0 && Math.abs(value as number) <= 2 ? null : 'needs a change of focus from -2 to 2 for focusBase'),
+    businessesPct: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a whole percentage from -100 to 100 for businessesPct'),
+    suspicion: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a change of suspicion from -100 to 100'),
+    amnesty: (value) => (isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for an amnesty'),
     gift: (value) => {
       if (!isRecord(value) || (value.liquidPct === undefined && value.businesses === undefined)) return 'gives nothing to the children';
       if (value.liquidPct !== undefined && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return 'gives a share of savings that is not a whole percentage from 1 to 100';
@@ -217,7 +223,7 @@ export function validateCards(c: Content): string[] {
     if (!CATEGORIES.includes(card.category)) errors.push(`${name} has an unknown category: ${card.category}`);
     if (!(typeof card.weight === 'number' && Number.isFinite(card.weight) && card.weight > 0)) errors.push(`${name} needs a positive weight`);
     if (!isCount(card.cooldown)) errors.push(`${name} needs a whole, non-negative cooldown`);
-    if (card.risk !== undefined && card.risk !== 'health' && card.risk !== 'job') errors.push(`${name} has an unknown risk: ${String(card.risk)}`);
+    if (card.risk !== undefined && card.risk !== 'health' && card.risk !== 'job' && card.risk !== 'scam') errors.push(`${name} has an unknown risk: ${String(card.risk)}`);
 
     if (card.category === 'world') {
       if (!isRecord(card.trigger)) errors.push(`${name} is a world card and needs a trigger`);

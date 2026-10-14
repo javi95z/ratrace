@@ -206,4 +206,30 @@ describe('the business tab', () => {
     expect(within(sheet).getByText('Online shop')).toBeTruthy();
     expect(within(sheet).getByText(fmt.money(state.player.businesses[0].capital))).toBeTruthy();
   });
+
+  it('shows every business at a glance, all of them summed, and runs each from the list without opening it', async () => {
+    const { services } = await inFinance('founder');
+    const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
+    const [shop] = quote.owned;
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const panel = screen.getByRole('region', { name: 'Your businesses' });
+    expect(within(panel).getByText('Worth')).toBeTruthy();
+    expect(within(panel).getAllByText(fmt.compact(shop.capital)).length).toBeGreaterThan(0);
+    expect(within(panel).getByText(`${fmt.money(shop.payout)} to you`)).toBeTruthy();
+    expect(within(panel).getByRole('img', { name: /of 5 stars$/ })).toBeTruthy();
+    // The founder runs her shop herself this round: the switch is on, and taking it off is an order like any other.
+    const tend = within(panel).getByRole('button', { name: /Run it yourself · 1 focus/ });
+    expect(tend.getAttribute('aria-pressed')).toBe(String(shop.tended));
+    const manager = within(panel).getByRole('button', { name: `Manager · ${shop.managerPct}%` });
+    expect(manager.getAttribute('aria-pressed')).toBe('false');
+    await user.click(manager);
+    expect(ordersOf()).toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
+    expect(within(panel).getByRole('button', { name: /Manager · / }).getAttribute('aria-pressed')).toBe('true');
+    // With a manager, the player's focus is not asked for.
+    expect((within(panel).getByRole('button', { name: /Run it yourself/ }) as HTMLButtonElement).disabled).toBe(true);
+    await user.click(within(panel).getByRole('button', { name: /Manager · / }));
+    expect(ordersOf()).not.toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
+  });
 });

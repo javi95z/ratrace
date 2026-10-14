@@ -30,6 +30,86 @@ function settingOrder(view: GameView, businessId: string, want: { payoutPct: num
   return { type: 'setBusiness', businessId, ...(payoutPct === undefined ? {} : { payoutPct }), ...(manager === undefined ? {} : { manager }) };
 }
 
+/**
+ * The two ways a business is run, as orders: the player's own focus this round, and a manager. The
+ * same orders the business's sheet gives, so a change made in one place shows in the other.
+ */
+function useRunning(view: GameView | null, business: Owned) {
+  const setOrder = useGame((s) => s.setOrder);
+  const isSetting = (order: Order) => order.type === 'setBusiness' && order.businessId === business.id;
+  const isTending = (order: Order) => order.type === 'tendBusiness' && order.businessId === business.id;
+  return {
+    tend: (on: boolean) => setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null),
+    manage: (on: boolean) => (view ? setOrder(isSetting, settingOrder(view, business.id, { payoutPct: business.payoutPct, manager: on })) : false),
+  };
+}
+
+/** A small switch beside a business: on or off, with what it costs said in its label. */
+function QuickSwitch({ on, disabled, label, onChange }: { on: boolean; disabled?: boolean; label: string; onChange(on: boolean): void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className={`pixel frame-raised min-h-9 flex-1 px-2 text-[13px] disabled:opacity-45 ${on ? 'frame-gold bg-teal-800 text-cream' : 'bg-night-600 text-ink-200'}`}
+    >
+      {on ? '✓ ' : ''}
+      {label}
+    </button>
+  );
+}
+
+/**
+ * One business in the list: what it is worth and makes, how it is run, what its customers say, and
+ * the two switches that run it, at hand without opening it. The rest is in its sheet.
+ */
+function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: BusinessesQuote; onOpen(): void }) {
+  const t = useT('finance.business');
+  const { text, fmt } = useWords();
+  const view = useGame((s) => s.view);
+  const runLine = useRunLine();
+  const run = runLine(business);
+  const running = useRunning(view, business);
+  const stars = reviewStars(business);
+  // A business opened by an order of this round is not the player's to run until the round is played.
+  const standing = view?.player.businesses.find((x) => x.id === business.id);
+  return (
+    <li className="border-t-2 border-night-900 py-2 first:border-t-0 first:pt-0">
+      <button type="button" aria-haspopup="dialog" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 text-left">
+        <Bare className="size-12">
+          <Sprite id={businessArt(business.typeId)} scale={2} />
+        </Bare>
+        <span className="min-w-0 flex-1">
+          <span className="pixel block truncate text-[17px]">{text.businessTypes[business.typeId].name}</span>
+          <span className={`block text-[12px] ${run.tone}`}>{run.text}</span>
+          <span role="img" aria-label={t('review.stars', { n: stars })} className="block text-[12px] tracking-widest text-gold-500">
+            {'★'.repeat(stars)}
+            <span className="text-ink-500">{'★'.repeat(5 - stars)}</span>
+          </span>
+        </span>
+        <span className="shrink-0 text-right">
+          <span className="pixel block text-[17px] text-gold-500">{fmt.money(business.capital)}</span>
+          <span className={`block text-[12px] ${business.profit >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>{t('profitRound', { amount: fmt.signed(business.profit) })}</span>
+          <span className="block text-[12px] text-ink-300">{t('paysYou', { amount: fmt.money(business.payout) })}</span>
+        </span>
+      </button>
+      {business.neglected ? <p className="mt-1 text-[12px] leading-snug text-wine-300">{t('neglectedShort')}</p> : null}
+      {standing ? (
+        <div className="mt-2 flex gap-2">
+          <QuickSwitch
+            on={business.tended}
+            disabled={business.manager || standing.tended || (!business.tended && quote.focusLeft < 1)}
+            label={t('quickTend')}
+            onChange={(on) => running.tend(on)}
+          />
+          <QuickSwitch on={business.manager} label={t('quickManager', { pct: business.managerPct })} onChange={(on) => running.manage(on)} />
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
 /** How a business is being run this round, in a line. */
 function useRunLine() {
   const t = useT('finance.business');
@@ -47,7 +127,6 @@ export function BusinessTab() {
   const shown = useShown();
   const view = useGame((s) => s.view);
   const addOrder = useGame((s) => s.addOrder);
-  const runLine = useRunLine();
   const [open, setOpen] = useState<string | null>(null);
   const [starting, setStarting] = useState<Kind | null>(null);
   const quote = quoteBusinesses(content, shown);
@@ -57,33 +136,34 @@ export function BusinessTab() {
   const nextSkill = later.length > 0 ? Math.min(...later.map((kind) => kind.minFinanceSkill)) : null;
   // Looked up afresh on every draw: a business sold while its sheet is open closes it.
   const opened = quote.owned.find((business) => business.id === open);
+  const total = quote.owned.reduce((sum, business) => ({ capital: sum.capital + business.capital, profit: sum.profit + business.profit, payout: sum.payout + business.payout }), { capital: 0, profit: 0, payout: 0 });
   if (!view) return null;
 
   return (
     <div className="flex flex-col gap-3">
       <Panel title={t('yours')} label={t('yours')}>
         {quote.owned.length === 0 ? <p className="text-[14px] leading-snug text-ink-300">{t('none')}</p> : null}
+        {quote.owned.length > 0 ? (
+          // All of them at a glance: what they are worth, what they make this round, and what comes to the player.
+          <div className="mb-2 grid grid-cols-3 gap-2 border-b-2 border-night-900 pb-2 text-center">
+            <div>
+              <p className="pixel text-[16px] text-gold-500">{fmt.compact(total.capital)}</p>
+              <p className="text-[11px] text-ink-300">{t('totalWorth')}</p>
+            </div>
+            <div>
+              <p className={`pixel text-[16px] ${total.profit >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>{fmt.signed(total.profit)}</p>
+              <p className="text-[11px] text-ink-300">{t('totalProfit')}</p>
+            </div>
+            <div>
+              <p className="pixel text-[16px]">{fmt.money(total.payout)}</p>
+              <p className="text-[11px] text-ink-300">{t('totalPayout')}</p>
+            </div>
+          </div>
+        ) : null}
         <ul className="flex flex-col">
-          {quote.owned.map((business) => {
-            const run = runLine(business);
-            return (
-              <li key={business.id} className="border-t-2 border-night-900 first:border-t-0">
-                <button type="button" aria-haspopup="dialog" onClick={() => setOpen(business.id)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
-                  <Bare className="size-9">
-                    <Sprite id={businessArt(business.typeId)} />
-                  </Bare>
-                  <span className="min-w-0 flex-1">
-                    <span className="pixel block truncate text-[16px]">{text.businessTypes[business.typeId].name}</span>
-                    <span className={`block text-[12px] ${run.tone}`}>{run.text}</span>
-                  </span>
-                  <span className="shrink-0 text-right">
-                    <span className="pixel block text-gold-500">{fmt.money(business.capital)}</span>
-                    <span className={`block text-[12px] ${business.profit >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>{t('profitRound', { amount: fmt.signed(business.profit) })}</span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {quote.owned.map((business) => (
+            <BusinessLine key={business.id} business={business} quote={quote} onOpen={() => setOpen(business.id)} />
+          ))}
         </ul>
         {quote.owned.length > 0 ? <p className="mt-1 text-[12px] leading-snug text-ink-300">{t('focusLeft', { n: quote.focusLeft })}</p> : null}
       </Panel>

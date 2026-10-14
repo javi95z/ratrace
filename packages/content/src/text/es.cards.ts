@@ -552,8 +552,8 @@ export const cards: Record<string, CardText> = {
     'Hacerlo',
   ]),
   career_restructuring: c('Reestructuración', 'La empresa revisa quién cobra más. Tu nombre está en la lista.', [
-    'Aceptar la salida con indemnización',
     'Aceptar un puesto por debajo',
+    'Aceptar la salida con indemnización',
     ['Pelear tu puesto', 'Te quedas. Esta vez.', 'Pierdes la pelea: sales con una indemnización menor.'],
   ]),
   late_gift: c('Herencia en vida', 'Tus hijos están en la edad en que más ayuda un empujón. Lo que des paga hoy el impuesto de donaciones.', [
@@ -570,5 +570,85 @@ export const cards: Record<string, CardText> = {
     'Que se ocupen tus hermanos',
     'Pagar una residencia',
     'Cuidarlos tú',
+  ]),
+  career_four_day_week: c('Semana de cuatro días', 'La empresa prueba la jornada de cuatro días: un 20 % menos de sueldo a cambio de un día libre más, para siempre.', [
+    'Seguir a jornada completa',
+    'Pasar a cuatro días',
+  ]),
+  edu_company_course: c('Un curso pagado por la empresa', 'Te pagan un curso caro. La letra pequeña: dos años de permanencia o lo devuelves.', [
+    'No, gracias',
+    'Aceptar, con dos años de permanencia',
+    'Pagártelo tú, sin ataduras',
+  ]),
+  biz_rival: c('Abre la competencia al lado', 'Un local idéntico al tuyo acaba de abrir en la misma calle, y con inauguración.', [
+    ['Aguantar y ver', 'Te quita clientes: tu negocio pierde valor.', 'Sus clientes vuelven a ti en un mes.'],
+    'Bajar precios',
+    'Reformar el local',
+  ]),
+  biz_viral_review: c('Una reseña se hace viral', 'Alguien ha escrito sobre tu negocio y medio barrio lo ha compartido. Aún no sabes en qué tono.', [
+    ['Dejarlo correr', 'Era buena: tienes cola en la puerta.', 'Era mala, y se nota en la caja.'],
+    ['Responder con mimo', 'Tu respuesta gusta más que la reseña.', 'Nadie lee las respuestas.'],
+    'Comprar reseñas falsas',
+  ]),
+  biz_labour_inspection: c('Inspección de trabajo', 'Un inspector pide los contratos, los horarios y las nóminas de tu negocio.', [
+    ['Que vengan', 'Todo en orden. Se van con un café.', 'Un contrato mal hecho: multa.'],
+    'Llamar antes a una asesoría laboral',
+  ]),
+  inv_bank_product: c('Un producto «garantizado»', 'Tu banco te ofrece un bono a dos años «sin riesgo». Comisión de entrada incluida, en letra pequeña.', [
+    'No, gracias',
+    'Contratarlo',
+    'Pedir un fondo indexado sin comisión',
+  ]),
+  inv_leveraged_etf: c('Un fondo que multiplica por tres', 'Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo.', [
+    'Pasar',
+    ['Meter 3.000 $', 'El mercado subió: triplicas.', 'El mercado bajó: se evapora.'],
+  ]),
+  house_noisy_neighbours: c('Vecinos ruidosos', 'Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir.', [
+    'Aguantar',
+    'Insonorizar el piso',
+    'Buscar otro piso de alquiler',
+  ]),
+  house_levy: c('Derrama en la comunidad', 'Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes.', [
+    'Pagar tu parte',
+    ['Recurrirla', 'El juez te da la razón.', 'Pierdes, y pagas con intereses.'],
+  ]),
+  house_lodger: c('Alquilar una habitación', 'Te sobra una habitación y una amiga busca dónde vivir. Pagaría bien.', [
+    'Mejor no',
+    'Alquilársela',
+  ]),
+  life_bali_wedding: c('Una boda en Bali', 'Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar.', [
+    'Excusarte',
+    'Ir a Bali',
+  ]),
+  fam_dog: c('Un perro en la protectora', 'Un perro de tres años te mira desde la jaula como si ya te conociera.', [
+    'Mejor no',
+    'Adoptarlo',
+  ]),
+  fam_partner_startup: c('Tu pareja quiere emprender', 'Tu pareja quiere dejar su trabajo para montar algo propio. Necesita tu apoyo, y un tiempo sin sueldo.', [
+    'Pedirle que no lo haga',
+    ['Apoyarle', 'Funciona: gana más que nunca.', 'No sale: vuelve a trabajar, por menos.'],
+  ]),
+  tax_no_vat: c('¿Sin IVA?', 'Un cliente te propone pagarte en efectivo y sin factura. Para los dos sale más barato.', [
+    'Con factura y con IVA',
+    'Sin IVA, en mano',
+  ]),
+  tax_amnesty: c('Amnistía fiscal', 'El Gobierno anuncia una amnistía: quien regularice ahora paga un 10 % de lo que no declaró y queda limpio.', [
+    'Arriesgarte',
+    'Regularizar',
+  ]),
+  late_motorbike: c('Una moto, a tu edad', 'Una Ducati en el escaparate y la sensación de que la vida se pasa.', [
+    'Ni hablar',
+    'Comprarla',
+    'Comprarla a plazos',
+  ]),
+  late_mentor: c('Ser mentor', 'Una asociación busca jubilados que guíen a jóvenes que empiezan. Unas horas a la semana.', [
+    'Prefieres tu huerto',
+    'Ser mentor',
+  ]),
+  late_scam_call: c('Un mensaje urgente', '«Mamá, papá, se me ha roto el móvil. Este es mi número nuevo. Necesito 3.000 $ hoy.»', [
+    ['Ignorarlo', 'Era una estafa. Bien hecho.', 'Era de verdad, y no te lo perdonan.'],
+    ['Hacer la transferencia', 'Era una estafa. El dinero no vuelve.', 'Era de verdad. Te lo agradecen.'],
+    'Llamar al número de siempre',
+    'Reconocer la estafa al vuelo',
   ]),
 };

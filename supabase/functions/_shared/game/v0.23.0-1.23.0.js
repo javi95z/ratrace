@@ -1587,7 +1587,10 @@ function validateCards(c) {
     lacksLadder: oneOf(ladders, "ladder"),
     notItems: listOf(items2, "item"),
     insured: oneOf(INSURANCE_KINDS, "insurance"),
-    regimes: listOf(REGIMES, "regime")
+    regimes: listOf(REGIMES, "regime"),
+    retired: flag,
+    evading: flag,
+    notRecentFlag: (value) => isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && value.rounds >= 1 ? null : "needs a flag and a positive number of rounds for notRecentFlag"
   };
   const triggerChecks = {
     regimeBegan: listOf(REGIMES, "regime"),
@@ -1648,6 +1651,10 @@ function validateCards(c) {
     lifestyleFloor: (value) => [0, 1, 2, 3].includes(value) ? null : "has a lifestyle floor that is not 0, 1, 2 or 3",
     sellHome: flag,
     retire: flag,
+    focusBase: (value) => isWhole(value) && value !== 0 && Math.abs(value) <= 2 ? null : "needs a change of focus from -2 to 2 for focusBase",
+    businessesPct: (value) => isWhole(value) && value !== 0 && within(value, -100, 100) ? null : "needs a whole percentage from -100 to 100 for businessesPct",
+    suspicion: (value) => isWhole(value) && value !== 0 && within(value, -100, 100) ? null : "needs a change of suspicion from -100 to 100",
+    amnesty: (value) => isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : "needs a whole percentage from 0 to 100 for an amnesty",
     gift: (value) => {
       if (!isRecord(value) || value.liquidPct === void 0 && value.businesses === void 0) return "gives nothing to the children";
       if (value.liquidPct !== void 0 && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return "gives a share of savings that is not a whole percentage from 1 to 100";
@@ -1729,7 +1736,7 @@ function validateCards(c) {
     if (!CATEGORIES.includes(card2.category)) errors.push(`${name} has an unknown category: ${card2.category}`);
     if (!(typeof card2.weight === "number" && Number.isFinite(card2.weight) && card2.weight > 0)) errors.push(`${name} needs a positive weight`);
     if (!isCount(card2.cooldown)) errors.push(`${name} needs a whole, non-negative cooldown`);
-    if (card2.risk !== void 0 && card2.risk !== "health" && card2.risk !== "job") errors.push(`${name} has an unknown risk: ${String(card2.risk)}`);
+    if (card2.risk !== void 0 && card2.risk !== "health" && card2.risk !== "job" && card2.risk !== "scam") errors.push(`${name} has an unknown risk: ${String(card2.risk)}`);
     if (card2.category === "world") {
       if (!isRecord(card2.trigger)) errors.push(`${name} is a world card and needs a trigger`);
       else {
@@ -1995,7 +2002,7 @@ function validateContent(c) {
   if (!listOf(life2.lifestyleStatus, 4, isWhole)) errors.push("life.lifestyleStatus must be four whole numbers");
   const pctSteps = (steps) => Array.isArray(steps) && steps.length > 0 && steps.every((step, i) => isRecord(step) && isCount(step.fromRound) && isWhole(step.pct) && (i === 0 ? step.fromRound === 0 && step.pct === 100 : step.fromRound > steps[i - 1].fromRound && step.pct >= steps[i - 1].pct));
   const risks = isRecord(life2.riskByAge) ? life2.riskByAge : {};
-  for (const risk of ["health", "job"]) {
+  for (const risk of ["health", "job", "scam"]) {
     if (!pctSteps(risks[risk])) errors.push(`life.riskByAge.${risk} must be steps from round 0 at 100, later and never lower`);
   }
   if (!pctSteps(life2.healthPremiumByAge)) errors.push("life.healthPremiumByAge must be steps from round 0 at 100, later and never lower");
@@ -2054,7 +2061,7 @@ function validateContent(c) {
     if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
       errors.push("life.skills.levelPoints must be three rising positive whole numbers");
     }
-    for (const field of ["studyPoints", "practicePoints", "investingPoints", "negotiationHuntRaisePct", "negotiationPromotionPct", "negotiationSalePct", "languagesMoveOffPct", "networkHuntPct", "networkStatus", "managementProfitPct", "managementManagerOffPct", "healthPremiumOffPct", "healthRiskOffPct", "jobRiskOffPct"]) {
+    for (const field of ["studyPoints", "practicePoints", "investingPoints", "negotiationHuntRaisePct", "negotiationPromotionPct", "negotiationSalePct", "languagesMoveOffPct", "networkHuntPct", "networkStatus", "managementProfitPct", "managementManagerOffPct", "healthPremiumOffPct", "healthRiskOffPct", "jobRiskOffPct", "scamRiskOffPct"]) {
       if (!(isWhole(skills[field]) && skills[field] >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
     }
     for (const field of ["languagesKeepRungFrom", "languagesPartnerFrom", "managementExtraFrom", "healthFocusFrom"]) {
@@ -2495,6 +2502,12 @@ function conditionHolds(when, p, at) {
   }
   if (when.notItems !== void 0 && life2.items.some((x) => when.notItems?.includes(x.itemId))) return false;
   if (when.insured !== void 0 && !life2.insurance[when.insured]) return false;
+  if (when.retired !== void 0 && when.retired !== (life2.retiredAtRound !== null && job === null)) return false;
+  if (when.evading !== void 0 && when.evading !== (hiding(life2.evasion) || life2.evasion.evaded.length > 0)) return false;
+  if (when.notRecentFlag !== void 0) {
+    const { flag, rounds } = when.notRecentFlag;
+    if (hasFlag(life2.flags, flag) && round2 - life2.flags[flag] < rounds) return false;
+  }
   if (when.regimes !== void 0 && !when.regimes.includes(world2.regime)) return false;
   if (when.cityPropertyReturnAtMostBp !== void 0) {
     if ((world2.propertyReturnBp[p.cityId] ?? 0) > when.cityPropertyReturnAtMostBp) return false;
@@ -2679,6 +2692,17 @@ function applyEffects(p, effects, at) {
   for (const flag of effects.clearFlags ?? []) delete life2.flags[flag];
   if (effects.job !== void 0) changeJob(p, effects.job, at);
   if (effects.retire === true && life2.career !== null) retire(p, round2);
+  if (effects.focusBase !== void 0) life2.focusBase = Math.max(1, life2.focusBase + effects.focusBase);
+  if (effects.businessesPct !== void 0) {
+    for (const business2 of p.businesses) business2.capital = Math.max(0, business2.capital + mulDiv(business2.capital, effects.businessesPct, 100));
+  }
+  if (effects.suspicion !== void 0) life2.evasion.suspicion = clamp(life2.evasion.suspicion + effects.suspicion, 0, 100);
+  if (effects.amnesty !== void 0) {
+    let owed = 0;
+    for (const entry of life2.evasion.evaded) owed += entry.amount;
+    p.cash -= mulDiv(owed, effects.amnesty.pct, 100);
+    life2.evasion = honestEvasion();
+  }
   if (effects.gift !== void 0) giveToChildren(p, effects.gift, at);
   if (effects.moveCity !== void 0 && effects.moveCity !== p.cityId) {
     life2.movingTo = effects.moveCity;
@@ -2770,7 +2794,7 @@ function weightOf(card2, p, content2, round2) {
   if (card2.risk === void 0) return card2.weight;
   const rules = content2.life;
   const aged = pctStepAt(rules.riskByAge[card2.risk], round2);
-  const off = card2.risk === "health" ? skillLevel(p, "health", content2) * rules.skills.healthRiskOffPct : tradeSkillLevel(p, content2) * rules.skills.jobRiskOffPct;
+  const off = card2.risk === "health" ? skillLevel(p, "health", content2) * rules.skills.healthRiskOffPct : card2.risk === "scam" ? p.life.financeSkill * rules.skills.scamRiskOffPct : tradeSkillLevel(p, content2) * rules.skills.jobRiskOffPct;
   return Math.max(1, Math.round(card2.weight * aged * Math.max(0, 100 - off) / 1e4));
 }
 function openCards(state, content2, at, rested = false) {
@@ -4220,6 +4244,115 @@ var worldCards = [
   ])
 ];
 
+// packages/content/src/cards/extra.ts
+var TRAINING_BOND = { flag: "training_bond", rounds: 2 };
+var moreCareerCards = [
+  // A day less for a fifth less, for good: time is the one thing money cannot buy back.
+  card("career_four_day_week", "career", { once: true, when: { employed: true, minRound: 4 } }, [
+    {},
+    { effects: { salaryModPct: -20, focusBase: 1 } }
+  ])
+];
+var moreEducationCards = [
+  // Paid by the employer, with two years of staying on; or paid by the player, and free to go.
+  card("edu_company_course", "education", { cooldown: 6, when: { employed: true, minRound: 1 } }, [
+    {},
+    { effects: { focus: 1, careerSkill: 4, setFlags: [TRAINING_BOND.flag] } },
+    { effects: { focus: 1, cash: usd(-4e3), careerSkill: 4 } }
+  ])
+];
+var moreBusinessCards = [
+  card("biz_rival", "business", { cooldown: 6, when: { hasBusiness: true } }, [
+    { outcomes: [{ weight: 50, effects: { businessesPct: -15 } }, { weight: 50, effects: {} }] },
+    { effects: { businessesPct: -8 } },
+    { effects: { cash: usd(-6e3), businessesPct: 5 } }
+  ]),
+  card("biz_viral_review", "business", { cooldown: 6, when: { hasBusiness: true } }, [
+    { outcomes: [{ weight: 50, effects: { businessesPct: 10 } }, { weight: 50, effects: { businessesPct: -10 } }] },
+    { effects: { focus: 1 }, outcomes: [{ weight: 75, effects: { businessesPct: 10 } }, { weight: 25, effects: {} }] },
+    { effects: { cash: usd(-1500), businessesPct: 8, status: -2 } }
+  ]),
+  card("biz_labour_inspection", "business", { weight: 6, cooldown: 8, when: { hasBusiness: true } }, [
+    { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { cash: usd(-6e3) } }] },
+    { effects: { cash: usd(-1500) } }
+  ])
+];
+var moreInvestingCards = [
+  // The bank's own product: a two-year bond with a fee on the way in. Someone who knows money asks for a fund without one.
+  card("inv_bank_product", "investing", { cooldown: 8, when: { minNetWorth: usd(1e4) } }, [
+    {},
+    { effects: { cash: usd(-300), invest: { assetId: "treasury_short", amount: usd(5e3) } } },
+    { when: { minFinanceSkill: 2 }, effects: { invest: { assetId: "msci_world", amount: usd(5e3) } } }
+  ]),
+  // Three times the market, both ways: a little under even odds of tripling the stake.
+  card("inv_leveraged_etf", "investing", { cooldown: 6, when: { minRound: 2 } }, [
+    {},
+    { effects: { cash: usd(-3e3) }, outcomes: [{ weight: 45, effects: { cash: usd(9e3) } }, { weight: 55, effects: {} }] }
+  ])
+];
+var moreHousingCards = [
+  card("house_noisy_neighbours", "housing", { cooldown: 6 }, [
+    { effects: { focus: 1 } },
+    { effects: { cash: usd(-4e3) } },
+    { when: { ownsHome: false }, effects: { cash: usd(-1500) } }
+  ]),
+  card("house_levy", "housing", { cooldown: 6, when: { ownsHome: true } }, [
+    { effects: { cash: usd(-3e3) } },
+    { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { cash: usd(-4500) } }] }
+  ]),
+  // A room of one's own home let to a lodger: an income for good, and a stranger in the kitchen.
+  card("house_lodger", "housing", { once: true, when: { ownsHome: true, notFlags: ["lodger"] } }, [
+    {},
+    { effects: { recurring: [yearly("lodger", "passive", 6e3, null)], status: -3, setFlags: ["lodger"] } }
+  ])
+];
+var moreLifestyleCards = [
+  card("life_bali_wedding", "lifestyle", { cooldown: 8, when: { minRound: 1 } }, [
+    { effects: { status: -1 } },
+    { effects: { cash: usd(-4e3), status: 2, skills: { network: 2 } } }
+  ])
+];
+var moreFamilyCards = [
+  // A dog is walked every day: health is practised for as long as it lives with the player.
+  card("fam_dog", "family", { cooldown: 8, when: { minRound: 2, notItems: ["pet_dog"] } }, [
+    {},
+    { effects: { buyItem: { itemId: "pet_dog", pricePct: 100 } } }
+  ]),
+  card("fam_partner_startup", "family", { once: true, when: { partner: true, minRound: 3 } }, [
+    { effects: { status: -1 } },
+    { effects: { partner: { salaryPct: 0 } }, outcomes: [{ weight: 40, effects: { partner: { salaryPct: 160 } } }, { weight: 60, effects: { partner: { salaryPct: 70 } } }] }
+  ])
+];
+var moreTaxCards = [
+  card("tax_no_vat", "tax", { cooldown: 6, when: { hasBusiness: true } }, [
+    {},
+    { effects: { cash: usd(2500), suspicion: 20 } }
+  ]),
+  // Once in a life: pay a tenth of what the tax office could still claim, and start again with nothing to fear.
+  card("tax_amnesty", "tax", { once: true, when: { evading: true } }, [
+    {},
+    { effects: { amnesty: { pct: 10 } } }
+  ])
+];
+var moreLaterLifeCards = [
+  card("late_motorbike", "laterLife", { once: true, when: { minRound: 8, maxRound: 13, notItems: ["car_motorbike"] } }, [
+    {},
+    { effects: { buyItem: { itemId: "car_motorbike", pricePct: 100 } } },
+    { effects: { loan: usd(22e3), buyItem: { itemId: "car_motorbike", pricePct: 100 } } }
+  ]),
+  card("late_mentor", "laterLife", { once: true, when: { retired: true } }, [
+    {},
+    { effects: { focus: 1, status: 3, skills: { network: 2 } } }
+  ]),
+  // A message from a number nobody knows, in a family member's name. Likelier with age, rarer for someone who knows money.
+  card("late_scam_call", "laterLife", { weight: 6, cooldown: 6, risk: "scam", when: { minRound: 8, minChildren: 1 } }, [
+    { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { status: -2 } }] },
+    { outcomes: [{ weight: 85, effects: { cash: usd(-3e3) } }, { weight: 15, effects: { status: 2 } }] },
+    { effects: { focus: 1 } },
+    { when: { minFinanceSkill: 2 }, effects: {} }
+  ])
+];
+
 // packages/content/src/cards/work.ts
 var NEW_EMPLOYER = { setFlags: ["share_plan"], clearFlags: ["layoff_proof"] };
 var FRESH_START = { clearFlags: ["layoff_proof", "share_plan"] };
@@ -4233,7 +4366,7 @@ var careerCards = [
     // Someone who has learnt to bargain comes with figures nobody can wave away.
     { when: { minSkills: { negotiation: 2 } }, effects: { focus: 1, skills: { negotiation: 1 } }, outcomes: [{ weight: 80, effects: { salaryModPct: 7 } }, { weight: 20, effects: { salaryModPct: 3 } }] }
   ]),
-  card("career_competitor_offer", "career", { cooldown: 5, when: { employed: true, minRound: 2 } }, [
+  card("career_competitor_offer", "career", { cooldown: 5, when: { notRecentFlag: TRAINING_BOND, employed: true, minRound: 2 } }, [
     {},
     { effects: { salaryModPct: 6, careerSkill: -1 } },
     { outcomes: [{ weight: 50, effects: { salaryModPct: 4 } }, { weight: 35, effects: {} }, { weight: 15, effects: { salaryModPct: -3 } }] }
@@ -4251,10 +4384,11 @@ var careerCards = [
     { effects: { focus: 1 }, outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { salaryBoostPct: -50, cashSalaryPct: 10, salaryModPct: -5 } }] },
     { effects: { focus: 2, salaryBoostPct: -50, cashSalaryPct: 25, careerSkill: 3 } }
   ]),
-  // From 50 a firm looks again at who it pays most: a way out with a cheque, a step down, or a fight for the post.
-  card("career_restructuring", "career", { weight: 8, cooldown: 6, risk: "job", when: { employed: true, minRound: 14 } }, [
-    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
+  // From 50 a firm looks again at who it pays most: a step down, a way out with a cheque, or a fight for the post.
+  // Whoever answers nothing keeps a job, a rung lower. A post nobody can be dismissed from is never in question.
+  card("career_restructuring", "career", { weight: 8, cooldown: 6, risk: "job", when: { employed: true, minRound: 14, notFlags: ["layoff_proof"] } }, [
     { effects: { job: { levelDelta: -1 }, salaryModPct: -8 } },
+    { effects: { job: { leave: true }, cashSalaryPct: 150 } },
     { effects: { focus: 1 }, outcomes: [{ weight: 55, effects: {} }, { weight: 45, effects: { job: { leave: true }, cashSalaryPct: 100 } }] }
   ]),
   card("career_toxic_boss", "career", { cooldown: 6, when: { employed: true } }, [
@@ -4303,7 +4437,7 @@ var careerCards = [
     { effects: { focus: 1, salaryModPct: 7 } },
     { outcomes: [{ weight: 55, effects: { salaryModPct: 10 } }, { weight: 45, effects: {} }] }
   ]),
-  card("career_big_offer", "career", { once: true, when: { employed: true, minLevel: 1, minRound: 3 } }, [
+  card("career_big_offer", "career", { once: true, when: { notRecentFlag: TRAINING_BOND, employed: true, minLevel: 1, minRound: 3 } }, [
     {},
     { effects: { focus: 1, salaryModPct: 10, status: 6 } },
     { outcomes: [{ weight: 60, effects: { salaryModPct: 15, status: 6 } }, { weight: 40, effects: {} }] }
@@ -4322,7 +4456,7 @@ var careerCards = [
     { effects: { careerSkill: 1 } },
     { effects: { focus: 1, salaryModPct: 5, status: 3 } }
   ]),
-  card("career_headhunter", "career", { cooldown: 6, when: { employed: true, minLevel: 2 } }, [
+  card("career_headhunter", "career", { cooldown: 6, when: { notRecentFlag: TRAINING_BOND, employed: true, minLevel: 2 } }, [
     {},
     { effects: { focus: 1 }, outcomes: [{ weight: 45, effects: { salaryModPct: 8 } }, { weight: 55, effects: {} }] },
     { when: { notCities: ["new_york"] }, effects: { moveCity: "new_york", salaryModPct: 6, cash: usd(5e3) } }
@@ -4445,17 +4579,26 @@ var businessCards = [
 // packages/content/src/cards/index.ts
 var cards = [
   ...careerCards,
+  ...moreCareerCards,
   ...educationCards,
+  ...moreEducationCards,
   ...businessCards,
+  ...moreBusinessCards,
   ...investingCards,
+  ...moreInvestingCards,
   ...housingCards,
+  ...moreHousingCards,
   ...lifestyleCards,
+  ...moreLifestyleCards,
   ...familyCards,
+  ...moreFamilyCards,
   ...healthCards,
   ...luckCards,
   ...worldCards,
   ...taxCards,
-  ...laterLifeCards
+  ...moreTaxCards,
+  ...laterLifeCards,
+  ...moreLaterLifeCards
 ];
 
 // packages/content/src/business.ts
@@ -4840,6 +4983,8 @@ var membership = (id, joining, upkeepAnnual, status, cities2) => ({
 var catalogue = [
   ...durables("car", [
     ["car_seat_ibiza", 18e3, 1500, 4, 80, -2200],
+    // Two wheels: a crisis of the forties, or the cheapest way across a city.
+    ["car_motorbike", 22e3, 1200, 9, 80, -2e3],
     ["car_toyota_corolla", 26e3, 1600, 6, 82, -2e3],
     ["car_vw_golf_gti", 42e3, 2200, 10, 80, -2200],
     ["car_tesla_model_3", 48e3, 1800, 14, 78, -2400],
@@ -4901,6 +5046,8 @@ var catalogue = [
   ...durables("charter", [["sea_sailboat", 18e4, 12e3, 35, 75, -1200]]),
   // The dearest thing in the game, moored only where there is a marina for it.
   ...onlyIn(["dubai", "singapore"], durables("charter", [["sea_motor_yacht", 12e5, 9e4, 70, 70, -1500]])),
+  // A dog is adopted, not bought, and nobody buys one back: what it costs is its keep, and it is walked every day.
+  ...durables("pet", [["pet_dog", 300, 1200, 2, 0, 0]]),
   membership("member_gym", 50, 360, 1),
   membership("member_platinum_card", 0, 800, 5),
   membership("member_club", 500, 3e3, 8),
@@ -5075,6 +5222,12 @@ var life = {
       { fromRound: 0, pct: 100 },
       { fromRound: 14, pct: 150 },
       { fromRound: 17, pct: 200 }
+    ],
+    // Swindlers call the old more than the young.
+    scam: [
+      { fromRound: 0, pct: 100 },
+      { fromRound: 14, pct: 200 },
+      { fromRound: 17, pct: 300 }
     ]
   },
   // Health cover is priced by the age it is taken out at: from 32, from 40, from 50 and from 56.
@@ -5135,7 +5288,7 @@ var life = {
       network: ["sales", "influencer", "hospitality", "public"],
       health: ["healthcare", "medicine"]
     },
-    practiceItems: { health: ["member_gym"], management: ["edu_coach"], languages: ["edu_language_school"] },
+    practiceItems: { health: ["member_gym", "pet_dog"], management: ["edu_coach"], languages: ["edu_language_school"] },
     negotiationHuntRaisePct: 1,
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,
@@ -5151,7 +5304,9 @@ var life = {
     healthFocusFrom: 3,
     // Each level takes 15 % off the chance of the misfortunes the skill guards against.
     healthRiskOffPct: 15,
-    jobRiskOffPct: 15
+    jobRiskOffPct: 15,
+    // A quarter off a swindle for each level of money sense.
+    scamRiskOffPct: 25
   }
 };
 var world = {

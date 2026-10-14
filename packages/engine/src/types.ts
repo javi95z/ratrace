@@ -28,7 +28,7 @@ export interface PctStep {
 }
 
 /** A misfortune that grows likelier with age: of the body, or of work. */
-export type CardRisk = 'health' | 'job';
+export type CardRisk = 'health' | 'job' | 'scam';
 
 /**
  * What not paying tax is worth, and what it risks. Every way of doing it saves tax this round and
@@ -141,6 +141,8 @@ export interface SkillRules {
   healthRiskOffPct: number;
   /** The skills a career practises: taken off the chance of a misfortune at work, in percent per level of the best of them. */
   jobRiskOffPct: number;
+  /** Money sense: taken off the chance of being swindled, in percent per level. */
+  scamRiskOffPct: number;
 }
 export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
 /** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
@@ -499,6 +501,12 @@ export interface Condition {
   notItems?: string[];
   /** Holds this insurance. */
   insured?: InsuranceKind;
+  /** True for someone who has retired and taken up no career since. */
+  retired?: boolean;
+  /** True for someone hiding something from the tax office, or with evaded tax it can still claim. */
+  evading?: boolean;
+  /** Holds unless this flag was set less than this many rounds ago: a promise still binding. */
+  notRecentFlag?: { flag: string; rounds: number };
   regimes?: Regime[];
   /** Property in the player's city returned this or less in the round that just ended. */
   cityPropertyReturnAtMostBp?: Bp;
@@ -591,6 +599,14 @@ export interface Effects {
   lifestyleFloor?: LifestyleTier;
   /** Ends the career for good: the player is retired. Any one-off money is worked out on the pay before it ends. */
   retire?: boolean;
+  /** A lasting change to the focus the player has every round. It never leaves less than one. */
+  focusBase?: number;
+  /** Changes what is in every business the player owns, in percent of it: a good name, or a rival next door. */
+  businessesPct?: number;
+  /** Added to how much the tax office suspects, from 0 to 100. */
+  suspicion?: number;
+  /** Settles with the tax office: this percent of the tax evaded that it can still claim is paid, and nothing more is owed or suspected. */
+  amnesty?: { pct: number };
   /**
    * Gives to the children in life: a percent of the cash and savings, every business, or both. What
    * is given, less the gift tax, is the family's and counts towards the score as the player's own.

@@ -5,7 +5,7 @@ import { previewCard } from '@ratrace/engine';
 import type { Effects, GameEvent, GameState, GameView, Order, PlayerState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeArt } from './art';
-import { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE } from './badges';
+import { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE, TWO_WHEELS } from './badges';
 import type { Journal } from './badges';
 import { content } from './content';
 import { lives } from './lives';
@@ -278,11 +278,13 @@ describe('the badges', () => {
   });
 
   it('gives the gallery its two badges', () => {
-    const cars = content.items.filter((item) => item.ladder === 'car').map((item) => item.id);
+    const cars = content.items.filter((item) => item.ladder === 'car' && !TWO_WHEELS.includes(item.id)).map((item) => item.id);
     expect(cars).toHaveLength(7);
+    // A motorbike is kept with the cars, and is not one of them.
+    expect(galleryBadges(content, [...cars.slice(1), 'car_motorbike'])).toEqual([]);
     expect(galleryBadges(content, cars)).toEqual(['every_car']);
     expect(galleryBadges(content, cars.slice(1))).toEqual([]);
-    const twenty = content.items.slice(7, 27).map((item) => item.id);
+    const twenty = content.items.slice(8, 28).map((item) => item.id);
     expect(galleryBadges(content, twenty)).toEqual(['twenty_items']);
     expect(galleryBadges(content, twenty.slice(1))).toEqual([]);
     expect(galleryBadges(content, content.items.map((item) => item.id))).toEqual(['twenty_items', 'every_car']);

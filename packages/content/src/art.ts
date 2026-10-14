@@ -8,7 +8,7 @@ import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId
 const scene = (name: string) => `card.${name}`;
 
 /**
- * Card scenes not drawn yet, each with the drawn scene shown in its place until `cards-22` is cut.
+ * Card scenes not drawn yet, each with the drawn scene shown in its place until `cards-22` to `cards-25` are cut.
  * A scene here is the only one a card may share.
  */
 export const SCENE_STAND_INS: Record<string, string> = {
@@ -16,6 +16,24 @@ export const SCENE_STAND_INS: Record<string, string> = {
   late_gift: scene('family_dinner'),
   late_business_handover: scene('contract_signing'),
   late_parents_care: scene('family_dinner'),
+  career_four_day_week: scene('packed_box'),
+  edu_company_course: scene('lecture_hall'),
+  biz_rival: scene('contract_signing'),
+  biz_viral_review: scene('contract_signing'),
+  biz_labour_inspection: scene('contract_signing'),
+  inv_bank_product: scene('advisor_office'),
+  inv_leveraged_etf: scene('advisor_office'),
+  house_noisy_neighbours: scene('small_house'),
+  house_levy: scene('small_house'),
+  house_lodger: scene('small_house'),
+  life_bali_wedding: scene('family_dinner'),
+  fam_dog: scene('family_dinner'),
+  fam_partner_startup: scene('family_dinner'),
+  tax_no_vat: scene('advisor_office'),
+  tax_amnesty: scene('advisor_office'),
+  late_motorbike: scene('sunset_bench'),
+  late_mentor: scene('sunset_bench'),
+  late_scam_call: scene('will_desk'),
 };
 
 export const cardArt: Record<string, string> = {
@@ -147,10 +165,33 @@ export const cardArt: Record<string, string> = {
   late_gift: SCENE_STAND_INS.late_gift,
   late_business_handover: SCENE_STAND_INS.late_business_handover,
   late_parents_care: SCENE_STAND_INS.late_parents_care,
+  career_four_day_week: SCENE_STAND_INS.career_four_day_week,
+  edu_company_course: SCENE_STAND_INS.edu_company_course,
+  biz_rival: SCENE_STAND_INS.biz_rival,
+  biz_viral_review: SCENE_STAND_INS.biz_viral_review,
+  biz_labour_inspection: SCENE_STAND_INS.biz_labour_inspection,
+  inv_bank_product: SCENE_STAND_INS.inv_bank_product,
+  inv_leveraged_etf: SCENE_STAND_INS.inv_leveraged_etf,
+  house_noisy_neighbours: SCENE_STAND_INS.house_noisy_neighbours,
+  house_levy: SCENE_STAND_INS.house_levy,
+  house_lodger: SCENE_STAND_INS.house_lodger,
+  life_bali_wedding: SCENE_STAND_INS.life_bali_wedding,
+  fam_dog: SCENE_STAND_INS.fam_dog,
+  fam_partner_startup: SCENE_STAND_INS.fam_partner_startup,
+  tax_no_vat: SCENE_STAND_INS.tax_no_vat,
+  tax_amnesty: SCENE_STAND_INS.tax_amnesty,
+  late_motorbike: SCENE_STAND_INS.late_motorbike,
+  late_mentor: SCENE_STAND_INS.late_mentor,
+  late_scam_call: SCENE_STAND_INS.late_scam_call,
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
+/** Things whose own picture is not drawn yet, and the drawn picture shown in their place until `items-06` is cut. */
+export const ITEM_STAND_INS: Record<string, string> = {
+  car_motorbike: 'car.seat_ibiza',
+  pet_dog: 'item.member_gym',
+};
+export const itemArt = (itemId: string): string => ITEM_STAND_INS[itemId] ?? (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
 /** The kinds of home each city draws its own way, once its sheet is cut. */
 export const CITY_HOME_KINDS = ['studio', 'flat', 'loft', 'townhouse', 'house', 'duplex', 'chalet', 'penthouse', 'estate', 'villa', 'mansion'] as const;
 /** The cities whose homes are drawn: until a city's sheet is cut, its homes are the plain ones. */

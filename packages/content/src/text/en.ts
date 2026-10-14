@@ -55,7 +55,8 @@ export const en: ContentText = {
     franchise: { name: 'Franchise', blurb: 'Dear, dull and steady. The one to own without running.' },
   },
   ladders: {
-    car: 'Cars',
+    pet: 'Pets',
+    car: 'Cars and bikes',
     watch: 'Watches',
     tech: 'Tech',
     fashion: 'Fashion',
