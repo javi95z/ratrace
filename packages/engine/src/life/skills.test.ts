@@ -43,8 +43,8 @@ function contentWith(change: (c: Content) => void = () => {}): Content {
 
 const game = (content: Content, life: Partial<LifeStart> = {}): GameState =>
   createGame({ content, start: { ...fixtureStart(), cash: 50_000_000, life: { ...office, ...life } } }, 'skills');
-/** Points that put a skill at a level, by the fixture's thresholds of 2, 5 and 9. */
-const at = (level: 0 | 1 | 2 | 3) => [0, 2, 5, 9][level];
+/** Points that put a skill at a level, by the fixture's thresholds of 3, 6 and 9. */
+const at = (level: 0 | 1 | 2 | 3) => [0, 3, 6, 9][level];
 const skilled = (content: Content, state: GameState, skills: Partial<Record<SkillId, number>>) =>
   withPlayer(content, state, {}, { skills: { ...state.player.life.skills, ...skills } });
 const focus = (action: Extract<Order, { type: 'focus' }>['action']): Order => ({ type: 'focus', action });
@@ -53,7 +53,7 @@ const skillEvents = (events: GameEvent[]) => events.filter((e) => e.kind === 'sk
 describe('learning a skill', () => {
   it('counts levels from the points, at the thresholds of the rules', () => {
     const content = fixtureContent();
-    expect([0, 1, 2, 4, 5, 8, 9, 40].map((points) => levelOfPoints(points, content))).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
+    expect([0, 2, 3, 5, 6, 8, 9, 40].map((points) => levelOfPoints(points, content))).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
   });
 
   it('starts a life with the skills it brings, and none of the others', () => {
@@ -67,8 +67,12 @@ describe('learning a skill', () => {
 
   it('takes a point of focus to study, says so when a level is reached, and needs no job for it', () => {
     const content = fixtureContent();
-    const studied = applyRound(content, game(content), { orders: [focus('studyNegotiation'), focus('exercise')] });
-    expect(studied.state.player.life.skills).toMatchObject({ negotiation: 2, health: 2, languages: 0 });
+    // A round of study is two points: short of a level from nothing, a level from one point in.
+    const once = applyRound(content, game(content), { orders: [focus('studyNegotiation')] });
+    expect(once.state.player.life.skills.negotiation).toBe(2);
+    expect(skillEvents(once.events)).toEqual([]);
+    const studied = applyRound(content, skilled(content, game(content), { negotiation: 1, health: 1 }), { orders: [focus('studyNegotiation'), focus('exercise')] });
+    expect(studied.state.player.life.skills).toMatchObject({ negotiation: 3, health: 3, languages: 0 });
     expect(skillEvents(studied.events)).toEqual([
       { kind: 'skill', skill: 'negotiation', level: 1 },
       { kind: 'skill', skill: 'health', level: 1 },
@@ -105,8 +109,8 @@ describe('learning a skill', () => {
     const state = game(content);
     const p = structuredClone(state.player);
     const situation = { content, world: state.timeline[0], round: 0 };
-    applyEffects(p, { skills: { network: 5 } }, situation);
-    expect(p.life.skills.network).toBe(5);
+    applyEffects(p, { skills: { network: 6 } }, situation);
+    expect(p.life.skills.network).toBe(6);
     expect(conditionHolds({ minSkills: { network: 2 } }, p, situation)).toBe(true);
     expect(conditionHolds({ minSkills: { network: 3 } }, p, situation)).toBe(false);
   });
@@ -125,9 +129,12 @@ describe('learning a skill', () => {
     const content = contentWith();
     const state = skilled(content, game(content), { negotiation: 3 });
     const quote = quoteSkills(content, viewOf(state));
-    expect(quote.skills.find((s) => s.skill === 'negotiation')).toEqual({ skill: 'negotiation', points: 3, level: 1, from: 2, next: 5, study: 'studyNegotiation', studyPoints: 2, practice: 1 });
-    expect(quote.skills.find((s) => s.skill === 'management')).toMatchObject({ study: null, practice: 0, next: 2 });
-    expect(quote.finance).toEqual({ level: 0, investedRounds: 0, nextAt: 3, investing: false });
+    expect(quote.skills.find((s) => s.skill === 'negotiation')).toEqual({ skill: 'negotiation', points: 3, level: 1, from: 3, next: 6, study: 'studyNegotiation', studyPoints: 2, practice: 1 });
+    expect(quote.skills.find((s) => s.skill === 'management')).toMatchObject({ study: null, practice: 0, from: 0, next: 3 });
+    // Money sense on the same steps; a level given by a card is counted from where it begins.
+    expect(quote.finance).toEqual({ level: 0, points: 0, from: 0, next: 3, practice: 0 });
+    const taught = quoteSkills(content, viewOf(withPlayer(content, state, {}, { financeSkill: 2, financePoints: 1 })));
+    expect(taught.finance).toEqual({ level: 2, points: 6, from: 6, next: 9, practice: 0 });
   });
 
   it('keeps the rules honest', () => {

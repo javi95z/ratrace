@@ -131,7 +131,7 @@ describe('end of round: things with a clock', () => {
 describe('end of round: finance skill from experience', () => {
   const buy: RoundChoices = { orders: [{ type: 'buy', assetId: 'fund_world', amount: 100_000 }] };
 
-  it('rises once after three rounds of holding an investment', () => {
+  it('rises a level for every three rounds of holding an investment, as any skill does with its points', () => {
     let state = game('invest');
     const seen: number[] = [];
     const raised: number[] = [];
@@ -141,9 +141,10 @@ describe('end of round: finance skill from experience', () => {
       seen.push(state.player.life.financeSkill);
       if (result.events.some((e) => e.kind === 'financeSkill')) raised.push(i);
     }
-    expect(seen).toEqual([0, 0, 1, 1, 1, 1]);
-    expect(raised).toEqual([2]);
+    expect(seen).toEqual([0, 0, 1, 1, 1, 2]);
+    expect(raised).toEqual([2, 5]);
     expect(state.player.life.investedRounds).toBe(6);
+    expect(state.player.life.financePoints).toBe(6);
   });
 
   it('counts the pension, counts rounds that are not in a row, and never counts cash', () => {
@@ -166,13 +167,13 @@ describe('end of round: finance skill from experience', () => {
   });
 
   it('does not rise past the top level', () => {
-    let state = game('expert', { financeSkill: 2 });
+    let state = game('expert', { financeSkill: 3 });
     for (let i = 0; i < 4; i++) {
       const result = play(state, i === 0 ? buy : quiet);
       state = result.state;
       expect(kinds(result.events)).not.toContain('financeSkill');
     }
-    expect(state.player.life.financeSkill).toBe(2);
+    expect(state.player.life.financeSkill).toBe(3);
   });
 });
 

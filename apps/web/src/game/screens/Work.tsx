@@ -121,17 +121,11 @@ export function WorkPanel({ shown }: { shown: GameView }) {
         <p className="pixel text-[12px] uppercase tracking-wider text-gold-200">{t('skills')}</p>
         <ul className="flex flex-col">
           <li>
-            <SkillLine icon={skillArt.finance} name={t('finance')} level={life.financeSkill} sub={t('financeLevel', { level: life.financeSkill })} onOpen={() => setAbout('finance')} />
+            <SkillLine icon={skillArt.finance} name={t('finance')} step={skills.finance} onOpen={() => setAbout('finance')} />
           </li>
           {skills.skills.map((skill) => (
             <li key={skill.skill}>
-              <SkillLine
-                icon={skillArt[skill.skill]}
-                name={text.skills[skill.skill]}
-                level={skill.level}
-                sub={skill.next === null ? t('skillTop') : t('skillPoints', { points: skill.points, next: skill.next })}
-                onOpen={() => setAbout(skill.skill)}
-              />
+              <SkillLine icon={skillArt[skill.skill]} name={text.skills[skill.skill]} step={skill} onOpen={() => setAbout(skill.skill)} />
             </li>
           ))}
         </ul>
@@ -156,8 +150,23 @@ export function WorkPanel({ shown }: { shown: GameView }) {
   );
 }
 
-/** One skill in the list: its sign, its name, how far along it is, and its level in squares. */
-function SkillLine({ icon, name, level, sub, onOpen }: { icon: string; name: string; level: number; sub: string; onOpen(): void }) {
+/** Where a skill stands, the same for every one: its level, and its points counted within that level. */
+interface Step {
+  level: number;
+  points: number;
+  from: number;
+  next: number | null;
+}
+
+/** "Level 2 · 1/3": the level, and how far into it, or that it is at the top. */
+function useStepLine() {
+  const t = useT('work');
+  return (step: Step) => (step.next === null ? t('skillTop') : t('skillPoints', { level: step.level, points: step.points - step.from, next: step.next - step.from }));
+}
+
+/** One skill in the list: its sign, its name, its level and how far into it, and its level in squares. */
+function SkillLine({ icon, name, step, onOpen }: { icon: string; name: string; step: Step; onOpen(): void }) {
+  const line = useStepLine();
   return (
     <Opener onOpen={onOpen}>
       <span className="flex items-center gap-2.5 py-1">
@@ -166,12 +175,35 @@ function SkillLine({ icon, name, level, sub, onOpen }: { icon: string; name: str
         </Bare>
         <span className="min-w-0 flex-1">
           <span className="block truncate">{name}</span>
-          <span className="block truncate text-[12px] text-ink-300">{sub}</span>
+          <span className="block truncate text-[12px] text-ink-300">{line(step)}</span>
         </span>
-        <Pips level={level} />
+        <Pips level={step.level} />
         <More />
       </span>
     </Opener>
+  );
+}
+
+/** The head of a skill's sheet, the same for every skill: a bar through the level the player is in. */
+function StepBar({ icon, step }: { icon: string; step: Step }) {
+  const t = useT('work');
+  const line = useStepLine();
+  return (
+    <div className="flex items-center gap-3">
+      <Bare className="size-12">
+        <Sprite id={icon} scale={2} />
+      </Bare>
+      <div className="min-w-0 flex-1">
+        {step.next === null ? (
+          <p className="pixel text-[16px] text-gold-500">{line(step)}</p>
+        ) : (
+          <>
+            <Bar value={step.points - step.from} max={step.next - step.from} label={t('skillProgress', { level: step.level + 1 })} tone="teal" />
+            <p className="mt-1 text-[12px] text-ink-300">{line(step)}</p>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -212,21 +244,7 @@ function SkillLevels({ skill }: { skill: SkillQuote }) {
   const { content, text } = useWords();
   return (
     <>
-      <div className="flex items-center gap-3">
-        <Bare className="size-12">
-          <Sprite id={skillArt[skill.skill]} scale={2} />
-        </Bare>
-        <div className="min-w-0 flex-1">
-          {skill.next === null ? (
-            <p className="pixel text-[16px] text-gold-500">{t('skillTop')}</p>
-          ) : (
-            <>
-              <Bar value={skill.points - skill.from} max={skill.next - skill.from} label={t('skillProgress', { level: skill.level + 1 })} tone="teal" />
-              <p className="mt-1 text-[12px] text-ink-300">{skill.level === 0 && skill.points === 0 ? t('skillNone', { n: skill.next }) : t('skillPoints', { points: skill.points, next: skill.next })}</p>
-            </>
-          )}
-        </div>
-      </div>
+      <StepBar icon={skillArt[skill.skill]} step={skill} />
       <ul className="flex flex-col gap-2">
         {([1, 2, 3] as const).map((at) => (
           <li key={at} aria-current={at === skill.level ? 'true' : undefined} className={`px-2.5 py-2 ${at === skill.level ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'} ${at > skill.level ? 'opacity-70' : ''}`}>
@@ -310,24 +328,12 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
 function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
   const t = useT('work');
   const { content } = useWords();
-  const years = content.life.financeExperienceRounds * content.yearsPerRound;
   const level = finance.level;
 
   return (
     <>
+      <StepBar icon={skillArt.finance} step={finance} />
       <p className="text-[14px] leading-snug">{t('financeAbout')}</p>
-      {/* How far experience has taken it, in the years the player counts in. */}
-      {finance.nextAt !== null ? (
-        <div>
-          <Bar value={finance.investedRounds} max={finance.nextAt} label={t('financeProgress')} tone="teal" />
-          <p className="mt-1 text-[12px] text-ink-300">
-            {t('financeProgress')}: {finance.investedRounds * content.yearsPerRound}/{finance.nextAt * content.yearsPerRound}
-            {finance.investing ? '' : ` · ${t('financeIdle')}`}
-          </p>
-        </div>
-      ) : level < 2 ? (
-        <p className="text-[12px] text-ink-300">{t('financeStuck')}</p>
-      ) : null}
       <ul className="flex flex-col gap-2">
         {([0, 1, 2, 3] as const).map((at) => {
           const opens = content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === at).length;
@@ -344,9 +350,8 @@ function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
           );
         })}
       </ul>
-      <p className="text-[12px] text-ink-300">
-        {level < 2 ? t('financeHow', { years }) : level === 2 ? t('financeMaster', { years: content.life.financeMasterRounds * content.yearsPerRound }) : t('financeTop')}
-      </p>
+      <p className="text-[13px] leading-snug">{t('financeHow', { n: content.life.skills.investingPoints })}</p>
+      <p className={`text-[12px] ${finance.practice > 0 ? 'text-teal-300' : 'text-ink-300'}`}>{finance.practice > 0 ? t('financeLiving', { n: finance.practice }) : t('financeIdle')}</p>
     </>
   );
 }

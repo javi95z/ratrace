@@ -934,8 +934,7 @@
       "3": "Ningún mercado nuevo: lo que cambia es con qué dinero compras."
     },
     "financeLandlord": "Y poner propiedades en alquiler.",
-    "financeHow": "Sube con la práctica: tras {years} años con dinero invertido. También con algunas cartas, como un curso o un buen libro.",
-    "financeTop": "Has llegado al tope: todo el mercado está abierto para ti.",
+    "financeHow": "Cada ronda con dinero invertido da +{n}. Un curso o un buen libro te sube un nivel, hasta el 2: el 3 solo llega invirtiendo.",
     "focusAbout": "El foco es tu tiempo y tu energía de dos años. Esta ronda tienes {total}.",
     "focusBonus": "{n} es por el descanso de tu último viaje.",
     "focusLeft": "te quedan esta ronda",
@@ -960,19 +959,15 @@
     "focusExtra": "+{n} extra esta ronda",
     "focusFromJob": "{n} es de tu trabajo, que deja tiempo.",
     "financeMargin": "Y comprar con dinero prestado del bróker.",
-    "financeMaster": "El último nivel no lo da ningún curso: llega tras {years} años con dinero invertido.",
     "skills": "Habilidades",
     "skillsAbout": "Lo que sabes hacer además de tu oficio. Cada una sube en tres niveles, estudiando con foco o viviéndola.",
-    "skillPoints": "{points}/{next}",
-    "skillTop": "Al máximo",
+    "skillPoints": "Nivel {level} · {points}/{next}",
+    "skillTop": "Nivel 3 · al máximo",
     "skillProgress": "Hacia el nivel {level}",
     "skillStudy": "{action}: +{n} por ronda, con 1 de foco en la pestaña Vida.",
     "skillLiving": "Tal como vives ahora, ganas +{n} cada ronda sin estudiar.",
     "skillNotLiving": "Tal como vives ahora, no la practicas sin estudiar.",
-    "skillNone": "Aún nada: el primer nivel llega con {n} puntos.",
-    "financeProgress": "Años con dinero invertido",
-    "financeStuck": "La experiencia ya no la sube más: hace falta un curso o un buen libro.",
-    "financeIdle": "Ahora mismo no tienes nada invertido, así que la experiencia no cuenta.",
+    "financeIdle": "Ahora mismo no tienes nada invertido, así que no suma.",
     "skillHow": {
       "negotiation": "Se aprende con un curso, buscando trabajo o trabajando en ventas, derecho o finanzas.",
       "languages": "Se aprende con clases, viviendo fuera de tu ciudad de origen o trabajando en hostelería.",
@@ -995,7 +990,8 @@
       "negotiationCards": "Al pedir un aumento puedes negociarlo en serio."
     },
     "learnGives": "+{n} de {skill}",
-    "focusPick": "Toca para elegir. Cuenta cuando se juegue la ronda."
+    "focusPick": "Toca para elegir. Cuenta cuando se juegue la ronda.",
+    "financeLiving": "Tienes dinero invertido: +{n} al acabar esta ronda."
   },
   "rankings": {
     "title": "Clasificaciones",

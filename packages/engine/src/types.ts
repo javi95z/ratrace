@@ -17,12 +17,14 @@ export type SkillLevel = 0 | 1 | 2 | 3;
 
 /** What the skills do, level by level, and how they are learnt. Every "per level" figure is multiplied by the level. */
 export interface SkillRules {
-  /** Points that reach levels 1, 2 and 3. */
+  /** Points that reach levels 1, 2 and 3, for every skill and for money sense alike. */
   levelPoints: readonly [number, number, number];
   /** Points from a round spent studying a skill with a point of focus. */
   studyPoints: number;
   /** Points from a round of living it: a trade that uses it, a city not the player's own, a club. */
   practicePoints: number;
+  /** Points of money sense from a round with money invested. */
+  investingPoints: number;
   /** Careers whose daily work practises a skill. */
   practiceCareers: Partial<Record<SkillId, readonly string[]>>;
   /** Things owned whose use practises a skill: a gym for health. */
@@ -268,10 +270,6 @@ export interface LifeRules {
   jobHuntChancePct: number;
   /** Lasting raise from a successful job hunt, in percent. */
   jobHuntRaisePct: number;
-  /** Rounds of holding an investment before finance skill rises once from experience. */
-  financeExperienceRounds: number;
-  /** Rounds of holding an investment that take someone at the third level to the fourth and last. Cards never do. */
-  financeMasterRounds: number;
   /** Finance skill needed to rent a property out. */
   rentOutMinFinanceSkill: FinanceSkill;
   /** Pay of a life with the `unstable_pay` flag swings by up to this many percent each round. */
@@ -739,6 +737,11 @@ export interface LifeState {
   homeCityId: string;
   /** Rounds in which the player held an investment. */
   investedRounds: number;
+  /**
+   * Points of money sense, counted like those of any skill: each round with money invested is one.
+   * The level is `financeSkill`, which a card can raise too, up to the third.
+   */
+  financePoints: number;
   focusBase: number;
   /** Focus on top this round, from what the player held when it opened: a long trip rests them for the round after. */
   focusBonus: number;

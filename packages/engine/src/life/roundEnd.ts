@@ -1,10 +1,10 @@
 import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
-import type { Content, FinanceSkill, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
+import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf } from './derive';
 import { lapsingIn } from './orders';
-import { learnSkills, skillLevel } from './skills';
+import { addFinancePoints, learnSkills, skillLevel } from './skills';
 
 /**
  * What a move costs beyond its price, as the player lands. Moved by their own choice they start a
@@ -96,15 +96,10 @@ export function ageLife(
     .map((entry) => (entry.roundsLeft === null ? entry : { ...entry, roundsLeft: entry.roundsLeft - 1 }));
   life.children = life.children.filter((left) => left > 1).map((left) => left - 1);
 
+  // Money sense is learnt like any skill, by a round of living it: with money at work.
   if (Object.keys(p.positions).length > 0 || p.pension > 0) {
     life.investedRounds += 1;
-    if (life.investedRounds === rules.financeExperienceRounds && life.financeSkill < 2) {
-      life.financeSkill = (life.financeSkill + 1) as FinanceSkill;
-      events.push({ kind: 'financeSkill', level: life.financeSkill });
-    } else if (life.financeSkill === 2 && life.investedRounds >= rules.financeMasterRounds) {
-      life.financeSkill = 3;
-      events.push({ kind: 'financeSkill', level: 3 });
-    }
+    addFinancePoints(p, content, rules.skills.investingPoints, events);
   }
 }
 

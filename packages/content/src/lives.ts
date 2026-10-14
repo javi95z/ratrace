@@ -101,7 +101,7 @@ export const lives: LifeDef[] = [
       lifestyleTier: 2,
       debts: [],
       life: {
-        lifeId: 'heir', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { network: 2 }, focus: 3, minLifestyleTier: 2,
+        lifeId: 'heir', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { network: 3 }, focus: 3, minLifestyleTier: 2,
         properties: [{ typeId: 'flat', rented: false }],
       },
     },
@@ -117,7 +117,7 @@ export const lives: LifeDef[] = [
       lifestyleTier: 0,
       debts: [],
       life: {
-        lifeId: 'newcomer', career: { id: 'service', level: 0 }, careerSkill: 2, financeSkill: 0, skills: { languages: 5 }, focus: 4, rentTier: 0,
+        lifeId: 'newcomer', career: { id: 'service', level: 0 }, careerSkill: 2, financeSkill: 0, skills: { languages: 6 }, focus: 4, rentTier: 0,
         recurring: [{ tag: 'remittance', kind: 'expense', annual: usd(2_400), roundsLeft: null }],
         flags: ['bilingual'],
       },
@@ -146,7 +146,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [{ kind: 'personalLoan', principal: usd(60_000), fixedRateBp: 500, roundsLeft: 8 }],
-      life: { lifeId: 'doctor', career: { id: 'medicine', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { health: 2 }, focus: 2, rentTier: 0, flags: ['layoff_proof'] },
+      life: { lifeId: 'doctor', career: { id: 'medicine', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { health: 3 }, focus: 2, rentTier: 0, flags: ['layoff_proof'] },
     },
   },
   {
@@ -173,7 +173,7 @@ export const lives: LifeDef[] = [
       lifestyleTier: 0,
       debts: [],
       life: {
-        lifeId: 'founder', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 2, skills: { management: 2 }, focus: 3, rentTier: 0,
+        lifeId: 'founder', career: { id: 'service', level: 0 }, careerSkill: 0, financeSkill: 2, skills: { management: 3 }, focus: 3, rentTier: 0,
         businesses: [{ typeId: 'shop', capital: usd(40_000) }],
       },
     },
@@ -204,7 +204,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [{ kind: 'personalLoan', principal: usd(24_000), fixedRateBp: 600, roundsLeft: 6 }],
-      life: { lifeId: 'lawyer', career: { id: 'law', level: 0 }, careerSkill: 0, financeSkill: 1, skills: { negotiation: 2 }, focus: 3 },
+      life: { lifeId: 'lawyer', career: { id: 'law', level: 0 }, careerSkill: 0, financeSkill: 1, skills: { negotiation: 3 }, focus: 3 },
     },
   },
   {
@@ -230,7 +230,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [],
-      life: { lifeId: 'influencer', career: { id: 'influencer', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { network: 2 }, focus: 3, rentTier: 0 },
+      life: { lifeId: 'influencer', career: { id: 'influencer', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { network: 3 }, focus: 3, rentTier: 0 },
     },
   },
   {
@@ -256,7 +256,7 @@ export const lives: LifeDef[] = [
       salaryAnnual: 0,
       lifestyleTier: 1,
       debts: [],
-      life: { lifeId: 'salesperson', career: { id: 'sales', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { negotiation: 2 }, focus: 3 },
+      life: { lifeId: 'salesperson', career: { id: 'sales', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { negotiation: 3 }, focus: 3 },
     },
   },
 ];

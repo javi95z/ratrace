@@ -1,5 +1,5 @@
 import { SKILLS } from '../types';
-import type { Content, FocusAction, GameEvent, PlayerState, RoundTally, SkillId, SkillLevel, StudyAction } from '../types';
+import type { Content, FinanceSkill, FocusAction, GameEvent, PlayerState, RoundTally, SkillId, SkillLevel, StudyAction } from '../types';
 
 /** The skill each study action teaches. */
 export const STUDY_OF: Record<StudyAction, SkillId> = {
@@ -18,6 +18,25 @@ export function isStudy(action: FocusAction): action is StudyAction {
 export function levelOfPoints(points: number, content: Content): SkillLevel {
   const [one, two, three] = content.life.skills.levelPoints;
   return points >= three ? 3 : points >= two ? 2 : points >= one ? 1 : 0;
+}
+
+/** The points at which a level begins: nothing for the first, a threshold of the rules for the others. */
+export function pointsOfLevel(level: number, content: Content): number {
+  return level <= 0 ? 0 : content.life.skills.levelPoints[Math.min(level, 3) - 1];
+}
+
+/**
+ * Raises money sense by points, as any skill: a round with money invested is one. A level a card
+ * gave stays even if the points are short of it, so the level is never taken back.
+ */
+export function addFinancePoints(p: PlayerState, content: Content, points: number, events: GameEvent[]): void {
+  const life = p.life;
+  life.financePoints += points;
+  const level = Math.max(life.financeSkill, levelOfPoints(life.financePoints, content)) as FinanceSkill;
+  if (level > life.financeSkill) {
+    life.financeSkill = level;
+    events.push({ kind: 'financeSkill', level });
+  }
 }
 
 /** The level the player has reached in a skill. */

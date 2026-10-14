@@ -95,20 +95,18 @@ export const life: LifeRules = {
   studySkill: 1,
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
-  financeExperienceRounds: 3,
-  // Twelve years with money at work make an investor who may be lent to.
-  financeMasterRounds: 6,
   rentOutMinFinanceSkill: 2,
   unstablePayPct: 30,
   cheapMortgageBp: 60,
   cardsPerRound: 3,
-  // A skill takes a round of study to start, three to be good at and five to master; living it gets
-  // there more slowly, and both together faster. Each level is worth about what a point of focus
-  // spent elsewhere would be, so that what to learn is a choice and not a chore.
+  // Every skill, money sense too, has the same three steps of three points. Study gives two a round
+  // and living it one, so both together make a level a round; study alone masters one in five, and
+  // years of investing alone make an investor who may be lent to in eighteen.
   skills: {
-    levelPoints: [2, 5, 9],
+    levelPoints: [3, 6, 9],
     studyPoints: 2,
     practicePoints: 1,
+    investingPoints: 1,
     practiceCareers: {
       negotiation: ['sales', 'law', 'finance'],
       languages: ['hospitality'],

@@ -84,7 +84,7 @@ describe('validateContent: life data', () => {
       expect(life({ [field]: NaN })).toContain(`life.${field} must be a whole, non-negative number`);
     }
     expect(life({ childRounds: 0 })).toContain('life.childRounds must be a positive whole number');
-    expect(life({ financeExperienceRounds: 0.5 })).toContain('life.financeExperienceRounds must be a positive whole number');
+    expect(life({ childRounds: 0.5 })).toContain('life.childRounds must be a positive whole number');
     expect(life({ jobHuntChancePct: 101 })).toContain('life.jobHuntChancePct must be between 0 and 100');
     expect(life({ lesserItemPct: -1 })).toContain('life.lesserItemPct must be between 0 and 100');
     expect(life({ unstablePayPct: 120 })).toContain('life.unstablePayPct must be a whole number from 0 to 100');

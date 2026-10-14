@@ -12,7 +12,7 @@ import type { Effects, FinanceSkill, LifestyleTier, PlayerState } from '../types
 import type { Situation } from './conditions';
 import { homeOf, refreshDerived } from './derive';
 import { FLAG_SOLD_BUSINESS, hasFlag } from './flags';
-import { addSkillPoints, maxBusinessesOf } from './skills';
+import { addSkillPoints, maxBusinessesOf, pointsOfLevel } from './skills';
 
 /** The one-off money of an effect, in the dollars of the round, after any protection the player holds. */
 function moneyOf(p: PlayerState, effects: Effects, at: Situation): Cents {
@@ -152,6 +152,8 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   life.careerSkill = Math.max(0, life.careerSkill + (effects.careerSkill ?? 0));
   // A course or a book takes someone as far as the third level; the fourth comes only from years of investing.
   life.financeSkill = clamp(life.financeSkill + (effects.financeSkill ?? 0), 0, Math.max(2, life.financeSkill)) as FinanceSkill;
+  // The points follow a level a card gives, so the next is counted from where it begins.
+  life.financePoints = Math.max(life.financePoints, pointsOfLevel(life.financeSkill, content));
   // A level reached by a card shows in the skill itself; the card already told of it.
   if (effects.skills !== undefined) addSkillPoints(p, content, effects.skills, []);
   life.bonusStatus += effects.status ?? 0;

@@ -1044,7 +1044,9 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
 }
 
 /** A thing on the shelf: the tile of the game, laid out in a row. */
-const SHELF = 'frame-raised flex min-h-11 items-center gap-2 bg-night-600 p-1.5 text-left text-cream transition-transform active:translate-y-[2px]';
+// In a narrow column the picture sits above the words; with room, beside them.
+const SHELF =
+  'frame-raised flex min-h-11 flex-col items-center gap-1 bg-night-600 p-1.5 text-center text-cream transition-transform active:translate-y-[2px] @min-[400px]:flex-row @min-[400px]:gap-2 @min-[400px]:text-left';
 
 function Shop() {
   const t = useT('finance.shop');
@@ -1057,9 +1059,9 @@ function Shop() {
     <div className="flex flex-col gap-3">
       {ladders.map((ladder) => (
         <Panel key={ladder} title={text.ladders[ladder]}>
-          {/* One a row in a narrow column, two on a phone held normally, three where there is room. */}
+          {/* Always two a row, so a car is drawn whole whatever the width. */}
           <div className="@container">
-          <div className="grid grid-cols-1 gap-2 @min-[360px]:grid-cols-2 @min-[620px]:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2">
             {content.items
               // The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
               .filter((item) => item.ladder === ladder && quoteItem(content, shown, item.id).soldHere)
@@ -1072,9 +1074,9 @@ function Shop() {
                     <Bare className="size-16">
                       <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
                     </Bare>
-                    <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+                    <span className="flex min-w-0 flex-1 flex-col items-center gap-0.5 @min-[400px]:items-start">
                       <span className="line-clamp-2 text-[13px] leading-tight">{names.items[item.id]}</span>
-                      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 @min-[400px]:justify-start">
                         <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t('owned') : fmt.compact(quoteItem(content, shown, item.id).price)}</span>
                         <span className="whitespace-nowrap">
                           <Tag tone="good">{t('status', { n: quoteItem(content, shown, item.id).status })}</Tag>

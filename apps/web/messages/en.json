@@ -934,8 +934,7 @@
       "3": "No new market: what changes is whose money you buy with."
     },
     "financeLandlord": "And letting property out.",
-    "financeHow": "It rises with practice: after {years} years with money invested. Some cards raise it too, such as a course or a good book.",
-    "financeTop": "You are at the top: the whole market is open to you.",
+    "financeHow": "Each round with money invested gives +{n}. A course or a good book takes you up a level, as far as 2: level 3 comes only from investing.",
     "focusAbout": "Focus is your time and your energy for two years. This round you have {total}.",
     "focusBonus": "{n} is from the rest your last trip gave you.",
     "focusLeft": "left this round",
@@ -960,19 +959,15 @@
     "focusExtra": "+{n} extra this round",
     "focusFromJob": "{n} comes from your job, which leaves time over.",
     "financeMargin": "And buying with money borrowed from the broker.",
-    "financeMaster": "No course gives the last level: it comes after {years} years with money invested.",
     "skills": "Skills",
     "skillsAbout": "What you can do besides your trade. Each has three levels, reached by studying with focus or by living it.",
-    "skillPoints": "{points}/{next}",
-    "skillTop": "Maxed out",
+    "skillPoints": "Level {level} · {points}/{next}",
+    "skillTop": "Level 3 · maxed out",
     "skillProgress": "Towards level {level}",
     "skillStudy": "{action}: +{n} a round, for 1 focus in the Lifestyle tab.",
     "skillLiving": "The way you live now gives +{n} a round without study.",
     "skillNotLiving": "The way you live now, you do not practise it without study.",
-    "skillNone": "Nothing yet: the first level comes at {n} points.",
-    "financeProgress": "Years with money invested",
-    "financeStuck": "Experience takes it no further: it needs a course or a good book.",
-    "financeIdle": "You have nothing invested right now, so experience does not count.",
+    "financeIdle": "You have nothing invested right now, so nothing adds up.",
     "skillHow": {
       "negotiation": "Learnt on a course, by looking for jobs, or by working in sales, law or finance.",
       "languages": "Learnt in classes, by living away from the city you started in, or by working in hospitality.",
@@ -995,7 +990,8 @@
       "negotiationCards": "When you ask for a raise, you can negotiate it properly."
     },
     "learnGives": "+{n} {skill}",
-    "focusPick": "Tap to choose. It takes effect when the round is played."
+    "focusPick": "Tap to choose. It takes effect when the round is played.",
+    "financeLiving": "You have money invested: +{n} when this round ends."
   },
   "rankings": {
     "title": "Rankings",

@@ -17,7 +17,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
     }
   }
 
-  const counts = ['baseSalaryAnnual', 'careerSkill', 'investedRounds', 'focusBase', 'focusBonus', 'focusUsed', 'partnerSettling', 'partnerSalaryPct'] as const;
+  const counts = ['baseSalaryAnnual', 'careerSkill', 'investedRounds', 'financePoints', 'focusBase', 'focusBonus', 'focusUsed', 'partnerSettling', 'partnerSalaryPct'] as const;
   for (const field of counts) {
     if (!isCount(life[field])) breaks.push(`life.${field} is not a non-negative whole number: ${life[field]}`);
   }

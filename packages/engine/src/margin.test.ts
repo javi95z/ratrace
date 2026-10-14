@@ -173,16 +173,18 @@ describe('a margin call', () => {
 describe('the fourth level of finance skill', () => {
   it('comes from years of investing to someone at the third, and from nothing else', () => {
     const start = withPlayer(content, game(50_000_000, 2), { positions: { [asset]: { value: 1_000_000, basis: 1_000_000 } } });
+    // The third level begins at its own points; the fourth is a step of points further, one a round invested.
+    const [, second, third] = content.life.skills.levelPoints;
     let state = start;
     const levels: number[] = [];
-    for (let round = 0; round < content.life.financeMasterRounds + 1; round++) {
+    for (let round = 0; round < third - second + 1; round++) {
       state = applyRound(content, state, { orders: [] }).state;
       levels.push(state.player.life.financeSkill);
     }
-    expect(levels.indexOf(3)).toBe(content.life.financeMasterRounds - 1);
+    expect(levels.indexOf(3)).toBe(third - second - 1);
     expect(levels.at(-1)).toBe(3);
-    // Someone who reached the third level late gets there as soon as the years are behind them.
-    const late = withPlayer(content, start, {}, { financeSkill: 2, investedRounds: 40 });
+    // Someone who reached the third level late gets there as soon as the points are behind them.
+    const late = withPlayer(content, start, {}, { financeSkill: 2, financePoints: 40 });
     expect(applyRound(content, late, { orders: [] }).state.player.life.financeSkill).toBe(3);
   });
 
@@ -204,6 +206,6 @@ describe('the fourth level of finance skill', () => {
     expect(bad((c) => (c.debt.marginCallPct = 40))).toContain('debt.marginMaxPct must be a whole percentage below debt.marginCallPct, itself below 100');
     expect(bad((c) => (c.debt.marginCallPct = 100))).toContain('debt.marginMaxPct must be a whole percentage below debt.marginCallPct, itself below 100');
     expect(bad((c) => (c.debt.marginMinFinanceSkill = 5 as never))).toContain('debt.marginMinFinanceSkill must be 0, 1, 2 or 3');
-    expect(bad((c) => (c.life.financeMasterRounds = 0))).toContain('life.financeMasterRounds must be a positive whole number');
+    expect(bad((c) => (c.life.skills.levelPoints = [3, 3, 9]))).toContain('life.skills.levelPoints must be three rising positive whole numbers');
   });
 });

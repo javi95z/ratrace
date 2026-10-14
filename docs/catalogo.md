@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.17.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.18.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -670,7 +670,7 @@ Desde los 26 años, la habitación alquilada pasa a dar -3 de estatus.
 
 ## Inversiones
 
-La cultura financiera dice qué se puede comprar por cuenta propia. Una carta puede dar algo de un nivel más alto.
+La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +1 punto, y cada nivel pide 3 (a 3, 6, 9 puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.
 
 | Inversión | Ticker | Clase | Cultura financiera | Renta | Qué es |
 | --- | --- | --- | --- | --- | --- |
@@ -720,7 +720,7 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Una carta pu
 | <img src="../art/clean/icons/icon.career_influencer.png" alt=""> | Salir a hacer contactos | +2 puntos de Contactos |
 | <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Hacer deporte | +2 puntos de Salud |
 
-Habilidades: cada una tiene tres niveles, a 2, 5, 9 puntos. Se ganan 2 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
+Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 2 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
 
 |  | Habilidad | Por nivel | Se practica |
 | --- | --- | --- | --- |

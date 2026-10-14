@@ -7,7 +7,7 @@ import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, overtimeOf, soldIn } from './life/orders';
 import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
-import { levelOfPoints, maxBusinessesOf, practised, skillLevel, STUDY_OF } from './life/skills';
+import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp, BP, mulDiv } from './money';
 import type { Bp, Cents } from './money';
@@ -575,8 +575,11 @@ export interface SkillQuote {
 
 export interface SkillsQuote {
   skills: SkillQuote[];
-  /** Money sense: its level, the rounds of investing behind it, and the round count that takes it further by experience. Null when experience takes it no further. */
-  finance: { level: FinanceSkill; investedRounds: number; nextAt: number | null; investing: boolean };
+  /**
+   * Money sense, on the same steps as any skill: a point for every round with money invested, and a
+   * level a card gives counted from where it begins. `practice` is what this round will add.
+   */
+  finance: { level: FinanceSkill; points: number; from: number; next: number | null; practice: number };
 }
 
 /** Every skill of the player, where it stands and how it grows: study, life as it is lived, and the years with money at work. */
@@ -588,24 +591,14 @@ export function quoteSkills(content: Content, view: GameView): SkillsQuote {
   const studyOf = Object.fromEntries(Object.entries(STUDY_OF).map(([action, skill]) => [skill, action])) as Partial<Record<SkillId, StudyAction>>;
   const life = p.life;
   const investing = Object.keys(p.positions).length > 0 || p.pension > 0;
-  const nextAt =
-    life.financeSkill < 2 ? (life.investedRounds < rules.financeExperienceRounds ? rules.financeExperienceRounds : null) : life.financeSkill === 2 ? rules.financeMasterRounds : null;
+  const step = (level: number) => ({ from: pointsOfLevel(level, content), next: level >= 3 ? null : pointsOfLevel(level + 1, content) });
   return {
     skills: SKILLS.map((skill) => {
       const points = life.skills[skill];
       const level = levelOfPoints(points, content);
-      const thresholds = rules.skills.levelPoints;
-      return {
-        skill,
-        points,
-        level,
-        from: level === 0 ? 0 : thresholds[level - 1],
-        next: level === 3 ? null : thresholds[level],
-        study: studyOf[skill] ?? null,
-        studyPoints: rules.skills.studyPoints,
-        practice: living[skill],
-      };
+      return { skill, points, level, ...step(level), study: studyOf[skill] ?? null, studyPoints: rules.skills.studyPoints, practice: living[skill] };
     }),
-    finance: { level: life.financeSkill, investedRounds: life.investedRounds, nextAt, investing },
+    // A level a card gave is where the count starts, though the points may be short of it.
+    finance: { level: life.financeSkill, points: Math.max(life.financePoints, pointsOfLevel(life.financeSkill, content)), ...step(life.financeSkill), practice: investing ? rules.skills.investingPoints : 0 },
   };
 }

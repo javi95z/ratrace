@@ -94,17 +94,21 @@ describe('the work panel of the profile', () => {
     expect(within(levels[1]).getByText(`Bonds, single stocks and gold: ${at(1)} more.`)).toBeTruthy();
     expect(within(levels[2]).getByText(`Cryptocurrencies: ${at(2)} more.`)).toBeTruthy();
     expect(within(levels[content.life.rentOutMinFinanceSkill]).getByText('And letting property out.')).toBeTruthy();
-    expect(within(sheet).getByText(new RegExp(`after ${content.life.financeExperienceRounds * content.yearsPerRound} years with money invested`))).toBeTruthy();
+    expect(within(sheet).getByText(/^Each round with money invested gives \+1\./)).toBeTruthy();
+    // Measured like every other skill: the level, and the points into it.
+    expect(within(sheet).getByRole('progressbar', { name: 'Towards level 1' })).toBeTruthy();
+    expect(within(sheet).getByText('Level 0 · 0/3')).toBeTruthy();
   });
 
   it('lists every skill with how far along it is, and opens what each level gives and how it is learnt', async () => {
     const { panel, user } = await nurse();
     const skills = within(panel).getByRole('region', { name: 'Skills' });
     for (const name of ['Money sense', 'Negotiation', 'Languages', 'Network', 'Management', 'Health']) expect(within(skills).getByText(name)).toBeTruthy();
-    expect(within(skills).getAllByText('0/2')).toHaveLength(5);
+    // Every skill, money sense too, is told the same way: its level and the points into it.
+    expect(within(skills).getAllByText('Level 0 · 0/3')).toHaveLength(6);
     await user.click(within(skills).getByText('Health'));
     const sheet = screen.getByRole('dialog', { name: 'Health' });
-    expect(within(sheet).getByText('Nothing yet: the first level comes at 2 points.')).toBeTruthy();
+    expect(within(sheet).getByRole('progressbar', { name: 'Towards level 1' })).toBeTruthy();
     // Each level counted in full: a fifth off the premium a level, an injury healed by training from the second, and focus at the top.
     expect(within(sheet).getByText('Health insurance costs you 60% less.')).toBeTruthy();
     expect(within(sheet).getByText('+1 focus every round.')).toBeTruthy();

@@ -211,7 +211,7 @@ export function validateContent(c: Content): string[] {
   for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
-  for (const field of ['childRounds', 'financeExperienceRounds', 'financeMasterRounds']) {
+  for (const field of ['childRounds']) {
     if (!(isWhole(life[field]) && life[field] >= 1)) errors.push(`life.${field} must be a positive whole number`);
   }
   for (const field of ['jobHuntChancePct', 'lesserItemPct']) {
@@ -248,7 +248,7 @@ export function validateContent(c: Content): string[] {
     if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
       errors.push('life.skills.levelPoints must be three rising positive whole numbers');
     }
-    for (const field of ['studyPoints', 'practicePoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct'] as const) {
+    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct'] as const) {
       if (!(isWhole(skills[field]) && (skills[field] as number) >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
     }
     for (const field of ['languagesKeepRungFrom', 'languagesPartnerFrom', 'managementExtraFrom', 'healthFocusFrom'] as const) {
