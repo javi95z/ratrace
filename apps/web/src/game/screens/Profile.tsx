@@ -1,6 +1,6 @@
 'use client';
 
-import { balanceArt, familyArt, homeLifeArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { balanceArt, familyArt, homeLifeArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
 import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
@@ -80,7 +80,7 @@ export function ProfileBody() {
           <Row left={t('lifestyle')} right={<>{text.lifestyleTiers[p.lifestyleTier]}<More /></>} />
         </button>
         <button type="button" aria-haspopup="dialog" onClick={() => setAbout('home')} className="flex min-h-11 w-full flex-col justify-center text-left">
-          <Row left={t('home')} sub={names.cities[p.cityId]} right={<>{home ? text.propertyTypes[home.typeId] : text.rentTiers[life.rentTier]}<More /></>} />
+          <Row left={t('home')} sub={names.cities[p.cityId]} right={<>{home ? homeName(text, home.typeId, home.cityId) : text.rentTiers[life.rentTier]}<More /></>} />
         </button>
         <button type="button" aria-haspopup="dialog" onClick={() => setAbout('insurance')} className="flex min-h-11 w-full flex-col justify-center text-left">
           <Row left={t('insurance')} right={<>{insured.length > 0 ? insured.join(' · ') : t('uninsured')}<More /></>} />
@@ -244,12 +244,12 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
       <>
         <div className="flex justify-center">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={propertyArt(home.typeId)} fallback={{ w: 128, h: 128 }} />
+            <Sprite id={propertyArt(home.typeId, home.cityId)} fallback={{ w: 128, h: 128 }} />
           </Bare>
         </div>
         <p className="text-center text-[14px] leading-snug">{life('ownerNote')}</p>
         <Panel>
-          <Row left={text.propertyTypes[home.typeId]} sub={names.cities[home.cityId]} right={owned.status > 0 ? <Tag tone="good">{estate('status', { n: owned.status })}</Tag> : undefined} />
+          <Row left={homeName(text, home.typeId, home.cityId)} sub={names.cities[home.cityId]} right={owned.status > 0 ? <Tag tone="good">{estate('status', { n: owned.status })}</Tag> : undefined} />
           <Row left={estate('worth')} right={<span className="text-gold-500">{fmt.money(owned.value)}</span>} />
           <Row left={estate('owed')} right={<span className={owned.mortgage ? 'text-wine-300' : ''}>{fmt.money(owned.mortgage?.principal ?? 0)}</span>} />
         </Panel>

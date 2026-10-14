@@ -1,5 +1,6 @@
 import { cards } from './es.cards';
 import type { ContentText } from './types';
+import { cityHomesEs } from './homes';
 
 export const es: ContentText = {
   cities: {
@@ -67,6 +68,7 @@ export const es: ContentText = {
     parking: 'Plaza de garaje', studio: 'Estudio', flat: 'Piso', loft: 'Loft', shop: 'Local comercial', townhouse: 'Adosado', house: 'Casa familiar', office: 'Oficina',
     duplex: 'Dúplex', warehouse: 'Nave industrial', chalet: 'Chalet', penthouse: 'Ático', estate: 'Finca', villa: 'Villa', block: 'Bloque de pisos', mansion: 'Mansión',
   },
+  cityHomes: cityHomesEs,
   rentTiers: ['Habitación alquilada', 'Piso alquilado'],
   lifestyleTiers: ['Austero', 'Normal', 'Cómodo', 'Lujoso'],
   insurance: { health: 'Seguro de salud', home: 'Seguro de hogar', life: 'Seguro de vida', liability: 'Seguro de responsabilidad civil' },

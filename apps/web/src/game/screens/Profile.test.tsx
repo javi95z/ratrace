@@ -308,7 +308,7 @@ describe('what the player owns, in the profile', () => {
     await user.click(screen.getByRole('button', { name: /^Home/ }));
     const sheet = screen.getByRole('dialog', { name: 'Home' });
     expect(within(sheet).getByText('You live in a home you own, so you pay no rent.')).toBeTruthy();
-    expect(within(sheet).getByText('Flat')).toBeTruthy();
+    expect(within(sheet).getByText('Apartment in the Marina')).toBeTruthy();
     expect(within(sheet).getByText('Worth today')).toBeTruthy();
     expect(within(sheet).queryAllByRole('listitem')).toEqual([]);
   });

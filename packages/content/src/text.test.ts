@@ -19,6 +19,8 @@ import {
   focusArt,
   skillArt,
   businessArt,
+  CITY_HOME_KINDS,
+  CITY_HOMES_DRAWN,
   USED_ART,
   PERCENTILE_ART,
   repairArt,
@@ -45,7 +47,7 @@ import { content } from './content';
 import { lives } from './lives';
 import { names } from './names';
 import type { Locale } from './names';
-import { fillNames, rawText, textFor } from './text';
+import { fillNames, homeName, rawText, textFor } from './text';
 
 const LOCALES: Locale[] = ['en', 'es', 'ru'];
 /** Every language the text was translated into, from the English it is written in. */
@@ -324,5 +326,23 @@ describe('content art', () => {
     for (const set of [lifestyleArt, rentTierIcon, Object.values(insuranceArt), Object.values(focusArt), Object.values(topicArt)]) {
       expect(new Set(set).size).toBe(set.length);
     }
+  });
+});
+
+describe('the homes of each city', () => {
+  it('names every kind of home in every city, in every language, and nothing that is only bought to let', () => {
+    for (const locale of ['en', 'es', 'ru'] as const) {
+      const { text } = textFor(locale);
+      for (const city of content.cities) {
+        const named = text.cityHomes[city.id] ?? {};
+        expect(Object.keys(named).sort(), `${locale} ${city.id}`).toEqual([...CITY_HOME_KINDS].sort());
+        for (const kind of CITY_HOME_KINDS) expect(homeName(text, kind, city.id), `${locale} ${city.id} ${kind}`).not.toBe(text.propertyTypes[kind]);
+      }
+      // What is only bought to let keeps its plain name everywhere.
+      expect(homeName(text, 'parking', 'madrid')).toBe(text.propertyTypes.parking);
+    }
+    // Every kind a city draws is a kind people live in.
+    for (const kind of CITY_HOME_KINDS) expect(content.propertyTypes.find((type) => type.id === kind)?.rentalOnly, kind).not.toBe(true);
+    expect(propertyArt('flat', 'madrid')).toBe(CITY_HOMES_DRAWN.includes('madrid') ? 'home.madrid.flat' : 'home.flat');
   });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind } from '@ratrace/content';
+import { assetKind, homeName } from '@ratrace/content';
 import { quotePortfolio } from '@ratrace/engine';
 import type { WealthKind } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
@@ -37,7 +37,7 @@ export function PortfolioGlance() {
   // A fund already holds the market, and a home or a business is how most lives hold their wealth.
   const asset = top?.kind === 'asset' ? content.assets.find((x) => x.id === top.id) : undefined;
   const risky = asset !== undefined && (assetKind(asset) === 'stock' || assetKind(asset) === 'crypto');
-  const topName = !top ? '' : top.kind === 'asset' ? names.assets[top.id].name : property ? `${text.propertyTypes[property.typeId]}, ${names.cities[property.cityId]}` : business ? text.businessTypes[business.typeId].name : '';
+  const topName = !top ? '' : top.kind === 'asset' ? names.assets[top.id].name : property ? `${homeName(text, property.typeId, property.cityId)}, ${names.cities[property.cityId]}` : business ? text.businessTypes[business.typeId].name : '';
 
   return (
     <Panel title={t('title')} label={t('title')}>

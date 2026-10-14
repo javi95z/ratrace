@@ -60,6 +60,11 @@ export function rawText(locale: Locale): ContentText {
   return raw[locale];
 }
 
+/** What a kind of home is called in a city: the city's own name for it, or the plain one. */
+export function homeName(text: ContentText, typeId: string, cityId: string): string {
+  return text.cityHomes[cityId]?.[typeId] ?? text.propertyTypes[typeId];
+}
+
 /** Everything the interface shows about the content in one language: the sentences, with every name filled in, and the names. */
 export function textFor(locale: Locale, pack: Names = names[locale]): { text: ContentText; names: Names } {
   return { text: filled(raw[locale], pack), names: pack };

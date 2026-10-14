@@ -107,7 +107,7 @@ describe('the lines of the balance sheet', () => {
     const { open } = await life('heir');
     const sheet = await open(/^Property/, 'Property');
     const [flat] = within(sheet).getAllByRole('listitem');
-    expect(within(flat).getByText('Flat')).toBeTruthy();
+    expect(within(flat).getByText('Apartment in the Marina')).toBeTruthy();
     expect(within(flat).getByText('Dubai · You live here')).toBeTruthy();
     expect(within(flat).getByText('Worth today')).toBeTruthy();
     expect(within(flat).queryByText('Still owed')).toBeNull();

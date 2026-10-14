@@ -139,8 +139,8 @@ describe('debtLabel', () => {
     expect(debtLabel(words('es'), { kind: 'personalLoan', forItem: 'car_seat_ibiza' })).toBe('Préstamo personal · SEAT Ibiza');
     // A mortgage is named for the home it is on, and not for another's.
     const flat = { id: 'property-1', cityId: 'london', typeId: 'flat', value: 1, basis: 1, rented: false, mortgageId: 'debt-7' };
-    expect(debtLabel(words('en'), { id: 'debt-7', kind: 'mortgageFixed' }, [flat])).toBe('Fixed mortgage · Flat, London');
-    expect(debtLabel(words('es'), { id: 'debt-7', kind: 'mortgageVariable' }, [flat])).toBe('Hipoteca variable · Piso, Londres');
+    expect(debtLabel(words('en'), { id: 'debt-7', kind: 'mortgageFixed' }, [flat])).toBe('Fixed mortgage · Flat in Islington, London');
+    expect(debtLabel(words('es'), { id: 'debt-7', kind: 'mortgageVariable' }, [flat])).toBe('Hipoteca variable · Piso en Islington, Londres');
     expect(debtLabel(words('en'), { id: 'debt-8', kind: 'mortgageFixed' }, [flat])).toBe('Fixed mortgage');
     // A thing no longer in the game is not named.
     expect(debtLabel(words('en'), { kind: 'personalLoan', forItem: 'gone' })).toBe('Personal loan');
@@ -255,11 +255,11 @@ describe('orderLabel', () => {
     expect(label({ type: 'pensionIn', amount: 50_000 })).toBe('Pension · $500');
     expect(label({ type: 'borrow', amount: 1_000_000 })).toBe('Borrow $10,000');
     expect(label({ type: 'repay', debtId: 'debt-1', amount: 100_000 })).toBe('Repay Personal loan · $1,000');
-    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: false })).toBe('Buy a home: Studio');
-    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: true })).toBe('Buy a rental: Studio');
-    expect(label({ type: 'sellProperty', propertyId: 'property-9' })).toBe('Sell: Flat');
-    expect(label({ type: 'setRented', propertyId: 'property-9', rented: true })).toBe('Rent out: Flat');
-    expect(label({ type: 'setRented', propertyId: 'property-9', rented: false })).toBe('Stop renting out: Flat');
+    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: false })).toBe('Buy a home: Studio in Lavapiés');
+    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: true })).toBe('Buy a rental: Studio in Lavapiés');
+    expect(label({ type: 'sellProperty', propertyId: 'property-9' })).toBe('Sell: Flat in Chamberí');
+    expect(label({ type: 'setRented', propertyId: 'property-9', rented: true })).toBe('Rent out: Flat in Chamberí');
+    expect(label({ type: 'setRented', propertyId: 'property-9', rented: false })).toBe('Stop renting out: Flat in Chamberí');
     expect(label({ type: 'focus', action: 'overtime' })).toBe('Overtime');
     expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Study');
     expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');

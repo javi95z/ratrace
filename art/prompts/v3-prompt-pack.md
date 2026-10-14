@@ -58,3 +58,135 @@ Where each goes:
 | # | File | What | Cell |
 | --- | --- | --- | --- |
 | 52 | `icons/icons-08.png` | 5 businesses, 6 skills, 5 signs for the used shop and the comparison | 32×32 |
+
+## Homes by city
+
+Six sheets, one per city: the same eleven kinds of home as the plain sheets, each drawn as that city builds it, plus a twelfth cell with the city's own "for sale" sign. Same rules as homes-01 and homes-02: three-quarter exterior view at night, warm lit windows, each building standing alone with no street around it, and nothing cut off at the edges. Within a sheet, keep one consistent night sky tone and light direction, so the twelve read as one city.
+
+The order is the same on every sheet, and the game relies on it: studio, flat, loft, townhouse, house, duplex, chalet, penthouse, estate, villa, mansion, sign.
+
+### 53. Homes of Madrid
+
+Save as `art/raw/homes/homes-madrid.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. Madrid architecture throughout: ochre and cream plaster, wrought-iron balconies, terracotta roof tiles, green wooden shutters. Left to right, top to bottom:
+1. Narrow old corridor-block in Lavapiés: peeling ochre facade, tiny balcony with a geranium pot, one small lit window, laundry on a line.
+2. Classic Chamberí apartment building: cream stone, rows of wrought-iron balconies, tall French windows, several warm windows lit.
+3. Converted brick workshop in Malasaña: big steel-framed factory windows on the top floor, a bicycle by the door, string lights inside.
+4. Row of three identical modern terraced houses in Las Rozas, pale brick, small front gardens; the middle one lit.
+5. Detached suburban house in Aravaca: white walls, terracotta roof, a lemon tree and a small wall around the garden.
+6. Two-storey duplex on the top of a Chueca building, with a rainbow flag on a balcony and a small roof terrace with plants.
+7. Spanish chalet in Pozuelo: white walls, terracotta roof, a swimming pool glowing blue and a cypress hedge.
+8. Penthouse on top of an elegant Salamanca district building, wide glass terrace with potted olive trees and a pergola.
+9. Country estate in the Sierra de Guadarrama: stone manor with a slate roof, pine trees and a long stone wall.
+10. Large contemporary villa in La Finca: white cubic volumes, floor-to-ceiling glass, an infinity pool and uplit palm trees.
+11. Small stone palace in El Viso: neo-Mudéjar brick details, a tower, iron gates and formal gardens with box hedges.
+12. A red and yellow Spanish "SE VENDE" sign on a metal stand with a phone number shown only as small dashes, no readable text.
+```
+
+### 54. Homes of London
+
+Save as `art/raw/homes/homes-london.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. London architecture throughout: London stock brick, white stucco, sash windows, black railings, chimney pots. Left to right, top to bottom:
+1. Small studio above a corner shop in outer London, plain brick, one lit window, a satellite dish.
+2. Georgian brick terrace in Islington converted into flats, black front door with a fanlight, several lit sash windows.
+3. Victorian warehouse loft in Shoreditch: dark brick, arched iron windows, a painted ghost sign kept blank, string lights inside.
+4. Victorian terraced house in Clapham: bay window, red front door, small front garden behind black railings.
+5. Detached Edwardian house in Wimbledon: red brick, white gables, a hedge and a gravel drive.
+6. Maisonette in Camden: the top two floors of a pastel-coloured townhouse, a roof terrace with plants.
+7. Thatched stone cottage in the Cotswolds: honey-coloured stone, a thatched roof, roses round the door.
+8. Penthouse on top of a glass tower on the South Bank, a terrace looking towards a tiny lit dome far behind.
+9. Country estate in Surrey: red-brick Tudor manor with tall chimneys, a long lawn and old oak trees.
+10. White stucco villa in Hampstead: a portico with columns, tall windows and a wide garden.
+11. Grand Kensington mansion: white stucco, a columned porch, many tall lit windows, a black iron fence and a Union Jack-free flagpole.
+12. A navy and white British estate agent's "FOR SALE" board on a post, lettering shown only as blank shapes.
+```
+
+### 55. Homes of New York
+
+Save as `art/raw/homes/homes-new-york.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. New York architecture throughout: red brick, brownstone, black fire escapes, water towers, steel and glass. Left to right, top to bottom:
+1. Five-storey walk-up in Queens: red brick with a zig-zag fire escape, one lit window, a tiny window air-conditioner.
+2. Pre-war apartment building in Brooklyn: brick with a stone cornice, a stoop, several lit windows and a water tower on the roof.
+3. Cast-iron loft building in SoHo: tall arched windows, a black fire escape and a freight door.
+4. Brownstone in Harlem: brown stone facade, high stoop with iron railings, bay window, warm windows.
+5. Detached clapboard house on Staten Island: white siding, a porch, an American-style mailbox and a small lawn.
+6. Duplex in a Greenwich Village townhouse: the top two floors lit, a rooftop garden with string lights.
+7. Wooden cabin in the Catskills: log walls, a stone chimney with smoke, pine trees and snow on the roof.
+8. Penthouse at the top of a classic Fifth Avenue tower, a setback terrace with trees and a glowing glass room.
+9. Shingle-style estate in the Hamptons: grey cedar shingles, white trim, dune grass and a long gravel drive.
+10. Colonial villa in Westchester: white columns, black shutters, a big lawn and old trees.
+11. Upper East Side limestone mansion: a grand Beaux-Arts facade, tall windows, an iron and glass canopy over the door.
+12. A New York real-estate "FOR SALE" sign hanging from a black post in front of a tiny patch of grass, lettering shown only as blank shapes.
+```
+
+### 56. Homes of Dubai
+
+Save as `art/raw/homes/homes-dubai.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. Dubai architecture throughout: sand-coloured stone, sleek glass towers, palm trees, blue pools, golden uplighting. Left to right, top to bottom:
+1. Studio in a plain mid-rise tower in Jumeirah Lake Towers, one lit window, a small balcony.
+2. Apartment in a curved glass tower in Dubai Marina, balconies with glass rails, several warm windows.
+3. Loft in a sharp angular Business Bay tower with double-height windows and a canal glinting at its foot.
+4. Row of beige townhouses in Arabian Ranches with small gardens and palm trees; the middle one lit.
+5. Two-storey family villa in Mirdif: sand-coloured walls, a flat roof, a carport and a bougainvillea.
+6. Duplex at the top of a Downtown building with a view of a very tall needle-like tower in the distance.
+7. Desert retreat in Al Qudra: low adobe-style building, a firepit glowing outside, dunes behind.
+8. Penthouse at the top of a skyscraper on Sheikh Zayed Road, a glass box with a rooftop pool and city lights below.
+9. Vast estate in Emirates Hills: a modern palace on a golf lawn, a long drive lined with palms.
+10. Beachfront villa on the Palm Jumeirah: white curves, an infinity pool, a private stretch of sand and a yacht at its jetty.
+11. Ultra-luxury mansion on Jumeirah Bay island: marble and gold, arches, fountains and a helipad on the roof.
+12. A sleek gold and white "FOR SALE" board on a stand by a palm tree, lettering shown only as blank shapes.
+```
+
+### 57. Homes of Singapore
+
+Save as `art/raw/homes/homes-singapore.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. Singapore architecture throughout: tropical greenery, pastel shophouses, tall public housing blocks, glass condos with sky gardens. Left to right, top to bottom:
+1. Small studio unit in an older Geylang walk-up: pastel paint, louvred windows, potted plants on the ledge.
+2. Tall HDB public housing block in Tampines: white and pastel stripes, numbered sides shown as blank shapes, many small lit windows, laundry poles sticking out.
+3. Loft in a converted Tanjong Pagar shophouse: high timber ceilings visible through tall windows, a roof terrace.
+4. Colourful Peranakan shophouse in Tiong Bahru: patterned tiles, pastel facade, timber shutters and a five-foot way with lanterns.
+5. Terraced house in Serangoon: two storeys, a gate, a car porch and a mango tree.
+6. Duplex at the top of a Novena condo with a balcony garden overflowing with plants.
+7. Black-and-white colonial bungalow in Alexandra: white walls, black timber frames, a deep veranda and tall rain trees.
+8. Penthouse in a Marina Bay tower with a sky garden and an infinity pool on the roof.
+9. Large bungalow in Bukit Timah: a modern tropical house with deep eaves, a lawn and jungle around it.
+10. Villa on Sentosa island with its own small marina berth, a pool and coconut palms.
+11. Good Class Bungalow on Nassim Road: an enormous low modern house, timber screens, a long lawn and old trees.
+12. A neat white and red Singapore property "FOR SALE" sign on a stand, lettering shown only as blank shapes.
+```
+
+### 58. Homes of Bangkok
+
+Save as `art/raw/homes/homes-bangkok.png`
+
+```text
+Square image. Object sheet: 4 columns by 3 rows, 12 buildings. Every building is a three-quarter exterior view at night with warm lit windows, standing alone with no street around it. Bangkok architecture throughout: tangled power lines, shophouses, tall condos, teak houses with steep roofs, tropical plants and a hint of temple gold. Left to right, top to bottom:
+1. Studio in a small condo block in On Nut: plain concrete, air-conditioner units on every balcony, one window lit.
+2. Condo tower on Sukhumvit: glass and concrete, balconies, many warm windows and a little rooftop pool.
+3. Loft in Ari: a converted concrete building with big windows, plants hanging down the front and a café sign shown as a blank shape.
+4. Old shophouse in Chinatown: narrow, three storeys, a metal shutter half open with warm light, red lanterns and a tangle of cables.
+5. Detached suburban house in Bang Na with a car port, a spirit house on a post in the garden and a mango tree.
+6. Duplex at the top of a stylish Thonglor building with a terrace full of plants.
+7. Traditional Thai teak house on stilts in Nonthaburi, steep roof with curled gable ends, a canal at its foot.
+8. Riverside penthouse at the top of a tower by the Chao Phraya, a long boat passing far below.
+9. Beach estate in Hua Hin: a low resort-like house among palms, with a pool and the sea behind.
+10. Pool villa in Ekkamai: modern white villa, frangipani trees and a glowing pool.
+11. Grand mansion in Sathorn: a colonial-style white mansion with columns, a gold spirit house and a high gate.
+12. A bright Thai real-estate "FOR SALE" banner tied to a fence, lettering shown only as blank shapes.
+```
+
+Where each goes: in every sheet, cells 1 to 11 are `home.<city>.studio`, `.flat`, `.loft`, `.townhouse`, `.house`, `.duplex`, `.chalet`, `.penthouse`, `.estate`, `.villa`, `.mansion`, with `<city>` one of `madrid`, `london`, `new_york`, `dubai`, `singapore`, `bangkok`. Cell 12 is `home.<city>.sign`.
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 53–58 | `homes/homes-<city>.png` | 11 homes as the city builds them, and its "for sale" sign | 128×128 |

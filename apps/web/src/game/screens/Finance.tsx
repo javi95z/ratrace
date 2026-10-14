@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART } from '@ratrace/content';
+import { assetKind, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
@@ -391,11 +391,11 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
 
   return (
-    <Sheet open onClose={onClose} title={t(quote.letOnly ? 'buyLetTitle' : 'buyTitle', { home: text.propertyTypes[typeId] })} closeLabel={common('close')}>
+    <Sheet open onClose={onClose} title={t(quote.letOnly ? 'buyLetTitle' : 'buyTitle', { home: homeName(text, typeId, shown.player.cityId) })} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex justify-center">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={propertyArt(typeId)} fallback={{ w: 128, h: 128 }} />
+            <Sprite id={propertyArt(typeId, shown.player.cityId)} fallback={{ w: 128, h: 128 }} />
           </Bare>
         </div>
         <Panel>
@@ -484,11 +484,11 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
   const gain = quote.value - quote.paid;
 
   return (
-    <Sheet open onClose={onClose} title={text.propertyTypes[property.typeId]} closeLabel={common('close')}>
+    <Sheet open onClose={onClose} title={homeName(text, property.typeId, property.cityId)} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex justify-center">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
+            <Sprite id={propertyArt(property.typeId, property.cityId)} fallback={{ w: 128, h: 128 }} />
           </Bare>
         </div>
         <p className="pixel text-center text-[13px] uppercase tracking-wider text-ink-300">{names.cities[property.cityId]}</p>
@@ -568,10 +568,10 @@ function PropertyTab() {
               {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
               <button type="button" aria-haspopup="dialog" disabled={sold} onClick={() => setOpened(property.id)} className="flex w-full items-center gap-3 text-left">
                 <Bare className="shrink-0">
-                  <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
+                  <Sprite id={propertyArt(property.typeId, property.cityId)} fallback={{ w: 128, h: 128 }} />
                 </Bare>
                 <span className="min-w-0 flex-1">
-                  <span className="pixel block text-[17px]">{text.propertyTypes[property.typeId]}</span>
+                  <span className="pixel block text-[17px]">{homeName(text, property.typeId, property.cityId)}</span>
                   <span className="block text-[13px] text-ink-200">{names.cities[property.cityId]}</span>
                   <span className="pixel mt-1 block text-[17px] text-gold-500">{fmt.money(property.value)}</span>
                   {rent !== undefined ? <span className="pixel block text-[14px] text-teal-300">{t('rentYear', { amount: fmt.money(rent) })}</span> : null}
@@ -618,9 +618,9 @@ function PropertyTab() {
                 return (
                   <button key={type.id} type="button" onClick={() => setBuying(type.id)} className={TILE}>
                     <Bare className="w-full py-1">
-                      <Sprite id={propertyArt(type.id)} fallback={{ w: 128, h: 128 }} />
+                      <Sprite id={propertyArt(type.id, p.cityId)} fallback={{ w: 128, h: 128 }} />
                     </Bare>
-                    <span className="mt-0.5 text-[14px] leading-tight">{text.propertyTypes[type.id]}</span>
+                    <span className="mt-0.5 text-[14px] leading-tight">{homeName(text, type.id, p.cityId)}</span>
                     <span className="pixel text-[18px] text-gold-500">{fmt.compact(quote.price)}</span>
                     <span className="text-[11px] leading-tight text-ink-200">{t('minDown', { amount: fmt.compact(quote.minDown + quote.purchaseTax) })}</span>
                     {/* A home says what living in it is worth; what cannot be lived in says what it lets for. */}

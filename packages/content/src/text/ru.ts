@@ -1,5 +1,6 @@
 import { cards } from './ru.cards';
 import type { ContentText } from './types';
+import { cityHomesRu } from './homes';
 
 export const ru: ContentText = {
   cities: {
@@ -67,6 +68,7 @@ export const ru: ContentText = {
     parking: 'Машино-место', studio: 'Студия', flat: 'Квартира', loft: 'Лофт', shop: 'Торговая точка', townhouse: 'Таунхаус', house: 'Семейный дом', office: 'Офисный этаж',
     duplex: 'Дуплекс', warehouse: 'Склад', chalet: 'Шале', penthouse: 'Пентхаус', estate: 'Поместье', villa: 'Вилла', block: 'Доходный дом', mansion: 'Особняк',
   },
+  cityHomes: cityHomesRu,
   rentTiers: ['Съёмная комната', 'Съёмная квартира'],
   lifestyleTiers: ['Эконом', 'Стандарт', 'Комфорт', 'Люкс'],
   insurance: { health: 'Медицинская страховка', home: 'Страховка жилья', life: 'Страховка жизни', liability: 'Страховка ответственности' },

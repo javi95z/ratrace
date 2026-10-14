@@ -136,7 +136,13 @@ export const cardArt: Record<string, string> = {
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
 export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
-export const propertyArt = (typeId: string): string => `home.${typeId}`;
+/** The kinds of home each city draws its own way, once its sheet is cut. */
+export const CITY_HOME_KINDS = ['studio', 'flat', 'loft', 'townhouse', 'house', 'duplex', 'chalet', 'penthouse', 'estate', 'villa', 'mansion'] as const;
+/** The cities whose homes are drawn: until a city's sheet is cut, its homes are the plain ones. */
+export const CITY_HOMES_DRAWN: readonly string[] = [];
+/** A kind of property, as the city it is in draws it, or plain where the city has no drawing of its own. */
+export const propertyArt = (typeId: string, cityId?: string): string =>
+  cityId !== undefined && CITY_HOMES_DRAWN.includes(cityId) && (CITY_HOME_KINDS as readonly string[]).includes(typeId) ? `home.${cityId}.${typeId}` : `home.${typeId}`;
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 /** The skyline of a city: by night, or in the first light a round opens in. */
 /** How a city is drawn: by night, by day, in a boom with cranes and fireworks, or in a crisis under the rain. */

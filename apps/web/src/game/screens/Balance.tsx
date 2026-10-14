@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, debtArt, itemArt, propertyArt } from '@ratrace/content';
+import { assetKind, debtArt, homeName, itemArt, propertyArt } from '@ratrace/content';
 import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWorth, quoteOwnedProperty, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
@@ -144,10 +144,10 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
               return (
                 <li key={property.id} className="frame flex items-center gap-3 bg-night-700 p-2">
                   <Bare className="shrink-0">
-                    <Sprite id={propertyArt(property.typeId)} fallback={{ w: 128, h: 128 }} />
+                    <Sprite id={propertyArt(property.typeId, property.cityId)} fallback={{ w: 128, h: 128 }} />
                   </Bare>
                   <div className="min-w-0 flex-1">
-                    <div className="pixel text-[16px]">{text.propertyTypes[property.typeId]}</div>
+                    <div className="pixel text-[16px]">{homeName(text, property.typeId, property.cityId)}</div>
                     <div className="text-[12px] text-ink-300">
                       {names.cities[property.cityId]} · {property.rented ? estate('rented') : home?.id === property.id ? estate('livedIn') : estate('empty')}
                     </div>

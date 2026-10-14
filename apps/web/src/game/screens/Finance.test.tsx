@@ -90,12 +90,12 @@ describe('the homes a player owns', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
     const owned = screen.getByRole('region', { name: 'Your properties' });
-    expect(within(owned).getByText('Flat')).toBeTruthy();
+    expect(within(owned).getByText('Apartment in the Marina')).toBeTruthy();
     expect(within(owned).getByText(/You live here/)).toBeTruthy();
 
     await user.click(within(owned).getByRole('button', { name: /^Sell for/ }));
     expect(button('1 order')).toBeTruthy();
-    expect(within(owned).getByText('Flat')).toBeTruthy();
+    expect(within(owned).getByText('Apartment in the Marina')).toBeTruthy();
     const selling = within(owned).getByRole('button', { name: 'Sold when the round is played' }) as HTMLButtonElement;
     expect(selling.disabled).toBe(true);
     expect(within(owned).queryByRole('button', { name: /^Sell for/ })).toBeNull();
@@ -141,7 +141,7 @@ describe('property that is only for letting', () => {
     expect(within(tile).getByText(`Lets for ${fmt.compact(parking.rentAnnual)} a year`)).toBeTruthy();
     expect(within(tile).queryByText(/^Status/)).toBeNull();
     // A home says what living in it is worth.
-    expect(within(within(homes).getByRole('button', { name: /^Flat/ })).getByText('Status +14')).toBeTruthy();
+    expect(within(within(homes).getByRole('button', { name: /^Apartment in the Marina/ })).getByText('Status +14')).toBeTruthy();
   });
 
   it('does not ask what a parking space is for, and says why someone without the skill cannot buy one', async () => {
@@ -206,7 +206,7 @@ describe('a parking space already owned', () => {
 
     // A mortgage is named for the home it is on.
     await user.click(screen.getByRole('tab', { name: 'Debt' }));
-    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Fixed mortgage · Flat, Dubai')).toBeTruthy();
+    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Fixed mortgage · Apartment in the Marina, Dubai')).toBeTruthy();
   });
 });
 
@@ -726,9 +726,9 @@ describe('a property the player owns', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
     const mine = screen.getByRole('region', { name: 'Your properties' });
-    await user.click(within(mine).getByRole('button', { name: /^Flat/ }));
+    await user.click(within(mine).getByRole('button', { name: /^Apartment in the Marina/ }));
 
-    const sheet = screen.getByRole('dialog', { name: 'Flat' });
+    const sheet = screen.getByRole('dialog', { name: 'Apartment in the Marina' });
     expect(within(sheet).getByText('You live here')).toBeTruthy();
     expect(within(sheet).getByText('Worth today')).toBeTruthy();
     expect(within(sheet).getAllByText(fmt.money(flat.value)).length).toBeGreaterThanOrEqual(2);

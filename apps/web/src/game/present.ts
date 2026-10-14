@@ -1,4 +1,4 @@
-import { badges, businessArt, careerArt, cityIcon, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
+import { badges, businessArt, homeName, careerArt, cityIcon, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -79,7 +79,7 @@ export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] 
 export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'forAsset'> & { id?: string }, properties: ReadonlyArray<Property> = []): string {
   const kind = words.text.debts[debt.kind];
   const home = debt.id === undefined ? undefined : properties.find((property) => property.mortgageId === debt.id);
-  if (home) return `${kind} · ${words.text.propertyTypes[home.typeId]}, ${words.names.cities[home.cityId]}`;
+  if (home) return `${kind} · ${homeName(words.text, home.typeId, home.cityId)}, ${words.names.cities[home.cityId]}`;
   if (debt.forAsset !== undefined && words.names.assets[debt.forAsset] !== undefined) return `${kind} · ${words.names.assets[debt.forAsset].name}`;
   return debt.forItem !== undefined && words.names.items[debt.forItem] !== undefined ? `${kind} · ${words.names.items[debt.forItem]}` : kind;
 }
@@ -163,7 +163,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
   const { text, names, fmt, content } = words;
   const home = (propertyId: string) => {
     const property = player.properties.find((p) => p.id === propertyId);
-    return property ? text.propertyTypes[property.typeId] : '';
+    return property ? homeName(text, property.typeId, property.cityId) : '';
   };
   const business = (businessId: string) => {
     const owned = player.businesses.find((b) => b.id === businessId);
@@ -202,7 +202,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('repay', { name: debt ? debtLabel(words, debt, player.properties) : '', amount: fmt.money(order.amount) });
     }
     case 'buyProperty':
-      return t(order.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[order.typeId] });
+      return t(order.rented ? 'buyRental' : 'buyHome', { home: homeName(text, order.typeId, player.cityId) });
     case 'sellProperty':
       return t('sellHome', { home: home(order.propertyId) });
     case 'setRented':

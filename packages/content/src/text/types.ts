@@ -26,6 +26,8 @@ export interface ContentText {
   lifestyleTiers: [string, string, string, string];
   insurance: Record<InsuranceKind, string>;
   focusActions: Record<FocusAction, string>;
+  /** What each kind of home is called in each city, by city and kind. A kind a city does not name goes by `propertyTypes`. */
+  cityHomes: Record<string, Record<string, string>>;
   /** The skills beyond the career and money sense, by name. */
   skills: Record<SkillId, string>;
   debts: Record<DebtKind, string>;

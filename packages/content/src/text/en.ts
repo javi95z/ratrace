@@ -1,5 +1,6 @@
 import { cards } from './en.cards';
 import type { ContentText } from './types';
+import { cityHomesEn } from './homes';
 
 export const en: ContentText = {
   cities: {
@@ -67,6 +68,7 @@ export const en: ContentText = {
     parking: 'Parking space', studio: 'Studio', flat: 'Flat', loft: 'Loft', shop: 'Shop unit', townhouse: 'Townhouse', house: 'Family house', office: 'Office floor',
     duplex: 'Duplex', warehouse: 'Warehouse', chalet: 'Chalet', penthouse: 'Penthouse', estate: 'Country estate', villa: 'Villa', block: 'Apartment block', mansion: 'Mansion',
   },
+  cityHomes: cityHomesEn,
   rentTiers: ['Rented room', 'Rented flat'],
   lifestyleTiers: ['Frugal', 'Normal', 'Comfortable', 'Lavish'],
   insurance: { health: 'Health insurance', home: 'Home insurance', life: 'Life insurance', liability: 'Liability insurance' },
