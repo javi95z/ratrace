@@ -1041,7 +1041,6 @@
     "needAccount": "Las clasificaciones necesitan una cuenta y conexión.",
     "you": "Tú",
     "noName": "Aún no tienes nombre. Hasta que elijas uno, las clasificaciones te muestran como «Rata» y cuatro caracteres.",
-    "yourName": "Apareces como {name}.",
     "chooseName": "Elegir un nombre",
     "changeName": "Cambiarlo",
     "name": "Nombre",
@@ -1052,7 +1051,7 @@
     "refused": "Ese nombre no se acepta.",
     "failed": "No se ha podido guardar el nombre. Inténtalo de nuevo.",
     "code": "Tu código de amigo",
-    "codeHint": "Dáselo a un amigo: con él puede seguirte.",
+    "codeHint": "Dáselo a un amigo para que te siga.",
     "kinds": "Qué clasificación",
     "all": "Histórica",
     "week": "Esta semana",
@@ -1073,6 +1072,15 @@
     "followUnknown": "Ningún jugador tiene ese código.",
     "followSelf": "Ese es tu propio código.",
     "followFull": "Ya sigues a todos los jugadores que se puede.",
-    "followFailed": "No ha funcionado. Inténtalo de nuevo."
+    "followFailed": "No ha funcionado. Inténtalo de nuevo.",
+    "place": "Puesto {place} · {day}",
+    "runUnreachable": "No se ha podido leer esta vida.",
+    "runStatus": "Estatus medio",
+    "runEscape": "Salió de la rueda",
+    "runNever": "Nunca",
+    "runAge": "A los {age}",
+    "runBankruptcies": "Quiebras",
+    "runCities": "Vivió en",
+    "runBadges": "Insignias de esta vida"
   }
 }

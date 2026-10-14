@@ -93,6 +93,20 @@ export interface RankingRow {
   mine: boolean;
 }
 
+/** A ranked life as another player may see it: how it ended, what it earned, where it was lived. */
+export interface RankedLifeDetail {
+  /** At the end, in start-of-game cents. */
+  netWorth: number;
+  status: number;
+  escapedAtRound: number | null;
+  bankruptcies: number;
+  badges: string[];
+  cities: string[];
+  /** Net worth round by round, in start-of-game cents. */
+  history: number[];
+  finishedAt: number;
+}
+
 /** Which ranking: of all time or of this week; among everyone or among friends; of one starting life or of any. */
 export interface RankingQuery {
   period: 'all' | 'week';
@@ -123,6 +137,8 @@ export interface Community {
    * of them scored less, and how many there are. Ranked and casual alike; the asker's own are left out.
    */
   compare(query: { lifeId: string; score: number }): Promise<{ below: number; total: number } | null>;
+  /** The life behind a line of a ranking, as far as anyone may see it. Null where it cannot be read. */
+  run(row: Pick<RankingRow, 'userId' | 'lifeId' | 'score'>): Promise<RankedLifeDetail | null>;
   /** Follows the player a friend code belongs to. `full`: the player follows as many as one may. */
   follow(code: string): Promise<'ok' | 'unknown' | 'self' | 'full' | 'failed'>;
   unfollow(userId: string): Promise<boolean>;

@@ -1041,7 +1041,6 @@
     "needAccount": "The rankings need an account and a connection.",
     "you": "You",
     "noName": "You have no name yet. Until you choose one, the rankings show you as \"Rat\" and four characters.",
-    "yourName": "You appear as {name}.",
     "chooseName": "Choose a name",
     "changeName": "Change it",
     "name": "Name",
@@ -1052,7 +1051,7 @@
     "refused": "That name is not accepted.",
     "failed": "The name could not be saved. Try again.",
     "code": "Your friend code",
-    "codeHint": "Give it to a friend: with it they can follow you.",
+    "codeHint": "Give it to a friend to follow you.",
     "kinds": "Which ranking",
     "all": "All time",
     "week": "This week",
@@ -1073,6 +1072,15 @@
     "followUnknown": "No player has that code.",
     "followSelf": "That is your own code.",
     "followFull": "You follow as many players as one can.",
-    "followFailed": "That did not work. Try again."
+    "followFailed": "That did not work. Try again.",
+    "place": "Place {place} · {day}",
+    "runUnreachable": "This life could not be read.",
+    "runStatus": "Average status",
+    "runEscape": "Left the rat race",
+    "runNever": "Never",
+    "runAge": "At {age}",
+    "runBankruptcies": "Bankruptcies",
+    "runCities": "Lived in",
+    "runBadges": "Badges of this life"
   }
 }

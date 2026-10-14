@@ -3,7 +3,8 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Community, Friend, RankingQuery, RankingRow } from '@/online/types';
+import type { Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@/online/types';
+import { formatFor } from '@/lib/format';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Rankings } from './Rankings';
 
@@ -42,6 +43,7 @@ function community(over: Partial<Community> = {}) {
     },
     friends: async () => state.friends,
     compare: async () => null,
+    run: async () => null,
     follow: async (code) => {
       asked.push(`follow ${code}`);
       state.friends = [{ userId: 'aaaa1111-0000', nickname: 'Otra_Rata' }, ...state.friends];
@@ -70,7 +72,9 @@ describe('the rankings', () => {
     const { community: c, asked } = community();
     show(c);
     const lines = within(await screen.findByRole('list', { name: 'All time' })).getAllByRole('listitem');
-    expect(lines.map((line) => line.textContent)).toEqual(['1Otra_RataSoftware engineer900', '2Rat BBBBNurse800', '9Rat MENurse120']);
+    // Each line: the place, the name, the starting life and the day it ended, and the score.
+    const day = formatFor('en').day(Date.UTC(2026, 9, 13));
+    expect(lines.map((line) => line.textContent)).toEqual([`1Otra_RataSoftware engineer · ${day}900▸`, `2Rat BBBBNurse · ${day}800▸`, `9Rat MENurse · ${day}120▸`]);
     expect(lines[2].getAttribute('aria-current')).toBe('true');
     expect(lines[0].getAttribute('aria-current')).toBeNull();
     expect(asked).toEqual(['ranking all everyone any']);
@@ -96,15 +100,20 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     await screen.findByRole('list', { name: 'All time' });
-    const life = screen.getByRole('combobox', { name: 'Starting life' }) as HTMLSelectElement;
-    expect(life.value).toBe('');
-    expect(within(life).getAllByRole('option').map((option) => option.textContent).slice(0, 3)).toEqual(['Any life', 'Nurse', 'Software engineer']);
-    await user.selectOptions(life, 'Nurse');
+    // The game's own picker: a button that says what is chosen, and a list in a sheet.
+    await user.click(screen.getByRole('button', { name: 'Starting life: Any life' }));
+    const list = within(screen.getByRole('dialog', { name: 'Starting life' })).getByRole('listbox', { name: 'Starting life' });
+    const options = within(list).getAllByRole('option');
+    expect(options.map((option) => option.textContent?.replace('✓', '')).slice(0, 3)).toEqual(['Any life', 'Nurse', 'Software engineer']);
+    expect(options[0].getAttribute('aria-selected')).toBe('true');
+    await user.click(within(list).getByRole('option', { name: 'Nurse' }));
+    expect(screen.queryByRole('dialog', { name: 'Starting life' })).toBeNull();
     await waitFor(() => expect(asked).toContain('ranking all everyone nurse'));
     // The life chosen stays chosen from one ranking to the next.
     await user.click(screen.getByRole('tab', { name: 'This week' }));
     await waitFor(() => expect(asked).toContain('ranking week everyone nurse'));
-    await user.selectOptions(life, 'Any life');
+    await user.click(screen.getByRole('button', { name: 'Starting life: Nurse' }));
+    await user.click(within(screen.getByRole('listbox', { name: 'Starting life' })).getByRole('option', { name: /^Any life/ }));
     await waitFor(() => expect(asked[asked.length - 1]).toBe('ranking week everyone any'));
   });
 
@@ -121,7 +130,7 @@ describe('the rankings', () => {
     await screen.findByRole('list', { name: 'This week' });
     waiting[0].answer([row(1, 'allt0000-0000'), row(2, 'allt1111-0000')]);
     await new Promise((done) => setTimeout(done, 20));
-    expect(within(screen.getByRole('list', { name: 'This week' })).getAllByRole('listitem').map((line) => line.textContent)).toEqual(['1Rat WEEKNurse900']);
+    expect(within(screen.getByRole('list', { name: 'This week' })).getAllByRole('listitem').map((line) => line.textContent)).toEqual([`1Rat WEEKNurse · ${formatFor('en').day(Date.UTC(2026, 9, 13))}900▸`]);
   });
 
   it('says so when nobody is in a ranking yet, and when it could not be read', async () => {
@@ -194,7 +203,7 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     const you = await screen.findByRole('region', { name: 'You' });
-    await waitFor(() => expect(you.textContent).toContain('You appear as Rata_Uno.'));
+    await waitFor(() => expect(you.textContent).toContain('Rata_Uno'));
     await user.click(within(you).getByRole('button', { name: 'Change it' }));
     expect((within(you).getByRole('textbox', { name: 'Name' }) as HTMLInputElement).value).toBe('Rata_Uno');
     await user.type(within(you).getByRole('textbox', { name: 'Name' }), '!');
@@ -233,7 +242,7 @@ describe('the rankings', () => {
     await user.clear(field);
     await user.type(field, ' abc ');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
-    await waitFor(() => expect(you.textContent).toContain('You appear as abc.'));
+    await waitFor(() => expect(you.textContent).toContain('abc'));
     expect(asked.filter((line) => line.startsWith('rename'))).toEqual(['rename abc']);
   });
 
@@ -314,5 +323,32 @@ describe('the rankings', () => {
       expect((await within(friends).findByRole('alert')).textContent, answer).toBe(said);
       cleanup();
     }
+  });
+
+  it('opens the life behind a line: how it ended, what it was worth, where it was lived and what it earned', async () => {
+    const detail: RankedLifeDetail = { netWorth: 123_456_00, status: 41, escapedAtRound: 9, bankruptcies: 1, badges: ['first_share'], cities: ['madrid', 'london'], history: [100_000, 400_000, 900_000], finishedAt: Date.UTC(2026, 9, 13) };
+    const asked: unknown[] = [];
+    const { community: c } = community({ run: async (line) => (asked.push(line), detail) });
+    const user = userEvent.setup();
+    show(c);
+    const [first] = within(await screen.findByRole('list', { name: 'All time' })).getAllByRole('listitem');
+    await user.click(within(first).getByRole('button'));
+    const sheet = screen.getByRole('dialog', { name: 'Otra_Rata' });
+    expect(asked).toEqual([expect.objectContaining({ userId: 'aaaa1111-0000', lifeId: 'engineer', score: 900 })]);
+    expect(await within(sheet).findByText('$123,456')).toBeTruthy();
+    expect(within(sheet).getByText('At 40')).toBeTruthy();
+    expect(within(sheet).getByText('Madrid')).toBeTruthy();
+    expect(within(sheet).getByText('London')).toBeTruthy();
+    expect(within(sheet).getByRole('list', { name: 'Badges of this life' })).toBeTruthy();
+    expect(within(sheet).getByRole('img', { name: /net worth/i })).toBeTruthy();
+  });
+
+  it('says so when the life behind a line cannot be read', async () => {
+    const { community: c } = community({ run: async () => null });
+    const user = userEvent.setup();
+    show(c);
+    const [first] = within(await screen.findByRole('list', { name: 'All time' })).getAllByRole('listitem');
+    await user.click(within(first).getByRole('button'));
+    expect(await within(screen.getByRole('dialog', { name: 'Otra_Rata' })).findByText('This life could not be read.')).toBeTruthy();
   });
 });

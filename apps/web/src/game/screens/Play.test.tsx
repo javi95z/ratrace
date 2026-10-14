@@ -613,6 +613,7 @@ describe('the end of a life, beside the lives of others', () => {
     ranking: async () => null,
     friends: async () => null,
     compare: async (query) => (asked.push(query), answer),
+    run: async () => null,
     follow: async () => 'failed',
     unfollow: async () => false,
   });

@@ -382,6 +382,28 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.compare({ lifeId: 'nurse', score: 420 })).toBeNull();
   });
 
+  it('reads the life behind a line of a ranking: the first ranked life of that start to reach that score', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.runs = { data: { net_worth: '12345600', status: 41, escaped_at_round: 9, bankruptcies: 1, badges: ['first_share'], cities: ['madrid', 'london'], history: ['100', '250'], finished_at: '2026-10-12T10:00:00Z' }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.run({ userId: 'u-9', lifeId: 'nurse', score: 356 })).toEqual({
+      netWorth: 12_345_600, status: 41, escapedAtRound: 9, bankruptcies: 1, badges: ['first_share'], cities: ['madrid', 'london'], history: [100, 250], finishedAt: Date.parse('2026-10-12T10:00:00Z'),
+    });
+    expect(client.asked).toContainEqual([
+      'runs',
+      ['select', 'net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at'],
+      ['eq', 'user_id', 'u-9'],
+      ['eq', 'mode', 'ranked'],
+      ['eq', 'life_id', 'nurse'],
+      ['eq', 'score', 356],
+      ['order', 'finished_at', { ascending: true }],
+      ['limit', 1],
+      ['maybeSingle'],
+    ]);
+    client.answers.runs = { data: null, error: null };
+    expect(await cloud.community.run({ userId: 'u-9', lifeId: 'nurse', score: 356 })).toBeNull();
+  });
+
   it('asks the database for a ranking, and says which line is the player\'s own', async () => {
     client.answers.getSession = signedIn;
     client.answers.rpc = {

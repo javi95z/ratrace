@@ -247,6 +247,29 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return null;
         }
       },
+      async run({ userId, lifeId, score }) {
+        try {
+          // The line of a ranking is the player's best ranked life of that start: the first to reach that score.
+          const { data, error } = await client
+            .from('runs')
+            .select('net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at')
+            .eq('user_id', userId)
+            .eq('mode', 'ranked')
+            .eq('life_id', lifeId)
+            .eq('score', score)
+            .order('finished_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          const row = data as { net_worth: number; status: number; escaped_at_round: number | null; bankruptcies: number; badges: string[] | null; cities: string[] | null; history: Array<number | string> | null; finished_at: string } | null;
+          if (error || row === null) return null;
+          return {
+            netWorth: Number(row.net_worth), status: row.status, escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies,
+            badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: Date.parse(row.finished_at) || 0,
+          };
+        } catch {
+          return null;
+        }
+      },
       async friends() {
         try {
           const followed = await client.from('friendships').select('followed').eq('follower', await me()).order('created_at', { ascending: false });
