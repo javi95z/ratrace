@@ -229,7 +229,7 @@ say(
   ),
   'Quien no tiene casa propia vive de alquiler:',
   table(['', 'Alquiler', 'Gasto de vivienda', 'Estatus'], [0, 1].map((tier) => [img(rentTierArt[tier]), text.rentTiers[tier], `${content.life.rentTierHousingPct[tier]} %`, signed(content.life.rentTierStatus[tier])])),
-  `Desde los ${START_AGE + content.life.roomLateRound * content.yearsPerRound} años, la habitación alquilada pasa a dar ${signed(content.life.roomLateStatus)} de estatus.`,
+  `Con los años, la habitación alquilada y el modo de vida austero restan más estatus: ${content.life.agedStatus.room.map((step) => `${START_AGE + step.fromRound * content.yearsPerRound} años ${signed(step.status)}`).join(', ')} la habitación; ${content.life.agedStatus.frugal.map((step) => `${START_AGE + step.fromRound * content.yearsPerRound} años ${signed(step.status)}`).join(', ')} el modo austero.`,
 );
 
 // ---------------------------------------------------------------------------------------------

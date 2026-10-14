@@ -92,11 +92,12 @@ describe('the v1 content', () => {
       expect((quote.finance?.down ?? 0) + (quote.finance?.loan ?? 0), item.id).toBe(quote.price);
       expect(Math.abs((quote.finance?.down ?? 0) * 5 - quote.price), item.id).toBeLessThan(5);
     }
-    expect(content.life.lifestyleStatus).toEqual([-3, 0, 3, 8]);
-    // A rented room is neutral until twenty-six, two rounds in, and then costs what a frugal life does.
-    expect(START_AGE + content.life.roomLateRound * content.yearsPerRound).toBe(26);
-    expect(content.life.roomLateStatus).toBe(-3);
+    expect(content.life.lifestyleStatus).toEqual([-2, 0, 3, 8]);
     expect(content.life.rentTierStatus).toEqual([0, 3]);
+    // A rented room and a frugal life cost more status each decade: from 26, from 32 and from 40.
+    const ages = (steps: ReadonlyArray<{ fromRound: number; status: number }>) => steps.map((step) => [START_AGE + step.fromRound * content.yearsPerRound, step.status]);
+    expect(ages(content.life.agedStatus.room)).toEqual([[22, 0], [26, -3], [32, -6], [40, -10]]);
+    expect(ages(content.life.agedStatus.frugal)).toEqual([[22, -2], [26, -3], [32, -4], [40, -6]]);
   });
 
   it('gives every city a trade or two it pays above the usual, and every career a city to go to', () => {

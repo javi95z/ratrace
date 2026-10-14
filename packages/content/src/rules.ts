@@ -72,11 +72,24 @@ export const life: LifeRules = {
   // A rented room costs a little over half the housing share of a rented flat.
   rentTierHousingPct: [55, 100],
   rentTierStatus: [0, 3],
-  // A room in a shared flat is how everyone starts. From twenty-six, two rounds in, it is noticed.
-  roomLateRound: 2,
-  roomLateStatus: -3,
   // Living on less than most people is seen, and it costs standing: saving is not free.
-  lifestyleStatus: [-3, 0, 3, 8],
+  lifestyleStatus: [-2, 0, 3, 8],
+  // A room in a shared flat and counting every coin are how everyone starts, and noticed more each
+  // decade after: from 26, from 32 and from 40.
+  agedStatus: {
+    room: [
+      { fromRound: 0, status: 0 },
+      { fromRound: 2, status: -3 },
+      { fromRound: 5, status: -6 },
+      { fromRound: 9, status: -10 },
+    ],
+    frugal: [
+      { fromRound: 0, status: -2 },
+      { fromRound: 2, status: -3 },
+      { fromRound: 5, status: -4 },
+      { fromRound: 9, status: -6 },
+    ],
+  },
   // A fifth down and the rest on a personal loan, for anything a dealer would write a contract for.
   itemFinanceDownPct: 20,
   itemFinanceMinPrice: usd(5_000),

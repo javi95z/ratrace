@@ -229,8 +229,17 @@ export function validateContent(c: Content): string[] {
   }
   if (!Array.isArray(life.agingLadders) || life.agingLadders.some((ladder) => !c.items.some((item) => item.ladder === ladder))) errors.push('life.agingLadders must name ladders that exist');
   if (!(isCount(life.agingFloorPct) && life.agingFloorPct <= 100)) errors.push('life.agingFloorPct must be a whole number from 0 to 100');
-  if (!isCount(life.roomLateRound)) errors.push('life.roomLateRound must be a whole, non-negative number');
-  if (!isWhole(life.roomLateStatus)) errors.push('life.roomLateStatus must be a whole number');
+  const aged = isRecord(life.agedStatus) ? life.agedStatus : {};
+  const starts = { room: (life.rentTierStatus as unknown[] | undefined)?.[0], frugal: (life.lifestyleStatus as unknown[] | undefined)?.[0] };
+  for (const kind of ['room', 'frugal'] as const) {
+    const steps = aged[kind] as unknown;
+    const ok =
+      Array.isArray(steps) &&
+      steps.length > 0 &&
+      steps.every((step, i) => isRecord(step) && isCount(step.fromRound) && isWhole(step.status) && (i === 0 ? step.fromRound === 0 : step.fromRound > (steps[i - 1] as { fromRound: number }).fromRound && step.status <= (steps[i - 1] as { status: number }).status));
+    if (!ok) errors.push(`life.agedStatus.${kind} must be steps from round 0, later and never better`);
+    else if ((steps as Array<{ status: number }>)[0].status !== starts[kind]) errors.push(`life.agedStatus.${kind} must start at the status of the start`);
+  }
   if (!listOf(life.lifestyleStatus, 4, isWhole)) errors.push('life.lifestyleStatus must be four whole numbers');
   if (!(isCount(life.itemFinanceDownPct) && life.itemFinanceDownPct <= 100)) errors.push('life.itemFinanceDownPct must be a whole number from 0 to 100');
   if (!isCount(life.itemFinanceMinPrice)) errors.push('life.itemFinanceMinPrice must be a whole, non-negative amount');

@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.20.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.21.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -673,7 +673,7 @@ Quien no tiene casa propia vive de alquiler:
 | <img src="../art/clean/homes/home.rented_room.png" alt=""> | Habitación alquilada | 55 % | 0 |
 | <img src="../art/clean/homes/home.rented_flat.png" alt=""> | Piso alquilado | 100 % | +3 |
 
-Desde los 26 años, la habitación alquilada pasa a dar -3 de estatus.
+Con los años, la habitación alquilada y el modo de vida austero restan más estatus: 22 años 0, 26 años -3, 32 años -6, 40 años -10 la habitación; 22 años -2, 26 años -3, 32 años -4, 40 años -6 el modo austero.
 
 ## Inversiones
 
@@ -705,7 +705,7 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 
 |  | Modo de vida | Coste de vida | Estatus |
 | --- | --- | --- | --- |
-| <img src="../art/clean/icons/icon.life_frugal.png" alt=""> | Austero | 70 % | -3 |
+| <img src="../art/clean/icons/icon.life_frugal.png" alt=""> | Austero | 70 % | -2 |
 | <img src="../art/clean/icons/icon.life_normal.png" alt=""> | Normal | 100 % | 0 |
 | <img src="../art/clean/icons/icon.life_comfortable.png" alt=""> | Cómodo | 140 % | +3 |
 | <img src="../art/clean/icons/icon.life_lavish.png" alt=""> | Lujoso | 200 % | +8 |

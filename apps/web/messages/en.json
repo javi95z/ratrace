@@ -413,7 +413,7 @@
       "tier": "How you live",
       "tierFloor": "Your life does not allow less than this.",
       "tierStatus": "Status:",
-      "roomLate": "From the age of {age}, living in a room takes {n} status away.",
+      "roomLate": "From {age}, a rented room costs {n} status.",
       "home": "Where you live",
       "ownerNote": "You live in a home you own, so you pay no rent.",
       "insurance": "Insurance",
@@ -441,7 +441,8 @@
       "movePartner": "Your partner will go {years} years without pay while they find work.",
       "learn": "Learn",
       "learnAbout": "Each costs 1 focus and needs no job. Management is learnt only by running a business.",
-      "learnHint": "+{n} {skill} · level {level}"
+      "learnHint": "+{n} {skill} · level {level}",
+      "frugalLate": "From {age}, living frugally costs {n} status."
     },
     "shop": {
       "status": "Status +{n}",

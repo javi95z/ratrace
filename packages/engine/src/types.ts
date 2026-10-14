@@ -15,6 +15,12 @@ export const SKILLS = ['negotiation', 'languages', 'network', 'management', 'hea
 export type SkillId = (typeof SKILLS)[number];
 export type SkillLevel = 0 | 1 | 2 | 3;
 
+/** A status that holds from a round on. */
+export interface StatusStep {
+  fromRound: number;
+  status: number;
+}
+
 /**
  * What not paying tax is worth, and what it risks. Every way of doing it saves tax this round and
  * raises suspicion; each round an inspection may come, as likely as the suspicion is high, and it
@@ -304,13 +310,16 @@ export interface LifeRules {
   insurancePremiumBp: Record<InsuranceKind, Bp>;
   /** Share of the housing cost paid at each rent tier, in percent. */
   rentTierHousingPct: readonly [number, number];
+  /** The status of a rented room and of a rented flat at the start. The room's then follows `agedStatus.room`. */
   rentTierStatus: readonly [number, number];
-  /** From this round on a rented room is no longer neutral: sharing a flat is ordinary at twenty-two and noticed later. */
-  roomLateRound: number;
-  /** The status of a rented room from that round on. */
-  roomLateStatus: number;
-  /** Status for each lifestyle tier. Living below the ordinary may take status away. */
+  /** Status for each lifestyle tier at the start. Living below the ordinary takes status away, and the frugal tier's then follows `agedStatus.frugal`. */
   lifestyleStatus: readonly [number, number, number, number];
+  /**
+   * What a rented room and the frugal way of living cost in status as the years go by: each step
+   * holds from its round on. Sharing a flat and counting every coin are ordinary at twenty-two, and
+   * noticed more and more after. The first step of each is at round 0, with the status of the start.
+   */
+  agedStatus: { room: readonly StatusStep[]; frugal: readonly StatusStep[] };
   /** Buying a thing that lasts on instalments: this percent of the price is paid down, and the rest is a personal loan. */
   itemFinanceDownPct: number;
   /** The least a thing must cost, at the prices of the start, to be sold on instalments. */

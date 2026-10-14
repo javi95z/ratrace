@@ -252,26 +252,24 @@ describe('quoteLiving', () => {
       tiers: [1_260_000, 1_800_000, 2_520_000, 3_600_000],
       rentTiers: [1_548_000, 1_800_000],
       rentStatus: [0, 2],
-      roomLateFromRound: null,
-      roomLateStatus: 0,
+      lifestyleStatus: [0, 0, 0, 9],
+      worse: { room: null, frugal: null },
       insurance: { health: 72_000, home: 54_000, life: 36_000, liability: 18_000 },
     });
   });
 
-  it('says what a rented room gives now and from when it gives less, exactly as the status then counts it', () => {
+  it('says what a rented room gives now and when it next gives less, exactly as the status then counts it', () => {
     const late = fixtureContent();
-    late.life.roomLateRound = 2;
-    late.life.roomLateStatus = -3;
+    late.life.agedStatus.room = [{ fromRound: 0, status: 0 }, { fromRound: 2, status: -3 }, { fromRound: 3, status: -6 }];
     let state = createGame({ content: late, start: { ...fixtureStart(), cash: 5_000_000, life: { ...office, rentTier: 0 } } }, 'room');
     const seen: Array<[number, number | null, number]> = [];
     for (let round = 0; round < 4; round++) {
       const quote = quoteLiving(late, viewOf(state));
-      seen.push([quote.rentStatus[0], quote.roomLateFromRound, statusBreakdown(late, viewOf(state)).home]);
+      seen.push([quote.rentStatus[0], quote.worse.room?.fromRound ?? null, statusBreakdown(late, viewOf(state)).home]);
       expect(quote.rentStatus[1]).toBe(2);
-      expect(quote.roomLateStatus).toBe(-3);
       state = applyRound(late, state, { orders: [] }).state;
     }
-    // Neutral for two rounds, warned of from the start; then it costs, and the warning is over.
-    expect(seen).toEqual([[0, 2, 0], [0, 2, 0], [-3, null, -3], [-3, null, -3]]);
+    // Neutral for two rounds, warned of from the start; then it costs more at each step, and the warning moves on to the next.
+    expect(seen).toEqual([[0, 2, 0], [0, 2, 0], [-3, 3, -3], [-6, null, -6]]);
   });
 });

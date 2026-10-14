@@ -176,7 +176,9 @@ describe('what the player owns, in the profile', () => {
     const costs = choices.map((li) => Number((li.textContent ?? '').match(/\$([\d,]+)\/yr/)?.[1].replace(/,/g, '')));
     expect(costs).toEqual([...costs].sort((a, b) => a - b));
     expect(within(choices[3]).getByText('Status +8')).toBeTruthy();
-    expect(within(choices[0]).getByText('Status −3')).toBeTruthy();
+    expect(within(choices[0]).getByText('Status −2')).toBeTruthy();
+    // And says when the frugal way will cost more: from 26.
+    expect(within(choices[0]).getByText('From 26, living frugally costs 3 status.')).toBeTruthy();
     expect(within(choices[1]).queryByText(/^Status/)).toBeNull();
     expect(within(sheet).getByText('It is changed during the finances: here or in the Lifestyle tab.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
@@ -190,7 +192,7 @@ describe('what the player owns, in the profile', () => {
     // A room costs nothing in status at twenty-two, and the sheet says from when it will.
     expect(within(choices[0]).queryByText(/^Status/)).toBeNull();
     expect(within(choices[1]).getByText('Status +3')).toBeTruthy();
-    expect(within(sheet).getByText('From the age of 26, living in a room takes 3 status away.')).toBeTruthy();
+    expect(within(sheet).getByText('From 26, a rented room costs 3 status.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
 
     await user.click(screen.getByRole('button', { name: /^Insurance/ }));
@@ -263,7 +265,7 @@ describe('what the player owns, in the profile', () => {
     expect(after.life.insurance).toMatchObject({ health: true, home: false });
   });
 
-  it('shows a rented room as a loss of status once the player is twenty-six, and warns of it no more', async () => {
+  it('shows a rented room as a loss of status once the player is twenty-six, and warns of the next step, at thirty-two', async () => {
     setWidth('desk');
     const user = userEvent.setup();
     const services = memoryServices();
@@ -277,7 +279,7 @@ describe('what the player owns, in the profile', () => {
     await user.click(screen.getByRole('button', { name: /^Home/ }));
     const sheet = screen.getByRole('dialog', { name: 'Home' });
     expect(within(within(sheet).getAllByRole('listitem')[0]).getByText('Status −3')).toBeTruthy();
-    expect(within(sheet).queryByText(/^From the age of/)).toBeNull();
+    expect(within(sheet).getByText('From 32, a rented room costs 6 status.')).toBeTruthy();
   });
 
   it('names every insurance held in one word each, so that four of them fit on the line', async () => {

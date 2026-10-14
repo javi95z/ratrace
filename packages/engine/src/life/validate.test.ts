@@ -93,11 +93,14 @@ describe('validateContent: life data', () => {
     expect(life({ rentTierStatus: [0, -1] })).toContain('life.rentTierStatus must be two whole, non-negative numbers');
     expect(life({ lifestyleStatus: [0, 0, 0] })).toContain('life.lifestyleStatus must be four whole numbers');
     expect(life({ lifestyleStatus: [0, 0.5, 0, 0] })).toContain('life.lifestyleStatus must be four whole numbers');
-    // A way of living may take status away.
-    expect(life({ lifestyleStatus: [-3, 0, 3, 8] })).toEqual([]);
-    expect(life({ roomLateRound: -1 })).toContain('life.roomLateRound must be a whole, non-negative number');
-    expect(life({ roomLateStatus: 0.5 })).toContain('life.roomLateStatus must be a whole number');
-    expect(life({ roomLateStatus: -3 })).toEqual([]);
+    // A way of living may take status away, as long as the frugal steps start from it.
+    expect(life({ lifestyleStatus: [-3, 0, 3, 8], agedStatus: { room: [{ fromRound: 0, status: 0 }], frugal: [{ fromRound: 0, status: -3 }] } })).toEqual([]);
+    expect(life({ lifestyleStatus: [-3, 0, 3, 8] })).toContain('life.agedStatus.frugal must start at the status of the start');
+    const aged = (room: unknown) => life({ agedStatus: { room, frugal: [{ fromRound: 0, status: 0 }] } });
+    expect(aged([{ fromRound: 1, status: 0 }])).toContain('life.agedStatus.room must be steps from round 0, later and never better');
+    expect(aged([{ fromRound: 0, status: 0 }, { fromRound: 2, status: 1 }])).toContain('life.agedStatus.room must be steps from round 0, later and never better');
+    expect(aged([{ fromRound: 0, status: -1 }])).toContain('life.agedStatus.room must start at the status of the start');
+    expect(aged([{ fromRound: 0, status: 0 }, { fromRound: 2, status: -3 }])).toEqual([]);
     expect(life({ itemFinanceDownPct: 101 })).toContain('life.itemFinanceDownPct must be a whole number from 0 to 100');
     expect(life({ itemFinanceMinPrice: -1 })).toContain('life.itemFinanceMinPrice must be a whole, non-negative amount');
     expect(life({ insurancePremiumBp: { health: 400, home: 300, life: 200 } })).toContain(

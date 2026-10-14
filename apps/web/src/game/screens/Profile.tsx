@@ -227,11 +227,12 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
         <p className="text-[14px] leading-snug">{t('aboutLifestyle')}</p>
         <ul className="flex flex-col gap-2">
           {text.lifestyleTiers.map((name, tier) => (
-            <Choice key={tier} icon={lifestyleArt[tier]} name={name} cost={perYear(living.tiers[tier])} status={content.life.lifestyleStatus[tier]} on={tier === p.lifestyleTier} onLabel={t('yours')}
+            <Choice key={tier} icon={lifestyleArt[tier]} name={name} cost={perYear(living.tiers[tier])} status={living.lifestyleStatus[tier]} on={tier === p.lifestyleTier} onLabel={t('yours')}
               disabled={tier < p.life.minLifestyleTier}
               onPick={now ? () => setOrder((order) => order.type === 'setLifestyle', tier === now.lifestyleTier ? null : { type: 'setLifestyle', tier: tier as LifestyleTier }) : undefined}
             >
               {tier < p.life.minLifestyleTier ? <p className="mt-1 text-[12px] text-wine-300">{life('tierFloor')}</p> : null}
+              {tier === 0 && living.worse.frugal ? <p className="mt-1 text-[12px] text-wine-300">{life('frugalLate', { age: ageAt(content, living.worse.frugal.fromRound), n: -living.worse.frugal.status })}</p> : null}
             </Choice>
           ))}
         </ul>
@@ -263,8 +264,8 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
             />
           ))}
         </ul>
-        {living.roomLateFromRound !== null ? (
-          <p className="text-[12px] text-wine-300">{life('roomLate', { age: ageAt(content, living.roomLateFromRound), n: -living.roomLateStatus })}</p>
+        {living.worse.room ? (
+          <p className="text-[12px] text-wine-300">{life('roomLate', { age: ageAt(content, living.worse.room.fromRound), n: -living.worse.room.status })}</p>
         ) : null}
         <p className="text-[12px] text-ink-300">{t('rentCost')}</p>
       </>

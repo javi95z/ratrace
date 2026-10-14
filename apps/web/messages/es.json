@@ -413,7 +413,7 @@
       "tier": "Cómo vives",
       "tierFloor": "Tu vida no permite menos que esto.",
       "tierStatus": "Estatus:",
-      "roomLate": "Desde los {age} años, vivir en una habitación resta {n} de estatus.",
+      "roomLate": "Desde los {age} años, la habitación resta {n} de estatus.",
       "home": "Dónde vives",
       "ownerNote": "Vives en una casa tuya, así que no pagas alquiler.",
       "insurance": "Seguros",
@@ -441,7 +441,8 @@
       "movePartner": "Tu pareja pasará {years} años sin sueldo mientras encuentra trabajo.",
       "learn": "Aprender",
       "learnAbout": "Cada una cuesta 1 de foco y no necesita trabajo. Gestión solo se aprende llevando un negocio.",
-      "learnHint": "+{n} de {skill} · nivel {level}"
+      "learnHint": "+{n} de {skill} · nivel {level}",
+      "frugalLate": "Desde los {age} años, el estilo austero resta {n}."
     },
     "shop": {
       "status": "Estatus +{n}",

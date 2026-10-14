@@ -4,7 +4,7 @@ import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
-import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
 import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
 import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
@@ -16,7 +16,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StudyAction, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -311,18 +311,22 @@ export interface LivingQuote {
   tiers: [Cents, Cents, Cents, Cents];
   /** Yearly living cost in a rented room and in a rented flat, at the current lifestyle. Null for an owner-occupier. */
   rentTiers: [Cents, Cents] | null;
-  /** The status of a rented room and of a rented flat, as of this round. */
+  /** The status of a rented room and of a rented flat, and of each way of living, as of this round. */
   rentStatus: [number, number];
-  /** The round from which a rented room has the status of someone no longer young, or null once it has come. */
-  roomLateFromRound: number | null;
-  /** The status a rented room will have from that round on. */
-  roomLateStatus: number;
+  lifestyleStatus: [number, number, number, number];
+  /** When a rented room and the frugal way of living next cost more status, and how much, or null once they cost the most. */
+  worse: { room: StatusStep | null; frugal: StatusStep | null };
   /** Yearly premium of each insurance on its own, at today's prices. */
   insurance: Record<InsuranceKind, Cents>;
 }
 
 export function quoteLiving(content: Content, view: GameView): LivingQuote {
   const p = view.player;
+  // A step that comes only after the last round is no step at all.
+  const soon = (steps: readonly StatusStep[]) => {
+    const next = nextStatusStep(steps, view.round);
+    return next !== null && next.fromRound < content.rounds ? next : null;
+  };
   const world = view.timeline[view.round];
   const atTier = (lifestyleTier: LifestyleTier) => livingCostAnnual({ ...p, lifestyleTier }, content, world);
   const atRent = (rentTier: RentTier) => livingCostAnnual({ ...p, life: { ...p.life, rentTier } }, content, world);
@@ -332,8 +336,8 @@ export function quoteLiving(content: Content, view: GameView): LivingQuote {
     tiers: [atTier(0), atTier(1), atTier(2), atTier(3)],
     rentTiers: ownsHome(p) ? null : [atRent(0), atRent(1)],
     rentStatus: rentStatusAt(content, view.round),
-    roomLateFromRound: view.round < content.life.roomLateRound && content.life.roomLateRound < content.rounds ? content.life.roomLateRound : null,
-    roomLateStatus: content.life.roomLateStatus,
+    lifestyleStatus: lifestyleStatusAt(content, view.round),
+    worse: { room: soon(content.life.agedStatus.room), frugal: soon(content.life.agedStatus.frugal) },
     insurance: Object.fromEntries(INSURANCE_KINDS.map((kind) => [kind, premium(kind)])) as Record<InsuranceKind, Cents>,
   };
 }

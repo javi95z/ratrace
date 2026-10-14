@@ -900,7 +900,8 @@ function Lifestyle() {
           }))}
         />
         <p className="mt-2 text-[12px] text-ink-300">
-          {t('tierStatus')} {text.lifestyleTiers.map((name, tier) => `${name} ${points(content.life.lifestyleStatus[tier])}`).join(' · ')}
+          {t('tierStatus')} {text.lifestyleTiers.map((name, tier) => `${name} ${points(living.lifestyleStatus[tier])}`).join(' · ')}
+          {living.worse.frugal ? ` · ${t('frugalLate', { age: ageAt(content, living.worse.frugal.fromRound), n: -living.worse.frugal.status })}` : ''}
         </p>
         {p.life.minLifestyleTier > 0 ? <p className="mt-2 text-[12px] text-ink-300">{t('tierFloor')}</p> : null}
       </Panel>
@@ -916,7 +917,7 @@ function Lifestyle() {
           />
           <p className="mt-2 text-[12px] text-ink-300">
             {t('tierStatus')} {text.rentTiers.map((name, tier) => `${name} ${points(living.rentStatus[tier])}`).join(' · ')}
-            {living.roomLateFromRound !== null ? ` · ${t('roomLate', { age: ageAt(content, living.roomLateFromRound), n: -living.roomLateStatus })}` : ''}
+            {living.worse.room ? ` · ${t('roomLate', { age: ageAt(content, living.worse.room.fromRound), n: -living.worse.room.status })}` : ''}
           </p>
           </>
         ) : (

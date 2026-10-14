@@ -2,7 +2,7 @@ import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemDef, ItemPerks, PlayerState, Property, Regime } from '../types';
+import type { Content, InsuranceKind, ItemDef, ItemPerks, PlayerState, Property, Regime, StatusStep } from '../types';
 import { skillLevel } from './skills';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -143,10 +143,27 @@ export interface StatusParts {
 }
 
 /** Status by source. Within one ladder the best item counts in full and the others in part. */
-/** The status each way of renting gives in a round: a room stops being neutral once the player is no longer young. */
+/** The status of a step list in a round: the last step that has begun. */
+export function statusStepAt(steps: readonly StatusStep[], round: number): number {
+  let status = steps[0]?.status ?? 0;
+  for (const step of steps) if (round >= step.fromRound) status = step.status;
+  return status;
+}
+
+/** The next step of a list after a round, or null when none is left. */
+export function nextStatusStep(steps: readonly StatusStep[], round: number): StatusStep | null {
+  return steps.find((step) => step.fromRound > round) ?? null;
+}
+
+/** The status each way of renting gives in a round: a room costs more of it the older the player is. */
 export function rentStatusAt(content: Content, round: number): [number, number] {
-  const [room, flat] = content.life.rentTierStatus;
-  return [round >= content.life.roomLateRound ? content.life.roomLateStatus : room, flat];
+  return [statusStepAt(content.life.agedStatus.room, round), content.life.rentTierStatus[1]];
+}
+
+/** The status each way of living gives in a round: the frugal way costs more of it the older the player is. */
+export function lifestyleStatusAt(content: Content, round: number): [number, number, number, number] {
+  const [, normal, comfortable, lavish] = content.life.lifestyleStatus;
+  return [statusStepAt(content.life.agedStatus.frugal, round), normal, comfortable, lavish];
 }
 
 export function statusParts(p: PlayerState, content: Content, round: number): StatusParts {
@@ -176,7 +193,7 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     home: home ? propertyTypeOf(content, home.typeId).status : rentStatusAt(content, round)[life.rentTier],
     job: life.career ? levelOf(content, life.career).status : 0,
     city: cityOf(content, p.cityId).prestige,
-    lifestyle: rules.lifestyleStatus[p.lifestyleTier],
+    lifestyle: lifestyleStatusAt(content, round)[p.lifestyleTier],
     bonus: life.bonusStatus,
     network: skillLevel(p, 'network', content) * rules.skills.networkStatus,
   };

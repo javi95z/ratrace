@@ -87,13 +87,13 @@ describe('status', () => {
     expect(deriveStatus(life({}, { bonusStatus: -50 }).player, content, 0)).toBe(0);
   });
 
-  it('counts a rented room as neutral while the player is young, and against them from the round the rules name', () => {
+  it('counts a rented room as neutral while the player is young, and against them more at each step the rules name', () => {
     const late = fixtureContent();
-    late.life.roomLateRound = 3;
-    late.life.roomLateStatus = -4;
+    late.life.agedStatus.room = [{ fromRound: 0, status: 0 }, { fromRound: 3, status: -4 }, { fromRound: 9, status: -9 }];
     const room = life({ career: { id: 'office', level: 2 }, rentTier: 0 }).player;
     const flat = life({ career: { id: 'office', level: 2 }, rentTier: 1 }).player;
-    expect([2, 3, 9].map((round) => deriveStatus(room, late, round))).toEqual([6, 2, 2]);
+    expect([2, 3, 9].map((round) => deriveStatus(room, late, round))).toEqual([6, 2, 0]);
+    expect(statusParts(room, late, 9).home).toBe(-9);
     expect([2, 3].map((round) => statusParts(room, late, round).home)).toEqual([0, -4]);
     // A flat is a flat at any age, and so is a home of one's own.
     expect([2, 3].map((round) => statusParts(flat, late, round).home)).toEqual([2, 2]);
@@ -141,9 +141,10 @@ describe('status', () => {
     expect(renewed.player.life.items[0].age).toBe(1);
   });
 
-  it('loses what a way of living below the ordinary takes, and shows that part as it is', () => {
+  it('loses what a way of living below the ordinary takes, more as the years go by, and shows that part as it is', () => {
     const lean = fixtureContent();
     lean.life.lifestyleStatus = [-4, 0, 0, 9];
+    lean.life.agedStatus.frugal = [{ fromRound: 0, status: -4 }, { fromRound: 3, status: -7 }];
     const at = (lifestyleTier: 0 | 1) => {
       const p = structuredClone(life({ career: { id: 'office', level: 2 }, rentTier: 0 }).player);
       p.lifestyleTier = lifestyleTier;
@@ -152,6 +153,9 @@ describe('status', () => {
     expect(deriveStatus(at(1), lean, 0)).toBe(6);
     expect(deriveStatus(at(0), lean, 0)).toBe(2);
     expect(statusParts(at(0), lean, 0).lifestyle).toBe(-4);
+    expect(statusParts(at(0), lean, 3).lifestyle).toBe(-7);
+    // The ordinary way of living costs nothing at any age.
+    expect(statusParts(at(1), lean, 9).lifestyle).toBe(0);
   });
 
   it('says where it comes from, part by part', () => {
