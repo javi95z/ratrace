@@ -6,7 +6,7 @@
   "scripts": {
     "sprites": "tsx scripts/sprites.ts",
     "predev": "tsx scripts/sprites.ts",
-    "dev": "next dev",
+    "dev": "next dev -p 3010",
     "prebuild": "tsx scripts/sprites.ts",
     "build": "next build",
     "start": "next start",
