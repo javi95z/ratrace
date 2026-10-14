@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
+import { assetKind, cityIcon, crestArt, debtArt, focusArt, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
@@ -978,7 +978,10 @@ function SecondHand({ used, onBought }: { used: UsedQuote; onBought(): void }) {
   const { content, text, fmt } = useWords();
   return (
     <section aria-label={t('usedTitle')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
-      <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-200">{t('usedTitle')}</p>
+      <p className="pixel flex items-center gap-2 text-[14px] uppercase tracking-[0.1em] text-gold-200">
+        <Sprite id={USED_ART} />
+        {t('usedTitle')}
+      </p>
       <div className="flex flex-wrap justify-center gap-1.5">
         <Tag tone="good">{t('status', { n: used.status })}</Tag>
         <Tag>{t('usedAge', { years: used.ageRounds * content.yearsPerRound })}</Tag>

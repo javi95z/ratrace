@@ -1,5 +1,6 @@
 'use client';
 
+import { businessArt } from '@ratrace/content';
 import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
@@ -13,7 +14,6 @@ import { useShown } from './Hud';
 type Owned = BusinessesQuote['owned'][number];
 type Kind = BusinessesQuote['kinds'][number];
 
-const ICON = 'icon.business';
 const signedPct = (pct: number) => (pct > 0 ? `+${pct}` : pct < 0 ? `−${-pct}` : '0');
 
 /**
@@ -69,7 +69,7 @@ export function BusinessTab() {
               <li key={business.id} className="border-t-2 border-night-900 first:border-t-0">
                 <button type="button" aria-haspopup="dialog" onClick={() => setOpen(business.id)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
                   <Bare className="size-9">
-                    <Sprite id={ICON} />
+                    <Sprite id={businessArt(business.typeId)} />
                   </Bare>
                   <span className="min-w-0 flex-1">
                     <span className="pixel block truncate text-[16px]">{text.businessTypes[business.typeId].name}</span>
@@ -93,8 +93,13 @@ export function BusinessTab() {
         <ul className="flex flex-col">
           {offered.map((kind) => (
             <li key={kind.typeId} className="border-t-2 border-night-900 py-3 first:border-t-0 first:pt-0 last:pb-0">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="pixel text-[16px]">{text.businessTypes[kind.typeId].name}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex min-w-0 items-center gap-2">
+                  <Bare className="size-8">
+                    <Sprite id={businessArt(kind.typeId)} />
+                  </Bare>
+                  <span className="pixel text-[16px]">{text.businessTypes[kind.typeId].name}</span>
+                </span>
                 <span className="pixel shrink-0 text-[14px] text-gold-500">{t('from', { amount: fmt.compact(kind.minCapital) })}</span>
               </div>
               <p className="mt-0.5 text-[13px] leading-snug text-ink-200">{text.businessTypes[kind.typeId].blurb}</p>
@@ -165,7 +170,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={ICON} scale={2} />
+            <Sprite id={businessArt(business.typeId)} scale={2} />
           </Bare>
           <div className="min-w-0">
             <p className="pixel text-[22px] leading-none text-gold-500">{fmt.money(business.capital)}</p>

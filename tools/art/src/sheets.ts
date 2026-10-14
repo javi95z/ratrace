@@ -173,6 +173,16 @@ export const SHEETS: SheetSpec[] = [
       'icon.bal_investments', 'icon.bal_property', 'icon.bal_things', 'icon.bal_debts',
     ],
   },
+  {
+    // Each kind of business, each skill and money sense, the second-hand shop, and a life beside others.
+    file: 'icons/icons-08', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
+    ids: [
+      'icon.biz_services', 'icon.biz_shop', 'icon.biz_app', 'icon.biz_bar',
+      'icon.biz_franchise', 'icon.skill_negotiation', 'icon.skill_languages', 'icon.skill_network',
+      'icon.skill_management', 'icon.skill_health', 'icon.skill_finance', 'icon.used',
+      'icon.repair_car', 'icon.repair', 'icon.repair_watch', 'icon.percentile',
+    ],
+  },
   // The frame of the portrait, by status: plain, bronze, silver, gold. The middle of each is clear.
   // Frames and loops share the icons' palette, though not their size: a group of their own would need every palette rebuilt.
   { file: 'icons/frames-01', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 80, height: 80, ids: ['frame.plain', 'frame.bronze', 'frame.silver', 'frame.gold'] },

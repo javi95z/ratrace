@@ -1129,6 +1129,31 @@
     "w": 32,
     "h": 32
   },
+  "icon.biz_app": {
+    "src": "icons/icon.biz_app.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.biz_bar": {
+    "src": "icons/icon.biz_bar.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.biz_franchise": {
+    "src": "icons/icon.biz_franchise.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.biz_services": {
+    "src": "icons/icon.biz_services.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.biz_shop": {
+    "src": "icons/icon.biz_shop.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.bond": {
     "src": "icons/icon.bond.png",
     "w": 32,
@@ -1464,6 +1489,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.percentile": {
+    "src": "icons/icon.percentile.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.property": {
     "src": "icons/icon.property.png",
     "w": 32,
@@ -1484,6 +1514,21 @@
     "w": 32,
     "h": 32
   },
+  "icon.repair": {
+    "src": "icons/icon.repair.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.repair_car": {
+    "src": "icons/icon.repair_car.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.repair_watch": {
+    "src": "icons/icon.repair_watch.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.settings": {
     "src": "icons/icon.settings.png",
     "w": 32,
@@ -1496,6 +1541,36 @@
   },
   "icon.skill": {
     "src": "icons/icon.skill.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_finance": {
+    "src": "icons/icon.skill_finance.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_health": {
+    "src": "icons/icon.skill_health.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_languages": {
+    "src": "icons/icon.skill_languages.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_management": {
+    "src": "icons/icon.skill_management.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_negotiation": {
+    "src": "icons/icon.skill_negotiation.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.skill_network": {
+    "src": "icons/icon.skill_network.png",
     "w": 32,
     "h": 32
   },
@@ -1551,6 +1626,11 @@
   },
   "icon.use_study": {
     "src": "icons/icon.use_study.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.used": {
+    "src": "icons/icon.used.png",
     "w": 32,
     "h": 32
   },

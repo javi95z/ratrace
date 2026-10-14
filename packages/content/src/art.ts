@@ -173,16 +173,23 @@ export const insuranceArt: Record<InsuranceKind, string> = {
   life: 'icon.insure_life',
   liability: 'icon.insure_liability',
 };
-/** The sign of each skill beyond the career, and of money sense. Drawn from the career signs until skills have their own. */
+/** The sign of each skill beyond the career, and of money sense. */
 export const skillArt: Record<SkillId | 'finance' | 'career', string> = {
   career: 'icon.skill',
-  finance: 'icon.career_finance',
-  negotiation: 'icon.career_sales',
-  languages: 'icon.city',
-  network: 'icon.career_influencer',
-  management: 'icon.business',
-  health: 'icon.insure_health',
+  finance: 'icon.skill_finance',
+  negotiation: 'icon.skill_negotiation',
+  languages: 'icon.skill_languages',
+  network: 'icon.skill_network',
+  management: 'icon.skill_management',
+  health: 'icon.skill_health',
 };
+/** The sign of each kind of business. */
+export const businessArt = (typeId: string): string => `icon.biz_${typeId}`;
+/** The second-hand shop: its sign, and the repair of a thing of each ladder, with a sign for any other. */
+export const USED_ART = 'icon.used';
+export const repairArt = (ladder: string): string => (ladder === 'car' ? 'icon.repair_car' : ladder === 'watch' ? 'icon.repair_watch' : 'icon.repair');
+/** A life beside the lives of others. */
+export const PERCENTILE_ART = 'icon.percentile';
 export const focusArt: Record<FocusAction, string> = {
   overtime: 'icon.focus_overtime',
   studyCareer: 'icon.focus_study',

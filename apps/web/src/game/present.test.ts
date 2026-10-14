@@ -74,8 +74,8 @@ describe('a business, in words', () => {
     expect(tags({ business: { typeId: 'bar', capital: 4_000_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar' }]);
     expect(tags({ sellBusinesses: { pricePct: 170 } })).toEqual([{ tone: 'good', text: 'You sell your businesses for 170% of what they are worth' }]);
     const notes = (events: GameEvent[]) => roundNotes(words('en'), t('en', 'resolve'), events);
-    expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'icon.business', title: 'You sold your business (Online shop) for $45,000.' }]);
-    expect(notes([{ kind: 'businessClosed', typeId: 'bar' }])).toEqual([{ tone: 'bad', icon: 'icon.business', title: 'Your business has closed: Bar.', hint: 'There was nothing left in it.' }]);
+    expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'icon.biz_shop', title: 'You sold your business (Online shop) for $45,000.' }]);
+    expect(notes([{ kind: 'businessClosed', typeId: 'bar' }])).toEqual([{ tone: 'bad', icon: 'icon.biz_bar', title: 'Your business has closed: Bar.', hint: 'There was nothing left in it.' }]);
   });
 });
 
@@ -109,7 +109,7 @@ describe('an inspection, told after the round', () => {
 describe('a repair, told after the round', () => {
   it('names the thing bought second hand and what its repair cost, as bad news', () => {
     const [note] = roundNotes(words('en'), t('en', 'resolve'), [{ kind: 'repair', itemId: 'car_seat_ibiza', amount: 144_000 }]);
-    expect(note).toMatchObject({ tone: 'bad', icon: 'car.seat_ibiza', title: 'Repair for your SEAT Ibiza: $1,440.' });
+    expect(note).toMatchObject({ tone: 'bad', icon: 'icon.repair_car', title: 'Repair for your SEAT Ibiza: $1,440.' });
   });
 });
 

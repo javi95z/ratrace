@@ -1,4 +1,4 @@
-import { careerArt, cityIcon, itemArt, skillArt, START_AGE } from '@ratrace/content';
+import { businessArt, careerArt, cityIcon, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -256,7 +256,7 @@ export interface RoundNote {
 const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
-export function roundNotes({ text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
+export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
   const told: Array<{ rank: number; note: RoundNote }> = [];
   const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
   for (const event of events) {
@@ -285,16 +285,16 @@ export function roundNotes({ text, names, fmt }: Words, t: Translate, events: Ga
         });
         break;
       case 'repair':
-        add(event, { tone: 'bad', icon: itemArt(event.itemId), title: t('repair', { item: names.items[event.itemId], amount: fmt.money(event.amount) }) });
+        add(event, { tone: 'bad', icon: repairArt(content.items.find((item) => item.id === event.itemId)?.ladder ?? ''), title: t('repair', { item: names.items[event.itemId], amount: fmt.money(event.amount) }) });
         break;
       case 'skill':
         add(event, { tone: 'good', icon: skillArt[event.skill], title: t('skill', { skill: text.skills[event.skill], level: event.level }) });
         break;
       case 'businessSold':
-        add(event, { tone: 'good', icon: 'icon.business', title: t('businessSold', { name: text.businessTypes[event.typeId]?.name ?? event.typeId, amount: fmt.money(event.price) }) });
+        add(event, { tone: 'good', icon: businessArt(event.typeId), title: t('businessSold', { name: text.businessTypes[event.typeId]?.name ?? event.typeId, amount: fmt.money(event.price) }) });
         break;
       case 'businessClosed':
-        add(event, { tone: 'bad', icon: 'icon.business', title: t('businessClosed', { name: text.businessTypes[event.typeId]?.name ?? event.typeId }), hint: t('businessClosedHint') });
+        add(event, { tone: 'bad', icon: businessArt(event.typeId), title: t('businessClosed', { name: text.businessTypes[event.typeId]?.name ?? event.typeId }), hint: t('businessClosedHint') });
         break;
       case 'marginCall':
         add(event, {

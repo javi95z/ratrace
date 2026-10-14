@@ -1431,6 +1431,86 @@
       "width": 32,
       "height": 32
     },
+    "icon.biz_services": {
+      "file": "icons/icon.biz_services.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.biz_shop": {
+      "file": "icons/icon.biz_shop.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.biz_app": {
+      "file": "icons/icon.biz_app.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.biz_bar": {
+      "file": "icons/icon.biz_bar.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.biz_franchise": {
+      "file": "icons/icon.biz_franchise.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_negotiation": {
+      "file": "icons/icon.skill_negotiation.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_languages": {
+      "file": "icons/icon.skill_languages.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_network": {
+      "file": "icons/icon.skill_network.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_management": {
+      "file": "icons/icon.skill_management.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_health": {
+      "file": "icons/icon.skill_health.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.skill_finance": {
+      "file": "icons/icon.skill_finance.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.used": {
+      "file": "icons/icon.used.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.repair_car": {
+      "file": "icons/icon.repair_car.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.repair": {
+      "file": "icons/icon.repair.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.repair_watch": {
+      "file": "icons/icon.repair_watch.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.percentile": {
+      "file": "icons/icon.percentile.png",
+      "width": 32,
+      "height": 32
+    },
     "frame.plain": {
       "file": "icons/frame.plain.png",
       "width": 80,
