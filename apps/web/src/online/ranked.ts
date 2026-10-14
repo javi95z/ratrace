@@ -24,6 +24,7 @@ interface RunRow {
   cities: string[];
   history: number[];
   finished_at: string;
+  challenge?: string | null;
 }
 const runOf = (raw: unknown): RankedRun | null => {
   if (!isRecord(raw) || typeof raw.id !== 'string') return null;
@@ -31,6 +32,7 @@ const runOf = (raw: unknown): RankedRun | null => {
   return {
     id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
     escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
+    challenge: typeof row.challenge === 'string' ? row.challenge : null,
   };
 };
 
@@ -67,8 +69,8 @@ export function rankedApi(call: RankedCall): RankedApi {
   };
 
   return {
-    async start(lifeId, versions, replace) {
-      const reply = await ask({ action: 'start', lifeId, engineVersion: versions.engine, contentVersion: versions.content, ...(replace ? { replace } : {}) });
+    async start(lifeId, versions, replace, challenge) {
+      const reply = await ask({ action: 'start', lifeId, engineVersion: versions.engine, contentVersion: versions.content, ...(replace ? { replace } : {}), ...(challenge ? { challenge } : {}) });
       const standing = standingOf(reply.body);
       if (reply.status === 200 && standing !== null && isRecord(reply.body) && typeof reply.body.gameId === 'string') return { ...standing, gameId: reply.body.gameId };
       const word = wordOf(reply.body);

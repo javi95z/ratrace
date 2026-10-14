@@ -18,4 +18,6 @@ export type { Milestone, Story } from './story';
 export { unlockedLives } from './unlocks';
 export type { Played } from './unlocks';
 export { assetKind } from './kinds';
+export { CHALLENGE_DEBT, CHALLENGE_RULES, challengeLimits, challengeOf, challengeStart, weekOf, weekStart } from './challenges';
+export type { Challenge, ChallengeRule } from './challenges';
 export type { AssetKind } from './kinds';

@@ -1,5 +1,6 @@
 import type { Journal, LifeDef, LifeRecord, Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, Order, RoundChoices, WorldState } from '@ratrace/engine';
+import { isWeek, startFor } from './challenge';
 import { StaleSession, Unreachable } from './errors';
 import type { RankedLifeInTheWay } from './errors';
 import { tellProfile } from './profile';
@@ -28,6 +29,8 @@ export interface RankedRun {
   cities: string[];
   history: number[];
   finishedAt: string;
+  /** The week whose challenge this life was the attempt at, or null. */
+  challenge: string | null;
 }
 
 /** What one step answers: what changed, and no more. `world` is the world of the round that has just begun, if one has. */
@@ -49,7 +52,7 @@ export interface RankedApi {
    * Starts a life. A player has one ranked life in progress: with another in the way this throws
    * `RankedInProgress`, unless `replace` names that very life, which is then given up.
    */
-  start(lifeId: string, versions: { engine: string; content: string }, replace?: string | null): Promise<RankedStanding & { gameId: string }>;
+  start(lifeId: string, versions: { engine: string; content: string }, replace?: string | null, challenge?: string): Promise<RankedStanding & { gameId: string }>;
   /** The life as it stands. `gone` if it was given up, or is nobody's. */
   view(gameId: string): Promise<(RankedStanding & { run: RankedRun | null }) | 'gone'>;
   /** Answers the next card, as step number `step`. `moved` if the life is not where this client thinks it is. */
@@ -71,7 +74,7 @@ const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'obj
 /** The device's note of a ranked life, if that is what it holds. What the note says of the game is the server's to confirm. */
 export function rankedOf(raw: unknown): RankedGame | null {
   if (!isRecord(raw) || raw.format !== SAVE_FORMAT || raw.ranked !== true) return null;
-  const { gameId, lifeId, engineVersion, contentVersion, step, view, journal, history, bankruptcies, updatedAt } = raw;
+  const { gameId, lifeId, engineVersion, contentVersion, step, view, journal, history, bankruptcies, updatedAt, challenge } = raw;
   if (typeof gameId !== 'string' || typeof lifeId !== 'string' || typeof engineVersion !== 'string' || typeof contentVersion !== 'string') return null;
   const seen = isRecord(view) && isRecord(journal) && Array.isArray(view.timeline) && isRecord(view.player);
   return {
@@ -79,6 +82,7 @@ export function rankedOf(raw: unknown): RankedGame | null {
     ranked: true,
     gameId,
     lifeId,
+    ...(isWeek(challenge) ? { challenge } : {}),
     engineVersion,
     contentVersion,
     step: typeof step === 'number' && Number.isSafeInteger(step) && step >= 0 ? step : 0,
@@ -92,8 +96,22 @@ export function rankedOf(raw: unknown): RankedGame | null {
 }
 
 /** The note of a ranked life nobody on this device has seen yet: which life it is, and nothing of how it stands. */
-export function rankedNote(life: { gameId: string; lifeId: string; engineVersion: string; contentVersion: string }): RankedGame {
-  return { format: SAVE_FORMAT, ranked: true, gameId: life.gameId, lifeId: life.lifeId, engineVersion: life.engineVersion, contentVersion: life.contentVersion, step: 0, view: null, history: [], bankruptcies: 0, journal: null, updatedAt: 0 };
+export function rankedNote(life: { gameId: string; lifeId: string; engineVersion: string; contentVersion: string; challenge?: string | null }): RankedGame {
+  return {
+    format: SAVE_FORMAT,
+    ranked: true,
+    gameId: life.gameId,
+    lifeId: life.lifeId,
+    ...(isWeek(life.challenge) ? { challenge: life.challenge } : {}),
+    engineVersion: life.engineVersion,
+    contentVersion: life.contentVersion,
+    step: 0,
+    view: null,
+    history: [],
+    bankruptcies: 0,
+    journal: null,
+    updatedAt: 0,
+  };
 }
 
 type Seen = RankedGame & { view: GameView; journal: Journal };
@@ -130,6 +148,10 @@ class RankedSession implements GameSession {
 
   get lifeId(): string {
     return this.game.lifeId;
+  }
+
+  get challenge(): string | undefined {
+    return this.game.challenge;
   }
 
   view(): GameView {
@@ -245,6 +267,7 @@ class RankedSession implements GameSession {
       cities: run.cities,
       verified: false,
       ranked: true,
+      ...(run.challenge ? { challenge: run.challenge } : {}),
     };
   }
 }
@@ -270,15 +293,21 @@ export class RankedSessions {
    * begins as a casual one; and `RankedInProgress` if the player has another in progress that is
    * not the one named in `replace`, which is theirs to decide about.
    */
-  async start(lifeId: string, replace: string | null = null): Promise<GameSession> {
+  async start(lifeId: string, replace: string | null = null, challenge?: string): Promise<GameSession> {
     const life = this.lives.find((candidate) => candidate.id === lifeId);
     if (!life) throw new Error(`unknown life: ${lifeId}`);
-    // Which lives a player may choose is decided here, as for a casual life, and again by the server.
-    if (life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
+    // Which lives a player may choose is decided here, as for a casual life, and again by the server. A week's challenge is open to everyone.
+    if (challenge !== undefined) {
+      if (startFor(this.lives, life, challenge) === null) throw new Error(`not the life of the challenge of ${challenge}: ${lifeId}`);
+    } else if (life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
     const api = this.api();
     if (api === null) throw new Unreachable('nobody is signed in');
-    const begun = await api.start(lifeId, this.versions, replace);
-    const session = this.open({ format: SAVE_FORMAT, ranked: true, gameId: begun.gameId, lifeId, engineVersion: this.versions.engine, contentVersion: this.versions.content, updatedAt: this.deps.now() }, begun, false);
+    const begun = await api.start(lifeId, this.versions, replace, challenge);
+    const session = this.open(
+      { format: SAVE_FORMAT, ranked: true, gameId: begun.gameId, lifeId, ...(challenge !== undefined ? { challenge } : {}), engineVersion: this.versions.engine, contentVersion: this.versions.content, updatedAt: this.deps.now() },
+      begun,
+      false,
+    );
     await session.persist();
     return session;
   }

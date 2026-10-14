@@ -10,11 +10,12 @@ import { Bare, Button, Panel, Row } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
 import { Sprite } from '@/ui/Sprite';
+import { ChallengeBoard } from './Challenge';
 import { Medal } from './Medal';
 import { WorthGraph } from './WorthGraph';
 
-type Kind = 'all' | 'week' | 'friends';
-const KINDS: readonly Kind[] = ['all', 'week', 'friends'];
+type Kind = 'all' | 'week' | 'friends' | 'challenge';
+const KINDS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
 /** How a name is written. The database checks it again, and what it says. */
 const NAME = /^[A-Za-z0-9_]{3,16}$/;
 const FIELD = 'sunk min-h-11 w-full bg-night-900 px-3 text-[16px] text-cream';
@@ -293,8 +294,12 @@ export function Rankings() {
   /** `undefined` while the answer is on its way; null when it could not be read. */
   const rows = answer?.to === asking ? answer.rows : undefined;
 
+  // A link may open the rankings on the week's challenge.
   useEffect(() => {
-    if (community === null) return;
+    if (new URLSearchParams(window.location.search).get('tab') === 'challenge') setKind('challenge');
+  }, []);
+  useEffect(() => {
+    if (community === null || kind === 'challenge') return;
     let wanted = true;
     void community.ranking({ period: kind === 'week' ? 'week' : 'all', friends: kind === 'friends', lifeId }).then((found) => {
       if (wanted) setAnswer({ to: asking, rows: found });
@@ -325,48 +330,54 @@ export function Rankings() {
             <div className="-mx-3">
               <Tabs<Kind> label={t('kinds')} idPrefix={ids} tabs={KINDS.map((id) => ({ id, label: t(id) }))} value={kind} onChange={setKind} />
             </div>
-            <div role="tabpanel" id={`${ids}-panel-${kind}`} aria-labelledby={`${ids}-tab-${kind}`} className="flex flex-col gap-2 pt-1">
-              <p className="text-[12px] text-ink-300">{t('hint')}</p>
-              <Picker<string | null>
-                label={t('life')}
-                value={lifeId}
-                onChange={setLifeId}
-                closeLabel={common('close')}
-                options={[{ value: null, label: t('anyLife'), icon: 'icon.trophy' }, ...lives.map((life) => ({ value: life.id, label: text.lives[life.id]?.name ?? life.id, icon: lifeIcon(life.id) }))]}
-              />
-              {rows === undefined ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
-              {rows === null ? (
-                <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">
-                  {t('unreachable')}
-                </p>
-              ) : null}
-              {rows?.length === 0 ? <p className="frame bg-night-700 p-3 text-[14px] text-ink-200">{t('empty')}</p> : null}
-              {rows && rows.length > 0 ? (
-                <ol aria-label={t(kind)} className="flex flex-col gap-1.5">
-                  {rows.map((row) => (
-                    <li key={row.userId} aria-current={row.mine ? 'true' : undefined}>
-                      {/* A line opens the life behind it. */}
-                      <button type="button" aria-haspopup="dialog" onClick={() => setOpened(row)} className={`bevel flex w-full items-center gap-3 px-3 py-2 text-left ${row.mine ? 'frame-gold bg-night-600' : 'bg-night-700'}`}>
-                        <span className={`pixel w-8 shrink-0 text-right text-[17px] ${PLACE[row.place] ?? 'text-ink-200'}`}>{row.place}</span>
-                        <Bare className="size-8">
-                          <Sprite id={lifeIcon(row.lifeId)} />
-                        </Bare>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[15px]">{nameOf(row)}</span>
-                          <span className="block truncate text-[12px] text-ink-300">
-                            {text.lives[row.lifeId]?.name ?? row.lifeId} · {fmt.day(row.finishedAt)}
+            {kind === 'challenge' ? (
+              <div role="tabpanel" id={`${ids}-panel-${kind}`} aria-labelledby={`${ids}-tab-${kind}`} className="pt-1">
+                <ChallengeBoard community={community} />
+              </div>
+            ) : (
+              <div role="tabpanel" id={`${ids}-panel-${kind}`} aria-labelledby={`${ids}-tab-${kind}`} className="flex flex-col gap-2 pt-1">
+                <p className="text-[12px] text-ink-300">{t('hint')}</p>
+                <Picker<string | null>
+                  label={t('life')}
+                  value={lifeId}
+                  onChange={setLifeId}
+                  closeLabel={common('close')}
+                  options={[{ value: null, label: t('anyLife'), icon: 'icon.trophy' }, ...lives.map((life) => ({ value: life.id, label: text.lives[life.id]?.name ?? life.id, icon: lifeIcon(life.id) }))]}
+                />
+                {rows === undefined ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
+                {rows === null ? (
+                  <p role="status" className="frame bg-wine-900 px-3 py-2 text-[14px]">
+                    {t('unreachable')}
+                  </p>
+                ) : null}
+                {rows?.length === 0 ? <p className="frame bg-night-700 p-3 text-[14px] text-ink-200">{t('empty')}</p> : null}
+                {rows && rows.length > 0 ? (
+                  <ol aria-label={t(kind)} className="flex flex-col gap-1.5">
+                    {rows.map((row) => (
+                      <li key={row.userId} aria-current={row.mine ? 'true' : undefined}>
+                        {/* A line opens the life behind it. */}
+                        <button type="button" aria-haspopup="dialog" onClick={() => setOpened(row)} className={`bevel flex w-full items-center gap-3 px-3 py-2 text-left ${row.mine ? 'frame-gold bg-night-600' : 'bg-night-700'}`}>
+                          <span className={`pixel w-8 shrink-0 text-right text-[17px] ${PLACE[row.place] ?? 'text-ink-200'}`}>{row.place}</span>
+                          <Bare className="size-8">
+                            <Sprite id={lifeIcon(row.lifeId)} />
+                          </Bare>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[15px]">{nameOf(row)}</span>
+                            <span className="block truncate text-[12px] text-ink-300">
+                              {text.lives[row.lifeId]?.name ?? row.lifeId} · {fmt.day(row.finishedAt)}
+                            </span>
                           </span>
-                        </span>
-                        <span className="pixel shrink-0 text-[18px]">{fmt.number(row.score)}</span>
-                        <span aria-hidden className="text-[11px] text-ink-300">
-                          ▸
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ol>
-              ) : null}
-            </div>
+                          <span className="pixel shrink-0 text-[18px]">{fmt.number(row.score)}</span>
+                          <span aria-hidden className="text-[11px] text-ink-300">
+                            ▸
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {kind === 'friends' ? <Following community={community} onChanged={again} /> : null}

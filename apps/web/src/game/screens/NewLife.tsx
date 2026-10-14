@@ -8,6 +8,7 @@ import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { WeeklyChallenge } from './Challenge';
 
 /** Choose who to be. A locked life shows what unlocks it. */
 export function NewLife() {
@@ -34,17 +35,25 @@ export function NewLife() {
   const [wantRanked, setWantRanked] = useState(true);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
+  /** The week's challenge asked for, the attempt or a practice, while the questions on the way to it are asked. Null for the life chosen below. */
+  const [challenge, setChallenge] = useState<{ lifeId: string; week: string; attempt: boolean } | null>(null);
 
-  /** Starts the chosen life. `replace` names the ranked life in progress elsewhere that the player has said may end for it. */
-  const begin = async (replace?: string) => {
+  /**
+   * Starts the chosen life, or the week's challenge when that is what was asked for. `replace` names
+   * the ranked life in progress elsewhere that the player has said may end for it.
+   */
+  const begin = async (replace?: string, asked = challenge) => {
     setAsking(false);
     setFailed(false);
     setAway(false);
     setStarting(true);
     try {
+      const options = asked
+        ? { ranked: asked.attempt && ranking === 'yes', challenge: asked.week, replace }
+        : { ranked: ranking === 'yes' && wantRanked, replace };
       // Nothing began if the player has a ranked life in progress somewhere else: they are asked what to do about it.
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
-      if (await start(chosen, { ranked: ranking === 'yes' && wantRanked, replace })) router.replace('/play');
+      if (await start(asked ? asked.lifeId : chosen, options)) router.replace('/play');
     } catch (error) {
       console.error('the life could not be started:', error);
       setFailed(true);
@@ -77,6 +86,16 @@ export function NewLife() {
         </Link>
         <h1 className="pixel text-[24px] text-gold-500">{t('title')}</h1>
       </div>
+
+      <WeeklyChallenge
+        starting={starting}
+        onStart={(week, attempt) => {
+          const asked = { lifeId: week.lifeId, week: week.week, attempt };
+          setChallenge(asked);
+          if (inProgress) setAsking(true);
+          else void begin(undefined, asked);
+        }}
+      />
 
       <div role="radiogroup" aria-label={t('title')} className="flex flex-col gap-3">
         {lives.map((life) => {
@@ -146,7 +165,16 @@ export function NewLife() {
           ) : null}
           {inProgress ? <p className="mb-2 text-center text-[12px] text-wine-300">{t('replace')}</p> : null}
           {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
-          <Button variant="primary" wide disabled={starting} onClick={() => (inProgress ? setAsking(true) : void begin())}>
+          <Button
+            variant="primary"
+            wide
+            disabled={starting}
+            onClick={() => {
+              setChallenge(null);
+              if (inProgress) setAsking(true);
+              else void begin(undefined, null);
+            }}
+          >
             {t('start')}
           </Button>
         </div>

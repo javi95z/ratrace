@@ -6,7 +6,6 @@ import { lifeBreaks } from './life/invariants';
 import type { Content, GameState, GameView } from './types';
 import { DEBT_KINDS } from './validate';
 
-
 /**
  * Lists every broken rule. An empty list means the state is sound.
  * `applyRound` runs this on the state it is given and on the state it returns,
@@ -28,6 +27,7 @@ export function findViewBreaks(content: Content, view: GameView): string[] {
 function breaksOf(content: Content, state: GameView, whole: GameState | null): string[] {
   const p = state.player;
   const breaks: string[] = [];
+  if (typeof state.limits !== 'object' || state.limits === null || Array.isArray(state.limits)) breaks.push('limits is not a record');
 
   const money: Array<[string, number]> = [
     ['cash', p.cash],

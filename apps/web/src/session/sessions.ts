@@ -17,13 +17,13 @@ export class GameSessions implements Sessions {
     private readonly versions: { engine: string; content: string },
   ) {}
 
-  async start(lifeId: string, options?: { ranked?: boolean; replace?: string }): Promise<GameSession> {
+  async start(lifeId: string, options?: { ranked?: boolean; replace?: string; challenge?: string }): Promise<GameSession> {
     const living = await this.livingRanked();
     if (options?.ranked === true && this.ranked.available()) {
       try {
         // The server ends the life it is told to and no other. The one this device is living is named: the player was
         // asked about it on the way here. Any other in progress is theirs to decide about, and comes back as a question.
-        return await this.ranked.start(lifeId, options.replace ?? living);
+        return await this.ranked.start(lifeId, options.replace ?? living, options.challenge);
       } catch (error) {
         // The server cannot take it now. A life always begins: this one on the device, and it says so.
         if (!(error instanceof Unreachable)) throw error;
@@ -31,7 +31,8 @@ export class GameSessions implements Sessions {
     }
     // Only now, with a life certain to begin in its place, is the ranked one this device was living given up.
     if (living !== null) await this.ranked.giveUp(living);
-    return this.local.start(lifeId);
+    // A challenge that cannot be the week's attempt is played as its practice.
+    return this.local.start(lifeId, options?.challenge === undefined ? undefined : { challenge: options.challenge });
   }
 
   async resume(): Promise<{ session: GameSession | null; lost: Lost | null }> {

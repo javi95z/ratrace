@@ -16,6 +16,7 @@ export { validateContent, validateStart } from './validate';
 export { headlineHeld } from './news';
 export { effectiveTax } from './tax';
 export { previewCard } from './life/cards';
+export { optionBreaks, orderBreaks } from './limits';
 export type { OptionPreview } from './life/cards';
 export { focusLeft, focusTotal, FOCUS_ACTIONS } from './life/orders';
 export { isStudy, levelOfPoints, pointsOfLevel, skillLevel, STUDY_OF } from './life/skills';

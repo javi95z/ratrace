@@ -1,3 +1,4 @@
+import { isWeek } from './challenge';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun } from './types';
 
@@ -35,6 +36,7 @@ export function readRun(raw: unknown): FinishedRun | null {
     cities: strings(raw.cities),
     verified: false,
     ...(raw.ranked === true ? { ranked: true as const } : {}),
+    ...(isWeek(raw.challenge) ? { challenge: raw.challenge } : {}),
   };
 }
 

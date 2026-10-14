@@ -1,6 +1,6 @@
 import { PRICE_LEVEL_START } from '../rates';
 import { netWorth } from '../selectors';
-import type { Condition, Content, PlayerState, SkillId, WorldState, WorldTrigger } from '../types';
+import type { Condition, Content, GameLimits, PlayerState, SkillId, WorldState, WorldTrigger } from '../types';
 import { homeOf } from './derive';
 import { hasFlag } from './flags';
 import { levelOfPoints } from './skills';
@@ -11,6 +11,8 @@ export interface Situation {
   /** The world of the current round. */
   world: WorldState;
   round: number;
+  /** What the game may not do; none when left out. */
+  limits?: GameLimits;
 }
 
 /** True when every part of the condition holds for the player. No condition always holds. */

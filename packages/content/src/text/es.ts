@@ -292,6 +292,7 @@ export const es: ContentText = {
     owned: 'Ya lo tienes.',
     cash: 'No puedes pagarlo, ni con tus ahorros.',
     insolvent: 'Debes más de lo que tienes, así que no cabe nada más en tu plan de pensiones.',
+    challenge: 'No en este reto: su regla lo prohíbe.',
   },
   reasons: {
     'bad-order': 'Esa orden no es válida.',
@@ -340,6 +341,7 @@ export const es: ContentText = {
     'bad-tier': 'Esa opción no existe.',
     'below-lifestyle-floor': 'No puedes vivir con menos que eso.',
     'unknown-insurance': 'Ese seguro no existe.',
+    'not-in-challenge': 'No en este reto: su regla lo prohíbe.',
     'preexisting-condition': 'Ninguna aseguradora cubre una enfermedad que ya has tenido.',
     'too-young-to-retire': 'Aún es pronto para jubilarte.',
     'unknown-city': 'Esa ciudad no existe.',

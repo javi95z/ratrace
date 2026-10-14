@@ -15,7 +15,7 @@ const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 0 }
 function setup(over: Partial<StartConfig> = {}, life: Partial<LifeStart> = {}, content: Content = fixtureContent()) {
   const world = generateTimeline('life-orders', content)[0];
   const p = fixturePlayer({ cash: 5_000_000, ...over, life: { ...office, ...life } }, content);
-  const ctx: OrderContext = { content, world, round: 0, tally: newTally() };
+  const ctx: OrderContext = { content, world, round: 0, tally: newTally(), limits: {} };
   const run = (order: unknown) => executeOrder(p, order, ctx);
   return { content, world, p, ctx, run };
 }

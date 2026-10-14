@@ -1,4 +1,5 @@
 import { coverShortfall } from '../debt';
+import { optionBreaks } from '../limits';
 import { cardOf } from '../lookup';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
@@ -15,6 +16,7 @@ const situationOf = (content: Content, state: GameView): Situation => ({
   content,
   world: state.timeline[state.round],
   round: state.round,
+  limits: state.limits,
 });
 
 /**
@@ -25,6 +27,8 @@ const situationOf = (content: Content, state: GameView): Situation => ({
 export function optionLock(p: PlayerState, card: CardDef, index: number, at: Situation): OptionLock | null {
   if (index === 0) return null;
   const option = card.options[index];
+  // What the game was started without is closed on a card too, whatever the dice would have made of it.
+  if (at.limits !== undefined && optionBreaks(option, at.limits)) return 'challenge';
   if (!conditionHolds(option.when, p, at)) {
     // Said apart when only a skill stands in the way: it is the one thing the player can work towards.
     const { minSkills, ...rest } = option.when ?? {};

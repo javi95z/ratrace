@@ -21,6 +21,7 @@ function setup(cash = 0) {
     world: timeline[0],
     round: 0,
     tally: newTally(),
+    limits: {},
   };
   return { content, timeline, p, ctx };
 }

@@ -33,7 +33,7 @@ describe('viewOf', () => {
   it('keeps the game as the player sees it and leaves out the seed, the random stream and every later world', () => {
     const state = played(3);
     const view = viewOf(state);
-    expect(Object.keys(view).sort()).toEqual(['answered', 'finished', 'hand', 'phase', 'player', 'round', 'timeline']);
+    expect(Object.keys(view).sort()).toEqual(['answered', 'finished', 'hand', 'limits', 'phase', 'player', 'round', 'timeline']);
     expect(view.timeline).toEqual(state.timeline.slice(0, 4));
     expect(view.player).toEqual(state.player);
     expect(view).toMatchObject({ round: 3, finished: false, phase: state.phase, hand: state.hand });

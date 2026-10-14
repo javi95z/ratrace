@@ -152,7 +152,7 @@ describe('what the cloud keeps of a player', () => {
     client.answers.games = { data: [gameRow], error: null };
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.playingGames()).toEqual([{ id: 'g-1', lifeId: 'nurse', engineVersion: '0.4.0', contentVersion: '1.3.0', seed: 'abc', round: 3, status: 'playing', log: [{ picks: [0], orders: [] }], stateHash: 'h-1', updatedAt: '2026-10-13T10:00:00Z' }]);
-    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at'], ['eq', 'mode', 'casual'], ['eq', 'status', 'playing'], ['order', 'updated_at', { ascending: false }], ['limit', 5]]]);
+    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at, challenge'], ['eq', 'mode', 'casual'], ['eq', 'status', 'playing'], ['order', 'updated_at', { ascending: false }], ['limit', 5]]]);
     client.answers.games = { data: null, error: new Error('offline') };
     await expect(cloud.playingGames()).rejects.toThrow('offline');
   });
@@ -161,7 +161,7 @@ describe('what the cloud keeps of a player', () => {
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.pushGame(upload)).toBe('saved');
     // Being played: a life another device gave up is taken up again by the one that still plays it.
-    expect(client.asked).toEqual([['games', ['upsert', { id: 'g-1', mode: 'casual', status: 'playing', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, log: upload.log, state_hash: 'h-1' }, { onConflict: 'id' }]]]);
+    expect(client.asked).toEqual([['games', ['upsert', { id: 'g-1', mode: 'casual', status: 'playing', life_id: 'nurse', engine_version: '0.4.0', content_version: '1.3.0', seed: 'abc', round: 3, log: upload.log, state_hash: 'h-1', challenge: null }, { onConflict: 'id' }]]]);
     client.asked.length = 0;
     await cloud.pushGame({ ...upload, stateHash: '' });
     expect((client.asked[0][1] as unknown[])[1]).toMatchObject({ state_hash: null });
@@ -331,8 +331,8 @@ describe('ranked lives, as the cloud is asked for them', () => {
   it('finds the ranked life a player has in progress, if they have one', async () => {
     client.answers.games = { data: { id: 'g-9', life_id: 'nurse', engine_version: '0.10.0', content_version: '1.9.0' }, error: null };
     const cloud = await connectSupabase('u', 'k');
-    expect(await cloud.rankedLife()).toEqual({ id: 'g-9', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0' });
-    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version'], ['eq', 'mode', 'ranked'], ['eq', 'status', 'playing'], ['limit', 1], ['maybeSingle']]]);
+    expect(await cloud.rankedLife()).toEqual({ id: 'g-9', lifeId: 'nurse', engineVersion: '0.10.0', contentVersion: '1.9.0', challenge: null });
+    expect(client.asked).toEqual([['games', ['select', 'id, life_id, engine_version, content_version, challenge'], ['eq', 'mode', 'ranked'], ['eq', 'status', 'playing'], ['limit', 1], ['maybeSingle']]]);
     client.answers.games = { data: null, error: null };
     expect(await cloud.rankedLife()).toBeNull();
     client.answers.games = { data: null, error: new Error('offline') };
@@ -424,6 +424,57 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(client.asked).toEqual([['rpc', 'ranking', { period: 'all', life: null, friends: false, top: 50 }]]);
     client.answers.rpc = { data: null, error: new Error('offline') };
     expect(await cloud.community.ranking({ period: 'all', friends: false, lifeId: null })).toBeNull();
+  });
+
+  it('reads the ranking of a week\'s challenge, how many took part, and which line is the player\'s own', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.rpc = {
+      data: [
+        { place: 1, user_id: 'u-9', nickname: 'Otra', portrait: null, score: 900, finished_at: '2026-10-12T08:00:00Z', run_id: 'r-9', entrants: 41 },
+        { place: 30, user_id: 'u-1', nickname: null, portrait: null, score: 300, finished_at: '2026-10-13T08:00:00Z', run_id: 'r-1', entrants: 41 },
+      ],
+      error: null,
+    };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.challengeRanking('2026-W42')).toEqual({
+      rows: [
+        { place: 1, userId: 'u-9', nickname: 'Otra', score: 900, finishedAt: Date.parse('2026-10-12T08:00:00Z'), mine: false },
+        { place: 30, userId: 'u-1', nickname: null, score: 300, finishedAt: Date.parse('2026-10-13T08:00:00Z'), mine: true },
+      ],
+      entrants: 41,
+    });
+    expect(client.asked).toEqual([['rpc', 'challenge_ranking', { week_id: '2026-W42', top: 50 }]]);
+    client.answers.rpc = { data: [], error: null };
+    expect(await cloud.community.challengeRanking('2026-W42')).toEqual({ rows: [], entrants: 0 });
+    client.answers.rpc = { data: null, error: new Error('offline') };
+    expect(await cloud.community.challengeRanking('2026-W42')).toBeNull();
+  });
+
+  it('reads the player\'s choices in a week\'s attempt, beside everyone\'s', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.rpc = { data: [{ seq: 0, card_id: 'tax_advisor', option: 1, same: '3', answered: '10' }], error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.challengeChoices('2026-W42')).toEqual([{ cardId: 'tax_advisor', option: 1, same: 3, answered: 10 }]);
+    expect(client.asked).toEqual([['rpc', 'challenge_choices', { week_id: '2026-W42' }]]);
+    client.answers.rpc = { data: null, error: new Error('offline') };
+    expect(await cloud.community.challengeChoices('2026-W42')).toBeNull();
+  });
+
+  it('says whether the player has had their attempt at a week, and its score once it is over', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.challenge_entries = { data: { week: '2026-W42' }, error: null };
+    client.answers.runs = { data: { score: 777 }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.challengeEntry('2026-W42')).toEqual({ entered: true, score: 777 });
+    expect(client.asked).toEqual([
+      ['challenge_entries', ['select', 'week'], ['eq', 'week', '2026-W42'], ['maybeSingle']],
+      ['runs', ['select', 'score'], ['eq', 'user_id', 'u-1'], ['eq', 'mode', 'ranked'], ['eq', 'challenge', '2026-W42'], ['maybeSingle']],
+    ]);
+    client.answers.challenge_entries = { data: null, error: null };
+    client.answers.runs = { data: null, error: null };
+    expect(await cloud.community.challengeEntry('2026-W42')).toEqual({ entered: false, score: null });
+    client.answers.runs = { data: null, error: new Error('offline') };
+    expect(await cloud.community.challengeEntry('2026-W42')).toBeNull();
   });
 
   it('follows a player by their code, lists whom the player follows by name, and stops following', async () => {

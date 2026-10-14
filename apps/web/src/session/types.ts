@@ -21,6 +21,8 @@ export interface GameSession {
   readonly lifeId: string;
   /** True for a life the server plays, step by step: its result can be set beside everyone else's. Left out, the device plays it. */
   readonly ranked?: boolean;
+  /** The week whose challenge this life is: the ranked attempt, or a practice. Left out for any other life. */
+  readonly challenge?: string;
   /** The game as the player may see it. The same object until the next answer or round. */
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */
@@ -54,7 +56,7 @@ export interface Sessions {
    * progress: with another in the way, on another device, this throws `RankedInProgress` and
    * changes nothing, unless `replace` names that life, which is then given up.
    */
-  start(lifeId: string, options?: { ranked?: boolean; replace?: string }): Promise<GameSession>;
+  start(lifeId: string, options?: { ranked?: boolean; replace?: string; challenge?: string }): Promise<GameSession>;
   /** Takes up a ranked life in progress elsewhere, where there are ranked lives at all. See `GameSessions.takeUp`. */
   takeUp?(life: RankedLifeInTheWay): Promise<GameSession | null>;
   /** The life in progress. `lost` says why there is none when a save existed but could not be opened. */
@@ -85,6 +87,8 @@ export interface SavedGame {
   engineVersion: string;
   contentVersion: string;
   lifeId: string;
+  /** The week whose challenge this life practises, under its rule. Left out for any other life. */
+  challenge?: string;
   seed: string;
   log: RoundLog[];
   history: number[];
@@ -107,6 +111,8 @@ export interface RankedGame {
   engineVersion: string;
   contentVersion: string;
   lifeId: string;
+  /** The week whose challenge this life is the attempt at. Left out for any other ranked life. */
+  challenge?: string;
   /** How many steps the server has taken, as far as this device knows. The next one is numbered with it. */
   step: number;
   /** The game as the server last showed it. Null for a life the account brought, which this device has not opened yet. */
@@ -147,6 +153,8 @@ export interface FinishedRun {
   verified: false;
   /** True for a life the server played: the one kind that is in the rankings. */
   ranked?: true;
+  /** The week whose challenge this life was: the attempt, if ranked, or a practice. */
+  challenge?: string;
 }
 
 export interface Settings {

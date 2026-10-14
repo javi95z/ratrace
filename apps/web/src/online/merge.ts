@@ -91,6 +91,8 @@ export interface CloudGame {
   round: number;
   status: string;
   log: unknown;
+  /** The week whose challenge this life practises. Null or left out for any other. */
+  challenge?: string | null;
   /** How the life stood when it was saved, in a word. Two copies with the same one are the same. */
   stateHash?: string | null;
   updatedAt: string;

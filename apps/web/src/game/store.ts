@@ -58,6 +58,8 @@ export interface RoundState {
   fault: boolean;
   /** True for a life the server plays: its result is set beside everyone else's. */
   ranked: boolean;
+  /** The week whose challenge the life is: the attempt, when ranked, or a practice. Null for any other life. */
+  challenge: string | null;
   /** True once a life asked for as ranked began as a casual one, because a ranked one could not be had just then, until the player has been told. */
   fellBack: boolean;
   /** True when the last step of a ranked life did not get through. It can be taken again. */
@@ -74,7 +76,7 @@ export interface RoundActions {
   /** Asks the device for a life in progress. */
   boot(): Promise<void>;
   /** Starts a new life. `ranked` asks for one the server plays; `fellBack` says if it could not be had. */
-  start(lifeId: string, options?: { ranked?: boolean; replace?: string }): Promise<boolean>;
+  start(lifeId: string, options?: { ranked?: boolean; replace?: string; challenge?: string }): Promise<boolean>;
   /**
    * Takes up the ranked life in progress elsewhere, in place of starting a new one. `taken`: it is
    * the life on this device now. `away`: the server did not answer, and the question stands.
@@ -141,6 +143,7 @@ const blank: RoundState = {
   moved: false,
   fault: false,
   ranked: false,
+  challenge: null,
   fellBack: false,
   unreachable: false,
   elsewhere: null,
@@ -214,6 +217,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         badges: opened.badges(),
         story: opened.story(),
         ranked: opened.ranked === true,
+        challenge: opened.challenge ?? null,
       };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.

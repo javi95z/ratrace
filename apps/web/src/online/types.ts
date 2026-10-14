@@ -115,6 +115,30 @@ export interface RankingQuery {
   lifeId: string | null;
 }
 
+/** One attempt in the ranking of a week's challenge. */
+export interface ChallengeRow {
+  place: number;
+  userId: string;
+  nickname: string | null;
+  score: number;
+  finishedAt: number;
+  mine: boolean;
+}
+
+/** The ranking of a week's challenge: the first fifty and the asker's own line, and how many took part. */
+export interface ChallengeRanking {
+  rows: ChallengeRow[];
+  entrants: number;
+}
+
+/** What the player chose on one card of their attempt, beside everyone else: how many chose the same, of how many who answered it. */
+export interface ChallengeChoice {
+  cardId: string;
+  option: number;
+  same: number;
+  answered: number;
+}
+
 /** Someone the player follows. */
 export interface Friend {
   userId: string;
@@ -143,4 +167,9 @@ export interface Community {
   /** Follows the player a friend code belongs to. `full`: the player follows as many as one may. */
   follow(code: string): Promise<'ok' | 'unknown' | 'self' | 'full' | 'failed'>;
   unfollow(userId: string): Promise<boolean>;
+  /** Whether the player has had their attempt at a week's challenge, and its score once it is over. Null where it cannot be read. */
+  challengeEntry(week: string): Promise<{ entered: boolean; score: number | null } | null>;
+  challengeRanking(week: string): Promise<ChallengeRanking | null>;
+  /** The player's choices in their attempt at a week, card by card, beside everyone's. Empty until the attempt is over. */
+  challengeChoices(week: string): Promise<ChallengeChoice[] | null>;
 }

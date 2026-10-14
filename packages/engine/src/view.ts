@@ -20,5 +20,6 @@ export function viewOf(state: GameState): GameView {
     phase: state.phase,
     hand: state.hand,
     answered: state.answered,
+    limits: state.limits,
   });
 }

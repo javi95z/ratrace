@@ -68,7 +68,7 @@ describe('what the things owned are good for', () => {
     expect(less).toBe(Math.floor((full * 70) / 100));
     const order = (state: GameState) => {
       const p = structuredClone(state.player);
-      expect(executeOrder(p, { type: 'moveCity', cityId: 'haven' }, { content, world: state.timeline[0], round: 0, tally: newTally() })).toBeNull();
+      expect(executeOrder(p, { type: 'moveCity', cityId: 'haven' }, { content, world: state.timeline[0], round: 0, tally: newTally(), limits: {} })).toBeNull();
       return state.player.cash - p.cash;
     };
     expect(order(driver)).toBe(less);

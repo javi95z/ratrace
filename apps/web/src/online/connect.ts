@@ -18,6 +18,7 @@ interface GameRow {
   log: unknown;
   state_hash: string | null;
   updated_at: string;
+  challenge?: string | null;
 }
 interface RunRow {
   id: string;
@@ -34,14 +35,17 @@ interface RunRow {
   cities: string[] | null;
   history: number[] | null;
   finished_at: string;
+  challenge?: string | null;
 }
 
 const gameOf = (row: GameRow): CloudGame => ({
   id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, seed: row.seed, round: row.round, status: row.status, log: row.log, stateHash: row.state_hash, updatedAt: row.updated_at,
+  ...(typeof row.challenge === 'string' ? { challenge: row.challenge } : {}),
 });
 const runOf = (row: RunRow): CloudRun => ({
   id: row.id, mode: row.mode === 'ranked' ? 'ranked' : 'casual', lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
   escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
+  ...(typeof row.challenge === 'string' ? { challenge: row.challenge } : {}),
 });
 
 /** The database's own word for "the rules of this table do not let you". */
@@ -144,7 +148,7 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     async playingGames() {
       const { data, error } = await client
         .from('games')
-        .select('id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at')
+        .select('id, life_id, engine_version, content_version, seed, round, status, log, state_hash, updated_at, challenge')
         .eq('mode', 'casual')
         .eq('status', 'playing')
         .order('updated_at', { ascending: false })
@@ -155,7 +159,19 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     async pushGame(game) {
       const { error } = await client.from('games').upsert(
         // `playing` is said, not left to the table: a life another device gave up is taken up again by the one still playing it.
-        { id: game.id, mode: 'casual', status: 'playing', life_id: game.lifeId, engine_version: game.engineVersion, content_version: game.contentVersion, seed: game.seed, round: game.round, log: game.log, state_hash: game.stateHash || null },
+        {
+          id: game.id,
+          mode: 'casual',
+          status: 'playing',
+          life_id: game.lifeId,
+          engine_version: game.engineVersion,
+          content_version: game.contentVersion,
+          seed: game.seed,
+          round: game.round,
+          log: game.log,
+          state_hash: game.stateHash || null,
+          challenge: game.challenge ?? null,
+        },
         { onConflict: 'id' },
       );
       if (!error) return 'saved';
@@ -186,7 +202,7 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       // Every signed-in player may read every run; these are the player's own.
       const { data, error } = await client
         .from('runs')
-        .select('id, mode, life_id, engine_version, content_version, score, net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at')
+        .select('id, mode, life_id, engine_version, content_version, score, net_worth, status, escaped_at_round, bankruptcies, badges, cities, history, finished_at, challenge')
         .eq('user_id', await me())
         .order('finished_at', { ascending: false })
         .limit(1000);
@@ -195,10 +211,10 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     },
     async rankedLife() {
       // A player has one ranked life in progress at most, and sees no game but their own.
-      const { data, error } = await client.from('games').select('id, life_id, engine_version, content_version').eq('mode', 'ranked').eq('status', 'playing').limit(1).maybeSingle();
+      const { data, error } = await client.from('games').select('id, life_id, engine_version, content_version, challenge').eq('mode', 'ranked').eq('status', 'playing').limit(1).maybeSingle();
       if (error) throw error;
-      const row = data as { id: string; life_id: string; engine_version: string; content_version: string } | null;
-      return row === null ? null : { id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version };
+      const row = data as { id: string; life_id: string; engine_version: string; content_version: string; challenge?: string | null } | null;
+      return row === null ? null : { id: row.id, lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, challenge: row.challenge ?? null };
     },
     giveUpRanked: (id) => ranked.abandon(id),
     ranked,
@@ -231,6 +247,43 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return ((data ?? []) as Array<{ place: number; user_id: string; nickname: string | null; score: number; life_id: string; finished_at: string }>).map((row) => ({
             place: Number(row.place), userId: row.user_id, nickname: row.nickname, score: row.score, lifeId: row.life_id, finishedAt: Date.parse(row.finished_at) || 0, mine: row.user_id === mine,
           }));
+        } catch {
+          return null;
+        }
+      },
+      async challengeEntry(week) {
+        try {
+          const mine = await me();
+          const [entry, run] = await Promise.all([
+            client.from('challenge_entries').select('week').eq('week', week).maybeSingle(),
+            client.from('runs').select('score').eq('user_id', mine).eq('mode', 'ranked').eq('challenge', week).maybeSingle(),
+          ]);
+          if (entry.error || run.error) return null;
+          const score = (run.data as { score: number } | null)?.score ?? null;
+          return { entered: entry.data !== null || score !== null, score };
+        } catch {
+          return null;
+        }
+      },
+      async challengeRanking(week) {
+        try {
+          const mine = await me();
+          const { data, error } = await client.rpc('challenge_ranking', { week_id: week, top: 50 });
+          if (error) return null;
+          const rows = (data ?? []) as Array<{ place: number; user_id: string; nickname: string | null; score: number; finished_at: string; entrants: number }>;
+          return {
+            rows: rows.map((row) => ({ place: Number(row.place), userId: row.user_id, nickname: row.nickname, score: row.score, finishedAt: Date.parse(row.finished_at) || 0, mine: row.user_id === mine })),
+            entrants: rows.length > 0 ? Number(rows[0].entrants) : 0,
+          };
+        } catch {
+          return null;
+        }
+      },
+      async challengeChoices(week) {
+        try {
+          const { data, error } = await client.rpc('challenge_choices', { week_id: week });
+          if (error) return null;
+          return ((data ?? []) as Array<{ card_id: string; option: number; same: number; answered: number }>).map((row) => ({ cardId: row.card_id, option: Number(row.option), same: Number(row.same), answered: Number(row.answered) }));
         } catch {
           return null;
         }

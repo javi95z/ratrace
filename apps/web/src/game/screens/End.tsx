@@ -14,6 +14,7 @@ import type { Best } from '@/game/records';
 import { Link } from '@/i18n/navigation';
 import { Panel, Row, Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { ChallengeResult } from './Challenge';
 import { Loop } from './Loop';
 import { Medal } from './Medal';
 import { ShareCard } from './ShareCard';
@@ -70,6 +71,7 @@ function Ended({ view }: { view: GameView }) {
   const bankruptcies = useGame((s) => s.bankruptcies);
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const ranked = useGame((s) => s.ranked);
+  const challenge = useGame((s) => s.challenge);
   const gameId = useGame((s) => s.gameId);
   const earned = useGame((s) => s.badges);
   const badges = useT('badges');
@@ -174,6 +176,9 @@ function Ended({ view }: { view: GameView }) {
           </p>
         ) : null}
       </section>
+
+      {/* The week's attempt, beside everyone else's: its place, and the choices that set it apart. */}
+      {ranked && challenge !== null ? <ChallengeResult week={challenge} /> : null}
 
       {told.length > 0 ? (
         <Panel title={tale('title')} label={tale('title')}>

@@ -1,6 +1,7 @@
 import type { LifeDef, Replayed } from '@ratrace/content';
 import { CONTENT_VERSION, replayLife } from '@ratrace/content';
 import { ENGINE_VERSION, findInvariantBreaks } from '@ratrace/engine';
+import { isWeek, startFor } from './challenge';
 import type { Content, GameState } from '@ratrace/engine';
 import type { LifeRecord } from './record';
 import { SAVE_FORMAT } from './types';
@@ -89,7 +90,10 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
   const log = readLog(raw.log);
   const seed = raw.seed;
   const at = log === null ? null : standingOf(log);
-  if (!life || log === null || at === null || typeof seed !== 'string') return { ok: false, lost: 'damaged' };
+  // A practice of a week's challenge is played again under that week's rule.
+  const challenge = raw.challenge === undefined ? undefined : isWeek(raw.challenge) ? raw.challenge : null;
+  const start = life && challenge !== null ? startFor(lives, life, challenge) : null;
+  if (!life || log === null || at === null || typeof seed !== 'string' || start === null) return { ok: false, lost: 'damaged' };
 
   const header = {
     format: SAVE_FORMAT,
@@ -97,6 +101,7 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
     engineVersion: raw.engineVersion,
     contentVersion: raw.contentVersion,
     lifeId: life.id,
+    ...(typeof challenge === 'string' ? { challenge } : {}),
     seed,
     log,
     updatedAt: isCount(raw.updatedAt) ? raw.updatedAt : 0,
@@ -107,7 +112,7 @@ export function openSave(raw: unknown, content: Content, lives: ReadonlyArray<Li
     return { ok: true, repaired: false, save: { ...header, history: raw.history as number[], bankruptcies: raw.bankruptcies, journal: raw.journal, state: raw.state } };
   }
   try {
-    return { ok: true, repaired: true, save: { ...header, ...replay(content, life.start, seed, log) } };
+    return { ok: true, repaired: true, save: { ...header, ...replay(content, start, seed, log) } };
   } catch {
     return { ok: false, lost: 'damaged' };
   }

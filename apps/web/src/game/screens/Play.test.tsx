@@ -616,6 +616,9 @@ describe('the end of a life, beside the lives of others', () => {
     run: async () => null,
     follow: async () => 'failed',
     unfollow: async () => false,
+    challengeEntry: async () => null,
+    challengeRanking: async () => null,
+    challengeChoices: async () => null,
   });
   const ended = async (answer: { below: number; total: number } | null) => {
     const asked: unknown[] = [];

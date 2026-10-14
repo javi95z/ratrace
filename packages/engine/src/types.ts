@@ -608,7 +608,7 @@ export interface CardOutcome {
  * bankruptcy lock; not enough focus; the thing is already owned; not enough cash and savings;
  * or it would fill the pension of someone who owes more than they own.
  */
-export type OptionLock = 'condition' | 'skill' | 'bankruptcy' | 'focus' | 'owned' | 'cash' | 'insolvent';
+export type OptionLock = 'condition' | 'skill' | 'bankruptcy' | 'focus' | 'owned' | 'cash' | 'insolvent' | 'challenge';
 
 export interface CardOption {
   /** The option is locked unless this holds. Never set on the first option. */
@@ -1043,6 +1043,8 @@ export interface OrderContext {
   world: WorldState;
   round: number;
   tally: RoundTally;
+  /** What the game may not do. */
+  limits: GameLimits;
 }
 
 /** Why an order was not executed. The client turns the code into text in the player's language. */
@@ -1095,6 +1097,7 @@ export type RejectReason =
   | 'unknown-insurance'
   | 'preexisting-condition'
   | 'too-young-to-retire'
+  | 'not-in-challenge'
   | 'unknown-city'
   | 'same-city'
   | 'already-moving';
@@ -1190,6 +1193,20 @@ export interface LifeStart {
   businesses?: Array<{ typeId: string; capital: Cents }>;
 }
 
+/**
+ * What a game may not do, set when it starts and kept for the whole of it: a challenge everyone
+ * plays alike. An order that goes against them is refused, and a card option that could is closed.
+ */
+export interface GameLimits {
+  /** Only these assets may be bought, by order, by plan or through a card. */
+  onlyAssets?: readonly string[];
+  /** No borrowing: no loan, no mortgage, no margin and nothing on instalments. The credit card still covers a shortfall. */
+  noBorrowing?: boolean;
+  noMoving?: boolean;
+  /** No property may be bought. */
+  noProperty?: boolean;
+}
+
 export interface StartConfig {
   cityId: string;
   cash: Cents;
@@ -1198,6 +1215,7 @@ export interface StartConfig {
   lifestyleTier: LifestyleTier;
   debts: Array<Omit<Debt, 'id'>>;
   life?: LifeStart;
+  limits?: GameLimits;
 }
 
 export interface GameConfig {
@@ -1228,6 +1246,8 @@ export interface GameState {
   answered: number;
   /** Saved position of the player's own random stream. */
   rng: { cards: RngState };
+  /** What this game may not do. Empty for an ordinary one. */
+  limits: GameLimits;
 }
 
 /**

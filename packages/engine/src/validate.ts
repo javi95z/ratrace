@@ -391,6 +391,18 @@ export function validateStart(content: Content, start: StartConfig): string[] {
     errors.push('salaryAnnual must be a non-negative whole number of cents');
   }
   if (![0, 1, 2, 3].includes(start.lifestyleTier)) errors.push('lifestyleTier must be 0, 1, 2 or 3');
+  if (start.limits !== undefined) {
+    const limits = start.limits as unknown as Record<string, unknown>;
+    if (!isRecord(limits)) errors.push('limits must be a record');
+    else {
+      const only = limits.onlyAssets;
+      if (only !== undefined && !(Array.isArray(only) && only.length > 0 && only.every((id) => content.assets.some((asset) => asset.id === id)))) errors.push('limits.onlyAssets must name assets that exist');
+      for (const flag of ['noBorrowing', 'noMoving', 'noProperty']) {
+        if (limits[flag] !== undefined && typeof limits[flag] !== 'boolean') errors.push(`limits.${flag} must be true or false`);
+      }
+      for (const key of Object.keys(limits)) if (!['onlyAssets', 'noBorrowing', 'noMoving', 'noProperty'].includes(key)) errors.push(`limits has an unknown limit: ${key}`);
+    }
+  }
   if (!Array.isArray(start.debts)) {
     errors.push('debts must be a list');
     return errors;

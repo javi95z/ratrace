@@ -1,4 +1,4 @@
-import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
+import { challengeOf, challengeStart, content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
 import { ENGINE_VERSION, finalScore, viewOf } from '@ratrace/engine';
 import type { LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
@@ -481,5 +481,61 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     server.state.down = true;
     expect(await tablet.sessions.resume()).toEqual({ session: null, lost: null });
     expect(await held(tablet.store)).not.toBeNull();
+  });
+});
+
+describe('the weekly challenge, on a device', { timeout: 120_000 }, () => {
+  // The server of the tests keeps the time of Tuesday 13 October 2026: the week of 12 October.
+  const WEEK = '2026-W42';
+  const week = challengeOf(WEEK, lives);
+  if (!week) throw new Error('no challenge for the week');
+  const life = lives.find((one) => one.id === week.lifeId)!;
+  const start = challengeStart(week, life);
+
+  it('plays the attempt on the server, under the week’s rule, whatever lives the device has unlocked, and keeps its week in the records', async () => {
+    const server = rankedServer();
+    const d = device(server);
+    const session = await d.sessions.start(week.lifeId, { ranked: true, challenge: WEEK });
+    expect(session.ranked).toBe(true);
+    expect(session.challenge).toBe(WEEK);
+    expect(session.view().limits).toEqual(start.limits ?? {});
+    expect(((await held(d.store)) as RankedGame).challenge).toBe(WEEK);
+    expect(server.games.get(session.gameId)?.challenge).toBe(WEEK);
+    await play(session);
+    expect((await d.store.listRuns())[0]).toMatchObject({ ranked: true, challenge: WEEK });
+  });
+
+  it('plays a practice on the device, under the same rule, and opens it again under it', async () => {
+    const d = device(null);
+    const session = await d.sessions.start(week.lifeId, { challenge: WEEK });
+    expect(session.ranked).not.toBe(true);
+    expect(session.challenge).toBe(WEEK);
+    expect(session.view().limits).toEqual(start.limits ?? {});
+    await play(session, 2);
+    const saved = (await held(d.store)) as SavedGame;
+    expect(saved.challenge).toBe(WEEK);
+    // A save whose state is lost is played again from its log, under the week's rule.
+    const damaged: Partial<SavedGame> = structuredClone(saved);
+    delete damaged.state;
+    await d.store.saveGame(damaged as SavedGame);
+    const again = (await d.sessions.resume()).session;
+    expect(again?.challenge).toBe(WEEK);
+    expect(again?.view()).toEqual(session.view());
+    await play(again as GameSession);
+    expect((await d.store.listRuns())[0]).toMatchObject({ challenge: WEEK });
+    expect((await d.store.listRuns())[0].ranked).toBeUndefined();
+  });
+
+  it('becomes a practice when the week’s attempt has been had, and starts no other life as the week’s', async () => {
+    const server = rankedServer();
+    const d = device(server);
+    const first = await d.sessions.start(week.lifeId, { ranked: true, challenge: WEEK });
+    await d.sessions.abandon();
+    expect(server.games.get(first.gameId)?.status).toBe('abandoned');
+    const second = await d.sessions.start(week.lifeId, { ranked: true, challenge: WEEK });
+    expect(second.ranked).not.toBe(true);
+    expect(second.challenge).toBe(WEEK);
+    const other = lives.find((one) => one.id !== week.lifeId)!;
+    await expect(d.sessions.start(other.id, { challenge: WEEK })).rejects.toThrow(/not the life of the challenge/);
   });
 });

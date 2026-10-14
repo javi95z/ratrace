@@ -2,6 +2,7 @@ import type { LifeDef, Milestone } from '@ratrace/content';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameView, RoundChoices } from '@ratrace/engine';
+import { startFor } from './challenge';
 import { StaleSession } from './errors';
 import { tellProfile } from './profile';
 import { recordStart, recordStep } from './record';
@@ -51,6 +52,10 @@ class LocalSession implements GameSession {
 
   get lifeId(): string {
     return this.save.lifeId;
+  }
+
+  get challenge(): string | undefined {
+    return this.save.challenge;
   }
 
   /** A life the device plays itself. */
@@ -178,6 +183,7 @@ class LocalSession implements GameSession {
       engineVersion: save.engineVersion,
       contentVersion: save.contentVersion,
       lifeId: save.lifeId,
+      ...(save.challenge !== undefined ? { challenge: save.challenge } : {}),
       seed: save.seed,
       log: save.log,
       finishedAt: save.updatedAt,
@@ -203,14 +209,18 @@ export class LocalSessions implements Sessions {
     private readonly deps: SessionDeps,
   ) {}
 
-  async start(lifeId: string): Promise<GameSession> {
+  /** Starts a life on this device. With `challenge`, it is the practice of that week's challenge: the week's life, under its rule, whether unlocked or not. */
+  async start(lifeId: string, options?: { challenge?: string }): Promise<GameSession> {
     const life = this.lives.find((candidate) => candidate.id === lifeId);
     if (!life) throw new Error(`unknown life: ${lifeId}`);
+    const challenge = options?.challenge;
+    const start = startFor(this.lives, life, challenge);
+    if (start === null) throw new Error(`not the life of the challenge of ${challenge}: ${lifeId}`);
     // Which lives a player may choose is decided here, not by a button that happens to be disabled.
-    if (life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
+    if (challenge === undefined && life.unlock !== 'default' && !Object.hasOwn((await this.store.loadProfile()).unlocked, life.id)) throw new Error(`locked life: ${lifeId}`);
     const gameId = this.deps.newId();
     const seed = this.deps.newSeed();
-    const state = createGame({ content: this.content, start: life.start }, seed);
+    const state = createGame({ content: this.content, start }, seed);
     const session = new LocalSession(
       {
         format: SAVE_FORMAT,
@@ -218,6 +228,7 @@ export class LocalSessions implements Sessions {
         engineVersion: ENGINE_VERSION,
         contentVersion: CONTENT_VERSION,
         lifeId,
+        ...(challenge !== undefined ? { challenge } : {}),
         seed,
         log: [],
         ...recordStart(this.content, state),

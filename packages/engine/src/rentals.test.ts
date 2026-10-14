@@ -24,7 +24,7 @@ const content: Content = {
 function setup(cash = 100_000_000) {
   const timeline = generateTimeline('rentals', content);
   const p = fixturePlayer({ cash });
-  const ctx: OrderContext = { content, world: timeline[0], round: 0, tally: newTally() };
+  const ctx: OrderContext = { content, world: timeline[0], round: 0, tally: newTally(), limits: {} };
   return { timeline, p, ctx };
 }
 

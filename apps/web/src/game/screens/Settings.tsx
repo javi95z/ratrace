@@ -189,6 +189,7 @@ function Standing({ shown }: { shown: GameView }) {
   const { content, text, names, fmt } = useWords();
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const ranked = useGame((s) => s.ranked);
+  const challenge = useGame((s) => s.challenge);
   const saving = useSaving();
   const p = shown.player;
   const age = ageAt(content, shown.round);
@@ -203,7 +204,7 @@ function Standing({ shown }: { shown: GameView }) {
           </Well>
         </span>
         <div className="min-w-0">
-          <p className="pixel text-[12px] uppercase tracking-wider text-gold-500">{ranked ? t('ranked') : t('game')}</p>
+          <p className="pixel text-[12px] uppercase tracking-wider text-gold-500">{challenge !== null ? t(ranked ? 'challenge' : 'practice') : ranked ? t('ranked') : t('game')}</p>
           <p className="pixel truncate text-[19px]">{text.lives[lifeId]?.name}</p>
           <p className="truncate text-[13px] text-ink-300">
             {common('age', { age })} · {names.cities[p.cityId]}

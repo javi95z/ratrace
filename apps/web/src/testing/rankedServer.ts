@@ -14,6 +14,10 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
   const games = new Map<string, RankedGameRow>();
   const seeds = new Map<string, string>();
   const runs: RunRow[] = [];
+  // The weekly challenges: each week's seed, who has had their attempt, and what each attempt chose.
+  const weekSeeds = new Map<string, string>();
+  const entries = new Map<string, string>();
+  const picks = new Map<string, Array<{ week: string; cardId: string; option: number }>>();
   const state = { ids: 0, clock: 0, down: false, loseNextAnswer: false, unlocked: [] as string[], calls: [] as string[] };
   const stamp = () => `2026-10-13T12:00:${String((state.clock += 1)).padStart(2, '0')}.000000+00:00`;
   const deps: RankedDeps = {
@@ -27,6 +31,19 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
     createGame: async (row, seed) => {
       games.set(row.id, { ...row, mode: 'ranked', round: 0, status: 'playing', log: [], updated_at: stamp() });
       seeds.set(row.id, seed);
+    },
+    challengeSeed: async (week, fresh) => {
+      if (!weekSeeds.has(week)) weekSeeds.set(week, fresh);
+      return weekSeeds.get(week) as string;
+    },
+    challengeEntered: async (who, week) => entries.has(`${who}/${week}`),
+    enterChallenge: async (who, week, gameId) => {
+      if (entries.has(`${who}/${week}`)) return false;
+      entries.set(`${who}/${week}`, gameId);
+      return true;
+    },
+    savePicks: async (runId, week, chosen) => {
+      if (!picks.has(runId)) picks.set(runId, chosen.map((pick) => ({ week, ...pick })));
     },
     loadGame: async (id) => structuredClone(games.get(id) ?? null),
     loadSeed: async (id) => seeds.get(id) ?? null,
@@ -55,5 +72,5 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
     }
     return reply;
   };
-  return { api: rankedApi(call), call, games, seeds, runs, state, user };
+  return { api: rankedApi(call), call, games, seeds, runs, state, user, weekSeeds, entries, picks };
 }

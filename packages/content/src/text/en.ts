@@ -292,6 +292,7 @@ export const en: ContentText = {
     owned: 'You already have it.',
     cash: 'You cannot pay for it, even with your savings.',
     insolvent: 'You owe more than you own, so nothing more can go into your pension.',
+    challenge: 'Not in this challenge: its rule forbids it.',
   },
   reasons: {
     'bad-order': 'That order is not valid.',
@@ -340,6 +341,7 @@ export const en: ContentText = {
     'bad-tier': 'That option does not exist.',
     'below-lifestyle-floor': 'You cannot live more modestly than that.',
     'unknown-insurance': 'That insurance does not exist.',
+    'not-in-challenge': 'Not in this challenge: its rule forbids it.',
     'preexisting-condition': 'No insurer takes on an illness you have already had.',
     'too-young-to-retire': 'It is too early to retire.',
     'unknown-city': 'That city does not exist.',

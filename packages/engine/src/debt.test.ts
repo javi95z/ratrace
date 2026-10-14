@@ -22,6 +22,7 @@ function setup(cash = 0) {
     world,
     round: 0,
     tally: newTally(),
+    limits: {},
   };
   return { content, world, p, ctx };
 }

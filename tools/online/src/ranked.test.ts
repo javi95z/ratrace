@@ -1,9 +1,9 @@
-import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
+import { challengeOf, challengeStart, content, CONTENT_VERSION, lives, replayLife, weekOf } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { GameState, GameView, LoggedRound, Order, WorldState } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { GAMES } from '../../../supabase/functions/_shared/game/index.ts';
-import { ranked } from '../../../supabase/functions/_shared/ranked.ts';
+import { ranked, weekOfServer } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RunRow } from '../../../supabase/functions/_shared/finish.ts';
 
@@ -22,6 +22,10 @@ function fakeDb() {
   const games = new Map<string, RankedGameRow>();
   const seeds = new Map<string, string>();
   const runs: RunRow[] = [];
+  // The weekly challenges: each week's seed, who has had their attempt, and what each attempt chose.
+  const weekSeeds = new Map<string, string>();
+  const entries = new Map<string, string>();
+  const picks = new Map<string, Array<{ week: string; cardId: string; option: number }>>();
   const state = { ids: 0, clock: 0, allowed: true, unlocked: [] as string[], asked: [] as string[], beatenOnce: false, writes: 0, runsFail: false };
   const stamp = () => `2026-10-13T12:00:${String((state.clock += 1)).padStart(2, '0')}.000000+00:00`;
   const deps: RankedDeps = {
@@ -38,6 +42,19 @@ function fakeDb() {
     createGame: async (row, seed) => {
       games.set(row.id, { ...row, mode: 'ranked', round: 0, status: 'playing', log: [], updated_at: stamp() });
       seeds.set(row.id, seed);
+    },
+    challengeSeed: async (week, fresh) => {
+      if (!weekSeeds.has(week)) weekSeeds.set(week, fresh);
+      return weekSeeds.get(week) as string;
+    },
+    challengeEntered: async (who, week) => entries.has(`${who}/${week}`),
+    enterChallenge: async (who, week, gameId) => {
+      if (entries.has(`${who}/${week}`)) return false;
+      entries.set(`${who}/${week}`, gameId);
+      return true;
+    },
+    savePicks: async (runId, week, chosen) => {
+      if (!picks.has(runId)) picks.set(runId, chosen.map((pick) => ({ week, ...pick })));
     },
     loadGame: async (id) => structuredClone(games.get(id) ?? null),
     loadSeed: async (id) => seeds.get(id) ?? null,
@@ -62,7 +79,7 @@ function fakeDb() {
       if (game) Object.assign(game, { status, round, updated_at: stamp() });
     },
   };
-  return { deps, games, seeds, runs, state };
+  return { deps, games, seeds, runs, state, weekSeeds, entries, picks };
 }
 type Db = ReturnType<typeof fakeDb>;
 
@@ -250,7 +267,7 @@ describe('playing a ranked life', { timeout: 120_000 }, () => {
       {
         id: at.gameId, user_id: ME, game_id: at.gameId, mode: 'ranked', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION,
         score: finalScore(content, mine), net_worth: realNetWorth(mine), status: livedStatus(mine), escaped_at_round: mine.player.escapedAtRound,
-        bankruptcies: whole.bankruptcies, badges: whole.journal.earned, cities: whole.journal.cities, history: whole.history, verified: true, finished_at: '2026-10-13T12:00:00.000Z',
+        bankruptcies: whole.bankruptcies, badges: whole.journal.earned, cities: whole.journal.cities, history: whole.history, verified: true, finished_at: '2026-10-13T12:00:00.000Z', challenge: null,
       },
     ]);
     expect(last.run).toEqual(db.runs[0]);
@@ -473,5 +490,94 @@ describe('looking at a ranked life, and giving it up', { timeout: 120_000 }, () 
       throw new Error('the database is away');
     };
     expect(await ask(db, card(at))).toEqual({ status: 500, body: { error: 'server' } });
+  });
+});
+
+describe('the weekly challenge, as the server plays it', () => {
+  // The fake server's clock is Tuesday 13 October 2026: the week of 12 October.
+  const WEEK = '2026-W42';
+  const week = challengeOf(WEEK, lives);
+  if (!week) throw new Error('no challenge for the week');
+  const begin = (db: Db, over: Record<string, unknown> = {}, user = ME) => ask(db, { action: 'start', lifeId: week.lifeId, ...VERSIONS, challenge: WEEK, ...over }, user);
+
+  it('counts its weeks as the game does', () => {
+    for (let day = 0; day < 1_000; day += 5) {
+      const at = new Date(Date.UTC(2025, 11, 20) + day * 86_400_000 + 3_600_000 * (day % 24));
+      expect(weekOfServer(at), at.toISOString()).toBe(weekOf(at.getTime()));
+    }
+  });
+
+  it('starts the week’s life under the week’s rule on the week’s seed, the same for everyone, whether the life is unlocked or not', async () => {
+    const db = fakeDb();
+    const mine = await begin(db);
+    const theirs = await begin(db, {}, OTHER);
+    expect(mine.status).toBe(200);
+    expect(theirs.status).toBe(200);
+    const [a, b] = [mine.body.gameId as string, theirs.body.gameId as string];
+    expect(db.games.get(a)).toMatchObject({ challenge: WEEK, life_id: week.lifeId, mode: 'ranked' });
+    expect(db.seeds.get(a)).toBe(db.weekSeeds.get(WEEK));
+    expect(db.seeds.get(b)).toBe(db.seeds.get(a));
+    // The same world and the same first cards for both.
+    expect(theirs.body.view).toEqual(mine.body.view);
+    const life = lives.find((one) => one.id === week.lifeId)!;
+    expect((mine.body.view as GameView).limits).toEqual(challengeStart(week, life).limits ?? {});
+    expect([...db.entries.keys()].sort()).toEqual([`${ME}/${WEEK}`, `${OTHER}/${WEEK}`]);
+  });
+
+  it('refuses a week that is not this one, something that is not a week, and another life than the week’s', async () => {
+    const db = fakeDb();
+    expect(await begin(db, { challenge: '2026-W41' })).toEqual({ status: 409, body: { error: 'challenge-closed' } });
+    expect(await begin(db, { challenge: 'this week' })).toEqual({ status: 400, body: { error: 'bad-request', field: 'challenge' } });
+    const other = lives.find((one) => one.id !== week.lifeId)!;
+    expect(await begin(db, { lifeId: other.id })).toEqual({ status: 400, body: { error: 'unknown-life' } });
+    expect(db.games.size).toBe(0);
+    expect(db.entries.size).toBe(0);
+  });
+
+  it('gives each player one attempt a week, and a second ends nothing in progress', async () => {
+    const db = fakeDb();
+    const first = await begin(db);
+    expect(first.status).toBe(200);
+    await ask(db, { action: 'abandon', gameId: first.body.gameId });
+    const living = await ask(db, { action: 'start', lifeId: 'nurse', ...VERSIONS });
+    expect(living.status).toBe(200);
+    expect(await begin(db, { replace: living.body.gameId })).toEqual({ status: 409, body: { error: 'challenge-played' } });
+    expect(db.games.get(living.body.gameId as string)?.status).toBe('playing');
+  });
+
+  it('gives up at once an attempt that loses the race to one already entered', async () => {
+    const db = fakeDb();
+    // Another device entered the week between the question and the entry.
+    db.deps.challengeEntered = async () => false;
+    db.entries.set(`${ME}/${WEEK}`, 'elsewhere');
+    expect(await begin(db)).toEqual({ status: 409, body: { error: 'challenge-played' } });
+    expect([...db.games.values()].map((game) => game.status)).toEqual(['abandoned']);
+  });
+
+  it('is not started by a version from before the challenges', async () => {
+    const db = fakeDb();
+    const older = { ...GAMES[`${ENGINE_VERSION}/${CONTENT_VERSION}`] };
+    delete older.challengeOf;
+    delete older.challengeStart;
+    expect(await ask(db, { action: 'start', lifeId: week.lifeId, ...VERSIONS, challenge: WEEK }, ME, { ...GAMES, [`${ENGINE_VERSION}/${CONTENT_VERSION}`]: older })).toEqual({
+      status: 409,
+      body: { error: 'challenge-closed' },
+    });
+  });
+
+  it('plays to the end under its rule, and writes the run of the week with every card chosen, in order', async () => {
+    const db = fakeDb();
+    const started = await begin(db);
+    let at: Standing = { gameId: started.body.gameId as string, step: 0, view: started.body.view as GameView };
+    const chosen: Array<{ cardId: string; option: number }> = [];
+    while (!at.view.finished) {
+      const next = await step(db, at);
+      for (const event of (next.body.events as Array<{ kind: string; cardId?: string; option?: number }>)) if (event.kind === 'card') chosen.push({ cardId: event.cardId as string, option: event.option as number });
+      at = next.at;
+    }
+    expect(db.runs).toHaveLength(1);
+    expect(db.runs[0]).toMatchObject({ mode: 'ranked', challenge: WEEK, life_id: week.lifeId });
+    expect(db.picks.get(at.gameId)).toEqual(chosen.map((pick) => ({ week: WEEK, ...pick })));
+    expect(chosen.length).toBeGreaterThan(0);
   });
 });

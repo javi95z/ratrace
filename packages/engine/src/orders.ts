@@ -2,6 +2,7 @@ import { executeBusinessOrder } from './business';
 import { executeBorrow, executeRepay } from './debt';
 import { executeSetEvasion } from './evasion';
 import { executeLifeOrder } from './life/orders';
+import { orderBreaks } from './limits';
 import { executePortfolioOrder, executeSetPlan } from './portfolio';
 import { executeBuyProperty, executeSellProperty, executeSetRented } from './property';
 import type { Order, OrderContext, PlayerState, RejectReason } from './types';
@@ -96,6 +97,7 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
   if (!hasValidFields(fields)) return 'bad-order';
 
   const order = raw as Order;
+  if (orderBreaks(order, ctx.limits)) return 'not-in-challenge';
   switch (order.type) {
     case 'buy':
     case 'sell':

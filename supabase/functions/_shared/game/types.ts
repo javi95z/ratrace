@@ -51,4 +51,8 @@ export interface GameModule {
   finalScore(content: unknown, state: unknown): number;
   realNetWorth(state: unknown): number;
   livedStatus(state: unknown): number;
+  /** The challenge of a week, or null for something that is not a week. Missing from the versions before the weekly challenges. */
+  challengeOf?(week: string, lives: GameModule['lives']): { week: string; lifeId: string; rule: string } | null;
+  /** How a week's challenge begins: its life under the week's rule. */
+  challengeStart?(challenge: { week: string; lifeId: string; rule: string }, life: GameModule['lives'][number]): unknown;
 }

@@ -17,6 +17,7 @@ declare
   made uuid;
   first_of_many uuid;
   ranked_b uuid := gen_random_uuid();
+  challenge_b uuid := gen_random_uuid();
   code_a text;
   code_b text;
   yes1 boolean;
@@ -628,6 +629,55 @@ begin
   begin
     perform public.add_friend('ZZZZZZZZ');
     failed := array_append(failed, 'a visitor with no account followed someone');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+
+  -- ---------------------------------------------------------------- weekly challenges
+  reset role;
+  -- The server makes a week's seed, enters B's attempt and writes it as finished, with what it chose.
+  insert into public.challenge_seeds (week, seed) values ('2026-W42', 'week-seed');
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, status, challenge) values (challenge_b, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', '2026-W42');
+  insert into public.challenge_entries (user_id, week, game_id) values (b, '2026-W42', challenge_b);
+  insert into public.runs (id, user_id, game_id, mode, life_id, engine_version, content_version, score, net_worth, status, finished_at, challenge)
+    values (challenge_b, b, challenge_b, 'ranked', 'nurse', '0.1.0', '1.0.0', 500, 0, 0, now(), '2026-W42');
+  insert into public.challenge_picks (run_id, week, seq, card_id, option) values (challenge_b, '2026-W42', 0, 'tax_advisor', 1), (challenge_b, '2026-W42', 1, 'health_illness', 0);
+  -- A cannot read the seeds, the picks, or B's entry; A finds no choices before finishing; A reads the week's ranking.
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  begin
+    perform 1 from public.challenge_seeds;
+    failed := array_append(failed, 'a player read the seeds of the challenges');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    perform 1 from public.challenge_picks;
+    failed := array_append(failed, 'a player read the choices of every attempt');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  select count(*) into n from public.challenge_entries;
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, format('A sees %s challenge entries that are not theirs', n)); end if;
+  begin
+    insert into public.challenge_entries (user_id, week, game_id) values (a, '2026-W42', gen_random_uuid());
+    failed := array_append(failed, 'a player entered a challenge without the server');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  select count(*) into n from public.challenge_choices('2026-W42');
+  if n = 0 then passed := passed + 1; else failed := array_append(failed, format('A, who has not finished the week, was told %s choices', n)); end if;
+  select array_agg(r.user_id order by r.place) into who from public.challenge_ranking('2026-W42') r;
+  if who = array[b] and (select r.entrants from public.challenge_ranking('2026-W42') r limit 1) = 1
+    then passed := passed + 1; else failed := array_append(failed, format('the week''s ranking is %s', who)); end if;
+  -- B, who has finished, is told their own choices beside everyone's, in order.
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  if (select array_agg(c.card_id || ':' || c.option || ':' || c.same || '/' || c.answered order by c.seq) from public.challenge_choices('2026-W42') c) = array['tax_advisor:1:1/1', 'health_illness:0:1/1']
+    then passed := passed + 1; else failed := array_append(failed, 'B was not told their own choices beside everyone''s'); end if;
+  select count(*) into n from public.challenge_entries;
+  if n = 1 then passed := passed + 1; else failed := array_append(failed, format('B sees %s of their own challenge entries', n)); end if;
+  reset role;
+  perform set_config('request.jwt.claims', '{"role":"anon"}', true);
+  set local role anon;
+  begin
+    perform public.challenge_ranking('2026-W42');
+    failed := array_append(failed, 'a visitor with no account read the ranking of a challenge');
   exception when insufficient_privilege then passed := passed + 1;
   end;
 

@@ -56,7 +56,7 @@ describe('starting a life', () => {
   it('shows the player a view: no seed, no random stream, no future', async () => {
     const { sessions } = setup();
     const view = (await sessions.start('engineer')).view();
-    expect(Object.keys(view).sort()).toEqual(['answered', 'finished', 'hand', 'phase', 'player', 'round', 'timeline']);
+    expect(Object.keys(view).sort()).toEqual(['answered', 'finished', 'hand', 'limits', 'phase', 'player', 'round', 'timeline']);
     expect(view.timeline).toHaveLength(1);
     expect(view.hand.length).toBeGreaterThan(0);
     expect(JSON.stringify(view)).not.toContain('seed-1');

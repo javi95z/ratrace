@@ -19,6 +19,8 @@ export interface GameUpload {
   round: number;
   log: unknown;
   stateHash: string;
+  /** The week whose challenge this life practises, or null. */
+  challenge?: string | null;
 }
 
 /** A finished life as the server wrote it. Every figure is the engine's, worked out on the server. */
@@ -38,6 +40,8 @@ export interface CloudRun {
   cities: string[];
   history: number[];
   finishedAt: string;
+  /** The week whose challenge this life was, or left out. */
+  challenge?: string;
 }
 
 /** What the mirror asks of the account. Any of it may fail: the device is then simply ahead for a while. */
@@ -57,7 +61,7 @@ export interface SyncCloud {
   /** The player's finished lives. */
   listRuns(): Promise<CloudRun[]>;
   /** The ranked life the player has in progress on the server, if they have one. */
-  rankedLife(): Promise<{ id: string; lifeId: string; engineVersion: string; contentVersion: string } | null>;
+  rankedLife(): Promise<{ id: string; lifeId: string; engineVersion: string; contentVersion: string; challenge?: string | null } | null>;
   /** Gives up a ranked life on the server that plays it. Throws if the server cannot be told just now. */
   giveUpRanked(id: string): Promise<void>;
   /**
@@ -117,6 +121,7 @@ const asRun = (run: CloudRun): FinishedRun => ({
   cities: run.cities,
   verified: false,
   ...(run.mode === 'ranked' ? { ranked: true as const } : {}),
+  ...(run.challenge !== undefined ? { challenge: run.challenge } : {}),
 });
 
 const uploadOf = (save: SavedGame): GameUpload => ({
@@ -128,6 +133,7 @@ const uploadOf = (save: SavedGame): GameUpload => ({
   round: save.state.round,
   log: save.log,
   stateHash: stateHash(save.state),
+  challenge: save.challenge ?? null,
 });
 /** A life and how it stands, in a word: two of these are equal when there is nothing new to send. */
 const standing = (upload: GameUpload): string => `${upload.id} ${upload.stateHash}`;
@@ -386,7 +392,17 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    * that has been damaged or tampered with cannot be opened as sound. Null if it cannot, or if it is over.
    */
   private adopt(game: CloudGame): SavedGame | null {
-    const save = this.open({ format: SAVE_FORMAT, gameId: game.id, engineVersion: game.engineVersion, contentVersion: game.contentVersion, lifeId: game.lifeId, seed: game.seed, log: game.log, updatedAt: Date.parse(game.updatedAt) || 0 });
+    const save = this.open({
+      format: SAVE_FORMAT,
+      gameId: game.id,
+      engineVersion: game.engineVersion,
+      contentVersion: game.contentVersion,
+      lifeId: game.lifeId,
+      ...(game.challenge ? { challenge: game.challenge } : {}),
+      seed: game.seed,
+      log: game.log,
+      updatedAt: Date.parse(game.updatedAt) || 0,
+    });
     return save === null || save.state.finished ? null : save;
   }
 
@@ -442,7 +458,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     // A device with no life at all takes the ranked life the account has in progress, as a note: the
     // life is opened from the server when the player goes to it.
     if (current === null && note === null && ranked !== null && ranked.engineVersion === this.options.versions.engine && ranked.contentVersion === this.options.versions.content) {
-      note = rankedNote({ gameId: ranked.id, lifeId: ranked.lifeId, engineVersion: ranked.engineVersion, contentVersion: ranked.contentVersion });
+      note = rankedNote({ gameId: ranked.id, lifeId: ranked.lifeId, engineVersion: ranked.engineVersion, contentVersion: ranked.contentVersion, challenge: ranked.challenge ?? null });
       await this.device.saveGame(note);
       moved = true;
     }
@@ -553,7 +569,17 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       let id = run.runId;
       // The life still on the device has just gone up.
       if (id !== current?.gameId) {
-        const whole = (as: string): GameUpload => ({ id: as, lifeId: run.lifeId, engineVersion: run.engineVersion, contentVersion: run.contentVersion, seed: run.seed, round: this.options.content.rounds, log: run.log, stateHash: '' });
+        const whole = (as: string): GameUpload => ({
+          id: as,
+          lifeId: run.lifeId,
+          engineVersion: run.engineVersion,
+          contentVersion: run.contentVersion,
+          seed: run.seed,
+          round: this.options.content.rounds,
+          log: run.log,
+          stateHash: '',
+          challenge: run.challenge ?? null,
+        });
         if ((await cloud.pushGame(whole(id))) === 'taken') {
           id = await this.renamed(id);
           await cloud.pushGame(whole(id));

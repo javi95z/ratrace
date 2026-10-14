@@ -18,7 +18,7 @@ const game = (cash: number, life: Partial<LifeStart> = {}): GameState =>
 /** Runs one order on a copy of the player and says how it went. */
 function tryOrder(state: GameState, order: Order): { reason: RejectReason | null; player: PlayerState } {
   const player = structuredClone(state.player);
-  const reason = executeOrder(player, order, { content, world: state.timeline[state.round], round: state.round, tally: newTally() });
+  const reason = executeOrder(player, order, { content, world: state.timeline[state.round], round: state.round, tally: newTally(), limits: {} });
   return { reason, player };
 }
 
@@ -172,7 +172,7 @@ describe('quoteItem', () => {
       [base, 'car_basic'],
     ];
     const answers = cases.map(([state, itemId]) => {
-      const sold = executeOrder(structuredClone(state.player), { type: 'sellItem', itemId }, { content: special, world: state.timeline[0], round: 0, tally: newTally() });
+      const sold = executeOrder(structuredClone(state.player), { type: 'sellItem', itemId }, { content: special, world: state.timeline[0], round: 0, tally: newTally(), limits: {} });
       expect(quoteItem(special, viewOf(state), itemId).sellable, itemId).toBe(sold === null);
       return sold;
     });

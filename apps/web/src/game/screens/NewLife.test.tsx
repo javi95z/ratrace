@@ -3,9 +3,9 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, lives, textFor, weekOf } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { Account, AccountState } from '@/online/types';
+import type { Account, AccountState, Community } from '@/online/types';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
 import { RankedSessions } from '@/session/ranked';
@@ -291,5 +291,70 @@ describe('a life that cannot be started', () => {
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
     expect(screen.queryByRole('alert')).toBeNull();
     quiet.mockRestore();
+  });
+});
+
+describe('the weekly challenge, where a life is chosen', () => {
+  const week = challengeOf(weekOf(Date.now()), lives);
+  if (!week) throw new Error('no challenge this week');
+  const lifeName = (id: string) => textFor('en').text.lives[id].name;
+  const ruleName: Record<string, string> = { indexOnly: 'Index funds only', noLoans: 'No loans', noMoving: 'No moving', noProperty: 'No property', startInDebt: 'Start in debt' };
+
+  /** A device whose player may be signed in, with what the account says of this week's attempt, remembering how lives were asked for. */
+  function withAccount(entry: { entered: boolean; score: number | null } | null) {
+    const services = memoryServices();
+    const asked: unknown[] = [];
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string, options?: { ranked?: boolean; challenge?: string }) => {
+      asked.push({ lifeId, ...options });
+      // No server here: the attempt, like the practice, begins on the device.
+      return start(lifeId, options?.challenge ? { challenge: options.challenge } : undefined);
+    };
+    // The same state each time it is read, as an account's is until it changes.
+    const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const community = {
+      challengeEntry: async () => entry,
+    } as unknown as Community;
+    return { services: { ...services, account, community: () => community }, asked };
+  }
+
+  it('says which life and which rule this week has, and practises it on the device, whether the life is unlocked or not', async () => {
+    const services = memoryServices();
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    const panel = screen.getByRole('button', { name: new RegExp(`^Weekly challenge${lifeName(week.lifeId)}`) });
+    expect(panel.textContent).toContain(ruleName[week.rule]);
+    await user.click(panel);
+    const sheet = screen.getByRole('dialog', { name: 'Weekly challenge' });
+    expect(within(sheet).getByText(ruleName[week.rule])).toBeTruthy();
+    // Without an account there is no attempt to play, only practice.
+    expect(within(sheet).queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(within(sheet).getByText('To play the attempt that counts, sign in. You can still practise.')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Practise' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
+  });
+
+  it('offers the attempt to a signed-in player who has not had it, as a ranked life of the week', async () => {
+    const { services, asked } = withAccount({ entered: false, score: null });
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    await user.click(screen.getByRole('button', { name: /^Weekly challenge/ }));
+    await user.click(await within(screen.getByRole('dialog', { name: 'Weekly challenge' })).findByRole('button', { name: 'Play the challenge (one attempt)' }));
+    await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: true, challenge: week.week, replace: undefined }]));
+  });
+
+  it('shows the score of an attempt already had, and offers only practice', async () => {
+    const { services } = withAccount({ entered: true, score: 777 });
+    const user = userEvent.setup();
+    renderGame(<NewLife />, services);
+    const panel = screen.getByRole('button', { name: /^Weekly challenge/ });
+    await waitFor(() => expect(panel.textContent).toContain('777'));
+    await user.click(panel);
+    const sheet = screen.getByRole('dialog', { name: 'Weekly challenge' });
+    expect(within(sheet).getByText("You have played this week's challenge: 777 points.")).toBeTruthy();
+    expect(within(sheet).queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(within(sheet).getByRole('button', { name: 'Practise' })).toBeTruthy();
   });
 });

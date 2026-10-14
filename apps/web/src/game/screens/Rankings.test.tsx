@@ -3,7 +3,8 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@/online/types';
+import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
+import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@/online/types';
 import { formatFor } from '@/lib/format';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Rankings } from './Rankings';
@@ -54,6 +55,9 @@ function community(over: Partial<Community> = {}) {
       state.friends = state.friends.filter((friend) => friend.userId !== userId);
       return true;
     },
+    challengeEntry: async () => ({ entered: false, score: null }),
+    challengeRanking: async () => ({ rows: [], entrants: 0 }),
+    challengeChoices: async () => [],
     ...over,
   };
   return { community: all, asked, state };
@@ -350,5 +354,46 @@ describe('the rankings', () => {
     const [first] = within(await screen.findByRole('list', { name: 'All time' })).getAllByRole('listitem');
     await user.click(within(first).getByRole('button'));
     expect(await within(screen.getByRole('dialog', { name: 'Otra_Rata' })).findByText('This life could not be read.')).toBeTruthy();
+  });
+});
+
+describe('the ranking of the weekly challenge', () => {
+  const week = challengeOf(weekOf(Date.now()), lives);
+  if (!week) throw new Error('no challenge this week');
+  const entry = (place: number, over: Partial<ChallengeRow> = {}): ChallengeRow => ({ place, userId: `user-${place}`, nickname: `Rata_${place}`, score: 2000 - place * 10, finishedAt: Date.UTC(2026, 9, 13), mine: false, ...over });
+
+  it('shows the week’s life and rule, every attempt best first, the best tenth marked, and how many took part', async () => {
+    const asked: string[] = [];
+    const { community: everyone } = community({
+      challengeRanking: async (asking) => {
+        asked.push(asking);
+        return { rows: [entry(1), entry(2), entry(3, { mine: true, nickname: null })], entrants: 20 };
+      },
+    });
+    const user = userEvent.setup();
+    show(everyone);
+    await user.click(await screen.findByRole('tab', { name: "This week's challenge" }));
+    expect(asked).toEqual([week.week]);
+    expect(screen.getByText(textFor('en').text.lives[week.lifeId].name)).toBeTruthy();
+    expect(screen.getByText('20 attempts · the best 2 are in the top 10%')).toBeTruthy();
+    const lines = within(screen.getByRole('list', { name: "This week's challenge" })).getAllByRole('listitem');
+    expect(lines.map((line) => line.textContent)).toEqual([
+      expect.stringContaining('Rata_1'),
+      expect.stringContaining('Rata_2'),
+      expect.stringContaining('Unnamed player'),
+    ]);
+    expect(lines.map((line) => within(line).queryByText('Top 10%') !== null)).toEqual([true, true, false]);
+    expect(lines[2].getAttribute('aria-current')).toBe('true');
+  });
+
+  it('says so when nobody has finished it yet, and when it cannot be read', async () => {
+    const user = userEvent.setup();
+    show(community({ challengeRanking: async () => ({ rows: [], entrants: 0 }) }).community);
+    await user.click(await screen.findByRole('tab', { name: /challenge/ }));
+    expect(await screen.findByText("Nobody has finished this week's challenge yet.")).toBeTruthy();
+    cleanup();
+    show(community({ challengeRanking: async () => null }).community);
+    await user.click(await screen.findByRole('tab', { name: /challenge/ }));
+    expect(await screen.findByText('The ranking of the challenge cannot be read just now.')).toBeTruthy();
   });
 });

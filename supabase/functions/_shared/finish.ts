@@ -1,3 +1,4 @@
+import { startOf } from './challenge.ts';
 import type { GameModule } from './game/types.ts';
 import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
@@ -14,6 +15,8 @@ export interface GameRow {
   round: number;
   status: string;
   log: unknown;
+  /** The week whose challenge this life is: a ranked attempt, or a practice. Null for any other life. */
+  challenge: string | null;
 }
 
 /** A row of `runs`, as the server writes it. */
@@ -36,6 +39,8 @@ export interface RunRow {
   history: number[];
   verified: true;
   finished_at: string;
+  /** The week whose challenge this life was, or null. */
+  challenge: string | null;
 }
 
 /** What finishing a life needs of the database. The function hands in the real thing; a test, its own. */
@@ -80,13 +85,13 @@ export async function finishRun(games: Readonly<Record<string, GameModule>>, dep
     const key = `${row.engine_version}/${row.content_version}`;
     if (!Object.hasOwn(games, key)) return { status: 409, body: { error: 'unknown-version', versions: Object.keys(games) } };
     const game = games[key];
-    const life = game.lives.find((one) => one.id === row.life_id);
+    const start = startOf(game, row.life_id, row.challenge ?? null);
     const log = readLog(row.log, game);
-    if (!life || log === null || typeof row.seed !== 'string' || row.seed.length === 0) return cannotReplay;
+    if (start === null || log === null || typeof row.seed !== 'string' || row.seed.length === 0) return cannotReplay;
 
     let played;
     try {
-      played = game.replayLife(game.content, life.start, row.seed, log);
+      played = game.replayLife(game.content, start, row.seed, log);
     } catch (error) {
       console.error('finish refused:', error instanceof Error ? error.message : error);
       return cannotReplay;
@@ -111,6 +116,7 @@ export async function finishRun(games: Readonly<Record<string, GameModule>>, dep
       history: played.history,
       verified: true,
       finished_at: deps.now().toISOString(),
+      challenge: row.challenge ?? null,
     };
     await deps.saveRun(run);
     await deps.closeGame(row.id, played.state.round);

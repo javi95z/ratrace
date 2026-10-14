@@ -2133,6 +2133,18 @@ function validateStart(content2, start) {
     errors.push("salaryAnnual must be a non-negative whole number of cents");
   }
   if (![0, 1, 2, 3].includes(start.lifestyleTier)) errors.push("lifestyleTier must be 0, 1, 2 or 3");
+  if (start.limits !== void 0) {
+    const limits = start.limits;
+    if (!isRecord(limits)) errors.push("limits must be a record");
+    else {
+      const only = limits.onlyAssets;
+      if (only !== void 0 && !(Array.isArray(only) && only.length > 0 && only.every((id) => content2.assets.some((asset) => asset.id === id)))) errors.push("limits.onlyAssets must name assets that exist");
+      for (const flag of ["noBorrowing", "noMoving", "noProperty"]) {
+        if (limits[flag] !== void 0 && typeof limits[flag] !== "boolean") errors.push(`limits.${flag} must be true or false`);
+      }
+      for (const key of Object.keys(limits)) if (!["onlyAssets", "noBorrowing", "noMoving", "noProperty"].includes(key)) errors.push(`limits has an unknown limit: ${key}`);
+    }
+  }
   if (!Array.isArray(start.debts)) {
     errors.push("debts must be a list");
     return errors;
@@ -2221,6 +2233,7 @@ function findInvariantBreaks(content2, state) {
 function breaksOf(content2, state, whole) {
   const p = state.player;
   const breaks = [];
+  if (typeof state.limits !== "object" || state.limits === null || Array.isArray(state.limits)) breaks.push("limits is not a record");
   const money = [
     ["cash", p.cash],
     ["deposit", p.deposit],
@@ -2343,6 +2356,37 @@ function assertNone(state, find) {
 }
 function assertInvariants(content2, state) {
   assertNone(state, () => findInvariantBreaks(content2, state));
+}
+
+// packages/engine/src/limits.ts
+function orderBreaks(order, limits) {
+  const asset = (assetId) => limits.onlyAssets !== void 0 && !limits.onlyAssets.includes(assetId);
+  switch (order.type) {
+    case "buy":
+      return asset(order.assetId) || limits.noBorrowing === true && (order.margin ?? 0) > 0;
+    case "setPlan":
+      return order.amount !== 0 && asset(order.assetId);
+    case "borrow":
+      return limits.noBorrowing === true;
+    case "buyProperty":
+      return limits.noProperty === true || limits.noBorrowing === true && order.mortgage !== "none";
+    case "buyItem":
+      return limits.noBorrowing === true && order.financed === true;
+    case "moveCity":
+      return limits.noMoving === true;
+    default:
+      return false;
+  }
+}
+function effectsBreak(effects, limits) {
+  if (effects === void 0) return false;
+  if (effects.invest !== void 0 && limits.onlyAssets !== void 0 && !limits.onlyAssets.includes(effects.invest.assetId)) return true;
+  if (effects.property !== void 0 && (limits.noProperty === true || limits.noBorrowing === true && effects.property.downPct < 100)) return true;
+  if (effects.loan !== void 0 && limits.noBorrowing === true) return true;
+  return effects.moveCity !== void 0 && limits.noMoving === true;
+}
+function optionBreaks(option, limits) {
+  return effectsBreak(option.effects, limits) || (option.outcomes ?? []).some((outcome) => effectsBreak(outcome.effects, limits));
 }
 
 // packages/engine/src/scoring.ts
@@ -2678,11 +2722,13 @@ function applyEffects(p, effects, at) {
 var situationOf = (content2, state) => ({
   content: content2,
   world: state.timeline[state.round],
-  round: state.round
+  round: state.round,
+  limits: state.limits
 });
 function optionLock(p, card2, index, at) {
   if (index === 0) return null;
   const option = card2.options[index];
+  if (at.limits !== void 0 && optionBreaks(option, at.limits)) return "challenge";
   if (!conditionHolds(option.when, p, at)) {
     const { minSkills, ...rest } = option.when ?? {};
     return minSkills !== void 0 && conditionHolds(rest, p, at) ? "skill" : "condition";
@@ -3085,6 +3131,7 @@ function executeOrder(p, raw, ctx) {
   if (!ORDER_TYPES.has(fields.type)) return "unknown-order";
   if (!hasValidFields(fields)) return "bad-order";
   const order = raw;
+  if (orderBreaks(order, ctx.limits)) return "not-in-challenge";
   switch (order.type) {
     case "buy":
     case "sell":
@@ -3456,7 +3503,8 @@ function createGame(config, seed) {
     phase: "finance",
     hand: [],
     answered: 0,
-    rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ""}`) }
+    rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ""}`) },
+    limits: structuredClone(config.start.limits ?? {})
   };
   const rng = new Rng(state.rng.cards);
   beginRound(config.content, state, rng);
@@ -3505,9 +3553,9 @@ function guard(caller, state, choices) {
     throw new Error(`${caller}: choices.orders must be an array`);
   }
 }
-function executeChoices(content2, p, now, round2, choices) {
+function executeChoices(content2, p, now, round2, choices, limits) {
   const tally = newTally();
-  const ctx = { content: content2, world: now, round: round2, tally };
+  const ctx = { content: content2, world: now, round: round2, tally, limits };
   const rejected = [];
   choices.orders.forEach((order, index) => {
     const reason = index < content2.maxOrdersPerRound ? executeOrder(p, order, ctx) : "too-many-orders";
@@ -3528,7 +3576,7 @@ function applyRound(content2, state, choices) {
   const completed = next.round + 1;
   const events = [];
   if (next.phase === "cards") resolveHand(content2, next, { rest: {} }, events);
-  const { tally, rejected, plans } = executeChoices(content2, p, now, next.round, choices);
+  const { tally, rejected, plans } = executeChoices(content2, p, now, next.round, choices, next.limits);
   for (const { order, reason } of rejected) events.push({ kind: "orderRejected", order, reason });
   for (const plan of plans) events.push({ kind: "planRan", ...plan });
   p.statusSum += p.statusPoints;
@@ -3639,7 +3687,8 @@ function viewOf(state) {
     finished: state.finished,
     phase: state.phase,
     hand: state.hand,
-    answered: state.answered
+    answered: state.answered,
+    limits: state.limits
   });
 }
 
@@ -5650,10 +5699,66 @@ function replayLife(content2, start, seed, log, onStep) {
   });
   return { state, ...record ?? recordStart(content2, state) };
 }
+
+// packages/content/src/challenges.ts
+var CHALLENGE_RULES = ["indexOnly", "noLoans", "noMoving", "noProperty", "startInDebt"];
+var CHALLENGE_DEBT = usd(3e4);
+var DAY_MS = 864e5;
+var WEEK = /^(\d{4})-W(\d{2})$/;
+function weekOf(ms) {
+  const day = Math.floor(ms / DAY_MS);
+  const weekday = ((day + 3) % 7 + 7) % 7 + 1;
+  const thursday = new Date((day - weekday + 4) * DAY_MS);
+  const year = thursday.getUTCFullYear();
+  const week = Math.floor((thursday.getTime() - Date.UTC(year, 0, 1)) / DAY_MS / 7) + 1;
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+function weekStart(week) {
+  const match = WEEK.exec(week);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const number = Number(match[2]);
+  const fourth = Date.UTC(year, 0, 4);
+  const fourthWeekday = (new Date(fourth).getUTCDay() + 6) % 7 + 1;
+  const start = fourth - (fourthWeekday - 1) * DAY_MS + (number - 1) * 7 * DAY_MS;
+  return number >= 1 && weekOf(start) === week ? start : null;
+}
+function challengeOf(week, lives2) {
+  const start = weekStart(week);
+  if (start === null || lives2.length === 0) return null;
+  const n = Math.round((start - Date.UTC(1970, 0, 5)) / (7 * DAY_MS));
+  const life2 = lives2[(n % lives2.length + lives2.length) % lives2.length];
+  const rule = CHALLENGE_RULES[((n + Math.floor(n / lives2.length)) % CHALLENGE_RULES.length + CHALLENGE_RULES.length) % CHALLENGE_RULES.length];
+  return { week, lifeId: life2.id, rule };
+}
+function challengeLimits(rule) {
+  switch (rule) {
+    case "indexOnly":
+      return { onlyAssets: assets.filter((asset) => assetKind(asset) === "fund").map((asset) => asset.id) };
+    case "noLoans":
+      return { noBorrowing: true };
+    case "noMoving":
+      return { noMoving: true };
+    case "noProperty":
+      return { noProperty: true };
+    case "startInDebt":
+      return {};
+  }
+}
+function challengeStart(challenge, life2) {
+  const start = structuredClone(life2.start);
+  const limits = challengeLimits(challenge.rule);
+  if (challenge.rule === "startInDebt") {
+    start.debts.push({ kind: "personalLoan", principal: CHALLENGE_DEBT, fixedRateBp: market.start.policyRateBp + debt.personalLoanSpreadBp, roundsLeft: debt.personalLoanTermRounds });
+  }
+  return Object.keys(limits).length > 0 ? { ...start, limits } : start;
+}
 export {
   CONTENT_VERSION,
   ENGINE_VERSION,
   SEED_BITS,
+  challengeOf,
+  challengeStart,
   content,
   finalScore,
   livedStatus,

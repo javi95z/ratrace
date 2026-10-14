@@ -16,7 +16,7 @@ import type { RankedGameRow } from '../_shared/ranked.ts';
 import { allowed } from '../_shared/rate.ts';
 
 /** What a ranked life reads of its row. */
-const ROW = 'id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at';
+const ROW = 'id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at, challenge';
 
 export default {
   fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
@@ -54,6 +54,23 @@ export default {
             await db.from('games').update({ status: 'abandoned' }).eq('id', row.id);
             throw new Error(kept.error.message);
           }
+        },
+        // Made once, by whoever asks first: of two that ask at once, both read the one that was kept.
+        challengeSeed: async (week, fresh) => {
+          must(await db.from('challenge_seeds').upsert({ week, seed: fresh }, { onConflict: 'week', ignoreDuplicates: true }));
+          return (must(await db.from('challenge_seeds').select('seed').eq('week', week).single()) as { seed: string }).seed;
+        },
+        challengeEntered: async (user, week) => (must(await db.from('challenge_entries').select('week').eq('user_id', user).eq('week', week).maybeSingle()) as unknown) !== null,
+        enterChallenge: async (user, week, gameId) => {
+          const entered = await db.from('challenge_entries').insert({ user_id: user, week, game_id: gameId });
+          // The key is the player and the week: a second entry is refused by the database itself.
+          if (entered.error?.code === '23505') return false;
+          must(entered);
+          return true;
+        },
+        savePicks: async (runId, week, picks) => {
+          if (picks.length === 0) return;
+          must(await db.from('challenge_picks').upsert(picks.map((pick, seq) => ({ run_id: runId, week, seq, card_id: pick.cardId, option: pick.option })), { onConflict: 'run_id,seq', ignoreDuplicates: true }));
         },
         loadGame: async (id) => must(await db.from('games').select(ROW).eq('id', id).maybeSingle()) as RankedGameRow | null,
         loadSeed: async (id) => (must(await db.from('game_secrets').select('seed').eq('game_id', id).maybeSingle()) as { seed: string } | null)?.seed ?? null,

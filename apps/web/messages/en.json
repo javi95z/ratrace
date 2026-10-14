@@ -141,7 +141,9 @@
     "homeHint": "Your life waits for you just as you leave it.",
     "sound": "Sound",
     "soundHint": "Coins, cards and fanfares. It plays once you touch the screen.",
-    "ranked": "Ranked life"
+    "ranked": "Ranked life",
+    "challenge": "Weekly challenge",
+    "practice": "Challenge practice"
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
@@ -973,7 +975,9 @@
     "badges": "{count, plural, =0 {No badges} one {1 badge} other {# badges}}",
     "graph": "Net worth through this life",
     "realWorth": "After inflation",
-    "ranked": "Ranked"
+    "ranked": "Ranked",
+    "challenge": "Challenge {week}",
+    "practice": "Practice {week}"
   },
   "share": {
     "open": "Share this life",
@@ -1189,6 +1193,53 @@
     "runAge": "At {age}",
     "runBankruptcies": "Bankruptcies",
     "runCities": "Lived in",
-    "runBadges": "Badges of this life"
+    "runBadges": "Badges of this life",
+    "challenge": "This week's challenge"
+  },
+  "challenge": {
+    "title": "Weekly challenge",
+    "rule": "The rule",
+    "about": "The same life, the same markets and the same cards for everyone all week. One attempt counts for the ranking; practise as often as you like.",
+    "ends": "Ends on {day}, at midnight UTC.",
+    "attempt": "Play the challenge (one attempt)",
+    "practice": "Practise",
+    "practiceHint": "A practice is played on this device with the same life and rule, but other cards and markets. It does not count for the ranking.",
+    "played": "You have played this week's challenge: {score} points.",
+    "entered": "You have already started your attempt this week.",
+    "needsAccount": "To play the attempt that counts, sign in. You can still practise.",
+    "rankingLink": "See the challenge ranking",
+    "rankingTitle": "This week's challenge",
+    "unreachable": "The ranking of the challenge cannot be read just now.",
+    "noEntries": "Nobody has finished this week's challenge yet.",
+    "entrants": "{n, plural, one {# attempt} other {# attempts}} · the best {top} are in the top 10%",
+    "topTenth": "Top 10%",
+    "nameless": "Unnamed player",
+    "place": "Place {place} of {n}",
+    "rareTitle": "What set your attempt apart",
+    "choice": "\"{card}\": you chose \"{option}\", like {pct}% of {n}.",
+    "allChoices": "See all your choices ({n})",
+    "choicesTitle": "Your choices, beside everyone's",
+    "rules": {
+      "indexOnly": {
+        "name": "Index funds only",
+        "about": "You may buy index funds and nothing else: no single shares, bonds, crypto or gold."
+      },
+      "noLoans": {
+        "name": "No loans",
+        "about": "No loans, mortgages, margin or instalments. The credit card still covers a shortfall."
+      },
+      "noMoving": {
+        "name": "No moving",
+        "about": "A whole life in the same city."
+      },
+      "noProperty": {
+        "name": "No property",
+        "about": "You may not buy any property: you rent all your life."
+      },
+      "startInDebt": {
+        "name": "Start in debt",
+        "about": "You start with a loan of {amount} to pay back."
+      }
+    }
   }
 }

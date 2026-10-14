@@ -1,4 +1,4 @@
-import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
+import { challengeOf, challengeStart, content, CONTENT_VERSION, lives, replayLife, weekOf } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth } from '@ratrace/engine';
 import type { LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
@@ -28,7 +28,7 @@ const WHOLE = lived('finished-life', content.rounds);
 const GAME = '11111111-1111-4111-8111-111111111111';
 const ME = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const game = (over: Partial<GameRow> = {}): GameRow => ({
-  id: GAME, user_id: ME, mode: 'casual', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION, seed: 'finished-life', round: content.rounds, status: 'playing', log: WHOLE, ...over,
+  id: GAME, user_id: ME, mode: 'casual', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION, seed: 'finished-life', round: content.rounds, status: 'playing', log: WHOLE, challenge: null, ...over,
 });
 
 /** A database of one game and whatever runs get written, remembering what was asked of it. */
@@ -58,7 +58,7 @@ describe('finishing a life on the server', { timeout: 60_000 }, () => {
       {
         id: GAME, user_id: ME, game_id: GAME, mode: 'casual', life_id: 'nurse', engine_version: ENGINE_VERSION, content_version: CONTENT_VERSION,
         score: finalScore(content, mine.state), net_worth: realNetWorth(mine.state), status: livedStatus(mine.state), escaped_at_round: mine.state.player.escapedAtRound,
-        bankruptcies: mine.bankruptcies, badges: mine.journal.earned, cities: mine.journal.cities, history: mine.history, verified: true, finished_at: '2026-10-13T12:00:00.000Z',
+        bankruptcies: mine.bankruptcies, badges: mine.journal.earned, cities: mine.journal.cities, history: mine.history, verified: true, finished_at: '2026-10-13T12:00:00.000Z', challenge: null,
       },
     ]);
     expect(reply.body).toEqual({ run: db.runs[0] });
@@ -150,5 +150,32 @@ describe('finishing a life on the server', { timeout: 60_000 }, () => {
     const broken: FinishDeps = { ...db.deps, saveRun: async () => { throw new Error('connection lost'); } };
     expect(await finishRun(GAMES, broken, ME, { gameId: GAME })).toEqual({ status: 500, body: { error: 'server' } });
     expect(db.closed).toEqual([]);
+  });
+
+  it('plays a practice of a week\u2019s challenge under the week\u2019s rule, and keeps its week on the run', async () => {
+    // A week whose challenge is the nurse's life, under a rule that changes how it begins.
+    const week = Array.from({ length: 400 }, (_, i) => weekOf(Date.UTC(2026, 0, 5) + i * 7 * 86_400_000))
+      .map((each) => challengeOf(each, lives)!)
+      .find((each) => each.lifeId === 'nurse' && each.rule === 'startInDebt');
+    if (!week) throw new Error('no week of the nurse in debt');
+    const under = challengeStart(week, lives.find((life) => life.id === 'nurse')!);
+    let state = createGame({ content, start: under }, 'practice');
+    const log: LoggedRound[] = [];
+    while (!state.finished) {
+      const picks: number[] = [];
+      while (state.phase === 'cards') {
+        state = applyCard(content, state, 0).state;
+        picks.push(0);
+      }
+      state = applyRound(content, state, { orders: [] }).state;
+      log.push({ picks, orders: [] });
+    }
+    const db = fakeDb(game({ seed: 'practice', log, challenge: week.week }));
+    const reply = await finishRun(GAMES, db.deps, ME, { gameId: GAME });
+    expect(reply.status).toBe(200);
+    expect(db.runs[0]).toMatchObject({ mode: 'casual', challenge: week.week, score: finalScore(content, state) });
+    // The same log, said to be another week's, is not a life that could have been played.
+    const wrong = Array.from({ length: 400 }, (_, i) => weekOf(Date.UTC(2026, 0, 5) + i * 7 * 86_400_000)).find((each) => challengeOf(each, lives)!.lifeId !== 'nurse')!;
+    expect(await finishRun(GAMES, fakeDb(game({ seed: 'practice', log, challenge: wrong })).deps, ME, { gameId: GAME })).toEqual({ status: 422, body: { error: 'cannot-replay' } });
   });
 });

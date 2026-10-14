@@ -73,6 +73,7 @@ export function Records() {
                       <p className="pixel flex flex-wrap items-center gap-x-2 text-[17px]">
                         {lifeName(run)}
                         {run.ranked ? <Tag tone="good">{t('ranked')}</Tag> : null}
+                        {run.challenge ? <Tag>{t(run.ranked ? 'challenge' : 'practice', { week: run.challenge })}</Tag> : null}
                       </p>
                       <p className="text-[12px] text-ink-300">
                         {fmt.day(run.finishedAt)} · {run.cities.map((city) => names.cities[city] ?? city).join(' · ')}

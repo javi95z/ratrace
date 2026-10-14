@@ -18,7 +18,7 @@ import { growProperties } from './property';
 import { Rng, seedRng } from './rng';
 import { newTally } from './tally';
 import type { TaxBill } from './tax';
-import type { CardPicks, Content, Evaded, GameConfig, GameEvent, GameState, GameView, LedgerLine, OrderContext, PlayerState, RejectReason, RoundChoices, RoundTally, WorldState } from './types';
+import type { CardPicks, Content, Evaded, GameConfig, GameEvent, GameLimits, GameState, GameView, LedgerLine, OrderContext, PlayerState, RejectReason, RoundChoices, RoundTally, WorldState } from './types';
 import { validateContent, validateStart } from './validate';
 import { generateTimeline } from './world';
 
@@ -38,6 +38,7 @@ export function createGame(config: GameConfig, seed: string): GameState {
     hand: [],
     answered: 0,
     rng: { cards: seedRng(seed, `cards:${config.playerKey ?? ''}`) },
+    limits: structuredClone(config.start.limits ?? {}),
   };
   const rng = new Rng(state.rng.cards);
   beginRound(config.content, state, rng);
@@ -178,9 +179,10 @@ function executeChoices(
   now: WorldState,
   round: number,
   choices: RoundChoices,
+  limits: GameLimits,
 ): { tally: RoundTally; rejected: RejectedOrder[]; plans: PlanRun[] } {
   const tally = newTally();
-  const ctx: OrderContext = { content, world: now, round, tally };
+  const ctx: OrderContext = { content, world: now, round, tally, limits };
   const rejected: RejectedOrder[] = [];
   choices.orders.forEach((order: unknown, index) => {
     const reason = index < content.maxOrdersPerRound ? executeOrder(p, order, ctx) : 'too-many-orders';
@@ -203,7 +205,7 @@ export function previewRound(content: Content, state: GameView, choices: RoundCh
   if (state.phase === 'cards') throw new Error('previewRound: answer the cards first');
   const player = structuredClone(state.player);
   const now = state.timeline[state.round];
-  const { tally, rejected, plans } = executeChoices(content, player, now, state.round, choices);
+  const { tally, rejected, plans } = executeChoices(content, player, now, state.round, choices, state.limits);
   const { income, expenses, passive, outgoings, escape, bill, evaded } = flowsOf(content, player, now, tally);
   const cashAfter = player.cash + income.salary + passive - outgoings - bill.total;
   // The same rule the round then follows: all of it, if the cash is there once the bills are met.
@@ -262,7 +264,7 @@ export function applyRound(
 
   if (next.phase === 'cards') resolveHand(content, next, { rest: {} }, events);
 
-  const { tally, rejected, plans } = executeChoices(content, p, now, next.round, choices);
+  const { tally, rejected, plans } = executeChoices(content, p, now, next.round, choices, next.limits);
   for (const { order, reason } of rejected) events.push({ kind: 'orderRejected', order, reason });
   for (const plan of plans) events.push({ kind: 'planRan', ...plan });
 

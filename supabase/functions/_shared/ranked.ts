@@ -1,5 +1,6 @@
 import type { RunRow } from './finish.ts';
 import type { GameModule, LoggedRound, ReplayedStep } from './game/types.ts';
+import { isWeek, startOf } from './challenge.ts';
 import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
 
@@ -16,6 +17,14 @@ export interface RankedGameRow {
   log: unknown;
   /** When the row was last written, exactly as the database says it: a step is written only if this still holds. */
   updated_at: string;
+  /** The week whose challenge this game is the attempt at, or null. */
+  challenge: string | null;
+}
+
+/** What a player chose on one card of a challenge, in the order the life was played. */
+export interface CardPick {
+  cardId: string;
+  option: number;
 }
 
 /** The kinds of call a ranked life counts. How many of each a player may make is in `rate.ts`. */
@@ -36,7 +45,15 @@ export interface RankedDeps {
   /** The ranked life this player has in progress, if they have one. A player has one at most. */
   playingRanked(userId: string): Promise<RankedGameRow | null>;
   /** Makes the game, in progress and with an empty log, and keeps its seed where no player can read it. */
-  createGame(row: { id: string; user_id: string; life_id: string; engine_version: string; content_version: string }, seed: string): Promise<void>;
+  createGame(row: { id: string; user_id: string; life_id: string; engine_version: string; content_version: string; challenge: string | null }, seed: string): Promise<void>;
+  /** The seed of a week's challenge: the one already made for it, or a new one kept for it from now on. Every attempt of the week plays it. */
+  challengeSeed(week: string, fresh: string): Promise<string>;
+  /** True if the player has had their attempt of a week, in progress, given up or finished. */
+  challengeEntered(userId: string, week: string): Promise<boolean>;
+  /** Enters the player's attempt of a week. False if they have had it already. */
+  enterChallenge(userId: string, week: string, gameId: string): Promise<boolean>;
+  /** Keeps what an attempt chose on each card, for the sums told to those who have finished the week. */
+  savePicks(runId: string, week: string, picks: readonly CardPick[]): Promise<void>;
   loadGame(id: string): Promise<RankedGameRow | null>;
   loadSeed(id: string): Promise<string | null>;
   /** Writes the log and the round, if the row is still as it was read. False if someone wrote it first. */
@@ -47,6 +64,9 @@ export interface RankedDeps {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** The event of a card answered, as far as a challenge keeps it. */
+const isCardEvent = (x: unknown): x is { kind: 'card'; cardId: string; option: number } =>
+  typeof x === 'object' && x !== null && (x as { kind?: unknown }).kind === 'card' && typeof (x as { cardId?: unknown }).cardId === 'string' && typeof (x as { option?: unknown }).option === 'number';
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isText = (x: unknown, max: number): x is string => typeof x === 'string' && x.length >= 1 && x.length <= max;
 const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
@@ -101,17 +121,19 @@ function lastIs(log: readonly LoggedRound[], choice: Choice): boolean {
  */
 async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, row: RankedGameRow) {
   const game = games[`${row.engine_version}/${row.content_version}`];
-  const life = game?.lives.find((one) => one.id === row.life_id);
+  const start = game ? startOf(game, row.life_id, row.challenge ?? null) : null;
   const seed = await deps.loadSeed(row.id);
   const log = game ? readLog(row.log, game) : null;
-  if (!game || !game.viewOf || !life || log === null || seed === null) return null;
+  if (!game || !game.viewOf || start === null || log === null || seed === null) return null;
   const viewOf = game.viewOf;
   const play = (played: readonly LoggedRound[]) => {
     let last: ReplayedStep | null = null;
-    const whole = game.replayLife(game.content, life.start, seed, played, (step) => {
+    const picks: CardPick[] = [];
+    const whole = game.replayLife(game.content, start, seed, played, (step) => {
       last = step;
+      for (const event of step.events) if (isCardEvent(event)) picks.push({ cardId: event.cardId, option: event.option });
     });
-    return { ...whole, last: last as ReplayedStep | null };
+    return { ...whole, last: last as ReplayedStep | null, picks };
   };
   /** Writes the run of a life that is over and closes its game. Done again, it changes nothing. */
   const settle = async (played: ReturnType<typeof play>): Promise<RunRow> => {
@@ -133,8 +155,11 @@ async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedD
       history: played.history,
       verified: true,
       finished_at: deps.now().toISOString(),
+      challenge: row.challenge ?? null,
     };
     await deps.saveRun(run);
+    // The choices are kept before the game is closed: a settle done again writes the same ones again.
+    if (row.challenge) await deps.savePicks(row.id, row.challenge, played.picks);
     await deps.closeGame(row.id, played.state.round, 'finished');
     return run;
   };
@@ -269,13 +294,19 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
  * Starts a ranked life. A player has one in progress at most, and it is never ended unasked: with
  * one in the way the answer says which, and the new life begins only when the request names that
  * very one in `replace`.
+ *
+ * With `challenge`, the life is the attempt at this week's challenge: the life and the rule are the
+ * week's, any life may be played whether unlocked or not, the seed is the week's own, and each
+ * player has one attempt a week, counted the moment it begins.
  */
 async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
-  const { lifeId, engineVersion, contentVersion, replace } = raw;
+  const { lifeId, engineVersion, contentVersion, replace, challenge } = raw;
   if (!isText(lifeId, 40)) return bad('lifeId');
   if (!isText(engineVersion, 20)) return bad('engineVersion');
   if (!isText(contentVersion, 20)) return bad('contentVersion');
   if (replace !== undefined && replace !== null && (typeof replace !== 'string' || !UUID.test(replace))) return bad('replace');
+  if (challenge !== undefined && challenge !== null && !isWeek(challenge)) return bad('challenge');
+  const week = typeof challenge === 'string' ? challenge : null;
   // Counted before anything is looked up: a call costs the same whatever it turns out to ask for.
   if (!(await deps.allow(userId, 'ranked-start'))) return tooMany;
 
@@ -288,8 +319,18 @@ async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDe
   if (!game.viewOf || (game.SEED_BITS ?? 0) < 128 || key !== deps.current) return { status: 409, body: { error: 'cannot-rank' } };
   const life = game.lives.find((one) => one.id === lifeId);
   if (!life) return { status: 400, body: { error: 'unknown-life' } };
-  // Which lives a player may choose is the game's rule, kept here as the device keeps it.
-  if (life.unlock !== 'default' && !(await deps.unlockedLives(userId)).includes(life.id)) return { status: 403, body: { error: 'locked-life' } };
+  let begins: unknown = life.start;
+  if (week !== null) {
+    // Only this week's challenge can be played, and only as this week's life: the server's clock says which week it is.
+    if (!game.challengeOf || week !== weekOfServer(deps.now())) return { status: 409, body: { error: 'challenge-closed' } };
+    begins = startOf(game, life.id, week);
+    if (begins === null) return { status: 400, body: { error: 'unknown-life' } };
+    // Asked before anything is given up for it: a second attempt ends nothing.
+    if (await deps.challengeEntered(userId, week)) return { status: 409, body: { error: 'challenge-played' } };
+  } else if (life.unlock !== 'default' && !(await deps.unlockedLives(userId)).includes(life.id)) {
+    // Which lives a player may choose is the game's rule, kept here as the device keeps it.
+    return { status: 403, body: { error: 'locked-life' } };
+  }
 
   const playing = await deps.playingRanked(userId);
   if (playing !== null && !(await settledIfOver(games, deps, playing))) {
@@ -299,11 +340,26 @@ async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDe
     await deps.closeGame(playing.id, playing.round, 'abandoned');
   }
   const id = deps.newId();
-  const seed = deps.newSeed();
-  await deps.createGame({ id, user_id: userId, life_id: life.id, engine_version: engineVersion, content_version: contentVersion }, seed);
-  const played = game.replayLife(game.content, life.start, seed, []);
+  const seed = week === null ? deps.newSeed() : await deps.challengeSeed(week, deps.newSeed());
+  await deps.createGame({ id, user_id: userId, life_id: life.id, engine_version: engineVersion, content_version: contentVersion, challenge: week }, seed);
+  // The attempt is the week's from the moment it begins. One that loses the race to an attempt already entered is given up at once.
+  if (week !== null && !(await deps.enterChallenge(userId, week, id))) {
+    await deps.closeGame(id, 0, 'abandoned');
+    return { status: 409, body: { error: 'challenge-played' } };
+  }
+  const played = game.replayLife(game.content, begins, seed, []);
   return {
     status: 200,
     body: { gameId: id, lifeId: life.id, step: 0, view: game.viewOf(played.state), record: { history: played.history, bankruptcies: played.bankruptcies, journal: played.journal } },
   };
+}
+
+/** The ISO week a moment falls in, in UTC, as "2026-W42": the server's own count, so that no client can choose its week. */
+export function weekOfServer(at: Date): string {
+  const day = Math.floor(at.getTime() / 86_400_000);
+  const weekday = ((((day + 3) % 7) + 7) % 7) + 1;
+  const thursday = new Date((day - weekday + 4) * 86_400_000);
+  const year = thursday.getUTCFullYear();
+  const number = Math.floor((thursday.getTime() - Date.UTC(year, 0, 1)) / 86_400_000 / 7) + 1;
+  return `${year}-W${String(number).padStart(2, '0')}`;
 }

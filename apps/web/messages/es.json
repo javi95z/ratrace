@@ -141,7 +141,9 @@
     "homeHint": "Tu vida te espera tal como la dejas.",
     "sound": "Sonido",
     "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla.",
-    "ranked": "Vida clasificatoria"
+    "ranked": "Vida clasificatoria",
+    "challenge": "Reto de la semana",
+    "practice": "Práctica del reto"
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
@@ -973,7 +975,9 @@
     "badges": "{count, plural, =0 {Sin insignias} one {1 insignia} other {# insignias}}",
     "graph": "El patrimonio a lo largo de esta vida",
     "realWorth": "Descontando la inflación",
-    "ranked": "Clasificatoria"
+    "ranked": "Clasificatoria",
+    "challenge": "Reto {week}",
+    "practice": "Práctica {week}"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -1189,6 +1193,53 @@
     "runAge": "A los {age}",
     "runBankruptcies": "Quiebras",
     "runCities": "Vivió en",
-    "runBadges": "Insignias de esta vida"
+    "runBadges": "Insignias de esta vida",
+    "challenge": "Reto de la semana"
+  },
+  "challenge": {
+    "title": "Reto de la semana",
+    "rule": "La regla",
+    "about": "La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Un solo intento cuenta para el ranking; practica cuantas veces quieras.",
+    "ends": "Termina el {day}, a medianoche UTC.",
+    "attempt": "Jugar el reto (un intento)",
+    "practice": "Practicar",
+    "practiceHint": "Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para el ranking.",
+    "played": "Ya jugaste el reto de esta semana: {score} puntos.",
+    "entered": "Ya empezaste tu intento de esta semana.",
+    "needsAccount": "Para jugar el intento que cuenta, entra con tu cuenta. Puedes practicar igualmente.",
+    "rankingLink": "Ver el ranking del reto",
+    "rankingTitle": "Reto de esta semana",
+    "unreachable": "Ahora no se puede leer el ranking del reto.",
+    "noEntries": "Nadie ha terminado aún el reto de esta semana.",
+    "entrants": "{n, plural, one {# intento} other {# intentos}} · los {top} mejores están en el 10 % superior",
+    "topTenth": "Top 10 %",
+    "nameless": "Jugador sin nombre",
+    "place": "Puesto {place} de {n}",
+    "rareTitle": "Lo que distinguió tu intento",
+    "choice": "«{card}»: elegiste «{option}», como el {pct} % de {n}.",
+    "allChoices": "Ver todas tus elecciones ({n})",
+    "choicesTitle": "Tus elecciones, junto a las de todos",
+    "rules": {
+      "indexOnly": {
+        "name": "Solo fondos indexados",
+        "about": "Solo puedes comprar fondos indexados: nada de acciones sueltas, bonos, cripto ni oro."
+      },
+      "noLoans": {
+        "name": "Sin préstamos",
+        "about": "Ni préstamos, ni hipotecas, ni margen, ni compras a plazos. La tarjeta cubre los descubiertos igualmente."
+      },
+      "noMoving": {
+        "name": "Sin mudanzas",
+        "about": "Toda la vida en la misma ciudad."
+      },
+      "noProperty": {
+        "name": "Sin inmuebles",
+        "about": "No puedes comprar ninguna propiedad: alquilas toda la vida."
+      },
+      "startInDebt": {
+        "name": "Empiezas con deuda",
+        "about": "Empiezas con un préstamo de {amount} que devolver."
+      }
+    }
   }
 }
