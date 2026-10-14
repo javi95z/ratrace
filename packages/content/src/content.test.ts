@@ -53,8 +53,9 @@ describe('the v1 content', () => {
     expect(groups.crypto).toEqual(['bitcoin', 'ethereum', 'dogecoin']);
     expect(groups.gold).toEqual(['gold']);
     expect(groups.stock).toHaveLength(10);
-    // A fund is what a beginner may buy: it needs no finance skill.
-    for (const asset of content.assets) expect((asset.minFinanceSkill ?? 0) === 0, asset.id).toBe(assetKind(asset) === 'fund');
+    // Nothing on the market is open with no money sense at all; a fund is among the first things that are.
+    for (const asset of content.assets) expect(asset.minFinanceSkill ?? 0, asset.id).toBeGreaterThanOrEqual(1);
+    for (const id of groups.fund) expect(content.assets.find((asset) => asset.id === id)?.minFinanceSkill, id).toBe(1);
   });
 
   it('never sells an item through a card for less than it could be sold on for at once', () => {

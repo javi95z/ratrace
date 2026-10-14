@@ -83,6 +83,16 @@ describe('learning a skill', () => {
     expect(alone.events).toContainEqual(expect.objectContaining({ kind: 'orderRejected', reason: 'no-job' }));
   });
 
+  it('teaches money sense on a course too, with no job needed: two rounds of it open the first level', () => {
+    const content = fixtureContent();
+    const jobless = withPlayer(content, game(content), {}, { career: null });
+    const once = applyRound(content, jobless, { orders: [focus('studyFinance')] });
+    expect(once.state.player.life).toMatchObject({ financePoints: 2, financeSkill: 0 });
+    const twice = applyRound(content, once.state, { orders: [focus('studyFinance')] });
+    expect(twice.state.player.life).toMatchObject({ financePoints: 4, financeSkill: 1 });
+    expect(twice.events).toContainEqual({ kind: 'financeSkill', level: 1 });
+  });
+
   it("is learnt by living it too: a trade, a job hunt, a city not one's own, a club, a gym", () => {
     const content = contentWith();
     // The office is a trade of negotiation; the fixture's start is a modest life in the home city.
@@ -132,9 +142,9 @@ describe('learning a skill', () => {
     expect(quote.skills.find((s) => s.skill === 'negotiation')).toEqual({ skill: 'negotiation', points: 3, level: 1, from: 3, next: 6, study: 'studyNegotiation', studyPoints: 2, practice: 1 });
     expect(quote.skills.find((s) => s.skill === 'management')).toMatchObject({ study: null, practice: 0, from: 0, next: 3 });
     // Money sense on the same steps; a level given by a card is counted from where it begins.
-    expect(quote.finance).toEqual({ level: 0, points: 0, from: 0, next: 3, practice: 0 });
+    expect(quote.finance).toEqual({ level: 0, points: 0, from: 0, next: 3, practice: 0, study: 'studyFinance', studyPoints: 2 });
     const taught = quoteSkills(content, viewOf(withPlayer(content, state, {}, { financeSkill: 2, financePoints: 1 })));
-    expect(taught.finance).toEqual({ level: 2, points: 6, from: 6, next: 9, practice: 0 });
+    expect(taught.finance).toEqual({ level: 2, points: 6, from: 6, next: 9, practice: 0, study: 'studyFinance', studyPoints: 2 });
   });
 
   it('keeps the rules honest', () => {

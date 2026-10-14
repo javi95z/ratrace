@@ -824,6 +824,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
 
 function Lifestyle() {
   const t = useT('finance.lifestyle');
+  const wording = useT('work');
   const { content, text, names, fmt } = useWords();
   const { view, shown, p } = useRound();
   const orders = useGame((s) => s.orders);
@@ -861,6 +862,14 @@ function Lifestyle() {
       <Panel title={t('learn')}>
         <div className="flex flex-col gap-2">
           <p className="text-[13px] text-ink-300">{t('learnAbout')}</p>
+          <Toggle
+            on={has(skills.finance.study)}
+            onChange={focus(skills.finance.study)}
+            disabled={!has(skills.finance.study) && left < 1}
+            label={text.focusActions[skills.finance.study]}
+            hint={t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })}
+            icon={focusArt[skills.finance.study]}
+          />
           {skills.skills.map((skill) =>
             skill.study === null ? null : (
               <Toggle

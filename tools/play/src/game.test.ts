@@ -218,7 +218,8 @@ describe('the terminal game', () => {
     expect(shown).toContain('✓ учиться (добавлено)');
     expect(shown).toContain('Нельзя: В этом раунде ты это уже делаешь.');
     expect(shown).toContain('Не знаю такой команды. Набери «помощь».');
-    expect(shown).toContain('Нельзя: Не хватает наличных.');
+    // A civil servant starts knowing nothing of money: not even a fund is open yet.
+    expect(shown).toContain('Нельзя: Для этого нужна финансовая грамотность повыше.');
     expect(shown).toContain('ПЛАНЫ НА РАУНД\n  1. отложить 500\n  2. учиться');
     expect(shown).toContain('− учиться (убрано)');
     // Undone for real: in the first round the same plan is taken again, where a second copy would be refused.

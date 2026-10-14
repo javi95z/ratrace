@@ -325,7 +325,7 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
 /** What each level of knowing about money lets the player do on their own, and how the next is reached. */
 function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
   const t = useT('work');
-  const { content } = useWords();
+  const { content, text } = useWords();
   const level = finance.level;
 
   return (
@@ -349,6 +349,7 @@ function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
         })}
       </ul>
       <p className="text-[13px] leading-snug">{t('financeHow', { n: content.life.skills.investingPoints })}</p>
+      <p className="text-[13px] leading-snug text-ink-200">{t('skillStudy', { action: text.focusActions[finance.study], n: finance.studyPoints })}</p>
       <p className={`text-[12px] ${finance.practice > 0 ? 'text-teal-300' : 'text-ink-300'}`}>{finance.practice > 0 ? t('financeLiving', { n: finance.practice }) : t('financeIdle')}</p>
     </>
   );
@@ -373,9 +374,12 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
     { action: 'jobHunt', name: t('hunt'), gives: t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct }) },
   ];
   // Learning needs no job: it is on the list whatever the player does for a living.
-  const learning = skills.skills.flatMap((skill) =>
-    skill.study === null ? [] : [{ action: skill.study as FocusAction, name: text.focusActions[skill.study], gives: t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }) }],
-  );
+  const learning = [
+    { action: skills.finance.study as FocusAction, name: text.focusActions[skills.finance.study], gives: t('learnGives', { n: skills.finance.studyPoints, skill: t('finance') }) },
+    ...skills.skills.flatMap((skill) =>
+      skill.study === null ? [] : [{ action: skill.study as FocusAction, name: text.focusActions[skill.study], gives: t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }) }],
+    ),
+  ];
   const uses = [...(work.level === null ? [] : job), ...learning];
 
   return (

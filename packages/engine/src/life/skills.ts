@@ -92,6 +92,8 @@ export function learnSkills(p: PlayerState, content: Content, tally: RoundTally,
     if (isStudy(action)) points[STUDY_OF[action]] += content.life.skills.studyPoints;
   }
   addSkillPoints(p, content, points, events);
+  // Money sense is studied like any skill, on top of what years of investing teach.
+  if (tally.focusActions.includes('studyFinance')) addFinancePoints(p, content, content.life.skills.studyPoints, events);
 }
 
 /** A business may be owned past the usual limit by someone who knows how to manage. */

@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.19.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.20.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -684,8 +684,8 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 | Bono EE. UU. 2 años | UST2 | Bonos | 1 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
 | Bono EE. UU. 10 años | UST10 | Bonos | 1 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
 | Bund alemán | BUND | Bonos | 1 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
-| S&P 500 | SPX | Acciones | 0 | 1,4 % al año | Las 500 mayores empresas de EE. UU. en un solo fondo. |
-| MSCI World | MSCI | Acciones | 0 | 1,8 % al año | Empresas de todo el mundo desarrollado en un solo fondo. Tu plan de pensiones lo sigue. |
+| S&P 500 | SPX | Acciones | 1 | 1,4 % al año | Las 500 mayores empresas de EE. UU. en un solo fondo. |
+| MSCI World | MSCI | Acciones | 1 | 1,8 % al año | Empresas de todo el mundo desarrollado en un solo fondo. Tu plan de pensiones lo sigue. |
 | Apple | AAPL | Acciones | 1 | 0,5 % al año | Crecimiento, con un cliente fiel en cada bolsillo. |
 | Microsoft | MSFT | Acciones | 1 | 0,8 % al año | Crecimiento, con suscripción incluida. |
 | Nvidia | NVDA | Acciones | 1 |  | Crecimiento a todo volumen. Vuela en los auges y se hunde en las caídas. |
@@ -722,20 +722,20 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 | <img src="../art/clean/icons/icon.focus_overtime.png" alt=""> | Hacer horas extra | Más sueldo esa ronda, según la carrera |
 | <img src="../art/clean/icons/icon.focus_study.png" alt=""> | Formarte para tu carrera | +1 de experiencia, además del +1 por trabajar |
 | <img src="../art/clean/icons/icon.focus_hunt.png" alt=""> | Buscar un trabajo mejor | 20 % de probabilidad de un +3 % de sueldo para siempre |
-| <img src="../art/clean/icons/icon.career_sales.png" alt=""> | Hacer un curso de negociación | +2 puntos de Negociación |
-| <img src="../art/clean/icons/icon.city.png" alt=""> | Ir a clases de idiomas | +2 puntos de Idiomas |
-| <img src="../art/clean/icons/icon.career_influencer.png" alt=""> | Salir a hacer contactos | +2 puntos de Contactos |
-| <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Hacer deporte | +2 puntos de Salud |
+| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Hacer un curso de negociación | +2 puntos de Negociación |
+| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Ir a clases de idiomas | +2 puntos de Idiomas |
+| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Salir a hacer contactos | +2 puntos de Contactos |
+| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Hacer deporte | +2 puntos de Salud |
 
 Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 2 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
 
 |  | Habilidad | Por nivel | Se practica |
 | --- | --- | --- | --- |
-| <img src="../art/clean/icons/icon.career_sales.png" alt=""> | Negociación | +1 % al buscar trabajo, +2 % por ascenso, negocio vendido un 4 % más caro | Buscando trabajo; Ventas, Derecho, Finanzas |
-| <img src="../art/clean/icons/icon.city.png" alt=""> | Idiomas | Mudanza un 15 % más barata; desde 2 sin perder puesto; desde 3 la pareja trabaja al llegar | Fuera de la ciudad de origen; Hostelería |
-| <img src="../art/clean/icons/icon.career_influencer.png" alt=""> | Contactos | +8 puntos al buscar trabajo, +1 de estatus | Socio de un club; Ventas, Influencer, Hostelería, Función pública |
-| <img src="../art/clean/icons/icon.business.png" alt=""> | Gestión | +6 % de beneficio, encargado 4 puntos más barato; desde 3 un negocio más | Llevando un negocio |
-| <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Salud | Seguro de salud un 20 % más barato; desde 3 +1 de foco | Gimnasio; Sanidad, Medicina |
+| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Negociación | +1 % al buscar trabajo, +2 % por ascenso, negocio vendido un 4 % más caro | Buscando trabajo; Ventas, Derecho, Finanzas |
+| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Idiomas | Mudanza un 15 % más barata; desde 2 sin perder puesto; desde 3 la pareja trabaja al llegar | Fuera de la ciudad de origen; Hostelería |
+| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Contactos | +8 puntos al buscar trabajo, +1 de estatus | Socio de un club; Ventas, Influencer, Hostelería, Función pública |
+| <img src="../art/clean/icons/icon.skill_management.png" alt=""> | Gestión | +6 % de beneficio, encargado 4 puntos más barato; desde 3 un negocio más | Llevando un negocio |
+| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Salud | Seguro de salud un 20 % más barato; desde 3 +1 de foco | Gimnasio; Sanidad, Medicina |
 
 Familia: una pareja añade un 45 % del coste de vida, y cada hijo un 22 % durante 20 años.
 

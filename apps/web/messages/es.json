@@ -150,7 +150,7 @@
     "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, con exactitud, el efectivo que tendrás después. Empieza por Cartera.",
     "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
     "ratRace": "La barra de arriba es el juego entero: tus ingresos pasivos frente a lo que cuesta tu vida. Cubre ese coste dos rondas seguidas y sales de la rueda.",
-    "invest": "El efectivo no rinde nada. El ahorro da un poco y es seguro. En Mercado hay fondos indexados, que puede comprar cualquiera, y se abre más según crece tu cultura financiera.",
+    "invest": "El efectivo no rinde nada. El ahorro da un poco y es seguro. Para invertir hace falta cultura financiera 1: se consigue con un curso de finanzas (pestaña Vida) o con el plan de pensiones.",
     "focus": "En la pestaña Vida está tu foco: estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
     "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda con exactitud.",
     "gotIt": "Entendido",
@@ -983,8 +983,8 @@
     "yourLevel": "Tu nivel",
     "locked": "Por alcanzar",
     "financeOpens": {
-      "0": "Fondos indexados: {n} para elegir. Lo sencillo, y lo que casi siempre basta.",
-      "1": "Bonos, acciones sueltas y oro: {n} más.",
+      "0": "Nada todavía: solo ahorro y plan de pensiones. Un curso de finanzas abre el nivel 1.",
+      "1": "Fondos indexados, bonos, acciones y oro: {n} para elegir.",
       "2": "Criptomonedas: {n} más.",
       "3": "Ningún mercado nuevo: lo que cambia es con qué dinero compras."
     },

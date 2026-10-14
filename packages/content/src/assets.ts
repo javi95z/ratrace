@@ -14,8 +14,8 @@ export const assets: AssetDef[] = [
   { id: 'bund', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 7, yieldSpreadBp: -50, minFinanceSkill: 1 },
 
   // Index funds.
-  { id: 'sp500', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 140, driftBp: 100 },
-  { id: 'msci_world', class: 'equity', betaPct: 95, idioVolBp: 250, yieldBp: 180 },
+  { id: 'sp500', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 140, driftBp: 100, minFinanceSkill: 1 },
+  { id: 'msci_world', class: 'equity', betaPct: 95, idioVolBp: 250, yieldBp: 180, minFinanceSkill: 1 },
 
   // Growth.
   { id: 'apple', class: 'equity', betaPct: 115, idioVolBp: 1_500, yieldBp: 50, driftBp: 150, minFinanceSkill: 1 },

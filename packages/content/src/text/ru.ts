@@ -74,6 +74,7 @@ export const ru: ContentText = {
     overtime: 'Работать сверхурочно',
     studyCareer: 'Учиться ради карьеры',
     jobHunt: 'Искать работу получше',
+    studyFinance: 'Пройти курс по финансам',
     studyNegotiation: 'Пройти курс переговоров',
     studyLanguages: 'Ходить на языковые курсы',
     networking: 'Заводить знакомства',

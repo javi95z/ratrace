@@ -29,12 +29,19 @@ const { names } = textFor('en');
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
 /** A life taken to the finances of its current round, without the screen. */
-async function inFinance(lifeId: string) {
+async function inFinance(lifeId: string, { taught = false }: { taught?: boolean } = {}) {
   const services = memoryServices();
   // The heir is a life a player has to unlock before choosing it.
   await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' }, crypto_kid: { at: 1, gameId: 'earlier' } } });
   const session = await services.sessions.start(lifeId);
   await toFinance(session);
+  // Nothing on the market is open with no money sense: a life that is to invest first takes two rounds of a finance course.
+  if (taught) {
+    for (let round = 0; round < 2; round++) {
+      await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }] });
+      await toFinance(session);
+    }
+  }
   return { services, session };
 }
 async function toFinance(session: GameSession) {
@@ -214,8 +221,8 @@ describe('the lifestyle tab', () => {
       for (const choice of within(screen.getByRole('radiogroup', { name: group })).getAllByRole('radio')) expect(pictured(choice), `${group}: ${choice.textContent}`).toBe(true);
     }
     const switches = screen.getAllByRole('switch');
-    // Three ways to work, four to learn, four insurances.
-    expect(switches).toHaveLength(3 + 4 + 4);
+    // Three ways to work, five to learn, four insurances.
+    expect(switches).toHaveLength(3 + 5 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
   });
 });
@@ -223,7 +230,7 @@ describe('the lifestyle tab', () => {
 describe('the portfolio at a glance', () => {
   it('says what the player\'s wealth is held in, share by share, and what most of it hangs on', async () => {
     // The heir owns a flat and has cash; a round later, two funds as well.
-    const { services, session } = await inFinance('heir');
+    const { services, session } = await inFinance('heir', { taught: true });
     await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'buy', assetId: 'msci_world', amount: 500_000 }] });
     await toFinance(session);
     const quote = quotePortfolio(content, viewOf(await stateOf(services)));
@@ -263,7 +270,7 @@ describe('the portfolio at a glance', () => {
 
 describe('what the investments pay', () => {
   it('is shown on each holding and in all, and can be put back into them with one switch', async () => {
-    const { services, session } = await inFinance('heir');
+    const { services, session } = await inFinance('heir', { taught: true });
     await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }, { type: 'buy', assetId: 'msci_world', amount: 500_000 }] });
     await toFinance(session);
     const state = await stateOf(services);
@@ -305,7 +312,7 @@ describe('buying with borrowed money', () => {
   };
 
   it('is not shown to someone without the skill: the sheet only buys', async () => {
-    const { services, session } = await inFinance('civil_servant');
+    const { services, session } = await inFinance('civil_servant', { taught: true });
     expect(quoteMargin(content, session.view(), 'sp500').lock).toBe('needs-finance-skill');
     const user = userEvent.setup();
     renderGame(<Play />, services);
@@ -386,7 +393,7 @@ describe('investing every round', () => {
   };
 
   it('is set from the market in the sheet that buys, and from then on buys by itself', async () => {
-    const { services } = await inFinance('civil_servant');
+    const { services } = await inFinance('civil_servant', { taught: true });
     const user = userEvent.setup();
     renderGame(<Play />, services);
     // Nothing yet, and the panel says how to begin.
@@ -420,7 +427,7 @@ describe('investing every round', () => {
   });
 
   it('shows what a plan has built, warns when a round cannot pay for it, and is changed or ended on a tap', async () => {
-    const { services, session } = await inFinance('civil_servant');
+    const { services, session } = await inFinance('civil_servant', { taught: true });
     await session.playRound({ orders: [{ type: 'setPlan', assetId: 'sp500', amount: 100_000 }] });
     await toFinance(session);
     await session.playRound({ orders: [] });
@@ -786,8 +793,8 @@ describe('focus from the work panel', () => {
     await user.click(within(work).getByText('Focus this round'));
     const sheet = screen.getByRole('dialog', { name: 'Focus' });
     expect(within(sheet).getByText('Tap to choose. It takes effect when the round is played.')).toBeTruthy();
-    // Three ways to work and four to learn.
-    expect(within(sheet).getAllByRole('switch')).toHaveLength(7);
+    // Three ways to work and five to learn.
+    expect(within(sheet).getAllByRole('switch')).toHaveLength(8);
     await user.click(within(sheet).getByRole('switch', { name: /^Exercise/ }));
     expect(within(sheet).getByRole('switch', { name: /^Exercise/ }).getAttribute('aria-checked')).toBe('true');
     expect(within(sheet).getByText('2/3')).toBeTruthy();
@@ -796,7 +803,7 @@ describe('focus from the work panel', () => {
 
 describe('a plan in the market', () => {
   it('is shown on the asset it buys, beside what the asset pays', async () => {
-    const { services, session } = await inFinance('heir');
+    const { services, session } = await inFinance('heir', { taught: true });
     await session.playRound({ orders: [{ type: 'setPlan', assetId: 'msci_world', amount: 50_000 }] });
     await toFinance(session);
     const user = userEvent.setup();

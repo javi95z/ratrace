@@ -90,8 +90,10 @@ describe('the work panel of the profile', () => {
     expect(within(levels[content.debt.marginMinFinanceSkill]).getByText('And buying with money borrowed from the broker.')).toBeTruthy();
     // The counts are the game's own: what each level adds to what can be bought.
     const at = (level: number) => content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === level).length;
-    expect(within(levels[0]).getByText(new RegExp(`^Index funds: ${at(0)} to choose from`))).toBeTruthy();
-    expect(within(levels[1]).getByText(`Bonds, single stocks and gold: ${at(1)} more.`)).toBeTruthy();
+    // With no money sense nothing is open; the first level opens every fund, bond, stock and gold there is.
+    expect(at(0)).toBe(0);
+    expect(within(levels[0]).getByText('Nothing yet: savings and the pension only. A finance course opens level 1.')).toBeTruthy();
+    expect(within(levels[1]).getByText(`Index funds, bonds, stocks and gold: ${at(1)} to choose from.`)).toBeTruthy();
     expect(within(levels[2]).getByText(`Cryptocurrencies: ${at(2)} more.`)).toBeTruthy();
     expect(within(levels[content.life.rentOutMinFinanceSkill]).getByText('And letting property out.')).toBeTruthy();
     expect(within(sheet).getByText(/^Each round with money invested gives \+1\./)).toBeTruthy();

@@ -149,7 +149,10 @@ describe('the finance phase', () => {
   it('refuses an order that cannot be done, says why, and leaves the basket alone', async () => {
     const { get } = await inFinance();
     get().addOrder(study);
-    expect(get().addOrder({ type: 'buy', assetId: 'msci_world', amount: 999_999_999_00 })).toBe(false);
+    // The nurse knows nothing of money yet: even a fund is not open to her.
+    expect(get().addOrder({ type: 'buy', assetId: 'msci_world', amount: 100_00 })).toBe(false);
+    expect(get().refusal).toBe('needs-finance-skill');
+    expect(get().addOrder({ type: 'depositIn', amount: 999_999_999_00 })).toBe(false);
     expect(get().refusal).toBe('not-enough-cash');
     expect(get().orders).toEqual([study]);
     expect(get().addOrder(study)).toBe(false);

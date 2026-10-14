@@ -620,7 +620,7 @@ export interface SkillsQuote {
    * Money sense, on the same steps as any skill: a point for every round with money invested, and a
    * level a card gives counted from where it begins. `practice` is what this round will add.
    */
-  finance: { level: FinanceSkill; points: number; from: number; next: number | null; practice: number };
+  finance: { level: FinanceSkill; points: number; from: number; next: number | null; practice: number; study: 'studyFinance'; studyPoints: number };
 }
 
 /** Every skill of the player, where it stands and how it grows: study, life as it is lived, and the years with money at work. */
@@ -640,7 +640,7 @@ export function quoteSkills(content: Content, view: GameView): SkillsQuote {
       return { skill, points, level, ...step(level), study: studyOf[skill] ?? null, studyPoints: rules.skills.studyPoints, practice: living[skill] };
     }),
     // A level a card gave is where the count starts, though the points may be short of it.
-    finance: { level: life.financeSkill, points: Math.max(life.financePoints, pointsOfLevel(life.financeSkill, content)), ...step(life.financeSkill), practice: investing ? rules.skills.investingPoints : 0 },
+    finance: { level: life.financeSkill, points: Math.max(life.financePoints, pointsOfLevel(life.financeSkill, content)), ...step(life.financeSkill), practice: investing ? rules.skills.investingPoints : 0, study: 'studyFinance', studyPoints: rules.skills.studyPoints },
   };
 }
 

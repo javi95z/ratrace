@@ -287,7 +287,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 5 + 8 + 6 + 16 * 4 + 5 + (4 + 2 + 4 + 7 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3);
+    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 5 + 8 + 6 + 16 * 4 + 5 + (4 + 2 + 4 + 8 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3);
     // Nobody is drawn at home with someone who lives alone; a couple, a family and a full house each have their picture.
     expect([[false, 0], [true, 0], [false, 1], [true, 2], [true, 3]].map(([partner, children]) => homeLifeArt({ partner: partner as boolean, children: children as number }))).toEqual([null, 'family.couple', 'family.children', 'family.children', 'family.full_house']);
     // Every career is drawn at its three stages, and a frame is earned by status, plainest first.
@@ -315,7 +315,7 @@ describe('content art', () => {
   it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {
     expect(lifestyleArt).toHaveLength(content.lifestyleMultiplierPct.length);
     expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
-    expect(keys(focusArt)).toEqual(['exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyLanguages', 'studyNegotiation']);
+    expect(keys(focusArt)).toEqual(['exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation']);
     expect(keys(skillArt)).toEqual(['career', 'finance', 'health', 'languages', 'management', 'negotiation', 'network']);
     expect(keys(topicArt)).toEqual(['crypto', 'inflation', 'property', 'rates', 'regime']);
   });

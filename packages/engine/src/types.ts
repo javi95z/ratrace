@@ -948,7 +948,7 @@ export type Order =
   | { type: 'moveCity'; cityId: string };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | StudyAction;
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'studyFinance' | StudyAction;
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 

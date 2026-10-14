@@ -89,6 +89,11 @@ const builder: Judge = (card, index, preview, state) => {
 // ---------------------------------------------------------------------------------------------
 // Writing orders
 
+/** Money put to work in the index fund, or in savings until the fund is open to the player. */
+function fund(state: GameView, amount: number): Order {
+  return state.player.life.financeSkill >= 1 ? { type: 'buy', assetId: 'msci_world', amount } : { type: 'depositIn', amount };
+}
+
 /** Focus actions for the round, in the order given, as far as focus allows. */
 function work(state: GameView, actions: FocusAction[]): Order[] {
   const left = focusLeft(state.player);
@@ -97,8 +102,10 @@ function work(state: GameView, actions: FocusAction[]): Order[] {
     .filter((business) => !business.manager && !business.tended)
     .slice(0, left)
     .map((business) => ({ type: 'tendBusiness', businessId: business.id }));
-  if (state.player.life.career === null) return tend;
-  return [...tend, ...actions.slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
+  // Nothing on the market is open with no money sense at all: every bot learns its first level before anything else.
+  const first: FocusAction[] = state.player.life.financeSkill === 0 ? ['studyFinance'] : [];
+  if (state.player.life.career === null) return [...tend, ...first.slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
+  return [...tend, ...[...first, ...actions].slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
 }
 
 /** The lowest lifestyle tier the life allows. Where the player rents is left as the life began. */
@@ -156,7 +163,7 @@ const indexer: Bot = {
     const card = clearCard(state);
     const safe = cushion(state, card.cash, 3_000);
     const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
-    if (safe.cash > 0) orders.push({ type: 'buy', assetId: 'msci_world', amount: safe.cash });
+    if (safe.cash > 0) orders.push(fund(state, safe.cash));
     return orders;
   },
 };
@@ -166,8 +173,8 @@ const indexer: Bot = {
  * the same cushion; it never borrows and never sells a coin. So the only thing that sets the two
  * apart is what they hold, and what happens to the gambler is what crypto does.
  *
- * Coins need finance skill, so until it has enough it holds the index fund, which is also what
- * teaches the first level, and it moves everything across the day it is allowed to.
+ * Coins need money sense, so until it has enough it holds the index fund (or savings, before even
+ * that is open), and it moves everything across the day it is allowed to.
  */
 const gambler: Bot = {
   id: 'gambler',
@@ -180,7 +187,7 @@ const gambler: Bot = {
     let cash = safe.cash;
 
     if (p.life.financeSkill < 2) {
-      if (cash > 0) orders.push({ type: 'buy', assetId: 'msci_world', amount: cash });
+      if (cash > 0) orders.push(fund(state, cash));
       return orders;
     }
     for (const [assetId, held] of Object.entries(p.positions)) {

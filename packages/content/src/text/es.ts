@@ -74,6 +74,7 @@ export const es: ContentText = {
     overtime: 'Hacer horas extra',
     studyCareer: 'Formarte para tu carrera',
     jobHunt: 'Buscar un trabajo mejor',
+    studyFinance: 'Hacer un curso de finanzas',
     studyNegotiation: 'Hacer un curso de negociación',
     studyLanguages: 'Ir a clases de idiomas',
     networking: 'Salir a hacer contactos',

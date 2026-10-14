@@ -150,7 +150,7 @@
     "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
     "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
     "ratRace": "The bar at the top is the whole game: your passive income against what your life costs. Cover the cost two rounds running and you are out of the rat race.",
-    "invest": "Cash earns nothing. Savings pay a little and are safe. The Market tab has index funds, which anyone can buy, and more opens up as your money sense grows.",
+    "invest": "Cash earns nothing. Savings pay a little and are safe. To invest you need money sense 1: take a finance course (Lifestyle tab) or pay into the pension.",
     "focus": "The Lifestyle tab holds your focus: study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
     "flow": "Flow, at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
     "gotIt": "Got it",
@@ -983,8 +983,8 @@
     "yourLevel": "Your level",
     "locked": "To reach",
     "financeOpens": {
-      "0": "Index funds: {n} to choose from. The simple thing, and nearly always enough.",
-      "1": "Bonds, single stocks and gold: {n} more.",
+      "0": "Nothing yet: savings and the pension only. A finance course opens level 1.",
+      "1": "Index funds, bonds, stocks and gold: {n} to choose from.",
       "2": "Cryptocurrencies: {n} more.",
       "3": "No new market: what changes is whose money you buy with."
     },
