@@ -119,6 +119,11 @@
     "w": 48,
     "h": 48
   },
+  "badge.audited": {
+    "src": "badges/badge.audited.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.bankrupt": {
     "src": "badges/badge.bankrupt.png",
     "w": 64,
@@ -131,6 +136,11 @@
   },
   "badge.bought_the_dip": {
     "src": "badges/badge.bought_the_dip.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.bought_the_top": {
+    "src": "badges/badge.bought_the_top.png",
     "w": 64,
     "h": 64
   },
@@ -214,6 +224,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.more_cars_than_spaces": {
+    "src": "badges/badge.more_cars_than_spaces.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.moved_to_dubai": {
     "src": "badges/badge.moved_to_dubai.png",
     "w": 64,
@@ -241,6 +256,11 @@
   },
   "badge.rode_out_recession": {
     "src": "badges/badge.rode_out_recession.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.room_at_40": {
+    "src": "badges/badge.room_at_40.png",
     "w": 64,
     "h": 64
   },
@@ -2076,6 +2096,21 @@
   },
   "item.art_wine": {
     "src": "items/item.art_wine.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.edu_certificate": {
+    "src": "items/item.edu_certificate.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.edu_coach": {
+    "src": "items/item.edu_coach.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.edu_language_school": {
+    "src": "items/item.edu_language_school.png",
     "w": 64,
     "h": 64
   },

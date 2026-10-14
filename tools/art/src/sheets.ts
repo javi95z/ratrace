@@ -69,6 +69,11 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // Three ways to learn that are bought: a certificate, a coach, a school abroad.
+    file: 'items/items-05', group: 'items', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64,
+    ids: ['item.edu_certificate', 'item.edu_coach', 'item.edu_language_school'],
+  },
+  {
     file: 'cars/cars-01', group: 'cars', kind: 'objects', cols: 2, rows: 4, width: 96, height: 48,
     ids: [
       'car.seat_ibiza', 'car.toyota_corolla', 'car.vw_golf_gti', 'car.tesla_model_3',
@@ -234,6 +239,11 @@ export const SHEETS: SheetSpec[] = [
       'crest.madrid', 'crest.london', 'crest.new_york', 'crest.dubai',
       'crest.singapore', 'crest.bangkok', 'crest.compass', 'crest.wheel',
     ],
+  },
+  {
+    // Four badges added since: the top bought, more cars than spaces, a room at forty, an inspection.
+    file: 'badges/badges-04', group: 'badges', kind: 'objects', cols: 2, rows: 2, width: 64, height: 64,
+    ids: ['badge.bought_the_top', 'badge.more_cars_than_spaces', 'badge.room_at_40', 'badge.audited'],
   },
   ...[
     ['office_desk', 'handshake', 'packed_box', 'airport', 'library', 'graduation'],

@@ -135,13 +135,7 @@ export const cardArt: Record<string, string> = {
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-/** Things whose own picture is not drawn yet, and the nearest one drawn, shown until it is. Emptied as `items-05` is cut. */
-export const ITEM_STAND_INS: Record<string, string> = {
-  edu_certificate: 'edu_mba',
-  edu_coach: 'member_club',
-  edu_language_school: 'travel_interrail',
-};
-export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${ITEM_STAND_INS[itemId] ?? itemId}`);
+export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
 /** The kinds of home each city draws its own way, once its sheet is cut. */
 export const CITY_HOME_KINDS = ['studio', 'flat', 'loft', 'townhouse', 'house', 'duplex', 'chalet', 'penthouse', 'estate', 'villa', 'mansion'] as const;
 /** The cities whose homes are drawn: until a city's sheet is cut, its homes are the plain ones. */
@@ -221,15 +215,8 @@ export const topicArt: Record<Headline['topic'], string> = {
   property: 'icon.property',
 };
 
-/** Badges whose own picture is not drawn yet, and the nearest one drawn, shown until it is. Emptied as `badges-04` is cut. */
-export const BADGE_STAND_INS: Record<string, string> = {
-  bought_the_top: 'crypto_winter',
-  more_cars_than_spaces: 'supercar',
-  room_at_40: 'three_rentals',
-  audited: 'bankrupt',
-};
 /** A badge, or `locked` for one not earned yet. */
-export const badgeArt = (badgeId: string): string => `badge.${BADGE_STAND_INS[badgeId] ?? badgeId}`;
+export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
 /** The rim a badge is set in, by its rarity: bronze, silver, a laurel of gold, and the gem. */
 export const RIM_ART = { common: 'rim.bronze', uncommon: 'rim.silver', rare: 'rim.gold', legendary: 'rim.gem' } as const;
 

@@ -220,7 +220,7 @@ Square image. Object sheet: 2 columns by 2 rows, 4 badges. Every badge is a roun
 | 59 | `icons/anim-02.png` | The wheel with the rat in a tracksuit (row 1) and a tuxedo (row 2): `anim.wheel_tracksuit.0–3`, `anim.wheel_tuxedo.0–3` | 48×48 |
 | 60 | `badges/badges-04.png` | `badge.bought_the_top`, `badge.more_cars_than_spaces`, `badge.room_at_40`, `badge.audited` | 64×64 |
 
-Until these are cut, the wheel keeps the rat in its suit and the four badges show a stand-in (`BADGE_STAND_INS` in `packages/content/src/art.ts`). When they are cut: add the sheets to `tools/art/src/sheets.ts`, the outfits to `RAT_OUTFITS_DRAWN`, and empty `BADGE_STAND_INS`.
+All three sheets are cut and wired.
 
 ## Three ways to learn, bought
 
@@ -239,4 +239,4 @@ Square image. Object sheet: 3 columns by 1 row, 3 objects, each standing alone a
 | --- | --- | --- | --- |
 | 61 | `items/items-05.png` | `item.edu_certificate`, `item.edu_coach`, `item.edu_language_school` | 64×64 |
 
-Until it is cut, the three show a stand-in (`ITEM_STAND_INS` in `packages/content/src/art.ts`).
+Cut and wired.

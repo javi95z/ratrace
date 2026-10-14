@@ -271,6 +271,21 @@
       "width": 64,
       "height": 64
     },
+    "item.edu_certificate": {
+      "file": "items/item.edu_certificate.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.edu_coach": {
+      "file": "items/item.edu_coach.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.edu_language_school": {
+      "file": "items/item.edu_language_school.png",
+      "width": 64,
+      "height": 64
+    },
     "car.seat_ibiza": {
       "file": "cars/car.seat_ibiza.png",
       "width": 96,
@@ -2068,6 +2083,26 @@
     },
     "crest.wheel": {
       "file": "badges/crest.wheel.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.bought_the_top": {
+      "file": "badges/badge.bought_the_top.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.more_cars_than_spaces": {
+      "file": "badges/badge.more_cars_than_spaces.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.room_at_40": {
+      "file": "badges/badge.room_at_40.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.audited": {
+      "file": "badges/badge.audited.png",
       "width": 64,
       "height": 64
     },
