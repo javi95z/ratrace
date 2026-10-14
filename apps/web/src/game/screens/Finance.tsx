@@ -1071,7 +1071,8 @@ function Shop() {
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
                   // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
                   <button key={item.id} type="button" onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
-                    <Bare className="size-16">
+                    {/* As tall as a watch, as wide as the thing needs: a car is twice as wide as it is tall. */}
+                    <Bare className="h-16 min-w-16">
                       <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
                     </Bare>
                     <span className="flex min-w-0 flex-1 flex-col items-center gap-0.5 @min-[400px]:items-start">

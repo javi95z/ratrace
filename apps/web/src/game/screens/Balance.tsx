@@ -197,7 +197,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
               <li key={item.itemId}>
                 <button type="button" aria-haspopup="dialog" onClick={() => onItem(item.itemId)} className="frame flex min-h-11 w-full items-center gap-3 bg-night-700 px-2 py-1 text-left">
                   <Bare className="size-10 overflow-hidden">
-                    <Sprite id={itemArt(item.itemId)} fallback={{ w: 64, h: 64 }} className="max-h-full max-w-full" />
+                    <Sprite id={itemArt(item.itemId)} fallback={{ w: 64, h: 64 }} className="max-h-full max-w-full object-contain" />
                   </Bare>
                   <span className="min-w-0 flex-1 truncate">{names.items[item.itemId]}</span>
                   <span className="pixel shrink-0">{item.value > 0 ? fmt.money(item.value) : t('things.noValue')}</span>

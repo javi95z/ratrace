@@ -110,11 +110,10 @@ describe('the work panel of the profile', () => {
     const sheet = screen.getByRole('dialog', { name: 'Health' });
     expect(within(sheet).getByRole('progressbar', { name: 'Towards level 1' })).toBeTruthy();
     // Each level counted in full: a fifth off the premium a level, an injury healed by training from the second, and focus at the top.
-    expect(within(sheet).getByText('Health insurance costs you 60% less.')).toBeTruthy();
-    expect(within(sheet).getByText('+1 focus every round.')).toBeTruthy();
-    expect(within(sheet).getByText('Exercise: +2 a round, for 1 focus in the Lifestyle tab.')).toBeTruthy();
+    expect(within(sheet).getByText('Health insurance −60% · injuries without physio · +1 focus a round')).toBeTruthy();
+    expect(within(sheet).getByText('Exercise: +2 a round, 1 focus.')).toBeTruthy();
     // A nurse lives it at work.
-    expect(within(sheet).getByText('The way you live now gives +1 a round without study.')).toBeTruthy();
+    expect(within(sheet).getByText('You already practise it: +1 a round.')).toBeTruthy();
   });
 
   it('opens what focus is spent on, each use at what it is worth to this player', async () => {

@@ -141,7 +141,7 @@ export function ProfileBody() {
                 {/* A tap opens what the thing is, what it gives and what it is worth. Buying and selling stay in the shop. */}
                 <button type="button" aria-haspopup="dialog" title={names.items[owned.itemId]} onClick={() => setOpen(owned.itemId)} className="block w-full">
                   <Bare className="aspect-square w-full overflow-hidden">
-                    <Sprite id={itemArt(owned.itemId)} alt={names.items[owned.itemId]} fallback={{ w: 64, h: 64 }} className="max-w-full" />
+                    <Sprite id={itemArt(owned.itemId)} alt={names.items[owned.itemId]} fallback={{ w: 64, h: 64 }} className="max-w-full object-contain" />
                   </Bare>
                 </button>
               </li>

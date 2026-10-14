@@ -190,7 +190,7 @@ function StepBar({ icon, step }: { icon: string; step: Step }) {
   const line = useStepLine();
   return (
     <div className="flex items-center gap-3">
-      <Bare className="size-12">
+      <Bare className="size-16">
         <Sprite id={icon} scale={2} />
       </Bare>
       <div className="min-w-0 flex-1">
@@ -252,18 +252,16 @@ function SkillLevels({ skill }: { skill: SkillQuote }) {
               <span className="pixel text-[16px]">{t('financeLevel', { level: at })}</span>
               {at === skill.level ? <Tag tone="good">{t('yourLevel')}</Tag> : at > skill.level ? <Tag>{t('locked')}</Tag> : null}
             </div>
-            {skillGives(t, content, skill.skill, at).map((line) => (
-              <p key={line} className="mt-1 text-[13px] leading-snug text-ink-200">
-                {line}
-              </p>
-            ))}
+            <p className="mt-1 text-[13px] leading-snug text-ink-200">{skillGives(t, content, skill.skill, at).join(' · ')}</p>
           </li>
         ))}
       </ul>
-      <p className="text-[13px] leading-snug">{t(`skillHow.${skill.skill}`)}</p>
-      <p className="text-[12px] leading-snug text-ink-300">{t('skillsAbout')}</p>
-      {skill.study ? <p className="text-[13px] leading-snug text-ink-200">{t('skillStudy', { action: text.focusActions[skill.study], n: skill.studyPoints })}</p> : null}
-      <p className={`text-[12px] ${skill.practice > 0 ? 'text-teal-300' : 'text-ink-300'}`}>{skill.practice > 0 ? t('skillLiving', { n: skill.practice }) : t('skillNotLiving')}</p>
+      {/* How it is learnt, in two lines: by study, and by living it. */}
+      <ul className="flex flex-col gap-1 text-[13px] leading-snug">
+        {skill.study ? <li>{t('skillStudy', { action: text.focusActions[skill.study], n: skill.studyPoints })}</li> : null}
+        <li>{t(`skillHow.${skill.skill}`, { n: content.life.skills.practicePoints, study: skill.studyPoints })}</li>
+      </ul>
+      {skill.practice > 0 ? <p className="text-[12px] text-teal-300">{t('skillLiving', { n: skill.practice })}</p> : null}
     </>
   );
 }
