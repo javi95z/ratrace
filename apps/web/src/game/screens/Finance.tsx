@@ -278,6 +278,8 @@ function Market() {
               const locked = need > p.life.financeSkill;
               const change = world.assetReturnBp[asset.id];
               const pays = assetYieldBp(asset, world);
+              // A standing plan shows where the asset is listed: what it buys each round.
+              const plan = shown.player.plans.find((x) => x.assetId === asset.id);
               return (
                 <button
                   key={asset.id}
@@ -296,7 +298,10 @@ function Market() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>
-                    <span className={`block text-[12px] ${locked ? 'text-gold-200' : 'text-ink-300'}`}>{locked ? t('needsSkill', { level: need }) : pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : ' '}</span>
+                    <span className={`block text-[12px] ${locked ? 'text-gold-200' : 'text-ink-300'}`}>
+                      {locked ? t('needsSkill', { level: need }) : pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : plan ? null : ' '}
+                      {plan ? <span className="text-teal-300">{`${pays > 0 ? ' · ' : ''}${t('planned', { amount: fmt.compact(plan.amount) })}`}</span> : null}
+                    </span>
                   </span>
                   <span className={`pixel text-right ${view.round === 0 ? 'text-ink-300' : change >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
                     {view.round === 0 ? '—' : fmt.change(change)}

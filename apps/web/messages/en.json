@@ -326,7 +326,8 @@
       "needsSkill": "Money sense {level}",
       "buy": "Buy",
       "history": "Price since you were 22",
-      "youHold": "You hold {amount}"
+      "youHold": "You hold {amount}",
+      "planned": "Plan: {amount} a round"
     },
     "amount": {
       "buy": "Buy {name}",

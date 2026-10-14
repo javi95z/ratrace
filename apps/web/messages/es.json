@@ -326,7 +326,8 @@
       "needsSkill": "Cultura financiera {level}",
       "buy": "Comprar",
       "history": "Precio desde tus 22 años",
-      "youHold": "Tienes {amount}"
+      "youHold": "Tienes {amount}",
+      "planned": "Plan: {amount} cada ronda"
     },
     "amount": {
       "buy": "Comprar {name}",

@@ -326,7 +326,8 @@
       "needsSkill": "Финансовая грамотность {level}",
       "buy": "Купить",
       "history": "Цена с твоих 22 лет",
-      "youHold": "У тебя {amount}"
+      "youHold": "У тебя {amount}",
+      "planned": "План: {amount} за раунд"
     },
     "amount": {
       "buy": "Купить: {name}",

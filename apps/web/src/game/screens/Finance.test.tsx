@@ -32,7 +32,7 @@ const button = (name: string | RegExp) => screen.getByRole('button', { name });
 async function inFinance(lifeId: string) {
   const services = memoryServices();
   // The heir is a life a player has to unlock before choosing it.
-  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' } } });
+  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' }, crypto_kid: { at: 1, gameId: 'earlier' } } });
   const session = await services.sessions.start(lifeId);
   await toFinance(session);
   return { services, session };
@@ -233,9 +233,21 @@ describe('the portfolio at a glance', () => {
     // One line a kind, in the order and the shares the engine gives.
     const kinds: Record<string, string> = { cash: 'Cash', savings: 'Savings', pension: 'Pension', equity: 'Funds and stocks', bond: 'Bonds', crypto: 'Crypto', gold: 'Gold', property: 'Property', things: 'Things' };
     expect(within(glance).getAllByRole('listitem').map((li) => li.textContent)).toEqual(quote.slices.map((slice) => `${kinds[slice.kind]}${fmt.rate(slice.shareBp)}`));
-    // The flat is most of what is put to work, and the screen says so in words.
+    // The flat is most of what is put to work: said plainly, and no warning, for a home is how most lives hold their wealth.
     expect(quote).toMatchObject({ concentrated: true, largest: { kind: 'property' } });
-    expect(within(glance).getByRole('note').textContent).toBe(`${fmt.rate(quote.largest?.shareBp ?? 0)} of what you have invested is in one thing: Flat, Dubai. If it does badly, so do you.`);
+    expect(within(glance).queryByRole('note')).toBeNull();
+  });
+
+  it('warns of too much in one thing only where one thing can fall alone: a single stock or a coin', async () => {
+    // The crypto kid's coin is almost all there is, beside a little of a fund.
+    const { services, session } = await inFinance('crypto_kid');
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'msci_world', amount: 50_000 }] });
+    await toFinance(session);
+    const quote = quotePortfolio(content, viewOf(await stateOf(services)));
+    expect(quote).toMatchObject({ concentrated: true, largest: { kind: 'asset' } });
+    renderGame(<Play />, services);
+    const glance = await screen.findByRole('region', { name: 'At a glance' });
+    expect(within(glance).getByRole('note').textContent).toMatch(/of what you have invested is in one thing: .*\. If it does badly, so do you\.$/);
   });
 
   it('warns nobody who is only beginning, and says nothing of being paid to someone nothing pays', async () => {
@@ -779,5 +791,19 @@ describe('focus from the work panel', () => {
     await user.click(within(sheet).getByRole('switch', { name: /^Exercise/ }));
     expect(within(sheet).getByRole('switch', { name: /^Exercise/ }).getAttribute('aria-checked')).toBe('true');
     expect(within(sheet).getByText('2/3')).toBeTruthy();
+  });
+});
+
+describe('a plan in the market', () => {
+  it('is shown on the asset it buys, beside what the asset pays', async () => {
+    const { services, session } = await inFinance('heir');
+    await session.playRound({ orders: [{ type: 'setPlan', assetId: 'msci_world', amount: 50_000 }] });
+    await toFinance(session);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    const row = screen.getByRole('button', { name: /MSCI World/ });
+    expect(within(row).getByText(/Plan: \$500 a round/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /S&P 500/ }).textContent).not.toMatch(/Plan:/);
   });
 });

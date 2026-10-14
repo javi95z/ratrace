@@ -1,5 +1,6 @@
 'use client';
 
+import { assetKind } from '@ratrace/content';
 import { quotePortfolio } from '@ratrace/engine';
 import type { WealthKind } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
@@ -32,6 +33,10 @@ export function PortfolioGlance() {
   const top = quote.largest;
   const property = top?.kind === 'property' ? shown.player.properties.find((x) => x.id === top.id) : undefined;
   const business = top?.kind === 'business' ? shown.player.businesses.find((x) => x.id === top.id) : undefined;
+  // Too much in one thing is a danger only where one thing can fall alone: a single stock or a coin.
+  // A fund already holds the market, and a home or a business is how most lives hold their wealth.
+  const asset = top?.kind === 'asset' ? content.assets.find((x) => x.id === top.id) : undefined;
+  const risky = asset !== undefined && (assetKind(asset) === 'stock' || assetKind(asset) === 'crypto');
   const topName = !top ? '' : top.kind === 'asset' ? names.assets[top.id].name : property ? `${text.propertyTypes[property.typeId]}, ${names.cities[property.cityId]}` : business ? text.businessTypes[business.typeId].name : '';
 
   return (
@@ -63,7 +68,7 @@ export function PortfolioGlance() {
       ) : (
         <p className="mt-1 text-[13px] text-ink-300">{t('empty')}</p>
       )}
-      {top && quote.concentrated ? (
+      {top && quote.concentrated && risky ? (
         <p role="note" className="mt-2 border-l-4 border-wine-300 pl-2 text-[13px] leading-snug text-wine-300">
           {t('concentrated', { name: topName, pct: fmt.rate(top.shareBp) })}
         </p>
