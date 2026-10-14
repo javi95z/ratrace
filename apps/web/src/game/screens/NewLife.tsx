@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useGame, useProfile, useRanking, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Button, Tag, Toggle, Well } from '@/ui/kit';
+import { Button, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 
@@ -122,7 +122,16 @@ export function NewLife() {
         <div className="mx-auto w-full max-w-md">
           {ranking === 'yes' ? (
             <div className="mb-2">
-              <Toggle on={wantRanked} onChange={setWantRanked} label={t('ranked')} hint={t('rankedHint')} />
+              {/* Two ways to play, side by side, each saying in a few words what it is. */}
+              <Segmented<'ranked' | 'free'>
+                label={t('mode')}
+                value={wantRanked ? 'ranked' : 'free'}
+                onChange={(mode) => setWantRanked(mode === 'ranked')}
+                options={[
+                  { value: 'ranked', label: t('modeRanked'), hint: t('modeRankedHint') },
+                  { value: 'free', label: t('modeFree'), hint: t('modeFreeHint') },
+                ]}
+              />
             </div>
           ) : null}
           {ranking === 'offline' ? (

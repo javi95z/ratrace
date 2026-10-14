@@ -53,8 +53,6 @@
     "confirmBody": "{life}, {age} años. Termina aquí y no queda registrada.",
     "confirmYes": "Terminarla y empezar esta",
     "confirmNo": "Seguir con mi vida",
-    "ranked": "Vida clasificatoria",
-    "rankedHint": "Se juega en el servidor, paso a paso. Cuenta para las clasificaciones y necesita conexión.",
     "noConnection": "Sin conexión: esta vida no será clasificatoria.",
     "elsewhereTitle": "Una vida clasificatoria en curso",
     "elsewhereBody": "{life}, ronda {round} de {total}. La tienes en curso en otro dispositivo, y solo puedes tener una.",
@@ -62,7 +60,12 @@
     "elsewhereTake": "Seguir con esa vida",
     "elsewhereEnd": "Terminarla y empezar esta",
     "elsewhereAway": "El servidor no ha respondido. Inténtalo de nuevo.",
-    "failed": "No se ha podido empezar la vida. Inténtalo de nuevo."
+    "failed": "No se ha podido empezar la vida. Inténtalo de nuevo.",
+    "mode": "Cómo jugar",
+    "modeRanked": "Clasificatoria",
+    "modeRankedHint": "Cuenta en el ranking · con conexión",
+    "modeFree": "Libre",
+    "modeFreeHint": "Solo para ti · sin conexión"
   },
   "hud": {
     "cash": "Efectivo",

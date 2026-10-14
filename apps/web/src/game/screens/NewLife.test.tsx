@@ -139,9 +139,12 @@ describe('choosing between a ranked life and a casual one', () => {
     const { services, asked } = signedIn();
     const user = userEvent.setup();
     renderGame(<NewLife />, services);
-    const ranked = await screen.findByRole('switch', { name: /^Ranked life/ });
+    // Two ways to play, side by side: ranked is chosen, and each says in a few words what it is.
+    const mode = await screen.findByRole('radiogroup', { name: 'How to play' });
+    const ranked = within(mode).getByRole('radio', { name: /^Ranked/ });
     expect(ranked.getAttribute('aria-checked')).toBe('true');
-    expect(ranked.textContent).toContain('It counts for the rankings and needs a connection.');
+    expect(ranked.textContent).toContain('Counts in the rankings · online');
+    expect(within(mode).getByRole('radio', { name: /^Free/ }).textContent).toContain('Just for you · offline');
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(asked).toEqual([{ ranked: true }]));
   });
@@ -150,7 +153,7 @@ describe('choosing between a ranked life and a casual one', () => {
     const { services, asked } = signedIn();
     const user = userEvent.setup();
     renderGame(<NewLife />, services);
-    await user.click(await screen.findByRole('switch', { name: /^Ranked life/ }));
+    await user.click(await screen.findByRole('radio', { name: /^Free/ }));
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(asked).toEqual([{ ranked: false }]));
   });
@@ -160,7 +163,7 @@ describe('choosing between a ranked life and a casual one', () => {
     const user = userEvent.setup();
     renderGame(<NewLife />, services);
     await screen.findAllByRole('radio');
-    expect(screen.queryByRole('switch', { name: /Ranked life/ })).toBeNull();
+    expect(screen.queryByRole('radiogroup', { name: 'How to play' })).toBeNull();
     expect(screen.queryByText(/will not be ranked/)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(asked).toEqual([{ ranked: false }]));

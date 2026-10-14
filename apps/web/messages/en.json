@@ -53,8 +53,6 @@
     "confirmBody": "{life}, age {age}. It ends here and is not recorded.",
     "confirmYes": "End it and start this one",
     "confirmNo": "Keep my life",
-    "ranked": "Ranked life",
-    "rankedHint": "Played on the server, one step at a time. It counts for the rankings and needs a connection.",
     "noConnection": "No connection: this life will not be ranked.",
     "elsewhereTitle": "A ranked life in progress",
     "elsewhereBody": "{life}, round {round} of {total}. You have it in progress on another device, and you can have only one.",
@@ -62,7 +60,12 @@
     "elsewhereTake": "Continue that life",
     "elsewhereEnd": "End it and start this one",
     "elsewhereAway": "The server did not answer. Try again.",
-    "failed": "The life could not be started. Try again."
+    "failed": "The life could not be started. Try again.",
+    "mode": "How to play",
+    "modeRanked": "Ranked",
+    "modeRankedHint": "Counts in the rankings · online",
+    "modeFree": "Free",
+    "modeFreeHint": "Just for you · offline"
   },
   "hud": {
     "cash": "Cash",
