@@ -3,8 +3,9 @@
 import { CHALLENGE_ART, CHALLENGE_DEBT, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { useEffect, useState } from 'react';
-import { useCommunity, useRanking, useT, useWords } from '@/game/context';
-import { Link } from '@/i18n/navigation';
+import { useCommunity, useGame, useRanking, useT, useWords } from '@/game/context';
+import { ageAt } from '@/game/present';
+import { Link, useRouter } from '@/i18n/navigation';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
 import { Button, Panel, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -30,20 +31,65 @@ const lastDay = (week: string): number => (weekStart(week) ?? 0) + 6 * 86_400_00
 /** The places of a challenge's ranking that are in its best tenth: the first, at least. */
 export const topTenth = (entrants: number): number => Math.max(1, Math.ceil(entrants / 10));
 
-/**
- * The week's challenge, where a life is chosen: the life, the rule, and whether the player has had
- * their attempt. It opens a sheet with all of it and the two ways to play it: the one attempt that
- * counts, and practice, as often as wanted.
- */
-export function WeeklyChallenge({ onStart, starting }: { onStart(challenge: Challenge, attempt: boolean): void; starting: boolean }) {
+/** The challenge on the front door, built from the same raised card, portrait well and type hierarchy as the rest of the game. */
+export function WeeklyChallengeCard() {
   const t = useT('challenge');
+  const { text } = useWords();
+  const week = useThisWeek();
+  const ruleText = useRuleText();
+  if (week === null) return null;
+  const rule = ruleText(week.rule);
+
+  return (
+    <Link href="/challenge" className="frame-raised frame-gold flex min-h-[84px] w-full items-center gap-3 bg-night-600 p-2 text-left">
+      <Well className="size-[64px]">
+        <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 60, h: 60 }} />
+      </Well>
+      <span className="flex min-w-0 flex-1 flex-col justify-center">
+        <span className="pixel flex items-center gap-1.5 text-[13px] uppercase tracking-wider text-gold-500">
+          <Sprite id={CHALLENGE_ART.icon} />
+          {t('title')}
+        </span>
+        <span className="pixel mt-0.5 block truncate text-[19px] text-cream">{text.lives[week.lifeId]?.name ?? week.lifeId}</span>
+        <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-ink-200">
+          <Sprite id={ruleArt[week.rule]} />
+          <span className="truncate">{rule.name}</span>
+        </span>
+      </span>
+      <span aria-hidden className="pixel shrink-0 px-1 text-[18px] text-gold-500">
+        ›
+      </span>
+    </Link>
+  );
+}
+
+/**
+ * The week's challenge has a page of its own: the common life and rule, the one attempt that counts,
+ * and practice as often as wanted.
+ */
+export function WeeklyChallenge() {
+  const t = useT('challenge');
+  const lifeT = useT('newLife');
   const common = useT('common');
-  const { text, fmt } = useWords();
+  const { content, text, fmt } = useWords();
   const week = useThisWeek();
   const ruleText = useRuleText();
   const community = useCommunity();
   const ranking = useRanking();
-  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const start = useGame((s) => s.start);
+  const elsewhere = useGame((s) => s.elsewhere);
+  const continueElsewhere = useGame((s) => s.continueElsewhere);
+  const clearElsewhere = useGame((s) => s.clearElsewhere);
+  const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
+  const living = useGame((s) => s.lifeId);
+  const round = useGame((s) => s.view?.round ?? 0);
+  const [starting, setStarting] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [away, setAway] = useState(false);
+  /** The button whose start is being confirmed or is waiting for a ranked life elsewhere. */
+  const [attempt, setAttempt] = useState(false);
   const [entry, setEntry] = useState<{ entered: boolean; score: number | null } | null>(null);
   useEffect(() => {
     if (week === null || community === null) return;
@@ -62,90 +108,156 @@ export function WeeklyChallenge({ onStart, starting }: { onStart(challenge: Chal
   // where the account cannot say, it is, and the server, which keeps the count, decides.
   const canAttempt = ranking === 'yes' && entry?.entered !== true;
 
-  return (
-    <>
-      <button type="button" aria-haspopup="dialog" onClick={() => setOpen(true)} className="frame-raised frame-gold mb-3 flex w-full items-center gap-3 bg-night-600 p-2 text-left">
-        <Well className="size-[52px]">
-          <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 48, h: 48 }} />
-        </Well>
-        <span className="min-w-0 flex-1">
-          <span className="pixel flex items-center gap-1 text-[12px] uppercase tracking-wider text-gold-500">
-            <Sprite id={CHALLENGE_ART.icon} />
-            {t('title')}
-          </span>
-          <span className="pixel block truncate text-[17px]">{lifeName}</span>
-          <span className="flex items-center gap-1 truncate text-[12px] text-ink-200">
-            <Sprite id={ruleArt[week.rule]} />
-            {rule.name}
-          </span>
-        </span>
-        {entry?.score !== null && entry?.score !== undefined ? <span className="pixel shrink-0 text-[15px] text-teal-300">{fmt.number(entry.score)}</span> : null}
-      </button>
+  /** Start after any warning has been answered. */
+  const begin = async (rankedAttempt = attempt, replace?: string) => {
+    setAsking(false);
+    setFailed(false);
+    setAway(false);
+    setStarting(true);
+    try {
+      if (await start(week.lifeId, { ranked: rankedAttempt && ranking === 'yes', challenge: week.week, replace })) router.replace('/play');
+    } catch (error) {
+      console.error('the challenge could not be started:', error);
+      setFailed(true);
+    } finally {
+      setStarting(false);
+    }
+  };
+  const askToStart = (rankedAttempt: boolean) => {
+    setAttempt(rankedAttempt);
+    if (inProgress) setAsking(true);
+    else void begin(rankedAttempt);
+  };
+  const takeUp = async () => {
+    setAway(false);
+    setStarting(true);
+    try {
+      const answer = await continueElsewhere();
+      if (answer === 'taken') router.replace('/play');
+      else if (answer === 'away') setAway(true);
+    } catch (error) {
+      console.error('the life could not be taken up:', error);
+      setFailed(true);
+    } finally {
+      setStarting(false);
+    }
+  };
 
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
-        <div className="flex flex-col gap-3">
-          <div className="frame-double flex justify-center overflow-hidden bg-night-900 leading-[0]">
-            <Sprite id={CHALLENGE_ART.scene} scale="art" fallback={{ w: 288, h: 120 }} className="max-w-none" />
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-3 px-3 pb-8 pt-4">
+      <div className="flex items-center gap-2">
+        <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 items-center justify-center bg-night-700 text-[18px] text-ink-200">
+          ←
+        </Link>
+        <h1 className="pixel flex items-center gap-2 text-[24px] text-gold-500">
+          <Sprite id={CHALLENGE_ART.icon} />
+          {t('title')}
+        </h1>
+      </div>
+
+      <div className="frame-double overflow-hidden bg-night-900 leading-[0]">
+        <Sprite id={CHALLENGE_ART.scene} scale="art" fallback={{ w: 288, h: 120 }} className="mx-auto max-w-none" />
+      </div>
+
+      <Panel className="frame-gold bg-night-600" label={t('title')}>
+        <div className="flex items-center gap-3">
+          <Well className="size-[76px]">
+            <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 64, h: 64 }} />
+          </Well>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('life')}</p>
+            <p className="pixel truncate text-[23px] text-cream">{lifeName}</p>
+            <p className="mt-1 text-[12px] text-ink-200">{t('ends', { day: fmt.day(lastDay(week.week)) })}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Well className="size-[68px]">
-              <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 64, h: 64 }} />
-            </Well>
-            <div className="min-w-0">
-              <p className="pixel text-[19px]">{lifeName}</p>
-              <p className="text-[12px] text-ink-300">{t('ends', { day: fmt.day(lastDay(week.week)) })}</p>
-            </div>
+        </div>
+      </Panel>
+
+      <Panel title={t('rule')} label={t('rule')}>
+        <div className="flex items-start gap-3">
+          <Well className="size-10">
+            <Sprite id={ruleArt[week.rule]} />
+          </Well>
+          <div>
+            <p className="pixel text-[18px] text-gold-200">{rule.name}</p>
+            <p className="mt-1 text-[13px] leading-snug text-ink-200">{rule.about}</p>
           </div>
-          <section aria-label={t('rule')} className="border-l-4 border-gold-500 pl-3">
-            <p className="pixel flex items-center gap-2 text-[16px] text-gold-200">
-              <Sprite id={ruleArt[week.rule]} />
-              {rule.name}
-            </p>
-            <p className="text-[13px] leading-snug text-ink-200">{rule.about}</p>
-          </section>
-          <p className="text-[13px] leading-snug">{t('about')}</p>
-          {entry?.entered ? (
-            <p role="status" className="text-[13px] text-teal-300">
-              {entry.score !== null ? t('played', { score: fmt.number(entry.score) }) : t('entered')}
-            </p>
-          ) : ranking !== 'yes' ? (
-            <p className="text-[13px] text-ink-300">{t('needsAccount')}</p>
-          ) : null}
-          <div className="flex flex-col gap-2">
-            {canAttempt ? (
-              <Button
-                variant="primary"
-                wide
-                disabled={starting}
-                onClick={() => {
-                  setOpen(false);
-                  onStart(week, true);
-                }}
-              >
-                {t('attempt')}
-              </Button>
-            ) : null}
-            <Button
-              wide
-              disabled={starting}
-              onClick={() => {
-                setOpen(false);
-                onStart(week, false);
-              }}
-            >
-              <Sprite id={CHALLENGE_ART.practice} />
-              {t('practice')}
-            </Button>
-          </div>
-          <p className="text-[12px] text-ink-300">{t('practiceHint')}</p>
-          {community !== null ? (
-            <Link href="/rankings?tab=challenge" className="text-center text-[13px] text-teal-300 underline">
-              {t('rankingLink')}
-            </Link>
-          ) : null}
+        </div>
+      </Panel>
+
+      <p className="text-[13px] leading-snug text-ink-200">{t('about')}</p>
+
+      {entry?.entered ? (
+        <p role="status" className="frame bg-teal-800 px-3 py-2 text-[13px] text-cream">
+          {entry.score !== null ? t('played', { score: fmt.number(entry.score) }) : t('entered')}
+        </p>
+      ) : ranking !== 'yes' ? (
+        <p className="frame bg-night-700 px-3 py-2 text-[13px] text-ink-200">{t('needsAccount')}</p>
+      ) : null}
+      {failed ? (
+        <p role="alert" className="frame bg-wine-900 px-3 py-2 text-center text-[13px]">
+          {lifeT('failed')}
+        </p>
+      ) : null}
+
+      <div className="flex flex-col gap-2">
+        {canAttempt ? (
+          <Button variant="primary" wide disabled={starting} onClick={() => askToStart(true)}>
+            {t('attempt')}
+          </Button>
+        ) : null}
+        <Button wide disabled={starting} onClick={() => askToStart(false)}>
+          <Sprite id={CHALLENGE_ART.practice} />
+          {t('practice')}
+        </Button>
+      </div>
+      <p className="text-[12px] leading-snug text-ink-300">{t('practiceHint')}</p>
+      {community !== null ? (
+        <Link href="/rankings?tab=challenge" className="text-center text-[13px] text-teal-300 underline">
+          {t('rankingLink')}
+        </Link>
+      ) : null}
+
+      <Sheet open={asking && inProgress} onClose={() => setAsking(false)} title={lifeT('confirmTitle')} closeLabel={common('close')} back={false}>
+        <p className="text-[15px] leading-snug text-ink-200">{lifeT('confirmBody', { life: text.lives[living ?? '']?.name ?? '', age: ageAt(content, round) })}</p>
+        <div className="mt-4 flex flex-col gap-3">
+          <Button variant="primary" wide onClick={() => setAsking(false)}>
+            {lifeT('confirmNo')}
+          </Button>
+          <Button variant="danger" wide disabled={starting} onClick={() => void begin()}>
+            {lifeT('confirmYes')}
+          </Button>
         </div>
       </Sheet>
-    </>
+
+      <Sheet open={elsewhere !== null} onClose={clearElsewhere} title={lifeT('elsewhereTitle')} closeLabel={common('close')} back={false}>
+        {elsewhere ? (
+          <>
+            <p className="text-[15px] leading-snug text-ink-200">
+              {lifeT('elsewhereBody', { life: text.lives[elsewhere.lifeId]?.name ?? elsewhere.lifeId, round: Math.min(elsewhere.round + 1, content.rounds), total: content.rounds })}
+            </p>
+            {elsewhere.here ? null : <p className="mt-2 text-[14px] leading-snug text-ink-200">{lifeT('elsewhereOther')}</p>}
+            {away ? (
+              <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
+                {lifeT('elsewhereAway')}
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-col gap-3">
+              {elsewhere.here ? (
+                <Button variant="primary" wide disabled={starting} onClick={() => void takeUp()}>
+                  {lifeT('elsewhereTake')}
+                </Button>
+              ) : null}
+              <Button variant="danger" wide disabled={starting} onClick={() => void begin(attempt, elsewhere.gameId)}>
+                {lifeT('elsewhereEnd')}
+              </Button>
+              <Button variant="quiet" wide onClick={clearElsewhere}>
+                {common('cancel')}
+              </Button>
+            </div>
+          </>
+        ) : null}
+      </Sheet>
+    </main>
   );
 }
 

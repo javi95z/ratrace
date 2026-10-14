@@ -1,7 +1,32 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { badgeArt, badges, cardArt, cityArt, cityIcon, content, CONTENT_VERSION, FAMILY_ART, focusArt, insuranceArt, itemArt, lifestyleArt, lives, portraitArt, propertyArt, rentTierArt, skillArt, START_AGE, textFor } from '@ratrace/content';
+import {
+  badgeArt,
+  badges,
+  cardArt,
+  CHALLENGE_ART,
+  CHALLENGE_DEBT,
+  CHALLENGE_RULES,
+  cityArt,
+  cityIcon,
+  content,
+  CONTENT_VERSION,
+  FAMILY_ART,
+  focusArt,
+  insuranceArt,
+  itemArt,
+  lifestyleArt,
+  lives,
+  portraitArt,
+  propertyArt,
+  rentTierArt,
+  ruleArt,
+  skillArt,
+  START_AGE,
+  textFor,
+} from '@ratrace/content';
+import type { ChallengeRule } from '@ratrace/content';
 import { STUDY_OF } from '@ratrace/engine';
 import type { ItemDef } from '@ratrace/engine';
 
@@ -14,6 +39,13 @@ import type { ItemDef } from '@ratrace/engine';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const OUT = path.join(ROOT, 'docs/catalogo.md');
 const { text, names } = textFor('es');
+const messages = JSON.parse(readFileSync(path.join(ROOT, 'apps/web/messages/es.json'), 'utf8')) as {
+  challenge: {
+    about: string;
+    practiceHint: string;
+    rules: Record<ChallengeRule, { name: string; about: string }>;
+  };
+};
 
 /** Where each sprite was cut to. The manifest says: a sprite is not always in the folder its name suggests. */
 const manifest = JSON.parse(readFileSync(path.join(ROOT, 'art/clean/manifest.json'), 'utf8')) as { sprites: Record<string, { file: string }> };
@@ -38,7 +70,7 @@ for (const item of content.items) itemsByLadder.set(item.ladder, [...(itemsByLad
 
 say(
   '# Catálogo del juego',
-  `Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde \`packages/content\` (contenido ${CONTENT_VERSION}) con \`pnpm catalog\`: no lo edites a mano.`,
+  `Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido ${CONTENT_VERSION}) con \`pnpm catalog\`: no lo edites a mano.`,
   'Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.',
 );
 say(
@@ -46,6 +78,7 @@ say(
     ['Qué', 'Cuántos'],
     [
       ['[Vidas](#vidas)', `${lives.length}`],
+      ['[Reto de la semana](#reto-de-la-semana)', `${CHALLENGE_RULES.length} reglas`],
       ['[Carreras](#carreras)', `${content.careers.length}`],
       ['[Ciudades](#ciudades)', `${content.cities.length}`],
       ['[Objetos](#objetos)', `${content.items.length}, de ellos ${itemsByLadder.get('car')?.length ?? 0} coches`],
@@ -89,6 +122,19 @@ for (const life of lives) {
     ),
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+say(
+  '## Reto de la semana',
+  img(CHALLENGE_ART.scene, 'Reto de la semana'),
+  messages.challenge.about,
+  'Cada semana ISO va de lunes a domingo en UTC. La semana determina una vida y una regla para todos; el servidor guarda la semilla que hace iguales los mercados y las cartas del intento oficial.',
+  messages.challenge.practiceHint,
+  table(
+    ['', 'Regla', 'Condición'],
+    CHALLENGE_RULES.map((rule) => [img(ruleArt[rule], messages.challenge.rules[rule].name), messages.challenge.rules[rule].name, messages.challenge.rules[rule].about.replace('{amount}', usd(CHALLENGE_DEBT))]),
+  ),
+);
 
 // ---------------------------------------------------------------------------------------------
 say('## Carreras', 'El sueldo es un porcentaje del sueldo medio de la ciudad donde vives. Se asciende al llegar a la experiencia que pide el puesto siguiente.');

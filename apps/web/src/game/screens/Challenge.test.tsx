@@ -1,23 +1,29 @@
 // @vitest-environment jsdom
-import { textFor } from '@ratrace/content';
-import { cleanup, screen, within } from '@testing-library/react';
+import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
+import type { SavedGame } from '@/session/types';
 import { memoryServices, renderGame } from '@/testing/render';
-import { ChallengeResult, topTenth } from './Challenge';
+import { ChallengeResult, topTenth, WeeklyChallenge } from './Challenge';
 
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, className }: { href: string; children: ReactNode; className?: string }) => (
     <a href={href} className={className}>
       {children}
     </a>
   ),
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  usePathname: () => '/play',
+  useRouter: () => router,
+  usePathname: () => '/challenge',
 }));
 
+beforeEach(() => {
+  router.push.mockClear();
+  router.replace.mockClear();
+});
 afterEach(cleanup);
 
 const cards = textFor('en').text.cards;
@@ -25,6 +31,60 @@ const show = (ranking: ChallengeRanking | null, choices: ChallengeChoice[] | nul
   const community = { challengeRanking: async () => ranking, challengeChoices: async () => choices } as unknown as Community;
   return renderGame(<ChallengeResult week="2026-W42" />, { ...memoryServices(), community: () => community });
 };
+
+describe('the weekly challenge page', () => {
+  const week = challengeOf(weekOf(Date.now()), lives);
+  if (!week) throw new Error('no challenge this week');
+  const lifeName = textFor('en').text.lives[week.lifeId].name;
+  const ruleName: Record<string, string> = { indexOnly: 'Index funds only', noLoans: 'No loans', noMoving: 'No moving', noProperty: 'No property', startInDebt: 'Start in debt' };
+  const saved = async (services: ReturnType<typeof memoryServices>) => (await services.store.loadGame()) as SavedGame | null;
+
+  /** A signed-in player and what the account says of this week's one ranked attempt. */
+  function withAccount(entry: { entered: boolean; score: number | null } | null) {
+    const services = memoryServices();
+    const asked: unknown[] = [];
+    const start = services.sessions.start.bind(services.sessions);
+    services.sessions.start = (lifeId: string, options?: { ranked?: boolean; challenge?: string; replace?: string }) => {
+      asked.push({ lifeId, ...options });
+      // There is no server in this view test; begin the same challenge locally after remembering the request.
+      return start(lifeId, options?.challenge ? { challenge: options.challenge } : undefined);
+    };
+    const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const community = { challengeEntry: async () => entry } as unknown as Community;
+    return { services: { ...services, account, community: () => community }, asked };
+  }
+
+  it('shows the life and rule on its own page and practises from there without an account', async () => {
+    const services = memoryServices();
+    const user = userEvent.setup();
+    renderGame(<WeeklyChallenge />, services);
+    expect(screen.getByRole('heading', { name: 'Weekly challenge' })).toBeTruthy();
+    expect(screen.getByText(lifeName)).toBeTruthy();
+    expect(screen.getByText(ruleName[week.rule])).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(screen.getByText('To play the attempt that counts, sign in. You can still practise.')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Practise' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
+  });
+
+  it('offers the one ranked attempt to a signed-in player who has not used it', async () => {
+    const { services, asked } = withAccount({ entered: false, score: null });
+    const user = userEvent.setup();
+    renderGame(<WeeklyChallenge />, services);
+    await user.click(await screen.findByRole('button', { name: 'Play the challenge (one attempt)' }));
+    await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: true, challenge: week.week, replace: undefined }]));
+  });
+
+  it('shows a completed attempt and leaves practice available', async () => {
+    const { services } = withAccount({ entered: true, score: 777 });
+    renderGame(<WeeklyChallenge />, services);
+    expect(await screen.findByText("You have played this week's challenge: 777 points.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Practise' })).toBeTruthy();
+  });
+});
 
 describe('the best tenth of a challenge', () => {
   it('is a tenth of those who took part, rounded up, and never less than the first', () => {

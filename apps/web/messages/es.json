@@ -7,7 +7,8 @@
       "play": "Tu vida",
       "collection": "Colección",
       "records": "Récords",
-      "rankings": "Clasificaciones"
+      "rankings": "Clasificaciones",
+      "challenge": "Reto de la semana"
     }
   },
   "common": {
@@ -1213,6 +1214,7 @@
   },
   "challenge": {
     "title": "Reto de la semana",
+    "life": "La vida de esta semana",
     "rule": "La regla",
     "about": "La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Un solo intento cuenta para el ranking; practica cuantas veces quieras.",
     "ends": "Termina el {day}, a medianoche UTC.",

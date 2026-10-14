@@ -7,7 +7,8 @@
       "play": "Your life",
       "collection": "Collection",
       "records": "Records",
-      "rankings": "Rankings"
+      "rankings": "Rankings",
+      "challenge": "Weekly challenge"
     }
   },
   "common": {
@@ -1213,6 +1214,7 @@
   },
   "challenge": {
     "title": "Weekly challenge",
+    "life": "This week's life",
     "rule": "The rule",
     "about": "The same life, the same markets and the same cards for everyone all week. One attempt counts for the ranking; practise as often as you like.",
     "ends": "Ends on {day}, at midnight UTC.",

@@ -8,6 +8,7 @@ import { InstallApp } from '@/pwa/InstallApp';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { WeeklyChallengeCard } from './Challenge';
 import { HomePreferences } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
@@ -84,6 +85,7 @@ export function Home() {
             >
               {t('newLife')}
             </Link>
+            <WeeklyChallengeCard />
             {over ? (
               <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
                 {t('lastLife')}

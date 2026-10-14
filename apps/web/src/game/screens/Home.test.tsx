@@ -65,6 +65,7 @@ describe('the front door', () => {
   it('offers a new life to someone new, and says where it will be kept', async () => {
     renderGame(<Home />, memoryServices());
     expect((await screen.findByRole('link', { name: 'New life' })).getAttribute('href')).toBe('/new');
+    expect(screen.getByRole('link', { name: /^Weekly challenge/ }).getAttribute('href')).toBe('/challenge');
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
     expect(screen.getByText('Your life saves itself after every step.')).toBeTruthy();
   });

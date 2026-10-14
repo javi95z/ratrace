@@ -1,12 +1,13 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde `packages/content` (contenido 1.23.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.23.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
 | Qué | Cuántos |
 | --- | --- |
 | [Vidas](#vidas) | 16 |
+| [Reto de la semana](#reto-de-la-semana) | 5 reglas |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 6 |
 | [Objetos](#objetos) | 60, de ellos 8 coches |
@@ -260,6 +261,24 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Ventaja | Un cuarto más de sueldo cuando la economía va en auge. |
 | Desventaja | Un cuarto menos cuando se encoge. |
 | Se desbloquea | Compra mientras todo cae. |
+
+## Reto de la semana
+
+<img src="../art/clean/cards/card.weekly_challenge.png" alt="Reto de la semana">
+
+La misma vida, los mismos mercados y las mismas cartas para todos durante toda la semana. Un solo intento cuenta para el ranking; practica cuantas veces quieras.
+
+Cada semana ISO va de lunes a domingo en UTC. La semana determina una vida y una regla para todos; el servidor guarda la semilla que hace iguales los mercados y las cartas del intento oficial.
+
+Una práctica se juega en este dispositivo con la misma vida y la misma regla, pero con otras cartas y otros mercados. No cuenta para el ranking.
+
+|  | Regla | Condición |
+| --- | --- | --- |
+| <img src="../art/clean/icons/icon.rule_index_only.png" alt="Solo fondos indexados"> | Solo fondos indexados | Solo puedes comprar fondos indexados: nada de acciones sueltas, bonos, cripto ni oro. |
+| <img src="../art/clean/icons/icon.rule_no_loans.png" alt="Sin préstamos"> | Sin préstamos | Ni préstamos, ni hipotecas, ni margen, ni compras a plazos. La tarjeta cubre los descubiertos igualmente. |
+| <img src="../art/clean/icons/icon.rule_no_moving.png" alt="Sin mudanzas"> | Sin mudanzas | Toda la vida en la misma ciudad. |
+| <img src="../art/clean/icons/icon.rule_no_property.png" alt="Sin inmuebles"> | Sin inmuebles | No puedes comprar ninguna propiedad: alquilas toda la vida. |
+| <img src="../art/clean/icons/icon.rule_start_in_debt.png" alt="Empiezas con deuda"> | Empiezas con deuda | Empiezas con un préstamo de 30.000 $ que devolver. |
 
 ## Carreras
 
