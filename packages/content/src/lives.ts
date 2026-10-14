@@ -28,6 +28,11 @@ export interface LifeDef {
  * each opened by a badge too. A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
  * `share_plan`, `bilingual` and `has_business` by cards.
+ *
+ * The three first lives begin in Madrid, where the game is learnt; the rest are spread over the six
+ * cities, each where its trade is at home. Dubai and Singapore tax gains lightly and make any life
+ * easier, so the lives that begin there are the ones that need it: the heir, the teacher, and the
+ * crypto kid on low pay.
  */
 export const lives: LifeDef[] = [
   {
@@ -77,7 +82,7 @@ export const lives: LifeDef[] = [
     id: 'rider',
     unlock: 'finish_one_life',
     start: {
-      cityId: 'madrid',
+      cityId: 'bangkok',
       cash: 0,
       salaryAnnual: 0,
       lifestyleTier: 0,
@@ -90,7 +95,7 @@ export const lives: LifeDef[] = [
     id: 'heir',
     unlock: 'net_worth_1m',
     start: {
-      cityId: 'madrid',
+      cityId: 'dubai',
       cash: usd(60_000),
       salaryAnnual: 0,
       lifestyleTier: 2,
@@ -136,7 +141,7 @@ export const lives: LifeDef[] = [
     id: 'doctor',
     unlock: 'escaped',
     start: {
-      cityId: 'madrid',
+      cityId: 'london',
       cash: usd(1_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -162,7 +167,7 @@ export const lives: LifeDef[] = [
     id: 'founder',
     unlock: 'sold_business',
     start: {
-      cityId: 'madrid',
+      cityId: 'new_york',
       cash: usd(3_000),
       salaryAnnual: 0,
       lifestyleTier: 0,
@@ -194,7 +199,7 @@ export const lives: LifeDef[] = [
     id: 'lawyer',
     unlock: 'first_luxury_watch',
     start: {
-      cityId: 'madrid',
+      cityId: 'new_york',
       cash: usd(1_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -207,7 +212,7 @@ export const lives: LifeDef[] = [
     id: 'teacher',
     unlock: 'index_only',
     start: {
-      cityId: 'madrid',
+      cityId: 'singapore',
       cash: usd(4_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -220,7 +225,7 @@ export const lives: LifeDef[] = [
     id: 'influencer',
     unlock: 'status_100',
     start: {
-      cityId: 'madrid',
+      cityId: 'bangkok',
       cash: usd(500),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -233,7 +238,7 @@ export const lives: LifeDef[] = [
     id: 'waiter',
     unlock: 'first_share',
     start: {
-      cityId: 'madrid',
+      cityId: 'bangkok',
       cash: usd(800),
       salaryAnnual: 0,
       lifestyleTier: 0,
@@ -246,7 +251,7 @@ export const lives: LifeDef[] = [
     id: 'salesperson',
     unlock: 'bought_the_dip',
     start: {
-      cityId: 'madrid',
+      cityId: 'bangkok',
       cash: usd(2_500),
       salaryAnnual: 0,
       lifestyleTier: 1,

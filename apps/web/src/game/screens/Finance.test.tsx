@@ -119,8 +119,8 @@ describe('property that is only for letting', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
     const kinds = (region: HTMLElement) => within(region).getAllByRole('button').map((tile) => tile.querySelector('img')?.getAttribute('src')?.replace(/^.*home\./, '').replace('.png', ''));
-    const homes = screen.getByRole('region', { name: 'Homes in Madrid' });
-    const lets = screen.getByRole('region', { name: 'To let in Madrid' });
+    const homes = screen.getByRole('region', { name: 'Homes in Dubai' });
+    const lets = screen.getByRole('region', { name: 'To let in Dubai' });
     // Each list in the order the game keeps them: the cheapest first.
     expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => type.id));
     expect(kinds(lets)).toEqual(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id));
@@ -199,7 +199,7 @@ describe('a parking space already owned', () => {
 
     // A mortgage is named for the home it is on.
     await user.click(screen.getByRole('tab', { name: 'Debt' }));
-    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Fixed mortgage · Flat, Madrid')).toBeTruthy();
+    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Fixed mortgage · Flat, Dubai')).toBeTruthy();
   });
 });
 
@@ -234,7 +234,7 @@ describe('the portfolio at a glance', () => {
     expect(within(glance).getAllByRole('listitem').map((li) => li.textContent)).toEqual(quote.slices.map((slice) => `${kinds[slice.kind]}${fmt.rate(slice.shareBp)}`));
     // The flat is most of what is put to work, and the screen says so in words.
     expect(quote).toMatchObject({ concentrated: true, largest: { kind: 'property' } });
-    expect(within(glance).getByRole('note').textContent).toBe(`${fmt.rate(quote.largest?.shareBp ?? 0)} of what you have invested is in one thing: Flat, Madrid. If it does badly, so do you.`);
+    expect(within(glance).getByRole('note').textContent).toBe(`${fmt.rate(quote.largest?.shareBp ?? 0)} of what you have invested is in one thing: Flat, Dubai. If it does badly, so do you.`);
   });
 
   it('warns nobody who is only beginning, and says nothing of being paid to someone nothing pays', async () => {
@@ -699,7 +699,7 @@ describe('how the player lives, in the lifestyle tab', () => {
 
 describe('a property the player owns', () => {
   it('opens on a tap: what it is worth, what it would bring, what is owed and what a sale would leave', async () => {
-    // The heir starts with a flat in Madrid, lived in and owned outright.
+    // The heir starts with a flat in Dubai, lived in and owned outright.
     const { services } = await inFinance('heir');
     const flat = (await stateOf(services)).player.properties[0];
     const user = userEvent.setup();
