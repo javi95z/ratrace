@@ -1,18 +1,20 @@
 'use client';
 
-import { badgeArt, endingArt, lives, PERCENTILE_ART, portraitArt } from '@ratrace/content';
+import { badgeArt, endingArt, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { useEffect, useMemo, useState } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
-import { ageAt, endingOf } from '@/game/present';
+import { ageAt, endingOf, prizedBadge } from '@/game/present';
 import { bestsOf } from '@/game/records';
 import { shareCard } from '@/game/share';
 import type { Best } from '@/game/records';
 import { Link } from '@/i18n/navigation';
 import { Panel, Row, Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { Loop } from './Loop';
+import { Medal } from './Medal';
 import { ShareCard } from './ShareCard';
 import { WorthGraph } from './WorthGraph';
 
@@ -91,6 +93,7 @@ function Ended({ view }: { view: GameView }) {
   const life = lives.find((candidate) => candidate.id === lifeId);
   const told = life ? epilogue({ words, t: tale, life, view, story, score: score.total, bankruptcies }) : [];
   const standing = useStanding(lifeId, score.total);
+  const prized = prizedBadge(earned.filter(isNew));
   const outcome = p.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, p.escapedAtRound) });
   // The picture to share says what this screen says, in the figures the engine gave.
   const picture = useMemo(
@@ -178,6 +181,15 @@ function Ended({ view }: { view: GameView }) {
         </Panel>
       ) : null}
 
+      {/* A rare or legendary badge won for the first time is cheered, the rarest first. */}
+      {prized ? (
+        <p role="status" className="frame frame-gold pixel animate-rise relative flex items-center justify-center gap-2 overflow-hidden bg-night-600 px-3 py-2 text-center text-[16px] text-gold-200">
+          <Loop name="confetti" className="absolute left-2" />
+          {t(rarityOf(prized.id) === 'legendary' ? 'legendaryBadge' : 'rareBadge', { name: text.badges[prized.id]?.name ?? prized.id })}
+          <Loop name="confetti" className="absolute right-2" />
+        </p>
+      ) : null}
+
       {bests.length > 0 || unlocked.length > 0 ? (
         <div className="flex flex-col gap-2">
           {bests.map((best) => (
@@ -216,7 +228,7 @@ function Ended({ view }: { view: GameView }) {
           <ul className="flex flex-col gap-2">
             {earned.map((id) => (
               <li key={id} className="flex items-center gap-3">
-                <Sprite id={badgeArt(id)} fallback={{ w: 64, h: 64 }} />
+                <Medal badgeId={id} />
                 <div className="min-w-0 flex-1">
                   <p className="pixel text-[16px]">{text.badges[id]?.name ?? id}</p>
                   <p className="text-[12px] leading-snug text-ink-300">{text.badges[id]?.how}</p>

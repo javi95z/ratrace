@@ -1,6 +1,6 @@
 'use client';
 
-import { badgeArt, careerArt, cityIcon, lives } from '@ratrace/content';
+import { careerArt, cityIcon, lives } from '@ratrace/content';
 import { useEffect, useId, useState } from 'react';
 import { useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
@@ -10,6 +10,7 @@ import { Bare, Button, Panel, Row } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
 import { Sprite } from '@/ui/Sprite';
+import { Medal } from './Medal';
 import { WorthGraph } from './WorthGraph';
 
 type Kind = 'all' | 'week' | 'friends';
@@ -257,7 +258,7 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
               <ul aria-label={t('runBadges')} className="flex flex-wrap gap-1">
                 {life.badges.map((id) => (
                   <li key={id} title={text.badges[id]?.name ?? id}>
-                    <Sprite id={badgeArt(id)} alt={text.badges[id]?.name ?? id} fallback={{ w: 64, h: 64 }} className="size-10" />
+                    <Medal badgeId={id} size="sm" alt={text.badges[id]?.name ?? id} />
                   </li>
                 ))}
               </ul>

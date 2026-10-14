@@ -210,6 +210,8 @@ export const topicArt: Record<Headline['topic'], string> = {
 
 /** A badge, or `locked` for one not earned yet. */
 export const badgeArt = (badgeId: string): string => `badge.${badgeId}`;
+/** The rim a badge is set in, by its rarity: bronze, silver, a laurel of gold, and the gem. */
+export const RIM_ART = { common: 'rim.bronze', uncommon: 'rim.silver', rare: 'rim.gold', legendary: 'rim.gem' } as const;
 
 /**
  * The picture of a moment that stops the game: leaving the rat race, going bankrupt, the first

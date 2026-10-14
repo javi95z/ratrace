@@ -801,7 +801,9 @@
     "home": "Home",
     "ranked": "A ranked life: it is in the rankings.",
     "rankings": "See the rankings",
-    "compare": "Better than {pct}% of the {life} lives others have played ({total})."
+    "compare": "Better than {pct}% of the {life} lives others have played ({total}).",
+    "rareBadge": "A rare badge: {name}!",
+    "legendaryBadge": "A legendary badge: {name}!"
   },
   "epilogue": {
     "title": "Your life, told",
@@ -843,7 +845,13 @@
     "unlocked": "New life unlocked",
     "isNew": "New",
     "earnedOn": "Earned {date}",
-    "notYet": "Not earned yet"
+    "notYet": "Not earned yet",
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare",
+      "legendary": "Legendary"
+    }
   },
   "collection": {
     "title": "Collection",
@@ -852,7 +860,9 @@
     "itemsCount": "{n} of {total} owned",
     "badgesCount": "{n} of {total} earned",
     "notOwned": "Not owned yet",
-    "intro": "Everything you have ever owned, in any life, and every badge you have earned."
+    "intro": "Everything you have ever owned, in any life, and every badge you have earned.",
+    "rarity": "Rarity",
+    "rarityAll": "All"
   },
   "records": {
     "title": "Records",

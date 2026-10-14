@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { badges, content } from '@ratrace/content';
+import { badges, content, rarityOf } from '@ratrace/content';
 import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
@@ -66,13 +66,36 @@ describe('the collection', () => {
     const earned = within(panel).getByText('Millionaire').closest('li') as HTMLElement;
     expect(within(earned).getByText('Earned 13 Oct 2026')).toBeTruthy();
     expect(within(earned).getByText(/Be worth a million/)).toBeTruthy();
-    expect(earned.querySelector('img')?.getAttribute('src')).toContain('badge.millionaire');
+    const pictures = (line: HTMLElement) => [...line.querySelectorAll('img')].map((img) => img.getAttribute('src') ?? '');
+    // Set in the rim of its rarity: a millionaire is common, and in bronze.
+    expect(pictures(earned)).toEqual([expect.stringContaining('rim.bronze'), expect.stringContaining('badge.millionaire')]);
+    expect(within(earned).getByText('Common')).toBeTruthy();
 
     const waiting = within(panel).getByText('Ten million').closest('li') as HTMLElement;
     expect(within(waiting).getByText('Not earned yet')).toBeTruthy();
     // How to earn it is not told until it has been earned: the name is the clue.
     expect(within(waiting).queryByText(/Be worth ten million/)).toBeNull();
-    expect(waiting.querySelector('img')?.getAttribute('src')).toContain('badge.locked');
+    // Its rarity is seen before it is won: ten million is rare, in gold, with the lock inside.
+    expect(pictures(waiting)).toEqual([expect.stringContaining('rim.gold'), expect.stringContaining('badge.locked')]);
+    expect(within(waiting).getByText('Rare')).toBeTruthy();
+  });
+
+  it('shows one rarity at a time, each saying how many of it are won', async () => {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' }, ten_million: { at: 1, gameId: 'g' } } });
+    const user = userEvent.setup();
+    renderGame(<Collection />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Badges' }));
+    const panel = screen.getByRole('tabpanel', { name: 'Badges' });
+    const of = (rarity: string) => badges.filter((badge) => rarityOf(badge.id) === rarity);
+    const rare = within(panel).getByRole('radio', { name: /^Rare/ });
+    expect(rare.textContent).toBe(`Rare1/${of('rare').length}`);
+    await user.click(rare);
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(of('rare').length);
+    expect(within(panel).getByText('Ten million')).toBeTruthy();
+    expect(within(panel).queryByText('Millionaire')).toBeNull();
+    await user.click(within(panel).getByRole('radio', { name: /^All/ }));
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
   });
 
   it('starts empty for someone new, and leads back home', async () => {

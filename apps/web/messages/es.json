@@ -801,7 +801,9 @@
     "home": "Inicio",
     "ranked": "Vida clasificatoria: está en las clasificaciones.",
     "rankings": "Ver las clasificaciones",
-    "compare": "Mejor que el {pct} % de las vidas de {life} que han jugado otros ({total})."
+    "compare": "Mejor que el {pct} % de las vidas de {life} que han jugado otros ({total}).",
+    "rareBadge": "¡Insignia rara: {name}!",
+    "legendaryBadge": "¡Insignia legendaria: {name}!"
   },
   "epilogue": {
     "title": "Tu vida, contada",
@@ -843,7 +845,13 @@
     "unlocked": "Nueva vida desbloqueada",
     "isNew": "Nueva",
     "earnedOn": "Conseguida el {date}",
-    "notYet": "Aún sin conseguir"
+    "notYet": "Aún sin conseguir",
+    "rarity": {
+      "common": "Común",
+      "uncommon": "Poco común",
+      "rare": "Rara",
+      "legendary": "Legendaria"
+    }
   },
   "collection": {
     "title": "Colección",
@@ -852,7 +860,9 @@
     "itemsCount": "{n} de {total} conseguidas",
     "badgesCount": "{n} de {total} conseguidas",
     "notOwned": "Aún no lo has tenido",
-    "intro": "Todo lo que has tenido alguna vez, en cualquier vida, y todas las insignias que has conseguido."
+    "intro": "Todo lo que has tenido alguna vez, en cualquier vida, y todas las insignias que has conseguido.",
+    "rarity": "Rareza",
+    "rarityAll": "Todas"
   },
   "records": {
     "title": "Récords",

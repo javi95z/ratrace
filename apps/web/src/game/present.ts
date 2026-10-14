@@ -1,5 +1,5 @@
-import { businessArt, careerArt, cityIcon, repairArt, skillArt, START_AGE } from '@ratrace/content';
-import type { CityLight, ContentText, Ending, Names } from '@ratrace/content';
+import { badges, businessArt, careerArt, cityIcon, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
+import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
@@ -375,3 +375,10 @@ export function insuranceCover(content: Content, kind: InsuranceKind): Insurance
   return { pays: [...pays].map(([cardId, pct]) => ({ cardId, pct })), opens: [...opens] };
 }
 
+
+/** The rarest of the badges a life won for the first time, if any of them was rare or legendary: the one the end of the life cheers. */
+export function prizedBadge(won: readonly string[]): BadgeDef | undefined {
+  return badges
+    .filter((badge) => won.includes(badge.id) && (rarityOf(badge.id) === 'rare' || rarityOf(badge.id) === 'legendary'))
+    .sort((a, b) => RARITIES.indexOf(rarityOf(b.id)) - RARITIES.indexOf(rarityOf(a.id)))[0];
+}

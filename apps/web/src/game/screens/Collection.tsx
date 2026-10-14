@@ -1,12 +1,14 @@
 'use client';
 
-import { badgeArt, badges, itemArt } from '@ratrace/content';
+import { badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
+import type { BadgeRarity } from '@ratrace/content';
 import { useId, useState } from 'react';
 import { useProfile, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { Bare } from '@/ui/kit';
+import { Bare, Segmented } from '@/ui/kit';
 import { Tabs } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { Medal } from './Medal';
 
 type Tab = 'items' | 'badges';
 
@@ -45,31 +47,51 @@ function Things() {
   );
 }
 
+/** The colour each rarity is named in, after its rim. */
+export const RARITY_TONE: Record<BadgeRarity, string> = { common: 'text-[#c98a4b]', uncommon: 'text-ink-100', rare: 'text-gold-500', legendary: 'text-teal-300' };
+
 /** All thirty badges with how each is earned. Earned ones are drawn, with the day; the rest show the lock. */
 function Badges() {
   const t = useT('collection');
   const labels = useT('badges');
   const { text, fmt } = useWords();
   const { badges: earned } = useProfile();
-  const groups = [...new Set(badges.map((badge) => badge.group))];
+  const [only, setOnly] = useState<BadgeRarity | 'all'>('all');
+  const shown = badges.filter((badge) => only === 'all' || rarityOf(badge.id) === only);
+  const groups = [...new Set(shown.map((badge) => badge.group))];
+  const count = (list: typeof badges) => list.filter((badge) => Object.hasOwn(earned, badge.id)).length;
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="pixel text-center text-[15px] text-gold-500">{t('badgesCount', { n: badges.filter((badge) => Object.hasOwn(earned, badge.id)).length, total: badges.length })}</p>
+      <p className="pixel text-center text-[15px] text-gold-500">{t('badgesCount', { n: count(badges), total: badges.length })}</p>
+      {/* One rarity at a time, or all: each says how many of it are won. */}
+      <Segmented<BadgeRarity | 'all'>
+        label={t('rarity')}
+        value={only}
+        onChange={setOnly}
+        options={[
+          { value: 'all', label: t('rarityAll') },
+          ...RARITIES.map((rarity) => {
+            const of = badges.filter((badge) => rarityOf(badge.id) === rarity);
+            return { value: rarity, label: labels(`rarity.${rarity}`), hint: `${count(of)}/${of.length}` };
+          }),
+        ]}
+      />
       {groups.map((group) => (
         <section key={group}>
           <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{text.badgeGroups[group]}</h2>
           {/* Two to a row wherever there is room for two. */}
           <ul className="grid grid-cols-1 gap-2 @min-[560px]:grid-cols-2">
-            {badges
+            {shown
               .filter((badge) => badge.group === group)
               .map((badge) => {
                 const got = Object.hasOwn(earned, badge.id) ? earned[badge.id] : null;
                 return (
                   <li key={badge.id} className={`flex items-center gap-3 p-2 ${got ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'}`}>
-                    <Sprite id={badgeArt(got ? badge.id : 'locked')} fallback={{ w: 64, h: 64 }} />
+                    <Medal badgeId={badge.id} locked={!got} />
                     <div className="min-w-0 flex-1">
                       <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{text.badges[badge.id].name}</p>
+                      <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarityOf(badge.id)]}`}>{labels(`rarity.${rarityOf(badge.id)}`)}</p>
                       {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
                       {got ? <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p> : null}
                       <p className={`mt-0.5 text-[12px] ${got ? 'text-teal-300' : 'text-ink-300'}`}>{got ? labels('earnedOn', { date: fmt.day(got.at) }) : labels('notYet')}</p>

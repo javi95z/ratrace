@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
-import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, orderLabel, portraitAge, priceHistory, roundNotes, worthBars } from './present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -91,6 +91,15 @@ describe('debts named for what they bought', () => {
   it('names a margin loan for the investment it is on', () => {
     expect(debtLabel(words('en'), { kind: 'margin', forAsset: 'sp500' })).toBe('Margin loan · S&P 500');
     expect(debtLabel(words('es'), { kind: 'margin', forAsset: 'sp500' })).toBe('Préstamo de margen · S&P 500');
+  });
+});
+
+describe('the badge the end of a life cheers', () => {
+  it('is the rarest won for the first time, and none when nothing rare was won', () => {
+    expect(prizedBadge(['millionaire', 'ten_million', 'escaped_before_35'])?.id).toBe('escaped_before_35');
+    expect(prizedBadge(['millionaire', 'supercar'])?.id).toBe('supercar');
+    expect(prizedBadge(['millionaire', 'first_share'])).toBeUndefined();
+    expect(prizedBadge([])).toBeUndefined();
   });
 });
 
