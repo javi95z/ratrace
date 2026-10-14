@@ -14,7 +14,7 @@ describe('the v1 content', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
     expect(content.assets).toHaveLength(19);
     expect(content.careers).toHaveLength(11);
-    expect(content.items).toHaveLength(55);
+    expect(content.items).toHaveLength(58);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
@@ -196,8 +196,8 @@ describe('the v1 content', () => {
     const by = (ladder: string) => content.items.filter((item) => item.ladder === ladder);
     // Every car moves a life for less, and the dearest no more than the cheapest.
     expect(new Set(by('car').map((item) => item.perks?.moveCostOffPct))).toEqual(new Set([30]));
-    // Watches, clothes and memberships help in a job hunt, more as they go up; nothing else does.
-    for (const item of content.items) if (item.perks?.jobHuntPct) expect(['watch', 'fashion', 'membership'], item.id).toContain(item.ladder);
+    // Watches, clothes, memberships and a certificate help in a job hunt, more as they go up; nothing else does.
+    for (const item of content.items) if (item.perks?.jobHuntPct) expect(['watch', 'fashion', 'membership', 'education'], item.id).toContain(item.ladder);
     const watches = by('watch').map((item) => item.perks?.jobHuntPct ?? 0);
     expect(watches).toEqual([...watches].sort((a, b) => a - b));
     // A rest needs a trip that is still going when the round ends: one that lasts a single round would promise what it cannot give.

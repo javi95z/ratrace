@@ -221,3 +221,22 @@ Square image. Object sheet: 2 columns by 2 rows, 4 badges. Every badge is a roun
 | 60 | `badges/badges-04.png` | `badge.bought_the_top`, `badge.more_cars_than_spaces`, `badge.room_at_40`, `badge.audited` | 64×64 |
 
 Until these are cut, the wheel keeps the rat in its suit and the four badges show a stand-in (`BADGE_STAND_INS` in `packages/content/src/art.ts`). When they are cut: add the sheets to `tools/art/src/sheets.ts`, the outfits to `RAT_OUTFITS_DRAWN`, and empty `BADGE_STAND_INS`.
+
+## Three ways to learn, bought
+
+### 61. Certificate, coach, school abroad
+
+Save as `art/raw/items/items-05.png`
+
+```text
+Square image. Object sheet: 3 columns by 1 row, 3 objects, each standing alone and centred in its cell. Left to right:
+1. A framed professional certificate with a gold seal and a blue ribbon, leaning against a thick exam study book with sticky tabs.
+2. A small whiteboard on an easel with a rising arrow and a target drawn on it, a black marker and a coffee cup beside it.
+3. A travel suitcase covered in stickers with a small flag pennant and a phrasebook poking out of the front pocket.
+```
+
+| # | File | What | Cell |
+| --- | --- | --- | --- |
+| 61 | `items/items-05.png` | `item.edu_certificate`, `item.edu_coach`, `item.edu_language_school` | 64×64 |
+
+Until it is cut, the three show a stand-in (`ITEM_STAND_INS` in `packages/content/src/art.ts`).

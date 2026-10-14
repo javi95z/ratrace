@@ -501,9 +501,9 @@ export const cards: Record<string, CardText> = {
   ]),
 
   // Impuestos
-  tax_advisor: c('Contratar a un asesor fiscal', 'Una amiga jura que la suya se pagó sola el primer año.', [
-    'Hacerlo tú',
-    ['Contratar a una', 'Encuentra deducciones que no sabías que existían.', 'Este año no hay nada. Aun así, tienes las espaldas cubiertas.'],
+  tax_advisor: c('¿Te llevas la renta a una gestoría?', 'Cobra por hacerte la renta. Suele encontrar deducciones que pagan su factura y, si te inspecciona Hacienda, te ahorra casi toda la multa.', [
+    'Seguir haciéndola tú',
+    ['Contratar la gestoría', 'Encuentra deducciones que no sabías que existían: se paga sola y sobra.', 'Este año no encuentra nada que deducir, pero ya tienes quien te defienda ante Hacienda.'],
   ]),
   tax_pension_topup: c('Aportación al plan de pensiones', 'Este año tu empresa iguala lo que aportes a tu plan.', [
     'Pasar',

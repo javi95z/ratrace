@@ -1,13 +1,13 @@
 # Art report
 
-Sprites: 524. Every group uses the 31 interface colours plus its own.
+Sprites: 604. Every group uses the 31 interface colours plus its own.
 
 | Group | Sprites | Size | Colours |
 |---|---|---|---|
 | items | 54 | 64×64 | 64 |
 | cars | 8 | 96×48 | 64 |
-| homes | 18 | 128×128 | 64 |
-| icons | 130 | 32×32 | 64 |
+| homes | 90 | 128×128 | 64 |
+| icons | 138 | 32×32 | 64 |
 | badges | 44 | 64×64 | 64 |
 | portraits | 80 | 64×64 | 64 |
 | cards | 162 | 288×120 | 64 |
@@ -19,4 +19,7 @@ No sheets missing.
 | Sprite | Notes |
 |---|---|
 | home.estate | 3 key-coloured pixels |
+| home.new_york.estate | touches-edge |
+| anim.wheel_tracksuit.0 | touches-edge |
+| anim.wheel_tuxedo.0 | touches-edge |
 | rim.gem | touches-edge |

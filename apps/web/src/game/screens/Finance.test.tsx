@@ -128,8 +128,8 @@ describe('property that is only for letting', () => {
     const kinds = (region: HTMLElement) => within(region).getAllByRole('button').map((tile) => tile.querySelector('img')?.getAttribute('src')?.replace(/^.*home\./, '').replace('.png', ''));
     const homes = screen.getByRole('region', { name: 'Homes in Dubai' });
     const lets = screen.getByRole('region', { name: 'To let in Dubai' });
-    // Each list in the order the game keeps them: the cheapest first.
-    expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => type.id));
+    // Each list in the order the game keeps them: the cheapest first. A home is drawn as Dubai builds it.
+    expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => `dubai.${type.id}`));
     expect(kinds(lets)).toEqual(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id));
     expect(kinds(homes)).toHaveLength(11);
     expect(kinds(lets)).toHaveLength(5);

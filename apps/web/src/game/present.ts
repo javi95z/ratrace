@@ -106,6 +106,11 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     if (points) add(toneOf(points), t('skill', { skill: text.skills[skill], value: signed(points) }));
   }
   if (effects.status) add(toneOf(effects.status), t('status', { value: signed(effects.status) }));
+  // A flag that a later card's bill is paid from, such as having a tax advisor, is said with the share it pays.
+  for (const flag of effects.setFlags ?? []) {
+    const pct = flagCover(content, flag);
+    if (pct > 0) add('good', t('coversInspection', { pct }));
+  }
   if (effects.focus) add('bad', t('focus', { value: signed(-effects.focus) }));
   for (const entry of effects.recurring ?? []) {
     const income = entry.kind === 'passive';
@@ -350,6 +355,16 @@ export function worthBars(history: number[]): { zero: number; bars: Array<{ y: n
     zero,
     bars: history.map((value) => (value >= 0 ? { y: (top - value) / span, h: value / span, negative: false } : { y: zero, h: -value / span, negative: true })),
   };
+}
+
+/** The largest share of a card's bill that a flag pays, in percent: none for a flag that pays nothing. */
+export function flagCover(content: Content, flag: string): number {
+  let best = 0;
+  for (const card of content.cards)
+    for (const option of card.options)
+      for (const effects of [option.effects, ...(option.outcomes ?? []).map((outcome) => outcome.effects)])
+        if (effects?.protection?.flag === flag) best = Math.max(best, effects.protection.coverPct);
+  return best;
 }
 
 /** What an insurance does for whoever holds it, read from the cards themselves so that it is never out of date. */

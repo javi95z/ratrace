@@ -135,11 +135,17 @@ export const cardArt: Record<string, string> = {
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
-export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${itemId}`);
+/** Things whose own picture is not drawn yet, and the nearest one drawn, shown until it is. Emptied as `items-05` is cut. */
+export const ITEM_STAND_INS: Record<string, string> = {
+  edu_certificate: 'edu_mba',
+  edu_coach: 'member_club',
+  edu_language_school: 'travel_interrail',
+};
+export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? `car.${itemId.slice(4)}` : `item.${ITEM_STAND_INS[itemId] ?? itemId}`);
 /** The kinds of home each city draws its own way, once its sheet is cut. */
 export const CITY_HOME_KINDS = ['studio', 'flat', 'loft', 'townhouse', 'house', 'duplex', 'chalet', 'penthouse', 'estate', 'villa', 'mansion'] as const;
 /** The cities whose homes are drawn: until a city's sheet is cut, its homes are the plain ones. */
-export const CITY_HOMES_DRAWN: readonly string[] = [];
+export const CITY_HOMES_DRAWN: readonly string[] = ['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok'];
 /** A kind of property, as the city it is in draws it, or plain where the city has no drawing of its own. */
 export const propertyArt = (typeId: string, cityId?: string): string =>
   cityId !== undefined && CITY_HOMES_DRAWN.includes(cityId) && (CITY_HOME_KINDS as readonly string[]).includes(typeId) ? `home.${cityId}.${typeId}` : `home.${typeId}`;
@@ -301,8 +307,8 @@ export const loopArt = (loop: Loop): string[] => [0, 1, 2, 3].map((frame) => `an
 
 /** What the rat in the wheel wears: a tracksuit for a frugal life, the suit of the logo, and a tuxedo for a rich one. */
 export type RatOutfit = 'tracksuit' | 'suit' | 'tuxedo';
-/** The outfits drawn so far, besides the suit of the plain wheel. Filled as `anim-02` is cut. */
-export const RAT_OUTFITS_DRAWN: readonly RatOutfit[] = [];
+/** The outfits drawn, besides the suit of the plain wheel. */
+export const RAT_OUTFITS_DRAWN: readonly RatOutfit[] = ['tracksuit', 'tuxedo'];
 /** The wheel turning with the rat in an outfit, or the plain wheel while that outfit is not drawn. */
 export const wheelArt = (outfit: RatOutfit): string[] =>
   RAT_OUTFITS_DRAWN.includes(outfit) ? [0, 1, 2, 3].map((frame) => `anim.wheel_${outfit}.${frame}`) : loopArt('wheel');

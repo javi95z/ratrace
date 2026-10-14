@@ -498,16 +498,16 @@ function practised(p, content2, tally) {
   const career = p.life.career?.id;
   const trade = (skill) => career !== void 0 && (rules.practiceCareers[skill] ?? []).includes(career);
   const member = p.life.items.some((owned) => content2.items.some((item) => item.id === owned.itemId && item.kind === "membership"));
-  const gym = p.life.items.some((owned) => content2.items.some((item) => item.id === owned.itemId && item.kind === "membership" && (rules.practiceItems.health ?? []).includes(item.id)));
+  const uses = (skill) => p.life.items.some((owned) => (rules.practiceItems[skill] ?? []).includes(owned.itemId));
   const tended = p.businesses.some((business2) => business2.tended);
   const managed = p.businesses.some((business2) => business2.manager);
   const practice = (yes) => yes ? rules.practicePoints : 0;
   return {
     negotiation: practice(trade("negotiation") || tally.focusActions.includes("jobHunt")),
-    languages: practice(trade("languages") || p.cityId !== p.life.homeCityId),
+    languages: practice(trade("languages") || p.cityId !== p.life.homeCityId || uses("languages")),
     network: practice(trade("network") || member),
-    management: tended ? rules.studyPoints : practice(managed),
-    health: practice(trade("health") || gym)
+    management: tended ? rules.studyPoints : practice(managed || uses("management")),
+    health: practice(trade("health") || uses("health"))
   };
 }
 function addSkillPoints(p, content2, points, events) {
@@ -4740,6 +4740,30 @@ var catalogue = [
   membership("member_beach_dubai", 3e3, 5e3, 10, ["dubai"]),
   membership("member_paddock_singapore", 4e3, 6e3, 11, ["singapore"]),
   membership("member_ringside_bangkok", 150, 400, 3, ["bangkok"]),
+  // Learning that is bought: a certificate kept for life, a coach paid by the year, and a term abroad that is lived.
+  {
+    id: "edu_certificate",
+    ladder: "education",
+    kind: "durable",
+    price: usd(4e3),
+    upkeepAnnual: 0,
+    status: 4,
+    resaleStartPct: 0,
+    resaleDriftBp: 0,
+    boostRounds: 0
+  },
+  {
+    id: "edu_coach",
+    ladder: "education",
+    kind: "membership",
+    price: 0,
+    upkeepAnnual: usd(6e3),
+    status: 2,
+    resaleStartPct: 0,
+    resaleDriftBp: 0,
+    boostRounds: 0
+  },
+  experience("edu_language_school", "education", 6e3, 4, 2),
   // An MBA takes two focus points and builds skill, so it is earned through its card, not bought in the shop.
   {
     id: "edu_mba",
@@ -4782,7 +4806,9 @@ var PERKS = {
   travel_safari: REST,
   travel_maldives: REST,
   travel_world_first: REST,
-  edu_mba: { salaryPct: 10 }
+  edu_mba: { salaryPct: 10 },
+  edu_certificate: { jobHuntPct: 8, salaryPct: 3 },
+  edu_coach: { salaryPct: 2 }
 };
 var items = catalogue.map((item) => {
   const perks = item.ladder === "car" ? CAR : PERKS[item.id];
@@ -4909,7 +4935,7 @@ var life = {
       network: ["sales", "influencer", "hospitality", "public"],
       health: ["healthcare", "medicine"]
     },
-    practiceItems: { health: ["member_gym"] },
+    practiceItems: { health: ["member_gym"], management: ["edu_coach"], languages: ["edu_language_school"] },
     negotiationHuntRaisePct: 1,
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,

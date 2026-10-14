@@ -292,7 +292,8 @@
     },
     "openBusiness": "Открываешь дело: {name}",
     "sellBusinesses": "Продаёшь бизнес за {pct}% его стоимости",
-    "skill": "{skill} {value}"
+    "skill": "{skill} {value}",
+    "coversInspection": "Покрывает {pct}% штрафа при налоговой проверке"
   },
   "finance": {
     "tabs": {

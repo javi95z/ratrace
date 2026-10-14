@@ -292,7 +292,8 @@
     },
     "openBusiness": "Abres un negocio: {name}",
     "sellBusinesses": "Vendes tus negocios al {pct} % de lo que valen",
-    "skill": "{skill} {value}"
+    "skill": "{skill} {value}",
+    "coversInspection": "Paga el {pct} % de una inspección de Hacienda"
   },
   "finance": {
     "tabs": {

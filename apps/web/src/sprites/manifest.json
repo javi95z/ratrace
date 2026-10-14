@@ -79,6 +79,46 @@
     "w": 48,
     "h": 48
   },
+  "anim.wheel_tracksuit.0": {
+    "src": "icons/anim.wheel_tracksuit.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tracksuit.1": {
+    "src": "icons/anim.wheel_tracksuit.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tracksuit.2": {
+    "src": "icons/anim.wheel_tracksuit.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tracksuit.3": {
+    "src": "icons/anim.wheel_tracksuit.3.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tuxedo.0": {
+    "src": "icons/anim.wheel_tuxedo.0.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tuxedo.1": {
+    "src": "icons/anim.wheel_tuxedo.1.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tuxedo.2": {
+    "src": "icons/anim.wheel_tuxedo.2.png",
+    "w": 48,
+    "h": 48
+  },
+  "anim.wheel_tuxedo.3": {
+    "src": "icons/anim.wheel_tuxedo.3.png",
+    "w": 48,
+    "h": 48
+  },
   "badge.bankrupt": {
     "src": "badges/badge.bankrupt.png",
     "w": 64,
@@ -994,6 +1034,66 @@
     "w": 80,
     "h": 80
   },
+  "home.bangkok.chalet": {
+    "src": "homes/home.bangkok.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.duplex": {
+    "src": "homes/home.bangkok.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.estate": {
+    "src": "homes/home.bangkok.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.flat": {
+    "src": "homes/home.bangkok.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.house": {
+    "src": "homes/home.bangkok.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.loft": {
+    "src": "homes/home.bangkok.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.mansion": {
+    "src": "homes/home.bangkok.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.penthouse": {
+    "src": "homes/home.bangkok.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.sign": {
+    "src": "homes/home.bangkok.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.studio": {
+    "src": "homes/home.bangkok.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.townhouse": {
+    "src": "homes/home.bangkok.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.bangkok.villa": {
+    "src": "homes/home.bangkok.villa.png",
+    "w": 128,
+    "h": 128
+  },
   "home.block": {
     "src": "homes/home.block.png",
     "w": 128,
@@ -1001,6 +1101,66 @@
   },
   "home.chalet": {
     "src": "homes/home.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.chalet": {
+    "src": "homes/home.dubai.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.duplex": {
+    "src": "homes/home.dubai.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.estate": {
+    "src": "homes/home.dubai.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.flat": {
+    "src": "homes/home.dubai.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.house": {
+    "src": "homes/home.dubai.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.loft": {
+    "src": "homes/home.dubai.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.mansion": {
+    "src": "homes/home.dubai.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.penthouse": {
+    "src": "homes/home.dubai.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.sign": {
+    "src": "homes/home.dubai.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.studio": {
+    "src": "homes/home.dubai.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.townhouse": {
+    "src": "homes/home.dubai.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.dubai.villa": {
+    "src": "homes/home.dubai.villa.png",
     "w": 128,
     "h": 128
   },
@@ -1029,8 +1189,188 @@
     "w": 128,
     "h": 128
   },
+  "home.london.chalet": {
+    "src": "homes/home.london.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.duplex": {
+    "src": "homes/home.london.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.estate": {
+    "src": "homes/home.london.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.flat": {
+    "src": "homes/home.london.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.house": {
+    "src": "homes/home.london.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.loft": {
+    "src": "homes/home.london.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.mansion": {
+    "src": "homes/home.london.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.penthouse": {
+    "src": "homes/home.london.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.sign": {
+    "src": "homes/home.london.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.studio": {
+    "src": "homes/home.london.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.townhouse": {
+    "src": "homes/home.london.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.london.villa": {
+    "src": "homes/home.london.villa.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.chalet": {
+    "src": "homes/home.madrid.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.duplex": {
+    "src": "homes/home.madrid.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.estate": {
+    "src": "homes/home.madrid.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.flat": {
+    "src": "homes/home.madrid.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.house": {
+    "src": "homes/home.madrid.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.loft": {
+    "src": "homes/home.madrid.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.mansion": {
+    "src": "homes/home.madrid.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.penthouse": {
+    "src": "homes/home.madrid.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.sign": {
+    "src": "homes/home.madrid.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.studio": {
+    "src": "homes/home.madrid.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.townhouse": {
+    "src": "homes/home.madrid.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.madrid.villa": {
+    "src": "homes/home.madrid.villa.png",
+    "w": 128,
+    "h": 128
+  },
   "home.mansion": {
     "src": "homes/home.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.chalet": {
+    "src": "homes/home.new_york.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.duplex": {
+    "src": "homes/home.new_york.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.estate": {
+    "src": "homes/home.new_york.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.flat": {
+    "src": "homes/home.new_york.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.house": {
+    "src": "homes/home.new_york.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.loft": {
+    "src": "homes/home.new_york.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.mansion": {
+    "src": "homes/home.new_york.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.penthouse": {
+    "src": "homes/home.new_york.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.sign": {
+    "src": "homes/home.new_york.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.studio": {
+    "src": "homes/home.new_york.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.townhouse": {
+    "src": "homes/home.new_york.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.new_york.villa": {
+    "src": "homes/home.new_york.villa.png",
     "w": 128,
     "h": 128
   },
@@ -1061,6 +1401,66 @@
   },
   "home.shop": {
     "src": "homes/home.shop.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.chalet": {
+    "src": "homes/home.singapore.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.duplex": {
+    "src": "homes/home.singapore.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.estate": {
+    "src": "homes/home.singapore.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.flat": {
+    "src": "homes/home.singapore.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.house": {
+    "src": "homes/home.singapore.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.loft": {
+    "src": "homes/home.singapore.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.mansion": {
+    "src": "homes/home.singapore.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.penthouse": {
+    "src": "homes/home.singapore.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.sign": {
+    "src": "homes/home.singapore.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.studio": {
+    "src": "homes/home.singapore.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.townhouse": {
+    "src": "homes/home.singapore.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.singapore.villa": {
+    "src": "homes/home.singapore.villa.png",
     "w": 128,
     "h": 128
   },

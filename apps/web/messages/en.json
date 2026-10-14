@@ -292,7 +292,8 @@
     },
     "openBusiness": "You open a business: {name}",
     "sellBusinesses": "You sell your businesses for {pct}% of what they are worth",
-    "skill": "{skill} {value}"
+    "skill": "{skill} {value}",
+    "coversInspection": "Pays {pct}% of a tax inspection"
   },
   "finance": {
     "tabs": {

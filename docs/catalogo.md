@@ -9,7 +9,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Vidas](#vidas) | 16 |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 6 |
-| [Objetos](#objetos) | 55, de ellos 7 coches |
+| [Objetos](#objetos) | 58, de ellos 7 coches |
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 19 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
@@ -641,6 +641,9 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| <img src="../art/clean/items/item.edu_mba.png" alt="Certificación PMP"> | Certificación PMP | 4.000 $ |  | +4 | 0 %, 0 % por ronda | +3 % de sueldo. +8 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.member_club.png" alt="Coach ejecutivo"> | Coach ejecutivo | 0 $ | 6.000 $/año | +2 |  | +2 % de sueldo | Cuota mientras lo tengas |
+| <img src="../art/clean/items/item.travel_interrail.png" alt="Escuela de idiomas en el extranjero"> | Escuela de idiomas en el extranjero | 6.000 $ |  | +4 |  |  | El estatus dura 4 años |
 | <img src="../art/clean/items/item.edu_mba.png" alt="MBA en el IESE"> | MBA en el IESE | 95.000 $ |  | +15 |  | +10 % de sueldo | Solo lo da una carta |
 
 ## Inmuebles
@@ -914,7 +917,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 
 |  | Carta | Opciones |
 | --- | --- | --- |
-| <img src="../art/clean/cards/card.advisor_office.png" alt="Contratar a un asesor fiscal"> | **Contratar a un asesor fiscal**<br>Una amiga jura que la suya se pagó sola el primer año. | 1. Hacerlo tú<br>2. Contratar a una |
+| <img src="../art/clean/cards/card.advisor_office.png" alt="¿Te llevas la renta a una gestoría?"> | **¿Te llevas la renta a una gestoría?**<br>Cobra por hacerte la renta. Suele encontrar deducciones que pagan su factura y, si te inspecciona Hacienda, te ahorra casi toda la multa. | 1. Seguir haciéndola tú<br>2. Contratar la gestoría |
 | <img src="../art/clean/cards/card.piggy_bank.png" alt="Aportación al plan de pensiones"> | **Aportación al plan de pensiones**<br>Este año tu empresa iguala lo que aportes a tu plan. | 1. Pasar<br>2. Aportar un poco<br>3. Aportar el máximo |
 | <img src="../art/clean/cards/card.receipts.png" alt="La declaración de la renta"> | **La declaración de la renta**<br>Una caja de zapatos llena de facturas y una fecha límite. | 1. Presentarla como siempre<br>2. Repasar todas las facturas |
 | <img src="../art/clean/cards/card.inspector.png" alt="Una inspección de Hacienda"> | **Una inspección de Hacienda**<br>Una carta certificada. Quieren tres años de papeles. | 1. Pagar lo que piden<br>2. Recurrir |

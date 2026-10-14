@@ -289,7 +289,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(113 + 55 + 16 + 2 + 6 * 5 + 8 + 6 + 16 * 4 + 6 + (4 + 2 + 4 + 8 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3);
+    expect(wanted.length).toBe(113 + 58 + 16 + 2 + 6 * 5 + 8 + 6 + 16 * 4 + 6 + (4 + 2 + 4 + 8 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3);
     // Nobody is drawn at home with someone who lives alone; a couple, a family and a full house each have their picture.
     expect([[false, 0], [true, 0], [false, 1], [true, 2], [true, 3]].map(([partner, children]) => homeLifeArt({ partner: partner as boolean, children: children as number }))).toEqual([null, 'family.couple', 'family.children', 'family.children', 'family.full_house']);
     // Every career is drawn at its three stages, and a frame is earned by status, plainest first.

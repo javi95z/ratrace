@@ -22,7 +22,7 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
 });
 
 /**
- * Fifty-five status items in nine ladders: the 34 of spec Appendix B, a seat of its own for each
+ * Fifty-eight status items in nine ladders: the 34 of spec Appendix B, a seat of its own for each
  * city besides Madrid, and sixteen more rungs in fashion, art, travel, and air and sea.
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
@@ -110,6 +110,17 @@ const catalogue: ItemDef[] = [
   membership('member_paddock_singapore', 4_000, 6_000, 11, ['singapore']),
   membership('member_ringside_bangkok', 150, 400, 3, ['bangkok']),
 
+  // Learning that is bought: a certificate kept for life, a coach paid by the year, and a term abroad that is lived.
+  {
+    id: 'edu_certificate', ladder: 'education', kind: 'durable', price: usd(4_000), upkeepAnnual: 0, status: 4,
+    resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 0,
+  },
+  {
+    id: 'edu_coach', ladder: 'education', kind: 'membership', price: 0, upkeepAnnual: usd(6_000), status: 2,
+    resaleStartPct: 0, resaleDriftBp: 0, boostRounds: 0,
+  },
+  experience('edu_language_school', 'education', 6_000, 4, 2),
+
   // An MBA takes two focus points and builds skill, so it is earned through its card, not bought in the shop.
   {
     id: 'edu_mba', ladder: 'education', kind: 'durable', price: usd(95_000), upkeepAnnual: 0, status: 15,
@@ -125,7 +136,7 @@ const REST: ItemPerks = { focus: 1 };
 /**
  * What a thing is good for beyond its status, so that owning is a decision and not only a display.
  * The right watch and the right clothes help in an interview; a laptop is something to study on; a
- * club or a seat is where the people who hire are met; a degree is paid for every month after.
+ * club or a seat is where the people who hire are met; a degree or a certificate is paid for every month after.
  * Art, boats and the rest are status and nothing else.
  */
 const PERKS: Record<string, ItemPerks> = {
@@ -155,6 +166,8 @@ const PERKS: Record<string, ItemPerks> = {
   travel_maldives: REST,
   travel_world_first: REST,
   edu_mba: { salaryPct: 10 },
+  edu_certificate: { jobHuntPct: 8, salaryPct: 3 },
+  edu_coach: { salaryPct: 2 },
 };
 
 export const items: ItemDef[] = catalogue.map((item) => {

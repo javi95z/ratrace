@@ -92,6 +92,9 @@ const items: Names['items'] = {
   member_paddock_singapore: 'Singapore GP Paddock Club',
   member_ringside_bangkok: 'Rajadamnern ringside pass',
   edu_mba: 'MBA at IESE',
+  edu_certificate: 'PMP certification',
+  edu_coach: 'Executive coach',
+  edu_language_school: 'Language school abroad',
 };
 
 const brands: Names['brands'] = {
@@ -155,6 +158,9 @@ export const names: Record<Locale, Names> = {
       member_paddock_singapore: 'Paddock Club del GP de Singapur',
       member_ringside_bangkok: 'Pase de ringside en Rajadamnern',
       edu_mba: 'MBA en el IESE',
+      edu_certificate: 'Certificación PMP',
+      edu_coach: 'Coach ejecutivo',
+      edu_language_school: 'Escuela de idiomas en el extranjero',
     },
     brands,
   },
@@ -206,6 +212,9 @@ export const names: Record<Locale, Names> = {
       member_paddock_singapore: 'Paddock Club Гран-при Сингапура',
       member_ringside_bangkok: 'Место у ринга на «Раджадамнерне»',
       edu_mba: 'MBA в IESE',
+      edu_certificate: 'Сертификат PMP',
+      edu_coach: 'Бизнес-коуч',
+      edu_language_school: 'Языковая школа за границей',
     },
     brands,
   },

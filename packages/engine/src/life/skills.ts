@@ -60,16 +60,17 @@ export function practised(p: PlayerState, content: Content, tally: RoundTally): 
   const career = p.life.career?.id;
   const trade = (skill: SkillId) => career !== undefined && (rules.practiceCareers[skill] ?? []).includes(career);
   const member = p.life.items.some((owned) => content.items.some((item) => item.id === owned.itemId && item.kind === 'membership'));
-  const gym = p.life.items.some((owned) => content.items.some((item) => item.id === owned.itemId && item.kind === 'membership' && (rules.practiceItems.health ?? []).includes(item.id)));
+  // Something held whose use is practice: a gym for health, a coach for management, a school abroad for languages.
+  const uses = (skill: SkillId) => p.life.items.some((owned) => (rules.practiceItems[skill] ?? []).includes(owned.itemId));
   const tended = p.businesses.some((business) => business.tended);
   const managed = p.businesses.some((business) => business.manager);
   const practice = (yes: boolean) => (yes ? rules.practicePoints : 0);
   return {
     negotiation: practice(trade('negotiation') || tally.focusActions.includes('jobHunt')),
-    languages: practice(trade('languages') || p.cityId !== p.life.homeCityId),
+    languages: practice(trade('languages') || p.cityId !== p.life.homeCityId || uses('languages')),
     network: practice(trade('network') || member),
-    management: tended ? rules.studyPoints : practice(managed),
-    health: practice(trade('health') || gym),
+    management: tended ? rules.studyPoints : practice(managed || uses('management')),
+    health: practice(trade('health') || uses('health')),
   };
 }
 

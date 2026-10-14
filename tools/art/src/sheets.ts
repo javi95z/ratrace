@@ -93,6 +93,36 @@ export const SHEETS: SheetSpec[] = [
     ],
   },
   {
+    // Eleven homes as Madrid builds them, and its "for sale" sign.
+    file: 'homes/homes-madrid', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.madrid.studio', 'home.madrid.flat', 'home.madrid.loft', 'home.madrid.townhouse', 'home.madrid.house', 'home.madrid.duplex', 'home.madrid.chalet', 'home.madrid.penthouse', 'home.madrid.estate', 'home.madrid.villa', 'home.madrid.mansion', 'home.madrid.sign'],
+  },
+  {
+    // Eleven homes as London builds them, and its "for sale" sign.
+    file: 'homes/homes-london', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.london.studio', 'home.london.flat', 'home.london.loft', 'home.london.townhouse', 'home.london.house', 'home.london.duplex', 'home.london.chalet', 'home.london.penthouse', 'home.london.estate', 'home.london.villa', 'home.london.mansion', 'home.london.sign'],
+  },
+  {
+    // Eleven homes as New York builds them, and its "for sale" sign.
+    file: 'homes/homes-new-york', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.new_york.studio', 'home.new_york.flat', 'home.new_york.loft', 'home.new_york.townhouse', 'home.new_york.house', 'home.new_york.duplex', 'home.new_york.chalet', 'home.new_york.penthouse', 'home.new_york.estate', 'home.new_york.villa', 'home.new_york.mansion', 'home.new_york.sign'],
+  },
+  {
+    // Eleven homes as Dubai builds them, and its "for sale" sign.
+    file: 'homes/homes-dubai', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.dubai.studio', 'home.dubai.flat', 'home.dubai.loft', 'home.dubai.townhouse', 'home.dubai.house', 'home.dubai.duplex', 'home.dubai.chalet', 'home.dubai.penthouse', 'home.dubai.estate', 'home.dubai.villa', 'home.dubai.mansion', 'home.dubai.sign'],
+  },
+  {
+    // Eleven homes as Singapore builds them, and its "for sale" sign.
+    file: 'homes/homes-singapore', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.singapore.studio', 'home.singapore.flat', 'home.singapore.loft', 'home.singapore.townhouse', 'home.singapore.house', 'home.singapore.duplex', 'home.singapore.chalet', 'home.singapore.penthouse', 'home.singapore.estate', 'home.singapore.villa', 'home.singapore.mansion', 'home.singapore.sign'],
+  },
+  {
+    // Eleven homes as Bangkok builds them, and its "for sale" sign.
+    file: 'homes/homes-bangkok', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.bangkok.studio', 'home.bangkok.flat', 'home.bangkok.loft', 'home.bangkok.townhouse', 'home.bangkok.house', 'home.bangkok.duplex', 'home.bangkok.chalet', 'home.bangkok.penthouse', 'home.bangkok.estate', 'home.bangkok.villa', 'home.bangkok.mansion', 'home.bangkok.sign'],
+  },
+  {
     file: 'icons/icons-01', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
     ids: [
       'icon.account', 'icon.deposit', 'icon.bond', 'icon.fund',
@@ -190,6 +220,11 @@ export const SHEETS: SheetSpec[] = [
     // Four loops of four frames: a coin turning, the wheel, confetti, an arrow going up.
     file: 'icons/anim-01', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 48, height: 48,
     ids: ['coin', 'wheel', 'confetti', 'arrow'].flatMap((name) => [0, 1, 2, 3].map((frame) => `anim.${name}.${frame}`)),
+  },
+  {
+    // The wheel again, the rat in a tracksuit and in a tuxedo.
+    file: 'icons/anim-02', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 48, height: 48,
+    ids: ['tracksuit', 'tuxedo'].flatMap((outfit) => [0, 1, 2, 3].map((frame) => `anim.wheel_${outfit}.${frame}`)),
   },
   {
     // Four rims for badges by rarity, a crest for each city, and two spare.
