@@ -54,10 +54,12 @@ export const moreInvestingCards: CardDef[] = [
 ];
 
 export const moreHousingCards: CardDef[] = [
+  // Bear it, talk to them, or: move out if it is rented, soundproof it if it is yours.
   card('house_noisy_neighbours', 'housing', { cooldown: 6 }, [
     { effects: { focus: 1 } },
-    { effects: { cash: usd(-4_000) } },
+    { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { focus: 1, status: -1 } }] },
     { when: { ownsHome: false }, effects: { cash: usd(-1_500) } },
+    { when: { ownsHome: true }, effects: { cash: usd(-4_000), homeValue: usd(1_500) } },
   ]),
   card('house_levy', 'housing', { cooldown: 6, when: { ownsHome: true } }, [
     { effects: { cash: usd(-3_000) } },

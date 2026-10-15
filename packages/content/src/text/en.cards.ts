@@ -234,10 +234,10 @@ export const cards: Record<string, CardText> = {
     'Move out',
     'Buy it',
   ]),
-  house_refinance: c('Fixed or variable', 'Your bank will switch your mortgage for a fee.', [
+  house_refinance: c('Fixed or variable', 'Your bank offers to switch the rate of your mortgage, for a fee.', [
     'Leave it',
-    'Fix the rate',
-    'Go variable',
+    'Switch your variable mortgages to fixed',
+    'Switch your fixed mortgages to variable',
   ]),
   house_tenant_default: c('The tenant stops paying', 'Three months of silence and a full letterbox.', [
     'Wait and absorb the loss',
@@ -616,8 +616,9 @@ export const cards: Record<string, CardText> = {
   ]),
   house_noisy_neighbours: c('Noisy neighbours', 'Upstairs practise the drums at dinner time. And at bedtime.', [
     'Put up with it',
-    'Soundproof the flat',
+    ['Go up and talk to them', 'They apologise and turn it down.', 'They look at you oddly and turn it up.'],
     'Find another flat to rent',
+    'Soundproof your home',
   ]),
   house_levy: c('A building levy', 'The lift has to be replaced and the residents voted a levy. Your share, due this month.', [
     'Pay your share',
@@ -816,5 +817,32 @@ export const cards: Record<string, CardText> = {
   lodger_tension: c('Tension at home', 'Your partner cannot stand finding the lodger on the sofa every evening.', [
     'They are right: the lodger goes',
     ['It is only a little longer', 'You hold out, with a frosty atmosphere.', 'Your partner moves out before the lodger does.'],
+  ]),
+  red_licence: c('No licence yet', 'Your business has to close for a few weeks: a paper is missing, and nobody knows who signs it.', [
+    'Wait for it',
+    'Pay a fixer to move it along',
+    ['Open anyway', 'Nobody comes to look.', 'An inspector comes: a fine, and your name on file.'],
+  ]),
+  red_appointment: c('The appointment', 'Renewing a paper needs an appointment. The first one free is three weeks away, a Tuesday at 9 a.m.', [
+    'Take the day off and go',
+    'Pay an agency to do it',
+  ]),
+  red_works_stopped: c('Works stopped', 'A notice on the door: your renovation lacks the permit the council changed last month.', [
+    'Wait for it to be sorted',
+    'Pay the extra fee and carry on',
+  ]),
+  red_inheritance: c('An inheritance in limbo', 'A distant aunt leaves you something. Between notaries, duties and stamps, collecting it is another story.', [
+    'Pay the duty and collect now',
+    ['Wait for the paperwork', 'It arrives whole, if late.', 'Between deadlines and surcharges, half of half arrives.'],
+  ]),
+  red_grant: c('A grant', 'There is help for businesses like yours. The form runs to forty pages.', [
+    'Not worth it',
+    ['Fill it all in', 'You get it.', 'A stamp is missing. Refused.'],
+  ]),
+  refuge_bank_freeze: c('Bank freeze', 'The banks limit cash withdrawals "for your safety". The queues go round the block.', [
+    'Queue and wait',
+    'Borrow from the family',
+    'Fall back on your gold',
+    'Pay in crypto',
   ]),
 };

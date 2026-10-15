@@ -15,10 +15,11 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-1_500) } },
     { effects: { property: { typeId: 'flat', pricePct: 92, downPct: 20, rented: false } } },
   ]),
+  // The bank offers the other kind of mortgage: only the switch that would change something is offered.
   card('house_refinance', 'housing', { when: { hasMortgage: true } }, [
     {},
-    { effects: { cash: usd(-800), refinance: 'fixed' } },
-    { effects: { cash: usd(-800), refinance: 'variable' } },
+    { when: { mortgage: 'variable' }, effects: { cash: usd(-800), refinance: 'fixed' } },
+    { when: { mortgage: 'fixed' }, effects: { cash: usd(-800), refinance: 'variable' } },
   ]),
   card('house_tenant_default', 'housing', { cooldown: 5, when: { landlord: true } }, [
     { effects: { cash: usd(-4_000), protection: { insurance: 'home', coverPct: 75 } } },
@@ -179,5 +180,39 @@ export const lodgerCards: CardDef[] = [
   card('lodger_tension', 'lifestyle', { weight: 8, cooldown: 4, when: { lodger: true, partner: true } }, [
     { effects: { endLodger: true } },
     { outcomes: [{ weight: 80, effects: { status: -2 } }, { weight: 20, effects: { partner: null } }] },
+  ]),
+];
+
+/**
+ * Red tape, now and then: the paperwork of the state, which costs time or money and rarely both.
+ * And the day the banks close their doors, when whoever kept a little gold or crypto pays no price.
+ */
+export const redTapeCards: CardDef[] = [
+  card('red_licence', 'business', { weight: 2, cooldown: 10, when: { hasBusiness: true } }, [
+    { effects: { businessesPct: -5 } },
+    { effects: { cash: usd(-2_000) } },
+    { outcomes: [{ weight: 70, effects: {} }, { weight: 30, effects: { cash: usd(-4_000), suspicion: 10 } }] },
+  ]),
+  card('red_appointment', 'lifestyle', { weight: 2, cooldown: 10, when: { minRound: 1 } }, [
+    { effects: { focus: 1 } },
+    { effects: { cash: usd(-300) } },
+  ]),
+  card('red_works_stopped', 'housing', { weight: 2, cooldown: 10, when: { ownsHome: true } }, [
+    { effects: { focus: 1, status: -1 } },
+    { effects: { cash: usd(-2_500) } },
+  ]),
+  card('red_inheritance', 'luck', { weight: 2, once: true, when: { minRound: 3 } }, [
+    { effects: { cash: usd(12_000) } },
+    { outcomes: [{ weight: 60, effects: { cash: usd(20_000) } }, { weight: 40, effects: { cash: usd(4_000) } }] },
+  ]),
+  card('red_grant', 'business', { weight: 2, cooldown: 10, when: { hasBusiness: true } }, [
+    {},
+    { effects: { focus: 1 }, outcomes: [{ weight: 60, effects: { cash: usd(6_000) } }, { weight: 40, effects: {} }] },
+  ]),
+  card('refuge_bank_freeze', 'luck', { weight: 2, once: true, when: { minRound: 3 } }, [
+    { effects: { focus: 1 } },
+    { effects: { status: -2 } },
+    { when: { holds: 'gold' }, effects: {} },
+    { when: { holds: 'crypto' }, effects: {} },
   ]),
 ];

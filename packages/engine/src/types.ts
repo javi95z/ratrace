@@ -578,6 +578,8 @@ export interface Condition {
   /** Owns a property that is rented out. */
   landlord?: boolean;
   hasMortgage?: boolean;
+  /** Someone with at least one mortgage of this kind. */
+  mortgage?: 'fixed' | 'variable';
   /** True for someone who owns a business. */
   hasBusiness?: boolean;
   /** Net worth in start-of-game dollars. */

@@ -83,6 +83,7 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
   if (when.uninsured !== undefined && life.insurance[when.uninsured]) return false;
   if (when.retired !== undefined && when.retired !== (life.retiredAtRound !== null && job === null)) return false;
   if (when.inJail !== undefined && when.inJail !== life.jailRounds > 0) return false;
+  if (when.mortgage !== undefined && !p.debts.some((debt) => debt.kind === (when.mortgage === 'fixed' ? 'mortgageFixed' : 'mortgageVariable'))) return false;
   if (when.lodger !== undefined && when.lodger !== lodgerOf(p, content)) return false;
   if (when.remote !== undefined && when.remote !== (workModeOf(p, content) === 'remote')) return false;
   if (when.evading !== undefined && when.evading !== (hiding(life.evasion) || life.evasion.evaded.length > 0)) return false;

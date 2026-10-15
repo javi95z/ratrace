@@ -307,7 +307,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(175 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 9 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5);
+    expect(wanted.length).toBe(181 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 9 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5);
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.

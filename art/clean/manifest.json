@@ -4031,6 +4031,61 @@
       "width": 64,
       "height": 64
     },
+    "icon.rule_no_business": {
+      "file": "icons/icon.rule_no_business.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_frugal": {
+      "file": "icons/icon.rule_frugal.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_minimalist": {
+      "file": "icons/icon.rule_minimalist.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_honest": {
+      "file": "icons/icon.rule_honest.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.rule_rich_heir": {
+      "file": "icons/icon.rule_rich_heir.png",
+      "width": 32,
+      "height": 32
+    },
+    "card.red_licence": {
+      "file": "cards/card.red_licence.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.red_appointment": {
+      "file": "cards/card.red_appointment.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.red_works_stopped": {
+      "file": "cards/card.red_works_stopped.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.red_inheritance": {
+      "file": "cards/card.red_inheritance.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.red_grant": {
+      "file": "cards/card.red_grant.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.refuge_bank_freeze": {
+      "file": "cards/card.refuge_bank_freeze.png",
+      "width": 288,
+      "height": 120
+    },
     "badge.tax_free_year": {
       "file": "badges/badge.tax_free_year.png",
       "width": 64,

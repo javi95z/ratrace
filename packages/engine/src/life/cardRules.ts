@@ -84,6 +84,7 @@ export function validateCards(c: Content): string[] {
     insured: oneOf(INSURANCE_KINDS, 'insurance'), uninsured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
     retired: flag, evading: flag, inJail: flag, lodger: flag, remote: flag,
+    mortgage: (value) => (value === 'fixed' || value === 'variable' ? null : 'needs a kind of mortgage: fixed or variable'),
     notRecentFlag: (value) => (isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && (value.rounds as number) >= 1 ? null : 'needs a flag and a positive number of rounds for notRecentFlag'),
   };
   const triggerChecks: Record<string, Check> = {
