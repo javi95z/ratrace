@@ -8,6 +8,7 @@ import { useAccount, useAccountSaves, useGame, useGuide, useSaving, useSettings,
 import { ageAt, portraitAge } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
 import { maskEmail } from '@/lib/mask';
+import { GoogleMark } from '@/ui/GoogleMark';
 import { routing } from '@/i18n/routing';
 import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -61,39 +62,37 @@ function AccountBlock() {
   return (
     // A part of the panel it stands in, set off by a rule: never a box inside a box.
     <section aria-label={t('title')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
-      <p className="pixel text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
       {state.kind === 'member' ? (
         <>
-          <p className="pixel text-[16px] text-teal-300">{t('member')}</p>
-          {state.email ? <p className="break-all text-[13px] text-ink-300">{t('memberAs', { email: maskEmail(state.email) })}</p> : null}
+          <p className="flex items-center gap-2">
+            <GoogleMark size={18} />
+            <span className="pixel text-[16px] text-teal-300">{t('member')}</span>
+            {state.email ? <span className="min-w-0 truncate text-[13px] text-ink-300">{t('memberAs', { email: maskEmail(state.email) })}</span> : null}
+          </p>
           {saved}
         </>
+      ) : state.notice === 'joining' ? (
+        // Not a fault but good news: the player is already known, and is being taken into their account.
+        <p role="status" className="pixel animate-blink text-[15px] leading-snug text-gold-200">
+          {t('joining')}
+        </p>
       ) : (
         <>
-          {state.notice === 'joining' ? (
-            // Not a fault but good news: the player is already known, and is being taken into their account.
-            <p role="status" className="pixel animate-blink text-[15px] leading-snug text-gold-200">
-              {t('joining')}
-            </p>
-          ) : (
-            <>
-              <p className="text-[14px] leading-snug">{t('guest')}</p>
-              {state.notice ? (
-                <div className="flex items-center gap-2">
-                  <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug text-wine-300">
-                    {t(state.notice)}
-                  </p>
-                  <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
-                    {t('dismiss')}
-                  </Button>
-                </div>
-              ) : null}
-              <Button variant="primary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
-                {t('keep')}
+          {state.notice ? (
+            <div className="flex items-center gap-2">
+              <p role="alert" className="min-w-0 flex-1 text-[13px] leading-snug text-wine-300">
+                {t(state.notice)}
+              </p>
+              <Button variant="quiet" className="shrink-0 text-[14px]" onClick={dismissNotice}>
+                {t('dismiss')}
               </Button>
-              <p className="text-[12px] leading-snug text-ink-200">{t('keepHint')}</p>
-            </>
-          )}
+            </div>
+          ) : null}
+          <Button variant="secondary" wide disabled={leaving} onClick={leaveWith(keepWithGoogle)}>
+            <GoogleMark />
+            {t('keep')}
+          </Button>
+          <p className="text-center text-[12px] leading-snug text-ink-300">{t('guest')}</p>
           {saved}
         </>
       )}

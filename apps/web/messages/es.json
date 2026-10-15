@@ -1075,9 +1075,8 @@
   },
   "account": {
     "title": "Cuenta",
-    "guest": "Juegas como invitado.",
+    "guest": "Juegas como invitado: entra para seguir en cualquier dispositivo.",
     "keep": "Entrar con Google",
-    "keepHint": "Guarda tu vida en tu cuenta y sigue en cualquier dispositivo.",
     "member": "Conectada con Google",
     "memberAs": "{email}",
     "failed": "No se ha podido entrar. Sigues como invitado.",

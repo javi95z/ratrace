@@ -128,7 +128,7 @@ describe('the account in the settings', () => {
 
   it('tells a guest that the account is in the cloud, and that only this browser can open it', () => {
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account);
-    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain("You're playing as a guest.");
+    expect(screen.getByRole('region', { name: 'Account' }).textContent).toContain("You're playing as a guest");
   });
 
   it('says plainly when nothing was linked, whatever the reason', () => {
