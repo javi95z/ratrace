@@ -28,9 +28,9 @@ afterEach(cleanup);
 const fmt = formatFor('en');
 const { names } = textFor('en');
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
-const openShop = async (user: ReturnType<typeof userEvent.setup>, view: 'recommended' | 'affordable' | 'all' = 'all') => {
+const openShop = async (user: ReturnType<typeof userEvent.setup>, view: 'affordable' | 'all' = 'all') => {
   await user.click(await screen.findByRole('tab', { name: 'Shop' }));
-  if (view !== 'recommended') await user.click(screen.getByRole('radio', { name: view === 'all' ? 'All' : 'In reach' }));
+  if (view === 'all') await user.click(screen.getByRole('radio', { name: 'All' }));
 };
 
 /** A life taken to the finances of its current round, without the screen. */
@@ -591,27 +591,26 @@ describe('what belongs to a city', () => {
 });
 
 describe('the shop catalogue', () => {
-  it('starts with a shorter recommendation, filters to what is in reach and can reveal everything', async () => {
+  it('opens on what is in reach, leaving out empty shelves, and shows everything on asking', async () => {
     const { services } = await inFinance('nurse');
     const shown = viewOf(await stateOf(services));
     const soldHere = content.items.filter((item) => quoteItem(content, shown, item.id).soldHere).length;
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await openShop(user, 'recommended');
+    await openShop(user, 'affordable');
     const shelf = screen.getByRole('tabpanel', { name: 'Shop' });
     const itemCount = () => shelf.querySelectorAll('[data-finance-item]').length;
 
+    expect(screen.queryByRole('radio', { name: 'Recommended' })).toBeNull();
+    expect(screen.getByText('What you own and what you can buy now, including on instalments or second hand.')).toBeTruthy();
     expect(itemCount()).toBeGreaterThan(0);
     expect(itemCount()).toBeLessThan(soldHere);
-    expect(screen.getAllByRole('button', { name: /^See all \(\d+\)$/ }).length).toBeGreaterThan(0);
-
-    await user.click(screen.getByRole('radio', { name: 'In reach' }));
-    expect(screen.getByText('What you own and what you can buy now, including on instalments or second hand.')).toBeTruthy();
-    expect(itemCount()).toBeLessThan(soldHere);
+    // No shelf stands empty, and nothing sends the player off to see everything.
+    for (const panel of shelf.querySelectorAll('section')) expect(panel.querySelector('[data-finance-item]')).not.toBeNull();
+    expect(screen.queryByRole('button', { name: /^See all/ })).toBeNull();
 
     await user.click(screen.getByRole('radio', { name: 'All' }));
     expect(itemCount()).toBe(soldHere);
-    expect(screen.queryByRole('button', { name: /^See all \(\d+\)$/ })).toBeNull();
   });
 });
 
