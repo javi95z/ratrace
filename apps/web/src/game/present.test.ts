@@ -195,7 +195,7 @@ describe('effectTags', () => {
       }).map((tag) => tag.text),
     ).toEqual([
       'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', 'Status +18', '−$150/yr', '+6 points of chance on a job hunt', '$2k into Tesla', '+$4k pension', 'Loan of $12k',
-      'You buy a rental: Studio', 'Mortgage becomes fixed', 'Home value +$20k', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
+      'You buy a rental: Studio', 'Your variable mortgages go fixed, at 4.0%', 'Home value +$20k', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
     ]);
     expect(tags({ job: { leave: true }, partner: null, sellHome: true, lose: { what: 'deposit', pct: 15 } }).map((tag) => tag.text)).toEqual([
       'You stop working', 'You separate', 'You sell your home', 'Lose 15% of your savings',

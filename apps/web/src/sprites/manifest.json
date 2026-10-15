@@ -1164,6 +1164,36 @@
     "w": 288,
     "h": 120
   },
+  "card.red_appointment": {
+    "src": "cards/card.red_appointment.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.red_grant": {
+    "src": "cards/card.red_grant.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.red_inheritance": {
+    "src": "cards/card.red_inheritance.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.red_licence": {
+    "src": "cards/card.red_licence.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.red_works_stopped": {
+    "src": "cards/card.red_works_stopped.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.refuge_bank_freeze": {
+    "src": "cards/card.refuge_bank_freeze.png",
+    "w": 288,
+    "h": 120
+  },
   "card.rent_letter": {
     "src": "cards/card.rent_letter.png",
     "w": 288,
@@ -2659,8 +2689,28 @@
     "w": 32,
     "h": 32
   },
+  "icon.rule_frugal": {
+    "src": "icons/icon.rule_frugal.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_honest": {
+    "src": "icons/icon.rule_honest.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.rule_index_only": {
     "src": "icons/icon.rule_index_only.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_minimalist": {
+    "src": "icons/icon.rule_minimalist.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_no_business": {
+    "src": "icons/icon.rule_no_business.png",
     "w": 32,
     "h": 32
   },
@@ -2676,6 +2726,11 @@
   },
   "icon.rule_no_property": {
     "src": "icons/icon.rule_no_property.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.rule_rich_heir": {
+    "src": "icons/icon.rule_rich_heir.png",
     "w": 32,
     "h": 32
   },

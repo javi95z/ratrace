@@ -28,7 +28,7 @@ export function evasionOrder(view: GameView, want: Want): Order | null {
  */
 export function EvasionPanel({ shown, preview }: { shown: GameView; preview: RoundPreview }) {
   const t = useT('finance.evasion');
-  const { content, names, fmt } = useWords();
+  const { content, fmt } = useWords();
   const view = useGame((s) => s.view);
   const city = content.cities.find((each) => each.id === shown.player.cityId);
   const gainsBp = city ? effectiveTax(city, shown.timeline[shown.round]).capitalGainsBp : 0;
@@ -65,7 +65,7 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
             on={quote.hideCrypto}
             onChange={(hideCrypto) => change({ hideCrypto })}
             label={t('crypto')}
-            hint={quote.hideCrypto ? saved(quote.evaded.crypto) : t('cryptoHint', { rate: fmt.rate(gainsBp), city: names.cities[shown.player.cityId], age: ageAt(content, content.evasion.cryptoReportRound) })}
+            hint={quote.hideCrypto ? saved(quote.evaded.crypto) : t('cryptoHint', { rate: fmt.rate(gainsBp), age: ageAt(content, content.evasion.cryptoReportRound) })}
           />
         ) : null}
 

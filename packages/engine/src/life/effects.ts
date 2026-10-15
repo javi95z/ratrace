@@ -274,8 +274,10 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
   if (effects.property !== undefined) buyProperty(p, effects.property, at);
 
   if (effects.refinance !== undefined) {
+    // Only the mortgages of the other kind change: one already of the kind asked for keeps its terms.
+    const from = effects.refinance === 'fixed' ? 'mortgageVariable' : 'mortgageFixed';
     for (const debt of p.debts) {
-      if (debt.kind !== 'mortgageFixed' && debt.kind !== 'mortgageVariable') continue;
+      if (debt.kind !== from) continue;
       debt.kind = effects.refinance === 'fixed' ? 'mortgageFixed' : 'mortgageVariable';
       debt.fixedRateBp = effects.refinance === 'fixed' ? world.policyRateBp + mortgageSpreadBp(p, content) : 0;
     }

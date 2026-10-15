@@ -234,10 +234,10 @@ export const cards: Record<string, CardText> = {
     'Mudarte',
     'Comprarlo',
   ]),
-  house_refinance: c('Fija o variable', 'Tu banco te cambia la hipoteca a cambio de una comisión.', [
+  house_refinance: c('Fija o variable', 'Tu banco te ofrece cambiar el tipo de tu hipoteca, esta vez sin comisión.', [
     'Dejarla como está',
-    'Pasarla a tipo fijo',
-    'Pasarla a variable',
+    'Pasar tus hipotecas variables a tipo fijo',
+    'Pasar tus hipotecas fijas a variable',
   ]),
   house_tenant_default: c('El inquilino deja de pagar', 'Tres meses de silencio y el buzón lleno.', [
     'Esperar y asumir la pérdida',
@@ -616,8 +616,9 @@ export const cards: Record<string, CardText> = {
   ]),
   house_noisy_neighbours: c('Vecinos ruidosos', 'Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir.', [
     'Aguantar',
-    'Insonorizar el piso',
+    ['Subir a hablar con ellos', 'Se disculpan y bajan el volumen.', 'Te miran raro y suben el volumen.'],
     'Buscar otro piso de alquiler',
+    'Insonorizar tu casa',
   ]),
   house_levy: c('Derrama en la comunidad', 'Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes.', [
     'Pagar tu parte',
@@ -816,5 +817,32 @@ export const cards: Record<string, CardText> = {
   lodger_tension: c('Tensión en casa', 'Tu pareja no soporta encontrarse al inquilino en el sofá todas las noches.', [
     'Tiene razón: el inquilino se va',
     ['Es solo un poco más', 'Aguantáis, con un ambiente gélido.', 'Tu pareja se va antes que el inquilino.'],
+  ]),
+  red_licence: c('Sin licencia todavía', 'Tu negocio tiene que cerrar unas semanas: falta un papel que nadie sabe quién firma.', [
+    'Esperar a que llegue',
+    'Pagar a un gestor que lo mueva',
+    ['Abrir igualmente', 'Nadie pasa a mirar.', 'Pasa un inspector: multa y una ficha a tu nombre.'],
+  ]),
+  red_appointment: c('Cita previa', 'Para renovar un papel hace falta cita. La primera libre es dentro de tres semanas, un martes a las 9:00.', [
+    'Pedir el día libre e ir',
+    'Pagar a una gestoría',
+  ]),
+  red_works_stopped: c('Obra paralizada', 'Un aviso en la puerta: tu reforma no tiene el permiso que el ayuntamiento cambió el mes pasado.', [
+    'Esperar a que lo resuelvan',
+    'Pagar la tasa extra y seguir',
+  ]),
+  red_inheritance: c('Una herencia en trámite', 'Una tía lejana te deja algo. Entre notarios, sucesiones y sellos, cobrarlo es otra historia.', [
+    'Pagar el impuesto y cobrar ya',
+    ['Esperar a que acabe el trámite', 'Llega entera, aunque tarde.', 'Entre plazos y recargos, llega la mitad de la mitad.'],
+  ]),
+  red_grant: c('Una subvención', 'Hay una ayuda para negocios como el tuyo. El formulario tiene cuarenta páginas.', [
+    'No merece la pena',
+    ['Rellenarlo todo', 'Te la conceden.', 'Falta un sello. Denegada.'],
+  ]),
+  refuge_bank_freeze: c('Corralito', 'Los bancos limitan las retiradas de efectivo «por su seguridad». Las colas dan la vuelta a la manzana.', [
+    'Hacer cola y esperar',
+    'Pedir dinero a la familia',
+    'Tirar de tu oro',
+    'Pagar en cripto',
   ]),
 };

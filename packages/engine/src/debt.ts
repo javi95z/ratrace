@@ -157,6 +157,34 @@ export function executeRepay(p: PlayerState, order: Extract<Order, { type: 'repa
   return null;
 }
 
+/** What switching a mortgage would do today: the kind it would become, its fee, the rate before and after, and why it may not be, if it may not. */
+export function mortgageSwitch(p: PlayerState, debtId: string, content: Content, world: WorldState, round: number): { to: 'fixed' | 'variable'; fee: Cents; rateNowBp: Bp; rateAfterBp: Bp; lock: RejectReason | null } | null {
+  const d = p.debts.find((x) => x.id === debtId);
+  if (!d || (d.kind !== 'mortgageFixed' && d.kind !== 'mortgageVariable')) return null;
+  const rules = content.debt;
+  const to = d.kind === 'mortgageFixed' ? 'variable' : 'fixed';
+  const fee = mulDiv(d.principal, to === 'fixed' ? rules.switchFeePct.toFixed : rules.switchFeePct.toVariable, 100);
+  // A fixed rate is the one the bank gives today; a variable one is the market's plus the margin.
+  const rateAfterBp = world.policyRateBp + mortgageSpreadBp(p, content);
+  const resting = d.switchedAt !== undefined && round - d.switchedAt < rules.switchRestRounds;
+  return { to, fee, rateNowBp: debtRateBp(d, content, world, p), rateAfterBp, lock: resting ? 'switch-resting' : fee > p.cash ? 'not-enough-cash' : null };
+}
+
+/** Switches a mortgage between fixed and variable, for a fee: a fixed one is fixed at today's rate. */
+export function executeSwitchMortgage(p: PlayerState, order: Extract<Order, { type: 'switchMortgage' }>, ctx: OrderContext): RejectReason | null {
+  const quote = mortgageSwitch(p, order.debtId, ctx.content, ctx.world, ctx.round);
+  if (quote === null) return 'not-a-mortgage';
+  if (quote.lock !== null) return quote.lock;
+  const d = p.debts.find((x) => x.id === order.debtId);
+  if (!d) return 'not-a-mortgage';
+  p.cash -= quote.fee;
+  ctx.tally.mortgageFees += quote.fee;
+  d.kind = quote.to === 'fixed' ? 'mortgageFixed' : 'mortgageVariable';
+  d.fixedRateBp = quote.to === 'fixed' ? quote.rateAfterBp : 0;
+  d.switchedAt = ctx.round;
+  return null;
+}
+
 /** Brings negative cash back to zero: from the deposit first, then on the credit card. Spare cash is left alone. */
 export function coverShortfall(p: PlayerState): Pick<Settlement, 'fromDeposit' | 'drawn'> {
   if (p.cash >= 0) return { fromDeposit: 0, drawn: 0 };

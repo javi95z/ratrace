@@ -237,3 +237,20 @@ describe('the limits of the new challenge rules', () => {
     expect(optionBreaks({ effects: { suspicion: 10 } }, { noEvasion: true })).toBe(true);
   });
 });
+
+describe('switching a mortgage', () => {
+  it('fixes a variable one at today’s rate for a fee, and not again for a while', () => {
+    const c = fixtureContent();
+    const state = start(c);
+    state.player.debts.push({ id: 'debt-m', kind: 'mortgageVariable', principal: 100_000_00, fixedRateBp: 0, roundsLeft: 10 });
+    const cash = state.player.cash;
+    const { player, rejected } = previewRound(c, state, { orders: [{ type: 'switchMortgage', debtId: 'debt-m' }] });
+    expect(rejected).toEqual([]);
+    const debt = player.debts.find((d) => d.id === 'debt-m');
+    expect(debt?.kind).toBe('mortgageFixed');
+    expect(debt?.fixedRateBp).toBe(state.timeline[0].policyRateBp + c.debt.mortgageSpreadBp);
+    expect(player.cash).toBe(cash - 1_000_00);
+    const { state: after } = applyRound(c, state, { orders: [{ type: 'switchMortgage', debtId: 'debt-m' }] });
+    expect(previewRound(c, after, { orders: [{ type: 'switchMortgage', debtId: 'debt-m' }] }).rejected.map((r) => r.reason)).toEqual(['switch-resting']);
+  });
+});

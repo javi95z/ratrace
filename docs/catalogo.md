@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 175 |
+| [Cartas](#cartas) | 181 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 46 |
 
@@ -339,11 +339,11 @@ Una práctica se juega en este dispositivo con la misma vida y la misma regla, p
 | <img src="../art/clean/icons/icon.rule_no_moving.png" alt="Sin mudanzas"> | Sin mudanzas | Toda la vida en la misma ciudad. |
 | <img src="../art/clean/icons/icon.rule_no_property.png" alt="Sin inmuebles"> | Sin inmuebles | No puedes comprar ninguna propiedad: alquilas toda la vida. |
 | <img src="../art/clean/icons/icon.rule_start_in_debt.png" alt="Empiezas con deuda"> | Empiezas con deuda | Empiezas con un préstamo de 30.000 $ que devolver. |
-| <img src="../art/clean/icons/icon.business.png" alt="Sin negocios"> | Sin negocios | Trabajas para otros toda la vida: nada de negocio propio. |
-| <img src="../art/clean/icons/icon.life_frugal.png" alt="Vida austera"> | Vida austera | Nada por encima de vivir sencillo, toda la vida. |
-| <img src="../art/clean/icons/icon.used.png" alt="Minimalista"> | Minimalista | Nada de la tienda: ni coches, ni relojes, ni viajes. |
-| <img src="../art/clean/icons/icon.tax.png" alt="Contribuyente ejemplar"> | Contribuyente ejemplar | Ni un dólar escondido a Hacienda: nada en negro, ni sociedades fuera, ni cripto callada. |
-| <img src="../art/clean/icons/icon.gift.png" alt="Herencia envenenada"> | Herencia envenenada | Empiezas con 30.000 $ más y una familia que no te deja vivir por debajo de lo acomodado. |
+| <img src="../art/clean/icons/icon.rule_no_business.png" alt="Sin negocios"> | Sin negocios | Trabajas para otros toda la vida: nada de negocio propio. |
+| <img src="../art/clean/icons/icon.rule_frugal.png" alt="Vida austera"> | Vida austera | Nada por encima de vivir sencillo, toda la vida. |
+| <img src="../art/clean/icons/icon.rule_minimalist.png" alt="Minimalista"> | Minimalista | Nada de la tienda: ni coches, ni relojes, ni viajes. |
+| <img src="../art/clean/icons/icon.rule_honest.png" alt="Contribuyente ejemplar"> | Contribuyente ejemplar | Ni un dólar escondido a Hacienda: nada en negro, ni sociedades fuera, ni cripto callada. |
+| <img src="../art/clean/icons/icon.rule_rich_heir.png" alt="Herencia envenenada"> | Herencia envenenada | Empiezas con 30.000 $ más y una familia que no te deja vivir por debajo de lo acomodado. |
 
 ## Carreras
 
@@ -985,7 +985,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crime_jail_library.png" alt="La biblioteca de la cárcel"> | **La biblioteca de la cárcel**<br>Tres estanterías, un diccionario y mucho tiempo. | 1. Dormir<br>2. Aprender un idioma<br>3. Estudiar para tu oficio |
 | <img src="../art/clean/cards/card.crime_fake_mba.png" alt="Una pequeña mejora"> | **Una pequeña mejora**<br>Nadie comprueba un currículum. Un MBA quedaría muy bien en el tuyo. | 1. Dejar el currículum como está<br>2. Añadir el MBA |
 
-### Negocios (15)
+### Negocios (17)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1000,6 +1000,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rival_shop.png" alt="Abre la competencia al lado"> | **Abre la competencia al lado**<br>Un local idéntico al tuyo acaba de abrir en la misma calle, y con inauguración. | 1. Aguantar y ver<br>2. Bajar precios<br>3. Reformar el local |
 | <img src="../art/clean/cards/card.viral_review.png" alt="Una reseña se hace viral"> | **Una reseña se hace viral**<br>Alguien ha escrito sobre tu negocio y medio barrio lo ha compartido. Aún no sabes en qué tono. | 1. Dejarlo correr<br>2. Responder con mimo<br>3. Comprar reseñas falsas |
 | <img src="../art/clean/cards/card.labour_inspector.png" alt="Inspección de trabajo"> | **Inspección de trabajo**<br>Un inspector pide los contratos, los horarios y las nóminas de tu negocio. | 1. Que vengan<br>2. Llamar antes a una asesoría laboral |
+| <img src="../art/clean/cards/card.red_licence.png" alt="Sin licencia todavía"> | **Sin licencia todavía**<br>Tu negocio tiene que cerrar unas semanas: falta un papel que nadie sabe quién firma. | 1. Esperar a que llegue<br>2. Pagar a un gestor que lo mueva<br>3. Abrir igualmente |
+| <img src="../art/clean/cards/card.red_grant.png" alt="Una subvención"> | **Una subvención**<br>Hay una ayuda para negocios como el tuyo. El formulario tiene cuarenta páginas. | 1. No merece la pena<br>2. Rellenarlo todo |
 | <img src="../art/clean/cards/card.city_bangkok_beach_bar.png" alt="Un bar en la playa"> | **Un bar en la playa**<br>Un amigo en Koh Samui busca un socio más para un bar en la arena. | 1. Quedarte en la ciudad<br>2. Poner dinero |
 | <img src="../art/clean/cards/card.city_mexico_city_taqueria.png" alt="Un socio para la taquería"> | **Un socio para la taquería**<br>El taquero de tu esquina busca socio para abrir un segundo puesto. | 1. Desearle suerte<br>2. Poner dinero |
 | <img src="../art/clean/cards/card.crime_memoirs.png" alt="Memorias desde la celda"> | **Memorias desde la celda**<br>Una editorial cree que tu historia vendería. Un pódcast también. | 1. Guardártela<br>2. Contarlo todo |
@@ -1024,28 +1026,29 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crime_memecoin.png" alt="Lanza tu propia moneda"> | **Lanza tu propia moneda**<br>Llámala $RATA, paga a unos influencers y vende antes de que nadie se entere. ¿Qué puede salir mal? | 1. Conservar la dignidad<br>2. Lanzar $RATA |
 | <img src="../art/clean/cards/card.crime_insider_tip.png" alt="Tu cuñado sabe algo"> | **Tu cuñado sabe algo**<br>Trabaja en un banco. El lunes se anuncia una opa, y nadie lo sabe todavía. | 1. Cambiar de tema<br>2. Comprar antes del lunes |
 
-### Vivienda (16)
+### Vivienda (17)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
 | <img src="../art/clean/cards/card.rent_letter.png" alt="Sube el alquiler"> | **Sube el alquiler**<br>Una carta del casero: «para ajustarlo al mercado». | 1. Pagar<br>2. Negociar |
 | <img src="../art/clean/cards/card.door_keys.png" alt="Tu primer piso"> | **Tu primer piso**<br>Una ayuda para primera vivienda te deja entrar con la décima parte del precio. | 1. Seguir de alquiler<br>2. Comprar un estudio<br>3. Comprar un piso, con ayuda de casa |
 | <img src="../art/clean/cards/card.sold_board.png" alt="El casero vende"> | **El casero vende**<br>Te lo ofrece a ti primero, un poco por debajo del precio. | 1. Mudarte<br>2. Comprarlo |
-| <img src="../art/clean/cards/card.mortgage_scales.png" alt="Fija o variable"> | **Fija o variable**<br>Tu banco te cambia la hipoteca a cambio de una comisión. | 1. Dejarla como está<br>2. Pasarla a tipo fijo<br>3. Pasarla a variable |
+| <img src="../art/clean/cards/card.mortgage_scales.png" alt="Fija o variable"> | **Fija o variable**<br>Tu banco te ofrece cambiar el tipo de tu hipoteca, esta vez sin comisión. | 1. Dejarla como está<br>2. Pasar tus hipotecas variables a tipo fijo<br>3. Pasar tus hipotecas fijas a variable |
 | <img src="../art/clean/cards/card.unpaid_rent.png" alt="El inquilino deja de pagar"> | **El inquilino deja de pagar**<br>Tres meses de silencio y el buzón lleno. | 1. Esperar y asumir la pérdida<br>2. Contratar a un abogado |
 | <img src="../art/clean/cards/card.scaffolding.png" alt="Reformar"> | **Reformar**<br>La cocina es de otro siglo y el baño gotea. | 1. Poner parches<br>2. Hacerlo bien<br>3. Reforma de lujo |
 | <img src="../art/clean/cards/card.flooded_room.png" alt="Daños por agua"> | **Daños por agua**<br>Revienta una tubería mientras pasas el fin de semana fuera. El piso es tuyo, y la factura también. | 1. Llamar a una empresa<br>2. Hacerlo casi todo tú |
 | <img src="../art/clean/cards/card.moving_boxes.png" alt="Iros a vivir juntos"> | **Iros a vivir juntos**<br>Dos alquileres, dos neveras, y siempre estás en su casa. | 1. Todavía no<br>2. Iros a vivir juntos |
-| <img src="../art/clean/cards/card.noisy_neighbours.png" alt="Vecinos ruidosos"> | **Vecinos ruidosos**<br>Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir. | 1. Aguantar<br>2. Insonorizar el piso<br>3. Buscar otro piso de alquiler |
+| <img src="../art/clean/cards/card.noisy_neighbours.png" alt="Vecinos ruidosos"> | **Vecinos ruidosos**<br>Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir. | 1. Aguantar<br>2. Subir a hablar con ellos<br>3. Buscar otro piso de alquiler<br>4. Insonorizar tu casa |
 | <img src="../art/clean/cards/card.building_levy.png" alt="Derrama en la comunidad"> | **Derrama en la comunidad**<br>Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes. | 1. Pagar tu parte<br>2. Recurrirla |
 | <img src="../art/clean/cards/card.lodger_room.png" alt="Alquilar una habitación"> | **Alquilar una habitación**<br>Te sobra una habitación y una amiga busca dónde vivir. Pagaría bien. | 1. Mejor no<br>2. Alquilársela |
+| <img src="../art/clean/cards/card.red_works_stopped.png" alt="Obra paralizada"> | **Obra paralizada**<br>Un aviso en la puerta: tu reforma no tiene el permiso que el ayuntamiento cambió el mes pasado. | 1. Esperar a que lo resuelvan<br>2. Pagar la tasa extra y seguir |
 | <img src="../art/clean/cards/card.city_madrid_tourist_flat.png" alt="Agosto en Madrid"> | **Agosto en Madrid**<br>En agosto todo el mundo se va. Tu piso podría ganarse el sueldo mientras no estás. | 1. Dejarlo vacío<br>2. Alquilarlo legal, con papeles<br>3. Alquilarlo en negro, sin preguntas |
 | <img src="../art/clean/cards/card.city_new_york_rent_hike.png" alt="El alquiler sube un 20 %"> | **El alquiler sube un 20 %**<br>Tu casero escribe: el contrato se renueva un veinte por ciento más caro. | 1. Pagarlo<br>2. Recurrir ante la junta de alquileres |
 | <img src="../art/clean/cards/card.city_singapore_ballot.png" alt="Sorteo de vivienda pública"> | **Sorteo de vivienda pública**<br>El Estado construye pisos a una fracción del precio de mercado. Hay sorteo. | 1. No apuntarte<br>2. Apuntarte al sorteo |
 | <img src="../art/clean/cards/card.city_bangkok_flood.png" alt="Llegan las lluvias"> | **Llegan las lluvias**<br>El monzón inunda tu calle y, con ella, la planta baja. | 1. Que se encargue el seguro<br>2. Sacos de arena y limpiar tú |
 | <img src="../art/clean/cards/card.city_tokyo_earthquake.png" alt="Tiembla la tierra"> | **Tiembla la tierra**<br>Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa. | 1. Llamar al seguro<br>2. Arreglar tú lo que puedas |
 
-### Estilo de vida (21)
+### Estilo de vida (22)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1064,12 +1067,32 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.lodger_unpaid.png" alt="El alquiler se retrasa"> | **El alquiler se retrasa**<br>Tu inquilino no ha pagado este mes, ni el anterior. Detrás de la puerta suena música. | 1. Darle un mes más<br>2. Pedirle que se vaya |
 | <img src="../art/clean/cards/card.lodger_friend.png" alt="Un inquilino con contactos"> | **Un inquilino con contactos**<br>Tu inquilino quiere presentarte a una amiga que trabaja donde te gustaría trabajar a ti. | 1. Una cena y poco más<br>2. Coger su tarjeta y escribirle |
 | <img src="../art/clean/cards/card.lodger_tension.png" alt="Tensión en casa"> | **Tensión en casa**<br>Tu pareja no soporta encontrarse al inquilino en el sofá todas las noches. | 1. Tiene razón: el inquilino se va<br>2. Es solo un poco más |
+| <img src="../art/clean/cards/card.red_appointment.png" alt="Cita previa"> | **Cita previa**<br>Para renovar un papel hace falta cita. La primera libre es dentro de tres semanas, un martes a las 9:00. | 1. Pedir el día libre e ir<br>2. Pagar a una gestoría |
 | <img src="../art/clean/cards/card.bali_wedding.png" alt="Una boda en Bali"> | **Una boda en Bali**<br>Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar. | 1. Excusarte<br>2. Ir a Bali |
 | <img src="../art/clean/cards/card.city_madrid_cana.png" alt="Solo una caña"> | **Solo una caña**<br>Un compañero dice de tomar una caña al salir. En Madrid, una caña acaba en cena a medianoche. | 1. Irte a casa<br>2. Quedarte a cenar |
 | <img src="../art/clean/cards/card.city_london_club.png" alt="Te quieren en un club"> | **Te quieren en un club**<br>Un socio de un club privado de Mayfair se ofrece a proponerte. | 1. Declinarlo con educación<br>2. Pagar la cuota de entrada |
 | <img src="../art/clean/cards/card.city_dubai_golden_visa.png" alt="Un visado dorado"> | **Un visado dorado**<br>Con lo que tienes, podrías tener diez años de residencia y el estatus que conlleva. | 1. No hace falta<br>2. Solicitarlo |
 | <img src="../art/clean/cards/card.crime_jail_commissary.png" alt="La economía de los fideos"> | **La economía de los fideos**<br>Dentro, los fideos instantáneos son dinero. Todo el mundo los quiere y nadie tiene bastantes. | 1. Comprar lo que necesitas<br>2. Montar el negocio de fideos |
 | <img src="../art/clean/cards/card.crime_ham_smuggling.png" alt="Una maleta llena de jamón"> | **Una maleta llena de jamón**<br>Un amigo pagará bien unos jamones ibéricos traídos en tu equipaje. La aduana puede no estar de acuerdo. | 1. Llevar solo ropa<br>2. Meter los jamones |
+
+### Suerte (14)
+
+|  | Carta | Opciones |
+| --- | --- | --- |
+| <img src="../art/clean/cards/card.red_inheritance.png" alt="Una herencia en trámite"> | **Una herencia en trámite**<br>Una tía lejana te deja algo. Entre notarios, sucesiones y sellos, cobrarlo es otra historia. | 1. Pagar el impuesto y cobrar ya<br>2. Esperar a que acabe el trámite |
+| <img src="../art/clean/cards/card.refuge_bank_freeze.png" alt="Corralito"> | **Corralito**<br>Los bancos limitan las retiradas de efectivo «por su seguridad». Las colas dan la vuelta a la manzana. | 1. Hacer cola y esperar<br>2. Pedir dinero a la familia<br>3. Tirar de tu oro<br>4. Pagar en cripto |
+| <img src="../art/clean/cards/card.lottery.png" alt="El Gordo"> | **El Gordo**<br>En la oficina se compra lotería de Navidad. Participa todo el mundo. | 1. No jugar<br>2. Comprar un décimo<br>3. Comprar diez |
+| <img src="../art/clean/cards/card.breakdown.png" alt="El coche no arranca"> | **El coche no arranca**<br>Un clic, un testigo encendido y una grúa. | 1. El taller oficial<br>2. Un taller barato |
+| <img src="../art/clean/cards/card.tax_refund.png" alt="Hacienda te devuelve"> | **Hacienda te devuelve**<br>Hacienda te debe dinero. A veces pasa. | 1. Coger el dinero<br>2. Meterlo en el plan de pensiones |
+| <img src="../art/clean/cards/card.pickpocket.png" alt="Te roban el móvil"> | **Te roban el móvil**<br>Hace un segundo estaba en la mesa de la terraza. | 1. Comprar otro<br>2. Rescatar uno viejo |
+| <img src="../art/clean/cards/card.bonus_confetti.png" alt="Un bonus inesperado"> | **Un bonus inesperado**<br>Un buen año. Tu jefa te llama, sonriendo. | 1. Coger el bonus<br>2. Pedir a cambio un aumento |
+| <img src="../art/clean/cards/card.phishing.png" alt="Un mensaje de «tu banco»"> | **Un mensaje de «tu banco»**<br>Parece auténtico. Dice que tu cuenta está bloqueada. | 1. Resolverlo rápido<br>2. Comprobarlo con calma |
+| <img src="../art/clean/cards/card.speed_camera.png" alt="Una multa por exceso de velocidad"> | **Una multa por exceso de velocidad**<br>Te llega por correo una foto de tu coche. | 1. Pagarla<br>2. Recurrirla |
+| <img src="../art/clean/cards/card.casino.png" alt="La app de apuestas"> | **La app de apuestas**<br>Una apuesta gratis para empezar. Esta noche juega tu equipo. | 1. Borrar la app<br>2. Una apuesta pequeña<br>3. Ir a por un premio grande |
+| <img src="../art/clean/cards/card.city_singapore_gum.png" alt="Te pillan con chicle"> | **Te pillan con chicle**<br>Un vigilante te ve con chicle en el metro. Singapur es una ciudad de multas. | 1. Pagar la multa<br>2. Recurrir y recoger basura una mañana |
+| <img src="../art/clean/cards/card.crime_wrongly_accused.png" alt="Inocente, de verdad"> | **Inocente, de verdad**<br>La policía está segura de que hiciste algo que no hiciste. Estabas en el dentista. | 1. Fiarte del abogado de oficio<br>2. Pagar un buen abogado |
+| <img src="../art/clean/cards/card.crime_jail_cellmate.png" alt="Tu compañero de celda, banquero"> | **Tu compañero de celda, banquero**<br>El de la litera de arriba dirigía un fondo de inversión. Tiene opiniones sobre tu cartera. | 1. Hacerte el dormido<br>2. Tomar apuntes |
+| <img src="../art/clean/cards/card.crime_illegal_betting.png" alt="Una apuesta segura"> | **Una apuesta segura**<br>Un señor en un bar jura que el partido de Segunda del domingo ya está decidido. | 1. Verlo gratis<br>2. Apostar dos mil |
 
 ### Familia (13)
 
@@ -1098,23 +1121,6 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.dentist_chair.png" alt="Una urgencia dental"> | **Una urgencia dental**<br>Se te parte una muela con un hueso de aceituna. | 1. Arreglarlo bien<br>2. Buscar una clínica barata |
 | <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisio privada<br>2. Lista de espera pública<br>3. Jugar con dolor<br>4. Recuperarte entrenando |
 | <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un gimnasio abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
-
-### Suerte (12)
-
-|  | Carta | Opciones |
-| --- | --- | --- |
-| <img src="../art/clean/cards/card.lottery.png" alt="El Gordo"> | **El Gordo**<br>En la oficina se compra lotería de Navidad. Participa todo el mundo. | 1. No jugar<br>2. Comprar un décimo<br>3. Comprar diez |
-| <img src="../art/clean/cards/card.breakdown.png" alt="El coche no arranca"> | **El coche no arranca**<br>Un clic, un testigo encendido y una grúa. | 1. El taller oficial<br>2. Un taller barato |
-| <img src="../art/clean/cards/card.tax_refund.png" alt="Hacienda te devuelve"> | **Hacienda te devuelve**<br>Hacienda te debe dinero. A veces pasa. | 1. Coger el dinero<br>2. Meterlo en el plan de pensiones |
-| <img src="../art/clean/cards/card.pickpocket.png" alt="Te roban el móvil"> | **Te roban el móvil**<br>Hace un segundo estaba en la mesa de la terraza. | 1. Comprar otro<br>2. Rescatar uno viejo |
-| <img src="../art/clean/cards/card.bonus_confetti.png" alt="Un bonus inesperado"> | **Un bonus inesperado**<br>Un buen año. Tu jefa te llama, sonriendo. | 1. Coger el bonus<br>2. Pedir a cambio un aumento |
-| <img src="../art/clean/cards/card.phishing.png" alt="Un mensaje de «tu banco»"> | **Un mensaje de «tu banco»**<br>Parece auténtico. Dice que tu cuenta está bloqueada. | 1. Resolverlo rápido<br>2. Comprobarlo con calma |
-| <img src="../art/clean/cards/card.speed_camera.png" alt="Una multa por exceso de velocidad"> | **Una multa por exceso de velocidad**<br>Te llega por correo una foto de tu coche. | 1. Pagarla<br>2. Recurrirla |
-| <img src="../art/clean/cards/card.casino.png" alt="La app de apuestas"> | **La app de apuestas**<br>Una apuesta gratis para empezar. Esta noche juega tu equipo. | 1. Borrar la app<br>2. Una apuesta pequeña<br>3. Ir a por un premio grande |
-| <img src="../art/clean/cards/card.city_singapore_gum.png" alt="Te pillan con chicle"> | **Te pillan con chicle**<br>Un vigilante te ve con chicle en el metro. Singapur es una ciudad de multas. | 1. Pagar la multa<br>2. Recurrir y recoger basura una mañana |
-| <img src="../art/clean/cards/card.crime_wrongly_accused.png" alt="Inocente, de verdad"> | **Inocente, de verdad**<br>La policía está segura de que hiciste algo que no hiciste. Estabas en el dentista. | 1. Fiarte del abogado de oficio<br>2. Pagar un buen abogado |
-| <img src="../art/clean/cards/card.crime_jail_cellmate.png" alt="Tu compañero de celda, banquero"> | **Tu compañero de celda, banquero**<br>El de la litera de arriba dirigía un fondo de inversión. Tiene opiniones sobre tu cartera. | 1. Hacerte el dormido<br>2. Tomar apuntes |
-| <img src="../art/clean/cards/card.crime_illegal_betting.png" alt="Una apuesta segura"> | **Una apuesta segura**<br>Un señor en un bar jura que el partido de Segunda del domingo ya está decidido. | 1. Verlo gratis<br>2. Apostar dos mil |
 
 ### Mundo (18)
 

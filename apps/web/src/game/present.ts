@@ -168,7 +168,7 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));
   if (effects.loan) add('bad', t('loan', { amount: dollars(effects.loan) }));
   if (effects.property) add('plain', t(effects.property.rented ? 'buyRental' : 'buyHome', { home: text.propertyTypes[effects.property.typeId] }));
-  if (effects.refinance) add('plain', t(effects.refinance === 'fixed' ? 'refinanceFixed' : 'refinanceVariable'));
+  if (effects.refinance) add('plain', t(effects.refinance === 'fixed' ? 'refinanceFixed' : 'refinanceVariable', { rate: fmt.rate(world.policyRateBp + content.debt.mortgageSpreadBp) }));
   if (effects.sellHome) add('plain', t('sellHome'));
   if (effects.homeValue) add(toneOf(effects.homeValue), t('homeValue', { amount: fmt.briefSigned(indexed(effects.homeValue, world)) }));
   if (effects.lose) {
@@ -246,6 +246,10 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('backToWork');
     case 'setLodger':
       return t(order.on ? 'lodgerOn' : 'lodgerOff');
+    case 'switchMortgage': {
+      const debt = player.debts.find((d) => d.id === order.debtId);
+      return t(debt?.kind === 'mortgageVariable' ? 'switchToFixed' : 'switchToVariable', { name: debt ? debtLabel(words, debt, player.properties) : '' });
+    }
     case 'setResidency':
       return t(order.on ? 'residencyOn' : 'residencyOff', { city: names.cities[player.cityId] });
     case 'buyItem':
