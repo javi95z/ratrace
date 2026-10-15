@@ -91,7 +91,7 @@ describe('the work panel of the profile', () => {
     // The counts are the game's own: what each level adds to what can be bought.
     const at = (level: number) => content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === level).length;
     // With no Finance every fund, bond and share is open already; the first level adds gold.
-    expect(at(0)).toBe(16);
+    expect(at(0)).toBe(18);
     expect(within(levels[0]).getByText(`Index funds, bonds and shares: ${at(0)} to choose from, from day one.`)).toBeTruthy();
     expect(within(levels[1]).getByText(`Gold: ${at(1)} more.`)).toBeTruthy();
     expect(within(levels[2]).getByText(`Cryptocurrencies: ${at(2)} more.`)).toBeTruthy();

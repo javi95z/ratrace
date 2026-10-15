@@ -141,7 +141,6 @@
     "guide": "Consejos de la guía",
     "guideHint": "Notas que explican cada pantalla durante tu primera vida.",
     "home": "Volver al inicio",
-    "homeHint": "Tu vida te espera tal como la dejas.",
     "sound": "Sonido",
     "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla.",
     "ranked": "Vida clasificatoria",
@@ -1101,7 +1100,6 @@
   },
   "account": {
     "title": "Cuenta",
-    "guest": "Juegas como invitado: entra para seguir en cualquier dispositivo.",
     "keep": "Entrar con Google",
     "member": "Conectada con Google",
     "memberAs": "{email}",
@@ -1258,7 +1256,6 @@
   "keyboard": {
     "title": "Controles de teclado",
     "open": "Controles de teclado",
-    "settingsHint": "Juega sin ratón. Pulsa la tecla de interrogación en cualquier momento para ver los controles relevantes.",
     "intro": "Solo se muestran los controles que sirven aquí. Los atajos nunca se activan mientras escribes en un campo.",
     "help": {
       "tab": "Ir al siguiente control.",

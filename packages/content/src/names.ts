@@ -21,6 +21,8 @@ const assets: Names['assets'] = {
   bund: { name: 'German Bund', ticker: 'BUND' },
   sp500: { name: 'S&P 500', ticker: 'SPX' },
   msci_world: { name: 'MSCI World', ticker: 'MSCI' },
+  reit: { name: 'Global REIT', ticker: 'REIT' },
+  small_caps: { name: 'Russell 2000', ticker: 'R2K' },
   apple: { name: 'Apple', ticker: 'AAPL' },
   microsoft: { name: 'Microsoft', ticker: 'MSFT' },
   nvidia: { name: 'Nvidia', ticker: 'NVDA' },
@@ -124,6 +126,8 @@ export const names: Record<Locale, Names> = {
     cities: { madrid: 'Madrid', london: 'Londres', new_york: 'Nueva York', dubai: 'Dubái', singapore: 'Singapur', bangkok: 'Bangkok', tokyo: 'Tokio', moscow: 'Moscú', mexico_city: 'Ciudad de México', zurich: 'Zúrich' },
     assets: {
       ...assets,
+      reit: { name: 'Fondo inmobiliario global', ticker: 'REIT' },
+      small_caps: { name: 'Pequeñas empresas EE. UU.', ticker: 'R2K' },
       treasury_bills: { name: 'Letras del Tesoro EE. UU.', ticker: 'TBILL' },
       treasury_short: { name: 'Bono EE. UU. 2 años', ticker: 'UST2' },
       treasury_long: { name: 'Bono EE. UU. 10 años', ticker: 'UST10' },
@@ -183,6 +187,8 @@ export const names: Record<Locale, Names> = {
     cities: { madrid: 'Мадрид', london: 'Лондон', new_york: 'Нью-Йорк', dubai: 'Дубай', singapore: 'Сингапур', bangkok: 'Бангкок', tokyo: 'Токио', moscow: 'Москва', mexico_city: 'Мехико', zurich: 'Цюрих' },
     assets: {
       ...assets,
+      reit: { name: 'Глобальный фонд недвижимости', ticker: 'REIT' },
+      small_caps: { name: 'Малые компании США', ticker: 'R2K' },
       treasury_bills: { name: 'Казначейские векселя США', ticker: 'TBILL' },
       treasury_short: { name: 'Облигации США, 2 года', ticker: 'UST2' },
       treasury_long: { name: 'Облигации США, 10 лет', ticker: 'UST10' },

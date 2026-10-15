@@ -152,6 +152,7 @@ export function validateContent(c: Content): string[] {
     if (!(isWhole(type.minCapital) && type.minCapital > 0 && isWhole(type.scale) && type.scale > 0)) errors.push(`business ${type.id} needs a positive whole least capital and scale`);
     if (!(isCount(type.yieldBp) && isCount(type.managerPct) && type.managerPct <= 100)) errors.push(`business ${type.id} needs a whole yield and a manager's share up to 100`);
     if (![0, 1, 2, 3].includes(type.minFinanceSkill as number)) errors.push(`business ${type.id} needs a finance skill of 0, 1, 2 or 3`);
+    if (type.careers !== undefined && (!Array.isArray(type.careers) || type.careers.length === 0 || type.careers.some((id) => !c.careers.some((career) => career.id === id)))) errors.push(`business ${type.id} names careers that do not exist`);
     for (const [regime, pct] of Object.entries(type.cyclePct)) {
       if (!(REGIMES as readonly string[]).includes(regime) || !isWhole(pct)) errors.push(`business ${type.id} has a swing that is not a whole percentage for a known state of the economy`);
     }

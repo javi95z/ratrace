@@ -94,7 +94,7 @@ export const moreTaxCards: CardDef[] = [
     { effects: { cash: usd(2_500), suspicion: 20 } },
   ]),
   // Once in a life: pay a tenth of what the tax office could still claim, and start again with nothing to fear.
-  card('tax_amnesty', 'tax', { once: true, when: { evading: true } }, [
+  card('tax_amnesty', 'tax', { once: true, when: { evading: true, minRound: 4 } }, [
     {},
     { effects: { amnesty: { pct: 10 } } },
   ]),

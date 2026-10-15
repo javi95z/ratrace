@@ -8,7 +8,7 @@
  */
 export type AssetKind = 'fund' | 'bond' | 'stock' | 'crypto' | 'gold';
 
-const FUNDS: ReadonlySet<string> = new Set(['sp500', 'msci_world']);
+const FUNDS: ReadonlySet<string> = new Set(['sp500', 'msci_world', 'reit', 'small_caps']);
 
 export function assetKind(asset: { id: string; class: 'bond' | 'equity' | 'crypto' | 'gold' }): AssetKind {
   if (asset.class === 'equity') return FUNDS.has(asset.id) ? 'fund' : 'stock';

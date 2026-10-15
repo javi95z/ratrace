@@ -93,7 +93,6 @@ function AccountBlock({ compact = false }: { compact?: boolean }) {
             <GoogleMark />
             {t('keep')}
           </Button>
-          {compact ? null : <p className="text-center text-[12px] leading-snug text-ink-300">{t('guest')}</p>}
           {saved}
         </>
       )}
@@ -264,7 +263,6 @@ export function SettingsSheet({ open, onClose, shown }: { open: boolean; onClose
             <span aria-hidden>←</span>
             {t('home')}
           </Link>
-          <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('homeHint')}</p>
         </div>
         <Version />
       </div>

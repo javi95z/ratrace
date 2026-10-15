@@ -743,6 +743,8 @@ export interface BusinessTypeDef {
   minFinanceSkill: FinanceSkill;
   /** One of this kind at most: a trade of one's own is one practice, however many clients it has. */
   onlyOne?: boolean;
+  /** The careers whose trade it is: only someone working in one may open it. Absent: anyone. */
+  careers?: readonly string[];
 }
 
 export interface BusinessRules {
@@ -1140,6 +1142,7 @@ export type RejectReason =
   | 'unknown-action'
   | 'no-focus'
   | 'already-done'
+  | 'not-your-trade'
   | 'skill-maxed'
   | 'career-top'
   | 'studied-enough'
