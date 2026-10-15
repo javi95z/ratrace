@@ -106,10 +106,10 @@ describe('the account in the settings', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('says where the player\'s things are: in the account, on their way to it, or waiting for a connection', () => {
+  it('says where the player\'s things are only when they are not yet in the account: on their way to it, or waiting for a connection', () => {
     const member: AccountState = { kind: 'member', userId: 'u', email: null };
     show(fakeAccount(member).account, 'en', savesAt('saved'));
-    expect(screen.getByRole('status').textContent).toBe('All saved');
+    expect(screen.queryByRole('status')).toBeNull();
     cleanup();
     show(fakeAccount(member).account, 'en', savesAt('sending'));
     expect(screen.getByRole('status').textContent).toBe('Saving…');

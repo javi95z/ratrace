@@ -29,7 +29,7 @@ const CYRILLIC = { fontFamily: 'var(--font-pixel-cyrillic-alone), var(--font-pix
  * their Google already has. Nothing is shown at all where the game has no cloud behind it, or
  * could not reach it.
  */
-function AccountBlock() {
+function AccountBlock({ compact = false }: { compact?: boolean }) {
   const t = useT('account');
   const { state, keepWithGoogle, dismissNotice } = useAccount();
   const { status } = useAccountSaves();
@@ -51,17 +51,18 @@ function AccountBlock() {
   };
 
   // One line of truth about saving. The device always has everything; this says whether the account does too.
+  // Saved is how things should be, and goes unsaid: only saving, or saving on the device alone, is told.
   const saved =
-    status === 'off' ? null : (
+    status === 'off' || status === 'saved' ? null : (
       <p role="status" className="flex items-center gap-2 text-[12px] text-ink-200">
-        <span aria-hidden className={`size-2 shrink-0 ${status === 'saved' ? 'bg-teal-300' : status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
+        <span aria-hidden className={`size-2 shrink-0 ${status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
         {t(status)}
       </p>
     );
 
   return (
     // A part of the panel it stands in, set off by a rule: never a box inside a box.
-    <section aria-label={t('title')} className="flex flex-col gap-2 border-t-2 border-night-900 pt-3">
+    <section aria-label={t('title')} className={compact ? 'flex flex-col gap-2' : 'flex flex-col gap-2 border-t-2 border-night-900 pt-3'}>
       {state.kind === 'member' ? (
         <>
           <p className="flex items-center gap-2">
@@ -92,7 +93,7 @@ function AccountBlock() {
             <GoogleMark />
             {t('keep')}
           </Button>
-          <p className="text-center text-[12px] leading-snug text-ink-300">{t('guest')}</p>
+          {compact ? null : <p className="text-center text-[12px] leading-snug text-ink-300">{t('guest')}</p>}
           {saved}
         </>
       )}
@@ -167,11 +168,12 @@ export function HomePreferences() {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
+      {/* The way into an account first, the same size as the settings below it. */}
+      <AccountBlock compact />
       <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <Sprite id="icon.settings" />
         {t('title')}
       </Button>
-      <AccountBlock />
       <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
         <div className="flex flex-col gap-2">
           <LanguagePick />
