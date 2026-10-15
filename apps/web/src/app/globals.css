@@ -150,9 +150,47 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-gold-500);
-  outline-offset: 2px;
+  outline: 3px solid var(--color-gold-200);
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
+  position: relative;
+  z-index: 1;
 }
+
+.keycap {
+  font-family: var(--font-pixel);
+  display: inline-flex;
+  min-height: 1.4rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-ink-300);
+  background: var(--color-night-900);
+  padding: 0.05rem 0.35rem;
+  color: var(--color-gold-200);
+  font-size: 0.75rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.keyboard-hint { display: none; }
+html[data-input='keyboard'] .keyboard-hint { display: inline-flex; }
+
+/* Shortcut badges live in a button's corner instead of interrupting its label; the room is kept on
+   both sides so a centred label stays centred. */
+html[data-input='keyboard'] button:has(> .keyboard-hint) { padding-inline: 5.5rem; }
+html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-right: 2.75rem; }
+
+/* Standard skip links: absent from the visual layout until keyboard focus reaches them. */
+.skip-links {
+  position: fixed;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 80;
+  display: flex;
+  transform: translateY(-180%);
+  gap: 0.5rem;
+}
+.skip-links:focus-within { transform: translateY(0); }
 
 /*
  * The colours a frame is drawn in: its outline, its lit edge, its shaded edge, and the ring of a

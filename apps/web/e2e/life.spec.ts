@@ -19,6 +19,34 @@ const shot = async (page: Page, name: string, project: string) => {
 /** True while the page stands on the entry a sheet keeps in the history for Back to take away. */
 const onSheetEntry = (page: Page) => page.evaluate(() => (history.state as { ratraceSheet?: boolean } | null)?.ratraceSheet === true);
 
+test('a round can be entered and a card answered with the keyboard alone', async ({ page }) => {
+  const problems = watch(page);
+  const w = WORDS.en;
+  await page.goto('/en/new');
+
+  const nurse = page.getByRole('radio', { name: /^Nurse/ });
+  const engineer = page.getByRole('radio', { name: /^Software engineer/ });
+  await nurse.press('ArrowDown');
+  await expect(engineer).toBeChecked();
+  await expect(engineer).toBeFocused();
+  await page.getByRole('button', { name: w.start }).press('Enter');
+
+  await expect(page.getByRole('heading', { name: w.news })).toBeVisible();
+  await page.keyboard.press('Control+Enter');
+  const choices = page.getByRole('group', { name: w.choices });
+  const first = choices.locator('button:not(:disabled)').first();
+  await expect(first).toBeFocused();
+  await settle(page);
+  await first.press('Enter');
+  await expect(page.getByRole('heading', { name: w.happened })).toBeVisible();
+
+  await page.keyboard.type('?');
+  await expect(page.getByRole('dialog', { name: 'Keyboard controls' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
 test('a whole life, from the front door to the score', async ({ page }, info) => {
   const problems = watch(page);
   const w = WORDS.en;

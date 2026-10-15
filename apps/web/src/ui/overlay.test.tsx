@@ -83,6 +83,7 @@ describe('Sheet', () => {
     expect(screen.queryByRole('button', { name: 'Remove one' })).toBeNull();
     // The button is gone, and the focus with it. The sheet must not be left deaf to the keyboard.
     expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove two' }));
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
@@ -285,6 +286,27 @@ describe('Sheet', () => {
     await user.keyboard('{Escape}');
     expect(document.body.style.overflow).toBe('');
   });
+
+  it('can put initial focus on the close control and makes the page behind inert', async () => {
+    function Focused() {
+      const [open, setOpen] = useState(false);
+      return (
+        <div data-page>
+          <button onClick={() => setOpen(true)}>Open focused</button>
+          <Sheet open={open} onClose={() => setOpen(false)} title="Focused" closeLabel="Close focused" initialFocus="close">
+            <button>Inside</button>
+          </Sheet>
+        </div>
+      );
+    }
+    const user = userEvent.setup();
+    const { container } = render(<Focused />);
+    await user.click(screen.getByRole('button', { name: 'Open focused' }));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close focused' }));
+    expect(container.inert).toBe(true);
+    await user.keyboard('{Escape}');
+    expect(container.inert).toBe(false);
+  });
 });
 
 describe('Tabs', () => {
@@ -307,6 +329,10 @@ describe('Tabs', () => {
     await user.keyboard('{ArrowRight}');
     expect(selected()).toBe('A');
     await user.keyboard('{ArrowLeft}');
+    expect(selected()).toBe('C');
+    await user.keyboard('{Home}');
+    expect(selected()).toBe('A');
+    await user.keyboard('{End}');
     expect(selected()).toBe('C');
     // Only the tab that is on is a Tab stop.
     expect(screen.getAllByRole('tab').map((tab) => tab.tabIndex)).toEqual([-1, -1, 0]);

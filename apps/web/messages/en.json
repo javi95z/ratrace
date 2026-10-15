@@ -369,7 +369,7 @@
       "yield": "Pays {rate}",
       "needsSkill": "Money sense {level}",
       "buy": "Buy",
-      "history": "Price since you were 22",
+      "history": "Price history",
       "youHold": "You hold {amount}",
       "planned": "Plan: {amount} a round"
     },
@@ -383,6 +383,8 @@
       "repay": "Repay: {name}",
       "available": "Up to {amount}",
       "amount": "Amount",
+    "exact": "Exact amount",
+    "keyboardHelp": "Arrow keys adjust one step. Hold Shift for ten steps; Page Up and Page Down move about 10%.",
       "confirm": "Confirm {amount}",
       "nothing": "There is nothing to move."
     },
@@ -494,6 +496,15 @@
       "rungStudyLeft": "{left} of {max} left at this rung"
     },
     "shop": {
+      "viewLabel": "What to show in the shop",
+      "recommended": "Recommended",
+      "affordable": "In reach",
+      "all": "All",
+      "recommendedHint": "What you own, the best buys in reach, your next goals and one dream item.",
+      "affordableHint": "What you own and what you can buy now, including on instalments or second hand.",
+      "allHint": "The complete catalogue in your city.",
+      "noneAffordable": "Nothing in this category is in reach yet.",
+      "showAll": "See all ({count})",
       "status": "Status +{n}",
       "upkeep": "{amount}/yr upkeep",
       "owned": "Yours",
@@ -525,7 +536,6 @@
       "usedRisk": "Each round, a {pct}% chance of a repair of about {amount}.",
       "usedWarranty": "The warranty covers the first round.",
       "buyUsed": "Buy used for {amount}",
-      "usedFrom": "Used: {amount}",
       "ownedUsed": "Yours · used",
       "usedTag": "Second hand",
       "usedOwned": "You bought it used: each round, a {pct}% chance of a repair.",
@@ -1220,6 +1230,31 @@
     "runCities": "Lived in",
     "runBadges": "Badges of this life",
     "challenge": "This week's challenge"
+  },
+  "keyboard": {
+    "title": "Keyboard controls",
+    "open": "Keyboard controls",
+    "settingsHint": "Play without a mouse. Press the question-mark key at any time for the relevant controls.",
+    "intro": "Only the controls that apply here are shown. Shortcuts never run while you are typing in a field.",
+    "help": {
+      "tab": "Move to the next control.",
+      "shiftTab": "Move to the previous control.",
+      "escape": "Close the open window and return to what opened it.",
+      "question": "Open this keyboard reference.",
+      "life": "Move through available lives; Home and End jump to the first and last.",
+      "cards": "Choose an available option with its number, or move with the arrows and press Enter.",
+      "tabs": "Move through finance tabs; Home and End jump to either edge.",
+      "switchTab": "Go to the previous or next finance tab from anywhere on the screen.",
+      "amount": "Adjust money faster in an amount slider.",
+      "primary": "Use the current safe main action. It never confirms a destructive choice."
+    },
+    "skip": {
+      "stage": "Skip to the round",
+      "profile": "Skip to profile",
+      "news": "Skip to news",
+      "orders": "Skip to orders",
+      "actions": "Skip to round actions"
+    }
   },
   "challenge": {
     "title": "Weekly challenge",

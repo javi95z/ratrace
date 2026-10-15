@@ -4,13 +4,14 @@ import { cardArt } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
 import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
 import { chancePct, effectTags } from '@/game/present';
 import type { EffectTag } from '@/game/present';
 import { Panel, Tag } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { Celebrations } from './Celebrations';
+import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
 
 /** How far a card must be dragged before letting go answers it. */
 const SWIPE = 90;
@@ -31,7 +32,7 @@ function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: Effec
 }
 
 /** What one option of a card offers: its label, what it costs and does, and the odds of each thing it may bring. */
-function Offer({ def, index, preview, world }: { def: CardDef; index: number; preview: OptionPreview; world: WorldState }) {
+function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: number; preview: OptionPreview; world: WorldState; shortcut?: number }) {
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
@@ -50,7 +51,10 @@ function Offer({ def, index, preview, world }: { def: CardDef; index: number; pr
   return (
     <>
       <span className="flex items-start justify-between gap-2">
-        <span className={`pixel text-[16px] ${dim}`}>{written.label}</span>
+        <span className={`pixel flex items-center gap-2 text-[16px] ${dim}`}>
+          {written.label}
+          {shortcut ? <KeyboardHint>{shortcut}</KeyboardHint> : null}
+        </span>
         {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
       </span>
       {/* Why it is locked is the engine's to say. */}
@@ -67,7 +71,7 @@ function Offer({ def, index, preview, world }: { def: CardDef; index: number; pr
 }
 
 /** One option of a card, to be chosen. */
-function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean }) {
+function Option({ def, index, preview, onPick, disabled, tabIndex }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean; tabIndex: number }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
   if (!world) return null;
   return (
@@ -75,9 +79,11 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
       type="button"
       onClick={onPick}
       disabled={disabled || !preview.available}
-      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
+      tabIndex={tabIndex}
+      data-card-option={index}
+      className="frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
     >
-      <Offer def={def} index={index} preview={preview} world={world} />
+      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? index + 1 : undefined} />
     </button>
   );
 }
@@ -92,12 +98,49 @@ export function CardStage() {
   const pick = useGame((s) => s.pick);
   const x = useMotionValue(0);
   const tilt = useTransform(x, [-160, 160], [-6, 6]);
+  const choices = useRef<HTMLDivElement>(null);
+  const { keyboard } = useKeyboard();
 
   // The card to answer is the next one of the hand, judged as the player stands after the ones before it.
   const waiting = view !== null && view.phase === 'cards';
   const cardId = waiting ? view.hand[view.answered] : undefined;
   const def = content.cards.find((card) => card.id === cardId);
   const previews = useMemo(() => (view && def && waiting ? previewCard(content, view, def.id) : []), [content, view, def, waiting]);
+  const enabled = previews.flatMap((preview, index) => (preview.available ? [index] : []));
+  const focus = (index: number) => {
+    const option = choices.current?.querySelector<HTMLElement>(`[data-card-option="${index}"]`);
+    option?.focus();
+    option?.scrollIntoView?.({ block: 'nearest' });
+  };
+  const choose = (index: number) => choices.current?.querySelector<HTMLButtonElement>(`[data-card-option="${index}"]`)?.click();
+  useKeyboardScope(
+    (event) => {
+      if (!waiting || busy || enabled.length === 0 || event.altKey || event.ctrlKey || event.metaKey) return false;
+      // A held digit must not go on to answer the next card too.
+      if (event.repeat && /^[1-4]$/.test(event.key)) return true;
+      if (/^[1-4]$/.test(event.key)) {
+        const index = Number(event.key) - 1;
+        if (!enabled.includes(index)) return false;
+        choose(index);
+        return true;
+      }
+      const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (!direction && event.key !== 'Home' && event.key !== 'End') return false;
+      const active = document.activeElement instanceof HTMLElement ? Number(document.activeElement.dataset.cardOption) : Number.NaN;
+      const at = enabled.includes(active) ? enabled.indexOf(active) : 0;
+      const next = event.key === 'Home' ? enabled[0] : event.key === 'End' ? enabled.at(-1)! : enabled[(at + direction + enabled.length) % enabled.length];
+      focus(next);
+      return true;
+    },
+    { active: waiting, priority: 20 },
+  );
+  useEffect(() => {
+    if (!keyboard || !def || enabled.length === 0) return;
+    const frame = requestAnimationFrame(() => focus(enabled[0]));
+    return () => cancelAnimationFrame(frame);
+    // The card id deliberately resets focus; availability belongs to that card.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [def?.id, keyboard]);
   if (!view || !def) return null;
 
   const written = text.cards[def.id];
@@ -130,9 +173,9 @@ export function CardStage() {
         </div>
       </motion.article>
 
-      <div role="group" aria-label={t('choices', { title: written.title })} className="flex flex-col gap-2.5">
+      <div ref={choices} role="group" aria-label={t('choices', { title: written.title })} className="flex flex-col gap-2.5">
         {def.options.map((_, i) => (
-          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} />
+          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} tabIndex={i === enabled[0] ? 0 : -1} />
         ))}
       </div>
       {swipeable ? (

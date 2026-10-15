@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { closeOnBack } from './back';
 
@@ -19,8 +19,11 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
  * `back={false}` leaves the history alone. It is for a sheet whose answer replaces the page: an
  * entry of its own would be the one replaced, and the page it meant to leave would stay behind.
  */
-export function Sheet({ open, onClose, title, closeLabel, back = true, tone, children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+type InitialFocus = 'panel' | 'close' | 'first' | RefObject<HTMLElement | null>;
+
+export function Sheet({ open, onClose, title, closeLabel, back = true, tone, initialFocus = 'panel', children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; initialFocus?: InitialFocus; children: ReactNode }) {
   const panel = useRef<HTMLDivElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   // The latest `onClose`, so that a parent which makes a new one on every draw does not reopen the effect below.
   const close = useRef(onClose);
@@ -33,9 +36,26 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, chi
     const box = panel.current;
     if (!box) return;
     const opener = document.activeElement as HTMLElement | null;
-    box.focus();
+    const first = () => box.querySelector<HTMLElement>(FOCUSABLE);
+    const wanted = typeof initialFocus === 'object' ? initialFocus.current : initialFocus === 'close' ? closeButton.current : initialFocus === 'first' ? first() : box;
+    (wanted ?? box).focus();
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Everything except the top-level sheet is removed from sequential focus and the accessibility
+    // tree by `inert`. Previous values are restored, which also makes nested sheets safe.
+    const root = box.closest<HTMLElement>('[data-sheet-root]');
+    const behind = [...document.body.children]
+      .filter((node): node is HTMLElement => node instanceof HTMLElement && node !== root)
+      .map((node) => ({ node, inert: Boolean(node.inert) }));
+    for (const entry of behind) entry.node.inert = true;
+
+    let lastStop = 0;
+    const rememberFocus = () => {
+      const stops = [...box.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const at = stops.indexOf(document.activeElement as HTMLElement);
+      if (at >= 0) lastStop = at;
+    };
+    box.addEventListener('focusin', rememberFocus);
 
     // The keys are heard on the whole page, not on the sheet: the focus can leave the sheet without
     // the player doing anything, and a sheet that no longer hears Escape is a trap.
@@ -70,23 +90,28 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, chi
     // When the thing that had the focus is taken out of the sheet (an order removed from a list),
     // the browser drops the focus on the page behind. Bring it back.
     const watcher = new MutationObserver(() => {
-      if (!box.contains(document.activeElement)) box.focus();
+      if (!box.contains(document.activeElement)) {
+        const stops = [...box.querySelectorAll<HTMLElement>(FOCUSABLE)];
+        (stops[Math.min(lastStop, Math.max(0, stops.length - 1))] ?? box).focus();
+      }
     });
     watcher.observe(box, { childList: true, subtree: true });
 
     return () => {
       forgetBack();
       watcher.disconnect();
+      box.removeEventListener('focusin', rememberFocus);
       document.removeEventListener('keydown', onKeyDown, true);
       document.body.style.overflow = overflow;
+      for (const entry of behind) entry.node.inert = entry.inert;
       opener?.focus?.();
     };
-  }, [open, back]);
+  }, [open, back, initialFocus]);
 
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center desk:items-center desk:p-6">
+    <div data-sheet-root className="fixed inset-0 z-50 flex items-end justify-center desk:items-center desk:p-6">
       <div aria-hidden data-sheet-backdrop className="absolute inset-0 bg-night-900/80" onClick={onClose} />
       <div
         ref={panel}
@@ -101,7 +126,7 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, chi
           <h2 id={titleId} className="pixel pt-1 text-[19px]">
             {title}
           </h2>
-          <button type="button" onClick={onClose} aria-label={closeLabel} className="pixel -mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center text-[20px] text-ink-300">
+          <button ref={closeButton} type="button" onClick={onClose} aria-label={closeLabel} className="pixel -mr-2 -mt-2 flex size-11 shrink-0 items-center justify-center text-[20px] text-ink-300">
             ✕
           </button>
         </div>
@@ -122,10 +147,10 @@ export function Tabs<T extends string>({ label, tabs, value, onChange, idPrefix 
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
-    if (step === 0) return;
+    if (step === 0 && event.key !== 'Home' && event.key !== 'End') return;
     event.preventDefault();
     const at = tabs.findIndex((tab) => tab.id === value);
-    const next = tabs[(at + step + tabs.length) % tabs.length];
+    const next = event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs.at(-1)! : tabs[(at + step + tabs.length) % tabs.length];
     onChange(next.id);
     strip.current?.querySelector<HTMLElement>(`[data-tab="${next.id}"]`)?.focus();
   };

@@ -63,6 +63,36 @@ async function playRounds(session: GameSession, rounds: number) {
 }
 
 describe('the play screen', () => {
+  it('can advance a safe action and choose cards with the keyboard alone', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await screen.findByRole('heading', { name: 'News' });
+    await user.keyboard('{Control>}{Enter}{/Control}');
+    const choices = await screen.findByRole('group', { name: /^Your choices/ });
+    const enabled = within(choices).getAllByRole('button').filter((choice) => !(choice as HTMLButtonElement).disabled);
+    await waitFor(() => expect(enabled).toContain(document.activeElement));
+    if (enabled.length > 1) {
+      enabled[0].focus();
+      await user.keyboard('{ArrowDown}');
+      expect(document.activeElement).toBe(enabled[1]);
+    }
+    const chosen = enabled.at(-1) as HTMLElement;
+    await user.keyboard(String(Number(chosen.dataset.cardOption) + 1));
+    expect(await screen.findByRole('heading', { name: 'What happened' })).toBeTruthy();
+  });
+
+  it('does not repeat the primary action while a key is held down', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Play />, services);
+    await screen.findByRole('heading', { name: 'News' });
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, repeat: true, bubbles: true }));
+    expect(screen.queryByRole('group', { name: /^Your choices/ })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'News' })).toBeTruthy();
+  });
+
   it('sends a visitor with no life in progress back to the front door', async () => {
     renderGame(<Play />, memoryServices());
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/'));

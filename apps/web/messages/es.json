@@ -369,7 +369,7 @@
       "yield": "Paga un {rate}",
       "needsSkill": "Cultura financiera {level}",
       "buy": "Comprar",
-      "history": "Precio desde tus 22 años",
+      "history": "Evolución del precio",
       "youHold": "Tienes {amount}",
       "planned": "Plan: {amount} cada ronda"
     },
@@ -383,6 +383,8 @@
       "repay": "Amortizar: {name}",
       "available": "Hasta {amount}",
       "amount": "Importe",
+    "exact": "Importe exacto",
+    "keyboardHelp": "Las flechas ajustan un paso. Mantén Mayús para diez pasos; Re Pág y Av Pág mueven aproximadamente un 10 %.",
       "confirm": "Confirmar {amount}",
       "nothing": "No hay nada que mover."
     },
@@ -494,6 +496,15 @@
       "rungStudyLeft": "quedan {left} de {max} en este puesto"
     },
     "shop": {
+      "viewLabel": "Qué mostrar en la tienda",
+      "recommended": "Recomendados",
+      "affordable": "A mi alcance",
+      "all": "Todos",
+      "recommendedHint": "Lo que ya tienes, las mejores compras a tu alcance, los siguientes objetivos y un capricho.",
+      "affordableHint": "Lo que ya tienes y lo que puedes comprar ahora, también a plazos o de segunda mano.",
+      "allHint": "El catálogo completo de tu ciudad.",
+      "noneAffordable": "Todavía no hay nada a tu alcance en esta categoría.",
+      "showAll": "Ver todos ({count})",
       "status": "Estatus +{n}",
       "upkeep": "{amount}/año de mantenimiento",
       "owned": "Tuyo",
@@ -525,7 +536,6 @@
       "usedRisk": "Cada ronda, un {pct} % de probabilidad de una reparación de unos {amount}.",
       "usedWarranty": "La primera ronda la cubre la garantía.",
       "buyUsed": "Comprar usado por {amount}",
-      "usedFrom": "Usado: {amount}",
       "ownedUsed": "Tuyo · usado",
       "usedTag": "De segunda mano",
       "usedOwned": "Lo compraste usado: cada ronda, un {pct} % de probabilidad de una reparación.",
@@ -1220,6 +1230,31 @@
     "runCities": "Vivió en",
     "runBadges": "Insignias de esta vida",
     "challenge": "Reto de la semana"
+  },
+  "keyboard": {
+    "title": "Controles de teclado",
+    "open": "Controles de teclado",
+    "settingsHint": "Juega sin ratón. Pulsa la tecla de interrogación en cualquier momento para ver los controles relevantes.",
+    "intro": "Solo se muestran los controles que sirven aquí. Los atajos nunca se activan mientras escribes en un campo.",
+    "help": {
+      "tab": "Ir al siguiente control.",
+      "shiftTab": "Ir al control anterior.",
+      "escape": "Cerrar la ventana abierta y volver a lo que la abrió.",
+      "question": "Abrir esta referencia de teclado.",
+      "life": "Recorrer las vidas disponibles; Inicio y Fin saltan a la primera y la última.",
+      "cards": "Elegir una opción disponible con su número, o moverse con las flechas y pulsar Intro.",
+      "tabs": "Recorrer las pestañas de finanzas; Inicio y Fin saltan a los extremos.",
+      "switchTab": "Ir a la pestaña de finanzas anterior o siguiente desde cualquier punto de la pantalla.",
+      "amount": "Ajustar el dinero más rápido en un selector de importe.",
+      "primary": "Usar la acción principal segura. Nunca confirma una decisión destructiva."
+    },
+    "skip": {
+      "stage": "Saltar a la ronda",
+      "profile": "Saltar al perfil",
+      "news": "Saltar a las noticias",
+      "orders": "Saltar a los pedidos",
+      "actions": "Saltar a las acciones de la ronda"
+    }
   },
   "challenge": {
     "title": "Reto de la semana",
