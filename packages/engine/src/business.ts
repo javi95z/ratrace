@@ -1,5 +1,6 @@
 import { newId } from './ids';
 import { FLAG_SOLD_BUSINESS } from './life/flags';
+import { ownPay } from './life/derive';
 import { focusLeft } from './life/orders';
 import { maxBusinessesOf, skillLevel } from './life/skills';
 import { applyBp, isAmount, mulDiv } from './money';
@@ -43,12 +44,15 @@ export function businessRound(business: Business, content: Content, world: World
   const cyclePct = type.cyclePct[world.regime] ?? 0;
   const base = applyBp(working, type.yieldBp * content.yearsPerRound);
   let profit = mulDiv(base, 100 + cyclePct, 100);
-  const neglected = !business.manager && !business.tended;
+  // Run full time by its owner, it is never left alone, and has no manager to pay.
+  const fullTime = business.fullTime === true;
+  const neglected = !fullTime && !business.manager && !business.tended;
   if (profit > 0) {
     if (neglected) profit = mulDiv(profit, rules.neglectProfitPct, 100);
     // An owner who knows the trade of running things gets more out of it, and pays a manager less.
     else profit = mulDiv(profit, 100 + management * content.life.skills.managementProfitPct, 100);
-    if (business.manager) profit -= mulDiv(profit, managerShare(type, content, management), 100);
+    if (fullTime) profit = mulDiv(profit, content.life.fullTime.profitPct, 100);
+    else if (business.manager) profit -= mulDiv(profit, managerShare(type, content, management), 100);
   }
   const payout = profit > 0 ? mulDiv(profit, business.payoutPct, 100) : 0;
   return { neglected, cyclePct, profit, payout, retained: profit - payout };
@@ -175,13 +179,17 @@ export function growBusinesses(p: PlayerState, content: Content, now: WorldState
   const closed: string[] = [];
   const kept: Business[] = [];
   const management = skillLevel(p, 'management', content);
+  // What a good round is: one that made a good share of what the job pays.
+  const rule = content.life.fullTime;
+  const pay = indexed(ownPay(p, content), now) * content.yearsPerRound;
   for (const business of p.businesses) {
     const round = businessRound(business, content, now, management);
+    const strong = pay > 0 && round.profit * 100 >= pay * rule.strongPct ? (business.strong ?? 0) + 1 : 0;
     let capital = business.capital + round.retained;
     if (round.neglected) capital -= applyBp(Math.max(0, capital), content.business.neglectDecayBp);
     capital = capital > 0 ? mulDiv(capital, after.priceLevel, now.priceLevel) : 0;
     if (capital <= 0) closed.push(business.typeId);
-    else kept.push({ ...business, capital });
+    else kept.push({ ...business, capital, strong });
   }
   p.businesses = kept;
   return closed;
@@ -196,5 +204,7 @@ export function businessBreaks(business: unknown, content: Content): string | nu
   if (!(typeof b.basis === 'number' && Number.isSafeInteger(b.basis) && b.basis >= 0)) return `business ${b.id} has a basis that is not a non-negative whole number: ${String(b.basis)}`;
   if (!content.business.payouts.includes(b.payoutPct as number)) return `business ${b.id} pays out a share the rules do not allow: ${String(b.payoutPct)}`;
   if (typeof b.manager !== 'boolean' || typeof b.tended !== 'boolean') return `business ${b.id} needs a manager and a tended flag`;
+  if (b.fullTime !== undefined && typeof b.fullTime !== 'boolean') return `business ${b.id} has a full-time flag that is not true or false`;
+  if (b.strong !== undefined && !(Number.isSafeInteger(b.strong) && b.strong >= 0)) return `business ${b.id} has a count of good rounds that is not a whole number`;
   return null;
 }

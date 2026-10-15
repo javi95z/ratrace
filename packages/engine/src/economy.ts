@@ -4,6 +4,7 @@ import type { DebtService } from './debt';
 import { cityOf } from './lookup';
 import { applyBp, mulDiv } from './money';
 import type { Cents } from './money';
+import { homeOf, lodgerOf } from './life/derive';
 import { ownsHome, rentYieldBp } from './property';
 import { assetYieldBp, depositRateBp, indexed } from './rates';
 import type { Content, PlayerState, WorldState } from './types';
@@ -67,6 +68,9 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
   for (const property of p.properties) {
     if (property.rented) rent += applyBp(property.value, rentYieldBp(content, property.cityId, property.typeId) * years);
   }
+  // A lodger pays for a room: a share of what the whole home would let for.
+  const home = lodgerOf(p, content) ? homeOf(p, content) : null;
+  if (home) rent += mulDiv(applyBp(home.value, rentYieldBp(content, home.cityId, home.typeId) * years), content.life.lodger.rentPct, 100);
 
   return {
     salary: indexed(p.salaryAnnual, world) * years,

@@ -220,6 +220,9 @@ const base: Content = {
     jobHuntRaisePct: 8,
     workModes: { remote: { focus: 1, payPct: 100, jobStatusPct: 50, workSkill: true, fromLevel: 1 }, partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0 } },
     raise: { chancePct: 40, perNegotiationPct: 10, pct: 5, restRounds: 2 },
+    fullTime: { strongPct: 60, strongRounds: 2, profitPct: 150, focus: 1, status: [[0, 5], [1_000_000_00, 10]], rungsLost: 1 },
+    lodger: { rentPct: 30, statusLost: 3 },
+    works: { focus: 2, weights: { flop: 50, modest: 40, hit: 10 }, payPct: { flop: 2, modest: 10, hit: 40 }, fadePct: 30, saleYears: 3, audience: [], audienceHitWeight: 10 },
     jail: { statusLost: 6, rungsLost: 1 },
     // No limits by default: each test of one sets its own.
     focusLimits: { overtimeTiredFrom: 99, overtimeHealthPoints: 0, overtimeBurnoutFrom: 99, burnoutChancePct: 0, burnoutHealthPoints: 0, burnoutFocus: 0, huntRestRounds: 0, huntMissPct: 0, huntFloorPct: 0, studyPerRung: 999 },

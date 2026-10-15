@@ -232,9 +232,17 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'setRented':
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
-      return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt');
+      return isStudy(order.action) ? text.focusActions[order.action] : order.action === 'createWork' ? text.focusActions.createWork : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt');
     case 'setWorkMode':
       return t(`work.${order.mode}`);
+    case 'goFullTime':
+      return t('goFullTime', { name: business(order.businessId) });
+    case 'backToWork':
+      return t('backToWork');
+    case 'setLodger':
+      return t(order.on ? 'lodgerOn' : 'lodgerOff');
+    case 'sellWorks':
+      return t('sellWorks');
     case 'buyItem':
       return t(order.noInvoice === true ? 'buyNoInvoiceItem' : order.used === true ? 'buyUsedItem' : order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'setEvasion': {
@@ -281,7 +289,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'work', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -346,6 +354,9 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'jobHunt':
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
+        break;
+      case 'work':
+        add(event, { tone: event.tier === 'hit' ? 'gold' : event.tier === 'modest' ? 'good' : 'plain', icon: focusArt.createWork, title: t(`work.${event.tier}`), hint: event.tier === 'flop' ? t('work.flopHint') : t('work.paysHint', { amount: fmt.money(event.annual) }) });
         break;
       case 'raise':
         add(event, { tone: event.success ? 'good' : 'plain', icon: focusArt.askRaise, title: event.success ? t('raiseYes', { pct: event.pct }) : t('raiseNo') });

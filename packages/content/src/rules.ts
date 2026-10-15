@@ -15,20 +15,20 @@ import { usd } from './money';
 export const propertyTypes: PropertyTypeDef[] = [
   { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 90 },
   { id: 'studio', pricePct: 60, status: 8 },
-  { id: 'flat', pricePct: 100, status: 14 },
-  { id: 'loft', pricePct: 125, status: 18 },
+  { id: 'flat', pricePct: 100, status: 14, spareRoom: true },
+  { id: 'loft', pricePct: 125, status: 18, spareRoom: true },
   { id: 'shop', pricePct: 130, status: 0, rentalOnly: true, rentPct: 125 },
-  { id: 'townhouse', pricePct: 150, status: 21 },
-  { id: 'house', pricePct: 180, status: 24 },
+  { id: 'townhouse', pricePct: 150, status: 21, spareRoom: true },
+  { id: 'house', pricePct: 180, status: 24, spareRoom: true },
   { id: 'office', pricePct: 220, status: 0, rentalOnly: true, rentPct: 115 },
-  { id: 'duplex', pricePct: 250, status: 31 },
+  { id: 'duplex', pricePct: 250, status: 31, spareRoom: true },
   { id: 'warehouse', pricePct: 300, status: 0, rentalOnly: true, rentPct: 120 },
-  { id: 'chalet', pricePct: 320, status: 37 },
-  { id: 'penthouse', pricePct: 400, status: 42 },
-  { id: 'estate', pricePct: 550, status: 50 },
-  { id: 'villa', pricePct: 800, status: 60 },
+  { id: 'chalet', pricePct: 320, status: 37, spareRoom: true },
+  { id: 'penthouse', pricePct: 400, status: 42, spareRoom: true },
+  { id: 'estate', pricePct: 550, status: 50, spareRoom: true },
+  { id: 'villa', pricePct: 800, status: 60, spareRoom: true },
   { id: 'block', pricePct: 900, status: 0, rentalOnly: true, rentPct: 110 },
-  { id: 'mansion', pricePct: 1500, status: 80 },
+  { id: 'mansion', pricePct: 1500, status: 80, spareRoom: true },
 ];
 
 export const debt: DebtParams = {
@@ -149,6 +149,36 @@ export const life: LifeRules = {
     // Home is earned: from the third rung, once the boss trusts the work without seeing it done.
     remote: { focus: 1, payPct: 100, jobStatusPct: 70, workSkill: true, fromLevel: 2 },
     partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0 },
+  },
+  // Leaving the job for one's own: a business that made three fifths of the pay two rounds running.
+  // Run full time it makes three fifths more, frees a point of focus, and its owner is somebody by
+  // its size; going back to a job starts a rung lower.
+  fullTime: {
+    strongPct: 60,
+    strongRounds: 2,
+    profitPct: 160,
+    focus: 1,
+    status: [
+      [0, 6],
+      [usd(100_000), 10],
+      [usd(400_000), 14],
+      [usd(1_500_000), 18],
+    ],
+    rungsLost: 1,
+  },
+  // A lodger pays about a third of what the whole home would let for, and the flat is shared.
+  lodger: { rentPct: 30, statusLost: 4 },
+  // Making something: two points of focus, and most of it sinks without trace. A hit pays almost half a
+  // median salary a year at first, and a third less every round as people move on. Someone with an
+  // audience, or a classroom, sells more.
+  works: {
+    focus: 2,
+    weights: { flop: 55, modest: 35, hit: 10 },
+    payPct: { flop: 2, modest: 12, hit: 45 },
+    fadePct: 30,
+    saleYears: 3,
+    audience: ['influencer', 'education'],
+    audienceHitWeight: 10,
   },
   // Asking the boss: one in three says yes, a good negotiator is told yes far more often. Yes or no, not again for two rounds.
   raise: { chancePct: 30, perNegotiationPct: 15, pct: 4, restRounds: 2 },

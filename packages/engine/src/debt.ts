@@ -1,3 +1,4 @@
+import { businessRound } from './business';
 import { newId } from './ids';
 import { FLAG_CHEAP_MORTGAGE, hasFlag } from './life/flags';
 import { cityOf } from './lookup';
@@ -106,7 +107,10 @@ export function applyDebtPayments(p: PlayerState, service: DebtService): void {
 export function loanRoom(p: PlayerState, content: Content, world: WorldState): Cents {
   let existing = 0;
   for (const d of p.debts) if (d.kind === 'personalLoan') existing += d.principal;
-  const limit = mulDiv(indexed(p.salaryAnnual, world), content.debt.personalLoanMaxIncomePct, 100);
+  // A business run for a living is income a bank counts, as it counts pay.
+  let ownBoss = 0;
+  for (const business of p.businesses) if (business.fullTime === true) ownBoss += Math.max(0, Math.floor(businessRound(business, content, world).profit / content.yearsPerRound));
+  const limit = mulDiv(indexed(p.salaryAnnual, world) + ownBoss, content.debt.personalLoanMaxIncomePct, 100);
   return Math.max(0, limit - existing);
 }
 

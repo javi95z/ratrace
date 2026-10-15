@@ -35,6 +35,10 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'setEvasion',
   'retire',
   'setWorkMode',
+  'goFullTime',
+  'backToWork',
+  'setLodger',
+  'sellWorks',
 ]);
 
 const isText = (x: unknown): x is string => typeof x === 'string';
@@ -80,6 +84,10 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
       return isText(fields.cityId);
     case 'setWorkMode':
       return isText(fields.mode);
+    case 'goFullTime':
+      return isText(fields.businessId);
+    case 'setLodger':
+      return isFlag(fields.on);
     case 'setEvasion':
       return (fields.blackPct === undefined || typeof fields.blackPct === 'number') && [fields.shell, fields.hideCrypto].every((flag) => flag === undefined || isFlag(flag));
     default:
@@ -138,6 +146,10 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'moveCity':
     case 'retire':
     case 'setWorkMode':
+    case 'goFullTime':
+    case 'backToWork':
+    case 'setLodger':
+    case 'sellWorks':
       return executeLifeOrder(p, order, ctx);
     case 'setEvasion':
       return executeSetEvasion(p, order, ctx);

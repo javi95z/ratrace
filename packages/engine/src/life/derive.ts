@@ -72,7 +72,25 @@ export function careerSwing(p: PlayerState, content: Content, regime: Regime, ro
 export function focusBonusOf(p: PlayerState, content: Content): number {
   const fit = skillLevel(p, 'health', content) >= content.life.skills.healthFocusFrom ? 1 : 0;
   const retired = isRetired(p) ? content.life.retiredFocus : 0;
-  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired + workModeRule(p, content).focus;
+  const ownBoss = p.businesses.some((business) => business.fullTime === true) ? content.life.fullTime.focus : 0;
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired + workModeRule(p, content).focus + ownBoss;
+}
+
+/** True while a lodger lives in the spare room: there must still be a home of the player's own with one. */
+export function lodgerOf(p: PlayerState, content: Content): boolean {
+  if (!p.life.lodger) return false;
+  const home = homeOf(p, content);
+  return home !== null && propertyTypeOf(content, home.typeId).spareRoom === true;
+}
+
+/** The status of running one's own business for a living, by the largest run full time; null for someone who does not. */
+export function ownBossStatus(p: PlayerState, content: Content): number | null {
+  let capital = -1;
+  for (const business of p.businesses) if (business.fullTime === true) capital = Math.max(capital, business.capital);
+  if (capital < 0) return null;
+  let status = 0;
+  for (const [from, points] of content.life.fullTime.status) if (capital >= from) status = points;
+  return status;
 }
 
 /**
@@ -167,6 +185,8 @@ export function derivePassive(p: PlayerState): Cents {
   for (const entry of p.life.recurring) {
     if (entry.kind === 'passive') total += entry.annual;
   }
+  // What was made pays while people still buy it.
+  for (const work of p.life.works ?? []) total += work.annual;
   return total;
 }
 
@@ -238,9 +258,10 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
   const home = homeOf(p, content);
   return {
     items,
-    home: home ? propertyTypeOf(content, home.typeId).status : rentStatusAt(content, round)[life.rentTier],
+    // A lodger in the spare room is a flat shared.
+    home: home ? propertyTypeOf(content, home.typeId).status - (lodgerOf(p, content) ? rules.lodger.statusLost : 0) : rentStatusAt(content, round)[life.rentTier],
     // A life of one's own after work is a standing too.
-    job: life.career ? mulDiv(levelOf(content, life.career).status, workModeRule(p, content).jobStatusPct, 100) : isRetired(p) ? rules.retiredStatus : 0,
+    job: life.career ? mulDiv(levelOf(content, life.career).status, workModeRule(p, content).jobStatusPct, 100) : (ownBossStatus(p, content) ?? (isRetired(p) ? rules.retiredStatus : 0)),
     city: cityOf(content, p.cityId).prestige,
     lifestyle: lifestyleStatusAt(content, round)[p.lifestyleTier],
     bonus: life.bonusStatus,

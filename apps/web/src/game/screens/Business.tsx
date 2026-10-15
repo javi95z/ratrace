@@ -233,6 +233,42 @@ function Review({ business }: { business: Owned }) {
   );
 }
 
+/**
+ * Living from the business: once it has made a good share of the pay two rounds running, the job
+ * can be left for it; run full time it says so, and what it gives. Nothing is shown before it has
+ * made a first good round.
+ */
+function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
+  const t = useT('finance.business');
+  const { content, text } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  const orders = useGame((s) => s.orders);
+  const rule = content.life.fullTime;
+  const p = view.player;
+  const isLeaving = (order: Order) => order.type === 'goFullTime';
+  const leaving = orders.some((order) => order.type === 'goFullTime' && order.businessId === business.id);
+  if (business.fullTime === true) {
+    return (
+      <div className="border-l-4 border-teal-300 pl-2.5">
+        <p className="pixel text-[15px] text-teal-300">{t('fullTime.is')}</p>
+        <p className="text-[12px] leading-snug text-ink-200">{t('fullTime.isHint', { pct: rule.profitPct - 100, focus: rule.focus })}</p>
+      </div>
+    );
+  }
+  const strong = business.strong ?? 0;
+  if (p.life.career === null || strong === 0 || p.businesses.some((x) => x.fullTime === true)) return null;
+  if (strong < rule.strongRounds) return <p className="text-[12px] leading-snug text-ink-300">{t('fullTime.almost', { pct: rule.strongPct, n: strong, of: rule.strongRounds })}</p>;
+  const job = text.careers[p.life.career.id].levels[p.life.career.level];
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Button variant={leaving ? 'primary' : undefined} onClick={() => setOrder(isLeaving, leaving ? null : { type: 'goFullTime', businessId: business.id })}>
+        {leaving ? t('fullTime.leaving') : t('fullTime.go')}
+      </Button>
+      <p className="text-[12px] leading-snug text-ink-300">{t('fullTime.goHint', { job, pct: rule.profitPct - 100, focus: rule.focus })}</p>
+    </div>
+  );
+}
+
 /** One business, looked at closely: what this round makes of it, and everything that can be done with it. */
 function BusinessSheet({ business, view, quote, onClose }: { business: Owned; view: GameView; quote: BusinessesQuote; onClose(): void }) {
   const t = useT('finance.business');
@@ -282,6 +318,8 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
           {business.neglected ? <p className="mt-1 text-[12px] leading-snug text-wine-300">{t('neglected', { pct: content.business.neglectProfitPct })}</p> : null}
         </Panel>
 
+        {standing ? <OwnBoss business={business} view={view} /> : null}
+
         {standing ? (
           <>
             <Segmented<number>
@@ -290,6 +328,9 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
               onChange={(payoutPct) => set({ payoutPct })}
               options={quote.payouts.map((pct) => ({ value: pct, label: t(pct === 0 ? 'keepAll' : pct === 100 ? 'takeAll' : 'takeHalf'), hint: t('payoutPct', { pct }) }))}
             />
+            {/* Run full time, it needs neither the owner's spare focus nor a manager. */}
+            {business.fullTime === true ? null : (
+            <>
             <Toggle
               on={business.tended}
               disabled={business.manager || standing.tended || (!business.tended && quote.focusLeft < 1)}
@@ -298,6 +339,8 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
               hint={business.manager ? t('tendNoNeed') : t('tendHint', { left: quote.focusLeft })}
             />
             <Toggle on={business.manager} onChange={(manager) => set({ manager })} label={t('manager')} hint={t('managerHint', { pct: business.managerPct })} />
+            </>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button onClick={() => setInvesting(true)} disabled={shown.player.cash <= 0}>
                 {t('invest')}

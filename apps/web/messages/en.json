@@ -443,7 +443,9 @@
       "term": "Term",
       "ownedOutright": "It is all yours: nothing is owed on it.",
       "netOnSale": "A sale would leave you",
-      "netOnSaleHint": "After the mortgage is repaid and before tax on the gain."
+      "netOnSaleHint": "After the mortgage is repaid and before tax on the gain.",
+      "lodger": "Let the spare room",
+      "lodgerHint": "+{amount} a year · −{status} home status: the flat is shared"
     },
     "debt": {
       "none": "You owe nothing.",
@@ -522,7 +524,21 @@
       "remoteHint": "+{focus} focus · {status}% job status",
       "partTimeHint": "+{focus} focus · {pay}% pay · learn by study only",
       "raise": "Ask for a raise",
-      "raiseHint": "{chance}% chance of +{pct}% pay. Yes or no, not again for a while."
+      "raiseHint": "{chance}% chance of +{pct}% pay. Yes or no, not again for a while.",
+      "works": "What you make",
+      "worksAbout": "A book, an online course, a song: two focus for a round, and the public decides. Most sink without trace; a hit pays for years.",
+      "create": "Make something",
+      "createHint": "{flop}% a flop · {modest}% modest, {modestPay} a year · {hit}% a hit, {hitPay} a year",
+      "workLine": "{tier} · from age {age}",
+      "sell": "Sell the rights for {amount}",
+      "sellHint": "{years} years of what it all pays today, at once.",
+      "tiers": {
+        "flop": "A flop",
+        "modest": "Modest",
+        "hit": "A hit"
+      },
+      "back": "Go back to work as {job}",
+      "backHint": "A rung below where you left it. Your business stays yours, for your spare focus."
     },
     "shop": {
       "viewLabel": "What to show in the shop",
@@ -701,7 +717,15 @@
       "quickManager": "Manager · {pct}%",
       "totalWorth": "Worth",
       "totalProfit": "Profit this round",
-      "totalPayout": "To you"
+      "totalPayout": "To you",
+      "fullTime": {
+        "is": "This is your job now",
+        "isHint": "You run it full time: {pct}% more profit, no manager to pay, and +{focus} focus each round.",
+        "almost": "If it makes {pct}% of your pay two rounds running, you could live from it. So far: {n} of {of}.",
+        "go": "Leave your job for it",
+        "leaving": "✓ Leaving your job for it this round",
+        "goHint": "You stop being {job}: no fixed pay. It makes {pct}% more, needs no manager, and you get +{focus} focus. You can go back to a job later, a rung lower."
+      }
     },
     "evasion": {
       "title": "What you do not declare",
@@ -798,7 +822,14 @@
     "releasedRung": "Back to work, a rung lower than before.",
     "before": "Was {amount}",
     "raiseYes": "Your boss said yes: +{pct}% pay",
-    "raiseNo": "Your boss said not now"
+    "raiseNo": "Your boss said not now",
+    "work": {
+      "flop": "Your work came out. Your mother bought three copies.",
+      "modest": "Your work found its readers",
+      "hit": "A hit! Everyone is quoting you",
+      "flopHint": "It pays almost nothing. It looks good on the shelf, though.",
+      "paysHint": "It pays {amount} a year to begin with, less every round as people move on."
+    }
   },
   "profile": {
     "title": "Your life",
@@ -1134,7 +1165,12 @@
       "office": "Work at the workplace",
       "remote": "Work from home",
       "partTime": "Work half the day"
-    }
+    },
+    "goFullTime": "Leave your job for {name}",
+    "backToWork": "Go back to work",
+    "lodgerOn": "Let the spare room",
+    "lodgerOff": "Stop letting the spare room",
+    "sellWorks": "Sell the rights to everything you made"
   },
   "account": {
     "title": "Account",

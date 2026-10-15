@@ -244,6 +244,8 @@ export interface PropertyTypeDef {
   rentalOnly?: boolean;
   /** Its rent, as a percent of what a home of the same value brings in its city. 100 where left out. */
   rentPct?: number;
+  /** A home with a room to spare, which can be let to a lodger. */
+  spareRoom?: boolean;
 }
 
 export interface CareerLevel {
@@ -412,6 +414,29 @@ export interface LifeRules {
   jobHuntRaisePct: number;
   /** Working from home, and working half the day. */
   workModes: Record<Exclude<WorkMode, 'office'>, WorkModeRule>;
+  /**
+   * Leaving the job for a business: the rounds in a row it must have made `strongPct` of the pay;
+   * what giving it all the time adds to its profit, in percent, and the focus it frees; the status
+   * of running one's own, by its capital; and how far back down the ladder a return to work starts.
+   */
+  fullTime: { strongPct: number; strongRounds: number; profitPct: number; focus: number; status: ReadonlyArray<readonly [Cents, number]>; rungsLost: number };
+  /** A lodger in the spare room: the share of the home's rent it brings, and the status the home loses. */
+  lodger: { rentPct: number; statusLost: number };
+  /**
+   * Making something that pays royalties: the focus a round of it costs; the weight of each outcome,
+   * and what each pays a year at first, as a percent of the city's median pay; what each round takes
+   * off it, in percent; what selling the whole catalogue fetches, in years of what it pays; and the
+   * careers with an audience, which turn out hits more often.
+   */
+  works: {
+    focus: number;
+    weights: Record<WorkTier, number>;
+    payPct: Record<WorkTier, number>;
+    fadePct: number;
+    saleYears: number;
+    audience: ReadonlyArray<string>;
+    audienceHitWeight: number;
+  };
   /**
    * Asking the boss for a raise: the chance it is given, and what each level of negotiation adds to
    * it; the lasting raise it brings, in percent; and the rounds before asking again, given or not.
@@ -815,6 +840,22 @@ export interface Business {
   manager: boolean;
   /** True if the owner gave it focus this round. A business with neither manager nor focus is neglected. */
   tended: boolean;
+  /** True once the owner has left their job for it: it is their work now. Absent: false. */
+  fullTime?: boolean;
+  /** Rounds in a row it made a good share of the owner's pay. Absent: none. */
+  strong?: number;
+}
+
+/** How well a work turned out, from a flop nobody read to a hit everybody quotes. */
+export type WorkTier = 'flop' | 'modest' | 'hit';
+
+/** Something the player made that pays them while people still buy it. */
+export interface CreativeWork {
+  tier: WorkTier;
+  /** What it pays a year now, in start-of-game dollars. It fades each round. */
+  annual: Cents;
+  /** The round it came out. */
+  round: number;
 }
 
 export interface Content {
@@ -988,6 +1029,12 @@ export interface LifeState {
   workMode: WorkMode;
   /** Rounds still to wait before asking for a raise again. */
   raiseRest: number;
+  /** The job left to run a business full time, to go back to; null if none was. */
+  formerCareer: { id: string; level: number } | null;
+  /** True while the spare room of the home is let. It counts only while there is such a home: see `lodgerOf`. */
+  lodger: boolean;
+  /** What the player has made that still pays. */
+  works: CreativeWork[];
   /** Career skill that study has added at the rung held now. */
   rungStudy: number;
   partner: boolean;
@@ -1119,10 +1166,18 @@ export type Order =
   /** Leaves the career for good, from the round the rules allow. */
   | { type: 'retire' }
   /** Works from this round on at the workplace, from home, or half the day. */
-  | { type: 'setWorkMode'; mode: WorkMode };
+  | { type: 'setWorkMode'; mode: WorkMode }
+  /** Leaves the job to run a business full time. */
+  | { type: 'goFullTime'; businessId: string }
+  /** Goes back to the career left for a business, a rung lower. */
+  | { type: 'backToWork' }
+  /** Lets the spare room of the home, or stops. */
+  | { type: 'setLodger'; on: boolean }
+  /** Sells the rights to everything made, at once. */
+  | { type: 'sellWorks' };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction;
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'createWork' | 'studyFinance' | StudyAction;
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1206,6 +1261,10 @@ export type RejectReason =
   | 'bad-mode'
   | 'no-remote'
   | 'needs-seniority'
+  | 'not-strong-enough'
+  | 'no-former-job'
+  | 'no-spare-room'
+  | 'no-works'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
@@ -1279,6 +1338,8 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   /** The boss was asked for a raise; `pct` is what it brought, nothing if it was not given. */
   | { kind: 'raise'; success: boolean; pct: number }
+  /** Something made came out, and how it did: what it pays a year to begin with, in the dollars of the day. */
+  | { kind: 'work'; tier: WorkTier; annual: Cents }
   /** Overtime round after round: the health it cost, and whether it ended in burnout, which costs focus the round after too. */
   | { kind: 'overworked'; streak: number; healthLost: number; burnout: boolean; focusLost: number }
   | { kind: 'financeSkill'; level: FinanceSkill }

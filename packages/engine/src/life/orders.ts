@@ -5,15 +5,15 @@ import { indexed } from '../rates';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
-import { INSURANCE_KINDS, perksOf, workModeRule } from './derive';
+import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from './derive';
 import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'createWork', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
 export type LifeOrder = Extract<
   Order,
-  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' }
+  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' | 'goFullTime' | 'backToWork' | 'setLodger' | 'sellWorks' }
 >;
 
 /** Focus points the player can still spend this round. */
@@ -39,8 +39,8 @@ export function focusTotal(p: PlayerState): number {
  */
 export function focusLock(p: PlayerState, action: FocusAction, content: Content): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
-  // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
-  if (p.life.career === null && !isStudy(action) && action !== 'studyFinance') return 'no-job';
+  // A skill of one's own can be studied without a job, and anyone can make something; overtime, the career and a job hunt need one.
+  if (p.life.career === null && !isStudy(action) && action !== 'studyFinance' && action !== 'createWork') return 'no-job';
   if (isStudy(action) && skillLevel(p, STUDY_OF[action], content) >= 3) return 'skill-maxed';
   if (action === 'studyFinance' && p.life.financeSkill >= 3) return 'skill-maxed';
   if (action === 'studyCareer' && p.life.career !== null) {
@@ -87,11 +87,60 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): R
   const lock = focusLock(p, action, ctx.content);
   if (lock !== null) return lock;
   if (ctx.tally.focusActions.includes(action)) return 'already-done';
-  if (focusLeft(p) < 1) return 'no-focus';
-  p.life.focusUsed += 1;
+  const cost = focusCost(action, ctx.content);
+  if (focusLeft(p) < cost) return 'no-focus';
+  p.life.focusUsed += cost;
   ctx.tally.focusActions.push(action);
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
   if (action === 'overtime' && p.life.career !== null) p.life.salaryBoostPct += overtimeOf(p, ctx.content);
+  return null;
+}
+
+/** The focus a use of it takes: one, but for making something, which takes more. */
+export function focusCost(action: FocusAction, content: Content): number {
+  return action === 'createWork' ? content.life.works.focus : 1;
+}
+
+/** Leaves the job for a business that has shown it can pay for a life. */
+function executeGoFullTime(p: PlayerState, businessId: string, content: Content): RejectReason | null {
+  const business = p.businesses.find((x) => x.id === businessId);
+  if (!business) return 'unknown-business';
+  if (p.life.career === null || p.life.jailRounds > 0) return 'no-job';
+  if (p.businesses.some((x) => x.fullTime === true)) return 'already-done';
+  if ((business.strong ?? 0) < content.life.fullTime.strongRounds) return 'not-strong-enough';
+  const before = focusBonusOf(p, content);
+  p.life.formerCareer = { ...p.life.career };
+  p.life.career = null;
+  p.life.baseSalaryAnnual = 0;
+  business.fullTime = true;
+  business.manager = false;
+  business.tended = true;
+  p.life.focusBonus += focusBonusOf(p, content) - before;
+  return null;
+}
+
+/** Goes back to the job left for a business, a rung lower: the business is the owner's to run again in spare time. */
+function executeBackToWork(p: PlayerState, content: Content): RejectReason | null {
+  const former = p.life.formerCareer;
+  if (former === null || p.life.career !== null) return 'no-former-job';
+  const before = focusBonusOf(p, content);
+  p.life.career = { id: former.id, level: Math.max(0, former.level - content.life.fullTime.rungsLost) };
+  p.life.formerCareer = null;
+  p.life.rungStudy = 0;
+  for (const business of p.businesses) business.fullTime = false;
+  p.life.focusBonus += focusBonusOf(p, content) - before;
+  return null;
+}
+
+/** Sells the rights to everything made, for some years of what it pays. */
+function executeSellWorks(p: PlayerState, ctx: OrderContext): RejectReason | null {
+  if (p.life.works.length === 0) return 'no-works';
+  let annual = 0;
+  for (const work of p.life.works) annual += work.annual;
+  const price = indexed(annual, ctx.world) * ctx.content.life.works.saleYears;
+  p.cash += price;
+  ctx.tally.realisedGains += price;
+  p.life.works = [];
   return null;
 }
 
@@ -352,6 +401,16 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
       return executeMoveCity(p, order.cityId, ctx);
     case 'setWorkMode':
       return executeSetWorkMode(p, order.mode, ctx);
+    case 'goFullTime':
+      return executeGoFullTime(p, order.businessId, ctx.content);
+    case 'backToWork':
+      return executeBackToWork(p, ctx.content);
+    case 'setLodger':
+      if (order.on && !lodgerOf({ ...p, life: { ...p.life, lodger: true } }, ctx.content)) return 'no-spare-room';
+      p.life.lodger = order.on;
+      return null;
+    case 'sellWorks':
+      return executeSellWorks(p, ctx);
     case 'retire':
       if (p.life.career === null) return 'no-job';
       if (ctx.round < ctx.content.life.retireFromRound) return 'too-young-to-retire';

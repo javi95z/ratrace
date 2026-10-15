@@ -606,7 +606,10 @@ function PropertyTab() {
           // Whether it can be lived in is the engine's to say, like its price.
           const letOnly = quoteProperty(content, shown, property.typeId).letOnly;
           // What a year of letting it brings is the engine's figure, shown for what is let now.
-          const rent = property.rented ? quoteOwnedProperty(content, shown, property.id)?.rentAnnual : undefined;
+          const owned = quoteOwnedProperty(content, shown, property.id);
+          const rent = property.rented ? owned?.rentAnnual : undefined;
+          const lodger = sold ? null : (owned?.lodger ?? null);
+          const lodging = (order: Order) => order.type === 'setLodger';
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
               {/* A tap on the home itself opens everything about it. What can be done with it stays on the buttons below. */}
@@ -641,6 +644,18 @@ function PropertyTab() {
                   <Button variant="danger" onClick={() => addOrder({ type: 'sellProperty', propertyId: property.id })}>
                     {t('sell', { amount: fmt.compact(property.value) })}
                   </Button>
+                </div>
+              ) : null}
+              {/* The home lived in, with a room to spare: it can take a lodger. */}
+              {lodger ? (
+                <div className="mt-2">
+                  <Toggle
+                    on={lodger.on}
+                    onChange={(on) => setOrder(lodging, on === view.player.life.lodger ? null : { type: 'setLodger', on })}
+                    label={t('lodger')}
+                    hint={t('lodgerHint', { amount: fmt.money(lodger.annual), status: lodger.statusLost })}
+                    icon="icon.rent_room"
+                  />
                 </div>
               ) : null}
             </div>
@@ -964,6 +979,7 @@ function Lifestyle() {
   // What each use of focus is worth to this player, counting what they own.
   const work = quoteWork(content, shown);
   const skills = quoteSkills(content, shown);
+  const made = quoteWork(content, view).works;
   const note = useFocusNote();
   const jobUses = career
     ? ([
@@ -1016,9 +1032,50 @@ function Lifestyle() {
               <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />
             ))}
           </div>
+        ) : work.backToWork ? (
+          // Left for a business: the way back, a rung lower.
+          <div className="flex flex-col gap-1.5">
+            <Button
+              variant={orders.some((order) => order.type === 'backToWork') ? 'primary' : undefined}
+              onClick={() => setOrder((order) => order.type === 'backToWork', orders.some((order) => order.type === 'backToWork') ? null : { type: 'backToWork' })}
+            >
+              {t('back', { job: text.careers[work.backToWork.careerId].levels[work.backToWork.level] })}
+            </Button>
+            <p className="text-[12px] leading-snug text-ink-300">{t('backHint')}</p>
+          </div>
         ) : (
           <p className="text-[14px] text-ink-300">{t('noJob')}</p>
         )}
+      </Panel>
+
+      {/* What the player makes: a toggle to make something this round, what has been made, and the rights to sell. */}
+      <Panel title={t('works')}>
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] leading-snug text-ink-200">{t('worksAbout')}</p>
+          <Toggle
+            on={has('createWork')}
+            onChange={focus('createWork')}
+            disabled={!has('createWork') && left < work.works.focus}
+            label={t('create')}
+            hint={t('createHint', { flop: work.works.odds.flop, modest: work.works.odds.modest, hit: work.works.odds.hit, modestPay: fmt.compact(work.works.pays.modest), hitPay: fmt.compact(work.works.pays.hit) })}
+            icon={focusArt.createWork}
+          />
+          {/* What was made, as it stood before this round's orders: selling it stays on screen, to be taken back. */}
+          {made.list.length > 0 ? (
+            <>
+              {made.list.map((piece, i) => (
+                <Row key={i} left={t('workLine', { tier: t(`tiers.${piece.tier}`), age: ageAt(content, piece.round) })} right={<span className="text-teal-300">{perYear(piece.annual)}</span>} />
+              ))}
+              <Button
+                variant={orders.some((order) => order.type === 'sellWorks') ? 'primary' : undefined}
+                onClick={() => setOrder((order) => order.type === 'sellWorks', orders.some((order) => order.type === 'sellWorks') ? null : { type: 'sellWorks' })}
+              >
+                {t('sell', { amount: fmt.compact(made.sale) })}
+              </Button>
+              <p className="-mt-1 text-[12px] text-ink-300">{t('sellHint', { years: content.life.works.saleYears })}</p>
+            </>
+          ) : null}
+        </div>
       </Panel>
 
       {/* Skills of one's own: each a point of focus, and no job needed. What is mastered goes last, and is closed. */}

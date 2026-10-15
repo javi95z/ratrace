@@ -307,7 +307,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(171 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 9 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7);
+    expect(wanted.length).toBe(171 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 10 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7);
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.
     for (const assetId of Object.keys(assetLogo)) expect(content.assets.some((asset) => asset.id === assetId), assetId).toBe(true);
@@ -338,7 +338,7 @@ describe('content art', () => {
   it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {
     expect(lifestyleArt).toHaveLength(content.lifestyleMultiplierPct.length);
     expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
-    expect(keys(focusArt)).toEqual(['askRaise', 'exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation']);
+    expect(keys(focusArt)).toEqual(['askRaise', 'createWork', 'exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation']);
     expect(keys(skillArt)).toEqual(['career', 'finance', 'health', 'languages', 'management', 'negotiation', 'network']);
     expect(keys(topicArt)).toEqual(['asset', 'crypto', 'inflation', 'noise', 'property', 'rates', 'regime', 'taxes']);
     // As many filler headlines in every language as the world draws from.
