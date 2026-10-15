@@ -238,13 +238,20 @@
       transform: rotate(0deg) scale(1);
     }
   }
+  /* It crosses the whole card and leaves it, then waits out of sight: nothing lingers at the edge. */
   @keyframes glint {
     0% {
       transform: translateX(-150%) skewX(-20deg);
+      opacity: 1;
     }
-    35%,
+    35% {
+      transform: translateX(650%) skewX(-20deg);
+      opacity: 1;
+    }
+    36%,
     100% {
-      transform: translateX(400%) skewX(-20deg);
+      transform: translateX(650%) skewX(-20deg);
+      opacity: 0;
     }
   }
   @keyframes holo {

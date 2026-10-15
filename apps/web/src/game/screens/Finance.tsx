@@ -57,11 +57,12 @@ function Portfolio() {
   const pensionRoom = preview.pensionRoom;
   // What can be sold this round: what is held once the orders so far have run, without what a plan buys after them.
   // A plan buys when the round is played, after every order: the order cannot sell what it has not bought yet.
-  const sellable = (assetId: string): number => {
-    let planned = 0;
-    for (const run of preview.plans) if (run.assetId === assetId && run.reason === null) planned += run.amount;
-    return Math.max(0, (p.positions[assetId]?.value ?? 0) - planned);
+  const planned = (assetId: string): number => {
+    let amount = 0;
+    for (const run of preview.plans) if (run.assetId === assetId && run.reason === null) amount += run.amount;
+    return amount;
   };
+  const sellable = (assetId: string): number => Math.max(0, (p.positions[assetId]?.value ?? 0) - planned(assetId));
 
   const sheet = (() => {
     if (!move) return null;
@@ -122,10 +123,14 @@ function Portfolio() {
                 </div>
                 {dividends.has(asset.id) ? <div className="text-[12px] text-ink-300">{t('pays', { amount: fmt.money(dividends.get(asset.id) ?? 0) })}</div> : null}
                 <MarginLine assetId={asset.id} />
+                {/* What a plan buys is on the line already, but it is bought only as the round is played. */}
+                {planned(asset.id) > 0 ? <div className="text-[12px] text-sky-300">{t('planBuys', { amount: fmt.money(planned(asset.id)) })}</div> : null}
               </div>
               <div className="pixel text-right">{fmt.money(position.value)}</div>
               </button>
-              <Button onClick={() => setMove({ kind: 'sell', asset })}>{t('sell')}</Button>
+              <Button onClick={() => setMove({ kind: 'sell', asset })} disabled={sellable(asset.id) <= 0}>
+                {t('sell')}
+              </Button>
             </div>
           );
         })}
@@ -1346,6 +1351,12 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
                       <span className="whitespace-nowrap">
                         <Tag tone="good">{t('status', { n: quote.status })}</Tag>
                       </span>
+                      {/* A long trip is a rest too: the focus it gives says so beside the status. */}
+                      {item.perks?.focus ? (
+                        <span className="whitespace-nowrap">
+                          <Tag tone="good">{t('focusTag', { n: item.perks.focus })}</Tag>
+                        </span>
+                      ) : null}
                     </span>
                   </span>
                 </button>

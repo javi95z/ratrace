@@ -3,7 +3,9 @@ import { businessRound } from '../business';
 import { incomeForRound } from '../economy';
 import { applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
-import type { Content, GameState, LifeStart } from '../types';
+import { Rng, seedRng } from '../rng';
+import type { CardDef, Content, GameState, LifeStart } from '../types';
+import { drawHand } from './cards';
 import { lodgerOf, ownPay, statusParts, workModeOf } from './derive';
 import { applyEffects } from './effects';
 import { focusLock, focusTotal } from './orders';
@@ -113,5 +115,22 @@ describe('cards about the new ways of living', () => {
     expect(lodgerOf(p, c)).toBe(true);
     applyEffects(p, { endLodger: true }, { content: c, world: state.timeline[0], round: 0 });
     expect(lodgerOf(p, c)).toBe(false);
+  });
+});
+
+describe('a card that sells something', () => {
+  it('is never dealt to someone who already owns it', () => {
+    const c = fixtureContent();
+    const itemId = c.items[0].id;
+    const offer: CardDef = { id: 'offer', category: 'lifestyle', weight: 1_000, cooldown: 0, options: [{}, { effects: { buyItem: { itemId, pricePct: 80 } } }] };
+    c.cards = [...c.cards, offer];
+    const state = start(c);
+    const hand = () => {
+      state.player.life.seen = {};
+      return drawHand(state, c, new Rng(seedRng('offer', 'cards')));
+    };
+    expect(hand()).toContain('offer');
+    state.player.life.items.push({ itemId, value: 0, paid: 0, age: 0, roundsLeft: null });
+    expect(hand()).not.toContain('offer');
   });
 });

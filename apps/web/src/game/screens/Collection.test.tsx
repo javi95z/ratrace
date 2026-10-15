@@ -51,7 +51,7 @@ describe('the collection', () => {
     for (const group of ['Cars and bikes', 'Pets', 'Watches', 'Tech', 'Fashion', 'Travel', 'Memberships']) expect(within(things).getByRole('heading', { name: group })).toBeTruthy();
   });
 
-  it('shows every badge, tells how it is earned only of those earned, and marks them with the day', async () => {
+  it('shows every badge, tells how it is earned only of those earned, and never says when', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: Date.UTC(2026, 9, 13, 12), gameId: 'g' }, bankrupt: { at: Date.UTC(2026, 0, 2, 12), gameId: 'g' } } });
     const user = userEvent.setup();
@@ -64,7 +64,7 @@ describe('the collection', () => {
     for (const group of ['Wealth', 'Escape', 'Investing', 'Status', 'Life', 'Misfortune']) expect(within(panel).getByRole('heading', { name: group })).toBeTruthy();
 
     const earned = within(panel).getByText('Millionaire').closest('li') as HTMLElement;
-    expect(within(earned).getByText('Earned 13 Oct 2026')).toBeTruthy();
+    expect(within(earned).queryByText(/2026/)).toBeNull();
     expect(within(earned).getByText(/Be worth a million/)).toBeTruthy();
     const pictures = (line: HTMLElement) => [...line.querySelectorAll('img')].map((img) => img.getAttribute('src') ?? '');
     // Set in the rim of its rarity: a millionaire is common, and in bronze.
@@ -112,6 +112,6 @@ describe('the collection', () => {
     renderGame(<Collection />, services, 'es');
     await user.click(await screen.findByRole('tab', { name: 'Insignias' }));
     expect(screen.getByText('Millonario')).toBeTruthy();
-    expect(screen.getByText(/Conseguida el 13 oct 2026/)).toBeTruthy();
+    expect(screen.queryByText(/2026/)).toBeNull();
   });
 });

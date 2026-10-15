@@ -266,23 +266,24 @@ export const world: WorldRules = {
  */
 export const evasion: EvasionRules = {
   blackPcts: [0, 25, 50],
-  blackSuspicionPer100: 24,
+  // Hiding pays a little better than it used to: the office notices less, forgets sooner, and fines less.
+  blackSuspicionPer100: 18,
   // An offshore company is for someone who knows money well, and costs a salary's worth of fees.
   shellMinFinanceSkill: 3,
   shellFeeAnnual: usd(6_000),
   shellTaxCutPct: 80,
-  shellSuspicion: 8,
+  shellSuspicion: 6,
   // From thirty-eight the exchanges tell the tax office what their customers made.
   cryptoSuspicion: 6,
   cryptoReportRound: 8,
   noInvoiceLadders: ['art', 'watch'],
-  noInvoiceDiscountPct: 20,
+  noInvoiceDiscountPct: 25,
   noInvoiceSaleSuspicion: 15,
-  suspicionDecay: 5,
+  suspicionDecay: 8,
   auditMaxPct: 60,
   // Inspected with this much hidden, it goes to court as well.
   chargedFromEvaded: usd(80_000),
-  auditFinePct: 50,
+  auditFinePct: 40,
   auditGoodsPct: 30,
   auditStatus: -8,
   limitationRounds: 2,

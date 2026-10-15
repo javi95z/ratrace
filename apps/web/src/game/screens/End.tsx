@@ -112,6 +112,7 @@ export function End() {
 /** The score and the three parts it is made of, what the life earned, the graph of a lifetime, and the way to another. */
 function Ended({ view }: { view: GameView }) {
   const t = useT('end');
+  const common = useT('common');
   const tale = useT('epilogue');
   const words = useWords();
   const { content, text, names, fmt } = words;
@@ -188,7 +189,7 @@ function Ended({ view }: { view: GameView }) {
                 <Sprite id={portraitArt(lifeId, 58)} fallback={{ w: 64, h: 64 }} />
               </Well>
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="pixel text-[30px] leading-none text-gold-500">{t('title')}</h1>
               <p className="mt-1 text-[13px] text-ink-300">
                 <span>{t('age', { age: ageAt(content, view.round) })}</span>
@@ -198,6 +199,10 @@ function Ended({ view }: { view: GameView }) {
                 </span>
               </p>
             </div>
+            {/* A life looked back on from the front door is left the way it was come to. */}
+            <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 shrink-0 items-center justify-center self-start bg-night-700 text-[18px] text-ink-200">
+              ←
+            </Link>
           </header>
 
           {/* The last picture of the life, and the verdict on it under it: where it ended up, and how. */}

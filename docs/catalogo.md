@@ -922,12 +922,12 @@ Cada forma de ocultar algo a Hacienda ahorra impuestos esa ronda y suma sospecha
 
 | Forma | Qué ahorra | Sospecha | Notas |
 | --- | --- | --- | --- |
-| Sueldo en negro | El IRPF de esa parte del sueldo | 25 %: +6, 50 %: +12 por ronda | Hace falta trabajo |
-| Sociedad en un paraíso fiscal | El 80 % del impuesto de las inversiones | +8 por ronda | Finanzas 3; cuota de 6.000 $ al año |
+| Sueldo en negro | El IRPF de esa parte del sueldo | 25 %: +4, 50 %: +9 por ronda | Hace falta trabajo |
+| Sociedad en un paraíso fiscal | El 80 % del impuesto de las inversiones | +6 por ronda | Finanzas 3; cuota de 6.000 $ al año |
 | No declarar la cripto | El impuesto de las ganancias en cripto | +6 por ronda con ganancias; el doble desde los 38 años | Los exchanges informan a Hacienda |
-| Comprar sin factura | Un 20 % del precio | +15 al venderlo | Arte y Relojes |
+| Comprar sin factura | Un 25 % del precio | +15 al venderlo | Arte y Relojes |
 
-La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección nunca pasa del 60 %. Una inspección cobra lo ocultado en los últimos 4 años más un 50 % de multa y el 30 % del valor de lo comprado sin factura; resta 8 de estatus y lo cancela todo.
+La sospecha baja 8 por ronda sin ocultar nada, y la probabilidad de inspección nunca pasa del 60 %. Una inspección cobra lo ocultado en los últimos 4 años más un 40 % de multa y el 30 % del valor de lo comprado sin factura; resta 8 de estatus y lo cancela todo.
 
 ## Cartas
 

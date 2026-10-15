@@ -271,9 +271,7 @@
     "choices": "Your choices: {title}",
     "changes": "What changes",
     "rolled": "chance of this being what came up",
-    "needsSkill": "Needs {skill} {level}.",
-    "rare": "Rare",
-    "legendary": "Legendary"
+    "needsSkill": "Needs {skill} {level}."
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -375,7 +373,8 @@
       "sell": "Sell",
       "gain": "{amount} gain",
       "loss": "{amount} loss",
-      "pays": "Pays {amount} this round"
+      "pays": "Pays {amount} this round",
+      "planBuys": "{amount} of it your plan buys as the round is played"
     },
     "market": {
       "funds": "Index funds",
@@ -574,7 +573,8 @@
       "noInvoiceTitle": "Without an invoice",
       "noInvoiceRisk": "{pct}% cheaper, in cash. Sell it and you will be asked where it came from (+{suspicion} suspicion); an inspection takes {goods}% of its value.",
       "buyNoInvoice": "Buy without an invoice for {amount}",
-      "noInvoiceTag": "No invoice"
+      "noInvoiceTag": "No invoice",
+      "focusTag": "Focus +{n}"
     },
     "taxes": {
       "income": "Money in over {years} years",
@@ -1041,7 +1041,6 @@
     "earned": "Badge earned",
     "unlocked": "New life unlocked",
     "isNew": "New",
-    "earnedOn": "Earned {date}",
     "notYet": "Not earned yet",
     "rarity": {
       "common": "Common",
@@ -1382,14 +1381,14 @@
   "rivals": {
     "topic": "Your people",
     "names": {
-      "classmate": "Oliver|Jack|Harry|Tom|James|Ethan",
-      "cousin": "Emily|Sophie|Olivia|Grace|Chloe|Lucy",
-      "ex": "Daniel|Ryan|Lewis|Adam|Nathan|Sam"
+      "men": "Oliver|Jack|Harry|Tom|James|Ethan",
+      "women": "Emily|Sophie|Olivia|Grace|Chloe|Lucy"
     },
     "who": {
       "classmate": "{name} from school",
       "cousin": "{name}, your cousin",
-      "ex": "{name}, your ex"
+      "exMan": "{name}, your ex",
+      "exWoman": "{name}, your ex"
     },
     "stories": {
       "passedYou": "{who} now has more than you",

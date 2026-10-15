@@ -180,9 +180,6 @@ export function CardStage() {
             />
           ) : null}
           {rarity ? <span aria-hidden data-motion-only className="pointer-events-none absolute inset-y-0 left-0 w-1/5 animate-glint bg-white/40" /> : null}
-          {rarity ? (
-            <span className={`pixel absolute left-1.5 top-1.5 px-1.5 py-0.5 text-[12px] uppercase leading-none tracking-wider ${rarity === 'legendary' ? 'bg-teal-300 text-ink-900' : 'bg-gold-500 text-ink-900'}`}>{t(rarity)}</span>
-          ) : null}
         </div>
         {rarity === 'legendary' ? <Sparks colours={['bg-gold-500', 'bg-teal-300', 'bg-cream', 'bg-wine-300']} count={16} reach={150} size={4} delayMs={450} /> : null}
         <div className="px-3 pb-3 pt-2">

@@ -54,7 +54,7 @@ export const RARITY_TONE: Record<BadgeRarity, string> = { common: 'text-[#c98a4b
 function Badges() {
   const t = useT('collection');
   const labels = useT('badges');
-  const { text, fmt } = useWords();
+  const { text } = useWords();
   const { badges: earned } = useProfile();
   const [only, setOnly] = useState<BadgeRarity | 'all'>('all');
   const shown = badges.filter((badge) => only === 'all' || rarityOf(badge.id) === only);
@@ -95,7 +95,7 @@ function Badges() {
                       <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarityOf(badge.id)]}`}>{labels(`rarity.${rarityOf(badge.id)}`)}</p>
                       {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
                       {got ? <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p> : null}
-                      <p className={`mt-0.5 text-[12px] ${got ? 'text-teal-300' : 'text-ink-300'}`}>{got ? labels('earnedOn', { date: fmt.day(got.at) }) : labels('notYet')}</p>
+                      {got ? null : <p className="mt-0.5 text-[12px] text-ink-300">{labels('notYet')}</p>}
                     </div>
                   </li>
                 );

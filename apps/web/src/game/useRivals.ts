@@ -5,8 +5,14 @@ import { useGame, useT, useWords } from '@/game/context';
 import { RIVALS, rivalsOf } from './rivals';
 import type { Rival } from './rivals';
 
-/** How many names there are of each kind of rival, in every language. */
+/** How many names there are of each sex, in every language. */
 export const RIVAL_NAMES = 6;
+
+/** The lives drawn as women; the rest are drawn as men. An ex is of the other sex. */
+const WOMEN: ReadonlySet<string> = new Set(['nurse', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson']);
+
+/** Whether each rival is a woman: the classmate a man, the cousin a woman, the ex the other sex to the player. */
+const isWoman = (rival: Rival, lifeId: string): boolean => (rival.id === 'cousin' ? true : rival.id === 'ex' ? !WOMEN.has(lifeId) : false);
 
 /**
  * The rivals of the life on screen, as of the round on screen, and how each is called: their name
@@ -25,7 +31,14 @@ export function useRivals(): { rivals: Rival[]; who(rival: Rival): string } | nu
     return rivalsOf(content, view.timeline, history, view.player.life.homeCityId, key, RIVAL_NAMES);
   }, [content, view, history, lifeId]);
   if (rivals === null) return null;
-  const who = (rival: Rival) => t(`who.${rival.id}`, { name: t(`names.${rival.id}`).split('|')[rival.name] ?? '' });
+  const who = (rival: Rival) => {
+    const woman = isWoman(rival, lifeId);
+    // Two men among the rivals, the classmate and an ex, never share a name.
+    const classmate = rivals.find((other) => other.id === 'classmate');
+    const index = rival.id === 'ex' && !woman && classmate?.name === rival.name ? (rival.name + 3) % RIVAL_NAMES : rival.name;
+    const name = t(woman ? 'names.women' : 'names.men').split('|')[index] ?? '';
+    return t(`who.${rival.id === 'ex' ? (woman ? 'exWoman' : 'exMan') : rival.id}`, { name });
+  };
   return { rivals, who };
 }
 

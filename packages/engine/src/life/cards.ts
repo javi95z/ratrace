@@ -100,8 +100,12 @@ export function weightOf(card: CardDef, p: PlayerState, content: Content, round:
   return Math.max(1, Math.round((card.weight * aged * Math.max(0, 100 - off)) / 10_000));
 }
 
-/** True where a card belongs where the player is: cards of prison inside, every other card outside. */
+/**
+ * True where a card belongs where the player is: cards of prison inside, every other card outside;
+ * and never a card that offers to sell the player something they already own.
+ */
 function belongs(card: CardDef, p: PlayerState): boolean {
+  if (card.options.some((option) => option.effects?.buyItem !== undefined && p.life.items.some((owned) => owned.itemId === option.effects?.buyItem?.itemId))) return false;
   return (card.when?.inJail === true) === p.life.jailRounds > 0;
 }
 
