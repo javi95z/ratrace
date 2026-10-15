@@ -463,8 +463,9 @@
       "repay": "Amortizar",
       "left": "{rounds, plural, =0 {Sin plazo fijo} one {Queda 1 ronda} other {Quedan # rondas}}",
       "rate": "{rate} al año",
-      "perRound": "Pagas cada ronda",
-      "interestTotal": "Intereses en total ({rate} al año)"
+      "perRound": "Pagas cada ronda, aprox.",
+      "repayTotal": "Devuelves en total",
+      "interestPart": "{interest} son intereses, al {rate} anual"
     },
     "lifestyle": {
       "work": "El foco de esta ronda",

@@ -463,8 +463,9 @@
       "repay": "Погасить",
       "left": "{rounds, plural, =0 {Без срока} one {Ещё # раунд} few {Ещё # раунда} many {Ещё # раундов} other {Ещё # раунда}}",
       "rate": "{rate} в год",
-      "perRound": "Платёж за раунд",
-      "interestTotal": "Проценты всего ({rate} в год)"
+      "perRound": "Примерно за раунд",
+      "repayTotal": "Всего вернуть",
+      "interestPart": "Из них проценты: {interest}, {rate} в год"
     },
     "lifestyle": {
       "work": "Фокус этого раунда",

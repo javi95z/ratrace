@@ -463,8 +463,9 @@
       "repay": "Repay",
       "left": "{rounds, plural, =0 {No fixed term} one {1 round left} other {# rounds left}}",
       "rate": "{rate} a year",
-      "perRound": "Paid each round",
-      "interestTotal": "Interest in all ({rate} a year)"
+      "perRound": "About this much a round",
+      "repayTotal": "You pay back in all",
+      "interestPart": "{interest} of it interest, at {rate} a year"
     },
     "lifestyle": {
       "work": "This round's focus",

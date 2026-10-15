@@ -759,8 +759,9 @@ function DebtTab() {
             const plan = loanPlan(a, loan.rateBp, loan.termRounds, content.yearsPerRound);
             return (
               <div className="border-y-2 border-night-900 py-1">
-                <Row left={t('perRound')} right={plan.payments.map((paid) => fmt.money(paid)).join(' · ')} />
-                <Row left={t('interestTotal', { rate: fmt.rate(loan.rateBp) })} right={<span className="text-wine-300">{fmt.money(plan.interest)}</span>} />
+                {/* One figure a round, the average: the first is a little more and the last a little less. */}
+                <Row left={t('perRound')} right={fmt.money(Math.round((a + plan.interest) / plan.payments.length))} />
+                <Row left={t('repayTotal')} sub={t('interestPart', { interest: fmt.money(plan.interest), rate: fmt.rate(loan.rateBp) })} right={<span className="text-wine-300">{fmt.money(a + plan.interest)}</span>} />
               </div>
             );
           }}
