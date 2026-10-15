@@ -1,19 +1,17 @@
 'use client';
 
-import { careerArt, cityIcon, GIFT_ART, HANDOVER_ART, RETIRED_ART } from '@ratrace/content';
+import { careerArt, cityIcon, GIFT_ART, HANDOVER_ART, portraitArt, RETIRED_ART } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
-import { useT, useWords } from '@/game/context';
+import { useGame, useT, useWords } from '@/game/context';
 import { chapters } from '@/game/epilogue';
 import { useStill } from '@/game/motion';
-import { ageAt } from '@/game/present';
-import { ratOutfit } from '@/game/quips';
-import { Bare, Panel } from '@/ui/kit';
+import { ageAt, portraitAge } from '@/game/present';
+import { Bare, Panel, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
-import { Loop } from './Loop';
 
-/** How long the rat takes to run the whole of a life. */
+/** How long the portrait takes to walk the whole of a life. */
 const RUN_MS = 3_000;
 
 /** The sign of each kind of milestone. */
@@ -81,19 +79,20 @@ function useLabel(): (m: Milestone) => string {
 }
 
 /**
- * A life on one line: from the first age to the last, the rat in its wheel rolls along it once, and
+ * A life on one line: from the first age to the last, the player's portrait walks along it once, and
  * each milestone lights as it passes. Under the line, the same milestones in words, for reading and
- * for a screen reader. Where motion is left out, the rat is at the end and every milestone is lit.
+ * for a screen reader. Where motion is left out, the portrait is at the end and every milestone is lit.
  */
 export function LifeLine({ view, story }: { view: GameView; story: readonly Milestone[] }) {
   const t = useT('end');
   const { content } = useWords();
   const still = useStill();
   const label = useLabel();
+  const lifeId = useGame((s) => s.lifeId) ?? '';
   const told = chapters(story);
   const last = Math.max(1, view.round);
   const at = (round: number) => `${Math.min(100, (round / last) * 100)}%`;
-  // The rat starts at the first age and is sent on its way once it has been drawn there.
+  // The portrait starts at the first age and is sent on its way once it has been drawn there.
   const [running, setRunning] = useState(still);
   useEffect(() => {
     if (still) return;
@@ -103,7 +102,7 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
 
   return (
     <Panel title={t('lifeLine')} label={t('lifeLine')}>
-      <div aria-hidden className="relative mx-6 mb-2 mt-[96px] h-1 bg-night-900">
+      <div aria-hidden className="relative mx-6 mb-7 mt-[96px] h-1 bg-night-900">
         {told.map((m, i) => (
           <span
             key={i}
@@ -116,11 +115,14 @@ export function LifeLine({ view, story }: { view: GameView; story: readonly Mile
             <span className="absolute left-1/2 top-8 h-[56px] w-0.5 -translate-x-1/2 bg-gold-700/60" />
           </span>
         ))}
+        {/* The player walks the line, as they look at the end of it. */}
         <span
-          className="absolute -top-12 -ml-6 transition-[left] ease-linear"
+          className="absolute -top-[22px] -ml-5 transition-[left] ease-linear"
           style={{ left: running ? '100%' : '0%', transitionDuration: still ? '0ms' : `${RUN_MS}ms`, transitionTimingFunction: `steps(${Math.max(8, last * 2)}, end)` }}
         >
-          <Loop name="wheel" outfit={ratOutfit(view)} ms={110} />
+          <Well className="size-10 frame-gold">
+            <Sprite id={portraitArt(lifeId, portraitAge(ageAt(content, view.round)))} fallback={{ w: 60, h: 60 }} className="!h-full !w-full" />
+          </Well>
         </span>
       </div>
       <div className="mx-1 flex justify-between text-[12px] text-ink-300">

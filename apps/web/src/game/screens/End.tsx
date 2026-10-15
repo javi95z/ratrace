@@ -292,7 +292,7 @@ function Ended({ view }: { view: GameView }) {
 
 /**
  * The badges of a life, two a row and named only: what each asks is in its sheet, so a long life
- * does not make a long page. A badge won for the first time wears a gold dot.
+ * does not make a long page. A badge won for the first time says so in its sheet.
  */
 function EarnedBadges({ earned, isNew }: { earned: string[]; isNew(id: string): boolean }) {
   const { text } = useWords();
@@ -308,9 +308,7 @@ function EarnedBadges({ earned, isNew }: { earned: string[]; isNew(id: string): 
               <Medal badgeId={id} size="sm" />
               <span className="pixel min-w-0 flex-1 text-[14px] leading-tight">{text.badges[id]?.name ?? id}</span>
               {isNew(id) ? (
-                <span className="size-2.5 shrink-0 bg-gold-500" title={badges('isNew')}>
-                  <span className="sr-only">{badges('isNew')}</span>
-                </span>
+                <span className="sr-only">{badges('isNew')}</span>
               ) : null}
             </button>
           </li>
