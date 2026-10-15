@@ -162,7 +162,8 @@
       "resolve": "Dos años después"
     },
     "unreachable": "El servidor no ha respondido. Inténtalo de nuevo.",
-    "fellBack": "Ahora mismo no se ha podido empezar una vida clasificatoria, así que esta no lo es. Se guarda en este dispositivo."
+    "fellBack": "Ahora mismo no se ha podido empezar una vida clasificatoria, así que esta no lo es. Se guarda en este dispositivo.",
+    "turnYears": "{age, plural, one {año} other {años}}"
   },
   "guide": {
     "title": "Guía",
@@ -499,14 +500,11 @@
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",
-      "recommended": "Recomendados",
       "affordable": "A mi alcance",
       "all": "Todos",
-      "recommendedHint": "Lo que ya tienes, las mejores compras a tu alcance, los siguientes objetivos y un capricho.",
       "affordableHint": "Lo que ya tienes y lo que puedes comprar ahora, también a plazos o de segunda mano.",
       "allHint": "El catálogo completo de tu ciudad.",
-      "noneAffordable": "Todavía no hay nada a tu alcance en esta categoría.",
-      "showAll": "Ver todos ({count})",
+      "noneAffordable": "Todavía no hay nada a tu alcance en la tienda.",
       "status": "Estatus +{n}",
       "upkeep": "{amount}/año de mantenimiento",
       "owned": "Tuyo",
@@ -917,7 +915,31 @@
     "escapeAge": "Fuera de la rueda a los",
     "badgesCount": "Insignias",
     "badgesNew": "{n, plural, one {# nueva} other {# nuevas}}",
-    "rankedLink": "Vida clasificatoria: ver el ranking"
+    "rankedLink": "Vida clasificatoria: ver el ranking",
+    "lifeLine": "Tu vida en una línea",
+    "lineAge": "{age} años",
+    "lineQuiet": "Una vida tranquila: nada destacó.",
+    "line": {
+      "top": "Lo más alto: {title}",
+      "promoted": "Ascenso: {title}",
+      "career": "Nueva carrera: {career}",
+      "moved": "Mudanza a {city}",
+      "firstChild": "Primer hijo",
+      "child": "Otro hijo",
+      "home": "Casa propia: {home}",
+      "crisis": "Superaste {crisis}",
+      "worth": "Patrimonio de {amount}",
+      "jobLost": "Te quedas sin trabajo",
+      "retired": "Jubilación",
+      "gift": "Herencia en vida",
+      "partner": "A vivir en pareja",
+      "split": "Separación",
+      "business": "Abres un negocio",
+      "soldBusiness": "Traspasas el negocio",
+      "escaped": "Fuera de la rueda",
+      "escapeLost": "De vuelta a la rueda",
+      "bankrupt": "Bancarrota"
+    }
   },
   "epilogue": {
     "title": "Tu vida, contada",

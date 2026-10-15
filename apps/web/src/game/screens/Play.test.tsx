@@ -212,6 +212,10 @@ describe('the play screen', () => {
 
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(screen.getByText('Age 62')).toBeTruthy();
+    // The life on one line, from its first age to its last, with what happened on the way in words.
+    const line = screen.getByRole('region', { name: 'Your life on one line' });
+    expect(within(line).getByText('22 years old')).toBeTruthy();
+    expect(within(line).getByText('62 years old')).toBeTruthy();
     const [run] = await services.store.listRuns();
     expect(run.history).toHaveLength(21);
     const score = screen.getByRole('group', { name: 'Score' });

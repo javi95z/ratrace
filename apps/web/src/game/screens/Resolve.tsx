@@ -2,13 +2,16 @@
 
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
+import { useRef } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
+import { useCountUp } from '@/game/motion';
 import { ageAt, roundNotes } from '@/game/present';
 import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
 import type { RoundNote } from '@/game/present';
 import { Bare, Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sprite } from '@/ui/Sprite';
+import { FlyingCoins } from './FlyingCoins';
 import { Loop } from './Loop';
 
 const NOTE: Record<RoundNote['tone'], string> = {
@@ -20,6 +23,22 @@ const NOTE: Record<RoundNote['tone'], string> = {
 
 /** How long each line of the ledger waits for the one before it. */
 const ROLL_MS = 80;
+/** How long a line takes to rise into place. */
+const RISE_MS = 280;
+
+/** Money that came in on its own: it flies to the cash as coins once the ledger has rolled. */
+const PASSIVE: ReadonlySet<string> = new Set(['dividends', 'interest', 'rent', 'otherPassive', 'business']);
+
+/** The cash after the round, counted up from what it was as the coins land. */
+function CashCount({ from, to, delay }: { from: number; to: number; delay: number }) {
+  const { fmt } = useWords();
+  const shown = useCountUp(to, { from, delay, ms: 800 });
+  return (
+    <span data-coin-to aria-label={fmt.money(to)}>
+      <span aria-hidden>{fmt.money(shown)}</span>
+    </span>
+  );
+}
 
 /**
  * Two years later: what happened, then the ledger rolling up line by line, then where it leaves
@@ -32,6 +51,7 @@ export function Resolve() {
   const { content, text, fmt } = words;
   const resolved = useGame((s) => s.resolved);
   const view = useGame((s) => s.view);
+  const area = useRef<HTMLDivElement>(null);
   if (!resolved || !view) return null;
 
   const { before, events } = resolved;
@@ -43,9 +63,12 @@ export function Resolve() {
   const worthNow = netWorth(view.player);
   const bank = bankQuip(before, view, events);
   const family = familyQuip(content, before, view);
+  // The coins leave once every line of the ledger is in place, and the cash counts as they land.
+  const rolled = lines.length * ROLL_MS + RISE_MS;
 
   return (
-    <div className="flex flex-col gap-3 px-3">
+    <div ref={area} className="relative flex flex-col gap-3 px-3">
+      <FlyingCoins area={area} startMs={rolled} />
       <div className="text-center">
         {/* Two years go by: the wheel turns. */}
         <h2 className="pixel flex items-center gap-2 text-[22px] text-gold-500">
@@ -88,7 +111,9 @@ export function Resolve() {
                 <th scope="row" className="py-0.5 pr-3 text-left font-normal">
                   {text.ledger[line.line]}
                 </th>
-                <td className={`pixel whitespace-nowrap py-0.5 text-right ${line.amount >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>{fmt.signed(line.amount)}</td>
+                <td data-coin-from={PASSIVE.has(line.line) && line.amount > 0 ? '' : undefined} className={`pixel whitespace-nowrap py-0.5 text-right ${line.amount >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
+                  {fmt.signed(line.amount)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -103,7 +128,7 @@ export function Resolve() {
               {t('cashNow')}
             </span>
           }
-          right={fmt.money(view.player.cash)}
+          right={<CashCount from={before.player.cash} to={view.player.cash} delay={rolled + 450} />}
         />
         <Row
           className="mt-1 border-t-2 border-night-900 pt-2"

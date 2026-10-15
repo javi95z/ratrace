@@ -12,6 +12,7 @@ import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggl
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { HealthCoverNote } from './HealthCover';
+import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { BusinessTab } from './Business';
@@ -23,7 +24,7 @@ import { ItemUses } from './ItemUses';
 import { masteredLast, useFocusNote } from './focusNote';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
-type ShopView = 'recommended' | 'affordable' | 'all';
+type ShopView = 'affordable' | 'all';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
 const KINDS: AssetKind[] = ['fund', 'bond', 'stock', 'crypto', 'gold'];
 const KIND_TITLE: Record<AssetKind, string> = { fund: 'funds', bond: 'bonds', stock: 'stocks', crypto: 'crypto', gold: 'gold' };
@@ -113,7 +114,7 @@ function Portfolio() {
             <div key={asset.id} className="flex items-center gap-3 py-1.5">
               {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
               <button type="button" data-finance-item onClick={() => setBuying(asset)} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left">
-              <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+              <AssetMark asset={asset} />
               <div className="min-w-0 flex-1">
                 <div className="truncate">{names.assets[asset.id].name}</div>
                 <div className={`text-[12px] ${gain >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
@@ -134,6 +135,25 @@ function Portfolio() {
       {sheet}
       {buying ? <BuySheet asset={buying} onClose={() => setBuying(null)} /> : null}
     </div>
+  );
+}
+
+/**
+ * An asset by its mark, answering the orders of the round: bought, it jumps and throws gold sparks;
+ * sold, it shrinks and comes back. Each new order plays it again; what was ordered before the list
+ * was opened plays nothing.
+ */
+function AssetMark({ asset }: { asset: AssetDef }) {
+  const { names } = useWords();
+  const orders = useGame((s) => s.orders);
+  const mine = orders.filter((order) => (order.type === 'buy' || order.type === 'sell') && order.assetId === asset.id);
+  const [before] = useState(mine.length);
+  const last = mine.length > before ? mine[mine.length - 1].type : null;
+  return (
+    <span key={mine.length} className={`relative inline-flex ${last === 'buy' ? 'animate-pop' : last === 'sell' ? 'animate-sink' : ''}`}>
+      <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+      {last === 'buy' ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={8} reach={26} /> : null}
+    </span>
   );
 }
 
@@ -297,7 +317,7 @@ function Market() {
                 >
                   {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
                   <span className={locked ? 'opacity-50' : ''}>
-                    <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+                    <AssetMark asset={asset} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>
@@ -1149,21 +1169,6 @@ type ShelfItem = { item: ItemDef; quote: ItemQuote; owned: boolean };
 const inReach = ({ quote, owned }: ShelfItem, cash: number) =>
   owned || quote.price <= cash || quote.finance?.lock === null || quote.used?.lock === null || quote.noInvoice?.lock === null;
 
-/**
- * A short shelf keeps the collection legible without hiding its ladder: everything owned, the
- * three best purchases currently in reach, the next two rungs, and the final dream item.
- */
-function recommended(items: ShelfItem[], cash: number): ShelfItem[] {
-  const chosen = new Set(items.filter((entry) => entry.owned).map((entry) => entry.item.id));
-  const available = items.filter((entry) => !entry.owned && inReach(entry, cash));
-  const next = items.filter((entry) => !entry.owned && !inReach(entry, cash));
-  for (const entry of available.slice(-3)) chosen.add(entry.item.id);
-  for (const entry of next.slice(0, 2)) chosen.add(entry.item.id);
-  const dream = items.findLast((entry) => !entry.owned);
-  if (dream) chosen.add(dream.item.id);
-  return items.filter((entry) => chosen.has(entry.item.id));
-}
-
 function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopView): void }) {
   const t = useT('finance.shop');
   const { content, text, names, fmt } = useWords();
@@ -1178,58 +1183,51 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
       .map((item) => ({ item, quote: quoteItem(content, shown, item.id), owned: p.life.items.some((owned) => owned.itemId === item.id) }))
       .filter((entry) => entry.quote.soldHere),
   }));
-  const hint = view === 'recommended' ? 'recommendedHint' : view === 'affordable' ? 'affordableHint' : 'allHint';
+  // In reach, a shelf with nothing on it is left out; with nothing at all, one line says so.
+  const visible = shelves
+    .map(({ ladder, items }) => ({ ladder, items: view === 'all' ? items : items.filter((entry) => inReach(entry, p.cash)) }))
+    .filter(({ items }) => items.length > 0);
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
         <Segmented<ShopView>
           label={t('viewLabel')}
-          options={(['recommended', 'affordable', 'all'] as const).map((value) => ({ value, label: t(value) }))}
+          options={(['affordable', 'all'] as const).map((value) => ({ value, label: t(value) }))}
           value={view}
           onChange={onViewChange}
         />
-        <p className="text-center text-[12px] leading-snug text-ink-300">{t(hint)}</p>
+        <p className="text-center text-[12px] leading-snug text-ink-300">{t(view === 'affordable' ? 'affordableHint' : 'allHint')}</p>
       </div>
-      {shelves.map(({ ladder, items }) => {
-        const visible = view === 'all' ? items : view === 'affordable' ? items.filter((entry) => inReach(entry, p.cash)) : recommended(items, p.cash);
-        const hidden = items.length - visible.length;
-        return (
+      {visible.length === 0 ? <p className="py-3 text-center text-[13px] text-ink-300">{t('noneAffordable')}</p> : null}
+      {visible.map(({ ladder, items }) => (
         <Panel key={ladder} title={text.ladders[ladder]}>
           {/* Always two a row, so a car is drawn whole whatever the width. */}
           <div className="@container">
-            {visible.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2">
-                {visible.map(({ item, quote, owned }) => (
-                  // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
-                  // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
-                  <button key={item.id} type="button" data-finance-item onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
-                    {/* As tall as a watch, as wide as the thing needs: a car is twice as wide as it is tall. */}
-                    <Bare className="h-16 min-w-16">
-                      <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
-                    </Bare>
-                    <span className="flex min-w-0 flex-1 flex-col items-center gap-0.5 @min-[400px]:items-start">
-                      <span className="line-clamp-2 text-[13px] leading-tight">{names.items[item.id]}</span>
-                      <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 @min-[400px]:justify-start">
-                        <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t(quote.ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(quote.price)}</span>
-                        <span className="whitespace-nowrap">
-                          <Tag tone="good">{t('status', { n: quote.status })}</Tag>
-                        </span>
+            <div className="grid grid-cols-2 gap-2">
+              {items.map(({ item, quote, owned }) => (
+                // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
+                // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
+                <button key={item.id} type="button" data-finance-item onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
+                  {/* As tall as a watch, as wide as the thing needs: a car is twice as wide as it is tall. */}
+                  <Bare className="h-16 min-w-16">
+                    <Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />
+                  </Bare>
+                  <span className="flex min-w-0 flex-1 flex-col items-center gap-0.5 @min-[400px]:items-start">
+                    <span className="line-clamp-2 text-[13px] leading-tight">{names.items[item.id]}</span>
+                    <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 @min-[400px]:justify-start">
+                      <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t(quote.ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(quote.price)}</span>
+                      <span className="whitespace-nowrap">
+                        <Tag tone="good">{t('status', { n: quote.status })}</Tag>
                       </span>
                     </span>
-                  </button>
-                ))}
-              </div>
-            ) : <p className="py-3 text-center text-[13px] text-ink-300">{t('noneAffordable')}</p>}
-            {hidden > 0 ? (
-              <Button className="mt-2" wide onClick={() => onViewChange('all')}>
-                {t('showAll', { count: items.length })}
-              </Button>
-            ) : null}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </Panel>
-        );
-      })}
+      ))}
       {open ? <ItemSheet item={open} onClose={() => setOpen(null)} /> : null}
     </div>
   );
@@ -1348,7 +1346,7 @@ export function Finance() {
   const alsoRemoved = useGame((s) => s.alsoRemoved);
   const clearAlsoRemoved = useGame((s) => s.clearAlsoRemoved);
   const [tab, setTab] = useState<TabId>('portfolio');
-  const [shopView, setShopView] = useState<ShopView>('recommended');
+  const [shopView, setShopView] = useState<ShopView>('affordable');
   const ids = useId();
   const panel = useRef<HTMLDivElement>(null);
   // [ and ] move between tabs from anywhere on the stage, without going back to the tab strip first.
