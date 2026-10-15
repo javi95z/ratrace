@@ -1020,8 +1020,14 @@ describe('what is not declared', () => {
     expect(within(panel).queryByRole('switch', { name: /^Offshore company/ })).toBeNull();
   });
 
+  it('offers to hide crypto gains only where gains are taxed', async () => {
+    // The crypto kid begins where a gain pays nothing: there is nothing to hide.
+    const { panel } = await openTaxes('crypto_kid');
+    expect(within(panel).queryByRole('switch', { name: /^Hide crypto gains/ })).toBeNull();
+  });
+
   it('hides crypto gains by order, and says nothing is saved in a round with nothing sold', async () => {
-    const { user, panel } = await openTaxes('crypto_kid');
+    const { user, panel } = await openTaxes('nurse');
     await user.click(within(panel).getByRole('switch', { name: /^Hide crypto gains/ }));
     expect(within(panel).getByRole('switch', { name: /^Hide crypto gains/ }).textContent).toContain('This round you save nothing.');
     // Once on the switch, once among the round's orders.
