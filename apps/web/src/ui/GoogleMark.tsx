@@ -1,29 +1,11 @@
-/**
- * Google's "G" drawn in the game's pixels, in Google's four colours, so the sign-in button belongs
- * to the rest of the screen. Decoration: the button's words already say Google.
- */
-const ROWS = [
-  '....RRRR....',
-  '..RRRRRRRR..',
-  '.RRR....RRR.',
-  '.RR.........',
-  'RR..........',
-  'YY....BBBBBB',
-  'YY....BBBBBB',
-  'YY........BB',
-  '.YG.......BB',
-  '.GGG....BBB.',
-  '..GGGGGGBB..',
-  '....GGGG....',
-];
-const COLOUR: Record<string, string> = { R: '#ea4335', Y: '#fbbc05', G: '#34a853', B: '#4285f4' };
+import { GOOGLE_LOGO } from '@ratrace/content';
+import { Sprite } from './Sprite';
 
+/** Google's "G" in the game's pixels, for the sign-in button. Decoration: the button's words already say Google. */
 export function GoogleMark({ size = 24 }: { size?: number }) {
   return (
-    <svg aria-hidden width={size} height={size} viewBox="0 0 12 12" shapeRendering="crispEdges" className="shrink-0">
-      {ROWS.flatMap((row, y) =>
-        [...row].map((cell, x) => (cell === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={COLOUR[cell]} />)),
-      )}
-    </svg>
+    <span aria-hidden className="inline-flex shrink-0" style={{ width: size, height: size }}>
+      <Sprite id={GOOGLE_LOGO} fallback={{ w: 32, h: 32 }} className="!h-full !w-full" />
+    </span>
   );
 }

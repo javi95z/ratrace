@@ -181,8 +181,18 @@ const BADGE: Record<string, string> = {
   gold: 'bg-gold-500 text-ink-900 [--hi:var(--color-gold-200)] [--lo:var(--color-gold-700)]',
 };
 
-/** An asset's ticker on a coloured plate. Assets have no sprite of their own. */
-export function TickerBadge({ ticker, kind }: { ticker: string; kind: string }) {
+/**
+ * An asset on a plate: its brand mark on a dark plate where it has one, its ticker on the colour of
+ * its class where it has not. The name is always written beside it, so the mark is decoration.
+ */
+export function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: string; logo?: string }) {
+  if (logo) {
+    return (
+      <span className="lamp inline-flex h-9 w-14 shrink-0 items-center justify-center bg-night-900 [--hi:var(--color-night-600)] [--lo:var(--color-ink-900)]">
+        <Sprite id={logo} />
+      </span>
+    );
+  }
   return (
     <span className={join('pixel lamp inline-flex h-9 w-14 shrink-0 items-center justify-center text-[14px]', BADGE[kind] ?? BADGE.equity)}>{ticker}</span>
   );

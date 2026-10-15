@@ -3226,6 +3226,86 @@
       "width": 312,
       "height": 66
     },
+    "logo.google": {
+      "file": "icons/logo.google.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.apple": {
+      "file": "icons/logo.apple.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.microsoft": {
+      "file": "icons/logo.microsoft.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.nvidia": {
+      "file": "icons/logo.nvidia.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.amazon": {
+      "file": "icons/logo.amazon.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.tesla": {
+      "file": "icons/logo.tesla.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.inditex": {
+      "file": "icons/logo.inditex.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.lvmh": {
+      "file": "icons/logo.lvmh.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.ferrari": {
+      "file": "icons/logo.ferrari.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.santander": {
+      "file": "icons/logo.santander.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.coca_cola": {
+      "file": "icons/logo.coca_cola.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.bitcoin": {
+      "file": "icons/logo.bitcoin.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.ethereum": {
+      "file": "icons/logo.ethereum.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.dogecoin": {
+      "file": "icons/logo.dogecoin.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.toyota": {
+      "file": "icons/logo.toyota.png",
+      "width": 32,
+      "height": 32
+    },
+    "logo.nestle": {
+      "file": "icons/logo.nestle.png",
+      "width": 32,
+      "height": 32
+    },
     "brand.logo": {
       "file": "brand/brand.logo.png",
       "width": 256,

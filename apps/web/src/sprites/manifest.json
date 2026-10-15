@@ -2524,6 +2524,86 @@
     "w": 64,
     "h": 64
   },
+  "logo.amazon": {
+    "src": "icons/logo.amazon.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.apple": {
+    "src": "icons/logo.apple.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.bitcoin": {
+    "src": "icons/logo.bitcoin.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.coca_cola": {
+    "src": "icons/logo.coca_cola.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.dogecoin": {
+    "src": "icons/logo.dogecoin.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.ethereum": {
+    "src": "icons/logo.ethereum.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.ferrari": {
+    "src": "icons/logo.ferrari.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.google": {
+    "src": "icons/logo.google.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.inditex": {
+    "src": "icons/logo.inditex.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.lvmh": {
+    "src": "icons/logo.lvmh.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.microsoft": {
+    "src": "icons/logo.microsoft.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.nestle": {
+    "src": "icons/logo.nestle.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.nvidia": {
+    "src": "icons/logo.nvidia.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.santander": {
+    "src": "icons/logo.santander.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.tesla": {
+    "src": "icons/logo.tesla.png",
+    "w": 32,
+    "h": 32
+  },
+  "logo.toyota": {
+    "src": "icons/logo.toyota.png",
+    "w": 32,
+    "h": 32
+  },
   "portrait.banker.22": {
     "src": "portraits/portrait.banker.22.png",
     "w": 64,

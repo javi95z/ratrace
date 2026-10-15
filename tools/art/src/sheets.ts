@@ -321,5 +321,13 @@ export const SHEETS: SheetSpec[] = [
     file: `skylines/skylines-0${i + 5}`, group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66,
     ids: (i % 2 === 0 ? ['madrid', 'london', 'new_york'] : ['dubai', 'singapore', 'bangkok']).map((city) => `skyline.${city}.${mood}`),
   })),
+  // Brand marks: Google's for signing in, Apple's for a sign-in to come, and those of the shares and coins on the market.
+  {
+    file: 'icons/logos-01', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
+    ids: [
+      'logo.google', 'logo.apple', 'logo.microsoft', 'logo.nvidia', 'logo.amazon', 'logo.tesla', 'logo.inditex', 'logo.lvmh',
+      'logo.ferrari', 'logo.santander', 'logo.coca_cola', 'logo.bitcoin', 'logo.ethereum', 'logo.dogecoin', 'logo.toyota', 'logo.nestle',
+    ],
+  },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

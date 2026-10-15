@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
+import { assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
 import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
@@ -110,7 +110,7 @@ function Portfolio() {
           const gain = position.value - position.basis;
           return (
             <div key={asset.id} className="flex items-center gap-3 py-1.5">
-              <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} />
+              <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
               <div className="min-w-0 flex-1">
                 <div className="truncate">{names.assets[asset.id].name}</div>
                 <div className={`text-[12px] ${gain >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
@@ -186,7 +186,7 @@ function Plans() {
           return (
             <li key={plan.assetId} className="border-t-2 border-night-900 first:border-t-0">
               <button type="button" data-finance-item aria-haspopup="dialog" onClick={() => setEditing(plan.assetId)} className="flex min-h-11 w-full items-center gap-3 py-2 text-left">
-                <TickerBadge ticker={names.assets[plan.assetId].ticker} kind={content.assets.find((asset) => asset.id === plan.assetId)?.class ?? 'equity'} />
+                <TickerBadge ticker={names.assets[plan.assetId].ticker} kind={content.assets.find((asset) => asset.id === plan.assetId)?.class ?? 'equity'} logo={assetLogo[plan.assetId]} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate">{names.assets[plan.assetId].name}</span>
                   <span className="block text-[12px] text-ink-300">{plan.rounds > 0 ? t('putIn', { amount: fmt.money(plan.invested), rounds: plan.rounds }) : t('starts')}</span>
@@ -307,7 +307,7 @@ function Market() {
                 >
                   {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
                   <span className={locked ? 'opacity-50' : ''}>
-                    <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} />
+                    <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>

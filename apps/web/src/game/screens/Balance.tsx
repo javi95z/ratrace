@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, debtArt, homeName, itemArt, propertyArt } from '@ratrace/content';
+import { assetKind, assetLogo, debtArt, homeName, itemArt, propertyArt } from '@ratrace/content';
 import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWorth, quoteOwnedProperty, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
@@ -109,7 +109,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
                     const pays = assetYieldBp(asset, world);
                     return (
                       <li key={asset.id} className="flex items-center gap-3">
-                        <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} />
+                        <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
                         <div className="min-w-0 flex-1">
                           <div className="truncate">{names.assets[asset.id].name}</div>
                           <div className="text-[12px]">
