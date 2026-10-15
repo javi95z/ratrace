@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
+import { useStill } from '@/game/motion';
 import { ageAt } from '@/game/present';
 import type { Stage } from '@/game/store';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -16,6 +17,7 @@ import { Basket, BasketList, Finance } from './Finance';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { Moments } from './Moments';
+import { PageTurn } from './PageTurn';
 import { Headlines, NewsPanel, RoundOpener } from './News';
 import { Leave, ProfileBody, ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
@@ -209,6 +211,20 @@ export function Play() {
     setBasketOpen(false);
   }, [stage, desk]);
 
+  // Two years go by as a round turns: the calendar loses a page. Not on opening a life already under way,
+  // and never where motion is left out.
+  const still = useStill();
+  const round = view?.round ?? null;
+  const lastRound = useRef<number | null>(null);
+  const [turn, setTurn] = useState<{ from: number; to: number } | null>(null);
+  useEffect(() => {
+    if (round === null) return;
+    const was = lastRound.current;
+    lastRound.current = round;
+    if (was !== null && round > was && !still) setTurn({ from: ageAt(content, was), to: ageAt(content, round) });
+  }, [round, still, content]);
+  const pageTurn = turn ? <PageTurn key={turn.to} from={turn.from} to={turn.to} onDone={() => setTurn(null)} /> : null;
+
   // A new stage starts at its top and takes the focus, so a screen reader says where the player now is
   // and the keyboard carries on from there.
   const playing = status === 'playing' && view !== null;
@@ -278,6 +294,7 @@ export function Play() {
           ) : null}
         </aside>
         {notice}
+        {pageTurn}
         <Moments />
       </div>
     );
@@ -300,6 +317,7 @@ export function Play() {
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
       {basketOpen && stage === 'finance' ? <Basket onClose={() => setBasketOpen(false)} /> : null}
       {notice}
+      {pageTurn}
       <Moments />
     </div>
   );

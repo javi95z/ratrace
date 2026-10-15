@@ -12,6 +12,7 @@ import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggl
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { HealthCoverNote } from './HealthCover';
+import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
 import { BusinessTab } from './Business';
@@ -113,7 +114,7 @@ function Portfolio() {
             <div key={asset.id} className="flex items-center gap-3 py-1.5">
               {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
               <button type="button" data-finance-item onClick={() => setBuying(asset)} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left">
-              <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+              <AssetMark asset={asset} />
               <div className="min-w-0 flex-1">
                 <div className="truncate">{names.assets[asset.id].name}</div>
                 <div className={`text-[12px] ${gain >= 0 ? 'text-teal-300' : 'text-wine-300'}`}>
@@ -134,6 +135,25 @@ function Portfolio() {
       {sheet}
       {buying ? <BuySheet asset={buying} onClose={() => setBuying(null)} /> : null}
     </div>
+  );
+}
+
+/**
+ * An asset by its mark, answering the orders of the round: bought, it jumps and throws gold sparks;
+ * sold, it shrinks and comes back. Each new order plays it again; what was ordered before the list
+ * was opened plays nothing.
+ */
+function AssetMark({ asset }: { asset: AssetDef }) {
+  const { names } = useWords();
+  const orders = useGame((s) => s.orders);
+  const mine = orders.filter((order) => (order.type === 'buy' || order.type === 'sell') && order.assetId === asset.id);
+  const [before] = useState(mine.length);
+  const last = mine.length > before ? mine[mine.length - 1].type : null;
+  return (
+    <span key={mine.length} className={`relative inline-flex ${last === 'buy' ? 'animate-pop' : last === 'sell' ? 'animate-sink' : ''}`}>
+      <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+      {last === 'buy' ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={8} reach={26} /> : null}
+    </span>
   );
 }
 
@@ -297,7 +317,7 @@ function Market() {
                 >
                   {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
                   <span className={locked ? 'opacity-50' : ''}>
-                    <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+                    <AssetMark asset={asset} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>

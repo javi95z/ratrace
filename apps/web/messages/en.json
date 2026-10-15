@@ -162,7 +162,8 @@
       "resolve": "Two years later"
     },
     "unreachable": "The server did not answer. Try again.",
-    "fellBack": "A ranked life could not be started just now, so this one is not ranked. It is saved on this device."
+    "fellBack": "A ranked life could not be started just now, so this one is not ranked. It is saved on this device.",
+    "turnYears": "{age, plural, one {year old} other {years old}}"
   },
   "guide": {
     "title": "Guide",
@@ -914,7 +915,31 @@
     "escapeAge": "Out of the rat race at",
     "badgesCount": "Badges",
     "badgesNew": "{n, plural, one {# new} other {# new}}",
-    "rankedLink": "This life is ranked: see the rankings"
+    "rankedLink": "This life is ranked: see the rankings",
+    "lifeLine": "Your life on one line",
+    "lineAge": "{age} years old",
+    "lineQuiet": "A quiet life: nothing on it stood out.",
+    "line": {
+      "top": "Top of the ladder: {title}",
+      "promoted": "Promoted: {title}",
+      "career": "A new career: {career}",
+      "moved": "Moved to {city}",
+      "firstChild": "First child",
+      "child": "Another child",
+      "home": "Bought a home: {home}",
+      "crisis": "Lived through {crisis}",
+      "worth": "Worth {amount}",
+      "jobLost": "Lost the job",
+      "retired": "Retired",
+      "gift": "Gave the children their inheritance",
+      "partner": "Moved in together",
+      "split": "Split up",
+      "business": "Opened a business",
+      "soldBusiness": "Handed on the business",
+      "escaped": "Out of the rat race",
+      "escapeLost": "Back in the race",
+      "bankrupt": "Bankrupt"
+    }
   },
   "epilogue": {
     "title": "Your life, told",

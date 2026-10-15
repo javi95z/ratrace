@@ -72,6 +72,21 @@
   --animate-fall: fall 1.6s steps(16, end) forwards;
   /* A lamp that pulses: something is wrong and still going on. */
   --animate-alarm: alarm 1.2s steps(2, start) infinite;
+  /* A coin flown from where money came in to the cash it lands in, in an arc. */
+  --animate-fly: fly 0.7s steps(10, end) both;
+  /* A brand mark bought: it jumps and lands. Sold: it shrinks and comes back. */
+  --animate-pop: pop 0.5s steps(6, end);
+  --animate-sink: sink 0.45s steps(5, end);
+  /* A spark thrown out from a centre, and gone. */
+  --animate-spark: spark 0.6s steps(6, end) both;
+  /* A badge won: it spins in from nothing and settles. */
+  --animate-medal: medal 0.9s steps(12, end) both;
+  /* The page of the calendar torn off as a round turns. */
+  --animate-tear: tear 0.9s steps(9, end) both;
+  /* The new page, shown and then put away. */
+  --animate-page: page 1.5s steps(15, end) both;
+  /* A mark on the line of a life, lit as the rat goes by. */
+  --animate-light: light 0.3s steps(3, end) both;
 
   @keyframes rise {
     from {
@@ -109,6 +124,106 @@
   @keyframes alarm {
     50% {
       opacity: 0.35;
+    }
+  }
+  @keyframes fly {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.6);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(calc(var(--dx) * 0.1), calc(var(--dy) * 0.1 - 18px)) scale(1);
+    }
+    55% {
+      transform: translate(calc(var(--dx) * 0.55), calc(var(--dy) * 0.55 - 28px)) scale(1);
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--dx), var(--dy)) scale(0.7);
+    }
+  }
+  @keyframes pop {
+    35% {
+      transform: translateY(-6px) scale(1.15);
+    }
+    70% {
+      transform: translateY(0) scale(0.94);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes sink {
+    50% {
+      transform: scale(0.7);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes spark {
+    from {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate(var(--sx), var(--sy));
+    }
+  }
+  @keyframes medal {
+    0% {
+      opacity: 0;
+      transform: scale(0.2) rotateY(0deg);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.12) rotateY(540deg);
+    }
+    100% {
+      transform: scale(1) rotateY(720deg);
+    }
+  }
+  @keyframes tear {
+    0%,
+    30% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(30px, 140%) rotate(16deg);
+      opacity: 0;
+    }
+  }
+  @keyframes page {
+    0% {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    12%,
+    80% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+  @keyframes light {
+    from {
+      opacity: 0.25;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }
@@ -364,6 +479,15 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
   }
 }
 html[data-motion='reduced'] [data-confetti] {
+  display: none;
+}
+/* The same for flying coins, sparks and the calendar page: decoration that is only movement. */
+@media (prefers-reduced-motion: reduce) {
+  [data-motion-only] {
+    display: none;
+  }
+}
+html[data-motion='reduced'] [data-motion-only] {
   display: none;
 }
 

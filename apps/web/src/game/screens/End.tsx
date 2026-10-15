@@ -4,8 +4,9 @@ import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rari
 import { useEffect, useMemo, useState } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useCommunity, useGame, useProfile, useRuns, useSettings, useT, useWords } from '@/game/context';
+import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
+import { useCountUp } from '@/game/motion';
 import { obituary } from '@/game/quips';
 import { ageAt, endingOf, prizedBadge } from '@/game/present';
 import { bestsOf } from '@/game/records';
@@ -16,6 +17,7 @@ import { Panel, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { ChallengeResult } from './Challenge';
+import { LifeLine } from './LifeLine';
 import { Loop } from './Loop';
 import { Medal } from './Medal';
 import { ShareCard } from './ShareCard';
@@ -45,29 +47,6 @@ function useStanding(lifeId: string, score: number): { pct: number; total: numbe
 }
 
 const BEST: Record<Best, string> = { score: 'bestScore', netWorth: 'bestNetWorth', escape: 'bestEscape', status: 'bestStatus' };
-
-/** A figure that counts up to where it ends, once, as a score is read out. Still at once with motion reduced. */
-function useCountUp(target: number, ms = 900): number {
-  const { reducedMotion } = useSettings();
-  const [shown, setShown] = useState(reducedMotion ? target : 0);
-  useEffect(() => {
-    if (reducedMotion) {
-      setShown(target);
-      return;
-    }
-    let frame = 0;
-    const start = performance.now();
-    const step = (now: number) => {
-      const done = Math.min(1, (now - start) / ms);
-      // Fast at first, slowing to the last figure.
-      setShown(Math.round(target * (1 - (1 - done) ** 3)));
-      if (done < 1) frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [target, ms, reducedMotion]);
-  return shown;
-}
 
 /** One figure of a life, set in a tile: what it is, and a line under it. */
 function Figure({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -286,6 +265,8 @@ function Ended({ view }: { view: GameView }) {
             </div>
             <p className="mt-2 text-center text-[12px] text-ink-300">{t('graph')}</p>
           </Panel>
+
+          <LifeLine view={view} story={story} />
 
           <Panel title={t('badges')} label={t('badges')}>
             {earned.length === 0 ? <p className="text-[14px] text-ink-300">{t('noBadges')}</p> : <EarnedBadges earned={earned} isNew={isNew} />}

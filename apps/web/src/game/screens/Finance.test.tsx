@@ -1076,5 +1076,8 @@ describe('a holding in the portfolio', () => {
     await user.click(within(sheet).getByRole('button', { name: '100%' }));
     await user.click(within(sheet).getByRole('button', { name: /^Confirm/ }));
     expect(button('1 order')).toBeTruthy();
+    // Bought, its mark jumps once; it did not before.
+    const mark = within(holdings).getByRole('button', { name: /S&P 500/ }).querySelector('.animate-pop');
+    expect(mark).not.toBeNull();
   });
 });
