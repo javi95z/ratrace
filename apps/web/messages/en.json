@@ -34,7 +34,7 @@
     "browserMenu": "Open the browser menu or the install icon in the address bar.",
     "browserInstall": "Choose Install app or Add to Home screen.",
     "browserConfirm": "Confirm Install. The game will appear with your other apps.",
-    "offline": "Once the game has opened online, the installed app can open and play free lives without a connection. Rankings and account sync still need one."
+    "offline": "Once the game has opened online, the installed app can open and play Offline lives without a connection. Rankings and account sync still need one."
   },
   "home": {
     "continue": "Continue your life",
@@ -82,7 +82,7 @@
     "mode": "How to play",
     "modeRanked": "Ranked",
     "modeRankedHint": "For the ranking",
-    "modeFree": "Free",
+    "modeFree": "Offline",
     "modeFreeHint": "Just for you"
   },
   "hud": {

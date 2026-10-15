@@ -34,7 +34,7 @@
     "browserMenu": "Abre el menú del navegador o el icono de instalación de la barra de direcciones.",
     "browserInstall": "Elige Instalar aplicación o Añadir a pantalla de inicio.",
     "browserConfirm": "Confirma Instalar. El juego aparecerá junto a tus otras aplicaciones.",
-    "offline": "Cuando el juego ya se ha abierto con conexión, la app instalada puede abrirse y jugar vidas libres sin internet. Las clasificaciones y la sincronización de la cuenta siguen necesitándolo."
+    "offline": "Cuando el juego ya se ha abierto con conexión, la app instalada puede abrirse y jugar vidas Offline sin internet. Las clasificaciones y la sincronización de la cuenta siguen necesitándolo."
   },
   "home": {
     "continue": "Seguir con tu vida",
@@ -82,7 +82,7 @@
     "mode": "Cómo jugar",
     "modeRanked": "Clasificatoria",
     "modeRankedHint": "Para el ranking",
-    "modeFree": "Libre",
+    "modeFree": "Offline",
     "modeFreeHint": "Solo para ti"
   },
   "hud": {

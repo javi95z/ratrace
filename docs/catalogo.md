@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.30.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.31.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -14,9 +14,9 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 157 |
+| [Cartas](#cartas) | 171 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 38 |
+| [Insignias](#insignias) | 41 |
 
 ## Vidas
 
@@ -930,7 +930,7 @@ La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (27)
+### Carrera (29)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -961,8 +961,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_dubai_visa.png" alt="Caduca el visado"> | **Caduca el visado**<br>Hay que renovar el visado de residencia: reconocimiento médico, formulario y tasa. | 1. Pagar a un gestor<br>2. Pasar un día haciendo colas |
 | <img src="../art/clean/cards/card.city_tokyo_karaoke.png" alt="Karaoke con el jefe"> | **Karaoke con el jefe**<br>Tras la cena de fin de año, tu jefe reserva una sala de karaoke y te mira. | 1. Poner una excusa<br>2. Coger el micrófono |
 | <img src="../art/clean/cards/card.city_moscow_rouble.png" alt="Se hunde el rublo"> | **Se hunde el rublo**<br>El rublo cae un tercio frente al dólar en una noche, y tu sueldo con él. | 1. Aguantar<br>2. Negociar el sueldo en dólares |
+| <img src="../art/clean/cards/card.crime_fake_mba_found.png" alt="Recursos Humanos pregunta"> | **Recursos Humanos pregunta**<br>Recursos Humanos quiere una copia de tu título de MBA. Para el viernes. | 1. Tirarte el farol<br>2. Confesar |
+| <img src="../art/clean/cards/card.crime_enchufe.png" alt="Un primo en el ministerio"> | **Un primo en el ministerio**<br>Tu primo puede conseguirte una plaza pública, sin oposición. La familia ayuda a la familia. | 1. Decir que no, gracias<br>2. Aceptar el favor |
 
-### Formación (7)
+### Formación (9)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -973,8 +975,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.bootcamp.png" alt="Bootcamp de programación"> | **Bootcamp de programación**<br>Dieciséis semanas para ser programador júnior. Dicen que todos encuentran trabajo. | 1. Pasar<br>2. Apuntarte y pasarte a tecnología |
 | <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte |
 | <img src="../art/clean/cards/card.company_course.png" alt="Un curso pagado por la empresa"> | **Un curso pagado por la empresa**<br>Te pagan un curso caro. La letra pequeña: dos años de permanencia o lo devuelves. | 1. No, gracias<br>2. Aceptar, con dos años de permanencia<br>3. Pagártelo tú, sin ataduras |
+| <img src="../art/clean/cards/card.crime_jail_library.png" alt="La biblioteca de la cárcel"> | **La biblioteca de la cárcel**<br>Tres estanterías, un diccionario y mucho tiempo. | 1. Dormir<br>2. Aprender un idioma<br>3. Estudiar para tu oficio |
+| <img src="../art/clean/cards/card.crime_fake_mba.png" alt="Una pequeña mejora"> | **Una pequeña mejora**<br>Nadie comprueba un currículum. Un MBA quedaría muy bien en el tuyo. | 1. Dejar el currículum como está<br>2. Añadir el MBA |
 
-### Negocios (13)
+### Negocios (15)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -991,8 +995,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.labour_inspector.png" alt="Inspección de trabajo"> | **Inspección de trabajo**<br>Un inspector pide los contratos, los horarios y las nóminas de tu negocio. | 1. Que vengan<br>2. Llamar antes a una asesoría laboral |
 | <img src="../art/clean/cards/card.city_bangkok_beach_bar.png" alt="Un bar en la playa"> | **Un bar en la playa**<br>Un amigo en Koh Samui busca un socio más para un bar en la arena. | 1. Quedarte en la ciudad<br>2. Poner dinero |
 | <img src="../art/clean/cards/card.city_mexico_city_taqueria.png" alt="Un socio para la taquería"> | **Un socio para la taquería**<br>El taquero de tu esquina busca socio para abrir un segundo puesto. | 1. Desearle suerte<br>2. Poner dinero |
+| <img src="../art/clean/cards/card.crime_memoirs.png" alt="Memorias desde la celda"> | **Memorias desde la celda**<br>Una editorial cree que tu historia vendería. Un pódcast también. | 1. Guardártela<br>2. Contarlo todo |
+| <img src="../art/clean/cards/card.crime_laundering.png" alt="Dinero limpio"> | **Dinero limpio**<br>Tu negocio cobra mucho en efectivo. Un amigo te explica cómo podría cobrar un poco más, sobre el papel. | 1. Llevar las cuentas honestas<br>2. Lavar lo que tienes oculto |
 
-### Inversión (12)
+### Inversión (14)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1008,6 +1014,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crowd_building.png" alt="Crowdfunding inmobiliario"> | **Crowdfunding inmobiliario**<br>Una plataforma te deja comprar un trozo de un edificio en alquiler. | 1. Pasar<br>2. Comprar una parte |
 | <img src="../art/clean/cards/card.bank_product.png" alt="Un producto «garantizado»"> | **Un producto «garantizado»**<br>Tu banco te ofrece un bono a dos años «sin riesgo». Comisión de entrada incluida, en letra pequeña. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado sin comisión |
 | <img src="../art/clean/cards/card.leveraged_chart.png" alt="Un fondo que multiplica por tres"> | **Un fondo que multiplica por tres**<br>Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo. | 1. Pasar<br>2. Meter 3.000 $ |
+| <img src="../art/clean/cards/card.crime_memecoin.png" alt="Lanza tu propia moneda"> | **Lanza tu propia moneda**<br>Llámala $RATA, paga a unos influencers y vende antes de que nadie se entere. ¿Qué puede salir mal? | 1. Conservar la dignidad<br>2. Lanzar $RATA |
+| <img src="../art/clean/cards/card.crime_insider_tip.png" alt="Tu cuñado sabe algo"> | **Tu cuñado sabe algo**<br>Trabaja en un banco. El lunes se anuncia una opa, y nadie lo sabe todavía. | 1. Cambiar de tema<br>2. Comprar antes del lunes |
 
 ### Vivienda (16)
 
@@ -1030,7 +1038,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_bangkok_flood.png" alt="Llegan las lluvias"> | **Llegan las lluvias**<br>El monzón inunda tu calle y, con ella, la planta baja. | 1. Que se encargue el seguro<br>2. Sacos de arena y limpiar tú |
 | <img src="../art/clean/cards/card.city_tokyo_earthquake.png" alt="Tiembla la tierra"> | **Tiembla la tierra**<br>Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa. | 1. Llamar al seguro<br>2. Arreglar tú lo que puedas |
 
-### Estilo de vida (15)
+### Estilo de vida (17)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1049,6 +1057,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_madrid_cana.png" alt="Solo una caña"> | **Solo una caña**<br>Un compañero dice de tomar una caña al salir. En Madrid, una caña acaba en cena a medianoche. | 1. Irte a casa<br>2. Quedarte a cenar |
 | <img src="../art/clean/cards/card.city_london_club.png" alt="Te quieren en un club"> | **Te quieren en un club**<br>Un socio de un club privado de Mayfair se ofrece a proponerte. | 1. Declinarlo con educación<br>2. Pagar la cuota de entrada |
 | <img src="../art/clean/cards/card.city_dubai_golden_visa.png" alt="Un visado dorado"> | **Un visado dorado**<br>Con lo que tienes, podrías tener diez años de residencia y el estatus que conlleva. | 1. No hace falta<br>2. Solicitarlo |
+| <img src="../art/clean/cards/card.crime_jail_commissary.png" alt="La economía de los fideos"> | **La economía de los fideos**<br>Dentro, los fideos instantáneos son dinero. Todo el mundo los quiere y nadie tiene bastantes. | 1. Comprar lo que necesitas<br>2. Montar el negocio de fideos |
+| <img src="../art/clean/cards/card.crime_ham_smuggling.png" alt="Una maleta llena de jamón"> | **Una maleta llena de jamón**<br>Un amigo pagará bien unos jamones ibéricos traídos en tu equipaje. La aduana puede no estar de acuerdo. | 1. Llevar solo ropa<br>2. Meter los jamones |
 
 ### Familia (13)
 
@@ -1078,7 +1088,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo<br>3. Recuperarte entrenando |
 | <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un gimnasio abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
 
-### Suerte (9)
+### Suerte (12)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1091,6 +1101,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.speed_camera.png" alt="Una multa por exceso de velocidad"> | **Una multa por exceso de velocidad**<br>Te llega por correo una foto de tu coche. | 1. Pagarla<br>2. Recurrirla |
 | <img src="../art/clean/cards/card.casino.png" alt="La app de apuestas"> | **La app de apuestas**<br>Una apuesta gratis para empezar. Esta noche juega tu equipo. | 1. Borrar la app<br>2. Una apuesta pequeña<br>3. Ir a por un premio grande |
 | <img src="../art/clean/cards/card.city_singapore_gum.png" alt="Te pillan con chicle"> | **Te pillan con chicle**<br>Un vigilante te ve con chicle en el metro. Singapur es una ciudad de multas. | 1. Pagar la multa<br>2. Recurrir y recoger basura una mañana |
+| <img src="../art/clean/cards/card.crime_wrongly_accused.png" alt="Inocente, de verdad"> | **Inocente, de verdad**<br>La policía está segura de que hiciste algo que no hiciste. Estabas en el dentista. | 1. Fiarte del abogado de oficio<br>2. Pagar un buen abogado |
+| <img src="../art/clean/cards/card.crime_jail_cellmate.png" alt="Tu compañero de celda, banquero"> | **Tu compañero de celda, banquero**<br>El de la litera de arriba dirigía un fondo de inversión. Tiene opiniones sobre tu cartera. | 1. Hacerte el dormido<br>2. Tomar apuntes |
+| <img src="../art/clean/cards/card.crime_illegal_betting.png" alt="Una apuesta segura"> | **Una apuesta segura**<br>Un señor en un bar jura que el partido de Segunda del domingo ya está decidido. | 1. Verlo gratis<br>2. Apostar dos mil |
 
 ### Mundo (18)
 
@@ -1115,7 +1128,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crisis_cuts.png" alt="Recortes"> | **Recortes**<br>Las cuentas se cuadran por las malas: una derrama, sueldos congelados y gangas para quien tenga efectivo. | 1. Pagar la derrama<br>2. Pagarla, y hacer el trabajo de dos<br>3. Pagarla, y comprar un estudio embargado para alquilar |
 | <img src="../art/clean/cards/card.bank_queue.png" alt="Quiebra un banco"> | **Quiebra un banco**<br>Un banco mediano cierra y se forman colas delante de los demás. | 1. Confiar en la garantía<br>2. Hacer cola y mover tu dinero |
 
-### Impuestos (11)
+### Impuestos (12)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1130,6 +1143,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_mexico_city_mordida.png" alt="El inspector espera"> | **El inspector espera**<br>Un inspector encuentra un problema en tus papeles, y te deja claro que podría desaparecer. | 1. Negarte y arriesgarte<br>2. Pagar la mordida |
 | <img src="../art/clean/cards/card.city_zurich_numbered_account.png" alt="Una cuenta con número"> | **Una cuenta con número**<br>Un banquero discreto te sugiere una cuenta que solo se conoce por su número. | 1. Darle las gracias e irte<br>2. Abrir la cuenta |
 | <img src="../art/clean/cards/card.city_zurich_referendum.png" alt="Un referéndum sobre impuestos"> | **Un referéndum sobre impuestos**<br>El cantón vota bajar el impuesto sobre la renta. Podrías hacer campaña. | 1. Solo votar<br>2. Hacer campaña por la bajada |
+| <img src="../art/clean/cards/card.courtroom.png" alt="Tu día en el juzgado"> | **Tu día en el juzgado**<br>Los cargos siguen adelante. Un juzgado, una jueza que ha oído todas las excusas, y tú. | 1. Abogado de oficio<br>2. Contratar al mejor abogado<br>3. Pactar y delatar a tu socio |
 
 ### Madurez (11)
 
@@ -1193,6 +1207,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Millonario a los 35"> | Millonario a los 35 | Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación. |
 | <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, descontando la inflación. |
 | <img src="../art/clean/badges/badge.swiss_banker.png" alt="Banquero suizo"> | Banquero suizo | Ten un patrimonio de 1.000.000 $ viviendo en Zúrich. |
+| <img src="../art/clean/badges/badge.fiscally_creative.png" alt="Fiscalmente creativo"> | Fiscalmente creativo | Oculta 100.000 $ a Hacienda sin que te inspeccionen nunca. |
 | <img src="../art/clean/badges/badge.debt_free_at_40.png" alt="Sin deudas a los 40"> | Sin deudas a los 40 | No debas nada de nada el día que cumplas 40, sin haber quebrado nunca. |
 | <img src="../art/clean/badges/badge.no_credit_card.png" alt="Ni una vez la tarjeta"> | Ni una vez la tarjeta | Vive una vida entera sin que nada acabe cargado a la tarjeta de crédito. |
 
@@ -1250,4 +1265,6 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.bankrupt.png" alt="Quiebra"> | Quiebra | Quiebra. Les pasa a los mejores. |
 | <img src="../art/clean/badges/badge.room_at_40.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
 | <img src="../art/clean/badges/badge.ronin.png" alt="Rōnin"> | Rōnin | Pierde tu trabajo en Tokio. |
+| <img src="../art/clean/badges/badge.ex_convict.png" alt="Expresidiario"> | Expresidiario | Cumple condena en la cárcel y sal. |
+| <img src="../art/clean/badges/badge.truly_innocent.png" alt="Inocente de verdad"> | Inocente de verdad | Que te acusen de algo que no hiciste, y quedar absuelto. |
 | <img src="../art/clean/badges/badge.audited.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |

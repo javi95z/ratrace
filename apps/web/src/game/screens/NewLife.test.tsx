@@ -160,7 +160,7 @@ describe('choosing between a ranked life and a casual one', () => {
     const ranked = within(mode).getByRole('radio', { name: /^Ranked/ });
     expect(ranked.getAttribute('aria-checked')).toBe('true');
     expect(ranked.textContent).toContain('For the ranking');
-    expect(within(mode).getByRole('radio', { name: /^Free/ }).textContent).toContain('Just for you');
+    expect(within(mode).getByRole('radio', { name: /^Offline/ }).textContent).toContain('Just for you');
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(asked).toEqual([{ ranked: true }]));
   });
@@ -169,7 +169,7 @@ describe('choosing between a ranked life and a casual one', () => {
     const { services, asked } = signedIn();
     const user = userEvent.setup();
     renderGame(<NewLife />, services);
-    await user.click(await screen.findByRole('radio', { name: /^Free/ }));
+    await user.click(await screen.findByRole('radio', { name: /^Offline/ }));
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(asked).toEqual([{ ranked: false }]));
   });

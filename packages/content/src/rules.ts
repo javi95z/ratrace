@@ -187,7 +187,7 @@ export const life: LifeRules = {
       network: ['sales', 'influencer', 'hospitality', 'public'],
       health: ['healthcare', 'medicine'],
     },
-    practiceItems: { health: ['member_gym', 'pet_dog', 'tech_smartwatch'], management: ['edu_coach'], languages: ['edu_language_school'] },
+    practiceItems: { health: ['member_gym', 'pet_dog'], management: ['edu_coach'], languages: ['edu_language_school'] },
     negotiationHuntRaisePct: 1,
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,

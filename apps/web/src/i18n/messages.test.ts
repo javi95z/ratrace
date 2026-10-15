@@ -169,7 +169,8 @@ describe('interface text', () => {
   it('is really translated: no language is a copy of the English', () => {
     /** Words that are the same in English and in another language. A sentence of placeholders and signs alone is the same in all. */
     const same: Record<string, Set<string>> = {
-      es: new Set(['meta.title', 'finance.market.crypto', 'finance.property.variable', 'news.crypto']),
+      // "Offline" is the word Spanish players use for a game that needs no connection.
+      es: new Set(['meta.title', 'finance.market.crypto', 'finance.property.variable', 'news.crypto', 'newLife.modeFree']),
       ru: new Set(['meta.title']),
     };
     const worded = (sentence: string) => /\p{L}/u.test(sentence.replace(/\{[^{}]*\}/g, ''));

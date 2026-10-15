@@ -14,7 +14,7 @@ describe('the v1 content', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich']);
     expect(content.assets).toHaveLength(22);
     expect(content.careers).toHaveLength(11);
-    expect(content.items).toHaveLength(67);
+    expect(content.items).toHaveLength(64);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);

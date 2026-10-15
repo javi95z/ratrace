@@ -174,6 +174,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.ex_convict": {
+    "src": "badges/badge.ex_convict.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.family_of_four": {
     "src": "badges/badge.family_of_four.png",
     "w": 64,
@@ -191,6 +196,11 @@
   },
   "badge.first_share": {
     "src": "badges/badge.first_share.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.fiscally_creative": {
+    "src": "badges/badge.fiscally_creative.png",
     "w": 64,
     "h": 64
   },
@@ -306,6 +316,11 @@
   },
   "badge.three_rentals": {
     "src": "badges/badge.three_rentals.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.truly_innocent": {
+    "src": "badges/badge.truly_innocent.png",
     "w": 64,
     "h": 64
   },
@@ -651,6 +666,71 @@
   },
   "card.crash_screens": {
     "src": "cards/card.crash_screens.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_enchufe": {
+    "src": "cards/card.crime_enchufe.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_fake_mba": {
+    "src": "cards/card.crime_fake_mba.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_fake_mba_found": {
+    "src": "cards/card.crime_fake_mba_found.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_ham_smuggling": {
+    "src": "cards/card.crime_ham_smuggling.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_illegal_betting": {
+    "src": "cards/card.crime_illegal_betting.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_insider_tip": {
+    "src": "cards/card.crime_insider_tip.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_jail_cellmate": {
+    "src": "cards/card.crime_jail_cellmate.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_jail_commissary": {
+    "src": "cards/card.crime_jail_commissary.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_jail_library": {
+    "src": "cards/card.crime_jail_library.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_laundering": {
+    "src": "cards/card.crime_laundering.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_memecoin": {
+    "src": "cards/card.crime_memecoin.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_memoirs": {
+    "src": "cards/card.crime_memoirs.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.crime_wrongly_accused": {
+    "src": "cards/card.crime_wrongly_accused.png",
     "w": 288,
     "h": 120
   },

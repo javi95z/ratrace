@@ -3891,6 +3891,86 @@
       "width": 32,
       "height": 32
     },
+    "card.crime_wrongly_accused": {
+      "file": "cards/card.crime_wrongly_accused.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_jail_cellmate": {
+      "file": "cards/card.crime_jail_cellmate.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_jail_commissary": {
+      "file": "cards/card.crime_jail_commissary.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_jail_library": {
+      "file": "cards/card.crime_jail_library.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_memoirs": {
+      "file": "cards/card.crime_memoirs.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_fake_mba": {
+      "file": "cards/card.crime_fake_mba.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_fake_mba_found": {
+      "file": "cards/card.crime_fake_mba_found.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_ham_smuggling": {
+      "file": "cards/card.crime_ham_smuggling.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_memecoin": {
+      "file": "cards/card.crime_memecoin.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_illegal_betting": {
+      "file": "cards/card.crime_illegal_betting.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_enchufe": {
+      "file": "cards/card.crime_enchufe.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_insider_tip": {
+      "file": "cards/card.crime_insider_tip.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.crime_laundering": {
+      "file": "cards/card.crime_laundering.png",
+      "width": 288,
+      "height": 120
+    },
+    "badge.fiscally_creative": {
+      "file": "badges/badge.fiscally_creative.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.ex_convict": {
+      "file": "badges/badge.ex_convict.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.truly_innocent": {
+      "file": "badges/badge.truly_innocent.png",
+      "width": 64,
+      "height": 64
+    },
     "brand.logo": {
       "file": "brand/brand.logo.png",
       "width": 256,

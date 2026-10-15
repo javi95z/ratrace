@@ -1,7 +1,7 @@
 # PWA
 
 The web game is installable from its Home screen and keeps the static game shell on the device.
-Free lives can open without a network connection after the app has completed one online load;
+Offline lives can open without a network connection after the app has completed one online load;
 ranked play and account synchronisation still require the network.
 
 ## Player experience
