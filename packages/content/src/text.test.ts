@@ -340,9 +340,12 @@ describe('content art', () => {
     expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
     expect(keys(focusArt)).toEqual(['askRaise', 'exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation']);
     expect(keys(skillArt)).toEqual(['career', 'finance', 'health', 'languages', 'management', 'negotiation', 'network']);
-    expect(keys(topicArt)).toEqual(['asset', 'crypto', 'inflation', 'noise', 'property', 'rates', 'regime', 'taxes']);
+    expect(keys(topicArt)).toEqual(['asset', 'crypto', 'government', 'inflation', 'noise', 'property', 'rates', 'regime', 'taxes']);
     // As many filler headlines in every language as the world draws from.
-    for (const locale of ['en', 'es', 'ru'] as const) expect(rawText(locale).headlines.noise).toHaveLength(content.world.noiseHeadlines);
+    for (const locale of ['en', 'es', 'ru'] as const) {
+      expect(rawText(locale).headlines.noise).toHaveLength(content.world.noiseHeadlines);
+      expect(rawText(locale).headlines.government).toHaveLength(content.world.governmentHeadlines);
+    }
   });
 
   it('gives every choice a picture of its own: no two ways of living, insurances or uses of focus share one', () => {

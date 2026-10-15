@@ -890,7 +890,6 @@ Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier ha
 | <img src="../art/clean/icons/icon.insure_health.png" alt=""> | Seguro de salud | 1,5 % del coste de vida de la ciudad |
 | <img src="../art/clean/icons/icon.insure_home.png" alt=""> | Seguro de hogar | 0,6 % del coste de vida de la ciudad |
 | <img src="../art/clean/icons/icon.insure_life.png" alt=""> | Seguro de vida | 0,6 % del coste de vida de la ciudad |
-| <img src="../art/clean/icons/icon.insure_liability.png" alt=""> | Seguro de responsabilidad civil | 0,4 % del coste de vida de la ciudad |
 
 |  | En qué poner el foco | Qué da |
 | --- | --- | --- |
@@ -1089,10 +1088,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 
 |  | Carta | Opciones |
 | --- | --- | --- |
-| <img src="../art/clean/cards/card.hospital.png" alt="Una enfermedad grave"> | **Una enfermedad grave**<br>Pruebas, un diagnóstico y un tratamiento con precio. | 1. Ir por la pública y esperar<br>2. Ir por la privada, ya<br>3. Cobrar tu seguro de vida |
+| <img src="../art/clean/cards/card.hospital.png" alt="Una enfermedad grave"> | **Una enfermedad grave**<br>Pruebas, un diagnóstico y un tratamiento con precio. | 1. Ir por la privada, ya<br>2. Ir por la pública y esperar<br>3. Cobrar tu seguro de vida |
 | <img src="../art/clean/cards/card.burnout.png" alt="Agotamiento"> | **Agotamiento**<br>Llevas una hora mirando el mismo correo. | 1. Seguir tirando<br>2. Pedir un permiso sin sueldo<br>3. Ir a terapia |
 | <img src="../art/clean/cards/card.dentist_chair.png" alt="Una urgencia dental"> | **Una urgencia dental**<br>Se te parte una muela con un hueso de aceituna. | 1. Arreglarlo bien<br>2. Buscar una clínica barata |
-| <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo<br>3. Recuperarte entrenando |
+| <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisio privada<br>2. Lista de espera pública<br>3. Jugar con dolor<br>4. Recuperarte entrenando |
 | <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un gimnasio abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
 
 ### Suerte (12)

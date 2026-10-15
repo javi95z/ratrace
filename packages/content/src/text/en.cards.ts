@@ -363,8 +363,8 @@ export const cards: Record<string, CardText> = {
 
   // Health
   health_illness: c('A serious illness', 'Tests, a diagnosis, and a treatment plan with a price.', [
-    'Use the public system and wait',
     'Go private, now',
+    'Use the public system and wait',
     'Claim on your life cover',
   ]),
   health_burnout: c('Burnout', 'You have been staring at the same email for an hour.', [
@@ -377,8 +377,9 @@ export const cards: Record<string, CardText> = {
     ['Find a cheap clinic', 'A neat job at a third of the price.', 'It has to be redone. Properly, this time.'],
   ]),
   health_injury: c('A sports injury', 'A five-a-side game, a wet pitch, a knee.', [
-    'Physiotherapy',
-    'Rest it',
+    'Private physio',
+    'Wait for the public list',
+    ['Play through the pain', 'It holds: nobody notices a thing.', 'It gives out, and this time for months.'],
     'Train your way back',
   ]),
   health_gym_habit: c('Join the gym', 'There is a gym downstairs and you get out of breath on the stairs.', [

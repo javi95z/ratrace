@@ -4,7 +4,7 @@ import type { Content, CryptoPhase, Headline, Regime, Trend, WorldState } from '
 const REGIMES: readonly Regime[] = ['expansion', 'boom', 'slowdown', 'recession', 'recovery'];
 const PHASES: readonly CryptoPhase[] = ['accumulation', 'bull', 'mania', 'winter'];
 const TRENDS: readonly Trend[] = ['up', 'down', 'flat'];
-const TOPICS: ReadonlyArray<Headline['topic']> = ['regime', 'rates', 'inflation', 'crypto', 'property', 'asset', 'taxes', 'noise'];
+const TOPICS: ReadonlyArray<Headline['topic']> = ['regime', 'rates', 'inflation', 'crypto', 'property', 'asset', 'taxes', 'noise', 'government'];
 
 /** The investments a headline may name: the ones that move, crypto aside, which has news of its own. */
 const newsworthy = (content: Content): string[] => content.assets.filter((asset) => asset.class !== 'crypto' && asset.class !== 'bond').map((asset) => asset.id);
@@ -37,6 +37,7 @@ function truth(content: Content, about: Headline, now: WorldState, next: WorldSt
     case 'taxes':
       return { topic: 'taxes', cityId: about.cityId, trend: trendOf((next.taxShiftBp[about.cityId] ?? 0) - (now.taxShiftBp[about.cityId] ?? 0), 0) };
     case 'noise':
+    case 'government':
       return about;
   }
 }
@@ -60,6 +61,7 @@ export function headlineHeld(content: Content, headline: Headline, now: WorldSta
     case 'taxes':
       return 'trend' in real && real.trend === headline.trend;
     case 'noise':
+    case 'government':
       return true;
   }
 }
@@ -92,6 +94,7 @@ function falsehood(content: Content, real: Headline, now: WorldState, rng: Rng):
     case 'taxes':
       return { topic: 'taxes', cityId: real.cityId, trend: others(TRENDS, real.trend, rng) };
     case 'noise':
+    case 'government':
       return real;
   }
 }
@@ -107,7 +110,7 @@ export function writeNews(seed: string, content: Content, timeline: WorldState[]
   const assets = newsworthy(content);
   const taxed = taxing(content);
   // A topic with nothing to say in this content is never drawn.
-  const open = TOPICS.filter((topic) => (topic === 'asset' ? assets.length > 0 : topic === 'taxes' ? taxed.length > 0 : topic === 'noise' ? rules.noiseHeadlines > 0 : true));
+  const open = TOPICS.filter((topic) => (topic === 'asset' ? assets.length > 0 : topic === 'taxes' ? taxed.length > 0 : topic === 'noise' ? rules.noiseHeadlines > 0 : topic === 'government' ? rules.governmentHeadlines > 0 : true));
   const count = Math.min(rules.headlinesPerRound, open.length);
 
   for (let r = 0; r + 1 < timeline.length; r++) {
@@ -130,13 +133,15 @@ export function writeNews(seed: string, content: Content, timeline: WorldState[]
               ? { topic, cityId: reformed.length > 0 ? reformed[0] : local && homeCityId && taxed.includes(homeCityId) ? homeCityId : taxed[rng.int(taxed.length)], trend: 'flat' }
               : topic === 'noise'
                 ? { topic, id: rng.int(rules.noiseHeadlines) }
+                : topic === 'government'
+                  ? { topic, id: rng.int(rules.governmentHeadlines) }
                 : topic === 'regime'
             ? { topic, regime: now.regime }
             : topic === 'crypto'
               ? { topic, phase: now.cryptoPhase }
               : { topic, trend: 'flat' };
       const real = truth(content, about, now, next);
-      news.push(topic === 'noise' || rng.chance(rules.newsTruthPct) ? real : falsehood(content, real, now, rng));
+      news.push(topic === 'noise' || topic === 'government' || rng.chance(rules.newsTruthPct) ? real : falsehood(content, real, now, rng));
     }
     now.news = news;
   }

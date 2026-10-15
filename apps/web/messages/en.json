@@ -210,7 +210,8 @@
       "property": "Housing",
       "asset": "Markets",
       "taxes": "Taxes",
-      "noise": "Society"
+      "noise": "Society",
+      "government": "Government"
     },
     "paper": "The Rat Race Times",
     "issue": "No. {n}"
@@ -271,7 +272,12 @@
     "choices": "Your choices: {title}",
     "changes": "What changes",
     "rolled": "chance of this being what came up",
-    "needsSkill": "Needs {skill} {level}."
+    "needsSkill": "Needs {skill} {level}.",
+    "thanksSkill": "Thanks to your {skill}",
+    "thanksCover": "Your {cover}",
+    "thanksTrade": "Your trade",
+    "covers": "Cover pays {amount}",
+    "saved": "Your cover saved you {amount}"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -334,7 +340,8 @@
     "launder": "Washes what is hidden ({pct}% fee)",
     "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}",
     "remote": "Work from home: +1 focus",
-    "endLodger": "The lodger moves out"
+    "endLodger": "The lodger moves out",
+    "partnerPay": "Partner earns {pct}% of the median"
   },
   "finance": {
     "tabs": {
@@ -527,7 +534,9 @@
       "raise": "Ask for a raise",
       "raiseHint": "{chance}% chance of +{pct}% pay. Yes or no, not again for a while.",
       "back": "Go back to work as {job}",
-      "backHint": "A rung below where you left it. Your business stays yours, for your spare focus."
+      "backHint": "A rung below where you left it. Your business stays yours, for your spare focus.",
+      "homeHelped": "Home again: your family carries you back and puts you up for a while. Old friends open doors, and no rung is lost.",
+      "homeBack": "Home again: old friends open doors, and no rung is lost. Come back richer than you left and it is a triumph."
     },
     "shop": {
       "viewLabel": "What to show in the shop",
@@ -811,7 +820,11 @@
     "releasedRung": "Back to work, a rung lower than before.",
     "before": "Was {amount}",
     "raiseYes": "Your boss said yes: +{pct}% pay",
-    "raiseNo": "Your boss said not now"
+    "raiseNo": "Your boss said not now",
+    "homeAgain": "Home again",
+    "homeTriumph": "Home again, and richer than you left",
+    "homeHelped": "Your family put you up: {amount} saved.",
+    "homeFriends": "Old friends open doors: more contacts, and no rung lost."
   },
   "profile": {
     "title": "Your life",
@@ -856,8 +869,7 @@
     "insuranceShort": {
       "health": "Health",
       "home": "Home",
-      "life": "Life",
-      "liability": "Liability"
+      "life": "Life"
     },
     "aboutLifestyle": "Your lifestyle multiplies what living costs you each year. Living on little shows and takes status away; the top two give it.",
     "aboutRent": "Until you own a home in {city}, you rent. A room or a flat changes what you spend and your status.",

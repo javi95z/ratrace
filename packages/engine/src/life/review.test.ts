@@ -106,7 +106,7 @@ describe('I5: a card can ask whether the player is insured', () => {
     const content = contentWith([claim]);
     const state = start(content);
     expect(previewCard(content, state, 'claim')[1].available).toBe(false);
-    const insured = withPlayer(content, state, {}, { insurance: { health: false, home: false, life: true, liability: false } });
+    const insured = withPlayer(content, state, {}, { insurance: { health: false, home: false, life: true } });
     expect(previewCard(content, insured, 'claim')[1].available).toBe(true);
     expect(validateContent(contentWith([{ ...claim, when: { insured: 'pet' as any } }]))).toEqual(['card claim condition names an unknown insurance: pet']);
   });

@@ -7,7 +7,7 @@ import type { CardDef, CardPicks, Content, GameEvent, GameState, GameView, Optio
 import { conditionHolds } from './conditions';
 import type { Situation } from './conditions';
 import { pctStepAt } from './derive';
-import { applyEffects } from './effects';
+import { applyEffects, coverOf } from './effects';
 import { focusLeft } from './orders';
 import { skillLevel, tradeSkillLevel } from './skills';
 import { ownedOutsidePension, totalOwed } from '../solvency';
@@ -207,6 +207,8 @@ export interface OptionPreview {
   cash: Cents;
   /** One entry per outcome that may be rolled: its weight, and the further change in cash it brings. */
   outcomes: Array<{ weight: number; cash: Cents }>;
+  /** What the player's cover pays of the option's cost: zero without a cover, or without a cost. */
+  covered: Cents;
 }
 
 /**
@@ -230,6 +232,6 @@ export function previewCard(content: Content, state: GameView, cardId: string): 
       return { weight: outcome.weight, cash: rolled.cash - fixed.cash };
     });
     const lock = optionLock(p, card, index, at);
-    return { available: lock === null, lock, cash: fixed.cash - p.cash, outcomes };
+    return { available: lock === null, lock, cash: fixed.cash - p.cash, outcomes, covered: coverOf(p, option.effects, at) };
   });
 }

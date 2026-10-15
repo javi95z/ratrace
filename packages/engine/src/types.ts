@@ -151,7 +151,7 @@ export interface SkillRules {
   /** Money sense: taken off the chance of being swindled, in percent per level. */
   scamRiskOffPct: number;
 }
-export type InsuranceKind = 'health' | 'home' | 'life' | 'liability';
+export type InsuranceKind = 'health' | 'home' | 'life';
 /** 0 is a rented room, 1 a rented flat. Only matters while the player does not live in a home they own. */
 export type RentTier = 0 | 1;
 
@@ -402,6 +402,13 @@ export interface LifeRules {
   moveChildPct: number;
   /** Rungs of the career lost by moving of one's own accord: nobody knows the newcomer yet. A transfer loses none. */
   moveRungsLost: number;
+  /**
+   * Coming back to the city the life began in: someone with less than `helpBelowWorth` (in the
+   * dollars of the start) is helped home by family, for nothing, and saves `helpPct` of a round of
+   * living there; anyone keeps their rung and their partner's work, and picks up old friends
+   * (`networkPoints`); and someone who comes back richer than they left wins `status`, once.
+   */
+  homecoming: { helpBelowWorth: Cents; helpPct: number; networkPoints: number; status: number };
   /** Rounds a partner goes without pay after such a move, while they find work of their own. */
   partnerSettlingRounds: number;
   /**
@@ -505,6 +512,8 @@ export interface WorldRules {
   headlinesPerRound: number;
   /** How many headlines of filler there are to choose from. None means no filler. */
   noiseHeadlines: number;
+  /** How many headlines about the government there are to choose from. None means none. */
+  governmentHeadlines: number;
   /** Chance in percent that a headline is true. */
   newsTruthPct: number;
   /** A move in rates or inflation smaller than this is reported as flat. */
@@ -584,6 +593,8 @@ export interface Condition {
   /** Owns none of these items. */
   notItems?: string[];
   /** Holds this insurance. */
+  /** Someone without this cover. */
+  uninsured?: InsuranceKind;
   insured?: InsuranceKind;
   /** True for someone who has retired and taken up no career since. */
   retired?: boolean;
@@ -891,7 +902,9 @@ export type Headline =
   /** Whether a city's taxes go up, down or stay as they are. */
   | { topic: 'taxes'; cityId: string; trend: Trend }
   /** News that tells nothing of what is coming: the `id`th of the content's filler headlines. Always "true". */
-  | { topic: 'noise'; id: number };
+  | { topic: 'noise'; id: number }
+  /** The government at work, as the paper sees it: the `id`th of the content's. Tells nothing either. */
+  | { topic: 'government'; id: number };
 
 export interface WorldState {
   round: number;
@@ -1022,6 +1035,10 @@ export interface LifeState {
   formerCareer: { id: string; level: number } | null;
   /** True while the spare room of the home is let. It counts only while there is such a home: see `lodgerOf`. */
   lodger: boolean;
+  /** Net worth, in the dollars of the start, the last time the player left the city the life began in; null if never. */
+  leftHomeWorth: Cents | null;
+  /** A move home under way: what the family's help is worth, and whether it is a return in triumph. Null otherwise. */
+  homecoming: { gift: Cents; triumphant: boolean } | null;
   /** Career skill that study has added at the rung held now. */
   rungStudy: number;
   partner: boolean;
@@ -1344,6 +1361,8 @@ export type GameEvent =
   /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
   | { kind: 'planRan'; assetId: string; amount: Cents; reason: RejectReason | null }
   | { kind: 'moved'; cityId: string; rungsLost: number; partnerIdle: boolean }
+  /** Back in the city the life began in: what the family's help came to, and whether it was a return in triumph. */
+  | { kind: 'homecoming'; gift: Cents; triumphant: boolean }
   /** A membership of the city just left ended with the move. Nothing is paid back. */
   | { kind: 'lapsed'; itemId: string };
 

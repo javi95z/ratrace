@@ -472,9 +472,9 @@ describe('previewCard', () => {
     const state = createGame({ content, start: start() }, 'peek');
     const before = JSON.stringify(state);
     expect(previewCard(content, state, 'deal')).toEqual([
-      { available: true, lock: null, cash: -50_000, outcomes: [] },
-      { available: false, lock: 'cash', cash: -2_000_000, outcomes: [] },
-      { available: true, lock: null, cash: 240_000, outcomes: [{ weight: 3, cash: 100_000 }, { weight: 1, cash: -400_000 }] },
+      { available: true, lock: null, cash: -50_000, outcomes: [], covered: 0 },
+      { available: false, lock: 'cash', cash: -2_000_000, outcomes: [], covered: 0 },
+      { available: true, lock: null, cash: 240_000, outcomes: [{ weight: 3, cash: 100_000 }, { weight: 1, cash: -400_000 }], covered: 0 },
     ]);
     expect(JSON.stringify(state)).toBe(before);
   });

@@ -81,7 +81,7 @@ export function validateCards(c: Content): string[] {
         : 'asks for skills that are unknown or at a level that is not 1, 2 or 3',
     flags: flagList, notFlags: flagList,
     holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
-    insured: oneOf(INSURANCE_KINDS, 'insurance'),
+    insured: oneOf(INSURANCE_KINDS, 'insurance'), uninsured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
     retired: flag, evading: flag, inJail: flag, lodger: flag, remote: flag,
     notRecentFlag: (value) => (isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && (value.rounds as number) >= 1 ? null : 'needs a flag and a positive number of rounds for notRecentFlag'),

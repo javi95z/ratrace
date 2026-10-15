@@ -243,7 +243,6 @@ export const insuranceArt: Record<InsuranceKind, string> = {
   health: 'icon.insure_health',
   home: 'icon.insure_home',
   life: 'icon.insure_life',
-  liability: 'icon.insure_liability',
 };
 /** The sign of each skill beyond the career, and of money sense. */
 export const skillArt: Record<SkillId | 'finance' | 'career', string> = {
@@ -283,6 +282,7 @@ export const topicArt: Record<Headline['topic'], string> = {
   asset: 'icon.stock',
   taxes: 'icon.tax',
   noise: 'icon.news',
+  government: 'icon.career_public',
 };
 
 /** A badge, or `locked` for one not earned yet. */

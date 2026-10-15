@@ -6,7 +6,7 @@ import { fixtureContent, fixtureStart } from '../testing/fixture';
 import { Rng, seedRng } from '../rng';
 import type { CardDef, Content, GameState, LifeStart } from '../types';
 import { drawHand } from './cards';
-import { lodgerOf, ownPay, statusParts, workModeOf } from './derive';
+import { lodgerOf, ownPay, refreshDerived, statusParts, workModeOf } from './derive';
 import { applyEffects } from './effects';
 import { focusLock, focusTotal } from './orders';
 
@@ -132,5 +132,41 @@ describe('a card that sells something', () => {
     expect(hand()).toContain('offer');
     state.player.life.items.push({ itemId, value: 0, paid: 0, age: 0, roundsLeft: null });
     expect(hand()).not.toContain('offer');
+  });
+});
+
+describe('coming home', () => {
+  it('with little to show: the family carries you back for nothing and puts you up; no rung lost, old friends found', () => {
+    const c = fixtureContent();
+    const state = start(c, { career: { id: 'office', level: 2 } });
+    state.player.cash = 1_000_00;
+    const away = c.cities.find((city) => city.id !== state.player.cityId);
+    if (!away) throw new Error('needs a second city');
+    state.player.life.homeCityId = state.player.cityId;
+    state.player.cityId = away.id;
+    refreshDerived(state.player, c, state.round);
+    const network = state.player.life.skills.network;
+    const { state: after, events } = applyRound(c, state, { orders: [{ type: 'moveCity', cityId: state.player.life.homeCityId }] });
+    expect(after.player.cityId).toBe(after.player.life.homeCityId);
+    expect(after.player.life.career?.level).toBe(2);
+    expect(after.player.life.skills.network).toBeGreaterThan(network);
+    const back = events.find((event) => event.kind === 'homecoming');
+    expect(back).toMatchObject({ kind: 'homecoming', triumphant: false });
+    expect(back && 'gift' in back && back.gift).toBeGreaterThan(0);
+  });
+
+  it('richer than when you left: a triumph, once', () => {
+    const c = fixtureContent();
+    const state = start(c);
+    const away = c.cities.find((city) => city.id !== state.player.cityId);
+    if (!away) throw new Error('needs a second city');
+    const home = state.player.cityId;
+    const { state: gone } = applyRound(c, state, { orders: [{ type: 'moveCity', cityId: away.id }] });
+    expect(gone.player.life.leftHomeWorth).not.toBeNull();
+    gone.player.cash += 500_000_00;
+    const status = gone.player.life.bonusStatus;
+    const { events, state: back } = applyRound(c, gone, { orders: [{ type: 'moveCity', cityId: home }] });
+    expect(events).toContainEqual({ kind: 'homecoming', gift: 0, triumphant: true });
+    expect(back.player.life.bonusStatus).toBe(status + c.life.homecoming.status);
   });
 });

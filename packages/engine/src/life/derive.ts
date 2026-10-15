@@ -6,7 +6,7 @@ import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, 
 import { FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { skillLevel } from './skills';
 
-export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
+export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life'];
 
 /** The home the player lives in: a property they own in their city and have not rented out. The grandest, if several. */
 export function homeOf(p: PlayerState, content: Content): Property | null {

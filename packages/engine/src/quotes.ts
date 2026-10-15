@@ -6,7 +6,7 @@ import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { lodgerOf, workModeOf } from './life/derive';
 import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { raiseChance, workModeLock } from './life/orders';
+import { helpedHome, raiseChance, workModeLock } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
 import { careerStudyOf, jobHuntChance, jobHuntRaise, landingOf, overtimeToll, promotionRaise } from './life/roundEnd';
@@ -248,6 +248,8 @@ export interface MoveQuote {
   rungsLost: number;
   /** Rounds a partner would go without pay. */
   partnerIdleRounds: number;
+  /** Back to the city the life began in: whether the family helps. Null for anywhere else. */
+  home: { helped: boolean } | null;
 }
 
 function cityYear(content: Content, p: PlayerState, world: WorldState): CityYear {
@@ -277,8 +279,8 @@ export function quoteMove(content: Content, view: GameView, cityId: string): Mov
   const world = view.timeline[view.round];
   const lapses = lapsingIn(content, p, cityId);
   const landed = structuredClone(p);
-  const landing = landingOf(landed, content, false);
   landed.cityId = cityId;
+  const landing = landingOf(landed, content, false);
   if (landed.life.career && landing.level !== null) landed.life.career.level = landing.level;
   landed.life.partnerSettling = landing.partnerSettling;
   landed.life.items = landed.life.items.filter((owned) => !lapses.includes(owned.itemId));
@@ -290,6 +292,7 @@ export function quoteMove(content: Content, view: GameView, cityId: string): Mov
     there: cityYear(content, landed, world),
     rungsLost: landing.rungsLost,
     partnerIdleRounds: landing.partnerSettling - p.life.partnerSettling,
+    home: cityId === p.life.homeCityId && cityId !== p.cityId ? { helped: helpedHome(content, world, cityId, p) } : null,
   };
 }
 

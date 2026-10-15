@@ -21,7 +21,7 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-800), refinance: 'variable' } },
   ]),
   card('house_tenant_default', 'housing', { cooldown: 5, when: { landlord: true } }, [
-    { effects: { cash: usd(-4_000), protection: { insurance: 'liability', coverPct: 75 } } },
+    { effects: { cash: usd(-4_000), protection: { insurance: 'home', coverPct: 75 } } },
     { effects: { cash: usd(-1_500) }, outcomes: [{ weight: 65, effects: { cash: usd(2_000) } }, { weight: 35, effects: { cash: usd(-2_500) } }] },
   ]),
   card('house_renovation', 'housing', { cooldown: 6, when: { ownsHome: true } }, [

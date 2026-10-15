@@ -210,7 +210,8 @@
       "property": "Vivienda",
       "asset": "Bolsa",
       "taxes": "Impuestos",
-      "noise": "Sociedad"
+      "noise": "Sociedad",
+      "government": "Gobierno"
     },
     "paper": "El Diario de la Rueda",
     "issue": "Nº {n}"
@@ -271,7 +272,12 @@
     "choices": "Tus opciones: {title}",
     "changes": "Lo que cambia",
     "rolled": "de probabilidad de que saliera esto",
-    "needsSkill": "Necesitas {skill} {level}."
+    "needsSkill": "Necesitas {skill} {level}.",
+    "thanksSkill": "Por tu {skill}",
+    "thanksCover": "Por tu {cover}",
+    "thanksTrade": "Por tu oficio",
+    "covers": "El seguro paga {amount}",
+    "saved": "Tu seguro te ahorró {amount}"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -334,7 +340,8 @@
     "launder": "Lava lo oculto (comisión del {pct} %)",
     "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}",
     "remote": "Teletrabajo: +1 de foco",
-    "endLodger": "El inquilino se va"
+    "endLodger": "El inquilino se va",
+    "partnerPay": "Tu pareja cobra el {pct} % del sueldo medio"
   },
   "finance": {
     "tabs": {
@@ -527,7 +534,9 @@
       "raise": "Pedir un aumento",
       "raiseHint": "{chance} % de que te suban un {pct} %. Salga o no, tardarás en poder pedirlo otra vez.",
       "back": "Volver a trabajar de {job}",
-      "backHint": "Un escalón por debajo de donde lo dejaste. Tu negocio sigue siendo tuyo, con tu foco libre."
+      "backHint": "Un escalón por debajo de donde lo dejaste. Tu negocio sigue siendo tuyo, con tu foco libre.",
+      "homeHelped": "De vuelta a casa: tu familia te trae y te acoge una temporada. Los amigos de siempre abren puertas y no pierdes escalón.",
+      "homeBack": "De vuelta a casa: los amigos de siempre abren puertas y no pierdes escalón. Si vuelves más rico que cuando te fuiste, es un triunfo."
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",
@@ -811,7 +820,11 @@
     "releasedRung": "Vuelves al trabajo, un puesto más abajo.",
     "before": "Antes {amount}",
     "raiseYes": "Tu jefe dijo que sí: +{pct} % de sueldo",
-    "raiseNo": "Tu jefe dijo que ahora no"
+    "raiseNo": "Tu jefe dijo que ahora no",
+    "homeAgain": "De vuelta a casa",
+    "homeTriumph": "De vuelta a casa, y más rico que cuando te fuiste",
+    "homeHelped": "Tu familia te acoge: {amount} ahorrados.",
+    "homeFriends": "Los amigos de siempre abren puertas: más contactos y ningún escalón perdido."
   },
   "profile": {
     "title": "Tu vida",
@@ -856,8 +869,7 @@
     "insuranceShort": {
       "health": "Salud",
       "home": "Hogar",
-      "life": "Vida",
-      "liability": "R. civil"
+      "life": "Vida"
     },
     "aboutLifestyle": "Tu estilo de vida multiplica lo que te cuesta vivir cada año. Vivir con poco se nota y resta estatus; los dos más altos lo dan.",
     "aboutRent": "Mientras no tengas casa propia en {city}, vives de alquiler. Elegir entre habitación y piso cambia el gasto y el estatus.",

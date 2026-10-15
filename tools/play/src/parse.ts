@@ -92,7 +92,6 @@ const INSURANCE: Record<InsuranceKind, string[]> = {
   health: ['health', 'salud', 'здоровье'],
   home: ['home', 'hogar', 'жилье'],
   life: ['life', 'vida', 'жизнь'],
-  liability: ['liability', 'civil', 'ответственность'],
 };
 /** How a home is paid for, after its kind: with no mortgage, or with a variable one. Anything else is a fixed one. */
 const NO_MORTGAGE = ['cash', 'contado', 'наличными'];

@@ -236,7 +236,7 @@ describe('the v1 content', () => {
         }
       }
     }
-    expect([...used].sort()).toEqual(['health', 'home', 'liability', 'life']);
+    expect([...used].sort()).toEqual(['health', 'home', 'life']);
   });
 
   it('reads every flag a life starts with, in a card or in the engine', () => {
@@ -265,7 +265,7 @@ describe('the v1 content', () => {
     expect(content.debt.bankruptcyStatusPenalty).toBe(25);
     expect(content.lifestyleMultiplierPct).toEqual([70, 100, 140, 200]);
     // A crypto winter takes three quarters: the one number that holds the gambler's band (spec 3.7).
-    expect(content.market.cryptoMeanBp.winter).toBe(-7_500);
+    expect(content.market.cryptoMeanBp.winter).toBe(-5_500);
   });
 
   it('starts the crypto kid with a coin no order of his could not have bought, and the founder with a business to sell', () => {

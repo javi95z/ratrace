@@ -19,7 +19,7 @@ import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
 import { WorkPanel } from './Work';
 
-const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
+const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];
 
 /**
  * Who the player is: their job and skills, their family, an income statement and a balance sheet.

@@ -227,7 +227,7 @@ describe('health cover by age', () => {
     expect(rejected(events)).toEqual(['preexisting-condition']);
     expect(state.player.life.insurance).toMatchObject({ health: false, home: true });
 
-    const covered = withPlayer(content, game(content), {}, { flags: { had_illness: 0 }, insurance: { health: true, home: false, life: false, liability: false }, healthCoverSince: 0 });
+    const covered = withPlayer(content, game(content), {}, { flags: { had_illness: 0 }, insurance: { health: true, home: false, life: false }, healthCoverSince: 0 });
     expect(quoteLiving(content, viewOf(covered)).health.refused).toBe(false);
     const kept = play(content, covered, [{ type: 'setInsurance', insurance: 'health', on: true }]);
     expect(rejected(kept.events)).toEqual([]);

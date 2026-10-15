@@ -291,7 +291,6 @@ describe('parse', () => {
     expect(orderOf('страховка жильё нет', s)).toEqual({ type: 'setInsurance', insurance: 'home', on: false });
     expect(orderOf('страховка жилье да', s)).toEqual({ type: 'setInsurance', insurance: 'home', on: true });
     expect(orderOf('страховка жизнь', s)).toEqual({ type: 'setInsurance', insurance: 'life', on: true });
-    expect(orderOf('страховка ответственность', s)).toEqual({ type: 'setInsurance', insurance: 'liability', on: true });
     expect(run('страховка кот', s)).toEqual({ kind: 'error', problem: 'unknown-insurance' });
     expect(orderOf('переехать Дубай', s)).toEqual({ type: 'moveCity', cityId: 'dubai' });
     expect(orderOf('переехать нью-йорк', s)).toEqual({ type: 'moveCity', cityId: 'new_york' });

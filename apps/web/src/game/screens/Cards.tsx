@@ -33,7 +33,7 @@ function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: Effec
 }
 
 /** What one option of a card offers: its label, what it costs and does, and the odds of each thing it may bring. */
-function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: number; preview: OptionPreview; world: WorldState; shortcut?: number }) {
+function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardDef; index: number; preview: OptionPreview; world: WorldState; shortcut?: number; partnered: boolean }) {
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
@@ -49,6 +49,16 @@ function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: 
     return wanted ? t('needsSkill', { skill: words.text.skills[wanted[0] as SkillId], level: wanted[1] }) : words.text.optionLocks[lock];
   };
 
+  // A choice that is there because of what the player has made of themselves says so: a skill, a cover, a trade.
+  const skill = Object.keys(option.when?.minSkills ?? {})[0] as SkillId | undefined;
+  const thanks = skill
+    ? t('thanksSkill', { skill: words.text.skills[skill] })
+    : option.when?.insured
+      ? t('thanksCover', { cover: words.text.insurance[option.when.insured].replace(/^./, (first) => first.toLowerCase()) })
+      : option.when?.careers
+        ? t('thanksTrade')
+        : null;
+
   return (
     <>
       <span className="flex items-start justify-between gap-2">
@@ -56,15 +66,15 @@ function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: 
           {written.label}
           {shortcut ? <KeyboardHint>{shortcut}</KeyboardHint> : null}
         </span>
-        {preview.available ? null : <Tag tone="bad">{t('locked')}</Tag>}
+        {preview.available ? (thanks ? <span className="pixel shrink-0 bg-teal-800 px-1.5 py-0.5 text-[11px] uppercase tracking-wider text-teal-300">{thanks}</span> : null) : <Tag tone="bad">{t('locked')}</Tag>}
       </span>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <span className="text-[13px] leading-snug text-cream">{lockWords(preview.lock)}</span> : null}
-      <Tags cash={preview.cash} tags={effectTags(words, effects, world, option.effects)} className={dim} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered), ...(preview.covered > 0 ? [{ tone: 'good' as const, text: t('covers', { amount: words.fmt.brief(preview.covered) }) }] : [])]} className={dim} />
       {(option.outcomes ?? []).map((outcome, k) => (
         <span key={k} className={`flex items-start gap-2 ${dim}`}>
           <span className="pixel w-12 shrink-0 text-right text-[13px] text-gold-500">{t('chance', { pct: chancePct(preview.outcomes[k].weight, total) })}</span>
-          <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects)} empty={t('nothing')} />
+          <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects, partnered)} empty={t('nothing')} />
         </span>
       ))}
     </>
@@ -74,6 +84,7 @@ function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: 
 /** One option of a card, to be chosen. */
 function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { def: CardDef; index: number; number: number; preview: OptionPreview; onPick(): void; disabled: boolean; tabIndex: number }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
+  const partnered = useGame((s) => s.view?.player.life.partner ?? false);
   if (!world) return null;
   return (
     <button
@@ -84,7 +95,7 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
       data-card-option={index}
       className="frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
     >
-      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} />
+      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} partnered={partnered} />
     </button>
   );
 }
@@ -107,8 +118,8 @@ export function CardStage() {
   const cardId = waiting ? view.hand[view.answered] : undefined;
   const def = content.cards.find((card) => card.id === cardId);
   const previews = useMemo(() => (view && def && waiting ? previewCard(content, view, def.id) : []), [content, view, def, waiting]);
-  // A choice that wants a skill the player lacks is not shown at all; the digits count what is shown.
-  const shown = previews.flatMap((preview, index) => (preview.lock === 'skill' ? [] : [index]));
+  // A choice the player cannot take is not shown at all: the digits count what is shown.
+  const shown = previews.flatMap((preview, index) => (preview.available ? [index] : []));
   const enabled = shown.filter((index) => previews[index].available);
   const focus = (index: number) => {
     const option = choices.current?.querySelector<HTMLElement>(`[data-card-option="${index}"]`);
@@ -148,7 +159,8 @@ export function CardStage() {
 
   const written = text.cards[def.id];
   const rarity = cardRarity(def);
-  const swipeable = def.options.length === 2 && !reducedMotion && !busy;
+  // Two choices on screen can be swiped, left for the first and right for the second.
+  const swipeable = shown.length === 2 && !reducedMotion && !busy;
 
   return (
     <div className="flex flex-col gap-3 px-3">
@@ -163,8 +175,8 @@ export function CardStage() {
         dragElastic={0.6}
         style={{ x, rotate: tilt, width: 'calc(288px * var(--art) + 4px)' }}
         onDragEnd={(_, info) => {
-          if (info.offset.x > SWIPE && previews[1]?.available) void pick(1);
-          else if (info.offset.x < -SWIPE) void pick(0);
+          if (info.offset.x > SWIPE) void pick(shown[1]);
+          else if (info.offset.x < -SWIPE) void pick(shown[0]);
         }}
         className={`frame relative mx-auto touch-pan-y bg-cream text-ink-900 ${rarity ? 'frame-gold' : 'frame-cream'} ${rarity === 'legendary' ? 'animate-legend' : 'animate-rise'}`}
       >
@@ -196,8 +208,8 @@ export function CardStage() {
       {swipeable ? (
         // A swipe cannot be taken back, so each side says what it picks. The buttons above say the same to a screen reader.
         <div aria-hidden className="flex items-start justify-between gap-3 text-[12px] text-ink-300">
-          <span className="min-w-0 flex-1 truncate text-left">← {written.options[0].label}</span>
-          <span className={`min-w-0 flex-1 truncate text-right ${previews[1]?.available ? '' : 'line-through'}`}>{written.options[1].label} →</span>
+          <span className="min-w-0 flex-1 truncate text-left">← {written.options[shown[0]].label}</span>
+          <span className="min-w-0 flex-1 truncate text-right">{written.options[shown[1]].label} →</span>
         </div>
       ) : null}
       {swipeable ? <p className="text-center text-[12px] text-ink-300">{t('swipe')}</p> : null}
@@ -211,6 +223,7 @@ export function CardStage() {
  * here: the figures are the engine's.
  */
 export function Outcome() {
+  const view = useGame((s) => s.view);
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
@@ -236,7 +249,10 @@ export function Outcome() {
         const odds = was?.options[event.option]?.outcomes ?? [];
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
-        const tags = world ? [...effectTags(words, effects, world, chosen?.effects), ...effectTags(words, effects, world, rolled?.effects)] : [];
+        const partnered = view?.player.life.partner ?? false;
+        const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered)] : [];
+        // What the player's cover paid, when it paid: the reason to have it.
+        const covered = was?.options[event.option]?.covered ?? 0;
 
         return (
           <div key={event.cardId} className="flex flex-col gap-3">
@@ -250,6 +266,7 @@ export function Outcome() {
                 <p className="pixel mt-0.5 text-[13px] uppercase tracking-wider text-ink-500">{t('chose', { label: option.label })}</p>
                 {/* What followed: the line of the outcome the dice gave, or the line of the choice itself. */}
                 <p className="mt-2 text-[15px] leading-snug">{event.outcome !== null ? option.outcomes[event.outcome] : option.after}</p>
+                {covered > 0 ? <p className="pixel mt-2 text-[14px] text-teal-800">{t('saved', { amount: words.fmt.money(covered) })}</p> : null}
                 {event.outcome !== null && total > 0 ? (
                   <p className="mt-2 flex items-center gap-2 text-[13px] text-ink-700">
                     <span className="pixel bg-ink-900 px-1.5 py-0.5 text-[13px] text-gold-500">{t('chance', { pct: chancePct(odds[event.outcome]?.weight ?? 0, total) })}</span>

@@ -7,9 +7,10 @@ const ILL = 'had_illness';
 export const healthCards: CardDef[] = [
   // Not before the fourth year: a player needs a chance to have bought insurance first. An illness is
   // on the record for good: no insurer takes on health cover for it afterwards.
+  // The public system and its waiting list are for someone without cover; with it, the private clinic is near enough free.
   card('health_illness', 'health', { weight: 6, cooldown: 6, risk: 'health', when: { minRound: 2 } }, [
-    { effects: { focus: 2, cash: usd(-1_500), protection: { insurance: 'health', coverPct: 90 }, setFlags: [ILL] } },
     { effects: { focus: 1, cash: usd(-14_000), protection: { insurance: 'health', coverPct: 90 }, setFlags: [ILL] } },
+    { when: { uninsured: 'health' }, effects: { focus: 2, cash: usd(-1_500), setFlags: [ILL] } },
     // Life cover pays out on a serious illness.
     { when: { insured: 'life' }, effects: { focus: 2, cash: usd(9_000), setFlags: [ILL] } },
   ]),
@@ -22,10 +23,11 @@ export const healthCards: CardDef[] = [
     { effects: { cash: usd(-2_200), protection: { insurance: 'health', coverPct: 50 } } },
     { outcomes: [{ weight: 65, effects: { cash: usd(-700) } }, { weight: 35, effects: { cash: usd(-3_200) } }] },
   ]),
+  // Money buys the time back; waiting costs it; playing on is a gamble; a fit body heals on its own.
   card('health_injury', 'health', { cooldown: 6, risk: 'health' }, [
-    { effects: { focus: 1, cash: usd(-1_800), protection: { insurance: 'health', coverPct: 80 } } },
+    { effects: { cash: usd(-1_800), protection: { insurance: 'health', coverPct: 80 } } },
     { effects: { focus: 2 } },
-    // A body that is used to work heals faster, and for nothing.
+    { outcomes: [{ weight: 50, effects: {} }, { weight: 50, effects: { focus: 3, skills: { health: -2 } } }] },
     { when: { minSkills: { health: 2 } }, effects: { focus: 1 } },
   ]),
   card('health_gym_habit', 'health', { when: { notFlags: ['fit'], notItems: ['member_gym'] } }, [

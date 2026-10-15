@@ -80,7 +80,7 @@ const order: fc.Arbitrary<Order> = fc.oneof(
     weight: 1,
     arbitrary: fc.record({
       type: fc.constant('setInsurance' as const),
-      insurance: fc.constantFrom('health' as const, 'home' as const, 'life' as const, 'liability' as const, 'pet' as never),
+      insurance: fc.constantFrom('health' as const, 'home' as const, 'life' as const, 'pet' as never),
       on: fc.boolean(),
     }),
   },

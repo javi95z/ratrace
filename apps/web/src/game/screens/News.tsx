@@ -38,6 +38,7 @@ const TOPIC: Record<Headline['topic'], string> = {
   asset: 'bg-teal-500',
   taxes: 'bg-wine-500',
   noise: 'bg-ink-300',
+  government: 'bg-sky-200',
 };
 
 /** The headlines about the next two years, and the gauges of the economy. */

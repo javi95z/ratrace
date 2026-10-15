@@ -47,6 +47,8 @@ export function headlineText({ text, names }: Words, h: Headline, n = 0): string
       return text.headlines.taxes[h.trend].replace('{city}', names.cities[h.cityId]);
     case 'noise':
       return text.headlines.noise[h.id] ?? '';
+    case 'government':
+      return text.headlines.government[h.id] ?? '';
   }
 }
 
@@ -98,7 +100,7 @@ export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'f
  * engine's preview gives, which already counts insurance, discounts and purchase tax.
  * `t` translates the `effects` section.
  */
-export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined): EffectTag[] {
+export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined, partnered = false): EffectTag[] {
   if (effects === undefined) return [];
   const { content, text, names, fmt } = words;
   // A tag is read at a glance: the amount is given in round figures, and the exact one is on the ledger.
@@ -145,7 +147,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   else if ((effects.job?.levelDelta ?? 0) < 0) add('bad', t('demotion'));
   if (effects.moveCity) add('plain', t('moveTo', { city: names.cities[effects.moveCity] }));
   if (effects.partner === null) add('plain', t('partnerOut'));
-  else if (effects.partner !== undefined) add('plain', t('partnerIn'));
+  // Someone already with a partner is told what it does to their pay; someone without, that a life is shared.
+  else if (effects.partner !== undefined) add(partnered ? (effects.partner.salaryPct >= 100 ? 'good' : 'bad') : 'plain', partnered ? t('partnerPay', { pct: effects.partner.salaryPct }) : t('partnerIn'));
   if (effects.children) add('plain', t('children', { count: effects.children }));
   if (effects.buyItem) {
     // A thing is taken for what it gives: the name alone says nothing of the status, how long it lasts, or the bargain.
@@ -289,7 +292,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -351,6 +354,14 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         if (event.reason !== null) {
           add(event, { tone: 'bad', icon: 'icon.fund', title: t('planMissed', { name: names.assets[event.assetId]?.name ?? event.assetId, amount: fmt.money(event.amount) }), hint: text.reasons[event.reason] });
         }
+        break;
+      case 'homecoming':
+        add(event, {
+          tone: event.triumphant ? 'gold' : 'good',
+          icon: 'icon.family',
+          title: t(event.triumphant ? 'homeTriumph' : 'homeAgain'),
+          hint: [event.gift > 0 ? t('homeHelped', { amount: fmt.money(event.gift) }) : '', t('homeFriends')].filter(Boolean).join(' '),
+        });
         break;
       case 'jobHunt':
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });

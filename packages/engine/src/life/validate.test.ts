@@ -103,9 +103,7 @@ describe('validateContent: life data', () => {
     expect(aged([{ fromRound: 0, status: 0 }, { fromRound: 2, status: -3 }])).toEqual([]);
     expect(life({ itemFinanceDownPct: 101 })).toContain('life.itemFinanceDownPct must be a whole number from 0 to 100');
     expect(life({ itemFinanceMinPrice: -1 })).toContain('life.itemFinanceMinPrice must be a whole, non-negative amount');
-    expect(life({ insurancePremiumBp: { health: 400, home: 300, life: 200 } })).toContain(
-      'life.insurancePremiumBp needs a whole, non-negative number for liability',
-    );
+    expect(life({ insurancePremiumBp: { health: 400, home: 300 } as never })).toContain('life.insurancePremiumBp needs a whole, non-negative number for life');
     expect(life({ rentOutMinFinanceSkill: 5 })).toContain('life.rentOutMinFinanceSkill must be 0, 1 or 2');
   });
 
@@ -116,7 +114,7 @@ describe('validateContent: life data', () => {
 
   it('checks the world rules', () => {
     const world = (over: Record<string, unknown>) => errors({ world: { ...c.world, ...over } as never });
-    expect(world({ headlinesPerRound: 9 })).toContain('world.headlinesPerRound must be a whole number from 0 to 8');
+    expect(world({ headlinesPerRound: 10 })).toContain('world.headlinesPerRound must be a whole number from 0 to 9');
     expect(world({ newsTruthPct: 130 })).toContain('world.newsTruthPct must be between 0 and 100');
     expect(world({ flatBandBp: -1 })).toContain('world.flatBandBp must be a whole, non-negative number');
     expect(world({ taxReformChancePct: -5 })).toContain('world.taxReformChancePct must be between 0 and 100');

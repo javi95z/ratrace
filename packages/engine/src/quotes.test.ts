@@ -237,7 +237,7 @@ describe('quoteLiving', () => {
     for (const tier of [0, 1] as const) {
       expect(previewRound(content, view, { orders: [{ type: 'setRentTier', tier }] }).expenses.living).toBe((quote.rentTiers?.[tier] ?? 0) * 2);
     }
-    for (const insurance of ['health', 'home', 'life', 'liability'] as const) {
+    for (const insurance of ['health', 'home', 'life'] as const) {
       const other = previewRound(content, view, { orders: [{ type: 'setInsurance', insurance, on: true }] }).expenses.other;
       expect(other).toBe(quote.insurance[insurance] * 2);
     }
@@ -254,7 +254,7 @@ describe('quoteLiving', () => {
       rentStatus: [0, 2],
       lifestyleStatus: [0, 0, 0, 9],
       worse: { room: null, frugal: null },
-      insurance: { health: 72_000, home: 54_000, life: 36_000, liability: 18_000 },
+      insurance: { health: 72_000, home: 54_000, life: 36_000 },
       health: { since: null, dearerFrom: null, refused: false },
     });
   });

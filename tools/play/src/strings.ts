@@ -158,7 +158,7 @@ const en: Ui = {
     'unknown-city': "No such city. Type 'cities' to see them.",
     'unknown-home': "No such kind of home. Type 'homes' to see them.",
     'unknown-number': "No such number. Type 'me' to see your list.",
-    'unknown-insurance': 'The insurances are: health, home, life, liability.',
+    'unknown-insurance': 'The insurances are: health, home, life.',
     'needs-on-off': "Say 'on' or 'off'.",
     'bad-tier': 'The lifestyles are 0 to 3.',
   },

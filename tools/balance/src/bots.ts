@@ -319,7 +319,7 @@ const random: Bot = {
           orders.push({ type: 'pensionIn', amount: part() });
           break;
         default:
-          orders.push({ type: 'setInsurance', insurance: pick(['health', 'home', 'life', 'liability'] as const), on: roll() < 0.5 });
+          orders.push({ type: 'setInsurance', insurance: pick(['health', 'home', 'life'] as const), on: roll() < 0.5 });
       }
     }
     return orders;

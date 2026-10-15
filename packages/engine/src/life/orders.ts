@@ -1,12 +1,13 @@
 import { loanRoom, takePersonalLoan } from '../debt';
 import { careerOf } from '../lookup';
 import { mulDiv } from '../money';
-import { indexed } from '../rates';
+import { indexed, PRICE_LEVEL_START } from '../rates';
+import { netWorth } from '../selectors';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
 import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from './derive';
-import { FLAG_HAD_ILLNESS, FLAG_REMOTE_WORK, hasFlag } from './flags';
+import { FLAG_CAME_HOME_RICH, FLAG_HAD_ILLNESS, FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
@@ -151,7 +152,19 @@ export function lapsingIn(content: Content, p: PlayerState, cityId: string): str
 }
 
 /** What moving to a city costs this player today: less for someone with a car to carry their life in. */
+/** Net worth in the dollars of the start: what can be compared across the years of a life. */
+function realWorth(p: PlayerState, world: WorldState): Cents {
+  return Math.round((netWorth(p) * PRICE_LEVEL_START) / world.priceLevel);
+}
+
+/** True for someone going back to the city the life began in with little to show: the family helps. */
+export function helpedHome(content: Content, world: WorldState, cityId: string, p: PlayerState): boolean {
+  return cityId === p.life.homeCityId && p.cityId !== cityId && realWorth(p, world) < content.life.homecoming.helpBelowWorth;
+}
+
 export function moveCost(content: Content, world: WorldState, city: CityDef, p: PlayerState): Cents {
+  // Family carries a returning child home for nothing.
+  if (helpedHome(content, world, city.id, p)) return 0;
   const alone = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
   // A household is dearer to move than a suitcase: a partner and each child add their share.
   const family = (p.life.partner ? content.life.movePartnerPct : 0) + p.life.children.length * content.life.moveChildPct;
@@ -329,6 +342,15 @@ function executeMoveCity(p: PlayerState, cityId: string, ctx: OrderContext): Rej
   p.cash -= cost;
   ctx.tally.movingCost += cost;
   p.life.focusUsed += 1;
+  // Leaving home is remembered, to be measured against on the way back.
+  const worth = realWorth(p, ctx.world);
+  if (p.cityId === p.life.homeCityId) p.life.leftHomeWorth = worth;
+  if (cityId === p.life.homeCityId) {
+    const rules = ctx.content.life.homecoming;
+    const gift = helpedHome(ctx.content, ctx.world, cityId, p) ? mulDiv(indexed(city.livingCostAnnual, ctx.world) * ctx.content.yearsPerRound, rules.helpPct, 100) : 0;
+    const triumphant = p.life.leftHomeWorth !== null && worth > p.life.leftHomeWorth && !hasFlag(p.life.flags, FLAG_CAME_HOME_RICH);
+    p.life.homecoming = { gift, triumphant };
+  }
   p.life.movingTo = cityId;
   p.life.movingTransfer = false;
   return null;

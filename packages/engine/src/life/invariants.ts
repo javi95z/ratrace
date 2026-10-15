@@ -26,6 +26,8 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
   }
   if (!['office', 'remote', 'partTime'].includes(life.workMode)) breaks.push(`life.workMode is not a way of working: ${String(life.workMode)}`);
   if (typeof life.lodger !== 'boolean') breaks.push('life.lodger is not true or false');
+  if (life.leftHomeWorth !== null && !isWhole(life.leftHomeWorth)) breaks.push('life.leftHomeWorth is not a whole number or null');
+  if (life.homecoming !== null && !(typeof life.homecoming === 'object' && isCount(life.homecoming.gift) && typeof life.homecoming.triumphant === 'boolean')) breaks.push('life.homecoming is not a gift and a triumph, or null');
   if (life.formerCareer !== null && !(typeof life.formerCareer === 'object' && content.careers.some((career) => career.id === life.formerCareer?.id) && isCount(life.formerCareer.level))) breaks.push('life.formerCareer is not a career and a rung');
   if (![0, 1, 2, 3].includes(life.financeSkill)) breaks.push(`life.financeSkill is not 0, 1, 2 or 3: ${life.financeSkill}`);
   if (typeof life.skills !== 'object' || life.skills === null) breaks.push('life.skills is not a record');

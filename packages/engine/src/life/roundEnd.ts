@@ -3,6 +3,7 @@ import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf, workModeRule } from './derive';
+import { FLAG_CAME_HOME_RICH } from './flags';
 import { lapsingIn, raiseChance } from './orders';
 import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
 
@@ -15,6 +16,8 @@ import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './ski
 export function landingOf(p: PlayerState, content: Content, transfer: boolean): { level: number | null; rungsLost: number; partnerSettling: number } {
   const job = p.life.career;
   if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  // Home again, old contacts open doors at once: no rung lost, and a partner finds work straight away.
+  if (p.cityId === p.life.homeCityId) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
   // Someone who speaks the language is known for what they can do from the first day, and their partner too.
   const languages = skillLevel(p, 'languages', content);
   const rules = content.life.skills;
@@ -199,6 +202,18 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
     if (life.career) life.career.level = landing.level ?? life.career.level;
     life.partnerSettling = landing.partnerSettling;
     events.push({ kind: 'moved', cityId: p.cityId, rungsLost: landing.rungsLost, partnerIdle: landing.partnerSettling > 0 });
+    if (p.cityId === life.homeCityId && life.homecoming !== null) {
+      const back = life.homecoming;
+      const rules = content.life.homecoming;
+      p.cash += back.gift;
+      if (back.triumphant) {
+        life.bonusStatus += rules.status;
+        life.flags[FLAG_CAME_HOME_RICH] = 0;
+      }
+      addSkillPoints(p, content, { network: rules.networkPoints }, events);
+      events.push({ kind: 'homecoming', gift: back.gift, triumphant: back.triumphant });
+    }
+    life.homecoming = null;
     const lapsed = lapsingIn(content, p, p.cityId);
     life.items = life.items.filter((owned) => !lapsed.includes(owned.itemId));
     for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });

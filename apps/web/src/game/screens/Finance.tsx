@@ -28,7 +28,7 @@ type ShopView = 'affordable' | 'all';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
 const KINDS: AssetKind[] = ['fund', 'bond', 'stock', 'crypto', 'gold'];
 const KIND_TITLE: Record<AssetKind, string> = { fund: 'funds', bond: 'bonds', stock: 'stocks', crypto: 'crypto', gold: 'gold' };
-const INSURANCES: InsuranceKind[] = ['health', 'home', 'life', 'liability'];
+const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];
 
 /** The game before this round's orders, the game with them applied, and the preview of the round. */
 function useRound() {
@@ -948,6 +948,8 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
         <>
           <ul className="my-1 flex flex-col gap-1 text-[13px] leading-snug">
             <li>{t('moveCost', { amount: fmt.money(quote.cost) })}</li>
+            {/* Going home: what is waiting there, said before the move is ordered. */}
+            {quote.home ? <li className="text-teal-300">{t(quote.home.helped ? 'homeHelped' : 'homeBack')}</li> : null}
             {job && quote.rungsLost > 0 && there.level !== null ? <li className="text-wine-300">{t('moveRung', { title: text.careers[job.id].levels[there.level] })}</li> : null}
             {quote.partnerIdleRounds > 0 ? <li className="text-wine-300">{t('movePartner', { years: quote.partnerIdleRounds * years })}</li> : null}
             {/* Said before the move is ordered: what belongs to this city does not come along. */}

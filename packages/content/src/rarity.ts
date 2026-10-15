@@ -18,7 +18,7 @@ export const RARITY_BANDS: Record<BadgeRarity, [number, number]> = { common: [30
 export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }> = {
   first_100k: { rarity: 'common' },
   millionaire: { rarity: 'common' },
-  millionaire_by_35: { rarity: 'legendary' },
+  millionaire_by_35: { rarity: 'rare' },
   ten_million: { rarity: 'rare' },
   swiss_banker: { rarity: 'rare', judged: true },
   fiscally_creative: { rarity: 'rare', judged: true },

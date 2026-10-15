@@ -65,6 +65,8 @@ function headline(pen: Pen, h: Headline, n = 0): string {
       return lines.taxes[h.trend].replace('{city}', pen.names.cities[h.cityId]);
     case 'noise':
       return lines.noise[h.id] ?? '';
+    case 'government':
+      return lines.government[h.id] ?? '';
   }
 }
 

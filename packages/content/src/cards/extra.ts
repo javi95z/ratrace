@@ -84,7 +84,8 @@ export const moreFamilyCards: CardDef[] = [
   ]),
   card('fam_partner_startup', 'family', { once: true, when: { partner: true, minRound: 3 } }, [
     { effects: { status: -1 } },
-    { effects: { partner: { salaryPct: 0 } }, outcomes: [{ weight: 40, effects: { partner: { salaryPct: 160 } } }, { weight: 60, effects: { partner: { salaryPct: 70 } } }] },
+    // A year or two of savings to keep the house going while it starts; then it works, or it is back to a job.
+    { effects: { cashSalaryPct: -15 }, outcomes: [{ weight: 40, effects: { partner: { salaryPct: 160 } } }, { weight: 60, effects: { partner: { salaryPct: 70 } } }] },
   ]),
 ];
 

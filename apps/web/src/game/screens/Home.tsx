@@ -123,8 +123,6 @@ export function Home() {
         )}
       </div>
 
-      <InstallApp />
-
       <Panel className="mt-auto w-full" label={settings('title')}>
         <HomePreferences />
         {/* With an account, its own line says where the life is saved. */}
@@ -136,6 +134,9 @@ export function Home() {
           </p>
         )}
       </Panel>
+
+      {/* Below the account and the settings: an offer, not something the page is for. */}
+      <InstallApp />
 
       {/* Saying yes leaves this page for the game, so the sheet keeps no entry of its own in the history. */}
       <Sheet open={offer !== null && asking === offer.gameId} onClose={() => setAsking(null)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>

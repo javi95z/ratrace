@@ -111,7 +111,7 @@ describe('the play screen', () => {
     const clippings = within(screen.getByRole('region', { name: 'News' })).getAllByRole('listitem');
     const news = ((await services.store.loadGame()) as SavedGame).state.timeline[0].news;
     expect(news.length).toBeGreaterThan(0);
-    const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing', asset: 'Markets', taxes: 'Taxes', noise: 'Society' };
+    const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing', asset: 'Markets', taxes: 'Taxes', noise: 'Society', government: 'Government' };
     expect(clippings.map((clipping) => clipping.querySelector('[data-topic]')?.textContent)).toEqual(news.map((headline) => SUBJECT[headline.topic]));
     for (const clipping of clippings) expect(clipping.querySelector('img')).not.toBeNull();
     expect(screen.getByText(/Round 1 of 20 · Madrid/)).toBeTruthy();
@@ -388,7 +388,7 @@ describe('the play screen', () => {
     expect(screen.queryByText('Badge earned')).toBeNull();
   });
 
-  it('says why a choice is locked in full strength, and dims only the choice', async () => {
+  it('shows no choice that cannot be taken', async () => {
     const services = memoryServices();
     // Played on, without the screen, to a card with a choice that is locked.
     let session = await services.sessions.start('nurse');
@@ -402,23 +402,15 @@ describe('the play screen', () => {
       else if (session.view().phase === 'cards') await session.answerCard(waiting().findIndex((option) => option.available));
       else await session.playRound({ orders: [] });
     }
-    const at = waiting().findIndex((option) => option.lock !== null);
-    const lock = waiting()[at].lock as NonNullable<ReturnType<typeof waiting>[number]['lock']>;
+    const open = waiting().filter((option) => option.available).length;
     const user = userEvent.setup();
     renderGame(<Play />, memoryServices(services.store));
-    // A hand not begun opens on the news; one begun opens on the card that waits.
     await screen.findByRole('heading', { level: 1 });
     const begin = screen.queryByRole('button', { name: 'See what life brings' });
     if (begin) await user.click(begin);
-
-    const locked = within(await screen.findByRole('group', { name: /^Your choices/ })).getAllByRole('button')[at] as HTMLButtonElement;
-    expect(locked.disabled).toBe(true);
-    const dimmed = (node: Element) => node.closest('[class*="opacity-"]') !== null;
-    const reason = within(locked).getByText(textFor('en').text.optionLocks[lock]);
-    // The reason is what the player needs to read: nothing on the way up to it takes its strength away.
-    expect(dimmed(reason)).toBe(false);
-    // What cannot be chosen is dimmed.
-    expect(dimmed(within(locked).getByText('Locked').previousElementSibling as Element)).toBe(true);
+    const choices = within(await screen.findByRole('group', { name: /^Your choices/ })).getAllByRole('button');
+    expect(choices).toHaveLength(open);
+    expect(screen.queryByText('Locked')).toBeNull();
   });
 
   it('gives one tip a visit, and hands the focus back to the stage when a tip is read', async () => {

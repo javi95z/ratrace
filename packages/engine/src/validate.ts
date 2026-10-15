@@ -227,6 +227,8 @@ export function validateContent(c: Content): string[] {
   if (!Array.isArray(fullTime.status) || fullTime.status.length === 0 || fullTime.status.some((step) => !Array.isArray(step) || !isCount(step[0]) || !isCount(step[1]))) errors.push('life.fullTime.status must be steps of capital and status');
   const lodger = isRecord(life.lodger) ? life.lodger : {};
   if (!(isCount(lodger.rentPct) && (lodger.rentPct as number) <= 100) || !isCount(lodger.statusLost)) errors.push('life.lodger needs a share of the rent from 0 to 100 and the status lost');
+  const homecoming = isRecord(life.homecoming) ? life.homecoming : {};
+  for (const field of ['helpBelowWorth', 'helpPct', 'networkPoints', 'status']) if (!isCount(homecoming[field])) errors.push(`life.homecoming.${field} must be a whole, non-negative number`);
   const raise = isRecord(life.raise) ? life.raise : {};
   for (const field of ['chancePct', 'perNegotiationPct', 'pct']) if (!(isCount(raise[field]) && (raise[field] as number) <= 100)) errors.push(`life.raise.${field} must be a whole number from 0 to 100`);
   if (!(isWhole(raise.restRounds) && (raise.restRounds as number) >= 1)) errors.push('life.raise.restRounds must be a whole number from 1 up');
@@ -350,10 +352,11 @@ export function validateContent(c: Content): string[] {
   }
 
   const w = c.world;
-  if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 8)) {
-    errors.push('world.headlinesPerRound must be a whole number from 0 to 8');
+  if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 9)) {
+    errors.push('world.headlinesPerRound must be a whole number from 0 to 9');
   }
   if (!isCount(w.noiseHeadlines)) errors.push('world.noiseHeadlines must be a whole, non-negative number');
+  if (!isCount(w.governmentHeadlines)) errors.push('world.governmentHeadlines must be a whole, non-negative number');
   if (!within(w.newsTruthPct, 0, 100)) errors.push('world.newsTruthPct must be between 0 and 100');
   if (!isCount(w.flatBandBp)) errors.push('world.flatBandBp must be a whole, non-negative number');
   if (!within(w.taxReformChancePct, 0, 100)) errors.push('world.taxReformChancePct must be between 0 and 100');

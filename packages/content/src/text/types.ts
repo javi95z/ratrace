@@ -52,6 +52,8 @@ export interface ContentText {
     taxes: Record<Trend, string>;
     /** Filler that tells nothing of what is coming, as many as `world.noiseHeadlines`. */
     noise: string[];
+    /** The government at work, as many as `world.governmentHeadlines`. */
+    government: string[];
   };
   /** Badges: what each is called, and how it is earned. */
   badges: Record<string, { name: string; how: string }>;

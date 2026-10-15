@@ -68,7 +68,7 @@ export const life: LifeRules = {
   childRounds: 10,
   partnerCostPct: 45,
   // Priced so that a careful player can justify each one: about what the bills it covers cost over a life.
-  insurancePremiumBp: { health: 150, home: 60, life: 60, liability: 40 },
+  insurancePremiumBp: { health: 150, home: 60, life: 60 },
   // A rented room costs a little over half the housing share of a rented flat.
   rentTierHousingPct: [55, 100],
   rentTierStatus: [0, 3],
@@ -169,6 +169,9 @@ export const life: LifeRules = {
   },
   // A lodger pays about a third of what the whole home would let for, and the flat is shared.
   lodger: { rentPct: 30, statusLost: 4 },
+  // Home again. With little to show, the family carries you back and puts you up for a while; with
+  // more, nobody needs to. Either way old friends open doors, and coming back richer is a triumph.
+  homecoming: { helpBelowWorth: usd(50_000), helpPct: 30, networkPoints: 3, status: 4 },
   // Asking the boss: one in three says yes, a good negotiator is told yes far more often. Yes or no, not again for two rounds.
   raise: { chancePct: 30, perNegotiationPct: 15, pct: 4, restRounds: 2 },
   // Prison: status on the way in, and a rung of the career on the way out.
@@ -246,6 +249,8 @@ export const world: WorldRules = {
   // Four a round: one is often filler that says nothing, to be told from the news that matters.
   headlinesPerRound: 4,
   noiseHeadlines: 38,
+  // The government as the paper sees it: busy, expensive, and always about to fix something.
+  governmentHeadlines: 20,
   newsTruthPct: 70,
   flatBandBp: 25,
   taxReformChancePct: 8,

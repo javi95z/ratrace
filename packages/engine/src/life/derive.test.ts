@@ -47,7 +47,7 @@ describe('other expenses and passive income', () => {
     const state = life({}, {
       partner: true,
       children: [11, 4],
-      insurance: { health: true, home: false, life: true, liability: false },
+      insurance: { health: true, home: false, life: true },
       items: [{ itemId: 'car_basic', value: 0, roundsLeft: null, paid: 0, age: 0 }, { itemId: 'club', value: 0, roundsLeft: null, paid: 0, age: 0 }],
       recurring: [
         { tag: 'school', kind: 'expense', annual: 100_000, roundsLeft: 3 },

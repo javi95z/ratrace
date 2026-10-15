@@ -258,7 +258,7 @@ describe('lifestyle, rent and insurance orders', () => {
   it('turns an insurance on and off', () => {
     const { p, run } = setup();
     expect(run({ type: 'setInsurance', insurance: 'health', on: true })).toBeNull();
-    expect(p.life.insurance).toEqual({ health: true, home: false, life: false, liability: false });
+    expect(p.life.insurance).toEqual({ health: true, home: false, life: false });
     expect(run({ type: 'setInsurance', insurance: 'health', on: false })).toBeNull();
     expect(p.life.insurance.health).toBe(false);
     expect(run({ type: 'setInsurance', insurance: 'pet', on: true })).toBe('unknown-insurance');

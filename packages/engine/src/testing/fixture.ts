@@ -189,7 +189,7 @@ const base: Content = {
     childCostPct: 25,
     childRounds: 9,
     partnerCostPct: 50,
-    insurancePremiumBp: { health: 400, home: 300, life: 200, liability: 100 },
+    insurancePremiumBp: { health: 400, home: 300, life: 200 },
     rentTierHousingPct: [60, 100],
     rentTierStatus: [0, 2],
     lifestyleStatus: [0, 0, 0, 9],
@@ -222,6 +222,7 @@ const base: Content = {
     raise: { chancePct: 40, perNegotiationPct: 10, pct: 5, restRounds: 2 },
     fullTime: { strongPct: 60, strongRounds: 2, profitPct: 150, focus: 1, status: [[0, 5], [1_000_000_00, 10]], rungsLost: 1 },
     lodger: { rentPct: 30, statusLost: 3 },
+    homecoming: { helpBelowWorth: 50_000_00, helpPct: 30, networkPoints: 3, status: 3 },
     jail: { statusLost: 6, rungsLost: 1 },
     // No limits by default: each test of one sets its own.
     focusLimits: { overtimeTiredFrom: 99, overtimeHealthPoints: 0, overtimeBurnoutFrom: 99, burnoutChancePct: 0, burnoutHealthPoints: 0, burnoutFocus: 0, huntRestRounds: 0, huntMissPct: 0, huntFloorPct: 0, studyPerRung: 999 },
@@ -264,6 +265,7 @@ const base: Content = {
   world: {
     headlinesPerRound: 3,
     noiseHeadlines: 0,
+    governmentHeadlines: 0,
     newsTruthPct: 70,
     flatBandBp: 25,
     taxReformChancePct: 0,

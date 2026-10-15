@@ -217,7 +217,7 @@ describe('what a skill does', () => {
 
   it('health: cheaper health insurance, and at the top a point of focus more', () => {
     const content = contentWith();
-    const insured = withPlayer(content, game(content), {}, { insurance: { health: true, home: false, life: false, liability: false } });
+    const insured = withPlayer(content, game(content), {}, { insurance: { health: true, home: false, life: false } });
     const fit = skilled(content, insured, { health: at(3) });
     const premium = deriveExpenses(insured.player, content);
     expect(deriveExpenses(fit.player, content)).toBe(Math.floor((premium * 40) / 100));

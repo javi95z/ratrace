@@ -12,6 +12,8 @@ export const FLAG_CHEAP_MORTGAGE = 'cheap_mortgage';
 export const FLAG_SOLD_BUSINESS = 'sold_business';
 /** The boss said yes to working from home, whatever the job and the rung. */
 export const FLAG_REMOTE_WORK = 'remote_work';
+/** Came back to the city the life began in richer than when they left: a triumph has been had. */
+export const FLAG_CAME_HOME_RICH = 'came_home_rich';
 
 /** Set by a serious illness: no insurer takes on health cover for it afterwards. */
 export const FLAG_HAD_ILLNESS = 'had_illness';

@@ -17,6 +17,17 @@ import { retire } from './orders';
 import { addSkillPoints, maxBusinessesOf, pointsOfLevel } from './skills';
 
 /** The one-off money of an effect, in the dollars of the round, after any protection the player holds. */
+/** What a cover pays of the cost of these effects for this player: nothing where there is none, or no cost. */
+export function coverOf(p: PlayerState, effects: Effects | undefined, at: Situation): Cents {
+  const shield = effects?.protection;
+  if (!effects || !shield) return 0;
+  const insured = shield.insurance !== undefined && p.life.insurance[shield.insurance];
+  const flagged = shield.flag !== undefined && hasFlag(p.life.flags, shield.flag);
+  if (!insured && !flagged) return 0;
+  const gross = moneyOf(p, { ...effects, protection: undefined }, at);
+  return gross < 0 ? mulDiv(-gross, shield.coverPct, 100) : 0;
+}
+
 function moneyOf(p: PlayerState, effects: Effects, at: Situation): Cents {
   let amount = indexed(effects.cash ?? 0, at.world);
   if (effects.cashSalaryPct !== undefined) {

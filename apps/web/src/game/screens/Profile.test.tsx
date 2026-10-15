@@ -202,7 +202,7 @@ describe('what the player owns, in the profile', () => {
     expect(within(sheet).getByText('Pays 90% on "Water damage"')).toBeTruthy();
     expect(within(sheet).getByText('Opens a way out on "A serious illness"')).toBeTruthy();
     expect(within(sheet).queryByText('Insured')).toBeNull();
-    expect(within(sheet).getAllByText(/^\$\d+\/yr$/)).toHaveLength(4);
+    expect(within(sheet).getAllByText(/^\$\d+\/yr$/)).toHaveLength(3);
   });
 
   it('is only to be read until the finances open, and there each line is the choice itself', async () => {
@@ -282,19 +282,19 @@ describe('what the player owns, in the profile', () => {
     expect(within(sheet).getByText('From 32, a rented room costs 6 status.')).toBeTruthy();
   });
 
-  it('names every insurance held in one word each, so that four of them fit on the line', async () => {
+  it('names every insurance held in one word each, so that all of them fit on the line', async () => {
     setWidth('desk');
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);
-    await session.playRound({ orders: (['health', 'home', 'life', 'liability'] as const).map((insurance) => ({ type: 'setInsurance' as const, insurance, on: true })) });
+    await session.playRound({ orders: (['health', 'home', 'life'] as const).map((insurance) => ({ type: 'setInsurance' as const, insurance, on: true })) });
     renderGame(<Play />, services);
     await screen.findAllByRole('heading', { name: 'News' });
-    expect(screen.getByRole('button', { name: /^Insurance/ }).textContent).toContain('Health · Home · Life · Liability');
+    expect(screen.getByRole('button', { name: /^Insurance/ }).textContent).toContain('Health · Home · Life');
     cleanup();
     renderGame(<Play />, services, 'es');
     await screen.findAllByRole('heading', { name: 'Noticias' });
-    expect(screen.getByRole('button', { name: /^Seguros/ }).textContent).toContain('Salud · Hogar · Vida · R. civil');
+    expect(screen.getByRole('button', { name: /^Seguros/ }).textContent).toContain('Salud · Hogar · Vida');
   });
 
   it('shows the home itself, and no rent, to someone who owns where they live', async () => {
