@@ -2,7 +2,7 @@
 
 import { careerArt, cityIcon, lives } from '@ratrace/content';
 import { useEffect, useId, useState } from 'react';
-import { useCommunity, useT, useWords } from '@/game/context';
+import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { ageAt } from '@/game/present';
 import type { Community, Friend, RankedLifeDetail, RankingRow } from '@/online/types';
@@ -31,6 +31,8 @@ function You({ community, onRenamed }: { community: Community; onRenamed(): void
   const [name, setName] = useState('');
   const [problem, setProblem] = useState<'invalid' | 'taken' | 'refused' | 'failed' | null>(null);
   const [busy, setBusy] = useState(false);
+  const { state: account } = useAccount();
+  const userId = account.kind === 'guest' || account.kind === 'member' ? account.userId : '';
 
   useEffect(() => {
     let wanted = true;
@@ -65,12 +67,12 @@ function You({ community, onRenamed }: { community: Community; onRenamed(): void
   return (
     <Panel title={t('you')} label={t('you')}>
       <div className="flex flex-col gap-2">
-        {/* The name and the code on one line each: the way to change the name sits beside it. */}
+        {/* The name as the rankings show it, the one they give until another is chosen, and the way to change it. */}
         {editing ? null : (
           <div className="flex items-center justify-between gap-3">
-            <p className={me.nickname ? 'pixel min-w-0 truncate text-[18px]' : 'min-w-0 text-[13px] leading-snug text-ink-200'}>{me.nickname ?? t('noName')}</p>
+            <p className="pixel min-w-0 truncate text-[18px]">{me.nickname ?? t('nameless', { tag: tagOf(userId) })}</p>
             <Button variant="quiet" className="shrink-0 text-[14px]" onClick={open}>
-              {me.nickname ? t('changeName') : t('chooseName')}
+              {t('changeName')}
             </Button>
           </div>
         )}
@@ -101,8 +103,8 @@ function You({ community, onRenamed }: { community: Community; onRenamed(): void
             </div>
           </form>
         ) : null}
-        <p className="text-[12px] text-ink-300" title={t('codeHint')}>
-          {t('code')}: <span className="pixel select-all text-[15px] tracking-[0.12em] text-gold-500">{me.friendCode}</span> · {t('codeHint')}
+        <p className="text-[12px] text-ink-300">
+          {t('code')}: <span className="pixel select-all text-[15px] tracking-[0.12em] text-gold-500">{me.friendCode}</span>
         </p>
       </div>
     </Panel>

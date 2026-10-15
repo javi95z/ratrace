@@ -87,20 +87,6 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
             onKeyDown={accelerated}
             onChange={(event) => setSafeAmount(Number(event.target.value))}
           />
-          <label className="flex items-center justify-between gap-3 text-[13px] text-ink-200">
-            <span>{t('exact')}</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={max}
-              step={step}
-              value={amount}
-              aria-describedby={`${availableId} ${helpId}`}
-              onChange={(event) => setSafeAmount(Number(event.target.value))}
-              className="frame sunk min-h-11 w-36 bg-night-900 px-2 text-right text-cream"
-            />
-          </label>
           <div className="grid grid-cols-3 gap-2">
             {[25, 50, 100].map((pct) => (
               <button key={pct} type="button" onClick={() => setAmount(Math.floor((max * pct) / 100))} className="pixel frame-raised min-h-11 bg-night-600 text-[15px] text-ink-200">

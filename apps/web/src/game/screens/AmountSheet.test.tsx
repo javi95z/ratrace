@@ -14,7 +14,7 @@ function Example({ confirmed }: { confirmed(amount: number): void }) {
 }
 
 describe('AmountSheet keyboard controls', () => {
-  it('focuses the slider, supports accelerated keys and accepts an exact amount', async () => {
+  it('focuses the slider, supports accelerated keys, and has no field for an exact amount', async () => {
     const user = userEvent.setup();
     const confirmed = vi.fn();
     renderGame(<Example confirmed={confirmed} />, memoryServices());
@@ -27,11 +27,9 @@ describe('AmountSheet keyboard controls', () => {
     expect(slider.value).toBe('3000');
     await user.keyboard('{End}');
     expect(slider.value).toBe('10000');
-    await user.clear(screen.getByRole('spinbutton', { name: 'Exact amount' }));
-    await user.type(screen.getByRole('spinbutton', { name: 'Exact amount' }), '3333');
-    expect(slider.value).toBe('3333');
+    expect(screen.queryByRole('spinbutton')).toBeNull();
     await user.keyboard('{Control>}{Enter}{/Control}');
-    expect(confirmed).toHaveBeenCalledWith(3333);
+    expect(confirmed).toHaveBeenCalledWith(10_000);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

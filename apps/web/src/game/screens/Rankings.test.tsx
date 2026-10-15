@@ -154,8 +154,9 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     const you = await screen.findByRole('region', { name: 'You' });
-    expect(you.textContent).toContain('You have no name yet');
-    await user.click(within(you).getByRole('button', { name: 'Choose a name' }));
+    // Until one is chosen, the name the rankings give: Rat, and four characters.
+    expect(you.textContent).toMatch(/Rat /);
+    await user.click(within(you).getByRole('button', { name: 'Change it' }));
     const field = within(you).getByRole('textbox', { name: 'Name' });
     await user.type(field, 'a b');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
@@ -193,7 +194,7 @@ describe('the rankings', () => {
     show(c);
     await screen.findByRole('list', { name: 'All time' });
     const you = screen.getByRole('region', { name: 'You' });
-    await user.click(within(you).getByRole('button', { name: 'Choose a name' }));
+    await user.click(within(you).getByRole('button', { name: 'Change it' }));
     await user.type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(asks).toBe(2));
@@ -234,7 +235,7 @@ describe('the rankings', () => {
     const user = userEvent.setup();
     show(c);
     const you = await screen.findByRole('region', { name: 'You' });
-    await user.click(within(you).getByRole('button', { name: 'Choose a name' }));
+    await user.click(within(you).getByRole('button', { name: 'Change it' }));
     const field = within(you).getByRole('textbox', { name: 'Name' });
     await user.type(field, 'ab');
     await user.click(within(you).getByRole('button', { name: 'Save' }));
@@ -256,7 +257,7 @@ describe('the rankings', () => {
       const user = userEvent.setup();
       show(c);
       const you = await screen.findByRole('region', { name: 'You' });
-      await user.click(within(you).getByRole('button', { name: 'Choose a name' }));
+      await user.click(within(you).getByRole('button', { name: 'Change it' }));
       await user.type(within(you).getByRole('textbox', { name: 'Name' }), 'Rata_Uno');
       await user.click(within(you).getByRole('button', { name: 'Save' }));
       expect((await within(you).findByRole('alert')).textContent, answer).toBe(said);

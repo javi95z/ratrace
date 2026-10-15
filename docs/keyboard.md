@@ -32,7 +32,7 @@ and a stage over a global command.
 | Card choices | Up, Down, Home, End, 1–4 | Move focus among available choices. A digit chooses that available option at once; a held digit never answers the next card. Enter or Space uses the focused native button. |
 | Shop view | Left, Right, Home, End | Recommended, in reach or all: a segmented radio group. |
 | Finance lists | Up, Down, Home, End, Escape | Move among actionable rows; Escape returns to the selected finance tab. |
-| Amount slider | arrows, Shift + arrows, Page Up/Down, Home, End | Move one step, ten steps, roughly 10%, or to either limit. An adjacent number field accepts an exact value. |
+| Amount slider | arrows, Shift + arrows, Page Up/Down, Home, End | Move one step, ten steps, roughly 10%, or to either limit. |
 
 ## Focus and dialogs
 
@@ -52,6 +52,6 @@ They stay outside the visual layout until focused.
 
 Unit tests cover modality, priority-safe shortcuts, editable-field exclusion, key repeat, help,
 dialog focus, inert background content, roving Tab stops, disabled choices, life typeahead, cards,
-amount acceleration and exact entry. The representative play-screen test advances from news and
+and amount acceleration. The representative play-screen test advances from news and
 answers a card with the keyboard alone. Any new composite control should add its key contract to
 this document and a focused unit test before it ships.
