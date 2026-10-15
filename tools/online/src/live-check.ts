@@ -349,11 +349,16 @@ try {
 
   // B listens to the room as a page in it does, and hears of it starting.
   const heard: string[] = [];
+  // SUBSCRIBED comes before the database is listened to for this channel: Realtime says so on its own, in a message of the system.
+  let ready = false;
   const channel = b
     .channel(`room:${room.id}`)
+    .on('system', {}, (message: { extension?: string; status?: string }) => {
+      if (message.extension === 'postgres_changes' && message.status === 'ok') ready = true;
+    })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` }, (change) => heard.push(`rooms:${change.eventType}`))
     .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${room.id}` }, (change) => heard.push(`room_players:${change.eventType}`));
-  const listening = await new Promise<boolean>((resolve) => {
+  const subscribed = await new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => resolve(false), 15_000);
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
@@ -362,10 +367,13 @@ try {
       }
     });
   });
+  for (let waited = 0; waited < 10_000 && !ready; waited += 100) await new Promise((resolve) => setTimeout(resolve, 100));
+  const listening = subscribed && ready;
   const started = await askRoom(a, { action: 'start', roomId: room.id });
   const playing = roomIn(started);
   const due = playing?.deadline ? Date.parse(playing.deadline) - Date.parse(playing.now) : 0;
-  check(statusOf(started) === 200 && playing?.status === 'playing' && playing.round === 0 && due === 90_000, 'the host starts it, and its first round is due in the seconds the room was opened with');
+  // Due ninety seconds after the server started it, by the server's clock; the answer's own moment is a little later.
+  check(statusOf(started) === 200 && playing?.status === 'playing' && playing.round === 0 && due > 85_000 && due <= 90_000, 'the host starts it, and its first round is due in the seconds the room was opened with');
   for (let waited = 0; waited < 10_000 && !heard.includes('rooms:UPDATE'); waited += 250) await new Promise((resolve) => setTimeout(resolve, 250));
   check(listening && heard.includes('rooms:UPDATE'), 'a member hears through Realtime that their room has changed');
 
