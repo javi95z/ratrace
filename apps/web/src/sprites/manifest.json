@@ -519,6 +519,106 @@
     "w": 288,
     "h": 120
   },
+  "card.city_bangkok_beach_bar": {
+    "src": "cards/card.city_bangkok_beach_bar.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_bangkok_flood": {
+    "src": "cards/card.city_bangkok_flood.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_dubai_golden_visa": {
+    "src": "cards/card.city_dubai_golden_visa.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_dubai_visa": {
+    "src": "cards/card.city_dubai_visa.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_london_club": {
+    "src": "cards/card.city_london_club.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_london_tube_strike": {
+    "src": "cards/card.city_london_tube_strike.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_madrid_cana": {
+    "src": "cards/card.city_madrid_cana.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_madrid_tourist_flat": {
+    "src": "cards/card.city_madrid_tourist_flat.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_mexico_city_mordida": {
+    "src": "cards/card.city_mexico_city_mordida.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_mexico_city_taqueria": {
+    "src": "cards/card.city_mexico_city_taqueria.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_moscow_dacha": {
+    "src": "cards/card.city_moscow_dacha.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_moscow_rouble": {
+    "src": "cards/card.city_moscow_rouble.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_new_york_elevator_pitch": {
+    "src": "cards/card.city_new_york_elevator_pitch.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_new_york_rent_hike": {
+    "src": "cards/card.city_new_york_rent_hike.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_singapore_ballot": {
+    "src": "cards/card.city_singapore_ballot.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_singapore_gum": {
+    "src": "cards/card.city_singapore_gum.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_tokyo_earthquake": {
+    "src": "cards/card.city_tokyo_earthquake.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_tokyo_karaoke": {
+    "src": "cards/card.city_tokyo_karaoke.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_zurich_numbered_account": {
+    "src": "cards/card.city_zurich_numbered_account.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.city_zurich_referendum": {
+    "src": "cards/card.city_zurich_referendum.png",
+    "w": 288,
+    "h": 120
+  },
   "card.classroom": {
     "src": "cards/card.classroom.png",
     "w": 288,

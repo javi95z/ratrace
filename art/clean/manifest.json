@@ -1761,6 +1761,106 @@
       "width": 288,
       "height": 120
     },
+    "card.city_madrid_cana": {
+      "file": "cards/card.city_madrid_cana.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_madrid_tourist_flat": {
+      "file": "cards/card.city_madrid_tourist_flat.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_london_tube_strike": {
+      "file": "cards/card.city_london_tube_strike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_london_club": {
+      "file": "cards/card.city_london_club.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_new_york_rent_hike": {
+      "file": "cards/card.city_new_york_rent_hike.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_new_york_elevator_pitch": {
+      "file": "cards/card.city_new_york_elevator_pitch.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_dubai_visa": {
+      "file": "cards/card.city_dubai_visa.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_dubai_golden_visa": {
+      "file": "cards/card.city_dubai_golden_visa.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_singapore_ballot": {
+      "file": "cards/card.city_singapore_ballot.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_singapore_gum": {
+      "file": "cards/card.city_singapore_gum.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_bangkok_flood": {
+      "file": "cards/card.city_bangkok_flood.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_bangkok_beach_bar": {
+      "file": "cards/card.city_bangkok_beach_bar.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_tokyo_earthquake": {
+      "file": "cards/card.city_tokyo_earthquake.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_tokyo_karaoke": {
+      "file": "cards/card.city_tokyo_karaoke.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_moscow_rouble": {
+      "file": "cards/card.city_moscow_rouble.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_moscow_dacha": {
+      "file": "cards/card.city_moscow_dacha.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_mexico_city_mordida": {
+      "file": "cards/card.city_mexico_city_mordida.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_mexico_city_taqueria": {
+      "file": "cards/card.city_mexico_city_taqueria.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_zurich_numbered_account": {
+      "file": "cards/card.city_zurich_numbered_account.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.city_zurich_referendum": {
+      "file": "cards/card.city_zurich_referendum.png",
+      "width": 288,
+      "height": 120
+    },
     "icon.career_healthcare": {
       "file": "icons/icon.career_healthcare.png",
       "width": 32,
