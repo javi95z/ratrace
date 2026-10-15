@@ -40,10 +40,11 @@ export interface ContentText {
   cryptoPhases: Record<CryptoPhase, string>;
   /** Headlines. The property ones contain {city}, which the interface fills in. */
   headlines: {
-    regime: Record<Regime, string>;
-    crypto: Record<CryptoPhase, string>;
-    rates: Record<Trend, string>;
-    inflation: Record<Trend, string>;
+    /** Each said a few ways, so the same forecast does not read the same every round. */
+    regime: Record<Regime, string[]>;
+    crypto: Record<CryptoPhase, string[]>;
+    rates: Record<Trend, string[]>;
+    inflation: Record<Trend, string[]>;
     property: Record<'up' | 'down', string>;
     /** With {asset}, the investment's name. */
     asset: Record<'up' | 'down', string>;

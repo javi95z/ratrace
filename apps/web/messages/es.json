@@ -199,7 +199,6 @@
     "inflation": "Inflación",
     "economy": "Economía",
     "crypto": "Cripto",
-    "hint": "Los titulares hablan de los próximos dos años.",
     "toCards": "Ver qué trae la vida",
     "toFinance": "A tus finanzas",
     "opener": "Los titulares de al lado hablan de los próximos dos años.",
@@ -212,17 +211,6 @@
       "asset": "Bolsa",
       "taxes": "Impuestos",
       "noise": "Sociedad"
-    },
-    "gossip": {
-      "label": "Opinión",
-      "0": "Los expertos coinciden: esta vez es distinto",
-      "1": "Un estudio dice que los jóvenes no compran casa por gastar en aguacates",
-      "2": "Un hombre explica las criptomonedas en una cena; nadie hace una segunda pregunta",
-      "3": "Un economista predice nueve de las dos últimas recesiones",
-      "4": "Un influencer deja su trabajo para vivir de rentas; vende un curso sobre ello",
-      "5": "«La vivienda nunca baja», asegura un hombre que vende viviendas",
-      "6": "Encuesta: todo el mundo es de clase media, sobre todo los ricos",
-      "7": "El banco sube las comisiones para celebrar sus beneficios récord"
     }
   },
   "crisis": {

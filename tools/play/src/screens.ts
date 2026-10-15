@@ -44,17 +44,19 @@ export function header(pen: Pen, state: GameState): string[] {
   return [RULE, `${padEnd(left, 44)}${padStart(`${ui.seed} ${state.seed}`, 20)}`, RULE];
 }
 
-function headline(pen: Pen, h: Headline): string {
+const way = (ways: readonly string[], n: number): string => ways[n % ways.length];
+
+function headline(pen: Pen, h: Headline, n = 0): string {
   const lines = pen.text.headlines;
   switch (h.topic) {
     case 'regime':
-      return lines.regime[h.regime];
+      return way(lines.regime[h.regime], n);
     case 'crypto':
-      return lines.crypto[h.phase];
+      return way(lines.crypto[h.phase], n);
     case 'rates':
-      return lines.rates[h.trend];
+      return way(lines.rates[h.trend], n);
     case 'inflation':
-      return lines.inflation[h.trend];
+      return way(lines.inflation[h.trend], n);
     case 'property':
       return lines.property[h.trend].replace('{city}', pen.names.cities[h.cityId]);
     case 'asset':

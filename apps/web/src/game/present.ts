@@ -25,17 +25,20 @@ export function portraitAge(age: number): 22 | 32 | 45 | 58 {
   return 58;
 }
 
-/** A headline as a sentence. */
-export function headlineText({ text, names }: Words, h: Headline): string {
+/** One of the ways a forecast is said, the `n`th going round. */
+const way = (ways: readonly string[], n: number): string => ways[((n % ways.length) + ways.length) % ways.length];
+
+/** A headline as a sentence. `n` picks among the ways it can be said: the screen passes something that changes each round. */
+export function headlineText({ text, names }: Words, h: Headline, n = 0): string {
   switch (h.topic) {
     case 'regime':
-      return text.headlines.regime[h.regime];
+      return way(text.headlines.regime[h.regime], n);
     case 'crypto':
-      return text.headlines.crypto[h.phase];
+      return way(text.headlines.crypto[h.phase], n);
     case 'rates':
-      return text.headlines.rates[h.trend];
+      return way(text.headlines.rates[h.trend], n);
     case 'inflation':
-      return text.headlines.inflation[h.trend];
+      return way(text.headlines.inflation[h.trend], n);
     case 'property':
       return text.headlines.property[h.trend].replace('{city}', names.cities[h.cityId]);
     case 'asset':

@@ -199,7 +199,6 @@
     "inflation": "Inflation",
     "economy": "Economy",
     "crypto": "Crypto",
-    "hint": "Headlines are about the next two years.",
     "toCards": "See what life brings",
     "toFinance": "To your finances",
     "opener": "The headlines beside this are about the next two years.",
@@ -212,17 +211,6 @@
       "asset": "Markets",
       "taxes": "Taxes",
       "noise": "Society"
-    },
-    "gossip": {
-      "label": "Opinion",
-      "0": "Experts agree: this time is different",
-      "1": "Twenty-somethings stop buying homes to buy avocados instead, says study",
-      "2": "Man explains crypto at dinner; nobody asks a second question",
-      "3": "Economist predicts nine of the last two recessions",
-      "4": "Influencer quits job to live off passive income; sells course on it",
-      "5": "\"Property never goes down,\" says man who sells property",
-      "6": "Survey: everyone is middle class, especially the rich",
-      "7": "Bank raises fees to celebrate record profits"
     }
   },
   "crisis": {

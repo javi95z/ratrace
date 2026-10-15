@@ -212,7 +212,7 @@ export const life: LifeRules = {
 export const world: WorldRules = {
   // Four a round: one is often filler that says nothing, to be told from the news that matters.
   headlinesPerRound: 4,
-  noiseHeadlines: 30,
+  noiseHeadlines: 38,
   newsTruthPct: 70,
   flatBandBp: 25,
   taxReformChancePct: 8,

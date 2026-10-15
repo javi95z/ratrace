@@ -288,7 +288,7 @@ export function Play() {
         </div>
 
         <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
-          <Headlines hint={false} />
+          <Headlines />
           {stage === 'finance' ? (
             <div id="round-orders" tabIndex={-1}><Panel title={finance('basketTitle')}><BasketList /></Panel></div>
           ) : null}

@@ -27,7 +27,9 @@ export function Guide() {
   if (runs === null || player === null) return null;
 
   const hasInvested = player.deposit > 0 || Object.keys(player.positions).length > 0;
-  const tip = nextTip({ stage, round, seen: guide.seen, off: guide.off, livesFinished: runs.length, hasInvested });
+  // While the game is being made, the guide shows whatever lives this device has finished, so it can be seen and tried.
+  const livesFinished = process.env.NODE_ENV === 'development' ? 0 : runs.length;
+  const tip = nextTip({ stage, round, seen: guide.seen, off: guide.off, livesFinished, hasInvested });
   if (tip === null || read === visit) return null;
 
   // The button pressed is about to go, and the focus with it: the stage takes it back, so the keyboard carries on from there.
