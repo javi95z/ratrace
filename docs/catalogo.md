@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.27.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.28.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -14,7 +14,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 20 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 137 |
+| [Cartas](#cartas) | 157 |
 | [Crisis](#crisis) | 3 |
 | [Insignias](#insignias) | 38 |
 
@@ -928,7 +928,7 @@ La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (22)
+### Carrera (27)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -954,6 +954,11 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.meeting_room.png" alt="Dirigir el equipo"> | **Dirigir el equipo**<br>Tu responsable se va y ha propuesto tu nombre. | 1. Seguir en lo técnico<br>2. Aceptar el equipo |
 | <img src="../art/clean/cards/card.headhunter_call.png" alt="Llama un cazatalentos"> | **Llama un cazatalentos**<br>«¿Tienes un rato para un café confidencial?» | 1. No me interesa<br>2. Ir a la reunión<br>3. Aceptar el puesto en Nueva York |
 | <img src="../art/clean/cards/card.four_day_week.png" alt="Semana de cuatro días"> | **Semana de cuatro días**<br>La empresa prueba la jornada de cuatro días: un 20 % menos de sueldo a cambio de un día libre más, para siempre. | 1. Seguir a jornada completa<br>2. Pasar a cuatro días |
+| <img src="../art/clean/cards/card.city_london_tube_strike.png" alt="Huelga de metro"> | **Huelga de metro**<br>Una semana sin metro, y la oficina sigue abriendo a las nueve. | 1. Ir en taxi toda la semana<br>2. Trabajar desde casa y retrasarte |
+| <img src="../art/clean/cards/card.city_new_york_elevator_pitch.png" alt="Cuarenta pisos con un inversor"> | **Cuarenta pisos con un inversor**<br>Un inversor famoso entra en tu ascensor. Tienes unos cuarenta segundos. | 1. Mirar el móvil<br>2. Contarle tu idea |
+| <img src="../art/clean/cards/card.city_dubai_visa.png" alt="Caduca el visado"> | **Caduca el visado**<br>Hay que renovar el visado de residencia: reconocimiento médico, formulario y tasa. | 1. Pagar a un gestor<br>2. Pasar un día haciendo colas |
+| <img src="../art/clean/cards/card.city_tokyo_karaoke.png" alt="Karaoke con el jefe"> | **Karaoke con el jefe**<br>Tras la cena de fin de año, tu jefe reserva una sala de karaoke y te mira. | 1. Poner una excusa<br>2. Coger el micrófono |
+| <img src="../art/clean/cards/card.city_moscow_rouble.png" alt="Se hunde el rublo"> | **Se hunde el rublo**<br>El rublo cae un tercio frente al dólar en una noche, y tu sueldo con él. | 1. Aguantar<br>2. Negociar el sueldo en dólares |
 
 ### Formación (7)
 
@@ -967,7 +972,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.language_class.png" alt="Un idioma nuevo"> | **Un idioma nuevo**<br>Una profesora da clases por las tardes a dos calles de casa. | 1. Quizá el año que viene<br>2. Apuntarte |
 | <img src="../art/clean/cards/card.company_course.png" alt="Un curso pagado por la empresa"> | **Un curso pagado por la empresa**<br>Te pagan un curso caro. La letra pequeña: dos años de permanencia o lo devuelves. | 1. No, gracias<br>2. Aceptar, con dos años de permanencia<br>3. Pagártelo tú, sin ataduras |
 
-### Negocios (11)
+### Negocios (13)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -982,6 +987,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.rival_shop.png" alt="Abre la competencia al lado"> | **Abre la competencia al lado**<br>Un local idéntico al tuyo acaba de abrir en la misma calle, y con inauguración. | 1. Aguantar y ver<br>2. Bajar precios<br>3. Reformar el local |
 | <img src="../art/clean/cards/card.viral_review.png" alt="Una reseña se hace viral"> | **Una reseña se hace viral**<br>Alguien ha escrito sobre tu negocio y medio barrio lo ha compartido. Aún no sabes en qué tono. | 1. Dejarlo correr<br>2. Responder con mimo<br>3. Comprar reseñas falsas |
 | <img src="../art/clean/cards/card.labour_inspector.png" alt="Inspección de trabajo"> | **Inspección de trabajo**<br>Un inspector pide los contratos, los horarios y las nóminas de tu negocio. | 1. Que vengan<br>2. Llamar antes a una asesoría laboral |
+| <img src="../art/clean/cards/card.city_bangkok_beach_bar.png" alt="Un bar en la playa"> | **Un bar en la playa**<br>Un amigo en Koh Samui busca un socio más para un bar en la arena. | 1. Quedarte en la ciudad<br>2. Poner dinero |
+| <img src="../art/clean/cards/card.city_mexico_city_taqueria.png" alt="Un socio para la taquería"> | **Un socio para la taquería**<br>El taquero de tu esquina busca socio para abrir un segundo puesto. | 1. Desearle suerte<br>2. Poner dinero |
 
 ### Inversión (12)
 
@@ -1000,7 +1007,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.bank_product.png" alt="Un producto «garantizado»"> | **Un producto «garantizado»**<br>Tu banco te ofrece un bono a dos años «sin riesgo». Comisión de entrada incluida, en letra pequeña. | 1. No, gracias<br>2. Contratarlo<br>3. Pedir un fondo indexado sin comisión |
 | <img src="../art/clean/cards/card.leveraged_chart.png" alt="Un fondo que multiplica por tres"> | **Un fondo que multiplica por tres**<br>Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo. | 1. Pasar<br>2. Meter 3.000 $ |
 
-### Vivienda (11)
+### Vivienda (16)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1015,8 +1022,13 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.noisy_neighbours.png" alt="Vecinos ruidosos"> | **Vecinos ruidosos**<br>Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir. | 1. Aguantar<br>2. Insonorizar el piso<br>3. Buscar otro piso de alquiler |
 | <img src="../art/clean/cards/card.building_levy.png" alt="Derrama en la comunidad"> | **Derrama en la comunidad**<br>Hay que cambiar el ascensor y la junta ha votado una derrama. Tu parte, para este mes. | 1. Pagar tu parte<br>2. Recurrirla |
 | <img src="../art/clean/cards/card.lodger_room.png" alt="Alquilar una habitación"> | **Alquilar una habitación**<br>Te sobra una habitación y una amiga busca dónde vivir. Pagaría bien. | 1. Mejor no<br>2. Alquilársela |
+| <img src="../art/clean/cards/card.city_madrid_tourist_flat.png" alt="Agosto en Madrid"> | **Agosto en Madrid**<br>En agosto todo el mundo se va. Tu piso podría ganarse el sueldo mientras no estás. | 1. Dejarlo vacío<br>2. Alquilarlo legal, con papeles<br>3. Alquilarlo en negro, sin preguntas |
+| <img src="../art/clean/cards/card.city_new_york_rent_hike.png" alt="El alquiler sube un 20 %"> | **El alquiler sube un 20 %**<br>Tu casero escribe: el contrato se renueva un veinte por ciento más caro. | 1. Pagarlo<br>2. Recurrir ante la junta de alquileres |
+| <img src="../art/clean/cards/card.city_singapore_ballot.png" alt="Sorteo de vivienda pública"> | **Sorteo de vivienda pública**<br>El Estado construye pisos a una fracción del precio de mercado. Hay sorteo. | 1. No apuntarte<br>2. Apuntarte al sorteo |
+| <img src="../art/clean/cards/card.city_bangkok_flood.png" alt="Llegan las lluvias"> | **Llegan las lluvias**<br>El monzón inunda tu calle y, con ella, la planta baja. | 1. Que se encargue el seguro<br>2. Sacos de arena y limpiar tú |
+| <img src="../art/clean/cards/card.city_tokyo_earthquake.png" alt="Tiembla la tierra"> | **Tiembla la tierra**<br>Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa. | 1. Llamar al seguro<br>2. Arreglar tú lo que puedas |
 
-### Estilo de vida (12)
+### Estilo de vida (15)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1032,8 +1044,11 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.nightclub.png" alt="Mesa con botella"> | **Mesa con botella**<br>Alguien propone coger mesa. El camarero ya tiene la carta en la mano. | 1. Irte pronto a casa<br>2. Poner tu parte<br>3. Pagar la mesa con tu tarjeta |
 | <img src="../art/clean/cards/card.sale_crowd.png" alt="Black Friday"> | **Black Friday**<br>Tienes la cesta llena desde el martes. | 1. Cerrar la pestaña<br>2. La PS5<br>3. El MacBook Pro |
 | <img src="../art/clean/cards/card.bali_wedding.png" alt="Una boda en Bali"> | **Una boda en Bali**<br>Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar. | 1. Excusarte<br>2. Ir a Bali |
+| <img src="../art/clean/cards/card.city_madrid_cana.png" alt="Solo una caña"> | **Solo una caña**<br>Un compañero dice de tomar una caña al salir. En Madrid, una caña acaba en cena a medianoche. | 1. Irte a casa<br>2. Quedarte a cenar |
+| <img src="../art/clean/cards/card.city_london_club.png" alt="Te quieren en un club"> | **Te quieren en un club**<br>Un socio de un club privado de Mayfair se ofrece a proponerte. | 1. Declinarlo con educación<br>2. Pagar la cuota de entrada |
+| <img src="../art/clean/cards/card.city_dubai_golden_visa.png" alt="Un visado dorado"> | **Un visado dorado**<br>Con lo que tienes, podrías tener diez años de residencia y el estatus que conlleva. | 1. No hace falta<br>2. Solicitarlo |
 
-### Familia (12)
+### Familia (13)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1049,6 +1064,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.school_gate.png" alt="Qué colegio"> | **Qué colegio**<br>El colegio del barrio está bien. El otro tiene lista de espera y uniforme. | 1. El colegio del barrio<br>2. Un colegio privado<br>3. El colegio internacional |
 | <img src="../art/clean/cards/card.shelter_dog.png" alt="Un perro en la protectora"> | **Un perro en la protectora**<br>Un perro de tres años te mira desde la jaula como si ya te conociera. | 1. Mejor no<br>2. Adoptarlo |
 | <img src="../art/clean/cards/card.partner_startup.png" alt="Tu pareja quiere emprender"> | **Tu pareja quiere emprender**<br>Tu pareja quiere dejar su trabajo para montar algo propio. Necesita tu apoyo, y un tiempo sin sueldo. | 1. Pedirle que no lo haga<br>2. Apoyarle |
+| <img src="../art/clean/cards/card.city_moscow_dacha.png" alt="Una dacha en la familia"> | **Una dacha en la familia**<br>Una tía te deja su dacha de madera a una hora de la ciudad. | 1. Venderla<br>2. Quedártela para los fines de semana |
 
 ### Salud (5)
 
@@ -1060,7 +1076,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.pitch_injury.png" alt="Una lesión deportiva"> | **Una lesión deportiva**<br>Una pachanga, el campo mojado, una rodilla. | 1. Fisioterapia<br>2. Reposo<br>3. Recuperarte entrenando |
 | <img src="../art/clean/cards/card.gym.png" alt="Apuntarte al gimnasio"> | **Apuntarte al gimnasio**<br>Hay un gimnasio abajo y te ahogas subiendo las escaleras. | 1. Quizá el año que viene<br>2. Apuntarte, e ir de verdad |
 
-### Suerte (8)
+### Suerte (9)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1072,6 +1088,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.phishing.png" alt="Un mensaje de «tu banco»"> | **Un mensaje de «tu banco»**<br>Parece auténtico. Dice que tu cuenta está bloqueada. | 1. Resolverlo rápido<br>2. Comprobarlo con calma |
 | <img src="../art/clean/cards/card.speed_camera.png" alt="Una multa por exceso de velocidad"> | **Una multa por exceso de velocidad**<br>Te llega por correo una foto de tu coche. | 1. Pagarla<br>2. Recurrirla |
 | <img src="../art/clean/cards/card.casino.png" alt="La app de apuestas"> | **La app de apuestas**<br>Una apuesta gratis para empezar. Esta noche juega tu equipo. | 1. Borrar la app<br>2. Una apuesta pequeña<br>3. Ir a por un premio grande |
+| <img src="../art/clean/cards/card.city_singapore_gum.png" alt="Te pillan con chicle"> | **Te pillan con chicle**<br>Un vigilante te ve con chicle en el metro. Singapur es una ciudad de multas. | 1. Pagar la multa<br>2. Recurrir y recoger basura una mañana |
 
 ### Mundo (18)
 
@@ -1096,7 +1113,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crisis_cuts.png" alt="Recortes"> | **Recortes**<br>Las cuentas se cuadran por las malas: una derrama, sueldos congelados y gangas para quien tenga efectivo. | 1. Pagar la derrama<br>2. Pagarla, y hacer el trabajo de dos<br>3. Pagarla, y comprar un estudio embargado para alquilar |
 | <img src="../art/clean/cards/card.bank_queue.png" alt="Quiebra un banco"> | **Quiebra un banco**<br>Un banco mediano cierra y se forman colas delante de los demás. | 1. Confiar en la garantía<br>2. Hacer cola y mover tu dinero |
 
-### Impuestos (8)
+### Impuestos (11)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1108,6 +1125,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_arrival.png" alt="Cambiar de residencia fiscal"> | **Cambiar de residencia fiscal**<br>Un asesor te enseña lo que conservarías si vivieras en Dubái. | 1. Quedarte<br>2. Mudarte a Dubái<br>3. Pagar antes un buen asesoramiento |
 | <img src="../art/clean/cards/card.cash_no_invoice.png" alt="¿Sin IVA?"> | **¿Sin IVA?**<br>Un cliente te propone pagarte en efectivo y sin factura. Para los dos sale más barato. | 1. Con factura y con IVA<br>2. Sin IVA, en mano |
 | <img src="../art/clean/cards/card.tax_amnesty.png" alt="Amnistía fiscal"> | **Amnistía fiscal**<br>El Gobierno anuncia una amnistía: quien regularice ahora paga un 10 % de lo que no declaró y queda limpio. | 1. Arriesgarte<br>2. Regularizar |
+| <img src="../art/clean/cards/card.city_mexico_city_mordida.png" alt="El inspector espera"> | **El inspector espera**<br>Un inspector encuentra un problema en tus papeles, y te deja claro que podría desaparecer. | 1. Negarte y arriesgarte<br>2. Pagar la mordida |
+| <img src="../art/clean/cards/card.city_zurich_numbered_account.png" alt="Una cuenta con número"> | **Una cuenta con número**<br>Un banquero discreto te sugiere una cuenta que solo se conoce por su número. | 1. Darle las gracias e irte<br>2. Abrir la cuenta |
+| <img src="../art/clean/cards/card.city_zurich_referendum.png" alt="Un referéndum sobre impuestos"> | **Un referéndum sobre impuestos**<br>El cantón vota bajar el impuesto sobre la renta. Podrías hacer campaña. | 1. Solo votar<br>2. Hacer campaña por la bajada |
 
 ### Madurez (11)
 
