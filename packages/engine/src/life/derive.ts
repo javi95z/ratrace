@@ -3,6 +3,7 @@ import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
 import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep, WorkMode, WorkModeRule } from '../types';
+import { FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { skillLevel } from './skills';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -100,6 +101,8 @@ export function ownBossStatus(p: PlayerState, content: Content): number | null {
 export function workModeOf(p: PlayerState, content: Content): WorkMode {
   const mode = p.life.workMode;
   if ((mode !== 'remote' && mode !== 'partTime') || p.life.career === null || p.life.jailRounds > 0) return 'office';
+  // The boss's word, given on a card, opens home to any job at any rung.
+  if (mode === 'remote' && hasFlag(p.life.flags, FLAG_REMOTE_WORK)) return mode;
   if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'office';
   // A step down the ladder and the trust goes with it.
   if (p.life.career.level < content.life.workModes[mode].fromLevel) return 'office';
@@ -128,7 +131,11 @@ export function ownPay(p: PlayerState, content: Content, level?: number): Cents 
   // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.
   const here = life.career ? (cityOf(content, p.cityId).careerPayPct?.[life.career.id] ?? 100) : 100;
   const base = rung ? mulDiv(mulDiv(median, rung.salaryPct, 100), here, 100) : life.baseSalaryAnnual;
-  const full = mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
+  // Languages pay abroad, and knowing how to run things pays where people are led.
+  const skills = content.life.skills;
+  const abroad = p.cityId !== life.homeCityId ? skillLevel(p, 'languages', content) * skills.languagesAbroadPayPct : 0;
+  const leads = rung && life.career && (level ?? life.career.level) >= skills.managementPayFromLevel ? skillLevel(p, 'management', content) * skills.managementPayPct : 0;
+  const full = mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct + abroad + leads), 100);
   return mulDiv(full, workModeRule(p, content).payPct, 100);
 }
 

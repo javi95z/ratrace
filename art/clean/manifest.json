@@ -3986,6 +3986,56 @@
       "width": 64,
       "height": 64
     },
+    "card.lodger_good": {
+      "file": "cards/card.lodger_good.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lodger_unpaid": {
+      "file": "cards/card.lodger_unpaid.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lodger_friend": {
+      "file": "cards/card.lodger_friend.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.lodger_tension": {
+      "file": "cards/card.lodger_tension.png",
+      "width": 288,
+      "height": 120
+    },
+    "business.services": {
+      "file": "items/business.services.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.shop": {
+      "file": "items/business.shop.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.app": {
+      "file": "items/business.app.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.bar": {
+      "file": "items/business.bar.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.franchise": {
+      "file": "items/business.franchise.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.own_boss": {
+      "file": "badges/badge.own_boss.png",
+      "width": 64,
+      "height": 64
+    },
     "brand.logo": {
       "file": "brand/brand.logo.png",
       "width": 256,

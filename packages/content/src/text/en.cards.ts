@@ -800,4 +800,20 @@ export const cards: Record<string, CardText> = {
     'Keep the books honest',
     'Wash what you have hidden',
   ]),
+  lodger_good: c('The perfect lodger', 'Pays on the first of the month, waters the plants and never uses your mug.', [
+    'Leave things as they are',
+    ['Put the rent up a little', 'They pay it without a word.', 'They find somewhere else. You should have left it.'],
+  ]),
+  lodger_unpaid: c('The rent is late', 'Your lodger has not paid this month, nor last. There is music behind the door.', [
+    ['Give them another month', 'They pay it all, with an apology and a cake.', 'They leave in the night, owing you three months.'],
+    'Ask them to leave',
+  ]),
+  lodger_friend: c('A lodger who knows people', 'Your lodger wants you to meet a friend who works where you would like to.', [
+    'A dinner, nothing more',
+    'Take the card, and follow up',
+  ]),
+  lodger_tension: c('Tension at home', 'Your partner cannot stand finding the lodger on the sofa every evening.', [
+    'They are right: the lodger goes',
+    ['It is only a little longer', 'You hold out, with a frosty atmosphere.', 'Your partner moves out before the lodger does.'],
+  ]),
 };

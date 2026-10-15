@@ -27,7 +27,7 @@ export function createGame(config: GameConfig, seed: string): GameState {
   if (errors.length > 0) throw new Error(`invalid content: ${errors.join('; ')}`);
   const startErrors = validateStart(config.content, config.start);
   if (startErrors.length > 0) throw new Error(`invalid start: ${startErrors.join('; ')}`);
-  const timeline = generateTimeline(seed, config.content);
+  const timeline = generateTimeline(seed, config.content, config.start.cityId);
   const state: GameState = {
     seed,
     round: 0,

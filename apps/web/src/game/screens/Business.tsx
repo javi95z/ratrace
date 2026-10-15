@@ -77,8 +77,7 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
   return (
     <li className="border-t-2 border-night-900 py-2 first:border-t-0 first:pt-0">
       <button type="button" aria-haspopup="dialog" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 text-left">
-        {/* An icon of 32 pixels, at its own size like every icon in a list; a drawing of its own is to come. */}
-        <Bare className="size-10 shrink-0">
+        <Bare className="size-16 shrink-0">
           <Sprite id={businessArt(business.typeId)} />
         </Bare>
         <span className="min-w-0 flex-1">
@@ -175,7 +174,7 @@ export function BusinessTab() {
             <li key={kind.typeId} className="border-t-2 border-night-900 py-3 first:border-t-0 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-2">
-                  <Bare className="size-8">
+                  <Bare className="size-16 shrink-0">
                     <Sprite id={businessArt(kind.typeId)} />
                   </Bare>
                   <span className="pixel text-[16px]">{text.businessTypes[kind.typeId].name}</span>
@@ -299,7 +298,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={businessArt(business.typeId)} scale={2} />
+            <Sprite id={businessArt(business.typeId)} />
           </Bare>
           <div className="min-w-0">
             <p className="pixel text-[22px] leading-none text-gold-500">{fmt.money(business.capital)}</p>

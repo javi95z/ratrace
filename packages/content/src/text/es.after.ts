@@ -14,7 +14,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_switch: ['Dejas pasar ese tren. El tuyo sigue en su vía.', 'De saberlo todo a preguntarlo todo en una mañana. La escalera es más alta.', null],
   career_big_offer: ['Dices que no al gran nombre. Poca gente lo hace.', 'El logo de tu tarjeta ahora abre puertas.', null],
   career_shares_vs_salary: ['Un poco más cada mes, y sin sustos.', null],
-  career_remote_work: ['Sigues con el café de máquina y las charlas de pasillo.', 'El trayecto ahora es de la cama a la mesa. Te ven menos.', null],
+  career_remote_work: ['Sigues con el café de máquina y las charlas de pasillo.', 'El trayecto ahora es de la cama a la mesa, y las horas son tuyas.', null],
   career_become_manager: ['Sigues con las manos en la masa, y cada vez lo haces mejor.', 'Menos hacer y más reuniones. El equipo es tuyo.'],
   career_law_firm: ['Te quedas. El despacho contrata a alguien más joven.', 'Una mesa junto a la fotocopiadora y una montaña de expedientes. Por algo se empieza.', null],
   career_market: ['Compras tomates y te vas a casa.', 'A mediodía lo has vendido todo. Se te da bien.'],
@@ -278,4 +278,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   crime_enchufe: ['Tu primo se ofende una semana.', null],
   crime_insider_tip: ['Te habla de su barco en su lugar.', null],
   crime_laundering: ['Las cuentas cuadran, y tu conciencia también.', 'Un mes ajetreado en los papeles, borrón y cuenta nueva, y un inspector atento.'],
+  lodger_good: ['La paz en casa vale más que unos dólares.', null],
+  lodger_unpaid: [null, 'Se va, y la habitación se queda vacía una temporada.'],
+  lodger_friend: ['Una noche agradable y un nombre nuevo en el móvil.', 'Un café, una comida y luego una sala llena de gente que conviene conocer.'],
+  lodger_tension: ['El sofá vuelve a ser tuyo, y la paz también.', null],
 };

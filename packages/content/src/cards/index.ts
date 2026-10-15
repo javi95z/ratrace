@@ -2,7 +2,7 @@ import type { CardDef } from '@ratrace/engine';
 import { healthCards, laterLifeCards, luckCards } from './chance';
 import { cityCards } from './cities';
 import { crimeCards } from './crime';
-import { familyCards, housingCards, lifestyleCards } from './home';
+import { familyCards, housingCards, lifestyleCards, lodgerCards } from './home';
 import { investingCards, taxCards, worldCards } from './markets';
 import { moreBusinessCards, moreCareerCards, moreEducationCards, moreFamilyCards, moreHousingCards, moreInvestingCards, moreLaterLifeCards, moreLifestyleCards, moreTaxCards } from './extra';
 import { businessCards, careerCards, educationCards } from './work';
@@ -20,6 +20,7 @@ export const cards: CardDef[] = [
   ...housingCards,
   ...moreHousingCards,
   ...lifestyleCards,
+  ...lodgerCards,
   ...moreLifestyleCards,
   ...familyCards,
   ...moreFamilyCards,

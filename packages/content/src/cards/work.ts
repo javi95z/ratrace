@@ -111,9 +111,10 @@ export const careerCards: CardDef[] = [
     // Worth about what the raise is over the years left, on average, with everything riding on the company.
     { outcomes: [{ weight: 25, effects: { cashSalaryPct: 200 } }, { weight: 45, effects: { cashSalaryPct: 60 } }, { weight: 30, effects: {} }] },
   ]),
-  card('career_remote_work', 'career', { once: true, when: { careers: ['tech', 'finance', 'public'], minRound: 1, notFlags: ['remote_work'] } }, [
+  // The boss says yes to home before the rung would: only for someone not already working from it.
+  card('career_remote_work', 'career', { once: true, when: { careers: ['tech', 'finance', 'public'], minRound: 1, notFlags: ['remote_work'], remote: false } }, [
     {},
-    { effects: { setFlags: ['remote_work'], salaryModPct: 3, careerSkill: -1 } },
+    { effects: { setFlags: ['remote_work'], workMode: 'remote' } },
     { outcomes: [{ weight: 40, effects: { salaryModPct: 4 } }, { weight: 60, effects: {} }] },
   ]),
   card('career_become_manager', 'career', { once: true, when: { employed: true, minLevel: 1 } }, [

@@ -49,10 +49,11 @@ export const assets: AssetDef[] = [
 
 export const market: MarketParams = {
   regimeTransitions: {
-    expansion: [['expansion', 45], ['boom', 25], ['slowdown', 25], ['recession', 5]],
-    boom: [['boom', 25], ['slowdown', 45], ['recession', 25], ['expansion', 5]],
-    slowdown: [['recession', 40], ['expansion', 35], ['slowdown', 25]],
-    recession: [['recovery', 65], ['recession', 35]],
+    // About one round in eight is a recession, close to the share of the years since the war.
+    expansion: [['expansion', 47], ['boom', 25], ['slowdown', 25], ['recession', 3]],
+    boom: [['boom', 25], ['slowdown', 55], ['recession', 15], ['expansion', 5]],
+    slowdown: [['recession', 28], ['expansion', 47], ['slowdown', 25]],
+    recession: [['recovery', 75], ['recession', 25]],
     recovery: [['expansion', 65], ['boom', 15], ['recovery', 20]],
   },
   cryptoTransitions: {

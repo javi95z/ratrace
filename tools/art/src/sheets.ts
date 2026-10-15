@@ -373,5 +373,9 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-33', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 288, height: 120, ids: ['card.crime_laundering'] },
   { file: 'items/items-08', group: 'items', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['item.tech_smartwatch', 'item.tech_drone', 'item.tech_ai_workstation'] },
   { file: 'badges/badges-07', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.fiscally_creative', 'badge.ex_convict', 'badge.truly_innocent'] },
+  // The sheet came with two more scenes, of a book; the cards they were for were left out of the game.
+  { file: 'cards/cards-34', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.lodger_good', 'card.lodger_unpaid', 'card.lodger_friend', 'card.lodger_tension', '', ''] },
+  { file: 'items/business-01', group: 'items', kind: 'objects', cols: 5, rows: 1, width: 64, height: 64, ids: ['business.services', 'business.shop', 'business.app', 'business.bar', 'business.franchise'] },
+  { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

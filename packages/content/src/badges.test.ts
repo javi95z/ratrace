@@ -188,6 +188,10 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   },
   mba: { earns: { player: own('edu_mba') }, misses: [{ player: own('watch_casio') }] },
   sold_business: { earns: { player: (p) => (p.life.flags.sold_business = 4) }, misses: [{ player: (p) => (p.life.flags.has_business = 4) }] },
+  own_boss: {
+    earns: { player: (p) => p.businesses.push({ id: 'business-1', typeId: 'shop', capital: usd(50_000), basis: usd(50_000), payoutPct: 50, manager: false, tended: true, fullTime: true }) },
+    misses: [{ player: (p) => p.businesses.push({ id: 'business-1', typeId: 'shop', capital: usd(50_000), basis: usd(50_000), payoutPct: 50, manager: false, tended: true }) }],
+  },
   rode_out_recession: {
     earns: { world: RECESSION, was: hold('msci_world', usd(5_000)), player: hold('msci_world', usd(3_900), usd(5_000)) },
     misses: [
@@ -242,11 +246,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and eleven since, each in one of six groups', () => {
-    expect(badges).toHaveLength(41);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(41);
+  it('are the thirty of the spec and twelve since, each in one of six groups', () => {
+    expect(badges).toHaveLength(42);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(42);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([8, 4, 8, 8, 7, 6]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([8, 4, 8, 8, 8, 6]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {

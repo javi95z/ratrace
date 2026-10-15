@@ -134,6 +134,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.amnesty) add('plain', t('amnesty', { pct: effects.amnesty.pct }));
   if (effects.launder) add('plain', t('launder', { pct: effects.launder.feePct }));
   if (effects.jail) add('bad', t('jail', { n: effects.jail.rounds }));
+  if (effects.workMode === 'remote') add('good', t('remote'));
+  if (effects.endLodger) add('plain', t('endLodger'));
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
   if (effects.gift?.business) add('bad', t('giftBusiness'));
   if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));

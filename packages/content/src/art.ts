@@ -49,6 +49,10 @@ export const cardArt: Record<string, string> = {
   crime_enchufe: scene('crime_enchufe'),
   crime_insider_tip: scene('crime_insider_tip'),
   crime_laundering: scene('crime_laundering'),
+  lodger_good: scene('lodger_good'),
+  lodger_unpaid: scene('lodger_unpaid'),
+  lodger_friend: scene('lodger_friend'),
+  lodger_tension: scene('lodger_tension'),
   career_overtime_crunch: scene('office_desk'),
   career_layoff: scene('packed_box'),
   career_restructuring: scene('restructuring'),
@@ -252,7 +256,7 @@ export const skillArt: Record<SkillId | 'finance' | 'career', string> = {
   health: 'icon.skill_health',
 };
 /** The sign of each kind of business. */
-export const businessArt = (typeId: string): string => `icon.biz_${typeId}`;
+export const businessArt = (typeId: string): string => `business.${typeId}`;
 /** The second-hand shop: its sign, and the repair of a thing of each ladder, with a sign for any other. */
 export const USED_ART = 'icon.used';
 export const repairArt = (ladder: string): string => (ladder === 'car' ? 'icon.repair_car' : ladder === 'watch' ? 'icon.repair_watch' : 'icon.repair');

@@ -220,6 +220,8 @@ export const life: LifeRules = {
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,
     languagesMoveOffPct: 15,
+    // Someone who speaks the language is worth more away from home: a few percent more pay a level.
+    languagesAbroadPayPct: 4,
     languagesKeepRungFrom: 2,
     languagesPartnerFrom: 3,
     networkHuntPct: 8,
@@ -227,6 +229,9 @@ export const life: LifeRules = {
     managementProfitPct: 6,
     managementManagerOffPct: 4,
     managementExtraFrom: 3,
+    // From the third rung people are led, and leading them well is paid.
+    managementPayPct: 3,
+    managementPayFromLevel: 2,
     healthPremiumOffPct: 20,
     healthFocusFrom: 3,
     // Each level takes 15 % off the chance of the misfortunes the skill guards against.

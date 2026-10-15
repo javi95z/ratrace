@@ -125,7 +125,7 @@ const zurichTax: TaxProfile = {
   dividendBp: 3_500,
   rentAsIncome: true,
   rentBp: 0,
-  propertyPurchaseBp: 300,
+  propertyPurchaseBp: 100,
   propertyAnnualBp: 50,
   pensionDeductionCapBp: 1_500,
   investmentAllowance: 0,

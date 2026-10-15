@@ -124,6 +124,8 @@ export interface SkillRules {
   negotiationSalePct: number;
   /** Languages: taken off the cost of a move, in percent per level. */
   languagesMoveOffPct: number;
+  /** Languages: added to pay while living away from the city the life began in, in percent per level. */
+  languagesAbroadPayPct: number;
   /** Languages: from this level a move of one's own costs no rung, and from the next a partner finds work at once. */
   languagesKeepRungFrom: SkillLevel;
   languagesPartnerFrom: SkillLevel;
@@ -135,6 +137,9 @@ export interface SkillRules {
   managementManagerOffPct: number;
   /** Management: from this level one more business can be owned. */
   managementExtraFrom: SkillLevel;
+  /** Management: added to pay from the rung `managementPayFromLevel` up, where people are led, in percent per level. */
+  managementPayPct: number;
+  managementPayFromLevel: number;
   /** Health: taken off the health insurance premium, in percent per level. */
   healthPremiumOffPct: number;
   /** Health: from this level a point of focus more every round. */
@@ -546,6 +551,10 @@ export interface Condition {
   minLevel?: number;
   maxLevel?: number;
   partner?: boolean;
+  /** True for someone with a lodger in the spare room, false for someone without. */
+  lodger?: boolean;
+  /** True for someone who works from home, false for someone who does not. */
+  remote?: boolean;
   minChildren?: number;
   maxChildren?: number;
   /** Lives in a home they own. */
@@ -689,6 +698,10 @@ export interface Effects {
    * could still claim goes on the fee, and nothing hidden is left to claim. Suspicion is the card's to add.
    */
   launder?: { feePct: number };
+  /** The lodger moves out. */
+  endLodger?: true;
+  /** Works from now on in this way. A card that says so is the boss's permission: see the flag `remote_work`. */
+  workMode?: WorkMode;
   /** Prison, for this round and the rounds after it up to this many in all: no pay, no focus, status lost, and a rung on the way out. */
   jail?: { rounds: number };
   /**

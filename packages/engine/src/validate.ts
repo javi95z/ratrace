@@ -333,7 +333,7 @@ export function validateContent(c: Content): string[] {
     if (!(Array.isArray(steps) && steps.length === 3 && steps.every((x, i) => isWhole(x) && x > (i === 0 ? 0 : steps[i - 1])))) {
       errors.push('life.skills.levelPoints must be three rising positive whole numbers');
     }
-    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct', 'healthRiskOffPct', 'jobRiskOffPct', 'scamRiskOffPct'] as const) {
+    for (const field of ['studyPoints', 'practicePoints', 'investingPoints', 'negotiationHuntRaisePct', 'negotiationPromotionPct', 'negotiationSalePct', 'languagesMoveOffPct', 'languagesAbroadPayPct', 'managementPayPct', 'managementPayFromLevel', 'networkHuntPct', 'networkStatus', 'managementProfitPct', 'managementManagerOffPct', 'healthPremiumOffPct', 'healthRiskOffPct', 'jobRiskOffPct', 'scamRiskOffPct'] as const) {
       if (!(isWhole(skills[field]) && (skills[field] as number) >= 0)) errors.push(`life.skills.${field} must be a non-negative whole number`);
     }
     for (const field of ['languagesKeepRungFrom', 'languagesPartnerFrom', 'managementExtraFrom', 'healthFocusFrom'] as const) {

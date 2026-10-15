@@ -158,3 +158,26 @@ export const familyCards: CardDef[] = [
     { effects: { recurring: [yearly('school', 'expense', 16_000, 6)], status: 10 } },
   ]),
 ];
+
+/**
+ * A lodger in the spare room: one who pays and is no trouble, one who stops paying, one who opens
+ * doors, and one a partner cannot stand.
+ */
+export const lodgerCards: CardDef[] = [
+  card('lodger_good', 'lifestyle', { weight: 6, cooldown: 6, when: { lodger: true } }, [
+    {},
+    { outcomes: [{ weight: 70, effects: { cash: usd(2_400) } }, { weight: 30, effects: { endLodger: true } }] },
+  ]),
+  card('lodger_unpaid', 'lifestyle', { weight: 6, cooldown: 6, when: { lodger: true } }, [
+    { outcomes: [{ weight: 60, effects: {} }, { weight: 40, effects: { cash: usd(-3_000), endLodger: true } }] },
+    { effects: { cash: usd(-1_500), endLodger: true } },
+  ]),
+  card('lodger_friend', 'lifestyle', { weight: 4, once: true, when: { lodger: true } }, [
+    { effects: { skills: { network: 1 } } },
+    { effects: { skills: { network: 3 }, status: 1 } },
+  ]),
+  card('lodger_tension', 'lifestyle', { weight: 8, cooldown: 4, when: { lodger: true, partner: true } }, [
+    { effects: { endLodger: true } },
+    { outcomes: [{ weight: 80, effects: { status: -2 } }, { weight: 20, effects: { partner: null } }] },
+  ]),
+];

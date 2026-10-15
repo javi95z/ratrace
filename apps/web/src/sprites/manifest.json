@@ -254,6 +254,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.own_boss": {
+    "src": "badges/badge.own_boss.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.passive_double": {
     "src": "badges/badge.passive_double.png",
     "w": 64,
@@ -353,6 +358,31 @@
     "src": "brand/brand.wordmark.png",
     "w": 256,
     "h": 256
+  },
+  "business.app": {
+    "src": "items/business.app.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.bar": {
+    "src": "items/business.bar.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.franchise": {
+    "src": "items/business.franchise.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.services": {
+    "src": "items/business.services.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.shop": {
+    "src": "items/business.shop.png",
+    "w": 64,
+    "h": 64
   },
   "car.bmw_m3": {
     "src": "cars/car.bmw_m3.png",
@@ -899,8 +929,28 @@
     "w": 288,
     "h": 120
   },
+  "card.lodger_friend": {
+    "src": "cards/card.lodger_friend.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lodger_good": {
+    "src": "cards/card.lodger_good.png",
+    "w": 288,
+    "h": 120
+  },
   "card.lodger_room": {
     "src": "cards/card.lodger_room.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lodger_tension": {
+    "src": "cards/card.lodger_tension.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.lodger_unpaid": {
+    "src": "cards/card.lodger_unpaid.png",
     "w": 288,
     "h": 120
   },

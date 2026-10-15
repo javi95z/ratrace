@@ -83,7 +83,7 @@ export function validateCards(c: Content): string[] {
     holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
     insured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
-    retired: flag, evading: flag, inJail: flag,
+    retired: flag, evading: flag, inJail: flag, lodger: flag, remote: flag,
     notRecentFlag: (value) => (isRecord(value) && idAllowed(value.flag) && isWhole(value.rounds) && (value.rounds as number) >= 1 ? null : 'needs a flag and a positive number of rounds for notRecentFlag'),
   };
   const triggerChecks: Record<string, Check> = {
@@ -141,6 +141,8 @@ export function validateCards(c: Content): string[] {
     businessesPct: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a whole percentage from -100 to 100 for businessesPct'),
     suspicion: (value) => (isWhole(value) && value !== 0 && within(value, -100, 100) ? null : 'needs a change of suspicion from -100 to 100'),
     amnesty: (value) => (isRecord(value) && isWhole(value.pct) && within(value.pct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for an amnesty'),
+    endLodger: (value) => (value === true ? null : 'can only be true for a lodger moving out'),
+    workMode: (value) => (value === 'office' || value === 'remote' || value === 'partTime' ? null : 'needs a way of working: office, remote or partTime'),
     launder: (value) => (isRecord(value) && isWhole(value.feePct) && within(value.feePct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for the fee of laundering'),
     jail: (value) => (isRecord(value) && isWhole(value.rounds) && within(value.rounds, 1, 3) ? null : 'needs from 1 to 3 rounds of prison'),
     gift: (value) => {

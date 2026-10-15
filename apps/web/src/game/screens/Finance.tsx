@@ -1364,27 +1364,29 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
 
 function Taxes() {
   const t = useT('finance.taxes');
-  const { text, fmt } = useWords();
+  const { content, text, fmt } = useWords();
   const { preview, p, shown } = useRound();
+  // These are the round's figures, the two years of it; the HUD's Flow is the same money a year.
+  const years = content.yearsPerRound;
   const line = (label: ReactNode, amount: number, key: string) => (amount === 0 ? null : <Row key={key} left={label} right={fmt.signed(amount)} />);
   const { income, expenses, tax, escape } = preview;
 
   return (
     <div className="flex flex-col gap-3">
-      <Panel title={t('income')}>
+      <Panel title={t('income', { years })}>
         {line(text.ledger.salary, income.salary, 'salary')}
         {line(text.ledger.dividends, income.dividends, 'dividends')}
         {line(text.ledger.interest, income.interest, 'interest')}
         {line(text.ledger.rent, income.rent, 'rent')}
         {line(text.ledger.otherPassive, income.otherPassive, 'other')}
       </Panel>
-      <Panel title={t('expenses')}>
+      <Panel title={t('expenses', { years })}>
         {line(text.ledger.living, -expenses.living, 'living')}
         {line(text.ledger.otherExpenses, -expenses.other, 'other')}
         {line(text.ledger.debtInterest, -expenses.debtInterest, 'interest')}
         {line(text.ledger.debtPrincipal, -expenses.debtPrincipal, 'principal')}
       </Panel>
-      <Panel title={t('tax')}>
+      <Panel title={t('tax', { years })}>
         <Row left={t('incomeTax')} right={fmt.signed(-tax.income)} />
         <Row left={t('investmentTax')} right={fmt.signed(-tax.investment)} />
         <Row left={t('propertyTax')} right={fmt.signed(-tax.property)} />

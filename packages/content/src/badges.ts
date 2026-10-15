@@ -52,6 +52,7 @@ export const badges: BadgeDef[] = [
   { id: 'family_of_four', group: 'life' },
   { id: 'mba', group: 'life' },
   { id: 'sold_business', group: 'life' },
+  { id: 'own_boss', group: 'life' },
   { id: 'rode_out_recession', group: 'life' },
   { id: 'bankrupt', group: 'misfortune' },
   { id: 'room_at_40', group: 'misfortune' },
@@ -247,6 +248,8 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   family_of_four: (f) => f.p.life.partner && f.p.life.children.length >= 2,
   mba: (f) => owns(f.p, 'edu_mba'),
   sold_business: (f) => Object.hasOwn(f.p.life.flags, 'sold_business'),
+  // The job left for a business of one's own, and a round lived from it.
+  own_boss: (f) => f.round && f.p.businesses.some((business) => business.fullTime === true),
   rode_out_recession: (f) => f.round && f.world.regime === 'recession' && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),
 
   bankrupt: (f) => f.events.some((e) => e.kind === 'bankrupt'),

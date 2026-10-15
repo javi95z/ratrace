@@ -14,7 +14,7 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_switch: ['You let that train go. Yours stays on its track.', 'From knowing it all to asking about it all in a morning. The ladder is taller.', null],
   career_big_offer: ['You say no to the big name. Few do.', 'The logo on your card now opens doors.', null],
   career_shares_vs_salary: ['A little more every month, and no surprises.', null],
-  career_remote_work: ['You keep the machine coffee and the corridor chats.', 'The commute is now bed to desk. They see less of you.', null],
+  career_remote_work: ['You keep the machine coffee and the corridor chats.', 'The commute is now bed to desk, and the hours are yours.', null],
   career_become_manager: ['You keep your hands on the work, and keep getting better at it.', 'Less doing, more meetings. The team is yours.'],
   career_law_firm: ['You stay. The firm hires someone younger.', 'A desk by the photocopier and a mountain of files. It is a start.', null],
   career_market: ['You buy tomatoes and go home.', 'By noon you have sold out. Selling suits you.'],
@@ -290,4 +290,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   crime_enchufe: ['Your cousin is offended for a week.', null],
   crime_insider_tip: ['He tells you about his boat instead.', null],
   crime_laundering: ['The books balance, and so does your conscience.', 'A busy month on paper, a clean slate, and an inspector who notices busy months.'],
+  lodger_good: ['Peace at home is worth more than a few dollars.', null],
+  lodger_unpaid: [null, 'They go, and the room stays empty for a while.'],
+  lodger_friend: ['A pleasant evening, and a new name in your phone.', 'Coffee, then lunch, then a room full of people worth knowing.'],
+  lodger_tension: ['The sofa is yours again, and so is the peace.', null],
 };

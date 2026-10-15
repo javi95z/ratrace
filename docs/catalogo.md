@@ -14,9 +14,9 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 171 |
+| [Cartas](#cartas) | 175 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 41 |
+| [Insignias](#insignias) | 42 |
 
 ## Vidas
 
@@ -1041,7 +1041,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_bangkok_flood.png" alt="Llegan las lluvias"> | **Llegan las lluvias**<br>El monzón inunda tu calle y, con ella, la planta baja. | 1. Que se encargue el seguro<br>2. Sacos de arena y limpiar tú |
 | <img src="../art/clean/cards/card.city_tokyo_earthquake.png" alt="Tiembla la tierra"> | **Tiembla la tierra**<br>Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa. | 1. Llamar al seguro<br>2. Arreglar tú lo que puedas |
 
-### Estilo de vida (17)
+### Estilo de vida (21)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1056,6 +1056,10 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.club_contacts.png" alt="En la barra del club"> | **En la barra del club**<br>Alguien a quien saludas cada semana se inclina hacia ti con una oportunidad. | 1. Cambiar de tema<br>2. Preguntar si buscan gente<br>3. Entrar en su negocio<br>4. Pedir que te presente a quien decide |
 | <img src="../art/clean/cards/card.nightclub.png" alt="Mesa con botella"> | **Mesa con botella**<br>Alguien propone coger mesa. El camarero ya tiene la carta en la mano. | 1. Irte pronto a casa<br>2. Poner tu parte<br>3. Pagar la mesa con tu tarjeta |
 | <img src="../art/clean/cards/card.sale_crowd.png" alt="Black Friday"> | **Black Friday**<br>Tienes la cesta llena desde el martes. | 1. Cerrar la pestaña<br>2. La PS5<br>3. El MacBook Pro |
+| <img src="../art/clean/cards/card.lodger_good.png" alt="El inquilino perfecto"> | **El inquilino perfecto**<br>Paga el día uno, riega las plantas y nunca usa tu taza. | 1. Dejarlo todo como está<br>2. Subirle un poco el alquiler |
+| <img src="../art/clean/cards/card.lodger_unpaid.png" alt="El alquiler se retrasa"> | **El alquiler se retrasa**<br>Tu inquilino no ha pagado este mes, ni el anterior. Detrás de la puerta suena música. | 1. Darle un mes más<br>2. Pedirle que se vaya |
+| <img src="../art/clean/cards/card.lodger_friend.png" alt="Un inquilino con contactos"> | **Un inquilino con contactos**<br>Tu inquilino quiere presentarte a una amiga que trabaja donde te gustaría trabajar a ti. | 1. Una cena y poco más<br>2. Coger su tarjeta y escribirle |
+| <img src="../art/clean/cards/card.lodger_tension.png" alt="Tensión en casa"> | **Tensión en casa**<br>Tu pareja no soporta encontrarse al inquilino en el sofá todas las noches. | 1. Tiene razón: el inquilino se va<br>2. Es solo un poco más |
 | <img src="../art/clean/cards/card.bali_wedding.png" alt="Una boda en Bali"> | **Una boda en Bali**<br>Tu mejor amigo se casa en Bali. Viaje, hotel, regalo y una semana sin trabajar. | 1. Excusarte<br>2. Ir a Bali |
 | <img src="../art/clean/cards/card.city_madrid_cana.png" alt="Solo una caña"> | **Solo una caña**<br>Un compañero dice de tomar una caña al salir. En Madrid, una caña acaba en cena a medianoche. | 1. Irte a casa<br>2. Quedarte a cenar |
 | <img src="../art/clean/cards/card.city_london_club.png" alt="Te quieren en un club"> | **Te quieren en un club**<br>Un socio de un club privado de Mayfair se ofrece a proponerte. | 1. Declinarlo con educación<br>2. Pagar la cuota de entrada |
@@ -1259,6 +1263,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.family_of_four.png" alt="Familia de cuatro"> | Familia de cuatro | Comparte tu vida con una pareja y dos hijos. |
 | <img src="../art/clean/badges/badge.mba.png" alt="MBA"> | MBA | Consigue el MBA en el IESE. |
 | <img src="../art/clean/badges/badge.sold_business.png" alt="Negocio vendido"> | Negocio vendido | Monta un negocio y véndelo. |
+| <img src="../art/clean/badges/badge.own_boss.png" alt="Tu propio jefe"> | Tu propio jefe | Deja tu trabajo para vivir de tu negocio. |
 | <img src="../art/clean/badges/badge.rode_out_recession.png" alt="Aguantar la recesión"> | Aguantar la recesión | Mantén tus inversiones durante una recesión sin vender ninguna. |
 
 ### Mala suerte

@@ -11,7 +11,7 @@ import { netWorth } from '../selectors';
 import { effectiveTax, purchaseTax } from '../tax';
 import type { Effects, FinanceSkill, LifestyleTier, PlayerState } from '../types';
 import type { Situation } from './conditions';
-import { homeOf, refreshDerived } from './derive';
+import { focusBonusOf, homeOf, refreshDerived } from './derive';
 import { FLAG_SOLD_BUSINESS, hasFlag } from './flags';
 import { retire } from './orders';
 import { addSkillPoints, maxBusinessesOf, pointsOfLevel } from './skills';
@@ -42,7 +42,11 @@ function changeJob(p: PlayerState, job: NonNullable<Effects['job']>, at: Situati
     life.baseSalaryAnnual = 0;
     return;
   }
-  if (job.career !== undefined) life.career = { id: job.career, level: job.level ?? 0 };
+  // A new employer is a new start: no looking for the next one straight away.
+  if (job.career !== undefined) {
+    life.career = { id: job.career, level: job.level ?? 0 };
+    life.huntRest = Math.max(life.huntRest, at.content.life.focusLimits.huntRestRounds);
+  }
   else if (life.career === null) return;
   else if (job.level !== undefined) life.career.level = job.level;
   if (life.career === null) return;
@@ -218,6 +222,13 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     for (const entry of life.evasion.evaded) owed += entry.amount;
     p.cash -= mulDiv(owed, effects.launder.feePct, 100);
     life.evasion.evaded = [];
+  }
+  if (effects.endLodger === true) life.lodger = false;
+  if (effects.workMode !== undefined) {
+    // The focus a way of working gives counts from the round it starts in.
+    const before = focusBonusOf(p, at.content);
+    life.workMode = effects.workMode;
+    life.focusBonus += focusBonusOf(p, at.content) - before;
   }
   if (effects.jail !== undefined) {
     // Already inside, the sentence runs to whichever ends later. Going in costs status once.

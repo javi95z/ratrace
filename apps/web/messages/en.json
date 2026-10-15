@@ -334,7 +334,9 @@
     "sellBusiness": "You sell your largest business for {pct}% of what it is worth",
     "giftBusiness": "Your largest business to your children",
     "launder": "Washes what is hidden ({pct}% fee)",
-    "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}"
+    "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}",
+    "remote": "Work from home: +1 focus",
+    "endLodger": "The lodger moves out"
   },
   "finance": {
     "tabs": {
@@ -575,9 +577,9 @@
       "noInvoiceTag": "No invoice"
     },
     "taxes": {
-      "income": "Coming in",
-      "expenses": "Going out",
-      "tax": "Tax",
+      "income": "Money in over {years} years",
+      "expenses": "Money out over {years} years",
+      "tax": "Tax over {years} years",
       "incomeTax": "Income tax",
       "investmentTax": "Tax on investments",
       "propertyTax": "Property tax",

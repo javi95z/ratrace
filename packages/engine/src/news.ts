@@ -101,7 +101,7 @@ function falsehood(content: Content, real: Headline, now: WorldState, rng: Rng):
  * Each is on a different topic and is true with the chance the content sets.
  * The headlines have their own random stream, so they never move a price.
  */
-export function writeNews(seed: string, content: Content, timeline: WorldState[]): void {
+export function writeNews(seed: string, content: Content, timeline: WorldState[], homeCityId?: string): void {
   const rules = content.world;
   const rng = new Rng(seedRng(seed, 'news'));
   const assets = newsworthy(content);
@@ -119,13 +119,15 @@ export function writeNews(seed: string, content: Content, timeline: WorldState[]
       const topic = topics.splice(rng.int(topics.length), 1)[0];
       // Taxes are news where a reform is coming, if one is; anywhere else they are a guess.
       const reformed = taxed.filter((cityId) => (next.taxShiftBp[cityId] ?? 0) !== (now.taxShiftBp[cityId] ?? 0));
+      // Half the news of homes and of taxes is of the city the life began in: it is the local paper.
+      const local = homeCityId !== undefined && content.cities.some((city) => city.id === homeCityId) && rng.chance(50);
       const about: Headline =
         topic === 'property'
-          ? { topic, cityId: content.cities[rng.int(content.cities.length)].id, trend: 'up' }
+          ? { topic, cityId: local && homeCityId ? homeCityId : content.cities[rng.int(content.cities.length)].id, trend: 'up' }
           : topic === 'asset'
             ? { topic, assetId: assets[rng.int(assets.length)], trend: 'up' }
             : topic === 'taxes'
-              ? { topic, cityId: reformed.length > 0 ? reformed[0] : taxed[rng.int(taxed.length)], trend: 'flat' }
+              ? { topic, cityId: reformed.length > 0 ? reformed[0] : local && homeCityId && taxed.includes(homeCityId) ? homeCityId : taxed[rng.int(taxed.length)], trend: 'flat' }
               : topic === 'noise'
                 ? { topic, id: rng.int(rules.noiseHeadlines) }
                 : topic === 'regime'

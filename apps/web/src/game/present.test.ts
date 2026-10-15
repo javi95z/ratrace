@@ -74,8 +74,8 @@ describe('a business, in words', () => {
     expect(tags({ business: { typeId: 'bar', capital: 4_000_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar' }]);
     expect(tags({ sellBusiness: { pricePct: 170 } })).toEqual([{ tone: 'good', text: 'You sell your largest business for 170% of what it is worth' }]);
     const notes = (events: GameEvent[]) => roundNotes(words('en'), t('en', 'resolve'), events);
-    expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'icon.biz_shop', title: 'You sold your business (Online shop) for $45,000.' }]);
-    expect(notes([{ kind: 'businessClosed', typeId: 'bar' }])).toEqual([{ tone: 'bad', icon: 'icon.biz_bar', title: 'Your business has closed: Bar.', hint: 'There was nothing left in it.' }]);
+    expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'business.shop', title: 'You sold your business (Online shop) for $45,000.' }]);
+    expect(notes([{ kind: 'businessClosed', typeId: 'bar' }])).toEqual([{ tone: 'bad', icon: 'business.bar', title: 'Your business has closed: Bar.', hint: 'There was nothing left in it.' }]);
   });
 });
 

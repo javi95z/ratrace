@@ -360,6 +360,7 @@ export const en: ContentText = {
     family_of_four: { name: 'Family of four', how: 'Share your life with a partner and two children.' },
     mba: { name: 'MBA', how: 'Earn the {item:edu_mba}.' },
     sold_business: { name: 'Sold a business', how: 'Build a business and sell it.' },
+    own_boss: { name: 'Your own boss', how: 'Leave your job to live from your business.' },
     rode_out_recession: { name: 'Rode it out', how: 'Hold your investments through a recession without selling any.' },
     bankrupt: { name: 'Bankrupt', how: 'Go bankrupt. It happens to the best.' },
     audited: { name: 'Taxes are for everyone', how: 'Be caught by a tax inspection.' },

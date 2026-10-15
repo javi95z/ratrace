@@ -4,8 +4,9 @@ import { incomeForRound } from '../economy';
 import { applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import type { Content, GameState, LifeStart } from '../types';
-import { lodgerOf, ownPay, statusParts } from './derive';
-import { focusTotal } from './orders';
+import { lodgerOf, ownPay, statusParts, workModeOf } from './derive';
+import { applyEffects } from './effects';
+import { focusLock, focusTotal } from './orders';
 
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 2 }, careerSkill: 10, financeSkill: 0, focus: 3 };
 const start = (c: Content, life: Partial<LifeStart> = {}): GameState => createGame({ content: c, start: { ...fixtureStart(), cash: 200_000_00, life: { ...office, ...life } } }, 'livings');
@@ -86,5 +87,31 @@ describe('a lodger', () => {
     const c = fixtureContent();
     const { rejected } = previewRound(c, start(c, { properties: [{ typeId: 'studio', rented: false }] }), { orders: [{ type: 'setLodger', on: true }] });
     expect(rejected.map((r) => r.reason)).toEqual(['no-spare-room']);
+  });
+});
+
+describe('cards about the new ways of living', () => {
+  it('a new job leaves no room to hunt for the next one straight away', () => {
+    const c = fixtureContent();
+    c.life.focusLimits.huntRestRounds = 1;
+    const state = start(c);
+    applyEffects(state.player, { job: { career: 'office', level: 0 } }, { content: c, world: state.timeline[0], round: 0 });
+    expect(focusLock(state.player, 'jobHunt', c)).toBe('hunt-resting');
+  });
+
+  it('the boss’s yes to home works at any rung, and the lodger can be shown the door', () => {
+    const c = fixtureContent();
+    const state = start(c, { career: { id: 'office', level: 0 }, careerSkill: 0, properties: [{ typeId: 'flat', rented: false }] });
+    const flat = c.propertyTypes.find((type) => type.id === 'flat');
+    if (flat) (flat as { spareRoom?: boolean }).spareRoom = true;
+    const p = state.player;
+    const focus = focusTotal(p);
+    applyEffects(p, { setFlags: ['remote_work'], workMode: 'remote' }, { content: c, world: state.timeline[0], round: 0 });
+    expect(workModeOf(p, c)).toBe('remote');
+    expect(focusTotal(p)).toBe(focus + 1);
+    p.life.lodger = true;
+    expect(lodgerOf(p, c)).toBe(true);
+    applyEffects(p, { endLodger: true }, { content: c, world: state.timeline[0], round: 0 });
+    expect(lodgerOf(p, c)).toBe(false);
   });
 });

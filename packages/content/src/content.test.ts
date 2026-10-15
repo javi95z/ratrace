@@ -32,7 +32,7 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(171);
+    expect(content.cards).toHaveLength(175);
     expect(lives).toHaveLength(20);
   });
 
@@ -42,7 +42,7 @@ describe('the v1 content', () => {
     expect(count).toEqual({
       // Twenty of them are a city's own: five in career, five in housing, three in lifestyle and in tax, two in business, one in family and in luck.
       // And fourteen are of the wrong side of the law.
-      career: 29, education: 9, business: 15, investing: 14, housing: 16, lifestyle: 17,
+      career: 29, education: 9, business: 15, investing: 14, housing: 16, lifestyle: 21,
       family: 13, health: 5, luck: 12, world: 18, tax: 12, laterLife: 11,
     });
   });

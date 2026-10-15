@@ -6,7 +6,7 @@ import type { Cents } from '../money';
 import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
 import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from './derive';
-import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
+import { FLAG_HAD_ILLNESS, FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
@@ -65,6 +65,7 @@ export function workModeLock(p: PlayerState, mode: WorkMode, content: Content): 
   if (!WORK_MODES.includes(mode)) return 'bad-mode';
   if (mode === 'office') return null;
   if (p.life.career === null) return 'no-job';
+  if (mode === 'remote' && hasFlag(p.life.flags, FLAG_REMOTE_WORK)) return null;
   if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'no-remote';
   if (p.life.career.level < content.life.workModes[mode].fromLevel) return 'needs-seniority';
   return null;

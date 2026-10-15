@@ -50,6 +50,7 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   family_of_four: { rarity: 'uncommon', judged: true },
   mba: { rarity: 'rare' },
   sold_business: { rarity: 'rare' },
+  own_boss: { rarity: 'rare', judged: true },
   rode_out_recession: { rarity: 'common' },
   bankrupt: { rarity: 'uncommon' },
   room_at_40: { rarity: 'uncommon' },

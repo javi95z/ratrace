@@ -150,7 +150,7 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams, plan: C
 }
 
 /** The whole world for one game. It depends on the seed and the content, never on a player. */
-export function generateTimeline(seed: string, content: Content): WorldState[] {
+export function generateTimeline(seed: string, content: Content, homeCityId?: string): WorldState[] {
   const m = content.market;
   const streams: Streams = {
     macro: new Rng(seedRng(seed, 'world')),
@@ -180,7 +180,7 @@ export function generateTimeline(seed: string, content: Content): WorldState[] {
   // Each of these has its own random stream and reads prices without changing them.
   applyTaxReforms(seed, content, timeline);
   chooseWorldCards(seed, content, timeline);
-  writeNews(seed, content, timeline);
+  writeNews(seed, content, timeline, homeCityId);
   return timeline;
 }
 

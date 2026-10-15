@@ -334,7 +334,9 @@
     "sellBusiness": "Vendes tu negocio más grande por el {pct} % de lo que vale",
     "giftBusiness": "Tu negocio más grande, para tus hijos",
     "launder": "Lava lo oculto (comisión del {pct} %)",
-    "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}"
+    "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}",
+    "remote": "Teletrabajo: +1 de foco",
+    "endLodger": "El inquilino se va"
   },
   "finance": {
     "tabs": {
@@ -575,9 +577,9 @@
       "noInvoiceTag": "Sin factura"
     },
     "taxes": {
-      "income": "Lo que entra",
-      "expenses": "Lo que sale",
-      "tax": "Impuestos",
+      "income": "Lo que entra en {years} años",
+      "expenses": "Lo que sale en {years} años",
+      "tax": "Impuestos de {years} años",
       "incomeTax": "Impuesto sobre la renta",
       "investmentTax": "Impuestos sobre inversiones",
       "propertyTax": "Impuesto sobre la vivienda",

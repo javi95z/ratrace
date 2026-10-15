@@ -360,6 +360,7 @@ export const es: ContentText = {
     family_of_four: { name: 'Familia de cuatro', how: 'Comparte tu vida con una pareja y dos hijos.' },
     mba: { name: 'MBA', how: 'Consigue el {item:edu_mba}.' },
     sold_business: { name: 'Negocio vendido', how: 'Monta un negocio y véndelo.' },
+    own_boss: { name: 'Tu propio jefe', how: 'Deja tu trabajo para vivir de tu negocio.' },
     rode_out_recession: { name: 'Aguantar la recesión', how: 'Mantén tus inversiones durante una recesión sin vender ninguna.' },
     bankrupt: { name: 'Quiebra', how: 'Quiebra. Les pasa a los mejores.' },
     audited: { name: 'Hacienda somos todos', how: 'Que te pille una inspección de Hacienda.' },

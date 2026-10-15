@@ -800,4 +800,20 @@ export const cards: Record<string, CardText> = {
     'Llevar las cuentas honestas',
     'Lavar lo que tienes oculto',
   ]),
+  lodger_good: c('El inquilino perfecto', 'Paga el día uno, riega las plantas y nunca usa tu taza.', [
+    'Dejarlo todo como está',
+    ['Subirle un poco el alquiler', 'Lo paga sin rechistar.', 'Se busca otra cosa. Mejor haberlo dejado.'],
+  ]),
+  lodger_unpaid: c('El alquiler se retrasa', 'Tu inquilino no ha pagado este mes, ni el anterior. Detrás de la puerta suena música.', [
+    ['Darle un mes más', 'Lo paga todo, con una disculpa y un bizcocho.', 'Se va de noche debiéndote tres meses.'],
+    'Pedirle que se vaya',
+  ]),
+  lodger_friend: c('Un inquilino con contactos', 'Tu inquilino quiere presentarte a una amiga que trabaja donde te gustaría trabajar a ti.', [
+    'Una cena y poco más',
+    'Coger su tarjeta y escribirle',
+  ]),
+  lodger_tension: c('Tensión en casa', 'Tu pareja no soporta encontrarse al inquilino en el sofá todas las noches.', [
+    'Tiene razón: el inquilino se va',
+    ['Es solo un poco más', 'Aguantáis, con un ambiente gélido.', 'Tu pareja se va antes que el inquilino.'],
+  ]),
 };
