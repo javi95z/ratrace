@@ -1,12 +1,12 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.25.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.26.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
 | Qué | Cuántos |
 | --- | --- |
-| [Vidas](#vidas) | 16 |
+| [Vidas](#vidas) | 20 |
 | [Reto de la semana](#reto-de-la-semana) | 5 reglas |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 10 |
@@ -14,9 +14,9 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 20 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 135 |
+| [Cartas](#cartas) | 137 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 35 |
+| [Insignias](#insignias) | 38 |
 
 ## Vidas
 
@@ -261,6 +261,66 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Ventaja | Un cuarto más de sueldo cuando la economía va en auge. |
 | Desventaja | Un cuarto menos cuando se encoge. |
 | Se desbloquea | Compra mientras todo cae. |
+
+### Ingeniero de robótica
+
+<img src="../art/clean/portraits/portrait.robotics_engineer.22.png" alt="Ingeniero de robótica a los 22"> <img src="../art/clean/portraits/portrait.robotics_engineer.32.png" alt="Ingeniero de robótica a los 32"> <img src="../art/clean/portraits/portrait.robotics_engineer.45.png" alt="Ingeniero de robótica a los 45"> <img src="../art/clean/portraits/portrait.robotics_engineer.58.png" alt="Ingeniero de robótica a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Tokio, con 6.000 $ |
+| Trabajo | Programador júnior (Tecnología) |
+| Experiencia · Finanzas · Foco | 1 · 1/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | Un trabajo para toda la vida en una empresa de robots, y cultura financiera desde el primer día. |
+| Desventaja | Un piso del tamaño de una plaza de garaje, y precios de Tokio. |
+| Se desbloquea | Vive en tres continentes en una misma vida. |
+
+### Programadora
+
+<img src="../art/clean/portraits/portrait.programmer.22.png" alt="Programadora a los 22"> <img src="../art/clean/portraits/portrait.programmer.32.png" alt="Programadora a los 32"> <img src="../art/clean/portraits/portrait.programmer.45.png" alt="Programadora a los 45"> <img src="../art/clean/portraits/portrait.programmer.58.png" alt="Programadora a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Moscú, con 2.000 $ |
+| Trabajo | Programador júnior (Tecnología) |
+| Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | Buen sueldo para una ciudad barata, y un impuesto plano del trece por ciento. |
+| Desventaja | Un sueldo que sube y baja con el rublo. |
+| Se desbloquea | Ten cinco tipos de inversión a la vez. |
+
+### Chef
+
+<img src="../art/clean/portraits/portrait.chef.22.png" alt="Chef a los 22"> <img src="../art/clean/portraits/portrait.chef.32.png" alt="Chef a los 32"> <img src="../art/clean/portraits/portrait.chef.45.png" alt="Chef a los 45"> <img src="../art/clean/portraits/portrait.chef.58.png" alt="Chef a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Ciudad de México, con 1.500 $ |
+| Trabajo | Camarero (Hostelería) |
+| Experiencia · Finanzas · Foco | 2 · 0/3 · 4 |
+| Modo de vida | Normal |
+| Empieza con | Nada más |
+| Ventaja | Dirige una cocina desde el primer día, con cuatro puntos de foco, en la ciudad más barata del juego. |
+| Desventaja | El sueldo más bajo al empezar, y jornadas largas. |
+| Se desbloquea | Comparte tu vida con pareja y dos hijos. |
+
+### Banquero privado
+
+<img src="../art/clean/portraits/portrait.private_banker.22.png" alt="Banquero privado a los 22"> <img src="../art/clean/portraits/portrait.private_banker.32.png" alt="Banquero privado a los 32"> <img src="../art/clean/portraits/portrait.private_banker.45.png" alt="Banquero privado a los 45"> <img src="../art/clean/portraits/portrait.private_banker.58.png" alt="Banquero privado a los 58">
+
+|  |  |
+| --- | --- |
+| Empieza en | Zúrich, con 10.000 $ |
+| Trabajo | Analista (Finanzas) |
+| Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
+| Modo de vida | Cómodo (no puede bajar de Cómodo) |
+| Empieza con | Nada más |
+| Ventaja | La mesa mejor pagada en la ciudad más cara, con clientes que abren puertas. |
+| Desventaja | Un estilo de vida que nunca puede bajar de acomodado, en Zúrich. |
+| Se desbloquea | Reúne un millón viviendo en Zúrich. |
 
 ## Reto de la semana
 
@@ -868,13 +928,15 @@ La sospecha baja 5 por ronda sin ocultar nada, y la probabilidad de inspección 
 
 Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni compra nada.
 
-### Carrera (20)
+### Carrera (22)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
 | <img src="../art/clean/cards/card.boss_door.png" alt="Pedir un aumento"> | **Pedir un aumento**<br>La semana que viene tienes la evaluación y el alquiler te ha subido dos veces desde la última. | 1. No decir nada<br>2. Pedirlo<br>3. Preparar bien los argumentos<br>4. Negociarlo en serio |
 | <img src="../art/clean/cards/card.handshake.png" alt="Llama la competencia"> | **Llama la competencia**<br>La empresa rival te quiere, y ofrece más. | 1. Ser leal<br>2. Aceptar el puesto<br>3. Enseñársela a tu jefe |
 | <img src="../art/clean/cards/card.airport.png" alt="Un ascenso con letra pequeña"> | **Un ascenso con letra pequeña**<br>El ascenso es tuyo. La mesa está en Londres. | 1. Rechazarlo<br>2. Hacer las maletas |
+| <img src="../art/clean/cards/card.office_east.png" alt="Una oficina en el este"> | **Una oficina en el este**<br>La empresa abre mesas en Tokio y Moscú, y busca a alguien que conozca el trabajo. | 1. Quedarte donde estás<br>2. Irte a Tokio<br>3. Irte a Moscú |
+| <img src="../art/clean/cards/card.office_west.png" alt="Una oficina en el oeste"> | **Una oficina en el oeste**<br>Dos plazas, con todo pagado: una en Ciudad de México y otra en Zúrich. | 1. Quedarte donde estás<br>2. Irte a Ciudad de México<br>3. Irte a Zúrich |
 | <img src="../art/clean/cards/card.office_desk.png" alt="Semanas de entrega"> | **Semanas de entrega**<br>Han adelantado la fecha. Alguien tiene que quedarse hasta tarde un mes. | 1. Hacer lo justo<br>2. Echar horas |
 | <img src="../art/clean/cards/card.packed_box.png" alt="Una ronda de despidos"> | **Una ronda de despidos**<br>En tu calendario aparece una reunión general sin orden del día. | 1. Aceptar la indemnización<br>2. Pelear por tu puesto<br>3. Formarte mientras buscas |
 | <img src="../art/clean/cards/card.restructuring.png" alt="Reestructuración"> | **Reestructuración**<br>La empresa revisa quién cobra más. Tu nombre está en la lista. | 1. Aceptar un puesto por debajo<br>2. Aceptar la salida con indemnización<br>3. Pelear tu puesto |
@@ -1108,6 +1170,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.millionaire.png" alt="Millonario"> | Millonario | Ten un patrimonio de un millón, descontando la inflación. |
 | <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Millonario a los 35"> | Millonario a los 35 | Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación. |
 | <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, descontando la inflación. |
+| <img src="../art/clean/badges/badge.swiss_banker.png" alt="Banquero suizo"> | Banquero suizo | Ten un patrimonio de 1.000.000 $ viviendo en Zúrich. |
 | <img src="../art/clean/badges/badge.debt_free_at_40.png" alt="Sin deudas a los 40"> | Sin deudas a los 40 | No debas nada de nada el día que cumplas 40, sin haber quebrado nunca. |
 | <img src="../art/clean/badges/badge.no_credit_card.png" alt="Ni una vez la tarjeta"> | Ni una vez la tarjeta | Vive una vida entera sin que nada acabe cargado a la tarjeta de crédito. |
 
@@ -1152,6 +1215,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.three_cities.png" alt="Tres ciudades"> | Tres ciudades | Vive en tres ciudades en una misma vida. |
 | <img src="../art/clean/badges/badge.moved_to_dubai.png" alt="Mudanza a Dubái"> | Mudanza a Dubái | Múdate a Dubái. |
+| <img src="../art/clean/badges/badge.world_tour.png" alt="La vuelta al mundo"> | La vuelta al mundo | Vive en tres continentes en una misma vida. |
 | <img src="../art/clean/badges/badge.family_of_four.png" alt="Familia de cuatro"> | Familia de cuatro | Comparte tu vida con una pareja y dos hijos. |
 | <img src="../art/clean/badges/badge.mba.png" alt="MBA"> | MBA | Consigue el MBA en el IESE. |
 | <img src="../art/clean/badges/badge.sold_business.png" alt="Negocio vendido"> | Negocio vendido | Monta un negocio y véndelo. |
@@ -1163,4 +1227,5 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.bankrupt.png" alt="Quiebra"> | Quiebra | Quiebra. Les pasa a los mejores. |
 | <img src="../art/clean/badges/badge.room_at_40.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
+| <img src="../art/clean/badges/badge.ronin.png" alt="Rōnin"> | Rōnin | Pierde tu trabajo en Tokio. |
 | <img src="../art/clean/badges/badge.audited.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |

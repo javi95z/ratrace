@@ -259,6 +259,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.ronin": {
+    "src": "badges/badge.ronin.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.room_at_40": {
     "src": "badges/badge.room_at_40.png",
     "w": 64,
@@ -284,6 +289,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.swiss_banker": {
+    "src": "badges/badge.swiss_banker.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.ten_million": {
     "src": "badges/badge.ten_million.png",
     "w": 64,
@@ -301,6 +311,11 @@
   },
   "badge.twenty_items": {
     "src": "badges/badge.twenty_items.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.world_tour": {
+    "src": "badges/badge.world_tour.png",
     "w": 64,
     "h": 64
   },
@@ -796,6 +811,16 @@
   },
   "card.office_desk": {
     "src": "cards/card.office_desk.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.office_east": {
+    "src": "cards/card.office_east.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.office_west": {
+    "src": "cards/card.office_west.png",
     "w": 288,
     "h": 120
   },
@@ -2924,6 +2949,26 @@
     "w": 64,
     "h": 64
   },
+  "portrait.chef.22": {
+    "src": "portraits/portrait.chef.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.chef.32": {
+    "src": "portraits/portrait.chef.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.chef.45": {
+    "src": "portraits/portrait.chef.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.chef.58": {
+    "src": "portraits/portrait.chef.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.civil_servant.22": {
     "src": "portraits/portrait.civil_servant.22.png",
     "w": 64,
@@ -3204,6 +3249,46 @@
     "w": 64,
     "h": 64
   },
+  "portrait.private_banker.22": {
+    "src": "portraits/portrait.private_banker.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.private_banker.32": {
+    "src": "portraits/portrait.private_banker.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.private_banker.45": {
+    "src": "portraits/portrait.private_banker.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.private_banker.58": {
+    "src": "portraits/portrait.private_banker.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.programmer.22": {
+    "src": "portraits/portrait.programmer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.programmer.32": {
+    "src": "portraits/portrait.programmer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.programmer.45": {
+    "src": "portraits/portrait.programmer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.programmer.58": {
+    "src": "portraits/portrait.programmer.58.png",
+    "w": 64,
+    "h": 64
+  },
   "portrait.rider.22": {
     "src": "portraits/portrait.rider.22.png",
     "w": 64,
@@ -3221,6 +3306,26 @@
   },
   "portrait.rider.58": {
     "src": "portraits/portrait.rider.58.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.robotics_engineer.22": {
+    "src": "portraits/portrait.robotics_engineer.22.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.robotics_engineer.32": {
+    "src": "portraits/portrait.robotics_engineer.32.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.robotics_engineer.45": {
+    "src": "portraits/portrait.robotics_engineer.45.png",
+    "w": 64,
+    "h": 64
+  },
+  "portrait.robotics_engineer.58": {
+    "src": "portraits/portrait.robotics_engineer.58.png",
     "w": 64,
     "h": 64
   },
