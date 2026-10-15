@@ -218,7 +218,7 @@ const base: Content = {
     studySkill: 1,
     jobHuntChancePct: 35,
     jobHuntRaisePct: 8,
-    workModes: { remote: { focus: 1, payPct: 100, jobStatusPct: 50, workSkill: true }, partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false } },
+    workModes: { remote: { focus: 1, payPct: 100, jobStatusPct: 50, workSkill: true, fromLevel: 1 }, partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0 } },
     raise: { chancePct: 40, perNegotiationPct: 10, pct: 5, restRounds: 2 },
     jail: { statusLost: 6, rungsLost: 1 },
     // No limits by default: each test of one sets its own.

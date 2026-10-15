@@ -83,10 +83,12 @@ export function workModeOf(p: PlayerState, content: Content): WorkMode {
   const mode = p.life.workMode;
   if ((mode !== 'remote' && mode !== 'partTime') || p.life.career === null || p.life.jailRounds > 0) return 'office';
   if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'office';
+  // A step down the ladder and the trust goes with it.
+  if (p.life.career.level < content.life.workModes[mode].fromLevel) return 'office';
   return mode;
 }
 
-const AT_WORK: WorkModeRule = { focus: 0, payPct: 100, jobStatusPct: 100, workSkill: true };
+const AT_WORK: WorkModeRule = { focus: 0, payPct: 100, jobStatusPct: 100, workSkill: true, fromLevel: 0 };
 
 /** What the way the player works changes: nothing at the workplace. */
 export function workModeRule(p: PlayerState, content: Content): WorkModeRule {

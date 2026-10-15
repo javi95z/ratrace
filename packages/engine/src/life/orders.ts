@@ -66,6 +66,7 @@ export function workModeLock(p: PlayerState, mode: WorkMode, content: Content): 
   if (mode === 'office') return null;
   if (p.life.career === null) return 'no-job';
   if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'no-remote';
+  if (p.life.career.level < content.life.workModes[mode].fromLevel) return 'needs-seniority';
   return null;
 }
 

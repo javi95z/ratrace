@@ -219,6 +219,7 @@ export function validateContent(c: Content): string[] {
     if (!isCount(rule.focus)) errors.push(`life.workModes.${mode}.focus must be a whole, non-negative number`);
     for (const field of ['payPct', 'jobStatusPct']) if (!(isCount(rule[field]) && (rule[field] as number) <= 100)) errors.push(`life.workModes.${mode}.${field} must be a whole number from 0 to 100`);
     if (typeof rule.workSkill !== 'boolean') errors.push(`life.workModes.${mode}.workSkill must be true or false`);
+    if (!isCount(rule.fromLevel)) errors.push(`life.workModes.${mode}.fromLevel must be a whole, non-negative number`);
   }
   const raise = isRecord(life.raise) ? life.raise : {};
   for (const field of ['chancePct', 'perNegotiationPct', 'pct']) if (!(isCount(raise[field]) && (raise[field] as number) <= 100)) errors.push(`life.raise.${field} must be a whole number from 0 to 100`);

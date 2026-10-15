@@ -426,6 +426,7 @@ export const en: ContentText = {
     'raise-resting': 'You asked your boss not long ago: give it a while before asking again.',
     'bad-mode': 'That is not a way of working.',
     'no-remote': 'This job cannot be done from home.',
+    'needs-seniority': 'Working from home is earned: it comes a few rungs up.',
     'no-job': 'You need a job for that.',
     'unknown-item': 'That item does not exist.',
     'not-for-sale': 'That is not for sale here.',

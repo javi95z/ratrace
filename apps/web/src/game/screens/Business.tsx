@@ -77,7 +77,8 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
   return (
     <li className="border-t-2 border-night-900 py-2 first:border-t-0 first:pt-0">
       <button type="button" aria-haspopup="dialog" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 text-left">
-        <Bare className="size-12">
+        {/* A 32-pixel picture drawn at twice its size needs a box of 64: a smaller one squeezes it. */}
+        <Bare className="size-16 shrink-0">
           <Sprite id={businessArt(business.typeId)} scale={2} />
         </Bare>
         <span className="min-w-0 flex-1">

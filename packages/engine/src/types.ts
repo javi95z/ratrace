@@ -286,6 +286,8 @@ export interface WorkModeRule {
   jobStatusPct: number;
   /** Whether a round of it still teaches the trade; without it, only study does. */
   workSkill: boolean;
+  /** The rung of the career from which it is allowed: trust is earned first. */
+  fromLevel: number;
 }
 
 export type ItemKind = 'durable' | 'membership' | 'experience';
@@ -1203,6 +1205,7 @@ export type RejectReason =
   | 'raise-resting'
   | 'bad-mode'
   | 'no-remote'
+  | 'needs-seniority'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'

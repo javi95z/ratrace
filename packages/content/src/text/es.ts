@@ -426,6 +426,7 @@ export const es: ContentText = {
     'raise-resting': 'Hace poco que pediste un aumento: deja pasar un tiempo antes de volver a pedirlo.',
     'bad-mode': 'Esa forma de trabajar no existe.',
     'no-remote': 'Este trabajo no se puede hacer desde casa.',
+    'needs-seniority': 'El teletrabajo se gana: llega al subir unos escalones.',
     'no-job': 'Para eso necesitas un trabajo.',
     'unknown-item': 'Ese artículo no existe.',
     'not-for-sale': 'Eso no se vende aquí.',

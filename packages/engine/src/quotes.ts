@@ -6,7 +6,7 @@ import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { workModeOf } from './life/derive';
 import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { raiseChance } from './life/orders';
+import { raiseChance, workModeLock } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
 import { careerStudyOf, jobHuntChance, jobHuntRaise, landingOf, overtimeToll, promotionRaise } from './life/roundEnd';
@@ -422,7 +422,7 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     focusLocks: Object.fromEntries(FOCUS_ACTIONS.map((action) => [action, focusLock(p, action, content)])) as Record<FocusAction, RejectReason | null>,
     jobHuntChancePct: jobHuntChance(content, perks, p),
     raise: { chancePct: raiseChance(p, content), pct: content.life.raise.pct },
-    workMode: { current: workModeOf(p, content), remote: career?.remote === true, rules: content.life.workModes },
+    workMode: { current: workModeOf(p, content), remote: workModeLock(p, 'remote', content) === null, rules: content.life.workModes },
     jobHuntRaisePct: jobHuntRaise(content, p),
     promotionRaisePct: promotionRaise(content, p),
     focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus, lost: p.life.focusLost },

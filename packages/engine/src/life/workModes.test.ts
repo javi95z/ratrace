@@ -31,6 +31,13 @@ describe('ways of working', () => {
     expect(statusParts(player, c, 0).job).toBe(Math.floor(job / 2));
   });
 
+  it('from home only a few rungs up: trust comes first', () => {
+    const c = content(true);
+    const state = createGame({ content: c, start: { ...fixtureStart(), life: { ...office, career: { id: 'office', level: 0 }, careerSkill: 0 } } }, 'junior');
+    const { rejected } = previewRound(c, state, { orders: [{ type: 'setWorkMode', mode: 'remote' }] });
+    expect(rejected.map((r) => r.reason)).toEqual(['needs-seniority']);
+  });
+
   it('from home only where the job allows it', () => {
     const c = content(false);
     const { rejected } = previewRound(c, game(c), { orders: [{ type: 'setWorkMode', mode: 'remote' }] });
