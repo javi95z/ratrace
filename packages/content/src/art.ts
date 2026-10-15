@@ -163,7 +163,7 @@ export const itemArt = (itemId: string): string => (itemId.startsWith('car_') ? 
 /** The kinds of home each city draws its own way, once its sheet is cut. */
 export const CITY_HOME_KINDS = ['studio', 'flat', 'loft', 'townhouse', 'house', 'duplex', 'chalet', 'penthouse', 'estate', 'villa', 'mansion'] as const;
 /** The cities whose homes are drawn: until a city's sheet is cut, its homes are the plain ones. */
-export const CITY_HOMES_DRAWN: readonly string[] = ['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok'];
+export const CITY_HOMES_DRAWN: readonly string[] = ['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich'];
 /** A kind of property, as the city it is in draws it, or plain where the city has no drawing of its own. */
 /** The "for sale" board of a city, as it puts one up, or the board of the city of the start when the city has none. */
 export const saleSignArt = (cityId: string): string => `home.${CITY_HOMES_DRAWN.includes(cityId) ? cityId : CITY_HOMES_DRAWN[0]}.sign`;

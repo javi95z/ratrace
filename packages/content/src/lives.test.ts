@@ -84,7 +84,7 @@ const order: fc.Arbitrary<Order> = fc.oneof(
       on: fc.boolean(),
     }),
   },
-  { weight: 1, arbitrary: fc.record({ type: fc.constant('moveCity' as const), cityId: fc.constantFrom('madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'atlantis') }) },
+  { weight: 1, arbitrary: fc.record({ type: fc.constant('moveCity' as const), cityId: fc.constantFrom('madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich', 'atlantis') }) },
 );
 
 interface Life {

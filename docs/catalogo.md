@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.24.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.25.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -9,8 +9,8 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Vidas](#vidas) | 16 |
 | [Reto de la semana](#reto-de-la-semana) | 5 reglas |
 | [Carreras](#carreras) | 11 |
-| [Ciudades](#ciudades) | 6 |
-| [Objetos](#objetos) | 60, de ellos 8 coches |
+| [Ciudades](#ciudades) | 10 |
+| [Objetos](#objetos) | 64, de ellos 8 coches |
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 20 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
@@ -543,6 +543,82 @@ Tu dinero cunde cuatro veces más. Tus ahorros también.
 | Estatus por vivir aquí | +6 |
 | Carreras que paga mejor | Servicios +15 % · Tecnología +10 % · Hostelería +20 % · Influencer +10 % |
 
+### <img src="../art/clean/icons/icon.city_tokyo.png" alt=""> Tokio
+
+Todo funciona, nada baja de precio y los pisos apenas suben.
+
+<img src="../art/clean/skylines/skyline.tokyo.png" alt="Tokio de noche"> <img src="../art/clean/skylines/skyline.tokyo.day.png" alt="Tokio de día">
+
+<img src="../art/clean/skylines/skyline.tokyo.boom.png" alt="Tokio en bonanza"> <img src="../art/clean/skylines/skyline.tokyo.crisis.png" alt="Tokio en crisis">
+
+|  |  |
+| --- | --- |
+| Sueldo medio | 42.000 $ al año |
+| Coste de vida | 33.000 $ al año |
+| Piso de referencia | 450.000 $ |
+| Alquiler que rinde un inmueble | 3,8 % de su valor al año |
+| Impuesto sobre la renta | 15 % · 33 % · 45 % |
+| Impuesto sobre ganancias | 20 % |
+| Estatus por vivir aquí | +13 |
+| Carreras que paga mejor | Tecnología +15 % · Ventas +10 % · Hostelería +10 % |
+
+### <img src="../art/clean/icons/icon.city_moscow.png" alt=""> Moscú
+
+Un impuesto plano del trece por ciento y un mercado que se mueve con los tipos.
+
+<img src="../art/clean/skylines/skyline.moscow.png" alt="Moscú de noche"> <img src="../art/clean/skylines/skyline.moscow.day.png" alt="Moscú de día">
+
+<img src="../art/clean/skylines/skyline.moscow.boom.png" alt="Moscú en bonanza"> <img src="../art/clean/skylines/skyline.moscow.crisis.png" alt="Moscú en crisis">
+
+|  |  |
+| --- | --- |
+| Sueldo medio | 18.000 $ al año |
+| Coste de vida | 14.000 $ al año |
+| Piso de referencia | 220.000 $ |
+| Alquiler que rinde un inmueble | 4,5 % de su valor al año |
+| Impuesto sobre la renta | 13 % · 13 % · 15 % |
+| Impuesto sobre ganancias | 13 % |
+| Estatus por vivir aquí | +9 |
+| Carreras que paga mejor | Finanzas +15 % · Tecnología +15 % · Función pública +10 % |
+
+### <img src="../art/clean/icons/icon.city_mexico_city.png" alt=""> Ciudad de México
+
+Barata para vivir, rápida para crecer y tacos en cada esquina.
+
+<img src="../art/clean/skylines/skyline.mexico_city.png" alt="Ciudad de México de noche"> <img src="../art/clean/skylines/skyline.mexico_city.day.png" alt="Ciudad de México de día">
+
+<img src="../art/clean/skylines/skyline.mexico_city.boom.png" alt="Ciudad de México en bonanza"> <img src="../art/clean/skylines/skyline.mexico_city.crisis.png" alt="Ciudad de México en crisis">
+
+|  |  |
+| --- | --- |
+| Sueldo medio | 12.000 $ al año |
+| Coste de vida | 10.000 $ al año |
+| Piso de referencia | 140.000 $ |
+| Alquiler que rinde un inmueble | 6 % de su valor al año |
+| Impuesto sobre la renta | 10 % · 25 % · 35 % |
+| Impuesto sobre ganancias | 10 % |
+| Estatus por vivir aquí | +7 |
+| Carreras que paga mejor | Influencer +15 % · Hostelería +10 % · Ventas +15 % · Derecho +10 % |
+
+### <img src="../art/clean/icons/icon.city_zurich.png" alt=""> Zúrich
+
+Los sueldos más altos del juego, los pisos más caros y cero impuestos sobre las ganancias.
+
+<img src="../art/clean/skylines/skyline.zurich.png" alt="Zúrich de noche"> <img src="../art/clean/skylines/skyline.zurich.day.png" alt="Zúrich de día">
+
+<img src="../art/clean/skylines/skyline.zurich.boom.png" alt="Zúrich en bonanza"> <img src="../art/clean/skylines/skyline.zurich.crisis.png" alt="Zúrich en crisis">
+
+|  |  |
+| --- | --- |
+| Sueldo medio | 95.000 $ al año |
+| Coste de vida | 70.000 $ al año |
+| Piso de referencia | 1.400.000 $ |
+| Alquiler que rinde un inmueble | 2,8 % de su valor al año |
+| Impuesto sobre la renta | 12 % · 22 % · 33 % |
+| Impuesto sobre ganancias | 0 % |
+| Estatus por vivir aquí | +16 |
+| Carreras que paga mejor | Finanzas +25 % · Medicina +15 % · Derecho +15 % · Tecnología +10 % |
+
 ## Objetos
 
 Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.
@@ -626,7 +702,7 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 | <img src="../art/clean/items/item.travel_weekend.png" alt="Escapada con Ryanair"> | Escapada con Ryanair | 300 $ |  | +2 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_interrail.png" alt="Pase de Interrail"> | Pase de Interrail | 1.200 $ |  | +3 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_ibiza.png" alt="Verano en Ibiza"> | Verano en Ibiza | 2.500 $ |  | +5 |  |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +7 |  |  | El estatus dura 2 años. Solo en Madrid, Londres; se pierde al mudarse |
+| <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +7 |  |  | El estatus dura 2 años. Solo en Madrid, Londres, Zúrich; se pierde al mudarse |
 | <img src="../art/clean/items/item.travel_business_class.png" alt="Business de Emirates"> | Business de Emirates | 6.000 $ |  | +9 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
 | <img src="../art/clean/items/item.travel_safari.png" alt="Safari en el Masái Mara"> | Safari en el Masái Mara | 9.000 $ |  | +12 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
 | <img src="../art/clean/items/item.travel_maldives.png" alt="Resort en Maldivas"> | Resort en Maldivas | 14.000 $ |  | +15 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
@@ -662,6 +738,10 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 | <img src="../art/clean/items/item.member_beach_dubai.png" alt="Club de playa de Jumeirah"> | Club de playa de Jumeirah | 3.000 $ | 5.000 $/año | +10 |  | +4 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Dubái; se pierde al mudarse |
 | <img src="../art/clean/items/item.member_paddock_singapore.png" alt="Paddock Club del GP de Singapur"> | Paddock Club del GP de Singapur | 4.000 $ | 6.000 $/año | +11 |  | +5 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Singapur; se pierde al mudarse |
 | <img src="../art/clean/items/item.member_ringside_bangkok.png" alt="Pase de ringside en Rajadamnern"> | Pase de ringside en Rajadamnern | 150 $ | 400 $/año | +3 |  | +2 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Bangkok; se pierde al mudarse |
+| <img src="../art/clean/items/item.member_sumo_tokyo.png" alt="Palco en el sumo de Ryōgoku"> | Palco en el sumo de Ryōgoku | 2.000 $ | 3.500 $/año | +9 |  | +4 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Tokio; se pierde al mudarse |
+| <img src="../art/clean/items/item.member_bolshoi_moscow.png" alt="Palco de temporada en el Bolshói"> | Palco de temporada en el Bolshói | 800 $ | 2.000 $/año | +7 |  | +3 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Moscú; se pierde al mudarse |
+| <img src="../art/clean/items/item.member_palco_mexico_city.png" alt="Palco en el Estadio Azteca"> | Palco en el Estadio Azteca | 6.000 $ | 1.500 $/año | +6 |  | +3 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Ciudad de México; se pierde al mudarse |
+| <img src="../art/clean/items/item.member_golf_zurich.png" alt="Club de golf de Zumikon"> | Club de golf de Zumikon | 25.000 $ | 8.000 $/año | +13 |  | +6 puntos al buscar trabajo | Cuota mientras lo tengas. Solo en Zúrich; se pierde al mudarse |
 
 ### Formación
 

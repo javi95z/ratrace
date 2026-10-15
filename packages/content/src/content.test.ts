@@ -11,10 +11,10 @@ describe('the v1 content', () => {
   });
 
   it('has the size the spec sets', () => {
-    expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok']);
+    expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich']);
     expect(content.assets).toHaveLength(20);
     expect(content.careers).toHaveLength(11);
-    expect(content.items).toHaveLength(60);
+    expect(content.items).toHaveLength(64);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
@@ -297,7 +297,7 @@ describe('the v1 content', () => {
     // What is not a membership goes along on a move, so it may be sold in more than one city.
     expect(local.filter((item) => item.kind !== 'membership').map((item) => [item.id, item.cities])).toEqual([
       ['fashion_suit', ['london']],
-      ['travel_ski', ['madrid', 'london']],
+      ['travel_ski', ['madrid', 'london', 'zurich']],
       ['sea_motor_yacht', ['dubai', 'singapore']],
     ]);
     // A card hands a thing over wherever the player is, so no card may give what belongs to one city.

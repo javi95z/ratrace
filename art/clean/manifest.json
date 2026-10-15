@@ -3226,6 +3226,386 @@
       "width": 312,
       "height": 66
     },
+    "home.tokyo.studio": {
+      "file": "homes/home.tokyo.studio.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.flat": {
+      "file": "homes/home.tokyo.flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.loft": {
+      "file": "homes/home.tokyo.loft.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.townhouse": {
+      "file": "homes/home.tokyo.townhouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.house": {
+      "file": "homes/home.tokyo.house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.duplex": {
+      "file": "homes/home.tokyo.duplex.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.chalet": {
+      "file": "homes/home.tokyo.chalet.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.penthouse": {
+      "file": "homes/home.tokyo.penthouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.estate": {
+      "file": "homes/home.tokyo.estate.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.villa": {
+      "file": "homes/home.tokyo.villa.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.mansion": {
+      "file": "homes/home.tokyo.mansion.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.sign": {
+      "file": "homes/home.tokyo.sign.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.studio": {
+      "file": "homes/home.moscow.studio.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.flat": {
+      "file": "homes/home.moscow.flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.loft": {
+      "file": "homes/home.moscow.loft.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.townhouse": {
+      "file": "homes/home.moscow.townhouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.house": {
+      "file": "homes/home.moscow.house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.duplex": {
+      "file": "homes/home.moscow.duplex.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.chalet": {
+      "file": "homes/home.moscow.chalet.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.penthouse": {
+      "file": "homes/home.moscow.penthouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.estate": {
+      "file": "homes/home.moscow.estate.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.villa": {
+      "file": "homes/home.moscow.villa.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.mansion": {
+      "file": "homes/home.moscow.mansion.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.sign": {
+      "file": "homes/home.moscow.sign.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.studio": {
+      "file": "homes/home.mexico_city.studio.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.flat": {
+      "file": "homes/home.mexico_city.flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.loft": {
+      "file": "homes/home.mexico_city.loft.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.townhouse": {
+      "file": "homes/home.mexico_city.townhouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.house": {
+      "file": "homes/home.mexico_city.house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.duplex": {
+      "file": "homes/home.mexico_city.duplex.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.chalet": {
+      "file": "homes/home.mexico_city.chalet.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.penthouse": {
+      "file": "homes/home.mexico_city.penthouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.estate": {
+      "file": "homes/home.mexico_city.estate.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.villa": {
+      "file": "homes/home.mexico_city.villa.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.mansion": {
+      "file": "homes/home.mexico_city.mansion.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.sign": {
+      "file": "homes/home.mexico_city.sign.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.studio": {
+      "file": "homes/home.zurich.studio.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.flat": {
+      "file": "homes/home.zurich.flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.loft": {
+      "file": "homes/home.zurich.loft.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.townhouse": {
+      "file": "homes/home.zurich.townhouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.house": {
+      "file": "homes/home.zurich.house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.duplex": {
+      "file": "homes/home.zurich.duplex.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.chalet": {
+      "file": "homes/home.zurich.chalet.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.penthouse": {
+      "file": "homes/home.zurich.penthouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.estate": {
+      "file": "homes/home.zurich.estate.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.villa": {
+      "file": "homes/home.zurich.villa.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.mansion": {
+      "file": "homes/home.zurich.mansion.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.sign": {
+      "file": "homes/home.zurich.sign.png",
+      "width": 128,
+      "height": 128
+    },
+    "icon.city_tokyo": {
+      "file": "icons/icon.city_tokyo.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.city_moscow": {
+      "file": "icons/icon.city_moscow.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.city_mexico_city": {
+      "file": "icons/icon.city_mexico_city.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.city_zurich": {
+      "file": "icons/icon.city_zurich.png",
+      "width": 32,
+      "height": 32
+    },
+    "crest.tokyo": {
+      "file": "badges/crest.tokyo.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.moscow": {
+      "file": "badges/crest.moscow.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.mexico_city": {
+      "file": "badges/crest.mexico_city.png",
+      "width": 64,
+      "height": 64
+    },
+    "crest.zurich": {
+      "file": "badges/crest.zurich.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_sumo_tokyo": {
+      "file": "items/item.member_sumo_tokyo.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_bolshoi_moscow": {
+      "file": "items/item.member_bolshoi_moscow.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_palco_mexico_city": {
+      "file": "items/item.member_palco_mexico_city.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.member_golf_zurich": {
+      "file": "items/item.member_golf_zurich.png",
+      "width": 64,
+      "height": 64
+    },
+    "skyline.tokyo": {
+      "file": "skylines/skyline.tokyo.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.moscow": {
+      "file": "skylines/skyline.moscow.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.mexico_city": {
+      "file": "skylines/skyline.mexico_city.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.zurich": {
+      "file": "skylines/skyline.zurich.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.tokyo.day": {
+      "file": "skylines/skyline.tokyo.day.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.moscow.day": {
+      "file": "skylines/skyline.moscow.day.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.mexico_city.day": {
+      "file": "skylines/skyline.mexico_city.day.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.zurich.day": {
+      "file": "skylines/skyline.zurich.day.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.tokyo.boom": {
+      "file": "skylines/skyline.tokyo.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.moscow.boom": {
+      "file": "skylines/skyline.moscow.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.mexico_city.boom": {
+      "file": "skylines/skyline.mexico_city.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.zurich.boom": {
+      "file": "skylines/skyline.zurich.boom.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.tokyo.crisis": {
+      "file": "skylines/skyline.tokyo.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.moscow.crisis": {
+      "file": "skylines/skyline.moscow.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.mexico_city.crisis": {
+      "file": "skylines/skyline.mexico_city.crisis.png",
+      "width": 312,
+      "height": 66
+    },
+    "skyline.zurich.crisis": {
+      "file": "skylines/skyline.zurich.crisis.png",
+      "width": 312,
+      "height": 66
+    },
     "logo.google": {
       "file": "icons/logo.google.png",
       "width": 32,

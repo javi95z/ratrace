@@ -10,6 +10,10 @@ export const es: ContentText = {
     dubai: { tagline: 'Sin impuesto sobre la renta y con mil maneras de gastar lo que te queda.' },
     singapore: { tagline: 'Impuestos bajos, alquileres altos y ganancias libres de impuestos.' },
     bangkok: { tagline: 'Tu dinero cunde cuatro veces más. Tus ahorros también.' },
+    tokyo: { tagline: 'Todo funciona, nada baja de precio y los pisos apenas suben.' },
+    moscow: { tagline: 'Un impuesto plano del trece por ciento y un mercado que se mueve con los tipos.' },
+    mexico_city: { tagline: 'Barata para vivir, rápida para crecer y tacos en cada esquina.' },
+    zurich: { tagline: 'Los sueldos más altos del juego, los pisos más caros y cero impuestos sobre las ganancias.' },
   },
   assets: {
     treasury_bills: { blurb: 'Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve.' },
