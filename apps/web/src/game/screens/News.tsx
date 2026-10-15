@@ -50,8 +50,8 @@ export function Headlines() {
   return (
     <div className="flex flex-col gap-3">
       <CrisisBar crisis={world.crisis} />
-      {/* A newspaper, thrown onto the table once a round, spinning: masthead, the lead story, and the rest in brief. */}
-      <section key={view.round} aria-label={t('title')} className="frame frame-cream animate-paper bg-cream px-3 pb-1.5 pt-2 text-ink-900">
+      {/* A newspaper, thrown onto the table once a round, spinning: masthead, the double rule of its border, and its stories. */}
+      <section key={view.round} aria-label={t('title')} className="animate-paper border-2 border-ink-900 bg-cream px-3.5 pb-2 pt-2.5 text-ink-900 shadow-[inset_0_0_0_3px_var(--color-cream),inset_0_0_0_4px_var(--color-ink-900),4px_4px_0_rgb(0_0_0/0.45)]">
         <h2 className="sr-only">{t('title')}</h2>
         <header className="text-center">
           <p className="pixel text-[26px] leading-none tracking-wide">{t('paper')}</p>
@@ -64,16 +64,16 @@ export function Headlines() {
         </header>
         <ul>
           {world.news.map((h, i) => (
-            // The first is the lead story, in big type; the rest follow in brief, each under a rule.
-            <li key={i} className={`flex items-start gap-2 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
-              <span aria-hidden className={`mt-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden ${TOPIC[h.topic]}`}>
+            // One story after another, each under a rule, as the columns of a page.
+            <li key={i} className={`flex items-center gap-2.5 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
+              <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 p-1 ${TOPIC[h.topic]}`}>
                 <Sprite id={topicArt[h.topic]} />
               </span>
               <span className="min-w-0">
                 <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
                   {t(`topics.${h.topic}`)}
                 </span>
-                <span className={i === 0 ? 'pixel mt-0.5 block text-[20px] leading-[1.05]' : 'mt-0.5 block text-[14px] font-semibold leading-tight'}>{headlineText(words, h, view.round + i)}</span>
+                <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{headlineText(words, h, view.round + i)}</span>
               </span>
             </li>
           ))}
