@@ -7,7 +7,7 @@ import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorldState } from '../types';
 import { INSURANCE_KINDS, perksOf } from './derive';
 import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
-import { isStudy, skillLevel } from './skills';
+import { isStudy, skillLevel, STUDY_OF } from './skills';
 
 export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
@@ -21,15 +21,37 @@ export function focusLeft(p: PlayerState): number {
   return Math.max(0, focusTotal(p) - p.life.focusUsed);
 }
 
-/** Focus points the player has for this round in all: their own, and what a rest gave them. */
+/**
+ * Focus points the player has for this round in all: their own, and what a rest gave them, less
+ * what a burnout took. A burnout never leaves the player with none.
+ */
 export function focusTotal(p: PlayerState): number {
-  return p.life.focusBase + p.life.focusBonus;
+  const total = p.life.focusBase + p.life.focusBonus;
+  return p.life.focusLost > 0 ? Math.max(Math.min(1, total), total - p.life.focusLost) : total;
 }
 
-function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): RejectReason | null {
+/**
+ * Why a use of focus is closed to the player as they stand, whatever focus is left, or null. A skill
+ * at its top has nothing more to learn; study for the career needs a rung above and counts for
+ * so much at each rung; and a job hunt that just worked needs a rest.
+ */
+export function focusLock(p: PlayerState, action: FocusAction, content: Content): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
   // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
   if (p.life.career === null && !isStudy(action) && action !== 'studyFinance') return 'no-job';
+  if (isStudy(action) && skillLevel(p, STUDY_OF[action], content) >= 3) return 'skill-maxed';
+  if (action === 'studyFinance' && p.life.financeSkill >= 3) return 'skill-maxed';
+  if (action === 'studyCareer' && p.life.career !== null) {
+    if (careerOf(content, p.life.career.id).levels[p.life.career.level + 1] === undefined) return 'career-top';
+    if (p.life.rungStudy >= content.life.focusLimits.studyPerRung) return 'studied-enough';
+  }
+  if (action === 'jobHunt' && p.life.huntRest > 0) return 'hunt-resting';
+  return null;
+}
+
+function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): RejectReason | null {
+  const lock = focusLock(p, action, ctx.content);
+  if (lock !== null) return lock;
   if (ctx.tally.focusActions.includes(action)) return 'already-done';
   if (focusLeft(p) < 1) return 'no-focus';
   p.life.focusUsed += 1;

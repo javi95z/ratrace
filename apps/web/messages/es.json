@@ -487,7 +487,11 @@
       "healthRefused": "Ninguna aseguradora te cubre la salud: ya tuviste una enfermedad grave.",
       "healthLocked": "Seguro de salud con el precio de la edad a la que lo contrataste: {age}.",
       "healthDearer": "Contratar el seguro de salud a partir de los {age} cuesta más.",
-      "insuranceRenews": "Cada seguro se renueva solo cada ronda hasta que lo canceles."
+      "insuranceRenews": "Cada seguro se renueva solo cada ronda hasta que lo canceles.",
+      "mastered": "Dominado",
+      "tired": "−{n} de salud",
+      "burnoutRisk": "{pct} % de riesgo de quemarte",
+      "rungStudyLeft": "quedan {left} de {max} en este puesto"
     },
     "shop": {
       "status": "Estatus +{n}",
@@ -746,7 +750,11 @@
       "kids": "Los niños abren los regalos en cuatro minutos. Pagarlos te ha llevado dos años.",
       "rich": "De repente todo el mundo se acuerda de tu cumpleaños.",
       "plain": "Alguien saca la política. Te vas antes del postre."
-    }
+    },
+    "overworked": "{n} rondas seguidas de horas extra: el cuerpo lo nota.",
+    "overworkedHint": "−{health} de salud.",
+    "burnout": "Te quemas tras {n} rondas de horas extra.",
+    "burnoutHint": "−{health} de salud y {focus} de foco menos la próxima ronda."
   },
   "profile": {
     "title": "Tu vida",
@@ -1162,7 +1170,8 @@
     "retire": "Jubilarte esta ronda",
     "retireGives": "Dejas de trabajar para siempre: sin sueldo. Mientras no vuelvas a una carrera, +{focus} de foco cada ronda y {status} de estatus.",
     "retireLater": "Podrás jubilarte a partir de los {age} años.",
-    "retireOpen": "Ya puedes jubilarte, desde tus finanzas."
+    "retireOpen": "Ya puedes jubilarte, desde tus finanzas.",
+    "focusBurnout": "{n} menos esta ronda: te quemaste de tantas horas extra."
   },
   "rankings": {
     "title": "Clasificaciones",

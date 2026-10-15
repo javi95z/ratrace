@@ -199,6 +199,14 @@ describe('the play screen', () => {
     expect(run.badges.length).toBeGreaterThan(0);
     expect(within(earned).getAllByRole('listitem')).toHaveLength(run.badges.length);
     expect(within(earned).getAllByText('New').length).toBe(run.badges.length);
+    // Two a row and named only: what a badge asks is in its sheet.
+    const [first] = run.badges;
+    const badgeText = textFor('en').text.badges[first];
+    expect(within(earned).queryByText(badgeText.how)).toBeNull();
+    await user.click(within(earned).getByRole('button', { name: new RegExp(`^${badgeText.name}`) }));
+    const sheet = screen.getByRole('dialog', { name: badgeText.name });
+    expect(within(sheet).getByText(badgeText.how)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
     // Nothing to beat in a first life, so no personal best is claimed.
     expect(screen.queryByText('New best score')).toBeNull();

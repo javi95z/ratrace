@@ -1,4 +1,4 @@
-import { cashflow, focusLeft, homeOf, indexed, previewCard, quoteProperty, stateHash } from '@ratrace/engine';
+import { cashflow, focusLeft, focusLock, homeOf, indexed, previewCard, quoteProperty, stateHash } from '@ratrace/engine';
 import type { CardDef, Content, Effects, FocusAction, GameView, LifestyleTier, OptionPreview, Order } from '@ratrace/engine';
 
 /**
@@ -94,8 +94,8 @@ function fund(state: GameView, amount: number): Order {
   return state.player.life.financeSkill >= 1 ? { type: 'buy', assetId: 'msci_world', amount } : { type: 'depositIn', amount };
 }
 
-/** Focus actions for the round, in the order given, as far as focus allows. */
-function work(state: GameView, actions: FocusAction[]): Order[] {
+/** Focus actions for the round, in the order given, as far as focus allows: none that is closed to the player. */
+function work(content: Content, state: GameView, actions: FocusAction[]): Order[] {
   const left = focusLeft(state.player);
   // A business comes first: one nobody runs makes half and wears down, which no bot would choose.
   const tend: Order[] = state.player.businesses
@@ -104,8 +104,9 @@ function work(state: GameView, actions: FocusAction[]): Order[] {
     .map((business) => ({ type: 'tendBusiness', businessId: business.id }));
   // Nothing on the market is open with no money sense at all: every bot learns its first level before anything else.
   const first: FocusAction[] = state.player.life.financeSkill === 0 ? ['studyFinance'] : [];
+  const open = (action: FocusAction) => focusLock(state.player, action, content) === null;
   if (state.player.life.career === null) return [...tend, ...first.slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
-  return [...tend, ...[...first, ...actions].slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
+  return [...tend, ...[...first, ...actions].filter(open).slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
 }
 
 /** The lowest lifestyle tier the life allows. Where the player rents is left as the life began. */
@@ -148,9 +149,9 @@ function grandestAffordable(content: Content, state: GameView): LifestyleTier {
 const saver: Bot = {
   id: 'saver',
   pick: (content, state) => answer(content, state, ambitious),
-  orders: (_content, state) => {
+  orders: (content, state) => {
     const card = clearCard(state);
-    const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
+    const orders = [...frugal(state), ...work(content, state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
     if (card.cash > 0) orders.push({ type: 'depositIn', amount: card.cash });
     return orders;
   },
@@ -159,10 +160,10 @@ const saver: Bot = {
 const indexer: Bot = {
   id: 'indexer',
   pick: (content, state) => answer(content, state, ambitious),
-  orders: (_content, state) => {
+  orders: (content, state) => {
     const card = clearCard(state);
     const safe = cushion(state, card.cash, 3_000);
-    const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
+    const orders = [...frugal(state), ...work(content, state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
     if (safe.cash > 0) orders.push(fund(state, safe.cash));
     return orders;
   },
@@ -183,7 +184,7 @@ const gambler: Bot = {
     const p = state.player;
     const card = clearCard(state);
     const safe = cushion(state, card.cash, 3_000);
-    const orders = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
+    const orders = [...frugal(state), ...work(content, state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders, ...safe.orders];
     let cash = safe.cash;
 
     if (p.life.financeSkill < 2) {
@@ -211,7 +212,7 @@ const chaser: Bot = {
   orders: (content, state) => {
     const p = state.player;
     const world = state.timeline[state.round];
-    const orders: Order[] = [...work(state, ['overtime', 'jobHunt', 'studyCareer'])];
+    const orders: Order[] = [...work(content, state, ['overtime', 'jobHunt', 'studyCareer'])];
     const tier = grandestAffordable(content, state);
     if (p.lifestyleTier !== tier) orders.push({ type: 'setLifestyle', tier });
     if (p.life.rentTier !== 1) orders.push({ type: 'setRentTier', tier: 1 });
@@ -240,7 +241,7 @@ const landlord: Bot = {
   orders: (content, state) => {
     const p = state.player;
     const card = clearCard(state);
-    const orders: Order[] = [...frugal(state), ...work(state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
+    const orders: Order[] = [...frugal(state), ...work(content, state, ['studyCareer', 'overtime', 'jobHunt']), ...card.orders];
     let cash = card.cash + p.deposit;
     if (p.deposit > 0) orders.push({ type: 'depositOut', amount: p.deposit });
 

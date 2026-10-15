@@ -94,7 +94,7 @@ describe('a career that leaves time over', () => {
   it('gives its focus from the first round and in every round after', () => {
     let state = game(content);
     for (let round = 0; round < 3; round++) {
-      expect(quoteWork(content, viewOf(state)).focus).toEqual({ left: 4, total: 4, bonus: 1 });
+      expect(quoteWork(content, viewOf(state)).focus).toEqual({ left: 4, total: 4, bonus: 1, lost: 0 });
       expect(quoteWork(content, viewOf(state)).traits.focus).toBe(1);
       const spent = applyRound(content, state, { orders: [{ type: 'focus', action: 'overtime' }, { type: 'focus', action: 'studyCareer' }, { type: 'focus', action: 'jobHunt' }, { type: 'moveCity', cityId: round % 2 === 0 ? 'haven' : 'home' }] });
       expect(spent.events.filter((e) => e.kind === 'orderRejected')).toEqual([]);

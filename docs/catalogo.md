@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.23.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.24.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -749,15 +749,15 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 
 |  | En qué poner el foco | Qué da |
 | --- | --- | --- |
-| <img src="../art/clean/icons/icon.focus_overtime.png" alt=""> | Hacer horas extra | Más sueldo esa ronda, según la carrera |
-| <img src="../art/clean/icons/icon.focus_study.png" alt=""> | Formarte para tu carrera | +1 de experiencia, además del +1 por trabajar |
-| <img src="../art/clean/icons/icon.focus_hunt.png" alt=""> | Buscar un trabajo mejor | 20 % de probabilidad de un +3 % de sueldo para siempre |
-| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Hacer un curso de negociación | +2 puntos de Negociación |
-| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Ir a clases de idiomas | +2 puntos de Idiomas |
-| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Salir a hacer contactos | +2 puntos de Contactos |
-| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Hacer deporte | +2 puntos de Salud |
+| <img src="../art/clean/icons/icon.focus_overtime.png" alt=""> | Hacer horas extra | Más sueldo esa ronda, según la carrera. Desde 2 rondas seguidas, −1 de salud; desde 3, un 35 % de quemarte: −2 de salud más y −1 de foco la ronda siguiente |
+| <img src="../art/clean/icons/icon.focus_study.png" alt=""> | Formarte para tu carrera | +1 de experiencia, además del +1 por trabajar; como mucho 3 por puesto, y nada en el último |
+| <img src="../art/clean/icons/icon.focus_hunt.png" alt=""> | Buscar un trabajo mejor | 20 % de probabilidad de un +3 % de sueldo para siempre. Tras una subida, 1 ronda sin buscar; cada búsqueda fallida seguida resta 15 puntos, hasta un mínimo del 5 % |
+| <img src="../art/clean/icons/icon.skill_negotiation.png" alt=""> | Hacer un curso de negociación | +3 puntos de Negociación; nada al nivel 3 |
+| <img src="../art/clean/icons/icon.skill_languages.png" alt=""> | Ir a clases de idiomas | +3 puntos de Idiomas; nada al nivel 3 |
+| <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Salir a hacer contactos | +3 puntos de Contactos; nada al nivel 3 |
+| <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Hacer deporte | +3 puntos de Salud; nada al nivel 3 |
 
-Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 2 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
+Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 3 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
 
 |  | Habilidad | Por nivel | Se practica |
 | --- | --- | --- | --- |

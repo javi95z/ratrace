@@ -18,7 +18,7 @@ export { effectiveTax } from './tax';
 export { previewCard } from './life/cards';
 export { optionBreaks, orderBreaks } from './limits';
 export type { OptionPreview } from './life/cards';
-export { focusLeft, focusTotal, FOCUS_ACTIONS } from './life/orders';
+export { focusLeft, focusLock, focusTotal, FOCUS_ACTIONS } from './life/orders';
 export { isStudy, levelOfPoints, pointsOfLevel, skillLevel, STUDY_OF } from './life/skills';
 export { homeOf } from './life/derive';
 export { propertyPrice } from './property';

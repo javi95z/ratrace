@@ -5,9 +5,9 @@ import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
-import { canSellItem, financeLock, focusLeft, focusTotal, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
+import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
-import { jobHuntChance, jobHuntRaise, landingOf, promotionRaise } from './life/roundEnd';
+import { careerStudyOf, jobHuntChance, jobHuntRaise, landingOf, overtimeToll, promotionRaise } from './life/roundEnd';
 import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, STUDY_OF } from './life/skills';
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp, BP, mulDiv } from './money';
@@ -17,7 +17,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -366,12 +366,19 @@ export interface WorkQuote {
   studySkill: number;
   /** Extra pay for a round of overtime, in percent. Zero without a career. */
   overtimePct: number;
+  /** What overtime this round would cost the body: the rounds in a row it makes, the health it takes, and the chance of burnout. */
+  overtimeToll: { streak: number; healthPoints: number; burnoutChancePct: number };
+  /** Career skill study may still add at this rung, of the most it may. */
+  rungStudy: { left: number; max: number };
+  /** Why each use of focus is closed to the player as they stand, whatever focus is left, or null. */
+  focusLocks: Record<FocusAction, RejectReason | null>;
   /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
   jobHuntChancePct: number;
   jobHuntRaisePct: number;
   /** What a promotion adds to pay on top of the rung, in percent: what the player can negotiate. */
   promotionRaisePct: number;
-  focus: { left: number; total: number; bonus: number };
+  /** `lost` is what a burnout in the round before took from this one. */
+  focus: { left: number; total: number; bonus: number; lost: number };
   /** What the things owned add, by perk. */
   perks: Required<ItemPerks>;
   /**
@@ -402,12 +409,15 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     payAnnual: indexed(ownPay(p, content), world),
     skill: p.life.careerSkill,
     workSkill: content.life.workSkill,
-    studySkill: content.life.studySkill + perks.studySkill,
+    studySkill: job ? careerStudyOf(p, content, perks) : content.life.studySkill + perks.studySkill,
     overtimePct: overtimeOf(p, content),
+    overtimeToll: overtimeToll(p, content),
+    rungStudy: { left: Math.max(0, content.life.focusLimits.studyPerRung - p.life.rungStudy), max: content.life.focusLimits.studyPerRung },
+    focusLocks: Object.fromEntries(FOCUS_ACTIONS.map((action) => [action, focusLock(p, action, content)])) as Record<FocusAction, RejectReason | null>,
     jobHuntChancePct: jobHuntChance(content, perks, p),
     jobHuntRaisePct: jobHuntRaise(content, p),
     promotionRaisePct: promotionRaise(content, p),
-    focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus },
+    focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus, lost: p.life.focusLost },
     perks,
     traits: {
       ...careerSwing(p, content, world.regime, view.round),

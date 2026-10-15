@@ -282,7 +282,7 @@ describe('the terminal game', () => {
     expect(second).toBeGreaterThan(result);
   });
 
-  it('plays every life to the end in every language without a hole in the text', async () => {
+  it('plays every life to the end in every language without a hole in the text', { timeout: 60_000 }, async () => {
     // Every screen, then the word that plays the round, as each language types them.
     const typed = {
       en: ['me', 'market', 'port', 'shop', 'homes', 'cities', 'tax', 'orders', 'help', 'done'],

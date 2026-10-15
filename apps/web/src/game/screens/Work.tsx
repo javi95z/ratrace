@@ -10,6 +10,7 @@ import { ageAt } from '@/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { masteredLast, useFocusNote } from './focusNote';
 
 type About = 'career' | 'finance' | 'focus' | SkillId;
 const TITLE: Record<'career' | 'finance' | 'focus', string> = { career: 'careerTitle', finance: 'financeTitle', focus: 'focusTitle' };
@@ -416,25 +417,26 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const setOrder = useGame((s) => s.setOrder);
   const open = stage === 'finance' && view !== null;
   const has = (action: FocusAction) => orders.some((order) => order.type === 'focus' && order.action === action);
-  const job: Array<{ action: FocusAction; name: string; gives: string }> = [
-    { action: 'overtime', name: t('overtime'), gives: t('overtimeGives', { pct: work.overtimePct }) },
-    { action: 'studyCareer', name: t('study'), gives: t('studyGives', { n: work.studySkill }) },
-    { action: 'jobHunt', name: t('hunt'), gives: t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct }) },
+  const note = useFocusNote();
+  const use = (action: FocusAction, name: string, gives: string) => ({ action, name, note: note(work, action, gives) });
+  const job = [
+    use('overtime', t('overtime'), t('overtimeGives', { pct: work.overtimePct })),
+    use('studyCareer', t('study'), t('studyGives', { n: work.studySkill })),
+    use('jobHunt', t('hunt'), t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct })),
   ];
-  // Learning needs no job: it is on the list whatever the player does for a living.
-  const learning = [
-    { action: skills.finance.study as FocusAction, name: text.focusActions[skills.finance.study], gives: t('learnGives', { n: skills.finance.studyPoints, skill: t('finance') }) },
-    ...skills.skills.flatMap((skill) =>
-      skill.study === null ? [] : [{ action: skill.study as FocusAction, name: text.focusActions[skill.study], gives: t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }) }],
-    ),
-  ];
+  // Learning needs no job: it is on the list whatever the player does for a living. What is mastered goes last.
+  const learning = masteredLast([
+    use(skills.finance.study, text.focusActions[skills.finance.study], t('learnGives', { n: skills.finance.studyPoints, skill: t('finance') })),
+    ...skills.skills.flatMap((skill) => (skill.study === null ? [] : [use(skill.study, text.focusActions[skill.study], t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }))])),
+  ]);
   const uses = [...(work.level === null ? [] : job), ...learning];
 
   return (
     <>
       <p className="text-[14px] leading-snug">
         {t('focusAbout', { total: work.focus.total })} {work.traits.focus > 0 ? t('focusFromJob', { n: work.traits.focus }) : ''}{' '}
-        {work.focus.bonus > work.traits.focus ? t('focusBonus', { n: work.focus.bonus - work.traits.focus }) : ''}
+        {work.focus.bonus > work.traits.focus ? t('focusBonus', { n: work.focus.bonus - work.traits.focus }) : ''}{' '}
+        {work.focus.lost > 0 ? t('focusBurnout', { n: work.focus.lost }) : ''}
       </p>
       <div className="frame bg-night-800 px-3 py-2 text-center">
         <span className="pixel text-[22px] text-gold-500">{`${work.focus.left}/${work.focus.total}`}</span>
@@ -448,9 +450,9 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
               key={use.action}
               on={has(use.action)}
               onChange={(on) => setOrder((order) => order.type === 'focus' && order.action === use.action, on ? { type: 'focus', action: use.action } : null)}
-              disabled={!has(use.action) && work.focus.left < 1}
+              disabled={!has(use.action) && (work.focus.left < 1 || use.note.locked)}
               label={use.name}
-              hint={use.gives}
+              hint={use.note.hint}
               icon={focusArt[use.action]}
             />
           ))}
@@ -464,7 +466,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
               </Bare>
               <div className="min-w-0">
                 <div className="pixel text-[16px]">{use.name}</div>
-                <p className="text-[13px] leading-snug text-ink-200">{use.gives}</p>
+                <p className="text-[13px] leading-snug text-ink-200">{use.note.hint}</p>
               </div>
             </li>
           ))}

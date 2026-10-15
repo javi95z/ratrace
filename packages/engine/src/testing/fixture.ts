@@ -217,6 +217,8 @@ const base: Content = {
     studySkill: 1,
     jobHuntChancePct: 35,
     jobHuntRaisePct: 8,
+    // No limits by default: each test of one sets its own.
+    focusLimits: { overtimeTiredFrom: 99, overtimeHealthPoints: 0, overtimeBurnoutFrom: 99, burnoutChancePct: 0, burnoutHealthPoints: 0, burnoutFocus: 0, huntRestRounds: 0, huntMissPct: 0, huntFloorPct: 0, studyPerRung: 999 },
     rentOutMinFinanceSkill: 0,
     unstablePayPct: 30,
     cheapMortgageBp: 50,

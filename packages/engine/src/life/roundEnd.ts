@@ -4,7 +4,7 @@ import type { Rng } from '../rng';
 import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf } from './derive';
 import { lapsingIn } from './orders';
-import { addFinancePoints, learnSkills, skillLevel } from './skills';
+import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
 
 /**
  * What a move costs beyond its price, as the player lands. Moved by their own choice they start a
@@ -27,9 +27,34 @@ export function landingOf(p: PlayerState, content: Content, transfer: boolean): 
   };
 }
 
-/** The chance in percent that a job hunt ends in a raise: the rule's own, what the player's things add, and who they know. */
+/**
+ * The chance in percent that a job hunt ends in a raise: the rule's own, what the player's things
+ * add, and who they know, less what each failed hunt just before it took. Failing again and again
+ * says something to the next interviewer too, down to a floor.
+ */
 export function jobHuntChance(content: Content, perks: Required<ItemPerks>, p: PlayerState): number {
-  return Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct + skillLevel(p, 'network', content) * content.life.skills.networkHuntPct);
+  const full = Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct + skillLevel(p, 'network', content) * content.life.skills.networkHuntPct);
+  const limits = content.life.focusLimits;
+  return Math.max(Math.min(full, limits.huntFloorPct), full - p.life.huntMisses * limits.huntMissPct);
+}
+
+/**
+ * What overtime would do to the body if it is worked this round: the rounds in a row it would make,
+ * the health it would cost, and the chance it ends in burnout.
+ */
+export function overtimeToll(p: PlayerState, content: Content): { streak: number; healthPoints: number; burnoutChancePct: number } {
+  const limits = content.life.focusLimits;
+  const streak = p.life.overtimeStreak + 1;
+  return {
+    streak,
+    healthPoints: streak >= limits.overtimeTiredFrom ? limits.overtimeHealthPoints : 0,
+    burnoutChancePct: streak >= limits.overtimeBurnoutFrom ? limits.burnoutChancePct : 0,
+  };
+}
+
+/** Career skill a round of study adds now: the rule's and the player's things', up to what is left of the rung's share. */
+export function careerStudyOf(p: PlayerState, content: Content, perks: Required<ItemPerks>): number {
+  return Math.max(0, Math.min(content.life.studySkill + perks.studySkill, content.life.focusLimits.studyPerRung - p.life.rungStudy));
 }
 
 /** The lasting raise a successful job hunt brings, in percent: more for someone who can ask for it. */
@@ -58,22 +83,54 @@ export function ageLife(
 ): void {
   const life = p.life;
   const rules = content.life;
+  const limits = rules.focusLimits;
   const perks = perksOf(p, content);
+  // A burnout's toll was this round's, and a rest after a job hunt counts down with it.
+  life.focusLost = 0;
+  if (life.huntRest > 0) life.huntRest -= 1;
 
   if (life.career !== null) {
     // What the player owns counts as it stood while the round was lived: before anything fades or lapses.
-    life.careerSkill += rules.workSkill + (tally.focusActions.includes('studyCareer') ? rules.studySkill + perks.studySkill : 0);
+    const studied = tally.focusActions.includes('studyCareer') ? careerStudyOf(p, content, perks) : 0;
+    life.careerSkill += rules.workSkill + studied;
+    life.rungStudy += studied;
     const next = careerOf(content, life.career.id).levels[life.career.level + 1];
     if (next !== undefined && life.careerSkill >= next.minSkill) {
       life.career.level += 1;
+      life.rungStudy = 0;
       life.salaryModPct += promotionRaise(content, p);
       events.push({ kind: 'promoted', careerId: life.career.id, level: life.career.level });
     }
   }
   if (tally.focusActions.includes('jobHunt')) {
     const success = rng.chance(jobHuntChance(content, perks, p));
-    if (success) life.salaryModPct += jobHuntRaise(content, p);
+    if (success) {
+      life.salaryModPct += jobHuntRaise(content, p);
+      life.huntMisses = 0;
+      life.huntRest = limits.huntRestRounds;
+    } else {
+      life.huntMisses += 1;
+    }
     events.push({ kind: 'jobHunt', success });
+  } else {
+    // A round without looking and the next search starts afresh.
+    life.huntMisses = 0;
+  }
+
+  if (tally.focusActions.includes('overtime')) {
+    const toll = overtimeToll(p, content);
+    life.overtimeStreak = toll.streak;
+    // The dice are thrown only from the round burnout is possible, so a life that never gets there draws the same numbers as before.
+    const burnout = toll.burnoutChancePct > 0 && rng.chance(toll.burnoutChancePct);
+    const healthLost = Math.min(life.skills.health, toll.healthPoints + (burnout ? limits.burnoutHealthPoints : 0));
+    if (healthLost > 0) addSkillPoints(p, content, { health: -healthLost }, events);
+    if (burnout) {
+      life.focusLost = limits.burnoutFocus;
+      life.overtimeStreak = 0;
+    }
+    if (toll.healthPoints > 0 || burnout) events.push({ kind: 'overworked', streak: toll.streak, healthLost, burnout, focusLost: burnout ? limits.burnoutFocus : 0 });
+  } else {
+    life.overtimeStreak = 0;
   }
 
   learnSkills(p, content, tally, events);

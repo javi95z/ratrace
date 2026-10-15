@@ -19,6 +19,7 @@ import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { EvasionPanel } from './Evasion';
 import { ItemUses } from './ItemUses';
+import { masteredLast, useFocusNote } from './focusNote';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
@@ -853,6 +854,20 @@ function Lifestyle() {
   // What each use of focus is worth to this player, counting what they own.
   const work = quoteWork(content, shown);
   const skills = quoteSkills(content, shown);
+  const note = useFocusNote();
+  const jobUses = career
+    ? ([
+        ['overtime', t('overtime'), t('overtimeHint', { pct: career.overtimePct })],
+        ['studyCareer', t('study'), t('studyHint', { n: work.studySkill })],
+        ['jobHunt', t('hunt'), t('huntHint', { pct: work.jobHuntChancePct })],
+      ] as const).map(([action, label, gives]) => ({ action, label, note: note(work, action, gives) }))
+    : [];
+  const learnUses = masteredLast([
+    { action: skills.finance.study, label: text.focusActions[skills.finance.study], note: note(work, skills.finance.study, t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })) },
+    ...skills.skills.flatMap((skill) =>
+      skill.study === null ? [] : [{ action: skill.study, label: text.focusActions[skill.study], note: note(work, skill.study, t('learnHint', { n: skill.studyPoints, skill: text.skills[skill.skill], level: skill.level })) }],
+    ),
+  ]);
   const moveOrdered = orders.some((order) => order.type === 'moveCity');
   const common = useT('common');
   const perYear = (cents: number) => common('perYear', { amount: fmt.compact(cents) });
@@ -863,40 +878,22 @@ function Lifestyle() {
         {career ? (
           <div className="flex flex-col gap-2">
             <p className="text-[13px] text-ink-300">{t('focusLeft', { left, total: work.focus.total })}</p>
-            <Toggle on={has('overtime')} onChange={focus('overtime')} disabled={!has('overtime') && left < 1} label={t('overtime')} hint={t('overtimeHint', { pct: career.overtimePct })} icon={focusArt.overtime} />
-            <Toggle on={has('studyCareer')} onChange={focus('studyCareer')} disabled={!has('studyCareer') && left < 1} label={t('study')} hint={t('studyHint', { n: work.studySkill })} icon={focusArt.studyCareer} />
-            <Toggle on={has('jobHunt')} onChange={focus('jobHunt')} disabled={!has('jobHunt') && left < 1} label={t('hunt')} hint={t('huntHint', { pct: work.jobHuntChancePct })} icon={focusArt.jobHunt} />
+            {jobUses.map((use) => (
+              <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />
+            ))}
           </div>
         ) : (
           <p className="text-[14px] text-ink-300">{t('noJob')}</p>
         )}
       </Panel>
 
-      {/* Skills of one's own: each a point of focus, and no job needed. */}
-      <Panel title={t('learn')}>
+      {/* Skills of one's own: each a point of focus, and no job needed. What is mastered goes last, and is closed. */}
+      <Panel title={t('learn')} label={t('learn')}>
         <div className="flex flex-col gap-2">
           <p className="text-[13px] text-ink-300">{t('learnAbout')}</p>
-          <Toggle
-            on={has(skills.finance.study)}
-            onChange={focus(skills.finance.study)}
-            disabled={!has(skills.finance.study) && left < 1}
-            label={text.focusActions[skills.finance.study]}
-            hint={t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })}
-            icon={focusArt[skills.finance.study]}
-          />
-          {skills.skills.map((skill) =>
-            skill.study === null ? null : (
-              <Toggle
-                key={skill.skill}
-                on={has(skill.study)}
-                onChange={focus(skill.study)}
-                disabled={!has(skill.study) && left < 1}
-                label={text.focusActions[skill.study]}
-                hint={t('learnHint', { n: skill.studyPoints, skill: text.skills[skill.skill], level: skill.level })}
-                icon={focusArt[skill.study]}
-              />
-            ),
-          )}
+          {learnUses.map((use) => (
+            <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />
+          ))}
         </div>
       </Panel>
 

@@ -1,4 +1,4 @@
-import { badges, businessArt, homeName, careerArt, cityIcon, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
+import { badges, businessArt, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -268,7 +268,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -327,6 +327,15 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'jobHunt':
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
+        break;
+      case 'overworked':
+        // Overtime round after round: the health it cost, and a burnout that takes focus from the next round too.
+        add(event, {
+          tone: 'bad',
+          icon: event.burnout ? focusArt.overtime : skillArt.health,
+          title: t(event.burnout ? 'burnout' : 'overworked', { n: event.streak }),
+          hint: event.burnout ? t('burnoutHint', { health: event.healthLost, focus: event.focusLost }) : event.healthLost > 0 ? t('overworkedHint', { health: event.healthLost }) : undefined,
+        });
         break;
       case 'moved':
         add(event, {

@@ -64,6 +64,7 @@ const table = (head: string[], rows: string[][]): string =>
 const out: string[] = [];
 /** Each piece is a block of its own: a blank line after every one. */
 const say = (...blocks: string[]) => out.push(...blocks.flatMap((block) => [block, '']));
+const limits = content.life.focusLimits;
 
 const itemsByLadder = new Map<string, ItemDef[]>();
 for (const item of content.items) itemsByLadder.set(item.ladder, [...(itemsByLadder.get(item.ladder) ?? []), item]);
@@ -311,10 +312,10 @@ say(
   table(
     ['', 'En qué poner el foco', 'Qué da'],
     [
-      [img(focusArt.overtime), text.focusActions.overtime, 'Más sueldo esa ronda, según la carrera'],
-      [img(focusArt.studyCareer), text.focusActions.studyCareer, `+${content.life.studySkill} de experiencia, además del +${content.life.workSkill} por trabajar`],
-      [img(focusArt.jobHunt), text.focusActions.jobHunt, `${content.life.jobHuntChancePct} % de probabilidad de un +${content.life.jobHuntRaisePct} % de sueldo para siempre`],
-      ...STUDIES.map((action) => [img(focusArt[action]), text.focusActions[action], `+${content.life.skills.studyPoints} puntos de ${text.skills[STUDY_OF[action]]}`]),
+      [img(focusArt.overtime), text.focusActions.overtime, `Más sueldo esa ronda, según la carrera. Desde ${limits.overtimeTiredFrom} rondas seguidas, −${limits.overtimeHealthPoints} de salud; desde ${limits.overtimeBurnoutFrom}, un ${limits.burnoutChancePct} % de quemarte: −${limits.burnoutHealthPoints} de salud más y −${limits.burnoutFocus} de foco la ronda siguiente`],
+      [img(focusArt.studyCareer), text.focusActions.studyCareer, `+${content.life.studySkill} de experiencia, además del +${content.life.workSkill} por trabajar; como mucho ${limits.studyPerRung} por puesto, y nada en el último`],
+      [img(focusArt.jobHunt), text.focusActions.jobHunt, `${content.life.jobHuntChancePct} % de probabilidad de un +${content.life.jobHuntRaisePct} % de sueldo para siempre. Tras una subida, ${limits.huntRestRounds} ronda sin buscar; cada búsqueda fallida seguida resta ${limits.huntMissPct} puntos, hasta un mínimo del ${limits.huntFloorPct} %`],
+      ...STUDIES.map((action) => [img(focusArt[action]), text.focusActions[action], `+${content.life.skills.studyPoints} puntos de ${text.skills[STUDY_OF[action]]}; nada al nivel 3`]),
     ],
   ),
   `Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a ${content.life.skills.levelPoints.join(', ')} puntos: ${content.life.skills.levelPoints[0]} por nivel. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,

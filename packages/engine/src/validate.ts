@@ -211,6 +211,14 @@ export function validateContent(c: Content): string[] {
   for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
+  const limits = isRecord(life.focusLimits) ? life.focusLimits : {};
+  for (const field of ['overtimeTiredFrom', 'overtimeBurnoutFrom', 'huntRestRounds', 'studyPerRung', 'overtimeHealthPoints', 'burnoutHealthPoints', 'burnoutFocus']) {
+    if (!isCount(limits[field])) errors.push(`life.focusLimits.${field} must be a whole, non-negative number`);
+  }
+  for (const field of ['burnoutChancePct', 'huntMissPct', 'huntFloorPct']) {
+    if (!(isCount(limits[field]) && (limits[field] as number) <= 100)) errors.push(`life.focusLimits.${field} must be a whole number from 0 to 100`);
+  }
+  if (isCount(limits.overtimeTiredFrom) && isCount(limits.overtimeBurnoutFrom) && limits.overtimeBurnoutFrom < limits.overtimeTiredFrom) errors.push('life.focusLimits.overtimeBurnoutFrom must not come before overtimeTiredFrom');
   for (const field of ['childRounds']) {
     if (!(isWhole(life[field]) && life[field] >= 1)) errors.push(`life.${field} must be a positive whole number`);
   }

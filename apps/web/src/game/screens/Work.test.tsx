@@ -113,7 +113,7 @@ describe('the work panel of the profile', () => {
     expect(within(sheet).getByRole('progressbar', { name: 'Towards level 1' })).toBeTruthy();
     // Each level counted in full: a fifth off the premium a level, an injury healed by training from the second, and focus at the top.
     expect(within(sheet).getByText('Health insurance −60% · injuries without physio · +1 focus a round')).toBeTruthy();
-    expect(within(sheet).getByText('Exercise: +2 a round, 1 focus.')).toBeTruthy();
+    expect(within(sheet).getByText('Exercise: +3 a round, 1 focus.')).toBeTruthy();
     // A nurse lives it at work.
     expect(within(sheet).getByText('You already practise it: +1 a round.')).toBeTruthy();
   });
@@ -123,7 +123,7 @@ describe('the work panel of the profile', () => {
     await user.click(within(panel).getByRole('button', { name: /^Focus this round/ }));
     const sheet = screen.getByRole('dialog', { name: 'Focus' });
     expect(within(sheet).getByText(`+${work.overtimePct}% pay this round.`)).toBeTruthy();
-    expect(within(sheet).getByText(`+${work.studySkill} career skill, on top of what working gives.`)).toBeTruthy();
+    expect(within(sheet).getByText(`+${work.studySkill} career skill, on top of what working gives · ${work.rungStudy.left} of ${work.rungStudy.max} left at this rung`)).toBeTruthy();
     expect(within(sheet).getByText(`${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBeTruthy();
     expect(within(sheet).getByText(/^Moving city takes 1 focus/)).toBeTruthy();
   });
@@ -139,7 +139,7 @@ describe('the work panel of the profile', () => {
     const work = quoteWork(content, session.view());
     expect(work.studySkill).toBe(before.studySkill + 1);
     expect(work.jobHuntChancePct).toBe(before.jobHuntChancePct + 4);
-    expect(work.focus).toEqual({ left: before.focus.total + 1, total: before.focus.total + 1, bonus: 1 });
+    expect(work.focus).toEqual({ left: before.focus.total + 1, total: before.focus.total + 1, bonus: 1, lost: 0 });
 
     const user = userEvent.setup();
     renderGame(<Play />, services);

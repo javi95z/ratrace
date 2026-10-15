@@ -384,6 +384,8 @@ export interface LifeRules {
   jobHuntChancePct: number;
   /** Lasting raise from a successful job hunt, in percent. */
   jobHuntRaisePct: number;
+  /** How far the three uses of focus that serve the job can be pushed, round after round. */
+  focusLimits: FocusLimits;
   /** Finance skill needed to rent a property out. */
   rentOutMinFinanceSkill: FinanceSkill;
   /** Pay of a life with the `unstable_pay` flag swings by up to this many percent each round. */
@@ -395,6 +397,30 @@ export interface LifeRules {
   skills: SkillRules;
   /** The ladders whose things are also sold second hand, and on what terms. Paid in cash only. */
   used: Partial<Record<string, UsedRule>>;
+}
+
+/**
+ * What keeps overtime, study for the career and job hunting from being the answer every round.
+ * Overtime round after round wears the body down and may end in burnout; a job hunt that worked
+ * needs a rest before the next, and one that keeps failing grows less likely; and study for the
+ * career counts for so much at each rung, the rest coming only from the work itself.
+ */
+export interface FocusLimits {
+  /** From this many rounds of overtime in a row, each costs points of health. */
+  overtimeTiredFrom: number;
+  overtimeHealthPoints: number;
+  /** From this many in a row, a chance in percent of burnout: more health lost, and focus the round after. */
+  overtimeBurnoutFrom: number;
+  burnoutChancePct: number;
+  burnoutHealthPoints: number;
+  burnoutFocus: number;
+  /** Rounds without a job hunt after one that ended in a raise. */
+  huntRestRounds: number;
+  /** Chance a job hunt loses for each failed one just before it, and the least it keeps. */
+  huntMissPct: number;
+  huntFloorPct: number;
+  /** Career skill that study can add at one rung: the rest of the way up is done by working. */
+  studyPerRung: number;
 }
 
 /** News and tax reforms. Both come from their own random streams, so they never move a price. */
@@ -894,6 +920,16 @@ export interface LifeState {
   /** Focus on top this round, from what the player held when it opened: a long trip rests them for the round after. */
   focusBonus: number;
   focusUsed: number;
+  /** Focus taken from this round by a burnout in the one before. */
+  focusLost: number;
+  /** Rounds of overtime in a row, up to the last one played. */
+  overtimeStreak: number;
+  /** Job hunts in a row that ended in nothing, up to the last one played. */
+  huntMisses: number;
+  /** Rounds still to wait before another job hunt, after one that worked. */
+  huntRest: number;
+  /** Career skill that study has added at the rung held now. */
+  rungStudy: number;
   partner: boolean;
   /** The partner's salary as a percent of the city median. Zero when not working. */
   partnerSalaryPct: number;
@@ -1099,6 +1135,10 @@ export type RejectReason =
   | 'unknown-action'
   | 'no-focus'
   | 'already-done'
+  | 'skill-maxed'
+  | 'career-top'
+  | 'studied-enough'
+  | 'hunt-resting'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
@@ -1170,6 +1210,8 @@ export type GameEvent =
   | { kind: 'cardWithdrawn'; cardId: string; replacedBy: string | null }
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
+  /** Overtime round after round: the health it cost, and whether it ended in burnout, which costs focus the round after too. */
+  | { kind: 'overworked'; streak: number; healthLost: number; burnout: boolean; focusLost: number }
   | { kind: 'financeSkill'; level: FinanceSkill }
   | { kind: 'skill'; skill: SkillId; level: SkillLevel }
   /** The tax office inspected: the tax evaded and its fine, and what was taken of things bought without an invoice. */

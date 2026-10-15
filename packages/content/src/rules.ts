@@ -143,6 +143,22 @@ export const life: LifeRules = {
   studySkill: 1,
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
+  // Overtime two rounds running costs a point of health, and from the third a third of the time it
+  // ends in burnout: two more points and a point of focus the round after. A raise found needs a
+  // round's rest before the next search, and each search that fails makes the next one 15 points
+  // less likely. Study for the career is worth three points at each rung; the rest is work.
+  focusLimits: {
+    overtimeTiredFrom: 2,
+    overtimeHealthPoints: 1,
+    overtimeBurnoutFrom: 3,
+    burnoutChancePct: 35,
+    burnoutHealthPoints: 2,
+    burnoutFocus: 1,
+    huntRestRounds: 1,
+    huntMissPct: 15,
+    huntFloorPct: 5,
+    studyPerRung: 3,
+  },
   rentOutMinFinanceSkill: 2,
   unstablePayPct: 30,
   cheapMortgageBp: 60,
@@ -155,12 +171,12 @@ export const life: LifeRules = {
     car: { pricePct: 55, ageRounds: 2, repairChancePct: 30, repairPct: 8 },
     watch: { pricePct: 70, ageRounds: 2, repairChancePct: 25, repairPct: 6 },
   },
-  // Every skill, money sense too, has the same three steps of three points. Study gives two a round
-  // and living it one, so both together make a level a round; study alone masters one in five, and
-  // years of investing alone make an investor who may be lent to in eighteen.
+  // Every skill, money sense too, has the same three steps of three points. Study gives three a round
+  // and living it one; study alone masters a skill in three rounds, and years of investing alone
+  // make an investor who may be lent to in eighteen. A skill at its top is studied no more.
   skills: {
     levelPoints: [3, 6, 9],
-    studyPoints: 2,
+    studyPoints: 3,
     practicePoints: 1,
     investingPoints: 1,
     practiceCareers: {

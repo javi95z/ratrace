@@ -13,6 +13,7 @@ import { shareCard } from '@/game/share';
 import type { Best } from '@/game/records';
 import { Link } from '@/i18n/navigation';
 import { Panel, Tag, Well } from '@/ui/kit';
+import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { ChallengeResult } from './Challenge';
 import { Loop } from './Loop';
@@ -108,7 +109,6 @@ function Ended({ view }: { view: GameView }) {
   const challenge = useGame((s) => s.challenge);
   const gameId = useGame((s) => s.gameId);
   const earned = useGame((s) => s.badges);
-  const badges = useT('badges');
   const share = useT('share');
   const meta = useT('meta');
   const profile = useProfile();
@@ -288,22 +288,7 @@ function Ended({ view }: { view: GameView }) {
           </Panel>
 
           <Panel title={t('badges')} label={t('badges')}>
-            {earned.length === 0 ? (
-              <p className="text-[14px] text-ink-300">{t('noBadges')}</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {earned.map((id) => (
-                  <li key={id} className="flex items-center gap-3">
-                    <Medal badgeId={id} />
-                    <div className="min-w-0 flex-1">
-                      <p className="pixel text-[16px]">{text.badges[id]?.name ?? id}</p>
-                      <p className="text-[12px] leading-snug text-ink-300">{text.badges[id]?.how}</p>
-                    </div>
-                    {isNew(id) ? <Tag tone="good">{badges('isNew')}</Tag> : null}
-                  </li>
-                ))}
-              </ul>
-            )}
+            {earned.length === 0 ? <p className="text-[14px] text-ink-300">{t('noBadges')}</p> : <EarnedBadges earned={earned} isNew={isNew} />}
             <Link href="/collection" className="pixel frame-raised mt-3 flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">
               {t('collection')}
             </Link>
@@ -321,5 +306,44 @@ function Ended({ view }: { view: GameView }) {
         </div>
       </div>
     </main>
+  );
+}
+
+/**
+ * The badges of a life, two a row and named only: what each asks is in its sheet, so a long life
+ * does not make a long page. A badge won for the first time wears a gold dot.
+ */
+function EarnedBadges({ earned, isNew }: { earned: string[]; isNew(id: string): boolean }) {
+  const { text } = useWords();
+  const badges = useT('badges');
+  const common = useT('common');
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <>
+      <ul className="grid grid-cols-2 gap-2">
+        {earned.map((id) => (
+          <li key={id}>
+            <button type="button" onClick={() => setOpen(id)} className="flex min-h-11 w-full items-center gap-2 py-1 text-left transition-transform active:translate-y-[2px]">
+              <Medal badgeId={id} size="sm" />
+              <span className="pixel min-w-0 flex-1 text-[14px] leading-tight">{text.badges[id]?.name ?? id}</span>
+              {isNew(id) ? (
+                <span className="size-2.5 shrink-0 bg-gold-500" title={badges('isNew')}>
+                  <span className="sr-only">{badges('isNew')}</span>
+                </span>
+              ) : null}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {open !== null ? (
+        <Sheet open onClose={() => setOpen(null)} title={text.badges[open]?.name ?? open} closeLabel={common('close')}>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Medal badgeId={open} />
+            <p className="text-[14px] leading-snug text-ink-200">{text.badges[open]?.how}</p>
+            {isNew(open) ? <Tag tone="good">{badges('isNew')}</Tag> : null}
+          </div>
+        </Sheet>
+      ) : null}
+    </>
   );
 }

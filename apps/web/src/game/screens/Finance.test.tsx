@@ -993,3 +993,26 @@ describe('what is not declared', () => {
     expect(within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).queryByRole('region', { name: 'Without an invoice' })).toBeNull();
   });
 });
+
+describe('the limits of focus', () => {
+  it('closes a mastered skill and lists it last, and says what overtime round after round costs', async () => {
+    const { services, session } = await inFinance('nurse', { taught: true });
+    // A third finance course masters money sense; overtime this round makes the next one the second in a row.
+    await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }, { type: 'focus', action: 'overtime' }] });
+    await toFinance(session);
+    expect((await stateOf(services)).player.life.financeSkill).toBe(3);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+
+    const learn = screen.getByRole('region', { name: 'Learn' });
+    const switches = within(learn).getAllByRole('switch');
+    const course = within(learn).getByRole('switch', { name: /Take a finance course/ });
+    expect(switches.at(-1)).toBe(course);
+    expect((course as HTMLButtonElement).disabled).toBe(true);
+    expect(within(course).getByText('Mastered')).toBeTruthy();
+
+    const overtime = screen.getByRole('switch', { name: /Overtime/ });
+    expect(within(overtime).getByText(/· −1 health$/)).toBeTruthy();
+  });
+});
