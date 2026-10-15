@@ -6,7 +6,7 @@ const facts = (over: Partial<GuideFacts> = {}): GuideFacts => ({ stage: 'news', 
 
 describe('the guide of a first life', () => {
   it('has one tip for each stage of a round, and a few that wait for their moment', () => {
-    expect(TIPS.map((tip) => tip.id)).toEqual(['news', 'cards', 'finance', 'ledger', 'ratRace', 'invest', 'focus', 'flow']);
+    expect(TIPS.map((tip) => tip.id)).toEqual(['news', 'cards', 'finance', 'ledger', 'ratRace', 'invest', 'focus', 'flow', 'debt', 'rivals', 'property', 'business', 'move', 'workMode', 'taxes']);
     expect(new Set(TIPS.map((tip) => tip.id)).size).toBe(TIPS.length);
   });
 
@@ -33,7 +33,8 @@ describe('the guide of a first life', () => {
     expect(nextTip(facts({ stage: 'finance', round: 1, seen: ['finance'], hasInvested: true }))).toBe('focus');
     expect(nextTip(facts({ stage: 'finance', round: 2, seen: ['finance', 'invest'] }))).toBe('focus');
     expect(nextTip(facts({ stage: 'finance', round: 3, seen: ['finance', 'invest', 'focus'] }))).toBe('flow');
-    expect(nextTip(facts({ stage: 'finance', round: 3, seen: ['finance', 'invest', 'focus', 'flow'] }))).toBeNull();
+    expect(nextTip(facts({ stage: 'finance', round: 3, seen: ['finance', 'invest', 'focus', 'flow'] }))).toBe('debt');
+    expect(nextTip(facts({ stage: 'finance', round: 3, seen: ['finance', 'invest', 'focus', 'flow', 'debt', 'property'] }))).toBeNull();
     // A stage's own tip always comes before the ones that wait.
     expect(nextTip(facts({ stage: 'finance', round: 5 }))).toBe('finance');
   });

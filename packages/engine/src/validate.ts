@@ -109,6 +109,7 @@ export function validateContent(c: Content): string[] {
   }
 
   for (const city of c.cities) {
+    if (city.residency !== undefined && !(isCount(city.residency.feeAnnual) && isCount(city.residency.dividendBp) && city.residency.dividendBp <= 10_000)) errors.push(`city ${city.id} offers a residency without a fee and a rate`);
     const rates = [...city.tax.incomeRatesBp, city.tax.capitalGainsBp, city.tax.dividendBp, city.tax.rentBp];
     if (rates.some((r) => !within(r, 0, 10_000))) errors.push(`city ${city.id} has a tax rate outside 0..10000 bp`);
     const sizes = [city.medianSalaryAnnual, city.livingCostAnnual, city.flatPrice];
@@ -213,6 +214,7 @@ export function validateContent(c: Content): string[] {
   for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
+  if (typeof life.dealOnlyChoices !== 'boolean') errors.push('life.dealOnlyChoices must be true or false');
   const modes = isRecord(life.workModes) ? life.workModes : {};
   for (const mode of ['remote', 'partTime']) {
     const rule = isRecord(modes[mode]) ? modes[mode] : {};

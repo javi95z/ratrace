@@ -143,6 +143,8 @@ export const life: LifeRules = {
   studySkill: 1,
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
+  // A card with only one open option is not a decision: it is not dealt.
+  dealOnlyChoices: true,
   // From home a point of focus more, the same pay and the same standing, but fewer openings heard of:
   // a job hunt works less often. Half the day, two points more, two fifths less pay and half the
   // standing, and the trade is learnt only by study.

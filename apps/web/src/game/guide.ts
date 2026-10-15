@@ -36,7 +36,20 @@ export const TIPS: readonly Tip[] = [
   { id: 'invest', stage: 'finance', fromRound: 1, unless: (facts) => facts.hasInvested },
   { id: 'focus', stage: 'finance', fromRound: 1 },
   { id: 'flow', stage: 'finance', fromRound: 2 },
+  { id: 'debt', stage: 'finance', fromRound: 2 },
+  { id: 'rivals', stage: 'news', fromRound: 2 },
+  { id: 'property', stage: 'finance', fromRound: 3 },
+  { id: 'business', stage: 'finance', fromRound: 4 },
+  { id: 'move', stage: 'finance', fromRound: 5 },
+  { id: 'workMode', stage: 'finance', fromRound: 6 },
+  { id: 'taxes', stage: 'finance', fromRound: 7 },
 ];
+
+/**
+ * The round from which each tab of the money is on screen in a guided first life: the first round
+ * shows what a first round needs, and the rest come as their tips do, so nothing is learnt all at once.
+ */
+export const TAB_FROM_ROUND: Readonly<Record<string, number>> = { portfolio: 0, market: 0, lifestyle: 0, shop: 0, debt: 2, taxes: 2, property: 3, business: 4 };
 
 /**
  * The tip to show now, or null. A first life is guided, one tip a visit to a stage, each tip once.

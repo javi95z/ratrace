@@ -194,7 +194,14 @@
     "focus": "The Lifestyle tab holds your focus: study for a promotion, work overtime for pay now, or look for a better job. Use it every round.",
     "flow": "Flow, at the top, is what you earn less what you spend in a year, before tax. The Taxes tab shows this round to the dollar.",
     "gotIt": "Got it",
-    "skip": "Skip the guide"
+    "skip": "Skip the guide",
+    "debt": "Debt and Taxes are open now. A loan says what it costs each round before you take it; Taxes shows this round to the dollar, and what you could hide from the taxman, at a risk.",
+    "rivals": "\"Your people\" in the paper are three people your age living beside you: a classmate, a cousin and an ex. Your profile shows where you stand among them, and the end of your life ranks you.",
+    "property": "Homes are open now. Buying one costs a deposit and a tax, and saves the rent; a home with a spare room can take a lodger.",
+    "business": "Businesses are open now. Starting one takes a point of focus and money; run it yourself or pay a manager. If it pays most of your salary for two rounds, you can quit for it.",
+    "move": "Moving to another city is in Life, under where you live. Each city pays and costs differently; going back home has its perks.",
+    "workMode": "In Life, How you work: half the day frees focus for less pay; working from home comes a few rungs up, in the trades that allow it.",
+    "taxes": "In Taxes you can hide part of your pay, open a company abroad, or keep crypto gains quiet. It saves money now and builds suspicion; an inspection takes it back with a fine."
   },
   "news": {
     "title": "News",
@@ -590,8 +597,6 @@
       "focusTag": "Focus +{n}"
     },
     "taxes": {
-      "income": "Money in over {years} years",
-      "expenses": "Money out over {years} years",
       "tax": "Tax over {years} years",
       "incomeTax": "Income tax",
       "investmentTax": "Tax on investments",
@@ -604,7 +609,10 @@
       "escapeTitle": "Escape test",
       "escapeHint": "Passive income after tax, against what the round costs you. Cover it two rounds in a row and you are out.",
       "inflationTax": "Inflation on your cash",
-      "inflationHint": "Your {cash} in cash buys {pct}% less than {years} years ago. Nobody charges it; it is simply gone."
+      "inflationHint": "Your {cash} in cash buys {pct}% less than {years} years ago. Nobody charges it; it is simply gone.",
+      "residencyTitle": "Tax residency in {city}",
+      "residency": "Take the tax residency",
+      "residencyHint": "Dividends and interest earned abroad pay {rate} while they stay abroad. It costs {fee} a year, and ends if you move."
     },
     "decided": "Already decided",
     "plans": {
@@ -1168,7 +1176,9 @@
     "goFullTime": "Leave your job for {name}",
     "backToWork": "Go back to work",
     "lodgerOn": "Let the spare room",
-    "lodgerOff": "Stop letting the spare room"
+    "lodgerOff": "Stop letting the spare room",
+    "residencyOn": "Take tax residency in {city}",
+    "residencyOff": "Give up tax residency in {city}"
   },
   "account": {
     "title": "Account",

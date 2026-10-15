@@ -2,7 +2,7 @@ import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep, WorkMode, WorkModeRule } from '../types';
+import type { CityDef, Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep, WorkMode, WorkModeRule } from '../types';
 import { FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { skillLevel } from './skills';
 
@@ -75,6 +75,11 @@ export function focusBonusOf(p: PlayerState, content: Content): number {
   const retired = isRetired(p) ? content.life.retiredFocus : 0;
   const ownBoss = p.businesses.some((business) => business.fullTime === true) ? content.life.fullTime.focus : 0;
   return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired + workModeRule(p, content).focus + ownBoss;
+}
+
+/** The tax residency the player holds where they live, or null: one held is lost by leaving the city that gave it. */
+export function residencyOf(p: PlayerState, content: Content): NonNullable<CityDef['residency']> | null {
+  return p.life.residency ? (cityOf(content, p.cityId).residency ?? null) : null;
 }
 
 /** True while a lodger lives in the spare room: there must still be a home of the player's own with one. */
@@ -178,8 +183,9 @@ export function deriveExpenses(p: PlayerState, content: Content): Cents {
     if (life.insurance[kind]) total += insurancePremium(p, content, kind, life.healthCoverSince ?? 0);
   }
   for (const owned of life.items) total += itemOf(content, owned.itemId).upkeepAnnual;
-  // An offshore company has its fee, year after year, whatever it saves.
+  // An offshore company has its fee, year after year, whatever it saves; so has a residency.
   if (life.evasion.shell) total += content.evasion.shellFeeAnnual;
+  total += residencyOf(p, content)?.feeAnnual ?? 0;
   for (const entry of life.recurring) {
     if (entry.kind === 'expense') total += entry.annual;
   }

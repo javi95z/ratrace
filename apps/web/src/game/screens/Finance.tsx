@@ -2,11 +2,12 @@
 
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import type { KeyboardEvent } from 'react';
+import { useGame, useGuided, useIntroducesTabs, useT, useWords } from '@/game/context';
+import { TAB_FROM_ROUND } from '@/game/guide';
 import { ageAt, debtLabel, loanPlan, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
@@ -1398,14 +1399,36 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
 // ------------------------------------------------------------------------------------------------
 // Taxes: the round as it will resolve
 
+/**
+ * The tax residency a city offers, for whoever lives there: what it costs and what it saves, and the
+ * switch. Nothing is shown in a city that offers none.
+ */
+function Residency() {
+  const t = useT('finance.taxes');
+  const { content, names, fmt } = useWords();
+  const { view, p, world } = useRound();
+  const setOrder = useGame((s) => s.setOrder);
+  const offer = content.cities.find((city) => city.id === p.cityId)?.residency;
+  if (!offer) return null;
+  return (
+    <Panel title={t('residencyTitle', { city: names.cities[p.cityId] })}>
+      <Toggle
+        on={p.life.residency}
+        onChange={(on) => setOrder((order) => order.type === 'setResidency', on === view.player.life.residency ? null : { type: 'setResidency', on })}
+        label={t('residency')}
+        hint={t('residencyHint', { fee: fmt.money(indexed(offer.feeAnnual, world)), rate: fmt.rate(offer.dividendBp) })}
+      />
+    </Panel>
+  );
+}
+
 function Taxes() {
   const t = useT('finance.taxes');
-  const { content, text, fmt } = useWords();
+  const { content, fmt } = useWords();
   const { preview, p, shown } = useRound();
   // These are the round's figures, the two years of it; the HUD's Flow is the same money a year.
   const years = content.yearsPerRound;
-  const line = (label: ReactNode, amount: number, key: string) => (amount === 0 ? null : <Row key={key} left={label} right={fmt.signed(amount)} />);
-  const { income, expenses, tax, escape } = preview;
+  const { tax, escape } = preview;
   // The tax nobody votes for: what the rise in prices of the last two years took from cash left idle. Only told, never charged.
   const before = shown.round > 0 ? shown.timeline[shown.round - 1] : null;
   const now = shown.timeline[shown.round];
@@ -1414,19 +1437,6 @@ function Taxes() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Panel title={t('income', { years })}>
-        {line(text.ledger.salary, income.salary, 'salary')}
-        {line(text.ledger.dividends, income.dividends, 'dividends')}
-        {line(text.ledger.interest, income.interest, 'interest')}
-        {line(text.ledger.rent, income.rent, 'rent')}
-        {line(text.ledger.otherPassive, income.otherPassive, 'other')}
-      </Panel>
-      <Panel title={t('expenses', { years })}>
-        {line(text.ledger.living, -expenses.living, 'living')}
-        {line(text.ledger.otherExpenses, -expenses.other, 'other')}
-        {line(text.ledger.debtInterest, -expenses.debtInterest, 'interest')}
-        {line(text.ledger.debtPrincipal, -expenses.debtPrincipal, 'principal')}
-      </Panel>
       <Panel title={t('tax', { years })}>
         <Row left={t('incomeTax')} right={fmt.signed(-tax.income)} />
         <Row left={t('investmentTax')} right={fmt.signed(-tax.investment)} />
@@ -1441,6 +1451,7 @@ function Taxes() {
           />
         ) : null}
       </Panel>
+      <Residency />
       <EvasionPanel shown={shown} preview={preview} />
       <Panel>
         <Row left={t('cashNow')} right={fmt.money(p.cash)} />
@@ -1523,13 +1534,19 @@ export function Finance() {
   const alsoRemoved = useGame((s) => s.alsoRemoved);
   const clearAlsoRemoved = useGame((s) => s.clearAlsoRemoved);
   const [tab, setTab] = useState<TabId>('portfolio');
+  // A guided first life opens the tabs one by one, with their tips.
+  const guidedLife = useGuided();
+  const introduces = useIntroducesTabs();
+  const guided = guidedLife && introduces;
+  const round = useGame((s) => s.view?.round ?? 0);
+  const tabs = guided ? TABS.filter((id) => round >= (TAB_FROM_ROUND[id] ?? 0)) : TABS;
   const [shopView, setShopView] = useState<ShopView>('affordable');
   const ids = useId();
   const panel = useRef<HTMLDivElement>(null);
   // [ and ] move between tabs from anywhere on the stage, without going back to the tab strip first.
   useKeyboardScope((event) => {
     if ((event.key !== '[' && event.key !== ']') || event.altKey || event.ctrlKey || event.metaKey || document.querySelector('[role="dialog"]')) return false;
-    const next = TABS[(TABS.indexOf(tab) + (event.key === ']' ? 1 : -1) + TABS.length) % TABS.length];
+    const next = tabs[(tabs.indexOf(tab) + (event.key === ']' ? 1 : -1) + tabs.length) % tabs.length];
     setTab(next);
     requestAnimationFrame(() => document.getElementById(`${ids}-tab-${next}`)?.focus());
     return true;
@@ -1556,7 +1573,7 @@ export function Finance() {
   return (
     <div>
       <div className="sticky top-0 z-10 bg-night-800">
-        <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={TABS.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
+        <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={tabs.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
       </div>
       <div ref={panel} role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} onKeyDown={navigateItems} className="px-3 pt-1">
         {tab === 'portfolio' ? <Portfolio /> : null}

@@ -194,7 +194,14 @@
     "focus": "En la pestaña Vida está tu foco: estudia para ascender, haz horas extra para cobrar ya o busca un trabajo mejor. Úsalo cada ronda.",
     "flow": "El flujo, arriba, es lo que ganas menos lo que gastas en un año, antes de impuestos. En Impuestos tienes esta ronda con exactitud.",
     "gotIt": "Entendido",
-    "skip": "Quitar la guía"
+    "skip": "Quitar la guía",
+    "debt": "Ya tienes Deuda e Impuestos. Un préstamo te dice lo que pagarás cada ronda antes de pedirlo; Impuestos muestra esta ronda al céntimo y lo que podrías esconder a Hacienda, con riesgo.",
+    "rivals": "«Tu gente» del Diario son tres personas de tu edad que viven a tu lado: alguien de tu clase, tu prima y tu ex. En tu perfil ves en qué puesto vas, y al final de la vida, el ranking.",
+    "property": "Ya puedes comprar vivienda. Pide una entrada y un impuesto, y te ahorra el alquiler; si tiene una habitación de sobra, puedes alquilarla.",
+    "business": "Ya puedes montar negocios. Montar uno cuesta un punto de foco y dinero; llévalo tú o paga un encargado. Si te da casi todo tu sueldo dos rondas seguidas, puedes dejar tu trabajo por él.",
+    "move": "Mudarte a otra ciudad está en Vida, en dónde vives. Cada ciudad paga y cuesta distinto; volver a tu ciudad de origen tiene ventajas.",
+    "workMode": "En Vida, Cómo trabajas: media jornada te deja más foco a cambio de sueldo; el teletrabajo llega unos escalones más arriba, en los oficios que lo permiten.",
+    "taxes": "En Impuestos puedes cobrar parte en negro, abrir una sociedad fuera o callarte las ganancias en cripto. Ahorras ahora y levantas sospechas; una inspección se lo lleva todo con multa."
   },
   "news": {
     "title": "Noticias",
@@ -590,8 +597,6 @@
       "focusTag": "Foco +{n}"
     },
     "taxes": {
-      "income": "Lo que entra en {years} años",
-      "expenses": "Lo que sale en {years} años",
       "tax": "Impuestos de {years} años",
       "incomeTax": "Impuesto sobre la renta",
       "investmentTax": "Impuestos sobre inversiones",
@@ -604,7 +609,10 @@
       "escapeTitle": "Prueba de salida",
       "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales.",
       "inflationTax": "Inflación sobre tu efectivo",
-      "inflationHint": "Tus {cash} en efectivo compran un {pct} % menos que hace {years} años. Nadie te lo cobra: simplemente desaparece."
+      "inflationHint": "Tus {cash} en efectivo compran un {pct} % menos que hace {years} años. Nadie te lo cobra: simplemente desaparece.",
+      "residencyTitle": "Residencia fiscal en {city}",
+      "residency": "Hacerte residente fiscal",
+      "residencyHint": "Tus dividendos e intereses de fuera tributan al {rate} mientras no traigas el dinero. Cuesta {fee} al año y se pierde si te mudas."
     },
     "decided": "Ya decidido",
     "plans": {
@@ -1168,7 +1176,9 @@
     "goFullTime": "Dejar tu trabajo por {name}",
     "backToWork": "Volver a trabajar",
     "lodgerOn": "Alquilar la habitación",
-    "lodgerOff": "Dejar de alquilar la habitación"
+    "lodgerOff": "Dejar de alquilar la habitación",
+    "residencyOn": "Residencia fiscal en {city}",
+    "residencyOff": "Dejar la residencia fiscal en {city}"
   },
   "account": {
     "title": "Cuenta",

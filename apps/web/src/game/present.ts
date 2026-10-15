@@ -246,6 +246,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('backToWork');
     case 'setLodger':
       return t(order.on ? 'lodgerOn' : 'lodgerOff');
+    case 'setResidency':
+      return t(order.on ? 'residencyOn' : 'residencyOff', { city: names.cities[player.cityId] });
     case 'buyItem':
       return t(order.noInvoice === true ? 'buyNoInvoiceItem' : order.used === true ? 'buyUsedItem' : order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'setEvasion': {

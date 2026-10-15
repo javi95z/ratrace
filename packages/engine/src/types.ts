@@ -237,6 +237,11 @@ export interface CityDef {
   taxOfficePct?: number;
   /** What each career pays here against the usual, in percent: a city is the place for some trades. Absent: 100. */
   careerPayPct?: Readonly<Record<string, number>>;
+  /**
+   * A tax residency the city offers to whoever lives there and pays for it: a fee a year, and the
+   * rate it charges on dividends and interest earned abroad, which stay abroad. Absent: none.
+   */
+  residency?: { feeAnnual: Cents; dividendBp: Bp };
 }
 
 export interface PropertyTypeDef {
@@ -426,6 +431,8 @@ export interface LifeRules {
   jobHuntChancePct: number;
   /** Lasting raise from a successful job hunt, in percent. */
   jobHuntRaisePct: number;
+  /** True where a card is dealt only if the player has at least two of its options open: one choice is no choice. */
+  dealOnlyChoices: boolean;
   /** Working from home, and working half the day. */
   workModes: Record<Exclude<WorkMode, 'office'>, WorkModeRule>;
   /**
@@ -1035,6 +1042,8 @@ export interface LifeState {
   formerCareer: { id: string; level: number } | null;
   /** True while the spare room of the home is let. It counts only while there is such a home: see `lodgerOf`. */
   lodger: boolean;
+  /** True while the player holds the tax residency of the city they live in. It counts only where the city offers one: see `residencyOf`. */
+  residency: boolean;
   /** Net worth, in the dollars of the start, the last time the player left the city the life began in; null if never. */
   leftHomeWorth: Cents | null;
   /** A move home under way: what the family's help is worth, and whether it is a return in triumph. Null otherwise. */
@@ -1176,7 +1185,9 @@ export type Order =
   /** Goes back to the career left for a business, a rung lower. */
   | { type: 'backToWork' }
   /** Lets the spare room of the home, or stops. */
-  | { type: 'setLodger'; on: boolean };
+  | { type: 'setLodger'; on: boolean }
+  /** Takes the tax residency the city offers, or gives it up. */
+  | { type: 'setResidency'; on: boolean };
 
 /** Each costs one focus point and can be done once a round. */
 export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction;
@@ -1266,6 +1277,7 @@ export type RejectReason =
   | 'not-strong-enough'
   | 'no-former-job'
   | 'no-spare-room'
+  | 'no-residency'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'

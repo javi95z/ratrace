@@ -17,6 +17,7 @@ import type { BalanceLine } from './Balance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
+import { RivalsBoard } from './Rivals';
 import { WorkPanel } from './Work';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];
@@ -29,12 +30,13 @@ export function ProfileBody() {
   const t = useT('profile');
   const { content, text, names, fmt } = useWords();
   const shown = useShown();
+  const history = useGame((s) => s.history);
   const p = shown.player;
   const life = p.life;
 
   const home = homeOf(p, content);
   const household = homeLifeArt({ partner: life.partner, children: life.children.length });
-  // One word each: the full names of four insurances do not fit on a line, and the sheet behind the row has them.
+  // One word each: the full names of the insurances do not fit on a line, and the sheet behind the row has them.
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => t(`insuranceShort.${kind}`));
   const flow = cashflow(content, shown);
   const [open, setOpen] = useState<string | null>(null);
@@ -131,6 +133,9 @@ export function ProfileBody() {
       </Panel>
       {/* One of the things owned is opened from the list of them: the list gives way to it. */}
       {line ? <BalanceSheet line={line} shown={shown} onClose={() => setLine(null)} onItem={(itemId) => (setLine(null), setOpen(itemId))} /> : null}
+
+      {/* The people the player grew up with, and where the player stands among them. */}
+      <RivalsBoard history={history} />
 
       <Panel title={t('owned')}>
         {life.items.length === 0 ? (

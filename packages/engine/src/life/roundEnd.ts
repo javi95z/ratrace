@@ -214,6 +214,8 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
       events.push({ kind: 'homecoming', gift: back.gift, triumphant: back.triumphant });
     }
     life.homecoming = null;
+    // A residency belongs to the city that gave it.
+    life.residency = false;
     const lapsed = lapsingIn(content, p, p.cityId);
     life.items = life.items.filter((owned) => !lapsed.includes(owned.itemId));
     for (const itemId of lapsed) events.push({ kind: 'lapsed', itemId });

@@ -109,6 +109,14 @@ function belongs(card: CardDef, p: PlayerState): boolean {
   return (card.when?.inJail === true) === p.life.jailRounds > 0;
 }
 
+/** True where the player has a choice to make on the card: at least two options open to them. A card with one is not a decision. */
+function hasChoice(card: CardDef, p: PlayerState, at: Situation): boolean {
+  if (!at.content.life.dealOnlyChoices) return true;
+  let open = 0;
+  for (let i = 0; i < card.options.length && open < 2; i++) if (optionLock(p, card, i, at) === null) open += 1;
+  return open >= 2;
+}
+
 /**
  * The personal cards that could be dealt to the player as they stand: those whose condition holds
  * and that are not resting after a recent appearance, each with its weight. A card of the hand is
@@ -125,7 +133,7 @@ function openCards(state: GameState, content: Content, at: Situation, rested = f
       // With `rested`, a card still resting may come back early, but never one of this very round, nor one that comes once in a life.
       if (card.once === true || since === 0 || (!rested && since <= card.cooldown)) continue;
     }
-    if (belongs(card, p) && conditionHolds(card.when, p, at)) pool.push([card.id, weightOf(card, p, content, state.round)]);
+    if (belongs(card, p) && conditionHolds(card.when, p, at) && hasChoice(card, p, at)) pool.push([card.id, weightOf(card, p, content, state.round)]);
   }
   return pool;
 }
@@ -144,7 +152,7 @@ function settleHand(state: GameState, content: Content, rng: Rng, events: GameEv
   const at = situationOf(content, state);
   while (state.answered < state.hand.length) {
     const waiting = cardOf(content, state.hand[state.answered]);
-    if (belongs(waiting, p) && conditionHolds(waiting.when, p, at)) return;
+    if (belongs(waiting, p) && conditionHolds(waiting.when, p, at) && hasChoice(waiting, p, at)) return;
     delete p.life.seen[waiting.id];
     let pool = openCards(state, content, at);
     if (pool.length === 0) pool = openCards(state, content, at, true);

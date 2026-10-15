@@ -1,3 +1,4 @@
+import { residencyOf } from './life/derive';
 import { expensesForRound, incomeForRound, outgoingsOf, passiveOf } from './economy';
 import type { RoundExpenses, RoundIncome } from './economy';
 import { cityOf } from './lookup';
@@ -35,7 +36,9 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
   let propertyValueOwned = 0;
   for (const property of p.properties) propertyValueOwned += property.value;
   const city = cityOf(content, p.cityId);
-  const tax = effectiveTax(city, now);
+  // A residency taxes what is earned abroad at its own rate, while it stays abroad.
+  const residency = residencyOf(p, content);
+  const tax = residency ? { ...effectiveTax(city, now), dividendBp: residency.dividendBp } : effectiveTax(city, now);
   const median = indexed(city.medianSalaryAnnual, now);
   const earned = {
     // What a business pays its owner is income like a salary, and taxed as one.

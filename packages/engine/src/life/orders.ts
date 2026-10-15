@@ -1,5 +1,5 @@
 import { loanRoom, takePersonalLoan } from '../debt';
-import { careerOf } from '../lookup';
+import { careerOf, cityOf } from '../lookup';
 import { mulDiv } from '../money';
 import { indexed, PRICE_LEVEL_START } from '../rates';
 import { netWorth } from '../selectors';
@@ -14,7 +14,7 @@ export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer',
 
 export type LifeOrder = Extract<
   Order,
-  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' | 'goFullTime' | 'backToWork' | 'setLodger' }
+  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' | 'goFullTime' | 'backToWork' | 'setLodger' | 'setResidency' }
 >;
 
 /** Focus points the player can still spend this round. */
@@ -410,6 +410,10 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
       return executeGoFullTime(p, order.businessId, ctx.content);
     case 'backToWork':
       return executeBackToWork(p, ctx.content);
+    case 'setResidency':
+      if (order.on && cityOf(ctx.content, p.cityId).residency === undefined) return 'no-residency';
+      p.life.residency = order.on;
+      return null;
     case 'setLodger':
       if (order.on && !lodgerOf({ ...p, life: { ...p.life, lodger: true } }, ctx.content)) return 'no-spare-room';
       p.life.lodger = order.on;

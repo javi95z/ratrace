@@ -213,6 +213,8 @@ export const cities: CityDef[] = [
   },
   {
     id: 'bangkok',
+    // Thailand taxes what is earned abroad only when it is brought in: a residency for whoever leaves it there.
+    residency: { feeAnnual: usd(2_000), dividendBp: 0 },
     medianSalaryAnnual: usd(13_000),
     livingCostAnnual: usd(10_500),
     flatPrice: usd(95_000),

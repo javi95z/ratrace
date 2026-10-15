@@ -170,3 +170,40 @@ describe('coming home', () => {
     expect(back.player.life.bonusStatus).toBe(status + c.life.homecoming.status);
   });
 });
+
+describe('a tax residency', () => {
+  it('in a city that offers one: dividends earned abroad pay its rate, for a fee a year, and it ends with a move', () => {
+    const c = fixtureContent();
+    const city = c.cities[0];
+    (city as { residency?: { feeAnnual: number; dividendBp: number } }).residency = { feeAnnual: 1_000_00, dividendBp: 0 };
+    const state = start(c);
+    state.player.cityId = city.id;
+    refreshDerived(state.player, c, 0);
+    const expenses = state.player.extraExpensesAnnual;
+    const { player, rejected } = previewRound(c, state, { orders: [{ type: 'setResidency', on: true }] });
+    expect(rejected).toEqual([]);
+    expect(player.life.residency).toBe(true);
+    expect(player.extraExpensesAnnual).toBe(expenses + 1_000_00);
+    const other = c.cities.find((x) => x.id !== city.id);
+    if (!other) throw new Error('needs a second city');
+    const elsewhere = start(c);
+    elsewhere.player.cityId = other.id;
+    refreshDerived(elsewhere.player, c, 0);
+    expect(previewRound(c, elsewhere, { orders: [{ type: 'setResidency', on: true }] }).rejected.map((r) => r.reason)).toEqual(['no-residency']);
+  });
+});
+
+describe('a card with one open choice', () => {
+  it('is not dealt where the content asks for choices', () => {
+    const c = fixtureContent();
+    c.life.dealOnlyChoices = true;
+    const lonely: CardDef = { id: 'lonely', category: 'lifestyle', weight: 1_000, cooldown: 0, options: [{}, { when: { minNetWorth: 999_999_999_00 }, effects: {} }] };
+    c.cards = [...c.cards, lonely];
+    const state = start(c);
+    state.player.life.seen = {};
+    expect(drawHand(state, c, new Rng(seedRng('lonely', 'cards')))).not.toContain('lonely');
+    c.life.dealOnlyChoices = false;
+    state.player.life.seen = {};
+    expect(drawHand(state, c, new Rng(seedRng('lonely', 'cards')))).toContain('lonely');
+  });
+});

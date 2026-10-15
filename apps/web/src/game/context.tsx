@@ -48,6 +48,8 @@ export interface Services {
   saves?: AccountSaves | null;
   /** The other players, while someone is signed in, and null otherwise. Left out, there are none to ask. */
   community?: () => Community | null;
+  /** True where the tabs of the money are opened one by one through a guided first life. Left out, every tab is there from the start. */
+  introduceTabs?: boolean;
   /** What plays the sounds. Left out, a test hears nothing. */
   sound?: SoundBoard;
 }
@@ -65,6 +67,7 @@ interface Game {
   saves: AccountSaves;
   community: () => Community | null;
   sound: SoundBoard;
+  introduceTabs: boolean;
   words: Words;
   locale: Locale;
   profile: Profile;
@@ -101,7 +104,7 @@ function browserServices(): Services {
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
   const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
-  return { sessions, store, saving, account, saves, community, sound: createSoundBoard() };
+  return { sessions, store, saving, account, saves, community, sound: createSoundBoard(), introduceTabs: true };
 }
 
 /** Anything a tap is meant for: it answers with a tick. */
@@ -116,11 +119,12 @@ interface Made {
   saves: AccountSaves;
   community: () => Community | null;
   sound: SoundBoard;
+  introduceTabs: boolean;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, sound }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, sound, introduceTabs }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null) };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null), introduceTabs: introduceTabs === true };
 }
 
 /**
@@ -224,6 +228,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       saves: made.saves,
       community: made.community,
       sound: made.sound,
+      introduceTabs: made.introduceTabs,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
       profile,
@@ -277,6 +282,22 @@ export const useSound = (): ((cue: Cue) => void) => {
 
 /** What belongs to the player rather than to one life: badges, the gallery, the lives unlocked. */
 export const useProfile = (): Profile => useGameContext().profile;
+
+/**
+ * True while the player is guided through a first life: no life finished on this device, and the
+ * guide not turned off. While the game is being made, always, so that it can be seen.
+ */
+export function useGuided(): boolean {
+  const { profile, runs } = useGameContext();
+  if (process.env.NODE_ENV === 'development') return true;
+  return runs !== null && runs.length === 0 && !profile.guide.off;
+}
+
+/** True where the tabs of the money open one by one in a guided life. */
+export function useIntroducesTabs(): boolean {
+  const { introduceTabs } = useGameContext();
+  return introduceTabs;
+}
 
 /** The guided first life: the tips already read, and the two ways to be done with one. */
 export function useGuide() {

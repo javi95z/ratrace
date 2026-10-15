@@ -477,6 +477,7 @@ export const en: ContentText = {
     'not-strong-enough': 'Not yet: it has to make a good part of your pay two rounds running before it can be your living.',
     'no-former-job': 'There is no job to go back to.',
     'no-spare-room': 'You need a home of your own with a room to spare.',
+    'no-residency': 'This city offers no tax residency.',
     'no-job': 'You need a job for that.',
     'unknown-item': 'That item does not exist.',
     'not-for-sale': 'That is not for sale here.',
