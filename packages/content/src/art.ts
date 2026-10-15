@@ -263,7 +263,17 @@ export const momentArt: Record<string, string> = {
 export const PORTRAIT_AGES = [22, 32, 45, 58] as const;
 export const portraitArt = (lifeId: string, age: (typeof PORTRAIT_AGES)[number]): string => `portrait.${lifeId}.${age}`;
 
-/** Assets have no sprite of their own: the interface draws a ticker badge over the icon of their class. */
+/** The brand mark of a share or a coin, drawn in pixels. Funds, bonds and gold have none, and keep their ticker. */
+export const assetLogo: Readonly<Partial<Record<string, string>>> = {
+  apple: 'logo.apple', microsoft: 'logo.microsoft', nvidia: 'logo.nvidia', amazon: 'logo.amazon', tesla: 'logo.tesla',
+  inditex: 'logo.inditex', lvmh: 'logo.lvmh', ferrari: 'logo.ferrari', santander: 'logo.santander', coca_cola: 'logo.coca_cola',
+  bitcoin: 'logo.bitcoin', ethereum: 'logo.ethereum', dogecoin: 'logo.dogecoin',
+};
+
+/** Signing in with Google shows its mark. */
+export const GOOGLE_LOGO = 'logo.google';
+
+/** Assets with no brand mark have no sprite of their own: the interface draws a ticker badge over the icon of their class. */
 export const assetClassArt: Record<'bond' | 'fund' | 'stock' | 'crypto' | 'gold', string> = {
   bond: 'icon.bond',
   fund: 'icon.fund',

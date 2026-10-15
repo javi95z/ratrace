@@ -200,3 +200,33 @@ Square image. Object sheet: 2 columns by 2 rows, 4 objects, each shown front-on.
 | 77 | `icons/icons-10.png` | 4 city landmarks | 32×32 |
 | 78 | `badges/badges-05.png` | 4 city crests | 64×64 |
 | 79 | `items/items-07.png` | 4 season seats | 64×64 |
+
+## Brand marks
+
+### 80. Sign-in and company logos
+
+Save as `art/raw/icons/logos-01.png`
+
+Attach `art/raw/icons/icons-05.png`.
+
+```text
+Square image. Object sheet: 4 columns by 4 rows, 16 small logos. Each is the real brand mark redrawn as clean pixel art, flat colours, a dark outline only where the mark needs one to stand on a dark navy background, readable at very small size. Only the mark itself, never the company name written out, except where the mark is a single letter. Left to right, top to bottom:
+1. Google: the four-colour "G" (red, yellow, green, blue).
+2. Apple: the bitten apple in white.
+3. Microsoft: the four coloured squares.
+4. NVIDIA: the green eye swirl.
+5. Amazon: the orange smile arrow.
+6. Tesla: the red "T".
+7. Inditex: the black "Z" of Zara on a cream square.
+8. LVMH: the gold interlocked "LV" monogram.
+9. Ferrari: the black prancing horse on a yellow shield.
+10. Santander: the red flame.
+11. Coca-Cola: a red disc with the white wave ribbon.
+12. Bitcoin: the orange coin with the white "₿".
+13. Ethereum: the grey-violet diamond, kept bluish grey (no purple).
+14. Dogecoin: the gold coin with the shiba dog's face.
+15. Toyota: the three silver ovals.
+16. Nestlé: the nest with the bird and two chicks, in grey.
+```
+
+Where each goes: `logo.google`, `logo.apple`, `logo.microsoft`, `logo.nvidia`, `logo.amazon`, `logo.tesla`, `logo.inditex`, `logo.lvmh`, `logo.ferrari`, `logo.santander`, `logo.coca_cola`, `logo.bitcoin`, `logo.ethereum`, `logo.dogecoin`, `logo.toyota`, `logo.nestle`, 32×32. The Google mark replaces the one drawn in code on the sign-in button; the others go on the ticker badges of their assets, and the last two wait for those shares.
