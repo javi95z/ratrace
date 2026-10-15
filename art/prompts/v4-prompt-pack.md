@@ -20,6 +20,8 @@ Use the same ChatGPT project and the same **style block** (in `v1-prompt-pack.md
 
 Save each result over the old file, under the same name. The checks before saving are the same as in v1.
 
+All seven redrawn and wired.
+
 ## Redraw note
 
 ```text

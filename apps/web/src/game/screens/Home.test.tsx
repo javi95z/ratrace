@@ -148,15 +148,15 @@ describe('the front door', () => {
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
   });
 
-  it('says when the life in progress is a practice of the weekly challenge, and under which rule', async () => {
+  it('says, briefly, when the life in progress is a practice of the weekly challenge', async () => {
     const services = memoryServices();
     const week = challengeOf(weekOf(Date.now()), lives);
     if (week === null) throw new Error('every week has a challenge');
     await services.sessions.start(week.lifeId, { challenge: week.week });
     renderGame(<Home />, services);
     const carry = await screen.findByRole('link', { name: /Continue your life/ });
-    expect(carry.textContent).toContain('Weekly challenge · practice');
-    expect(carry.textContent).toContain(en.challenge.rules[week.rule].name);
+    expect(carry.textContent).toContain('Challenge practice');
+    expect(carry.textContent).not.toContain(en.challenge.rules[week.rule].name);
   });
 
   it('offers a look at the life that just ended, and nothing to continue', async () => {

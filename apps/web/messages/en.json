@@ -38,8 +38,8 @@
   },
   "home": {
     "continue": "Continue your life",
-    "continueChallenge": "Weekly challenge · your attempt",
-    "continuePractice": "Weekly challenge · practice",
+    "continueChallenge": "Weekly challenge",
+    "continuePractice": "Challenge practice",
     "continueDetail": "{life} · age {age} · {city}",
     "lastLife": "See how your last life ended",
     "movedGone": "That life was ended in another tab or on another device.",

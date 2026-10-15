@@ -38,8 +38,8 @@
   },
   "home": {
     "continue": "Seguir con tu vida",
-    "continueChallenge": "Reto de la semana · tu intento",
-    "continuePractice": "Reto de la semana · práctica",
+    "continueChallenge": "Reto semanal",
+    "continuePractice": "Práctica del reto",
     "continueDetail": "{life} · {age} años · {city}",
     "lastLife": "Ver cómo acabó tu última vida",
     "movedGone": "Esa vida se terminó en otra pestaña o en otro dispositivo.",

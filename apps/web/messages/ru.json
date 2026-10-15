@@ -38,8 +38,8 @@
   },
   "home": {
     "continue": "Продолжить жизнь",
-    "continueChallenge": "Испытание недели · твоя попытка",
-    "continuePractice": "Испытание недели · тренировка",
+    "continueChallenge": "Испытание недели",
+    "continuePractice": "Тренировка испытания",
     "continueDetail": "{life} · {age, plural, one {# год} few {# года} many {# лет} other {# года}} · {city}",
     "lastLife": "Чем кончилась прошлая жизнь",
     "movedGone": "Эту жизнь завершили в другой вкладке или на другом устройстве.",
