@@ -211,7 +211,8 @@
       "asset": "Bolsa",
       "taxes": "Impuestos",
       "noise": "Sociedad"
-    }
+    },
+    "masthead": "El Diario de la Rueda · edición de los {age}"
   },
   "crisis": {
     "label": "Crisis · año {year} de {of}",
@@ -269,7 +270,9 @@
     "choices": "Tus opciones: {title}",
     "changes": "Lo que cambia",
     "rolled": "de probabilidad de que saliera esto",
-    "needsSkill": "Necesitas {skill} {level}."
+    "needsSkill": "Necesitas {skill} {level}.",
+    "rare": "Rara",
+    "legendary": "Legendaria"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -726,7 +729,6 @@
     "title": "Dos años después",
     "ages": "De los {from} a los {to}",
     "netWorth": "Patrimonio",
-    "was": "Antes {amount} · {change}",
     "ledger": "Lo que entró y lo que salió",
     "cashNow": "Efectivo ahora",
     "promoted": "Ascenso: {title}",
@@ -783,7 +785,8 @@
     "charged": "La inspección acaba en el juzgado.",
     "chargedHint": "Ocultabas tanto que habrá juicio. Busca un abogado.",
     "released": "Sales de la cárcel.",
-    "releasedRung": "Vuelves al trabajo, un puesto más abajo."
+    "releasedRung": "Vuelves al trabajo, un puesto más abajo.",
+    "before": "Antes {amount}"
   },
   "profile": {
     "title": "Tu vida",

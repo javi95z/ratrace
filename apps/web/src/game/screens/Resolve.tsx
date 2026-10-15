@@ -2,15 +2,17 @@
 
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { useCountUp } from '@/game/motion';
+import { useCountUp, useStill } from '@/game/motion';
 import { ageAt, roundNotes } from '@/game/present';
 import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
 import type { RoundNote } from '@/game/present';
 import { Bare, Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
+import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
+import { WorthGraph } from './WorthGraph';
 import { FlyingCoins } from './FlyingCoins';
 import { Loop } from './Loop';
 
@@ -37,6 +39,53 @@ function CashCount({ from, to, delay }: { from: number; to: number; delay: numbe
     <span data-coin-to aria-label={fmt.money(to)}>
       <span aria-hidden>{fmt.money(shown)}</span>
     </span>
+  );
+}
+
+/** How long net worth takes to count to where the round left it. */
+const WORTH_MS = 1100;
+
+/**
+ * Where the round leaves the player, made to be felt: net worth counts from what it was to what it
+ * is, lands with a jump (or sinks, in red), says by how much, and the bar of this round grows on
+ * the graph of the life. Where motion is left out, it all stands where it ends at once.
+ */
+function WorthRise({ from, to, delay }: { from: number; to: number; delay: number }) {
+  const t = useT('resolve');
+  const { fmt } = useWords();
+  const still = useStill();
+  const history = useGame((s) => s.history);
+  const shown = useCountUp(to, { from, delay, ms: WORTH_MS });
+  const [landed, setLanded] = useState(still);
+  useEffect(() => {
+    if (still) return setLanded(true);
+    const timer = setTimeout(() => setLanded(true), delay + WORTH_MS);
+    return () => clearTimeout(timer);
+  }, [still, delay]);
+  const change = to - from;
+  const up = change >= 0;
+
+  return (
+    <div className="mt-1 border-t-2 border-night-900 pt-3">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="pixel text-[17px]">{t('netWorth')}</p>
+          <p className="text-[12px] text-ink-300">{t('before', { amount: fmt.money(from) })}</p>
+        </div>
+        <div className="relative flex flex-col items-end">
+          <span aria-label={fmt.money(to)} className={`pixel block text-[28px] leading-none ${landed && !up ? 'text-wine-300' : 'text-gold-500'} ${landed && change !== 0 ? (up ? 'animate-pop' : 'animate-sink') : ''}`}>
+            <span aria-hidden>{fmt.money(shown)}</span>
+          </span>
+          <span className={`pixel mt-1 px-1.5 text-[14px] ${landed ? 'animate-rise' : 'invisible'} ${up ? 'bg-teal-800 text-teal-300' : 'bg-wine-900 text-wine-300'}`}>{fmt.signed(change)}</span>
+          {landed && !still && change > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={12} reach={48} /> : null}
+        </div>
+      </div>
+      {history.length > 1 ? (
+        <div className="mt-3">
+          <WorthGraph history={history} label={t('netWorth')} height={48} growMs={still ? undefined : delay} />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -130,12 +179,7 @@ export function Resolve() {
           }
           right={<CashCount from={before.player.cash} to={view.player.cash} delay={rolled + 450} />}
         />
-        <Row
-          className="mt-1 border-t-2 border-night-900 pt-2"
-          left={<span className="pixel text-[17px]">{t('netWorth')}</span>}
-          sub={t('was', { amount: fmt.money(worthBefore), change: fmt.signed(worthNow - worthBefore) })}
-          right={<span className="text-[19px] text-gold-500">{fmt.money(worthNow)}</span>}
-        />
+        <WorthRise from={worthBefore} to={worthNow} delay={rolled + 450 + 800} />
       </Panel>
 
       {/* What is said of the two years, by the bank and at the family's table: for a smile, it changes nothing. */}

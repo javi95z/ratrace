@@ -211,7 +211,8 @@
       "asset": "Markets",
       "taxes": "Taxes",
       "noise": "Society"
-    }
+    },
+    "masthead": "The Rat Race Times · age {age} edition"
   },
   "crisis": {
     "label": "Crisis · year {year} of {of}",
@@ -269,7 +270,9 @@
     "choices": "Your choices: {title}",
     "changes": "What changes",
     "rolled": "chance of this being what came up",
-    "needsSkill": "Needs {skill} {level}."
+    "needsSkill": "Needs {skill} {level}.",
+    "rare": "Rare",
+    "legendary": "Legendary"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -726,7 +729,6 @@
     "title": "Two years later",
     "ages": "Age {from} to {to}",
     "netWorth": "Net worth",
-    "was": "Was {amount} · {change}",
     "ledger": "What came in and went out",
     "cashNow": "Cash now",
     "promoted": "Promoted: {title}",
@@ -783,7 +785,8 @@
     "charged": "The inspection goes to court.",
     "chargedHint": "So much was hidden that there will be a trial. Get a lawyer.",
     "released": "Out of prison.",
-    "releasedRung": "Back to work, a rung lower than before."
+    "releasedRung": "Back to work, a rung lower than before.",
+    "before": "Was {amount}"
   },
   "profile": {
     "title": "Your life",

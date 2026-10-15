@@ -1,7 +1,7 @@
 import { badges, businessArt, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
-import type { Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
+import type { CardDef, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
 import type { Format } from '@/lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
@@ -450,4 +450,15 @@ export function loanPlan(amount: number, rateBp: number, termRounds: number, yea
     owed -= slice;
   }
   return { payments, interest };
+}
+
+/**
+ * How rare a card is to be dealt, for how it is shown: one that comes up in one life out of many
+ * shines. World cards are the same for everyone and are never rare.
+ */
+export function cardRarity(def: Pick<CardDef, 'category' | 'weight'>): 'legendary' | 'rare' | null {
+  if (def.category === 'world') return null;
+  if (def.weight <= 2) return 'legendary';
+  if (def.weight <= 3) return 'rare';
+  return null;
 }

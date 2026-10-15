@@ -6,9 +6,10 @@ import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ra
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
-import { chancePct, effectTags } from '@/game/present';
+import { cardRarity, chancePct, effectTags } from '@/game/present';
 import type { EffectTag } from '@/game/present';
 import { Panel, Tag } from '@/ui/kit';
+import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { Celebrations } from './Celebrations';
 import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
@@ -146,6 +147,7 @@ export function CardStage() {
   if (!view || !def) return null;
 
   const written = text.cards[def.id];
+  const rarity = cardRarity(def);
   const swipeable = def.options.length === 2 && !reducedMotion && !busy;
 
   return (
@@ -164,11 +166,25 @@ export function CardStage() {
           if (info.offset.x > SWIPE && previews[1]?.available) void pick(1);
           else if (info.offset.x < -SWIPE) void pick(0);
         }}
-        className="frame frame-cream mx-auto animate-rise touch-pan-y bg-cream text-ink-900"
+        className={`frame relative mx-auto touch-pan-y bg-cream text-ink-900 ${rarity ? 'frame-gold' : 'frame-cream'} ${rarity === 'legendary' ? 'animate-legend' : 'animate-rise'}`}
       >
-        <div className="border-2 border-cream leading-[0]">
+        <div className="relative overflow-hidden border-2 border-cream leading-[0]">
           <Sprite id={cardArt[def.id] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
+          {/* A rare card catches the light now and then; a legendary one shimmers all over. */}
+          {rarity === 'legendary' ? (
+            <span
+              aria-hidden
+              data-motion-only
+              className="pointer-events-none absolute inset-0 animate-holo opacity-40 mix-blend-overlay"
+              style={{ backgroundImage: 'linear-gradient(110deg, #d1495b, #f2c14e, #7fd1b9, #9ad1d4, #3b6ea5, #d1495b)', backgroundSize: '200% 100%' }}
+            />
+          ) : null}
+          {rarity ? <span aria-hidden data-motion-only className="pointer-events-none absolute inset-y-0 left-0 w-1/5 animate-glint bg-white/40" /> : null}
+          {rarity ? (
+            <span className={`pixel absolute left-1.5 top-1.5 px-1.5 py-0.5 text-[12px] uppercase leading-none tracking-wider ${rarity === 'legendary' ? 'bg-teal-300 text-ink-900' : 'bg-gold-500 text-ink-900'}`}>{t(rarity)}</span>
+          ) : null}
         </div>
+        {rarity === 'legendary' ? <Sparks colours={['bg-gold-500', 'bg-teal-300', 'bg-cream', 'bg-wine-300']} count={16} reach={150} size={4} delayMs={450} /> : null}
         <div className="px-3 pb-3 pt-2">
           <h2 className="pixel text-[19px]">{written.title}</h2>
           <p className="mt-1 text-[14px] leading-snug text-ink-700">{written.body}</p>

@@ -42,7 +42,7 @@ const TOPIC: Record<Headline['topic'], string> = {
 export function Headlines() {
   const t = useT('news');
   const words = useWords();
-  const { text, fmt } = words;
+  const { content, text, fmt } = words;
   const view = useGame((s) => s.view);
   if (!view) return null;
   const world = view.timeline[view.round];
@@ -51,6 +51,9 @@ export function Headlines() {
     <div className="flex flex-col gap-3">
       <CrisisBar crisis={world.crisis} />
       <Panel title={t('title')} label={t('title')}>
+        {/* Thrown onto the table once a round, spinning, with its masthead. */}
+        <div key={view.round} className="animate-paper">
+          <p className="pixel mb-2 border-b-2 border-ink-500 pb-1 text-center text-[13px] uppercase tracking-[0.15em] text-ink-200">{t('masthead', { age: ageAt(content, view.round) })}</p>
         <ul className="flex flex-col gap-2.5">
           {world.news.map((h, i) => (
             // A newspaper clipping: what it is about on the left, in a picture, and the headline beside it.
@@ -67,6 +70,7 @@ export function Headlines() {
             </li>
           ))}
         </ul>
+        </div>
       </Panel>
 
       <Panel>

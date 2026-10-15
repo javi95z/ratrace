@@ -1,13 +1,14 @@
 'use client';
 
-import { frameArt, portraitArt } from '@ratrace/content';
+import { FRAME_STATUS, frameArt, portraitArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, cityLight, portraitAge } from '@/game/present';
 import { Bar, Row, Stat, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
+import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
@@ -22,6 +23,30 @@ export function useShown(): GameView {
   const preview = useGame((s) => s.preview);
   if (!view) throw new Error('no game on screen');
   return preview ? { ...view, player: preview.player } : view;
+}
+
+/**
+ * What stands behind the portrait, by the frame it has earned: nothing at first, then a colour,
+ * then stage lights, then a burst of gold. Status shows before a word is read.
+ */
+const BACKDROP: ReadonlyArray<string | undefined> = [
+  undefined,
+  'var(--color-teal-800)',
+  'repeating-linear-gradient(90deg, var(--color-night-500) 0 4px, var(--color-sky-500) 4px 8px)',
+  'repeating-conic-gradient(from 0deg at 50% 100%, var(--color-gold-700) 0 10deg, var(--color-gold-900) 10deg 20deg)',
+];
+const tierOf = (status: number): number => FRAME_STATUS.reduce((best, from, i) => (status >= from ? i : best), 0);
+
+/** The frame the status has reached, and a moment of celebration each time it reaches a better one. */
+function useTierUp(status: number): { tier: number; rose: number } {
+  const tier = tierOf(status);
+  const last = useRef(tier);
+  const [rose, setRose] = useState(0);
+  useEffect(() => {
+    if (tier > last.current) setRose((n) => n + 1);
+    last.current = tier;
+  }, [tier]);
+  return { tier, rose };
 }
 
 type Figure = 'cash' | 'flow' | 'status' | 'ratRace';
@@ -195,20 +220,28 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const yearly = flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual;
   const escape = preview ? preview.escape : escapeProgress(content, shown);
   const escaped = p.escapedAtRound !== null;
+  const { tier, rose } = useTierUp(p.statusPoints);
+  const backdrop = BACKDROP[tier];
   // Where the profile is already on screen, as on a wide one, the portrait opens nothing and is no button.
   const portrait = (
     // A sprite is never drawn at a fraction of its size: the small portrait is the face, cut out of the whole.
-    <Well className={compact ? 'size-11 items-start overflow-hidden' : 'size-16'}>
-      <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className={compact ? '-mt-1 max-w-none' : ''} />
+    <Well className={`relative ${compact ? 'size-11 items-start overflow-hidden' : 'size-16 overflow-hidden'}`}>
+      {backdrop ? <span aria-hidden className="absolute inset-0" style={{ background: backdrop }} /> : null}
+      <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className={`relative ${compact ? '-mt-1 max-w-none' : ''}`} />
     </Well>
   );
   // At full size the portrait hangs in a frame, plain at first and richer as status grows. The small one keeps its gold line.
   const framed = compact ? (
-    <span className="frame-double my-1.5 ml-1.5 inline-flex shrink-0 leading-[0] [--ring:var(--color-gold-500)]">{portrait}</span>
+    <span key={rose} className={`frame-double relative my-1.5 ml-1.5 inline-flex shrink-0 leading-[0] [--ring:var(--color-gold-500)] ${rose > 0 ? 'animate-pop' : ''}`}>
+      {portrait}
+      {rose > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={10} reach={34} /> : null}
+    </span>
   ) : (
-    <span className="relative inline-flex size-20 shrink-0 items-center justify-center leading-[0]" data-frame={frameArt(p.statusPoints)}>
+    <span key={rose} className={`relative inline-flex size-20 shrink-0 items-center justify-center leading-[0] ${rose > 0 ? 'animate-pop' : ''}`} data-frame={frameArt(p.statusPoints)}>
       {portrait}
       <Sprite id={frameArt(p.statusPoints)} fallback={{ w: 80, h: 80 }} className="pointer-events-none absolute inset-0" />
+      {rose > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={14} reach={52} size={4} /> : null}
+      {rose > 0 ? <span aria-hidden data-motion-only className="pointer-events-none absolute inset-0 overflow-hidden"><span className="absolute inset-y-0 left-0 w-1/4 animate-glint bg-white/40 [animation-iteration-count:1]" /></span> : null}
     </span>
   );
 

@@ -142,7 +142,7 @@ describe('the play screen', () => {
     expect(within(ledger).getByText('Salary')).toBeTruthy();
     expect(within(ledger).getByText('Living costs')).toBeTruthy();
     // Where the net worth was and how it changed, said so it cannot be read as before and after.
-    expect(screen.getByText(/^Was \$[\d,]+ · [+−]\$[\d,]+$/)).toBeTruthy();
+    expect(screen.getByText(/^Was \$[\d,]+$/)).toBeTruthy();
     expect(((await services.store.loadGame()) as SavedGame).state.round).toBe(1);
 
     await user.click(button('Next round'));

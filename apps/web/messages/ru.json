@@ -211,7 +211,8 @@
       "asset": "Рынки",
       "taxes": "Налоги",
       "noise": "Общество"
-    }
+    },
+    "masthead": "Вестник бегов · выпуск: {age} лет"
   },
   "crisis": {
     "label": "Кризис · год {year} из {of}",
@@ -269,7 +270,9 @@
     "choices": "Твои варианты: {title}",
     "changes": "Что меняется",
     "rolled": "вероятность именно этого исхода",
-    "needsSkill": "Нужно: {skill} {level}."
+    "needsSkill": "Нужно: {skill} {level}.",
+    "rare": "Редкая",
+    "legendary": "Легендарная"
   },
   "effects": {
     "salaryMod": "{value}% к зарплате навсегда",
@@ -726,7 +729,6 @@
     "title": "Два года спустя",
     "ages": "С {from} до {to, plural, one {# года} few {# лет} many {# лет} other {# года}}",
     "netWorth": "Чистый капитал",
-    "was": "Было {amount} · {change}",
     "ledger": "Что пришло и что ушло",
     "cashNow": "Наличные сейчас",
     "promoted": "Повышение: {title}",
@@ -783,7 +785,8 @@
     "charged": "Проверка доходит до суда.",
     "chargedHint": "Спрятано столько, что будет суд. Нужен адвокат.",
     "released": "Свобода.",
-    "releasedRung": "Снова на работе, но ступенью ниже."
+    "releasedRung": "Снова на работе, но ступенью ниже.",
+    "before": "Было {amount}"
   },
   "profile": {
     "title": "Твоя жизнь",
