@@ -74,14 +74,12 @@ describe('the play screen', () => {
     const enabled = within(choices).getAllByRole('button').filter((choice) => !(choice as HTMLButtonElement).disabled);
     await waitFor(() => expect(enabled).toContain(document.activeElement));
     if (enabled.length > 1) {
-      const index = Number((enabled[1] as HTMLElement).dataset.cardOption);
-      await user.keyboard(String(index + 1));
-      expect(document.activeElement).toBe(enabled[1]);
       enabled[0].focus();
       await user.keyboard('{ArrowDown}');
       expect(document.activeElement).toBe(enabled[1]);
     }
-    await user.keyboard('{Enter}');
+    const chosen = enabled.at(-1) as HTMLElement;
+    await user.keyboard(String(Number(chosen.dataset.cardOption) + 1));
     expect(await screen.findByRole('heading', { name: 'What happened' })).toBeTruthy();
   });
 

@@ -40,6 +40,7 @@ function KeyboardHelp({ open, onClose, context }: { open: boolean; onClose(): vo
   if (context === 'cards') rows.push(['↑ / ↓ · 1–4', t('help.cards')]);
   if (context === 'finance') {
     rows.push(['← / → · Home / End', t('help.tabs')]);
+    rows.push(['[ / ]', t('help.switchTab')]);
     rows.push(['Shift + ← / → · PgUp / PgDn', t('help.amount')]);
   }
   if (context === 'play' || context === 'finance') rows.push(['Ctrl/⌘ + Enter', t('help.primary')]);
@@ -151,7 +152,7 @@ export function useKeyboardContext(context: KeyboardContextName) {
 
 /** A hint is visible only after the player uses a keyboard. */
 export function KeyboardHint({ children }: { children: ReactNode }) {
-  return <kbd className="keyboard-hint keycap" aria-hidden>{children}</kbd>;
+  return <kbd className="keyboard-hint keycap pointer-events-none absolute right-1 top-1 z-[2]" aria-hidden>{children}</kbd>;
 }
 
 /** The settings entry expands in place, so it never stacks one modal over another. */

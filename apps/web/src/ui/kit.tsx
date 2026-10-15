@@ -34,7 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={type}
       className={join(
-        'pixel frame-raised inline-flex min-h-11 select-none items-center justify-center gap-2 px-4 py-2 text-center text-[17px]',
+        'pixel frame-raised relative inline-flex min-h-11 select-none items-center justify-center gap-2 px-4 py-2 text-center text-[17px]',
         'transition-transform active:translate-y-[2px] disabled:pointer-events-none disabled:opacity-45',
         BUTTON[variant],
         wide && 'w-full',

@@ -175,6 +175,11 @@ body {
 .keyboard-hint { display: none; }
 html[data-input='keyboard'] .keyboard-hint { display: inline-flex; }
 
+/* Shortcut badges live in a button's corner instead of interrupting its label; the room is kept on
+   both sides so a centred label stays centred. */
+html[data-input='keyboard'] button:has(> .keyboard-hint) { padding-inline: 5.5rem; }
+html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-right: 2.75rem; }
+
 /* Standard skip links: absent from the visual layout until keyboard focus reaches them. */
 .skip-links {
   position: fixed;

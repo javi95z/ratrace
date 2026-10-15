@@ -9,6 +9,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, debtLabel, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
+import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { HealthCoverNote } from './HealthCover';
 import { Sprite } from '@/ui/Sprite';
@@ -21,6 +22,7 @@ import { EvasionPanel } from './Evasion';
 import { ItemUses } from './ItemUses';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
+type ShopView = 'recommended' | 'affordable' | 'all';
 const TABS: TabId[] = ['portfolio', 'market', 'property', 'business', 'debt', 'lifestyle', 'shop', 'taxes'];
 const KINDS: AssetKind[] = ['fund', 'bond', 'stock', 'crypto', 'gold'];
 const KIND_TITLE: Record<AssetKind, string> = { fund: 'funds', bond: 'bonds', stock: 'stocks', crypto: 'crypto', gold: 'gold' };
@@ -1132,27 +1134,64 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
 const SHELF =
   'frame-raised flex min-h-11 flex-col items-center gap-1 bg-night-600 p-1.5 text-center text-cream transition-transform active:translate-y-[2px] @min-[400px]:flex-row @min-[400px]:gap-2 @min-[400px]:text-left';
 
-function Shop() {
+type ShelfItem = { item: ItemDef; quote: ItemQuote; owned: boolean };
+
+/** A thing is in reach if any way the shop offers it can actually be used today. */
+const inReach = ({ quote, owned }: ShelfItem, cash: number) =>
+  owned || quote.price <= cash || quote.finance?.lock === null || quote.used?.lock === null || quote.noInvoice?.lock === null;
+
+/**
+ * A short shelf keeps the collection legible without hiding its ladder: everything owned, the
+ * three best purchases currently in reach, the next two rungs, and the final dream item.
+ */
+function recommended(items: ShelfItem[], cash: number): ShelfItem[] {
+  const chosen = new Set(items.filter((entry) => entry.owned).map((entry) => entry.item.id));
+  const available = items.filter((entry) => !entry.owned && inReach(entry, cash));
+  const next = items.filter((entry) => !entry.owned && !inReach(entry, cash));
+  for (const entry of available.slice(-3)) chosen.add(entry.item.id);
+  for (const entry of next.slice(0, 2)) chosen.add(entry.item.id);
+  const dream = items.findLast((entry) => !entry.owned);
+  if (dream) chosen.add(dream.item.id);
+  return items.filter((entry) => chosen.has(entry.item.id));
+}
+
+function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopView): void }) {
   const t = useT('finance.shop');
   const { content, text, names, fmt } = useWords();
   const { shown, p } = useRound();
   const [open, setOpen] = useState<ItemDef | null>(null);
   const ladders = [...new Set(content.items.map((item) => item.ladder))];
+  const shelves = ladders.map((ladder) => ({
+    ladder,
+    items: content.items
+      // The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
+      .filter((item) => item.ladder === ladder)
+      .map((item) => ({ item, quote: quoteItem(content, shown, item.id), owned: p.life.items.some((owned) => owned.itemId === item.id) }))
+      .filter((entry) => entry.quote.soldHere),
+  }));
+  const hint = view === 'recommended' ? 'recommendedHint' : view === 'affordable' ? 'affordableHint' : 'allHint';
 
   return (
     <div className="flex flex-col gap-3">
-      {ladders.map((ladder) => (
+      <div className="flex flex-col gap-1.5">
+        <Segmented<ShopView>
+          label={t('viewLabel')}
+          options={(['recommended', 'affordable', 'all'] as const).map((value) => ({ value, label: t(value) }))}
+          value={view}
+          onChange={onViewChange}
+        />
+        <p className="text-center text-[12px] leading-snug text-ink-300">{t(hint)}</p>
+      </div>
+      {shelves.map(({ ladder, items }) => {
+        const visible = view === 'all' ? items : view === 'affordable' ? items.filter((entry) => inReach(entry, p.cash)) : recommended(items, p.cash);
+        const hidden = items.length - visible.length;
+        return (
         <Panel key={ladder} title={text.ladders[ladder]}>
           {/* Always two a row, so a car is drawn whole whatever the width. */}
           <div className="@container">
-          <div className="grid grid-cols-2 gap-2">
-            {content.items
-              // The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
-              .filter((item) => item.ladder === ladder && quoteItem(content, shown, item.id).soldHere)
-              .map((item) => {
-                const owned = p.life.items.some((x) => x.itemId === item.id);
-                const quote = quoteItem(content, shown, item.id);
-                return (
+            {visible.length > 0 ? (
+              <div className="grid grid-cols-2 gap-2">
+                {visible.map(({ item, quote, owned }) => (
                   // What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
                   // A row, the picture beside the words: a shelf of many things reads at a glance without empty space.
                   <button key={item.id} type="button" data-finance-item onClick={() => setOpen(item)} className={`${SHELF} ${owned ? 'frame-gold' : ''}`}>
@@ -1168,15 +1207,20 @@ function Shop() {
                           <Tag tone="good">{t('status', { n: quote.status })}</Tag>
                         </span>
                       </span>
-                      {!owned && quote.used ? <span className="text-[11px] leading-tight text-ink-200">{t('usedFrom', { amount: fmt.compact(quote.used.price) })}</span> : null}
                     </span>
                   </button>
-                );
-              })}
-          </div>
+                ))}
+              </div>
+            ) : <p className="py-3 text-center text-[13px] text-ink-300">{t('noneAffordable')}</p>}
+            {hidden > 0 ? (
+              <Button className="mt-2" wide onClick={() => onViewChange('all')}>
+                {t('showAll', { count: items.length })}
+              </Button>
+            ) : null}
           </div>
         </Panel>
-      ))}
+        );
+      })}
       {open ? <ItemSheet item={open} onClose={() => setOpen(null)} /> : null}
     </div>
   );
@@ -1295,8 +1339,17 @@ export function Finance() {
   const alsoRemoved = useGame((s) => s.alsoRemoved);
   const clearAlsoRemoved = useGame((s) => s.clearAlsoRemoved);
   const [tab, setTab] = useState<TabId>('portfolio');
+  const [shopView, setShopView] = useState<ShopView>('recommended');
   const ids = useId();
   const panel = useRef<HTMLDivElement>(null);
+  // [ and ] move between tabs from anywhere on the stage, without going back to the tab strip first.
+  useKeyboardScope((event) => {
+    if ((event.key !== '[' && event.key !== ']') || event.altKey || event.ctrlKey || event.metaKey || document.querySelector('[role="dialog"]')) return false;
+    const next = TABS[(TABS.indexOf(tab) + (event.key === ']' ? 1 : -1) + TABS.length) % TABS.length];
+    setTab(next);
+    requestAnimationFrame(() => document.getElementById(`${ids}-tab-${next}`)?.focus());
+    return true;
+  });
   const navigateItems = (event: KeyboardEvent<HTMLDivElement>) => {
     const target = event.target instanceof HTMLElement ? event.target.closest<HTMLElement>('[data-finance-item]') : null;
     if (!target) return;
@@ -1328,7 +1381,7 @@ export function Finance() {
         {tab === 'business' ? <BusinessTab /> : null}
         {tab === 'debt' ? <DebtTab /> : null}
         {tab === 'lifestyle' ? <Lifestyle /> : null}
-        {tab === 'shop' ? <Shop /> : null}
+        {tab === 'shop' ? <Shop view={shopView} onViewChange={setShopView} /> : null}
         {tab === 'taxes' ? <Taxes /> : null}
       </div>
       <Toast message={refusal ? `${t('refused')}: ${text.reasons[refusal]}` : null} onDone={clearRefusal} />

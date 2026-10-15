@@ -28,6 +28,10 @@ afterEach(cleanup);
 const fmt = formatFor('en');
 const { names } = textFor('en');
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
+const openShop = async (user: ReturnType<typeof userEvent.setup>, view: 'recommended' | 'affordable' | 'all' = 'all') => {
+  await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+  if (view !== 'recommended') await user.click(screen.getByRole('radio', { name: view === 'all' ? 'All' : 'In reach' }));
+};
 
 /** A life taken to the finances of its current round, without the screen. */
 async function inFinance(lifeId: string, { taught = false }: { taught?: boolean } = {}) {
@@ -561,7 +565,7 @@ describe('what belongs to a city', () => {
     const { services } = await inFinance('nurse');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
     expect(button(/Bernabéu season seat/)).toBeTruthy();
     for (const elsewhere of [/Arsenal season ticket/, /Knicks season seats/, /Jumeirah beach club/, /Paddock Club/, /Rajadamnern/]) expect(screen.queryByRole('button', { name: elsewhere })).toBeNull();
     // What is sold everywhere is still there.
@@ -586,6 +590,31 @@ describe('what belongs to a city', () => {
   });
 });
 
+describe('the shop catalogue', () => {
+  it('starts with a shorter recommendation, filters to what is in reach and can reveal everything', async () => {
+    const { services } = await inFinance('nurse');
+    const shown = viewOf(await stateOf(services));
+    const soldHere = content.items.filter((item) => quoteItem(content, shown, item.id).soldHere).length;
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openShop(user, 'recommended');
+    const shelf = screen.getByRole('tabpanel', { name: 'Shop' });
+    const itemCount = () => shelf.querySelectorAll('[data-finance-item]').length;
+
+    expect(itemCount()).toBeGreaterThan(0);
+    expect(itemCount()).toBeLessThan(soldHere);
+    expect(screen.getAllByRole('button', { name: /^See all \(\d+\)$/ }).length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole('radio', { name: 'In reach' }));
+    expect(screen.getByText('What you own and what you can buy now, including on instalments or second hand.')).toBeTruthy();
+    expect(itemCount()).toBeLessThan(soldHere);
+
+    await user.click(screen.getByRole('radio', { name: 'All' }));
+    expect(itemCount()).toBe(soldHere);
+    expect(screen.queryByRole('button', { name: /^See all \(\d+\)$/ })).toBeNull();
+  });
+});
+
 describe('a thing the player owns, in the shop', () => {
   it('shows what it cost beside the price to sell it at, and nothing of the kind for a thing not owned', async () => {
     const { services, session } = await inFinance('nurse');
@@ -595,7 +624,7 @@ describe('a thing the player owns, in the shop', () => {
     expect(casio.paid).toBe(content.items.find((item) => item.id === 'watch_casio')?.price);
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
 
     await user.click(button(/Casio F-91W/));
     const mine = screen.getByRole('dialog', { name: 'Casio F-91W' });
@@ -616,7 +645,7 @@ describe('what a thing is good for', () => {
     const { services } = await inFinance('nurse');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
 
     const uses = async (name: RegExp, title: string) => {
       await user.click(button(name));
@@ -655,7 +684,7 @@ describe('buying on instalments', () => {
     if (plan === null || plan.lock !== null) throw new Error('a civil servant can buy a small car on instalments');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
 
     await user.click(button(/SEAT Ibiza/));
     const sheet = screen.getByRole('dialog', { name: 'SEAT Ibiza' });
@@ -702,7 +731,7 @@ describe('buying on instalments', () => {
     await session.playRound({ orders: [{ type: 'sellItem', itemId: 'car_seat_ibiza' }] });
     await toFinance(session);
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
     await user.click(button(/SEAT Ibiza/));
     const gone = within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).getByRole('note');
     expect(within(gone).getByText('You bought it on instalments and no longer have it. The debt stays.')).toBeTruthy();
@@ -716,7 +745,7 @@ describe('buying on instalments', () => {
     if (porsche === null || porsche.lock === null) throw new Error('a nurse cannot have a Porsche on instalments');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
 
     await user.click(button(/Casio F-91W/));
     const casio = screen.getByRole('dialog', { name: 'Casio F-91W' });
@@ -868,7 +897,7 @@ describe('a plan in the market', () => {
 });
 
 describe('the second-hand shop', () => {
-  it('offers a car second hand beside the new one, with its age, its status and its repairs, and buys it for cash', async () => {
+  it('keeps the used price off the shelf, then shows its age, status and repairs in the sheet and buys it for cash', async () => {
     // The heir has the cash for a used car. On a wide screen the round's orders are listed beside the shop.
     setWidth('desk');
     const { services } = await inFinance('heir');
@@ -877,9 +906,9 @@ describe('the second-hand shop', () => {
     if (!used) throw new Error('a car is sold second hand');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
-    // The shelf says what it costs used, beside the price new.
-    expect(within(button(/SEAT Ibiza/)).getByText(`Used: ${fmt.compact(used.price)}`)).toBeTruthy();
+    await openShop(user);
+    // The shelf stays easy to scan: the used offer belongs inside the item's sheet.
+    expect(within(button(/SEAT Ibiza/)).queryByText(`Used: ${fmt.compact(used.price)}`)).toBeNull();
 
     await user.click(button(/SEAT Ibiza/));
     const sheet = screen.getByRole('dialog', { name: 'SEAT Ibiza' });
@@ -900,7 +929,7 @@ describe('the second-hand shop', () => {
     const { services } = await inFinance('nurse');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
     await user.click(button(/SEAT Ibiza/));
     const second = within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).getByRole('region', { name: 'Second hand' });
     expect((within(second).getByRole('button', { name: /^Buy used for/ }) as HTMLButtonElement).disabled).toBe(true);
@@ -919,7 +948,7 @@ describe('the second-hand shop', () => {
     await toFinance(session);
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
     const shelf = screen.getByRole('tabpanel', { name: 'Shop' });
     expect(within(within(shelf).getByRole('button', { name: /Omega Speedmaster/ })).getByText('Yours · used')).toBeTruthy();
     // Among what the player owns, beside the game: the thing is named by its name alone.
@@ -982,7 +1011,7 @@ describe('what is not declared', () => {
     if (!offer) throw new Error('a watch is sold without an invoice');
     const user = userEvent.setup();
     renderGame(<Play />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Shop' }));
+    await openShop(user);
     await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /Omega Speedmaster/ }));
     const part = within(screen.getByRole('dialog', { name: 'Omega Speedmaster' })).getByRole('region', { name: 'Without an invoice' });
     expect(within(part).getByText(new RegExp(`^${offer.discountPct}% cheaper, in cash\\.`))).toBeTruthy();
@@ -991,5 +1020,22 @@ describe('what is not declared', () => {
     // A car is not sold so.
     await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /SEAT Ibiza/ }));
     expect(within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).queryByRole('region', { name: 'Without an invoice' })).toBeNull();
+  });
+});
+
+describe('the finance tabs by keyboard', () => {
+  it('moves to the next and the previous tab with the bracket keys, wrapping at either end', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const selected = () => screen.getAllByRole('tab').find((tab) => tab.getAttribute('aria-selected') === 'true')?.textContent;
+    await screen.findByRole('tab', { name: 'Shop' });
+    const first = selected();
+    await user.keyboard(']');
+    expect(selected()).not.toBe(first);
+    await user.keyboard('[[');
+    expect(selected()).toBe(first);
+    await user.keyboard('[[');
+    expect(selected()).toBe('Taxes');
   });
 });

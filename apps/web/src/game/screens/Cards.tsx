@@ -81,9 +81,9 @@ function Option({ def, index, preview, onPick, disabled, tabIndex }: { def: Card
       disabled={disabled || !preview.available}
       tabIndex={tabIndex}
       data-card-option={index}
-      className="frame-raised flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
+      className="frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
     >
-      <Offer def={def} index={index} preview={preview} world={world} shortcut={index + 1} />
+      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? index + 1 : undefined} />
     </button>
   );
 }
@@ -112,13 +112,16 @@ export function CardStage() {
     option?.focus();
     option?.scrollIntoView?.({ block: 'nearest' });
   };
+  const choose = (index: number) => choices.current?.querySelector<HTMLButtonElement>(`[data-card-option="${index}"]`)?.click();
   useKeyboardScope(
     (event) => {
       if (!waiting || busy || enabled.length === 0 || event.altKey || event.ctrlKey || event.metaKey) return false;
+      // A held digit must not go on to answer the next card too.
+      if (event.repeat && /^[1-4]$/.test(event.key)) return true;
       if (/^[1-4]$/.test(event.key)) {
         const index = Number(event.key) - 1;
         if (!enabled.includes(index)) return false;
-        focus(index);
+        choose(index);
         return true;
       }
       const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
