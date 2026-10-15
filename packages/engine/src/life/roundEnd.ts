@@ -88,8 +88,21 @@ export function ageLife(
   // A burnout's toll was this round's, and a rest after a job hunt counts down with it.
   life.focusLost = 0;
   if (life.huntRest > 0) life.huntRest -= 1;
+  // A round in prison is one less to serve; the last one served, the player walks out a rung lower.
+  const jailed = life.jailRounds > 0;
+  if (jailed) {
+    life.jailRounds -= 1;
+    if (life.jailRounds === 0) {
+      const rungsLost = life.career ? Math.min(life.career.level, rules.jail.rungsLost) : 0;
+      if (life.career) life.career.level -= rungsLost;
+      life.rungStudy = 0;
+      life.flags.ex_convict = now.round;
+      events.push({ kind: 'released', rungsLost });
+    }
+  }
 
-  if (life.career !== null) {
+  // Nothing is learnt at work from a cell.
+  if (life.career !== null && !jailed) {
     // What the player owns counts as it stood while the round was lived: before anything fades or lapses.
     const studied = tally.focusActions.includes('studyCareer') ? careerStudyOf(p, content, perks) : 0;
     life.careerSkill += rules.workSkill + studied;

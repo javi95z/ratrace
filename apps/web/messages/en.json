@@ -125,7 +125,8 @@
       "flow": "What comes in less what goes out in a year, before tax. Green, you have money left over; red, you are eating into your cash.",
       "status": "Points for who you are and what you own. Within one ladder, your best thing counts in full and the rest only in part."
     },
-    "openSettings": "Open settings"
+    "openSettings": "Open settings",
+    "inJail": "In prison"
   },
   "settings": {
     "version": "Version {content} · engine {engine}",
@@ -321,7 +322,9 @@
     "suspicion": "Tax office suspicion {value}",
     "amnesty": "Pay {pct}% of what you hid, and start clean",
     "sellBusiness": "You sell your largest business for {pct}% of what it is worth",
-    "giftBusiness": "Your largest business to your children"
+    "giftBusiness": "Your largest business to your children",
+    "launder": "Washes what is hidden ({pct}% fee)",
+    "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}"
   },
   "finance": {
     "tabs": {
@@ -767,7 +770,11 @@
     "overworked": "{n} rounds of overtime in a row: your body notices.",
     "overworkedHint": "−{health} health.",
     "burnout": "Burnout after {n} rounds of overtime.",
-    "burnoutHint": "−{health} health, and {focus} less focus next round."
+    "burnoutHint": "−{health} health, and {focus} less focus next round.",
+    "charged": "The inspection goes to court.",
+    "chargedHint": "So much was hidden that there will be a trial. Get a lawyer.",
+    "released": "Out of prison.",
+    "releasedRung": "Back to work, a rung lower than before."
   },
   "profile": {
     "title": "Your life",

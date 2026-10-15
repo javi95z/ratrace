@@ -31,6 +31,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     focusBonus: 0,
     focusUsed: 0,
     focusLost: 0,
+    jailRounds: 0,
     overtimeStreak: 0,
     huntMisses: 0,
     huntRest: 0,

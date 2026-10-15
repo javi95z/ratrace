@@ -123,6 +123,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   if (effects.businessesPct) add(toneOf(effects.businessesPct), t('businessesPct', { value: signed(effects.businessesPct) }));
   if (effects.suspicion) add(toneOf(-effects.suspicion), t('suspicion', { value: signed(effects.suspicion) }));
   if (effects.amnesty) add('plain', t('amnesty', { pct: effects.amnesty.pct }));
+  if (effects.launder) add('plain', t('launder', { pct: effects.launder.feePct }));
+  if (effects.jail) add('bad', t('jail', { n: effects.jail.rounds }));
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));
   if (effects.gift?.business) add('bad', t('giftBusiness'));
   if (effects.gift) add('good', t('giftCounts', { pct: content.life.giftTaxPct }));
@@ -268,7 +270,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'overworked', 'planRan', 'moved', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -290,6 +292,12 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'financeSkill':
         add(event, { tone: 'good', icon: skillArt.finance, title: t('financeSkill', { level: event.level }) });
+        break;
+      case 'charged':
+        add(event, { tone: 'bad', icon: 'icon.tax', title: t('charged'), hint: t('chargedHint') });
+        break;
+      case 'released':
+        add(event, { tone: 'good', icon: 'icon.exit_door', title: t('released'), hint: event.rungsLost > 0 ? t('releasedRung') : undefined });
         break;
       case 'audit':
         add(event, {

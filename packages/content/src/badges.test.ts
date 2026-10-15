@@ -79,6 +79,14 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   millionaire: { earns: { player: cash(1_000_000) }, misses: [{ player: cash(999_999) }] },
   millionaire_by_35: { earns: { player: cash(1_000_000), round: 6 }, misses: [{ player: cash(1_000_000), round: 7 }, { player: cash(900_000), round: 3 }] },
   ten_million: { earns: { player: cash(10_000_000) }, misses: [{ player: cash(9_999_999) }] },
+  fiscally_creative: {
+    earns: { player: (p) => (p.life.evasion.evaded = [{ round: 0, amount: usd(100_000) }]) },
+    misses: [
+      { player: (p) => (p.life.evasion.evaded = [{ round: 0, amount: usd(99_999) }]) },
+      // Inspected once in the life, and creativity is no longer the word.
+      { player: (p) => (p.life.evasion.evaded = [{ round: 0, amount: usd(100_000) }]), journal: { earned: ['audited'] } },
+    ],
+  },
   swiss_banker: {
     earns: { player: all(cash(1_000_000), (p) => (p.cityId = 'zurich')) },
     misses: [{ player: all(cash(999_999), (p) => (p.cityId = 'zurich')) }, { player: cash(1_000_000) }],
@@ -200,6 +208,15 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     earns: { player: all(own('car_seat_ibiza', 'car_bmw_m3'), home('parking')) },
     misses: [{ player: all(own('car_seat_ibiza'), home('parking')) }, { player: own('car_seat_ibiza', 'car_bmw_m3') }],
   },
+  ex_convict: {
+    earns: { player: (p) => (p.life.flags.ex_convict = 1) },
+    // Still inside is not out.
+    misses: [{ player: (p) => (p.life.jailRounds = 1) }],
+  },
+  truly_innocent: {
+    earns: { player: (p) => (p.life.flags.acquitted_innocent = 1) },
+    misses: [{ player: (p) => (p.life.flags.charged = 1) }],
+  },
   ronin: {
     earns: { was: (p) => (p.cityId = 'tokyo'), player: (p) => ((p.cityId = 'tokyo'), (p.life.career = null)) },
     misses: [
@@ -225,11 +242,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and eight since, each in one of six groups', () => {
-    expect(badges).toHaveLength(38);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(38);
+  it('are the thirty of the spec and eleven since, each in one of six groups', () => {
+    expect(badges).toHaveLength(41);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(41);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([7, 4, 8, 8, 7, 4]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([8, 4, 8, 8, 7, 6]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {

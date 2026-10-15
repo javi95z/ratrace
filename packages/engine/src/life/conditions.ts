@@ -81,6 +81,7 @@ export function conditionHolds(when: Condition | undefined, p: PlayerState, at: 
   if (when.notItems !== undefined && life.items.some((x) => when.notItems?.includes(x.itemId))) return false;
   if (when.insured !== undefined && !life.insurance[when.insured]) return false;
   if (when.retired !== undefined && when.retired !== (life.retiredAtRound !== null && job === null)) return false;
+  if (when.inJail !== undefined && when.inJail !== life.jailRounds > 0) return false;
   if (when.evading !== undefined && when.evading !== (hiding(life.evasion) || life.evasion.evaded.length > 0)) return false;
   if (when.notRecentFlag !== undefined) {
     const { flag, rounds } = when.notRecentFlag;

@@ -179,6 +179,7 @@ const base: Content = {
     noInvoiceSaleSuspicion: 0,
     suspicionDecay: 5,
     auditMaxPct: 0,
+    chargedFromEvaded: 100_000 * USD,
     auditFinePct: 50,
     auditGoodsPct: 30,
     auditStatus: -8,
@@ -217,6 +218,7 @@ const base: Content = {
     studySkill: 1,
     jobHuntChancePct: 35,
     jobHuntRaisePct: 8,
+    jail: { statusLost: 6, rungsLost: 1 },
     // No limits by default: each test of one sets its own.
     focusLimits: { overtimeTiredFrom: 99, overtimeHealthPoints: 0, overtimeBurnoutFrom: 99, burnoutChancePct: 0, burnoutHealthPoints: 0, burnoutFocus: 0, huntRestRounds: 0, huntMissPct: 0, huntFloorPct: 0, studyPerRung: 999 },
     rentOutMinFinanceSkill: 0,
