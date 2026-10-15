@@ -178,9 +178,8 @@ describe('a round in a room', () => {
 
     await toFinance(user);
     await user.click(screen.getByRole('button', { name: /Play the round/ }));
-    const waiting = (await screen.findByText('Waiting for the others')).closest('[role="status"]') as HTMLElement;
-    expect(waiting.textContent).toContain('Waiting for the others');
-    expect(waiting.textContent).toContain('1 of 2 have played');
+    expect(await screen.findByText('Waiting for the others')).toBeTruthy();
+    const waiting = screen.getByText('1 of 2 have played').closest('[role="status"]') as HTMLElement;
     expect(waiting.textContent).toContain('Still choosing: Rat BBBB');
     expect(screen.queryByRole('button', { name: /Play the round/ })).toBeNull();
 
@@ -226,6 +225,56 @@ describe('a round in a room', () => {
     expect(await screen.findByText('The clock played 2 rounds for you.')).toBeTruthy();
     // Two rounds of two years each later: the life is opened where the room is.
     await waitFor(() => expect(screen.getAllByText('Age 26').length).toBeGreaterThan(0));
+  });
+
+  it('says a room on other rules than the page cannot be played here, and offers to leave it', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    // The room began under rules this page no longer plays.
+    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '0.1.0' });
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    expect(await screen.findByText('This room plays another version of the game. Reload the page to play it.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^The room:/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Leave the room' })).toBeTruthy();
+  });
+
+  it('keeps the ticking clock out of what a screen reader is told while the player waits', async () => {
+    const server = roomServer();
+    await lobby(server);
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance(user);
+    await user.click(screen.getByRole('button', { name: /Play the round/ }));
+    await screen.findByText('Waiting for the others');
+    const waiting = screen.getByText('1 of 2 have played').closest('[role="status"]') as HTMLElement;
+    expect(waiting.textContent).not.toMatch(/\d:\d\d/);
+  });
+
+  it('wakes after sleeping through rounds it had played, says only how many the clock played, and never that the life moved elsewhere', async () => {
+    const server = roomServer();
+    const room = await lobby(server, 90);
+    const { services } = inRooms(server);
+    services.rooms = () => ({ ...server.link(HOST), watch: () => () => {} });
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance(user);
+    await user.click(screen.getByRole('button', { name: /Play the round/ }));
+    await screen.findByText('Waiting for the others');
+    for (let round = 0; round < 3; round++) {
+      server.wait(90_000 + 5_000);
+      await server.ask(B, { action: 'state', roomId: room.id });
+    }
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(await screen.findByText('The clock played 2 rounds for you.')).toBeTruthy();
+    expect(screen.queryByText(/played on in another tab/)).toBeNull();
   });
 
   it('leaves the life on the device as it was, whatever the room does', async () => {

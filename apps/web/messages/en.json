@@ -1536,6 +1536,7 @@
       "alone": "At least one more must join to start.",
       "not-host": "Only the host can start the room.",
       "refused": "That did not work. Try again."
-    }
+    },
+    "otherRules": "This room plays another version of the game. Reload the page to play it."
   }
 }

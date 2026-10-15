@@ -199,7 +199,8 @@ export class RoomSession implements GameSession {
       // Ready, and waiting for the others: the round turns for everyone at once, and its result comes then.
       await this.deps.turned(round);
       const now = await api.view(this.roomId);
-      if (now === 'gone' || now.view.round <= round) throw new StaleSession();
+      // Only the round played is shown as played. A page that woke rounds later opens the life as it stands; the room says how many the clock played.
+      if (now === 'gone' || now.view.round !== round + 1) throw new StaleSession();
       return this.became(now);
     });
   }

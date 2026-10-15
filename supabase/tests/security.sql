@@ -37,6 +37,10 @@ declare
   j jsonb;
   t2 timestamptz;
   log0 jsonb;
+  e uuid := gen_random_uuid();
+  room_t uuid := gen_random_uuid();
+  ge uuid := gen_random_uuid();
+  gd uuid := gen_random_uuid();
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -806,18 +810,18 @@ begin
   select updated_at, log into t, log0 from public.games where id = ga;
   select updated_at into t2 from public.games where id = gb;
   nm := public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
-       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb),
-       jsonb_build_object('user', b, 'game', gb, 'as_read', t2 - interval '1 second', 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":2}'::jsonb)));
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{"score":1}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2 - interval '1 second', 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{"score":2}'::jsonb)));
   if nm = 'moved'
      and (select round from public.rooms where id = room_r) = 0 and (select log from public.games where id = ga) = log0
      and (select count(*) from public.room_players where room_id = room_r and standing is not null) = 0
     then passed := passed + 1; else failed := array_append(failed, 'half a turn was written'); end if;
   -- Every member named, each as read: it turns once, and only once.
   nm := public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
-       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb)));
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{"score":1}'::jsonb)));
   nm := nm || ' ' || public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
-       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb),
-       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":2}'::jsonb)));
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{"score":1}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{"score":2}'::jsonb)));
   if nm = 'moved ok'
      and (select round from public.rooms where id = room_r) = 1 and (select count(*) from public.games where id in (ga, gb) and round = 1) = 2
      and (select standing ->> 'score' from public.room_players where room_id = room_r and user_id = b) = '2'
@@ -825,8 +829,8 @@ begin
   select updated_at into t from public.games where id = ga;
   select updated_at into t2 from public.games where id = gb;
   if public.room_turn(room_r, 0, now(), jsonb_build_array(
-       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'standing', '{}'::jsonb),
-       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'standing', '{}'::jsonb))) = 'moved'
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb))) = 'moved'
     then passed := passed + 1; else failed := array_append(failed, 'a round was turned twice'); end if;
 
   -- Leaving in play gives the life up and the room goes on for whoever is left; the last to leave closes it.
@@ -859,6 +863,58 @@ begin
   j := public.room_leave(room_s, d);
   if j ->> 'status' = 'closed' and (select count(*) from public.room_players where room_id = room_s and left_at is null) = 0
     then passed := passed + 1; else failed := array_append(failed, format('the host leaving the lobby answered %s', j)); end if;
+
+  -- ---------------------------------------------------------------- rooms, after review
+  reset role;
+  begin
+  insert into auth.users (id, aud, role, is_anonymous) values (e, 'authenticated', 'authenticated', true);
+  perform public.room_open(room_t, e, 'nurse', '0.1.0', '1.0.0', 90);
+  perform public.room_join((select code from public.rooms where id = room_t), d, '0.1.0', '1.0.0');
+  perform public.room_start(room_t, e, 'seed-t', jsonb_build_object(e::text, ge, d::text, gd), now() + interval '90 seconds');
+  -- A turn worked out before a member's orders were kept is refused: it would play them with none, and keep the orders unplayed.
+  perform public.room_submit(room_t, 0, d, '[]');
+  select updated_at into t from public.games where id = ge;
+  select updated_at into t2 from public.games where id = gd;
+  nm := public.room_turn(room_t, 0, now() + interval '90 seconds', jsonb_build_array(
+       jsonb_build_object('user', e, 'game', ge, 'as_read', t, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', false, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', d, 'game', gd, 'as_read', t2, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', false, 'standing', '{}'::jsonb)));
+  if nm = 'moved' and (select round from public.rooms where id = room_t) = 0
+    then passed := passed + 1; else failed := array_append(failed, format('a turn that missed a member''s orders answered %s', nm)); end if;
+  -- And a turn that says a member is ready who is not is refused too.
+  nm := public.room_turn(room_t, 0, now() + interval '90 seconds', jsonb_build_array(
+       jsonb_build_object('user', e, 'game', ge, 'as_read', t, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', d, 'game', gd, 'as_read', t2, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb)));
+  if nm = 'moved' then passed := passed + 1; else failed := array_append(failed, format('a turn that made a member ready answered %s', nm)); end if;
+  -- A log too large for its game is not a failure of the room: the turn answers so, writes nothing, and can be tried with less.
+  big := (select jsonb_agg(jsonb_build_object('picks', '[0]'::jsonb, 'orders', (select jsonb_agg(jsonb_build_object('type', 'buy', 'pad', repeat('x', 1000))) from generate_series(1, 50)))) from generate_series(1, 3));
+  nm := public.room_turn(room_t, 0, now() + interval '90 seconds', jsonb_build_array(
+       jsonb_build_object('user', e, 'game', ge, 'as_read', t, 'log', big, 'round', 1, 'finished', false, 'ready', false, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', d, 'game', gd, 'as_read', t2, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb)));
+  if nm = 'invalid' and (select round from public.rooms where id = room_t) = 0 and (select log from public.games where id = gd) = '[]'
+    then passed := passed + 1; else failed := array_append(failed, format('a turn too large for a log answered %s', nm)); end if;
+  nm := public.room_turn(room_t, 0, now() + interval '90 seconds', jsonb_build_array(
+       jsonb_build_object('user', e, 'game', ge, 'as_read', t, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', false, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', d, 'game', gd, 'as_read', t2, 'log', '[{"picks":[0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'ready', true, 'standing', '{}'::jsonb)));
+  if nm = 'ok' and (select round from public.rooms where id = room_t) = 1 then passed := passed + 1; else failed := array_append(failed, format('the right turn answered %s', nm)); end if;
+  -- A host whose account goes takes only their own rows: the room plays on, with no host, for whoever is left.
+  delete from auth.users where id = e;
+  if (select status from public.rooms where id = room_t) = 'playing' and (select host from public.rooms where id = room_t) is null
+     and (select count(*) from public.room_players where room_id = room_t) = 1 and (select status from public.games where id = gd) = 'playing'
+    then passed := passed + 1; else failed := array_append(failed, 'a host''s account took the room with it'); end if;
+  -- A lobby left with no host can be started by nobody: the day closes it.
+  room_t := gen_random_uuid();
+  insert into auth.users (id, aud, role, is_anonymous) values (e, 'authenticated', 'authenticated', true);
+  perform public.room_leave((select room_id from public.room_players where user_id = d and left_at is null limit 1), d);
+  perform public.room_open(room_t, e, 'nurse', '0.1.0', '1.0.0', 90);
+  perform public.room_join((select code from public.rooms where id = room_t), d, '0.1.0', '1.0.0');
+  perform public.room_join((select code from public.rooms where id = room_t), c, '0.1.0', '1.0.0');
+  delete from auth.users where id = e;
+  j := public.room_start(room_t, d, 'seed', jsonb_build_object(d::text, gen_random_uuid(), c::text, gen_random_uuid()), now() + interval '90 seconds');
+  if j ->> 'error' = 'not-host' and (select status from public.rooms where id = room_t) = 'open'
+    then passed := passed + 1; else failed := array_append(failed, format('a member started a lobby with no host: %s', j)); end if;
+  exception when others then
+    failed := array_append(failed, format('the rooms after review stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
 
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;

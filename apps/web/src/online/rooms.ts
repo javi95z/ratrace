@@ -49,7 +49,8 @@ export function roomOf(raw: unknown): RoomState | null {
   return {
     id: raw.id,
     code: raw.code,
-    host: String(raw.host),
+    // No host once the host's account is gone.
+    host: typeof raw.host === 'string' ? raw.host : '',
     lifeId: String(raw.lifeId),
     engineVersion: String(raw.engineVersion),
     contentVersion: String(raw.contentVersion),

@@ -2,6 +2,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@/session/memory';
+import { Unreachable } from '@/session/errors';
 import type { RoomsLink } from '@/session/room';
 import { roomServer } from '@/testing/roomServer';
 import { createRoomStore, LOOK_EVERY_MS } from './room';
@@ -48,8 +49,8 @@ function world(offset = 0) {
     clock.now = until;
     await settle();
   };
-  const page = (user: string, link: () => RoomsLink | null = () => server.link(user), store = new MemoryStore(), timers = schedule) => ({
-    rooms: createRoomStore({ link, store, content, lives, versions, now: () => clock.now + offset, schedule: timers }),
+  const page = (user: string, link: () => RoomsLink | null = () => server.link(user), store = new MemoryStore(), timers = schedule, rules = versions) => ({
+    rooms: createRoomStore({ link, store, content, lives, versions: rules, now: () => clock.now + offset, schedule: timers }),
     store,
   });
   /** A page that hears nothing through Realtime. */
@@ -329,6 +330,105 @@ describe('the room a page follows', () => {
       expect(run).toMatchObject({ room: true, seed: '' });
       expect(page.rooms.getState().room?.members.find((m) => m.me)?.standing?.score).toBe(run.score);
     }
+  });
+
+  it('opens the life again when the first look at it did not get through', async () => {
+    const w = world();
+    let failing = true;
+    // The page's way to the server loses every look at the life, for a while.
+    const flaky = (): RoomsLink => {
+      const link = w.server.link(HOST);
+      return {
+        ...link,
+        api: {
+          ...link.api,
+          view: (roomId) => (failing ? Promise.reject(new Unreachable('lost')) : link.api.view(roomId)),
+        },
+      };
+    };
+    const host = w.page(HOST, flaky);
+    await host.rooms.getState().open('nurse', 180);
+    await w.server.ask(B, { action: 'join', code: host.rooms.getState().room?.code, ...{ engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION } });
+    await host.rooms.getState().start();
+    await settle();
+    expect(gameOf(host.rooms).getState().status).toBe('none');
+    failing = false;
+    await w.advance(LOOK_EVERY_MS);
+    expect(gameOf(host.rooms).getState().status).toBe('playing');
+  });
+
+  it('can join again a lobby it left by mistake, and keeps a room whose leaving did not get through', async () => {
+    const w = world();
+    const host = w.page(HOST);
+    const b = w.page(B);
+    await host.rooms.getState().open('nurse', 180);
+    const code = host.rooms.getState().room?.code ?? '';
+    await b.rooms.getState().join(code);
+    await b.rooms.getState().leave();
+    expect(b.rooms.getState().status).toBe('none');
+    expect(await b.rooms.getState().join(code)).toBe(true);
+    await settle();
+    expect(b.rooms.getState()).toMatchObject({ status: 'in', room: { status: 'open' } });
+    w.server.network.down = true;
+    await b.rooms.getState().leave();
+    expect(b.rooms.getState()).toMatchObject({ status: 'in', refusal: 'unreachable', room: { status: 'open' } });
+    w.server.network.down = false;
+    await b.rooms.getState().refresh();
+    expect(b.rooms.getState()).toMatchObject({ status: 'in', room: { status: 'open' } });
+  });
+
+  it('does not open a life in a room that plays other rules than the page, and says so', async () => {
+    const w = world();
+    const host = w.page(HOST);
+    await host.rooms.getState().open('nurse', 180);
+    await w.server.ask(B, { action: 'join', code: host.rooms.getState().room?.code, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+    await host.rooms.getState().start();
+    // A page on newer rules, opened after the room began.
+    const newer = w.page(B, () => w.server.link(B), new MemoryStore(), undefined, { engine: '99.0.0', content: CONTENT_VERSION });
+    await newer.rooms.getState().boot();
+    expect(newer.rooms.getState()).toMatchObject({ status: 'in', otherRules: true, game: null });
+    expect(host.rooms.getState().otherRules).toBe(false);
+  });
+
+  it('wakes after sleeping through rounds while it waited, with no ledger of the wrong round, and says how many the clock played', async () => {
+    const w = world();
+    const host = w.page(HOST, w.deaf(HOST), new MemoryStore(), () => () => {});
+    await host.rooms.getState().open('nurse', 90);
+    await w.server.ask(B, { action: 'join', code: host.rooms.getState().room?.code, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+    await host.rooms.getState().start();
+    await settle();
+    const room = host.rooms.getState().room?.id as string;
+    await toFinance(gameOf(host.rooms));
+    const waiting = gameOf(host.rooms).getState().play();
+    await settle();
+    // The phone sleeps: the round the player played turns, and two more after it by the clock.
+    for (let round = 0; round < 3; round++) {
+      w.server.wait(90_000 + 5_000);
+      await w.server.ask(B, { action: 'state', roomId: room });
+    }
+    await host.rooms.getState().refresh();
+    await waiting;
+    await settle();
+    expect(host.rooms.getState()).toMatchObject({ missed: 2, room: { round: 3 } });
+    expect(gameOf(host.rooms).getState()).toMatchObject({ stage: 'news', moved: true });
+    expect(gameOf(host.rooms).getState().view?.round).toBe(3);
+  });
+
+  it('lets go of the room and the life of an account that is no longer the one signed in', async () => {
+    const w = world();
+    let who = HOST;
+    const page = w.page(HOST, () => w.server.link(who));
+    await page.rooms.getState().open('nurse', 180);
+    await w.server.ask(B, { action: 'join', code: page.rooms.getState().room?.code, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+    await page.rooms.getState().start();
+    await settle();
+    expect(page.rooms.getState().game).not.toBeNull();
+    // Another account, in a lobby of its own.
+    const C = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+    await w.server.ask(C, { action: 'open', lifeId: 'nurse', seconds: 90, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+    who = C;
+    await page.rooms.getState().boot();
+    expect(page.rooms.getState()).toMatchObject({ status: 'in', game: null, missed: 0, room: { status: 'open', seconds: 90 } });
   });
 
   it('looks again every fifteen seconds, and when the page comes back online after being away', async () => {

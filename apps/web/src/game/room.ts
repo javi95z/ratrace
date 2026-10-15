@@ -39,6 +39,8 @@ export interface RoomStoreState {
   missed: number;
   /** The room the player was in was closed under them, by its host or for being left alone a day, until they have been told. */
   closed: boolean;
+  /** True when the room plays other rules than this page: its life cannot be played here, and the page says to reload. */
+  otherRules: boolean;
 }
 
 export interface RoomActions {
@@ -77,7 +79,7 @@ export interface RoomStoreOptions {
   onSaveError?(error: unknown): void;
 }
 
-const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false };
+const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false };
 
 /**
  * The room the player is in, as this page follows it: it hears of every change, and asks the server
@@ -193,9 +195,21 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       // A page that hears of a room through two answers at once keeps the later one.
       if (was !== null && was.id === room.id && was.now > room.now) return;
       let { game, missed } = get();
+      // Another room, another account's most often: nothing of the last one's life is kept.
+      if (was !== null && was.id !== room.id) {
+        game = null;
+        missed = 0;
+      }
       if (room.members.find((m) => m.me)?.ready) readyIn.set(room.id, room.round);
-      if (game === null && (room.status === 'playing' || room.status === 'finished')) game = lifeOf(room);
-      else if (game !== null && was?.id === room.id && room.round > was.round) {
+      // Every round beyond the one the player played and waited for was played by the clock.
+      for (const waiter of waiters) if (room.round > waiter.round + 1) missed += room.round - waiter.round - 1;
+      const otherRules = room.engineVersion !== options.versions.engine || room.contentVersion !== options.versions.content;
+      const inPlay = room.status === 'playing' || room.status === 'finished';
+      if (game === null && inPlay && !otherRules) game = lifeOf(room);
+      else if (game !== null && inPlay && game.getState().status === 'none') {
+        // The life could not be opened when the room began, or was lost since: it is asked for again on every look.
+        void game.getState().boot().catch((error: unknown) => console.error('the life in the room could not be opened:', error));
+      } else if (game !== null && was?.id === room.id && room.round > was.round) {
         const life = game.getState();
         // The room turned while this page was not waiting for it. One round is shown as a played round is; more, and the life is
         // opened again as it stands. Either way the player is told of every round the clock played for them.
@@ -206,7 +220,7 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           void again.catch((error: unknown) => console.error('the life in the room could not be brought up to date:', error));
         }
       }
-      set({ status: 'in', room, skew, game, missed });
+      set({ status: 'in', room, skew, game, missed, otherRules });
       release(room);
       if (room.status === 'open' || room.status === 'playing') {
         watch(room);
@@ -245,6 +259,12 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       ...blank,
 
       async boot() {
+        // Asked again, most often because someone else is signed in now: nothing of the last answer is kept.
+        stopClocks();
+        stopWatching();
+        release(null);
+        left = null;
+        readyIn.clear();
         const rooms = api();
         if (rooms === null) {
           set({ ...blank, status: 'unavailable' });
@@ -258,9 +278,20 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
         }
       },
 
-      open: (lifeId, seconds) => request((rooms) => rooms.open(lifeId, seconds, options.versions)),
+      open: (lifeId, seconds) =>
+        request(async (rooms) => {
+          const room = await rooms.open(lifeId, seconds, options.versions);
+          left = null;
+          return room;
+        }),
 
-      join: (code) => request((rooms) => rooms.join(code, options.versions)),
+      // A lobby left by mistake can be joined again: the room the player left is theirs again once they are back in it.
+      join: (code) =>
+        request(async (rooms) => {
+          const room = await rooms.join(code, options.versions);
+          left = null;
+          return room;
+        }),
 
       async start() {
         const room = get().room;
@@ -271,9 +302,10 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       async leave() {
         const room = get().room;
         if (room === null) return;
-        left = room.id;
+        // Left only once the server says so: a leaving that did not get through keeps the room, and says why.
         await request(async (rooms) => {
           await rooms.leave(room.id);
+          left = room.id;
           return null;
         });
       },

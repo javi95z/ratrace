@@ -253,7 +253,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   // Another tab played this life on: the store has already opened it as it now stands, and the player is told why the screen changed.
   // A ranked life is played by the server. When it did not answer, nothing was played, and the player is told to try again;
   // and when it could not be reached at the start, the life began on the device, and the player is told that too.
-  const said = moved ? 'moved' : unreachable ? 'unreachable' : fellBack ? 'fellBack' : null;
+  // In a room the life moves on with the room, which says itself how many rounds the clock played: no word of another tab.
+  const said = moved && !room ? 'moved' : unreachable ? 'unreachable' : fellBack ? 'fellBack' : null;
   const heard = said === 'moved' ? clearMoved : said === 'unreachable' ? clearUnreachable : clearFellBack;
   const notice = <Toast message={said ? play(said) : null} onDone={heard} ms={6_000} />;
 

@@ -28,7 +28,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const unlocked = new Map<string, string[]>();
   const state = { ids: 0, codes: 0, stamps: 0, now: start, allowed: true, asked: [] as string[] };
   /** Called with each turn before it is written: a test may change the database there, as another call would have. */
-  const hooks: { beforeTurn: ((room: string, round: number) => void) | null } = { beforeTurn: null };
+  const hooks: { beforeTurn: ((room: string, round: number) => void) | null; invalidTurns: number; brokenTurns: number } = { beforeTurn: null, invalidTurns: 0, brokenTurns: 0 };
   const stamp = () => `2026-10-16T10:00:00.${String((state.stamps += 1)).padStart(6, '0')}+00:00`;
   const nowIso = () => new Date(state.now).toISOString();
   const active = (room: string) => members.filter((m) => m.room_id === room && m.left_at === null);
@@ -166,6 +166,14 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     },
     turn: async (roomId, round, deadline, lives: TurnLife[]) => {
       hooks.beforeTurn?.(roomId, round);
+      if (hooks.brokenTurns > 0) {
+        hooks.brokenTurns -= 1;
+        throw new Error('the database is not answering');
+      }
+      if (hooks.invalidTurns > 0) {
+        hooks.invalidTurns -= 1;
+        return 'invalid';
+      }
       const room = roomsById.get(roomId);
       if (!room || room.status !== 'playing') return 'closed';
       const here = active(roomId);
@@ -176,6 +184,10 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
         const m = memberOf(roomId, life.user);
         if (!game || game.user_id !== life.user || game.updated_at !== life.as_read || game.status !== 'playing' || game.room !== roomId) return 'moved';
         if (!m || m.left_at !== null || m.game_id !== life.game) return 'moved';
+        // Worked out with the member's orders, or with none: they must still be ready, or still not.
+        if ((m.ready_round === round) !== (life.ready === true)) return 'moved';
+        // A log its game cannot hold, as the table's own check refuses it.
+        if (JSON.stringify(life.log).length > 131_072) return 'invalid';
       }
       for (const life of lives) {
         Object.assign(games.get(life.game) as RoomGameRow, { log: structuredClone(life.log), round: life.round, status: life.finished ? 'finished' : 'playing', updated_at: stamp() });

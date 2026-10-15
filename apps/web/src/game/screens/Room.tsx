@@ -64,13 +64,13 @@ function Page({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-/** Why the last thing asked of the room did not happen, if it did not. */
-function Refusal() {
+/** Why the last thing asked of the room did not happen, if it did not. Framed on a page; plain inside a sheet, which is framed itself. */
+function Refusal({ plain = false }: { plain?: boolean }) {
   const t = useT('room');
   const refusal = useRoom((s) => s.refusal);
   if (refusal === null) return null;
   return (
-    <p role="alert" className="frame bg-wine-900 px-3 py-2 text-[14px]">
+    <p role="alert" className={plain ? 'text-[14px] text-wine-300' : 'frame bg-wine-900 px-3 py-2 text-[14px]'}>
       {t(`refused.${REFUSALS.has(refusal) ? refusal : 'refused'}`)}
     </p>
   );
@@ -88,6 +88,7 @@ export function Room() {
   const game = useRoom((s) => s.game);
   const refresh = useRoom((s) => s.refresh);
   const leave = useRoom((s) => s.leave);
+  const otherRules = useRoom((s) => s.otherRules);
 
   if (status === 'booting') {
     return (
@@ -115,6 +116,18 @@ export function Room() {
   }
   if (status === 'none' || room === null) return <Door />;
   if (room.status === 'open') return <Lobby room={room} />;
+  if (otherRules) {
+    return (
+      <Page title={t('title')}>
+        <p role="status" className="frame bg-night-700 px-3 py-3 text-[15px]">
+          {t('otherRules')}
+        </p>
+        <Button wide onClick={() => void leave()}>
+          {t('leave')}
+        </Button>
+      </Page>
+    );
+  }
   if (room.status === 'closed') {
     return (
       <Page title={t('title')}>
@@ -256,7 +269,7 @@ function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
           <p className="mb-1.5 text-[13px] text-ink-300">{t('life')}</p>
           <LifePicker label={t('life')} lives={available.map((life) => ({ id: life.id, name: text.lives[life.id]?.name ?? life.id }))} value={lifeId} onChange={setLifeId} />
         </div>
-        <Refusal />
+        <Refusal plain />
         <Button variant="primary" wide disabled={busy} onClick={() => void go()}>
           {t('create')}
         </Button>
@@ -469,13 +482,20 @@ function Waiting({ room }: { room: RoomState }) {
   const here = room.members.filter((member) => !member.left);
   const choosing = here.filter((member) => !member.ready).map(nameOf);
   return (
-    <div role="status" className="flex flex-col items-center gap-0.5 py-1 text-center">
+    <div className="flex flex-col items-center gap-0.5 py-1 text-center">
       <p className="pixel text-[17px] text-cream">
         {t('waiting')}
-        {left === null ? null : <span className="ml-2 tabular-nums text-gold-500">{clock(left)}</span>}
+        {/* The clock is in the room's bar for a screen reader; said here every second it would drown the rest. */}
+        {left === null ? null : (
+          <span aria-hidden className="ml-2 tabular-nums text-gold-500">
+            {clock(left)}
+          </span>
+        )}
       </p>
-      <p className="text-[13px] text-ink-200">{t('waitingCount', { ready: here.length - choosing.length, total: here.length })}</p>
-      {choosing.length > 0 ? <p className="text-[13px] text-ink-300">{t('choosing', { names: choosing.join(', ') })}</p> : null}
+      <div role="status">
+        <p className="text-[13px] text-ink-200">{t('waitingCount', { ready: here.length - choosing.length, total: here.length })}</p>
+        {choosing.length > 0 ? <p className="text-[13px] text-ink-300">{t('choosing', { names: choosing.join(', ') })}</p> : null}
+      </div>
     </div>
   );
 }

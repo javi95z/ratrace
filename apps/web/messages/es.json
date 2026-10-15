@@ -1483,7 +1483,7 @@
     "title": "Jugar con amigos",
     "intro": "Todos viven la misma vida en el mismo mundo, ronda a ronda. Gana la mejor puntuación.",
     "needAccount": "Las salas necesitan una cuenta y conexión.",
-    "away": "Ahora mismo no se puede llegar a las salas.",
+    "away": "Ahora no hay conexión con las salas.",
     "retry": "Reintentar",
     "open": "Abrir una sala",
     "life": "La vida que vivirán todos",
@@ -1536,6 +1536,7 @@
       "alone": "Hace falta al menos una persona más para empezar.",
       "not-host": "Solo quien abrió la sala puede empezarla.",
       "refused": "No ha funcionado. Vuelve a intentarlo."
-    }
+    },
+    "otherRules": "Esta sala juega con otra versión del juego. Recarga la página para jugarla."
   }
 }

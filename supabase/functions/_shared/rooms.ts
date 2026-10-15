@@ -15,12 +15,17 @@ export const MAX_MEMBERS = 6;
 const MAX_HAND = 20;
 /** How many times a turn is read and written again when something moved under it, before the call gives up. */
 const TURN_TRIES = 4;
+/** The most a round's orders may weigh, as JSON. Fifty orders of the heaviest kind are a few kilobytes. */
+export const MAX_ORDERS_CHARS = 16_000;
+/** The most a member's log may weigh once a round is added to it, as JSON: under what its game can hold, whatever was sent. */
+export const MAX_LOG_CHARS = 120_000;
 
 /** A row of `rooms`. */
 export interface RoomRow {
   id: string;
   code: string;
-  host: string;
+  /** Null once the host's account is gone: the room plays on, and a lobby with no host cannot be started. */
+  host: string | null;
   life_id: string;
   engine_version: string;
   content_version: string;
@@ -77,6 +82,8 @@ export interface TurnLife {
   log: LoggedRound[];
   round: number;
   finished: boolean;
+  /** True if the turn played orders the member kept for the round: they must still be ready, or still not, when it is written. */
+  ready: boolean;
   standing: Standing;
 }
 
@@ -120,8 +127,8 @@ export interface RoomsDeps {
   step(roomId: string, round: number, userId: string, gameId: string, asRead: string, log: LoggedRound[], gameRound: number): Promise<'ok' | 'moved' | 'closed' | 'ready'>;
   /** Keeps a member's orders for a round and marks them ready. `all` once everyone still in the room is. */
   submit(roomId: string, round: number, userId: string, orders: unknown[]): Promise<{ kept: 'new' | 'same' | 'other' | 'moved' | 'closed'; all: boolean }>;
-  /** Writes the turn of a round, every life of it, or nothing. With no deadline the room is over. */
-  turn(roomId: string, round: number, deadline: Date | null, lives: TurnLife[]): Promise<'ok' | 'moved' | 'closed'>;
+  /** Writes the turn of a round, every life of it, or nothing. With no deadline the room is over. `invalid` if a log could not be held. */
+  turn(roomId: string, round: number, deadline: Date | null, lives: TurnLife[]): Promise<'ok' | 'moved' | 'closed' | 'invalid'>;
   /** Writes the run unless one with its id is already there. */
   saveRun(run: RunRow): Promise<void>;
 }
@@ -265,6 +272,8 @@ function due(room: RoomRow, members: readonly MemberRow[], now: Date): boolean {
  */
 async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, at: RoomRow): Promise<void> {
   let room = at;
+  // Once the database has said it cannot hold a turn, it is played with no orders at all rather than not at all.
+  let bare = false;
   for (let attempt = 0; attempt < TURN_TRIES; attempt++) {
     const game = games[versionsOf(room)];
     if (!game?.viewOf) throw new Error(`room ${room.id} is on versions the server does not hold`);
@@ -279,8 +288,11 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       if (row === null || seed === null || log === null) throw new Error(`room ${room.id}: the life of ${member.user_id} cannot be opened`);
       const play = playerOf(game, room.life_id, seed);
       const answered = withCardsAnswered(play, log);
-      const orders = Array.isArray(kept[member.user_id]) ? kept[member.user_id] : [];
+      const ready = Object.hasOwn(kept, member.user_id);
+      const orders = !bare && ready && Array.isArray(kept[member.user_id]) ? kept[member.user_id] : [];
       let next = withStep(answered.log, { orders });
+      // A log its game could not hold would stop the room for everyone: the round is played without these orders.
+      if (JSON.stringify(next).length > MAX_LOG_CHARS) next = withStep(answered.log, { orders: [] });
       let played: Played;
       try {
         played = play(next);
@@ -290,7 +302,7 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
         next = withStep(answered.log, { orders: [] });
         played = play(next);
       }
-      lives.push({ user: member.user_id, game: row.id, as_read: row.updated_at, log: next, round: played.state.round, finished: played.state.finished, standing: standingOf(game, played) });
+      lives.push({ user: member.user_id, game: row.id, as_read: row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready, standing: standingOf(game, played) });
       ends.push({ row, played });
     }
     const over = lives.length > 0 && lives.every((life) => life.finished);
@@ -300,7 +312,12 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       return;
     }
     if (said === 'closed') return;
-    // Moved: another call turned it, or a member came, went or played a card while it was being read.
+    if (said === 'invalid') {
+      console.error(`room ${room.id}: a turn could not be held; the round is played with no orders`);
+      bare = true;
+      continue;
+    }
+    // Moved: another call turned it, or a member came, went, played a card or kept orders while it was being read.
     const now = await deps.loadRoom(room.id);
     if (now === null || now.status !== 'playing' || now.round !== room.round) return;
     room = now;
@@ -316,11 +333,17 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
 async function upkeep(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[]) {
   let changed = false;
   let turned = false;
-  if ((room.status === 'open' || room.status === 'playing') && (await deps.closeIfStale(room.id, deps.now()))) changed = true;
-  else if (due(room, members, deps.now())) {
-    await turn(games, deps, room);
-    changed = true;
-    turned = true;
+  try {
+    if ((room.status === 'open' || room.status === 'playing') && (await deps.closeIfStale(room.id, deps.now()))) changed = true;
+    else if (due(room, members, deps.now())) {
+      await turn(games, deps, room);
+      changed = true;
+      turned = true;
+    }
+  } catch (error) {
+    // A round that cannot be turned now is turned on a later look. Meanwhile the room is shown as it stands, and can be left.
+    console.error(`room ${room.id}: upkeep failed:`, error instanceof Error ? error.message : error);
+    return { room, members, turned: false };
   }
   if (!changed) return { room, members, turned };
   const now = await deps.loadRoom(room.id);
@@ -535,7 +558,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   }
 
   // Orders for the round: tried now, played when the round turns.
-  if (picked.orders.length > game.content.maxOrdersPerRound) return bad('orders');
+  if (picked.orders.length > game.content.maxOrdersPerRound || JSON.stringify(picked.orders).length > MAX_ORDERS_CHARS) return bad('orders');
   if (raw.step !== steps) return { status: 409, body: { error: 'out-of-step', step: steps } };
   if (roundsIn(log) !== room.round) return moved;
   const answered = withCardsAnswered(play, log);

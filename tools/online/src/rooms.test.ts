@@ -291,6 +291,67 @@ describe('a round in a room', () => {
   });
 });
 
+describe('a turn that cannot be written as it was worked out', () => {
+  it('plays orders kept while the round was being turned: the turn is read again with them', async () => {
+    const { server, room } = await begun();
+    await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [] });
+    const step = await answerHand(server, B, room);
+    let landed = false;
+    server.hooks.beforeTurn = () => {
+      if (landed) return;
+      landed = true;
+      // B's orders arrive after this turn read the orders kept, and before it is written.
+      void server.deps.submit(room, 0, B, [{ type: 'buy', assetId: 'sp500', amount: 100_000 }]);
+    };
+    server.wait(180_000 + GRACE_MS);
+    expect(roomOf(await server.ask(HOST, { action: 'state', roomId: room })).round).toBe(1);
+    expect(server.logOf(B, room)[0].orders).toEqual([{ type: 'buy', assetId: 'sp500', amount: 100_000 }]);
+    expect(step).toBeGreaterThan(0);
+  });
+
+  it('refuses orders that weigh more than any round needs', async () => {
+    const { server, room } = await begun();
+    const step = await answerHand(server, HOST, room);
+    const heavy = Array.from({ length: 50 }, () => ({ type: 'buy', assetId: 'sp500', amount: 100, note: 'x'.repeat(400) }));
+    expect(await server.ask(HOST, { action: 'submit', roomId: room, step, orders: heavy })).toMatchObject({ status: 400, body: { field: 'orders' } });
+  });
+
+  it('plays a member with no orders once their log could hold no more, and the room goes on', async () => {
+    const { server, room } = await begun();
+    // As heavy as a round's orders may be, every round: the log would outgrow its game after a few.
+    const heavy = Array.from({ length: 50 }, () => ({ type: 'buy', assetId: 'sp500', amount: 1, note: 'x'.repeat(250) }));
+    expect(JSON.stringify(heavy).length).toBeLessThan(16_000);
+    for (let round = 0; round < 10; round++) {
+      expect((await server.ask(B, { action: 'submit', roomId: room, step: await answerHand(server, B, room), orders: [] })).status).toBe(200);
+      expect((await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: heavy })).status).toBe(200);
+      expect(roomOf(await server.ask(HOST, { action: 'state', roomId: room })).round).toBe(round + 1);
+    }
+    const log = server.logOf(HOST, room);
+    expect(JSON.stringify(log).length).toBeLessThanOrEqual(120_000);
+    expect(log[0].orders).toHaveLength(50);
+    expect(log[9].orders).toEqual([]);
+  });
+
+  it('plays the round with no orders at all when the database says the turn cannot be held, rather than not at all', async () => {
+    const { server, room } = await begun();
+    server.hooks.invalidTurns = 1;
+    await server.ask(B, { action: 'submit', roomId: room, step: await answerHand(server, B, room), orders: [{ type: 'buy', assetId: 'sp500', amount: 100 }] });
+    await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [] });
+    expect(roomOf(await server.ask(HOST, { action: 'state', roomId: room })).round).toBe(1);
+    expect(server.logOf(B, room)[0].orders).toEqual([]);
+  });
+
+  it('lets a member look at the room and leave it even when its round cannot be turned', async () => {
+    const { server, room } = await begun();
+    server.wait(180_000 + GRACE_MS);
+    server.hooks.brokenTurns = 10;
+    expect((await server.ask(B, { action: 'state', roomId: room })).status).toBe(200);
+    expect((await server.ask(B, { action: 'mine' })).status).toBe(200);
+    expect((await server.ask(B, { action: 'leave', roomId: room })).status).toBe(200);
+    expect(await server.ask(B, { action: 'mine' })).toEqual({ status: 200, body: { room: null } });
+  });
+});
+
 describe('two members who choose the same', () => {
   it('live the same life to the end, the life the engine plays from the same log, and the room ends with a run for each', async () => {
     const { server, room } = await begun();
