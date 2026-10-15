@@ -1,10 +1,10 @@
 # Art report
 
-Sprites: 798. Every group uses the 31 interface colours plus its own.
+Sprites: 801. Every group uses the 31 interface colours plus its own.
 
 | Group | Sprites | Size | Colours |
 |---|---|---|---|
-| items | 62 | 64×64 | 64 |
+| items | 65 | 64×64 | 64 |
 | cars | 9 | 96×48 | 64 |
 | homes | 138 | 128×128 | 64 |
 | icons | 170 | 32×32 | 64 |
@@ -14,7 +14,7 @@ Sprites: 798. Every group uses the 31 interface colours plus its own.
 | skylines | 40 | 312×66 | 64 |
 | brand | 4 | 256×256 | 64 |
 
-Missing sheets: items/items-08
+No sheets missing.
 
 | Sprite | Notes |
 |---|---|

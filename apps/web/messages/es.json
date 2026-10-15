@@ -9,7 +9,9 @@
       "records": "Récords",
       "rankings": "Clasificaciones",
       "challenge": "Reto de la semana"
-    }
+    },
+    "imageAlt": "The Rat Race en píxeles: una rata en su rueda, los skylines nocturnos de Nueva York y Madrid y el nombre del juego en dorado.",
+    "keywords": "rat race,simulador de vida,juego de finanzas personales,juego de inversión,independencia financiera,pixel art"
   },
   "common": {
     "age": "{age} años",
@@ -1059,7 +1061,8 @@
     "badges": "Insignias",
     "netWorth": "Patrimonio, descontando la inflación",
     "never": "Nunca salió de la rueda",
-    "escapedAt": "Fuera de la rueda a los {age}"
+    "escapedAt": "Fuera de la rueda a los {age}",
+    "invite": "¿Lo harías mejor? Juega a The Rat Race: {url}"
   },
   "orders": {
     "buy": "Comprar {name} · {amount}",

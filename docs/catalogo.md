@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.31.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.32.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -10,7 +10,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Reto de la semana](#reto-de-la-semana) | 5 reglas |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 10 |
-| [Objetos](#objetos) | 64, de ellos 8 coches |
+| [Objetos](#objetos) | 67, de ellos 8 coches |
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
@@ -729,6 +729,9 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 | <img src="../art/clean/items/item.tech_phone.png" alt="iPhone"> | iPhone | 1.200 $ |  | +2 | 60 %, -50 % por ronda |  |  |
 | <img src="../art/clean/items/item.tech_laptop.png" alt="MacBook Pro"> | MacBook Pro | 2.600 $ |  | +3 | 65 %, -45 % por ronda | +1 de experiencia al estudiar |  |
 | <img src="../art/clean/items/item.tech_console.png" alt="PS5"> | PS5 | 550 $ |  | +1 | 60 %, -40 % por ronda |  |  |
+| <img src="../art/clean/items/item.tech_smartwatch.png" alt="Apple Watch"> | Apple Watch | 450 $ |  | +1 | 50 %, -50 % por ronda |  |  |
+| <img src="../art/clean/items/item.tech_drone.png" alt="DJI Mavic"> | DJI Mavic | 1.800 $ |  | +2 | 55 %, -50 % por ronda |  |  |
+| <img src="../art/clean/items/item.tech_ai_workstation.png" alt="Estación de trabajo de IA"> | Estación de trabajo de IA | 18.000 $ |  | +4 | 50 %, -40 % por ronda | +2 de experiencia al estudiar |  |
 
 ### Moda
 

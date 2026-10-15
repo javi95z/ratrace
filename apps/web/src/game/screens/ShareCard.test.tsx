@@ -234,7 +234,9 @@ describe('the share sheet', () => {
     await user.click(screen.getByRole('button', { name: 'Share this life' }));
     await user.click(await screen.findByRole('button', { name: 'Share' }));
     expect(share).toHaveBeenCalledTimes(1);
-    const sent = (share.mock.calls[0] as unknown as [{ files: File[]; title: string }])[0];
+    const sent = (share.mock.calls[0] as unknown as [{ files: File[]; title: string; text: string }])[0];
+    // With a way into the game, in the language of the life.
+    expect(sent.text).toMatch(/^Can you do better\? Play The Rat Race: https?:\/\/[^ ]+\/en$/);
     expect(sent.files[0].name).toBe('rat-race-nurse-364.png');
     expect(sent.files[0].type).toBe('image/png');
     Object.assign(navigator, { canShare: undefined, share: undefined });

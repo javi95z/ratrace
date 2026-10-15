@@ -144,10 +144,48 @@ async function writeIcons() {
   ]);
 }
 
+/** The picture a link to the game shows when it is shared, the size every network asks for. */
+export const SHARE_IMAGE = { width: 1200, height: 630 } as const;
+
+/**
+ * The picture of a shared link, drawn from the game's own pixels at whole multiples so not one of them
+ * blurs: a night sky with a few stars, two skylines along the bottom, the rat in its wheel on the left
+ * and the name on the right. It holds no words of any language, so one picture serves them all.
+ */
+async function writeShareImage() {
+  const { width, height } = SHARE_IMAGE;
+  const sprite = (path: string, scale: number) =>
+    sharp(join(publicDir, 'sprites', path))
+      .metadata()
+      .then(({ width: w = 0, height: h = 0 }) => sharp(join(publicDir, 'sprites', path)).resize(w * scale, h * scale, { kernel: sharp.kernel.nearest }).png().toBuffer());
+  // Stars at fixed places, two pixels square, in the two creams of the game.
+  const stars = [
+    [120, 60], [260, 140], [420, 40], [560, 110], [700, 60], [820, 150], [960, 50], [1100, 120], [1160, 30], [60, 200], [340, 230], [1040, 220],
+  ].map(([x, y], i) => ({ input: { create: { width: 4, height: 4, channels: 4 as const, background: i % 2 ? '#f4f1e4' : '#ffe9a8' } }, left: x, top: y }));
+  const [left, right, wheel, name] = await Promise.all([
+    sprite('skylines/skyline.new_york.png', 2),
+    sprite('skylines/skyline.madrid.png', 2),
+    sprite('brand/brand.mascot.png', 2),
+    sprite('brand/brand.wordmark.png', 2),
+  ]);
+  await sharp({ create: { width, height, channels: 4, background: '#141b33' } })
+    .composite([
+      ...stars,
+      { input: left, left: 0, top: height - 132 },
+      { input: right, left: 600, top: height - 132 },
+      { input: wheel, left: 40, top: 20 },
+      { input: name, left: 640, top: 40 },
+    ])
+    .png({ compressionLevel: 9 })
+    .toFile(join(publicDir, 'og.png'));
+}
+
 async function main() {
   await writeIcons();
+  await writeShareImage();
   const publicAssets = filesBelow(publicDir).filter((path) => !path.endsWith('/sw.js')).map((path) => webPath(path, publicDir));
-  const routes = ['/en', '/en/collection', '/en/new', '/en/play', '/en/rankings', '/en/records', '/es', '/es/collection', '/es/new', '/es/play', '/es/rankings', '/es/records', '/ru', '/ru/collection', '/ru/new', '/ru/play', '/ru/rankings', '/ru/records', '/manifest.webmanifest'];
+  const pages = ['', '/challenge', '/collection', '/new', '/play', '/rankings', '/records'];
+  const routes = [...['en', 'es', 'ru'].flatMap((locale) => pages.map((page) => `/${locale}${page}`)), '/manifest.webmanifest'];
   const built = process.argv.includes('--build');
   const nextStatic = built ? filesBelow(join(app, '.next/static')).map((path) => webPath(path, join(app, '.next/static'), '/_next/static')) : [];
   const assets = [...routes, ...publicAssets, ...nextStatic];

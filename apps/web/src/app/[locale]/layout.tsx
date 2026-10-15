@@ -5,6 +5,7 @@ import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { CSSProperties, ReactNode } from 'react';
 import { GameProvider } from '@/game/context';
+import { metadataOf, SITE_URL } from '@/i18n/metadata';
 import { routing } from '@/i18n/routing';
 import { PwaProvider } from '@/pwa/runtime';
 import '../globals.css';
@@ -46,10 +47,15 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: 'meta' });
   return {
+    // Every address in a shared card is made absolute against where the game lives.
+    metadataBase: SITE_URL,
+    // The front door's addresses, picture and card; every other page gives its own whole.
+    ...(await metadataOf(params, '')),
     // A page gives its own title and the game's name follows it; the front door is the game's name alone.
     title: { default: t('title'), template: `%s · ${t('title')}` },
-    description: t('description'),
     applicationName: t('title'),
+    category: 'games',
+    keywords: t('keywords').split(',').map((word) => word.trim()),
     manifest: '/manifest.webmanifest',
     appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: t('title') },
     icons: {

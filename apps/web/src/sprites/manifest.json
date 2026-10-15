@@ -2934,6 +2934,11 @@
     "w": 64,
     "h": 64
   },
+  "item.tech_ai_workstation": {
+    "src": "items/item.tech_ai_workstation.png",
+    "w": 64,
+    "h": 64
+  },
   "item.tech_camera": {
     "src": "items/item.tech_camera.png",
     "w": 64,
@@ -2941,6 +2946,11 @@
   },
   "item.tech_console": {
     "src": "items/item.tech_console.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_drone": {
+    "src": "items/item.tech_drone.png",
     "w": 64,
     "h": 64
   },
@@ -2956,6 +2966,11 @@
   },
   "item.tech_phone": {
     "src": "items/item.tech_phone.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.tech_smartwatch": {
+    "src": "items/item.tech_smartwatch.png",
     "w": 64,
     "h": 64
   },

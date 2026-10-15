@@ -9,7 +9,9 @@
       "records": "Records",
       "rankings": "Rankings",
       "challenge": "Weekly challenge"
-    }
+    },
+    "imageAlt": "The Rat Race in pixels: a rat in a wheel, the night skylines of New York and Madrid, and the game's name in gold.",
+    "keywords": "rat race,life simulator,personal finance game,investing game,financial independence,pixel art"
   },
   "common": {
     "age": "Age {age}",
@@ -1059,7 +1061,8 @@
     "badges": "Badges",
     "netWorth": "Net worth, after inflation",
     "never": "Never left the rat race",
-    "escapedAt": "Out of the rat race at {age}"
+    "escapedAt": "Out of the rat race at {age}",
+    "invite": "Can you do better? Play The Rat Race: {url}"
   },
   "orders": {
     "buy": "Buy {name} · {amount}",

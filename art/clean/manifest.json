@@ -3956,6 +3956,21 @@
       "width": 288,
       "height": 120
     },
+    "item.tech_smartwatch": {
+      "file": "items/item.tech_smartwatch.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_drone": {
+      "file": "items/item.tech_drone.png",
+      "width": 64,
+      "height": 64
+    },
+    "item.tech_ai_workstation": {
+      "file": "items/item.tech_ai_workstation.png",
+      "width": 64,
+      "height": 64
+    },
     "badge.fiscally_creative": {
       "file": "badges/badge.fiscally_creative.png",
       "width": 64,
