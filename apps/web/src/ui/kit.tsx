@@ -182,13 +182,13 @@ const BADGE: Record<string, string> = {
 };
 
 /**
- * An asset on a plate: its brand mark on a dark plate where it has one, its ticker on the colour of
+ * An asset by its look: its brand mark on its own where it has one, its ticker on the colour of
  * its class where it has not. The name is always written beside it, so the mark is decoration.
  */
 export function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: string; logo?: string }) {
   if (logo) {
     return (
-      <span className="lamp inline-flex h-9 w-14 shrink-0 items-center justify-center bg-night-900 [--hi:var(--color-night-600)] [--lo:var(--color-ink-900)]">
+      <span className="inline-flex h-9 w-14 shrink-0 items-center justify-center">
         <Sprite id={logo} />
       </span>
     );

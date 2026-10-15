@@ -1062,3 +1062,20 @@ describe('the finance tabs by keyboard', () => {
     expect(selected()).toBe('Taxes');
   });
 });
+
+describe('a holding in the portfolio', () => {
+  it('opens the same sheet as the market, to buy more of it once or every round', async () => {
+    const { services, session } = await inFinance('heir', { taught: true });
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'sp500', amount: 1_000_000 }] });
+    await toFinance(session);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const holdings = await screen.findByRole('region', { name: 'Your investments' });
+    await user.click(within(holdings).getByRole('button', { name: /S&P 500/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
+    expect(within(sheet).getByRole('radio', { name: /Every round/ })).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: '100%' }));
+    await user.click(within(sheet).getByRole('button', { name: /^Confirm/ }));
+    expect(button('1 order')).toBeTruthy();
+  });
+});
