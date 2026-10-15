@@ -333,9 +333,10 @@ export function validateContent(c: Content): string[] {
   }
 
   const w = c.world;
-  if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 5)) {
-    errors.push('world.headlinesPerRound must be a whole number from 0 to 5');
+  if (!(isWhole(w.headlinesPerRound) && w.headlinesPerRound >= 0 && w.headlinesPerRound <= 8)) {
+    errors.push('world.headlinesPerRound must be a whole number from 0 to 8');
   }
+  if (!isCount(w.noiseHeadlines)) errors.push('world.noiseHeadlines must be a whole, non-negative number');
   if (!within(w.newsTruthPct, 0, 100)) errors.push('world.newsTruthPct must be between 0 and 100');
   if (!isCount(w.flatBandBp)) errors.push('world.flatBandBp must be a whole, non-negative number');
   if (!within(w.taxReformChancePct, 0, 100)) errors.push('world.taxReformChancePct must be between 0 and 100');

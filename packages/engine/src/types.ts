@@ -460,6 +460,8 @@ export interface CrisisDef {
 
 export interface WorldRules {
   headlinesPerRound: number;
+  /** How many headlines of filler there are to choose from. None means no filler. */
+  noiseHeadlines: number;
   /** Chance in percent that a headline is true. */
   newsTruthPct: number;
   /** A move in rates or inflation smaller than this is reported as flat. */
@@ -827,7 +829,13 @@ export type Headline =
   | { topic: 'crypto'; phase: CryptoPhase }
   | { topic: 'rates'; trend: Trend }
   | { topic: 'inflation'; trend: Trend }
-  | { topic: 'property'; cityId: string; trend: 'up' | 'down' };
+  | { topic: 'property'; cityId: string; trend: 'up' | 'down' }
+  /** One investment that is not crypto: whether it gains or loses over the round. */
+  | { topic: 'asset'; assetId: string; trend: 'up' | 'down' }
+  /** Whether a city's taxes go up, down or stay as they are. */
+  | { topic: 'taxes'; cityId: string; trend: Trend }
+  /** News that tells nothing of what is coming: the `id`th of the content's filler headlines. Always "true". */
+  | { topic: 'noise'; id: number };
 
 export interface WorldState {
   round: number;

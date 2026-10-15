@@ -275,6 +275,9 @@ export const topicArt: Record<Headline['topic'], string> = {
   rates: 'icon.rates',
   inflation: 'icon.inflation',
   property: 'icon.property',
+  asset: 'icon.stock',
+  taxes: 'icon.tax',
+  noise: 'icon.news',
 };
 
 /** A badge, or `locked` for one not earned yet. */

@@ -33,6 +33,9 @@ const TOPIC: Record<Headline['topic'], string> = {
   rates: 'bg-sky-300',
   inflation: 'bg-wine-300',
   property: 'bg-teal-300',
+  asset: 'bg-teal-500',
+  taxes: 'bg-wine-500',
+  noise: 'bg-ink-300',
 };
 
 /** How many columns of opinion there are to take turns. */
@@ -62,7 +65,7 @@ export function Headlines({ hint = true }: { hint?: boolean }) {
                 <span data-topic className="pixel block text-[13px] uppercase tracking-[0.1em] text-ink-500">
                   {t(`topics.${h.topic}`)}
                 </span>
-                <span className="block text-[15px] font-semibold leading-snug">{headlineText(words, h)}</span>
+                <span className="block text-[15px] font-semibold leading-tight">{headlineText(words, h)}</span>
               </span>
             </li>
           ))}

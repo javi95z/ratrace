@@ -45,6 +45,12 @@ export interface ContentText {
     rates: Record<Trend, string>;
     inflation: Record<Trend, string>;
     property: Record<'up' | 'down', string>;
+    /** With {asset}, the investment's name. */
+    asset: Record<'up' | 'down', string>;
+    /** With {city}. */
+    taxes: Record<Trend, string>;
+    /** Filler that tells nothing of what is coming, as many as `world.noiseHeadlines`. */
+    noise: string[];
   };
   /** Badges: what each is called, and how it is earned. */
   badges: Record<string, { name: string; how: string }>;

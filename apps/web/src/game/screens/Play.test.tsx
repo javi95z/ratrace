@@ -111,7 +111,7 @@ describe('the play screen', () => {
     const clippings = within(screen.getByRole('region', { name: 'News' })).getAllByRole('listitem');
     const news = ((await services.store.loadGame()) as SavedGame).state.timeline[0].news;
     expect(news.length).toBeGreaterThan(0);
-    const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing' };
+    const SUBJECT = { regime: 'Economy', crypto: 'Crypto', rates: 'Interest rates', inflation: 'Inflation', property: 'Housing', asset: 'Markets', taxes: 'Taxes', noise: 'Society' };
     expect(clippings.map((clipping) => clipping.querySelector('[data-topic]')?.textContent)).toEqual(news.map((headline) => SUBJECT[headline.topic]));
     for (const clipping of clippings) expect(clipping.querySelector('img')).not.toBeNull();
     expect(screen.getByText(/Round 1 of 20 · Madrid/)).toBeTruthy();

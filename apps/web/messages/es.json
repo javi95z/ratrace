@@ -125,10 +125,23 @@
     "about": {
       "cash": "El dinero que tienes a mano. De aquí salen tus gastos y tus compras, y mientras espera no rinde nada.",
       "flow": "Lo que entra menos lo que sale en un año, antes de impuestos. En verde te sobra; en rojo te comes el efectivo.",
-      "status": "Puntos por quién eres y lo que tienes. Dentro de una misma gama, la mejor cosa cuenta entera y las demás solo una parte."
+      "status": "Puntos por quién eres y lo que tienes. Dentro de una misma gama, la mejor cosa cuenta entera y las demás solo una parte.",
+      "ratRace": "Sales de la rueda cuando lo que ganas sin trabajar, ya con impuestos, paga todos tus gastos. Dos rondas seguidas cubriéndolos y estás fuera; si una ronda no llega, vuelves a entrar."
     },
     "openSettings": "Abrir ajustes",
-    "inJail": "En prisión"
+    "inJail": "En prisión",
+    "perYearShort": "Al año",
+    "wayOut": {
+      "covered": "Cubierto",
+      "passive": "Ingresos pasivos",
+      "tax": "Impuestos",
+      "outgoings": "Gastos",
+      "missing": "Te falta al año",
+      "spare": "Te sobra al año",
+      "oneMore": "Esta ronda ya lo cubres. Una más así y sales de la rueda.",
+      "worth": "Salir ahora multiplicaría tu puntuación por {multiplier}. Cuanto antes salgas, más vale.",
+      "escaped": "Saliste a los {age}: tu puntuación se multiplica por {multiplier}. Sigue cubriendo tus gastos para no volver a entrar."
+    }
   },
   "settings": {
     "version": "Versión {content} · motor {engine}",
@@ -195,7 +208,10 @@
       "crypto": "Cripto",
       "rates": "Tipos de interés",
       "inflation": "Inflación",
-      "property": "Vivienda"
+      "property": "Vivienda",
+      "asset": "Bolsa",
+      "taxes": "Impuestos",
+      "noise": "Sociedad"
     },
     "gossip": {
       "label": "Opinión",
@@ -446,7 +462,9 @@
       "noCredit": "Tras tu quiebra, ningún banco te presta hasta que cumplas {age}.",
       "repay": "Amortizar",
       "left": "{rounds, plural, =0 {Sin plazo fijo} one {Queda 1 ronda} other {Quedan # rondas}}",
-      "rate": "{rate} al año"
+      "rate": "{rate} al año",
+      "perRound": "Pagas cada ronda",
+      "interestTotal": "Intereses en total ({rate} al año)"
     },
     "lifestyle": {
       "work": "El foco de esta ronda",

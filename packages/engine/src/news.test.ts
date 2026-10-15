@@ -39,10 +39,38 @@ describe('news', () => {
         for (const headline of world.news) {
           topics.add(headline.topic);
           if (headline.topic === 'property') expect(['home', 'haven']).toContain(headline.cityId);
+          // Taxes are news only where something is taxed; an investment, never a coin or a bond.
+          if (headline.topic === 'taxes') expect(headline.cityId).toBe('home');
+          if (headline.topic === 'asset') expect(['fund_world', 'stock_growth', 'stock_dividend', 'gold']).toContain(headline.assetId);
         }
       }
     }
-    expect([...topics].sort()).toEqual(['crypto', 'inflation', 'property', 'rates', 'regime']);
+    // No filler without filler to choose from.
+    expect([...topics].sort()).toEqual(['asset', 'crypto', 'inflation', 'property', 'rates', 'regime', 'taxes']);
+  });
+
+  it('mixes in filler, one of the content’s, that is never wrong and never repeats a topic', () => {
+    const content = withWorld({ noiseHeadlines: 4, headlinesPerRound: 8 });
+    const ids = new Set<number>();
+    for (let i = 0; i < 20; i++) {
+      const timeline = generateTimeline(`noise-${i}`, content);
+      for (let r = 0; r < 20; r++) {
+        const noise = timeline[r].news.filter((h) => h.topic === 'noise');
+        expect(noise).toHaveLength(1);
+        for (const h of noise) {
+          ids.add(h.id);
+          expect(headlineHeld(content, h, timeline[r], timeline[r + 1])).toBe(true);
+        }
+      }
+    }
+    expect([...ids].sort()).toEqual([0, 1, 2, 3]);
+  });
+
+  it('tells of a tax reform the round before it comes, in the city it comes to', () => {
+    const content = withWorld({ taxReformChancePct: 100, taxReformsPerGame: 1, taxReformStepsBp: [300], headlinesPerRound: 7, newsTruthPct: 100 });
+    const timeline = generateTimeline('reform-news', content);
+    expect(timeline[0].news).toContainEqual({ topic: 'taxes', cityId: 'home', trend: 'up' });
+    expect(timeline[1].news).toContainEqual({ topic: 'taxes', cityId: 'home', trend: 'flat' });
   });
 
   it('is true as often as the content says', () => {
@@ -101,6 +129,17 @@ describe('news', () => {
     expect(held({ topic: 'property', cityId: 'home', trend: 'down' }, fell)).toBe(true);
     expect(held({ topic: 'property', cityId: 'home', trend: 'up' }, fell)).toBe(false);
     expect(held({ topic: 'property', cityId: 'haven', trend: 'up' }, fell)).toBe(true);
+
+    const moved = next({ assetReturnBp: { ...now.assetReturnBp, stock_growth: -10, gold: 0 } });
+    expect(held({ topic: 'asset', assetId: 'stock_growth', trend: 'down' }, moved)).toBe(true);
+    expect(held({ topic: 'asset', assetId: 'gold', trend: 'up' }, moved)).toBe(true);
+    expect(held({ topic: 'asset', assetId: 'gold', trend: 'down' }, moved)).toBe(false);
+
+    const taxed = next({ taxShiftBp: { home: 200, haven: 0 } });
+    expect(held({ topic: 'taxes', cityId: 'home', trend: 'up' }, taxed)).toBe(true);
+    expect(held({ topic: 'taxes', cityId: 'home', trend: 'flat' }, taxed)).toBe(false);
+    expect(held({ topic: 'taxes', cityId: 'haven', trend: 'flat' }, taxed)).toBe(true);
+    expect(held({ topic: 'noise', id: 3 }, taxed)).toBe(true);
   });
 });
 

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
-import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -376,5 +376,12 @@ describe('worthBars', () => {
     expect(worthBars([0, 0]).bars).toEqual([{ y: 0, h: 0, negative: false }, { y: 0, h: 0, negative: false }]);
     expect(worthBars([-10, -20])).toEqual({ zero: 0, bars: [{ y: 0, h: 0.5, negative: true }, { y: 0, h: 1, negative: true }] });
     expect(worthBars([])).toEqual({ zero: 0, bars: [] });
+  });
+});
+
+describe('loanPlan', () => {
+  it('charges an even slice of the loan each round, with the interest of that round on what is still owed', () => {
+    // 30,000 at 10% a year, two years a round, over three rounds.
+    expect(loanPlan(30_000_00, 1_000, 3, 2)).toEqual({ payments: [16_000_00, 14_000_00, 12_000_00], interest: 12_000_00 });
   });
 });

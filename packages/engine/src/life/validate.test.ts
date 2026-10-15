@@ -116,7 +116,7 @@ describe('validateContent: life data', () => {
 
   it('checks the world rules', () => {
     const world = (over: Record<string, unknown>) => errors({ world: { ...c.world, ...over } as never });
-    expect(world({ headlinesPerRound: 6 })).toContain('world.headlinesPerRound must be a whole number from 0 to 5');
+    expect(world({ headlinesPerRound: 9 })).toContain('world.headlinesPerRound must be a whole number from 0 to 8');
     expect(world({ newsTruthPct: 130 })).toContain('world.newsTruthPct must be between 0 and 100');
     expect(world({ flatBandBp: -1 })).toContain('world.flatBandBp must be a whole, non-negative number');
     expect(world({ taxReformChancePct: -5 })).toContain('world.taxReformChancePct must be between 0 and 100');

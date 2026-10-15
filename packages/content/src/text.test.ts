@@ -208,7 +208,7 @@ describe.each(LOCALES)('content text: %s', (locale) => {
     const { text: ready } = textFor(locale);
     for (const [path, sentence] of strings(ready)) {
       const left = sentence.match(/\{[^}]*\}/g) ?? [];
-      expect(left.filter((p) => p !== '{city}'), path).toEqual([]);
+      expect(left.filter((p) => p !== '{city}' && p !== '{asset}'), path).toEqual([]);
     }
     expect(ready.cards.life_rolex_call.body).toContain(pack.items.watch_rolex);
     expect(ready.cards.inv_hot_tip.body).toContain('Tesla');
@@ -307,7 +307,7 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(171 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 8 + 5) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7);
+    expect(wanted.length).toBe(171 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 8 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7);
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.
     for (const assetId of Object.keys(assetLogo)) expect(content.assets.some((asset) => asset.id === assetId), assetId).toBe(true);
@@ -340,7 +340,9 @@ describe('content art', () => {
     expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
     expect(keys(focusArt)).toEqual(['exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation']);
     expect(keys(skillArt)).toEqual(['career', 'finance', 'health', 'languages', 'management', 'negotiation', 'network']);
-    expect(keys(topicArt)).toEqual(['crypto', 'inflation', 'property', 'rates', 'regime']);
+    expect(keys(topicArt)).toEqual(['asset', 'crypto', 'inflation', 'noise', 'property', 'rates', 'regime', 'taxes']);
+    // As many filler headlines in every language as the world draws from.
+    for (const locale of ['en', 'es', 'ru'] as const) expect(rawText(locale).headlines.noise).toHaveLength(content.world.noiseHeadlines);
   });
 
   it('gives every choice a picture of its own: no two ways of living, insurances or uses of focus share one', () => {

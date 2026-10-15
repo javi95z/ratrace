@@ -7,7 +7,7 @@ import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, Ite
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, debtLabel, orderLabel, priceHistory } from '@/game/present';
+import { ageAt, debtLabel, loanPlan, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
@@ -749,7 +749,23 @@ function DebtTab() {
           onConfirm={(a) => addOrder({ type: 'repay', debtId: repaying.id, amount: a })}
         />
       ) : null}
-      {borrowing ? <AmountSheet title={amount('borrow')} max={loan.room} onClose={() => setBorrowing(false)} onConfirm={(a) => addOrder({ type: 'borrow', amount: a })} /> : null}
+      {borrowing ? (
+        <AmountSheet
+          title={amount('borrow')}
+          max={loan.room}
+          onClose={() => setBorrowing(false)}
+          onConfirm={(a) => addOrder({ type: 'borrow', amount: a })}
+          preview={(a) => {
+            const plan = loanPlan(a, loan.rateBp, loan.termRounds, content.yearsPerRound);
+            return (
+              <div className="border-y-2 border-night-900 py-1">
+                <Row left={t('perRound')} right={plan.payments.map((paid) => fmt.money(paid)).join(' · ')} />
+                <Row left={t('interestTotal', { rate: fmt.rate(loan.rateBp) })} right={<span className="text-wine-300">{fmt.money(plan.interest)}</span>} />
+              </div>
+            );
+          }}
+        />
+      ) : null}
     </div>
   );
 }

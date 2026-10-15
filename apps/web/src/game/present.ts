@@ -38,6 +38,12 @@ export function headlineText({ text, names }: Words, h: Headline): string {
       return text.headlines.inflation[h.trend];
     case 'property':
       return text.headlines.property[h.trend].replace('{city}', names.cities[h.cityId]);
+    case 'asset':
+      return text.headlines.asset[h.trend].replace('{asset}', names.assets[h.assetId]?.name ?? h.assetId);
+    case 'taxes':
+      return text.headlines.taxes[h.trend].replace('{city}', names.cities[h.cityId]);
+    case 'noise':
+      return text.headlines.noise[h.id] ?? '';
   }
 }
 
@@ -423,4 +429,22 @@ export function prizedBadge(won: readonly string[]): BadgeDef | undefined {
   return badges
     .filter((badge) => won.includes(badge.id) && (rarityOf(badge.id) === 'rare' || rarityOf(badge.id) === 'legendary'))
     .sort((a, b) => RARITIES.indexOf(rarityOf(b.id)) - RARITIES.indexOf(rarityOf(a.id)))[0];
+}
+
+/**
+ * What a personal loan of `amount` costs, round by round, as the engine charges it: an even slice
+ * of what was lent each round, plus the interest of that round on what is still owed.
+ */
+export function loanPlan(amount: number, rateBp: number, termRounds: number, yearsPerRound: number): { payments: number[]; interest: number } {
+  const payments: number[] = [];
+  let owed = amount;
+  let interest = 0;
+  for (let left = termRounds; left >= 1 && owed > 0; left -= 1) {
+    const charged = Math.round((owed * rateBp * yearsPerRound) / 10_000);
+    const slice = left <= 1 ? owed : Math.ceil(owed / left);
+    payments.push(slice + charged);
+    interest += charged;
+    owed -= slice;
+  }
+  return { payments, interest };
 }

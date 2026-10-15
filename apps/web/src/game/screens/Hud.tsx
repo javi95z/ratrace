@@ -1,7 +1,7 @@
 'use client';
 
 import { frameArt, portraitArt } from '@ratrace/content';
-import { cashflow, cashflowLines, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
+import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -24,7 +24,7 @@ export function useShown(): GameView {
   return preview ? { ...view, player: preview.player } : view;
 }
 
-type Figure = 'cash' | 'flow' | 'status';
+type Figure = 'cash' | 'flow' | 'status' | 'ratRace';
 
 /**
  * What one figure of the HUD means, and what it is made of. Lines that are zero and say nothing
@@ -64,6 +64,8 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
         <Row className={total} left={t('perYear')} right={fmt.signed(whole.salaryAnnual + whole.passiveAnnual - whole.expensesAnnual)} />
       </>
     );
+  } else if (figure === 'ratRace') {
+    rows = <RatRace shown={shown} />;
   } else {
     const status = statusBreakdown(content, shown);
     rows = (
@@ -85,6 +87,56 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
     <>
       <p className="mb-1 text-[13px] leading-snug text-ink-200">{t(`about.${figure}`)}</p>
       <div className="text-[14px]">{rows}</div>
+    </>
+  );
+}
+
+/**
+ * The way out, laid bare: how much of the year's outgoings what comes in without working already
+ * pays, where that comes from, what is left to cover, and what getting out is worth.
+ */
+function RatRace({ shown }: { shown: GameView }) {
+  const t = useT('hud');
+  const { content, fmt } = useWords();
+  const preview = useGame((s) => s.preview);
+  const p = shown.player;
+  const years = content.yearsPerRound;
+  const escape = preview ? preview.escape : escapeProgress(content, shown);
+  const lines = cashflowLines(content, shown);
+  const passive = Math.floor(escape.passiveAfterTax / years);
+  const outgoings = Math.floor(escape.outgoings / years);
+  const before = lines.dividends + lines.interest + lines.rent + lines.otherPassive;
+  const tax = Math.max(0, before - passive);
+  const gap = outgoings - passive;
+  const pct = outgoings > 0 ? Math.min(100, Math.floor((passive * 100) / outgoings)) : 100;
+  const escaped = p.escapedAtRound !== null;
+  const good = (cents: number) => <span className="text-teal-300">{fmt.signed(cents)}</span>;
+  const bad = (cents: number) => <span className="text-wine-300">{fmt.signed(-cents)}</span>;
+  const total = 'mt-1 border-t-2 border-night-900 pt-2';
+  const state = escaped
+    ? t('wayOut.escaped', { age: ageAt(content, p.escapedAtRound ?? 0), multiplier: fmt.factor(escapeMultiplier(p.escapedAtRound, content.rounds, content.scoring)) })
+    : gap <= 0 && p.passiveStreak >= 1
+      ? t('wayOut.oneMore')
+      : t('wayOut.worth', { multiplier: fmt.factor(escapeMultiplier(shown.round, content.rounds, content.scoring)) });
+
+  return (
+    <>
+      <div className="my-2 flex items-baseline justify-between gap-3">
+        <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('wayOut.covered')}</span>
+        <span className={`pixel text-[26px] leading-none ${escaped ? 'text-teal-300' : 'text-gold-500'}`}>{pct}%</span>
+      </div>
+      <Bar value={passive} max={outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
+      <div className="mt-3">
+        {lines.dividends > 0 ? <Row left={t('dividends')} right={good(lines.dividends)} /> : null}
+        {lines.interest > 0 ? <Row left={t('interest')} right={good(lines.interest)} /> : null}
+        {lines.rent > 0 ? <Row left={t('rent')} right={good(lines.rent)} /> : null}
+        {lines.otherPassive > 0 ? <Row left={t('otherPassive')} right={good(lines.otherPassive)} /> : null}
+        {tax > 0 ? <Row left={t('wayOut.tax')} right={bad(tax)} /> : null}
+        <Row className={total} left={t('wayOut.passive')} sub={t('perYearShort')} right={<span className="text-teal-300">{fmt.money(passive)}</span>} />
+        <Row left={t('wayOut.outgoings')} sub={t('perYearShort')} right={<span className="text-wine-300">{fmt.money(outgoings)}</span>} />
+        <Row className={total} left={gap > 0 ? t('wayOut.missing') : t('wayOut.spare')} right={<span className={gap > 0 ? 'text-gold-500' : 'text-teal-300'}>{fmt.money(Math.abs(gap))}</span>} />
+      </div>
+      <p className="mt-2 text-[13px] leading-snug text-ink-200">{state}</p>
     </>
   );
 }
@@ -202,7 +254,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       {/* Away from the news, where the bar of a crisis is whole, a strip keeps it in sight. */}
       {compact ? <CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact /> : null}
 
-      <div title={t('ratRaceHint')}>
+      <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block w-full text-left">
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
           <span className="pixel">{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
           <span className="pixel text-[14px] text-ink-200">
@@ -210,7 +262,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
           </span>
         </div>
         <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
-      </div>
+      </button>
 
       <Sheet open={open !== null} onClose={() => setOpen(null)} title={open ? t(open) : ''} closeLabel={common('close')}>
         {open ? <Details figure={open} shown={shown} /> : null}

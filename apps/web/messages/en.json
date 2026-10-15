@@ -125,10 +125,23 @@
     "about": {
       "cash": "The money you have on hand. Your expenses and purchases come out of it, and it earns nothing while it waits.",
       "flow": "What comes in less what goes out in a year, before tax. Green, you have money left over; red, you are eating into your cash.",
-      "status": "Points for who you are and what you own. Within one ladder, your best thing counts in full and the rest only in part."
+      "status": "Points for who you are and what you own. Within one ladder, your best thing counts in full and the rest only in part.",
+      "ratRace": "You leave the rat race when what you earn without working, after tax, pays all your outgoings. Cover them two rounds in a row and you are out; a round that falls short puts you back in."
     },
     "openSettings": "Open settings",
-    "inJail": "In prison"
+    "inJail": "In prison",
+    "perYearShort": "A year",
+    "wayOut": {
+      "covered": "Covered",
+      "passive": "Passive income",
+      "tax": "Tax",
+      "outgoings": "Outgoings",
+      "missing": "Still short a year",
+      "spare": "To spare a year",
+      "oneMore": "This round already covers it. One more like it and you are out of the rat race.",
+      "worth": "Getting out now would multiply your score by {multiplier}. The sooner you get out, the more it is worth.",
+      "escaped": "You got out at {age}: your score is multiplied by {multiplier}. Keep your outgoings covered so you do not fall back in."
+    }
   },
   "settings": {
     "version": "Version {content} · engine {engine}",
@@ -195,7 +208,10 @@
       "crypto": "Crypto",
       "rates": "Interest rates",
       "inflation": "Inflation",
-      "property": "Housing"
+      "property": "Housing",
+      "asset": "Markets",
+      "taxes": "Taxes",
+      "noise": "Society"
     },
     "gossip": {
       "label": "Opinion",
@@ -446,7 +462,9 @@
       "noCredit": "After your bankruptcy, no bank lends to you until you are {age}.",
       "repay": "Repay",
       "left": "{rounds, plural, =0 {No fixed term} one {1 round left} other {# rounds left}}",
-      "rate": "{rate} a year"
+      "rate": "{rate} a year",
+      "perRound": "Paid each round",
+      "interestTotal": "Interest in all ({rate} a year)"
     },
     "lifestyle": {
       "work": "This round's focus",

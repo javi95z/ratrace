@@ -4,7 +4,13 @@ import type { Content, CryptoPhase, Headline, Regime, Trend, WorldState } from '
 const REGIMES: readonly Regime[] = ['expansion', 'boom', 'slowdown', 'recession', 'recovery'];
 const PHASES: readonly CryptoPhase[] = ['accumulation', 'bull', 'mania', 'winter'];
 const TRENDS: readonly Trend[] = ['up', 'down', 'flat'];
-const TOPICS: ReadonlyArray<Headline['topic']> = ['regime', 'rates', 'inflation', 'crypto', 'property'];
+const TOPICS: ReadonlyArray<Headline['topic']> = ['regime', 'rates', 'inflation', 'crypto', 'property', 'asset', 'taxes', 'noise'];
+
+/** The investments a headline may name: the ones that move, crypto aside, which has news of its own. */
+const newsworthy = (content: Content): string[] => content.assets.filter((asset) => asset.class !== 'crypto' && asset.class !== 'bond').map((asset) => asset.id);
+/** The cities whose taxes can change: those that tax something. */
+const taxing = (content: Content): string[] =>
+  content.cities.filter(({ tax }) => [...tax.incomeRatesBp, tax.capitalGainsBp, tax.dividendBp, tax.rentBp].some((rate) => rate > 0)).map((city) => city.id);
 
 function trendOf(change: number, flatBandBp: number): Trend {
   if (change > flatBandBp) return 'up';
@@ -26,6 +32,12 @@ function truth(content: Content, about: Headline, now: WorldState, next: WorldSt
       return { topic: 'inflation', trend: trendOf(next.inflationBp - now.inflationBp, band) };
     case 'property':
       return { topic: 'property', cityId: about.cityId, trend: (next.propertyReturnBp[about.cityId] ?? 0) >= 0 ? 'up' : 'down' };
+    case 'asset':
+      return { topic: 'asset', assetId: about.assetId, trend: (next.assetReturnBp[about.assetId] ?? 0) >= 0 ? 'up' : 'down' };
+    case 'taxes':
+      return { topic: 'taxes', cityId: about.cityId, trend: trendOf((next.taxShiftBp[about.cityId] ?? 0) - (now.taxShiftBp[about.cityId] ?? 0), 0) };
+    case 'noise':
+      return about;
   }
 }
 
@@ -44,7 +56,11 @@ export function headlineHeld(content: Content, headline: Headline, now: WorldSta
     case 'rates':
     case 'inflation':
     case 'property':
+    case 'asset':
+    case 'taxes':
       return 'trend' in real && real.trend === headline.trend;
+    case 'noise':
+      return true;
   }
 }
 
@@ -71,6 +87,12 @@ function falsehood(content: Content, real: Headline, now: WorldState, rng: Rng):
       return { topic: 'inflation', trend: others(TRENDS, real.trend, rng) };
     case 'property':
       return { topic: 'property', cityId: real.cityId, trend: real.trend === 'up' ? 'down' : 'up' };
+    case 'asset':
+      return { topic: 'asset', assetId: real.assetId, trend: real.trend === 'up' ? 'down' : 'up' };
+    case 'taxes':
+      return { topic: 'taxes', cityId: real.cityId, trend: others(TRENDS, real.trend, rng) };
+    case 'noise':
+      return real;
   }
 }
 
@@ -82,25 +104,37 @@ function falsehood(content: Content, real: Headline, now: WorldState, rng: Rng):
 export function writeNews(seed: string, content: Content, timeline: WorldState[]): void {
   const rules = content.world;
   const rng = new Rng(seedRng(seed, 'news'));
-  const count = Math.min(rules.headlinesPerRound, TOPICS.length);
+  const assets = newsworthy(content);
+  const taxed = taxing(content);
+  // A topic with nothing to say in this content is never drawn.
+  const open = TOPICS.filter((topic) => (topic === 'asset' ? assets.length > 0 : topic === 'taxes' ? taxed.length > 0 : topic === 'noise' ? rules.noiseHeadlines > 0 : true));
+  const count = Math.min(rules.headlinesPerRound, open.length);
 
   for (let r = 0; r + 1 < timeline.length; r++) {
     const now = timeline[r];
     const next = timeline[r + 1];
-    const topics = [...TOPICS];
+    const topics = [...open];
     const news: Headline[] = [];
     for (let i = 0; i < count; i++) {
       const topic = topics.splice(rng.int(topics.length), 1)[0];
+      // Taxes are news where a reform is coming, if one is; anywhere else they are a guess.
+      const reformed = taxed.filter((cityId) => (next.taxShiftBp[cityId] ?? 0) !== (now.taxShiftBp[cityId] ?? 0));
       const about: Headline =
         topic === 'property'
           ? { topic, cityId: content.cities[rng.int(content.cities.length)].id, trend: 'up' }
-          : topic === 'regime'
+          : topic === 'asset'
+            ? { topic, assetId: assets[rng.int(assets.length)], trend: 'up' }
+            : topic === 'taxes'
+              ? { topic, cityId: reformed.length > 0 ? reformed[0] : taxed[rng.int(taxed.length)], trend: 'flat' }
+              : topic === 'noise'
+                ? { topic, id: rng.int(rules.noiseHeadlines) }
+                : topic === 'regime'
             ? { topic, regime: now.regime }
             : topic === 'crypto'
               ? { topic, phase: now.cryptoPhase }
               : { topic, trend: 'flat' };
       const real = truth(content, about, now, next);
-      news.push(rng.chance(rules.newsTruthPct) ? real : falsehood(content, real, now, rng));
+      news.push(topic === 'noise' || rng.chance(rules.newsTruthPct) ? real : falsehood(content, real, now, rng));
     }
     now.news = news;
   }
@@ -113,9 +147,7 @@ export function writeNews(seed: string, content: Content, timeline: WorldState[]
 export function applyTaxReforms(seed: string, content: Content, timeline: WorldState[]): void {
   const rules = content.world;
   const rng = new Rng(seedRng(seed, 'tax'));
-  const taxed = content.cities
-    .filter(({ tax }) => [...tax.incomeRatesBp, tax.capitalGainsBp, tax.dividendBp, tax.rentBp].some((rate) => rate > 0))
-    .map((city) => city.id);
+  const taxed = taxing(content);
 
   let reforms = 0;
   for (let r = 1; r < timeline.length; r++) {

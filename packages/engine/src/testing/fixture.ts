@@ -256,6 +256,7 @@ const base: Content = {
   // No reforms and no cards by default, so tests of money are not disturbed. Tests of either add their own.
   world: {
     headlinesPerRound: 3,
+    noiseHeadlines: 0,
     newsTruthPct: 70,
     flatBandBp: 25,
     taxReformChancePct: 0,

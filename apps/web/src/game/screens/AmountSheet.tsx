@@ -29,13 +29,15 @@ interface Props {
   start?: number;
   /** Shown under the button: another thing that can be done from here. */
   footer?: ReactNode;
+  /** What the chosen amount comes to, under the slider, kept up to date as it moves. */
+  preview?: (amount: number) => ReactNode;
 }
 
 /**
  * Picks an amount of money: a slider, chips for a quarter, a half and all of it, and one button.
  * It is mounted only while it is open, so it always starts from zero.
  */
-export function AmountSheet({ title, max, onClose, onConfirm, children, start = 0, footer }: Props) {
+export function AmountSheet({ title, max, onClose, onConfirm, children, start = 0, footer, preview }: Props) {
   const t = useT('finance.amount');
   const common = useT('common');
   const { fmt } = useWords();
@@ -94,6 +96,7 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
               </button>
             ))}
           </div>
+          {preview && amount > 0 ? preview(amount) : null}
           <p id={availableId} className="text-center text-[12px] text-ink-300">{t('available', { amount: fmt.money(max) })}</p>
           <p id={helpId} className="keyboard-hint justify-center text-center text-[12px] text-ink-300">{t('keyboardHelp')}</p>
           <Button
