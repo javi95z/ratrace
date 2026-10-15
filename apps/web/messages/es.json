@@ -1376,5 +1376,31 @@
         "about": "Empiezas con un préstamo de {amount} que devolver."
       }
     }
+  },
+  "rivals": {
+    "topic": "Tu gente",
+    "names": {
+      "classmate": "Álvaro|Javier|Sergio|Pablo|Diego|Iván",
+      "cousin": "Lucía|Marta|Paula|Elena|Carmen|Sara",
+      "ex": "Daniel|Rubén|Hugo|Adrián|Marcos|Raúl"
+    },
+    "who": {
+      "classmate": "{name}, de tu clase",
+      "cousin": "{name}, tu prima",
+      "ex": "{name}, tu ex"
+    },
+    "stories": {
+      "passedYou": "{who} ya tiene más que tú",
+      "youPassed": "Ya tienes más que {who}",
+      "millionaire": "{who} ya tiene su primer millón",
+      "windfall": "{who} hereda de una tía lejana y lo cuenta en cada cena",
+      "blow": "{who} tiene un año horrible: despido, avería y multa",
+      "boom": "{who} estrena coche y lo sube a todas las redes",
+      "bust": "{who} lo pierde casi todo en bolsa y cripto"
+    },
+    "title": "Tus rivales",
+    "place": "Quedaste {n}.º de {of}",
+    "you": "Tú",
+    "about": "Gente de tu edad que vivió su vida al lado de la tuya, en la misma economía."
   }
 }

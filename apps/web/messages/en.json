@@ -1376,5 +1376,31 @@
         "about": "You start with a loan of {amount} to pay back."
       }
     }
+  },
+  "rivals": {
+    "topic": "Your people",
+    "names": {
+      "classmate": "Oliver|Jack|Harry|Tom|James|Ethan",
+      "cousin": "Emily|Sophie|Olivia|Grace|Chloe|Lucy",
+      "ex": "Daniel|Ryan|Lewis|Adam|Nathan|Sam"
+    },
+    "who": {
+      "classmate": "{name} from school",
+      "cousin": "{name}, your cousin",
+      "ex": "{name}, your ex"
+    },
+    "stories": {
+      "passedYou": "{who} now has more than you",
+      "youPassed": "You now have more than {who}",
+      "millionaire": "{who} makes a first million",
+      "windfall": "{who} inherits from a distant aunt and mentions it at every dinner",
+      "blow": "{who} has an awful year: laid off, a breakdown and a fine",
+      "boom": "{who} shows off a new car on every social network",
+      "bust": "{who} loses almost everything on stocks and crypto"
+    },
+    "title": "Your rivals",
+    "place": "You came {n} of {of}",
+    "you": "You",
+    "about": "People your age who lived their lives beside yours, in the same economy."
   }
 }

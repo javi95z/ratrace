@@ -22,6 +22,7 @@ import { Loop } from './Loop';
 import { Medal } from './Medal';
 import { ShareCard } from './ShareCard';
 import { WorthGraph } from './WorthGraph';
+import { useRivals } from '@/game/useRivals';
 
 /** Fewer lives than this to compare with say nothing yet: a share of three is not a standing. */
 export const COMPARE_MIN = 5;
@@ -69,6 +70,40 @@ function Part({ label, value }: { label: string; value: string }) {
 }
 
 /** How the life ended. Nothing to show until there is a life. */
+/**
+ * How the life ended beside the lives of the player's rivals: everyone by net worth, in the dollars
+ * of age 22, the player among them, and the place they came.
+ */
+function RivalsBoard({ history }: { history: number[] }) {
+  const t = useT('rivals');
+  const { fmt } = useWords();
+  const people = useRivals();
+  if (!people || history.length === 0) return null;
+  const last = history.length - 1;
+  const rows = [
+    { key: 'you', name: t('you'), worth: history[last], you: true },
+    ...people.rivals.map((rival) => ({ key: rival.id, name: people.who(rival), worth: rival.worth[last] ?? 0, you: false })),
+  ].sort((a, b) => b.worth - a.worth);
+  const place = rows.findIndex((row) => row.you) + 1;
+  return (
+    <Panel title={t('title')} label={t('title')}>
+      <p className="pixel text-[20px] text-gold-500">{t('place', { n: place, of: rows.length })}</p>
+      <p className="mb-2 text-[12px] leading-snug text-ink-300">{t('about')}</p>
+      <ol>
+        {rows.map((row, i) => (
+          <li key={row.key} className={`flex items-baseline justify-between gap-3 border-t-2 border-night-900 py-1.5 first:border-t-0 ${row.you ? 'text-gold-500' : ''}`}>
+            <span className="min-w-0 truncate">
+              <span className="pixel mr-2 text-ink-300">{i + 1}</span>
+              <span className={row.you ? 'pixel text-[16px]' : 'text-[14px]'}>{row.name}</span>
+            </span>
+            <span className="pixel shrink-0 text-[15px]">{fmt.compact(row.worth)}</span>
+          </li>
+        ))}
+      </ol>
+    </Panel>
+  );
+}
+
 export function End() {
   const view = useGame((s) => s.view);
   return view ? <Ended view={view} /> : null;
@@ -265,6 +300,8 @@ function Ended({ view }: { view: GameView }) {
             </div>
             <p className="mt-2 text-center text-[12px] text-ink-300">{t('graph')}</p>
           </Panel>
+
+          <RivalsBoard history={history} />
 
           <LifeLine view={view} story={story} />
 

@@ -4,6 +4,8 @@ import { topicArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
+import { rivalNews } from '@/game/rivals';
+import { useRivals } from '@/game/useRivals';
 import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 import { CityBanner } from './CityBanner';
@@ -44,8 +46,13 @@ export function Headlines() {
   const words = useWords();
   const { names, text, fmt } = words;
   const view = useGame((s) => s.view);
+  const history = useGame((s) => s.history);
+  const people = useRivals();
+  const r = useT('rivals');
   if (!view) return null;
   const world = view.timeline[view.round];
+  // The people the player grew up with make the paper too, now and then.
+  const gossip = people ? rivalNews(people.rivals, history, view.round) : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -77,6 +84,19 @@ export function Headlines() {
               </span>
             </li>
           ))}
+          {gossip && people ? (
+            <li className="flex items-center gap-2.5 border-t border-dashed border-ink-300 py-1.5">
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 bg-gold-200 p-1">
+                <Sprite id="icon.percentile" />
+              </span>
+              <span className="min-w-0">
+                <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
+                  {r('topic')}
+                </span>
+                <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{r(`stories.${gossip.story}`, { who: people.who(gossip.rival) })}</span>
+              </span>
+            </li>
+          ) : null}
         </ul>
       </section>
 
