@@ -1,0 +1,92 @@
+// Rooms: two to six friends live the same life in the same world, a round at a time.
+//
+// The logic is in `_shared/rooms.ts`, where it is tested without a server. This file is the
+// database behind it: the room's own functions in the database, each of which holds the room's
+// row while it works, and plain reads for the rest.
+//
+// It reads and writes with the project's secret key, which the platform gives it and which skips
+// the rules that keep players out of the rooms they are not in. Who is asking comes from the
+// token, never the body.
+import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { RunRow } from '../_shared/finish.ts';
+import { CURRENT, GAMES } from '../_shared/game/index.ts';
+import { json, readJson } from '../_shared/http.ts';
+import { allowed } from '../_shared/rate.ts';
+import { rooms } from '../_shared/rooms.ts';
+import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
+
+const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at';
+const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at';
+const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
+
+export default {
+  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+    const userId = ctx.userClaims?.id;
+    if (typeof userId !== 'string') return json(401, { error: 'no-player' });
+    const read = await readJson(req);
+    if ('refusal' in read) return read.refusal;
+
+    const db = ctx.supabaseAdmin;
+    const must = <T>(result: { data: T; error: { message: string } | null }): T => {
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    };
+    const call = async <T>(name: string, args: Record<string, unknown>): Promise<T> => must(await db.rpc(name, args)) as T;
+
+    const reply = await rooms(
+      GAMES,
+      {
+        current: CURRENT,
+        allow: (user, kind) => allowed(db, user, kind),
+        newId: () => crypto.randomUUID(),
+        newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
+        now: () => new Date(),
+        unlockedLives: async (user) => {
+          const row = must(await db.from('player_progress').select('progress').eq('user_id', user).maybeSingle()) as { progress?: { unlocked?: unknown } } | null;
+          const unlocked = row?.progress?.unlocked;
+          return typeof unlocked === 'object' && unlocked !== null ? Object.keys(unlocked) : [];
+        },
+        myRoom: async (user) => {
+          const row = must(
+            await db
+              .from('room_players')
+              .select('room_id, joined_at, rooms!inner(status)')
+              .eq('user_id', user)
+              .is('left_at', null)
+              .in('rooms.status', ['open', 'playing', 'finished'])
+              .order('joined_at', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+          ) as { room_id: string } | null;
+          return row?.room_id ?? null;
+        },
+        loadRoom: async (id) => must(await db.from('rooms').select(ROOM).eq('id', id).maybeSingle()) as RoomRow | null,
+        members: async (room) => must(await db.from('room_players').select(MEMBER).eq('room_id', room).order('joined_at', { ascending: true })) as MemberRow[],
+        names: async (ids) => {
+          if (ids.length === 0) return {};
+          const rows = must(await db.from('profiles').select('user_id, nickname').in('user_id', ids)) as Array<{ user_id: string; nickname: string | null }>;
+          return Object.fromEntries(rows.map((row) => [row.user_id, row.nickname]));
+        },
+        open: (room) => call('room_open', { p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
+        join: (code, user, engine, content) => call('room_join', { p_code: code, p_member: user, p_engine: engine, p_content: content }),
+        start: (room, host, seed, games, deadline) => call('room_start', { p_room: room, p_host: host, p_seed: seed, p_games: games, p_deadline: deadline.toISOString() }),
+        leave: (room, user) => call('room_leave', { p_room: room, p_member: user }),
+        closeIfStale: (room, now) => call('room_close', { p_room: room, p_now: now.toISOString() }),
+        loadGame: async (id) => must(await db.from('games').select(GAME).eq('id', id).maybeSingle()) as RoomGameRow | null,
+        loadSeed: async (id) => (must(await db.from('game_secrets').select('seed').eq('game_id', id).maybeSingle()) as { seed: string } | null)?.seed ?? null,
+        loadOrders: async (room, round) => {
+          const rows = must(await db.from('room_orders').select('user_id, orders').eq('room_id', room).eq('round', round)) as Array<{ user_id: string; orders: unknown[] }>;
+          return Object.fromEntries(rows.map((row) => [row.user_id, row.orders]));
+        },
+        step: (room, round, user, game, asRead, log, gameRound) =>
+          call('room_step', { p_room: room, p_round: round, p_member: user, p_game: game, p_as_read: asRead, p_log: log, p_game_round: gameRound }),
+        submit: (room, round, user, orders) => call('room_submit', { p_room: room, p_round: round, p_member: user, p_orders: orders }),
+        turn: (room, round, deadline, lives) => call('room_turn', { p_room: room, p_round: round, p_deadline: deadline === null ? null : deadline.toISOString(), p_lives: lives }),
+        saveRun: async (run: RunRow) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
+      },
+      userId,
+      read.value,
+    );
+    return json(reply.status, reply.body);
+  }),
+};

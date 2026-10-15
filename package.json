@@ -18,7 +18,7 @@
     "online:test-db": "pnpm --filter @ratrace/online-tools test-db",
     "online:bundle": "pnpm --filter @ratrace/online-tools bundle",
     "online:live-check": "pnpm --filter @ratrace/online-tools live-check",
-    "online:deploy": "pnpm online:bundle && supabase functions deploy engine finish-run ranked --use-api && pnpm online:bundle --shipped",
+    "online:deploy": "pnpm online:bundle && supabase functions deploy engine finish-run ranked rooms --use-api && pnpm online:bundle --shipped",
     "catalog": "pnpm --filter @ratrace/play catalog"
   },
   "devDependencies": {

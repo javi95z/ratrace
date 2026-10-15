@@ -430,3 +430,7 @@ verify_jwt = true
 # A ranked life: the server keeps the seed and plays every step. Signed-in players only.
 [functions.ranked]
 verify_jwt = true
+
+# Rooms: friends living the same life a round at a time; the server plays every member's life. Signed-in players only.
+[functions.rooms]
+verify_jwt = true

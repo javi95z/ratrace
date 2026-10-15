@@ -309,6 +309,101 @@ try {
   check(statusOf(third) === 200 && firstOfTwo.data?.status === 'abandoned', 'and it is given up for the new one when the request names it');
   const givenUp = await askRanked(a, { action: 'abandon', gameId: (third.data as { gameId: string }).gameId });
   check(statusOf(givenUp) === 200 && statusOf(await askRanked(a, { action: 'view', gameId: (third.data as { gameId: string }).gameId })) === 409, 'and a ranked life can be given up');
+
+  // ---------------------------------------------------------------- rooms
+  // The two guests open a room and join it, hear of it through Realtime, and play it through the real function a round
+  // at a time: alike for three rounds, then one leaves while the other waits, which turns the round, and the other plays
+  // it alone to its end.
+  type Member = { userId: string; name: string | null; me: boolean; host: boolean; ready: boolean; left: boolean; standing: { score: number } | null };
+  type Room = { id: string; code: string; status: string; round: number; rounds: number; deadline: string | null; now: string; members: Member[] };
+  type Life = { step: number; view: { phase: string; finished: boolean; round: number; answered: number }; events: unknown[]; run?: { mode: string; verified: boolean; score: number } };
+  const askRoom = (who: typeof a, body: Record<string, unknown>) => who.functions.invoke('rooms', { body }) as Promise<Answer>;
+  const roomIn = (answer: Answer) => (answer.data as { room?: Room } | null)?.room ?? null;
+  const lifeIn = async (who: typeof a, roomId: string) => (await askRoom(who, { action: 'view', roomId })).data as Life | null;
+  /** Answers every card of the member's hand with its first option, then plays the round with no orders. */
+  const playRound = async (who: typeof a, roomId: string) => {
+    let life = await lifeIn(who, roomId);
+    while (life && !life.view.finished && life.view.phase === 'cards') {
+      const card = await askRoom(who, { action: 'card', roomId, step: life.step, option: 0 });
+      if (statusOf(card) !== 200) throw new Error(`a card in the room was refused with ${statusOf(card)}`);
+      life = { ...life, step: (card.data as { step: number }).step, view: (card.data as { view: Life['view'] }).view };
+    }
+    if (!life) throw new Error('the room has no life for this guest');
+    const played = await askRoom(who, { action: 'submit', roomId, step: life.step, orders: [] });
+    if (statusOf(played) !== 200) throw new Error(`a round in the room was refused with ${statusOf(played)}`);
+    return played;
+  };
+
+  const opened = await askRoom(a, { action: 'open', lifeId: 'nurse', seconds: 90, ...versions });
+  const room = roomIn(opened);
+  check(statusOf(opened) === 200 && /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/.test(room?.code ?? '') && room?.status === 'open', 'a guest opens a room, with a code of six characters');
+  if (!room) throw new Error('no room was opened');
+  const joined = await askRoom(b, { action: 'join', code: ` ${room.code.toLowerCase()} `, ...versions });
+  const roomForB = roomIn(joined);
+  check(statusOf(joined) === 200 && roomForB?.members.length === 2 && roomForB.members[0].name === `check_${idA.slice(0, 8)}` && roomForB.members[1].me, 'another guest joins it by its code, typed any way, and sees who opened it by name');
+  const tables = await b.from('rooms').select('id').eq('id', room.id);
+  const ordersSeen = await b.from('room_orders').select('round');
+  const strangers = await nobody.from('rooms').select('id');
+  check(tables.data?.length === 1 && ordersSeen.error !== null && (strangers.error !== null || (strangers.data ?? []).length === 0), 'a member reads their room; nobody reads the orders kept for a round, and a visitor reads no room');
+  check(statusOf(await askRoom(b, { action: 'start', roomId: room.id })) === 403, 'only the host starts the room');
+
+  // B listens to the room as a page in it does, and hears of it starting.
+  const heard: string[] = [];
+  const channel = b
+    .channel(`room:${room.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${room.id}` }, (change) => heard.push(`rooms:${change.eventType}`))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${room.id}` }, (change) => heard.push(`room_players:${change.eventType}`));
+  const listening = await new Promise<boolean>((resolve) => {
+    const timer = setTimeout(() => resolve(false), 15_000);
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        clearTimeout(timer);
+        resolve(true);
+      }
+    });
+  });
+  const started = await askRoom(a, { action: 'start', roomId: room.id });
+  const playing = roomIn(started);
+  const due = playing?.deadline ? Date.parse(playing.deadline) - Date.parse(playing.now) : 0;
+  check(statusOf(started) === 200 && playing?.status === 'playing' && playing.round === 0 && due === 90_000, 'the host starts it, and its first round is due in the seconds the room was opened with');
+  for (let waited = 0; waited < 10_000 && !heard.includes('rooms:UPDATE'); waited += 250) await new Promise((resolve) => setTimeout(resolve, 250));
+  check(listening && heard.includes('rooms:UPDATE'), 'a member hears through Realtime that their room has changed');
+
+  // Three rounds alike: both lives stay alike, and neither sees the other before a round turns.
+  const lifeA0 = await lifeIn(a, room.id);
+  const lifeB0 = await lifeIn(b, room.id);
+  check(lifeA0 !== null && lifeB0 !== null && JSON.stringify(lifeA0.view) === JSON.stringify(lifeB0.view) && !('seed' in (lifeA0.view as object)), 'every member begins exactly alike, and is shown no seed');
+  let alike = true;
+  let unseen = true;
+  for (let round = 0; round < 3; round++) {
+    const waiting = roomIn(await playRound(a, room.id));
+    const meanwhile = roomIn(await askRoom(b, { action: 'state', roomId: room.id }));
+    if (!meanwhile?.members[0].ready || meanwhile.members.some((m) => m.standing !== null && round === 0) || waiting?.round !== round) unseen = false;
+    const turned = await playRound(b, room.id);
+    const result = (turned.data as { result?: { view: { round: number } } } | null)?.result;
+    if (result?.view.round !== round + 1) unseen = false;
+    if (JSON.stringify((await lifeIn(a, room.id))?.view) !== JSON.stringify((await lifeIn(b, room.id))?.view)) alike = false;
+  }
+  check(unseen, 'a member who has played waits, shown only as ready; the last to play turns the round and is answered it');
+  check(alike, 'two members who choose alike live alike, round after round');
+
+  // A plays the fourth round and waits; B leaves, which gives B's life up and turns the round for A.
+  await playRound(a, room.id);
+  const left = await askRoom(b, { action: 'leave', roomId: room.id });
+  const afterLeaving = roomIn(await askRoom(a, { action: 'state', roomId: room.id }));
+  const bGame = await b.from('games').select('status, mode').eq('room', room.id).maybeSingle();
+  check(statusOf(left) === 200 && afterLeaving?.round === 4 && afterLeaving.members[1].left && bGame.data?.status === 'abandoned' && bGame.data.mode === 'room', 'a member who leaves gives their life up, and the room stops waiting for them');
+
+  // A plays on alone to the end: each round turns as soon as it is played.
+  let last: Answer | null = null;
+  for (let round = 4; round < content.rounds; round++) last = await playRound(a, room.id);
+  const ended = roomIn(last as Answer);
+  const finalLife = await lifeIn(a, room.id);
+  const roomRun = await a.from('runs').select('mode, verified, score').eq('game_id', (await a.from('games').select('id').eq('room', room.id).maybeSingle()).data?.id ?? '').maybeSingle();
+  check(ended?.status === 'finished' && finalLife?.view.finished === true && roomRun.data?.mode === 'room' && roomRun.data.verified === true && ended.members[0].standing?.score === roomRun.data.score && finalLife.run?.score === roomRun.data.score,
+    'the room ends after its last round with a run of its own for the life, written by the server, and the room\'s order by score');
+  check(statusOf(await askRoom(a, { action: 'leave', roomId: room.id })) === 200 && roomIn(await askRoom(a, { action: 'mine' })) === null, 'a member leaves a room that is over, and is in none');
+  await b.removeChannel(channel);
 } catch (error) {
   check(false, error instanceof Error ? error.message : String(error));
 } finally {
