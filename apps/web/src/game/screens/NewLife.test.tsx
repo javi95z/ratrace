@@ -57,11 +57,11 @@ describe('choosing a life', () => {
     renderGame(<NewLife />, memoryServices());
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     const lives = screen.getAllByRole('radio');
-    expect(lives).toHaveLength(16);
+    expect(lives).toHaveLength(20);
     expect(lives.filter((life) => !(life as HTMLButtonElement).disabled).map((life) => within(life).getByText(/Nurse|Software engineer|Civil servant/).textContent)).toEqual([
       'Nurse', 'Software engineer', 'Civil servant',
     ]);
-    expect(screen.getAllByText(/To unlock/)).toHaveLength(13);
+    expect(screen.getAllByText(/To unlock/)).toHaveLength(17);
   });
 
   it('opens a life the player has unlocked, and marks it', async () => {
@@ -71,7 +71,7 @@ describe('choosing a life', () => {
     renderGame(<NewLife />, services);
     const rider = await screen.findByRole('radio', { name: /^Delivery rider/ });
     await waitFor(() => expect((rider as HTMLButtonElement).disabled).toBe(false));
-    expect(screen.getAllByText(/To unlock/)).toHaveLength(12);
+    expect(screen.getAllByText(/To unlock/)).toHaveLength(16);
     await user.click(rider);
     await user.click(screen.getByRole('button', { name: 'Start this life' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));

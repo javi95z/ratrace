@@ -27,6 +27,16 @@ export const cards: Record<string, CardText> = {
     'Rechazarlo',
     'Hacer las maletas',
   ]),
+  career_transfer_east: c('Una oficina en el este', 'La empresa abre mesas en {city:tokyo} y {city:moscow}, y busca a alguien que conozca el trabajo.', [
+    'Quedarte donde estás',
+    'Irte a {city:tokyo}',
+    'Irte a {city:moscow}',
+  ]),
+  career_transfer_west: c('Una oficina en el oeste', 'Dos plazas, con todo pagado: una en {city:mexico_city} y otra en {city:zurich}.', [
+    'Quedarte donde estás',
+    'Irte a {city:mexico_city}',
+    'Irte a {city:zurich}',
+  ]),
   career_overtime_crunch: c('Semanas de entrega', 'Han adelantado la fecha. Alguien tiene que quedarse hasta tarde un mes.', [
     ['Hacer lo justo', 'Nadie se da cuenta.', 'Alguien se ha dado cuenta.'],
     'Echar horas',

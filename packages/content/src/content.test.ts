@@ -32,15 +32,15 @@ describe('the v1 content', () => {
     // Dearest last, so the shop reads as a ladder.
     const prices = content.propertyTypes.map((type) => type.pricePct);
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
-    expect(content.cards).toHaveLength(135);
-    expect(lives).toHaveLength(16);
+    expect(content.cards).toHaveLength(137);
+    expect(lives).toHaveLength(20);
   });
 
   it('has the number of cards the spec sets for each category', () => {
     const count: Record<string, number> = {};
     for (const card of content.cards) count[card.category] = (count[card.category] ?? 0) + 1;
     expect(count).toEqual({
-      career: 20, education: 7, business: 11, investing: 12, housing: 11, lifestyle: 12,
+      career: 22, education: 7, business: 11, investing: 12, housing: 11, lifestyle: 12,
       family: 12, health: 5, luck: 8, world: 18, tax: 8, laterLife: 11,
     });
   });

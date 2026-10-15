@@ -6,6 +6,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_raise: ['The review comes and goes. The rent does not.', null, null, null],
   career_competitor_offer: ['You stay. Your boss will never know how close it was.', 'New desk, new badge, and everything to learn again.', null],
   career_relocation: ['Someone else gets the promotion. You keep your neighbourhood.', 'Boxes, a one-way ticket and a new title on the card.'],
+  career_transfer_east: ['Someone else goes. You keep your street.', 'A capsule flat, trains that are never late, and your name in two alphabets.', 'Fur hats, a flat tax and a desk on the thirtieth floor of a glass tower.'],
+  career_transfer_west: ['Someone else goes. You keep your street.', 'Tacos at the corner, sun at noon and a rent you can actually pay.', 'Clean trams, a quiet lake and a payslip that makes you count the zeros twice.'],
   career_overtime_crunch: [null, 'A month of cold dinners. It ships, and the payslip shows it.'],
   career_layoff: ['You sign, pick up your plant and leave with a cheque.', null, 'Half a year of notes and interviews. You come back knowing more.'],
   career_toxic_boss: ['You hold on. Each midnight email costs you a little more.', null, 'Another team, another boss, and a few months to catch up.'],

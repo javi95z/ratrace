@@ -147,6 +147,6 @@ describe('what a step of a life adds to the profile', () => {
 
   it('can hold every badge there is', () => {
     const every = profileAfter(content, lives, newProfile(), step({ earned: badges.map((b) => b.id) }));
-    expect(Object.keys(every.profile.badges)).toHaveLength(33);
+    expect(Object.keys(every.profile.badges)).toHaveLength(36);
   });
 });

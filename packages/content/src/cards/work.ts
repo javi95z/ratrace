@@ -27,6 +27,18 @@ export const careerCards: CardDef[] = [
     {},
     { effects: { job: { levelDelta: 1 }, moveCity: 'london', cash: usd(4_000), skills: { languages: 1 } } },
   ]),
+  // An employer with offices abroad sends someone with a rung behind them: a transfer costs the career nothing,
+  // and pays the move. No bonus on top: a cheap city is reward enough.
+  card('career_transfer_east', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3, notCities: ['tokyo', 'moscow'] } }, [
+    {},
+    { when: { careers: ['tech', 'sales', 'finance', 'hospitality'] }, effects: { moveCity: 'tokyo', salaryModPct: 5, skills: { languages: 1 } } },
+    { when: { careers: ['tech', 'finance', 'public', 'education'] }, effects: { moveCity: 'moscow', salaryModPct: 3, skills: { languages: 1 } } },
+  ]),
+  card('career_transfer_west', 'career', { once: true, when: { employed: true, minLevel: 1, minRound: 3, notCities: ['mexico_city', 'zurich'] } }, [
+    {},
+    { effects: { moveCity: 'mexico_city', skills: { languages: 1 } } },
+    { when: { careers: ['finance', 'medicine', 'law', 'tech'] }, effects: { moveCity: 'zurich', salaryModPct: 4 } },
+  ]),
   card('career_overtime_crunch', 'career', { cooldown: 3, when: { employed: true } }, [
     { outcomes: [{ weight: 80, effects: {} }, { weight: 20, effects: { salaryModPct: -2 } }] },
     { effects: { focus: 1, cashSalaryPct: 12, careerSkill: 1 } },
