@@ -186,7 +186,10 @@ export function BusinessTab() {
                 <Tag tone="good">{t('yield', { rate: fmt.rate(kind.yieldBp) })}</Tag>
                 <Tag tone={kind.cyclePct > 0 ? 'good' : kind.cyclePct < 0 ? 'bad' : 'plain'}>{t('economy', { pct: signedPct(kind.cyclePct) })}</Tag>
                 <Tag>{t('managerShare', { pct: kind.managerPct })}</Tag>
+                {/* The start is the hard part: it may not survive its first round, and it takes a while to find its customers. */}
+                {kind.failChancePct > 0 ? <Tag tone="bad">{t('failChance', { pct: kind.failChancePct })}</Tag> : null}
               </div>
+              <p className="mt-1 text-[12px] leading-snug text-ink-300">{t('slowStart', { first: content.business.rampPct[0] ?? 100, second: content.business.rampPct[1] ?? 100, back: content.business.failRecoverPct })}</p>
               {kind.lock !== null ? (
                 <p className="mt-1.5 text-[12px] leading-snug text-gold-200">{text.reasons[kind.lock]}</p>
               ) : shown.player.cash < kind.minCapital ? (

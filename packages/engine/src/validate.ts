@@ -143,6 +143,9 @@ export function validateContent(c: Content): string[] {
   if (!Array.isArray(business.payouts) || business.payouts.length === 0 || business.payouts.some((share, i) => !isCount(share) || share > 100 || (i > 0 && share <= business.payouts[i - 1]))) {
     errors.push('business.payouts must be whole percentages from 0 to 100, rising');
   }
+  if (!Array.isArray(business.rampPct) || business.rampPct.some((pct) => !(isCount(pct) && pct <= 100))) errors.push('business.rampPct must be whole percentages up to 100');
+  if (!isCount(business.managementFailOffPct) || !(isCount(business.failRecoverPct) && business.failRecoverPct <= 100)) errors.push('business needs whole numbers for the management off a failure and what a failure gives back');
+  for (const type of business.types ?? []) if (!(isCount(type.failPct) && type.failPct <= 100)) errors.push(`business type ${type.id} needs a chance of failing from 0 to 100`);
   if (!within(business.neglectProfitPct, 0, 100) || !within(business.neglectDecayBp, 0, 10_000)) errors.push('business neglect must take a share of the profit and of the capital, no more than all of either');
   for (const regime of REGIMES) {
     // Above 100, a business could be opened and sold in one round for a profit, all day.
@@ -430,10 +433,11 @@ export function validateStart(content: Content, start: StartConfig): string[] {
     else {
       const only = limits.onlyAssets;
       if (only !== undefined && !(Array.isArray(only) && only.length > 0 && only.every((id) => content.assets.some((asset) => asset.id === id)))) errors.push('limits.onlyAssets must name assets that exist');
-      for (const flag of ['noBorrowing', 'noMoving', 'noProperty']) {
+      if (limits.maxLifestyleTier !== undefined && ![0, 1, 2, 3].includes(limits.maxLifestyleTier as number)) errors.push('limits.maxLifestyleTier must be a tier from 0 to 3');
+      for (const flag of ['noBorrowing', 'noMoving', 'noProperty', 'noBusiness', 'noItems', 'noEvasion']) {
         if (limits[flag] !== undefined && typeof limits[flag] !== 'boolean') errors.push(`limits.${flag} must be true or false`);
       }
-      for (const key of Object.keys(limits)) if (!['onlyAssets', 'noBorrowing', 'noMoving', 'noProperty'].includes(key)) errors.push(`limits has an unknown limit: ${key}`);
+      for (const key of Object.keys(limits)) if (!['onlyAssets', 'noBorrowing', 'noMoving', 'noProperty', 'noBusiness', 'maxLifestyleTier', 'noItems', 'noEvasion'].includes(key)) errors.push(`limits has an unknown limit: ${key}`);
     }
   }
   if (!Array.isArray(start.debts)) {

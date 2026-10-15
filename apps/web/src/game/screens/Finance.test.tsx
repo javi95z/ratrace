@@ -86,8 +86,7 @@ describe('the pension', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
 
-    expect(await screen.findByText(`Up to ${fmt.money(room)} more this round`)).toBeTruthy();
-    await user.click(button('Add'));
+    await user.click(await screen.findByRole('button', { name: 'Add' }));
     const sheet = screen.getByRole('dialog', { name: 'Pay into your pension' });
     expect(within(sheet).getByText(`Up to ${fmt.money(room)}`)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: '100%' }));
@@ -95,9 +94,8 @@ describe('the pension', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
     expect(button('1 order')).toBeTruthy();
-    // The room is used up, and the screen says so instead of offering a sheet that would refuse everything.
-    expect(screen.getByText('Nothing more can go in this round.')).toBeTruthy();
-    expect((button('Add') as HTMLButtonElement).disabled).toBe(true);
+    // The room is used up: the button is not offered, rather than a sheet that would refuse everything.
+    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
   });
 
   it('offers nothing to someone who owes more than they own, instead of a sheet that refuses every amount', async () => {
@@ -105,8 +103,8 @@ describe('the pension', () => {
     const { services } = await inFinance('engineer');
     expect(previewRound(content, viewOf(await stateOf(services)), { orders: [] }).pensionRoom).toBe(0);
     renderGame(<Play />, services);
-    expect(await screen.findByText('Nothing more can go in this round.')).toBeTruthy();
-    expect((button('Add') as HTMLButtonElement).disabled).toBe(true);
+    await screen.findByRole('button', { name: 'Save' });
+    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
   });
 });
 

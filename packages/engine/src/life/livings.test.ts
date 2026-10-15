@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { businessRound } from '../business';
 import { incomeForRound } from '../economy';
+import { optionBreaks, orderBreaks } from '../limits';
 import { applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import { Rng, seedRng } from '../rng';
@@ -205,5 +206,34 @@ describe('a card with one open choice', () => {
     c.life.dealOnlyChoices = false;
     state.player.life.seen = {};
     expect(drawHand(state, c, new Rng(seedRng('lonely', 'cards')))).toContain('lonely');
+  });
+});
+
+describe('a new business', () => {
+  it('starts slowly, and may not see its second round: what is left of it is sold for parts', () => {
+    const c = fixtureContent();
+    c.business.rampPct = [50, 75];
+    const fresh = { id: 'b', typeId: 'stall', capital: 50_000_00, basis: 50_000_00, payoutPct: 50, manager: false, tended: true };
+    const world = start(c).timeline[0];
+    const grown = businessRound(fresh, c, world).profit;
+    expect(businessRound({ ...fresh, age: 0 }, c, world).profit).toBe(Math.floor((grown * 50) / 100));
+    expect(businessRound({ ...fresh, age: 1 }, c, world).profit).toBe(Math.floor((grown * 75) / 100));
+    (c.business.types[0] as { failPct: number }).failPct = 100;
+    const { state, events } = applyRound(c, start(c), { orders: [{ type: 'startBusiness', typeId: 'stall', capital: 10_000_00 }] });
+    expect(state.player.businesses).toEqual([]);
+    expect(events).toContainEqual({ kind: 'businessFailed', typeId: 'stall', recovered: 4_000_00 });
+  });
+});
+
+describe('the limits of the new challenge rules', () => {
+  it('forbid what each says, by order and through a card', () => {
+    expect(orderBreaks({ type: 'startBusiness', typeId: 'stall', capital: 1 }, { noBusiness: true })).toBe(true);
+    expect(orderBreaks({ type: 'setLifestyle', tier: 2 }, { maxLifestyleTier: 1 })).toBe(true);
+    expect(orderBreaks({ type: 'setLifestyle', tier: 1 }, { maxLifestyleTier: 1 })).toBe(false);
+    expect(orderBreaks({ type: 'buyItem', itemId: 'x' }, { noItems: true })).toBe(true);
+    expect(orderBreaks({ type: 'setEvasion', blackPct: 25 }, { noEvasion: true })).toBe(true);
+    expect(orderBreaks({ type: 'setEvasion', blackPct: 0 }, { noEvasion: true })).toBe(false);
+    expect(optionBreaks({ effects: { buyItem: { itemId: 'x', pricePct: 80 } } }, { noItems: true })).toBe(true);
+    expect(optionBreaks({ effects: { suspicion: 10 } }, { noEvasion: true })).toBe(true);
   });
 });

@@ -1,3 +1,4 @@
+import { scoreOf } from '@ratrace/engine';
 import type { Content, WorldState } from '@ratrace/engine';
 
 /**
@@ -25,6 +26,9 @@ const STYLES: Record<RivalId, Style> = {
 };
 
 export const RIVALS: readonly RivalId[] = ['classmate', 'cousin', 'ex'];
+
+/** The status each rival's life is worth, for their score: the cousin lives well, the ex lives for now. */
+export const RIVAL_STATUS: Record<RivalId, number> = { classmate: 22, cousin: 34, ex: 26 };
 
 /** A few rounds of a life bring a windfall or a blow besides the market: an inheritance, a divorce. */
 const SURPRISE_PCT = 8;
@@ -130,4 +134,9 @@ export function rivalNews(rivals: readonly Rival[], history: readonly number[], 
     }
   }
   return null;
+}
+
+/** A rival's score after round `r`, as the game would count it: the points of their wealth, and the standing of their life. */
+export function rivalScore(content: Content, rival: Rival, r: number): number {
+  return scoreOf(rival.worth[r] ?? 0, RIVAL_STATUS[rival.id], null, content);
 }

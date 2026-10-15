@@ -31,7 +31,7 @@ describe('opening a business', () => {
     const { player, rejected } = after(state, [start(2_000_000)]);
     expect(rejected).toEqual([]);
     expect(player.cash).toBe(3_000_000);
-    expect(player.businesses).toEqual([{ id: player.businesses[0].id, typeId: 'stall', capital: 2_000_000, basis: 2_000_000, payoutPct: 50, manager: false, tended: true }]);
+    expect(player.businesses).toEqual([{ id: player.businesses[0].id, typeId: 'stall', capital: 2_000_000, basis: 2_000_000, payoutPct: 50, manager: false, tended: true, age: 0 }]);
     expect(player.life.focusUsed).toBe(1);
     expect(netWorth(player)).toBe(netWorth(state.player));
   });

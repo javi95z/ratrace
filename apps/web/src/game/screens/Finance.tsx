@@ -87,24 +87,34 @@ function Portfolio() {
   return (
     <div className="flex flex-col gap-3">
       <PortfolioGlance />
+      {/* Cash, savings and the pension, a line each, with what can be done to each beside it: nothing that cannot be done is shown. */}
       <Panel>
         <Row left={t('cash')} sub={t('cashHint')} right={fmt.money(p.cash)} />
-        <div className="my-1 h-[2px] bg-night-900" />
-        <Row left={t('savings')} sub={t('savingsRate', { rate: fmt.rate(depositRateBp(content, world)) })} right={fmt.money(p.deposit)} />
-        <div className="mt-1 grid grid-cols-2 gap-2">
-          <Button onClick={() => setMove({ kind: 'save' })} disabled={p.cash <= 0}>
-            {t('save')}
-          </Button>
-          <Button onClick={() => setMove({ kind: 'withdraw' })} disabled={p.deposit <= 0}>
-            {t('withdraw')}
-          </Button>
+        <div className="flex items-center gap-2 border-t-2 border-night-900 py-1.5">
+          <div className="min-w-0 flex-1">
+            <Row left={t('savings')} sub={t('savingsRate', { rate: fmt.rate(depositRateBp(content, world)) })} right={fmt.money(p.deposit)} />
+          </div>
+          {p.cash > 0 ? (
+            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'save' })}>
+              {t('save')}
+            </Button>
+          ) : null}
+          {p.deposit > 0 ? (
+            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'withdraw' })}>
+              {t('withdraw')}
+            </Button>
+          ) : null}
         </div>
-        <div className="my-3 h-[2px] bg-night-900" />
-        <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
-        <p className="text-[12px] text-ink-300">{pensionRoom > 0 ? t('pensionRoom', { amount: fmt.money(pensionRoom) }) : t('pensionFull')}</p>
-        <Button className="mt-2" wide onClick={() => setMove({ kind: 'pension' })} disabled={pensionRoom <= 0}>
-          {t('add')}
-        </Button>
+        <div className="flex items-center gap-2 border-t-2 border-night-900 pt-1.5">
+          <div className="min-w-0 flex-1">
+            <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
+          </div>
+          {pensionRoom > 0 ? (
+            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pension' })}>
+              {t('add')}
+            </Button>
+          ) : null}
+        </div>
       </Panel>
 
       <Panel title={t('holdings')} label={t('holdings')}>
@@ -299,7 +309,7 @@ function PriceChart({ values, label }: { values: number[]; label: string }) {
   return (
     <figure className="frame bg-night-900 px-2 pb-1.5 pt-2">
       <figcaption className="flex items-baseline justify-between gap-2 px-1">
-        <span className="text-[12px] text-ink-300">{t('sinceStart', { age: START_AGE })}</span>
+        <span className="text-[12px] text-ink-300">{t('sinceStart')}</span>
         <span className="pixel text-[20px] leading-none" style={{ color: tone }}>
           {change > 0 ? '+' : ''}
           {change}%

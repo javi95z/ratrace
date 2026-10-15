@@ -10,7 +10,7 @@ export type { TaxBill } from './tax';
 export { netWorth, realNetWorth, finalScore, cashflow, cashflowLines, escapeProgress, livedStatus, scoreBreakdown, statusBreakdown } from './selectors';
 export type { CashflowLines, ScoreBreakdown } from './selectors';
 export type { StatusParts } from './life/derive';
-export { wealthPoints, escapeMultiplier } from './scoring';
+export { wealthPoints, escapeMultiplier, scoreOf } from './scoring';
 export { livingCostAnnual } from './economy';
 export { validateContent, validateStart } from './validate';
 export { headlineHeld } from './news';

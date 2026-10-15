@@ -829,6 +829,8 @@ export interface BusinessTypeDef {
   onlyOne?: boolean;
   /** The careers whose trade it is: only someone working in one may open it. Absent: anyone. */
   careers?: readonly string[];
+  /** The chance in percent that it fails in its first round, before management takes its share off. */
+  failPct: number;
 }
 
 export interface BusinessRules {
@@ -842,6 +844,12 @@ export interface BusinessRules {
   neglectDecayBp: Bp;
   /** What a business fetches when sold from the tab, as a percent of its capital, by the state of the economy. Never above 100. */
   salePct: Record<Regime, number>;
+  /** What a new business makes in its first rounds, as a percent of what it will: a slow start. */
+  rampPct: ReadonlyArray<number>;
+  /** Points taken off the chance of failing at the start for each level of management. */
+  managementFailOffPct: number;
+  /** What is got back of the capital of a business that fails at the start, in percent. */
+  failRecoverPct: number;
 }
 
 /** A business the player owns. */
@@ -862,6 +870,8 @@ export interface Business {
   fullTime?: boolean;
   /** Rounds in a row it made a good share of the owner's pay. Absent: none. */
   strong?: number;
+  /** Rounds it has been running. Absent: long enough to be past its start. */
+  age?: number;
 }
 
 
@@ -1368,6 +1378,8 @@ export type GameEvent =
   /** `capital` is what was in it, and `price` what it fetched. */
   | { kind: 'businessSold'; typeId: string; capital: Cents; price: Cents }
   | { kind: 'businessClosed'; typeId: string }
+  /** A new business did not survive its first round: what was got back of it. */
+  | { kind: 'businessFailed'; typeId: string; recovered: Cents }
   /** The broker sold an investment bought with borrowed money, because the loan had grown too large beside it. */
   | { kind: 'marginCall'; assetId: string; sold: Cents; repaid: Cents }
   /** A plan bought, or did not and why: no cash left for it, or the asset is no longer the player's to buy. */
@@ -1412,6 +1424,14 @@ export interface GameLimits {
   noMoving?: boolean;
   /** No property may be bought. */
   noProperty?: boolean;
+  /** No business may be opened. */
+  noBusiness?: boolean;
+  /** No way of living above this tier. */
+  maxLifestyleTier?: LifestyleTier;
+  /** Nothing may be bought from the shop, by order or through a card. */
+  noItems?: boolean;
+  /** Nothing may be hidden from the tax office. */
+  noEvasion?: boolean;
 }
 
 export interface StartConfig {

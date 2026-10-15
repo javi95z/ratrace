@@ -10,8 +10,14 @@ import { debt } from './rules';
  * follow from the week alone, so the device and the server agree on them without asking each other;
  * the world and the cards follow from a seed only the server holds, the same for every player.
  */
-export type ChallengeRule = 'indexOnly' | 'noLoans' | 'noMoving' | 'noProperty' | 'startInDebt';
-export const CHALLENGE_RULES: readonly ChallengeRule[] = ['indexOnly', 'noLoans', 'noMoving', 'noProperty', 'startInDebt'];
+export type ChallengeRule = 'indexOnly' | 'noLoans' | 'noMoving' | 'noProperty' | 'startInDebt' | 'noBusiness' | 'frugal' | 'minimalist' | 'honest' | 'richHeir';
+export const CHALLENGE_RULES: readonly ChallengeRule[] = ['indexOnly', 'noLoans', 'noMoving', 'noProperty', 'startInDebt', 'noBusiness', 'frugal', 'minimalist', 'honest', 'richHeir'];
+
+/** A rule added later joins the turn from the week it names: the weeks before it keep the challenge they had. */
+const RULE_FROM: Partial<Record<ChallengeRule, string>> = { noBusiness: '2026-W43', frugal: '2026-W43', minimalist: '2026-W43', honest: '2026-W43', richHeir: '2026-W43' };
+
+/** What a rich heir starts with on top, and the way of living they cannot drop below. */
+export const HEIR_CASH = usd(60_000);
 
 export interface Challenge {
   /** The ISO week, as "2026-W42": weeks begin on Monday, in UTC. */
@@ -63,7 +69,8 @@ export function challengeOf(week: string, all: readonly LifeDef[]): Challenge | 
   // Weeks counted from the Monday of 5 January 1970.
   const n = Math.round((start - Date.UTC(1970, 0, 5)) / (7 * DAY_MS));
   const life = lives[((n % lives.length) + lives.length) % lives.length];
-  const rule = CHALLENGE_RULES[(((n + Math.floor(n / lives.length)) % CHALLENGE_RULES.length) + CHALLENGE_RULES.length) % CHALLENGE_RULES.length];
+  const rules = CHALLENGE_RULES.filter((rule) => RULE_FROM[rule] === undefined || start >= (weekStart(RULE_FROM[rule] ?? '') ?? Infinity));
+  const rule = rules[(((n + Math.floor(n / lives.length)) % rules.length) + rules.length) % rules.length];
   return { week, lifeId: life.id, rule };
 }
 
@@ -78,7 +85,16 @@ export function challengeLimits(rule: ChallengeRule): GameLimits {
       return { noMoving: true };
     case 'noProperty':
       return { noProperty: true };
+    case 'noBusiness':
+      return { noBusiness: true };
+    case 'frugal':
+      return { maxLifestyleTier: 1 };
+    case 'minimalist':
+      return { noItems: true };
+    case 'honest':
+      return { noEvasion: true };
     case 'startInDebt':
+    case 'richHeir':
       return {};
   }
 }
@@ -90,6 +106,17 @@ export function challengeStart(challenge: Challenge, life: LifeDef): StartConfig
   if (challenge.rule === 'startInDebt') {
     // A loan taken out before the game, at the rate of the start, paid off over the usual term.
     start.debts.push({ kind: 'personalLoan', principal: CHALLENGE_DEBT, fixedRateBp: market.start.policyRateBp + debt.personalLoanSpreadBp, roundsLeft: debt.personalLoanTermRounds });
+  }
+  if (challenge.rule === 'richHeir') {
+    // Money from the family, and the family's idea of how to live: never below the comfortable.
+    start.cash += HEIR_CASH;
+    if (start.life) start.life = { ...start.life, minLifestyleTier: 3 };
+    start.lifestyleTier = 3;
+  }
+  if (challenge.rule === 'frugal') {
+    // A life of austerity starts plainly, whatever the life would have chosen.
+    start.lifestyleTier = Math.min(start.lifestyleTier, 1) as typeof start.lifestyleTier;
+    if (start.life) start.life = { ...start.life, minLifestyleTier: Math.min(start.life.minLifestyleTier ?? 0, 1) as typeof start.lifestyleTier };
   }
   return Object.keys(limits).length > 0 ? { ...start, limits } : start;
 }

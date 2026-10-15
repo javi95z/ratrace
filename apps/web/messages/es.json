@@ -380,8 +380,6 @@
       "savingsRate": "{rate} al año",
       "pension": "Plan de pensiones",
       "pensionHint": "Bloqueado hasta los 62. Sigue al índice mundial.",
-      "pensionRoom": "Hasta {amount} más esta ronda",
-      "pensionFull": "Esta ronda no cabe nada más.",
       "save": "Ahorrar",
       "withdraw": "Retirar",
       "add": "Aportar",
@@ -405,7 +403,7 @@
       "history": "Evolución del precio",
       "youHold": "Tienes {amount}",
       "planned": "Plan: {amount} cada ronda",
-      "sinceStart": "Precio desde tus {age} años"
+      "sinceStart": "Precio desde el inicio"
     },
     "amount": {
       "buy": "Comprar {name}",
@@ -737,7 +735,9 @@
         "go": "Dejar tu trabajo por este negocio",
         "leaving": "✓ Dejas tu trabajo por él esta ronda",
         "goHint": "Dejas de ser {job}: sin sueldo fijo. El negocio rinde un {pct} % más, sin encargado, y tienes +{focus} de foco. Podrás volver a un trabajo, un escalón más abajo."
-      }
+      },
+      "failChance": "{pct} % fracasa al empezar",
+      "slowStart": "La primera ronda rinde el {first} % de lo que rendirá, la segunda el {second} %. Si fracasa, recuperas el {back} %."
     },
     "evasion": {
       "title": "Lo que no declaras",
@@ -838,7 +838,9 @@
     "homeAgain": "De vuelta a casa",
     "homeTriumph": "De vuelta a casa, y más rico que cuando te fuiste",
     "homeHelped": "Tu familia te acoge: {amount} ahorrados.",
-    "homeFriends": "Los amigos de siempre abren puertas: más contactos y ningún escalón perdido."
+    "homeFriends": "Los amigos de siempre abren puertas: más contactos y ningún escalón perdido.",
+    "businessFailed": "{name} no salió adelante",
+    "businessFailedHint": "Cerró en su primera ronda. Vendido por piezas: recuperas {amount}."
   },
   "profile": {
     "title": "Tu vida",
@@ -1403,6 +1405,26 @@
       "startInDebt": {
         "name": "Empiezas con deuda",
         "about": "Empiezas con un préstamo de {amount} que devolver."
+      },
+      "noBusiness": {
+        "name": "Sin negocios",
+        "about": "Trabajas para otros toda la vida: nada de negocio propio."
+      },
+      "frugal": {
+        "name": "Vida austera",
+        "about": "Nada por encima de vivir sencillo, toda la vida."
+      },
+      "minimalist": {
+        "name": "Minimalista",
+        "about": "Nada de la tienda: ni coches, ni relojes, ni viajes."
+      },
+      "honest": {
+        "name": "Contribuyente ejemplar",
+        "about": "Ni un dólar escondido a Hacienda: nada en negro, ni sociedades fuera, ni cripto callada."
+      },
+      "richHeir": {
+        "name": "Herencia envenenada",
+        "about": "Empiezas con {amount} más y una familia que no te deja vivir por debajo de lo acomodado."
       }
     }
   },
@@ -1428,8 +1450,10 @@
       "bust": "{who} lo pierde casi todo en bolsa y cripto"
     },
     "title": "Tus rivales",
-    "place": "Quedaste {n}.º de {of}",
     "you": "Tú",
-    "about": "Gente de tu edad que vivió su vida al lado de la tuya, en la misma economía."
+    "about": "Gente de tu edad que vive su vida al lado de la tuya, en la misma economía, por puntuación.",
+    "placeNow": "Vas #{n} de {of}",
+    "placeEnd": "Quedaste #{n} de {of}",
+    "points": "{n} puntos"
   }
 }

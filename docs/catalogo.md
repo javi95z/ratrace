@@ -1,13 +1,13 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.33.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.34.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
 | Qué | Cuántos |
 | --- | --- |
 | [Vidas](#vidas) | 20 |
-| [Reto de la semana](#reto-de-la-semana) | 5 reglas |
+| [Reto de la semana](#reto-de-la-semana) | 10 reglas |
 | [Carreras](#carreras) | 11 |
 | [Ciudades](#ciudades) | 10 |
 | [Objetos](#objetos) | 67, de ellos 8 coches |
@@ -339,6 +339,11 @@ Una práctica se juega en este dispositivo con la misma vida y la misma regla, p
 | <img src="../art/clean/icons/icon.rule_no_moving.png" alt="Sin mudanzas"> | Sin mudanzas | Toda la vida en la misma ciudad. |
 | <img src="../art/clean/icons/icon.rule_no_property.png" alt="Sin inmuebles"> | Sin inmuebles | No puedes comprar ninguna propiedad: alquilas toda la vida. |
 | <img src="../art/clean/icons/icon.rule_start_in_debt.png" alt="Empiezas con deuda"> | Empiezas con deuda | Empiezas con un préstamo de 30.000 $ que devolver. |
+| <img src="../art/clean/icons/icon.business.png" alt="Sin negocios"> | Sin negocios | Trabajas para otros toda la vida: nada de negocio propio. |
+| <img src="../art/clean/icons/icon.life_frugal.png" alt="Vida austera"> | Vida austera | Nada por encima de vivir sencillo, toda la vida. |
+| <img src="../art/clean/icons/icon.used.png" alt="Minimalista"> | Minimalista | Nada de la tienda: ni coches, ni relojes, ni viajes. |
+| <img src="../art/clean/icons/icon.tax.png" alt="Contribuyente ejemplar"> | Contribuyente ejemplar | Ni un dólar escondido a Hacienda: nada en negro, ni sociedades fuera, ni cripto callada. |
+| <img src="../art/clean/icons/icon.gift.png" alt="Herencia envenenada"> | Herencia envenenada | Empiezas con 30.000 $ más y una familia que no te deja vivir por debajo de lo acomodado. |
 
 ## Carreras
 

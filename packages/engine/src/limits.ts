@@ -16,7 +16,13 @@ export function orderBreaks(order: Order, limits: GameLimits): boolean {
     case 'buyProperty':
       return limits.noProperty === true || (limits.noBorrowing === true && order.mortgage !== 'none');
     case 'buyItem':
-      return limits.noBorrowing === true && order.financed === true;
+      return limits.noItems === true || (limits.noBorrowing === true && order.financed === true) || (limits.noEvasion === true && order.noInvoice === true);
+    case 'startBusiness':
+      return limits.noBusiness === true;
+    case 'setLifestyle':
+      return limits.maxLifestyleTier !== undefined && order.tier > limits.maxLifestyleTier;
+    case 'setEvasion':
+      return limits.noEvasion === true && ((order.blackPct ?? 0) > 0 || order.shell === true || order.hideCrypto === true);
     case 'moveCity':
       return limits.noMoving === true;
     default:
@@ -29,6 +35,10 @@ function effectsBreak(effects: Effects | undefined, limits: GameLimits): boolean
   if (effects.invest !== undefined && limits.onlyAssets !== undefined && !limits.onlyAssets.includes(effects.invest.assetId)) return true;
   if (effects.property !== undefined && (limits.noProperty === true || (limits.noBorrowing === true && effects.property.downPct < 100))) return true;
   if (effects.loan !== undefined && limits.noBorrowing === true) return true;
+  if (effects.business !== undefined && limits.noBusiness === true) return true;
+  if (effects.buyItem !== undefined && limits.noItems === true) return true;
+  if (limits.noEvasion === true && ((effects.suspicion ?? 0) > 0 || effects.launder !== undefined)) return true;
+  if (limits.maxLifestyleTier !== undefined && effects.lifestyleFloor !== undefined && effects.lifestyleFloor > limits.maxLifestyleTier) return true;
   return effects.moveCity !== undefined && limits.noMoving === true;
 }
 

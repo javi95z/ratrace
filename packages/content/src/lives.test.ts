@@ -253,7 +253,15 @@ describe('whole lives on the v1 content', () => {
           // wore down if nobody ran it, and followed prices, the rule written out here.
           let businesses = 0;
           for (const e of result.events) if (e.kind === 'businessSold') businesses += e.price - e.capital;
+          // One that failed in its first round is gone, and what was got back of it is cash.
+          const failed = result.events.filter((e): e is Extract<typeof e, { kind: 'businessFailed' }> => e.kind === 'businessFailed');
           for (const owned of held.businesses) {
+            const fail = owned.age === 0 ? failed.find((e) => e.typeId === owned.typeId) : undefined;
+            if (fail) {
+              businesses += fail.recovered - owned.capital;
+              failed.splice(failed.indexOf(fail), 1);
+              continue;
+            }
             const round = businessRound(owned, content, now, skillLevel(held, 'management', content));
             let capital = owned.capital + round.retained;
             if (round.neglected) capital -= Math.round((Math.max(0, capital) * content.business.neglectDecayBp) / 10_000);

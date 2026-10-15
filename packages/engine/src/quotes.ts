@@ -1,4 +1,4 @@
-import { businessLock, businessRound, businessSalePrice, businessTypeOf, managerShare } from './business';
+import { businessLock, businessRound, failChance, businessSalePrice, businessTypeOf, managerShare } from './business';
 import type { BusinessRound } from './business';
 import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
@@ -617,7 +617,7 @@ export interface BusinessesQuote {
   /** Each business owned, with what this round makes of it as it stands and what it would sell for today. */
   owned: Array<Business & BusinessRound & { salePrice: Cents; managerPct: number }>;
   /** Each kind there is: what it asks for at today's prices, what it yields, how the economy treats it this round, and why it cannot be opened, if it cannot. */
-  kinds: Array<{ typeId: string; minCapital: Cents; yieldBp: Bp; scale: Cents; cyclePct: number; managerPct: number; minFinanceSkill: number; lock: RejectReason | null }>;
+  kinds: Array<{ typeId: string; minCapital: Cents; yieldBp: Bp; scale: Cents; cyclePct: number; managerPct: number; minFinanceSkill: number; lock: RejectReason | null; /** The chance in percent that one opened now fails in its first round. */ failChancePct: number }>;
   /** The most businesses there may be, and the shares of the profit that may be taken out. */
   max: number;
   payouts: number[];
@@ -646,6 +646,7 @@ export function quoteBusinesses(content: Content, view: GameView): BusinessesQuo
       managerPct: type.managerPct,
       minFinanceSkill: type.minFinanceSkill,
       lock: businessLock(p, type, content),
+      failChancePct: failChance(type, content, management),
     })),
     max: maxBusinessesOf(p, content),
     payouts: [...content.business.payouts],

@@ -277,13 +277,15 @@ export function applyRound(
   growPortfolio(p, content, now, after);
   growProperties(p, after);
   for (const sale of tally.businessesSold) events.push({ kind: 'businessSold', ...sale });
+  // The player's own dice: a new business may fail, and what was bought second hand may need a repair.
+  const rng = new Rng(next.rng.cards);
   // What each business kept or lost this round goes into it now, at the economy the round was lived in.
-  for (const typeId of growBusinesses(p, content, now, after)) events.push({ kind: 'businessClosed', typeId });
+  const grown = growBusinesses(p, content, now, after, rng);
+  for (const typeId of grown.closed) events.push({ kind: 'businessClosed', typeId });
+  for (const fail of grown.failed) events.push({ kind: 'businessFailed', ...fail });
 
   p.cash += income.salary + passive - outgoings - bill.total;
   applyDebtPayments(p, expenses.service);
-  // The player's own dice: what was bought second hand may need a repair, paid with the round's bills.
-  const rng = new Rng(next.rng.cards);
   const repairs = repairUsed(p, content, now, rng);
   let repaired = 0;
   for (const repair of repairs) {

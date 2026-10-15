@@ -397,6 +397,11 @@ export const ruleArt: Record<ChallengeRule, string> = {
   noMoving: 'icon.rule_no_moving',
   noProperty: 'icon.rule_no_property',
   startInDebt: 'icon.rule_start_in_debt',
+  noBusiness: 'icon.business',
+  frugal: 'icon.life_frugal',
+  minimalist: 'icon.used',
+  honest: 'icon.tax',
+  richHeir: 'icon.gift',
 };
 /** The weekly challenge: its sign, its picture, the mark of its best tenth, and the sign of a practice. */
 export const CHALLENGE_ART = { icon: 'icon.challenge', scene: 'card.weekly_challenge', topTenth: 'icon.top_tenth', practice: 'icon.practice' } as const;

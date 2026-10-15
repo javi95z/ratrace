@@ -148,14 +148,17 @@ const base: Content = {
   ],
   business: {
     types: [
-      { id: 'stall', minCapital: 1_000 * USD, yieldBp: 1_000, scale: 100_000 * USD, cyclePct: { boom: 50, recession: -150 }, managerPct: 40, minFinanceSkill: 0 },
-      { id: 'firm', minCapital: 20_000 * USD, yieldBp: 600, scale: 500_000 * USD, cyclePct: {}, managerPct: 20, minFinanceSkill: 2 },
+      { id: 'stall', minCapital: 1_000 * USD, yieldBp: 1_000, scale: 100_000 * USD, cyclePct: { boom: 50, recession: -150 }, managerPct: 40, minFinanceSkill: 0, failPct: 0 },
+      { id: 'firm', minCapital: 20_000 * USD, yieldBp: 600, scale: 500_000 * USD, cyclePct: {}, managerPct: 20, minFinanceSkill: 2, failPct: 0 },
     ],
     maxBusinesses: 2,
     payouts: [0, 50, 100],
     neglectProfitPct: 50,
     neglectDecayBp: 500,
     salePct: { expansion: 95, boom: 100, slowdown: 85, recession: 70, recovery: 90 },
+    rampPct: [],
+    managementFailOffPct: 0,
+    failRecoverPct: 40,
   },
   items: [
     { id: 'car_basic', ladder: 'car', kind: 'durable', price: 12_000 * USD, upkeepAnnual: 1_200 * USD, status: 4, resaleStartPct: 80, resaleDriftBp: -2_000, boostRounds: 0 },

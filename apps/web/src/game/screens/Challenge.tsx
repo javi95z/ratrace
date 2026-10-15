@@ -1,6 +1,6 @@
 'use client';
 
-import { CHALLENGE_ART, CHALLENGE_DEBT, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
+import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitArt, ruleArt, weekOf, weekStart } from '@ratrace/content';
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useCommunity, useGame, useRanking, useT, useWords } from '@/game/context';
@@ -22,7 +22,7 @@ export function useThisWeek(): Challenge | null {
 export function useRuleText() {
   const t = useT('challenge');
   const { fmt } = useWords();
-  return (rule: ChallengeRule) => ({ name: t(`rules.${rule}.name`), about: t(`rules.${rule}.about`, { amount: fmt.money(CHALLENGE_DEBT) }) });
+  return (rule: ChallengeRule) => ({ name: t(`rules.${rule}.name`), about: t(`rules.${rule}.about`, { amount: fmt.money(rule === 'richHeir' ? HEIR_CASH : CHALLENGE_DEBT) }) });
 }
 
 /** The day a week's challenge closes: its Sunday. */

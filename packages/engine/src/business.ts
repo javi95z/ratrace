@@ -5,6 +5,7 @@ import { focusLeft } from './life/orders';
 import { maxBusinessesOf, skillLevel } from './life/skills';
 import { applyBp, isAmount, mulDiv } from './money';
 import type { Cents } from './money';
+import type { Rng } from './rng';
 import { indexed } from './rates';
 import type { Business, BusinessTypeDef, Content, Order, OrderContext, PlayerState, RejectReason, SkillLevel, WorldState } from './types';
 
@@ -43,7 +44,9 @@ export function businessRound(business: Business, content: Content, world: World
   const working = mulDiv(business.capital, scale, scale + business.capital);
   const cyclePct = type.cyclePct[world.regime] ?? 0;
   const base = applyBp(working, type.yieldBp * content.yearsPerRound);
-  let profit = mulDiv(base, 100 + cyclePct, 100);
+  // A new business is still finding its customers: a share of what it will make.
+  const ramp = business.age === undefined ? 100 : (rules.rampPct[business.age] ?? 100);
+  let profit = mulDiv(mulDiv(base, 100 + cyclePct, 100), ramp, 100);
   // Run full time by its owner, it is never left alone, and has no manager to pay.
   const fullTime = business.fullTime === true;
   const neglected = !fullTime && !business.manager && !business.tended;
@@ -109,7 +112,7 @@ export function largestBusiness(p: PlayerState): Business | null {
 
 /** Opens a business with the given capital. It is run by its owner on the day it opens, and pays out half until told otherwise. */
 export function openBusiness(p: PlayerState, typeId: string, capital: Cents, content: Content): Business {
-  const business: Business = { id: newId(p, 'business'), typeId, capital, basis: capital, payoutPct: content.business.payouts[Math.floor(content.business.payouts.length / 2)], manager: false, tended: true };
+  const business: Business = { id: newId(p, 'business'), typeId, capital, basis: capital, payoutPct: content.business.payouts[Math.floor(content.business.payouts.length / 2)], manager: false, tended: true, age: 0 };
   p.businesses.push(business);
   return business;
 }
@@ -170,13 +173,19 @@ export function executeBusinessOrder(p: PlayerState, order: BusinessOrder, ctx: 
   }
 }
 
+/** The chance in percent that a business of this kind fails in its first round, for an owner with this much management. */
+export function failChance(type: BusinessTypeDef, content: Content, management: SkillLevel): number {
+  return Math.max(0, type.failPct - management * content.business.managementFailOffPct);
+}
+
 /**
  * What a round does to each business once it has paid out: what it kept goes into it, or what it
  * lost comes out; one nobody ran wears down besides; and what is left follows prices as the round
  * ends. A business with nothing left in it closes. Returns the kinds that closed.
  */
-export function growBusinesses(p: PlayerState, content: Content, now: WorldState, after: WorldState): string[] {
+export function growBusinesses(p: PlayerState, content: Content, now: WorldState, after: WorldState, rng: Rng): { closed: string[]; failed: Array<{ typeId: string; recovered: Cents }> } {
   const closed: string[] = [];
+  const failed: Array<{ typeId: string; recovered: Cents }> = [];
   const kept: Business[] = [];
   const management = skillLevel(p, 'management', content);
   // What a good round is: one that made a good share of what the job pays.
@@ -185,14 +194,21 @@ export function growBusinesses(p: PlayerState, content: Content, now: WorldState
   for (const business of p.businesses) {
     const round = businessRound(business, content, now, management);
     const strong = pay > 0 && round.profit * 100 >= pay * rule.strongPct ? (business.strong ?? 0) + 1 : 0;
+    // Its first round is the test: many new businesses do not see a second. What is left of it is sold for parts.
+    if (business.age === 0 && rng.chance(failChance(businessTypeOf(content, business.typeId), content, management))) {
+      const recovered = mulDiv(business.capital, content.business.failRecoverPct, 100);
+      p.cash += recovered;
+      failed.push({ typeId: business.typeId, recovered });
+      continue;
+    }
     let capital = business.capital + round.retained;
     if (round.neglected) capital -= applyBp(Math.max(0, capital), content.business.neglectDecayBp);
     capital = capital > 0 ? mulDiv(capital, after.priceLevel, now.priceLevel) : 0;
     if (capital <= 0) closed.push(business.typeId);
-    else kept.push({ ...business, capital, strong });
+    else kept.push({ ...business, capital, strong, ...(business.age === undefined ? {} : { age: business.age + 1 }) });
   }
   p.businesses = kept;
-  return closed;
+  return { closed, failed };
 }
 
 /** A business that is checked like any other state: used by the invariants and by the start of a life. */
@@ -206,5 +222,6 @@ export function businessBreaks(business: unknown, content: Content): string | nu
   if (typeof b.manager !== 'boolean' || typeof b.tended !== 'boolean') return `business ${b.id} needs a manager and a tended flag`;
   if (b.fullTime !== undefined && typeof b.fullTime !== 'boolean') return `business ${b.id} has a full-time flag that is not true or false`;
   if (b.strong !== undefined && !(Number.isSafeInteger(b.strong) && b.strong >= 0)) return `business ${b.id} has a count of good rounds that is not a whole number`;
+  if (b.age !== undefined && !(Number.isSafeInteger(b.age) && b.age >= 0)) return `business ${b.id} has an age that is not a whole number`;
   return null;
 }

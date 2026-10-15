@@ -380,8 +380,6 @@
       "savingsRate": "{rate} a year",
       "pension": "Pension plan",
       "pensionHint": "Locked until 62. Follows the world index.",
-      "pensionRoom": "Up to {amount} more this round",
-      "pensionFull": "Nothing more can go in this round.",
       "save": "Save",
       "withdraw": "Withdraw",
       "add": "Add",
@@ -405,7 +403,7 @@
       "history": "Price history",
       "youHold": "You hold {amount}",
       "planned": "Plan: {amount} a round",
-      "sinceStart": "Price since you were {age}"
+      "sinceStart": "Price since the start"
     },
     "amount": {
       "buy": "Buy {name}",
@@ -737,7 +735,9 @@
         "go": "Leave your job for it",
         "leaving": "✓ Leaving your job for it this round",
         "goHint": "You stop being {job}: no fixed pay. It makes {pct}% more, needs no manager, and you get +{focus} focus. You can go back to a job later, a rung lower."
-      }
+      },
+      "failChance": "{pct}% fail at the start",
+      "slowStart": "The first round it makes {first}% of what it will, the second {second}%. If it fails, you get {back}% back."
     },
     "evasion": {
       "title": "What you do not declare",
@@ -838,7 +838,9 @@
     "homeAgain": "Home again",
     "homeTriumph": "Home again, and richer than you left",
     "homeHelped": "Your family put you up: {amount} saved.",
-    "homeFriends": "Old friends open doors: more contacts, and no rung lost."
+    "homeFriends": "Old friends open doors: more contacts, and no rung lost.",
+    "businessFailed": "{name} did not make it",
+    "businessFailedHint": "It closed in its first round. Sold for parts: {amount} back."
   },
   "profile": {
     "title": "Your life",
@@ -1403,6 +1405,26 @@
       "startInDebt": {
         "name": "Start in debt",
         "about": "You start with a loan of {amount} to pay back."
+      },
+      "noBusiness": {
+        "name": "No businesses",
+        "about": "You work for others all your life: no business of your own."
+      },
+      "frugal": {
+        "name": "Austerity",
+        "about": "No way of living above the plain one, the whole life through."
+      },
+      "minimalist": {
+        "name": "Minimalist",
+        "about": "Nothing from the shop: no cars, no watches, no trips."
+      },
+      "honest": {
+        "name": "Model taxpayer",
+        "about": "Not a dollar hidden from the taxman: no cash in hand, no shell company, no quiet crypto."
+      },
+      "richHeir": {
+        "name": "Poisoned inheritance",
+        "about": "You start with {amount} more, and a family who will not see you live below the comfortable."
       }
     }
   },
@@ -1428,8 +1450,10 @@
       "bust": "{who} loses almost everything on stocks and crypto"
     },
     "title": "Your rivals",
-    "place": "You came {n} of {of}",
     "you": "You",
-    "about": "People your age who lived their lives beside yours, in the same economy."
+    "about": "People your age living their lives beside yours, in the same economy, by score.",
+    "placeNow": "You are #{n} of {of}",
+    "placeEnd": "You came #{n} of {of}",
+    "points": "{n} pts"
   }
 }

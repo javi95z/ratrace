@@ -294,7 +294,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'orderRejected'];
 
 /** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
@@ -342,6 +342,9 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'businessClosed':
         add(event, { tone: 'bad', icon: businessArt(event.typeId), title: t('businessClosed', { name: text.businessTypes[event.typeId]?.name ?? event.typeId }), hint: t('businessClosedHint') });
+        break;
+      case 'businessFailed':
+        add(event, { tone: 'bad', icon: businessArt(event.typeId), title: t('businessFailed', { name: text.businessTypes[event.typeId]?.name ?? event.typeId }), hint: t('businessFailedHint', { amount: fmt.money(event.recovered) }) });
         break;
       case 'marginCall':
         add(event, {
