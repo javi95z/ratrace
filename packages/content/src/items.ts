@@ -22,7 +22,7 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
 });
 
 /**
- * Sixty-four status items in ten ladders: the 34 of spec Appendix B, a seat of its own for each
+ * Sixty-seven status items in ten ladders: the 34 of spec Appendix B, a seat of its own for each
  * city besides Madrid, and more rungs in fashion, art, travel, air and sea, pets and learning.
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
@@ -55,6 +55,9 @@ const catalogue: ItemDef[] = [
     ['tech_phone', 1_200, 0, 2, 60, -5_000],
     ['tech_laptop', 2_600, 0, 3, 65, -4_500],
     ['tech_console', 550, 0, 1, 60, -4_000],
+    ['tech_smartwatch', 450, 0, 1, 50, -5_000],
+    ['tech_drone', 1_800, 0, 2, 55, -5_000],
+    ['tech_ai_workstation', 18_000, 0, 4, 50, -4_000],
   ]),
   ...durables('fashion', [
     ['fashion_blazer', 150, 0, 1, 20, -6_000],
@@ -160,6 +163,8 @@ const PERKS: Record<string, ItemPerks> = {
   fashion_birkin: { jobHuntPct: 6 },
   fashion_coat: { jobHuntPct: 8 },
   tech_laptop: { studySkill: 1 },
+  // Its own models trained overnight: the best study there is, short of a degree.
+  tech_ai_workstation: { studySkill: 2 },
   // A gym is where health is practised, and an insurer charges less for a member.
   member_gym: { healthCoverOffPct: 25 },
   member_club: { jobHuntPct: 6 },

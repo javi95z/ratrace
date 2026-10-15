@@ -1,7 +1,7 @@
 # Art prompt pack: v8
 
 The wrong side of the law: thirteen card scenes for small cheats, a trial and prison, and three
-badges. The trial itself uses `card.courtroom`, already drawn. Four sheets.
+badges, and three new things for the tech shelf. The trial itself uses `card.courtroom`, already drawn. Five sheets.
 
 Use the same ChatGPT project and the same **style block** (in `v1-prompt-pack.md`). Attach
 `art/raw/cards/cards-24.png` as the style reference, start each message with
@@ -59,6 +59,19 @@ Landscape image, 3:1. Object sheet: 3 columns by 1 row, 3 badges. Every badge is
 3. A white halo floating above a judge's gavel.
 ```
 
+## 92. Three things for the tech shelf
+
+Save as `art/raw/items/items-08.png` — `item.tech_smartwatch`, `item.tech_drone`, `item.tech_ai_workstation`
+
+Attach `art/raw/items/items-01.png`.
+
+```text
+Landscape image, 3:1. Object sheet: 3 columns by 1 row, 3 objects, each shown front-on and centred in its cell. Left to right:
+1. A smartwatch with a black sport band, its square screen showing a red heartbeat line and a ring of activity.
+2. A grey folding camera drone hovering, four small propellers spinning as motion blurs, a tiny camera under its body.
+3. A tall black workstation tower with a glass side panel showing glowing green graphics cards, beside a wide monitor with a neural-network diagram as dots and lines.
+```
+
 ## Where each goes
 
 | # | File | What | Size |
@@ -67,3 +80,4 @@ Landscape image, 3:1. Object sheet: 3 columns by 1 row, 3 badges. Every badge is
 | 89 | `cards/cards-32.png` | Found out, ham, a meme coin, a bet, a cousin, a tip | 288×120 |
 | 90 | `cards/cards-33.png` | Laundering | 288×120 |
 | 91 | `badges/badges-07.png` | Fiscally creative, ex-convict, truly innocent | 64×64 |
+| 92 | `items/items-08.png` | Smartwatch, drone, AI workstation | 64×64 |

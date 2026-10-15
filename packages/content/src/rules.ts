@@ -144,7 +144,7 @@ export const life: LifeRules = {
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
   // Prison: status on the way in, and a rung of the career on the way out.
-  jail: { statusLost: 8, rungsLost: 1 },
+  jail: { statusLost: 20, rungsLost: 1 },
   // Overtime two rounds running costs a point of health, and from the third a third of the time it
   // ends in burnout: two more points and a point of focus the round after. A raise found needs a
   // round's rest before the next search, and each search that fails makes the next one 15 points
@@ -187,7 +187,7 @@ export const life: LifeRules = {
       network: ['sales', 'influencer', 'hospitality', 'public'],
       health: ['healthcare', 'medicine'],
     },
-    practiceItems: { health: ['member_gym', 'pet_dog'], management: ['edu_coach'], languages: ['edu_language_school'] },
+    practiceItems: { health: ['member_gym', 'pet_dog', 'tech_smartwatch'], management: ['edu_coach'], languages: ['edu_language_school'] },
     negotiationHuntRaisePct: 1,
     negotiationPromotionPct: 2,
     negotiationSalePct: 4,
