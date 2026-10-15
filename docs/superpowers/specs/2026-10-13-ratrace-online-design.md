@@ -82,10 +82,9 @@ As built in phase 3:
 | `daily_challenges` | Day, scenario, content version | Everyone signed in | Server |
 | `daily_secrets` | Day, seed | Nobody | Server |
 | `daily_entries` | Day, player, game, score. One per player per day | Everyone signed in | Server |
-| `rooms` | Code, host, status, round, deadline, settings | Members | Server |
-| `room_secrets` | Seed and each member's full state | Nobody | Server |
-| `room_players` | Seat, ready flag, public summary (net worth, status, score) | Members | Server; member sets own ready flag |
-| `room_choices` | A member's choices for the current round | Owner only, until the round resolves | Owner, once per round |
+| `rooms` | Code, host, life, versions, seconds a round, status, round, deadline | Members | Server |
+| `room_players` | Seat, the member's game, the round they are ready in, when they left, their standing as of the last round played (net worth, status, score at the end) | Members of the same room | Server |
+| `room_orders` | A member's orders for a round, once they have played it, kept after the round turns | Nobody | Server |
 | `friendships` | Who follows whom. Following is one-way and needs no answer | Both sides | The follower: follows through a database function that takes a friend code, and stops by deleting the row. 200 at most |
 
 Rankings are views over `runs` and `daily_entries`: all-time best per player, this week, per starting life, today's challenge, and each of those filtered to friends.
@@ -112,7 +111,17 @@ A player has one ranked life in progress, and it is never ended unasked. Asked t
 
 **Daily challenge.** Cron creates tomorrow's scenario and seed. `daily-start` creates the player's one game for today. It then plays as ranked solo, with a shorter scenario set in content. A streak is a run of consecutive days in `daily_entries`. Days are UTC.
 
-**Rooms.** The host creates a room and shares its code. Each round, members submit choices, which others cannot read. When everyone is ready or the deadline passes, any member's client calls `room-resolve`. A row lock makes it run once. It runs `applyRound` for every member against the shared world, stores the results and broadcasts them. A cron sweep resolves rooms nobody resolved. A member who reconnects fetches their view. A member who sends nothing plays an empty round.
+**Rooms.** Two to six friends live the same life in the same world at the same time, a round at a time, and see who does best with it. This is the design of phase 5; see decisions 22 to 31.
+
+- *Making and joining.* A signed-in player opens a room: they choose its life, from the lives they have unlocked, and how long a round may take: 90 seconds, 3 minutes (the default) or 5 minutes. The room gets a code of six characters from an alphabet with no letters that read as others (no 0, O, 1, I, L), and a link that carries the code. Anyone signed in who has the code joins while the room is still in its lobby and has fewer than six members. A player is in one room at a time that is not over. A room is opened and joined only on the rules the server plays now, and a page on other rules is told to reload.
+- *Starting.* The host starts the room once two or more are in it. The server then makes one seed for the room and one ranked-style game for each member (mode `room`), every one of them with that seed and the room's life. So every member begins exactly alike, the world of every round (prices, news, crises, taxes) is the same for all of them, and two members who chose the same would live the same life. What tells them apart is what they choose. Nobody can join a room that has started.
+- *A round.* The room is in one round at a time, with a deadline. Each member reads the news and answers their cards at their own pace; the server plays each card at once, as for a ranked life. When a member plays the round, their orders are kept and not played: they are ready, and wait. The round turns when every member still in the room is ready, or when the deadline has passed by five seconds of grace. Then the server plays the round for every member at once: cards a member left unanswered take their first open option, and a member who sent no orders plays the round with none. The new standing of every member is written, the room moves to the next round, and its deadline is set from that moment. So nobody sees how the round turned out before everyone has chosen: the world is the same for all, and seeing it first would be seeing the future.
+- *The clock.* The deadline is the server's. A page counts down to it from the server's time and, a second before it, plays the round as it stands for a member who has not: the orders in the basket if they reached their finances, none otherwise. A round is turned by whichever call reaches the server first once it is due, whoever's it is; the database lets one turn through and the others find the room already on.
+- *What members see of each other.* Who is in the room and who is ready, at once. How each stands (net worth, status, whether out of the rat race, bankruptcies) only as of the last round played. Never anyone's cards, orders or cash before a round turns. At the end, each member's score, and the room's order by score.
+- *Leaving and coming back.* Everything is on the server, so a member who closes the page, loses the connection or changes device finds the room as it stands, with every round the clock played for them, and is told so. A member may leave. In the lobby that takes them out; the host leaving closes the room for everyone. Once it has started, their life is given up, the room stops waiting for them, and their last standing stays on the board marked as left. A room in which nothing has happened for a day is closed when it is next looked at, and its lives are given up: nobody is held in a room their friends have abandoned.
+- *The end.* After the last round every life is over: the server writes each member's run (mode `room`, played by the server, not in the global rankings), and the room is over. Each member's page shows the room's final order, and the end of their own life as for any other.
+- *Live.* A page in a room hears of every change to its room and its members through Realtime (Postgres changes, which the database's own row rules filter to members) and then asks the server how the room stands. It also asks every fifteen seconds while it is shown, when it is shown again, when the connection returns, and when the deadline is due. No cron and no broadcast are needed: the server turns a round when it is asked after the deadline, and a room nobody looks at is a room nobody is waiting in.
+- *On the device.* A room's life is not the device's life in progress: a casual or ranked life being played on the device stays exactly where it is while its player is in a room, and the front door shows both. The room's life is played on the same screens as any other, with the room's clock and members above them, and it counts as any other for the records, badges, collection and unlocks of the device.
 
 ## 8. Integrity
 
@@ -156,7 +165,7 @@ Each phase is its own plan and can ship alone.
 2. **Cloud saves:** casual sync, run history, progress across devices.
 3. **Ranked solo and rankings:** server-run games, global, weekly and friends rankings.
 4. **Daily challenge:** scenario, one entry per day, streaks.
-5. **Rooms:** create, join, simultaneous rounds, timers, reconnect, live ranking.
+5. **Rooms:** create, join, simultaneous rounds, timers, reconnect, live ranking. See `docs/superpowers/plans/2026-10-16-rooms.md`.
 
 ## 11. Decisions
 
@@ -194,3 +203,16 @@ Settled when phase 3 was built:
 19. Decision 8 has its answer: the CAPTCHA is Cloudflare Turnstile, built and off. It is turned on by naming its site key in the build and its secret in Supabase, together.
 20. A friend code can be read by anyone signed in, like the rest of a profile. Whoever has it can follow its player and see nothing they could not see already.
 21. The database changes of phase 3 are not all additions: a player's write to `profiles` is cut down to four columns, an index is replaced, the functions answer `429` beyond their limits, finished lives beyond five hundred are removed, and names are checked. Each was tried against the game then on `main` before it was applied.
+
+Settled when phase 5 was designed (2026-10-16):
+
+22. Every member of a room lives the same life on the same seed: the life the host chose, whether or not each member has unlocked it, as in a weekly challenge. The same deal for everyone is what makes a room a contest of choices.
+23. Cards are played the moment they are answered; a round's orders are kept until the round turns for everyone. A card says nothing of how the world turns; a round's result says all of it.
+24. A round turns when everyone still in the room is ready, or five seconds after its deadline. A member who has not chosen plays the first open option of each card left and no orders. The page plays the round as it stands a second before the deadline, so a member who is there loses nothing they had chosen.
+25. The server turns a round when it is first asked after it is due. There is no cron sweep: a room whose members are all away waits for them, and one untouched for a day is closed when next looked at.
+26. The tables `room_secrets` and `room_choices` of the first design are not made. The seed is kept per game in `game_secrets`, as for every game the server plays; orders waiting for a round to turn are in `room_orders`, which no client can read.
+27. A turn of the round, a member's card and a member's orders each happen inside one database function that holds the room's row: a turn writes every member's game, their standings and the room together or not at all, and a card or orders that arrive while a round is turning wait for it and are then refused if the round has moved.
+28. A room's run is mode `room`: played by the server with the future kept from its player, and still not in the global rankings, which hold lives played alone.
+29. Members are told of changes through Realtime Postgres changes on `rooms` and `room_players`. Presence (who has the page open) is not built: it needs private channels, which need the project's Realtime settings changed, and the room's clock already deals with a member who is away.
+30. A player is in one room at a time that is not over, and a room holds six at most. Rooms are opened on the rules the server plays now, and joined only from a page on the same rules.
+31. The room's lives are played by the server under one version. A page whose rules differ from its room's cannot play it, and says to reload.

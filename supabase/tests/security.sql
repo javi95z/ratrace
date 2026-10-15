@@ -26,6 +26,17 @@ declare
   who uuid[];
   scores int[];
   nm text;
+  c uuid := gen_random_uuid();
+  d uuid := gen_random_uuid();
+  room_r uuid := gen_random_uuid();
+  room_s uuid := gen_random_uuid();
+  code_r text;
+  ga uuid := gen_random_uuid();
+  gb uuid := gen_random_uuid();
+  gc uuid := gen_random_uuid();
+  j jsonb;
+  t2 timestamptz;
+  log0 jsonb;
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -66,12 +77,12 @@ begin
     then passed := passed + 1; else failed := array_append(failed, 'a function made without a grant can be called by clients'); end if;
   drop function public.probe_function();
   drop table public.probe_table;
-  -- A visitor with no account can call nothing. A player can call four things: the ranking, following someone by their
-  -- code, and the ranking and the sums of choices of a week's challenge.
+  -- A visitor with no account can call nothing. A player can call five things: the ranking, following someone by their
+  -- code, the ranking and the sums of choices of a week's challenge, and the question of whether they are in a room.
   select count(*) into n from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('anon', p.oid, 'execute');
   if n = 0 then passed := passed + 1; else failed := array_append(failed, format('%s functions of the game can be called with no account', n)); end if;
-  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'challenge_choices', 'challenge_ranking', 'ranking']
-    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the rankings, the choices of a challenge, and following by code'); end if;
+  if (select array_agg(p.proname::text order by p.proname::text) from pg_proc p where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and has_function_privilege('authenticated', p.oid, 'execute')) = array['add_friend', 'challenge_choices', 'challenge_ranking', 'in_room', 'ranking']
+    then passed := passed + 1; else failed := array_append(failed, 'the functions a player can call are not exactly the rankings, the choices of a challenge, following by code, and being in a room'); end if;
 
   -- ---------------------------------------------------------------- player A
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
@@ -636,12 +647,12 @@ begin
   -- ---------------------------------------------------------------- weekly challenges
   reset role;
   -- The server makes a week's seed, enters B's attempt and writes it as finished, with what it chose.
-  insert into public.challenge_seeds (week, seed) values ('2026-W42', 'week-seed');
-  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, status, challenge) values (challenge_b, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', '2026-W42');
-  insert into public.challenge_entries (user_id, week, game_id) values (b, '2026-W42', challenge_b);
+  insert into public.challenge_seeds (week, seed) values ('1999-W01', 'week-seed');
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, status, challenge) values (challenge_b, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', '1999-W01');
+  insert into public.challenge_entries (user_id, week, game_id) values (b, '1999-W01', challenge_b);
   insert into public.runs (id, user_id, game_id, mode, life_id, engine_version, content_version, score, net_worth, status, finished_at, challenge)
-    values (challenge_b, b, challenge_b, 'ranked', 'nurse', '0.1.0', '1.0.0', 500, 0, 0, now(), '2026-W42');
-  insert into public.challenge_picks (run_id, week, seq, card_id, option) values (challenge_b, '2026-W42', 0, 'tax_advisor', 1), (challenge_b, '2026-W42', 1, 'health_illness', 0);
+    values (challenge_b, b, challenge_b, 'ranked', 'nurse', '0.1.0', '1.0.0', 500, 0, 0, now(), '1999-W01');
+  insert into public.challenge_picks (run_id, week, seq, card_id, option) values (challenge_b, '1999-W01', 0, 'tax_advisor', 1), (challenge_b, '1999-W01', 1, 'health_illness', 0);
   -- A cannot read the seeds, the picks, or B's entry; A finds no choices before finishing; A reads the week's ranking.
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
   set local role authenticated;
@@ -658,18 +669,18 @@ begin
   select count(*) into n from public.challenge_entries;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, format('A sees %s challenge entries that are not theirs', n)); end if;
   begin
-    insert into public.challenge_entries (user_id, week, game_id) values (a, '2026-W42', gen_random_uuid());
+    insert into public.challenge_entries (user_id, week, game_id) values (a, '1999-W01', gen_random_uuid());
     failed := array_append(failed, 'a player entered a challenge without the server');
   exception when insufficient_privilege then passed := passed + 1;
   end;
-  select count(*) into n from public.challenge_choices('2026-W42');
+  select count(*) into n from public.challenge_choices('1999-W01');
   if n = 0 then passed := passed + 1; else failed := array_append(failed, format('A, who has not finished the week, was told %s choices', n)); end if;
-  select array_agg(r.user_id order by r.place) into who from public.challenge_ranking('2026-W42') r;
-  if who = array[b] and (select r.entrants from public.challenge_ranking('2026-W42') r limit 1) = 1
+  select array_agg(r.user_id order by r.place) into who from public.challenge_ranking('1999-W01') r;
+  if who = array[b] and (select r.entrants from public.challenge_ranking('1999-W01') r limit 1) = 1
     then passed := passed + 1; else failed := array_append(failed, format('the week''s ranking is %s', who)); end if;
   -- B, who has finished, is told their own choices beside everyone's, in order.
   perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
-  if (select array_agg(c.card_id || ':' || c.option || ':' || c.same || '/' || c.answered order by c.seq) from public.challenge_choices('2026-W42') c) = array['tax_advisor:1:1/1', 'health_illness:0:1/1']
+  if (select array_agg(c.card_id || ':' || c.option || ':' || c.same || '/' || c.answered order by c.seq) from public.challenge_choices('1999-W01') c) = array['tax_advisor:1:1/1', 'health_illness:0:1/1']
     then passed := passed + 1; else failed := array_append(failed, 'B was not told their own choices beside everyone''s'); end if;
   select count(*) into n from public.challenge_entries;
   if n = 1 then passed := passed + 1; else failed := array_append(failed, format('B sees %s of their own challenge entries', n)); end if;
@@ -677,17 +688,185 @@ begin
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
   set local role anon;
   begin
-    perform public.challenge_ranking('2026-W42');
+    perform public.challenge_ranking('1999-W01');
     failed := array_append(failed, 'a visitor with no account read the ranking of a challenge');
   exception when insufficient_privilege then passed := passed + 1;
   end;
+
+
+  -- ---------------------------------------------------------------- rooms
+  reset role;
+  insert into auth.users (id, aud, role, is_anonymous) values (c, 'authenticated', 'authenticated', true), (d, 'authenticated', 'authenticated', true);
+  -- Nobody but the server reads or writes a room's orders; a player reads rooms and their members, and writes nothing.
+  if (select count(*) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'room_orders') = 0
+     and (select array_agg(privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'rooms') = array['SELECT']
+     and (select array_agg(privilege_type::text) from information_schema.role_table_grants where table_schema = 'public' and grantee = 'authenticated' and table_name = 'room_players') = array['SELECT']
+    then passed := passed + 1; else failed := array_append(failed, 'the grants on the rooms are not reading rooms and members, and nothing of orders'); end if;
+
+  -- The server opens a room for A, with a code of six characters that cannot be mistaken.
+  j := public.room_open(room_r, a, 'nurse', '0.1.0', '1.0.0', 180);
+  code_r := j ->> 'code';
+  if code_r ~ '^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$' and (j ->> 'room')::uuid = room_r then passed := passed + 1; else failed := array_append(failed, format('opening a room answered %s', j)); end if;
+  -- A is in one room at a time that is not over.
+  j := public.room_open(gen_random_uuid(), a, 'nurse', '0.1.0', '1.0.0', 180);
+  if j ->> 'error' = 'in-a-room' and (j ->> 'room')::uuid = room_r then passed := passed + 1; else failed := array_append(failed, format('a second room for A answered %s', j)); end if;
+  begin
+    perform public.room_open(gen_random_uuid(), d, 'nurse', '0.1.0', '1.0.0', 60);
+    failed := array_append(failed, 'a room was opened with a round of a minute');
+  exception when check_violation then passed := passed + 1;
+  end;
+  -- B joins by the code however it is typed, and joining again changes nothing. Pages on other rules and unknown codes are turned away.
+  -- (Every call that changes something is made on its own line: the parts of one condition may be taken in any order.)
+  j := public.room_join(' ' || lower(code_r) || ' ', b, '0.1.0', '1.0.0');
+  nm := public.room_join(code_r, b, '0.1.0', '1.0.0') ->> 'room';
+  if j ->> 'room' = room_r::text and nm = room_r::text and (select count(*) from public.room_players where room_id = room_r) = 2
+    then passed := passed + 1; else failed := array_append(failed, format('B could not join by the code, or joined twice: %s', j)); end if;
+  if (public.room_join(code_r, c, '0.2.0', '1.0.0')) ->> 'error' = 'other-version' and (public.room_join('ZZZZZZ', c, '0.1.0', '1.0.0')) ->> 'error' = 'unknown-room'
+    then passed := passed + 1; else failed := array_append(failed, 'another version or an unknown code was not refused'); end if;
+  -- C joins and leaves the lobby: the row stays, marked, so that nothing is ever deleted under the eyes of Realtime.
+  perform public.room_join(code_r, c, '0.1.0', '1.0.0');
+  j := public.room_leave(room_r, c);
+  if j ->> 'status' = 'open' and (select left_at is not null from public.room_players where room_id = room_r and user_id = c)
+    then passed := passed + 1; else failed := array_append(failed, format('C leaving the lobby answered %s', j)); end if;
+  -- Only the host starts it, with a game for exactly each member still in it.
+  if (public.room_start(room_r, b, 'room-seed', jsonb_build_object(a::text, ga, b::text, gb), now() + interval '3 minutes')) ->> 'error' = 'not-host'
+     and (public.room_start(room_r, a, 'room-seed', jsonb_build_object(a::text, ga, c::text, gc), now() + interval '3 minutes')) ->> 'error' = 'moved'
+     and (select status from public.rooms where id = room_r) = 'open'
+    then passed := passed + 1; else failed := array_append(failed, 'a room was started by a guest, or with the wrong members'); end if;
+  j := public.room_start(room_r, a, 'room-seed', jsonb_build_object(a::text, ga, b::text, gb), now() + interval '3 minutes');
+  if (j ->> 'ok')::boolean and (select status from public.rooms where id = room_r) = 'playing'
+     and (select count(*) from public.games where room = room_r and mode = 'room' and status = 'playing' and life_id = 'nurse' and seed is null and id in (ga, gb)) = 2
+     and (select array_agg(distinct seed) from public.game_secrets where game_id in (ga, gb)) = array['room-seed']
+     and (select array_agg(game_id order by game_id) from public.room_players where room_id = room_r and left_at is null) = (select array_agg(x order by x) from unnest(array[ga, gb]) x)
+    then passed := passed + 1; else failed := array_append(failed, format('starting the room answered %s', j)); end if;
+  if (public.room_join(code_r, d, '0.1.0', '1.0.0')) ->> 'error' = 'started' then passed := passed + 1; else failed := array_append(failed, 'D joined a room that had started'); end if;
+
+  -- A card is written while the room is in its round and the game is as it was read.
+  select updated_at, log into t, log0 from public.games where id = ga;
+  nm := public.room_step(room_r, 0, a, ga, t, '[{"picks":[0],"orders":null}]', 0);
+  nm := nm || ' ' || public.room_step(room_r, 0, a, ga, t, '[{"picks":[0,1],"orders":null}]', 0);
+  nm := nm || ' ' || public.room_step(room_r, 1, a, ga, now(), '[{"picks":[0,1],"orders":null}]', 0);
+  nm := nm || ' ' || public.room_step(room_r, 0, b, ga, now(), '[]', 0);
+  if nm = 'ok moved moved closed' and (select log from public.games where id = ga) = '[{"picks":[0],"orders":null}]'
+    then passed := passed + 1; else failed := array_append(failed, format('a card was written out of turn, or not written in turn: %s', nm)); end if;
+  -- Orders wait: A is ready, the same orders again change nothing, other orders are refused, and a card is no longer taken.
+  j := public.room_submit(room_r, 0, a, '[]');
+  nm := (public.room_submit(room_r, 0, a, '[]')) ->> 'kept';
+  nm := nm || ' ' || ((public.room_submit(room_r, 0, a, '[{"type":"x"}]')) ->> 'kept');
+  if j ->> 'kept' = 'new' and not (j ->> 'all')::boolean and nm = 'same other'
+     and (select ready_round from public.room_players where room_id = room_r and user_id = a) = 0
+    then passed := passed + 1; else failed := array_append(failed, format('A''s orders answered %s', j)); end if;
+  select updated_at into t from public.games where id = ga;
+  if public.room_step(room_r, 0, a, ga, t, '[{"picks":[0,0],"orders":null}]', 0) = 'ready' then passed := passed + 1; else failed := array_append(failed, 'A answered a card after playing the round'); end if;
+  j := public.room_submit(room_r, 0, b, '[]');
+  if j ->> 'kept' = 'new' and (j ->> 'all')::boolean then passed := passed + 1; else failed := array_append(failed, format('B playing last answered %s', j)); end if;
+
+  -- What members read: their room and everyone in it, B's readiness, and no standing before the round turns. Nobody reads the orders.
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  if (select count(*) from public.rooms where id = room_r) = 1 and (select count(*) from public.room_players where room_id = room_r) = 3
+     and (select ready_round from public.room_players where room_id = room_r and user_id = b) = 0 and (select count(*) from public.room_players where room_id = room_r and standing is not null) = 0
+    then passed := passed + 1; else failed := array_append(failed, 'A does not read their room as it stands'); end if;
+  if (select count(*) from public.games where id = gb) = 0 then passed := passed + 1; else failed := array_append(failed, 'A read B''s life in the room'); end if;
+  begin
+    perform 1 from public.room_orders;
+    failed := array_append(failed, 'a member read the orders of the room');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    update public.rooms set round = 5 where id = room_r;
+    failed := array_append(failed, 'a member moved the room on');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    update public.room_players set ready_round = 0 where room_id = room_r;
+    failed := array_append(failed, 'a member changed who is ready');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    perform public.room_turn(room_r, 0, now(), '[]');
+    failed := array_append(failed, 'a member turned the round');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  begin
+    perform public.room_join(code_r, a, '0.1.0', '1.0.0');
+    failed := array_append(failed, 'a player called the server''s joining of a room');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  -- C, who left the lobby, still reads it; D, who was never in it, reads nothing of it.
+  perform set_config('request.jwt.claims', json_build_object('sub', c, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  if (select count(*) from public.rooms where id = room_r) = 1 then passed := passed + 1; else failed := array_append(failed, 'C no longer reads the room they left'); end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', d, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  if (select count(*) from public.rooms where id = room_r) = 0 and (select count(*) from public.room_players where room_id = room_r) = 0
+     and not public.in_room(room_r)
+    then passed := passed + 1; else failed := array_append(failed, 'D read a room they are not in'); end if;
+  reset role;
+
+  -- A turn writes every game, every standing and the room, or nothing: a game no longer as it was read stops all of it.
+  select updated_at, log into t, log0 from public.games where id = ga;
+  select updated_at into t2 from public.games where id = gb;
+  nm := public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2 - interval '1 second', 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":2}'::jsonb)));
+  if nm = 'moved'
+     and (select round from public.rooms where id = room_r) = 0 and (select log from public.games where id = ga) = log0
+     and (select count(*) from public.room_players where room_id = room_r and standing is not null) = 0
+    then passed := passed + 1; else failed := array_append(failed, 'half a turn was written'); end if;
+  -- Every member named, each as read: it turns once, and only once.
+  nm := public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb)));
+  nm := nm || ' ' || public.room_turn(room_r, 0, now() + interval '3 minutes', jsonb_build_array(
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":1}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[{"picks":[0,0],"orders":[]}]'::jsonb, 'round', 1, 'finished', false, 'standing', '{"score":2}'::jsonb)));
+  if nm = 'moved ok'
+     and (select round from public.rooms where id = room_r) = 1 and (select count(*) from public.games where id in (ga, gb) and round = 1) = 2
+     and (select standing ->> 'score' from public.room_players where room_id = room_r and user_id = b) = '2'
+    then passed := passed + 1; else failed := array_append(failed, format('a whole turn was not written: %s', nm)); end if;
+  select updated_at into t from public.games where id = ga;
+  select updated_at into t2 from public.games where id = gb;
+  if public.room_turn(room_r, 0, now(), jsonb_build_array(
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'standing', '{}'::jsonb),
+       jsonb_build_object('user', b, 'game', gb, 'as_read', t2, 'log', '[]'::jsonb, 'round', 1, 'finished', false, 'standing', '{}'::jsonb))) = 'moved'
+    then passed := passed + 1; else failed := array_append(failed, 'a round was turned twice'); end if;
+
+  -- Leaving in play gives the life up and the room goes on for whoever is left; the last to leave closes it.
+  j := public.room_leave(room_r, b);
+  if j ->> 'status' = 'playing' and (select status from public.games where id = gb) = 'abandoned' and (select status from public.rooms where id = room_r) = 'playing'
+    then passed := passed + 1; else failed := array_append(failed, format('B leaving the room in play answered %s', j)); end if;
+  -- The last round turned with no deadline: the room is over, and A's life with it.
+  select updated_at into t from public.games where id = ga;
+  nm := public.room_turn(room_r, 1, null, jsonb_build_array(
+       jsonb_build_object('user', a, 'game', ga, 'as_read', t, 'log', '[{"picks":[0,0],"orders":[]},{"picks":[],"orders":[]}]'::jsonb, 'round', 2, 'finished', true, 'standing', '{"score":3}'::jsonb)));
+  if nm = 'ok'
+     and (select status from public.rooms where id = room_r) = 'finished' and (select deadline from public.rooms where id = room_r) is null
+     and (select status from public.games where id = ga) = 'finished'
+    then passed := passed + 1; else failed := array_append(failed, format('the last round did not end the room: %s', nm)); end if;
+  -- A leaves the room that is over; it stays over. A may open another.
+  nm := (public.room_leave(room_r, a)) ->> 'status';
+  j := public.room_open(room_s, a, 'nurse', '0.1.0', '1.0.0', 90);
+  if nm = 'finished' and (select status from public.rooms where id = room_r) = 'finished' and j ->> 'room' = room_s::text
+    then passed := passed + 1; else failed := array_append(failed, 'A could not leave a room that was over and open another'); end if;
+  -- A day-old lobby is closed when the server next looks at it, and not before. The host leaving a lobby closes it for everyone.
+  perform public.room_join((select code from public.rooms where id = room_s), d, '0.1.0', '1.0.0');
+  yes1 := public.room_close(room_s, now() + interval '23 hours');
+  yes2 := public.room_close(room_s, now() + interval '25 hours');
+  if not yes1 and yes2
+     and (select status from public.rooms where id = room_s) = 'closed'
+    then passed := passed + 1; else failed := array_append(failed, 'a lobby was not closed after a day, or was closed before'); end if;
+  room_s := gen_random_uuid();
+  perform public.room_open(room_s, d, 'nurse', '0.1.0', '1.0.0', 300);
+  perform public.room_join((select code from public.rooms where id = room_s), c, '0.1.0', '1.0.0');
+  j := public.room_leave(room_s, d);
+  if j ->> 'status' = 'closed' and (select count(*) from public.room_players where room_id = room_s and left_at is null) = 0
+    then passed := passed + 1; else failed := array_append(failed, format('the host leaving the lobby answered %s', j)); end if;
 
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;
   delete from auth.users where id = a;
   select (select count(*) from public.profiles where user_id = a) + (select count(*) from public.player_progress where user_id = a) + (select count(*) from public.games where user_id = a)
        + (select count(*) from public.game_secrets where game_id = ranked_a) + (select count(*) from public.runs where user_id = a)
-       + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from private.rate_use where user_id = a) into n;
+       + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from private.rate_use where user_id = a)
+       + (select count(*) from public.rooms where host = a) + (select count(*) from public.room_players where user_id = a) + (select count(*) from public.room_orders where user_id = a) into n;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, (format('%s rows of a deleted account were left behind', n))::text); end if;
 
   -- The outcome travels as hex, so no quote in a message can be mistaken for the end of it.
