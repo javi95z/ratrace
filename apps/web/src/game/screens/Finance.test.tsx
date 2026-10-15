@@ -498,7 +498,12 @@ describe('investing every round', () => {
 });
 
 describe('moving to another city', () => {
-  it('sets the year there beside the year here, city by city, in the engine\'s own figures', async () => {
+  const openCity = async (user: ReturnType<typeof userEvent.setup>, cityId: string) => {
+    await user.click(within(screen.getByRole('dialog', { name: 'Move to another city' })).getByRole('button', { name: new RegExp(`^${names.cities[cityId]}`) }));
+    return screen.getByRole('region', { name: names.cities[cityId] });
+  };
+
+  it('lists every city on a row, where the year leaves the most first, the city lived in at the top', async () => {
     const { services } = await inFinance('nurse');
     const view = viewOf(await stateOf(services));
     const user = userEvent.setup();
@@ -506,29 +511,48 @@ describe('moving to another city', () => {
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
     await user.click(button('Move to another city'));
     const sheet = screen.getByRole('dialog', { name: 'Move to another city' });
+    const rows = within(sheet).getAllByRole('listitem');
+    expect(rows).toHaveLength(content.cities.length);
+    expect(within(rows[0]).getByText('Madrid')).toBeTruthy();
+    expect(within(rows[0]).getByText('You live here')).toBeTruthy();
+    // Madrid pays her trade above the usual, and says so on its row.
+    expect(within(rows[0]).getByText('Pays Healthcare more')).toBeTruthy();
+    expect(rows.slice(1).map((row) => row.textContent)).toEqual(
+      [...content.cities.filter((city) => city.id !== 'madrid')]
+        .sort((a, b) => quoteMove(content, view, b.id).there.leftAnnual - quoteMove(content, view, a.id).there.leftAnnual)
+        .map((city) => expect.stringContaining(names.cities[city.id])),
+    );
+  });
 
-    // Where she lives: her year as it is, with nothing to compare it to and nowhere to move.
-    const madrid = within(sheet).getByRole('region', { name: 'Madrid' });
+  it('opens a city with its year beside this one, its figures folded away, and the move', async () => {
+    const { services } = await inFinance('nurse');
+    const view = viewOf(await stateOf(services));
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    await user.click(button('Move to another city'));
+
+    const madrid = await openCity(user, 'madrid');
     const here = quoteMove(content, view, 'london').here;
-    expect(within(madrid).getByText('You live here')).toBeTruthy();
-    expect(within(madrid).getByText(fmt.money(here.payAnnual))).toBeTruthy();
     expect(within(madrid).getByText(fmt.money(here.leftAnnual))).toBeTruthy();
-    expect(within(madrid).queryByRole('button')).toBeNull();
-    // Madrid pays her trade above the usual, and says so.
-    expect(within(madrid).getByText('Healthcare +10%')).toBeTruthy();
+    expect(within(madrid).queryByRole('button', { name: 'Move here' })).toBeNull();
+    await user.click(within(madrid).getByRole('button', { name: '← All cities' }));
 
     for (const city of content.cities.filter((x) => x.id !== 'madrid')) {
       const quote = quoteMove(content, view, city.id);
-      const card = within(sheet).getByRole('region', { name: names.cities[city.id] });
+      const card = await openCity(user, city.id);
       const line = (label: string) => (within(card).getByText(label).parentElement?.textContent ?? '').replace(label, '');
+      expect(line('Left over a year'), city.id).toBe(`${fmt.compact(quote.here.leftAnnual)}→${fmt.compact(quote.there.leftAnnual)}`);
+      expect(within(card).queryByText('Your pay')).toBeNull();
+      await user.click(within(card).getByRole('button', { name: 'See the figures' }));
       expect(line('Your pay'), city.id).toBe(`${fmt.compact(quote.here.payAnnual)}→${fmt.compact(quote.there.payAnnual)}`);
       expect(line('Income tax'), city.id).toBe(`${fmt.compact(quote.here.taxAnnual)}→${fmt.compact(quote.there.taxAnnual)}`);
-      expect(line('Left over a year'), city.id).toBe(`${fmt.compact(quote.here.leftAnnual)}→${fmt.compact(quote.there.leftAnnual)}`);
       expect(within(card).getByText(`Status +${city.prestige}`)).toBeTruthy();
       expect(within(card).getByText(`Moving costs ${fmt.money(quote.cost)} and 1 focus`)).toBeTruthy();
       // A nurse on the first rung, alone: nothing more to lose by going.
       expect(within(card).queryByText(/^You arrive as/)).toBeNull();
-      expect(within(card).queryByText(/^Your partner will go/)).toBeNull();
+      expect(within(card).getByRole('button', { name: 'Move here' })).toBeTruthy();
+      await user.click(within(card).getByRole('button', { name: '← All cities' }));
     }
   });
 
@@ -550,10 +574,11 @@ describe('moving to another city', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
     await user.click(button('Move to another city'));
-    const card = within(screen.getByRole('dialog', { name: 'Move to another city' })).getByRole('region', { name: names.cities[elsewhere.id] });
+    const card = await openCity(user, elsewhere.id);
     const { text } = textFor('en');
     expect(within(card).getByText(`You arrive as ${text.careers[job.id].levels[job.level - 1]}: a rung down, until your next promotion.`)).toBeTruthy();
     // The pay shown there is the pay of the rung below, in that city.
+    await user.click(within(card).getByRole('button', { name: 'See the figures' }));
     expect((within(card).getByText('Your pay').parentElement?.textContent ?? '').endsWith(`→${fmt.compact(quote.there.payAnnual)}`)).toBe(true);
     expect(quote.there.level).toBe(job.level - 1);
   });
@@ -584,9 +609,13 @@ describe('what belongs to a city', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
     await user.click(button('Move to another city'));
-    const sheet = screen.getByRole('dialog', { name: 'Move to another city' });
-    // One warning for each of the five cities that are not Madrid.
-    expect(within(sheet).getAllByText('Moving ends: Bernabéu season seat.')).toHaveLength(content.cities.length - 1);
+    // A warning in each city that is not Madrid.
+    for (const city of content.cities.filter((x) => x.id !== 'madrid')) {
+      await user.click(within(screen.getByRole('dialog', { name: 'Move to another city' })).getByRole('button', { name: new RegExp(`^${names.cities[city.id]}`) }));
+      const card = screen.getByRole('region', { name: names.cities[city.id] });
+      expect(within(card).getByText('Moving ends: Bernabéu season seat.')).toBeTruthy();
+      await user.click(within(card).getByRole('button', { name: '← All cities' }));
+    }
   });
 });
 
@@ -831,7 +860,9 @@ describe("this round's orders", () => {
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
     await user.click(button('Move to another city'));
     const cities = screen.getByRole('dialog', { name: 'Move to another city' });
-    await user.click(within(cities).getAllByRole('button', { name: 'Move here' })[0]);
+    // The first city on the list after the one lived in.
+    await user.click(within(within(cities).getAllByRole('listitem')[1]).getByRole('button'));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Move here' }));
 
     await user.click(button('1 order'));
     const orders = screen.getByRole('dialog', { name: "This round's orders" });

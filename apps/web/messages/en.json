@@ -496,7 +496,11 @@
       "mastered": "Mastered",
       "tired": "−{n} health",
       "burnoutRisk": "{pct}% risk of burnout",
-      "rungStudyLeft": "{left} of {max} left at this rung"
+      "rungStudyLeft": "{left} of {max} left at this rung",
+      "bestForJob": "Pays {career} more",
+      "allCities": "← All cities",
+      "showNumbers": "See the figures",
+      "hideNumbers": "Hide the figures"
     },
     "shop": {
       "viewLabel": "What to show in the shop",

@@ -496,7 +496,11 @@
       "mastered": "Dominado",
       "tired": "−{n} de salud",
       "burnoutRisk": "{pct} % de riesgo de quemarte",
-      "rungStudyLeft": "quedan {left} de {max} en este puesto"
+      "rungStudyLeft": "quedan {left} de {max} en este puesto",
+      "bestForJob": "Paga más: {career}",
+      "allCities": "← Todas las ciudades",
+      "showNumbers": "Ver números",
+      "hideNumbers": "Ocultar números"
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",

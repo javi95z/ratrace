@@ -3,7 +3,7 @@
 import { assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
-import type { AssetDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
+import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -792,83 +792,143 @@ function MoveSheet({ onClose }: { onClose(): void }) {
   const t = useT('finance.lifestyle');
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
-  const { shown, p, world } = useRound();
-  const setOrder = useGame((s) => s.setOrder);
+  const { shown, p } = useRound();
   const job = p.life.career;
-  const years = content.yearsPerRound;
+  // One city at a time in full; the list is short, a row a city.
+  const [chosen, setChosen] = useState<string | null>(null);
+  const quotes = content.cities.map((city) => ({ city, quote: quoteMove(content, shown, city.id) }));
+  const here = quotes.find((entry) => entry.city.id === p.cityId);
+  // Where the year leaves the most first, the city lived in at the top.
+  const others = quotes.filter((entry) => entry.city.id !== p.cityId).sort((a, b) => b.quote.there.leftAnnual - a.quote.there.leftAnnual);
+  const open = chosen ? quotes.find((entry) => entry.city.id === chosen) : undefined;
 
   return (
-    <Sheet open onClose={onClose} title={t('moveTitle')} closeLabel={common('close')}>
-      <div className="flex flex-col gap-3">
-        <p className="text-[13px] leading-snug text-ink-200">{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</p>
-        {content.cities.map((city) => {
-          const here = city.id === p.cityId;
-          const tax = effectiveTax(city, world);
-          const quote = quoteMove(content, shown, city.id);
-          const { here: now, there } = quote;
-          const trades = Object.entries(city.careerPayPct ?? {});
-          return (
-            <Panel key={city.id} label={names.cities[city.id]}>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="pixel flex min-w-0 items-center gap-2 text-[17px]">
-                  <Sprite id={crestArt(city.id)} fallback={{ w: 64, h: 64 }} />
-                  {names.cities[city.id]}
-                </h3>
-                {here ? <Tag tone="good">{t('here')}</Tag> : null}
-              </div>
-              <p className="mb-1.5 text-[13px] text-ink-300">{text.cities[city.id].tagline}</p>
-              <div className="mb-1.5 flex flex-wrap gap-1.5">
-                <Tag tone="good">{t('cityStatus', { n: city.prestige })}</Tag>
-                {/* The trades the city pays above the usual. The player's own stands out. */}
-                {trades.map(([career, pct]) => (
-                  <Tag key={career} tone={job?.id === career ? 'good' : 'plain'}>
-                    {t('cityTrade', { career: text.careers[career].name, pct: pct - 100 })}
-                  </Tag>
-                ))}
-              </div>
-
-              {here ? null : (
-                <div className="flex justify-end gap-2 text-[11px] uppercase tracking-wider text-ink-300">
-                  <span>{t('yearHere')}</span>
-                  <span aria-hidden>→</span>
-                  <span>{t('yearThere')}</span>
-                </div>
-              )}
-              <Versus label={t('yourPay')} here={now.payAnnual} there={here ? undefined : there.payAnnual} />
-              {now.partnerAnnual > 0 || there.partnerAnnual > 0 ? <Versus label={t('partnerPay')} here={now.partnerAnnual} there={here ? undefined : there.partnerAnnual} /> : null}
-              <Versus label={t('incomeTax')} here={now.taxAnnual} there={here ? undefined : there.taxAnnual} more="worse" />
-              <Versus label={t('costs')} here={now.costAnnual} there={here ? undefined : there.costAnnual} more="worse" />
-              <Versus strong label={t('left')} here={now.leftAnnual} there={here ? undefined : there.leftAnnual} />
-              <p className="mt-1 text-[12px] text-ink-300">
-                {t('taxRates', { income: tax.incomeRatesBp.map((rate) => fmt.rate(rate)).join(' · '), gains: fmt.rate(tax.capitalGainsBp) })}
-              </p>
-
-              {here ? null : (
-                <>
-                  <ul className="my-2 flex flex-col gap-1 text-[13px] leading-snug">
-                    <li>{t('moveCost', { amount: fmt.money(quote.cost) })}</li>
-                    {job && quote.rungsLost > 0 && there.level !== null ? (
-                      <li className="text-wine-300">{t('moveRung', { title: text.careers[job.id].levels[there.level] })}</li>
-                    ) : null}
-                    {quote.partnerIdleRounds > 0 ? <li className="text-wine-300">{t('movePartner', { years: quote.partnerIdleRounds * years })}</li> : null}
-                    {/* Said before the move is ordered: what belongs to this city does not come along. */}
-                    {quote.lapses.length > 0 ? <li className="text-wine-300">{t('moveLapses', { items: quote.lapses.map((id) => names.items[id]).join(', ') })}</li> : null}
-                  </ul>
-                  <Button
-                    wide
-                    onClick={() => {
-                      if (setOrder((order) => order.type === 'moveCity', { type: 'moveCity', cityId: city.id })) onClose();
-                    }}
+    <Sheet open onClose={onClose} title={open ? names.cities[open.city.id] : t('moveTitle')} closeLabel={common('close')}>
+      {open ? (
+        <CityDetail city={open.city} quote={open.quote} onBack={() => setChosen(null)} onMoved={onClose} />
+      ) : (
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] leading-snug text-ink-200">{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</p>
+          <div className="flex justify-end text-[11px] uppercase tracking-wider text-ink-300">{t('left')}</div>
+          <ul className="flex flex-col gap-1.5">
+            {[...(here ? [here] : []), ...others].map(({ city, quote }) => {
+              const home = city.id === p.cityId;
+              const best = job !== null && (city.careerPayPct?.[job.id] ?? 100) > 100;
+              const gain = quote.there.leftAnnual - quote.here.leftAnnual;
+              return (
+                <li key={city.id}>
+                  <button
+                    type="button"
+                    data-finance-item
+                    onClick={() => setChosen(city.id)}
+                    className={`frame-raised flex min-h-12 w-full items-center gap-2 bg-night-600 px-2 py-1.5 text-left ${home ? 'frame-gold' : ''}`}
                   >
-                    {t('moveHere')}
-                  </Button>
-                </>
-              )}
-            </Panel>
-          );
-        })}
-      </div>
+                    <Bare className="size-9">
+                      <Sprite id={crestArt(city.id)} fallback={{ w: 64, h: 64 }} className="!h-full !w-full" />
+                    </Bare>
+                    <span className="min-w-0 flex-1">
+                      <span className="pixel block truncate text-[16px]">{names.cities[city.id]}</span>
+                      <span className="flex flex-wrap gap-1">
+                        {home ? <Tag tone="good">{t('here')}</Tag> : null}
+                        {best && job ? <Tag tone="plain">{t('bestForJob', { career: text.careers[job.id].name })}</Tag> : null}
+                      </span>
+                    </span>
+                    <span className={`pixel shrink-0 text-right text-[16px] ${home ? '' : gain > 0 ? 'text-teal-300' : gain < 0 ? 'text-wine-300' : ''}`}>
+                      {fmt.compact(home ? quote.here.leftAnnual : quote.there.leftAnnual)}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </Sheet>
+  );
+}
+
+/**
+ * One city in full: what it is, what the year would leave there beside here, and the figures behind
+ * that folded away until asked for; then what a move costs, and the move itself.
+ */
+function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: ReturnType<typeof quoteMove>; onBack(): void; onMoved(): void }) {
+  const t = useT('finance.lifestyle');
+  const { content, text, names, fmt } = useWords();
+  const { p, world } = useRound();
+  const setOrder = useGame((s) => s.setOrder);
+  const [numbers, setNumbers] = useState(false);
+  const job = p.life.career;
+  const years = content.yearsPerRound;
+  const here = city.id === p.cityId;
+  const tax = effectiveTax(city, world);
+  const { here: now, there } = quote;
+  const trades = Object.entries(city.careerPayPct ?? {});
+
+  return (
+    <section aria-label={names.cities[city.id]} className="flex flex-col gap-2">
+      <Button variant="quiet" className="self-start text-[14px]" onClick={onBack}>
+        {t('allCities')}
+      </Button>
+      <div className="flex items-center gap-2">
+        <Sprite id={crestArt(city.id)} fallback={{ w: 64, h: 64 }} />
+        <div className="min-w-0">
+          {here ? <Tag tone="good">{t('here')}</Tag> : null}
+          <p className="text-[13px] leading-snug text-ink-300">{text.cities[city.id].tagline}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        <Tag tone="good">{t('cityStatus', { n: city.prestige })}</Tag>
+        {/* The trades the city pays above the usual. The player's own stands out. */}
+        {trades.map(([career, pct]) => (
+          <Tag key={career} tone={job?.id === career ? 'good' : 'plain'}>
+            {t('cityTrade', { career: text.careers[career].name, pct: pct - 100 })}
+          </Tag>
+        ))}
+      </div>
+
+      {here ? null : (
+        <div className="flex justify-end gap-2 text-[11px] uppercase tracking-wider text-ink-300">
+          <span>{t('yearHere')}</span>
+          <span aria-hidden>→</span>
+          <span>{t('yearThere')}</span>
+        </div>
+      )}
+      <Versus strong label={t('left')} here={now.leftAnnual} there={here ? undefined : there.leftAnnual} />
+      <Button variant="quiet" className="text-[14px]" aria-expanded={numbers} onClick={() => setNumbers((shown) => !shown)}>
+        {t(numbers ? 'hideNumbers' : 'showNumbers')}
+      </Button>
+      {numbers ? (
+        <div>
+          <Versus label={t('yourPay')} here={now.payAnnual} there={here ? undefined : there.payAnnual} />
+          {now.partnerAnnual > 0 || there.partnerAnnual > 0 ? <Versus label={t('partnerPay')} here={now.partnerAnnual} there={here ? undefined : there.partnerAnnual} /> : null}
+          <Versus label={t('incomeTax')} here={now.taxAnnual} there={here ? undefined : there.taxAnnual} more="worse" />
+          <Versus label={t('costs')} here={now.costAnnual} there={here ? undefined : there.costAnnual} more="worse" />
+          <p className="mt-1 text-[12px] text-ink-300">
+            {t('taxRates', { income: tax.incomeRatesBp.map((rate) => fmt.rate(rate)).join(' · '), gains: fmt.rate(tax.capitalGainsBp) })}
+          </p>
+        </div>
+      ) : null}
+
+      {here ? null : (
+        <>
+          <ul className="my-1 flex flex-col gap-1 text-[13px] leading-snug">
+            <li>{t('moveCost', { amount: fmt.money(quote.cost) })}</li>
+            {job && quote.rungsLost > 0 && there.level !== null ? <li className="text-wine-300">{t('moveRung', { title: text.careers[job.id].levels[there.level] })}</li> : null}
+            {quote.partnerIdleRounds > 0 ? <li className="text-wine-300">{t('movePartner', { years: quote.partnerIdleRounds * years })}</li> : null}
+            {/* Said before the move is ordered: what belongs to this city does not come along. */}
+            {quote.lapses.length > 0 ? <li className="text-wine-300">{t('moveLapses', { items: quote.lapses.map((id) => names.items[id]).join(', ') })}</li> : null}
+          </ul>
+          <Button
+            wide
+            onClick={() => {
+              if (setOrder((order) => order.type === 'moveCity', { type: 'moveCity', cityId: city.id })) onMoved();
+            }}
+          >
+            {t('moveHere')}
+          </Button>
+        </>
+      )}
+    </section>
   );
 }
 

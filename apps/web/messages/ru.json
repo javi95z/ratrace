@@ -496,7 +496,11 @@
       "mastered": "Освоено",
       "tired": "−{n} здоровья",
       "burnoutRisk": "{pct}% риска выгорания",
-      "rungStudyLeft": "осталось {left} из {max} на этой должности"
+      "rungStudyLeft": "осталось {left} из {max} на этой должности",
+      "bestForJob": "Платят больше: {career}",
+      "allCities": "← Все города",
+      "showNumbers": "Показать цифры",
+      "hideNumbers": "Скрыть цифры"
     },
     "shop": {
       "viewLabel": "Что показывать в магазине",
