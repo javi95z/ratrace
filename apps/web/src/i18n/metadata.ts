@@ -7,15 +7,16 @@ import type { AppLocale } from './routing';
 export { SITE_URL } from '@/lib/site';
 
 /** The pages a link can lead to, by the path after the language. The front door is the empty one. */
-export const PAGES = ['', '/new', '/challenge', '/rankings', '/collection', '/records', '/play'] as const;
+export const PAGES = ['', '/new', '/challenge', '/room', '/rankings', '/collection', '/records', '/play'] as const;
 export type Page = (typeof PAGES)[number];
-const TITLE_OF: Partial<Record<Page, 'new' | 'play' | 'collection' | 'records' | 'rankings' | 'challenge'>> = {
+const TITLE_OF: Partial<Record<Page, 'new' | 'play' | 'collection' | 'records' | 'rankings' | 'challenge' | 'room'>> = {
   '/new': 'new',
   '/play': 'play',
   '/collection': 'collection',
   '/records': 'records',
   '/rankings': 'rankings',
   '/challenge': 'challenge',
+  '/room': 'room',
 };
 
 /** How each language is written for the networks that read Open Graph. */

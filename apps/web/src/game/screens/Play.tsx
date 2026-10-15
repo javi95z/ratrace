@@ -159,12 +159,24 @@ const Waiting = ({ children }: { children: ReactNode }) => (
   </main>
 );
 
+/** What a room adds to the screens of a life: its bar, what stands in for the next thing to do while the player waits, its order after a round, and at the end. */
+export interface RoomSlots {
+  bar: ReactNode;
+  /** Shown in place of the round's own button, while the player has played and waits for the others. Null otherwise. */
+  actions: ReactNode | null;
+  /** Below the ledger of a round. */
+  resolved: ReactNode;
+  /** Above the end of the life. */
+  end: ReactNode;
+}
+
 /**
  * A life being played: the HUD, the stage of the round, and the next thing to do.
  * A phone stacks them, with the profile and the orders in sheets. From 1024px they sit in three
  * columns: who you are, the round, and the world with this round's orders.
+ * In a room, `room` adds the room's bar, its wait and its order.
  */
-export function Play() {
+export function Play({ room }: { room?: RoomSlots } = {}) {
   const common = useT('common');
   const profile = useT('profile');
   const news = useT('news');
@@ -201,10 +213,10 @@ export function Play() {
     { active: status === 'playing', priority: 10 },
   );
 
-  // No life to play: the front door is where one is started.
+  // No life to play: the front door is where one is started. A room says itself where to go.
   useEffect(() => {
-    if (status === 'none') router.replace('/');
-  }, [status, router]);
+    if (status === 'none' && !room) router.replace('/');
+  }, [status, router, room]);
 
   // A sheet belongs to the stage it was opened in.
   useEffect(() => {
@@ -236,7 +248,7 @@ export function Play() {
 
   if (fault) return <Fault />;
   if (status !== 'playing' || !view) return <Waiting>{common('loading')}</Waiting>;
-  if (stage === 'end') return <End />;
+  if (stage === 'end') return <End extra={room?.end} />;
 
   // Another tab played this life on: the store has already opened it as it now stands, and the player is told why the screen changed.
   // A ranked life is played by the server. When it did not answer, nothing was played, and the player is told to try again;
@@ -245,8 +257,9 @@ export function Play() {
   const heard = said === 'moved' ? clearMoved : said === 'unreachable' ? clearUnreachable : clearFellBack;
   const notice = <Toast message={said ? play(said) : null} onDone={heard} ms={6_000} />;
 
-  const actions = <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
-  const hasActions = stage !== 'cards';
+  const actions = room?.actions ?? <Actions stage={stage} desk={desk} onBasket={() => setBasketOpen(true)} />;
+  const hasActions = stage !== 'cards' || room?.actions != null;
+  const afterStage = room && stage === 'resolve' ? <div className="mt-4 px-3">{room.resolved}</div> : null;
   const heading = <h1 className="sr-only">{play('heading', { life: text.lives[lifeId ?? '']?.name ?? '', age: ageAt(content, view.round) })}</h1>;
   // What the stage is called, for someone who cannot see it change.
   const stageName =
@@ -276,8 +289,10 @@ export function Play() {
 
         <div className="@container flex min-h-dvh min-w-0 flex-col">
           {/* Art is drawn at twice its size only where the column has room for a card that wide. */}
+          {room ? <div className="mx-auto w-full max-w-[680px] pt-3">{room.bar}</div> : null}
           <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
             <StageView stage={stage} desk />
+            {afterStage}
           </main>
           {hasActions ? (
             // The finances are long, so their button stays in reach at the bottom. Everywhere else it follows what was just read.
@@ -306,8 +321,10 @@ export function Play() {
       {heading}
       {/* The skyline opens and closes a round. In between, the room goes to the cards and the finances. */}
       <Hud compact={stage !== 'news' && stage !== 'resolve'} onProfile={() => setProfileOpen(true)} />
+      {room ? <div className="px-3 pt-2">{room.bar}</div> : null}
       <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
         <StageView stage={stage} desk={false} />
+        {afterStage}
       </main>
       {hasActions ? (
         <div id="round-actions" tabIndex={-1} className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 px-3 pt-3">

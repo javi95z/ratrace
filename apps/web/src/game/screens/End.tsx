@@ -2,6 +2,7 @@
 
 import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
@@ -69,14 +70,14 @@ function Part({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** How the life ended. Nothing to show until there is a life. */
-export function End() {
+/** How the life ended. Nothing to show until there is a life. `extra` comes first: in a room, the room's order. */
+export function End({ extra }: { extra?: ReactNode } = {}) {
   const view = useGame((s) => s.view);
-  return view ? <Ended view={view} /> : null;
+  return view ? <Ended view={view} extra={extra} /> : null;
 }
 
 /** The score and the three parts it is made of, what the life earned, the graph of a lifetime, and the way to another. */
-function Ended({ view }: { view: GameView }) {
+function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const t = useT('end');
   const common = useT('common');
   const tale = useT('epilogue');
@@ -147,6 +148,7 @@ function Ended({ view }: { view: GameView }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-3 pb-8 pt-6 lg:max-w-5xl">
+      {extra ? <div className="mb-4">{extra}</div> : null}
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <div className="flex flex-col gap-4">
           <header className="flex items-center gap-3">

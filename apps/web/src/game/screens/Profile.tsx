@@ -5,7 +5,7 @@ import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty 
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGame, useSaving, useT, useWords } from '@/game/context';
+import { useGame, useInRoom, useSaving, useT, useWords } from '@/game/context';
 import { ageAt, insuranceCover } from '@/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Button, Panel, Row, Tag } from '@/ui/kit';
@@ -388,6 +388,9 @@ export function Leave() {
   const t = useT('profile');
   const common = useT('common');
   const saving = useSaving();
+  // A life in a room is left with the room, from the room's own sheet.
+  const inRoom = useInRoom();
+  if (inRoom) return null;
   return (
     <div className="mt-3">
       <Link href="/" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-3 text-[15px] text-ink-200">

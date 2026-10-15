@@ -9,6 +9,10 @@ import type { PlayerStore } from '@/session/types';
 import { createGameStore } from './store';
 import type { GameStore } from './store';
 
+// What the screens of a room need to know of one, without reaching past the round stores into the sessions.
+export { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS } from '@/session/room';
+export type { RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
+
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
 export const LOOK_EVERY_MS = 15_000;
 /** How long before the deadline a page plays the round as it stands for a player who has not. */

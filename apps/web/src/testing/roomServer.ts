@@ -195,7 +195,17 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const network = { down: false };
   /** What a page could hear about: the rooms and who is in them. */
   const snapshot = () => JSON.stringify([[...roomsById.values()], members]);
-  const ask = (user: string, body: Record<string, unknown>): Promise<Reply> => rooms(GAMES, deps, user, body);
+  /** Asks the server as `user`. What it changed is told, once the answer is back, to every page listening, as Realtime tells it. */
+  const ask = async (user: string, body: Record<string, unknown>): Promise<Reply> => {
+    const before = snapshot();
+    const reply = await rooms(GAMES, deps, user, body);
+    if (snapshot() !== before) {
+      queueMicrotask(() => {
+        for (const set of listeners.values()) for (const listener of [...set]) listener();
+      });
+    }
+    return reply;
+  };
 
   return {
     deps,
@@ -213,11 +223,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     link: (user: string): RoomsLink => ({
       api: roomsApi(async (body) => {
         if (network.down) throw new TypeError('Failed to fetch');
-        const before = snapshot();
         const reply = await ask(user, JSON.parse(JSON.stringify(body)) as Record<string, unknown>);
-        if (snapshot() !== before) queueMicrotask(() => {
-          for (const set of listeners.values()) for (const listener of set) listener();
-        });
         return JSON.parse(JSON.stringify(reply)) as Reply;
       }),
       watch: (roomId, onChange) => {

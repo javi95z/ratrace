@@ -8,12 +8,13 @@ import { createContext, useContext, useEffect, useMemo, useState, useSyncExterna
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { formatFor } from '@/lib/format';
-import { browserOnline } from '@/online';
+import { browserOnline, browserPage } from '@/online';
 import { offlineAccount } from '@/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
 import { LocalSessions } from '@/session/local';
 import { RankedSessions } from '@/session/ranked';
+import type { RoomsLink } from '@/session/room';
 import { GameSessions } from '@/session/sessions';
 import { MemoryStore } from '@/session/memory';
 import { updateProfile } from '@/session/profile';
@@ -25,6 +26,8 @@ import type { Cue, SoundBoard } from '@/ui/sound';
 import { KeyboardProvider } from '@/ui/keyboard';
 import type { Translate, Words } from './present';
 import { cuesFor } from './sound';
+import { createRoomStore } from './room';
+import type { RoomActions, RoomStore, RoomStoreState } from './room';
 import { createGameStore } from './store';
 import type { GameStore, RoundActions, RoundState } from './store';
 
@@ -48,6 +51,10 @@ export interface Services {
   saves?: AccountSaves | null;
   /** The other players, while someone is signed in, and null otherwise. Left out, there are none to ask. */
   community?: () => Community | null;
+  /** The rooms, while someone is signed in, and null otherwise. Left out, there are none. */
+  rooms?: () => RoomsLink | null;
+  /** Runs something later, for the clocks of a room. Left out, the browser's own timers. */
+  schedule?: (run: () => void, ms: number) => () => void;
   /** True where the tabs of the money are opened one by one through a guided first life. Left out, every tab is there from the start. */
   introduceTabs?: boolean;
   /** What plays the sounds. Left out, a test hears nothing. */
@@ -61,6 +68,12 @@ const NO_SAVES: AccountSaves = { status: () => 'off', offer: () => null, subscri
 
 interface Game {
   game: GameStore;
+  /** The room the player is in, as this page follows it. */
+  rooms: RoomStore;
+  /** True under a `GameScope`: the round store is a room's life, not the device's own. */
+  inRoom: boolean;
+  /** Reads the profile and the finished lives again. */
+  reload(): void;
   store: PlayerStore;
   saving: Saving;
   account: Account;
@@ -86,7 +99,7 @@ function browserServices(): Services {
     if (degraded) console.warn('this browser is not saving:', error);
     for (const listener of listeners) listener();
   });
-  const { account, store, saves, ranked, community } = browserOnline(kept);
+  const { account, store, saves, ranked, rooms, community } = browserOnline(kept);
   const saving: Saving = {
     degraded: () => kept.degraded,
     subscribe: (listener) => {
@@ -104,7 +117,7 @@ function browserServices(): Services {
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
   const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
-  return { sessions, store, saving, account, saves, community, sound: createSoundBoard(), introduceTabs: true };
+  return { sessions, store, saving, account, saves, community, rooms, sound: createSoundBoard(), introduceTabs: true };
 }
 
 /** Anything a tap is meant for: it answers with a tick. */
@@ -113,6 +126,7 @@ const PRESSABLE = 'button, a[href], [role="tab"], [role="radio"], [role="switch"
 /** Everything one page load makes once: the round store and the two services behind it. */
 interface Made {
   game: GameStore;
+  rooms: RoomStore;
   store: PlayerStore;
   saving: Saving;
   account: Account;
@@ -122,9 +136,21 @@ interface Made {
   introduceTabs: boolean;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, sound, introduceTabs }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, sound, introduceTabs }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null), introduceTabs: introduceTabs === true };
+  const roomStore = createRoomStore({
+    link: rooms ?? (() => null),
+    store,
+    content,
+    lives,
+    versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION },
+    tapClock: () => performance.now(),
+    tapGuardMs: tapGuardMs ?? TAP_GUARD_MS,
+    schedule,
+    page: typeof window === 'undefined' ? undefined : browserPage,
+    onSaveError: (error) => console.warn('could not save the life in the room:', error),
+  });
+  return { game, rooms: roomStore, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null), introduceTabs: introduceTabs === true };
 }
 
 /**
@@ -156,6 +182,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     if (!booted.has(made.game)) {
       booted.add(made.game);
       void made.game.getState().boot();
+      void made.rooms.getState().boot().catch((error: unknown) => console.error('the room could not be looked for:', error));
     }
     refresh();
     const stop = made.game.subscribe((state, before) => {
@@ -175,8 +202,11 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     const stopAccount = made.account.subscribe(() => {
       const now = made.account.state().kind !== 'offline';
       const landed = now && !signedIn;
+      const changed = now !== signedIn;
       signedIn = now;
       if (landed && made.game.getState().status !== 'playing') void made.game.getState().boot();
+      // The rooms are the account's: whoever is now signed in, or nobody, has their own.
+      if (changed) void made.rooms.getState().boot().catch((error: unknown) => console.error('the room could not be looked for:', error));
     });
     return () => {
       mounted = false;
@@ -219,9 +249,19 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     };
   }, [made]);
 
+  const reload = useMemo(
+    () => () => {
+      void made.store.loadProfile().then(setProfile, () => undefined);
+      void made.store.listRuns().then(setRuns, () => undefined);
+    },
+    [made],
+  );
   const value = useMemo<Game>(
     () => ({
       game: made.game,
+      rooms: made.rooms,
+      inRoom: false,
+      reload,
       store: made.store,
       saving: made.saving,
       account: made.account,
@@ -240,13 +280,33 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
         void updateProfile(made.store, change).then(setProfile, () => undefined);
       },
     }),
-    [made, locale, profile, runs],
+    [made, locale, profile, runs, reload],
   );
   return (
     <GameContext.Provider value={value}>
       <KeyboardProvider>{children}</KeyboardProvider>
     </GameContext.Provider>
   );
+}
+
+/**
+ * Shows the screens under it a round store of their own: a life in a room, beside the device's own
+ * life in progress, on the same screens. What the life earns reaches the profile, and its sounds
+ * play, as for any life.
+ */
+export function GameScope({ game, children }: { game: GameStore; children: ReactNode }) {
+  const parent = useGameContext();
+  const { reload, sound } = parent;
+  useEffect(
+    () =>
+      game.subscribe((state, before) => {
+        if (state.view !== before.view || state.status !== before.status) reload();
+        for (const cue of cuesFor(state, before)) sound.play(cue);
+      }),
+    [game, reload, sound],
+  );
+  const value = useMemo<Game>(() => ({ ...parent, game, inRoom: true }), [parent, game]);
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
 function useGameContext(): Game {
@@ -259,6 +319,17 @@ function useGameContext(): Game {
 export function useGame<T>(select: (state: RoundState & RoundActions) => T): T {
   return useStore(useGameContext().game, select);
 }
+
+/** The room the player is in, as this page follows it. */
+export const useRooms = (): RoomStore => useGameContext().rooms;
+
+/** A slice of the room the player is in. The component redraws when that slice changes. */
+export function useRoom<T>(select: (state: RoomStoreState & RoomActions) => T): T {
+  return useStore(useGameContext().rooms, select);
+}
+
+/** True for the screens of a life in a room. */
+export const useInRoom = (): boolean => useGameContext().inRoom;
 
 /** The content with its text and names in the language in use, and how numbers are written. */
 export const useWords = (): Words => useGameContext().words;
