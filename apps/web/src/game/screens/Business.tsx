@@ -130,10 +130,8 @@ export function BusinessTab() {
   const [open, setOpen] = useState<string | null>(null);
   const [starting, setStarting] = useState<Kind | null>(null);
   const quote = quoteBusinesses(content, shown);
-  // Only what the player could open: a kind that needs more money sense is not offered, only said to be coming.
+  // Only what the player could open: a kind that needs more Finance is not shown.
   const offered = quote.kinds.filter((kind) => kind.lock !== 'needs-finance-skill');
-  const later = quote.kinds.filter((kind) => kind.lock === 'needs-finance-skill');
-  const nextSkill = later.length > 0 ? Math.min(...later.map((kind) => kind.minFinanceSkill)) : null;
   // Looked up afresh on every draw: a business sold while its sheet is open closes it.
   const opened = quote.owned.find((business) => business.id === open);
   const total = quote.owned.reduce((sum, business) => ({ capital: sum.capital + business.capital, profit: sum.profit + business.profit, payout: sum.payout + business.payout }), { capital: 0, profit: 0, payout: 0 });
@@ -201,7 +199,6 @@ export function BusinessTab() {
             </li>
           ))}
         </ul>
-        {nextSkill !== null ? <p className="mt-2 text-[12px] leading-snug text-ink-300">{t('moreLater', { n: later.length, level: nextSkill })}</p> : null}
       </Panel>
 
       {starting ? (

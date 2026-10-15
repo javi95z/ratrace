@@ -27,7 +27,7 @@ export function evasionOrder(view: GameView, want: Want): Order | null {
  */
 export function EvasionPanel({ shown, preview }: { shown: GameView; preview: RoundPreview }) {
   const t = useT('finance.evasion');
-  const { content, text, fmt } = useWords();
+  const { content, fmt } = useWords();
   const view = useGame((s) => s.view);
   const setOrder = useGame((s) => s.setOrder);
   const quote = quoteEvasion(content, shown, preview.evaded, preview.noInvoiceSold);
@@ -47,13 +47,15 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
           options={quote.blackPcts.map((pct) => ({ value: pct, label: pct === 0 ? t('blackNone') : t('blackPct', { pct }), disabled: pct > 0 && !quote.canBlack }))}
         />
         <p className="-mt-1 text-[12px] text-ink-300">{quote.canBlack ? (quote.blackPct > 0 ? saved(quote.evaded.black) : t('blackHint')) : t('blackNoJob')}</p>
-        <Toggle
-          on={quote.shell}
-          onChange={(shell) => change({ shell })}
-          disabled={!quote.shell && quote.shellLock !== null}
-          label={t('shell')}
-          hint={quote.shellLock !== null && !quote.shell ? text.reasons[quote.shellLock] : `${t('shellHint', { pct: quote.shellTaxCutPct, fee: fmt.money(quote.shellFeeAnnual) })} ${quote.shell ? saved(quote.evaded.shell) : ''}`}
-        />
+        {/* An offshore company is offered only to someone who knows how to run one, or who already has one. */}
+        {quote.shell || quote.shellLock === null ? (
+          <Toggle
+            on={quote.shell}
+            onChange={(shell) => change({ shell })}
+            label={t('shell')}
+            hint={`${t('shellHint', { pct: quote.shellTaxCutPct, fee: fmt.money(quote.shellFeeAnnual) })} ${quote.shell ? saved(quote.evaded.shell) : ''}`}
+          />
+        ) : null}
         <Toggle on={quote.hideCrypto} onChange={(hideCrypto) => change({ hideCrypto })} label={t('crypto')} hint={quote.hideCrypto ? saved(quote.evaded.crypto) : t('cryptoHint')} />
 
         {/* What it risks, set off by a rule: never a box inside a box. */}

@@ -189,7 +189,7 @@ export const en: ContentText = {
     },
     robotics_engineer: {
       name: 'Robotics engineer',
-      perk: 'A job for life at a maker of robots, and money sense from day one.',
+      perk: 'A job for life at a maker of robots, and Finance from day one.',
       handicap: 'A flat the size of a parking space, and Tokyo prices.',
       unlock: 'Live on three continents in one life.',
     },
@@ -358,7 +358,7 @@ export const en: ContentText = {
     'down-payment-too-low': 'The bank wants a larger down payment.',
     'down-payment-too-high': 'That covers the whole price. Buy without a mortgage instead.',
     'unknown-property': 'You do not own that property.',
-    'needs-finance-skill': 'You need more money sense for that.',
+    'needs-finance-skill': 'You need more Finance for that.',
     'not-a-home': 'Nobody can live there. It can only be let.',
     'unknown-action': 'That action does not exist.',
     'no-focus': 'You have no focus left this round.',

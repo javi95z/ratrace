@@ -120,7 +120,7 @@ describe('the terminal game', () => {
     expect(shown).toContain('✓ buy msci 1000 (added)');
     expect(shown).toContain('✓ study (added)');
     expect(shown).toContain('Refused: You do not have enough cash.');
-    expect(shown).toContain('Refused: You need more money sense for that.');
+    expect(shown).toContain('Refused: You need more Finance for that.');
     expect(shown).toContain("I do not know that command. Type 'help'.");
     expect(shown).toContain('Refused: You are already doing that this round.');
     expect(shown).toContain('1. save 500\n  2. buy msci 1000\n  3. study');
@@ -132,7 +132,7 @@ describe('the terminal game', () => {
     expect(shown).toContain('THIS ROUND');
     expect(shown).toContain('Escape test');
     expect(shown).toContain('MSCI   MSCI World');
-    expect(shown).toContain('needs money sense 2');
+    expect(shown).toContain('needs Finance 2');
     expect(shown).toContain('Rolex Submariner');
     expect(shown).toContain('Penthouse');
     expect(shown).toContain('Dubai — No income tax');
@@ -177,7 +177,7 @@ describe('the terminal game', () => {
       'учиться',
       'учиться',
       'танцевать',
-      'купить msci 999 999 999',
+      'купить btc 100',
       'планы',
       'отменить',
       'учиться',
@@ -218,8 +218,8 @@ describe('the terminal game', () => {
     expect(shown).toContain('✓ учиться (добавлено)');
     expect(shown).toContain('Нельзя: В этом раунде ты это уже делаешь.');
     expect(shown).toContain('Не знаю такой команды. Набери «помощь».');
-    // A civil servant starts knowing nothing of money: not even a fund is open yet.
-    expect(shown).toContain('Нельзя: Для этого нужна финансовая грамотность повыше.');
+    // A civil servant starts knowing nothing of money: a fund is open, a coin is not.
+    expect(shown).toContain('Нельзя: Для этого нужны Финансы повыше.');
     expect(shown).toContain('ПЛАНЫ НА РАУНД\n  1. отложить 500\n  2. учиться');
     expect(shown).toContain('− учиться (убрано)');
     // Undone for real: in the first round the same plan is taken again, where a second copy would be refused.
@@ -230,7 +230,7 @@ describe('the terminal game', () => {
     expect(shown).toContain('Зарплата');
     expect(shown).toContain('MSCI   MSCI World');
     expect(shown).toContain('XAU    Золото');
-    expect(shown).toContain('нужна финансовая грамотность 2');
+    expect(shown).toContain('нужны Финансы 2');
     expect(shown).toContain('ПОРТФЕЛЬ');
     expect(shown).toContain('Rolex Submariner');
     expect(shown).toContain('НЕДВИЖИМОСТЬ · Мадрид');
