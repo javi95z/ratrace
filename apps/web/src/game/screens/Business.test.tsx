@@ -44,7 +44,7 @@ async function inFinance(lifeId: string) {
 const openTab = async (user: ReturnType<typeof userEvent.setup>) => user.click(await screen.findByRole('tab', { name: 'Business' }));
 
 describe('the business tab', () => {
-  it('shows each kind the player could open: what it asks for, what it makes, how the economy treats it now; and how many more open later', async () => {
+  it('shows each kind the player could open: what it asks for, what it makes, how the economy treats it now; and nothing of what is closed', async () => {
     const { services } = await inFinance('civil_servant');
     const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
     const user = userEvent.setup();
@@ -65,7 +65,8 @@ describe('the business tab', () => {
     expect(row.getByText(`Manager: ${kind.managerPct}% of the profit`)).toBeTruthy();
     expect(row.getByText(/^The economy now: /)).toBeTruthy();
     expect(row.getByRole('button', { name: 'Open it' })).toBeTruthy();
-    expect(within(panel).getByText('4 more kinds of business open with money sense 2.')).toBeTruthy();
+    // What needs more Finance is not shown, nor said to be coming.
+    expect(within(panel).queryByText(/more kinds? of business/)).toBeNull();
   });
 
   it('says how much cash is missing instead of offering what cannot be paid for', async () => {

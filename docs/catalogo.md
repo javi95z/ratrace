@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.26.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.27.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -273,7 +273,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Experiencia · Finanzas · Foco | 1 · 1/3 · 3 |
 | Modo de vida | Normal |
 | Empieza con | Nada más |
-| Ventaja | Un trabajo para toda la vida en una empresa de robots, y cultura financiera desde el primer día. |
+| Ventaja | Un trabajo para toda la vida en una empresa de robots, y Finanzas desde el primer día. |
 | Desventaja | Un piso del tamaño de una plaza de garaje, y precios de Tokio. |
 | Se desbloquea | Vive en tres continentes en una misma vida. |
 
@@ -475,7 +475,7 @@ Horas extra: +8 % de sueldo esa ronda. El sueldo sigue a la economía: Auge +25 
 
 Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el 50 % y pierde un 8 % de su capital. Se pueden llevar hasta 3. Vendido desde la pestaña vale entre el 70 % y el 100 % de lo que tiene dentro, según la economía; solo una carta paga más.
 
-| Negocio | Capital mínimo | Rinde al año | Hecho para | Con la economía | Encargado | Cultura financiera |
+| Negocio | Capital mínimo | Rinde al año | Hecho para | Con la economía | Encargado | Finanzas |
 | --- | --- | --- | --- | --- | --- | --- |
 | Tu oficio por tu cuenta | 2.000 $ | hasta 22 % | 30.000 $ | Auge +15 %, Desaceleración -15 %, Recesión -40 % | 50 % del beneficio | 0 |
 | Tienda online | 5.000 $ | hasta 20 % | 80.000 $ | Auge +25 %, Expansión +5 %, Desaceleración -25 %, Recesión -70 % | 40 % del beneficio | 2 |
@@ -846,26 +846,26 @@ Con los años, la habitación alquilada y el modo de vida austero restan más es
 
 ## Inversiones
 
-La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +1 punto, y cada nivel pide 3 (a 3, 6, 9 puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.
+Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +1 punto, y cada nivel pide 3 (a 3, 6, 9 puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.
 
-| Inversión | Ticker | Clase | Cultura financiera | Renta | Qué es |
+| Inversión | Ticker | Clase | Finanzas | Renta | Qué es |
 | --- | --- | --- | --- | --- | --- |
-| Letras del Tesoro EE. UU. | TBILL | Bonos | 1 | Cupón según los tipos | Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve. |
-| Bono EE. UU. 2 años | UST2 | Bonos | 1 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
-| Bono EE. UU. 10 años | UST10 | Bonos | 1 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
-| Bund alemán | BUND | Bonos | 1 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
-| S&P 500 | SPX | Acciones | 1 | 1,4 % al año | Las 500 mayores empresas de EE. UU. en un solo fondo. |
-| MSCI World | MSCI | Acciones | 1 | 1,8 % al año | Empresas de todo el mundo desarrollado en un solo fondo. Tu plan de pensiones lo sigue. |
-| Apple | AAPL | Acciones | 1 | 0,5 % al año | Crecimiento, con un cliente fiel en cada bolsillo. |
-| Microsoft | MSFT | Acciones | 1 | 0,8 % al año | Crecimiento, con suscripción incluida. |
-| Nvidia | NVDA | Acciones | 1 |  | Crecimiento a todo volumen. Vuela en los auges y se hunde en las caídas. |
-| Amazon | AMZN | Acciones | 1 |  | Crecimiento que lo reinvierte todo y no reparte dividendo. |
-| Tesla | TSLA | Acciones | 1 |  | Mitad fabricante de coches, mitad discusión. Puede perder casi todo su valor en una mala ronda. |
-| Inditex | ITX | Acciones | 1 | 3 % al año | Moda que sigue al comprador. Cíclica y con buen dividendo. |
-| LVMH | MC | Acciones | 1 | 1,8 % al año | Lujo que sube y baja con el ánimo de los ricos. |
-| Ferrari | RACE | Acciones | 1 | 0,8 % al año | Vende menos coches de los que podría, a propósito. |
-| Santander | SAN | Acciones | 1 | 5 % al año | Un banco: mucho dividendo y un precio que no va a ninguna parte. |
-| Coca-Cola | KO | Acciones | 1 | 3,2 % al año | Defensiva. También se bebe en las recesiones. |
+| Letras del Tesoro EE. UU. | TBILL | Bonos | 0 | Cupón según los tipos | Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve. |
+| Bono EE. UU. 2 años | UST2 | Bonos | 0 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
+| Bono EE. UU. 10 años | UST10 | Bonos | 0 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
+| Bund alemán | BUND | Bonos | 0 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
+| S&P 500 | SPX | Acciones | 0 | 1,4 % al año | Las 500 mayores empresas de EE. UU. en un solo fondo. |
+| MSCI World | MSCI | Acciones | 0 | 1,8 % al año | Empresas de todo el mundo desarrollado en un solo fondo. Tu plan de pensiones lo sigue. |
+| Apple | AAPL | Acciones | 0 | 0,5 % al año | Crecimiento, con un cliente fiel en cada bolsillo. |
+| Microsoft | MSFT | Acciones | 0 | 0,8 % al año | Crecimiento, con suscripción incluida. |
+| Nvidia | NVDA | Acciones | 0 |  | Crecimiento a todo volumen. Vuela en los auges y se hunde en las caídas. |
+| Amazon | AMZN | Acciones | 0 |  | Crecimiento que lo reinvierte todo y no reparte dividendo. |
+| Tesla | TSLA | Acciones | 0 |  | Mitad fabricante de coches, mitad discusión. Puede perder casi todo su valor en una mala ronda. |
+| Inditex | ITX | Acciones | 0 | 3 % al año | Moda que sigue al comprador. Cíclica y con buen dividendo. |
+| LVMH | MC | Acciones | 0 | 1,8 % al año | Lujo que sube y baja con el ánimo de los ricos. |
+| Ferrari | RACE | Acciones | 0 | 0,8 % al año | Vende menos coches de los que podría, a propósito. |
+| Santander | SAN | Acciones | 0 | 5 % al año | Un banco: mucho dividendo y un precio que no va a ninguna parte. |
+| Coca-Cola | KO | Acciones | 0 | 3,2 % al año | Defensiva. También se bebe en las recesiones. |
 | Bitcoin | BTC | Cripto | 2 |  | La primera criptomoneda. Tiene sus propias estaciones, y sus inviernos son largos. |
 | Ethereum | ETH | Cripto | 2 |  | La segunda criptomoneda. Hace lo mismo que bitcoin, pero más fuerte. |
 | Dogecoin | DOGE | Cripto | 2 |  | Una broma con precio. A veces la broma es el precio. |
@@ -897,7 +897,7 @@ La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como
 | <img src="../art/clean/icons/icon.skill_network.png" alt=""> | Salir a hacer contactos | +3 puntos de Contactos; nada al nivel 3 |
 | <img src="../art/clean/icons/icon.skill_health.png" alt=""> | Hacer deporte | +3 puntos de Salud; nada al nivel 3 |
 
-Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 3 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
+Habilidades: todas, como Finanzas, van del nivel 0 al 3, a 3, 6, 9 puntos: 3 por nivel. Se ganan 3 por ronda estudiando con foco, y 1 por ronda viviéndola. Gestión solo se aprende llevando un negocio.
 
 |  | Habilidad | Por nivel | Se practica |
 | --- | --- | --- | --- |
@@ -918,7 +918,7 @@ Cada forma de ocultar algo a Hacienda ahorra impuestos esa ronda y suma sospecha
 | Forma | Qué ahorra | Sospecha | Notas |
 | --- | --- | --- | --- |
 | Sueldo en negro | El IRPF de esa parte del sueldo | 25 %: +6, 50 %: +12 por ronda | Hace falta trabajo |
-| Sociedad en un paraíso fiscal | El 80 % del impuesto de las inversiones | +8 por ronda | Cultura financiera 3; cuota de 6.000 $ al año |
+| Sociedad en un paraíso fiscal | El 80 % del impuesto de las inversiones | +8 por ronda | Finanzas 3; cuota de 6.000 $ al año |
 | No declarar la cripto | El impuesto de las ganancias en cripto | +6 por ronda con ganancias; el doble desde los 38 años | Los exchanges informan a Hacienda |
 | Comprar sin factura | Un 20 % del precio | +15 al venderlo | Arte y Relojes |
 

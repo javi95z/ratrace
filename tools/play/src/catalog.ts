@@ -160,7 +160,7 @@ say(
   '## Negocios',
   `Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y cada vez menos de cada dólar cuando crece por encima del tamaño para el que está hecho. La economía mueve el beneficio, y una ronda lo bastante mala es una pérdida. Pide 1 de foco cada ronda o un encargado; sin ninguno gana el ${content.business.neglectProfitPct} % y pierde un ${pct(content.business.neglectDecayBp)} de su capital. Se pueden llevar hasta ${content.business.maxBusinesses}. Vendido desde la pestaña vale entre el ${Math.min(...Object.values(content.business.salePct))} % y el ${Math.max(...Object.values(content.business.salePct))} % de lo que tiene dentro, según la economía; solo una carta paga más.`,
   table(
-    ['Negocio', 'Capital mínimo', 'Rinde al año', 'Hecho para', 'Con la economía', 'Encargado', 'Cultura financiera'],
+    ['Negocio', 'Capital mínimo', 'Rinde al año', 'Hecho para', 'Con la economía', 'Encargado', 'Finanzas'],
     content.business.types.map((type) => [
       text.businessTypes[type.id].name,
       usd(type.minCapital),
@@ -282,9 +282,9 @@ say(
 // ---------------------------------------------------------------------------------------------
 say(
   '## Inversiones',
-  `La cultura financiera dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +${content.life.skills.investingPoints} punto, y cada nivel pide ${content.life.skills.levelPoints[0]} (a ${content.life.skills.levelPoints.join(', ')} puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.`,
+  `Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +${content.life.skills.investingPoints} punto, y cada nivel pide ${content.life.skills.levelPoints[0]} (a ${content.life.skills.levelPoints.join(', ')} puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.`,
   table(
-    ['Inversión', 'Ticker', 'Clase', 'Cultura financiera', 'Renta', 'Qué es'],
+    ['Inversión', 'Ticker', 'Clase', 'Finanzas', 'Renta', 'Qué es'],
     content.assets.map((asset) => [
       names.assets[asset.id].name,
       names.assets[asset.id].ticker,
@@ -318,7 +318,7 @@ say(
       ...STUDIES.map((action) => [img(focusArt[action]), text.focusActions[action], `+${content.life.skills.studyPoints} puntos de ${text.skills[STUDY_OF[action]]}; nada al nivel 3`]),
     ],
   ),
-  `Habilidades: todas, como la cultura financiera, van del nivel 0 al 3, a ${content.life.skills.levelPoints.join(', ')} puntos: ${content.life.skills.levelPoints[0]} por nivel. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,
+  `Habilidades: todas, como Finanzas, van del nivel 0 al 3, a ${content.life.skills.levelPoints.join(', ')} puntos: ${content.life.skills.levelPoints[0]} por nivel. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,
   table(
     ['', 'Habilidad', 'Por nivel', 'Se practica'],
     [
@@ -343,7 +343,7 @@ say(
       ['Forma', 'Qué ahorra', 'Sospecha', 'Notas'],
       [
         ['Sueldo en negro', 'El IRPF de esa parte del sueldo', `${e.blackPcts.slice(1).map((pct) => `${pct} %: +${Math.floor((pct * e.blackSuspicionPer100) / 100)}`).join(', ')} por ronda`, 'Hace falta trabajo'],
-        ['Sociedad en un paraíso fiscal', `El ${e.shellTaxCutPct} % del impuesto de las inversiones`, `+${e.shellSuspicion} por ronda`, `Cultura financiera ${e.shellMinFinanceSkill}; cuota de ${usd(e.shellFeeAnnual)} al año`],
+        ['Sociedad en un paraíso fiscal', `El ${e.shellTaxCutPct} % del impuesto de las inversiones`, `+${e.shellSuspicion} por ronda`, `Finanzas ${e.shellMinFinanceSkill}; cuota de ${usd(e.shellFeeAnnual)} al año`],
         ['No declarar la cripto', 'El impuesto de las ganancias en cripto', `+${e.cryptoSuspicion} por ronda con ganancias; el doble desde los ${START_AGE + e.cryptoReportRound * content.yearsPerRound} años`, 'Los exchanges informan a Hacienda'],
         ['Comprar sin factura', `Un ${e.noInvoiceDiscountPct} % del precio`, `+${e.noInvoiceSaleSuspicion} al venderlo`, e.noInvoiceLadders.map((ladder) => text.ladders[ladder]).join(' y ')],
       ],

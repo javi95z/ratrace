@@ -295,13 +295,12 @@ function Market() {
 
   return (
     <div className="flex flex-col gap-3">
-      {KINDS.map((kind) => (
+      {/* What needs more Finance than the player has is not on the market at all; a class with nothing open is left out. */}
+      {KINDS.filter((kind) => content.assets.some((asset) => assetKind(asset) === kind && (asset.minFinanceSkill ?? 0) <= p.life.financeSkill)).map((kind) => (
         <Panel key={kind} title={t(KIND_TITLE[kind])}>
           {content.assets
-            .filter((asset) => assetKind(asset) === kind)
+            .filter((asset) => assetKind(asset) === kind && (asset.minFinanceSkill ?? 0) <= p.life.financeSkill)
             .map((asset) => {
-              const need = asset.minFinanceSkill ?? 0;
-              const locked = need > p.life.financeSkill;
               const change = world.assetReturnBp[asset.id];
               const pays = assetYieldBp(asset, world);
               // A standing plan shows where the asset is listed: what it buys each round.
@@ -311,18 +310,14 @@ function Market() {
                   key={asset.id}
                   type="button"
                   data-finance-item
-                  disabled={locked}
                   onClick={() => setBuying(asset)}
                   className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left"
                 >
-                  {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
-                  <span className={locked ? 'opacity-50' : ''}>
-                    <AssetMark asset={asset} />
-                  </span>
+                  <AssetMark asset={asset} />
                   <span className="min-w-0 flex-1">
-                    <span className={`block truncate ${locked ? 'text-ink-200' : ''}`}>{names.assets[asset.id].name}</span>
-                    <span className={`block text-[12px] ${locked ? 'text-gold-200' : 'text-ink-300'}`}>
-                      {locked ? t('needsSkill', { level: need }) : pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : plan ? null : ' '}
+                    <span className="block truncate">{names.assets[asset.id].name}</span>
+                    <span className="block text-[12px] text-ink-300">
+                      {pays > 0 ? t('yield', { rate: fmt.rate(pays) }) : plan ? null : ' '}
                       {plan ? <span className="text-teal-300">{`${pays > 0 ? ' · ' : ''}${t('planned', { amount: fmt.compact(plan.amount) })}`}</span> : null}
                     </span>
                   </span>
@@ -481,7 +476,8 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
           </div>
         )}
 
-        {quote.letOnly ? null : (
+        {/* Letting it out takes Finance: without it, it is a home to live in, and nothing is said of letting. */}
+        {quote.letOnly || !quote.canRentOut ? null : (
           <div>
             <h3 className="pixel mb-1.5 text-[14px] uppercase tracking-wider text-ink-200">{t('use')}</h3>
             <Segmented<'live' | 'rent'>
@@ -490,12 +486,11 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
               onChange={(value) => setRented(value === 'rent')}
               options={[
                 { value: 'live', label: t('liveIn') },
-                { value: 'rent', label: t('rentOut'), disabled: !quote.canRentOut },
+                { value: 'rent', label: t('rentOut') },
               ]}
             />
           </div>
         )}
-        {quote.canRentOut ? null : <p className="text-[13px] text-ink-200">{t('rentOutLocked', { level: content.life.rentOutMinFinanceSkill })}</p>}
 
         <p className="pixel text-center text-[17px] text-gold-500">{t('payNow', { amount: fmt.money(cashDown + quote.purchaseTax) })}</p>
         <Button
@@ -658,13 +653,16 @@ function PropertyTab() {
       {/* Somewhere to live, and what is only bought to let: two shelves, each with its cheapest first. */}
       {([false, true] as const).map((letOnly) => {
         const title = t(letOnly ? 'letTitle' : 'title', { city: names.cities[p.cityId] });
+        // What can only be let is offered only to someone with the Finance to let it: without it, that shelf is not there.
+        const tiles = content.propertyTypes
+          .map((type) => ({ type, quote: quoteProperty(content, shown, type.id) }))
+          .filter(({ quote }) => quote.letOnly === letOnly && (!quote.letOnly || quote.canRentOut));
+        if (tiles.length === 0) return null;
         return (
           <Panel key={String(letOnly)} title={title} label={title}>
             {/* Two side by side on a phone, each drawn whole at its own size; more where the column is wider. */}
             <div className="grid grid-cols-2 gap-2 @min-[560px]:grid-cols-3">
-              {content.propertyTypes.map((type) => {
-                const quote = quoteProperty(content, shown, type.id);
-                if (quote.letOnly !== letOnly) return null;
+              {tiles.map(({ type, quote }) => {
                 return (
                   <button key={type.id} type="button" data-finance-item onClick={() => setBuying(type.id)} className={TILE}>
                     <Bare className="w-full py-1">

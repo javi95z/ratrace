@@ -158,7 +158,7 @@ describe('effectTags', () => {
       { tone: 'good', text: '+5% salary for good' },
       { tone: 'bad', text: '−40% pay this round' },
       { tone: 'good', text: '+3 career skill' },
-      { tone: 'good', text: '+1 money sense' },
+      { tone: 'good', text: '+1 Finance' },
       { tone: 'bad', text: '−2 status' },
       { tone: 'bad', text: '−2 focus' },
     ]);
@@ -322,7 +322,7 @@ describe('roundNotes', () => {
     expect(told.map((note) => note.title)).toEqual([
       'You are out of the rat race!',
       `Promoted: ${words('en').text.careers.tech.levels[2]}`,
-      'Experience pays: money sense 1.',
+      'Experience pays: Finance 1.',
       'Negotiation up: level 2.',
       'The job hunt paid off: a lasting raise.',
       'You moved to Dubai.',

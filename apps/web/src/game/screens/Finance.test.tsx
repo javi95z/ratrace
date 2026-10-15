@@ -148,7 +148,8 @@ describe('the homes a player owns', () => {
 
 describe('property that is only for letting', () => {
   it('shows homes and what is only for letting apart, every one on the same dark tile, and says of a parking space what it lets for', async () => {
-    const { services, session } = await inFinance('heir');
+    // Two finance courses: Finance 2, which letting takes.
+    const { services, session } = await inFinance('heir', { taught: true });
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
@@ -171,16 +172,14 @@ describe('property that is only for letting', () => {
     expect(within(within(homes).getByRole('button', { name: /^Apartment in the Marina/ })).getByText('Status +14')).toBeTruthy();
   });
 
-  it('does not ask what a parking space is for, and says why someone without the skill cannot buy one', async () => {
-    const { services } = await inFinance('heir');
+  it('does not offer what can only be let to someone without the Finance to let it', async () => {
+    const { services } = await inFinance('nurse');
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
-    await user.click(screen.getByRole('button', { name: /^Parking space/ }));
-    const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking space' });
-    expect(within(sheet).queryByRole('radiogroup', { name: 'What for' })).toBeNull();
-    expect(within(sheet).getByText('Renting out needs money sense 2')).toBeTruthy();
-    expect((within(sheet).getByRole('button', { name: 'Buy' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: /^Parking space/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'To let in Madrid' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Homes in Madrid' })).toBeTruthy();
   });
 
   it('buys a parking space to let, for someone who has the skill', async () => {
@@ -1018,11 +1017,9 @@ describe('what is not declared', () => {
     expect(screen.queryByText('Pay under the table: 25%')).toBeNull();
   });
 
-  it('opens an offshore company only to someone who knows money well, and says why not', async () => {
+  it('offers an offshore company only to someone who knows money well', async () => {
     const { panel } = await openTaxes('nurse');
-    const shell = within(panel).getByRole('switch', { name: /^Offshore company/ });
-    expect((shell as HTMLButtonElement).disabled).toBe(true);
-    expect(shell.textContent).toContain('You need more money sense for that.');
+    expect(within(panel).queryByRole('switch', { name: /^Offshore company/ })).toBeNull();
   });
 
   it('hides crypto gains by order, and says nothing is saved in a round with nothing sold', async () => {
@@ -1110,5 +1107,18 @@ describe('a holding in the portfolio', () => {
     // Bought, its mark jumps once; it did not before.
     const mark = within(holdings).getByRole('button', { name: /S&P 500/ }).querySelector('.animate-pop');
     expect(mark).not.toBeNull();
+  });
+});
+
+describe('the market without Finance', () => {
+  it('offers funds, bonds and shares from the first day, and does not show what needs more', async () => {
+    const { services } = await inFinance('nurse');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    const panel = screen.getByRole('tabpanel', { name: 'Market' });
+    for (const name of ['S&P 500', 'Apple', 'Bund']) expect(within(panel).getByText(new RegExp(name)), name).toBeTruthy();
+    for (const name of ['Bitcoin', 'Gold']) expect(within(panel).queryByText(name), name).toBeNull();
+    expect(within(panel).queryByText(/^Finance \d/)).toBeNull();
   });
 });

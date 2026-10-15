@@ -189,7 +189,7 @@ export const es: ContentText = {
     },
     robotics_engineer: {
       name: 'Ingeniero de robótica',
-      perk: 'Un trabajo para toda la vida en una empresa de robots, y cultura financiera desde el primer día.',
+      perk: 'Un trabajo para toda la vida en una empresa de robots, y Finanzas desde el primer día.',
       handicap: 'Un piso del tamaño de una plaza de garaje, y precios de Tokio.',
       unlock: 'Vive en tres continentes en una misma vida.',
     },
@@ -358,7 +358,7 @@ export const es: ContentText = {
     'down-payment-too-low': 'El banco pide una entrada mayor.',
     'down-payment-too-high': 'Eso cubre todo el precio. Compra sin hipoteca.',
     'unknown-property': 'Ese inmueble no es tuyo.',
-    'needs-finance-skill': 'Te falta cultura financiera para eso.',
+    'needs-finance-skill': 'Te faltan Finanzas para eso.',
     'not-a-home': 'Ahí no se puede vivir. Solo se puede alquilar.',
     'unknown-action': 'Esa acción no existe.',
     'no-focus': 'No te queda foco esta ronda.',

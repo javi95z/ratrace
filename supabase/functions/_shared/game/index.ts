@@ -20,12 +20,13 @@ import * as g16 from './v0.23.0-1.23.0.js';
 import * as g17 from './v0.24.0-1.24.0.js';
 import * as g18 from './v0.25.0-1.25.0.js';
 import * as g19 from './v0.26.0-1.26.0.js';
-import * as g20 from './v0.4.0-1.3.0.js';
-import * as g21 from './v0.5.0-1.5.0.js';
-import * as g22 from './v0.6.0-1.6.0.js';
-import * as g23 from './v0.7.0-1.7.0.js';
-import * as g24 from './v0.8.0-1.8.0.js';
-import * as g25 from './v0.9.0-1.9.0.js';
+import * as g20 from './v0.27.0-1.27.0.js';
+import * as g21 from './v0.4.0-1.3.0.js';
+import * as g22 from './v0.5.0-1.5.0.js';
+import * as g23 from './v0.6.0-1.6.0.js';
+import * as g24 from './v0.7.0-1.7.0.js';
+import * as g25 from './v0.8.0-1.8.0.js';
+import * as g26 from './v0.9.0-1.9.0.js';
 
 /** Every engine and content pair the server can play, under "engine/content". */
 export const GAMES: Readonly<Record<string, GameModule>> = {
@@ -49,13 +50,14 @@ export const GAMES: Readonly<Record<string, GameModule>> = {
   '0.24.0/1.24.0': g17 as unknown as GameModule,
   '0.25.0/1.25.0': g18 as unknown as GameModule,
   '0.26.0/1.26.0': g19 as unknown as GameModule,
-  '0.4.0/1.3.0': g20 as unknown as GameModule,
-  '0.5.0/1.5.0': g21 as unknown as GameModule,
-  '0.6.0/1.6.0': g22 as unknown as GameModule,
-  '0.7.0/1.7.0': g23 as unknown as GameModule,
-  '0.8.0/1.8.0': g24 as unknown as GameModule,
-  '0.9.0/1.9.0': g25 as unknown as GameModule,
+  '0.27.0/1.27.0': g20 as unknown as GameModule,
+  '0.4.0/1.3.0': g21 as unknown as GameModule,
+  '0.5.0/1.5.0': g22 as unknown as GameModule,
+  '0.6.0/1.6.0': g23 as unknown as GameModule,
+  '0.7.0/1.7.0': g24 as unknown as GameModule,
+  '0.8.0/1.8.0': g25 as unknown as GameModule,
+  '0.9.0/1.9.0': g26 as unknown as GameModule,
 };
 
 /** The rules the game plays now. The others are held to finish lives lived under them. */
-export const CURRENT = '0.26.0/1.26.0';
+export const CURRENT = '0.27.0/1.27.0';

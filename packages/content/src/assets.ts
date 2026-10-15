@@ -10,30 +10,30 @@ import type { AssetDef, MarketParams } from '@ratrace/engine';
 export const assets: AssetDef[] = [
   // Government bonds: coupon follows the policy rate; price falls when rates rise.
   // Bills are paid back within the round: the rate of the day, a little under it, and a price that never moves.
-  { id: 'treasury_bills', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 0, yieldSpreadBp: -25, minFinanceSkill: 1 },
-  { id: 'treasury_short', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 2, yieldSpreadBp: 0, minFinanceSkill: 1 },
-  { id: 'treasury_long', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 9, yieldSpreadBp: 80, minFinanceSkill: 1 },
-  { id: 'bund', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 7, yieldSpreadBp: -50, minFinanceSkill: 1 },
+  { id: 'treasury_bills', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 0, yieldSpreadBp: -25 },
+  { id: 'treasury_short', class: 'bond', betaPct: 100, idioVolBp: 0, yieldBp: 0, durationYears: 2, yieldSpreadBp: 0 },
+  { id: 'treasury_long', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 9, yieldSpreadBp: 80 },
+  { id: 'bund', class: 'bond', betaPct: 100, idioVolBp: 100, yieldBp: 0, durationYears: 7, yieldSpreadBp: -50 },
 
   // Index funds.
-  { id: 'sp500', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 140, driftBp: 100, minFinanceSkill: 1 },
-  { id: 'msci_world', class: 'equity', betaPct: 95, idioVolBp: 250, yieldBp: 180, minFinanceSkill: 1 },
+  { id: 'sp500', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 140, driftBp: 100 },
+  { id: 'msci_world', class: 'equity', betaPct: 95, idioVolBp: 250, yieldBp: 180 },
 
   // Growth.
-  { id: 'apple', class: 'equity', betaPct: 115, idioVolBp: 1_500, yieldBp: 50, driftBp: 150, minFinanceSkill: 1 },
-  { id: 'microsoft', class: 'equity', betaPct: 105, idioVolBp: 1_300, yieldBp: 80, driftBp: 150, minFinanceSkill: 1 },
-  { id: 'nvidia', class: 'equity', betaPct: 170, idioVolBp: 3_000, yieldBp: 0, driftBp: 300, minFinanceSkill: 1 },
-  { id: 'amazon', class: 'equity', betaPct: 135, idioVolBp: 2_000, yieldBp: 0, driftBp: 150, minFinanceSkill: 1 },
+  { id: 'apple', class: 'equity', betaPct: 115, idioVolBp: 1_500, yieldBp: 50, driftBp: 150 },
+  { id: 'microsoft', class: 'equity', betaPct: 105, idioVolBp: 1_300, yieldBp: 80, driftBp: 150 },
+  { id: 'nvidia', class: 'equity', betaPct: 170, idioVolBp: 3_000, yieldBp: 0, driftBp: 300 },
+  { id: 'amazon', class: 'equity', betaPct: 135, idioVolBp: 2_000, yieldBp: 0, driftBp: 150 },
   // Meme: wild, no income, and it can lose nine tenths in a round.
-  { id: 'tesla', class: 'equity', betaPct: 190, idioVolBp: 3_800, yieldBp: 0, driftBp: 300, crashChancePct: 2, minFinanceSkill: 1 },
+  { id: 'tesla', class: 'equity', betaPct: 190, idioVolBp: 3_800, yieldBp: 0, driftBp: 300, crashChancePct: 2 },
   // Cyclical.
-  { id: 'inditex', class: 'equity', betaPct: 110, idioVolBp: 1_500, yieldBp: 300, driftBp: -150, minFinanceSkill: 1 },
-  { id: 'lvmh', class: 'equity', betaPct: 120, idioVolBp: 1_600, yieldBp: 180, minFinanceSkill: 1 },
-  { id: 'ferrari', class: 'equity', betaPct: 100, idioVolBp: 1_500, yieldBp: 80, driftBp: 150, minFinanceSkill: 1 },
+  { id: 'inditex', class: 'equity', betaPct: 110, idioVolBp: 1_500, yieldBp: 300, driftBp: -150 },
+  { id: 'lvmh', class: 'equity', betaPct: 120, idioVolBp: 1_600, yieldBp: 180 },
+  { id: 'ferrari', class: 'equity', betaPct: 100, idioVolBp: 1_500, yieldBp: 80, driftBp: 150 },
   // Dividend.
-  { id: 'santander', class: 'equity', betaPct: 140, idioVolBp: 2_000, yieldBp: 500, driftBp: -600, minFinanceSkill: 1 },
+  { id: 'santander', class: 'equity', betaPct: 140, idioVolBp: 2_000, yieldBp: 500, driftBp: -600 },
   // Defensive.
-  { id: 'coca_cola', class: 'equity', betaPct: 55, idioVolBp: 800, yieldBp: 320, driftBp: -250, minFinanceSkill: 1 },
+  { id: 'coca_cola', class: 'equity', betaPct: 55, idioVolBp: 800, yieldBp: 320, driftBp: -250 },
 
   // Crypto follows its own cycle.
   { id: 'bitcoin', class: 'crypto', betaPct: 100, idioVolBp: 1_500, yieldBp: 0, minFinanceSkill: 2 },

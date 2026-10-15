@@ -53,9 +53,11 @@ describe('the v1 content', () => {
     expect(groups.crypto).toEqual(['bitcoin', 'ethereum', 'dogecoin']);
     expect(groups.gold).toEqual(['gold']);
     expect(groups.stock).toHaveLength(10);
-    // Nothing on the market is open with no money sense at all; a fund is among the first things that are.
-    for (const asset of content.assets) expect(asset.minFinanceSkill ?? 0, asset.id).toBeGreaterThanOrEqual(1);
-    for (const id of groups.fund) expect(content.assets.find((asset) => asset.id === id)?.minFinanceSkill, id).toBe(1);
+    // Funds, bonds and shares are open from the first day; gold takes Finance 1, and coins Finance 2.
+    const need = (id: string) => content.assets.find((asset) => asset.id === id)?.minFinanceSkill ?? 0;
+    for (const id of [...groups.fund, ...groups.bond, ...groups.stock]) expect(need(id), id).toBe(0);
+    expect(need('gold')).toBe(1);
+    for (const id of groups.crypto) expect(need(id), id).toBe(2);
   });
 
   it('never sells an item through a card for less than it could be sold on for at once', () => {

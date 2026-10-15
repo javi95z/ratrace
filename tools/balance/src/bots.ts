@@ -89,9 +89,9 @@ const builder: Judge = (card, index, preview, state) => {
 // ---------------------------------------------------------------------------------------------
 // Writing orders
 
-/** Money put to work in the index fund, or in savings until the fund is open to the player. */
-function fund(state: GameView, amount: number): Order {
-  return state.player.life.financeSkill >= 1 ? { type: 'buy', assetId: 'msci_world', amount } : { type: 'depositIn', amount };
+/** Money put to work in the index fund, which is open from the first day. */
+function fund(_state: GameView, amount: number): Order {
+  return { type: 'buy', assetId: 'msci_world', amount };
 }
 
 /** Focus actions for the round, in the order given, as far as focus allows: none that is closed to the player. */
@@ -102,7 +102,7 @@ function work(content: Content, state: GameView, actions: FocusAction[]): Order[
     .filter((business) => !business.manager && !business.tended)
     .slice(0, left)
     .map((business) => ({ type: 'tendBusiness', businessId: business.id }));
-  // Nothing on the market is open with no money sense at all: every bot learns its first level before anything else.
+  // Funds, bonds and shares are open from the first day; the coins need Finance, and every bot learns its first level before anything else.
   const first: FocusAction[] = state.player.life.financeSkill === 0 ? ['studyFinance'] : [];
   const open = (action: FocusAction) => focusLock(state.player, action, content) === null;
   if (state.player.life.career === null) return [...tend, ...first.slice(0, left - tend.length).map((action): Order => ({ type: 'focus', action }))];
@@ -174,8 +174,8 @@ const indexer: Bot = {
  * the same cushion; it never borrows and never sells a coin. So the only thing that sets the two
  * apart is what they hold, and what happens to the gambler is what crypto does.
  *
- * Coins need money sense, so until it has enough it holds the index fund (or savings, before even
- * that is open), and it moves everything across the day it is allowed to.
+ * Coins need Finance, so until it has enough it holds the index fund, and it moves everything
+ * across the day it is allowed to.
  */
 const gambler: Bot = {
   id: 'gambler',

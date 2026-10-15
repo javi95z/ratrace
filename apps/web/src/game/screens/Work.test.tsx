@@ -51,7 +51,7 @@ describe('the work panel of the profile', () => {
     expect(within(panel).getByText(`${fmt.money(next.payAnnual)}/yr`)).toBeTruthy();
     expect(next.payAnnual).toBeGreaterThan(here.payAnnual);
     // The two other lines are named for what they are, not for the career they could be mistaken for.
-    expect(within(panel).getByText('Money sense')).toBeTruthy();
+    expect(within(panel).getByText('Finance')).toBeTruthy();
     expect(within(panel).getByText('Focus this round')).toBeTruthy();
     expect(within(panel).getByText(`${work.focus.left}/${work.focus.total}`)).toBeTruthy();
     // Her ward as it looks from the first rung, and the sign of her trade beside her title.
@@ -79,10 +79,10 @@ describe('the work panel of the profile', () => {
     expect(within(sheet).getByText('Pay in Madrid today, with the raises and cuts you already carry.')).toBeTruthy();
   });
 
-  it('opens what each level of money sense lets the player buy, and how the next is reached', async () => {
+  it('opens what each level of Finance lets the player buy, and how the next is reached', async () => {
     const { user, panel } = await nurse();
-    await user.click(within(panel).getByRole('button', { name: /^Money sense/ }));
-    const sheet = screen.getByRole('dialog', { name: 'Money sense' });
+    await user.click(within(panel).getByRole('button', { name: /^Finance/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Finance' });
     const levels = within(sheet).getAllByRole('listitem');
     expect(levels.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null, null, null]);
     // The last level opens no market: it opens the broker's money, and no course gives it.
@@ -90,10 +90,10 @@ describe('the work panel of the profile', () => {
     expect(within(levels[content.debt.marginMinFinanceSkill]).getByText('And buying with money borrowed from the broker.')).toBeTruthy();
     // The counts are the game's own: what each level adds to what can be bought.
     const at = (level: number) => content.assets.filter((asset) => (asset.minFinanceSkill ?? 0) === level).length;
-    // With no money sense nothing is open; the first level opens every fund, bond, stock and gold there is.
-    expect(at(0)).toBe(0);
-    expect(within(levels[0]).getByText('Nothing yet: savings and the pension only. A finance course opens level 1.')).toBeTruthy();
-    expect(within(levels[1]).getByText(`Index funds, bonds, stocks and gold: ${at(1)} to choose from.`)).toBeTruthy();
+    // With no Finance every fund, bond and share is open already; the first level adds gold.
+    expect(at(0)).toBe(16);
+    expect(within(levels[0]).getByText(`Index funds, bonds and shares: ${at(0)} to choose from, from day one.`)).toBeTruthy();
+    expect(within(levels[1]).getByText(`Gold: ${at(1)} more.`)).toBeTruthy();
     expect(within(levels[2]).getByText(`Cryptocurrencies: ${at(2)} more.`)).toBeTruthy();
     expect(within(levels[content.life.rentOutMinFinanceSkill]).getByText('And letting property out.')).toBeTruthy();
     expect(within(sheet).getByText(/^Each round with money invested gives \+1\./)).toBeTruthy();
@@ -105,7 +105,7 @@ describe('the work panel of the profile', () => {
   it('lists every skill with how far along it is, and opens what each level gives and how it is learnt', async () => {
     const { panel, user } = await nurse();
     const skills = within(panel).getByRole('region', { name: 'Skills' });
-    for (const name of ['Money sense', 'Negotiation', 'Languages', 'Network', 'Management', 'Health']) expect(within(skills).getByText(name)).toBeTruthy();
+    for (const name of ['Finance', 'Negotiation', 'Languages', 'Network', 'Management', 'Health']) expect(within(skills).getByText(name)).toBeTruthy();
     // Every skill, money sense too, is told the same way: its level and the points into it.
     expect(within(skills).getAllByText('Level 0 · 0/3')).toHaveLength(6);
     await user.click(within(skills).getByText('Health'));

@@ -71,7 +71,7 @@ function Offer({ def, index, preview, world, shortcut }: { def: CardDef; index: 
 }
 
 /** One option of a card, to be chosen. */
-function Option({ def, index, preview, onPick, disabled, tabIndex }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean; tabIndex: number }) {
+function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { def: CardDef; index: number; number: number; preview: OptionPreview; onPick(): void; disabled: boolean; tabIndex: number }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
   if (!world) return null;
   return (
@@ -83,7 +83,7 @@ function Option({ def, index, preview, onPick, disabled, tabIndex }: { def: Card
       data-card-option={index}
       className="frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
     >
-      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? index + 1 : undefined} />
+      <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} />
     </button>
   );
 }
@@ -106,7 +106,9 @@ export function CardStage() {
   const cardId = waiting ? view.hand[view.answered] : undefined;
   const def = content.cards.find((card) => card.id === cardId);
   const previews = useMemo(() => (view && def && waiting ? previewCard(content, view, def.id) : []), [content, view, def, waiting]);
-  const enabled = previews.flatMap((preview, index) => (preview.available ? [index] : []));
+  // A choice that wants a skill the player lacks is not shown at all; the digits count what is shown.
+  const shown = previews.flatMap((preview, index) => (preview.lock === 'skill' ? [] : [index]));
+  const enabled = shown.filter((index) => previews[index].available);
   const focus = (index: number) => {
     const option = choices.current?.querySelector<HTMLElement>(`[data-card-option="${index}"]`);
     option?.focus();
@@ -119,8 +121,8 @@ export function CardStage() {
       // A held digit must not go on to answer the next card too.
       if (event.repeat && /^[1-4]$/.test(event.key)) return true;
       if (/^[1-4]$/.test(event.key)) {
-        const index = Number(event.key) - 1;
-        if (!enabled.includes(index)) return false;
+        const index = shown[Number(event.key) - 1];
+        if (index === undefined || !enabled.includes(index)) return false;
         choose(index);
         return true;
       }
@@ -174,8 +176,8 @@ export function CardStage() {
       </motion.article>
 
       <div ref={choices} role="group" aria-label={t('choices', { title: written.title })} className="flex flex-col gap-2.5">
-        {def.options.map((_, i) => (
-          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} tabIndex={i === enabled[0] ? 0 : -1} />
+        {shown.map((i, at) => (
+          <Option key={`${def.id}-${i}`} def={def} index={i} number={at + 1} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} tabIndex={i === enabled[0] ? 0 : -1} />
         ))}
       </div>
       {swipeable ? (
