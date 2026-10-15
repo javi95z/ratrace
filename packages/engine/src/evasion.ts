@@ -75,9 +75,10 @@ export function suspicionAfter(content: Content, p: PlayerState, evaded: Evaded,
   return Math.min(100, gained > 0 || hiding(state) ? state.suspicion + gained : Math.max(0, state.suspicion - content.evasion.suspicionDecay));
 }
 
-/** The chance in percent that the tax office comes, at a given suspicion. */
-export function auditChance(content: Content, suspicion: number): number {
-  return Math.min(content.evasion.auditMaxPct, Math.max(0, suspicion));
+/** The chance in percent that the tax office of a city comes, at a given suspicion: a strict office comes more often, a lax one less. */
+export function auditChance(content: Content, suspicion: number, cityId: string): number {
+  const office = content.cities.find((city) => city.id === cityId)?.taxOfficePct ?? 100;
+  return Math.min(content.evasion.auditMaxPct, Math.max(0, Math.round((suspicion * office) / 100)));
 }
 
 /** What an inspection would take today: the tax evaded and not yet past the limit, its fine, and a share of what was bought without an invoice. */
@@ -107,7 +108,7 @@ export function settleEvasion(content: Content, p: PlayerState, evaded: Evaded, 
   state.suspicion = suspicionAfter(content, p, evaded, noInvoiceSold, round);
 
   let taken = 0;
-  if (state.suspicion > 0 && rng.chance(auditChance(content, state.suspicion))) {
+  if (state.suspicion > 0 && rng.chance(auditChance(content, state.suspicion, p.cityId))) {
     const bill = auditBill(content, p);
     if (bill.total > 0 || hiding(state)) {
       taken = bill.total;

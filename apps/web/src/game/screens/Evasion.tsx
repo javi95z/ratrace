@@ -62,6 +62,8 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
         <section aria-label={t('risk')} className="flex flex-col gap-1.5 border-t-2 border-night-900 pt-3">
           <Bar value={quote.suspicionAfter} max={100} label={t('suspicion')} tone="gold" />
           <p className="text-[13px]">{t('chance', { pct: quote.auditChancePct })}</p>
+          {/* How hard the tax office of this city looks: the same hiding is riskier in New York than in Bangkok. */}
+          <p className="text-[12px] text-ink-300">{t(quote.taxOfficePct > 100 ? 'officeStrict' : quote.taxOfficePct < 80 ? 'officeLax' : 'officeUsual')}</p>
           {quote.bill.total > 0 ? (
             <p className="text-[13px] leading-snug text-wine-300">
               {t('bill', { total: fmt.money(quote.bill.total), evaded: fmt.money(quote.bill.evaded), fine: fmt.money(quote.bill.fine), goods: fmt.money(quote.bill.goods) })}

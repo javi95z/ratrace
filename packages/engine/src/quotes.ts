@@ -689,6 +689,8 @@ export interface EvasionQuote {
   suspicion: number;
   suspicionAfter: number;
   auditChancePct: number;
+  /** How hard the tax office of the city looks, against the usual, in percent. */
+  taxOfficePct: number;
   /** What an inspection would take once this round is played: the tax evaded and not yet past the limit, its fine, and the goods. */
   bill: { evaded: Cents; fine: Cents; goods: Cents; total: Cents };
   /** What this round hides, by way of hiding it. */
@@ -721,7 +723,8 @@ export function quoteEvasion(content: Content, view: GameView, evaded: Evaded, n
     shellTaxCutPct: rules.shellTaxCutPct,
     suspicion: state.suspicion,
     suspicionAfter: after,
-    auditChancePct: auditChance(content, after),
+    auditChancePct: auditChance(content, after, p.cityId),
+    taxOfficePct: content.cities.find((city) => city.id === p.cityId)?.taxOfficePct ?? 100,
     bill: auditBill(content, later),
     evaded,
     limitationYears: rules.limitationRounds * content.yearsPerRound,

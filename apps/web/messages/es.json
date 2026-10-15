@@ -705,7 +705,10 @@
         "mid": "«Si alguien pregunta, el efectivo fue un regalo de una tía. ¿Tienes una tía?».",
         "high": "«Yo dejaría de coger números desconocidos».",
         "max": "«No te conozco. ¿Quién eres? Vete, por favor»."
-      }
+      },
+      "officeStrict": "Aquí Hacienda es estricta: las inspecciones llegan más a menudo.",
+      "officeUsual": "Aquí Hacienda es como en la mayoría de sitios.",
+      "officeLax": "Aquí Hacienda mira hacia otro lado: las inspecciones son raras."
     }
   },
   "resolve": {

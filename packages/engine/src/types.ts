@@ -223,6 +223,11 @@ export interface CityDef {
   tax: TaxProfile;
   /** Status points for living here. */
   prestige: number;
+  /**
+   * How hard the tax office looks, against the usual, in percent: the chance of an inspection at a
+   * given suspicion is scaled by it. Absent: 100.
+   */
+  taxOfficePct?: number;
   /** What each career pays here against the usual, in percent: a city is the place for some trades. Absent: 100. */
   careerPayPct?: Readonly<Record<string, number>>;
 }

@@ -156,7 +156,8 @@ export function WeeklyChallenge() {
       </div>
 
       <div className="frame-double overflow-hidden bg-night-900 leading-[0]">
-        <Sprite id={CHALLENGE_ART.scene} scale="art" fallback={{ w: 288, h: 120 }} className="mx-auto max-w-none" />
+        {/* The banner fills the width it is given, on a phone as on a desk. */}
+        <Sprite id={CHALLENGE_ART.scene} fallback={{ w: 288, h: 120 }} className="!h-auto !w-full" />
       </div>
 
       <Panel className="frame-gold bg-night-600" label={t('title')}>

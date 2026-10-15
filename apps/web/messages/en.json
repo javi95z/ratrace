@@ -705,7 +705,10 @@
         "mid": "\"If anyone asks, the cash was a gift from an aunt. Do you have an aunt?\"",
         "high": "\"I would stop answering unknown numbers, if I were you.\"",
         "max": "\"I have never met you. Who are you? Please leave.\""
-      }
+      },
+      "officeStrict": "The tax office here is strict: inspections come more often.",
+      "officeUsual": "The tax office here is like most.",
+      "officeLax": "The tax office here looks the other way: inspections are rare."
     }
   },
   "resolve": {

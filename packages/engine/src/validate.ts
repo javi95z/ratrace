@@ -116,6 +116,7 @@ export function validateContent(c: Content): string[] {
       errors.push(`city ${city.id} needs a positive salary, living cost and flat price`);
     }
     if (!isCount(city.prestige)) errors.push(`city ${city.id} needs a whole, non-negative prestige`);
+    if (city.taxOfficePct !== undefined && !(isCount(city.taxOfficePct) && city.taxOfficePct <= 300)) errors.push(`city ${city.id} needs a tax office of 0 to 300 percent`);
     if (city.careerPayPct !== undefined) {
       if (!isRecord(city.careerPayPct)) errors.push(`city ${city.id} needs its career pay as a record`);
       else {

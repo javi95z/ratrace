@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { auditBill, declaredTax, hiding } from './evasion';
+import { auditBill, auditChance, declaredTax, hiding } from './evasion';
 import { applyRound, createGame, previewRound } from './game';
 import { findInvariantBreaks } from './invariants';
 import { deriveExpenses } from './life/derive';
@@ -257,5 +257,21 @@ describe('the rules and the state', () => {
     );
     const marked = withPlayer(content, state, {}, { items: [{ itemId: 'car_basic', value: 1, roundsLeft: null, paid: 1, age: 0, noInvoice: true }], collection: ['car_basic'] });
     expect(findInvariantBreaks(content, marked)).toContain('item car_basic is marked bought without an invoice, and it is not sold that way');
+  });
+});
+
+describe('the tax office of a city', () => {
+  it('comes as often as its strictness says, at the same suspicion, and never past the cap', () => {
+    const content = fixtureContent();
+    content.evasion.auditMaxPct = 60;
+    const [home, other] = content.cities;
+    home.taxOfficePct = 150;
+    other.taxOfficePct = 40;
+    expect(auditChance(content, 20, home.id)).toBe(30);
+    expect(auditChance(content, 20, other.id)).toBe(8);
+    expect(auditChance(content, 100, home.id)).toBe(content.evasion.auditMaxPct);
+    // A city that says nothing looks as hard as most.
+    delete other.taxOfficePct;
+    expect(auditChance(content, 20, other.id)).toBe(20);
   });
 });

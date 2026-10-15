@@ -131,6 +131,8 @@ const zurichTax: TaxProfile = {
   investmentAllowance: 0,
 };
 
+// How hard each tax office looks sets how likely an inspection is at the same suspicion: New York's
+// most of all, Dubai's and Bangkok's hardly at all.
 // Each city is the place for a trade or two, which it pays above the usual: the capital for its
 // civil servants, the two financial centres for finance, the hubs for whoever serves or builds there.
 export const cities: CityDef[] = [
@@ -146,6 +148,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 700,
     tax: madridTax,
     prestige: 6,
+    taxOfficePct: 100,
     careerPayPct: { public: 115, healthcare: 110, education: 110 },
   },
   {
@@ -160,6 +163,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: londonTax,
     prestige: 12,
+    taxOfficePct: 110,
     careerPayPct: { finance: 120, medicine: 110, law: 115, sales: 110 },
   },
   {
@@ -174,6 +178,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 800,
     tax: newYorkTax,
     prestige: 15,
+    taxOfficePct: 120,
     careerPayPct: { finance: 125, tech: 110, law: 120, sales: 115 },
   },
   {
@@ -188,6 +193,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 1_300,
     tax: dubaiTax,
     prestige: 15,
+    taxOfficePct: 30,
     careerPayPct: { service: 120, finance: 110, influencer: 120, hospitality: 115 },
   },
   {
@@ -202,6 +208,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 600,
     tax: singaporeTax,
     prestige: 12,
+    taxOfficePct: 90,
     careerPayPct: { tech: 120, finance: 110, education: 115 },
   },
   {
@@ -216,6 +223,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 900,
     tax: bangkokTax,
     prestige: 6,
+    taxOfficePct: 40,
     careerPayPct: { service: 115, tech: 110, hospitality: 120, influencer: 110 },
   },
   {
@@ -231,6 +239,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 500,
     tax: tokyoTax,
     prestige: 13,
+    taxOfficePct: 110,
     careerPayPct: { tech: 115, sales: 110, hospitality: 110 },
   },
   {
@@ -246,6 +255,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 1_400,
     tax: moscowTax,
     prestige: 9,
+    taxOfficePct: 60,
     careerPayPct: { finance: 115, tech: 115, public: 110 },
   },
   {
@@ -260,6 +270,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 1_100,
     tax: mexicoCityTax,
     prestige: 7,
+    taxOfficePct: 45,
     careerPayPct: { influencer: 115, hospitality: 110, sales: 115, law: 110 },
   },
   {
@@ -275,6 +286,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 400,
     tax: zurichTax,
     prestige: 16,
+    taxOfficePct: 90,
     careerPayPct: { finance: 125, medicine: 115, law: 115, tech: 110 },
   },
 ];
