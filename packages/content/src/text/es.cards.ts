@@ -661,4 +661,85 @@ export const cards: Record<string, CardText> = {
     'Llamar al número de siempre',
     'Reconocer la estafa al vuelo',
   ]),
+  city_madrid_cana: c('Solo una caña', 'Un compañero dice de tomar una caña al salir. En Madrid, una caña acaba en cena a medianoche.', [
+    'Irte a casa',
+    'Quedarte a cenar',
+  ]),
+  city_madrid_tourist_flat: c('Agosto en Madrid', 'En agosto todo el mundo se va. Tu piso podría ganarse el sueldo mientras no estás.', [
+    'Dejarlo vacío',
+    'Alquilarlo legal, con papeles',
+    'Alquilarlo en negro, sin preguntas',
+  ]),
+  city_london_tube_strike: c('Huelga de metro', 'Una semana sin metro, y la oficina sigue abriendo a las nueve.', [
+    'Ir en taxi toda la semana',
+    'Trabajar desde casa y retrasarte',
+  ]),
+  city_london_club: c('Te quieren en un club', 'Un socio de un club privado de Mayfair se ofrece a proponerte.', [
+    'Declinarlo con educación',
+    'Pagar la cuota de entrada',
+  ]),
+  city_new_york_rent_hike: c('El alquiler sube un 20 %', 'Tu casero escribe: el contrato se renueva un veinte por ciento más caro.', [
+    'Pagarlo',
+    ['Recurrir ante la junta de alquileres', 'La junta limita la subida. Sigues con el alquiler de antes.', 'La junta da la razón al casero, y encima pagas las costas.'],
+  ]),
+  city_new_york_elevator_pitch: c('Cuarenta pisos con un inversor', 'Un inversor famoso entra en tu ascensor. Tienes unos cuarenta segundos.', [
+    'Mirar el móvil',
+    ['Contarle tu idea', 'Te da su tarjeta. Un mes después tienes un trabajo mejor.', 'Asiente con educación y se baja en el piso treinta.'],
+  ]),
+  city_dubai_visa: c('Caduca el visado', 'Hay que renovar el visado de residencia: reconocimiento médico, formulario y tasa.', [
+    'Pagar a un gestor',
+    'Pasar un día haciendo colas',
+  ]),
+  city_dubai_golden_visa: c('Un visado dorado', 'Con lo que tienes, podrías tener diez años de residencia y el estatus que conlleva.', [
+    'No hace falta',
+    'Solicitarlo',
+  ]),
+  city_singapore_ballot: c('Sorteo de vivienda pública', 'El Estado construye pisos a una fracción del precio de mercado. Hay sorteo.', [
+    'No apuntarte',
+    ['Apuntarte al sorteo', 'Sale tu número: un piso nuevo a una fracción del precio.', 'Esta vez no sale tu número.'],
+  ]),
+  city_singapore_gum: c('Te pillan con chicle', 'Un vigilante te ve con chicle en el metro. Singapur es una ciudad de multas.', [
+    'Pagar la multa',
+    'Recurrir y recoger basura una mañana',
+  ]),
+  city_bangkok_flood: c('Llegan las lluvias', 'El monzón inunda tu calle y, con ella, la planta baja.', [
+    'Que se encargue el seguro',
+    'Sacos de arena y limpiar tú',
+  ]),
+  city_bangkok_beach_bar: c('Un bar en la playa', 'Un amigo en Koh Samui busca un socio más para un bar en la arena.', [
+    'Quedarte en la ciudad',
+    ['Poner dinero', 'Una buena temporada: el bar te devuelve el doble.', 'Una temporada lluviosa y vacía. El dinero se queda en la arena.'],
+  ]),
+  city_tokyo_earthquake: c('Tiembla la tierra', 'Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa.', [
+    'Llamar al seguro',
+    'Arreglar tú lo que puedas',
+  ]),
+  city_tokyo_karaoke: c('Karaoke con el jefe', 'Tras la cena de fin de año, tu jefe reserva una sala de karaoke y te mira.', [
+    'Poner una excusa',
+    ['Coger el micrófono', 'Tu balada hace llorar a la sala. El lunes el jefe se acuerda de ti.', 'Nadie recuerda la canción. Todos recuerdan la resaca.'],
+  ]),
+  city_moscow_rouble: c('Se hunde el rublo', 'El rublo cae un tercio frente al dólar en una noche, y tu sueldo con él.', [
+    'Aguantar',
+    'Negociar el sueldo en dólares',
+  ]),
+  city_moscow_dacha: c('Una dacha en la familia', 'Una tía te deja su dacha de madera a una hora de la ciudad.', [
+    'Venderla',
+    'Quedártela para los fines de semana',
+  ]),
+  city_mexico_city_mordida: c('El inspector espera', 'Un inspector encuentra un problema en tus papeles, y te deja claro que podría desaparecer.', [
+    ['Negarte y arriesgarte', 'Llega la multa, con todos los sellos.', 'El inspector se encoge de hombros y se va a visitar a otro.'],
+    'Pagar la mordida',
+  ]),
+  city_mexico_city_taqueria: c('Un socio para la taquería', 'El taquero de tu esquina busca socio para abrir un segundo puesto.', [
+    'Desearle suerte',
+    'Poner dinero',
+  ]),
+  city_zurich_numbered_account: c('Una cuenta con número', 'Un banquero discreto te sugiere una cuenta que solo se conoce por su número.', [
+    'Darle las gracias e irte',
+    ['Abrir la cuenta', 'La cuenta crece en silencio, y nadie pregunta.', 'Una filtración, una lista, y Hacienda lee tu nombre en ella.'],
+  ]),
+  city_zurich_referendum: c('Un referéndum sobre impuestos', 'El cantón vota bajar el impuesto sobre la renta. Podrías hacer campaña.', [
+    'Solo votar',
+    ['Hacer campaña por la bajada', 'La bajada sale adelante, y tu próxima factura encoge.', 'El cantón vota que no. Te quedas con los folletos.'],
+  ]),
 };

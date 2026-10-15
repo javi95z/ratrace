@@ -661,4 +661,85 @@ export const cards: Record<string, CardText> = {
     'Call the number you know',
     'Spot the scam at once',
   ]),
+  city_madrid_cana: c('One drink, they said', 'A colleague says one caña after work. In Madrid, one caña is dinner at midnight.', [
+    'Go home',
+    'Stay for dinner',
+  ]),
+  city_madrid_tourist_flat: c('August in the city', 'Everyone leaves Madrid in August. Your flat could earn its keep while you are away.', [
+    'Leave it empty',
+    'Let it properly, with the paperwork',
+    'Let it for cash, no questions',
+  ]),
+  city_london_tube_strike: c('The Tube is on strike', 'No trains for a week, and the office still opens at nine.', [
+    'Take cabs all week',
+    'Work from home and fall behind',
+  ]),
+  city_london_club: c('A club would have you', 'A member of a private club in Mayfair offers to put your name forward.', [
+    'Politely decline',
+    'Pay the joining fee',
+  ]),
+  city_new_york_rent_hike: c('The rent goes up a fifth', 'Your landlord writes to say the lease will renew at twenty per cent more.', [
+    'Pay it',
+    ['Fight it at the rent board', 'The board caps the rise. You stay at the old rent.', 'The board sides with the landlord, and you pay the fees too.'],
+  ]),
+  city_new_york_elevator_pitch: c('Forty floors with an investor', 'A famous investor steps into your lift. You have about forty seconds.', [
+    'Look at your phone',
+    ['Make your pitch', 'He gives you his card. A month later you have a better job.', 'He nods politely and gets out on the thirtieth floor.'],
+  ]),
+  city_dubai_visa: c('The visa is up', 'Your residence visa needs renewing, with a medical, a form and a fee.', [
+    'Pay an agent to do it',
+    'Spend a day in the queues',
+  ]),
+  city_dubai_golden_visa: c('A golden visa', 'With what you hold, you could have ten years of residence and the status that comes with it.', [
+    'Not needed',
+    'Apply for it',
+  ]),
+  city_singapore_ballot: c('A ballot for a new flat', 'The state is building flats at a fraction of the market price. There is a ballot.', [
+    'Do not enter',
+    ['Enter the ballot', 'Your number comes up: a new flat at a fraction of the price.', 'Your number does not come up this time.'],
+  ]),
+  city_singapore_gum: c('Caught chewing', 'A warden spots you with gum on the MRT. It is a fine city, in every sense.', [
+    'Pay the fine',
+    'Plead and do a morning of litter-picking',
+  ]),
+  city_bangkok_flood: c('The rains come in', 'The monsoon floods your street and the ground floor with it.', [
+    'Let the insurer handle it',
+    'Sandbag and clean up yourself',
+  ]),
+  city_bangkok_beach_bar: c('A bar on the beach', 'A friend in Koh Samui needs one more partner for a bar on the sand.', [
+    'Stay in the city',
+    ['Put money in', 'A good season: the bar pays you back twice over.', 'The season is wet and empty. The money stays in the sand.'],
+  ]),
+  city_tokyo_earthquake: c('The ground moves', 'A strong earthquake shakes the city. Your home is standing, but not unhurt.', [
+    'Call the insurer',
+    'Repair what you can yourself',
+  ]),
+  city_tokyo_karaoke: c('Karaoke with the boss', 'After the year-end party, your manager books a karaoke room and looks at you.', [
+    'Make your excuses',
+    ['Take the microphone', 'Your ballad brings the room to tears. On Monday the boss remembers you.', 'Nobody remembers the song. Everybody remembers the hangover.'],
+  ]),
+  city_moscow_rouble: c('The rouble falls', 'The rouble drops a third against the dollar overnight, and your salary with it.', [
+    'Ride it out',
+    'Negotiate your pay in dollars',
+  ]),
+  city_moscow_dacha: c('A dacha in the family', 'An aunt leaves you her wooden dacha an hour out of the city.', [
+    'Sell it',
+    'Keep it for the weekends',
+  ]),
+  city_mexico_city_mordida: c('The inspector waits', 'An inspector finds a problem with your paperwork, and lets you know it could go away.', [
+    ['Refuse and take your chances', 'The fine arrives, with every stamp on it.', 'The inspector shrugs and finds someone else to visit.'],
+    'Pay the mordida',
+  ]),
+  city_mexico_city_taqueria: c('A partner for the taquería', 'The taquero on your corner wants a partner to open a second stand.', [
+    'Wish him luck',
+    'Put money in',
+  ]),
+  city_zurich_numbered_account: c('An account with a number', 'A discreet banker suggests an account known only by its number.', [
+    'Thank him and leave',
+    ['Open the account', 'The account grows quietly, and nobody asks.', 'A leak, a list, and the tax office reads your name on it.'],
+  ]),
+  city_zurich_referendum: c('A vote on the taxes', 'The canton votes on cutting its income tax. You could campaign for it.', [
+    'Just vote',
+    ['Campaign for the cut', 'The cut passes, and your next bill shrinks.', 'The canton votes no. You keep the leaflets.'],
+  ]),
 };

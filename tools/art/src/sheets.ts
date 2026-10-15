@@ -198,6 +198,11 @@ export const SHEETS: SheetSpec[] = [
   // Three badges of the later cities, and the two transfers abroad.
   { file: 'badges/badges-06', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.swiss_banker', 'badge.world_tour', 'badge.ronin'] },
   { file: 'cards/cards-26', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.office_east', 'card.office_west'] },
+  // Two cards for each city, dealt only there.
+  { file: 'cards/cards-27', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_madrid_cana', 'card.city_madrid_tourist_flat', 'card.city_london_tube_strike', 'card.city_london_club', 'card.city_new_york_rent_hike', 'card.city_new_york_elevator_pitch'] },
+  { file: 'cards/cards-28', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_dubai_visa', 'card.city_dubai_golden_visa', 'card.city_singapore_ballot', 'card.city_singapore_gum', 'card.city_bangkok_flood', 'card.city_bangkok_beach_bar'] },
+  { file: 'cards/cards-29', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.city_tokyo_earthquake', 'card.city_tokyo_karaoke', 'card.city_moscow_rouble', 'card.city_moscow_dacha', 'card.city_mexico_city_mordida', 'card.city_mexico_city_taqueria'] },
+  { file: 'cards/cards-30', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.city_zurich_numbered_account', 'card.city_zurich_referendum'] },
   {
     // A sign for each career, and five for careers to come.
     file: 'icons/icons-06', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,
