@@ -27,16 +27,19 @@ export function Guide() {
   if (runs === null || player === null) return null;
 
   const hasInvested = player.deposit > 0 || Object.keys(player.positions).length > 0;
-  // While the game is being made, the guide shows whatever lives this device has finished, so it can be seen and tried.
-  const livesFinished = process.env.NODE_ENV === 'development' ? 0 : runs.length;
-  const tip = nextTip({ stage, round, seen: guide.seen, off: guide.off, livesFinished, hasInvested });
+  // While the game is being made, the guide shows whatever lives this device has finished, and even when it was turned off, so it can be seen and tried.
+  const developing = process.env.NODE_ENV === 'development';
+  const tip = nextTip({ stage, round, seen: guide.seen, off: developing ? false : guide.off, livesFinished: developing ? 0 : runs.length, hasInvested });
   if (tip === null || read === visit) return null;
 
   // The button pressed is about to go, and the focus with it: the stage takes it back, so the keyboard carries on from there.
   const leave = () => note.current?.closest<HTMLElement>('main')?.focus({ preventScroll: true });
 
   return (
-    <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold mx-3 mb-3 animate-rise bg-night-700 p-3">
+    <>
+    {/* The rest of the page steps back a little while a tip is there, so it is read first. Nothing is blocked. */}
+    <div aria-hidden data-guide-shade className="pointer-events-none fixed inset-0 z-40 bg-night-900/55" />
+    <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold relative z-50 mx-3 mb-3 animate-rise bg-night-700 p-3 shadow-[0_0_0_3px_var(--color-gold-500)]">
       <p className="pixel mb-1 text-[14px] uppercase tracking-[0.1em] text-gold-500">{t('title')}</p>
       <p className="text-[14px] leading-snug">{t(tip)}</p>
       <div className="mt-3 flex gap-2">
@@ -62,5 +65,6 @@ export function Guide() {
         </Button>
       </div>
     </aside>
+    </>
   );
 }

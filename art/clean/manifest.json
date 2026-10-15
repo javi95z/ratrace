@@ -4031,6 +4031,26 @@
       "width": 64,
       "height": 64
     },
+    "badge.tax_free_year": {
+      "file": "badges/badge.tax_free_year.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.tax_haven": {
+      "file": "badges/badge.tax_haven.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.off_the_grid": {
+      "file": "badges/badge.off_the_grid.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.home_again": {
+      "file": "badges/badge.home_again.png",
+      "width": 64,
+      "height": 64
+    },
     "badge.own_boss": {
       "file": "badges/badge.own_boss.png",
       "width": 64,

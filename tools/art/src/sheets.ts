@@ -376,6 +376,7 @@ export const SHEETS: SheetSpec[] = [
   // The sheet came with two more scenes, of a book; the cards they were for were left out of the game.
   { file: 'cards/cards-34', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.lodger_good', 'card.lodger_unpaid', 'card.lodger_friend', 'card.lodger_tension', '', ''] },
   { file: 'items/business-01', group: 'items', kind: 'objects', cols: 5, rows: 1, width: 64, height: 64, ids: ['business.services', 'business.shop', 'business.app', 'business.bar', 'business.franchise'] },
+  { file: 'badges/badges-09', group: 'badges', kind: 'objects', cols: 4, rows: 1, width: 64, height: 64, ids: ['badge.tax_free_year', 'badge.tax_haven', 'badge.off_the_grid', 'badge.home_again'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

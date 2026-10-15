@@ -1,6 +1,6 @@
 'use client';
 
-import { assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
+import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
@@ -271,24 +271,50 @@ function Plans() {
 // ------------------------------------------------------------------------------------------------
 // Market
 
-/** The price of an asset since the start of the life, as a stepped pixel line. */
-function Sparkline({ values, label }: { values: number[]; label: string }) {
+/**
+ * The price of an asset since the start of the life, read at a glance: a line of its price round by
+ * round over a dashed line where it started, green above it and red below, the change since then in
+ * big type, and the ages along the bottom. A round of rise or fall is a dot on the line.
+ */
+function PriceChart({ values, label }: { values: number[]; label: string }) {
+  const t = useT('finance.market');
+  const { content } = useWords();
   const w = 280;
-  const h = 48;
+  const h = 90;
+  const pad = 6;
   const max = Math.max(...values, 1);
   const min = Math.min(...values, 1);
   const span = max - min || 1;
-  const stepX = values.length > 1 ? w / (values.length - 1) : w;
-  let path = '';
-  values.forEach((value, i) => {
-    const x = Math.round(i * stepX);
-    const y = Math.round(h - 4 - ((value - min) / span) * (h - 8));
-    path += i === 0 ? `M0 ${y}` : ` H${x} V${y}`;
-  });
+  const x = (i: number) => (values.length > 1 ? pad + (i * (w - pad * 2)) / (values.length - 1) : w / 2);
+  const y = (value: number) => pad + (1 - (value - min) / span) * (h - pad * 2);
+  const last = values[values.length - 1] ?? 1;
+  const change = Math.round((last - 1) * 100);
+  const up = last >= 1;
+  const tone = up ? 'var(--color-teal-300)' : 'var(--color-wine-300)';
+  const line = values.map((value, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(value).toFixed(1)}`).join(' ');
+  const base = y(1);
+  const area = `${line} L${x(values.length - 1).toFixed(1)} ${base.toFixed(1)} L${x(0).toFixed(1)} ${base.toFixed(1)} Z`;
+  const ageAtRound = (round: number) => START_AGE + round * content.yearsPerRound;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="frame w-full bg-night-900" shapeRendering="crispEdges">
-      <path d={path} fill="none" stroke="var(--color-gold-500)" strokeWidth="2" />
-    </svg>
+    <figure className="frame bg-night-900 px-2 pb-1.5 pt-2">
+      <figcaption className="flex items-baseline justify-between gap-2 px-1">
+        <span className="text-[12px] text-ink-300">{t('sinceStart', { age: START_AGE })}</span>
+        <span className="pixel text-[20px] leading-none" style={{ color: tone }}>
+          {change > 0 ? '+' : ''}
+          {change}%
+        </span>
+      </figcaption>
+      <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="mt-1 block w-full">
+        <path d={area} fill={tone} opacity="0.15" />
+        <line x1={pad} x2={w - pad} y1={base} y2={base} stroke="var(--color-ink-500)" strokeWidth="1" strokeDasharray="3 3" />
+        <path d={line} fill="none" stroke={tone} strokeWidth="2" strokeLinejoin="round" />
+        <circle cx={x(values.length - 1)} cy={y(last)} r="3.5" fill={tone} />
+      </svg>
+      <div className="flex justify-between px-1 text-[11px] text-ink-300">
+        <span>{ageAtRound(0)}</span>
+        <span>{ageAtRound(values.length - 1)}</span>
+      </div>
+    </figure>
   );
 }
 
@@ -407,11 +433,8 @@ function BuySheet({ asset, onClose }: { asset: AssetDef; onClose(): void }) {
       </div>
       {each ? <p className="mb-2 text-[13px] leading-snug text-ink-200">{planned ? plans('already', { amount: fmt.money(planned.amount) }) : plans('editHint')}</p> : null}
       <p className="mb-2 text-[14px] text-ink-200">{text.assets[asset.id].blurb}</p>
-      <Sparkline values={priceHistory(view, asset.id)} label={t('history')} />
-      <div className="mb-3 mt-1 flex justify-between text-[12px] text-ink-300">
-        <span>{t('history')}</span>
-        {Object.hasOwn(p.positions, asset.id) ? <span>{t('youHold', { amount: fmt.money(p.positions[asset.id].value) })}</span> : null}
-      </div>
+      <PriceChart values={priceHistory(view, asset.id)} label={t('history')} />
+      {Object.hasOwn(p.positions, asset.id) ? <p className="mb-3 mt-1 text-right text-[12px] text-ink-300">{t('youHold', { amount: fmt.money(p.positions[asset.id].value) })}</p> : <div className="mb-3" />}
     </AmountSheet>
   );
 }
@@ -1383,6 +1406,11 @@ function Taxes() {
   const years = content.yearsPerRound;
   const line = (label: ReactNode, amount: number, key: string) => (amount === 0 ? null : <Row key={key} left={label} right={fmt.signed(amount)} />);
   const { income, expenses, tax, escape } = preview;
+  // The tax nobody votes for: what the rise in prices of the last two years took from cash left idle. Only told, never charged.
+  const before = shown.round > 0 ? shown.timeline[shown.round - 1] : null;
+  const now = shown.timeline[shown.round];
+  const eatenPct = before ? Math.max(0, 1 - before.priceLevel / now.priceLevel) : 0;
+  const eaten = Math.round(p.cash * eatenPct);
 
   return (
     <div className="flex flex-col gap-3">
@@ -1404,6 +1432,14 @@ function Taxes() {
         <Row left={t('investmentTax')} right={fmt.signed(-tax.investment)} />
         <Row left={t('propertyTax')} right={fmt.signed(-tax.property)} />
         {preview.purchaseTaxPaid > 0 ? <Row left={t('purchaseTax')} right={fmt.signed(-preview.purchaseTaxPaid)} /> : null}
+        {eaten > 0 ? (
+          <Row
+            className="mt-1 border-t-2 border-night-900 pt-2 text-ink-300"
+            left={t('inflationTax')}
+            sub={t('inflationHint', { cash: fmt.money(p.cash), pct: (eatenPct * 100).toFixed(1), years })}
+            right={<span className="text-ink-300">{fmt.signed(-eaten)}</span>}
+          />
+        ) : null}
       </Panel>
       <EvasionPanel shown={shown} preview={preview} />
       <Panel>

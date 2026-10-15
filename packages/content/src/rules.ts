@@ -250,7 +250,7 @@ export const world: WorldRules = {
   headlinesPerRound: 4,
   noiseHeadlines: 38,
   // The government as the paper sees it: busy, expensive, and always about to fix something.
-  governmentHeadlines: 20,
+  governmentHeadlines: 40,
   newsTruthPct: 70,
   flatBandBp: 25,
   taxReformChancePct: 8,

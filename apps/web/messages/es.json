@@ -141,7 +141,10 @@
       "oneMore": "Esta ronda ya lo cubres. Una más así y sales de la rueda.",
       "worth": "Salir ahora multiplicaría tu puntuación por {multiplier}. Cuanto antes salgas, más vale.",
       "escaped": "Saliste a los {age}: tu puntuación se multiplica por {multiplier}. Sigue cubriendo tus gastos para no volver a entrar."
-    }
+    },
+    "roundShort": "{n} de {total}",
+    "openNews": "Volver a leer el Diario",
+    "newsTitle": "El Diario"
   },
   "settings": {
     "version": "Versión {content} · motor {engine}",
@@ -182,7 +185,7 @@
   },
   "guide": {
     "title": "Guía",
-    "news": "Cada ronda empieza con las noticias. Cada titular da una pista de los próximos dos años, y no todos se cumplen. Léelos antes de mover tu dinero.",
+    "news": "Cada ronda empieza con el Diario. Algunos titulares dan pistas de los próximos dos años, y no todos se cumplen; el resto es el mundo hablando. Puedes releerlo luego con el botón del periódico de arriba.",
     "cards": "La vida te reparte unas cuantas cartas cada ronda. Cada opción enseña lo que cuesta y lo que trae antes de elegir, con las probabilidades cuando hay dados. Una elección no se puede deshacer.",
     "finance": "Ahora, tu dinero. Aquí no pasa nada hasta que juegas la ronda, y la línea de encima del botón te dice, con exactitud, el efectivo que tendrás después. Empieza por Cartera.",
     "ledger": "Han pasado dos años. Esto es todo lo que entró y lo que salió. Los precios se movieron después de jugar, así que lo que tienes vale otra cosa.",
@@ -273,9 +276,9 @@
     "changes": "Lo que cambia",
     "rolled": "de probabilidad de que saliera esto",
     "needsSkill": "Necesitas {skill} {level}.",
-    "thanksSkill": "Por tu {skill}",
-    "thanksCover": "Por tu {cover}",
-    "thanksTrade": "Por tu oficio",
+    "thanksSkill": "Gracias a tu {skill}",
+    "thanksCover": "Gracias a tu {cover}",
+    "thanksTrade": "Gracias a tu oficio",
     "covers": "El seguro paga {amount}",
     "saved": "Tu seguro te ahorró {amount}"
   },
@@ -394,7 +397,8 @@
       "buy": "Comprar",
       "history": "Evolución del precio",
       "youHold": "Tienes {amount}",
-      "planned": "Plan: {amount} cada ronda"
+      "planned": "Plan: {amount} cada ronda",
+      "sinceStart": "Precio desde tus {age} años"
     },
     "amount": {
       "buy": "Comprar {name}",
@@ -598,7 +602,9 @@
       "exact": "Son las cifras exactas de esta ronda, no una estimación. Los precios se mueven después de jugar.",
       "shortfall": "Si falta dinero, sale primero de tu ahorro y después va a la tarjeta de crédito.",
       "escapeTitle": "Prueba de salida",
-      "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales."
+      "escapeHint": "Ingresos pasivos tras impuestos, frente a lo que te cuesta la ronda. Cúbrelo dos rondas seguidas y sales.",
+      "inflationTax": "Inflación sobre tu efectivo",
+      "inflationHint": "Tus {cash} en efectivo compran un {pct} % menos que hace {years} años. Nadie te lo cobra: simplemente desaparece."
     },
     "decided": "Ya decidido",
     "plans": {

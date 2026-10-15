@@ -209,6 +209,11 @@
     "w": 64,
     "h": 64
   },
+  "badge.home_again": {
+    "src": "badges/badge.home_again.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.index_only": {
     "src": "badges/badge.index_only.png",
     "w": 64,
@@ -251,6 +256,11 @@
   },
   "badge.no_credit_card": {
     "src": "badges/badge.no_credit_card.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.off_the_grid": {
+    "src": "badges/badge.off_the_grid.png",
     "w": 64,
     "h": 64
   },
@@ -306,6 +316,16 @@
   },
   "badge.swiss_banker": {
     "src": "badges/badge.swiss_banker.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.tax_free_year": {
+    "src": "badges/badge.tax_free_year.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.tax_haven": {
+    "src": "badges/badge.tax_haven.png",
     "w": 64,
     "h": 64
   },

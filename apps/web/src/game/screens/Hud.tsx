@@ -12,6 +12,7 @@ import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
+import { Headlines } from './News';
 import { SettingsSheet } from './Settings';
 
 /**
@@ -212,6 +213,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const stage = useGame((s) => s.stage);
   const [open, setOpen] = useState<Figure | null>(null);
   const [settings, setSettings] = useState(false);
+  const [paper, setPaper] = useState(false);
   const p = shown.player;
   const age = ageAt(content, shown.round);
   const years = content.yearsPerRound;
@@ -261,7 +263,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         <div className="min-w-0 flex-1">
           <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>
           <div className="mt-1 truncate text-[13px] text-ink-200">
-            {common('round', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}
+            {t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}
             {p.life.career ? ` · ${text.careers[p.life.career.id].levels[p.life.career.level]}` : ''}
           </div>
           {/* Prison says so where the player always looks. */}
@@ -271,6 +273,12 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
             </span>
           ) : null}
         </div>
+        {/* The paper of the round, to read again once the round is under way. */}
+        {stage !== 'news' ? (
+          <button type="button" aria-haspopup="dialog" aria-label={t('openNews')} onClick={() => setPaper(true)} className="frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 transition-transform active:translate-y-[2px]">
+            <Sprite id="icon.news" fallback={{ w: 32, h: 32 }} />
+          </button>
+        ) : null}
         <button type="button" aria-haspopup="dialog" aria-label={t('openSettings')} onClick={() => setSettings(true)} className="frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 transition-transform active:translate-y-[2px]">
           <Sprite id="icon.settings" fallback={{ w: 32, h: 32 }} />
         </button>
@@ -301,6 +309,9 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         {open ? <Details figure={open} shown={shown} /> : null}
       </Sheet>
       <SettingsSheet open={settings} onClose={() => setSettings(false)} shown={shown} />
+      <Sheet open={paper} onClose={() => setPaper(false)} title={t('newsTitle')} closeLabel={common('close')}>
+        {paper ? <Headlines /> : null}
+      </Sheet>
     </header>
   );
 }

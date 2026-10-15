@@ -66,7 +66,7 @@ export const market: MarketParams = {
   // A winter takes more than half, as the real ones did, but the cycle climbs: held through it, coins
   // gain a few percent a year with wild swings, and enormously for whoever times it.
   cryptoMeanBp: { accumulation: 2_500, bull: 10_000, mania: 20_000, winter: -5_500 },
-  goldMeanBp: { expansion: 300, boom: 0, slowdown: 600, recession: 1_400, recovery: 200 },
+  goldMeanBp: { expansion: 300, boom: 0, slowdown: 700, recession: 1_800, recovery: 200 },
   classVolBp: { equity: 1_400, crypto: 2_500, gold: 900 },
   rateDriftBp: { expansion: 50, boom: 100, slowdown: -25, recession: -150, recovery: -25 },
   rateNoiseBp: 40,

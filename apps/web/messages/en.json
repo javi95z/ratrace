@@ -141,7 +141,10 @@
       "oneMore": "This round already covers it. One more like it and you are out of the rat race.",
       "worth": "Getting out now would multiply your score by {multiplier}. The sooner you get out, the more it is worth.",
       "escaped": "You got out at {age}: your score is multiplied by {multiplier}. Keep your outgoings covered so you do not fall back in."
-    }
+    },
+    "roundShort": "{n} of {total}",
+    "openNews": "Read the paper again",
+    "newsTitle": "The paper"
   },
   "settings": {
     "version": "Version {content} · engine {engine}",
@@ -182,7 +185,7 @@
   },
   "guide": {
     "title": "Guide",
-    "news": "Every round opens with the news. Each headline hints at the next two years, and not all of them come true. Read them before you put your money anywhere.",
+    "news": "Every round opens with the paper. Some headlines hint at the next two years, and not all of them come true; the rest are just the world talking. You can read it again later from the paper button at the top.",
     "cards": "Life deals you a few cards every round. Each choice shows what it costs and what it brings before you pick, with the odds where there are dice. A choice cannot be taken back.",
     "finance": "Now your money. Nothing here happens until you play the round, and the line above the button tells you, to the dollar, the cash you will have afterwards. Start in Portfolio.",
     "ledger": "Two years went by. This is everything that came in and went out. Prices moved after you played, so what you own is worth something new.",
@@ -274,8 +277,8 @@
     "rolled": "chance of this being what came up",
     "needsSkill": "Needs {skill} {level}.",
     "thanksSkill": "Thanks to your {skill}",
-    "thanksCover": "Your {cover}",
-    "thanksTrade": "Your trade",
+    "thanksCover": "Thanks to your {cover}",
+    "thanksTrade": "Thanks to your trade",
     "covers": "Cover pays {amount}",
     "saved": "Your cover saved you {amount}"
   },
@@ -394,7 +397,8 @@
       "buy": "Buy",
       "history": "Price history",
       "youHold": "You hold {amount}",
-      "planned": "Plan: {amount} a round"
+      "planned": "Plan: {amount} a round",
+      "sinceStart": "Price since you were {age}"
     },
     "amount": {
       "buy": "Buy {name}",
@@ -598,7 +602,9 @@
       "exact": "These are this round's exact figures, not an estimate. Prices move after you play.",
       "shortfall": "A shortfall comes out of your savings first, then goes on the credit card.",
       "escapeTitle": "Escape test",
-      "escapeHint": "Passive income after tax, against what the round costs you. Cover it two rounds in a row and you are out."
+      "escapeHint": "Passive income after tax, against what the round costs you. Cover it two rounds in a row and you are out.",
+      "inflationTax": "Inflation on your cash",
+      "inflationHint": "Your {cash} in cash buys {pct}% less than {years} years ago. Nobody charges it; it is simply gone."
     },
     "decided": "Already decided",
     "plans": {

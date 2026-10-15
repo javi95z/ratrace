@@ -24,9 +24,12 @@ export const badges: BadgeDef[] = [
   { id: 'ten_million', group: 'wealth' },
   { id: 'swiss_banker', group: 'wealth' },
   { id: 'fiscally_creative', group: 'wealth' },
+  { id: 'tax_free_year', group: 'wealth' },
+  { id: 'tax_haven', group: 'wealth' },
   { id: 'debt_free_at_40', group: 'wealth' },
   { id: 'no_credit_card', group: 'wealth' },
   { id: 'escaped', group: 'escape' },
+  { id: 'off_the_grid', group: 'escape' },
   { id: 'escaped_before_40', group: 'escape' },
   { id: 'escaped_before_35', group: 'escape' },
   { id: 'passive_double', group: 'escape' },
@@ -53,6 +56,7 @@ export const badges: BadgeDef[] = [
   { id: 'mba', group: 'life' },
   { id: 'sold_business', group: 'life' },
   { id: 'own_boss', group: 'life' },
+  { id: 'home_again', group: 'life' },
   { id: 'rode_out_recession', group: 'life' },
   { id: 'bankrupt', group: 'misfortune' },
   { id: 'room_at_40', group: 'misfortune' },
@@ -182,6 +186,8 @@ const keptAll = (f: Facts, kept: Facts['heldBefore']): boolean =>
       Object.hasOwn(f.p.positions, held.id) &&
       f.p.positions[held.id].basis >= held.position.basis,
   );
+/** Never once inspected by the tax office, in the life so far or in this step. */
+const neverInspected = (f: Facts): boolean => !f.journal.earned.includes('audited') && !f.events.some((e) => e.kind === 'audit');
 const wentBankrupt = (f: Facts): boolean => f.journal.earned.includes('bankrupt') || f.events.some((e) => e.kind === 'bankrupt');
 
 /** When each badge is earned. The two that are about the gallery of every life are judged by `galleryBadges`. */
@@ -195,11 +201,17 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   // A hundred thousand hidden that the office could still claim, and never once inspected.
   fiscally_creative: (f) =>
     f.p.life.evasion.evaded.reduce((sum, entry) => sum + entry.amount, 0) >= usd(100_000) && !f.journal.earned.includes('audited') && !f.events.some((e) => e.kind === 'audit'),
+  // Two years of pay and not a cent of income tax, whether by the city or by cunning.
+  tax_free_year: (f) => f.round && f.events.some((e) => e.kind === 'ledger' && e.line === 'salary' && e.amount > 0) && !f.events.some((e) => e.kind === 'ledger' && e.line === 'incomeTax'),
+  // A company abroad, and three rounds of it on the books without the office ever coming.
+  tax_haven: (f) => f.p.life.evasion.shell && new Set(f.p.life.evasion.evaded.map((entry) => entry.round)).size >= 3 && neverInspected(f),
   // Debts a bankruptcy wiped out are not debts paid.
   debt_free_at_40: (f) => f.round && f.age === 40 && f.p.debts.every((debt) => debt.principal === 0) && !wentBankrupt(f),
   no_credit_card: (f) => f.after.finished && !f.journal.cardUsed,
 
   escaped: (f) => f.escapedAtAge !== null,
+  // Out of the rat race without the tax office ever knocking.
+  off_the_grid: (f) => f.escapedAtAge !== null && neverInspected(f),
   escaped_before_40: (f) => f.escapedAtAge !== null && f.escapedAtAge < 40,
   escaped_before_35: (f) => f.escapedAtAge !== null && f.escapedAtAge < 35,
   passive_double: (f) => {
@@ -248,6 +260,7 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   family_of_four: (f) => f.p.life.partner && f.p.life.children.length >= 2,
   mba: (f) => owns(f.p, 'edu_mba'),
   sold_business: (f) => Object.hasOwn(f.p.life.flags, 'sold_business'),
+  home_again: (f) => f.events.some((e) => e.kind === 'homecoming'),
   // The job left for a business of one's own, and a round lived from it.
   own_boss: (f) => f.round && f.p.businesses.some((business) => business.fullTime === true),
   rode_out_recession: (f) => f.round && f.world.regime === 'recession' && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),

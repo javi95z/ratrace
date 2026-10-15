@@ -16,7 +16,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 175 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 42 |
+| [Insignias](#insignias) | 46 |
 
 ## Vidas
 
@@ -1214,6 +1214,8 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, descontando la inflación. |
 | <img src="../art/clean/badges/badge.swiss_banker.png" alt="Banquero suizo"> | Banquero suizo | Ten un patrimonio de 1.000.000 $ viviendo en Zúrich. |
 | <img src="../art/clean/badges/badge.fiscally_creative.png" alt="Fiscalmente creativo"> | Fiscalmente creativo | Oculta 100.000 $ a Hacienda sin que te inspeccionen nunca. |
+| <img src="../art/clean/badges/badge.tax_free_year.png" alt="Un año sin Hacienda"> | Un año sin Hacienda | Cobra un sueldo y no pagues nada de IRPF en una ronda. |
+| <img src="../art/clean/badges/badge.tax_haven.png" alt="Paraíso fiscal"> | Paraíso fiscal | Ten una sociedad en el extranjero tres rondas sin que te inspeccionen nunca. |
 | <img src="../art/clean/badges/badge.debt_free_at_40.png" alt="Sin deudas a los 40"> | Sin deudas a los 40 | No debas nada de nada el día que cumplas 40, sin haber quebrado nunca. |
 | <img src="../art/clean/badges/badge.no_credit_card.png" alt="Ni una vez la tarjeta"> | Ni una vez la tarjeta | Vive una vida entera sin que nada acabe cargado a la tarjeta de crédito. |
 
@@ -1222,6 +1224,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 |  | Insignia | Cómo se consigue |
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.escaped.png" alt="Fuera de la rueda"> | Fuera de la rueda | Paga lo que cuesta tu vida con ingresos pasivos, dos rondas seguidas. |
+| <img src="../art/clean/badges/badge.off_the_grid.png" alt="Fuera del sistema"> | Fuera del sistema | Sal de la rueda sin que Hacienda te haya inspeccionado nunca. |
 | <img src="../art/clean/badges/badge.escaped_before_40.png" alt="Fuera antes de los 40"> | Fuera antes de los 40 | Sal de la rueda antes de cumplir 40. |
 | <img src="../art/clean/badges/badge.escaped_before_35.png" alt="Fuera antes de los 35"> | Fuera antes de los 35 | Sal de la rueda antes de cumplir 35. |
 | <img src="../art/clean/badges/badge.passive_double.png" alt="El doble"> | El doble | Gana en ingresos pasivos, después de impuestos, el doble de lo que cuesta tu vida. |
@@ -1263,6 +1266,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.mba.png" alt="MBA"> | MBA | Consigue el MBA en el IESE. |
 | <img src="../art/clean/badges/badge.sold_business.png" alt="Negocio vendido"> | Negocio vendido | Monta un negocio y véndelo. |
 | <img src="../art/clean/badges/badge.own_boss.png" alt="Tu propio jefe"> | Tu propio jefe | Deja tu trabajo para vivir de tu negocio. |
+| <img src="../art/clean/badges/badge.home_again.png" alt="De vuelta a casa"> | De vuelta a casa | Vuelve a la ciudad donde empezó tu vida. |
 | <img src="../art/clean/badges/badge.rode_out_recession.png" alt="Aguantar la recesión"> | Aguantar la recesión | Mantén tus inversiones durante una recesión sin vender ninguna. |
 
 ### Mala suerte

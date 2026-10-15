@@ -240,17 +240,30 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     ],
   },
   audited: { earns: { events: [{ kind: 'audit', evaded: 100, fine: 50, goods: 0 }] }, misses: [{}] },
+  tax_free_year: {
+    earns: { events: [{ kind: 'ledger', line: 'salary', amount: usd(40_000) }] },
+    misses: [{ events: [{ kind: 'ledger', line: 'salary', amount: usd(40_000) }, { kind: 'ledger', line: 'incomeTax', amount: -usd(5_000) }] }, {}],
+  },
+  tax_haven: {
+    earns: { player: (p) => ((p.life.evasion.shell = true), (p.life.evasion.evaded = [0, 1, 2].map((round) => ({ round, amount: usd(1_000) })))) },
+    misses: [
+      { player: (p) => ((p.life.evasion.shell = true), (p.life.evasion.evaded = [0, 1].map((round) => ({ round, amount: usd(1_000) })))) },
+      { player: (p) => ((p.life.evasion.shell = true), (p.life.evasion.evaded = [0, 1, 2].map((round) => ({ round, amount: usd(1_000) })))), journal: { earned: ['audited'] } },
+    ],
+  },
+  off_the_grid: { earns: { events: [escaped(14)], round: 16 }, misses: [{ events: [escaped(14)], round: 16, journal: { earned: ['audited'] } }, { round: 16 }] },
+  home_again: { earns: { events: [{ kind: 'homecoming', gift: 0, triumphant: false }] }, misses: [{}] },
 };
 
 /** Badges that are about the gallery of every life, not about one step. */
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and twelve since, each in one of six groups', () => {
-    expect(badges).toHaveLength(42);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(42);
+  it('are the thirty of the spec and sixteen since, each in one of six groups', () => {
+    expect(badges).toHaveLength(46);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(46);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([8, 4, 8, 8, 8, 6]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([10, 5, 8, 8, 9, 6]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {

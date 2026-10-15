@@ -107,7 +107,8 @@ function stepWorld(prev: WorldState, content: Content, streams: Streams, plan: C
           ? m.equityMeanBp[regime]
           : asset.class === 'crypto'
             ? m.cryptoMeanBp[cryptoPhase]
-            : m.goldMeanBp[regime] + (inflationBp - NEUTRAL_INFLATION_BP) * content.yearsPerRound;
+            // Gold is the refuge from the printing press: it climbs with inflation, twice as fast as prices.
+            : m.goldMeanBp[regime] + (inflationBp - NEUTRAL_INFLATION_BP) * content.yearsPerRound * 2;
       const crisis = asset.class === 'equity' ? leaving?.equityBp : asset.class === 'crypto' ? leaving?.cryptoBp : leaving?.goldBp;
       ret = mean + round((classShock[asset.class] * asset.betaPct) / 100) + own + (crisis ?? 0);
     }
