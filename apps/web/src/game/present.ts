@@ -246,6 +246,10 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('backToWork');
     case 'setLodger':
       return t(order.on ? 'lodgerOn' : 'lodgerOff');
+    case 'switchMortgage': {
+      const debt = player.debts.find((d) => d.id === order.debtId);
+      return t(debt?.kind === 'mortgageVariable' ? 'switchToFixed' : 'switchToVariable', { name: debt ? debtLabel(words, debt, player.properties) : '' });
+    }
     case 'setResidency':
       return t(order.on ? 'residencyOn' : 'residencyOff', { city: names.cities[player.cityId] });
     case 'buyItem':

@@ -476,7 +476,22 @@
       "rate": "{rate} al año",
       "perRound": "Pagas cada ronda, aprox.",
       "repayTotal": "Devuelves en total",
-      "interestPart": "{interest} son intereses, al {rate} anual"
+      "interestPart": "{interest} son intereses, al {rate} anual",
+      "switchToFixed": "Pasar a tipo fijo",
+      "switchToVariable": "Pasar a tipo variable",
+      "switchingToFixed": "✓ Pasa a fijo esta ronda",
+      "switchingToVariable": "✓ Pasa a variable esta ronda",
+      "switchTitleFixed": "Pasar a tipo fijo",
+      "switchTitleVariable": "Pasar a tipo variable",
+      "switchAboutFixed": "Pagarás siempre el mismo tipo, haga lo que haga el banco central.",
+      "switchAboutVariable": "Tu tipo seguirá al del banco central: baja si bajan los tipos y sube si suben.",
+      "switchRate": "Tipo",
+      "switchInterest": "Intereses al año",
+      "switchFee": "Comisión ({pct} % de lo que debes)",
+      "switchPaper": "El Diario dice: «{headline}».",
+      "switchRest": "No podrás volver a cambiarla en {rounds} rondas.",
+      "switchDo": "Cambiarla por {fee}",
+      "switchUndo": "Dejarla como está"
     },
     "lifestyle": {
       "work": "El foco de esta ronda",
@@ -1180,7 +1195,9 @@
     "lodgerOn": "Alquilar la habitación",
     "lodgerOff": "Dejar de alquilar la habitación",
     "residencyOn": "Residencia fiscal en {city}",
-    "residencyOff": "Dejar la residencia fiscal en {city}"
+    "residencyOff": "Dejar la residencia fiscal en {city}",
+    "switchToFixed": "Pasar a fijo: {name}",
+    "switchToVariable": "Pasar a variable: {name}"
   },
   "account": {
     "title": "Cuenta",

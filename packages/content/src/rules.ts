@@ -42,6 +42,10 @@ export const debt: DebtParams = {
   creditCardRateBp: 2_200,
   mortgageTermRounds: 12,
   personalLoanTermRounds: 3,
+  // A mortgage can be switched between fixed and variable: a percent of what is owed to take a fixed
+  // rate, two to break one, and not again for three rounds.
+  switchFeePct: { toFixed: 1, toVariable: 2 },
+  switchRestRounds: 3,
   mortgageMaxLtvBp: 8_000,
   personalLoanMaxIncomePct: 100,
   bankruptcyIncomeMultiple: 3,

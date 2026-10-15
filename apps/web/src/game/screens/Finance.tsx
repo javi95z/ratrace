@@ -2,13 +2,13 @@
 
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGame, useGuided, useIntroducesTabs, useT, useWords } from '@/game/context';
 import { TAB_FROM_ROUND } from '@/game/guide';
-import { ageAt, debtLabel, loanPlan, orderLabel, priceHistory } from '@/game/present';
+import { ageAt, debtLabel, headlineText, loanPlan, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
@@ -751,6 +751,7 @@ function DebtTab() {
   const addOrder = useGame((s) => s.addOrder);
   const [repaying, setRepaying] = useState<Debt | null>(null);
   const [borrowing, setBorrowing] = useState(false);
+  const [switching, setSwitching] = useState<string | null>(null);
   const loan = quoteLoan(content, shown);
   let total = 0;
   for (const debt of p.debts) total += debt.principal;
@@ -769,6 +770,8 @@ function DebtTab() {
               <div className="text-[12px] text-ink-300">
                 {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })} · {t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}
               </div>
+              {/* A mortgage can be switched between fixed and variable: said under it, opened in a sheet. Not while it rests from the last switch. */}
+              <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
             </div>
             <div className="pixel">{fmt.money(debt.principal)}</div>
             <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
@@ -795,6 +798,7 @@ function DebtTab() {
         )}
       </Panel>
 
+      {switching ? <SwitchSheet debtId={switching} onClose={() => setSwitching(null)} /> : null}
       {repaying ? (
         <AmountSheet
           title={amount('repay', { name: debtLabel(words, repaying, p.properties) })}
@@ -822,6 +826,73 @@ function DebtTab() {
         />
       ) : null}
     </div>
+  );
+}
+
+/** The way into switching a mortgage: what it would become, or that it is being switched this round. Nothing while it may not be switched. */
+function SwitchLink({ debtId, onOpen }: { debtId: string; onOpen(): void }) {
+  const t = useT('finance.debt');
+  const { content } = useWords();
+  const { view, world } = useRound();
+  const orders = useGame((s) => s.orders);
+  const ordered = orders.some((order) => order.type === 'switchMortgage' && order.debtId === debtId);
+  const quote = mortgageSwitch(view.player, debtId, content, world, view.round);
+  if (quote === null || (quote.lock === 'switch-resting' && !ordered)) return null;
+  return (
+    <button type="button" onClick={onOpen} className={`mt-0.5 text-[12px] underline underline-offset-2 ${ordered ? 'text-teal-300' : 'text-sky-300'}`}>
+      {ordered ? t(quote.to === 'fixed' ? 'switchingToFixed' : 'switchingToVariable') : t(quote.to === 'fixed' ? 'switchToFixed' : 'switchToVariable')}
+    </button>
+  );
+}
+
+/**
+ * Switching one mortgage between fixed and variable, made plain: what it means, the rate before and
+ * after, the interest of a year each way, the fee, what the paper says of rates, and how long until
+ * it can be switched again.
+ */
+function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
+  const t = useT('finance.debt');
+  const common = useT('common');
+  const words = useWords();
+  const { content, fmt } = words;
+  const { view, world } = useRound();
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  const debt = view.player.debts.find((d) => d.id === debtId);
+  const quote = mortgageSwitch(view.player, debtId, content, world, view.round);
+  if (!debt || quote === null) return null;
+  const same = (order: Order) => order.type === 'switchMortgage' && order.debtId === debtId;
+  const ordered = orders.some(same);
+  const toFixed = quote.to === 'fixed';
+  const yearly = (bp: number) => Math.round((debt.principal * bp) / 10_000);
+  const rates = world.news.find((h) => h.topic === 'rates');
+  return (
+    <Sheet open onClose={onClose} title={t(toFixed ? 'switchTitleFixed' : 'switchTitleVariable')} closeLabel={common('close')}>
+      <div className="flex flex-col gap-2">
+        <p className="text-[14px] leading-snug text-ink-200">{debtLabel(words, debt, view.player.properties)}</p>
+        <p className="text-[13px] leading-snug text-ink-200">{t(toFixed ? 'switchAboutFixed' : 'switchAboutVariable')}</p>
+        <Row left={t('switchRate')} right={`${fmt.rate(quote.rateNowBp)} → ${fmt.rate(quote.rateAfterBp)}`} />
+        <Row left={t('switchInterest')} right={`${fmt.money(yearly(quote.rateNowBp))} → ${fmt.money(yearly(quote.rateAfterBp))}`} />
+        <Row left={t('switchFee', { pct: toFixed ? content.debt.switchFeePct.toFixed : content.debt.switchFeePct.toVariable })} right={<span className="text-wine-300">{fmt.money(quote.fee)}</span>} />
+        {/* What the paper of the round says of rates, if it says anything: the one hint there is of where they go. */}
+        {rates ? <p className="text-[12px] italic leading-snug text-ink-300">{t('switchPaper', { headline: headlineText(words, rates, view.round) })}</p> : null}
+        <p className="text-[12px] leading-snug text-ink-300">{t('switchRest', { rounds: content.debt.switchRestRounds })}</p>
+        {quote.lock === 'not-enough-cash' && !ordered ? (
+          <p className="text-[13px] text-wine-300">{words.text.reasons['not-enough-cash']}</p>
+        ) : (
+          <Button
+            variant={ordered ? undefined : 'primary'}
+            wide
+            onClick={() => {
+              setOrder(same, ordered ? null : { type: 'switchMortgage', debtId });
+              onClose();
+            }}
+          >
+            {ordered ? t('switchUndo') : t('switchDo', { fee: fmt.money(quote.fee) })}
+          </Button>
+        )}
+      </div>
+    </Sheet>
   );
 }
 

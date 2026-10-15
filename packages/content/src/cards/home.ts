@@ -15,11 +15,11 @@ export const housingCards: CardDef[] = [
     { effects: { cash: usd(-1_500) } },
     { effects: { property: { typeId: 'flat', pricePct: 92, downPct: 20, rented: false } } },
   ]),
-  // The bank offers the other kind of mortgage: only the switch that would change something is offered.
+  // The bank offers the other kind of mortgage for nothing, where switching by hand has a fee: only the switch that would change something is offered.
   card('house_refinance', 'housing', { when: { hasMortgage: true } }, [
     {},
-    { when: { mortgage: 'variable' }, effects: { cash: usd(-800), refinance: 'fixed' } },
-    { when: { mortgage: 'fixed' }, effects: { cash: usd(-800), refinance: 'variable' } },
+    { when: { mortgage: 'variable' }, effects: { refinance: 'fixed' } },
+    { when: { mortgage: 'fixed' }, effects: { refinance: 'variable' } },
   ]),
   card('house_tenant_default', 'housing', { cooldown: 5, when: { landlord: true } }, [
     { effects: { cash: usd(-4_000), protection: { insurance: 'home', coverPct: 75 } } },

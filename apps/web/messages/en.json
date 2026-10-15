@@ -476,7 +476,22 @@
       "rate": "{rate} a year",
       "perRound": "About this much a round",
       "repayTotal": "You pay back in all",
-      "interestPart": "{interest} of it interest, at {rate} a year"
+      "interestPart": "{interest} of it interest, at {rate} a year",
+      "switchToFixed": "Switch to fixed",
+      "switchToVariable": "Switch to variable",
+      "switchingToFixed": "✓ Going fixed this round",
+      "switchingToVariable": "✓ Going variable this round",
+      "switchTitleFixed": "Switch to a fixed rate",
+      "switchTitleVariable": "Switch to a variable rate",
+      "switchAboutFixed": "You pay the same rate from now on, whatever the central bank does.",
+      "switchAboutVariable": "Your rate follows the central bank: it falls when rates fall, and rises when they rise.",
+      "switchRate": "Rate",
+      "switchInterest": "Interest a year",
+      "switchFee": "Fee ({pct}% of what you owe)",
+      "switchPaper": "The paper says: \"{headline}\".",
+      "switchRest": "It cannot be switched again for {rounds} rounds.",
+      "switchDo": "Switch it for {fee}",
+      "switchUndo": "Leave it as it is"
     },
     "lifestyle": {
       "work": "This round's focus",
@@ -1180,7 +1195,9 @@
     "lodgerOn": "Let the spare room",
     "lodgerOff": "Stop letting the spare room",
     "residencyOn": "Take tax residency in {city}",
-    "residencyOff": "Give up tax residency in {city}"
+    "residencyOff": "Give up tax residency in {city}",
+    "switchToFixed": "Switch {name} to fixed",
+    "switchToVariable": "Switch {name} to variable"
   },
   "account": {
     "title": "Account",

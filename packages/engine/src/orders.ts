@@ -1,5 +1,5 @@
 import { executeBusinessOrder } from './business';
-import { executeBorrow, executeRepay } from './debt';
+import { executeBorrow, executeRepay, executeSwitchMortgage } from './debt';
 import { executeSetEvasion } from './evasion';
 import { executeLifeOrder } from './life/orders';
 import { orderBreaks } from './limits';
@@ -22,6 +22,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'sellBusiness',
   'borrow',
   'repay',
+  'switchMortgage',
   'buyProperty',
   'sellProperty',
   'setRented',
@@ -55,6 +56,7 @@ function hasValidFields(fields: Record<string, unknown>): boolean {
     case 'setPlan':
       return isText(fields.assetId);
     case 'repay':
+    case 'switchMortgage':
       return isText(fields.debtId);
     case 'buyProperty':
       return isText(fields.typeId) && isText(fields.mortgage) && isFlag(fields.rented);
@@ -132,6 +134,8 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
       return executeBorrow(p, order, ctx);
     case 'repay':
       return executeRepay(p, order);
+    case 'switchMortgage':
+      return executeSwitchMortgage(p, order, ctx);
     case 'buyProperty':
       return executeBuyProperty(p, order, ctx);
     case 'sellProperty':

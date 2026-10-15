@@ -404,6 +404,7 @@ export function validateContent(c: Content): string[] {
   if (![0, 1, 2, 3].includes(d.marginMinFinanceSkill as number)) errors.push('debt.marginMinFinanceSkill must be 0, 1, 2 or 3');
   const amounts = [d.marginSpreadBp, d.personalLoanSpreadBp, d.mortgageSpreadBp, d.creditCardRateBp, d.personalLoanMaxIncomePct, d.bankruptcyIncomeMultiple];
   if (amounts.some((x) => !notNegative(x))) errors.push('debt rates, spreads and limits must not be negative');
+  if (!isCount(c.debt.switchFeePct?.toFixed) || !isCount(c.debt.switchFeePct?.toVariable) || !isCount(c.debt.switchRestRounds)) errors.push('debt needs whole fees for switching a mortgage and the rounds before switching again');
 
   const points = c.scoring.wealthBreakpoints;
   if (points.length < 2) errors.push('scoring needs at least two wealth breakpoints');

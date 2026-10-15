@@ -318,6 +318,7 @@ export function applyRound(
     ['itemPurchases', -tally.itemsBought],
     ['itemSales', tally.itemsSold],
     ['moving', -tally.movingCost],
+    ['mortgageFee', -tally.mortgageFees],
     ['depositDraw', settled.fromDeposit],
     ['creditCardDraw', settled.drawn],
     ['creditCardRepay', -settled.repaid],

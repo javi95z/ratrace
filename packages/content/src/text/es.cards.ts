@@ -234,7 +234,7 @@ export const cards: Record<string, CardText> = {
     'Mudarte',
     'Comprarlo',
   ]),
-  house_refinance: c('Fija o variable', 'Te ofrecen cambiar el tipo de tu hipoteca a cambio de una comisión.', [
+  house_refinance: c('Fija o variable', 'Tu banco te ofrece cambiar el tipo de tu hipoteca, esta vez sin comisión.', [
     'Dejarla como está',
     'Pasar tus hipotecas variables a tipo fijo',
     'Pasar tus hipotecas fijas a variable',

@@ -19,6 +19,7 @@ export { previewCard } from './life/cards';
 export { optionBreaks, orderBreaks } from './limits';
 export type { OptionPreview } from './life/cards';
 export { coverOf } from './life/effects';
+export { mortgageSwitch } from './debt';
 export { focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, raiseChance, workModeLock } from './life/orders';
 export { workModeOf } from './life/derive';
 export { isStudy, levelOfPoints, pointsOfLevel, skillLevel, STUDY_OF } from './life/skills';

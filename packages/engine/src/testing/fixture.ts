@@ -116,6 +116,8 @@ const base: Content = {
     creditCardRateBp: 2_200,
     mortgageTermRounds: 12,
     personalLoanTermRounds: 3,
+    switchFeePct: { toFixed: 1, toVariable: 2 },
+    switchRestRounds: 3,
     mortgageMaxLtvBp: 8_000,
     personalLoanMaxIncomePct: 100,
     bankruptcyIncomeMultiple: 3,

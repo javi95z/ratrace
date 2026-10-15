@@ -234,7 +234,7 @@ export const cards: Record<string, CardText> = {
     'Move out',
     'Buy it',
   ]),
-  house_refinance: c('Fixed or variable', 'Your bank offers to switch the rate of your mortgage, for a fee.', [
+  house_refinance: c('Fixed or variable', 'Your bank offers to switch the rate of your mortgage, this time with no fee.', [
     'Leave it',
     'Switch your variable mortgages to fixed',
     'Switch your fixed mortgages to variable',

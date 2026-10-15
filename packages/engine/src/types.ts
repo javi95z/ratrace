@@ -786,6 +786,12 @@ export interface DebtParams {
   creditCardRateBp: Bp;
   mortgageTermRounds: number;
   personalLoanTermRounds: number;
+  /**
+   * Switching a mortgage between fixed and variable: the fee as a percent of what is owed, dearer to
+   * leave a fixed rate than to take one; and the rounds before the same mortgage may be switched again.
+   */
+  switchFeePct: { toFixed: number; toVariable: number };
+  switchRestRounds: number;
   /** Largest mortgage as a share of the price, in bp. */
   mortgageMaxLtvBp: Bp;
   /** Personal loans may total this percent of annual salary. */
@@ -968,6 +974,8 @@ export interface Debt {
   forItem?: string;
   /** The investment a margin loan was taken to buy more of, and is secured on. */
   forAsset?: string;
+  /** The round a mortgage was last switched between fixed and variable. Absent: never. */
+  switchedAt?: number;
 }
 
 export interface Property {
@@ -1198,6 +1206,8 @@ export type Order =
   | { type: 'backToWork' }
   /** Lets the spare room of the home, or stops. */
   | { type: 'setLodger'; on: boolean }
+  /** Switches a mortgage between fixed and variable, for a fee. */
+  | { type: 'switchMortgage'; debtId: string }
   /** Takes the tax residency the city offers, or gives it up. */
   | { type: 'setResidency'; on: boolean };
 
@@ -1225,6 +1235,8 @@ export interface RoundTally {
   itemsBought: Cents;
   itemsSold: Cents;
   movingCost: Cents;
+  /** Fees paid to switch mortgages between fixed and variable. */
+  mortgageFees: Cents;
   /** The part of `realisedGains` made on crypto. */
   realisedCryptoGains: Cents;
   /** Things bought without an invoice sold this round: each one is a question asked. */
@@ -1290,6 +1302,8 @@ export type RejectReason =
   | 'no-former-job'
   | 'no-spare-room'
   | 'no-residency'
+  | 'not-a-mortgage'
+  | 'switch-resting'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
@@ -1328,6 +1342,7 @@ export type LedgerLine =
   | 'itemPurchases'
   | 'itemSales'
   | 'moving'
+  | 'mortgageFee'
   | 'depositDraw'
   | 'creditCardDraw'
   | 'creditCardRepay'
