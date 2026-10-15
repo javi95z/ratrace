@@ -24,8 +24,8 @@ export interface RunRow {
   id: string;
   user_id: string;
   game_id: string;
-  /** `casual`: a life the device played and the server played again. `ranked`: one the server played itself. */
-  mode: 'casual' | 'ranked';
+  /** `casual`: a life the device played and the server played again. `ranked`: one the server played itself. `room`: one it played in a room. */
+  mode: 'casual' | 'ranked' | 'room';
   life_id: string;
   engine_version: string;
   content_version: string;

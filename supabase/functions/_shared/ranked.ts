@@ -77,14 +77,14 @@ const closed: Reply = { status: 409, body: { error: 'closed' } };
 const tooMany: Reply = { status: 429, body: { error: 'too-many' } };
 
 /** How much of a life a log holds: every card answered and every round played. The game and the database count the same way. */
-function stepsOf(log: readonly LoggedRound[]): number {
+export function stepsOf(log: readonly LoggedRound[]): number {
   let steps = 0;
   for (const entry of log) steps += entry.picks.length + (entry.orders === null ? 0 : 1);
   return steps;
 }
 
 /** A value as text with its keys in order, so that two that say the same read the same. */
-function canonical(value: unknown): string {
+export function canonical(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   const record = value as Record<string, unknown>;
@@ -92,10 +92,10 @@ function canonical(value: unknown): string {
 }
 
 /** What a player chose in one step: the option of a card, or the orders of a round. */
-type Choice = { card: number } | { orders: unknown[] };
+export type Choice = { card: number } | { orders: unknown[] };
 
 /** The log with one more step in it. The log it was given is not changed. */
-function withStep(log: readonly LoggedRound[], choice: Choice): LoggedRound[] {
+export function withStep(log: readonly LoggedRound[], choice: Choice): LoggedRound[] {
   const next = log.map((entry) => ({ picks: [...entry.picks], orders: entry.orders }));
   const open = next.length > 0 && next[next.length - 1].orders === null ? next[next.length - 1] : null;
   if ('card' in choice) {
@@ -107,7 +107,7 @@ function withStep(log: readonly LoggedRound[], choice: Choice): LoggedRound[] {
 }
 
 /** True if the last step of the log is this very choice. */
-function lastIs(log: readonly LoggedRound[], choice: Choice): boolean {
+export function lastIs(log: readonly LoggedRound[], choice: Choice): boolean {
   const last = log[log.length - 1];
   if (!last) return false;
   if ('orders' in choice) return last.orders !== null && canonical(last.orders) === canonical(choice.orders);

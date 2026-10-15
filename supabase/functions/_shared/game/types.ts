@@ -11,6 +11,8 @@ export interface LoggedRound {
 export interface GameState {
   round: number;
   finished: boolean;
+  /** Whether the round is waiting for its cards to be answered, or for its orders. */
+  phase: 'cards' | 'finance';
   player: { escapedAtRound: number | null };
 }
 

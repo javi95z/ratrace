@@ -9,6 +9,10 @@ export const LIMITS = {
   'ranked-start': [20, 3600],
   // A life is about a hundred steps, and a fast player takes several a second for a moment.
   'ranked-step': [240, 60],
+  // Opening a room and joining one: a few an evening, and a code tried now and then.
+  'room-make': [20, 3600],
+  // Every call about a room in play, the page's own looks at it included: a card or two a second at most, and a look every few seconds.
+  'room-step': [240, 60],
 } as const;
 
 export type Counted = keyof typeof LIMITS;
