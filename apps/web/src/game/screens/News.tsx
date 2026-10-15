@@ -42,7 +42,7 @@ const TOPIC: Record<Headline['topic'], string> = {
 export function Headlines() {
   const t = useT('news');
   const words = useWords();
-  const { content, text, fmt } = words;
+  const { names, text, fmt } = words;
   const view = useGame((s) => s.view);
   if (!view) return null;
   const world = view.timeline[view.round];
@@ -50,28 +50,35 @@ export function Headlines() {
   return (
     <div className="flex flex-col gap-3">
       <CrisisBar crisis={world.crisis} />
-      <Panel title={t('title')} label={t('title')}>
-        {/* Thrown onto the table once a round, spinning, with its masthead. */}
-        <div key={view.round} className="animate-paper">
-          <p className="pixel mb-2 border-b-2 border-ink-500 pb-1 text-center text-[13px] uppercase tracking-[0.15em] text-ink-200">{t('masthead', { age: ageAt(content, view.round) })}</p>
-        <ul className="flex flex-col gap-2.5">
+      {/* A newspaper, thrown onto the table once a round, spinning: masthead, the lead story, and the rest in brief. */}
+      <section key={view.round} aria-label={t('title')} className="frame frame-cream animate-paper bg-cream px-3 pb-1.5 pt-2 text-ink-900">
+        <h2 className="sr-only">{t('title')}</h2>
+        <header className="text-center">
+          <p className="pixel text-[26px] leading-none tracking-wide">{t('paper')}</p>
+          <div aria-hidden className="mt-1.5 h-[3px] bg-ink-900" />
+          <p className="pixel flex justify-between py-0.5 text-[12px] uppercase tracking-[0.12em] text-ink-500">
+            <span>{names.cities[view.player.cityId]}</span>
+            <span>{t('issue', { n: view.round + 1 })}</span>
+          </p>
+          <div aria-hidden className="h-px bg-ink-900" />
+        </header>
+        <ul>
           {world.news.map((h, i) => (
-            // A newspaper clipping: what it is about on the left, in a picture, and the headline beside it.
-            <li key={i} className="frame frame-cream flex bg-cream text-ink-900">
-              <span aria-hidden className={`flex w-11 shrink-0 items-center justify-center ${TOPIC[h.topic]}`}>
+            // The first is the lead story, in big type; the rest follow in brief, each under a rule.
+            <li key={i} className={`flex items-start gap-2 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
+              <span aria-hidden className={`mt-0.5 flex size-8 shrink-0 items-center justify-center overflow-hidden ${TOPIC[h.topic]}`}>
                 <Sprite id={topicArt[h.topic]} />
               </span>
-              <span className="min-w-0 px-2.5 py-2">
-                <span data-topic className="pixel block text-[13px] uppercase tracking-[0.1em] text-ink-500">
+              <span className="min-w-0">
+                <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
                   {t(`topics.${h.topic}`)}
                 </span>
-                <span className="block text-[15px] font-semibold leading-tight">{headlineText(words, h, view.round + i)}</span>
+                <span className={i === 0 ? 'pixel mt-0.5 block text-[20px] leading-[1.05]' : 'mt-0.5 block text-[14px] font-semibold leading-tight'}>{headlineText(words, h, view.round + i)}</span>
               </span>
             </li>
           ))}
         </ul>
-        </div>
-      </Panel>
+      </section>
 
       <Panel>
         <div className="grid grid-cols-2 gap-2">

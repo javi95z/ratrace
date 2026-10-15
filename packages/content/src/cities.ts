@@ -148,7 +148,7 @@ export const cities: CityDef[] = [
     propertyVolBp: 700,
     tax: madridTax,
     prestige: 6,
-    taxOfficePct: 100,
+    taxOfficePct: 130,
     careerPayPct: { public: 115, healthcare: 110, education: 110 },
   },
   {

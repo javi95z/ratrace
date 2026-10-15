@@ -12,7 +12,6 @@ import { Bare, Panel, Row } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
-import { WorthGraph } from './WorthGraph';
 import { FlyingCoins } from './FlyingCoins';
 import { Loop } from './Loop';
 
@@ -47,14 +46,12 @@ const WORTH_MS = 1100;
 
 /**
  * Where the round leaves the player, made to be felt: net worth counts from what it was to what it
- * is, lands with a jump (or sinks, in red), says by how much, and the bar of this round grows on
- * the graph of the life. Where motion is left out, it all stands where it ends at once.
+ * is, lands with a jump (or sinks, in red), and says by how much. Where motion is left out, it stands where it ends at once.
  */
 function WorthRise({ from, to, delay }: { from: number; to: number; delay: number }) {
   const t = useT('resolve');
   const { fmt } = useWords();
   const still = useStill();
-  const history = useGame((s) => s.history);
   const shown = useCountUp(to, { from, delay, ms: WORTH_MS });
   const [landed, setLanded] = useState(still);
   useEffect(() => {
@@ -80,11 +77,6 @@ function WorthRise({ from, to, delay }: { from: number; to: number; delay: numbe
           {landed && !still && change > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={12} reach={48} /> : null}
         </div>
       </div>
-      {history.length > 1 ? (
-        <div className="mt-3">
-          <WorthGraph history={history} label={t('netWorth')} height={48} growMs={still ? undefined : delay} />
-        </div>
-      ) : null}
     </div>
   );
 }

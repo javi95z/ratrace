@@ -1008,9 +1008,9 @@ describe('what is not declared', () => {
     expect(within(panel).getByText(`This round you save ${fmt.money(black.evaded.black)}.`)).toBeTruthy();
     expect(screen.getByText(fmt.signed(-black.tax.income))).toBeTruthy();
     expect(black.tax.income).toBeLessThan(honest.tax.income);
-    // A quarter of the pay is a few points of suspicion a round, and that is the chance of an inspection.
+    // A quarter of the pay is a few points of suspicion a round; the city's tax office makes the chance of an inspection of them.
     const points = Math.floor((25 * content.evasion.blackSuspicionPer100) / 100);
-    expect(within(panel).getByText(`Chance of an inspection when the round is played: ${points}%`)).toBeTruthy();
+    expect(within(panel).getByText(`Chance of an inspection when the round is played: ${Math.round((points * (content.cities.find((city) => city.id === state.player.cityId)?.taxOfficePct ?? 100)) / 100)}%`)).toBeTruthy();
     expect(screen.getByText('Pay under the table: 25%')).toBeTruthy();
     // Choosing nothing again takes the order back.
     await user.click(within(panel).getByRole('radio', { name: /^None/ }));

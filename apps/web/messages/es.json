@@ -212,7 +212,8 @@
       "taxes": "Impuestos",
       "noise": "Sociedad"
     },
-    "masthead": "El Diario de la Rueda · edición de los {age}"
+    "paper": "El Diario de la Rueda",
+    "issue": "Nº {n}"
   },
   "crisis": {
     "label": "Crisis · año {year} de {of}",

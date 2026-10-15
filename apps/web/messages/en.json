@@ -212,7 +212,8 @@
       "taxes": "Taxes",
       "noise": "Society"
     },
-    "masthead": "The Rat Race Times · age {age} edition"
+    "paper": "The Rat Race Times",
+    "issue": "No. {n}"
   },
   "crisis": {
     "label": "Crisis · year {year} of {of}",
