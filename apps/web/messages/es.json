@@ -38,6 +38,8 @@
   },
   "home": {
     "continue": "Seguir con tu vida",
+    "continueChallenge": "Reto de la semana · tu intento",
+    "continuePractice": "Reto de la semana · práctica",
     "continueDetail": "{life} · {age} años · {city}",
     "lastLife": "Ver cómo acabó tu última vida",
     "movedGone": "Esa vida se terminó en otra pestaña o en otro dispositivo.",
@@ -383,8 +385,8 @@
       "repay": "Amortizar: {name}",
       "available": "Hasta {amount}",
       "amount": "Importe",
-    "exact": "Importe exacto",
-    "keyboardHelp": "Las flechas ajustan un paso. Mantén Mayús para diez pasos; Re Pág y Av Pág mueven aproximadamente un 10 %.",
+      "exact": "Importe exacto",
+      "keyboardHelp": "Las flechas ajustan un paso. Mantén Mayús para diez pasos; Re Pág y Av Pág mueven aproximadamente un 10 %.",
       "confirm": "Confirmar {amount}",
       "nothing": "No hay nada que mover."
     },

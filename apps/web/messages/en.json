@@ -38,6 +38,8 @@
   },
   "home": {
     "continue": "Continue your life",
+    "continueChallenge": "Weekly challenge · your attempt",
+    "continuePractice": "Weekly challenge · practice",
     "continueDetail": "{life} · age {age} · {city}",
     "lastLife": "See how your last life ended",
     "movedGone": "That life was ended in another tab or on another device.",
@@ -383,8 +385,8 @@
       "repay": "Repay: {name}",
       "available": "Up to {amount}",
       "amount": "Amount",
-    "exact": "Exact amount",
-    "keyboardHelp": "Arrow keys adjust one step. Hold Shift for ten steps; Page Up and Page Down move about 10%.",
+      "exact": "Exact amount",
+      "keyboardHelp": "Arrow keys adjust one step. Hold Shift for ten steps; Page Up and Page Down move about 10%.",
       "confirm": "Confirm {amount}",
       "nothing": "There is nothing to move."
     },

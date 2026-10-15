@@ -3,7 +3,7 @@ import { act, cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { content, CONTENT_VERSION, lives } from '@ratrace/content';
+import { challengeOf, content, CONTENT_VERSION, lives, weekOf } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, AccountLife, AccountSaves, AccountState } from '@/online/types';
 import { LocalSessions } from '@/session/local';
@@ -13,6 +13,7 @@ import type { RankedApi } from '@/session/ranked';
 import { GameSessions } from '@/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame } from '@/testing/render';
+import en from '../../../messages/en.json';
 import { Home } from './Home';
 
 vi.mock('@/i18n/navigation', () => ({
@@ -145,6 +146,17 @@ describe('the front door', () => {
     expect(carry.getAttribute('href')).toBe('/play');
     expect(carry.textContent).toContain('Software engineer · age 22 · Madrid');
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+  });
+
+  it('says when the life in progress is a practice of the weekly challenge, and under which rule', async () => {
+    const services = memoryServices();
+    const week = challengeOf(weekOf(Date.now()), lives);
+    if (week === null) throw new Error('every week has a challenge');
+    await services.sessions.start(week.lifeId, { challenge: week.week });
+    renderGame(<Home />, services);
+    const carry = await screen.findByRole('link', { name: /Continue your life/ });
+    expect(carry.textContent).toContain('Weekly challenge · practice');
+    expect(carry.textContent).toContain(en.challenge.rules[week.rule].name);
   });
 
   it('offers a look at the life that just ended, and nothing to continue', async () => {

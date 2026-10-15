@@ -1,5 +1,6 @@
 'use client';
 
+import { CHALLENGE_ART, challengeOf, lives, ruleArt } from '@ratrace/content';
 import { useState } from 'react';
 import { useAccount, useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
@@ -8,7 +9,7 @@ import { InstallApp } from '@/pwa/InstallApp';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
-import { WeeklyChallengeCard } from './Challenge';
+import { useRuleText, WeeklyChallengeCard } from './Challenge';
 import { HomePreferences } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
@@ -25,6 +26,10 @@ export function Home() {
   const lifeId = useGame((s) => s.lifeId);
   const stage = useGame((s) => s.stage);
   const moved = useGame((s) => s.moved);
+  const ranked = useGame((s) => s.ranked);
+  const challenge = useGame((s) => s.challenge);
+  const weekly = challenge === null ? null : challengeOf(challenge, lives);
+  const ruleText = useRuleText();
   const saving = useSaving();
   // The rankings are the other players': there is a way to them only where someone is signed in to ask.
   const ranking = useRanking();
@@ -63,10 +68,23 @@ export function Home() {
           <>
             {inProgress ? (
               <Link href="/play" className="pixel frame-raised frame-gold flex min-h-14 flex-col items-center justify-center bg-gold-500 px-4 py-2 text-center text-ink-900">
+                {weekly ? (
+                  // A life of the weekly challenge says so before anything else: the attempt that counts, or a practice, and its rule.
+                  <span className="frame -mt-0.5 mb-1.5 flex items-center gap-1.5 bg-ink-900 px-2 py-0.5 text-[12px] uppercase tracking-wider text-gold-500">
+                    <Sprite id={CHALLENGE_ART.icon} />
+                    {t(ranked ? 'continueChallenge' : 'continuePractice')}
+                  </span>
+                ) : null}
                 <span className="text-[19px]">{t('continue')}</span>
                 <span className="font-sans text-[13px] font-normal text-ink-700">
                   {t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, view.round), city: names.cities[view.player.cityId] })}
                 </span>
+                {weekly ? (
+                  <span className="mt-1 flex items-center gap-1.5 font-sans text-[12px] font-normal text-ink-700">
+                    <Sprite id={ruleArt[weekly.rule]} />
+                    {ruleText(weekly.rule).name}
+                  </span>
+                ) : null}
               </Link>
             ) : null}
             {offer ? (
