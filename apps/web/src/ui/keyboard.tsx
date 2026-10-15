@@ -165,7 +165,6 @@ export function KeyboardGuide() {
         {t('open')}
         <KeyboardHint>?</KeyboardHint>
       </Button>
-      <p className="mt-1.5 text-center text-[12px] text-ink-300">{t('settingsHint')}</p>
       {open ? (
         <dl className="mt-3 flex flex-col gap-2">
           {([['Tab', 'tab'], ['Shift + Tab', 'shiftTab'], ['Esc', 'escape'], ['?', 'question']] as const).map(([keys, message]) => (

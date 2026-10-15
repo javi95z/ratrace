@@ -18,6 +18,10 @@ export const assets: AssetDef[] = [
   // Index funds.
   { id: 'sp500', class: 'equity', betaPct: 100, idioVolBp: 300, yieldBp: 140, driftBp: 100 },
   { id: 'msci_world', class: 'equity', betaPct: 95, idioVolBp: 250, yieldBp: 180 },
+  // Rent without a landlord's worries: property companies that pay most of it out, and swing with the market.
+  { id: 'reit', class: 'equity', betaPct: 110, idioVolBp: 700, yieldBp: 380, driftBp: -100 },
+  // Small companies: more to gain in a boom, more to lose in a recession.
+  { id: 'small_caps', class: 'equity', betaPct: 130, idioVolBp: 900, yieldBp: 120, driftBp: 150 },
 
   // Growth.
   { id: 'apple', class: 'equity', betaPct: 115, idioVolBp: 1_500, yieldBp: 50, driftBp: 150 },

@@ -36,7 +36,7 @@ const ordersOf = () => screen.queryAllByRole('button', { name: /^Remove: /, hidd
 /** A life taken to the finances of its first round. The founder starts with a shop of her own. */
 async function inFinance(lifeId: string) {
   const services = memoryServices();
-  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { founder: { at: 1, gameId: 'earlier' }, comeback: { at: 1, gameId: 'earlier' } } });
+  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { founder: { at: 1, gameId: 'earlier' }, comeback: { at: 1, gameId: 'earlier' }, waiter: { at: 1, gameId: 'earlier' } } });
   const session = await services.sessions.start(lifeId);
   await toFinance(session);
   return { services, session };
@@ -45,14 +45,14 @@ const openTab = async (user: ReturnType<typeof userEvent.setup>) => user.click(a
 
 describe('the business tab', () => {
   it('shows each kind the player could open: what it asks for, what it makes, how the economy treats it now; and nothing of what is closed', async () => {
-    const { services } = await inFinance('civil_servant');
+    const { services } = await inFinance('nurse');
     const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await openTab(user);
     expect(within(screen.getByRole('region', { name: 'Your businesses' })).getByText(/^You have none yet\./)).toBeTruthy();
 
-    // A civil servant knows too little about money for anything but her own practice: the others are not offered.
+    // A nurse knows too little about money for anything but her own practice: the others are not offered.
     expect(quote.kinds.map((kind) => kind.lock)).toEqual([null, 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill', 'needs-finance-skill']);
     const panel = screen.getByRole('region', { name: 'Open a business' });
     const kinds = within(panel).getAllByRole('listitem');
@@ -70,8 +70,8 @@ describe('the business tab', () => {
   });
 
   it('says how much cash is missing instead of offering what cannot be paid for', async () => {
-    // The comeback starts with nothing in hand.
-    const { services } = await inFinance('comeback');
+    // The waiter starts with next to nothing in hand.
+    const { services } = await inFinance('waiter');
     const state = await stateOf(services);
     const kind = quoteBusinesses(content, viewOf(state)).kinds[0];
     expect(state.player.cash).toBeLessThan(kind.minCapital);
@@ -84,7 +84,7 @@ describe('the business tab', () => {
   });
 
   it('opens one: the capital leaves the cash, a point of focus goes, and it is the player\'s from the next round', async () => {
-    const { services } = await inFinance('civil_servant');
+    const { services } = await inFinance('nurse');
     const before = await stateOf(services);
     const kind = quoteBusinesses(content, viewOf(before)).kinds[0];
     const user = userEvent.setup();
@@ -232,5 +232,15 @@ describe('the business tab', () => {
     expect((within(panel).getByRole('button', { name: /Run it yourself/ }) as HTMLButtonElement).disabled).toBe(true);
     await user.click(within(panel).getByRole('button', { name: /Manager · / }));
     expect(ordersOf()).not.toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
+  });
+
+  it('offers a trade of the player\'s own only to a trade that can be sold on its own', async () => {
+    const { services } = await inFinance('civil_servant');
+    const quote = quoteBusinesses(content, viewOf(await stateOf(services)));
+    expect(quote.kinds.find((kind) => kind.typeId === 'services')?.lock).toBe('not-your-trade');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    expect(within(screen.getByRole('region', { name: 'Open a business' })).queryAllByRole('listitem')).toHaveLength(0);
   });
 });

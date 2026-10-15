@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.29.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.30.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -12,7 +12,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Ciudades](#ciudades) | 10 |
 | [Objetos](#objetos) | 64, de ellos 8 coches |
 | [Inmuebles](#inmuebles) | 16 |
-| [Inversiones](#inversiones) | 20 |
+| [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 157 |
 | [Crisis](#crisis) | 3 |
@@ -856,6 +856,8 @@ Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier ha
 | Bund alemán | BUND | Bonos | 0 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
 | S&P 500 | SPX | Acciones | 0 | 1,4 % al año | Las 500 mayores empresas de EE. UU. en un solo fondo. |
 | MSCI World | MSCI | Acciones | 0 | 1,8 % al año | Empresas de todo el mundo desarrollado en un solo fondo. Tu plan de pensiones lo sigue. |
+| Fondo inmobiliario global | REIT | Acciones | 0 | 3,8 % al año | Inmobiliarias de todo el mundo: el alquiler llega como dividendo, sin inquilinos que perseguir. |
+| Pequeñas empresas EE. UU. | R2K | Acciones | 0 | 1,2 % al año | Dos mil empresas estadounidenses pequeñas: crecen más en los buenos tiempos y caen más en los malos. |
 | Apple | AAPL | Acciones | 0 | 0,5 % al año | Crecimiento, con un cliente fiel en cada bolsillo. |
 | Microsoft | MSFT | Acciones | 0 | 0,8 % al año | Crecimiento, con suscripción incluida. |
 | Nvidia | NVDA | Acciones | 0 |  | Crecimiento a todo volumen. Vuela en los auges y se hunde en las caídas. |

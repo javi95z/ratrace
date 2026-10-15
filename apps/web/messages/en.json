@@ -142,7 +142,6 @@
     "guide": "Tips from the guide",
     "guideHint": "Notes that explain each screen during your first life.",
     "home": "Back to the home screen",
-    "homeHint": "Your life waits for you just as you leave it.",
     "sound": "Sound",
     "soundHint": "Coins, cards and fanfares. It plays once you touch the screen.",
     "ranked": "Ranked life",
@@ -1108,7 +1107,6 @@
   },
   "account": {
     "title": "Account",
-    "guest": "You're playing as a guest: sign in to carry on from any device.",
     "keep": "Sign in with Google",
     "member": "Linked to Google",
     "memberAs": "{email}",
@@ -1265,7 +1263,6 @@
   "keyboard": {
     "title": "Keyboard controls",
     "open": "Keyboard controls",
-    "settingsHint": "Play without a mouse. Press the question-mark key at any time for the relevant controls.",
     "intro": "Only the controls that apply here are shown. Shortcuts never run while you are typing in a field.",
     "help": {
       "tab": "Move to the next control.",

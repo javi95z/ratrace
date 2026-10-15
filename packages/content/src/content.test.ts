@@ -12,7 +12,7 @@ describe('the v1 content', () => {
 
   it('has the size the spec sets', () => {
     expect(content.cities.map((c) => c.id)).toEqual(['madrid', 'london', 'new_york', 'dubai', 'singapore', 'bangkok', 'tokyo', 'moscow', 'mexico_city', 'zurich']);
-    expect(content.assets).toHaveLength(20);
+    expect(content.assets).toHaveLength(22);
     expect(content.careers).toHaveLength(11);
     expect(content.items).toHaveLength(64);
     expect(content.propertyTypes.map((type) => type.id)).toEqual([
@@ -50,7 +50,7 @@ describe('the v1 content', () => {
   it('groups assets the way the market screen shows them', () => {
     const groups: Record<string, string[]> = {};
     for (const asset of content.assets) (groups[assetKind(asset)] ??= []).push(asset.id);
-    expect(groups.fund).toEqual(['sp500', 'msci_world']);
+    expect(groups.fund).toEqual(['sp500', 'msci_world', 'reit', 'small_caps']);
     expect(groups.bond).toEqual(['treasury_bills', 'treasury_short', 'treasury_long', 'bund']);
     expect(groups.crypto).toEqual(['bitcoin', 'ethereum', 'dogecoin']);
     expect(groups.gold).toEqual(['gold']);

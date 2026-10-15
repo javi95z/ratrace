@@ -84,6 +84,7 @@ export function businessSalePrice(business: Business, content: Content, world: W
 /** Why the player may not open a business of a kind today, whatever the capital, or null when they may. */
 export function businessLock(p: PlayerState, type: BusinessTypeDef, content: Content): RejectReason | null {
   if (type.minFinanceSkill > p.life.financeSkill) return 'needs-finance-skill';
+  if (type.careers !== undefined && (p.life.career === null || !type.careers.includes(p.life.career.id))) return 'not-your-trade';
   if (onlyOneHeld(p, content, type.id)) return 'already-owned';
   if (p.businesses.length >= maxBusinessesOf(p, content)) return 'too-many-businesses';
   if (focusLeft(p) < 1) return 'no-focus';
