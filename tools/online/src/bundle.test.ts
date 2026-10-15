@@ -5,7 +5,7 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, SHIPPED_FILE } from './bundle';
+import { bundleGame, bundleName, fingerprint, GAME_DIR, mayWrite, registrySource, RETIRED_FILE, SHIPPED_FILE } from './bundle';
 
 const current = bundleName(ENGINE_VERSION, CONTENT_VERSION);
 
@@ -67,8 +67,10 @@ describe('the game as the server holds it', () => {
 
   it('holds every bundle that has shipped exactly as it shipped', () => {
     const shipped = JSON.parse(readFileSync(SHIPPED_FILE, 'utf8')) as Record<string, string>;
+    const retired = new Set(JSON.parse(readFileSync(RETIRED_FILE, 'utf8')) as string[]);
     expect(Object.keys(shipped).length).toBeGreaterThan(0);
     for (const [versions, print] of Object.entries(shipped)) {
+      if (retired.has(versions)) continue;
       const [engine, pack] = versions.split('/');
       const file = join(GAME_DIR, bundleName(engine, pack));
       expect(existsSync(file), `${versions} has shipped and its bundle is gone: lives on it can no longer be finished`).toBe(true);

@@ -199,9 +199,9 @@ describe('starting a ranked life', () => {
   it('refuses versions it does not hold, and versions whose seed could be found by trying', async () => {
     const db = fakeDb();
     expect(await ask(db, { action: 'start', lifeId: 'nurse', engineVersion: '9.9.9', contentVersion: CONTENT_VERSION })).toMatchObject({ status: 409, body: { error: 'unknown-version' } });
-    // The server still holds 0.9.0 to finish casual lives lived on it. A ranked life on it would have a future that can be read.
-    expect(Object.keys(GAMES)).toContain('0.9.0/1.9.0');
-    expect(await ask(db, { action: 'start', lifeId: 'nurse', engineVersion: '0.9.0', contentVersion: '1.9.0' })).toEqual({ status: 409, body: { error: 'cannot-rank' } });
+    // Rules whose seed could be found by trying (before 0.10) are no longer held at all: retired, they are as unknown as any.
+    expect(Object.keys(GAMES)).not.toContain('0.9.0/1.9.0');
+    expect(await ask(db, { action: 'start', lifeId: 'nurse', engineVersion: '0.9.0', contentVersion: '1.9.0' })).toMatchObject({ status: 409, body: { error: 'unknown-version' } });
     expect(db.games.size).toBe(0);
   });
 

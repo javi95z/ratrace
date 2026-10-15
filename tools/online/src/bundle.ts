@@ -24,6 +24,13 @@ export const GAME_DIR = fileURLToPath(new URL('../../../supabase/functions/_shar
 /** The bundles that have shipped, each under "engine/content" with the fingerprint of its bytes. */
 export const SHIPPED_FILE = join(GAME_DIR, 'shipped.json');
 
+/**
+ * Shipped versions the server no longer holds. An Edge Function has a size limit, and a device only
+ * plays the rules it was built with: a ranked life begun under older rules is given up on the device
+ * the moment the page updates, so its bundle can go. A run sent under them is answered `unknown-version`.
+ */
+export const RETIRED_FILE = join(GAME_DIR, 'retired.json');
+
 export const fingerprint = (code: string): string => createHash('sha256').update(code).digest('hex');
 
 /**
