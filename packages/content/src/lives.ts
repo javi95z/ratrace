@@ -3,6 +3,10 @@ import { usd } from './money';
 
 /** Badges that open a life by being earned once, in any life. */
 export type BadgeUnlock =
+  | 'world_tour'
+  | 'swiss_banker'
+  | 'five_asset_classes'
+  | 'family_of_four'
   | 'mba'
   | 'escaped'
   | 'bankrupt'
@@ -21,11 +25,16 @@ export interface LifeDef {
   id: string;
   unlock: Unlock;
   start: StartConfig;
+  /**
+   * The ISO week from which the weekly challenge may deal this life. A life added after the
+   * challenges began waits for the next week, so a week already under way is never changed.
+   */
+  challengeFrom?: string;
 }
 
 /**
- * Sixteen starting lives: the six of spec section 4, five that each open with a badge, and one for each of the five newer careers,
- * each opened by a badge too. A perk or a handicap is either a number in the start
+ * Twenty starting lives: the six of spec section 4, five that each open with a badge, one for each of the five newer careers,
+ * each opened by a badge too, and one for each of the four cities added since. A perk or a handicap is either a number in the start
  * or a flag: `layoff_proof` is read by cards, `unstable_pay` and `cheap_mortgage` by the engine,
  * `share_plan`, `bilingual` and `has_business` by cards.
  *
@@ -257,6 +266,62 @@ export const lives: LifeDef[] = [
       lifestyleTier: 1,
       debts: [],
       life: { lifeId: 'salesperson', career: { id: 'sales', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { negotiation: 3 }, focus: 3 },
+    },
+  },
+  {
+    // A job for life at a maker of robots, and the overtime that comes with it; a flat the size of a parking space.
+    id: 'robotics_engineer',
+    unlock: 'world_tour',
+    challengeFrom: '2026-W43',
+    start: {
+      cityId: 'tokyo',
+      cash: usd(6_000),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'robotics_engineer', career: { id: 'tech', level: 0 }, careerSkill: 1, financeSkill: 1, focus: 3, rentTier: 0, flags: ['layoff_proof'] },
+    },
+  },
+  {
+    // Good pay for a cheap city and a flat tax, in a currency that swings with the oil price.
+    id: 'programmer',
+    unlock: 'five_asset_classes',
+    challengeFrom: '2026-W43',
+    start: {
+      cityId: 'moscow',
+      cash: usd(2_000),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'programmer', career: { id: 'tech', level: 0 }, careerSkill: 0, financeSkill: 1, focus: 3, rentTier: 0, flags: ['unstable_pay'] },
+    },
+  },
+  {
+    // Runs a kitchen from the first day, in the cheapest city in the game; the pay starts low and the hours are long.
+    id: 'chef',
+    unlock: 'family_of_four',
+    challengeFrom: '2026-W43',
+    start: {
+      cityId: 'mexico_city',
+      cash: usd(1_500),
+      salaryAnnual: 0,
+      lifestyleTier: 1,
+      debts: [],
+      life: { lifeId: 'chef', career: { id: 'hospitality', level: 0 }, careerSkill: 2, financeSkill: 0, skills: { management: 3 }, focus: 4, rentTier: 0 },
+    },
+  },
+  {
+    // The best-paid desk in the dearest city, with the clients' manners to keep up from the start.
+    id: 'private_banker',
+    unlock: 'swiss_banker',
+    challengeFrom: '2026-W43',
+    start: {
+      cityId: 'zurich',
+      cash: usd(10_000),
+      salaryAnnual: 0,
+      lifestyleTier: 2,
+      debts: [],
+      life: { lifeId: 'private_banker', career: { id: 'finance', level: 0 }, careerSkill: 0, financeSkill: 2, skills: { network: 3 }, focus: 3, minLifestyleTier: 2 },
     },
   },
 ];

@@ -13,6 +13,8 @@ export const cardArt: Record<string, string> = {
   career_raise: scene('boss_door'),
   career_competitor_offer: scene('handshake'),
   career_relocation: scene('airport'),
+  career_transfer_east: scene('office_east'),
+  career_transfer_west: scene('office_west'),
   career_overtime_crunch: scene('office_desk'),
   career_layoff: scene('packed_box'),
   career_restructuring: scene('restructuring'),

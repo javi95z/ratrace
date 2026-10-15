@@ -25,6 +25,8 @@ const LIVES_C = ['comeback', 'founder', 'crypto_kid', 'nomad'];
 const LIVES_D = ['lawyer', 'teacher', 'influencer', 'waiter'];
 // The salesperson, and three lives for careers the game does not have yet.
 const LIVES_E = ['salesperson', 'electrician', 'pilot', 'scientist'];
+// A life for each of the four cities added later.
+const LIVES_F = ['robotics_engineer', 'programmer', 'chef', 'private_banker'];
 const AGES = [22, 32, 45, 58];
 /** A workplace for each career, two to a sheet, each at three stages: starting out, established, at the top. The last is for a trade to come. */
 const WORKPLACES = [['healthcare', 'tech'], ['public', 'service'], ['finance', 'medicine'], ['law', 'education'], ['influencer', 'hospitality'], ['sales', 'trades']];
@@ -192,6 +194,10 @@ export const SHEETS: SheetSpec[] = [
   { file: 'portraits/portraits-03', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_C) },
   { file: 'portraits/portraits-04', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_D) },
   { file: 'portraits/portraits-05', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_E) },
+  { file: 'portraits/portraits-06', group: 'portraits', kind: 'portraits', cols: 4, rows: 4, width: 64, height: 64, ids: portraits(LIVES_F) },
+  // Three badges of the later cities, and the two transfers abroad.
+  { file: 'badges/badges-06', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.swiss_banker', 'badge.world_tour', 'badge.ronin'] },
+  { file: 'cards/cards-26', group: 'cards', kind: 'scenes', cols: 2, rows: 1, width: 288, height: 120, ids: ['card.office_east', 'card.office_west'] },
   {
     // A sign for each career, and five for careers to come.
     file: 'icons/icons-06', group: 'icons', kind: 'objects', cols: 4, rows: 4, width: 32, height: 32,

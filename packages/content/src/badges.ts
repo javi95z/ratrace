@@ -16,12 +16,13 @@ export interface BadgeDef {
   group: BadgeGroup;
 }
 
-/** The thirty badges of v1 (spec, Appendix C) and five added since, in the order the collection shows them. */
+/** The thirty badges of v1 (spec, Appendix C) and eight added since, in the order the collection shows them. */
 export const badges: BadgeDef[] = [
   { id: 'first_100k', group: 'wealth' },
   { id: 'millionaire', group: 'wealth' },
   { id: 'millionaire_by_35', group: 'wealth' },
   { id: 'ten_million', group: 'wealth' },
+  { id: 'swiss_banker', group: 'wealth' },
   { id: 'debt_free_at_40', group: 'wealth' },
   { id: 'no_credit_card', group: 'wealth' },
   { id: 'escaped', group: 'escape' },
@@ -46,12 +47,14 @@ export const badges: BadgeDef[] = [
   { id: 'more_cars_than_spaces', group: 'status' },
   { id: 'three_cities', group: 'life' },
   { id: 'moved_to_dubai', group: 'life' },
+  { id: 'world_tour', group: 'life' },
   { id: 'family_of_four', group: 'life' },
   { id: 'mba', group: 'life' },
   { id: 'sold_business', group: 'life' },
   { id: 'rode_out_recession', group: 'life' },
   { id: 'bankrupt', group: 'misfortune' },
   { id: 'room_at_40', group: 'misfortune' },
+  { id: 'ronin', group: 'misfortune' },
   { id: 'audited', group: 'misfortune' },
 ];
 
@@ -117,6 +120,13 @@ export function journalAfter(content: Content, journal: Journal, after: GameView
   };
 }
 
+/** The continent each city is on, for a life that has seen three of them. */
+const CONTINENT: Readonly<Record<string, string>> = {
+  madrid: 'europe', london: 'europe', moscow: 'europe', zurich: 'europe',
+  new_york: 'america', mexico_city: 'america',
+  dubai: 'asia', singapore: 'asia', bangkok: 'asia', tokyo: 'asia',
+};
+
 /** The watches that count as luxury: from the first one a jeweller would lock away. */
 const LUXURY_WATCHES = ['watch_omega', 'watch_rolex', 'watch_ap', 'watch_patek'];
 
@@ -176,6 +186,8 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   millionaire: (f) => f.worth >= usd(1_000_000),
   millionaire_by_35: (f) => f.worth >= usd(1_000_000) && f.age <= 35,
   ten_million: (f) => f.worth >= usd(10_000_000),
+  // A million, made or kept, while living among the private banks.
+  swiss_banker: (f) => f.p.cityId === 'zurich' && f.worth >= usd(1_000_000),
   // Debts a bankruptcy wiped out are not debts paid.
   debt_free_at_40: (f) => f.round && f.age === 40 && f.p.debts.every((debt) => debt.principal === 0) && !wentBankrupt(f),
   no_credit_card: (f) => f.after.finished && !f.journal.cardUsed,
@@ -225,6 +237,7 @@ const RULES: Record<string, (f: Facts) => boolean> = {
 
   three_cities: (f) => f.journal.cities.length >= 3,
   moved_to_dubai: (f) => f.events.some((e) => e.kind === 'moved' && e.cityId === 'dubai'),
+  world_tour: (f) => new Set(f.journal.cities.map((city) => CONTINENT[city] ?? city)).size >= 3,
   family_of_four: (f) => f.p.life.partner && f.p.life.children.length >= 2,
   mba: (f) => owns(f.p, 'edu_mba'),
   sold_business: (f) => Object.hasOwn(f.p.life.flags, 'sold_business'),
@@ -233,6 +246,8 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   bankrupt: (f) => f.events.some((e) => e.kind === 'bankrupt'),
   // Forty, and still in a room of a shared flat: no home of one's own and none rented whole.
   room_at_40: (f) => f.round && f.age === 40 && homeOf(f.p, f.content) === null && f.p.life.rentTier === 0,
+  // A samurai without a master: the job lost in Tokyo, not given up for a pension.
+  ronin: (f) => f.p.cityId === 'tokyo' && f.was.life.career !== null && f.p.life.career === null && f.p.life.retiredAtRound === null,
   audited: (f) => f.events.some((e) => e.kind === 'audit'),
 };
 

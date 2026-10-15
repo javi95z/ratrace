@@ -27,6 +27,16 @@ export const cards: Record<string, CardText> = {
     'Turn it down',
     'Pack your bags',
   ]),
+  career_transfer_east: c('An office in the east', 'The firm is opening desks in {city:tokyo} and {city:moscow}, and wants someone who knows the work.', [
+    'Stay where you are',
+    'Go to {city:tokyo}',
+    'Go to {city:moscow}',
+  ]),
+  career_transfer_west: c('An office in the west', 'Two openings, both paid for: one in {city:mexico_city}, one in {city:zurich}.', [
+    'Stay where you are',
+    'Go to {city:mexico_city}',
+    'Go to {city:zurich}',
+  ]),
   career_overtime_crunch: c('Crunch time', 'The deadline moved forward. Somebody has to stay late for a month.', [
     ['Do the minimum', 'Nobody notices.', 'Somebody noticed.'],
     'Put in the hours',

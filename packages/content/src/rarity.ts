@@ -20,6 +20,7 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   millionaire: { rarity: 'common' },
   millionaire_by_35: { rarity: 'legendary' },
   ten_million: { rarity: 'rare' },
+  swiss_banker: { rarity: 'rare', judged: true },
   debt_free_at_40: { rarity: 'common' },
   no_credit_card: { rarity: 'common' },
   escaped: { rarity: 'uncommon' },
@@ -44,12 +45,14 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   more_cars_than_spaces: { rarity: 'rare', judged: true },
   three_cities: { rarity: 'rare', judged: true },
   moved_to_dubai: { rarity: 'uncommon', judged: true },
+  world_tour: { rarity: 'rare', judged: true },
   family_of_four: { rarity: 'uncommon', judged: true },
   mba: { rarity: 'rare' },
   sold_business: { rarity: 'rare' },
   rode_out_recession: { rarity: 'common' },
   bankrupt: { rarity: 'uncommon' },
   room_at_40: { rarity: 'uncommon' },
+  ronin: { rarity: 'rare', judged: true },
   audited: { rarity: 'rare', judged: true },
 };
 

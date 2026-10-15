@@ -54,9 +54,12 @@ export function weekStart(week: string): number | null {
  * The challenge of a week, or null for something that is not a week. The life moves on every week
  * and the rule with it, so that the same pair comes back only after many weeks.
  */
-export function challengeOf(week: string, lives: readonly LifeDef[]): Challenge | null {
+export function challengeOf(week: string, all: readonly LifeDef[]): Challenge | null {
   const start = weekStart(week);
-  if (start === null || lives.length === 0) return null;
+  if (start === null) return null;
+  // A life added later joins from the week it names: the weeks before it keep the challenge they had.
+  const lives = all.filter((life) => life.challengeFrom === undefined || start >= (weekStart(life.challengeFrom) ?? Infinity));
+  if (lives.length === 0) return null;
   // Weeks counted from the Monday of 5 January 1970.
   const n = Math.round((start - Date.UTC(1970, 0, 5)) / (7 * DAY_MS));
   const life = lives[((n % lives.length) + lives.length) % lives.length];

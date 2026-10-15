@@ -79,6 +79,10 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
   millionaire: { earns: { player: cash(1_000_000) }, misses: [{ player: cash(999_999) }] },
   millionaire_by_35: { earns: { player: cash(1_000_000), round: 6 }, misses: [{ player: cash(1_000_000), round: 7 }, { player: cash(900_000), round: 3 }] },
   ten_million: { earns: { player: cash(10_000_000) }, misses: [{ player: cash(9_999_999) }] },
+  swiss_banker: {
+    earns: { player: all(cash(1_000_000), (p) => (p.cityId = 'zurich')) },
+    misses: [{ player: all(cash(999_999), (p) => (p.cityId = 'zurich')) }, { player: cash(1_000_000) }],
+  },
   debt_free_at_40: {
     earns: { round: 9 },
     misses: [
@@ -161,6 +165,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     earns: { events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai'), journal: { cities: ['madrid', 'london', 'dubai'] } },
     misses: [{ events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai') }],
   },
+  world_tour: {
+    earns: { journal: { cities: ['madrid', 'new_york', 'tokyo'] } },
+    // Dubai is in Asia: two continents, however many cities.
+    misses: [{ journal: { cities: ['madrid', 'london', 'moscow', 'zurich', 'dubai'] } }],
+  },
   moved_to_dubai: {
     earns: { events: [{ kind: 'moved', cityId: 'dubai', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'dubai') },
     misses: [{ events: [{ kind: 'moved', cityId: 'london', rungsLost: 0, partnerIdle: false }], player: (p) => (p.cityId = 'london') }],
@@ -191,6 +200,15 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     earns: { player: all(own('car_seat_ibiza', 'car_bmw_m3'), home('parking')) },
     misses: [{ player: all(own('car_seat_ibiza'), home('parking')) }, { player: own('car_seat_ibiza', 'car_bmw_m3') }],
   },
+  ronin: {
+    earns: { was: (p) => (p.cityId = 'tokyo'), player: (p) => ((p.cityId = 'tokyo'), (p.life.career = null)) },
+    misses: [
+      { player: (p) => (p.life.career = null) },
+      // A pension is not a job lost.
+      { was: (p) => (p.cityId = 'tokyo'), player: (p) => ((p.cityId = 'tokyo'), (p.life.career = null), (p.life.retiredAtRound = 1)) },
+      { was: (p) => ((p.cityId = 'tokyo'), (p.life.career = null)), player: (p) => ((p.cityId = 'tokyo'), (p.life.career = null)) },
+    ],
+  },
   room_at_40: {
     earns: { round: 9, player: (p) => (p.life.rentTier = 0) },
     misses: [
@@ -207,11 +225,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and five since, each in one of six groups', () => {
-    expect(badges).toHaveLength(35);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(35);
+  it('are the thirty of the spec and eight since, each in one of six groups', () => {
+    expect(badges).toHaveLength(38);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(38);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([6, 4, 8, 8, 6, 3]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([7, 4, 8, 8, 7, 4]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {
@@ -414,6 +432,8 @@ describe('unlocking lives', () => {
       banker: 'mba', doctor: 'escaped', comeback: 'bankrupt', founder: 'sold_business', crypto_kid: 'crypto_winter',
       // One for each of the five newer careers.
       lawyer: 'first_luxury_watch', teacher: 'index_only', influencer: 'status_100', waiter: 'first_share', salesperson: 'bought_the_dip',
+      // One for each of the four cities added later.
+      robotics_engineer: 'world_tour', programmer: 'five_asset_classes', chef: 'family_of_four', private_banker: 'swiss_banker',
     };
     for (const [life, badge] of Object.entries(later)) {
       expect(badges.map((b) => b.id), life).toContain(badge);

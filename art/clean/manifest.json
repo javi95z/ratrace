@@ -1656,6 +1656,111 @@
       "width": 64,
       "height": 64
     },
+    "portrait.robotics_engineer.22": {
+      "file": "portraits/portrait.robotics_engineer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.32": {
+      "file": "portraits/portrait.robotics_engineer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.45": {
+      "file": "portraits/portrait.robotics_engineer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.robotics_engineer.58": {
+      "file": "portraits/portrait.robotics_engineer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.programmer.22": {
+      "file": "portraits/portrait.programmer.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.programmer.32": {
+      "file": "portraits/portrait.programmer.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.programmer.45": {
+      "file": "portraits/portrait.programmer.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.programmer.58": {
+      "file": "portraits/portrait.programmer.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.22": {
+      "file": "portraits/portrait.chef.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.32": {
+      "file": "portraits/portrait.chef.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.45": {
+      "file": "portraits/portrait.chef.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.chef.58": {
+      "file": "portraits/portrait.chef.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.private_banker.22": {
+      "file": "portraits/portrait.private_banker.22.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.private_banker.32": {
+      "file": "portraits/portrait.private_banker.32.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.private_banker.45": {
+      "file": "portraits/portrait.private_banker.45.png",
+      "width": 64,
+      "height": 64
+    },
+    "portrait.private_banker.58": {
+      "file": "portraits/portrait.private_banker.58.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.swiss_banker": {
+      "file": "badges/badge.swiss_banker.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.world_tour": {
+      "file": "badges/badge.world_tour.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.ronin": {
+      "file": "badges/badge.ronin.png",
+      "width": 64,
+      "height": 64
+    },
+    "card.office_east": {
+      "file": "cards/card.office_east.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.office_west": {
+      "file": "cards/card.office_west.png",
+      "width": 288,
+      "height": 120
+    },
     "icon.career_healthcare": {
       "file": "icons/icon.career_healthcare.png",
       "width": 32,

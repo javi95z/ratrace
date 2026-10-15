@@ -47,9 +47,15 @@ describe('the challenge of a week', () => {
     for (let i = 1; i < all.length; i++) expect(all[i].lifeId, all[i].week).not.toBe(all[i - 1].lifeId);
     expect(new Set(all.map((each) => each.lifeId))).toEqual(new Set(lives.map((life) => life.id)));
     expect(new Set(all.map((each) => each.rule))).toEqual(new Set(CHALLENGE_RULES));
-    // Pairs come back only after many weeks.
-    const pairs = all.map((each) => `${each.lifeId}/${each.rule}`);
+    // Pairs come back only after many weeks, once the lives that came later have joined.
+    const pairs = all.filter((each) => each.week >= '2026-W43').map((each) => `${each.lifeId}/${each.rule}`);
     expect(new Set(pairs.slice(0, 60)).size).toBe(60);
+  });
+
+  it('keeps every week before a later life joins exactly as it was', () => {
+    const first = lives.filter((life) => life.challengeFrom === undefined);
+    for (const week of weeks.filter((each) => each < '2026-W43')) expect(challengeOf(week, lives), week).toEqual(challengeOf(week, first));
+    expect(lives.filter((life) => life.challengeFrom !== undefined).map((life) => life.id)).toEqual(['robotics_engineer', 'programmer', 'chef', 'private_banker']);
   });
 
   it('starts every life under every rule as a sound game', () => {

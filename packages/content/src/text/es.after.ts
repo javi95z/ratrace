@@ -6,6 +6,8 @@ export const after: Record<string, ReadonlyArray<string | null>> = {
   career_raise: ['La evaluación pasa sin pena ni gloria. El alquiler, no.', null, null, null],
   career_competitor_offer: ['Te quedas. Tu jefe nunca sabrá lo cerca que estuvo.', 'Mesa nueva, tarjeta nueva y todo por aprender otra vez.', null],
   career_relocation: ['El ascenso se lo lleva otra persona. Tú conservas tu barrio.', 'Cajas, un billete de ida y un cargo nuevo en la tarjeta.'],
+  career_transfer_east: ['Va otra persona. Tú conservas tu calle.', 'Un piso cápsula, trenes que nunca llegan tarde y tu nombre en dos alfabetos.', 'Gorros de piel, un impuesto plano y una mesa en el piso treinta de una torre de cristal.'],
+  career_transfer_west: ['Va otra persona. Tú conservas tu calle.', 'Tacos en la esquina, sol a mediodía y un alquiler que sí puedes pagar.', 'Tranvías limpios, un lago tranquilo y una nómina con la que cuentas los ceros dos veces.'],
   career_overtime_crunch: [null, 'Un mes de cenas frías. La entrega sale, y se nota en la nómina.'],
   career_layoff: ['Firmas, recoges tu planta y sales con un cheque.', null, 'Medio año de apuntes y entrevistas. Vuelves sabiendo más.'],
   career_toxic_boss: ['Aguantas. Cada correo de medianoche te cuesta un poco más.', null, 'Otro equipo, otro jefe y unos meses para ponerte al día.'],
