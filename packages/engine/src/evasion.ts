@@ -114,6 +114,11 @@ export function settleEvasion(content: Content, p: PlayerState, evaded: Evaded, 
       taken = bill.total;
       p.cash -= taken;
       events.push({ kind: 'audit', evaded: bill.evaded, fine: bill.fine, goods: bill.goods });
+      // So much hidden that the office takes it to court: a trial is dealt from the next round.
+      if (bill.evaded >= rules.chargedFromEvaded) {
+        p.life.flags.charged = round;
+        events.push({ kind: 'charged' });
+      }
       p.life.bonusStatus += rules.auditStatus;
       Object.assign(state, honestEvasion());
       for (const owned of p.life.items) delete owned.noInvoice;

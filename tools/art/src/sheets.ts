@@ -367,5 +367,10 @@ export const SHEETS: SheetSpec[] = [
       'logo.ferrari', 'logo.santander', 'logo.coca_cola', 'logo.bitcoin', 'logo.ethereum', 'logo.dogecoin', 'logo.toyota', 'logo.nestle',
     ],
   },
+  // The wrong side of the law: trials, prison and small cheats, and the badges of a life that went there.
+  { file: 'cards/cards-31', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.crime_wrongly_accused', 'card.crime_jail_cellmate', 'card.crime_jail_commissary', 'card.crime_jail_library', 'card.crime_memoirs', 'card.crime_fake_mba'] },
+  { file: 'cards/cards-32', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.crime_fake_mba_found', 'card.crime_ham_smuggling', 'card.crime_memecoin', 'card.crime_illegal_betting', 'card.crime_enchufe', 'card.crime_insider_tip'] },
+  { file: 'cards/cards-33', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 288, height: 120, ids: ['card.crime_laundering'] },
+  { file: 'badges/badges-07', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.fiscally_creative', 'badge.ex_convict', 'badge.truly_innocent'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];

@@ -212,6 +212,18 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     p.cash -= mulDiv(owed, effects.amnesty.pct, 100);
     life.evasion = honestEvasion();
   }
+  if (effects.launder !== undefined) {
+    // The fee is a share of what the office could still claim; once washed, nothing hidden is left to claim.
+    let owed = 0;
+    for (const entry of life.evasion.evaded) owed += entry.amount;
+    p.cash -= mulDiv(owed, effects.launder.feePct, 100);
+    life.evasion.evaded = [];
+  }
+  if (effects.jail !== undefined) {
+    // Already inside, the sentence runs to whichever ends later. Going in costs status once.
+    if (life.jailRounds === 0) life.bonusStatus -= at.content.life.jail.statusLost;
+    life.jailRounds = Math.max(life.jailRounds, effects.jail.rounds);
+  }
   if (effects.gift !== undefined) giveToChildren(p, effects.gift, at);
   if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) {
     life.movingTo = effects.moveCity;

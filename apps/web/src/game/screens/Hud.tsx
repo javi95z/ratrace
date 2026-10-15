@@ -6,7 +6,7 @@ import type { GameView } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, cityLight, portraitAge } from '@/game/present';
-import { Bar, Row, Stat, Well } from '@/ui/kit';
+import { Bar, Row, Stat, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { CityBanner } from './CityBanner';
@@ -179,6 +179,12 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
             {common('round', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}
             {p.life.career ? ` · ${text.careers[p.life.career.id].levels[p.life.career.level]}` : ''}
           </div>
+          {/* Prison says so where the player always looks. */}
+          {p.life.jailRounds > 0 ? (
+            <span className="mt-1 inline-flex">
+              <Tag tone="bad">{t('inJail')}</Tag>
+            </span>
+          ) : null}
         </div>
         <button type="button" aria-haspopup="dialog" aria-label={t('openSettings')} onClick={() => setSettings(true)} className="frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 transition-transform active:translate-y-[2px]">
           <Sprite id="icon.settings" fallback={{ w: 32, h: 32 }} />

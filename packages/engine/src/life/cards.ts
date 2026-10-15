@@ -100,6 +100,11 @@ export function weightOf(card: CardDef, p: PlayerState, content: Content, round:
   return Math.max(1, Math.round((card.weight * aged * Math.max(0, 100 - off)) / 10_000));
 }
 
+/** True where a card belongs where the player is: cards of prison inside, every other card outside. */
+function belongs(card: CardDef, p: PlayerState): boolean {
+  return (card.when?.inJail === true) === p.life.jailRounds > 0;
+}
+
 /**
  * The personal cards that could be dealt to the player as they stand: those whose condition holds
  * and that are not resting after a recent appearance, each with its weight. A card of the hand is
@@ -116,7 +121,7 @@ function openCards(state: GameState, content: Content, at: Situation, rested = f
       // With `rested`, a card still resting may come back early, but never one of this very round, nor one that comes once in a life.
       if (card.once === true || since === 0 || (!rested && since <= card.cooldown)) continue;
     }
-    if (conditionHolds(card.when, p, at)) pool.push([card.id, weightOf(card, p, content, state.round)]);
+    if (belongs(card, p) && conditionHolds(card.when, p, at)) pool.push([card.id, weightOf(card, p, content, state.round)]);
   }
   return pool;
 }
@@ -135,7 +140,7 @@ function settleHand(state: GameState, content: Content, rng: Rng, events: GameEv
   const at = situationOf(content, state);
   while (state.answered < state.hand.length) {
     const waiting = cardOf(content, state.hand[state.answered]);
-    if (conditionHolds(waiting.when, p, at)) return;
+    if (belongs(waiting, p) && conditionHolds(waiting.when, p, at)) return;
     delete p.life.seen[waiting.id];
     let pool = openCards(state, content, at);
     if (pool.length === 0) pool = openCards(state, content, at, true);

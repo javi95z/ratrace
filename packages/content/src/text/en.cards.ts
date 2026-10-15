@@ -742,4 +742,62 @@ export const cards: Record<string, CardText> = {
     'Just vote',
     ['Campaign for the cut', 'The cut passes, and your next bill shrinks.', 'The canton votes no. You keep the leaflets.'],
   ]),
+  crime_trial: c('Your day in court', 'The charges stand. A courtroom, a judge who has heard every excuse, and you.', [
+    ['Take the state\'s lawyer', 'He finds a loophole nobody expected. You walk out free.', 'He finds your file ten minutes before the hearing. Two rounds inside.'],
+    ['Hire the best lawyer in town', 'Expensive, brilliant and smug. Acquitted.', 'Even the best lose sometimes. One round inside.'],
+    'Make a deal and name your partner',
+  ]),
+  crime_wrongly_accused: c('Not guilty, honestly', 'The police are sure you did something you did not do. You were at the dentist.', [
+    ['Trust the state\'s lawyer', 'The dentist testifies. You are cleared, and your teeth are fine.', 'The dentist is on holiday. A round inside for nothing.'],
+    'Pay a good lawyer',
+  ]),
+  crime_jail_cellmate: c('Your cellmate, the banker', 'The man in the bunk above ran a hedge fund. He has opinions about your portfolio.', [
+    'Pretend to sleep',
+    'Take notes',
+  ]),
+  crime_jail_commissary: c('The noodle economy', 'Inside, instant noodles are money. Everybody wants them, nobody has enough.', [
+    'Buy what you need',
+    ['Run the noodle trade', 'You become the central bank of the whole wing.', 'Caught with two hundred packets. Your sentence grows.'],
+  ]),
+  crime_jail_library: c('The prison library', 'Three shelves, a dictionary and a lot of time.', [
+    'Sleep through it',
+    'Learn a language',
+    'Study for your trade',
+  ]),
+  crime_memoirs: c('Memoirs from a cell', 'A publisher thinks your story would sell. A podcast thinks so too.', [
+    'Keep it to yourself',
+    ['Tell everything', 'A bestseller, a tour and a film option.', 'Twelve copies sold, nine of them to your mother.'],
+  ]),
+  crime_fake_mba: c('A small upgrade', 'Nobody checks a CV. An MBA would look very good on yours.', [
+    'Leave the CV as it is',
+    'Add the MBA',
+  ]),
+  crime_fake_mba_found: c('HR has a question', 'Human Resources would like a copy of your MBA certificate. By Friday.', [
+    ['Bluff your way through', 'They forget to ask again. You breathe.', 'They call the business school. Your desk is cleared by noon.'],
+    'Come clean',
+  ]),
+  crime_ham_smuggling: c('A suitcase full of ham', 'A friend will pay well for whole Iberian hams, brought in your luggage. Customs may disagree.', [
+    'Pack only clothes',
+    ['Pack the hams', 'The scanner shows shoes. Your friend pays in cash.', 'A sniffer dog, a fine and a very confused officer.'],
+  ]),
+  crime_memecoin: c('Launch your own coin', 'Call it $RATA, pay some influencers, sell before anyone notices. What could go wrong?', [
+    'Keep your dignity',
+    ['Launch $RATA', 'It goes up a hundredfold. You sell at the top.', 'It goes up, you sell, and the regulator reads your messages.', 'Nobody buys. The logo was nice.'],
+  ]),
+  crime_illegal_betting: c('A sure thing', 'A man in a bar swears the second division match on Sunday is decided already.', [
+    'Watch it for free',
+    ['Bet two thousand', 'He was right. You collect, quietly.', 'He was wrong. So much for sure things.', 'The match was rigged, and the police were watching the bets.'],
+  ]),
+  crime_enchufe: c('A cousin in the ministry', 'Your cousin can find you a public post, no exam needed. Family helps family.', [
+    'Say no, thanks',
+    ['Accept the favour', 'A desk for life, and a cousin you now owe forever.', 'An anonymous complaint, and an inspector reading the hiring file.'],
+  ]),
+  crime_insider_tip: c('Your brother-in-law knows something', 'He works at a bank. A takeover is coming on Monday, and nobody knows yet.', [
+    'Change the subject',
+    ['Buy before Monday', 'Monday comes, the shares jump. You sell.', 'The shares jump, and so does the regulator.', 'There was no takeover. He meant another bank.'],
+  ]),
+  crime_laundering: c('Clean money', 'Your business takes plenty of cash. A friend explains how it could take a little more, on paper.', [
+    'Keep the books honest',
+    'Wash what you have hidden',
+  ]),
 };

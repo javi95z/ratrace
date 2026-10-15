@@ -82,6 +82,8 @@ export function focusBonusOf(p: PlayerState, content: Content): number {
  */
 export function ownPay(p: PlayerState, content: Content, level?: number): Cents {
   const life = p.life;
+  // Nobody is paid from a cell.
+  if (life.jailRounds > 0 && level === undefined) return 0;
   const median = cityOf(content, p.cityId).medianSalaryAnnual;
   const rung = life.career ? levelOf(content, level === undefined ? life.career : { id: life.career.id, level }) : null;
   // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.

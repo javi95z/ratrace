@@ -742,4 +742,62 @@ export const cards: Record<string, CardText> = {
     'Solo votar',
     ['Hacer campaña por la bajada', 'La bajada sale adelante, y tu próxima factura encoge.', 'El cantón vota que no. Te quedas con los folletos.'],
   ]),
+  crime_trial: c('Tu día en el juzgado', 'Los cargos siguen adelante. Un juzgado, una jueza que ha oído todas las excusas, y tú.', [
+    ['Abogado de oficio', 'Encuentra un resquicio que nadie esperaba. Sales libre.', 'Lee tu expediente diez minutos antes de la vista. Dos rondas dentro.'],
+    ['Contratar al mejor abogado', 'Caro, brillante y engreído. Absuelto.', 'Hasta los mejores pierden a veces. Una ronda dentro.'],
+    'Pactar y delatar a tu socio',
+  ]),
+  crime_wrongly_accused: c('Inocente, de verdad', 'La policía está segura de que hiciste algo que no hiciste. Estabas en el dentista.', [
+    ['Fiarte del abogado de oficio', 'El dentista declara. Quedas libre, y tus dientes están bien.', 'El dentista está de vacaciones. Una ronda dentro por nada.'],
+    'Pagar un buen abogado',
+  ]),
+  crime_jail_cellmate: c('Tu compañero de celda, banquero', 'El de la litera de arriba dirigía un fondo de inversión. Tiene opiniones sobre tu cartera.', [
+    'Hacerte el dormido',
+    'Tomar apuntes',
+  ]),
+  crime_jail_commissary: c('La economía de los fideos', 'Dentro, los fideos instantáneos son dinero. Todo el mundo los quiere y nadie tiene bastantes.', [
+    'Comprar lo que necesitas',
+    ['Montar el negocio de fideos', 'Te conviertes en el banco central del módulo.', 'Te pillan con doscientos sobres. Te alargan la condena.'],
+  ]),
+  crime_jail_library: c('La biblioteca de la cárcel', 'Tres estanterías, un diccionario y mucho tiempo.', [
+    'Dormir',
+    'Aprender un idioma',
+    'Estudiar para tu oficio',
+  ]),
+  crime_memoirs: c('Memorias desde la celda', 'Una editorial cree que tu historia vendería. Un pódcast también.', [
+    'Guardártela',
+    ['Contarlo todo', 'Un superventas, una gira y una opción para película.', 'Doce ejemplares vendidos, nueve a tu madre.'],
+  ]),
+  crime_fake_mba: c('Una pequeña mejora', 'Nadie comprueba un currículum. Un MBA quedaría muy bien en el tuyo.', [
+    'Dejar el currículum como está',
+    'Añadir el MBA',
+  ]),
+  crime_fake_mba_found: c('Recursos Humanos pregunta', 'Recursos Humanos quiere una copia de tu título de MBA. Para el viernes.', [
+    ['Tirarte el farol', 'No vuelven a preguntar. Respiras.', 'Llaman a la escuela de negocios. A mediodía has recogido tu mesa.'],
+    'Confesar',
+  ]),
+  crime_ham_smuggling: c('Una maleta llena de jamón', 'Un amigo pagará bien unos jamones ibéricos traídos en tu equipaje. La aduana puede no estar de acuerdo.', [
+    'Llevar solo ropa',
+    ['Meter los jamones', 'El escáner ve zapatos. Tu amigo paga en efectivo.', 'Un perro rastreador, una multa y un agente muy confundido.'],
+  ]),
+  crime_memecoin: c('Lanza tu propia moneda', 'Llámala $RATA, paga a unos influencers y vende antes de que nadie se entere. ¿Qué puede salir mal?', [
+    'Conservar la dignidad',
+    ['Lanzar $RATA', 'Se multiplica por cien. Vendes en lo alto.', 'Sube, vendes, y el regulador lee tus mensajes.', 'Nadie compra. El logo era bonito.'],
+  ]),
+  crime_illegal_betting: c('Una apuesta segura', 'Un señor en un bar jura que el partido de Segunda del domingo ya está decidido.', [
+    'Verlo gratis',
+    ['Apostar dos mil', 'Tenía razón. Cobras, sin hacer ruido.', 'No tenía razón. Tanto para lo seguro.', 'El partido estaba amañado, y la policía vigilaba las apuestas.'],
+  ]),
+  crime_enchufe: c('Un primo en el ministerio', 'Tu primo puede conseguirte una plaza pública, sin oposición. La familia ayuda a la familia.', [
+    'Decir que no, gracias',
+    ['Aceptar el favor', 'Una plaza para toda la vida, y un primo al que le debes para siempre.', 'Una denuncia anónima, y un inspector leyendo el expediente.'],
+  ]),
+  crime_insider_tip: c('Tu cuñado sabe algo', 'Trabaja en un banco. El lunes se anuncia una opa, y nadie lo sabe todavía.', [
+    'Cambiar de tema',
+    ['Comprar antes del lunes', 'Llega el lunes, las acciones suben. Vendes.', 'Suben las acciones, y también el interés del regulador.', 'No había opa. Se refería a otro banco.'],
+  ]),
+  crime_laundering: c('Dinero limpio', 'Tu negocio cobra mucho en efectivo. Un amigo te explica cómo podría cobrar un poco más, sobre el papel.', [
+    'Llevar las cuentas honestas',
+    'Lavar lo que tienes oculto',
+  ]),
 };

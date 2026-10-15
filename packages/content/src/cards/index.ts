@@ -1,6 +1,7 @@
 import type { CardDef } from '@ratrace/engine';
 import { healthCards, laterLifeCards, luckCards } from './chance';
 import { cityCards } from './cities';
+import { crimeCards } from './crime';
 import { familyCards, housingCards, lifestyleCards } from './home';
 import { investingCards, taxCards, worldCards } from './markets';
 import { moreBusinessCards, moreCareerCards, moreEducationCards, moreFamilyCards, moreHousingCards, moreInvestingCards, moreLaterLifeCards, moreLifestyleCards, moreTaxCards } from './extra';
@@ -31,4 +32,6 @@ export const cards: CardDef[] = [
   ...moreLaterLifeCards,
   // Two for each city, dealt only there.
   ...cityCards,
+  // The wrong side of the law, and prison.
+  ...crimeCards,
 ];

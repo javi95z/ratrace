@@ -57,6 +57,8 @@ export interface EvasionRules {
   suspicionDecay: number;
   /** The chance of an inspection never passes this, in percent, however high the suspicion. */
   auditMaxPct: number;
+  /** Tax evaded, in start-of-game cents, from which an inspection goes to court as well. */
+  chargedFromEvaded: Cents;
   /** An inspection: the fine on the tax evaded, in percent of it; the share of the value of things bought without an invoice taken; and the status lost. */
   auditFinePct: number;
   auditGoodsPct: number;
@@ -391,6 +393,8 @@ export interface LifeRules {
   jobHuntRaisePct: number;
   /** How far the three uses of focus that serve the job can be pushed, round after round. */
   focusLimits: FocusLimits;
+  /** What prison costs besides the time: status on the way in, and rungs of the career on the way out. */
+  jail: { statusLost: number; rungsLost: number };
   /** Finance skill needed to rent a property out. */
   rentOutMinFinanceSkill: FinanceSkill;
   /** Pay of a life with the `unstable_pay` flag swings by up to this many percent each round. */
@@ -536,6 +540,8 @@ export interface Condition {
   retired?: boolean;
   /** True for someone hiding something from the tax office, or with evaded tax it can still claim. */
   evading?: boolean;
+  /** True for a card dealt only in prison, false or absent for one dealt only outside. */
+  inJail?: boolean;
   /** Holds unless this flag was set less than this many rounds ago: a promise still binding. */
   notRecentFlag?: { flag: string; rounds: number };
   regimes?: Regime[];
@@ -638,6 +644,13 @@ export interface Effects {
   suspicion?: number;
   /** Settles with the tax office: this percent of the tax evaded that it can still claim is paid, and nothing more is owed or suspected. */
   amnesty?: { pct: number };
+  /**
+   * Washes what is hidden through a business that takes cash: this percent of the tax the office
+   * could still claim goes on the fee, and nothing hidden is left to claim. Suspicion is the card's to add.
+   */
+  launder?: { feePct: number };
+  /** Prison, for this round and the rounds after it up to this many in all: no pay, no focus, status lost, and a rung on the way out. */
+  jail?: { rounds: number };
   /**
    * Gives to the children in life: a percent of the cash and savings, the largest business, or both.
    * What is given, less the gift tax, is the family's and counts towards the score as the player's own.
@@ -927,6 +940,8 @@ export interface LifeState {
   focusUsed: number;
   /** Focus taken from this round by a burnout in the one before. */
   focusLost: number;
+  /** Rounds of prison still to serve, this one included; nothing outside. */
+  jailRounds: number;
   /** Rounds of overtime in a row, up to the last one played. */
   overtimeStreak: number;
   /** Job hunts in a row that ended in nothing, up to the last one played. */
@@ -1221,6 +1236,10 @@ export type GameEvent =
   | { kind: 'skill'; skill: SkillId; level: SkillLevel }
   /** The tax office inspected: the tax evaded and its fine, and what was taken of things bought without an invoice. */
   | { kind: 'audit'; evaded: Cents; fine: Cents; goods: Cents }
+  /** An inspection found so much hidden that it goes to court: a trial follows. */
+  | { kind: 'charged' }
+  /** Out of prison: the rung lost on the way out, if any. */
+  | { kind: 'released'; rungsLost: number }
   /** Something bought second hand needed a repair, paid this round. */
   | { kind: 'repair'; itemId: string; amount: Cents }
   /** `rungsLost` and `partnerIdle` say what the move cost the career and the household; both are nothing for a transfer. */

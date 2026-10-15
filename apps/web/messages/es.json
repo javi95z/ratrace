@@ -125,7 +125,8 @@
       "flow": "Lo que entra menos lo que sale en un año, antes de impuestos. En verde te sobra; en rojo te comes el efectivo.",
       "status": "Puntos por quién eres y lo que tienes. Dentro de una misma gama, la mejor cosa cuenta entera y las demás solo una parte."
     },
-    "openSettings": "Abrir ajustes"
+    "openSettings": "Abrir ajustes",
+    "inJail": "En prisión"
   },
   "settings": {
     "version": "Versión {content} · motor {engine}",
@@ -322,7 +323,9 @@
     "suspicion": "Sospecha de Hacienda {value}",
     "amnesty": "Pagas el {pct} % de lo que ocultaste y empiezas de cero",
     "sellBusiness": "Vendes tu negocio más grande por el {pct} % de lo que vale",
-    "giftBusiness": "Tu negocio más grande, para tus hijos"
+    "giftBusiness": "Tu negocio más grande, para tus hijos",
+    "launder": "Lava lo oculto (comisión del {pct} %)",
+    "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}"
   },
   "finance": {
     "tabs": {
@@ -768,7 +771,11 @@
     "overworked": "{n} rondas seguidas de horas extra: el cuerpo lo nota.",
     "overworkedHint": "−{health} de salud.",
     "burnout": "Te quemas tras {n} rondas de horas extra.",
-    "burnoutHint": "−{health} de salud y {focus} de foco menos la próxima ronda."
+    "burnoutHint": "−{health} de salud y {focus} de foco menos la próxima ronda.",
+    "charged": "La inspección acaba en el juzgado.",
+    "chargedHint": "Ocultabas tanto que habrá juicio. Busca un abogado.",
+    "released": "Sales de la cárcel.",
+    "releasedRung": "Vuelves al trabajo, un puesto más abajo."
   },
   "profile": {
     "title": "Tu vida",

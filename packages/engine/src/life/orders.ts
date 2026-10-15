@@ -26,6 +26,8 @@ export function focusLeft(p: PlayerState): number {
  * what a burnout took. A burnout never leaves the player with none.
  */
 export function focusTotal(p: PlayerState): number {
+  // In prison there is nothing to spend focus on.
+  if (p.life.jailRounds > 0) return 0;
   const total = p.life.focusBase + p.life.focusBonus;
   return p.life.focusLost > 0 ? Math.max(Math.min(1, total), total - p.life.focusLost) : total;
 }
