@@ -1156,4 +1156,16 @@ describe('the mirror', { timeout: 60_000 }, () => {
     // And it is never sent back as a casual life to be finished.
     expect(state.asked.filter((line) => line.startsWith('push') || line.startsWith('finish'))).toEqual([]);
   });
+
+  it('brings a life lived in a room to the records, marked as one, and never sends one back up', async () => {
+    const { cloud, state } = fakeCloud();
+    state.runs.push({ id: 'room-done', mode: 'room', lifeId: 'nurse', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, score: 300, netWorth: 9, status: 30, escapedAtRound: null, bankruptcies: 0, badges: [], cities: ['madrid'], history: [1], finishedAt: '2026-10-01T08:00:00Z' });
+    const d = device(cloud);
+    // A room's life the device itself kept at its end: its figures are the server's, and it has no log to send.
+    await d.store.addRun({ format: 1, runId: 'room-here', engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, lifeId: 'nurse', seed: '', log: [], finishedAt: 1, score: 200, netWorth: 1, status: 1, escapedAtRound: null, bankruptcies: 0, history: [1], badges: [], cities: ['madrid'], verified: false, room: true });
+    await d.mirror.sync();
+    expect((await d.store.listRuns()).find((run) => run.runId === 'room-done')).toMatchObject({ room: true });
+    expect((await d.store.listRuns()).find((run) => run.runId === 'room-done')).not.toHaveProperty('ranked');
+    expect(state.asked.filter((line) => line.startsWith('push') || line.startsWith('finish'))).toEqual([]);
+  });
 });

@@ -5,6 +5,8 @@ import { canonical } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rooms } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { MemberRow, RoomGameRow, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { Reply } from '../../../../supabase/functions/_shared/replay.ts';
+import { roomsApi } from '@/online/rooms';
+import type { RoomsLink } from '@/session/room';
 
 /** A member as the database keeps them, with the room they are in. */
 type Member = MemberRow & { room_id: string };
@@ -188,13 +190,43 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     },
   };
 
+  /** The pages listening to each room, and the network between page and server, which a test may cut. */
+  const listeners = new Map<string, Set<() => void>>();
+  const network = { down: false };
+  /** What a page could hear about: the rooms and who is in them. */
+  const snapshot = () => JSON.stringify([[...roomsById.values()], members]);
+  const ask = (user: string, body: Record<string, unknown>): Promise<Reply> => rooms(GAMES, deps, user, body);
+
   return {
     deps,
     state,
     hooks,
+    network,
     db: { rooms: roomsById, members, games, seeds, orders, runs, names, unlocked },
     /** Asks the server as `user`, with nothing between. */
-    ask: (user: string, body: Record<string, unknown>): Promise<Reply> => rooms(GAMES, deps, user, body),
+    ask,
+    /**
+     * The rooms as a page signed in as `user` reaches them: the game's own mapping of the server's
+     * answers, a trip through JSON as over the network, and the changes of a room told to whoever
+     * listens to it, as Realtime tells them, once the answer is back.
+     */
+    link: (user: string): RoomsLink => ({
+      api: roomsApi(async (body) => {
+        if (network.down) throw new TypeError('Failed to fetch');
+        const before = snapshot();
+        const reply = await ask(user, JSON.parse(JSON.stringify(body)) as Record<string, unknown>);
+        if (snapshot() !== before) queueMicrotask(() => {
+          for (const set of listeners.values()) for (const listener of set) listener();
+        });
+        return JSON.parse(JSON.stringify(reply)) as Reply;
+      }),
+      watch: (roomId, onChange) => {
+        const set = listeners.get(roomId) ?? new Set<() => void>();
+        set.add(onChange);
+        listeners.set(roomId, set);
+        return () => void set.delete(onChange);
+      },
+    }),
     /** Moves the server's clock on. */
     wait: (ms: number) => {
       state.now += ms;

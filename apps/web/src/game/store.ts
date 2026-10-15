@@ -6,7 +6,7 @@ import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { RankedInProgress, StaleSession, Unreachable } from '@/session/errors';
 import type { RankedLifeInTheWay } from '@/session/errors';
-import type { GameSession, Lost, Sessions } from '@/session/types';
+import type { GameSession, Lost, Sessions, StepResult } from '@/session/types';
 
 /** Where the player is within a round. */
 export type Stage = 'news' | 'cards' | 'outcome' | 'finance' | 'resolve' | 'end';
@@ -113,6 +113,17 @@ export interface RoundActions {
   clearFellBack(): void;
   clearUnreachable(): void;
   play(): Promise<void>;
+  /**
+   * The round's time is up, in a room: it is played as it stands. From the finances, with the
+   * basket; from anywhere before them, with no orders, and the cards still waiting take their first
+   * option. A round already being played, or over, is left as it is.
+   */
+  timeUp(): Promise<void>;
+  /**
+   * A round was played while this page was not waiting for it, in a room: by the clock, or before
+   * the page was opened again. Its result is shown as a played round's is. Nothing if there is none.
+   */
+  catchUp(): Promise<void>;
   /** From the ledger to the next round, or to the end. */
   next(): void;
 }
@@ -200,6 +211,42 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       } else {
         console.error('the game refused a step:', error);
         set({ fault: true });
+      }
+    };
+
+    /** Shows what a round did, as the ledger after it. */
+    const shown = (view: GameView, result: StepResult) => {
+      if (!session) return;
+      set({
+          view: result.view,
+          history: session.history(),
+          bankruptcies: session.bankruptcies(),
+          badges: session.badges(),
+          story: session.story(),
+          earned: result.earned,
+          unlocked: result.unlocked,
+          resolved: { before: view, events: result.events },
+          orders: [],
+          preview: null,
+          refusal: null,
+          alsoRemoved: 0,
+          cardEvents: [],
+          offered: null,
+          stage: 'resolve',
+          unreachable: false,
+        });
+    };
+
+    /** Plays the round with these orders, and shows what it did. */
+    const playing = async (view: GameView, orders: Order[]) => {
+      if (!session) return;
+      set({ busy: true });
+      try {
+        shown(view, await session.playRound({ orders }));
+      } catch (error) {
+        await refused(error);
+      } finally {
+        set({ busy: false });
       }
     };
 
@@ -384,25 +431,23 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       async play() {
         const { view, orders, busy, stage } = get();
         if (!view || !session || busy || stage !== 'finance' || !settled()) return;
+        await playing(view, orders);
+      },
+
+      async timeUp() {
+        const { view, orders, busy, stage } = get();
+        // Before the finances the basket is empty: the round is played with no orders.
+        if (!view || !session || busy || (stage !== 'news' && stage !== 'cards' && stage !== 'outcome' && stage !== 'finance')) return;
+        await playing(view, orders);
+      },
+
+      async catchUp() {
+        const { view, busy } = get();
+        if (!view || !session?.catchUp || busy) return;
         set({ busy: true });
         try {
-          const result = await session.playRound({ orders });
-          set({
-            view: result.view,
-            history: session.history(),
-            bankruptcies: session.bankruptcies(),
-            badges: session.badges(),
-            story: session.story(),
-            earned: result.earned,
-            unlocked: result.unlocked,
-            resolved: { before: view, events: result.events },
-            orders: [],
-            preview: null,
-            refusal: null,
-            alsoRemoved: 0,
-            stage: 'resolve',
-            unreachable: false,
-          });
+          const result = await session.catchUp();
+          if (result !== null) shown(view, result);
         } catch (error) {
           await refused(error);
         } finally {

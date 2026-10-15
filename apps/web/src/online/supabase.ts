@@ -1,4 +1,5 @@
 import type { RankedApi } from '@/session/ranked';
+import type { RoomsLink } from '@/session/room';
 import type { SyncCloud } from './mirror';
 import type { Account, AccountNotice, AccountState, Community } from './types';
 
@@ -17,6 +18,8 @@ export interface CloudUser {
 export interface Cloud extends SyncCloud {
   /** The server of ranked lives, asked as whoever is signed in. */
   ranked: RankedApi;
+  /** The rooms, asked as whoever is signed in, and heard of as they change. */
+  rooms: RoomsLink;
   /** The other players: rankings, names, friends. */
   community: Community;
   /** Whoever this browser is already signed in as, or null. Fails if it could not find out: that is not "nobody". */

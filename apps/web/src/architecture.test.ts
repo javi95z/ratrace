@@ -106,8 +106,8 @@ describe('the wall between the screens and the game', () => {
     const reaches = (path: string) => importsOf(path).filter((i) => i.from === '@supabase/supabase-js' || /^@\/online(\/(?!types$).*)?$/.test(i.from));
     expect(screens.flatMap((path) => reaches(path).map((i) => `${rel(path)}: ${i.from}`))).toEqual([]);
     const wires = all.filter((path) => !rel(path).startsWith('online/') && reaches(path).length > 0).map(rel);
-    // One file wires the cloud into the game. One more stands in for the server of ranked lives in tests.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'testing/rankedServer.ts']);
+    // One file wires the cloud into the game. Two more stand in for the servers of ranked lives and of rooms in tests.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'testing/rankedServer.ts', 'testing/roomServer.ts']);
     // And the client library is named in exactly one file, which loads it only when an account starts.
     const named = all.filter((path) => importsOf(path).some((i) => i.from === '@supabase/supabase-js') || /import\('@supabase\/supabase-js'\)/.test(readFileSync(path, 'utf8'))).map(rel);
     expect(named).toEqual(['online/connect.ts']);

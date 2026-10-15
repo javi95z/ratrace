@@ -1,6 +1,7 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { RankedApi } from '@/session/ranked';
+import type { RoomsLink } from '@/session/room';
 import type { PlayerStore } from '@/session/types';
 import { turnstile } from './captcha';
 import { connectSupabase } from './connect';
@@ -21,6 +22,8 @@ export interface Online {
   saves: AccountSaves | null;
   /** The server of ranked lives while someone is signed in, and null otherwise. */
   ranked(): RankedApi | null;
+  /** The rooms while someone is signed in, and null otherwise. */
+  rooms(): RoomsLink | null;
   /** The other players, while someone is signed in, and null otherwise. */
   community(): Community | null;
 }
@@ -49,7 +52,7 @@ export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
   const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule, newId: parts.newId });
   follow(account, mirror, parts.page);
-  return { account, store: mirror, saves: mirror, ranked: () => account.cloud()?.ranked ?? null, community: () => account.cloud()?.community ?? null };
+  return { account, store: mirror, saves: mirror, ranked: () => account.cloud()?.ranked ?? null, rooms: () => account.cloud()?.rooms ?? null, community: () => account.cloud()?.community ?? null };
 }
 
 /**
@@ -102,7 +105,7 @@ export function browserOnline(device: PlayerStore): Online {
   // Named in full, because the build writes these two values into the page only where it sees them so.
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null, community: () => null };
+  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null, rooms: () => null, community: () => null };
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.NEXT_PUBLIC_SUPABASE_REGION || undefined;
   // The site key of the guard at the door of guest sign-in. Named, a guest is made only with its word; left out, there is no guard.

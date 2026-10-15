@@ -36,6 +36,7 @@ export function readRun(raw: unknown): FinishedRun | null {
     cities: strings(raw.cities),
     verified: false,
     ...(raw.ranked === true ? { ranked: true as const } : {}),
+    ...(raw.room === true ? { room: true as const } : {}),
     ...(isWeek(raw.challenge) ? { challenge: raw.challenge } : {}),
   };
 }

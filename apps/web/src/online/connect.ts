@@ -3,6 +3,7 @@ import type { Captcha } from './captcha';
 import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
+import { roomsApi } from './rooms';
 import type { Cloud, CloudUser } from './supabase';
 
 const userOf = (user: User | null | undefined): CloudUser | null => (user ? { id: user.id, is_anonymous: user.is_anonymous === true, email: user.email } : null);
@@ -43,7 +44,7 @@ const gameOf = (row: GameRow): CloudGame => ({
   ...(typeof row.challenge === 'string' ? { challenge: row.challenge } : {}),
 });
 const runOf = (row: RunRow): CloudRun => ({
-  id: row.id, mode: row.mode === 'ranked' ? 'ranked' : 'casual', lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
+  id: row.id, mode: row.mode === 'ranked' || row.mode === 'room' ? row.mode : 'casual', lifeId: row.life_id, engineVersion: row.engine_version, contentVersion: row.content_version, score: row.score, netWorth: row.net_worth, status: row.status,
   escapedAtRound: row.escaped_at_round, bankruptcies: row.bankruptcies, badges: row.badges ?? [], cities: row.cities ?? [], history: (row.history ?? []).map(Number), finishedAt: row.finished_at,
   ...(typeof row.challenge === 'string' ? { challenge: row.challenge } : {}),
 });
@@ -109,6 +110,15 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     // The function answered, and said no: its answer is in the response. Anything else never reached it.
     if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
     throw error instanceof Error ? error : new Error('the ranked function could not be reached');
+  });
+  // Rooms are asked for in the same region as ranked lives, for the same reason: every step is a few trips to the database.
+  const roomsName = rankedName.replace(/^ranked/, 'rooms');
+  const rooms = roomsApi(async (body) => {
+    const { data, error } = await client.functions.invoke(roomsName, { body });
+    if (!error) return { status: 200, body: data };
+    const context = (error as { context?: unknown }).context;
+    if (context instanceof Response) return { status: context.status, body: await context.clone().json().catch(() => null) };
+    throw error instanceof Error ? error : new Error('the rooms function could not be reached');
   });
 
   return {
@@ -218,6 +228,22 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     },
     giveUpRanked: (id) => ranked.abandon(id),
     ranked,
+    rooms: {
+      api: rooms,
+      // Every change to the room and to anyone in it, as the rules of the two tables let this player read them.
+      watch(roomId, onChange) {
+        const channel = client
+          .channel(`room:${roomId}`)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, () => onChange())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${roomId}` }, () => onChange())
+          // Listening begins a moment after the channel opens, and what changed in that moment would be missed: it is asked for once then.
+          .on('system', {}, (message: { extension?: string; status?: string }) => {
+            if (message.extension === 'postgres_changes' && message.status === 'ok') onChange();
+          })
+          .subscribe();
+        return () => void client.removeChannel(channel);
+      },
+    },
     community: {
       async me() {
         try {

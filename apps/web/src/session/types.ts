@@ -40,6 +40,11 @@ export interface GameSession {
   answerCard(option: number): Promise<StepResult>;
   /** Plays the round. Cards still unanswered take their first option. */
   playRound(choices: RoundChoices): Promise<StepResult>;
+  /**
+   * For a life whose rounds may be played without this page asking, in a room: the result of the
+   * round played since the page last saw the life, or null if none was. Left out, there never is one.
+   */
+  catchUp?(): Promise<StepResult | null>;
 }
 
 /**
@@ -153,6 +158,8 @@ export interface FinishedRun {
   verified: false;
   /** True for a life the server played: the one kind that is in the rankings. */
   ranked?: true;
+  /** True for a life lived in a room with friends: the server played it too, and it is in no ranking. */
+  room?: true;
   /** The week whose challenge this life was: the attempt, if ranked, or a practice. */
   challenge?: string;
 }

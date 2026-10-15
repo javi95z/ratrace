@@ -26,8 +26,8 @@ export interface GameUpload {
 /** A finished life as the server wrote it. Every figure is the engine's, worked out on the server. */
 export interface CloudRun {
   id: string;
-  /** `ranked` for a life the server played itself. Left out, a casual one. */
-  mode?: 'casual' | 'ranked';
+  /** `ranked` for a life the server played itself, `room` for one it played in a room. Left out, a casual one. */
+  mode?: 'casual' | 'ranked' | 'room';
   lifeId: string;
   engineVersion: string;
   contentVersion: string;
@@ -121,6 +121,7 @@ const asRun = (run: CloudRun): FinishedRun => ({
   cities: run.cities,
   verified: false,
   ...(run.mode === 'ranked' ? { ranked: true as const } : {}),
+  ...(run.mode === 'room' ? { room: true as const } : {}),
   ...(run.challenge !== undefined ? { challenge: run.challenge } : {}),
 });
 

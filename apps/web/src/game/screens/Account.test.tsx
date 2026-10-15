@@ -166,6 +166,7 @@ describe('the account in the settings', () => {
       rankedLife: async () => null,
     giveUpRanked: async () => {},
       ranked: {} as Cloud['ranked'],
+      rooms: {} as Cloud['rooms'],
       community: {} as Cloud['community'],
     };
     show(new SupabaseAccount(async () => cloud, () => 'http://localhost:3000/en', () => {}));

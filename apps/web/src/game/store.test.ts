@@ -232,6 +232,61 @@ describe('the finance phase', () => {
   });
 });
 
+describe('when the round\'s time is up', () => {
+  it('plays the basket from the finances, exactly as playing the round would, and shows what it did', async () => {
+    const [timed, played] = [setup(), setup()];
+    for (const { get } of [timed, played]) {
+      await get().start('engineer');
+      await answerHand(get);
+      expect(get().addOrder(study)).toBe(true);
+    }
+    await timed.get().timeUp();
+    await played.get().play();
+    expect(timed.get()).toMatchObject({ stage: 'resolve', orders: [], busy: false });
+    expect(timed.get().view?.round).toBe(1);
+    expect(timed.get().view).toEqual(played.get().view);
+    expect(timed.get().resolved).toEqual(played.get().resolved);
+  });
+
+  it('plays it with no orders from the cards, the cards still waiting taking their first option', async () => {
+    const { get, sessions } = setup();
+    await get().start('nurse');
+    get().leaveNews();
+    expect(get().stage).toBe('cards');
+    await get().timeUp();
+    expect(get()).toMatchObject({ stage: 'resolve', cardEvents: [], offered: null });
+    const { session } = await sessions.resume();
+    expect(session?.view().round).toBe(1);
+  });
+
+  it('plays it from the news, and from a card\'s result', async () => {
+    const one = setup();
+    await one.get().start('nurse');
+    await one.get().timeUp();
+    expect(one.get().stage).toBe('resolve');
+    const two = setup();
+    await two.get().start('nurse');
+    two.get().leaveNews();
+    await two.get().pick(0);
+    expect(two.get().stage).toBe('outcome');
+    await two.get().timeUp();
+    expect(two.get()).toMatchObject({ stage: 'resolve', cardEvents: [] });
+  });
+
+  it('leaves a round already being played, a ledger and an end as they are', async () => {
+    const { get } = setup();
+    await get().start('nurse');
+    await answerHand(get);
+    const first = get().play();
+    await get().timeUp();
+    await first;
+    expect(get().view?.round).toBe(1);
+    expect(get().stage).toBe('resolve');
+    await get().timeUp();
+    expect(get().view?.round).toBe(1);
+  });
+});
+
 describe('a whole life', () => {
   it('ends on the end screen, with the run recorded and nothing left to resume', async () => {
     const { store, get } = setup();
