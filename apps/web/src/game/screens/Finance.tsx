@@ -50,6 +50,7 @@ function Portfolio() {
   const { p, shown, world, preview } = useRound();
   const addOrder = useGame((s) => s.addOrder);
   const [move, setMove] = useState<Move | null>(null);
+  const [buying, setBuying] = useState<AssetDef | null>(null);
   const held = content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id));
   // The most the pension takes this round, from the engine: its cap, the cash there is, and solvency.
   const pensionRoom = preview.pensionRoom;
@@ -110,6 +111,8 @@ function Portfolio() {
           const gain = position.value - position.basis;
           return (
             <div key={asset.id} className="flex items-center gap-3 py-1.5">
+              {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
+              <button type="button" data-finance-item onClick={() => setBuying(asset)} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left">
               <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
               <div className="min-w-0 flex-1">
                 <div className="truncate">{names.assets[asset.id].name}</div>
@@ -120,6 +123,7 @@ function Portfolio() {
                 <MarginLine assetId={asset.id} />
               </div>
               <div className="pixel text-right">{fmt.money(position.value)}</div>
+              </button>
               <Button onClick={() => setMove({ kind: 'sell', asset })}>{t('sell')}</Button>
             </div>
           );
@@ -128,6 +132,7 @@ function Portfolio() {
       <Payouts />
       <Plans />
       {sheet}
+      {buying ? <BuySheet asset={buying} onClose={() => setBuying(null)} /> : null}
     </div>
   );
 }
@@ -264,20 +269,9 @@ function Sparkline({ values, label }: { values: number[]; label: string }) {
 
 function Market() {
   const t = useT('finance.market');
-  const amount = useT('finance.amount');
-  const { content, text, names, fmt } = useWords();
-  const { view, p, world } = useRound();
-  const addOrder = useGame((s) => s.addOrder);
-  const setOrder = useGame((s) => s.setOrder);
-  const plans = useT('finance.plans');
-  const { shown, preview } = useRound();
+  const { content, names, fmt } = useWords();
+  const { view, p, world, shown } = useRound();
   const [buying, setBuying] = useState<AssetDef | null>(null);
-  // The same sheet buys once or sets what is bought every round.
-  const [each, setEach] = useState(false);
-  // Bought once, it may be bought with as much again borrowed from the broker.
-  const [geared, setGeared] = useState(false);
-  const margin = buying ? quoteMargin(content, shown, buying.id) : null;
-  const planned = buying ? shown.player.plans.find((plan) => plan.assetId === buying.id) : undefined;
 
   return (
     <div className="flex flex-col gap-3">
@@ -298,11 +292,7 @@ function Market() {
                   type="button"
                   data-finance-item
                   disabled={locked}
-                  onClick={() => {
-                    setEach(false);
-                    setGeared(false);
-                    setBuying(asset);
-                  }}
+                  onClick={() => setBuying(asset)}
                   className="flex min-h-11 w-full items-center gap-3 py-1.5 text-left"
                 >
                   {/* Only the badge is dimmed for a locked asset: its name and what unlocks it must stay readable. */}
@@ -325,62 +315,84 @@ function Market() {
         </Panel>
       ))}
 
-      {buying ? (
-        <AmountSheet
-          // A new sheet for each way of buying: the amount starts over, and so does what it can be.
-          key={each ? 'each' : 'once'}
-          title={each ? plans('edit', { name: names.assets[buying.id].name }) : amount('buy', { name: names.assets[buying.id].name })}
-          max={each ? planMax(p.cash, preview.income.salary) : p.cash}
-          start={each ? (planned?.amount ?? 0) : 0}
-          onClose={() => setBuying(null)}
-          onConfirm={(a) =>
-            each
-              ? setOrder(isPlanFor(buying.id), planOrder(view, buying.id, a))
-              : addOrder(geared && margin?.lock === null && margin.canDouble ? { type: 'buy', assetId: buying.id, amount: a, margin: a } : { type: 'buy', assetId: buying.id, amount: a })
-          }
-          footer={
-            // Margin is not spoken of until the player has the skill for it: a closed switch teaches nothing to someone years from it.
-            each || !margin || margin.lock === 'needs-finance-skill' ? null : (
-              <section aria-label={plans('marginTitle')} className="mt-3 border-t-2 border-night-900 pt-3">
-                <Toggle
-                  on={geared && margin.lock === null && margin.canDouble}
-                  onChange={setGeared}
-                  disabled={margin.lock !== null || !margin.canDouble}
-                  label={plans('margin')}
-                  hint={plans('marginHint', { rate: fmt.rate(margin.rateBp) })}
-                />
-                <p className={`mt-1.5 text-[12px] leading-snug ${margin.lock !== null || !margin.canDouble ? 'text-gold-200' : 'text-ink-300'}`}>
-                  {margin.lock !== null
-                    ? text.reasons[margin.lock]
-                    : !margin.canDouble
-                      ? plans('marginFull', { pct: margin.maxPct })
-                      : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
-                </p>
-              </section>
-            )
-          }
-        >
-          <div className="mb-3">
-            <Segmented<'once' | 'each'>
-              label={plans('how')}
-              value={each ? 'each' : 'once'}
-              onChange={(how) => setEach(how === 'each')}
-              options={[
-                { value: 'once', label: plans('once'), hint: plans('onceHint') },
-                { value: 'each', label: plans('each'), hint: plans('eachHint') },
-              ]}
-            />
-          </div>
-          {each ? <p className="mb-2 text-[13px] leading-snug text-ink-200">{planned ? plans('already', { amount: fmt.money(planned.amount) }) : plans('editHint')}</p> : null}
-          <p className="mb-2 text-[14px] text-ink-200">{text.assets[buying.id].blurb}</p>
-          <Sparkline values={priceHistory(view, buying.id)} label={t('history')} />
-          <div className="mb-3 mt-1 flex justify-between text-[12px] text-ink-300">
-            <span>{t('history')}</span>
-            {Object.hasOwn(p.positions, buying.id) ? <span>{t('youHold', { amount: fmt.money(p.positions[buying.id].value) })}</span> : null}
-          </div>
-        </AmountSheet>
-      ) : null}
+      {buying ? <BuySheet asset={buying} onClose={() => setBuying(null)} /> : null}
     </div>
+  );
+}
+
+/**
+ * Buying an asset: once, or every round, and with borrowed money where the player may. Opened from
+ * the market, and from a holding in the portfolio, to buy more of it.
+ */
+function BuySheet({ asset, onClose }: { asset: AssetDef; onClose(): void }) {
+  const t = useT('finance.market');
+  const amount = useT('finance.amount');
+  const plans = useT('finance.plans');
+  const { content, text, names, fmt } = useWords();
+  const { view, p, shown, preview } = useRound();
+  const addOrder = useGame((s) => s.addOrder);
+  const setOrder = useGame((s) => s.setOrder);
+  // The same sheet buys once or sets what is bought every round.
+  const [each, setEach] = useState(false);
+  // Bought once, it may be bought with as much again borrowed from the broker.
+  const [geared, setGeared] = useState(false);
+  const margin = quoteMargin(content, shown, asset.id);
+  const planned = shown.player.plans.find((plan) => plan.assetId === asset.id);
+
+  return (
+    <AmountSheet
+      // A new sheet for each way of buying: the amount starts over, and so does what it can be.
+      key={each ? 'each' : 'once'}
+      title={each ? plans('edit', { name: names.assets[asset.id].name }) : amount('buy', { name: names.assets[asset.id].name })}
+      max={each ? planMax(p.cash, preview.income.salary) : p.cash}
+      start={each ? (planned?.amount ?? 0) : 0}
+      onClose={onClose}
+      onConfirm={(a) =>
+        each
+          ? setOrder(isPlanFor(asset.id), planOrder(view, asset.id, a))
+          : addOrder(geared && margin?.lock === null && margin.canDouble ? { type: 'buy', assetId: asset.id, amount: a, margin: a } : { type: 'buy', assetId: asset.id, amount: a })
+      }
+      footer={
+        // Margin is not spoken of until the player has the skill for it: a closed switch teaches nothing to someone years from it.
+        each || !margin || margin.lock === 'needs-finance-skill' ? null : (
+          <section aria-label={plans('marginTitle')} className="mt-3 border-t-2 border-night-900 pt-3">
+            <Toggle
+              on={geared && margin.lock === null && margin.canDouble}
+              onChange={setGeared}
+              disabled={margin.lock !== null || !margin.canDouble}
+              label={plans('margin')}
+              hint={plans('marginHint', { rate: fmt.rate(margin.rateBp) })}
+            />
+            <p className={`mt-1.5 text-[12px] leading-snug ${margin.lock !== null || !margin.canDouble ? 'text-gold-200' : 'text-ink-300'}`}>
+              {margin.lock !== null
+                ? text.reasons[margin.lock]
+                : !margin.canDouble
+                  ? plans('marginFull', { pct: margin.maxPct })
+                  : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
+            </p>
+          </section>
+        )
+      }
+    >
+      <div className="mb-3">
+        <Segmented<'once' | 'each'>
+          label={plans('how')}
+          value={each ? 'each' : 'once'}
+          onChange={(how) => setEach(how === 'each')}
+          options={[
+            { value: 'once', label: plans('once'), hint: plans('onceHint') },
+            { value: 'each', label: plans('each'), hint: plans('eachHint') },
+          ]}
+        />
+      </div>
+      {each ? <p className="mb-2 text-[13px] leading-snug text-ink-200">{planned ? plans('already', { amount: fmt.money(planned.amount) }) : plans('editHint')}</p> : null}
+      <p className="mb-2 text-[14px] text-ink-200">{text.assets[asset.id].blurb}</p>
+      <Sparkline values={priceHistory(view, asset.id)} label={t('history')} />
+      <div className="mb-3 mt-1 flex justify-between text-[12px] text-ink-300">
+        <span>{t('history')}</span>
+        {Object.hasOwn(p.positions, asset.id) ? <span>{t('youHold', { amount: fmt.money(p.positions[asset.id].value) })}</span> : null}
+      </div>
+    </AmountSheet>
   );
 }
 
