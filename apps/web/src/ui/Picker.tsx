@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Sheet } from './overlay';
+import { Face } from './Face';
 import { Sprite } from './Sprite';
 
 export interface PickerOption<T> {
@@ -9,7 +10,12 @@ export interface PickerOption<T> {
   label: string;
   /** A sprite beside the label. */
   icon?: string;
+  /** A portrait beside the label, of which only the face is shown, at the size of an icon. */
+  face?: string;
 }
+
+/** What stands beside an option: its face, or its icon. */
+const mark = (option: { icon?: string; face?: string }) => (option.face ? <Face id={option.face} /> : option.icon ? <Sprite id={option.icon} /> : null);
 
 /**
  * A choice among many, in the game's own look: a raised button showing what is chosen, which opens
@@ -29,7 +35,7 @@ export function Picker<T extends string | null>({ label, value, options, onChang
         onClick={() => setOpen(true)}
         className="frame-raised flex min-h-11 w-full items-center gap-2 bg-night-600 px-3 text-left text-[16px] text-cream active:translate-y-[2px]"
       >
-        {chosen.icon ? <Sprite id={chosen.icon} /> : null}
+        {mark(chosen)}
         <span className="min-w-0 flex-1 truncate">{chosen.label}</span>
         <span aria-hidden className="text-[12px] text-gold-500">
           ▼
@@ -52,7 +58,7 @@ export function Picker<T extends string | null>({ label, value, options, onChang
                     }}
                     className={`flex min-h-11 items-center gap-2 px-3 py-1.5 text-left text-[15px] ${selected ? 'bevel frame-gold bg-night-600 text-gold-200' : 'frame bg-night-700 text-cream'}`}
                   >
-                    {option.icon ? <Sprite id={option.icon} /> : null}
+                    {mark(option)}
                     <span className="min-w-0 flex-1 truncate">{option.label}</span>
                     {selected ? <span aria-hidden className="text-gold-500">✓</span> : null}
                   </button>

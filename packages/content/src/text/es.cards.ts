@@ -612,7 +612,7 @@ export const cards: Record<string, CardText> = {
   ]),
   inv_leveraged_etf: c('Un fondo que multiplica por tres', 'Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo.', [
     'Pasar',
-    ['Meter 3.000 $', 'El mercado subió: triplicas.', 'El mercado bajó: se evapora.'],
+    ['Meter dinero', 'El mercado subió: lo triplicas.', 'El mercado se quedó quieto: recuperas lo que pusiste.', 'El mercado bajó: se evapora.'],
   ]),
   house_noisy_neighbours: c('Vecinos ruidosos', 'Los de arriba ensayan con la batería a la hora de cenar. Y a la de dormir.', [
     'Aguantar',

@@ -10,7 +10,7 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { maskEmail } from '@/lib/mask';
 import { GoogleMark } from '@/ui/GoogleMark';
 import { routing } from '@/i18n/routing';
-import { Bar, Button, Panel, Stat, Toggle, Well } from '@/ui/kit';
+import { Bar, Button, Panel, Toggle, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { KeyboardGuide } from '@/ui/keyboard';
 import { Sprite } from '@/ui/Sprite';
@@ -198,45 +198,38 @@ function Standing({ shown }: { shown: GameView }) {
   const left = (content.rounds - shown.round) * content.yearsPerRound;
 
   return (
-    <section aria-label={t('game')} className="frame frame-gold bg-night-700 p-3">
-      <div className="flex items-center gap-3">
+    <section aria-label={t('game')} className="frame frame-gold bg-night-700 p-2.5">
+      <div className="flex items-center gap-2.5">
         <span className="frame shrink-0 leading-[0]">
-          <Well className="size-[68px]">
-            <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} />
+          <Well className="size-11 items-start overflow-hidden">
+            <Sprite id={portraitArt(lifeId, portraitAge(age))} fallback={{ w: 64, h: 64 }} className="-mt-1 max-w-none" />
           </Well>
         </span>
-        <div className="min-w-0">
-          <p className="pixel text-[12px] uppercase tracking-wider text-gold-500">{challenge !== null ? t(ranked ? 'challenge' : 'practice') : ranked ? t('ranked') : t('game')}</p>
-          <p className="pixel truncate text-[19px]">{text.lives[lifeId]?.name}</p>
-          <p className="truncate text-[13px] text-ink-300">
+        <div className="min-w-0 flex-1">
+          <p className="pixel text-[11px] uppercase tracking-wider text-gold-500">{challenge !== null ? t(ranked ? 'challenge' : 'practice') : ranked ? t('ranked') : t('game')}</p>
+          <p className="pixel truncate text-[17px] leading-tight">{text.lives[lifeId]?.name}</p>
+          <p className="truncate text-[12px] text-ink-300">
             {common('age', { age })} · {names.cities[p.cityId]}
-            {p.life.career ? ` · ${text.careers[p.life.career.id].levels[p.life.career.level]}` : ''}
           </p>
+        </div>
+        {/* What it is worth so far, in two figures beside who is living it. */}
+        <div className="shrink-0 text-right">
+          <p className="pixel text-[16px] leading-tight text-gold-500">{t('points', { n: fmt.number(scoreBreakdown(content, shown).total) })}</p>
+          <p className="pixel text-[13px] leading-tight text-ink-200">{fmt.compact(netWorth(p))}</p>
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
+      <div className="mt-2">
+        <div className="mb-1 flex items-baseline justify-between gap-2 text-[12px]">
           <span className="pixel">{common('round', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })}</span>
           <span className="text-ink-300">{left > 0 ? t('yearsLeft', { years: left }) : t('over')}</span>
         </div>
         <Bar value={shown.round} max={content.rounds} label={t('progress')} tone="teal" />
       </div>
 
-      <div className="@container mt-3">
-        <div className="grid grid-cols-2 gap-1.5">
-          <Stat icon="icon.account" value={fmt.compact(netWorth(p))} label={t('netWorth')} />
-          <Stat icon="icon.trophy" value={fmt.number(scoreBreakdown(content, shown).total)} label={t('score')} />
-        </div>
-      </div>
-
-      {saving ? (
-        <p className="mt-3 flex items-center gap-2 text-[12px] text-ink-300">
-          <span aria-hidden className="size-2 shrink-0 bg-teal-300" />
-          {t('saved')}
-        </p>
-      ) : (
-        <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
+      {/* Saving is said only when it fails: when it works, there is nothing to say. */}
+      {saving ? null : (
+        <p role="alert" className="frame mt-2 bg-wine-900 px-3 py-2 text-[13px]">
           {common('notSaved')}
         </p>
       )}

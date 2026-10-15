@@ -155,7 +155,6 @@
     "over": "Life over",
     "netWorth": "Net worth",
     "score": "Score",
-    "saved": "Saved on this device after every step",
     "preferences": "Preferences",
     "guide": "Tips from the guide",
     "guideHint": "Notes that explain each screen during your first life.",
@@ -164,7 +163,8 @@
     "soundHint": "Coins, cards and fanfares. It plays once you touch the screen.",
     "ranked": "Ranked life",
     "challenge": "Weekly challenge",
-    "practice": "Challenge practice"
+    "practice": "Challenge practice",
+    "points": "{n} pts"
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
@@ -750,7 +750,7 @@
       "shell": "Offshore company",
       "shellHint": "Saves {pct}% of the tax on your investments. A fee of {fee} a year.",
       "crypto": "Hide crypto gains",
-      "cryptoHint": "Gains on crypto pay no tax.",
+      "cryptoHint": "Selling crypto pays {rate} tax on the gain in {city}. Hide it and you keep it; from age {age} the exchanges tell the taxman, and suspicion rises faster.",
       "saved": "This round you save {amount}.",
       "savedNothing": "This round you save nothing.",
       "risk": "The risk",

@@ -1,8 +1,9 @@
 'use client';
 
-import { quoteEvasion } from '@ratrace/engine';
+import { effectiveTax, quoteEvasion } from '@ratrace/engine';
 import type { GameView, Order, RoundPreview } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
+import { ageAt } from '@/game/present';
 import { adviserQuip } from '@/game/quips';
 import { Bar, Panel, Segmented, Toggle } from '@/ui/kit';
 
@@ -27,8 +28,10 @@ export function evasionOrder(view: GameView, want: Want): Order | null {
  */
 export function EvasionPanel({ shown, preview }: { shown: GameView; preview: RoundPreview }) {
   const t = useT('finance.evasion');
-  const { content, fmt } = useWords();
+  const { content, names, fmt } = useWords();
   const view = useGame((s) => s.view);
+  const city = content.cities.find((each) => each.id === shown.player.cityId);
+  const gainsBp = city ? effectiveTax(city, shown.timeline[shown.round]).capitalGainsBp : 0;
   const setOrder = useGame((s) => s.setOrder);
   const quote = quoteEvasion(content, shown, preview.evaded, preview.noInvoiceSold);
   if (!view) return null;
@@ -56,7 +59,15 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
             hint={`${t('shellHint', { pct: quote.shellTaxCutPct, fee: fmt.money(quote.shellFeeAnnual) })} ${quote.shell ? saved(quote.evaded.shell) : ''}`}
           />
         ) : null}
-        <Toggle on={quote.hideCrypto} onChange={(hideCrypto) => change({ hideCrypto })} label={t('crypto')} hint={quote.hideCrypto ? saved(quote.evaded.crypto) : t('cryptoHint')} />
+        {/* Crypto gains are taxed as the city taxes any gain: where it taxes none, there is nothing to hide. */}
+        {quote.hideCrypto || gainsBp > 0 ? (
+          <Toggle
+            on={quote.hideCrypto}
+            onChange={(hideCrypto) => change({ hideCrypto })}
+            label={t('crypto')}
+            hint={quote.hideCrypto ? saved(quote.evaded.crypto) : t('cryptoHint', { rate: fmt.rate(gainsBp), city: names.cities[shown.player.cityId], age: ageAt(content, content.evasion.cryptoReportRound) })}
+          />
+        ) : null}
 
         {/* What it risks, set off by a rule: never a box inside a box. */}
         <section aria-label={t('risk')} className="flex flex-col gap-1.5 border-t-2 border-night-900 pt-3">

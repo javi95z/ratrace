@@ -264,8 +264,9 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
           <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>
           <div className="mt-1 truncate text-[13px] text-ink-200">
             {t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}
-            {p.life.career ? ` · ${text.careers[p.life.career.id].levels[p.life.career.level]}` : ''}
           </div>
+          {/* The job on a line of its own: a long title is not cut short by the city. */}
+          {p.life.career ? <div className="truncate text-[12px] leading-tight text-ink-300">{text.careers[p.life.career.id].levels[p.life.career.level]}</div> : null}
           {/* Prison says so where the player always looks. */}
           {p.life.jailRounds > 0 ? (
             <span className="mt-1 inline-flex">

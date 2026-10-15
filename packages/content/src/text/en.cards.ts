@@ -612,7 +612,7 @@ export const cards: Record<string, CardText> = {
   ]),
   inv_leveraged_etf: c('A fund that triples', 'An influencer swears by a leveraged ETF: three times what the market does. Up and down.', [
     'Pass',
-    ['Put in $3,000', 'The market rose: you triple it.', 'The market fell: it is gone.'],
+    ['Put money in', 'The market rose: you triple it.', 'The market stood still: you get back what you put in.', 'The market fell: it evaporates.'],
   ]),
   house_noisy_neighbours: c('Noisy neighbours', 'Upstairs practise the drums at dinner time. And at bedtime.', [
     'Put up with it',

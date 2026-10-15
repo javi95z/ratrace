@@ -155,7 +155,6 @@
     "over": "Vida terminada",
     "netWorth": "Patrimonio",
     "score": "Puntuación",
-    "saved": "Guardada en este dispositivo después de cada paso",
     "preferences": "Preferencias",
     "guide": "Consejos de la guía",
     "guideHint": "Notas que explican cada pantalla durante tu primera vida.",
@@ -164,7 +163,8 @@
     "soundHint": "Monedas, cartas y fanfarrias. Suena al tocar la pantalla.",
     "ranked": "Vida clasificatoria",
     "challenge": "Reto de la semana",
-    "practice": "Práctica del reto"
+    "practice": "Práctica del reto",
+    "points": "{n} puntos"
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
@@ -750,7 +750,7 @@
       "shell": "Sociedad en un paraíso fiscal",
       "shellHint": "Ahorra el {pct} % del impuesto de tus inversiones. Cuota {fee} al año.",
       "crypto": "Ocultar las ganancias en cripto",
-      "cryptoHint": "Las ganancias en cripto no pagan impuestos.",
+      "cryptoHint": "Vender cripto paga un {rate} de impuesto sobre la ganancia en {city}. Si lo escondes, te lo quedas; desde los {age} los exchanges informan a Hacienda y la sospecha sube más rápido.",
       "saved": "Esta ronda ahorras {amount}.",
       "savedNothing": "Esta ronda no ahorras nada.",
       "risk": "El riesgo",

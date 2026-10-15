@@ -1,6 +1,6 @@
 'use client';
 
-import { careerArt, cityIcon, lives } from '@ratrace/content';
+import { cityIcon, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useId, useState } from 'react';
 import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
@@ -9,6 +9,7 @@ import type { Community, Friend, RankedLifeDetail, RankingRow } from '@/online/t
 import { Bare, Button, Panel, Row } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
+import { Face } from '@/ui/Face';
 import { Sprite } from '@/ui/Sprite';
 import { ChallengeBoard } from './Challenge';
 import { Medal } from './Medal';
@@ -195,11 +196,6 @@ function Following({ community, onChanged }: { community: Community; onChanged()
 /** The gold, silver and bronze of the first three places. */
 const PLACE: Record<number, string> = { 1: 'text-gold-500', 2: 'text-ink-100', 3: 'text-[#c98a4b]' };
 
-/** The sign of a starting life: the sign of the career it begins in. */
-function lifeIcon(lifeId: string): string {
-  const career = lives.find((life) => life.id === lifeId)?.start.life?.career?.id;
-  return career ? careerArt(career) : 'icon.job';
-}
 
 /**
  * The life behind a line of a ranking, as anyone may see it: how it ended, what it was worth year
@@ -226,9 +222,7 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
     <Sheet open onClose={onClose} title={name} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <Bare className="size-10">
-            <Sprite id={lifeIcon(row.lifeId)} />
-          </Bare>
+          <Face id={portraitArt(row.lifeId, 22)} />
           <div className="min-w-0 flex-1">
             <p className="pixel truncate text-[16px]">{text.lives[row.lifeId]?.name ?? row.lifeId}</p>
             <p className="text-[12px] text-ink-300">{t('place', { place: row.place, day: fmt.day(row.finishedAt) })}</p>
@@ -344,7 +338,7 @@ export function Rankings() {
                   value={lifeId}
                   onChange={setLifeId}
                   closeLabel={common('close')}
-                  options={[{ value: null, label: t('anyLife'), icon: 'icon.trophy' }, ...lives.map((life) => ({ value: life.id, label: text.lives[life.id]?.name ?? life.id, icon: lifeIcon(life.id) }))]}
+                  options={[{ value: null, label: t('anyLife'), icon: 'icon.trophy' }, ...lives.map((life) => ({ value: life.id, label: text.lives[life.id]?.name ?? life.id, face: portraitArt(life.id, 22) }))]}
                 />
                 {rows === undefined ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
                 {rows === null ? (
@@ -361,7 +355,7 @@ export function Rankings() {
                         <button type="button" aria-haspopup="dialog" onClick={() => setOpened(row)} className={`bevel flex w-full items-center gap-3 px-3 py-2 text-left ${row.mine ? 'frame-gold bg-night-600' : 'bg-night-700'}`}>
                           <span className={`pixel w-8 shrink-0 text-right text-[17px] ${PLACE[row.place] ?? 'text-ink-200'}`}>{row.place}</span>
                           <Bare className="size-8">
-                            <Sprite id={lifeIcon(row.lifeId)} />
+                            <Face id={portraitArt(row.lifeId, 22)} />
                           </Bare>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-[15px]">{nameOf(row)}</span>

@@ -48,7 +48,8 @@ export const moreInvestingCards: CardDef[] = [
   // Three times the market, both ways: a little under even odds of tripling the stake.
   card('inv_leveraged_etf', 'investing', { cooldown: 6, when: { minRound: 2 } }, [
     {},
-    { effects: { cash: usd(-3_000) }, outcomes: [{ weight: 45, effects: { cash: usd(9_000) } }, { weight: 55, effects: {} }] },
+    // Three times the market, both ways: it triples, it comes back as it went in, or it is gone.
+    { effects: { cash: usd(-3_000) }, outcomes: [{ weight: 40, effects: { cash: usd(9_000) } }, { weight: 25, effects: { cash: usd(3_000) } }, { weight: 35, effects: {} }] },
   ]),
 ];
 

@@ -66,17 +66,17 @@ describe('the settings of a life in progress', () => {
     }
   });
 
-  it('say where the game stands: who, how far along, what it is worth, and that it is saved', async () => {
+  it('say where the game stands: who, how far along, and what it is worth', async () => {
     const { sheet } = await open();
     const game = within(sheet).getByRole('region', { name: 'Your game' });
     expect(within(game).getByText('Nurse')).toBeTruthy();
-    expect(within(game).getByText(/Age 22 · Madrid · Nurse/)).toBeTruthy();
+    expect(within(game).getByText(/Age 22 · Madrid/)).toBeTruthy();
     expect(within(game).getByText('Round 1 of 20')).toBeTruthy();
     expect(within(game).getByText('40 years left')).toBeTruthy();
     expect(within(game).getByRole('progressbar', { name: 'How far along your life is' }).getAttribute('aria-valuenow')).toBe('0');
-    expect(within(game).getByText('Net worth')).toBeTruthy();
-    expect(within(game).getByText('Score')).toBeTruthy();
-    expect(within(game).getByText('Saved on this device after every step')).toBeTruthy();
+    expect(within(game).getByText(/ pts$/)).toBeTruthy();
+    // Saving that works says nothing.
+    expect(within(game).queryByRole('alert')).toBeNull();
   });
 
   it('say so when the device is not saving', async () => {
