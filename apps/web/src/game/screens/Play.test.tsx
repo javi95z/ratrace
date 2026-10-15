@@ -279,7 +279,7 @@ describe('the play screen', () => {
     renderGame(<Play />, services);
 
     const tip = await screen.findByRole('note', { name: 'Guide' });
-    expect(tip.textContent).toContain('Every round opens with the news');
+    expect(tip.textContent).toContain('Every round opens with the paper');
     await user.click(within(tip).getByRole('button', { name: 'Got it' }));
     expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
     await waitFor(async () => expect((await services.store.loadProfile()).guide).toEqual({ seen: ['news'], off: false }));
