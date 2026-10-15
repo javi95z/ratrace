@@ -1114,6 +1114,16 @@
     "w": 64,
     "h": 64
   },
+  "crest.mexico_city": {
+    "src": "badges/crest.mexico_city.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.moscow": {
+    "src": "badges/crest.moscow.png",
+    "w": 64,
+    "h": 64
+  },
   "crest.new_york": {
     "src": "badges/crest.new_york.png",
     "w": 64,
@@ -1124,8 +1134,18 @@
     "w": 64,
     "h": 64
   },
+  "crest.tokyo": {
+    "src": "badges/crest.tokyo.png",
+    "w": 64,
+    "h": 64
+  },
   "crest.wheel": {
     "src": "badges/crest.wheel.png",
+    "w": 64,
+    "h": 64
+  },
+  "crest.zurich": {
+    "src": "badges/crest.zurich.png",
     "w": 64,
     "h": 64
   },
@@ -1459,6 +1479,126 @@
     "w": 128,
     "h": 128
   },
+  "home.mexico_city.chalet": {
+    "src": "homes/home.mexico_city.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.duplex": {
+    "src": "homes/home.mexico_city.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.estate": {
+    "src": "homes/home.mexico_city.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.flat": {
+    "src": "homes/home.mexico_city.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.house": {
+    "src": "homes/home.mexico_city.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.loft": {
+    "src": "homes/home.mexico_city.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.mansion": {
+    "src": "homes/home.mexico_city.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.penthouse": {
+    "src": "homes/home.mexico_city.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.sign": {
+    "src": "homes/home.mexico_city.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.studio": {
+    "src": "homes/home.mexico_city.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.townhouse": {
+    "src": "homes/home.mexico_city.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.mexico_city.villa": {
+    "src": "homes/home.mexico_city.villa.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.chalet": {
+    "src": "homes/home.moscow.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.duplex": {
+    "src": "homes/home.moscow.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.estate": {
+    "src": "homes/home.moscow.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.flat": {
+    "src": "homes/home.moscow.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.house": {
+    "src": "homes/home.moscow.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.loft": {
+    "src": "homes/home.moscow.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.mansion": {
+    "src": "homes/home.moscow.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.penthouse": {
+    "src": "homes/home.moscow.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.sign": {
+    "src": "homes/home.moscow.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.studio": {
+    "src": "homes/home.moscow.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.townhouse": {
+    "src": "homes/home.moscow.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.moscow.villa": {
+    "src": "homes/home.moscow.villa.png",
+    "w": 128,
+    "h": 128
+  },
   "home.new_york.chalet": {
     "src": "homes/home.new_york.chalet.png",
     "w": 128,
@@ -1614,6 +1754,66 @@
     "w": 128,
     "h": 128
   },
+  "home.tokyo.chalet": {
+    "src": "homes/home.tokyo.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.duplex": {
+    "src": "homes/home.tokyo.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.estate": {
+    "src": "homes/home.tokyo.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.flat": {
+    "src": "homes/home.tokyo.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.house": {
+    "src": "homes/home.tokyo.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.loft": {
+    "src": "homes/home.tokyo.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.mansion": {
+    "src": "homes/home.tokyo.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.penthouse": {
+    "src": "homes/home.tokyo.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.sign": {
+    "src": "homes/home.tokyo.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.studio": {
+    "src": "homes/home.tokyo.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.townhouse": {
+    "src": "homes/home.tokyo.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.tokyo.villa": {
+    "src": "homes/home.tokyo.villa.png",
+    "w": 128,
+    "h": 128
+  },
   "home.townhouse": {
     "src": "homes/home.townhouse.png",
     "w": 128,
@@ -1626,6 +1826,66 @@
   },
   "home.warehouse": {
     "src": "homes/home.warehouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.chalet": {
+    "src": "homes/home.zurich.chalet.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.duplex": {
+    "src": "homes/home.zurich.duplex.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.estate": {
+    "src": "homes/home.zurich.estate.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.flat": {
+    "src": "homes/home.zurich.flat.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.house": {
+    "src": "homes/home.zurich.house.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.loft": {
+    "src": "homes/home.zurich.loft.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.mansion": {
+    "src": "homes/home.zurich.mansion.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.penthouse": {
+    "src": "homes/home.zurich.penthouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.sign": {
+    "src": "homes/home.zurich.sign.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.studio": {
+    "src": "homes/home.zurich.studio.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.townhouse": {
+    "src": "homes/home.zurich.townhouse.png",
+    "w": 128,
+    "h": 128
+  },
+  "home.zurich.villa": {
+    "src": "homes/home.zurich.villa.png",
     "w": 128,
     "h": 128
   },
@@ -1844,6 +2104,16 @@
     "w": 32,
     "h": 32
   },
+  "icon.city_mexico_city": {
+    "src": "icons/icon.city_mexico_city.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_moscow": {
+    "src": "icons/icon.city_moscow.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.city_new_york": {
     "src": "icons/icon.city_new_york.png",
     "w": 32,
@@ -1851,6 +2121,16 @@
   },
   "icon.city_singapore": {
     "src": "icons/icon.city_singapore.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_tokyo": {
+    "src": "icons/icon.city_tokyo.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.city_zurich": {
+    "src": "icons/icon.city_zurich.png",
     "w": 32,
     "h": 32
   },
@@ -2354,6 +2634,11 @@
     "w": 64,
     "h": 64
   },
+  "item.member_bolshoi_moscow": {
+    "src": "items/item.member_bolshoi_moscow.png",
+    "w": 64,
+    "h": 64
+  },
   "item.member_club": {
     "src": "items/item.member_club.png",
     "w": 64,
@@ -2361,6 +2646,11 @@
   },
   "item.member_golf": {
     "src": "items/item.member_golf.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_golf_zurich": {
+    "src": "items/item.member_golf_zurich.png",
     "w": 64,
     "h": 64
   },
@@ -2376,6 +2666,11 @@
   },
   "item.member_paddock_singapore": {
     "src": "items/item.member_paddock_singapore.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_palco_mexico_city": {
+    "src": "items/item.member_palco_mexico_city.png",
     "w": 64,
     "h": 64
   },
@@ -2401,6 +2696,11 @@
   },
   "item.member_seat_new_york": {
     "src": "items/item.member_seat_new_york.png",
+    "w": 64,
+    "h": 64
+  },
+  "item.member_sumo_tokyo": {
+    "src": "items/item.member_sumo_tokyo.png",
     "w": 64,
     "h": 64
   },
@@ -3104,6 +3404,46 @@
     "w": 312,
     "h": 66
   },
+  "skyline.mexico_city": {
+    "src": "skylines/skyline.mexico_city.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.mexico_city.boom": {
+    "src": "skylines/skyline.mexico_city.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.mexico_city.crisis": {
+    "src": "skylines/skyline.mexico_city.crisis.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.mexico_city.day": {
+    "src": "skylines/skyline.mexico_city.day.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.moscow": {
+    "src": "skylines/skyline.moscow.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.moscow.boom": {
+    "src": "skylines/skyline.moscow.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.moscow.crisis": {
+    "src": "skylines/skyline.moscow.crisis.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.moscow.day": {
+    "src": "skylines/skyline.moscow.day.png",
+    "w": 312,
+    "h": 66
+  },
   "skyline.new_york": {
     "src": "skylines/skyline.new_york.png",
     "w": 312,
@@ -3141,6 +3481,46 @@
   },
   "skyline.singapore.day": {
     "src": "skylines/skyline.singapore.day.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.tokyo": {
+    "src": "skylines/skyline.tokyo.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.tokyo.boom": {
+    "src": "skylines/skyline.tokyo.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.tokyo.crisis": {
+    "src": "skylines/skyline.tokyo.crisis.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.tokyo.day": {
+    "src": "skylines/skyline.tokyo.day.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.zurich": {
+    "src": "skylines/skyline.zurich.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.zurich.boom": {
+    "src": "skylines/skyline.zurich.boom.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.zurich.crisis": {
+    "src": "skylines/skyline.zurich.crisis.png",
+    "w": 312,
+    "h": 66
+  },
+  "skyline.zurich.day": {
+    "src": "skylines/skyline.zurich.day.png",
     "w": 312,
     "h": 66
   },
