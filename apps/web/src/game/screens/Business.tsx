@@ -77,9 +77,9 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
   return (
     <li className="border-t-2 border-night-900 py-2 first:border-t-0 first:pt-0">
       <button type="button" aria-haspopup="dialog" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 text-left">
-        {/* A 32-pixel picture drawn at twice its size needs a box of 64: a smaller one squeezes it. */}
-        <Bare className="size-16 shrink-0">
-          <Sprite id={businessArt(business.typeId)} scale={2} />
+        {/* An icon of 32 pixels, at its own size like every icon in a list; a drawing of its own is to come. */}
+        <Bare className="size-10 shrink-0">
+          <Sprite id={businessArt(business.typeId)} />
         </Bare>
         <span className="min-w-0 flex-1">
           <span className="pixel block truncate text-[17px]">{text.businessTypes[business.typeId].name}</span>
@@ -235,8 +235,7 @@ function Review({ business }: { business: Owned }) {
 
 /**
  * Living from the business: once it has made a good share of the pay two rounds running, the job
- * can be left for it; run full time it says so, and what it gives. Nothing is shown before it has
- * made a first good round.
+ * can be left for it; run full time it says so, and what it gives. Before that, nothing is shown.
  */
 function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
   const t = useT('finance.business');
@@ -256,8 +255,8 @@ function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
     );
   }
   const strong = business.strong ?? 0;
-  if (p.life.career === null || strong === 0 || p.businesses.some((x) => x.fullTime === true)) return null;
-  if (strong < rule.strongRounds) return <p className="text-[12px] leading-snug text-ink-300">{t('fullTime.almost', { pct: rule.strongPct, n: strong, of: rule.strongRounds })}</p>;
+  if (p.life.career === null || p.businesses.some((x) => x.fullTime === true)) return null;
+  if (strong < rule.strongRounds) return null;
   const job = text.careers[p.life.career.id].levels[p.life.career.level];
   return (
     <div className="flex flex-col gap-1.5">

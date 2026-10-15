@@ -3,7 +3,8 @@ import { applyRound, createGame, previewRound } from '../game';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import type { Content, GameState, LifeStart } from '../types';
 import { validateContent } from '../validate';
-import { ownPay, statusParts, workModeOf } from './derive';
+import { ownPay, perksOf, statusParts, workModeOf } from './derive';
+import { jobHuntChance } from './roundEnd';
 import { focusLock, focusTotal, raiseChance } from './orders';
 
 const office: LifeStart = { lifeId: 'tester', career: { id: 'office', level: 2 }, careerSkill: 10, financeSkill: 0, focus: 3 };
@@ -36,6 +37,14 @@ describe('ways of working', () => {
     const state = createGame({ content: c, start: { ...fixtureStart(), life: { ...office, career: { id: 'office', level: 0 }, careerSkill: 0 } } }, 'junior');
     const { rejected } = previewRound(c, state, { orders: [{ type: 'setWorkMode', mode: 'remote' }] });
     expect(rejected.map((r) => r.reason)).toEqual(['needs-seniority']);
+  });
+
+  it('from home, a job hunt works less often', () => {
+    const c = content(true);
+    const state = game(c);
+    const plain = jobHuntChance(c, perksOf(state.player, c), state.player);
+    const { player } = previewRound(c, state, { orders: [{ type: 'setWorkMode', mode: 'remote' }] });
+    expect(jobHuntChance(c, perksOf(player, c), player)).toBe(plain - 10);
   });
 
   it('from home only where the job allows it', () => {

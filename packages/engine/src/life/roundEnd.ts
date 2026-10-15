@@ -1,8 +1,7 @@
-import { careerOf, cityOf, itemOf } from '../lookup';
+import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
-import { indexed } from '../rates';
 import type { Rng } from '../rng';
-import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorkTier, WorldState } from '../types';
+import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
 import { focusBonusOf, perksOf, workModeRule } from './derive';
 import { lapsingIn, raiseChance } from './orders';
 import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
@@ -34,7 +33,7 @@ export function landingOf(p: PlayerState, content: Content, transfer: boolean): 
  * says something to the next interviewer too, down to a floor.
  */
 export function jobHuntChance(content: Content, perks: Required<ItemPerks>, p: PlayerState): number {
-  const full = Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct + skillLevel(p, 'network', content) * content.life.skills.networkHuntPct);
+  const full = Math.max(0, Math.min(100, content.life.jobHuntChancePct + perks.jobHuntPct + skillLevel(p, 'network', content) * content.life.skills.networkHuntPct) - workModeRule(p, content).huntOffPct);
   const limits = content.life.focusLimits;
   return Math.max(Math.min(full, limits.huntFloorPct), full - p.life.huntMisses * limits.huntMissPct);
 }
@@ -131,20 +130,6 @@ export function ageLife(
   } else {
     // A round without looking and the next search starts afresh.
     life.huntMisses = 0;
-  }
-
-  // What was made fades as people move on; what fades to almost nothing is forgotten. Then what was made this round comes out.
-  const works = rules.works;
-  const median = cityOf(content, p.cityId).medianSalaryAnnual;
-  life.works = life.works.map((work) => ({ ...work, annual: mulDiv(work.annual, 100 - works.fadePct, 100) })).filter((work) => work.annual * 100 >= median);
-  if (tally.focusActions.includes('createWork')) {
-    const audience = life.career !== null && works.audience.includes(life.career.id);
-    const weights: Record<WorkTier, number> = { ...works.weights, hit: works.weights.hit + (audience ? works.audienceHitWeight : 0) };
-    let roll = rng.int(weights.flop + weights.modest + weights.hit);
-    const tier: WorkTier = (roll -= weights.flop) < 0 ? 'flop' : (roll -= weights.modest) < 0 ? 'modest' : 'hit';
-    const annual = mulDiv(median, works.payPct[tier], 100);
-    life.works.push({ tier, annual, round: now.round });
-    events.push({ kind: 'work', tier, annual: indexed(annual, now) });
   }
 
   // Asked or not given, the boss is not asked again for a while.

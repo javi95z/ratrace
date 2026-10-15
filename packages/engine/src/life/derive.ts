@@ -106,7 +106,7 @@ export function workModeOf(p: PlayerState, content: Content): WorkMode {
   return mode;
 }
 
-const AT_WORK: WorkModeRule = { focus: 0, payPct: 100, jobStatusPct: 100, workSkill: true, fromLevel: 0 };
+const AT_WORK: WorkModeRule = { focus: 0, payPct: 100, jobStatusPct: 100, workSkill: true, fromLevel: 0, huntOffPct: 0 };
 
 /** What the way the player works changes: nothing at the workplace. */
 export function workModeRule(p: PlayerState, content: Content): WorkModeRule {
@@ -185,8 +185,6 @@ export function derivePassive(p: PlayerState): Cents {
   for (const entry of p.life.recurring) {
     if (entry.kind === 'passive') total += entry.annual;
   }
-  // What was made pays while people still buy it.
-  for (const work of p.life.works ?? []) total += work.annual;
   return total;
 }
 

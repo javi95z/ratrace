@@ -19,7 +19,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorkMode, WorkTier, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorkMode, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -383,11 +383,6 @@ export interface WorkQuote {
   /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
   /** Asking the boss for more: the chance it is given, and the lasting raise it brings, in percent. */
   raise: { chancePct: number; pct: number };
-  /**
-   * What the player has made: each work with what it pays a year today, what selling them all would
-   * fetch, and the odds and first-year pay of making another, in percent and in today's dollars.
-   */
-  works: { list: Array<{ tier: WorkTier; annual: Cents; round: number }>; sale: Cents; focus: number; odds: Record<WorkTier, number>; pays: Record<WorkTier, Cents> };
   /** The job left for a business, and the rung a return to it starts on; null if there is none to go back to. */
   backToWork: { careerId: string; level: number } | null;
   /** How the player works now, whether the job may be done from home, and what each way changes. */
@@ -414,24 +409,6 @@ export interface WorkQuote {
 }
 
 /** The player's working life in figures: the ladder they are on and what each way of spending focus is worth to them. */
-function worksQuote(p: PlayerState, content: Content, world: WorldState): WorkQuote['works'] {
-  const rules = content.life.works;
-  const audience = p.life.career !== null && rules.audience.includes(p.life.career.id);
-  const weights = { ...rules.weights, hit: rules.weights.hit + (audience ? rules.audienceHitWeight : 0) };
-  const total = weights.flop + weights.modest + weights.hit;
-  const median = cityOf(content, p.cityId).medianSalaryAnnual;
-  const pay = (tier: WorkTier) => indexed(mulDiv(median, rules.payPct[tier], 100), world);
-  let annual = 0;
-  for (const work of p.life.works) annual += work.annual;
-  return {
-    list: p.life.works.map((work) => ({ ...work, annual: indexed(work.annual, world) })),
-    sale: indexed(annual, world) * rules.saleYears,
-    focus: rules.focus,
-    odds: { flop: Math.round((weights.flop * 100) / total), modest: Math.round((weights.modest * 100) / total), hit: Math.round((weights.hit * 100) / total) },
-    pays: { flop: pay('flop'), modest: pay('modest'), hit: pay('hit') },
-  };
-}
-
 export function quoteWork(content: Content, view: GameView): WorkQuote {
   const p = view.player;
   const world = view.timeline[view.round];
@@ -453,7 +430,6 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     focusLocks: Object.fromEntries(FOCUS_ACTIONS.map((action) => [action, focusLock(p, action, content)])) as Record<FocusAction, RejectReason | null>,
     jobHuntChancePct: jobHuntChance(content, perks, p),
     raise: { chancePct: raiseChance(p, content), pct: content.life.raise.pct },
-    works: worksQuote(p, content, world),
     backToWork:
       p.life.formerCareer !== null && p.life.career === null
         ? { careerId: p.life.formerCareer.id, level: Math.max(0, p.life.formerCareer.level - content.life.fullTime.rungsLost) }

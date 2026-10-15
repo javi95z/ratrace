@@ -39,7 +39,6 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     raiseRest: 0,
     formerCareer: null,
     lodger: false,
-    works: [],
     rungStudy: 0,
     partner: false,
     partnerSalaryPct: 0,

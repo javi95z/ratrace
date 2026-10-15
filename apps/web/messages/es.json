@@ -521,22 +521,10 @@
       "remote": "Teletrabajo",
       "partTime": "Media jornada",
       "officeHint": "Sueldo y estatus enteros",
-      "remoteHint": "+{focus} foco · {status} % de estatus del puesto",
+      "remoteHint": "+{focus} de foco · buscar trabajo sale {hunt} puntos peor",
       "partTimeHint": "+{focus} foco · {pay} % del sueldo · solo aprendes estudiando",
       "raise": "Pedir un aumento",
       "raiseHint": "{chance} % de que te suban un {pct} %. Salga o no, tardarás en poder pedirlo otra vez.",
-      "works": "Lo que creas",
-      "worksAbout": "Un libro, un curso online, una canción: dos de foco una ronda, y el público decide. La mayoría pasa sin pena ni gloria; un éxito paga durante años.",
-      "create": "Crear algo",
-      "createHint": "{flop} % fracaso · {modest} % discreto, {modestPay} al año · {hit} % éxito, {hitPay} al año",
-      "workLine": "{tier} · desde los {age}",
-      "sell": "Vender los derechos por {amount}",
-      "sellHint": "{years} años de lo que paga hoy todo, de golpe.",
-      "tiers": {
-        "flop": "Un fracaso",
-        "modest": "Discreto",
-        "hit": "Un éxito"
-      },
       "back": "Volver a trabajar de {job}",
       "backHint": "Un escalón por debajo de donde lo dejaste. Tu negocio sigue siendo tuyo, con tu foco libre."
     },
@@ -721,7 +709,6 @@
       "fullTime": {
         "is": "Ahora es tu trabajo",
         "isHint": "Lo llevas a tiempo completo: un {pct} % más de beneficio, sin encargado al que pagar y +{focus} de foco cada ronda.",
-        "almost": "Si te da el {pct} % de tu sueldo dos rondas seguidas, podrás vivir de él. Llevas {n} de {of}.",
         "go": "Dejar tu trabajo por este negocio",
         "leaving": "✓ Dejas tu trabajo por él esta ronda",
         "goHint": "Dejas de ser {job}: sin sueldo fijo. El negocio rinde un {pct} % más, sin encargado, y tienes +{focus} de foco. Podrás volver a un trabajo, un escalón más abajo."
@@ -822,14 +809,7 @@
     "releasedRung": "Vuelves al trabajo, un puesto más abajo.",
     "before": "Antes {amount}",
     "raiseYes": "Tu jefe dijo que sí: +{pct} % de sueldo",
-    "raiseNo": "Tu jefe dijo que ahora no",
-    "work": {
-      "flop": "Tu obra salió. Tu madre compró tres ejemplares.",
-      "modest": "Tu obra encontró su público",
-      "hit": "¡Un éxito! Todo el mundo te cita",
-      "flopHint": "No da casi nada. Eso sí, queda muy bien en la estantería.",
-      "paysHint": "Paga {amount} al año al principio, y menos cada ronda según la gente pasa a otra cosa."
-    }
+    "raiseNo": "Tu jefe dijo que ahora no"
   },
   "profile": {
     "title": "Tu vida",
@@ -1169,8 +1149,7 @@
     "goFullTime": "Dejar tu trabajo por {name}",
     "backToWork": "Volver a trabajar",
     "lodgerOn": "Alquilar la habitación",
-    "lodgerOff": "Dejar de alquilar la habitación",
-    "sellWorks": "Vender los derechos de lo que has creado"
+    "lodgerOff": "Dejar de alquilar la habitación"
   },
   "account": {
     "title": "Cuenta",

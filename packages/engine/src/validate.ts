@@ -220,22 +220,13 @@ export function validateContent(c: Content): string[] {
     for (const field of ['payPct', 'jobStatusPct']) if (!(isCount(rule[field]) && (rule[field] as number) <= 100)) errors.push(`life.workModes.${mode}.${field} must be a whole number from 0 to 100`);
     if (typeof rule.workSkill !== 'boolean') errors.push(`life.workModes.${mode}.workSkill must be true or false`);
     if (!isCount(rule.fromLevel)) errors.push(`life.workModes.${mode}.fromLevel must be a whole, non-negative number`);
+    if (!(isCount(rule.huntOffPct) && (rule.huntOffPct as number) <= 100)) errors.push(`life.workModes.${mode}.huntOffPct must be a whole number from 0 to 100`);
   }
   const fullTime = isRecord(life.fullTime) ? life.fullTime : {};
   for (const field of ['strongPct', 'profitPct', 'strongRounds', 'focus', 'rungsLost']) if (!isCount(fullTime[field])) errors.push(`life.fullTime.${field} must be a whole, non-negative number`);
   if (!Array.isArray(fullTime.status) || fullTime.status.length === 0 || fullTime.status.some((step) => !Array.isArray(step) || !isCount(step[0]) || !isCount(step[1]))) errors.push('life.fullTime.status must be steps of capital and status');
   const lodger = isRecord(life.lodger) ? life.lodger : {};
   if (!(isCount(lodger.rentPct) && (lodger.rentPct as number) <= 100) || !isCount(lodger.statusLost)) errors.push('life.lodger needs a share of the rent from 0 to 100 and the status lost');
-  const works = isRecord(life.works) ? life.works : {};
-  const tiers = ['flop', 'modest', 'hit'];
-  if (!(isWhole(works.focus) && (works.focus as number) >= 1)) errors.push('life.works.focus must be a whole number from 1 up');
-  for (const part of ['weights', 'payPct']) {
-    const record = isRecord(works[part]) ? works[part] : {};
-    for (const tier of tiers) if (!isCount(record[tier])) errors.push(`life.works.${part}.${tier} must be a whole, non-negative number`);
-  }
-  if (!(isCount(works.fadePct) && (works.fadePct as number) >= 1 && (works.fadePct as number) <= 100)) errors.push('life.works.fadePct must be a whole number from 1 to 100');
-  if (!isCount(works.saleYears) || !isCount(works.audienceHitWeight)) errors.push('life.works needs whole numbers of years for a sale and of weight for an audience');
-  if (!Array.isArray(works.audience) || works.audience.some((id) => !c.careers.some((career) => career.id === id))) errors.push('life.works.audience names a career that does not exist');
   const raise = isRecord(life.raise) ? life.raise : {};
   for (const field of ['chancePct', 'perNegotiationPct', 'pct']) if (!(isCount(raise[field]) && (raise[field] as number) <= 100)) errors.push(`life.raise.${field} must be a whole number from 0 to 100`);
   if (!(isWhole(raise.restRounds) && (raise.restRounds as number) >= 1)) errors.push('life.raise.restRounds must be a whole number from 1 up');

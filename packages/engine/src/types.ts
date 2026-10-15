@@ -290,6 +290,8 @@ export interface WorkModeRule {
   workSkill: boolean;
   /** The rung of the career from which it is allowed: trust is earned first. */
   fromLevel: number;
+  /** Points off the chance a job hunt works: someone nobody meets hears of fewer openings. */
+  huntOffPct: number;
 }
 
 export type ItemKind = 'durable' | 'membership' | 'experience';
@@ -422,21 +424,6 @@ export interface LifeRules {
   fullTime: { strongPct: number; strongRounds: number; profitPct: number; focus: number; status: ReadonlyArray<readonly [Cents, number]>; rungsLost: number };
   /** A lodger in the spare room: the share of the home's rent it brings, and the status the home loses. */
   lodger: { rentPct: number; statusLost: number };
-  /**
-   * Making something that pays royalties: the focus a round of it costs; the weight of each outcome,
-   * and what each pays a year at first, as a percent of the city's median pay; what each round takes
-   * off it, in percent; what selling the whole catalogue fetches, in years of what it pays; and the
-   * careers with an audience, which turn out hits more often.
-   */
-  works: {
-    focus: number;
-    weights: Record<WorkTier, number>;
-    payPct: Record<WorkTier, number>;
-    fadePct: number;
-    saleYears: number;
-    audience: ReadonlyArray<string>;
-    audienceHitWeight: number;
-  };
   /**
    * Asking the boss for a raise: the chance it is given, and what each level of negotiation adds to
    * it; the lasting raise it brings, in percent; and the rounds before asking again, given or not.
@@ -846,17 +833,6 @@ export interface Business {
   strong?: number;
 }
 
-/** How well a work turned out, from a flop nobody read to a hit everybody quotes. */
-export type WorkTier = 'flop' | 'modest' | 'hit';
-
-/** Something the player made that pays them while people still buy it. */
-export interface CreativeWork {
-  tier: WorkTier;
-  /** What it pays a year now, in start-of-game dollars. It fades each round. */
-  annual: Cents;
-  /** The round it came out. */
-  round: number;
-}
 
 export interface Content {
   rounds: number;
@@ -1033,8 +1009,6 @@ export interface LifeState {
   formerCareer: { id: string; level: number } | null;
   /** True while the spare room of the home is let. It counts only while there is such a home: see `lodgerOf`. */
   lodger: boolean;
-  /** What the player has made that still pays. */
-  works: CreativeWork[];
   /** Career skill that study has added at the rung held now. */
   rungStudy: number;
   partner: boolean;
@@ -1172,12 +1146,10 @@ export type Order =
   /** Goes back to the career left for a business, a rung lower. */
   | { type: 'backToWork' }
   /** Lets the spare room of the home, or stops. */
-  | { type: 'setLodger'; on: boolean }
-  /** Sells the rights to everything made, at once. */
-  | { type: 'sellWorks' };
+  | { type: 'setLodger'; on: boolean };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'createWork' | 'studyFinance' | StudyAction;
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction;
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1264,7 +1236,6 @@ export type RejectReason =
   | 'not-strong-enough'
   | 'no-former-job'
   | 'no-spare-room'
-  | 'no-works'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
@@ -1338,8 +1309,6 @@ export type GameEvent =
   | { kind: 'jobHunt'; success: boolean }
   /** The boss was asked for a raise; `pct` is what it brought, nothing if it was not given. */
   | { kind: 'raise'; success: boolean; pct: number }
-  /** Something made came out, and how it did: what it pays a year to begin with, in the dollars of the day. */
-  | { kind: 'work'; tier: WorkTier; annual: Cents }
   /** Overtime round after round: the health it cost, and whether it ended in burnout, which costs focus the round after too. */
   | { kind: 'overworked'; streak: number; healthLost: number; burnout: boolean; focusLost: number }
   | { kind: 'financeSkill'; level: FinanceSkill }

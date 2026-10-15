@@ -143,12 +143,13 @@ export const life: LifeRules = {
   studySkill: 1,
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
-  // From home a point of focus more and the same pay, but a desk nobody sees counts for less. Half the
-  // day, two points more, two fifths less pay and half the standing, and the trade is learnt only by study.
+  // From home a point of focus more, the same pay and the same standing, but fewer openings heard of:
+  // a job hunt works less often. Half the day, two points more, two fifths less pay and half the
+  // standing, and the trade is learnt only by study.
   workModes: {
     // Home is earned: from the third rung, once the boss trusts the work without seeing it done.
-    remote: { focus: 1, payPct: 100, jobStatusPct: 70, workSkill: true, fromLevel: 2 },
-    partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0 },
+    remote: { focus: 1, payPct: 100, jobStatusPct: 100, workSkill: true, fromLevel: 2, huntOffPct: 8 },
+    partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0, huntOffPct: 0 },
   },
   // Leaving the job for one's own: a business that made three fifths of the pay two rounds running.
   // Run full time it makes three fifths more, frees a point of focus, and its owner is somebody by
@@ -168,18 +169,6 @@ export const life: LifeRules = {
   },
   // A lodger pays about a third of what the whole home would let for, and the flat is shared.
   lodger: { rentPct: 30, statusLost: 4 },
-  // Making something: two points of focus, and most of it sinks without trace. A hit pays almost half a
-  // median salary a year at first, and a third less every round as people move on. Someone with an
-  // audience, or a classroom, sells more.
-  works: {
-    focus: 2,
-    weights: { flop: 55, modest: 35, hit: 10 },
-    payPct: { flop: 2, modest: 12, hit: 45 },
-    fadePct: 30,
-    saleYears: 3,
-    audience: ['influencer', 'education'],
-    audienceHitWeight: 10,
-  },
   // Asking the boss: one in three says yes, a good negotiator is told yes far more often. Yes or no, not again for two rounds.
   raise: { chancePct: 30, perNegotiationPct: 15, pct: 4, restRounds: 2 },
   // Prison: status on the way in, and a rung of the career on the way out.

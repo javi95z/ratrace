@@ -2,10 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { businessRound } from '../business';
 import { incomeForRound } from '../economy';
 import { applyRound, createGame, previewRound } from '../game';
-import { cityOf } from '../lookup';
 import { fixtureContent, fixtureStart } from '../testing/fixture';
 import type { Content, GameState, LifeStart } from '../types';
-import { validateContent } from '../validate';
 import { lodgerOf, ownPay, statusParts } from './derive';
 import { focusTotal } from './orders';
 
@@ -88,45 +86,5 @@ describe('a lodger', () => {
     const c = fixtureContent();
     const { rejected } = previewRound(c, start(c, { properties: [{ typeId: 'studio', rented: false }] }), { orders: [{ type: 'setLodger', on: true }] });
     expect(rejected.map((r) => r.reason)).toEqual(['no-spare-room']);
-  });
-});
-
-describe('making something', () => {
-  it('takes two points of focus, comes out when the round ends, and pays less every round', () => {
-    const c = fixtureContent();
-    c.life.works.weights = { flop: 0, modest: 0, hit: 1 };
-    const state = start(c);
-    const { state: after, events } = applyRound(c, state, { orders: [{ type: 'focus', action: 'createWork' }] });
-    const median = cityOf(c, 'home').medianSalaryAnnual;
-    const first = Math.floor((median * c.life.works.payPct.hit) / 100);
-    expect(events.find((e) => e.kind === 'work')).toMatchObject({ kind: 'work', tier: 'hit' });
-    expect(after.player.life.works).toEqual([{ tier: 'hit', annual: first, round: 0 }]);
-    expect(after.player.extraPassiveAnnual).toBe(first);
-    const { state: later } = applyRound(c, after, { orders: [] });
-    expect(later.player.life.works[0].annual).toBe(Math.floor((first * (100 - c.life.works.fadePct)) / 100));
-  });
-
-  it('needs the focus for it', () => {
-    const c = fixtureContent();
-    const { rejected } = previewRound(c, start(c, { focus: 1 }), { orders: [{ type: 'focus', action: 'createWork' }] });
-    expect(rejected.map((r) => r.reason)).toEqual(['no-focus']);
-  });
-
-  it('sells the rights to all of it for some years of what it pays', () => {
-    const c = fixtureContent();
-    const state = start(c);
-    state.player.life.works = [{ tier: 'modest', annual: 1_000_00, round: 0 }];
-    state.player.extraPassiveAnnual = 1_000_00;
-    const cash = state.player.cash;
-    const { player } = previewRound(c, state, { orders: [{ type: 'sellWorks' }] });
-    expect(player.life.works).toEqual([]);
-    expect(player.cash).toBe(cash + 1_000_00 * c.life.works.saleYears);
-  });
-
-  it('checks its rules', () => {
-    const c = fixtureContent();
-    c.life.works.fadePct = 0;
-    c.life.lodger.rentPct = 150;
-    expect(validateContent(c)).toEqual(expect.arrayContaining(['life.works.fadePct must be a whole number from 1 to 100', 'life.lodger needs a share of the rent from 0 to 100 and the status lost']));
   });
 });

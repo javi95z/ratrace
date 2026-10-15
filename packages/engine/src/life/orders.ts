@@ -9,11 +9,11 @@ import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from '
 import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'createWork', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
 export type LifeOrder = Extract<
   Order,
-  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' | 'goFullTime' | 'backToWork' | 'setLodger' | 'sellWorks' }
+  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' | 'goFullTime' | 'backToWork' | 'setLodger' }
 >;
 
 /** Focus points the player can still spend this round. */
@@ -39,8 +39,8 @@ export function focusTotal(p: PlayerState): number {
  */
 export function focusLock(p: PlayerState, action: FocusAction, content: Content): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
-  // A skill of one's own can be studied without a job, and anyone can make something; overtime, the career and a job hunt need one.
-  if (p.life.career === null && !isStudy(action) && action !== 'studyFinance' && action !== 'createWork') return 'no-job';
+  // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
+  if (p.life.career === null && !isStudy(action) && action !== 'studyFinance') return 'no-job';
   if (isStudy(action) && skillLevel(p, STUDY_OF[action], content) >= 3) return 'skill-maxed';
   if (action === 'studyFinance' && p.life.financeSkill >= 3) return 'skill-maxed';
   if (action === 'studyCareer' && p.life.career !== null) {
@@ -87,18 +87,12 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): R
   const lock = focusLock(p, action, ctx.content);
   if (lock !== null) return lock;
   if (ctx.tally.focusActions.includes(action)) return 'already-done';
-  const cost = focusCost(action, ctx.content);
-  if (focusLeft(p) < cost) return 'no-focus';
-  p.life.focusUsed += cost;
+  if (focusLeft(p) < 1) return 'no-focus';
+  p.life.focusUsed += 1;
   ctx.tally.focusActions.push(action);
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
   if (action === 'overtime' && p.life.career !== null) p.life.salaryBoostPct += overtimeOf(p, ctx.content);
   return null;
-}
-
-/** The focus a use of it takes: one, but for making something, which takes more. */
-export function focusCost(action: FocusAction, content: Content): number {
-  return action === 'createWork' ? content.life.works.focus : 1;
 }
 
 /** Leaves the job for a business that has shown it can pay for a life. */
@@ -129,18 +123,6 @@ function executeBackToWork(p: PlayerState, content: Content): RejectReason | nul
   p.life.rungStudy = 0;
   for (const business of p.businesses) business.fullTime = false;
   p.life.focusBonus += focusBonusOf(p, content) - before;
-  return null;
-}
-
-/** Sells the rights to everything made, for some years of what it pays. */
-function executeSellWorks(p: PlayerState, ctx: OrderContext): RejectReason | null {
-  if (p.life.works.length === 0) return 'no-works';
-  let annual = 0;
-  for (const work of p.life.works) annual += work.annual;
-  const price = indexed(annual, ctx.world) * ctx.content.life.works.saleYears;
-  p.cash += price;
-  ctx.tally.realisedGains += price;
-  p.life.works = [];
   return null;
 }
 
@@ -409,8 +391,6 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
       if (order.on && !lodgerOf({ ...p, life: { ...p.life, lodger: true } }, ctx.content)) return 'no-spare-room';
       p.life.lodger = order.on;
       return null;
-    case 'sellWorks':
-      return executeSellWorks(p, ctx);
     case 'retire':
       if (p.life.career === null) return 'no-job';
       if (ctx.round < ctx.content.life.retireFromRound) return 'too-young-to-retire';
