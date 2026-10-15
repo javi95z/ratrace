@@ -35,6 +35,8 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     overtimeStreak: 0,
     huntMisses: 0,
     huntRest: 0,
+    workMode: 'office',
+    raiseRest: 0,
     rungStudy: 0,
     partner: false,
     partnerSalaryPct: 0,

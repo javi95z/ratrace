@@ -143,6 +143,14 @@ export const life: LifeRules = {
   studySkill: 1,
   jobHuntChancePct: 20,
   jobHuntRaisePct: 3,
+  // From home a point of focus more and the same pay, but a desk nobody sees counts for less. Half the
+  // day, two points more, two fifths less pay and half the standing, and the trade is learnt only by study.
+  workModes: {
+    remote: { focus: 1, payPct: 100, jobStatusPct: 70, workSkill: true },
+    partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false },
+  },
+  // Asking the boss: one in three says yes, a good negotiator is told yes far more often. Yes or no, not again for two rounds.
+  raise: { chancePct: 30, perNegotiationPct: 15, pct: 4, restRounds: 2 },
   // Prison: status on the way in, and a rung of the career on the way out.
   jail: { statusLost: 20, rungsLost: 1 },
   // Overtime two rounds running costs a point of health, and from the third a third of the time it

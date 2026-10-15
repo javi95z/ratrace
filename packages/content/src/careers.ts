@@ -23,6 +23,7 @@ export const careers: CareerDef[] = [
     // Fast and steep.
     id: 'tech',
     overtimePct: 5,
+    remote: true,
     levels: [
       { salaryPct: 105, minSkill: 0, status: 3 },
       { salaryPct: 120, minSkill: 4, status: 6 },
@@ -58,6 +59,7 @@ export const careers: CareerDef[] = [
     // The highest ceiling. Reached by switching careers, or by the one life that starts here.
     id: 'finance',
     overtimePct: 6,
+    remote: true,
     levels: [
       { salaryPct: 130, minSkill: 0, status: 5 },
       { salaryPct: 160, minSkill: 4, status: 9 },
@@ -81,6 +83,7 @@ export const careers: CareerDef[] = [
     // The longest apprenticeship and the highest ceiling of all: years of drafting for others, then a name on the door.
     id: 'law',
     overtimePct: 6,
+    remote: true,
     levels: [
       { salaryPct: 90, minSkill: 0, status: 4 },
       { salaryPct: 115, minSkill: 6, status: 8 },
@@ -105,6 +108,7 @@ export const careers: CareerDef[] = [
     // Fast money and more status than anything pays, for the young: from thirty-four the audience moves on.
     id: 'influencer',
     overtimePct: 12,
+    remote: true,
     fade: { fromRound: 6, pctPerRound: 12, maxPct: 70 },
     levels: [
       { salaryPct: 70, minSkill: 0, status: 6 },
@@ -129,6 +133,7 @@ export const careers: CareerDef[] = [
     // A low base and a commission on top, which is the economy's to give and to take.
     id: 'sales',
     overtimePct: 8,
+    remote: true,
     cyclePct: { boom: 25, expansion: 10, slowdown: -10, recession: -25 },
     levels: [
       { salaryPct: 75, minSkill: 0, status: 2 },

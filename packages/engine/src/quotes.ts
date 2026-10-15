@@ -4,7 +4,9 @@ import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
 import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
+import { workModeOf } from './life/derive';
 import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { raiseChance } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
 import { careerStudyOf, jobHuntChance, jobHuntRaise, landingOf, overtimeToll, promotionRaise } from './life/roundEnd';
@@ -17,7 +19,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorkMode, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -373,6 +375,10 @@ export interface WorkQuote {
   /** Why each use of focus is closed to the player as they stand, whatever focus is left, or null. */
   focusLocks: Record<FocusAction, RejectReason | null>;
   /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
+  /** Asking the boss for more: the chance it is given, and the lasting raise it brings, in percent. */
+  raise: { chancePct: number; pct: number };
+  /** How the player works now, whether the job may be done from home, and what each way changes. */
+  workMode: { current: WorkMode; remote: boolean; rules: Content['life']['workModes'] };
   jobHuntChancePct: number;
   jobHuntRaisePct: number;
   /** What a promotion adds to pay on top of the rung, in percent: what the player can negotiate. */
@@ -415,6 +421,8 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     rungStudy: { left: Math.max(0, content.life.focusLimits.studyPerRung - p.life.rungStudy), max: content.life.focusLimits.studyPerRung },
     focusLocks: Object.fromEntries(FOCUS_ACTIONS.map((action) => [action, focusLock(p, action, content)])) as Record<FocusAction, RejectReason | null>,
     jobHuntChancePct: jobHuntChance(content, perks, p),
+    raise: { chancePct: raiseChance(p, content), pct: content.life.raise.pct },
+    workMode: { current: workModeOf(p, content), remote: career?.remote === true, rules: content.life.workModes },
     jobHuntRaisePct: jobHuntRaise(content, p),
     promotionRaisePct: promotionRaise(content, p),
     focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus, lost: p.life.focusLost },

@@ -2,7 +2,7 @@ import { careerOf, cityOf, itemOf, levelOf, propertyTypeOf } from '../lookup';
 import { applyBp, BP, mulDiv } from '../money';
 import type { Cents } from '../money';
 import { ITEM_PERKS } from '../types';
-import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep } from '../types';
+import type { Content, InsuranceKind, ItemDef, ItemPerks, PctStep, PlayerState, Property, Regime, StatusStep, WorkMode, WorkModeRule } from '../types';
 import { skillLevel } from './skills';
 
 export const INSURANCE_KINDS: readonly InsuranceKind[] = ['health', 'home', 'life', 'liability'];
@@ -72,7 +72,26 @@ export function careerSwing(p: PlayerState, content: Content, regime: Regime, ro
 export function focusBonusOf(p: PlayerState, content: Content): number {
   const fit = skillLevel(p, 'health', content) >= content.life.skills.healthFocusFrom ? 1 : 0;
   const retired = isRetired(p) ? content.life.retiredFocus : 0;
-  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired;
+  return perksOf(p, content).focus + (p.life.career ? (careerOf(content, p.life.career.id).focus ?? 0) : 0) + fit + retired + workModeRule(p, content).focus;
+}
+
+/**
+ * How the player works as things stand: the way they chose, while there is a job that allows it.
+ * Without a job, in prison, or in a job that cannot be done from home, it is at the workplace.
+ */
+export function workModeOf(p: PlayerState, content: Content): WorkMode {
+  const mode = p.life.workMode;
+  if ((mode !== 'remote' && mode !== 'partTime') || p.life.career === null || p.life.jailRounds > 0) return 'office';
+  if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'office';
+  return mode;
+}
+
+const AT_WORK: WorkModeRule = { focus: 0, payPct: 100, jobStatusPct: 100, workSkill: true };
+
+/** What the way the player works changes: nothing at the workplace. */
+export function workModeRule(p: PlayerState, content: Content): WorkModeRule {
+  const mode = workModeOf(p, content);
+  return mode === 'office' ? AT_WORK : content.life.workModes[mode];
 }
 
 /**
@@ -89,7 +108,8 @@ export function ownPay(p: PlayerState, content: Content, level?: number): Cents 
   // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.
   const here = life.career ? (cityOf(content, p.cityId).careerPayPct?.[life.career.id] ?? 100) : 100;
   const base = rung ? mulDiv(mulDiv(median, rung.salaryPct, 100), here, 100) : life.baseSalaryAnnual;
-  return mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
+  const full = mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct), 100);
+  return mulDiv(full, workModeRule(p, content).payPct, 100);
 }
 
 /** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */
@@ -218,7 +238,7 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     items,
     home: home ? propertyTypeOf(content, home.typeId).status : rentStatusAt(content, round)[life.rentTier],
     // A life of one's own after work is a standing too.
-    job: life.career ? levelOf(content, life.career).status : isRetired(p) ? rules.retiredStatus : 0,
+    job: life.career ? mulDiv(levelOf(content, life.career).status, workModeRule(p, content).jobStatusPct, 100) : isRetired(p) ? rules.retiredStatus : 0,
     city: cityOf(content, p.cityId).prestige,
     lifestyle: lifestyleStatusAt(content, round)[p.lifestyleTier],
     bonus: life.bonusStatus,

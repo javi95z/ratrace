@@ -247,8 +247,8 @@ describe('the lifestyle tab', () => {
       for (const choice of within(screen.getByRole('radiogroup', { name: group })).getAllByRole('radio')) expect(pictured(choice), `${group}: ${choice.textContent}`).toBe(true);
     }
     const switches = screen.getAllByRole('switch');
-    // Three ways to work, five to learn, four insurances.
-    expect(switches).toHaveLength(3 + 5 + 4);
+    // Four uses of focus at work, five to learn, four insurances.
+    expect(switches).toHaveLength(4 + 5 + 4);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
   });
 });

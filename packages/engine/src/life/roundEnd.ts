@@ -2,8 +2,8 @@ import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
-import { focusBonusOf, perksOf } from './derive';
-import { lapsingIn } from './orders';
+import { focusBonusOf, perksOf, workModeRule } from './derive';
+import { lapsingIn, raiseChance } from './orders';
 import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
 
 /**
@@ -88,6 +88,7 @@ export function ageLife(
   // A burnout's toll was this round's, and a rest after a job hunt counts down with it.
   life.focusLost = 0;
   if (life.huntRest > 0) life.huntRest -= 1;
+  if (life.raiseRest > 0) life.raiseRest -= 1;
   // A round in prison is one less to serve; the last one served, the player walks out a rung lower.
   const jailed = life.jailRounds > 0;
   if (jailed) {
@@ -105,7 +106,8 @@ export function ageLife(
   if (life.career !== null && !jailed) {
     // What the player owns counts as it stood while the round was lived: before anything fades or lapses.
     const studied = tally.focusActions.includes('studyCareer') ? careerStudyOf(p, content, perks) : 0;
-    life.careerSkill += rules.workSkill + studied;
+    // Half a day, the trade is learnt only by study.
+    life.careerSkill += (workModeRule(p, content).workSkill ? rules.workSkill : 0) + studied;
     life.rungStudy += studied;
     const next = careerOf(content, life.career.id).levels[life.career.level + 1];
     if (next !== undefined && life.careerSkill >= next.minSkill) {
@@ -128,6 +130,15 @@ export function ageLife(
   } else {
     // A round without looking and the next search starts afresh.
     life.huntMisses = 0;
+  }
+
+  // Asked or not given, the boss is not asked again for a while.
+  if (tally.focusActions.includes('askRaise')) {
+    const success = rng.chance(raiseChance(p, content));
+    const pct = success ? rules.raise.pct : 0;
+    life.salaryModPct += pct;
+    life.raiseRest = rules.raise.restRounds;
+    events.push({ kind: 'raise', success, pct });
   }
 
   if (tally.focusActions.includes('overtime')) {

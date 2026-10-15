@@ -513,7 +513,16 @@
       "bestForJob": "Paga más: {career}",
       "allCities": "← Todas las ciudades",
       "showNumbers": "Ver números",
-      "hideNumbers": "Ocultar números"
+      "hideNumbers": "Ocultar números",
+      "mode": "Cómo trabajas",
+      "office": "Presencial",
+      "remote": "Teletrabajo",
+      "partTime": "Media jornada",
+      "officeHint": "Sueldo y estatus enteros",
+      "remoteHint": "+{focus} foco · {status} % de estatus del puesto",
+      "partTimeHint": "+{focus} foco · {pay} % del sueldo · solo aprendes estudiando",
+      "raise": "Pedir un aumento",
+      "raiseHint": "{chance} % de que te suban un {pct} %. Salga o no, tardarás en poder pedirlo otra vez."
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",
@@ -787,7 +796,9 @@
     "chargedHint": "Ocultabas tanto que habrá juicio. Busca un abogado.",
     "released": "Sales de la cárcel.",
     "releasedRung": "Vuelves al trabajo, un puesto más abajo.",
-    "before": "Antes {amount}"
+    "before": "Antes {amount}",
+    "raiseYes": "Tu jefe dijo que sí: +{pct} % de sueldo",
+    "raiseNo": "Tu jefe dijo que ahora no"
   },
   "profile": {
     "title": "Tu vida",
@@ -1117,7 +1128,13 @@
     "evasionShellOff": "Cerrar la sociedad en el paraíso fiscal",
     "evasionCryptoOn": "Ocultar las ganancias en cripto",
     "evasionCryptoOff": "Declarar las ganancias en cripto",
-    "retire": "Jubilarte"
+    "retire": "Jubilarte",
+    "raise": "Pedir un aumento",
+    "work": {
+      "office": "Trabajar presencial",
+      "remote": "Teletrabajar",
+      "partTime": "Trabajar media jornada"
+    }
   },
   "account": {
     "title": "Cuenta",

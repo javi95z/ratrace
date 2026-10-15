@@ -75,7 +75,7 @@ export function practised(p: PlayerState, content: Content, tally: RoundTally): 
   const managed = p.businesses.some((business) => business.manager);
   const practice = (yes: boolean) => (yes ? rules.practicePoints : 0);
   return {
-    negotiation: practice(trade('negotiation') || tally.focusActions.includes('jobHunt')),
+    negotiation: practice(trade('negotiation') || tally.focusActions.includes('jobHunt') || tally.focusActions.includes('askRaise')),
     languages: practice(trade('languages') || p.cityId !== p.life.homeCityId || uses('languages')),
     network: practice(trade('network') || member),
     management: tended ? rules.studyPoints : practice(managed || uses('management')),

@@ -4,16 +4,16 @@ import { mulDiv } from '../money';
 import { indexed } from '../rates';
 import type { Cents } from '../money';
 import type { Rng } from '../rng';
-import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorldState } from '../types';
-import { INSURANCE_KINDS, perksOf } from './derive';
+import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
+import { INSURANCE_KINDS, perksOf, workModeRule } from './derive';
 import { FLAG_HAD_ILLNESS, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
 
 export type LifeOrder = Extract<
   Order,
-  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' }
+  { type: 'focus' | 'buyItem' | 'sellItem' | 'setLifestyle' | 'setRentTier' | 'setInsurance' | 'moveCity' | 'retire' | 'setWorkMode' }
 >;
 
 /** Focus points the player can still spend this round. */
@@ -48,6 +48,37 @@ export function focusLock(p: PlayerState, action: FocusAction, content: Content)
     if (p.life.rungStudy >= content.life.focusLimits.studyPerRung) return 'studied-enough';
   }
   if (action === 'jobHunt' && p.life.huntRest > 0) return 'hunt-resting';
+  if (action === 'askRaise' && p.life.raiseRest > 0) return 'raise-resting';
+  return null;
+}
+
+/** The chance the boss gives a raise when asked, in percent: better for someone who can negotiate. */
+export function raiseChance(p: PlayerState, content: Content): number {
+  const rules = content.life.raise;
+  return Math.min(100, rules.chancePct + skillLevel(p, 'negotiation', content) * rules.perNegotiationPct);
+}
+
+const WORK_MODES: readonly WorkMode[] = ['office', 'remote', 'partTime'];
+
+/** Why the player may not work in a way, or null when they may. */
+export function workModeLock(p: PlayerState, mode: WorkMode, content: Content): RejectReason | null {
+  if (!WORK_MODES.includes(mode)) return 'bad-mode';
+  if (mode === 'office') return null;
+  if (p.life.career === null) return 'no-job';
+  if (mode === 'remote' && careerOf(content, p.life.career.id).remote !== true) return 'no-remote';
+  return null;
+}
+
+/**
+ * Works from this round on in another way. The focus it gives or takes counts at once; focus
+ * already spent stays spent.
+ */
+function executeSetWorkMode(p: PlayerState, mode: WorkMode, ctx: OrderContext): RejectReason | null {
+  const lock = workModeLock(p, mode, ctx.content);
+  if (lock !== null) return lock;
+  const before = workModeRule(p, ctx.content).focus;
+  p.life.workMode = mode;
+  p.life.focusBonus += workModeRule(p, ctx.content).focus - before;
   return null;
 }
 
@@ -318,6 +349,8 @@ export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderCon
       return executeSetInsurance(p, order, ctx);
     case 'moveCity':
       return executeMoveCity(p, order.cityId, ctx);
+    case 'setWorkMode':
+      return executeSetWorkMode(p, order.mode, ctx);
     case 'retire':
       if (p.life.career === null) return 'no-job';
       if (ctx.round < ctx.content.life.retireFromRound) return 'too-young-to-retire';

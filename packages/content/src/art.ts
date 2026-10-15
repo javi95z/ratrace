@@ -262,6 +262,7 @@ export const focusArt: Record<FocusAction, string> = {
   overtime: 'icon.focus_overtime',
   studyCareer: 'icon.focus_study',
   jobHunt: 'icon.focus_hunt',
+  askRaise: 'icon.use_pay',
   studyFinance: skillArt.finance,
   studyNegotiation: skillArt.negotiation,
   studyLanguages: skillArt.languages,

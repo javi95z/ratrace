@@ -2,8 +2,8 @@
 
 import { assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork } from '@ratrace/engine';
-import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
+import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
+import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -970,6 +970,7 @@ function Lifestyle() {
         ['overtime', t('overtime'), t('overtimeHint', { pct: career.overtimePct })],
         ['studyCareer', t('study'), t('studyHint', { n: work.studySkill })],
         ['jobHunt', t('hunt'), t('huntHint', { pct: work.jobHuntChancePct })],
+        ['askRaise', t('raise'), t('raiseHint', { chance: work.raise.chancePct, pct: work.raise.pct })],
       ] as const).map(([action, label, gives]) => ({ action, label, note: note(work, action, gives) }))
     : [];
   const learnUses = masteredLast([
@@ -987,6 +988,22 @@ function Lifestyle() {
       <Panel title={t('work')}>
         {career ? (
           <div className="flex flex-col gap-2">
+            {/* How the job is done: from home only where the job allows it, and half the day anywhere. */}
+            <Segmented<WorkMode>
+              label={t('mode')}
+              value={work.workMode.current}
+              onChange={(mode) => setOrder((order) => order.type === 'setWorkMode', mode === workModeOf(view.player, content) ? null : { type: 'setWorkMode', mode })}
+              options={(['office', 'remote', 'partTime'] as const)
+                .filter((mode) => mode !== 'remote' || work.workMode.remote)
+                .map((mode) => ({ value: mode, label: t(mode) }))}
+            />
+            <p className="-mt-1 text-[12px] text-ink-300">
+              {work.workMode.current === 'office'
+                ? t('officeHint')
+                : work.workMode.current === 'remote'
+                  ? t('remoteHint', { focus: work.workMode.rules.remote.focus, status: work.workMode.rules.remote.jobStatusPct })
+                  : t('partTimeHint', { focus: work.workMode.rules.partTime.focus, pay: work.workMode.rules.partTime.payPct })}
+            </p>
             <p className="text-[13px] text-ink-300">{t('focusLeft', { left, total: work.focus.total })}</p>
             {jobUses.map((use) => (
               <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />

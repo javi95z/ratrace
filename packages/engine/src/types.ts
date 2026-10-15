@@ -269,6 +269,23 @@ export interface CareerDef {
   fade?: { fromRound: number; pctPerRound: number; maxPct: number };
   /** Focus points on top each round: a job that leaves time over. */
   focus?: number;
+  /** A job that can be done from home. Absent: only at the workplace. */
+  remote?: boolean;
+}
+
+/** How the player works: at the workplace all day, from home, or half the day. */
+export type WorkMode = 'office' | 'remote' | 'partTime';
+
+/** What working other than at the workplace all day changes. */
+export interface WorkModeRule {
+  /** Focus points on top each round. */
+  focus: number;
+  /** The pay kept, in percent. */
+  payPct: number;
+  /** The status of the job kept, in percent: a desk nobody sees counts for less. */
+  jobStatusPct: number;
+  /** Whether a round of it still teaches the trade; without it, only study does. */
+  workSkill: boolean;
 }
 
 export type ItemKind = 'durable' | 'membership' | 'experience';
@@ -391,6 +408,13 @@ export interface LifeRules {
   jobHuntChancePct: number;
   /** Lasting raise from a successful job hunt, in percent. */
   jobHuntRaisePct: number;
+  /** Working from home, and working half the day. */
+  workModes: Record<Exclude<WorkMode, 'office'>, WorkModeRule>;
+  /**
+   * Asking the boss for a raise: the chance it is given, and what each level of negotiation adds to
+   * it; the lasting raise it brings, in percent; and the rounds before asking again, given or not.
+   */
+  raise: { chancePct: number; perNegotiationPct: number; pct: number; restRounds: number };
   /** How far the three uses of focus that serve the job can be pushed, round after round. */
   focusLimits: FocusLimits;
   /** What prison costs besides the time: status on the way in, and rungs of the career on the way out. */
@@ -958,6 +982,10 @@ export interface LifeState {
   huntMisses: number;
   /** Rounds still to wait before another job hunt, after one that worked. */
   huntRest: number;
+  /** How the player works. It counts only while the job allows it: see `workModeOf`. */
+  workMode: WorkMode;
+  /** Rounds still to wait before asking for a raise again. */
+  raiseRest: number;
   /** Career skill that study has added at the rung held now. */
   rungStudy: number;
   partner: boolean;
@@ -1087,10 +1115,12 @@ export type Order =
   | { type: 'setInsurance'; insurance: InsuranceKind; on: boolean }
   | { type: 'moveCity'; cityId: string }
   /** Leaves the career for good, from the round the rules allow. */
-  | { type: 'retire' };
+  | { type: 'retire' }
+  /** Works from this round on at the workplace, from home, or half the day. */
+  | { type: 'setWorkMode'; mode: WorkMode };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'studyFinance' | StudyAction;
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction;
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1170,6 +1200,9 @@ export type RejectReason =
   | 'career-top'
   | 'studied-enough'
   | 'hunt-resting'
+  | 'raise-resting'
+  | 'bad-mode'
+  | 'no-remote'
   | 'no-job'
   | 'unknown-item'
   | 'not-for-sale'
@@ -1241,6 +1274,8 @@ export type GameEvent =
   | { kind: 'cardWithdrawn'; cardId: string; replacedBy: string | null }
   | { kind: 'promoted'; careerId: string; level: number }
   | { kind: 'jobHunt'; success: boolean }
+  /** The boss was asked for a raise; `pct` is what it brought, nothing if it was not given. */
+  | { kind: 'raise'; success: boolean; pct: number }
   /** Overtime round after round: the health it cost, and whether it ended in burnout, which costs focus the round after too. */
   | { kind: 'overworked'; streak: number; healthLost: number; burnout: boolean; focusLost: number }
   | { kind: 'financeSkill'; level: FinanceSkill }

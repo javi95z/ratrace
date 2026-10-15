@@ -513,7 +513,16 @@
       "bestForJob": "Pays {career} more",
       "allCities": "← All cities",
       "showNumbers": "See the figures",
-      "hideNumbers": "Hide the figures"
+      "hideNumbers": "Hide the figures",
+      "mode": "How you work",
+      "office": "Workplace",
+      "remote": "From home",
+      "partTime": "Half day",
+      "officeHint": "Full pay and standing",
+      "remoteHint": "+{focus} focus · {status}% job status",
+      "partTimeHint": "+{focus} focus · {pay}% pay · learn by study only",
+      "raise": "Ask for a raise",
+      "raiseHint": "{chance}% chance of +{pct}% pay. Yes or no, not again for a while."
     },
     "shop": {
       "viewLabel": "What to show in the shop",
@@ -787,7 +796,9 @@
     "chargedHint": "So much was hidden that there will be a trial. Get a lawyer.",
     "released": "Out of prison.",
     "releasedRung": "Back to work, a rung lower than before.",
-    "before": "Was {amount}"
+    "before": "Was {amount}",
+    "raiseYes": "Your boss said yes: +{pct}% pay",
+    "raiseNo": "Your boss said not now"
   },
   "profile": {
     "title": "Your life",
@@ -1117,7 +1128,13 @@
     "evasionShellOff": "Close the offshore company",
     "evasionCryptoOn": "Hide crypto gains",
     "evasionCryptoOff": "Declare crypto gains",
-    "retire": "Retire"
+    "retire": "Retire",
+    "raise": "Ask for a raise",
+    "work": {
+      "office": "Work at the workplace",
+      "remote": "Work from home",
+      "partTime": "Work half the day"
+    }
   },
   "account": {
     "title": "Account",

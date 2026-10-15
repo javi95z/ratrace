@@ -232,7 +232,9 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'setRented':
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
-      return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : 'hunt');
+      return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt');
+    case 'setWorkMode':
+      return t(`work.${order.mode}`);
     case 'buyItem':
       return t(order.noInvoice === true ? 'buyNoInvoiceItem' : order.used === true ? 'buyUsedItem' : order.financed === true ? 'financeItem' : 'buyItem', { item: names.items[order.itemId] });
     case 'setEvasion': {
@@ -344,6 +346,9 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'jobHunt':
         add(event, { tone: event.success ? 'good' : 'plain', icon: 'icon.job', title: t(event.success ? 'jobHuntYes' : 'jobHuntNo') });
+        break;
+      case 'raise':
+        add(event, { tone: event.success ? 'good' : 'plain', icon: focusArt.askRaise, title: event.success ? t('raiseYes', { pct: event.pct }) : t('raiseNo') });
         break;
       case 'overworked':
         // Overtime round after round: the health it cost, and a burnout that takes focus from the next round too.

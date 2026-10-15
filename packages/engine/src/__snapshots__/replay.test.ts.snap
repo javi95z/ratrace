@@ -4,7 +4,7 @@ exports[`golden replay > reproduces the recorded final state from the stored cho
 {
   "escapedAtRound": null,
   "executed": 98,
-  "hash": "1eb2dff1593fcec4",
+  "hash": "c06cc8a1a7f523cc",
   "ledgerLines": [
     "debtInterest",
     "debtPrincipal",
