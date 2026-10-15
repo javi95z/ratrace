@@ -22,8 +22,8 @@ const membership = (id: string, joining: number, upkeepAnnual: number, status: n
 });
 
 /**
- * Sixty status items in ten ladders: the 34 of spec Appendix B, a seat of its own for each
- * city besides Madrid, and sixteen more rungs in fashion, art, travel, and air and sea.
+ * Sixty-four status items in ten ladders: the 34 of spec Appendix B, a seat of its own for each
+ * city besides Madrid, and more rungs in fashion, art, travel, air and sea, pets and learning.
  *
  * Columns for durables: price, yearly upkeep, status, resale value on day one as a percent of the
  * price, and the change in resale value each round, in bp, on top of inflation.
@@ -84,8 +84,8 @@ const catalogue: ItemDef[] = [
   experience('travel_weekend', 'travel', 300, 2, 1),
   experience('travel_interrail', 'travel', 1_200, 3, 1),
   experience('travel_ibiza', 'travel', 2_500, 5, 1),
-  // The Alps are a short flight from two of the six cities.
-  experience('travel_ski', 'travel', 4_500, 7, 1, ['madrid', 'london']),
+  // The Alps are a short flight from Madrid and London, and the train from Zurich.
+  experience('travel_ski', 'travel', 4_500, 7, 1, ['madrid', 'london', 'zurich']),
   experience('travel_business_class', 'travel', 6_000, 9, 2),
   experience('travel_safari', 'travel', 9_000, 12, 2),
   experience('travel_maldives', 'travel', 14_000, 15, 2),
@@ -114,6 +114,10 @@ const catalogue: ItemDef[] = [
   membership('member_beach_dubai', 3_000, 5_000, 10, ['dubai']),
   membership('member_paddock_singapore', 4_000, 6_000, 11, ['singapore']),
   membership('member_ringside_bangkok', 150, 400, 3, ['bangkok']),
+  membership('member_sumo_tokyo', 2_000, 3_500, 9, ['tokyo']),
+  membership('member_bolshoi_moscow', 800, 2_000, 7, ['moscow']),
+  membership('member_palco_mexico_city', 6_000, 1_500, 6, ['mexico_city']),
+  membership('member_golf_zurich', 25_000, 8_000, 13, ['zurich']),
 
   // Learning that is bought: a certificate kept for life, a coach paid by the year, and a term abroad that is lived.
   {
@@ -166,6 +170,10 @@ const PERKS: Record<string, ItemPerks> = {
   member_beach_dubai: { jobHuntPct: 4 },
   member_paddock_singapore: { jobHuntPct: 5 },
   member_ringside_bangkok: { jobHuntPct: 2 },
+  member_sumo_tokyo: { jobHuntPct: 4 },
+  member_bolshoi_moscow: { jobHuntPct: 3 },
+  member_palco_mexico_city: { jobHuntPct: 3 },
+  member_golf_zurich: { jobHuntPct: 6 },
   travel_business_class: REST,
   travel_safari: REST,
   travel_maldives: REST,

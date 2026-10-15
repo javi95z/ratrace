@@ -2,7 +2,7 @@ import type { CityDef, TaxProfile } from '@ratrace/engine';
 import { usd } from './money';
 
 /**
- * Six cities. Salaries, living costs and flat prices are game values in the right proportions,
+ * Ten cities. Salaries, living costs and flat prices are game values in the right proportions,
  * not statistics. Tax rates are deliberately simplified (spec 3.8).
  */
 
@@ -77,6 +77,57 @@ const bangkokTax: TaxProfile = {
   propertyPurchaseBp: 300,
   propertyAnnualBp: 10,
   pensionDeductionCapBp: 0,
+  investmentAllowance: 0,
+};
+
+/** Gains and dividends taxed lightly, with a yearly allowance like a NISA account; property pays a yearly tax. */
+const tokyoTax: TaxProfile = {
+  incomeRatesBp: [1_500, 3_300, 4_500],
+  capitalGainsBp: 2_000,
+  dividendBp: 2_000,
+  rentAsIncome: true,
+  rentBp: 0,
+  propertyPurchaseBp: 400,
+  propertyAnnualBp: 140,
+  pensionDeductionCapBp: 800,
+  investmentAllowance: usd(4_000),
+};
+
+/** A flat tax on nearly everything, and almost nothing on property. */
+const moscowTax: TaxProfile = {
+  incomeRatesBp: [1_300, 1_300, 1_500],
+  capitalGainsBp: 1_300,
+  dividendBp: 1_300,
+  rentAsIncome: false,
+  rentBp: 1_300,
+  propertyPurchaseBp: 0,
+  propertyAnnualBp: 10,
+  pensionDeductionCapBp: 0,
+  investmentAllowance: 0,
+};
+
+const mexicoCityTax: TaxProfile = {
+  incomeRatesBp: [1_000, 2_500, 3_500],
+  capitalGainsBp: 1_000,
+  dividendBp: 1_000,
+  rentAsIncome: false,
+  rentBp: 1_000,
+  propertyPurchaseBp: 500,
+  propertyAnnualBp: 10,
+  pensionDeductionCapBp: 1_000,
+  investmentAllowance: 0,
+};
+
+/** No tax on gains at all; dividends and a wealth tax pay for it. Rent is taxed with salary. */
+const zurichTax: TaxProfile = {
+  incomeRatesBp: [1_200, 2_200, 3_300],
+  capitalGainsBp: 0,
+  dividendBp: 3_500,
+  rentAsIncome: true,
+  rentBp: 0,
+  propertyPurchaseBp: 300,
+  propertyAnnualBp: 50,
+  pensionDeductionCapBp: 1_500,
   investmentAllowance: 0,
 };
 
@@ -166,5 +217,64 @@ export const cities: CityDef[] = [
     tax: bangkokTax,
     prestige: 6,
     careerPayPct: { service: 115, tech: 110, hospitality: 120, influencer: 110 },
+  },
+  {
+    // Prices that have hardly moved in thirty years, and rates that barely move them now.
+    id: 'tokyo',
+    medianSalaryAnnual: usd(42_000),
+    livingCostAnnual: usd(33_000),
+    flatPrice: usd(450_000),
+    rentYieldBp: 380,
+    propertyGrowthBp: 300,
+    propertyMomentumPct: 20,
+    propertyRateSensitivity: 2,
+    propertyVolBp: 500,
+    tax: tokyoTax,
+    prestige: 13,
+    careerPayPct: { tech: 115, sales: 110, hospitality: 110 },
+  },
+  {
+    // A flat tax and cheap property, in a market that swings hard with the rates.
+    id: 'moscow',
+    medianSalaryAnnual: usd(18_000),
+    livingCostAnnual: usd(14_000),
+    flatPrice: usd(220_000),
+    rentYieldBp: 450,
+    propertyGrowthBp: 600,
+    propertyMomentumPct: 30,
+    propertyRateSensitivity: 6,
+    propertyVolBp: 1_400,
+    tax: moscowTax,
+    prestige: 9,
+    careerPayPct: { finance: 115, tech: 115, public: 110 },
+  },
+  {
+    id: 'mexico_city',
+    medianSalaryAnnual: usd(12_000),
+    livingCostAnnual: usd(10_000),
+    flatPrice: usd(140_000),
+    rentYieldBp: 600,
+    propertyGrowthBp: 650,
+    propertyMomentumPct: 30,
+    propertyRateSensitivity: 4,
+    propertyVolBp: 1_100,
+    tax: mexicoCityTax,
+    prestige: 7,
+    careerPayPct: { influencer: 115, hospitality: 110, sales: 115, law: 110 },
+  },
+  {
+    // The highest pay and the dearest flats in the game, and a quiet market.
+    id: 'zurich',
+    medianSalaryAnnual: usd(95_000),
+    livingCostAnnual: usd(70_000),
+    flatPrice: usd(1_400_000),
+    rentYieldBp: 280,
+    propertyGrowthBp: 400,
+    propertyMomentumPct: 20,
+    propertyRateSensitivity: 3,
+    propertyVolBp: 400,
+    tax: zurichTax,
+    prestige: 16,
+    careerPayPct: { finance: 125, medicine: 115, law: 115, tech: 110 },
   },
 ];

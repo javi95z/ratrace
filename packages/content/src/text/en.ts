@@ -10,6 +10,10 @@ export const en: ContentText = {
     dubai: { tagline: 'No income tax, plenty of ways to spend what you keep.' },
     singapore: { tagline: 'Low tax, high rents, and no tax at all on gains.' },
     bangkok: { tagline: 'Your money goes four times as far. So do your savings.' },
+    tokyo: { tagline: 'Everything works, nothing gets cheaper, and the flats barely go up.' },
+    moscow: { tagline: 'A flat tax of thirteen percent, and a market that swings with the rates.' },
+    mexico_city: { tagline: 'Cheap to live in, quick to grow, and tacos at every corner.' },
+    zurich: { tagline: 'The highest pay in the game, the dearest flats, and no tax at all on gains.' },
   },
   assets: {
     treasury_bills: { blurb: 'Short loans to the US government, rolled over each round. Pays a little under the going rate, and its price never moves.' },

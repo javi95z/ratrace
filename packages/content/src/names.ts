@@ -94,6 +94,10 @@ const items: Names['items'] = {
   member_beach_dubai: 'Jumeirah beach club',
   member_paddock_singapore: 'Singapore GP Paddock Club',
   member_ringside_bangkok: 'Rajadamnern ringside pass',
+  member_sumo_tokyo: 'Box at the Ryōgoku sumo',
+  member_bolshoi_moscow: 'Bolshoi season box',
+  member_palco_mexico_city: 'Box at the Estadio Azteca',
+  member_golf_zurich: 'Zumikon golf club',
   edu_mba: 'MBA at IESE',
   edu_certificate: 'PMP certification',
   edu_coach: 'Executive coach',
@@ -111,13 +115,13 @@ const brands: Names['brands'] = {
 
 export const names: Record<Locale, Names> = {
   en: {
-    cities: { madrid: 'Madrid', london: 'London', new_york: 'New York', dubai: 'Dubai', singapore: 'Singapore', bangkok: 'Bangkok' },
+    cities: { madrid: 'Madrid', london: 'London', new_york: 'New York', dubai: 'Dubai', singapore: 'Singapore', bangkok: 'Bangkok', tokyo: 'Tokyo', moscow: 'Moscow', mexico_city: 'Mexico City', zurich: 'Zurich' },
     assets,
     items,
     brands,
   },
   es: {
-    cities: { madrid: 'Madrid', london: 'Londres', new_york: 'Nueva York', dubai: 'Dubái', singapore: 'Singapur', bangkok: 'Bangkok' },
+    cities: { madrid: 'Madrid', london: 'Londres', new_york: 'Nueva York', dubai: 'Dubái', singapore: 'Singapur', bangkok: 'Bangkok', tokyo: 'Tokio', moscow: 'Moscú', mexico_city: 'Ciudad de México', zurich: 'Zúrich' },
     assets: {
       ...assets,
       treasury_bills: { name: 'Letras del Tesoro EE. UU.', ticker: 'TBILL' },
@@ -162,6 +166,10 @@ export const names: Record<Locale, Names> = {
       member_beach_dubai: 'Club de playa de Jumeirah',
       member_paddock_singapore: 'Paddock Club del GP de Singapur',
       member_ringside_bangkok: 'Pase de ringside en Rajadamnern',
+      member_sumo_tokyo: 'Palco en el sumo de Ryōgoku',
+      member_bolshoi_moscow: 'Palco de temporada en el Bolshói',
+      member_palco_mexico_city: 'Palco en el Estadio Azteca',
+      member_golf_zurich: 'Club de golf de Zumikon',
       edu_mba: 'MBA en el IESE',
       edu_certificate: 'Certificación PMP',
       edu_coach: 'Coach ejecutivo',
@@ -172,7 +180,7 @@ export const names: Record<Locale, Names> = {
   // Brands, cars, watches and coins keep their own letters. What is described, not named, is in Russian. A name is put
   // into a sentence as it stands here, undeclined: the ones cards use read well that way.
   ru: {
-    cities: { madrid: 'Мадрид', london: 'Лондон', new_york: 'Нью-Йорк', dubai: 'Дубай', singapore: 'Сингапур', bangkok: 'Бангкок' },
+    cities: { madrid: 'Мадрид', london: 'Лондон', new_york: 'Нью-Йорк', dubai: 'Дубай', singapore: 'Сингапур', bangkok: 'Бангкок', tokyo: 'Токио', moscow: 'Москва', mexico_city: 'Мехико', zurich: 'Цюрих' },
     assets: {
       ...assets,
       treasury_bills: { name: 'Казначейские векселя США', ticker: 'TBILL' },
@@ -218,6 +226,10 @@ export const names: Record<Locale, Names> = {
       member_beach_dubai: 'Пляжный клуб в Джумейре',
       member_paddock_singapore: 'Paddock Club Гран-при Сингапура',
       member_ringside_bangkok: 'Место у ринга на «Раджадамнерне»',
+      member_sumo_tokyo: 'Ложа на турнире сумо в Рёгоку',
+      member_bolshoi_moscow: 'Абонемент в ложу Большого театра',
+      member_palco_mexico_city: 'Ложа на стадионе «Ацтека»',
+      member_golf_zurich: 'Гольф-клуб в Цумиконе',
       edu_mba: 'MBA в IESE',
       edu_certificate: 'Сертификат PMP',
       edu_coach: 'Бизнес-коуч',

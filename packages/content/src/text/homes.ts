@@ -30,6 +30,22 @@ export const cityHomesEs: CityHomes = {
     studio: 'Estudio en On Nut', flat: 'Condo en Sukhumvit', loft: 'Loft en Ari', townhouse: 'Shophouse en Chinatown', house: 'Casa en Bang Na', duplex: 'Dúplex en Thonglor',
     chalet: 'Casa de teca en Nonthaburi', penthouse: 'Ático junto al río', estate: 'Finca en Hua Hin', villa: 'Villa con piscina en Ekkamai', mansion: 'Mansión en Sathorn',
   },
+  tokyo: {
+    studio: 'Estudio en Koenji', flat: 'Piso en Nakameguro', loft: 'Loft en Kuramae', townhouse: 'Casa estrecha en Shimokitazawa', house: 'Casa en Setagaya', duplex: 'Dúplex en Ebisu',
+    chalet: 'Refugio en Hakone', penthouse: 'Ático en Roppongi', estate: 'Finca en Karuizawa', villa: 'Villa en Hayama', mansion: 'Mansión en Den-en-chofu',
+  },
+  moscow: {
+    studio: 'Estudio en una jrushchovka de Biriuliovo', flat: 'Piso en Marino', loft: 'Loft en Krasny Oktiabr', townhouse: 'Adosado en Kommunarka', house: 'Dacha en Peredélkino', duplex: 'Dúplex en Patriarshie Prudí',
+    chalet: 'Cabaña de troncos junto al Volga', penthouse: 'Ático en Moscow City', estate: 'Finca en Barvija', villa: 'Villa en la Rubliovka', mansion: 'Palacete en Ostozhenka',
+  },
+  mexico_city: {
+    studio: 'Cuarto de azotea en Iztapalapa', flat: 'Depa en la Narvarte', loft: 'Loft en la Roma', townhouse: 'Casa colonial en Coyoacán', house: 'Casa en Ciudad Satélite', duplex: 'Dúplex en la Condesa',
+    chalet: 'Casa de fin de semana en Valle de Bravo', penthouse: 'Penthouse en Polanco', estate: 'Hacienda en Morelos', villa: 'Villa en Lomas de Chapultepec', mansion: 'Mansión en San Ángel',
+  },
+  zurich: {
+    studio: 'Estudio en Schwamendingen', flat: 'Piso en Wiedikon', loft: 'Loft en Zürich-West', townhouse: 'Casa en el casco antiguo', house: 'Casa en Küsnacht', duplex: 'Dúplex en Seefeld',
+    chalet: 'Chalet en los Alpes', penthouse: 'Ático junto a la Prime Tower', estate: 'Finca en la Costa Dorada del lago', villa: 'Villa en el Zürichberg', mansion: 'Mansión a orillas del lago',
+  },
 };
 
 export const cityHomesEn: CityHomes = {
@@ -57,6 +73,22 @@ export const cityHomesEn: CityHomes = {
     studio: 'Studio in On Nut', flat: 'Condo on Sukhumvit', loft: 'Loft in Ari', townhouse: 'Shophouse in Chinatown', house: 'House in Bang Na', duplex: 'Duplex in Thonglor',
     chalet: 'Teak house in Nonthaburi', penthouse: 'Riverside penthouse', estate: 'Estate in Hua Hin', villa: 'Pool villa in Ekkamai', mansion: 'Mansion in Sathorn',
   },
+  tokyo: {
+    studio: 'Studio in Koenji', flat: 'Flat in Nakameguro', loft: 'Loft in Kuramae', townhouse: 'Narrow house in Shimokitazawa', house: 'House in Setagaya', duplex: 'Duplex in Ebisu',
+    chalet: 'Retreat in Hakone', penthouse: 'Penthouse in Roppongi', estate: 'Estate in Karuizawa', villa: 'Villa in Hayama', mansion: 'Mansion in Den-en-chofu',
+  },
+  moscow: {
+    studio: 'Studio in a Biryulyovo khrushchyovka', flat: 'Flat in Maryino', loft: 'Loft at Krasny Oktyabr', townhouse: 'Townhouse in Kommunarka', house: 'Dacha in Peredelkino', duplex: 'Duplex on the Patriarch\'s Ponds',
+    chalet: 'Log cabin on the Volga', penthouse: 'Penthouse in Moscow City', estate: 'Estate in Barvikha', villa: 'Villa on the Rublyovka', mansion: 'Mansion on the Ostozhenka',
+  },
+  mexico_city: {
+    studio: 'Rooftop room in Iztapalapa', flat: 'Flat in Narvarte', loft: 'Loft in Roma', townhouse: 'Colonial house in Coyoacán', house: 'House in Ciudad Satélite', duplex: 'Duplex in Condesa',
+    chalet: 'Weekend house in Valle de Bravo', penthouse: 'Penthouse in Polanco', estate: 'Hacienda in Morelos', villa: 'Villa in Lomas de Chapultepec', mansion: 'Mansion in San Ángel',
+  },
+  zurich: {
+    studio: 'Studio in Schwamendingen', flat: 'Flat in Wiedikon', loft: 'Loft in Zürich-West', townhouse: 'Old-town house', house: 'House in Küsnacht', duplex: 'Duplex in Seefeld',
+    chalet: 'Chalet in the Alps', penthouse: 'Penthouse by the Prime Tower', estate: 'Estate on the Gold Coast', villa: 'Villa on the Zürichberg', mansion: 'Lakeside mansion',
+  },
 };
 
 export const cityHomesRu: CityHomes = {
@@ -83,5 +115,21 @@ export const cityHomesRu: CityHomes = {
   bangkok: {
     studio: 'Студия в Он-Нут', flat: 'Кондо на Сукхумвите', loft: 'Лофт в Ари', townhouse: 'Шопхаус в Чайнатауне', house: 'Дом в Банг-На', duplex: 'Дуплекс в Тхонглоре',
     chalet: 'Тиковый дом в Нонтхабури', penthouse: 'Пентхаус у реки', estate: 'Поместье в Хуахине', villa: 'Вилла с бассейном в Эккамае', mansion: 'Особняк в Саторне',
+  },
+  tokyo: {
+    studio: 'Студия в Коэндзи', flat: 'Квартира в Накамэгуро', loft: 'Лофт в Курамаэ', townhouse: 'Узкий дом в Симокитадзаве', house: 'Дом в Сэтагае', duplex: 'Дуплекс в Эбису',
+    chalet: 'Дом в горах Хаконэ', penthouse: 'Пентхаус в Роппонги', estate: 'Поместье в Каруидзаве', villa: 'Вилла в Хаяме', mansion: 'Особняк в Дэнъэнтёфу',
+  },
+  moscow: {
+    studio: 'Студия в хрущёвке в Бирюлёве', flat: 'Квартира в Марьине', loft: 'Лофт на «Красном Октябре»', townhouse: 'Таунхаус в Коммунарке', house: 'Дача в Переделкине', duplex: 'Дуплекс на Патриарших',
+    chalet: 'Бревенчатый дом на Волге', penthouse: 'Пентхаус в «Москва-Сити»', estate: 'Поместье в Барвихе', villa: 'Вилла на Рублёвке', mansion: 'Особняк на Остоженке',
+  },
+  mexico_city: {
+    studio: 'Комната на крыше в Истапалапе', flat: 'Квартира в Нарварте', loft: 'Лофт в Роме', townhouse: 'Колониальный дом в Койоакане', house: 'Дом в Сьюдад-Сателите', duplex: 'Дуплекс в Кондесе',
+    chalet: 'Загородный дом в Валье-де-Браво', penthouse: 'Пентхаус в Поланко', estate: 'Асьенда в Морелосе', villa: 'Вилла в Ломас-де-Чапультепек', mansion: 'Особняк в Сан-Анхеле',
+  },
+  zurich: {
+    studio: 'Студия в Швамендингене', flat: 'Квартира в Видиконе', loft: 'Лофт в Цюрих-Весте', townhouse: 'Дом в старом городе', house: 'Дом в Кюснахте', duplex: 'Дуплекс в Зеефельде',
+    chalet: 'Шале в Альпах', penthouse: 'Пентхаус у Прайм-тауэр', estate: 'Поместье на Золотом берегу', villa: 'Вилла на Цюрихберге', mansion: 'Особняк на берегу озера',
   },
 };

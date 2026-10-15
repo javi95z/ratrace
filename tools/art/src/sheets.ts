@@ -313,13 +313,40 @@ export const SHEETS: SheetSpec[] = [
   })),
   { file: 'skylines/skylines-01', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid', 'skyline.london', 'skyline.new_york'] },
   { file: 'skylines/skylines-02', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai', 'skyline.singapore', 'skyline.bangkok'] },
-  // The same six cities by day, shown while the news of a round is read.
+  // The first six cities by day, shown while the news of a round is read.
   { file: 'skylines/skylines-03', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.madrid.day', 'skyline.london.day', 'skyline.new_york.day'] },
   { file: 'skylines/skylines-04', group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66, ids: ['skyline.dubai.day', 'skyline.singapore.day', 'skyline.bangkok.day'] },
   // The same six again in a boom, with cranes and fireworks, and in a crisis, under rain with half the windows dark.
   ...(['boom', 'boom', 'crisis', 'crisis'] as const).map((mood, i): SheetSpec => ({
     file: `skylines/skylines-0${i + 5}`, group: 'skylines', kind: 'scenes', cols: 1, rows: 3, width: 312, height: 66,
     ids: (i % 2 === 0 ? ['madrid', 'london', 'new_york'] : ['dubai', 'singapore', 'bangkok']).map((city) => `skyline.${city}.${mood}`),
+  })),
+  // Four cities added since: their homes, their landmarks, crests and seats, and their skylines in every light.
+  {
+    file: 'homes/homes-tokyo', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.tokyo.studio', 'home.tokyo.flat', 'home.tokyo.loft', 'home.tokyo.townhouse', 'home.tokyo.house', 'home.tokyo.duplex', 'home.tokyo.chalet', 'home.tokyo.penthouse', 'home.tokyo.estate', 'home.tokyo.villa', 'home.tokyo.mansion', 'home.tokyo.sign'],
+  },
+  {
+    file: 'homes/homes-moscow', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.moscow.studio', 'home.moscow.flat', 'home.moscow.loft', 'home.moscow.townhouse', 'home.moscow.house', 'home.moscow.duplex', 'home.moscow.chalet', 'home.moscow.penthouse', 'home.moscow.estate', 'home.moscow.villa', 'home.moscow.mansion', 'home.moscow.sign'],
+  },
+  {
+    file: 'homes/homes-mexico_city', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.mexico_city.studio', 'home.mexico_city.flat', 'home.mexico_city.loft', 'home.mexico_city.townhouse', 'home.mexico_city.house', 'home.mexico_city.duplex', 'home.mexico_city.chalet', 'home.mexico_city.penthouse', 'home.mexico_city.estate', 'home.mexico_city.villa', 'home.mexico_city.mansion', 'home.mexico_city.sign'],
+  },
+  {
+    file: 'homes/homes-zurich', group: 'homes', kind: 'objects', cols: 4, rows: 3, width: 128, height: 128,
+    ids: ['home.zurich.studio', 'home.zurich.flat', 'home.zurich.loft', 'home.zurich.townhouse', 'home.zurich.house', 'home.zurich.duplex', 'home.zurich.chalet', 'home.zurich.penthouse', 'home.zurich.estate', 'home.zurich.villa', 'home.zurich.mansion', 'home.zurich.sign'],
+  },
+  { file: 'icons/icons-10', group: 'icons', kind: 'objects', cols: 2, rows: 2, width: 32, height: 32, ids: ['icon.city_tokyo', 'icon.city_moscow', 'icon.city_mexico_city', 'icon.city_zurich'] },
+  { file: 'badges/badges-05', group: 'badges', kind: 'objects', cols: 2, rows: 2, width: 64, height: 64, ids: ['crest.tokyo', 'crest.moscow', 'crest.mexico_city', 'crest.zurich'] },
+  {
+    file: 'items/items-07', group: 'items', kind: 'objects', cols: 2, rows: 2, width: 64, height: 64,
+    ids: ['item.member_sumo_tokyo', 'item.member_bolshoi_moscow', 'item.member_palco_mexico_city', 'item.member_golf_zurich'],
+  },
+  ...(['', '.day', '.boom', '.crisis'] as const).map((light, i): SheetSpec => ({
+    file: `skylines/skylines-${String(i + 9).padStart(2, '0')}`, group: 'skylines', kind: 'scenes', cols: 1, rows: 4, width: 312, height: 66,
+    ids: ['tokyo', 'moscow', 'mexico_city', 'zurich'].map((city) => `skyline.${city}${light}`),
   })),
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
 ];
