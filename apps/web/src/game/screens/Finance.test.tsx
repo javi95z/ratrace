@@ -343,8 +343,8 @@ describe('buying with borrowed money', () => {
     await user.click(await screen.findByRole('tab', { name: 'Market' }));
     await user.click(button(/S&P 500/));
     const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
-    expect(within(sheet).queryByRole('region', { name: 'Buying on margin' })).toBeNull();
-    expect(within(sheet).queryByRole('switch')).toBeNull();
+    expect(within(sheet).queryByRole('region', { name: 'Broker loan' })).toBeNull();
+    expect(within(sheet).queryByRole('radio', { name: /×/ })).toBeNull();
     expect(within(sheet).queryByText(/margin|broker/i)).toBeNull();
     // What is bought there is bought with their own money alone.
     fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
@@ -360,12 +360,12 @@ describe('buying with borrowed money', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Market' }));
     await user.click(button(/S&P 500/));
-    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Buying on margin' });
-    expect((within(section).getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
+    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Broker loan' });
+    expect(within(section).queryByRole('radio')).toBeNull();
     expect(within(section).getByText('No bank will lend to you yet after your bankruptcy.')).toBeTruthy();
   });
 
-  it('buys twice what is put in for someone who has it, says what it risks, and names the order for what it is', async () => {
+  it('buys up to twice what is put in for someone who has it, says what it costs and risks, and names the order for what it is', async () => {
     const { services, view } = await seasoned('civil_servant');
     const quote = quoteMargin(content, view, 'sp500');
     expect(quote).toMatchObject({ lock: null, canDouble: true });
@@ -374,11 +374,15 @@ describe('buying with borrowed money', () => {
     await user.click(await screen.findByRole('tab', { name: 'Market' }));
     await user.click(button(/S&P 500/));
     const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
-    const section = within(sheet).getByRole('region', { name: 'Buying on margin' });
-    expect(within(section).getByText(`You buy twice as much. The loan costs ${fmt.rate(quote.rateBp)} a year.`)).toBeTruthy();
-    expect(within(section).getByText('You gain and lose twice as much. If the loan passes 75% of what it is worth, the broker sells it all: a fall of 33% is enough.')).toBeTruthy();
-    await user.click(within(section).getByRole('switch'));
+    const section = within(sheet).getByRole('region', { name: 'Broker loan' });
+    expect(within(section).getAllByRole('radio').map((radio) => radio.textContent)).toEqual(['No loan', '×1.25', '×1.5', '×2']);
+    expect(within(section).getByText(`The broker lends you part of it to buy more. It costs ${fmt.rate(quote.rateBp)} a year.`)).toBeTruthy();
+    await user.click(within(section).getByRole('radio', { name: '×2' }));
+    expect(within(section).getByText('You buy ×2: you win and lose that much more. If the loan goes past 75% of what it is worth, the broker sells it all.')).toBeTruthy();
     fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
+    // What it comes to, as the amount moves: the holding, the loan, what it costs a round, and the fall that sells it.
+    expect(within(sheet).getByText(/^You buy \$2,000 in all: the broker puts in \$1,000\./)).toBeTruthy();
+    expect(within(sheet).getByText(/It costs you about \$\d+ a round · sold if it falls 33\.3%/)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Confirm $1,000' }));
 
     await user.click(button('1 order'));
@@ -392,7 +396,26 @@ describe('buying with borrowed money', () => {
     expect(within(holdings).getByText('You owe the broker $1,000 · sold if it falls 33.3%')).toBeTruthy();
     // And it is a debt among the debts, named for what it bought.
     await user.click(screen.getByRole('tab', { name: 'Debt' }));
-    expect(within(screen.getByRole('tabpanel', { name: 'Debt' })).getByText('Margin loan · S&P 500')).toBeTruthy();
+    const debt = screen.getByRole('tabpanel', { name: 'Debt' });
+    expect(within(debt).getByText('Margin loan · S&P 500')).toBeTruthy();
+    // With how near it is to the forced sale.
+    expect(within(debt).getByText('On S&P 500, worth $2,000')).toBeTruthy();
+    expect(within(debt).getByRole('meter', { name: 'How near the forced sale' }).getAttribute('aria-valuenow')).toBe('67');
+    expect(within(debt).getByText('sold if it falls 33.3%')).toBeTruthy();
+  });
+
+  it('borrows only the share chosen: half as much again at ×1.5', async () => {
+    const { services } = await seasoned('civil_servant');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Market' }));
+    await user.click(button(/S&P 500/));
+    const sheet = screen.getByRole('dialog', { name: 'Buy S&P 500' });
+    await user.click(within(within(sheet).getByRole('region', { name: 'Broker loan' })).getByRole('radio', { name: '×1.5' }));
+    fireEvent.change(within(sheet).getByRole('slider', { name: 'Amount' }), { target: { value: '100000' } });
+    await user.click(within(sheet).getByRole('button', { name: 'Confirm $1,000' }));
+    await user.click(button('1 order'));
+    expect(within(screen.getByRole('dialog', { name: "This round's orders" })).getByRole('button', { name: 'Remove: Buy $1,500 of S&P 500 on margin (you put in $1,000)' })).toBeTruthy();
   });
 
   it('lends no more on a holding that already owes more than half of itself', async () => {
@@ -404,8 +427,8 @@ describe('buying with borrowed money', () => {
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Market' }));
     await user.click(button(/S&P 500/));
-    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Buying on margin' });
-    expect((within(section).getByRole('switch') as HTMLButtonElement).disabled).toBe(true);
+    const section = within(screen.getByRole('dialog', { name: 'Buy S&P 500' })).getByRole('region', { name: 'Broker loan' });
+    expect(within(section).queryByRole('radio')).toBeNull();
     expect(within(section).getByText('You already owe more than 50% of what you hold of this: no more is lent on it.')).toBeTruthy();
   });
 });

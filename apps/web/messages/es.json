@@ -666,14 +666,18 @@
       "each": "Cada ronda",
       "eachHint": "Automático",
       "already": "Ya inviertes {amount} cada ronda. Cambia la cantidad aquí.",
-      "marginTitle": "Comprar con margen",
-      "margin": "Con margen: el bróker pone otro tanto",
-      "marginHint": "Compras el doble. El préstamo cuesta un {rate} al año.",
+      "marginTitle": "Préstamo del bróker",
       "marginFull": "Ya debes más del {pct} % de lo que tienes en este activo: no se presta más sobre él.",
-      "marginRisk": "Ganas y pierdes el doble. Si el préstamo pasa del {call} % de lo que vale, el bróker lo vende todo: basta una caída del {drop} %.",
       "marginOwed": "Debes {amount} al bróker",
       "marginDrop": "se vende si cae un {pct}",
-      "marginNow": "al borde de la venta forzosa"
+      "marginNow": "al borde de la venta forzosa",
+      "gearNone": "Sin préstamo",
+      "gearAbout": "El bróker te presta una parte para comprar más. Cuesta un {rate} al año.",
+      "gearRisk": "Compras ×{gear}: ganas y pierdes en esa medida. Si el préstamo pasa del {call} % de lo que vale, el bróker lo vende todo.",
+      "gearBuys": "Compras {total} en total: el bróker pone {loan}.",
+      "gearCost": "Te cuesta unos {cost} por ronda",
+      "gaugeOn": "Sobre {name}, que vale {value}",
+      "gaugeLabel": "Cerca de la venta forzosa"
     },
     "glance": {
       "title": "De un vistazo",

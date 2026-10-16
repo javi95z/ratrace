@@ -666,14 +666,18 @@
       "each": "Every round",
       "eachHint": "Automatic",
       "already": "You already invest {amount} every round. Change the amount here.",
-      "marginTitle": "Buying on margin",
-      "margin": "On margin: the broker puts in as much again",
-      "marginHint": "You buy twice as much. The loan costs {rate} a year.",
+      "marginTitle": "Broker loan",
       "marginFull": "You already owe more than {pct}% of what you hold of this: no more is lent on it.",
-      "marginRisk": "You gain and lose twice as much. If the loan passes {call}% of what it is worth, the broker sells it all: a fall of {drop}% is enough.",
       "marginOwed": "You owe the broker {amount}",
       "marginDrop": "sold if it falls {pct}",
-      "marginNow": "on the edge of a forced sale"
+      "marginNow": "on the edge of a forced sale",
+      "gearNone": "No loan",
+      "gearAbout": "The broker lends you part of it to buy more. It costs {rate} a year.",
+      "gearRisk": "You buy ×{gear}: you win and lose that much more. If the loan goes past {call}% of what it is worth, the broker sells it all.",
+      "gearBuys": "You buy {total} in all: the broker puts in {loan}.",
+      "gearCost": "It costs you about {cost} a round",
+      "gaugeOn": "On {name}, worth {value}",
+      "gaugeLabel": "How near the forced sale"
     },
     "glance": {
       "title": "At a glance",

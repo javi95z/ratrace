@@ -173,6 +173,35 @@ function AssetMark({ asset }: { asset: AssetDef }) {
   );
 }
 
+/** How much of a purchase may be borrowed from the broker: none, a quarter more, half as much again, or as much again. */
+type Gear = 1 | 1.25 | 1.5 | 2;
+const GEARS: readonly Gear[] = [1, 1.25, 1.5, 2];
+
+/**
+ * How close a broker's loan is to the forced sale: a bar of the loan against what the holding is
+ * worth, full when the broker sells, wine as it nears; and what the holding is worth, and how far
+ * it may fall before the sale.
+ */
+function MarginGauge({ assetId }: { assetId: string }) {
+  const t = useT('finance.plans');
+  const { content, names, fmt } = useWords();
+  const { shown } = useRound();
+  const margin = quoteMargin(content, shown, assetId);
+  if (margin.owed === 0 || margin.value <= 0 || margin.dropToCallBp === null) return null;
+  // The share of the way to the sale: the loan as a share of the holding, against the share at which the broker sells.
+  const way = Math.min(1, (margin.owed * 100) / (margin.value * margin.callPct));
+  const near = way >= 0.85;
+  return (
+    <div className="mt-1">
+      <div className="text-[12px] text-ink-300">{t('gaugeOn', { name: names.assets[assetId]?.name ?? assetId, value: fmt.money(margin.value) })}</div>
+      <div role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(way * 100)} aria-label={t('gaugeLabel')} className="mt-1 h-1.5 w-full bg-night-900">
+        <div className={`h-full ${near ? 'bg-wine-300' : 'bg-gold-500'}`} style={{ width: `${way * 100}%` }} />
+      </div>
+      <div className={`mt-0.5 text-[12px] ${near ? 'text-wine-300' : 'text-ink-300'}`}>{margin.dropToCallBp > 0 ? t('marginDrop', { pct: fmt.rate(margin.dropToCallBp) }) : t('marginNow')}</div>
+    </div>
+  );
+}
+
 /** What is owed to the broker on a holding, and how far its price may fall before he sells it. Nothing for a holding bought outright. */
 function MarginLine({ assetId }: { assetId: string }) {
   const t = useT('finance.plans');
@@ -391,9 +420,33 @@ function BuySheet({ asset, onClose }: { asset: AssetDef; onClose(): void }) {
   const setOrder = useGame((s) => s.setOrder);
   // The same sheet buys once or sets what is bought every round.
   const [each, setEach] = useState(false);
-  // Bought once, it may be bought with as much again borrowed from the broker.
-  const [geared, setGeared] = useState(false);
+  // Bought once, part of it may be borrowed from the broker: a quarter more, half as much again, or as much again.
+  const [gear, setGear] = useState<Gear>(1);
   const margin = quoteMargin(content, shown, asset.id);
+  const canGear = margin.lock === null && margin.canDouble;
+  // 1.25, 1.5, 2, in the language's own way of writing them.
+  const gearText = (value: Gear) => fmt.factor(value * 100).replace(/[.,]?0+$/, '');
+  /**
+   * What the broker lends on a purchase of `a` at the gear chosen: never past the share of the
+   * holding it may lend on, so a gear too high for what is already owed lends what it still can.
+   */
+  const lent = (a: number): number => {
+    if (!canGear || gear === 1) return 0;
+    const most = Math.floor((margin.maxPct * (margin.value + a) - 100 * margin.owed) / (100 - margin.maxPct));
+    return Math.max(0, Math.min(Math.round(a * (gear - 1)), most));
+  };
+  /** What a purchase of `a` comes to with the loan: the holding, the loan, the interest a round, and the fall that would make the broker sell. */
+  const geared = (a: number) => {
+    const loan = lent(a);
+    const owed = margin.owed + loan;
+    const value = margin.value + a + loan;
+    return {
+      total: a + loan,
+      loan,
+      perRound: Math.round((loan * margin.rateBp * content.yearsPerRound) / 10_000),
+      dropBp: owed > 0 && value > 0 ? 10_000 - Math.ceil((owed * 100 * 10_000) / (value * margin.callPct)) : null,
+    };
+  };
   const planned = shown.player.plans.find((plan) => plan.assetId === asset.id);
 
   return (
@@ -407,25 +460,44 @@ function BuySheet({ asset, onClose }: { asset: AssetDef; onClose(): void }) {
       onConfirm={(a) =>
         each
           ? setOrder(isPlanFor(asset.id), planOrder(view, asset.id, a))
-          : addOrder(geared && margin?.lock === null && margin.canDouble ? { type: 'buy', assetId: asset.id, amount: a, margin: a } : { type: 'buy', assetId: asset.id, amount: a })
+          : addOrder(lent(a) > 0 ? { type: 'buy', assetId: asset.id, amount: a, margin: lent(a) } : { type: 'buy', assetId: asset.id, amount: a })
+      }
+      preview={
+        each || gear === 1 || !canGear
+          ? undefined
+          : (a) => {
+              const g = geared(a);
+              return g.loan > 0 ? (
+                <p className="text-center text-[12px] leading-snug text-gold-200">
+                  {plans('gearBuys', { total: fmt.money(g.total), loan: fmt.money(g.loan) })}
+                  <br />
+                  {plans('gearCost', { cost: fmt.money(g.perRound) })}
+                  {g.dropBp !== null ? ` · ${plans('marginDrop', { pct: fmt.rate(g.dropBp) })}` : ''}
+                </p>
+              ) : null;
+            }
       }
       footer={
         // Margin is not spoken of until the player has the skill for it: a closed switch teaches nothing to someone years from it.
         each || !margin || margin.lock === 'needs-finance-skill' ? null : (
           <section aria-label={plans('marginTitle')} className="mt-3 border-t-2 border-night-900 pt-3">
-            <Toggle
-              on={geared && margin.lock === null && margin.canDouble}
-              onChange={setGeared}
-              disabled={margin.lock !== null || !margin.canDouble}
-              label={plans('margin')}
-              hint={plans('marginHint', { rate: fmt.rate(margin.rateBp) })}
-            />
-            <p className={`mt-1.5 text-[12px] leading-snug ${margin.lock !== null || !margin.canDouble ? 'text-gold-200' : 'text-ink-300'}`}>
+            <p className="mb-1.5 text-[13px] text-ink-300">{plans('marginTitle')}</p>
+            {canGear ? (
+              <Segmented<Gear>
+                label={plans('marginTitle')}
+                value={gear}
+                onChange={setGear}
+                options={GEARS.map((value) => ({ value, label: value === 1 ? plans('gearNone') : `×${gearText(value)}` }))}
+              />
+            ) : null}
+            <p className={`mt-1.5 text-[12px] leading-snug ${canGear ? 'text-ink-300' : 'text-gold-200'}`}>
               {margin.lock !== null
                 ? text.reasons[margin.lock]
                 : !margin.canDouble
                   ? plans('marginFull', { pct: margin.maxPct })
-                  : plans('marginRisk', { call: margin.callPct, drop: 100 - Math.ceil((margin.maxPct * 100) / margin.callPct) })}
+                  : gear === 1
+                    ? plans('gearAbout', { rate: fmt.rate(margin.rateBp) })
+                    : plans('gearRisk', { gear: gearText(gear), call: margin.callPct })}
             </p>
           </section>
         )
@@ -768,8 +840,11 @@ function DebtTab() {
             <div className="min-w-0 flex-1">
               <div className="truncate">{debtLabel(words, debt, p.properties)}</div>
               <div className="text-[12px] text-ink-300">
-                {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })} · {t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}
+                {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })}
+                {/* A broker's loan has no term: it is paid back when the holding is sold. */}
+                {debt.kind === 'margin' ? null : ` · ${t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}`}
               </div>
+              {debt.kind === 'margin' && debt.forAsset ? <MarginGauge assetId={debt.forAsset} /> : null}
               {/* A mortgage can be switched between fixed and variable: said under it, opened in a sheet. Not while it rests from the last switch. */}
               <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
             </div>
