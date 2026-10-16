@@ -18,7 +18,16 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 14 | Weekly challenge | One life and one rule for everyone each week on a seed only the server holds, one attempt that counts and practice as often as wanted, its own ranking and how others chose; it took the place of a daily challenge | Built, deployed (engine 0.24.0) | | P2 |
 | 15 | Online rooms | 2 to 6 friends live the same life on one seed, a round at a time: a host opens a room for a life and a round of 1:30, 3:00 or 5:00 and shares its code or link; cards are played at once and orders kept until everyone is ready or the deadline passes; the room's clock and who has played above the round, the wait, the room's order after each round and at the end; everything kept on the server, so a page that comes back finds the room as it stands and is told how many rounds the clock played | Built, reviewed, and checked against the live project (two guests through a whole room, a round turned by a member leaving, a change heard through Realtime); on `dev` | L | P2 |
 | 16 | More content | 7 more cities, 40 more assets and tools, 35 more items, 50 more cards, 8 more lives | Planned | L | P3 |
-| 17 | App and operations | Installable app, reminders, monitoring, backups | Planned | M | P3 |
+| 17 | App and operations | What keeps the game installed, coming back, watched and safe, in the nine parts below | Part built | M | P3 |
+| 17a | Installable app | Install from every browser (the native prompt, or the steps on an iPhone), an offline page, and a service worker that never keeps the cloud's answers | Built, with an end-to-end test | | P3 |
+| 17b | Notices | A push when the week's challenge begins, in the player's language, with a switch in Settings; next, "your turn" in a game with friends | Weekly notice built, waiting on its keys and secrets (`docs/pwa.md`); the friends' notice under way | S | P3 |
+| 17c | Automatic checks | Unit tests, types, lint and the end-to-end walk on every push to `dev` and `main` (GitHub Actions), and `main` refused while they are red | Not started: there is no CI, which is how 21 end-to-end tests fell behind unnoticed | S | P2 |
+| 17d | Safe releases | `main` goes out only when the server holds the rules of its build (`shipped.json` checked before Vercel deploys) | Not started | S | P2 |
+| 17e | Error monitoring | The errors of the page and of the functions in one place, with an alert, and nothing personal in them | Not started | S | P3 |
+| 17f | Usage numbers | Lives begun and finished, players back after one day and after seven, accounts kept, games with friends played; no cookies | Not started | S | P3 |
+| 17g | Health | An hourly check that a guest can sign in, play a step and open a game with friends, with an alert; the free project kept from pausing after a week with no use | Not started | S | P3 |
+| 17h | Backups | A daily copy of the database kept outside Supabase, and one restore tried for real | Not started | S | P2 |
+| 17i | Housekeeping | Guests who never came back removed after a while, old rooms and call counters cleared; the CAPTCHA on guest sign-in turned on with its keys | Not started | S | P3 |
 
 Beside the steps: since 2026-10-13 the game is also played in Russian, a third language beside English and Spanish. Every sentence of the interface and of the content is translated, to the rules in `docs/i18n/russian.md`; whoever adds text adds it in all three.
 
