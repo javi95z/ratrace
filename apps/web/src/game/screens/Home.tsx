@@ -53,7 +53,7 @@ export function Home() {
   };
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col items-center gap-5 px-4 pb-8 pt-10">
+    <main className="mx-auto flex min-h-dvh w-full flex-col sm:max-w-sm items-center gap-5 px-4 pb-8 pt-10">
       <Sprite id="brand.mascot" alt="" className="-mb-2" fallback={{ w: 256, h: 256 }} />
       <div className="text-center">
         <h1 className="pixel text-[34px] leading-none text-gold-500">{meta('title')}</h1>
