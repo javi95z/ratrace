@@ -9,6 +9,9 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)) },
   },
   test: {
+    // A test is given half a minute, not five seconds: two sessions at work on one machine slow everything several times over,
+    // and a test that only ran out of time says nothing about the game. Whole lives ask for more where they are played.
+    testTimeout: 30_000,
     include: [
       'packages/*/src/**/*.test.ts',
       'tools/*/src/**/*.test.ts',

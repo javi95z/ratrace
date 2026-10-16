@@ -22,8 +22,8 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 const went = vi.hoisted(() => vi.fn());
 
-// Lives played a round at a time through the screens: a few seconds on a busy machine.
-vi.setConfig({ testTimeout: 60_000 });
+// Lives played a round at a time through the screens: a quarter of a minute alone, several times that on a busy machine.
+vi.setConfig({ testTimeout: 180_000 });
 
 afterEach(() => {
   cleanup();

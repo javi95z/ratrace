@@ -9,8 +9,8 @@ import { createRoomStore, LOOK_EVERY_MS } from './room';
 import type { RoomStore } from './room';
 import type { GameStore } from './store';
 
-// A room is two lives played a round at a time: a few seconds on a busy machine.
-vi.setConfig({ testTimeout: 60_000 });
+// A room is two lives played a round at a time: a quarter of a minute alone, several times that on a busy machine.
+vi.setConfig({ testTimeout: 180_000 });
 
 const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
