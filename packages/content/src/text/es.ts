@@ -107,7 +107,7 @@ export const es: ContentText = {
       unlock: 'Disponible desde el principio.',
     },
     civil_servant: {
-      name: 'Funcionario',
+      name: 'Funcionaria',
       perk: 'Trabajo para toda la vida e hipoteca más barata.',
       handicap: 'Las subidas llegan despacio.',
       unlock: 'Disponible desde el principio.',
@@ -125,7 +125,7 @@ export const es: ContentText = {
       unlock: 'Alcanza un patrimonio de un millón.',
     },
     newcomer: {
-      name: 'Recién llegado',
+      name: 'Recién llegada',
       perk: 'Cuatro puntos de foco y un segundo idioma.',
       handicap: 'Poco dinero, y cada año manda una parte a casa.',
       unlock: 'Vive en tres ciudades en una misma vida.',
@@ -209,7 +209,7 @@ export const es: ContentText = {
       unlock: 'Comparte tu vida con pareja y dos hijos.',
     },
     private_banker: {
-      name: 'Banquero privado',
+      name: 'Banquera privada',
       perk: 'La mesa mejor pagada en la ciudad más cara, con clientes que abren puertas.',
       handicap: 'Un estilo de vida que nunca puede bajar de acomodado, en Zúrich.',
       unlock: 'Reúne un millón viviendo en {city:zurich}.',

@@ -11,7 +11,7 @@ import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
-import { Difficulty, LifeSummary } from './LifeSummary';
+import { LifeBrief, LifeSummary } from './LifeSummary';
 import { Play } from './Play';
 import { FIELD, NAME } from './Rankings';
 import { RoomPaper } from '@/game/roomStory';
@@ -292,10 +292,7 @@ function LifePicker({ label, lives: choices, value, onChange }: { label: string;
             {on ? (
               <LifeSummary lifeId={life.id} light />
             ) : (
-              <span className="flex min-w-0 flex-col gap-1">
-                <span className="text-[13px] leading-tight">{life.name}</span>
-                <Difficulty lifeId={life.id} />
-              </span>
+              <LifeBrief lifeId={life.id} />
             )}
           </button>
         );

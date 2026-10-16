@@ -10,7 +10,7 @@ import { Button, Segmented, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useKeyboardContext } from '@/ui/keyboard';
-import { Difficulty, LifeSummary } from './LifeSummary';
+import { Difficulty, LifeBrief, LifeSummary } from './LifeSummary';
 
 /** Choose who to be. A locked life shows what unlocks it. */
 export function NewLife() {
@@ -142,10 +142,7 @@ export function NewLife() {
               {on ? (
                 <LifeSummary lifeId={life.id} light />
               ) : (
-                <span className="flex min-w-0 flex-col gap-1">
-                  <span className="text-[13px] leading-tight">{text.lives[life.id].name}</span>
-                  <Difficulty lifeId={life.id} />
-                </span>
+                <LifeBrief lifeId={life.id} />
               )}
             </button>
           );

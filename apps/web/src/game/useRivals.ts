@@ -9,7 +9,7 @@ import type { Rival } from './rivals';
 export const RIVAL_NAMES = 6;
 
 /** The lives drawn as women; the rest are drawn as men. An ex is of the other sex. */
-const WOMEN: ReadonlySet<string> = new Set(['nurse', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson']);
+const WOMEN: ReadonlySet<string> = new Set(['nurse', 'civil_servant', 'newcomer', 'doctor', 'founder', 'lawyer', 'programmer', 'influencer', 'salesperson', 'private_banker']);
 
 /** Whether each rival is a woman: the classmate a man, the cousin a woman, the ex the other sex to the player. */
 const isWoman = (rival: Rival, lifeId: string): boolean => (rival.id === 'cousin' ? true : rival.id === 'ex' ? !WOMEN.has(lifeId) : false);

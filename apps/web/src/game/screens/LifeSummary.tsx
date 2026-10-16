@@ -61,3 +61,21 @@ export function LifeSummary({ lifeId, light = false }: { lifeId: string; light?:
     </span>
   );
 }
+
+/** A life as a small tile shows it, not chosen: its name, the city it starts in, and how hard it is. */
+export function LifeBrief({ lifeId }: { lifeId: string }) {
+  const { text, names } = useWords();
+  const life = lives.find((one) => one.id === lifeId);
+  if (!life) return null;
+  return (
+    <span className="flex min-w-0 flex-col gap-1">
+      <span className="text-[13px] leading-tight">{text.lives[lifeId]?.name ?? lifeId}</span>
+      <span className="flex items-center gap-1 text-[11px] leading-none text-ink-300">
+        <Sprite id={cityIcon(life.start.cityId)} className="!h-4 !w-4" />
+        <span className="truncate">{names.cities[life.start.cityId]}</span>
+      </span>
+      <Difficulty lifeId={lifeId} />
+    </span>
+  );
+}
+

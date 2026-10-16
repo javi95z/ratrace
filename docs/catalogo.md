@@ -52,9 +52,9 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Desventaja | Empieza con un préstamo de estudios. |
 | Se desbloquea | Disponible desde el principio. |
 
-### Funcionario
+### Funcionaria
 
-<img src="../art/clean/portraits/portrait.civil_servant.22.png" alt="Funcionario a los 22"> <img src="../art/clean/portraits/portrait.civil_servant.32.png" alt="Funcionario a los 32"> <img src="../art/clean/portraits/portrait.civil_servant.45.png" alt="Funcionario a los 45"> <img src="../art/clean/portraits/portrait.civil_servant.58.png" alt="Funcionario a los 58">
+<img src="../art/clean/portraits/portrait.civil_servant.22.png" alt="Funcionaria a los 22"> <img src="../art/clean/portraits/portrait.civil_servant.32.png" alt="Funcionaria a los 32"> <img src="../art/clean/portraits/portrait.civil_servant.45.png" alt="Funcionaria a los 45"> <img src="../art/clean/portraits/portrait.civil_servant.58.png" alt="Funcionaria a los 58">
 
 |  |  |
 | --- | --- |
@@ -97,9 +97,9 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Desventaja | No sabe vivir con poco, y no tiene formación. |
 | Se desbloquea | Alcanza un patrimonio de un millón. |
 
-### Recién llegado
+### Recién llegada
 
-<img src="../art/clean/portraits/portrait.newcomer.22.png" alt="Recién llegado a los 22"> <img src="../art/clean/portraits/portrait.newcomer.32.png" alt="Recién llegado a los 32"> <img src="../art/clean/portraits/portrait.newcomer.45.png" alt="Recién llegado a los 45"> <img src="../art/clean/portraits/portrait.newcomer.58.png" alt="Recién llegado a los 58">
+<img src="../art/clean/portraits/portrait.newcomer.22.png" alt="Recién llegada a los 22"> <img src="../art/clean/portraits/portrait.newcomer.32.png" alt="Recién llegada a los 32"> <img src="../art/clean/portraits/portrait.newcomer.45.png" alt="Recién llegada a los 45"> <img src="../art/clean/portraits/portrait.newcomer.58.png" alt="Recién llegada a los 58">
 
 |  |  |
 | --- | --- |
@@ -307,9 +307,9 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Desventaja | El sueldo más bajo al empezar, y jornadas largas. |
 | Se desbloquea | Comparte tu vida con pareja y dos hijos. |
 
-### Banquero privado
+### Banquera privada
 
-<img src="../art/clean/portraits/portrait.private_banker.22.png" alt="Banquero privado a los 22"> <img src="../art/clean/portraits/portrait.private_banker.32.png" alt="Banquero privado a los 32"> <img src="../art/clean/portraits/portrait.private_banker.45.png" alt="Banquero privado a los 45"> <img src="../art/clean/portraits/portrait.private_banker.58.png" alt="Banquero privado a los 58">
+<img src="../art/clean/portraits/portrait.private_banker.22.png" alt="Banquera privada a los 22"> <img src="../art/clean/portraits/portrait.private_banker.32.png" alt="Banquera privada a los 32"> <img src="../art/clean/portraits/portrait.private_banker.45.png" alt="Banquera privada a los 45"> <img src="../art/clean/portraits/portrait.private_banker.58.png" alt="Banquera privada a los 58">
 
 |  |  |
 | --- | --- |
