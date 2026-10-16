@@ -931,9 +931,8 @@ function Versus({ label, here, there, more = 'better', strong = false }: { label
 function MoveSheet({ onClose }: { onClose(): void }) {
   const t = useT('finance.lifestyle');
   const common = useT('common');
-  const { content, text, names, fmt } = useWords();
+  const { content, names, fmt } = useWords();
   const { shown, p } = useRound();
-  const job = p.life.career;
   // One city at a time in full; the list is short, a row a city.
   const [chosen, setChosen] = useState<string | null>(null);
   const quotes = content.cities.map((city) => ({ city, quote: quoteMove(content, shown, city.id) }));
@@ -953,7 +952,6 @@ function MoveSheet({ onClose }: { onClose(): void }) {
           <ul className="flex flex-col gap-1.5">
             {[...(here ? [here] : []), ...others].map(({ city, quote }) => {
               const home = city.id === p.cityId;
-              const best = job !== null && (city.careerPayPct?.[job.id] ?? 100) > 100;
               const gain = quote.there.leftAnnual - quote.here.leftAnnual;
               return (
                 <li key={city.id}>
@@ -968,10 +966,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
                     </Bare>
                     <span className="min-w-0 flex-1">
                       <span className="pixel block truncate text-[16px]">{names.cities[city.id]}</span>
-                      <span className="flex flex-wrap gap-1">
-                        {home ? <Tag tone="good">{t('here')}</Tag> : null}
-                        {best && job ? <Tag tone="plain">{t('bestForJob', { career: text.careers[job.id].name })}</Tag> : null}
-                      </span>
+                      {home ? <Tag tone="good">{t('here')}</Tag> : null}
                     </span>
                     <span className={`pixel shrink-0 text-right text-[16px] ${home ? '' : gain > 0 ? 'text-teal-300' : gain < 0 ? 'text-wine-300' : ''}`}>
                       {fmt.compact(home ? quote.here.leftAnnual : quote.there.leftAnnual)}
@@ -1002,7 +997,6 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
   const here = city.id === p.cityId;
   const tax = effectiveTax(city, world);
   const { here: now, there } = quote;
-  const trades = Object.entries(city.careerPayPct ?? {});
 
   return (
     <section aria-label={names.cities[city.id]} className="flex flex-col gap-2">
@@ -1018,12 +1012,6 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
       </div>
       <div className="flex flex-wrap gap-1.5">
         <Tag tone="good">{t('cityStatus', { n: city.prestige })}</Tag>
-        {/* The trades the city pays above the usual. The player's own stands out. */}
-        {trades.map(([career, pct]) => (
-          <Tag key={career} tone={job?.id === career ? 'good' : 'plain'}>
-            {t('cityTrade', { career: text.careers[career].name, pct: pct - 100 })}
-          </Tag>
-        ))}
       </div>
 
       {here ? null : (

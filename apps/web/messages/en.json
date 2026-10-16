@@ -148,7 +148,7 @@
       "worth": "Getting out now would multiply your score by {multiplier}. The sooner you get out, the more it is worth.",
       "escaped": "You got out at {age}: your score is multiplied by {multiplier}. Keep your outgoings covered so you do not fall back in."
     },
-    "roundShort": "{n} of {total}",
+    "roundShort": "Round {n} of {total}",
     "openNews": "Read the paper again",
     "newsTitle": "The paper"
   },
@@ -171,8 +171,8 @@
     "challenge": "Weekly challenge",
     "practice": "Challenge practice",
     "points": "{n} pts",
-    "weeklyNotice": "Tell me of the weekly challenge",
-    "weeklyNoticeHint": "A notice on Monday, when a new one begins.",
+    "weeklyNotice": "Turn on notifications",
+    "weeklyNoticeHint": "A notice every Monday, when a new weekly challenge begins.",
     "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings."
   },
   "play": {
@@ -531,7 +531,6 @@
       "moveLapses": "Moving ends: {items}.",
       "moveAbout": "Every city, with your year there beside the one you have here. Moving of your own accord costs a rung of your career and, with a partner, their pay for a round; a transfer a card offers costs none of that. With Languages {level} you keep your rung.",
       "cityStatus": "Status +{n}",
-      "cityTrade": "{career} +{pct}%",
       "yearHere": "Here",
       "yearThere": "There",
       "yourPay": "Your pay",
@@ -553,7 +552,6 @@
       "tired": "−{n} health",
       "burnoutRisk": "{pct}% risk of burnout",
       "rungStudyLeft": "{left} of {max} left at this rung",
-      "bestForJob": "Pays {career} more",
       "allCities": "← All cities",
       "showNumbers": "See the figures",
       "hideNumbers": "Hide the figures",

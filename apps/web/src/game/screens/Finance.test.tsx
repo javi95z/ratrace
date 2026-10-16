@@ -512,8 +512,8 @@ describe('moving to another city', () => {
     expect(rows).toHaveLength(content.cities.length);
     expect(within(rows[0]).getByText('Madrid')).toBeTruthy();
     expect(within(rows[0]).getByText('You live here')).toBeTruthy();
-    // Madrid pays her trade above the usual, and says so on its row.
-    expect(within(rows[0]).getByText('Pays Healthcare more')).toBeTruthy();
+    // What a city pays a trade above the usual is in its numbers, not on its row.
+    expect(within(rows[0]).queryByText(/more/)).toBeNull();
     expect(rows.slice(1).map((row) => row.textContent)).toEqual(
       [...content.cities.filter((city) => city.id !== 'madrid')]
         .sort((a, b) => quoteMove(content, view, b.id).there.leftAnnual - quoteMove(content, view, a.id).there.leftAnnual)
