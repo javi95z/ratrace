@@ -1,6 +1,6 @@
 'use client';
 
-import { badgeArt, lives, portraitArt } from '@ratrace/content';
+import { badgeArt, cityIcon, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
@@ -181,12 +181,15 @@ function Door() {
     void join(code);
   };
 
-  return (
-    <Page title={t('title')}>
-      {invited ? (
-        <section aria-label={t('invited')} className="frame-raised frame-gold flex flex-col items-center gap-2 bg-night-700 px-3 py-3 text-center">
-          <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('invited')}</p>
-          <p className="pixel text-[40px] leading-none tracking-[0.18em] text-gold-500">{invited}</p>
+  // Come by an invitation, the page is the invitation: the game to join, and the one button that joins it.
+  if (invited) {
+    return (
+      <Page title={t('title')}>
+        <section aria-label={t('invited')} className="frame-raised frame-gold flex flex-col items-center gap-3 bg-night-600 px-4 py-5 text-center">
+          <Sprite id="icon.skill_network" className="!h-12 !w-12" />
+          <p className="pixel text-[18px] leading-tight text-gold-500">{t('invited')}</p>
+          <p className="pixel text-[52px] leading-none tracking-[0.16em] text-cream">{invited}</p>
+          <p className="text-[14px] leading-snug text-ink-200">{t('invitedAbout')}</p>
           <Button
             variant="primary"
             wide
@@ -199,7 +202,18 @@ function Door() {
             {t('joinInvite')}
           </Button>
         </section>
-      ) : null}
+        {closed ? (
+          <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">
+            {t('closed')}
+          </p>
+        ) : null}
+        <Refusal />
+      </Page>
+    );
+  }
+
+  return (
+    <Page title={t('title')}>
       <ul className="flex flex-col gap-1.5 text-[15px] leading-snug text-ink-200">
         {(['introSame', 'introWho', 'introPace'] as const).map((line) => (
           <li key={line} className="flex gap-2">
@@ -215,7 +229,7 @@ function Door() {
           {t('closed')}
         </p>
       ) : null}
-      <Button variant={invited ? 'secondary' : 'primary'} wide disabled={busy} onClick={() => setOpening(true)}>
+      <Button variant="primary" wide disabled={busy} onClick={() => setOpening(true)}>
         {t('open')}
       </Button>
       <Panel title={t('join')}>
@@ -292,7 +306,17 @@ function LifeAbout({ lifeId }: { lifeId: string }) {
   return (
     <span className="flex min-w-0 flex-1 flex-col items-start gap-1 py-1 pr-1">
       <span className="pixel text-[16px] leading-tight">{written.name}</span>
-      <span className="text-[12px] leading-tight text-ink-700">{newLife('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>
+      <span className="sr-only">{newLife('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>
+      <span aria-hidden className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-900">
+        <span className="flex items-center gap-1">
+          <Sprite id={cityIcon(life.start.cityId)} />
+          {names.cities[life.start.cityId]}
+        </span>
+        <span className="pixel flex items-center gap-1 text-[14px]">
+          <Sprite id="icon.cash" />
+          {fmt.money(life.start.cash)}
+        </span>
+      </span>
       <Tag tone="good">{written.perk}</Tag>
       <Tag tone="bad">{written.handicap}</Tag>
     </span>
@@ -471,7 +495,6 @@ function Lobby({ room }: { room: RoomState }) {
       <section aria-label={t('code')} className="flex flex-col items-center gap-2 py-2 text-center">
         <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('code')}</p>
         <p className="pixel text-[44px] leading-none tracking-[0.18em] text-gold-500">{room.code}</p>
-        {url ? <p className="max-w-full select-all truncate text-[12px] text-ink-300">{url.replace(/^https?:\/\//, '')}</p> : null}
         <div className="flex flex-wrap justify-center gap-2">
           {canShare ? <Button onClick={() => void share()}>{t('share')}</Button> : null}
           <Button onClick={() => void copy()}>{t('copyLink')}</Button>
@@ -509,7 +532,7 @@ function Lobby({ room }: { room: RoomState }) {
           {enough ? null : <p className="text-center text-[13px] text-ink-300">{t('needsTwo')}</p>}
         </div>
       ) : (
-        <p role="status" className="pixel animate-blink text-center text-[15px] text-ink-200">
+        <p role="status" className="pixel text-center text-[15px] text-ink-200">
           {t('waitingHost')}
         </p>
       )}
@@ -614,12 +637,11 @@ function ShoutButton({ wide = false }: { wide?: boolean }) {
     return () => clearInterval(timer);
   }, [until]);
   const wait = Math.max(0, Math.ceil((until - Date.now()) / 1000));
-  const send = async (n: number) => {
-    const said = await shout(n);
-    if (said === 'ok') {
-      setUntil(Date.now() + SHOUT_EVERY_MS);
-      setOpen(false);
-    } else if (said === 'soon') setUntil(Date.now() + SHOUT_EVERY_MS);
+  // The sheet closes the moment a shout is chosen: the server is asked after, and the wait starts at once.
+  const send = (n: number) => {
+    setUntil(Date.now() + SHOUT_EVERY_MS);
+    setOpen(false);
+    void shout(n);
   };
   return (
     <>
@@ -637,7 +659,7 @@ function ShoutButton({ wide = false }: { wide?: boolean }) {
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-6 gap-2">
             {SHOUT_FACES.map((face, n) => (
-              <button key={face} type="button" disabled={wait > 0} aria-label={face} onClick={() => void send(n)} className="frame-raised flex aspect-square items-center justify-center bg-night-700 text-[24px] disabled:opacity-50">
+              <button key={face} type="button" disabled={wait > 0} aria-label={face} onClick={() => send(n)} className="frame-raised flex aspect-square items-center justify-center bg-night-700 text-[24px] disabled:opacity-50">
                 {face}
               </button>
             ))}
@@ -648,7 +670,7 @@ function ShoutButton({ wide = false }: { wide?: boolean }) {
                 key={key}
                 type="button"
                 disabled={wait > 0}
-                onClick={() => void send(SHOUT_FACES.length + at)}
+                onClick={() => send(SHOUT_FACES.length + at)}
                 className="frame-raised min-h-11 bg-night-600 px-2 py-1.5 text-left text-[14px] leading-tight disabled:opacity-50"
               >
                 {textOf(SHOUT_FACES.length + at)}

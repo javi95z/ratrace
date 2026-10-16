@@ -1596,6 +1596,7 @@
     "paperJumpMe": "You strike it rich: +{n} points",
     "paperDrop": "{who} sinks: −{n} points",
     "paperDropMe": "You sink: −{n} points",
-    "paperNeck": "Neck and neck at the top: {who} and {other}"
+    "paperNeck": "Neck and neck at the top: {who} and {other}",
+    "invitedAbout": "You will all live the same life, in the same world. Whoever ends with the most points wins."
   }
 }

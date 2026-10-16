@@ -1596,6 +1596,7 @@
     "paperJumpMe": "Das el pelotazo: +{n} puntos",
     "paperDrop": "{who} se hunde: −{n} puntos",
     "paperDropMe": "Te hundes: −{n} puntos",
-    "paperNeck": "Empate técnico en cabeza entre {who} y {other}"
+    "paperNeck": "Empate técnico en cabeza entre {who} y {other}",
+    "invitedAbout": "Todos viviréis la misma vida, en el mismo mundo. Gana quien acabe con más puntos."
   }
 }

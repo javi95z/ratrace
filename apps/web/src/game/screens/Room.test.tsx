@@ -153,10 +153,11 @@ describe('opening and joining a room', () => {
     await user.click(await screen.findByRole('button', { name: 'Start a game' }));
     await user.click(within(screen.getByRole('dialog', { name: 'Start a game' })).getByRole('button', { name: 'Start the game' }));
     const code = await screen.findByRole('region', { name: 'Game code' });
-    const shown = within(code).getByText(/\/en\/room\?code=[A-Z0-9]{6}$/);
+    // The link is not written out: it is shared or copied.
+    expect(within(code).queryByText(/room\?code=/)).toBeNull();
     await user.click(within(code).getByRole('button', { name: 'Copy link' }));
     expect(await screen.findByText('Link copied.')).toBeTruthy();
-    expect(await navigator.clipboard.readText()).toBe(`http://${shown.textContent}`);
+    expect(await navigator.clipboard.readText()).toMatch(/\/en\/room\?code=[A-Z0-9]{6}$/);
   });
 
   it('joins by the code an invitation carries, and waits for the host', async () => {
@@ -169,6 +170,9 @@ describe('opening and joining a room', () => {
     renderGame(<Room />, services);
     const invitation = await screen.findByRole('region', { name: 'You are invited to the game' });
     expect(within(invitation).getByText(code)).toBeTruthy();
+    // Come by a link, there is nothing else to do here: no game to open, no other code to type.
+    expect(screen.queryByRole('button', { name: 'Start a game' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Game code' })).toBeNull();
     await user.click(within(invitation).getByRole('button', { name: 'Join the game' }));
     expect(await screen.findByText('Waiting for the host to start.')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'In the game: 2 of 6' })).toBeTruthy();
