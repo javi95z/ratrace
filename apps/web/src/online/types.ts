@@ -172,4 +172,8 @@ export interface Community {
   challengeRanking(week: string): Promise<ChallengeRanking | null>;
   /** The player's choices in their attempt at a week, card by card, beside everyone's. Empty until the attempt is over. */
   challengeChoices(week: string): Promise<ChallengeChoice[] | null>;
+  /** Keeps where this browser can be told of the weekly challenge, in a language. False if it could not. */
+  notifyMe(keys: { endpoint: string; p256dh: string; auth: string }, locale: string): Promise<boolean>;
+  /** Forgets a browser that no longer wants to be told. */
+  stopNotifying(endpoint: string): Promise<boolean>;
 }

@@ -55,6 +55,41 @@ self.addEventListener('install', (event) => {
   })());
 });
 
+// The weekly notice: shown as the server sends it, and a tap opens the page it leads to, in a
+// window of the game that is already open if there is one.
+self.addEventListener('push', (event) => {
+  let notice = {};
+  try {
+    notice = event.data ? event.data.json() : {};
+  } catch {
+    notice = {};
+  }
+  if (!notice.title) return;
+  event.waitUntil(self.registration.showNotification(notice.title, {
+    body: notice.body,
+    tag: notice.tag,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { url: notice.url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil((async () => {
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of open) {
+      if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+        await client.focus();
+        if ('navigate' in client) await client.navigate(url);
+        return;
+      }
+    }
+    await self.clients.openWindow(url);
+  })());
+});
+
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();

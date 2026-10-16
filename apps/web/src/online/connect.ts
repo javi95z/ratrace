@@ -305,6 +305,22 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return null;
         }
       },
+      async notifyMe(keys, locale) {
+        try {
+          const { error } = await client.from('push_subscriptions').upsert({ endpoint: keys.endpoint, p256dh: keys.p256dh, auth: keys.auth, locale, user_id: await me() }, { onConflict: 'endpoint' });
+          return !error;
+        } catch {
+          return false;
+        }
+      },
+      async stopNotifying(endpoint) {
+        try {
+          const { error } = await client.from('push_subscriptions').delete().eq('endpoint', endpoint);
+          return !error;
+        } catch {
+          return false;
+        }
+      },
       async challengeChoices(week) {
         try {
           const { data, error } = await client.rpc('challenge_choices', { week_id: week });

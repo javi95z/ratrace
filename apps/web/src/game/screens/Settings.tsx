@@ -4,7 +4,8 @@ import { CONTENT_VERSION, portraitArt } from '@ratrace/content';
 import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
-import { useAccount, useAccountSaves, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
+import { useAccount, useAccountSaves, useCommunity, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
+import { canNotify, currentSubscription, subscribe, unsubscribe } from '@/pwa/notifications';
 import { ageAt, portraitAge } from '@/game/present';
 import { Link, usePathname } from '@/i18n/navigation';
 import { maskEmail } from '@/lib/mask';
@@ -135,8 +136,43 @@ function Switches() {
       <Toggle on={sound} onChange={setSound} label={t('sound')} hint={t('soundHint')} />
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
+      <WeeklyNotice />
     </div>
   );
+}
+
+/**
+ * Being told when a new weekly challenge begins, even with the game closed. It is offered only
+ * where the browser can show a notice and there is an account to keep the subscription in; a no
+ * from the browser is said, since only the browser can undo it.
+ */
+function WeeklyNotice() {
+  const t = useT('settings');
+  const { locale } = useSettings();
+  const community = useCommunity();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [refused, setRefused] = useState(false);
+  useEffect(() => {
+    let live = true;
+    if (canNotify()) void currentSubscription().then((held) => live && setOn(held !== null), () => live && setOn(false));
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (!canNotify() || community === null || on === null) return null;
+  const change = async (want: boolean) => {
+    if (want) {
+      const keys = await subscribe();
+      if (keys === null) return setRefused(Notification.permission === 'denied');
+      setRefused(false);
+      setOn(await community.notifyMe(keys, locale));
+    } else {
+      const endpoint = await unsubscribe();
+      if (endpoint) await community.stopNotifying(endpoint);
+      setOn(false);
+    }
+  };
+  return <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? t('weeklyNoticeBlocked') : t('weeklyNoticeHint')} />;
 }
 
 /** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */

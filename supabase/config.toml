@@ -434,3 +434,7 @@ verify_jwt = true
 # Rooms: friends living the same life a round at a time; the server plays every member's life. Signed-in players only.
 [functions.rooms]
 verify_jwt = true
+
+# The weekly notice: called by a job of the database with the project's secret key, never by a player.
+[functions.weekly-notice]
+verify_jwt = false

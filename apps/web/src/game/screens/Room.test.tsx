@@ -93,13 +93,13 @@ describe('the way to the rooms', () => {
     cleanup();
     const room = await lobby(server);
     renderGame(<Home />, services);
-    const back = await screen.findByRole('link', { name: /Back to your room/ });
-    expect(back.textContent).toContain(`Room ${room.code} · waiting to start`);
+    const back = await screen.findByRole('link', { name: /Back to your game/ });
+    expect(back.textContent).toContain(`Game ${room.code} · waiting to start`);
   });
 
   it('says rooms need an account and a connection where there is none', async () => {
     renderGame(<Room />, memoryServices());
-    expect(await screen.findByText('Rooms need an account and a connection.')).toBeTruthy();
+    expect(await screen.findByText('Games with friends need an account and a connection.')).toBeTruthy();
   });
 });
 
@@ -108,17 +108,17 @@ describe('opening and joining a room', () => {
     const { services } = inRooms();
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: 'Open a room' }));
-    const sheet = screen.getByRole('dialog', { name: 'Open a room' });
+    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
+    const sheet = screen.getByRole('dialog', { name: 'Start a game' });
     await user.click(within(sheet).getByRole('radio', { name: '1:30' }));
     await user.click(within(sheet).getByRole('radio', { name: /Software engineer/ }));
-    await user.click(within(sheet).getByRole('button', { name: 'Open the room' }));
+    await user.click(within(sheet).getByRole('button', { name: 'Start the game' }));
 
-    const code = await screen.findByRole('region', { name: 'Room code' });
+    const code = await screen.findByRole('region', { name: 'Game code' });
     expect(within(code).getByText(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/)).toBeTruthy();
     expect(screen.getByText('Software engineer')).toBeTruthy();
     expect(screen.getByText('1:30 a round')).toBeTruthy();
-    const members = screen.getByRole('region', { name: 'In the room: 1 of 6' });
+    const members = screen.getByRole('region', { name: 'In the game: 1 of 6' });
     expect(within(members).getByText('Host')).toBeTruthy();
     expect(within(members).getByText('You')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Start' }) as HTMLButtonElement).disabled).toBe(true);
@@ -133,11 +133,11 @@ describe('opening and joining a room', () => {
     const { services } = inRooms(server, B);
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    const field = await screen.findByRole('textbox', { name: 'Room code' });
+    const field = await screen.findByRole('textbox', { name: 'Game code' });
     await waitFor(() => expect((field as HTMLInputElement).value).toBe(code));
     await user.click(screen.getByRole('button', { name: 'Join' }));
     expect(await screen.findByText('Waiting for the host to start.')).toBeTruthy();
-    expect(screen.getByRole('region', { name: 'In the room: 2 of 6' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'In the game: 2 of 6' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Start' })).toBeNull();
   });
 
@@ -145,9 +145,9 @@ describe('opening and joining a room', () => {
     const { services } = inRooms();
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.type(await screen.findByRole('textbox', { name: 'Room code' }), 'zzzzzz');
+    await user.type(await screen.findByRole('textbox', { name: 'Game code' }), 'zzzzzz');
     await user.click(screen.getByRole('button', { name: 'Join' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('No room has that code.');
+    expect((await screen.findByRole('alert')).textContent).toBe('No game has that code.');
   });
 
   it('asks the host before leaving the lobby, and says it closes the room for everyone', async () => {
@@ -156,11 +156,11 @@ describe('opening and joining a room', () => {
     const { services } = inRooms(server);
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: 'Leave the room' }));
-    const sheet = screen.getByRole('dialog', { name: 'Leave the room?' });
-    expect(within(sheet).getByText('You opened it: leaving closes it for everyone.')).toBeTruthy();
+    await user.click(await screen.findByRole('button', { name: 'Leave the game' }));
+    const sheet = screen.getByRole('dialog', { name: 'Leave the game?' });
+    expect(within(sheet).getByText('You started it: leaving ends it for everyone.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Leave' }));
-    expect(await screen.findByRole('button', { name: 'Open a room' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
     expect((await server.ask(B, { action: 'mine' })).body.room).toBeNull();
   });
 });
@@ -173,7 +173,7 @@ describe('a round in a room', () => {
     const user = userEvent.setup();
     renderGame(<Room />, services);
     await user.click(await screen.findByRole('button', { name: 'Start' }));
-    const bar = await screen.findByRole('button', { name: /^The room: \d:\d\d left, 0 of 2 have played$/ });
+    const bar = await screen.findByRole('button', { name: /^The game: \d:\d\d left, 0 of 2 have played$/ });
     expect(bar.getAttribute('aria-haspopup')).toBe('dialog');
 
     await toFinance(user);
@@ -197,14 +197,14 @@ describe('a round in a room', () => {
     const { services } = inRooms(server);
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    await user.click(await screen.findByRole('button', { name: /^The room:/ }));
-    const sheet = screen.getByRole('dialog', { name: 'The room' });
+    await user.click(await screen.findByRole('button', { name: /^The game:/ }));
+    const sheet = screen.getByRole('dialog', { name: 'The game' });
     expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
-    await user.click(within(sheet).getByRole('button', { name: 'Leave the room' }));
-    const asking = screen.getByRole('dialog', { name: 'Leave the room?' });
-    expect(within(asking).getByText('Your life in the room ends here. The others play on without you.')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Leave the game' }));
+    const asking = screen.getByRole('dialog', { name: 'Leave the game?' });
+    expect(within(asking).getByText('Your life in the game ends here. The others play on without you.')).toBeTruthy();
     await user.click(within(asking).getByRole('button', { name: 'Leave' }));
-    expect(await screen.findByRole('button', { name: 'Open a room' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
     expect(went).not.toHaveBeenCalled();
   });
 
@@ -214,7 +214,7 @@ describe('a round in a room', () => {
     await server.ask(HOST, { action: 'start', roomId: room.id });
     const { services } = inRooms(server);
     renderGame(<Room />, services);
-    await screen.findByRole('button', { name: /^The room:/ });
+    await screen.findByRole('button', { name: /^The game:/ });
     for (let round = 0; round < 2; round++) {
       server.wait(90_000 + 5_000);
       await act(async () => {
@@ -231,13 +231,13 @@ describe('a round in a room', () => {
     const server = roomServer();
     const room = await lobby(server);
     await server.ask(HOST, { action: 'start', roomId: room.id });
-    // The room began under rules this page no longer plays.
+    // The game began under rules this page no longer plays.
     Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '0.1.0' });
     const { services } = inRooms(server);
     renderGame(<Room />, services);
-    expect(await screen.findByText('This room plays another version of the game. Reload the page to play it.')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^The room:/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Leave the room' })).toBeTruthy();
+    expect(await screen.findByText('This game plays another version. Reload the page to play it.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^The game:/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Leave the game' })).toBeTruthy();
   });
 
   it('keeps the ticking clock out of what a screen reader is told while the player waits', async () => {
@@ -320,12 +320,12 @@ describe('a round in a room', () => {
     await user.click(screen.getByRole('button', { name: /Play the round/ }));
     await bPlays(server, room.id);
     await user.click(await screen.findByRole('button', { name: /See how it ended/ }, { timeout: 5_000 }));
-    const final = await screen.findByRole('region', { name: 'How the room ended' });
+    const final = await screen.findByRole('region', { name: 'How the game ended' });
     expect(within(final).getByText(/^Place [12] of 2$/)).toBeTruthy();
     expect(within(final).getAllByRole('listitem')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
-    await user.click(within(final).getByRole('button', { name: 'Leave the room' }));
-    expect(await screen.findByRole('button', { name: 'Open a room' })).toBeTruthy();
+    await user.click(within(final).getByRole('button', { name: 'Leave the game' }));
+    expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
     expect((await services.store.listRuns())[0]).toMatchObject({ room: true });
   });
 });

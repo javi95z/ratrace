@@ -460,6 +460,20 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.challengeChoices('2026-W42')).toBeNull();
   });
 
+  it('keeps where a browser can be told of the weekly challenge, and forgets it when asked', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.push_subscriptions = { data: null, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.notifyMe({ endpoint: 'https://push.example/1', p256dh: 'p', auth: 'a' }, 'es')).toBe(true);
+    expect(await cloud.community.stopNotifying('https://push.example/1')).toBe(true);
+    expect(client.asked).toEqual([
+      ['push_subscriptions', ['upsert', { endpoint: 'https://push.example/1', p256dh: 'p', auth: 'a', locale: 'es', user_id: 'u-1' }, { onConflict: 'endpoint' }]],
+      ['push_subscriptions', ['delete'], ['eq', 'endpoint', 'https://push.example/1']],
+    ]);
+    client.answers.push_subscriptions = { data: null, error: new Error('offline') };
+    expect(await cloud.community.notifyMe({ endpoint: 'https://push.example/1', p256dh: 'p', auth: 'a' }, 'es')).toBe(false);
+  });
+
   it('says whether the player has had their attempt at a week, and its score once it is over', async () => {
     client.answers.getSession = signedIn;
     client.answers.challenge_entries = { data: { week: '2026-W42' }, error: null };

@@ -40,3 +40,29 @@ a route, takes the browser offline and reloads that route through the service wo
 For a manual check, use `pnpm build && pnpm --filter @ratrace/web start --port 3010`, open
 `http://localhost:3010`, install from Home, then disable the network and relaunch the app. Service
 workers work on localhost and HTTPS; they intentionally do not register under `next dev`.
+
+## Weekly challenge notice
+
+A player with an account can ask, in Settings, to be told when a new weekly challenge begins. The
+switch only shows where the browser can receive a push and the build has a VAPID public key. On iPhone
+and iPad it needs the game installed to the Home screen (iOS 16.4 or later).
+
+- The browser subscription lives in `public.push_subscriptions`, one row per browser, owned by the
+  player through RLS. The language of the notice is the one the player had when subscribing.
+- `pg_cron` calls the `weekly-notice` Edge Function every Monday at 08:00 UTC. It sends one notice to
+  every subscription and deletes those the push service reports gone (404/410).
+- A tap on the notice opens `/{locale}/challenge`, in an open window of the game if there is one.
+
+### Setup, once
+
+1. Generate the keys: `npx web-push generate-vapid-keys`. Keep the private one out of the repository.
+2. Edge Function secrets:
+   `supabase secrets set VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:<contact>`
+3. Vault values the cron job reads, in the SQL editor:
+   `select vault.create_secret('https://<ref>.supabase.co', 'project_url');`
+   `select vault.create_secret('<secret key>', 'secret_key');`
+4. In Vercel, `NEXT_PUBLIC_VAPID_PUBLIC_KEY=<public>` for the web build.
+5. `supabase db push`, then `pnpm online:deploy` (it deploys `weekly-notice` too).
+
+To try it without waiting for Monday, call the function with the secret key:
+`curl -X POST https://<ref>.supabase.co/functions/v1/weekly-notice -H "apikey: <secret key>"`.

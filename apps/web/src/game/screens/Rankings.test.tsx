@@ -58,6 +58,8 @@ function community(over: Partial<Community> = {}) {
     challengeEntry: async () => ({ entered: false, score: null }),
     challengeRanking: async () => ({ rows: [], entrants: 0 }),
     challengeChoices: async () => [],
+    notifyMe: async () => true,
+    stopNotifying: async () => true,
     ...over,
   };
   return { community: all, asked, state };
