@@ -8,6 +8,8 @@
 // the rules that keep players out of the rooms they are not in. Who is asking comes from the
 // token, never the body.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
 import type { RunRow } from '../_shared/finish.ts';
 import { CURRENT, GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
@@ -16,13 +18,14 @@ import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { allowed } from '../_shared/rate.ts';
 import { rooms } from '../_shared/rooms.ts';
 import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
+import { watched } from '../_shared/watch.ts';
 
 const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of';
 const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, reaction, reaction_round';
 const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+  fetch: withSupabase({ auth: 'user' }, watched('rooms', async (req: Request, ctx: SupabaseContext) => {
     const userId = ctx.userClaims?.id;
     if (typeof userId !== 'string') return json(401, { error: 'no-player' });
     const read = await readJson(req);
@@ -116,5 +119,5 @@ export default {
       read.value,
     );
     return json(reply.status, reply.body);
-  }),
+  }, noting)),
 };

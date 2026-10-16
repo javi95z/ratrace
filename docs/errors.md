@@ -15,7 +15,7 @@ alert. Nothing personal is kept or sent.
 - **In the functions**: every answer of 500 and above, and anything a function throws, under the
   function's name. The detail of a 500 the function caught itself is in its logs in the Supabase
   dashboard; the alert says so. Each function is watched by wrapping its handler in `watched`
-  (`supabase/functions/_shared/watch.ts`); `rooms` is not wrapped yet.
+  (`supabase/functions/_shared/watch.ts`); a new function is wrapped the same way.
 
 ## What a report holds
 
