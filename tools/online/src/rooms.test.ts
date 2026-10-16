@@ -64,7 +64,8 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, reaction: null }]);
+    expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false });
   });
 
   it('refuses what is not a room: a round of other seconds, an unknown life, a locked one, rules the server does not play now', async () => {
@@ -380,6 +381,96 @@ describe('two members who choose the same', () => {
     // Once they have left it, the room is behind them: their life in it is in their records, not here.
     await server.ask(B, { action: 'leave', roomId: room });
     expect(await server.ask(B, { action: 'view', roomId: room })).toMatchObject({ status: 409, body: { error: 'closed' } });
+  });
+});
+
+/** A room of HOST and B (and C if asked) played to its end by the clock alone. */
+async function over(also: string[] = []) {
+  const { server, room, code } = await begun(roomServer(), 90, also);
+  for (let guard = 0; guard < 50; guard++) {
+    if (roomOf(await server.ask(HOST, { action: 'state', roomId: room })).status === 'finished') return { server, room, code };
+    server.wait(90_000 + GRACE_MS + 1);
+  }
+  throw new Error('the room did not end');
+}
+
+describe('a rematch', () => {
+  it('opens a room on the same pace from one that is over, says so in the old one, and joins the others with one press', async () => {
+    const { server, room } = await over([C]);
+    server.notices.length = 0;
+    const asked = await server.ask(B, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS });
+    expect(asked.status).toBe(200);
+    const next = roomOf(asked);
+    expect(next).toMatchObject({ status: 'open', seconds: 90, host: B, lifeId: 'nurse' });
+    expect(asked.body.room).toMatchObject({ rematchOf: true });
+    expect(server.notices).toEqual([HOST, C].map((user) => ({ user, about: { kind: 'rematch' } })));
+    // The room that is over points to it while it waits.
+    expect((await server.ask(HOST, { action: 'state', roomId: room })).body.room).toMatchObject({ rematch: { code: next.code, open: true } });
+    // A second press, whoever makes it, joins it: one rematch a room.
+    const second = await server.ask(HOST, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS });
+    expect(roomOf(second).id).toBe(next.id);
+    expect(roomOf(second).members.map((m) => m.userId)).toEqual([B, HOST]);
+    expect(server.db.rooms.size).toBe(2);
+  });
+
+  it('is only for a room that is over, and only for whoever was in it', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    expect(await server.ask(HOST, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS })).toMatchObject({ status: 409, body: { error: 'not-over' } });
+    const done = await over();
+    expect(await done.server.ask(C, { action: 'rematch', roomId: done.room, lifeId: 'nurse', ...VERSIONS })).toMatchObject({ status: 404 });
+    expect(await done.server.ask(HOST, { action: 'rematch', roomId: done.room, lifeId: locked.id, ...VERSIONS })).toMatchObject({ status: 403, body: { error: 'locked-life' } });
+  });
+
+  it('cannot be joined once it has started', async () => {
+    const { server, room } = await over([C]);
+    const next = roomOf(await server.ask(HOST, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS }));
+    await server.ask(B, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS });
+    expect((await server.ask(HOST, { action: 'start', roomId: next.id })).status).toBe(200);
+    expect((await server.ask(C, { action: 'state', roomId: room })).body.room).toMatchObject({ rematch: { open: false } });
+    expect(await server.ask(C, { action: 'rematch', roomId: room, lifeId: 'nurse', ...VERSIONS })).toMatchObject({ status: 409, body: { error: 'started' } });
+  });
+});
+
+describe('reactions', () => {
+  it('put a member\'s face on the round that turned last, for everyone to see until the next one turns', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    // Nothing has turned yet: there is nothing to react to.
+    expect(await server.ask(B, { action: 'react', roomId: room, reaction: 0 })).toMatchObject({ status: 409, body: { error: 'closed' } });
+    server.wait(90_000 + GRACE_MS + 1);
+    const reacted = await server.ask(B, { action: 'react', roomId: room, reaction: 3 });
+    expect(roomOf(reacted).round).toBe(1);
+    const seen = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(seen.members.map((m) => (m as unknown as { reaction: number | null }).reaction)).toEqual([null, 3]);
+    // Taken off, then the next round turns with none.
+    await server.ask(HOST, { action: 'react', roomId: room, reaction: 1 });
+    server.wait(90_000 + GRACE_MS + 1);
+    const later = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(later.members.map((m) => (m as unknown as { reaction: number | null }).reaction)).toEqual([null, null]);
+  });
+
+  it('are one of the few faces, or none', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    server.wait(90_000 + GRACE_MS + 1);
+    for (const reaction of [5, -1, 1.5, '1', undefined]) expect((await server.ask(B, { action: 'react', roomId: room, reaction })).status, String(reaction)).toBe(400);
+    expect((await server.ask(B, { action: 'react', roomId: room, reaction: null })).status).toBe(200);
+  });
+});
+
+describe('a player\'s history', () => {
+  it('lists the games over they were in, the latest first, with everyone in their final order', async () => {
+    const { server, room } = await over([C]);
+    const reply = await server.ask(B, { action: 'history' });
+    expect(reply.status).toBe(200);
+    const games = reply.body.games as Array<{ id: string; lifeId: string; seconds: number; rematchOf: boolean; players: Array<{ me: boolean; score: number | null; left: boolean; tag: string }> }>;
+    expect(games.map((g) => [g.id, g.lifeId, g.seconds, g.rematchOf])).toEqual([[room, 'nurse', 90, false]]);
+    expect(games[0].players).toHaveLength(3);
+    expect(games[0].players.filter((p) => p.me)).toHaveLength(1);
+    const scores = games[0].players.map((p) => p.score as number);
+    expect(scores).toEqual([...scores].sort((x, y) => y - x));
+    // Nothing of a game in play, and nothing of anyone else's.
+    await begun(server, 90);
+    expect(((await server.ask(HOST, { action: 'history' })).body.games as unknown[]).length).toBe(1);
+    expect((await server.ask('dddddddd-dddd-4ddd-8ddd-dddddddddddd', { action: 'history' })).body).toEqual({ games: [] });
   });
 });
 

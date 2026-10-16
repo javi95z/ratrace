@@ -17,8 +17,8 @@ import { allowed } from '../_shared/rate.ts';
 import { rooms } from '../_shared/rooms.ts';
 import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
 
-const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at';
-const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at';
+const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of';
+const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, reaction, reaction_round';
 const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
 
 export default {
@@ -85,6 +85,23 @@ export default {
         submit: (room, round, user, orders) => call('room_submit', { p_room: room, p_round: round, p_member: user, p_orders: orders }),
         turn: (room, round, deadline, lives) => call('room_turn', { p_room: room, p_round: round, p_deadline: deadline === null ? null : deadline.toISOString(), p_lives: lives }),
         saveRun: async (run: RunRow) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
+        rematch: (old, room) =>
+          call('room_rematch', { p_old: old, p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
+        react: (room, user, reaction) => call('room_react', { p_room: room, p_member: user, p_reaction: reaction }),
+        history: async (user, limit) => {
+          const mine = must(
+            await db
+              .from('room_players')
+              .select(`room_id, rooms!inner(${ROOM})`)
+              .eq('user_id', user)
+              .eq('rooms.status', 'finished')
+              .order('joined_at', { ascending: false })
+              .limit(limit),
+          ) as unknown as Array<{ room_id: string; rooms: RoomRow }>;
+          if (mine.length === 0) return [];
+          const all = must(await db.from('room_players').select(`room_id, ${MEMBER}`).in('room_id', mine.map((row) => row.room_id)).order('joined_at', { ascending: true })) as Array<MemberRow & { room_id: string }>;
+          return mine.map((row) => ({ room: row.rooms, members: all.filter((m) => m.room_id === row.room_id) }));
+        },
         notify: async (users, about) => {
           // Sent after the answer, so that a player's move does not wait on push services.
           const sending = subscriptionsOf(db, users)

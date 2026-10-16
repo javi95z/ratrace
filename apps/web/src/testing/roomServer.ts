@@ -59,7 +59,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     loadRoom: async (id) => structuredClone(roomsById.get(id) ?? null),
     members: async (room) =>
       structuredClone(members.filter((m) => m.room_id === room).sort((a, b) => a.joined_at.localeCompare(b.joined_at))).map((m): MemberRow => ({
-        user_id: m.user_id, game_id: m.game_id, ready_round: m.ready_round, left_at: m.left_at, standing: m.standing, joined_at: m.joined_at,
+        user_id: m.user_id, game_id: m.game_id, ready_round: m.ready_round, left_at: m.left_at, standing: m.standing, joined_at: m.joined_at, reaction: m.reaction, reaction_round: m.reaction_round,
       })),
     names: async (ids) => Object.fromEntries(ids.map((id) => [id, names.get(id) ?? null])),
     open: async (row) => {
@@ -67,8 +67,8 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       if (other) return { error: 'in-a-room', room: other };
       let code = '';
       for (let n = (state.codes += 1); code.length < 6; n = Math.floor(n / 31)) code += ALPHABET[n % 31];
-      roomsById.set(row.id, { ...row, code, status: 'open', round: 0, deadline: null, created_at: nowIso() });
-      members.push({ room_id: row.id, user_id: row.host, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}` });
+      roomsById.set(row.id, { ...row, code, status: 'open', round: 0, deadline: null, created_at: nowIso(), rematch: null, rematch_of: null });
+      members.push({ room_id: row.id, user_id: row.host, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, reaction: null, reaction_round: null });
       return { room: row.id, code };
     },
     join: async (code, user, engine, content) => {
@@ -83,7 +83,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       if (other) return { error: 'in-a-room', room: other };
       if (active(room.id).length >= 6) return { error: 'full' };
       if (was) Object.assign(was, { left_at: null, joined_at: `${nowIso()}#${state.stamps++}` });
-      else members.push({ room_id: room.id, user_id: user, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}` });
+      else members.push({ room_id: room.id, user_id: user, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, reaction: null, reaction_round: null });
       return { room: room.id };
     },
     start: async (roomId, host, seed, named, deadline) => {
@@ -122,6 +122,33 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       }
       return { status: room.status };
     },
+    rematch: async (oldId, row) => {
+      const old = roomsById.get(oldId);
+      if (!old || !memberOf(oldId, row.host)) return { error: 'unknown-room' };
+      if (old.status !== 'finished') return { error: 'not-over' };
+      if (old.rematch !== null) {
+        const next = roomsById.get(old.rematch);
+        return next && next.status === 'open' ? { error: 'rematch-open', room: next.id, code: next.code } : { error: 'started' };
+      }
+      const made = await deps.open(row);
+      if ('error' in made) return made;
+      Object.assign(roomsById.get(made.room) as RoomRow, { rematch_of: oldId });
+      old.rematch = made.room;
+      return made;
+    },
+    react: async (roomId, user, reaction) => {
+      const room = roomsById.get(roomId);
+      const m = memberOf(roomId, user);
+      if (!room || !['playing', 'finished'].includes(room.status) || room.round < 1 || !m || m.left_at !== null) return 'closed';
+      Object.assign(m, { reaction, reaction_round: reaction === null ? null : room.round });
+      return 'ok';
+    },
+    history: async (user, limit) =>
+      members
+        .filter((m) => m.user_id === user && roomsById.get(m.room_id)?.status === 'finished')
+        .sort((a, b) => b.joined_at.localeCompare(a.joined_at))
+        .slice(0, limit)
+        .map((mine) => ({ room: structuredClone(roomsById.get(mine.room_id) as RoomRow), members: structuredClone(members.filter((m) => m.room_id === mine.room_id).sort((a, b) => a.joined_at.localeCompare(b.joined_at))) })),
     closeIfStale: async (roomId, now) => {
       const room = roomsById.get(roomId);
       if (!room) return false;

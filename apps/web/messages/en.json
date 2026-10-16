@@ -1132,7 +1132,10 @@
     "realWorth": "After inflation",
     "ranked": "Ranked",
     "challenge": "Challenge {week}",
-    "practice": "Practice {week}"
+    "practice": "Practice {week}",
+    "multiplayer": "Multiplayer",
+    "players": "{count, plural, one {# player} other {# players}}",
+    "placeShort": "#{place} of {total}"
   },
   "share": {
     "open": "Share this life",
@@ -1493,7 +1496,6 @@
     "code": "Game code",
     "enter": "Join",
     "closed": "The game was closed.",
-    "invite": "Invite",
     "copied": "Link copied.",
     "inviteText": "Play The Rat Race with me in multiplayer. Game {code}",
     "everyone": "Everyone lives",
@@ -1535,7 +1537,8 @@
       "unreachable": "No connection. Try again.",
       "alone": "At least one more must join to start.",
       "not-host": "Only the host can start the game.",
-      "refused": "That did not work. Try again."
+      "refused": "That did not work. Try again.",
+      "not-over": "The game is not over yet."
     },
     "otherRules": "This game plays another version. Reload the page to play it.",
     "introSame": "Everyone lives the same life in the same world: the same scares and the same chances.",
@@ -1543,6 +1546,21 @@
     "introPace": "Quick rounds to play together, or a round a day to play when you can.",
     "day": "1 day",
     "paceLive": "To play together: if someone does not choose in time, the clock plays for them.",
-    "paceDay": "To play when you can: each plays their round when they can, and a notice tells you when the next begins."
+    "paceDay": "To play when you can: each plays their round when they can, and a notice tells you when the next begins.",
+    "invited": "You are invited to the game",
+    "joinInvite": "Join the game",
+    "share": "Share",
+    "copyLink": "Copy link",
+    "react": "React to the round",
+    "face0": "Cracking up",
+    "face1": "What a scare",
+    "face2": "Money, money",
+    "face3": "Living large",
+    "face4": "Can't look",
+    "rematch": "Rematch",
+    "rematchAbout": "A new game with the same people and the same pace, {time} a round. The others will see it here and get a notice.",
+    "rematchCreate": "Ask for a rematch",
+    "rematchWaiting": "A rematch is waiting.",
+    "rematchJoin": "Join the rematch"
   }
 }

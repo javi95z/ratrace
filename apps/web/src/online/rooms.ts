@@ -1,7 +1,7 @@
 import { Unreachable } from '@/session/errors';
 import type { RankedRun, RankedStep } from '@/session/ranked';
-import { RoomRefused } from '@/session/room';
-import type { RoomLife, RoomMember, RoomsApi, RoomState } from '@/session/room';
+import { REACTIONS, RoomRefused } from '@/session/room';
+import type { RoomGameOver, RoomLife, RoomMember, RoomsApi, RoomState } from '@/session/room';
 
 /**
  * Asks the `rooms` function one thing and hands back its answer: the status and the body. It
@@ -34,6 +34,7 @@ function memberOf(raw: unknown): RoomMember | null {
             escaped: standing.escaped === true,
             bankruptcies: Number(standing.bankruptcies) || 0,
           },
+    reaction: Number.isInteger(raw.reaction) && (raw.reaction as number) >= 0 && (raw.reaction as number) < REACTIONS.length ? (raw.reaction as number) : null,
   };
 }
 
@@ -61,6 +62,29 @@ export function roomOf(raw: unknown): RoomState | null {
     deadline,
     now,
     members: members as RoomMember[],
+    rematch: isRecord(raw.rematch) && typeof raw.rematch.code === 'string' ? { code: raw.rematch.code, open: raw.rematch.open === true } : null,
+    rematchOf: raw.rematchOf === true,
+  };
+}
+
+/** A game over as the server tells of it, or null if it is not one. */
+function gameOverOf(raw: unknown): RoomGameOver | null {
+  if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.lifeId !== 'string' || !Array.isArray(raw.players)) return null;
+  const playedAt = typeof raw.playedAt === 'string' ? Date.parse(raw.playedAt) : Number.NaN;
+  if (Number.isNaN(playedAt)) return null;
+  return {
+    id: raw.id,
+    lifeId: raw.lifeId,
+    seconds: Number(raw.seconds) || 0,
+    playedAt,
+    rematchOf: raw.rematchOf === true,
+    players: raw.players.filter(isRecord).map((p) => ({
+      name: typeof p.name === 'string' ? p.name : null,
+      tag: typeof p.tag === 'string' ? p.tag : '',
+      me: p.me === true,
+      score: typeof p.score === 'number' ? p.score : null,
+      left: p.left === true,
+    })),
   };
 }
 
@@ -168,6 +192,17 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       const step = stepOf(reply.body);
       if (step === null) throw new Unreachable('the server answered something that is not a step');
       return step;
+    },
+    rematch: async (roomId, lifeId, versions) => room(await ask({ action: 'rematch', roomId, lifeId, engineVersion: versions.engine, contentVersion: versions.content })),
+    async react(roomId, reaction) {
+      const reply = await ask({ action: 'react', roomId, reaction });
+      if (reply.status === 404 || reply.status === 409) return 'gone';
+      return room(reply);
+    },
+    async history() {
+      const reply = await ask({ action: 'history' });
+      if (reply.status !== 200 || !isRecord(reply.body) || !Array.isArray(reply.body.games)) throw new Unreachable(`the server answered ${reply.status}`);
+      return reply.body.games.map(gameOverOf).filter((game): game is RoomGameOver => game !== null);
     },
     async submit(roomId, at, orders) {
       const reply = await ask({ action: 'submit', roomId, step: at, orders });

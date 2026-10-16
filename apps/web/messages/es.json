@@ -1132,7 +1132,10 @@
     "realWorth": "Descontando la inflación",
     "ranked": "Clasificatoria",
     "challenge": "Reto {week}",
-    "practice": "Práctica {week}"
+    "practice": "Práctica {week}",
+    "multiplayer": "Multijugador",
+    "players": "{count, plural, one {# jugador} other {# jugadores}}",
+    "placeShort": "{place}.º de {total}"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -1493,7 +1496,6 @@
     "code": "Código de la partida",
     "enter": "Unirse",
     "closed": "La partida se ha cerrado.",
-    "invite": "Invitar",
     "copied": "Enlace copiado.",
     "inviteText": "Juega conmigo a The Rat Race en multijugador. Partida {code}",
     "everyone": "Todos viven",
@@ -1535,7 +1537,8 @@
       "unreachable": "Sin conexión. Vuelve a intentarlo.",
       "alone": "Hace falta al menos una persona más para empezar.",
       "not-host": "Solo quien creó la partida puede empezarla.",
-      "refused": "No ha funcionado. Vuelve a intentarlo."
+      "refused": "No ha funcionado. Vuelve a intentarlo.",
+      "not-over": "La partida aún no ha terminado."
     },
     "otherRules": "Esta partida juega con otra versión del juego. Recarga la página para jugarla.",
     "introSame": "Todos viven la misma vida, en el mismo mundo: los mismos sustos y las mismas oportunidades.",
@@ -1543,6 +1546,21 @@
     "introPace": "Rondas rápidas para jugar a la vez, o una ronda al día para jugar a ratos.",
     "day": "1 día",
     "paceLive": "Para jugar a la vez: si alguien no elige a tiempo, el reloj juega en su lugar.",
-    "paceDay": "Para jugar a ratos: cada uno juega su ronda cuando puede, y un aviso te dice cuándo empieza otra."
+    "paceDay": "Para jugar a ratos: cada uno juega su ronda cuando puede, y un aviso te dice cuándo empieza otra.",
+    "invited": "Te han invitado a la partida",
+    "joinInvite": "Unirse a la partida",
+    "share": "Compartir",
+    "copyLink": "Copiar enlace",
+    "react": "Reacciona a la ronda",
+    "face0": "Me parto",
+    "face1": "Qué susto",
+    "face2": "Dinero, dinero",
+    "face3": "Por todo lo alto",
+    "face4": "No quiero mirar",
+    "rematch": "Revancha",
+    "rematchAbout": "Una partida nueva con la misma gente y el mismo ritmo, {time} por ronda. Los demás lo verán aquí y recibirán un aviso.",
+    "rematchCreate": "Proponer la revancha",
+    "rematchWaiting": "Ya hay una revancha esperando.",
+    "rematchJoin": "Unirse a la revancha"
   }
 }

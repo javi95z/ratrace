@@ -138,6 +138,19 @@ describe('opening and joining a room', () => {
     expect(await screen.findByText('1 day a round')).toBeTruthy();
   });
 
+  it('shows the link to the game, to share or copy', async () => {
+    const { services } = inRooms();
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Start a game' })).getByRole('button', { name: 'Start the game' }));
+    const code = await screen.findByRole('region', { name: 'Game code' });
+    const shown = within(code).getByText(/\/en\/room\?code=[A-Z0-9]{6}$/);
+    await user.click(within(code).getByRole('button', { name: 'Copy link' }));
+    expect(await screen.findByText('Link copied.')).toBeTruthy();
+    expect(await navigator.clipboard.readText()).toBe(`http://${shown.textContent}`);
+  });
+
   it('joins by the code an invitation carries, and waits for the host', async () => {
     const server = roomServer();
     const opened = await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS });
@@ -146,9 +159,9 @@ describe('opening and joining a room', () => {
     const { services } = inRooms(server, B);
     const user = userEvent.setup();
     renderGame(<Room />, services);
-    const field = await screen.findByRole('textbox', { name: 'Game code' });
-    await waitFor(() => expect((field as HTMLInputElement).value).toBe(code));
-    await user.click(screen.getByRole('button', { name: 'Join' }));
+    const invitation = await screen.findByRole('region', { name: 'You are invited to the game' });
+    expect(within(invitation).getByText(code)).toBeTruthy();
+    await user.click(within(invitation).getByRole('button', { name: 'Join the game' }));
     expect(await screen.findByText('Waiting for the host to start.')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'In the game: 2 of 6' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Start' })).toBeNull();
@@ -309,6 +322,33 @@ describe('a round in a room', () => {
     expect(after.lifeId).toBe('engineer');
   });
 
+  it('offers a rematch at the end, opened by one and joined by the others with one press', async () => {
+    const server = roomServer();
+    const room = await lobby(server, 90);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    // Played to its end by the clock alone.
+    for (let guard = 0; guard < 50 && (server.db.rooms.get(room.id)?.status ?? '') !== 'finished'; guard++) {
+      server.wait(96_000);
+      await server.ask(HOST, { action: 'state', roomId: room.id });
+    }
+    const asB = inRooms(server, B);
+    const user = userEvent.setup();
+    renderGame(<Room />, asB.services);
+    await user.click(await screen.findByRole('button', { name: 'Rematch' }, { timeout: 10_000 }));
+    const sheet = screen.getByRole('dialog', { name: 'Rematch' });
+    expect(within(sheet).getByText(/1:30 a round/)).toBeTruthy();
+    expect(within(sheet).getByRole('radio', { name: /Nurse/ }).getAttribute('aria-checked')).toBe('true');
+    await user.click(within(sheet).getByRole('button', { name: 'Ask for a rematch' }));
+    expect(await screen.findByRole('region', { name: 'In the game: 1 of 6' })).toBeTruthy();
+    cleanup();
+
+    const asHost = inRooms(server, HOST);
+    renderGame(<Room />, asHost.services);
+    expect(await screen.findByText('A rematch is waiting.', {}, { timeout: 10_000 })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Join the rematch' }));
+    expect(await screen.findByRole('region', { name: 'In the game: 2 of 6' })).toBeTruthy();
+  });
+
   it('ends with the room\'s order, the player\'s place in it, and the way out of the room', async () => {
     const server = roomServer();
     const room = await lobby(server);
@@ -337,6 +377,13 @@ describe('a round in a room', () => {
     expect(within(final).getByText(/^Place [12] of 2$/)).toBeTruthy();
     expect(within(final).getAllByRole('listitem')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
+    // A face on how it ended, for everyone to see, and off again with a second press.
+    const faces = within(final).getByRole('group', { name: 'React to the round' });
+    await user.click(within(faces).getByRole('button', { name: 'Living large' }));
+    await waitFor(() => expect(within(faces).getByRole('button', { name: 'Living large' }).getAttribute('aria-pressed')).toBe('true'));
+    expect(within(final).getByRole('img', { name: 'Living large' })).toBeTruthy();
+    await user.click(within(faces).getByRole('button', { name: 'Living large' }));
+    await waitFor(() => expect(within(final).queryByRole('img', { name: 'Living large' })).toBeNull());
     await user.click(within(final).getByRole('button', { name: 'Leave the game' }));
     expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
     expect((await services.store.listRuns())[0]).toMatchObject({ room: true });

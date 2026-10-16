@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { CONTENT_VERSION } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { FinishedRun } from '@/session/types';
 import { memoryServices, renderGame } from '@/testing/render';
+import { roomServer } from '@/testing/roomServer';
 import { Records } from './Records';
 
 vi.mock('@/i18n/navigation', () => ({
@@ -90,5 +94,34 @@ describe('the records', () => {
     expect(within(lives[0]).getByText('Ranked')).toBeTruthy();
     expect(within(lives[1]).queryByText('Ranked')).toBeNull();
   });
-});
 
+  it('lists the multiplayer games over, with where the player came and everyone in a sheet, even before a life of their own', async () => {
+    const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const versions = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const server = roomServer();
+    const opened = (await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 90, ...versions })).body.room as { id: string; code: string };
+    await server.ask(B, { action: 'join', code: opened.code, ...versions });
+    await server.ask(HOST, { action: 'start', roomId: opened.id });
+    for (let guard = 0; guard < 50 && server.db.rooms.get(opened.id)?.status !== 'finished'; guard++) {
+      server.wait(96_000);
+      await server.ask(HOST, { action: 'state', roomId: opened.id });
+    }
+    renderGame(<Records />, { ...memoryServices(), rooms: () => server.link(B), schedule: () => () => {} });
+    const section = await screen.findByRole('region', { name: 'Multiplayer' });
+    const row = within(section).getByRole('button', { name: /Nurse/ });
+    expect(row.textContent).toMatch(/#[12] of 2/);
+    expect(row.textContent).toContain('2 players');
+    await userEvent.setup().click(row);
+    const sheet = screen.getByRole('dialog', { name: 'Nurse' });
+    expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(sheet).getByText('You')).toBeTruthy();
+  });
+
+  it('has no multiplayer section for a player who has played none', async () => {
+    renderGame(<Records />, { ...memoryServices(), rooms: () => roomServer().link('cccccccc-cccc-4ccc-8ccc-cccccccccccc'), schedule: () => () => {} });
+    expect(await screen.findByText('No life finished yet. Your first one will appear here.')).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('region', { name: 'Multiplayer' })).toBeNull();
+  });
+});

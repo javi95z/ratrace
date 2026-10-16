@@ -35,6 +35,10 @@ export interface RoomRow {
   round: number;
   deadline: string | null;
   created_at: string;
+  /** The rematch opened from this room once it was over, if one was. */
+  rematch: string | null;
+  /** The room this one is the rematch of, if it is one. */
+  rematch_of: string | null;
 }
 
 /** How a member stood when the last round turned. */
@@ -57,6 +61,9 @@ export interface MemberRow {
   left_at: string | null;
   standing: Standing | null;
   joined_at: string;
+  /** The face the member put on a round, and which round: shown until the next one turns. */
+  reaction: number | null;
+  reaction_round: number | null;
 }
 
 /** A member's game, as far as a room reads it. */
@@ -132,12 +139,23 @@ export interface RoomsDeps {
   turn(roomId: string, round: number, deadline: Date | null, lives: TurnLife[]): Promise<'ok' | 'moved' | 'closed' | 'invalid'>;
   /** Writes the run unless one with its id is already there. */
   saveRun(run: RunRow): Promise<void>;
+  /** Opens the rematch of a room that is over. `rematch-open`, with its room and code, if another member opened it first. */
+  rematch(oldRoom: string, room: { id: string; host: string; life_id: string; engine_version: string; content_version: string; seconds: number }): Promise<{ room: string; code: string } | { error: string; room?: string; code?: string }>;
+  /** Puts a member's face on the round that turned last, or takes it off with null. `closed` if the room or the member is not in play. */
+  react(roomId: string, userId: string, reaction: number | null): Promise<'ok' | 'closed'>;
+  /** The rooms the player was in that are over, the latest first, at most `limit`, each with everyone who was in it. */
+  history(userId: string, limit: number): Promise<Array<{ room: RoomRow; members: MemberRow[] }>>;
   /** Tells players, on the devices that asked for notices, that their game needs them. Never fails: a notice lost is no reason to refuse a move. */
   notify(userIds: string[], about: RoomNotice): Promise<void>;
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' }>;
+
+/** How many faces a member may put on a round: the page draws them, the server keeps their number. */
+export const REACTIONS = 5;
+/** How many games over a history holds. */
+export const HISTORY_LIMIT = 20;
 
 /** A room whose rounds take this long or more is played at a distance: each new round is told. */
 const SLOW_SECONDS = 3_600;
@@ -279,8 +297,25 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
       ready: room.status === 'playing' && m.left_at === null && m.ready_round === room.round,
       left: m.left_at !== null,
       standing: m.standing ?? null,
+      // A face put on the round that turned last; an older one is no longer news.
+      reaction: m.left_at === null && m.reaction !== null && m.reaction_round === room.round ? m.reaction : null,
     })),
+    // The rematch of a room that is over, while it waits in its lobby for whoever wants it.
+    rematch: room.rematch === null ? null : await rematchOf(deps, room.rematch),
+    rematchOf: room.rematch_of !== null,
   };
+}
+
+/** A rematch as a room that is over tells of it: its code while it can still be joined, and whether it can. */
+async function rematchOf(deps: RoomsDeps, id: string): Promise<{ code: string; open: boolean } | null> {
+  const found = await deps.loadRoom(id);
+  return found === null ? null : { code: found.code, open: found.status === 'open' };
+}
+
+/** The members of a room, best first by the score the last round left them with; those who left after them. */
+function placed(members: readonly MemberRow[]): MemberRow[] {
+  const score = (m: MemberRow) => m.standing?.score ?? Number.NEGATIVE_INFINITY;
+  return [...members].sort((a, b) => Number(a.left_at !== null) - Number(b.left_at !== null) || score(b) - score(a));
 }
 
 /** True once the round in play must turn: everyone still in the room is ready, or its deadline and grace have passed. */
@@ -398,12 +433,17 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
         return await open(games, deps, userId, raw);
       case 'join':
         return await join(games, deps, userId, raw);
+      case 'rematch':
+        return await rematch(games, deps, userId, raw);
+      case 'history':
+        return await history(deps, userId);
       case 'start':
       case 'leave':
       case 'state':
       case 'view':
       case 'card':
       case 'submit':
+      case 'react':
         return await inRoom(games, deps, userId, raw);
       default:
         return bad('action');
@@ -454,13 +494,72 @@ async function open(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
   return await answerRoom(games, deps, made.room, userId);
 }
 
+/**
+ * The rematch of a room that is over: a new room with the same pace, on the rules the server plays
+ * now, for a life the asker may play, with the asker as its host. Whoever asks after it was opened
+ * joins it instead, so that one press does for everyone. The others still looking at the room that
+ * is over hear of it through Realtime, and by a notice.
+ */
+async function rematch(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
+  const { roomId, lifeId, engineVersion, contentVersion } = raw;
+  if (typeof roomId !== 'string' || !UUID.test(roomId)) return bad('roomId');
+  if (!isText(lifeId, 40)) return bad('lifeId');
+  if (!isText(engineVersion, 20)) return bad('engineVersion');
+  if (!isText(contentVersion, 20)) return bad('contentVersion');
+  if (!(await deps.allow(userId, 'room-make'))) return tooMany;
+
+  const old = await deps.loadRoom(roomId);
+  const everyone = old === null ? [] : await deps.members(roomId);
+  if (old === null || !everyone.some((m) => m.user_id === userId)) return unknownRoom;
+  const key = `${engineVersion}/${contentVersion}`;
+  const game = Object.hasOwn(games, key) ? games[key] : null;
+  if (game === null || !game.viewOf || (game.SEED_BITS ?? 0) < 128 || key !== deps.current) return { status: 409, body: { error: 'cannot-room' } };
+  const life = game.lives.find((one) => one.id === lifeId);
+  if (!life) return { status: 400, body: { error: 'unknown-life' } };
+  if (life.unlock !== 'default' && !(await deps.unlockedLives(userId)).includes(life.id)) return { status: 403, body: { error: 'locked-life' } };
+
+  const made = await deps.rematch(old.id, { id: deps.newId(), host: userId, life_id: life.id, engine_version: engineVersion, content_version: contentVersion, seconds: old.seconds });
+  if ('error' in made) {
+    // Opened by someone else first: joined, as the button promised.
+    if (made.error === 'rematch-open' && made.code) return await join(games, deps, userId, { code: made.code, engineVersion, contentVersion }, false);
+    if (made.error === 'unknown-room') return unknownRoom;
+    return { status: 409, body: { error: made.error, ...(made.room ? { roomId: made.room } : {}) } };
+  }
+  await deps.notify(
+    everyone.filter((m) => m.left_at === null && m.user_id !== userId).map((m) => m.user_id),
+    { kind: 'rematch' },
+  );
+  return await answerRoom(games, deps, made.room, userId);
+}
+
+/** The games over the player was in, the latest first: each with its life, its pace, and everyone in it in their final order. */
+async function history(deps: RoomsDeps, userId: string): Promise<Reply> {
+  if (!(await deps.allow(userId, 'room-step'))) return tooMany;
+  const rows = await deps.history(userId, HISTORY_LIMIT);
+  const names = await deps.names([...new Set(rows.flatMap((row) => row.members.map((m) => m.user_id)))]);
+  return {
+    status: 200,
+    body: {
+      games: rows.map(({ room, members }) => ({
+        id: room.id,
+        lifeId: room.life_id,
+        seconds: room.seconds,
+        playedAt: new Date(room.created_at).toISOString(),
+        rematchOf: room.rematch_of !== null,
+        players: placed(members).map((m) => ({ name: names[m.user_id] ?? null, tag: m.user_id.slice(0, 4).toUpperCase(), me: m.user_id === userId, score: m.standing?.score ?? null, left: m.left_at !== null })),
+      })),
+    },
+  };
+}
+
 /** Joins a room by its code, from a page on the room's rules. */
-async function join(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
+async function join(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, userId: string, raw: Record<string, unknown>, count = true): Promise<Reply> {
   const { code, engineVersion, contentVersion } = raw;
   if (typeof code !== 'string' || !TYPED_CODE.test(code)) return bad('code');
   if (!isText(engineVersion, 20)) return bad('engineVersion');
   if (!isText(contentVersion, 20)) return bad('contentVersion');
-  if (!(await deps.allow(userId, 'room-make'))) return tooMany;
+  // A rematch that joins was counted as the rematch it was asked as.
+  if (count && !(await deps.allow(userId, 'room-make'))) return tooMany;
 
   const joined = await deps.join(code, userId, engineVersion, contentVersion);
   if ('error' in joined) {
@@ -498,6 +597,13 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   const game = games[versionsOf(room)];
 
   if (raw.action === 'state') return { status: 200, body: { room: await roomBody(games, deps, room, members, userId) } };
+
+  if (raw.action === 'react') {
+    const { reaction } = raw;
+    if (reaction !== null && !(Number.isInteger(reaction) && (reaction as number) >= 0 && (reaction as number) < REACTIONS)) return bad('reaction');
+    if ((await deps.react(room.id, userId, reaction as number | null)) === 'closed') return closed;
+    return await answerRoom(games, deps, room.id, userId);
+  }
 
   if (raw.action === 'leave') {
     const left = await deps.leave(room.id, userId);

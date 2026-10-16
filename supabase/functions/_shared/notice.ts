@@ -19,6 +19,7 @@ export interface Notice {
  * - `roomStarted`: the host started the game the player was waiting in.
  * - `yourTurn`: everyone else in the player's game has played the round; the clock is running.
  * - `newRound`: in a game of a round a day, the next round has begun.
+ * - `rematch`: someone from a game that is over has opened its rematch.
  * - `idle`: a life left halfway, a week ago.
  */
 export type NoticeAbout =
@@ -26,6 +27,7 @@ export type NoticeAbout =
   | { kind: 'roomStarted'; seconds: number }
   | { kind: 'yourTurn'; round: number; rounds: number; secondsLeft: number }
   | { kind: 'newRound'; round: number; rounds: number; seconds: number }
+  | { kind: 'rematch' }
   | { kind: 'idle' };
 
 const langOf = (locale: string): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
@@ -55,6 +57,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     roomStarted: (a) => ({ title: 'Your game has started', body: `Everyone lives the same life now. You have ${span(a.seconds, 'en')} for each round.` }),
     yourTurn: (a) => ({ title: 'They are waiting for you', body: `Everyone else has played round ${a.round} of ${a.rounds}. ${span(a.secondsLeft, 'en')} left.` }),
     newRound: (a) => ({ title: `Round ${a.round} of ${a.rounds}`, body: `A new round of your game has begun. You have ${span(a.seconds, 'en')} to play it.` }),
+    rematch: () => ({ title: 'Rematch!', body: 'Someone from your last game wants another. Join them from the game.' }),
     idle: () => ({ title: 'Your life is waiting', body: 'You left a life halfway. Pick it up where you left it.' }),
   },
   es: {
@@ -65,6 +68,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     roomStarted: (a) => ({ title: 'Empieza la partida', body: `Todos vivís ya la misma vida. Tienes ${span(a.seconds, 'es')} por ronda.` }),
     yourTurn: (a) => ({ title: 'Faltas tú', body: `Los demás ya han jugado la ronda ${a.round} de ${a.rounds}. Quedan ${span(a.secondsLeft, 'es')}.` }),
     newRound: (a) => ({ title: `Ronda ${a.round} de ${a.rounds}`, body: `Empieza una ronda nueva de tu partida. Tienes ${span(a.seconds, 'es')} para jugarla.` }),
+    rematch: () => ({ title: '¡Revancha!', body: 'Alguien de tu última partida quiere otra. Únete desde la partida.' }),
     idle: () => ({ title: 'Tu vida te espera', body: 'Dejaste una vida a medias. Sigue donde la dejaste.' }),
   },
   ru: {
@@ -75,12 +79,13 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     roomStarted: (a) => ({ title: 'Партия началась', body: `Все живут одну и ту же жизнь. На каждый раунд у тебя ${span(a.seconds, 'ru')}.` }),
     yourTurn: (a) => ({ title: 'Ждут только тебя', body: `Остальные уже сыграли раунд ${a.round} из ${a.rounds}. Осталось ${span(a.secondsLeft, 'ru')}.` }),
     newRound: (a) => ({ title: `Раунд ${a.round} из ${a.rounds}`, body: `В твоей партии начался новый раунд. На него у тебя ${span(a.seconds, 'ru')}.` }),
+    rematch: () => ({ title: 'Реванш!', body: 'Кто-то из твоей последней партии хочет ещё одну. Присоединяйся из партии.' }),
     idle: () => ({ title: 'Твоя жизнь ждёт', body: 'Одна из твоих жизней осталась на полпути. Продолжи с того же места.' }),
   },
 };
 
-const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', idle: 'play' };
-const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', idle: 'idle-life' };
+const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play' };
+const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life' };
 
 /** The notice for a browser that asked for notices in a language; one the game does not have reads in English. */
 export function noticeOf(locale: string, about: NoticeAbout): Notice {

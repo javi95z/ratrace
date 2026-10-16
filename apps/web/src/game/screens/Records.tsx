@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import type { FinishedRun } from '@/session/types';
 import { Tag, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
+import { RoomHistory } from './RoomHistory';
 import { WorthGraph } from './WorthGraph';
 
 /** Personal bests, and every life lived to the end with its graph. */
@@ -40,6 +41,8 @@ export function Records() {
 
       {runs === null ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
       {runs !== null && runs.length === 0 ? <p className="frame bg-night-700 p-3 text-[14px] text-ink-200">{t('empty')}</p> : null}
+      {/* On a device with no life of its own yet, the account's multiplayer games are still there. */}
+      {runs !== null && runs.length === 0 ? <RoomHistory /> : null}
 
       {runs !== null && runs.length > 0 ? (
         <>
@@ -58,6 +61,8 @@ export function Records() {
             </p>
           </section>
 
+          <RoomHistory />
+
           <section aria-label={t('history')}>
             <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{t('history')}</h2>
             <ul className="flex flex-col gap-3">
@@ -73,6 +78,7 @@ export function Records() {
                       <p className="pixel flex flex-wrap items-center gap-x-2 text-[17px]">
                         {lifeName(run)}
                         {run.ranked ? <Tag tone="good">{t('ranked')}</Tag> : null}
+                        {run.room ? <Tag>{t('multiplayer')}</Tag> : null}
                         {run.challenge ? <Tag>{t(run.ranked ? 'challenge' : 'practice', { week: run.challenge })}</Tag> : null}
                       </p>
                       <p className="text-[12px] text-ink-300">

@@ -38,7 +38,12 @@ export interface RoomMember {
   left: boolean;
   /** As of the last round that turned; null before the first. */
   standing: RoomStanding | null;
+  /** The face they put on the round that turned last, as a number of `REACTIONS`; null for none. */
+  reaction: number | null;
 }
+
+/** The faces a member may put on a round, in the order the server numbers them. */
+export const REACTIONS = ['😂', '😱', '💸', '👑', '🙈'] as const;
 
 /** A room as a member may see it. */
 export interface RoomState {
@@ -59,6 +64,22 @@ export interface RoomState {
   now: number;
   /** Everyone who has been in the room, in the order they joined, those who left too. */
   members: RoomMember[];
+  /** The rematch opened from this room once it was over: its code, and whether it can still be joined. */
+  rematch: { code: string; open: boolean } | null;
+  /** True for a room that is the rematch of another. */
+  rematchOf: boolean;
+}
+
+/** A game over, as a player's history keeps it. */
+export interface RoomGameOver {
+  id: string;
+  lifeId: string;
+  seconds: number;
+  /** When it was opened, in milliseconds. */
+  playedAt: number;
+  rematchOf: boolean;
+  /** Everyone who was in it, in their final order; those who left last. */
+  players: Array<{ name: string | null; tag: string; me: boolean; score: number | null; left: boolean }>;
 }
 
 /** A member's life in a room, as the server shows it: the whole of what they may see, and what its last step did. */
@@ -104,6 +125,12 @@ export interface RoomsApi {
   card(roomId: string, step: number, option: number): Promise<RankedStep | 'moved'>;
   /** Plays the round, as step number `step`: the room as it then stands, and the round's result if it turned in this very call. */
   submit(roomId: string, step: number, orders: Order[]): Promise<{ room: RoomState; result: RankedStep | null } | 'moved'>;
+  /** Opens the rematch of a room that is over, or joins it if someone else opened it first. Throws `RoomRefused` when the server says no. */
+  rematch(roomId: string, lifeId: string, versions: { engine: string; content: string }): Promise<RoomState>;
+  /** Puts a face on the round that turned last, or takes it off with null. `gone` if the room is not in play for the player. */
+  react(roomId: string, reaction: number | null): Promise<RoomState | 'gone'>;
+  /** The games over the player was in, the latest first. */
+  history(): Promise<RoomGameOver[]>;
 }
 
 /** The rooms of the player's account: the server, and a way to hear of every change to one room. */

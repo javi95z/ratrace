@@ -6,7 +6,7 @@ import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
 import type { GameStore } from '@/game/store';
 import { Link } from '@/i18n/navigation';
-import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS } from '@/game/room';
+import { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS } from '@/game/room';
 import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
@@ -15,10 +15,12 @@ import { Play } from './Play';
 import type { RoomSlots } from './Play';
 
 /** The refusals the server gives in words of its own. Any other is told as a refusal with no reason. */
-const REFUSALS = new Set(['unknown-room', 'started', 'full', 'other-version', 'in-a-room', 'locked-life', 'cannot-room', 'unreachable', 'alone', 'not-host']);
+const REFUSALS = new Set(['unknown-room', 'started', 'full', 'other-version', 'in-a-room', 'locked-life', 'cannot-room', 'unreachable', 'alone', 'not-host', 'not-over']);
 /** Seconds as a clock reads them: 1:30; hours and minutes for a round of a day, 23h 05m. */
 const clock = (seconds: number) =>
   seconds >= 3_600 ? `${Math.floor(seconds / 3_600)}h ${String(Math.floor((seconds % 3_600) / 60)).padStart(2, '0')}m` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+/** What each face of `REACTIONS` is called, for whoever does not see it. */
+const FACES = ['face0', 'face1', 'face2', 'face3', 'face4'] as const;
 /** A round of a day is a day; a quick one, its clock. */
 const DAY = 86_400;
 /** Four characters of a player's id, for one with no name. */
@@ -162,10 +164,11 @@ function Door() {
   const clearClosed = useRoom((s) => s.clearClosed);
   const [opening, setOpening] = useState(false);
   const [code, setCode] = useState('');
-  // An invitation is a link with the room's code: it is waiting here, to be joined with one press.
+  // An invitation is a link with the room's code: it is shown as one, to be joined with one press.
+  const [invited, setInvited] = useState<string | null>(null);
   useEffect(() => {
-    const given = new URLSearchParams(window.location.search).get('code');
-    if (given) setCode(given.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6));
+    const given = (new URLSearchParams(window.location.search).get('code') ?? '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
+    if (given.length === 6) setInvited(given);
   }, []);
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -175,6 +178,23 @@ function Door() {
 
   return (
     <Page title={t('title')}>
+      {invited ? (
+        <section aria-label={t('invited')} className="frame-raised frame-gold flex flex-col items-center gap-2 bg-night-700 px-3 py-3 text-center">
+          <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('invited')}</p>
+          <p className="pixel text-[40px] leading-none tracking-[0.18em] text-gold-500">{invited}</p>
+          <Button
+            variant="primary"
+            wide
+            disabled={busy}
+            onClick={() => {
+              clearClosed();
+              void join(invited);
+            }}
+          >
+            {t('joinInvite')}
+          </Button>
+        </section>
+      ) : null}
       <ul className="flex flex-col gap-1.5 text-[15px] leading-snug text-ink-200">
         {(['introSame', 'introWho', 'introPace'] as const).map((line) => (
           <li key={line} className="flex gap-2">
@@ -190,7 +210,7 @@ function Door() {
           {t('closed')}
         </p>
       ) : null}
-      <Button variant="primary" wide disabled={busy} onClick={() => setOpening(true)}>
+      <Button variant={invited ? 'secondary' : 'primary'} wide disabled={busy} onClick={() => setOpening(true)}>
         {t('open')}
       </Button>
       <Panel title={t('join')}>
@@ -261,10 +281,9 @@ function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('room');
   const common = useT('common');
   const { text } = useWords();
-  const { unlocked } = useProfile();
   const busy = useRoom((s) => s.busy);
   const openRoom = useRoom((s) => s.open);
-  const available = lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id));
+  const available = useAvailableLives();
   const [lifeId, setLifeId] = useState(available[0]?.id ?? 'nurse');
   const [seconds, setSeconds] = useState<RoundSeconds>(180);
   const go = async () => {
@@ -288,6 +307,97 @@ function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
         </Button>
       </div>
     </Sheet>
+  );
+}
+
+/** The lives the player may live: those everyone has, and those they have unlocked. */
+function useAvailableLives() {
+  const { unlocked } = useProfile();
+  return lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id));
+}
+
+/** A rematch of the room that is over: a life, which is the same one unless chosen otherwise, on the same pace. */
+function RematchSheet({ room, open, onClose }: { room: RoomState; open: boolean; onClose(): void }) {
+  const t = useT('room');
+  const common = useT('common');
+  const { text } = useWords();
+  const busy = useRoom((s) => s.busy);
+  const rematch = useRoom((s) => s.rematch);
+  const available = useAvailableLives();
+  const [lifeId, setLifeId] = useState(available.some((life) => life.id === room.lifeId) ? room.lifeId : (available[0]?.id ?? 'nurse'));
+  const go = async () => {
+    if (await rematch(lifeId)) onClose();
+  };
+  return (
+    <Sheet open={open} onClose={onClose} title={t('rematch')} closeLabel={common('close')}>
+      <div className="flex flex-col gap-4">
+        <p className="text-[14px] leading-snug text-ink-200">{t('rematchAbout', { time: room.seconds === DAY ? t('day') : clock(room.seconds) })}</p>
+        <div>
+          <p className="mb-1.5 text-[13px] text-ink-300">{t('life')}</p>
+          <LifePicker label={t('life')} lives={available.map((life) => ({ id: life.id, name: text.lives[life.id]?.name ?? life.id }))} value={lifeId} onChange={setLifeId} />
+        </div>
+        <Refusal plain />
+        <Button variant="primary" wide disabled={busy} onClick={() => void go()}>
+          {t('rematchCreate')}
+        </Button>
+      </div>
+    </Sheet>
+  );
+}
+
+/** What a room that is over offers next: its rematch to join once someone has opened it, or to open. */
+function Rematch({ room }: { room: RoomState }) {
+  const t = useT('room');
+  const busy = useRoom((s) => s.busy);
+  const join = useRoom((s) => s.join);
+  const [asking, setAsking] = useState(false);
+  if (room.status !== 'finished') return null;
+  const waiting = room.rematch?.open ? room.rematch : null;
+  if (waiting) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <p role="status" className="text-center text-[14px] text-ink-200">
+          {t('rematchWaiting')}
+        </p>
+        <Button variant="primary" wide disabled={busy} onClick={() => void join(waiting.code)}>
+          {t('rematchJoin')}
+        </Button>
+      </div>
+    );
+  }
+  // Opened and started already: there is nothing left to join.
+  if (room.rematch !== null) return null;
+  return (
+    <>
+      <Button variant="primary" wide disabled={busy} onClick={() => setAsking(true)}>
+        {t('rematch')}
+      </Button>
+      <RematchSheet room={room} open={asking} onClose={() => setAsking(false)} />
+    </>
+  );
+}
+
+/** The faces a member may put on the round that turned last, one at a time: pressed again, it comes off. */
+function Reactions({ room }: { room: RoomState }) {
+  const t = useT('room');
+  const react = useRoom((s) => s.react);
+  const me = room.members.find((member) => member.me);
+  if (!me || me.left || room.round < 1 || (room.status !== 'playing' && room.status !== 'finished')) return null;
+  return (
+    <div role="group" aria-label={t('react')} className="mt-3 flex justify-center gap-2 border-t-2 border-night-900 pt-3">
+      {REACTIONS.map((face, at) => (
+        <button
+          key={face}
+          type="button"
+          aria-pressed={me.reaction === at}
+          aria-label={t(FACES[at])}
+          onClick={() => void react(me.reaction === at ? null : at)}
+          className={`frame-raised flex size-11 items-center justify-center text-[22px] ${me.reaction === at ? 'frame-gold bg-night-500' : 'bg-night-700'}`}
+        >
+          <span aria-hidden>{face}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -325,22 +435,32 @@ function Lobby({ room }: { room: RoomState }) {
   const leave = useRoom((s) => s.leave);
   const [asking, setAsking] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The link is the page's own address with the code: known once the page is in a browser.
+  const [url, setUrl] = useState<string | null>(null);
+  const [canShare, setCanShare] = useState(false);
+  useEffect(() => {
+    setUrl(`${window.location.origin}/${locale}/room?code=${room.code}`);
+    setCanShare(typeof navigator.share === 'function');
+  }, [locale, room.code]);
   const here = room.members.filter((member) => !member.left);
   const me = here.find((member) => member.me);
   const enough = here.length >= MIN_MEMBERS;
 
-  const invite = async () => {
-    const url = `${window.location.origin}/${locale}/room?code=${room.code}`;
-    const words = t('inviteText', { code: room.code });
+  const share = async () => {
+    if (url === null) return;
     try {
-      if (typeof navigator.share === 'function') {
-        await navigator.share({ title: t('title'), text: words, url });
-        return;
-      }
-      await navigator.clipboard.writeText(`${words} ${url}`);
+      await navigator.share({ title: t('title'), text: t('inviteText', { code: room.code }), url });
+    } catch {
+      // Sharing was turned down: the link and the code are on screen.
+    }
+  };
+  const copy = async () => {
+    if (url === null) return;
+    try {
+      await navigator.clipboard.writeText(url);
       setCopied(true);
     } catch {
-      // Sharing was turned down, or the browser keeps the clipboard to itself: the code is on screen to be read out.
+      // The browser keeps the clipboard to itself: the link is on screen to be copied by hand.
     }
   };
 
@@ -349,7 +469,11 @@ function Lobby({ room }: { room: RoomState }) {
       <section aria-label={t('code')} className="flex flex-col items-center gap-2 py-2 text-center">
         <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('code')}</p>
         <p className="pixel text-[44px] leading-none tracking-[0.18em] text-gold-500">{room.code}</p>
-        <Button onClick={() => void invite()}>{t('invite')}</Button>
+        {url ? <p className="max-w-full select-all truncate text-[12px] text-ink-300">{url.replace(/^https?:\/\//, '')}</p> : null}
+        <div className="flex flex-wrap justify-center gap-2">
+          {canShare ? <Button onClick={() => void share()}>{t('share')}</Button> : null}
+          <Button onClick={() => void copy()}>{t('copyLink')}</Button>
+        </div>
       </section>
       <Panel>
         <div className="flex items-center gap-3">
@@ -414,6 +538,11 @@ function Standings({ room }: { room: RoomState }) {
               <span className="flex items-center gap-1.5">
                 <span className="truncate text-[15px]">{nameOf(member)}</span>
                 {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
+                {member.reaction !== null ? (
+                  <span role="img" aria-label={t(FACES[member.reaction])} className="text-[17px] leading-none">
+                    {REACTIONS[member.reaction]}
+                  </span>
+                ) : null}
               </span>
               {member.left ? (
                 <span className="block text-[12px] text-ink-300">{t('left')}</span>
@@ -541,13 +670,17 @@ function RoomScreens({ room }: { room: RoomState }) {
     resolved: (
       <Panel title={order} label={order}>
         <Standings room={room} />
+        <Reactions room={room} />
       </Panel>
     ),
     end: (
       <Panel title={t('final')} label={t('final')}>
         {place > 0 ? <p className="pixel mb-2 text-[20px] text-gold-500">{t('place', { place, total: here.length })}</p> : null}
         <Standings room={room} />
-        <div className="mt-3 border-t-2 border-night-900 pt-3">
+        <Reactions room={room} />
+        <div className="mt-3 flex flex-col gap-2 border-t-2 border-night-900 pt-3">
+          <Rematch room={room} />
+          <Refusal plain />
           <Button wide disabled={busy} onClick={() => void leave()}>
             {t('leave')}
           </Button>

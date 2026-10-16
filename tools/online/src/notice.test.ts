@@ -16,6 +16,7 @@ describe('what a notice says', () => {
     expect(noticeOf('es', { kind: 'yourTurn', round: 6, rounds: 20, secondsLeft: 72 })).toEqual({ title: 'Faltas tú', body: 'Los demás ya han jugado la ronda 6 de 20. Quedan 1:12.', url: '/es/room', tag: 'room' });
     expect(noticeOf('ru', { kind: 'roomStarted', seconds: 90 }).url).toBe('/ru/room');
     expect(noticeOf('en', { kind: 'idle' })).toMatchObject({ url: '/en/play', tag: 'idle-life' });
+    expect(noticeOf('es', { kind: 'rematch' })).toMatchObject({ title: '¡Revancha!', url: '/es/room', tag: 'room' });
   });
 
   it('reads in English for a language the game does not have, and shows seconds as a clock does', () => {

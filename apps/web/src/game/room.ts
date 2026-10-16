@@ -4,14 +4,14 @@ import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { Unreachable } from '@/session/errors';
 import { GRACE_MS, RoomRefused, RoomSessions } from '@/session/room';
-import type { RoomsApi, RoomsLink, RoomState, RoundSeconds } from '@/session/room';
+import type { RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '@/session/room';
 import type { PlayerStore } from '@/session/types';
 import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS } from '@/session/room';
-export type { RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
+export { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS } from '@/session/room';
+export type { RoomGameOver, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
 export const LOOK_EVERY_MS = 15_000;
@@ -51,6 +51,12 @@ export interface RoomActions {
   start(): Promise<void>;
   /** Leaves the room: out of the lobby, giving up the life in play, or done with a room that is over. */
   leave(): Promise<void>;
+  /** Opens the rematch of the room that is over, with a life, or joins it if someone opened it first. */
+  rematch(lifeId: string): Promise<boolean>;
+  /** Puts a face on the round that turned last, or takes it off with null. Quietly does nothing if it cannot. */
+  react(reaction: number | null): Promise<void>;
+  /** The games over the player was in, the latest first. Null when they cannot be asked for just now. */
+  history(): Promise<RoomGameOver[] | null>;
   /** Asks the server how the room stands now. */
   refresh(): Promise<void>;
   clearRefusal(): void;
@@ -222,12 +228,13 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       }
       set({ status: 'in', room, skew, game, missed, otherRules });
       release(room);
-      if (room.status === 'open' || room.status === 'playing') {
-        watch(room);
-        setClocks(room, skew);
-      } else {
+      // A room that is over is still listened to: its rematch is heard of the moment someone opens it.
+      if (room.status === 'closed') {
         stopClocks();
         stopWatching();
+      } else {
+        watch(room);
+        setClocks(room, skew);
       }
     }
 
@@ -310,6 +317,40 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
         });
       },
 
+      async rematch(lifeId) {
+        const room = get().room;
+        if (room === null) return false;
+        return request(async (rooms) => {
+          const next = await rooms.rematch(room.id, lifeId, options.versions);
+          left = null;
+          return next;
+        });
+      },
+
+      async react(reaction) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return;
+        try {
+          const now = await rooms.react(room.id, reaction);
+          if (now !== 'gone' && get().room?.id === now.id) adopt(now);
+        } catch (error) {
+          // A face that did not get through is no loss: the round goes on without it.
+          if (!(error instanceof Unreachable) && !(error instanceof RoomRefused)) throw error;
+        }
+      },
+
+      async history() {
+        const rooms = api();
+        if (rooms === null) return null;
+        try {
+          return await rooms.history();
+        } catch (error) {
+          if (error instanceof Unreachable) return null;
+          throw error;
+        }
+      },
+
       async refresh() {
         // One question at a time: a change heard while asking is asked about once more, after.
         if (asking !== null) {
@@ -323,10 +364,14 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
             const room = get().room;
             if (rooms === null) return;
             try {
-              if (room === null) adopt(await rooms.mine());
-              else {
+              if (room === null) {
+                const found = await rooms.mine();
+                // Meanwhile the player's own request may have put them in a room: that answer is newer.
+                if (get().room === null) adopt(found);
+              } else {
                 const now = await rooms.state(room.id);
-                adopt(now === 'gone' ? null : now);
+                // A look at a room the page has moved on from, to a rematch most often, is about a room no longer shown.
+                if (get().room?.id === room.id) adopt(now === 'gone' ? null : now);
               }
             } catch (error) {
               if (!(error instanceof Unreachable)) throw error;
@@ -355,8 +400,8 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
   // Every fifteen seconds, and whenever the page comes back, the room is looked at again.
   const look = () => {
     const { status, room } = store.getState();
-    // Away, the server is asked again for the room; in one that is not over, how it stands.
-    if (status === 'away' || (status === 'in' && room !== null && (room.status === 'open' || room.status === 'playing'))) void store.getState().refresh();
+    // Away, the server is asked again for the room; in one, how it stands: one that is over may have its rematch.
+    if (status === 'away' || (status === 'in' && room !== null && room.status !== 'closed')) void store.getState().refresh();
   };
   const loop = () => {
     look();
