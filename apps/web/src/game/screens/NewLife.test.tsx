@@ -58,7 +58,9 @@ describe('choosing a life', () => {
     expect(screen.queryByText('Weekly challenge')).toBeNull();
     // The lives that can be lived are the ones to choose from, each with how hard it is.
     const lives = screen.getAllByRole('radio');
-    expect(lives.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant)$/).textContent)).toEqual(['Nurse', 'Software engineer', 'Civil servant']);
+    expect(lives.map((life) => within(life).getByText(/^(Nurse|Software engineer|Civil servant)\b/).textContent?.split(' · ')[0])).toEqual(['Nurse', 'Software engineer', 'Civil servant']);
+    // The one chosen says who lives it.
+    expect(lives[0].textContent).toContain('Nurse · Lucía');
     expect(within(lives[1]).getByRole('img', { name: 'Difficulty: normal' })).toBeTruthy();
     // The others wait at the foot, folded, with what unlocks each.
     expect(screen.queryByText(/To unlock/)).toBeNull();

@@ -125,6 +125,6 @@ describe('the epilogue', () => {
       expect(epilogue({ words: words(locale), t: translator(locale), life: jobless, view: ended('nurse'), story: [], score: 1, bankruptcies: 0 })[0]).not.toMatch(/[{}]/);
     }
     // The space before the dollar sign is one that does not break.
-    expect(tell('engineer', [], ended('engineer'), 'es')[0]).toMatch(/^Empezaste a los 22 en Madrid, de Programador júnior, con 2\.000\s\$ en el bolsillo\.$/);
+    expect(tell('engineer', [], ended('engineer'), 'es')[0]).toMatch(/^Empezaste a los 22 en Tokio, de Programador júnior, con 2\.000\s\$ en el bolsillo\.$/);
   });
 });

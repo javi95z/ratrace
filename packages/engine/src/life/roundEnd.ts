@@ -206,6 +206,8 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
       const back = life.homecoming;
       const rules = content.life.homecoming;
       p.cash += back.gift;
+      // Money that comes in is in the round's accounts, however late in the round it comes.
+      if (back.gift > 0) events.push({ kind: 'ledger', line: 'familyGift', amount: back.gift });
       if (back.triumphant) {
         life.bonusStatus += rules.status;
         life.flags[FLAG_CAME_HOME_RICH] = 0;

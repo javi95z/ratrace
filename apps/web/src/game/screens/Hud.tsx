@@ -4,7 +4,8 @@ import { FRAME_STATUS, frameArt, portraitArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import { characterName } from '@/game/characters';
+import { useGame, useSettings, useT, useWords } from '@/game/context';
 import { ageAt, cityLight, portraitAge } from '@/game/present';
 import { Bar, Row, Stat, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -208,6 +209,8 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const common = useT('common');
   const { content, text, names, fmt } = useWords();
   const lifeId = useGame((s) => s.lifeId) ?? '';
+  const { locale } = useSettings();
+  const character = characterName(lifeId, locale);
   const preview = useGame((s) => s.preview);
   const shown = useShown();
   const stage = useGame((s) => s.stage);
@@ -261,6 +264,8 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
           framed
         )}
         <div className="min-w-0 flex-1">
+          {/* Who lives this life, by name, above how old they are. */}
+          {character ? <div className="pixel mb-1 truncate text-[15px] leading-none text-gold-500">{character}</div> : null}
           <div className="pixel text-[26px] leading-none">{common('age', { age })}</div>
           <div className="mt-1 truncate text-[13px] text-ink-200">
             {t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })} · {names.cities[p.cityId]}

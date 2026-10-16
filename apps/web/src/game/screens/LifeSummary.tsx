@@ -2,7 +2,8 @@
 
 import { cityIcon, lives } from '@ratrace/content';
 import { difficultyOf } from '@/game/difficulty';
-import { useT, useWords } from '@/game/context';
+import { characterName } from '@/game/characters';
+import { useSettings, useT, useWords } from '@/game/context';
 import { Sprite } from '@/ui/Sprite';
 
 const LEVELS = ['level1', 'level2', 'level3'] as const;
@@ -36,13 +37,18 @@ export function Difficulty({ lifeId, light = false, word = false }: { lifeId: st
 export function LifeSummary({ lifeId, light = false }: { lifeId: string; light?: boolean }) {
   const t = useT('newLife');
   const { text, names, fmt } = useWords();
+  const { locale } = useSettings();
+  const character = characterName(lifeId, locale);
   const life = lives.find((one) => one.id === lifeId);
   const written = text.lives[lifeId];
   if (!life || !written) return null;
   return (
     <span className="flex min-w-0 flex-1 flex-col items-start gap-1 py-1 pr-1">
       <span className="flex w-full items-center justify-between gap-2">
-        <span className="pixel text-[17px] leading-tight">{written.name}</span>
+        <span className="pixel text-[17px] leading-tight">
+          {written.name}
+          {character ? <span className="font-sans text-[13px] font-normal"> · {character}</span> : null}
+        </span>
         <Difficulty lifeId={lifeId} light={light} word />
       </span>
       <span className="sr-only">{t('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>

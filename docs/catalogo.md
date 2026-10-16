@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.36.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.37.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -43,7 +43,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 2.000 $ |
+| Empieza en | Tokio, con 2.000 $ |
 | Trabajo | Programador júnior (Tecnología) |
 | Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
 | Modo de vida | Normal |
@@ -133,7 +133,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Londres, con 1.000 $ |
+| Empieza en | Zúrich, con 1.000 $ |
 | Trabajo | Médica residente (Medicina) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 2 |
 | Modo de vida | Normal |
@@ -148,7 +148,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Madrid, con 0 $ |
+| Empieza en | Moscú, con 0 $ |
 | Trabajo | Encargado de tienda (Servicios) |
 | Experiencia · Finanzas · Foco | 10 · 1/3 · 3 |
 | Modo de vida | Austero |
@@ -223,7 +223,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Bangkok, con 500 $ |
+| Empieza en | Dubái, con 500 $ |
 | Trabajo | Creador novato (Influencer) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |
@@ -253,7 +253,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Bangkok, con 2.500 $ |
+| Empieza en | Ciudad de México, con 2.500 $ |
 | Trabajo | Comercial júnior (Ventas) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 3 |
 | Modo de vida | Normal |

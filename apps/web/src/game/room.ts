@@ -45,7 +45,7 @@ export interface RoomStoreState {
   otherRules: boolean;
   /** The multiplayer badges the room that is over has just earned the player, for the end to show. */
   earned: string[];
-  /** What the others have shouted that the page has still to show, the oldest first. */
+  /** What has been shouted, by the others and by the player, that the page has still to show, the oldest first. */
   heard: Array<{ key: string; userId: string; n: number }>;
 }
 
@@ -252,10 +252,10 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           void again.catch((error: unknown) => console.error('the life in the room could not be brought up to date:', error));
         }
       }
-      // What the others shouted since this page last heard: each shout once, the player's own never.
+      // What was shouted since this page last heard, the player's own too, so they see what the others see: each shout once.
       let heard = was?.id === room.id ? get().heard : [];
       for (const member of room.members) {
-        if (member.me || member.shout === null) continue;
+        if (member.shout === null) continue;
         const key = `${room.id}/${member.userId}`;
         if ((shoutsHeard.get(key) ?? 0) >= member.shout.at) continue;
         shoutsHeard.set(key, member.shout.at);

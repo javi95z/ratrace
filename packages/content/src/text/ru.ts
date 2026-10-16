@@ -520,6 +520,7 @@ export const ru: ContentText = {
     itemSales: 'Продажа вещей',
     moving: 'Переезд',
     mortgageFee: 'Комиссия за смену ипотеки',
+    familyGift: 'Помощь семьи по возвращении домой',
     depositDraw: 'Снято со сбережений',
     creditCardDraw: 'Легло на кредитную карту',
     creditCardRepay: 'Погашение кредитной карты',

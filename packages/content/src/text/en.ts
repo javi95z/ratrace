@@ -520,6 +520,7 @@ export const en: ContentText = {
     itemSales: 'Things sold',
     moving: 'Moving costs',
     mortgageFee: 'Fee for switching a mortgage',
+    familyGift: 'Help from family on coming home',
     depositDraw: 'Taken from savings',
     creditCardDraw: 'Put on the credit card',
     creditCardRepay: 'Credit card paid down',

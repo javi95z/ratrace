@@ -107,6 +107,8 @@ describe('the play screen', () => {
 
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect(screen.getByText('Age 22')).toBeTruthy();
+    // Who lives the life, by name, above it.
+    expect(screen.getAllByText('Lucía').length).toBeGreaterThan(0);
     // Every headline is a clipping that says what it is about, in a word and a picture.
     const clippings = within(screen.getByRole('region', { name: 'News' })).getAllByRole('listitem');
     const news = ((await services.store.loadGame()) as SavedGame).state.timeline[0].news;

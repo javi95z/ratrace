@@ -62,7 +62,7 @@ export const lives: LifeDef[] = [
     id: 'engineer',
     unlock: 'default',
     start: {
-      cityId: 'madrid',
+      cityId: 'tokyo',
       cash: usd(2_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -150,7 +150,7 @@ export const lives: LifeDef[] = [
     id: 'doctor',
     unlock: 'escaped',
     start: {
-      cityId: 'london',
+      cityId: 'zurich',
       cash: usd(1_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -163,7 +163,7 @@ export const lives: LifeDef[] = [
     id: 'comeback',
     unlock: 'bankrupt',
     start: {
-      cityId: 'madrid',
+      cityId: 'moscow',
       cash: 0,
       salaryAnnual: 0,
       lifestyleTier: 0,
@@ -234,7 +234,7 @@ export const lives: LifeDef[] = [
     id: 'influencer',
     unlock: 'status_100',
     start: {
-      cityId: 'bangkok',
+      cityId: 'dubai',
       cash: usd(500),
       salaryAnnual: 0,
       lifestyleTier: 1,
@@ -260,7 +260,7 @@ export const lives: LifeDef[] = [
     id: 'salesperson',
     unlock: 'bought_the_dip',
     start: {
-      cityId: 'bangkok',
+      cityId: 'mexico_city',
       cash: usd(2_500),
       salaryAnnual: 0,
       lifestyleTier: 1,

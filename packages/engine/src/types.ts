@@ -1343,6 +1343,7 @@ export type LedgerLine =
   | 'itemSales'
   | 'moving'
   | 'mortgageFee'
+  | 'familyGift'
   | 'depositDraw'
   | 'creditCardDraw'
   | 'creditCardRepay'

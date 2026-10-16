@@ -255,8 +255,8 @@ describe('orderLabel', () => {
     expect(label({ type: 'pensionIn', amount: 50_000 })).toBe('Pension · $500');
     expect(label({ type: 'borrow', amount: 1_000_000 })).toBe('Borrow $10,000');
     expect(label({ type: 'repay', debtId: 'debt-1', amount: 100_000 })).toBe('Repay Personal loan · $1,000');
-    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: false })).toBe('Buy a home: Studio in Lavapiés');
-    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: true })).toBe('Buy a rental: Studio in Lavapiés');
+    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: false })).toBe('Buy a home: Studio in Koenji');
+    expect(label({ type: 'buyProperty', typeId: 'studio', downPayment: 1, mortgage: 'fixed', rented: true })).toBe('Buy a rental: Studio in Koenji');
     expect(label({ type: 'sellProperty', propertyId: 'property-9' })).toBe('Sell: Flat in Chamberí');
     expect(label({ type: 'setRented', propertyId: 'property-9', rented: true })).toBe('Rent out: Flat in Chamberí');
     expect(label({ type: 'setRented', propertyId: 'property-9', rented: false })).toBe('Stop renting out: Flat in Chamberí');

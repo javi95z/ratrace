@@ -148,7 +148,7 @@ describe('the front door', () => {
     renderGame(<Home />, services);
     const carry = await screen.findByRole('link', { name: /Continue your life/ });
     expect(carry.getAttribute('href')).toBe('/play');
-    expect(carry.textContent).toContain('Software engineer · age 22 · Madrid');
+    expect(carry.textContent).toContain('Software engineer · age 22 · Tokyo');
     expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
   });
 

@@ -520,6 +520,7 @@ export const es: ContentText = {
     itemSales: 'Ventas',
     moving: 'Gastos de mudanza',
     mortgageFee: 'Comisión por cambiar la hipoteca',
+    familyGift: 'Ayuda de la familia al volver a casa',
     depositDraw: 'Sacado del ahorro',
     creditCardDraw: 'Cargado a la tarjeta',
     creditCardRepay: 'Tarjeta pagada',
