@@ -9,7 +9,7 @@ import { items } from './items';
 import { debt, evasion, life, propertyTypes, scoring, world } from './rules';
 
 /** Bumped whenever a number or a card changes, so a saved game knows which rules it was played under. */
-export const CONTENT_VERSION = '1.34.0';
+export const CONTENT_VERSION = '1.35.0';
 
 /** Everything the engine needs to run a v1 game: 20 rounds of two years, from age 22 to 62. */
 export const content: Content = {

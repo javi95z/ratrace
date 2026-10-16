@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.34.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.35.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -604,7 +604,7 @@ Tu dinero cunde cuatro veces más. Tus ahorros también.
 | Piso de referencia | 95.000 $ |
 | Alquiler que rinde un inmueble | 5 % de su valor al año |
 | Impuesto sobre la renta | 5 % · 20 % · 35 % |
-| Impuesto sobre ganancias | 10 % |
+| Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +6 |
 | Carreras que paga mejor | Servicios +15 % · Tecnología +10 % · Hostelería +20 % · Influencer +10 % |
 

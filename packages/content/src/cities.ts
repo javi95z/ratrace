@@ -70,7 +70,8 @@ const singaporeTax: TaxProfile = {
 
 const bangkokTax: TaxProfile = {
   incomeRatesBp: [500, 2_000, 3_500],
-  capitalGainsBp: 1_000,
+  // Thailand does not tax an individual's gains on shares or on crypto.
+  capitalGainsBp: 0,
   dividendBp: 1_000,
   rentAsIncome: false,
   rentBp: 1_000,
