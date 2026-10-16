@@ -9,7 +9,7 @@
       "records": "Récords",
       "rankings": "Clasificaciones",
       "challenge": "Reto de la semana",
-      "room": "Jugar con amigos"
+      "room": "Multijugador"
     },
     "imageAlt": "The Rat Race en píxeles: una rata en su rueda, los skylines nocturnos de Nueva York y Madrid y el nombre del juego en dorado.",
     "keywords": "rat race,simulador de vida,juego de finanzas personales,juego de inversión,independencia financiera,pixel art"
@@ -63,7 +63,7 @@
     "accountLifeTake": "Continuar esa vida",
     "accountLifeEnd": "Terminar esa vida",
     "rankings": "Clasificaciones",
-    "room": "Jugar con amigos",
+    "room": "Multijugador",
     "inRoom": "Volver a tu partida",
     "roomLobby": "Partida {code} · sin empezar",
     "roomPlaying": "Partida {code} · ronda {round} de {total}",
@@ -172,7 +172,7 @@
     "practice": "Práctica del reto",
     "points": "{n} puntos",
     "weeklyNotice": "Activar notificaciones",
-    "weeklyNoticeHint": "El reto semanal, tus partidas con amigos y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
+    "weeklyNoticeHint": "El reto semanal, tus partidas multijugador y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
     "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador."
   },
   "play": {
@@ -1481,9 +1481,8 @@
     "points": "{n} puntos"
   },
   "room": {
-    "title": "Jugar con amigos",
-    "intro": "Todos viven la misma vida en el mismo mundo, ronda a ronda. Gana la mejor puntuación.",
-    "needAccount": "Las partidas con amigos necesitan una cuenta y conexión.",
+    "title": "Multijugador",
+    "needAccount": "El multijugador necesita una cuenta y conexión.",
     "away": "Ahora no hay conexión con las partidas.",
     "retry": "Reintentar",
     "open": "Crear una partida",
@@ -1496,7 +1495,7 @@
     "closed": "La partida se ha cerrado.",
     "invite": "Invitar",
     "copied": "Enlace copiado.",
-    "inviteText": "Juega conmigo a The Rat Race. Partida {code}",
+    "inviteText": "Juega conmigo a The Rat Race en multijugador. Partida {code}",
     "everyone": "Todos viven",
     "round": "{time} por ronda",
     "members": "En la partida: {count} de {max}",
@@ -1538,6 +1537,12 @@
       "not-host": "Solo quien creó la partida puede empezarla.",
       "refused": "No ha funcionado. Vuelve a intentarlo."
     },
-    "otherRules": "Esta partida juega con otra versión del juego. Recarga la página para jugarla."
+    "otherRules": "Esta partida juega con otra versión del juego. Recarga la página para jugarla.",
+    "introSame": "Todos viven la misma vida, en el mismo mundo: los mismos sustos y las mismas oportunidades.",
+    "introWho": "De 2 a 6 jugadores. Gana quien acabe con más puntos.",
+    "introPace": "Rondas rápidas para jugar a la vez, o una ronda al día para jugar a ratos.",
+    "day": "1 día",
+    "paceLive": "Para jugar a la vez: si alguien no elige a tiempo, el reloj juega en su lugar.",
+    "paceDay": "Para jugar a ratos: cada uno juega su ronda cuando puede, y un aviso te dice cuándo empieza otra."
   }
 }

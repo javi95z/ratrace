@@ -84,12 +84,12 @@ describe('the way to the rooms', () => {
   it('is on the front door only for a player with an account, and leads back to their room once they are in one', async () => {
     const plain = renderGame(<Home />, memoryServices());
     await screen.findByRole('link', { name: 'New life' });
-    expect(screen.queryByRole('link', { name: /Play with friends/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Multiplayer/ })).toBeNull();
     plain.unmount();
 
     const { server, services } = inRooms();
     renderGame(<Home />, services);
-    expect((await screen.findByRole('link', { name: /Play with friends/ })).getAttribute('href')).toBe('/room');
+    expect((await screen.findByRole('link', { name: /Multiplayer/ })).getAttribute('href')).toBe('/room');
     cleanup();
     const room = await lobby(server);
     renderGame(<Home />, services);
@@ -99,7 +99,7 @@ describe('the way to the rooms', () => {
 
   it('says rooms need an account and a connection where there is none', async () => {
     renderGame(<Room />, memoryServices());
-    expect(await screen.findByText('Games with friends need an account and a connection.')).toBeTruthy();
+    expect(await screen.findByText('Multiplayer needs an account and a connection.')).toBeTruthy();
   });
 });
 
@@ -123,6 +123,19 @@ describe('opening and joining a room', () => {
     expect(within(members).getByText('You')).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Start' }) as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText('At least one more must join to start.')).toBeTruthy();
+  });
+
+  it('opens one of a round a day, and says what that is for', async () => {
+    const { services } = inRooms();
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start a game' }));
+    const sheet = screen.getByRole('dialog', { name: 'Start a game' });
+    expect(within(sheet).getByText(/the clock plays for them/)).toBeTruthy();
+    await user.click(within(sheet).getByRole('radio', { name: '1 day' }));
+    expect(within(sheet).getByText(/a notice tells you when the next begins/)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Start the game' }));
+    expect(await screen.findByText('1 day a round')).toBeTruthy();
   });
 
   it('joins by the code an invitation carries, and waits for the host', async () => {

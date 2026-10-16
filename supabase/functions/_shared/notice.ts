@@ -18,18 +18,31 @@ export interface Notice {
  * - `weekly`: a new challenge has begun. With the player's place in last week's, if they played it.
  * - `roomStarted`: the host started the game the player was waiting in.
  * - `yourTurn`: everyone else in the player's game has played the round; the clock is running.
+ * - `newRound`: in a game of a round a day, the next round has begun.
  * - `idle`: a life left halfway, a week ago.
  */
 export type NoticeAbout =
   | { kind: 'weekly'; place: number | null; entrants: number | null }
   | { kind: 'roomStarted'; seconds: number }
   | { kind: 'yourTurn'; round: number; rounds: number; secondsLeft: number }
+  | { kind: 'newRound'; round: number; rounds: number; seconds: number }
   | { kind: 'idle' };
 
 const langOf = (locale: string): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
 
 /** Seconds as a clock shows them: 1:05. */
 export const clock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(Math.max(0, Math.round(seconds % 60))).padStart(2, '0')}`;
+
+const HOURS: Record<NoticeLocale, [string, string]> = { en: ['h', 'min'], es: ['h', 'min'], ru: ['ч', 'мин'] };
+
+/** A span of time as a person says it: a clock under an hour, hours and minutes above. */
+export function span(seconds: number, lang: NoticeLocale): string {
+  if (seconds < 3_600) return clock(seconds);
+  const [h, min] = HOURS[lang];
+  const hours = Math.floor(seconds / 3_600);
+  const minutes = Math.floor((seconds % 3_600) / 60);
+  return minutes === 0 ? `${hours} ${h}` : `${hours} ${h} ${minutes} ${min}`;
+}
 
 type Words = (about: never) => { title: string; body: string };
 
@@ -39,8 +52,9 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: 'A new weekly challenge',
       body: a.place !== null && a.entrants !== null ? `You came #${a.place} of ${a.entrants} last week. A new one has begun.` : 'One life, one rule, the same world for everyone. See where you rank this week.',
     }),
-    roomStarted: (a) => ({ title: 'Your game has started', body: `Everyone lives the same life now. You have ${clock(a.seconds)} for each round.` }),
-    yourTurn: (a) => ({ title: 'They are waiting for you', body: `Everyone else has played round ${a.round} of ${a.rounds}. ${clock(a.secondsLeft)} left.` }),
+    roomStarted: (a) => ({ title: 'Your game has started', body: `Everyone lives the same life now. You have ${span(a.seconds, 'en')} for each round.` }),
+    yourTurn: (a) => ({ title: 'They are waiting for you', body: `Everyone else has played round ${a.round} of ${a.rounds}. ${span(a.secondsLeft, 'en')} left.` }),
+    newRound: (a) => ({ title: `Round ${a.round} of ${a.rounds}`, body: `A new round of your game has begun. You have ${span(a.seconds, 'en')} to play it.` }),
     idle: () => ({ title: 'Your life is waiting', body: 'You left a life halfway. Pick it up where you left it.' }),
   },
   es: {
@@ -48,8 +62,9 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: 'Nuevo reto semanal',
       body: a.place !== null && a.entrants !== null ? `Quedaste #${a.place} de ${a.entrants} la semana pasada. Ya hay uno nuevo.` : 'Una vida, una regla y el mismo mundo para todos. A ver en qué puesto quedas esta semana.',
     }),
-    roomStarted: (a) => ({ title: 'Empieza la partida', body: `Todos vivís ya la misma vida. Tienes ${clock(a.seconds)} por ronda.` }),
-    yourTurn: (a) => ({ title: 'Faltas tú', body: `Los demás ya han jugado la ronda ${a.round} de ${a.rounds}. Quedan ${clock(a.secondsLeft)}.` }),
+    roomStarted: (a) => ({ title: 'Empieza la partida', body: `Todos vivís ya la misma vida. Tienes ${span(a.seconds, 'es')} por ronda.` }),
+    yourTurn: (a) => ({ title: 'Faltas tú', body: `Los demás ya han jugado la ronda ${a.round} de ${a.rounds}. Quedan ${span(a.secondsLeft, 'es')}.` }),
+    newRound: (a) => ({ title: `Ronda ${a.round} de ${a.rounds}`, body: `Empieza una ronda nueva de tu partida. Tienes ${span(a.seconds, 'es')} para jugarla.` }),
     idle: () => ({ title: 'Tu vida te espera', body: 'Dejaste una vida a medias. Sigue donde la dejaste.' }),
   },
   ru: {
@@ -57,14 +72,15 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: 'Новый недельный вызов',
       body: a.place !== null && a.entrants !== null ? `На прошлой неделе у тебя #${a.place} из ${a.entrants}. Начался новый.` : 'Одна жизнь, одно правило и один мир для всех. Посмотри, каким будет твоё место на этой неделе.',
     }),
-    roomStarted: (a) => ({ title: 'Партия началась', body: `Все живут одну и ту же жизнь. На каждый раунд у тебя ${clock(a.seconds)}.` }),
-    yourTurn: (a) => ({ title: 'Ждут только тебя', body: `Остальные уже сыграли раунд ${a.round} из ${a.rounds}. Осталось ${clock(a.secondsLeft)}.` }),
+    roomStarted: (a) => ({ title: 'Партия началась', body: `Все живут одну и ту же жизнь. На каждый раунд у тебя ${span(a.seconds, 'ru')}.` }),
+    yourTurn: (a) => ({ title: 'Ждут только тебя', body: `Остальные уже сыграли раунд ${a.round} из ${a.rounds}. Осталось ${span(a.secondsLeft, 'ru')}.` }),
+    newRound: (a) => ({ title: `Раунд ${a.round} из ${a.rounds}`, body: `В твоей партии начался новый раунд. На него у тебя ${span(a.seconds, 'ru')}.` }),
     idle: () => ({ title: 'Твоя жизнь ждёт', body: 'Одна из твоих жизней осталась на полпути. Продолжи с того же места.' }),
   },
 };
 
-const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', idle: 'play' };
-const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', idle: 'idle-life' };
+const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', idle: 'play' };
+const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', idle: 'idle-life' };
 
 /** The notice for a browser that asked for notices in a language; one the game does not have reads in English. */
 export function noticeOf(locale: string, about: NoticeAbout): Notice {

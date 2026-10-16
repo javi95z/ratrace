@@ -16,8 +16,11 @@ import type { RoomSlots } from './Play';
 
 /** The refusals the server gives in words of its own. Any other is told as a refusal with no reason. */
 const REFUSALS = new Set(['unknown-room', 'started', 'full', 'other-version', 'in-a-room', 'locked-life', 'cannot-room', 'unreachable', 'alone', 'not-host']);
-/** Seconds as a clock reads them: 1:30. */
-const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+/** Seconds as a clock reads them: 1:30; hours and minutes for a round of a day, 23h 05m. */
+const clock = (seconds: number) =>
+  seconds >= 3_600 ? `${Math.floor(seconds / 3_600)}h ${String(Math.floor((seconds % 3_600) / 60)).padStart(2, '0')}m` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+/** A round of a day is a day; a quick one, its clock. */
+const DAY = 86_400;
 /** Four characters of a player's id, for one with no name. */
 const tagOf = (userId: string) => userId.slice(0, 4).toUpperCase();
 
@@ -172,7 +175,16 @@ function Door() {
 
   return (
     <Page title={t('title')}>
-      <p className="text-[15px] leading-snug text-ink-200">{t('intro')}</p>
+      <ul className="flex flex-col gap-1.5 text-[15px] leading-snug text-ink-200">
+        {(['introSame', 'introWho', 'introPace'] as const).map((line) => (
+          <li key={line} className="flex gap-2">
+            <span aria-hidden className="text-gold-500">
+              ▸
+            </span>
+            <span>{t(line)}</span>
+          </li>
+        ))}
+      </ul>
       {closed ? (
         <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">
           {t('closed')}
@@ -263,7 +275,8 @@ function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
       <div className="flex flex-col gap-4">
         <div>
           <p className="mb-1.5 text-[13px] text-ink-300">{t('pace')}</p>
-          <Segmented<RoundSeconds> label={t('pace')} value={seconds} onChange={setSeconds} options={ROUND_SECONDS.map((value) => ({ value, label: clock(value) }))} />
+          <Segmented<RoundSeconds> label={t('pace')} value={seconds} onChange={setSeconds} options={ROUND_SECONDS.map((value) => ({ value, label: value === DAY ? t('day') : clock(value) }))} />
+          <p className="mt-1.5 text-[13px] text-ink-300">{t(seconds === DAY ? 'paceDay' : 'paceLive')}</p>
         </div>
         <div>
           <p className="mb-1.5 text-[13px] text-ink-300">{t('life')}</p>
@@ -346,7 +359,7 @@ function Lobby({ room }: { room: RoomState }) {
           <div className="min-w-0">
             <p className="text-[12px] text-ink-300">{t('everyone')}</p>
             <p className="pixel truncate text-[18px]">{text.lives[room.lifeId]?.name ?? room.lifeId}</p>
-            <p className="text-[13px] text-ink-200">{t('round', { time: clock(room.seconds) })}</p>
+            <p className="text-[13px] text-ink-200">{t('round', { time: room.seconds === DAY ? t('day') : clock(room.seconds) })}</p>
           </div>
         </div>
       </Panel>
@@ -440,7 +453,7 @@ function RoomBar({ room }: { room: RoomState }) {
         onClick={() => setOpen(true)}
         className="frame-raised flex min-h-11 w-full items-center gap-3 bg-night-700 px-3 py-1.5 text-left"
       >
-        <span aria-hidden className={`pixel w-14 shrink-0 text-[22px] tabular-nums ${low ? 'text-wine-300' : 'text-gold-500'}`}>
+        <span aria-hidden className={`pixel min-w-14 shrink-0 text-[22px] tabular-nums ${low ? 'text-wine-300' : 'text-gold-500'}`}>
           {time}
         </span>
         <span aria-hidden className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">

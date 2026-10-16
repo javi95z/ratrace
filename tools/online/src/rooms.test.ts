@@ -405,6 +405,23 @@ describe('the notices of a room', () => {
     expect(server.notices).toEqual([{ user: C, about: { kind: 'yourTurn', round: 1, rounds: content.rounds, secondsLeft: 150 } }]);
   });
 
+  it('tells everyone but whoever turned it that a new round of a game of a round a day has begun', async () => {
+    const { server, room } = await begun(roomServer(), 86_400, [C]);
+    server.notices.length = 0;
+    for (const who of [HOST, B]) await server.ask(who, { action: 'submit', roomId: room, step: await answerHand(server, who, room), orders: [] });
+    expect(server.notices).toEqual([{ user: C, about: { kind: 'yourTurn', round: 1, rounds: content.rounds, secondsLeft: 86_400 } }]);
+    server.notices.length = 0;
+    await server.ask(C, { action: 'submit', roomId: room, step: await answerHand(server, C, room), orders: [] });
+    expect(server.notices).toEqual([HOST, B].map((user) => ({ user, about: { kind: 'newRound', round: 2, rounds: content.rounds, seconds: 86_400 } })));
+  });
+
+  it('tells nobody of a new round in a quick game: everyone is looking', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    server.notices.length = 0;
+    for (const who of [HOST, B]) await server.ask(who, { action: 'submit', roomId: room, step: await answerHand(server, who, room), orders: [] });
+    expect(server.notices.filter((notice) => notice.about.kind === 'newRound')).toEqual([]);
+  });
+
   it('tells nobody when the round is about to turn anyway', async () => {
     const { server, room } = await begun(roomServer(), 90);
     server.notices.length = 0;
@@ -453,6 +470,15 @@ describe('leaving a room, and coming back', () => {
     expect(await server.ask(C, { action: 'mine' })).toEqual({ status: 200, body: { room: null } });
     expect(await server.ask(C, { action: 'state', roomId: room })).toMatchObject({ status: 404, body: { error: 'unknown-room' } });
     expect(await server.ask(C, { action: 'view', roomId: room })).toMatchObject({ status: 404, body: { error: 'unknown-room' } });
+  });
+
+  it('keeps a game of a round a day through a quiet day, and closes it after three', async () => {
+    const { server, room } = await begun(roomServer(), 86_400);
+    server.wait(86_400_000 + 2 * 86_400_000 - 1_000);
+    expect(roomOf(await server.ask(HOST, { action: 'state', roomId: room })).status).toBe('playing');
+    const quiet = await begun(roomServer(), 86_400);
+    quiet.server.wait(86_400_000 + 3 * 86_400_000 + 1_000);
+    expect(roomOf(await quiet.server.ask(HOST, { action: 'state', roomId: quiet.room })).status).toBe('closed');
   });
 
   it('closes a room nobody has moved for a day, giving up its lives', async () => {

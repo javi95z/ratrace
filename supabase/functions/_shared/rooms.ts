@@ -7,7 +7,7 @@ import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
 
 /** How long a round may take, in seconds: the host chooses one of these. */
-export const ROUND_SECONDS = [90, 180, 300] as const;
+export const ROUND_SECONDS = [90, 180, 300, 86_400] as const;
 /** How long after its deadline a round still waits, for the orders a page sent a moment before it. */
 export const GRACE_MS = 5_000;
 /** More players than this do not fit in a room. The database holds it to the same. */
@@ -137,7 +137,10 @@ export interface RoomsDeps {
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' }>;
+
+/** A room whose rounds take this long or more is played at a distance: each new round is told. */
+const SLOW_SECONDS = 3_600;
 
 /** A round with less than this left is not worth a notice: by the time it is read, the round has turned. */
 const NOTICE_MIN_MS = 20_000;
@@ -293,7 +296,7 @@ function due(room: RoomRow, members: readonly MemberRow[], now: Date): boolean {
  * written again when something moved under it; done by another call meanwhile, it does nothing.
  * At the last round the room is over, and the run of every life is written.
  */
-async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, at: RoomRow): Promise<void> {
+async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, at: RoomRow, by: string): Promise<void> {
   let room = at;
   // Once the database has said it cannot hold a turn, it is played with no orders at all rather than not at all.
   let bare = false;
@@ -332,6 +335,8 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
     const said = await deps.turn(room.id, room.round, over ? null : new Date(deps.now().getTime() + room.seconds * 1000), lives);
     if (said === 'ok') {
       if (over) for (const end of ends) await deps.saveRun(runOf(end.row, game, end.played, deps.now()));
+      // In a slow room nobody is looking: everyone but whoever turned it is told the next round is theirs.
+      else if (room.seconds >= SLOW_SECONDS) await deps.notify(lives.map((life) => life.user).filter((user) => user !== by), { kind: 'newRound', round: room.round + 2, rounds: game.content.rounds, seconds: room.seconds });
       return;
     }
     if (said === 'closed') return;
@@ -353,13 +358,13 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
  * that is due is turned. Answers the room and its members as they then stand, and whether a round
  * turned in this very call.
  */
-async function upkeep(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[]) {
+async function upkeep(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[], by: string) {
   let changed = false;
   let turned = false;
   try {
     if ((room.status === 'open' || room.status === 'playing') && (await deps.closeIfStale(room.id, deps.now()))) changed = true;
     else if (due(room, members, deps.now())) {
-      await turn(games, deps, room);
+      await turn(games, deps, room, by);
       changed = true;
       turned = true;
     }
@@ -415,7 +420,7 @@ async function mine(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
   const id = await deps.myRoom(userId);
   const found = id === null ? null : await deps.loadRoom(id);
   if (found === null) return { status: 200, body: { room: null } };
-  const { room, members } = await upkeep(games, deps, found, await deps.members(found.id));
+  const { room, members } = await upkeep(games, deps, found, await deps.members(found.id), userId);
   return { status: 200, body: { room: await roomBody(games, deps, room, members, userId) } };
 }
 
@@ -488,7 +493,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   const found = await deps.loadRoom(roomId);
   const everyone = found === null ? [] : await deps.members(roomId);
   if (found === null || !everyone.some((m) => m.user_id === userId)) return unknownRoom;
-  const { room, members, turned } = await upkeep(games, deps, found, everyone);
+  const { room, members, turned } = await upkeep(games, deps, found, everyone, userId);
   const me = members.find((m) => m.user_id === userId) as MemberRow;
   const game = games[versionsOf(room)];
 
@@ -499,7 +504,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     if ('error' in left) return closed;
     // Everyone still in the room may have been waiting only for the one who left.
     const now = await deps.loadRoom(room.id);
-    if (now !== null) await upkeep(games, deps, now, await deps.members(room.id));
+    if (now !== null) await upkeep(games, deps, now, await deps.members(room.id), userId);
     return await answerRoom(games, deps, room.id, userId);
   }
 
@@ -605,7 +610,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   // The last to play turns the round, and is answered their round as a step is.
   const before = room.round;
   const now = await deps.loadRoom(room.id);
-  if (now !== null && now.round === before) await turn(games, deps, now);
+  if (now !== null && now.round === before) await turn(games, deps, now, userId);
   const after = await deps.loadGame(row.id);
   const played = after ? readLog(after.log, game) : null;
   if (after === null || played === null || roundsIn(played) <= before) return await answerRoom(games, deps, room.id, userId, { result: null });

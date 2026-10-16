@@ -124,9 +124,10 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     },
     closeIfStale: async (roomId, now) => {
       const room = roomsById.get(roomId);
-      const day = 86_400_000;
       if (!room) return false;
-      const stale = (room.status === 'open' && Date.parse(room.created_at) < now.getTime() - day) || (room.status === 'playing' && room.deadline !== null && Date.parse(room.deadline) < now.getTime() - day);
+      // A day of quiet, or three rounds of it if a round takes longer.
+      const quiet = Math.max(86_400_000, 3 * room.seconds * 1000);
+      const stale = (room.status === 'open' && Date.parse(room.created_at) < now.getTime() - quiet) || (room.status === 'playing' && room.deadline !== null && Date.parse(room.deadline) < now.getTime() - quiet);
       if (!stale) return false;
       Object.assign(room, { status: 'closed', deadline: null });
       for (const game of games.values()) if (game.room === roomId && game.status === 'playing') Object.assign(game, { status: 'abandoned', updated_at: stamp() });

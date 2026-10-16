@@ -9,7 +9,7 @@
       "records": "Records",
       "rankings": "Rankings",
       "challenge": "Weekly challenge",
-      "room": "Play with friends"
+      "room": "Multiplayer"
     },
     "imageAlt": "The Rat Race in pixels: a rat in a wheel, the night skylines of New York and Madrid, and the game's name in gold.",
     "keywords": "rat race,life simulator,personal finance game,investing game,financial independence,pixel art"
@@ -63,7 +63,7 @@
     "accountLifeTake": "Continue that life",
     "accountLifeEnd": "End that life",
     "rankings": "Rankings",
-    "room": "Play with friends",
+    "room": "Multiplayer",
     "inRoom": "Back to your game",
     "roomLobby": "Game {code} · waiting to start",
     "roomPlaying": "Game {code} · round {round} of {total}",
@@ -172,7 +172,7 @@
     "practice": "Challenge practice",
     "points": "{n} pts",
     "weeklyNotice": "Turn on notifications",
-    "weeklyNoticeHint": "The weekly challenge, your games with friends and lives left halfway. One notice a day at most, except in a game.",
+    "weeklyNoticeHint": "The weekly challenge, your multiplayer games and lives left halfway. One notice a day at most, except in a game.",
     "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings."
   },
   "play": {
@@ -1481,9 +1481,8 @@
     "points": "{n} pts"
   },
   "room": {
-    "title": "Play with friends",
-    "intro": "Everyone lives the same life in the same world, a round at a time. The best score wins.",
-    "needAccount": "Games with friends need an account and a connection.",
+    "title": "Multiplayer",
+    "needAccount": "Multiplayer needs an account and a connection.",
     "away": "The games cannot be reached just now.",
     "retry": "Try again",
     "open": "Start a game",
@@ -1496,7 +1495,7 @@
     "closed": "The game was closed.",
     "invite": "Invite",
     "copied": "Link copied.",
-    "inviteText": "Play The Rat Race with me. Game {code}",
+    "inviteText": "Play The Rat Race with me in multiplayer. Game {code}",
     "everyone": "Everyone lives",
     "round": "{time} a round",
     "members": "In the game: {count} of {max}",
@@ -1538,6 +1537,12 @@
       "not-host": "Only the host can start the game.",
       "refused": "That did not work. Try again."
     },
-    "otherRules": "This game plays another version. Reload the page to play it."
+    "otherRules": "This game plays another version. Reload the page to play it.",
+    "introSame": "Everyone lives the same life in the same world: the same scares and the same chances.",
+    "introWho": "2 to 6 players. Whoever ends with the most points wins.",
+    "introPace": "Quick rounds to play together, or a round a day to play when you can.",
+    "day": "1 day",
+    "paceLive": "To play together: if someone does not choose in time, the clock plays for them.",
+    "paceDay": "To play when you can: each plays their round when they can, and a notice tells you when the next begins."
   }
 }

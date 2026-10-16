@@ -1,6 +1,6 @@
 import { weekOf } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
-import { clock, isoWeek, noticeOf } from '../../../supabase/functions/_shared/notice.ts';
+import { clock, isoWeek, noticeOf, span } from '../../../supabase/functions/_shared/notice.ts';
 
 describe('what a notice says', () => {
   it('names the week as the game does, every day of a few years', () => {
@@ -21,5 +21,7 @@ describe('what a notice says', () => {
   it('reads in English for a language the game does not have, and shows seconds as a clock does', () => {
     expect(noticeOf('fr', { kind: 'idle' }).title).toBe('Your life is waiting');
     expect([clock(5), clock(90), clock(300)]).toEqual(['0:05', '1:30', '5:00']);
+    expect([span(90, 'es'), span(86_400, 'es'), span(18_720, 'ru')]).toEqual(['1:30', '24 h', '5 ч 12 мин']);
+    expect(noticeOf('es', { kind: 'newRound', round: 6, rounds: 20, seconds: 86_400 })).toMatchObject({ title: 'Ronda 6 de 20', body: 'Empieza una ronda nueva de tu partida. Tienes 24 h para jugarla.', url: '/es/room' });
   });
 });
