@@ -94,7 +94,14 @@ describe('the way to the rooms', () => {
     const room = await lobby(server);
     renderGame(<Home />, services);
     const back = await screen.findByRole('link', { name: /Back to your game/ });
-    expect(back.textContent).toContain(`Game ${room.code} · waiting to start`);
+    expect(back.textContent).toContain('Waiting to start · 2 of 6');
+    cleanup();
+    // Started, the game waits for the player: it is the door's first button, with the time left.
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    renderGame(<Home />, services);
+    const turn = await screen.findByRole('link', { name: /Your turn · \d:\d\d left/ });
+    expect(screen.getAllByRole('link')[0]).toBe(turn);
+    expect(screen.getByRole('link', { name: 'New life' }).className).not.toContain('bg-gold-500');
   });
 
   it('says rooms need an account and a connection where there is none', async () => {

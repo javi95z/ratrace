@@ -14,6 +14,7 @@ import { GameSessions } from '@/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame } from '@/testing/render';
 import en from '../../../messages/en.json';
+import { PwaProvider } from '@/pwa/runtime';
 import { Home } from './Home';
 
 vi.mock('@/i18n/navigation', () => ({
@@ -68,7 +69,10 @@ describe('the front door', () => {
     expect((await screen.findByRole('link', { name: 'New life' })).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: /^Weekly challenge/ }).getAttribute('href')).toBe('/challenge');
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
-    expect(screen.getByText('Your life saves itself after every step.')).toBeTruthy();
+    // Where it is kept is said behind the settings, not on the door.
+    expect(screen.queryByText('Your life saves itself after every step.')).toBeNull();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Settings' }));
+    expect(within(screen.getByRole('dialog', { name: 'Settings' })).getByText('Your life saves itself after every step.')).toBeTruthy();
   });
 
   it('keeps the language and the switches a tap away, behind the settings', async () => {
@@ -279,5 +283,26 @@ describe('the front door', () => {
     const sheet = screen.getByRole('dialog', { name: 'Una vida en tu cuenta' });
     expect(sheet.textContent).toContain('Ingeniero de software, 30 años, en Madrid. La dejaste en otro dispositivo.');
     expect(sheet.textContent).not.toContain('termina la vida');
+  });
+
+  it('offers to install the game from the second visit on, until the player says no', async () => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    const user = userEvent.setup();
+    const first = renderGame(<PwaProvider><Home /></PwaProvider>, memoryServices());
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('region', { name: 'Keep the game' })).toBeNull();
+    first.unmount();
+    // Another visit: the page opened again.
+    window.sessionStorage.clear();
+    const second = renderGame(<PwaProvider><Home /></PwaProvider>, memoryServices());
+    const offer = await screen.findByRole('region', { name: 'Keep the game' });
+    await user.click(within(offer).getByRole('button', { name: 'No, thanks' }));
+    expect(screen.queryByRole('region', { name: 'Keep the game' })).toBeNull();
+    second.unmount();
+    window.sessionStorage.clear();
+    renderGame(<PwaProvider><Home /></PwaProvider>, memoryServices());
+    await screen.findByRole('link', { name: 'New life' });
+    expect(screen.queryByRole('region', { name: 'Keep the game' })).toBeNull();
   });
 });

@@ -1,13 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useT } from '@/game/context';
 import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { usePwa } from './runtime';
 
-/** A small invitation on Home and a useful fallback for browsers without a native install prompt. */
-export function InstallApp() {
+const OFFER_KEY = 'ratrace.installOffer';
+
+/**
+ * Whether Home offers to install the game: from the second visit on, until the player says no. A
+ * visit is a time the page is opened, counted once however often Home is shown in it. Nothing is
+ * offered where the browser keeps nothing.
+ */
+export function useInstallOffer(): { shown: boolean; dismiss(): void } {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    try {
+      const kept = JSON.parse(window.localStorage.getItem(OFFER_KEY) ?? '{}') as { visits?: number; dismissed?: boolean };
+      let visits = kept.visits ?? 0;
+      if (window.sessionStorage.getItem(OFFER_KEY) === null) {
+        visits += 1;
+        window.sessionStorage.setItem(OFFER_KEY, '1');
+        window.localStorage.setItem(OFFER_KEY, JSON.stringify({ ...kept, visits }));
+      }
+      setShown(visits >= 2 && kept.dismissed !== true);
+    } catch {
+      setShown(false);
+    }
+  }, []);
+  const dismiss = () => {
+    setShown(false);
+    try {
+      const kept = JSON.parse(window.localStorage.getItem(OFFER_KEY) ?? '{}') as object;
+      window.localStorage.setItem(OFFER_KEY, JSON.stringify({ ...kept, dismissed: true }));
+    } catch {
+      // Not kept: it is offered again next time, which is no harm.
+    }
+  };
+  return { shown, dismiss };
+}
+
+/** A small invitation on Home and a useful fallback for browsers without a native install prompt. `onDismiss` adds a way to say no for good. */
+export function InstallApp({ onDismiss }: { onDismiss?: () => void } = {}) {
   const t = useT('install');
   const common = useT('common');
   const { state, platform, install } = usePwa();
@@ -36,6 +71,11 @@ export function InstallApp() {
       <Button variant="quiet" className="shrink-0 px-3 text-[14px]" aria-haspopup={state === 'manual' ? 'dialog' : undefined} onClick={begin}>
         {t('action')}
       </Button>
+      {onDismiss ? (
+        <button type="button" aria-label={t('dismiss')} onClick={onDismiss} className="-mr-1 flex size-11 shrink-0 items-center justify-center text-[18px] text-ink-300">
+          ×
+        </button>
+      ) : null}
 
       <Sheet open={instructions} onClose={() => setInstructions(false)} title={t('howTitle')} closeLabel={common('close')}>
         <p className="text-[14px] leading-snug text-ink-200">{t(platform === 'ios' ? 'iosIntro' : 'browserIntro')}</p>

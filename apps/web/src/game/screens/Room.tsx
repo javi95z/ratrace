@@ -777,27 +777,49 @@ function RoomScreens({ room }: { room: RoomState }) {
   );
 }
 
-/** The way to the rooms from the front door: there only for a player with an account, and back to their room when they are in one. */
-export function RoomCard() {
+/** True when the player's game is in play and waits for them: they have not played the round yet. */
+export function useRoomTurn(): boolean {
+  return useRoom((s) => {
+    const me = s.room?.members.find((member) => member.me);
+    return s.status === 'in' && s.room?.status === 'playing' && me !== undefined && !me.left && !me.ready;
+  });
+}
+
+/**
+ * The way to multiplayer from the front door: there only for a player with an account, and back to
+ * their game when they are in one, saying how it stands. When it waits for them it is the door's
+ * first button, in gold.
+ */
+export function RoomCard({ primary = false }: { primary?: boolean }) {
   const t = useT('home');
+  const nameOf = useNameOf();
   const status = useRoom((s) => s.status);
   const room = useRoom((s) => s.room);
+  const left = useSecondsLeft();
   if (status === 'booting' || status === 'unavailable') return null;
   const inRoom = status === 'in' && room !== null && room.status !== 'closed';
-  const detail = !inRoom
-    ? null
-    : room.status === 'open'
-      ? t('roomLobby', { code: room.code })
-      : room.status === 'playing'
-        ? t('roomPlaying', { code: room.code, round: room.round + 1, total: room.rounds })
-        : t('roomOver', { code: room.code });
+  const me = room?.members.find((member) => member.me);
+  let detail: string | null = null;
+  if (inRoom && room) {
+    const here = room.members.filter((member) => !member.left);
+    if (room.status === 'open') detail = t('roomLobby', { count: here.length, max: MAX_MEMBERS });
+    else if (room.status === 'playing') {
+      const waitingFor = here.filter((member) => !member.ready && !member.me);
+      detail = me && !me.ready ? t('roomTurn', { time: left === null ? '—' : clock(left) }) : t('roomWaiting', { names: waitingFor.map(nameOf).join(', ') });
+    } else if (room.rematch?.open) detail = t('roomRematch');
+    else if (me && !me.left && me.standing) detail = t('roomOver', { place: rankOf(room.members, me), total: here.length });
+    else detail = t('roomDone');
+  }
   return (
-    <Link href="/room" className="pixel frame-raised flex min-h-12 flex-col items-center justify-center gap-0.5 bg-night-600 px-4 py-2 text-center text-cream">
-      <span className="flex items-center gap-2 text-[17px]">
+    <Link
+      href="/room"
+      className={`pixel frame-raised flex min-h-12 flex-col items-center justify-center gap-0.5 px-4 py-2 text-center ${primary ? 'frame-gold bg-gold-500 text-ink-900' : 'bg-night-600 text-cream'}`}
+    >
+      <span className={`flex items-center gap-2 ${primary ? 'text-[19px]' : 'text-[17px]'}`}>
         <Sprite id="icon.skill_network" />
         {inRoom ? t('inRoom') : t('room')}
       </span>
-      {detail ? <span className="font-sans text-[13px] font-normal text-ink-200">{detail}</span> : null}
+      {detail ? <span className={`font-sans text-[13px] font-normal ${primary ? 'text-ink-700' : 'text-ink-200'}`}>{detail}</span> : null}
     </Link>
   );
 }

@@ -2,24 +2,22 @@
 
 import { CHALLENGE_ART } from '@ratrace/content';
 import { useState } from 'react';
-import { useAccount, useAccountSaves, useGame, useRanking, useSaving, useT, useWords } from '@/game/context';
+import { useAccountSaves, useGame, useRanking, useRuns, useSaving, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
-import { InstallApp } from '@/pwa/InstallApp';
-import { Button, Panel } from '@/ui/kit';
+import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
+import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { WeeklyChallengeCard } from './Challenge';
-import { RoomCard } from './Room';
-import { HomePreferences } from './Settings';
+import { RoomCard, useRoomTurn } from './Room';
+import { HomePreferences, SaveStatus } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
   const common = useT('common');
-  const settings = useT('settings');
-  const { state: account } = useAccount();
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
   const lost = useGame((s) => s.lost);
@@ -38,6 +36,12 @@ export function Home() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const inProgress = status === 'playing' && view !== null && lifeId !== null && stage !== 'end';
+  // A game with friends waiting for the player comes before everything else, in gold.
+  const turn = useRoomTurn();
+  // Whoever has played before knows the game: the rat and its line make way for what they came for.
+  const runs = useRuns();
+  const returning = inProgress || (runs !== null && runs.length > 0);
+  const install = useInstallOffer();
   // A life that is over stays on the device until another begins, so its score can still be looked at.
   const over = status === 'playing' && view !== null && view.finished;
 
@@ -53,11 +57,14 @@ export function Home() {
   };
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full flex-col sm:max-w-sm items-center gap-5 px-4 pb-8 pt-10">
-      <Sprite id="brand.mascot" alt="" className="-mb-2" fallback={{ w: 256, h: 256 }} />
+    <main className={`relative mx-auto flex min-h-dvh w-full flex-col items-center px-4 pb-8 sm:max-w-sm ${returning ? 'gap-4 pt-6' : 'gap-5 pt-10'}`}>
+      <div className="absolute right-4 top-4">
+        <HomePreferences />
+      </div>
+      <Sprite id="brand.mascot" alt="" className={returning ? '-mb-1 !h-32 !w-32' : '-mb-2'} fallback={{ w: 256, h: 256 }} />
       <div className="text-center">
-        <h1 className="pixel text-[34px] leading-none text-gold-500">{meta('title')}</h1>
-        <p className="mt-2 text-ink-200">{meta('description')}</p>
+        <h1 className={`pixel leading-none text-gold-500 ${returning ? 'text-[28px]' : 'text-[34px]'}`}>{meta('title')}</h1>
+        {returning ? null : <p className="mt-2 text-ink-200">{meta('description')}</p>}
       </div>
 
       <div className="flex w-full flex-col gap-3">
@@ -65,8 +72,12 @@ export function Home() {
           <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p>
         ) : (
           <>
+            {turn ? <RoomCard primary /> : null}
             {inProgress ? (
-              <Link href="/play" className="pixel frame-raised frame-gold flex min-h-14 flex-col items-center justify-center bg-gold-500 px-4 py-2 text-center text-ink-900">
+              <Link
+                href="/play"
+                className={`pixel frame-raised flex min-h-14 flex-col items-center justify-center px-4 py-2 text-center ${turn ? 'bg-night-600 text-cream' : 'frame-gold bg-gold-500 text-ink-900'}`}
+              >
                 {challenge !== null ? (
                   // A life of the weekly challenge says so before anything else: the attempt that counts, or a practice.
                   <span className="mb-1 flex items-center gap-1 bg-ink-900 px-1.5 text-[11px] uppercase tracking-wider text-gold-500">
@@ -75,7 +86,7 @@ export function Home() {
                   </span>
                 ) : null}
                 <span className="text-[19px]">{t('continue')}</span>
-                <span className="font-sans text-[13px] font-normal text-ink-700">
+                <span className={`font-sans text-[13px] font-normal ${turn ? 'text-ink-200' : 'text-ink-700'}`}>
                   {t('continueDetail', { life: text.lives[lifeId].name, age: ageAt(content, view.round), city: names.cities[view.player.cityId] })}
                 </span>
               </Link>
@@ -91,13 +102,13 @@ export function Home() {
             <Link
               href="/new"
               className={`pixel frame-raised flex min-h-12 items-center justify-center px-4 py-2 text-center text-[19px] ${
-                inProgress ? 'bg-night-600 text-cream' : 'frame-gold bg-gold-500 text-ink-900'
+                inProgress || turn ? 'bg-night-600 text-cream' : 'frame-gold bg-gold-500 text-ink-900'
               }`}
             >
               {t('newLife')}
             </Link>
             <WeeklyChallengeCard />
-            <RoomCard />
+            {turn ? null : <RoomCard />}
             {over ? (
               <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
                 {t('lastLife')}
@@ -125,20 +136,20 @@ export function Home() {
         )}
       </div>
 
-      <Panel className="mt-auto w-full" label={settings('title')}>
-        <HomePreferences />
-        {/* With an account, its own line says where the life is saved. */}
-        {saving ? (
-          account.kind === 'offline' ? <p className="mt-3 text-[12px] text-ink-300">{t('savedHere')}</p> : null
-        ) : (
-          <p role="alert" className="frame mt-3 bg-wine-900 px-3 py-2 text-[13px]">
-            {common('notSaved')}
-          </p>
-        )}
-      </Panel>
+      <SaveStatus />
+      {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
+      {saving ? null : (
+        <p role="alert" className="frame w-full bg-wine-900 px-3 py-2 text-[13px]">
+          {common('notSaved')}
+        </p>
+      )}
 
-      {/* Below the account and the settings: an offer, not something the page is for. */}
-      <InstallApp />
+      {/* At the foot, from the second visit on, until the player says no: an offer, not something the page is for. */}
+      {install.shown ? (
+        <div className="mt-auto w-full">
+          <InstallApp onDismiss={install.dismiss} />
+        </div>
+      ) : null}
 
       {/* Saying yes leaves this page for the game, so the sheet keeps no entry of its own in the history. */}
       <Sheet open={offer !== null && asking === offer.gameId} onClose={() => setAsking(null)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>

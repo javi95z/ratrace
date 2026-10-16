@@ -96,7 +96,7 @@ describe('a player with an account, on two devices', { timeout: 60_000 }, () => 
     const phone = deviceOf(cloud, 'phone');
     renderGame(<Home />, phone.services);
     // Signed in with no form, and nothing yet to save: everything there is, is in the account, which goes unsaid.
-    await screen.findByRole('button', { name: 'Sign in with Google' });
+    await screen.findByRole('link', { name: 'New life' });
     expect(screen.queryByRole('status')).toBeNull();
 
     const session = await phone.sessions.start('nurse');

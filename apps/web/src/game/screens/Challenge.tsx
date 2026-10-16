@@ -37,8 +37,34 @@ export function WeeklyChallengeCard() {
   const { text } = useWords();
   const week = useThisWeek();
   const ruleText = useRuleText();
+  const community = useCommunity();
+  // Where the player stands in the week: not asked where nobody is signed in, and said only once known.
+  const [standing, setStanding] = useState<{ entered: boolean; place: number | null; entrants: number } | null>(null);
+  useEffect(() => {
+    if (week === null || community === null) return;
+    let live = true;
+    void (async () => {
+      const entry = await community.challengeEntry(week.week);
+      if (!live || entry === null) return;
+      if (!entry.entered) return setStanding({ entered: false, place: null, entrants: 0 });
+      const ranking = await community.challengeRanking(week.week);
+      if (!live) return;
+      setStanding({ entered: true, place: ranking?.rows.find((row) => row.mine)?.place ?? null, entrants: ranking?.entrants ?? 0 });
+    })();
+    return () => {
+      live = false;
+    };
+  }, [community, week]);
   if (week === null) return null;
   const rule = ruleText(week.rule);
+  // The days left of the week, today not counted: none on its Sunday.
+  const days = Math.max(0, Math.floor((lastDay(week.week) + 86_400_000 - Date.now()) / 86_400_000));
+  const state =
+    standing?.entered === true
+      ? standing.place !== null
+        ? t('cardPlayedAt', { place: standing.place, total: standing.entrants })
+        : t('cardPlayed')
+      : t('cardPending', { days });
 
   return (
     <Link href="/challenge" className="frame-raised frame-gold flex min-h-[84px] w-full items-center gap-3 bg-night-600 p-2 text-left">
@@ -55,6 +81,7 @@ export function WeeklyChallengeCard() {
           <Sprite id={ruleArt[week.rule]} />
           <span className="truncate">{rule.name}</span>
         </span>
+        <span className={`mt-0.5 block truncate text-[12px] ${standing?.entered ? 'text-teal-300' : 'text-gold-200'}`}>{state}</span>
       </span>
       <span aria-hidden className="pixel shrink-0 px-1 text-[18px] text-gold-500">
         ›

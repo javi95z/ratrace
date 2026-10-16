@@ -37,7 +37,8 @@
     "browserMenu": "Open the browser menu or the install icon in the address bar.",
     "browserInstall": "Choose Install app or Add to Home screen.",
     "browserConfirm": "Confirm Install. The game will appear with your other apps.",
-    "offline": "Once the game has opened online, the installed app can open and play Offline lives without a connection. Rankings and account sync still need one."
+    "offline": "Once the game has opened online, the installed app can open and play Offline lives without a connection. Rankings and account sync still need one.",
+    "dismiss": "No, thanks"
   },
   "home": {
     "continue": "Continue your life",
@@ -65,9 +66,12 @@
     "rankings": "Rankings",
     "room": "Multiplayer",
     "inRoom": "Back to your game",
-    "roomLobby": "Game {code} · waiting to start",
-    "roomPlaying": "Game {code} · round {round} of {total}",
-    "roomOver": "Game {code} · it has ended"
+    "roomLobby": "Waiting to start · {count} of {max}",
+    "roomOver": "Over · #{place} of {total}",
+    "roomTurn": "Your turn · {time} left",
+    "roomWaiting": "Waiting for {names}",
+    "roomRematch": "A rematch is waiting",
+    "roomDone": "Over"
   },
   "newLife": {
     "title": "Choose a life",
@@ -1453,7 +1457,10 @@
         "name": "Poisoned inheritance",
         "about": "You start with {amount} more, and a family who will not see you live below the comfortable."
       }
-    }
+    },
+    "cardPending": "To play · {days, plural, =0 {ends today} one {ends in # day} other {ends in # days}}",
+    "cardPlayed": "Played",
+    "cardPlayedAt": "Played · #{place} of {total}"
   },
   "rivals": {
     "topic": "Your people",

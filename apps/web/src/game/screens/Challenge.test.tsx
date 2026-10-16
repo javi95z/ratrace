@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
 import type { SavedGame } from '@/session/types';
 import { memoryServices, renderGame } from '@/testing/render';
-import { ChallengeResult, topTenth, WeeklyChallenge } from './Challenge';
+import { ChallengeResult, topTenth, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock('@/i18n/navigation', () => ({
@@ -125,3 +125,24 @@ describe('the result of the week’s attempt', () => {
     expect(container.textContent).toBe('');
   });
 });
+
+describe('the weekly challenge on the front door', () => {
+  const draw = (community: Partial<Community> | null) => renderGame(<WeeklyChallengeCard />, { ...memoryServices(), community: () => community as Community | null });
+
+  it('says the attempt is still to play, and how long the week has left', async () => {
+    draw({ challengeEntry: async () => ({ entered: false, score: null }) });
+    expect(await screen.findByText(/^To play · ends (today|in \d days?)$/)).toBeTruthy();
+  });
+
+  it('says where the player came once they have played it', async () => {
+    const ranking: ChallengeRanking = { rows: [{ place: 3, userId: 'me', nickname: null, score: 300, finishedAt: 0, mine: true }] as unknown as ChallengeRanking['rows'], entrants: 41 };
+    draw({ challengeEntry: async () => ({ entered: true, score: 300 }), challengeRanking: async () => ranking });
+    expect(await screen.findByText('Played · #3 of 41')).toBeTruthy();
+  });
+
+  it('says how long is left to a player with no account', async () => {
+    draw(null);
+    expect(await screen.findByText(/^To play · /)).toBeTruthy();
+  });
+});
+

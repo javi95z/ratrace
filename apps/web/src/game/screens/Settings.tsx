@@ -101,6 +101,20 @@ function AccountBlock({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/** Saving, as the front door says it: only while the account is being written, or when it is not. Saved goes unsaid. */
+export function SaveStatus() {
+  const t = useT('account');
+  const { state } = useAccount();
+  const { status } = useAccountSaves();
+  if (state.kind === 'offline' || status === 'off' || status === 'saved') return null;
+  return (
+    <p role="status" className="flex items-center justify-center gap-2 text-[12px] text-ink-200">
+      <span aria-hidden className={`size-2 shrink-0 ${status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
+      {t(status)}
+    </p>
+  );
+}
+
 /** The languages the game speaks, each under its own name, the one in use marked. */
 function LanguagePick() {
   const home = useT('home');
@@ -194,29 +208,37 @@ function Version() {
 }
 
 /**
- * The same on the front door, where there is a game to get to: the account in sight, and the
- * language and the switches a tap away behind one button.
+ * The same on the front door, where there is a game to get to: one button in the corner, and
+ * behind it the account, the language and the switches.
  */
 export function HomePreferences() {
   const t = useT('settings');
+  const home = useT('home');
   const common = useT('common');
+  const { state: account } = useAccount();
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-col gap-2">
-      {/* The way into an account first, the same size as the settings below it. */}
-      <AccountBlock compact />
-      <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-label={t('title')}
+        onClick={() => setOpen(true)}
+        className="frame-raised flex size-11 items-center justify-center bg-night-700"
+      >
         <Sprite id="icon.settings" />
-        {t('title')}
-      </Button>
+      </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          {/* The account first: whether the game is kept in it, and the way into one. */}
+          <AccountBlock compact />
+          {account.kind === 'offline' ? <p className="text-[13px] text-ink-300">{home('savedHere')}</p> : null}
           <LanguagePick />
           <Switches />
           <Version />
         </div>
       </Sheet>
-    </div>
+    </>
   );
 }
 

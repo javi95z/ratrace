@@ -37,7 +37,8 @@
     "browserMenu": "Abre el menú del navegador o el icono de instalación de la barra de direcciones.",
     "browserInstall": "Elige Instalar aplicación o Añadir a pantalla de inicio.",
     "browserConfirm": "Confirma Instalar. El juego aparecerá junto a tus otras aplicaciones.",
-    "offline": "Cuando el juego ya se ha abierto con conexión, la app instalada puede abrirse y jugar vidas Offline sin internet. Las clasificaciones y la sincronización de la cuenta siguen necesitándolo."
+    "offline": "Cuando el juego ya se ha abierto con conexión, la app instalada puede abrirse y jugar vidas Offline sin internet. Las clasificaciones y la sincronización de la cuenta siguen necesitándolo.",
+    "dismiss": "No, gracias"
   },
   "home": {
     "continue": "Seguir con tu vida",
@@ -65,9 +66,12 @@
     "rankings": "Clasificaciones",
     "room": "Multijugador",
     "inRoom": "Volver a tu partida",
-    "roomLobby": "Partida {code} · sin empezar",
-    "roomPlaying": "Partida {code} · ronda {round} de {total}",
-    "roomOver": "Partida {code} · ha terminado"
+    "roomLobby": "Esperando para empezar · {count} de {max}",
+    "roomOver": "Acabada · {place}.º de {total}",
+    "roomTurn": "Te toca · quedan {time}",
+    "roomWaiting": "Esperando a {names}",
+    "roomRematch": "Hay una revancha esperando",
+    "roomDone": "Acabada"
   },
   "newLife": {
     "title": "Elige una vida",
@@ -1453,7 +1457,10 @@
         "name": "Herencia envenenada",
         "about": "Empiezas con {amount} más y una familia que no te deja vivir por debajo de lo acomodado."
       }
-    }
+    },
+    "cardPending": "Pendiente · {days, plural, =0 {acaba hoy} one {acaba en # día} other {acaba en # días}}",
+    "cardPlayed": "Jugado",
+    "cardPlayedAt": "Jugado · {place}.º de {total}"
   },
   "rivals": {
     "topic": "Tu gente",
