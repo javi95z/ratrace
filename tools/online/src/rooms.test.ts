@@ -563,6 +563,13 @@ describe('leaving a room, and coming back', () => {
     expect(await server.ask(C, { action: 'view', roomId: room })).toMatchObject({ status: 404, body: { error: 'unknown-room' } });
   });
 
+  it('opens games of half a day a round, and tells each new round of them', async () => {
+    const { server, room } = await begun(roomServer(), 43_200);
+    server.notices.length = 0;
+    for (const who of [HOST, B]) await server.ask(who, { action: 'submit', roomId: room, step: await answerHand(server, who, room), orders: [] });
+    expect(server.notices.filter((notice) => notice.about.kind === 'newRound')).toEqual([{ user: HOST, about: { kind: 'newRound', round: 2, rounds: content.rounds, seconds: 43_200 } }]);
+  });
+
   it('keeps a game of a round a day through a quiet day, and closes it after three', async () => {
     const { server, room } = await begun(roomServer(), 86_400);
     server.wait(86_400_000 + 2 * 86_400_000 - 1_000);

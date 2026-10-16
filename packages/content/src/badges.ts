@@ -9,14 +9,14 @@ import type { Story } from './story';
 /** A life begins at 22 and ages by the years of a round. */
 export const START_AGE = 22;
 
-export type BadgeGroup = 'wealth' | 'escape' | 'investing' | 'status' | 'life' | 'misfortune';
+export type BadgeGroup = 'wealth' | 'escape' | 'investing' | 'status' | 'life' | 'misfortune' | 'multiplayer';
 
 export interface BadgeDef {
   id: string;
   group: BadgeGroup;
 }
 
-/** The thirty badges of v1 (spec, Appendix C) and eleven added since, in the order the collection shows them. */
+/** The thirty badges of v1 (spec, Appendix C) and those added since, in the order the collection shows them. */
 export const badges: BadgeDef[] = [
   { id: 'first_100k', group: 'wealth' },
   { id: 'millionaire', group: 'wealth' },
@@ -64,6 +64,9 @@ export const badges: BadgeDef[] = [
   { id: 'ex_convict', group: 'misfortune' },
   { id: 'truly_innocent', group: 'misfortune' },
   { id: 'audited', group: 'misfortune' },
+  { id: 'mp_first_win', group: 'multiplayer' },
+  { id: 'mp_full_house', group: 'multiplayer' },
+  { id: 'mp_rematch_win', group: 'multiplayer' },
 ];
 
 /**
@@ -284,6 +287,24 @@ export function badgesEarned(step: Step): string[] {
   return badges
     .filter((badge) => Object.hasOwn(RULES, badge.id) && !step.journal.earned.includes(badge.id) && RULES[badge.id](facts))
     .map((badge) => badge.id);
+}
+
+/** How a multiplayer game ended for a player: whether they won it, how many played it, and whether it was a rematch. */
+export interface RoomResult {
+  /** True for a player who stayed to the end with no score below anyone else's. */
+  won: boolean;
+  /** Everyone who began the game, those who left after it began too. */
+  players: number;
+  rematch: boolean;
+}
+
+/** The badges of multiplayer: judged from how a game ended, never from a life, so the server never needs them. */
+export const ROOM_BADGES: readonly string[] = ['mp_first_win', 'mp_full_house', 'mp_rematch_win'];
+
+/** The multiplayer badges a game that ended so earns. */
+export function roomBadges(result: RoomResult): string[] {
+  if (!result.won || result.players < 2) return [];
+  return ['mp_first_win', ...(result.players >= 6 ? ['mp_full_house'] : []), ...(result.rematch ? ['mp_rematch_win'] : [])];
 }
 
 /** What is kept with the cars but is no car: every car is a garage of four wheels. */

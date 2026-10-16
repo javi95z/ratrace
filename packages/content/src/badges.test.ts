@@ -5,7 +5,7 @@ import { previewCard } from '@ratrace/engine';
 import type { Effects, GameEvent, GameState, GameView, Order, PlayerState } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeArt } from './art';
-import { badges, badgesEarned, galleryBadges, journalAfter, journalStart, START_AGE, TWO_WHEELS } from './badges';
+import { badges, badgesEarned, galleryBadges, journalAfter, journalStart, ROOM_BADGES, roomBadges, START_AGE, TWO_WHEELS } from './badges';
 import type { Journal } from './badges';
 import { content } from './content';
 import { lives } from './lives';
@@ -259,11 +259,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and sixteen since, each in one of six groups', () => {
-    expect(badges).toHaveLength(46);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(46);
+  it('are the thirty of the spec and nineteen since, each in one of seven groups', () => {
+    expect(badges).toHaveLength(49);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(49);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune'].map(count)).toEqual([10, 5, 8, 8, 9, 6]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune', 'multiplayer'].map(count)).toEqual([10, 5, 8, 8, 9, 6, 3]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {
@@ -271,7 +271,7 @@ describe('the badges', () => {
     for (const locale of ['en', 'es', 'ru'] as const) {
       const { text } = textFor(locale);
       expect(Object.keys(text.badges).sort(), locale).toEqual(badges.map((b) => b.id).sort());
-      expect(Object.keys(text.badgeGroups).sort(), locale).toEqual(['escape', 'investing', 'life', 'misfortune', 'status', 'wealth']);
+      expect(Object.keys(text.badgeGroups).sort(), locale).toEqual(['escape', 'investing', 'life', 'misfortune', 'multiplayer', 'status', 'wealth']);
       for (const badge of badges) {
         expect(text.badges[badge.id].name.length, `${locale} ${badge.id}`).toBeGreaterThan(2);
         expect(text.badges[badge.id].name.length, `${locale} ${badge.id}`).toBeLessThanOrEqual(34);
@@ -283,7 +283,7 @@ describe('the badges', () => {
   });
 
   it('has a tested way in and a tested near miss for every badge', () => {
-    expect([...Object.keys(CASES), ...GALLERY].sort()).toEqual(badges.map((b) => b.id).sort());
+    expect([...Object.keys(CASES), ...GALLERY, ...ROOM_BADGES].sort()).toEqual(badges.map((b) => b.id).sort());
     for (const [id, { misses }] of Object.entries(CASES)) expect(misses.length, id).toBeGreaterThan(0);
   });
 
@@ -327,6 +327,18 @@ describe('the badges', () => {
     let twice = between;
     while (ratio(twice) < 2) twice += 250_000;
     expect(badgesEarned(withSavings(twice))).toContain('passive_double');
+  });
+
+  it('gives a multiplayer game won its badges: the first, against five, and a rematch', () => {
+    expect(roomBadges({ won: true, players: 2, rematch: false })).toEqual(['mp_first_win']);
+    expect(roomBadges({ won: true, players: 6, rematch: true })).toEqual(['mp_first_win', 'mp_full_house', 'mp_rematch_win']);
+    expect(roomBadges({ won: true, players: 5, rematch: false })).toEqual(['mp_first_win']);
+    // Nothing for a game lost, nor for one played alone because everyone else left before it began.
+    expect(roomBadges({ won: false, players: 6, rematch: true })).toEqual([]);
+    expect(roomBadges({ won: true, players: 1, rematch: true })).toEqual([]);
+    // Never judged from a life: the server, which judges lives, does not know of them.
+    const fromLives = new Set(Object.keys(CASES));
+    expect(ROOM_BADGES.filter((id) => fromLives.has(id))).toEqual([]);
   });
 
   it('gives the gallery its two badges', () => {

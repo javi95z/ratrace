@@ -1,6 +1,6 @@
 'use client';
 
-import { lives, portraitArt } from '@ratrace/content';
+import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
@@ -21,8 +21,13 @@ const clock = (seconds: number) =>
   seconds >= 3_600 ? `${Math.floor(seconds / 3_600)}h ${String(Math.floor((seconds % 3_600) / 60)).padStart(2, '0')}m` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 /** What each face of `REACTIONS` is called, for whoever does not see it. */
 const FACES = ['face0', 'face1', 'face2', 'face3', 'face4'] as const;
-/** A round of a day is a day; a quick one, its clock. */
+/** A round of a day is a day; one of hours, its hours; a quick one, its clock. */
 const DAY = 86_400;
+const HOUR = 3_600;
+function usePaceOf() {
+  const t = useT('room');
+  return (seconds: number) => (seconds === DAY ? t('day') : seconds >= HOUR ? t('hours', { n: seconds / HOUR }) : clock(seconds));
+}
 /** Four characters of a player's id, for one with no name. */
 const tagOf = (userId: string) => userId.slice(0, 4).toUpperCase();
 
@@ -279,6 +284,7 @@ function LifePicker({ label, lives: choices, value, onChange }: { label: string;
 /** Opening a room: its life, from those the player may live, and how long a round may take. */
 function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('room');
+  const paceOf = usePaceOf();
   const common = useT('common');
   const { text } = useWords();
   const busy = useRoom((s) => s.busy);
@@ -294,8 +300,8 @@ function OpenSheet({ open, onClose }: { open: boolean; onClose(): void }) {
       <div className="flex flex-col gap-4">
         <div>
           <p className="mb-1.5 text-[13px] text-ink-300">{t('pace')}</p>
-          <Segmented<RoundSeconds> label={t('pace')} value={seconds} onChange={setSeconds} options={ROUND_SECONDS.map((value) => ({ value, label: value === DAY ? t('day') : clock(value) }))} />
-          <p className="mt-1.5 text-[13px] text-ink-300">{t(seconds === DAY ? 'paceDay' : 'paceLive')}</p>
+          <Segmented<RoundSeconds> label={t('pace')} value={seconds} onChange={setSeconds} options={ROUND_SECONDS.map((value) => ({ value, label: paceOf(value) }))} />
+          <p className="mt-1.5 text-[13px] text-ink-300">{t(seconds >= HOUR ? 'paceDay' : 'paceLive')}</p>
         </div>
         <div>
           <p className="mb-1.5 text-[13px] text-ink-300">{t('life')}</p>
@@ -319,6 +325,7 @@ function useAvailableLives() {
 /** A rematch of the room that is over: a life, which is the same one unless chosen otherwise, on the same pace. */
 function RematchSheet({ room, open, onClose }: { room: RoomState; open: boolean; onClose(): void }) {
   const t = useT('room');
+  const paceOf = usePaceOf();
   const common = useT('common');
   const { text } = useWords();
   const busy = useRoom((s) => s.busy);
@@ -331,7 +338,7 @@ function RematchSheet({ room, open, onClose }: { room: RoomState; open: boolean;
   return (
     <Sheet open={open} onClose={onClose} title={t('rematch')} closeLabel={common('close')}>
       <div className="flex flex-col gap-4">
-        <p className="text-[14px] leading-snug text-ink-200">{t('rematchAbout', { time: room.seconds === DAY ? t('day') : clock(room.seconds) })}</p>
+        <p className="text-[14px] leading-snug text-ink-200">{t('rematchAbout', { time: paceOf(room.seconds) })}</p>
         <div>
           <p className="mb-1.5 text-[13px] text-ink-300">{t('life')}</p>
           <LifePicker label={t('life')} lives={available.map((life) => ({ id: life.id, name: text.lives[life.id]?.name ?? life.id }))} value={lifeId} onChange={setLifeId} />
@@ -427,6 +434,7 @@ function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; o
 /** The lobby: the code to share, the life everyone will live, who is in, and the start, which is the host's. */
 function Lobby({ room }: { room: RoomState }) {
   const t = useT('room');
+  const paceOf = usePaceOf();
   const { text } = useWords();
   const { locale } = useSettings();
   const nameOf = useNameOf();
@@ -483,7 +491,7 @@ function Lobby({ room }: { room: RoomState }) {
           <div className="min-w-0">
             <p className="text-[12px] text-ink-300">{t('everyone')}</p>
             <p className="pixel truncate text-[18px]">{text.lives[room.lifeId]?.name ?? room.lifeId}</p>
-            <p className="text-[13px] text-ink-200">{t('round', { time: room.seconds === DAY ? t('day') : clock(room.seconds) })}</p>
+            <p className="text-[13px] text-ink-200">{t('round', { time: paceOf(room.seconds) })}</p>
           </div>
         </div>
       </Panel>
@@ -654,6 +662,8 @@ function RoomPlay({ room, game }: { room: RoomState; game: GameStore }) {
 function RoomScreens({ room }: { room: RoomState }) {
   const t = useT('room');
   const missed = useRoom((s) => s.missed);
+  const earned = useRoom((s) => s.earned);
+  const { text } = useWords();
   const clearMissed = useRoom((s) => s.clearMissed);
   const leave = useRoom((s) => s.leave);
   const busy = useRoom((s) => s.busy);
@@ -676,6 +686,19 @@ function RoomScreens({ room }: { room: RoomState }) {
     end: (
       <Panel title={t('final')} label={t('final')}>
         {place > 0 ? <p className="pixel mb-2 text-[20px] text-gold-500">{t('place', { place, total: here.length })}</p> : null}
+        {earned.length > 0 ? (
+          <ul aria-label={t('newBadges')} className="mb-2 flex flex-col gap-1.5">
+            {earned.map((id) => (
+              <li key={id} className="flex items-center gap-2">
+                <Sprite id={badgeArt(id)} className="size-10 shrink-0" />
+                <span className="text-[14px] leading-tight">
+                  <span className="block text-[12px] text-ink-300">{t('newBadge')}</span>
+                  <span className="pixel text-[16px] text-gold-500">{text.badges[id]?.name ?? id}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <Standings room={room} />
         <Reactions room={room} />
         <div className="mt-3 flex flex-col gap-2 border-t-2 border-night-900 pt-3">

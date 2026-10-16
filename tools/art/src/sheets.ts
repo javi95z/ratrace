@@ -378,6 +378,7 @@ export const SHEETS: SheetSpec[] = [
   { file: 'items/business-01', group: 'items', kind: 'objects', cols: 5, rows: 1, width: 64, height: 64, ids: ['business.services', 'business.shop', 'business.app', 'business.bar', 'business.franchise'] },
   { file: 'icons/rules-02', group: 'icons', kind: 'objects', cols: 5, rows: 1, width: 32, height: 32, ids: ['icon.rule_no_business', 'icon.rule_frugal', 'icon.rule_minimalist', 'icon.rule_honest', 'icon.rule_rich_heir'] },
   { file: 'cards/cards-35', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.red_licence', 'card.red_appointment', 'card.red_works_stopped', 'card.red_inheritance', 'card.red_grant', 'card.refuge_bank_freeze'] },
+  { file: 'badges/badges-10', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.mp_first_win', 'badge.mp_full_house', 'badge.mp_rematch_win'] },
   { file: 'badges/badges-09', group: 'badges', kind: 'objects', cols: 4, rows: 1, width: 64, height: 64, ids: ['badge.tax_free_year', 'badge.tax_haven', 'badge.off_the_grid', 'badge.home_again'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },

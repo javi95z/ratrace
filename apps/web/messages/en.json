@@ -1561,6 +1561,9 @@
     "rematchAbout": "A new game with the same people and the same pace, {time} a round. The others will see it here and get a notice.",
     "rematchCreate": "Ask for a rematch",
     "rematchWaiting": "A rematch is waiting.",
-    "rematchJoin": "Join the rematch"
+    "rematchJoin": "Join the rematch",
+    "hours": "{n} h",
+    "newBadge": "New badge",
+    "newBadges": "New badges"
   }
 }

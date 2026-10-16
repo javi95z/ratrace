@@ -406,6 +406,9 @@ export const es: ContentText = {
     tax_haven: { name: 'Paraíso fiscal', how: 'Ten una sociedad en el extranjero tres rondas sin que te inspeccionen nunca.' },
     off_the_grid: { name: 'Fuera del sistema', how: 'Sal de la rueda sin que Hacienda te haya inspeccionado nunca.' },
     home_again: { name: 'De vuelta a casa', how: 'Vuelve a la ciudad donde empezó tu vida.' },
+    mp_first_win: { name: 'Primera victoria', how: 'Gana una partida multijugador.' },
+    mp_full_house: { name: 'Casa llena', how: 'Gana una partida multijugador de seis jugadores.' },
+    mp_rematch_win: { name: 'La revancha', how: 'Gana la revancha de una partida multijugador.' },
     own_boss: { name: 'Tu propio jefe', how: 'Deja tu trabajo para vivir de tu negocio.' },
     rode_out_recession: { name: 'Aguantar la recesión', how: 'Mantén tus inversiones durante una recesión sin vender ninguna.' },
     bankrupt: { name: 'Quiebra', how: 'Quiebra. Les pasa a los mejores.' },
@@ -417,7 +420,7 @@ export const es: ContentText = {
     more_cars_than_spaces: { name: 'Más coches que plazas', how: 'Ten una plaza de garaje y más coches que plazas.' },
     bought_the_top: { name: 'Compraste en máximos', how: 'Ten una inversión que valga la mitad o menos de lo que pagaste.' },
   },
-  badgeGroups: { wealth: 'Riqueza', escape: 'Salida', investing: 'Inversión', status: 'Estatus', life: 'Vida', misfortune: 'Mala suerte' },
+  badgeGroups: { wealth: 'Riqueza', escape: 'Salida', investing: 'Inversión', status: 'Estatus', life: 'Vida', misfortune: 'Mala suerte', multiplayer: 'Multijugador' },
   optionLocks: {
     condition: 'No está a tu alcance tal como están las cosas.',
     skill: 'Te falta soltura para esto.',

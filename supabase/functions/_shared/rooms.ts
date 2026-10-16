@@ -7,7 +7,7 @@ import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
 
 /** How long a round may take, in seconds: the host chooses one of these. */
-export const ROUND_SECONDS = [90, 180, 300, 86_400] as const;
+export const ROUND_SECONDS = [90, 180, 300, 43_200, 86_400] as const;
 /** How long after its deadline a round still waits, for the orders a page sent a moment before it. */
 export const GRACE_MS = 5_000;
 /** More players than this do not fit in a room. The database holds it to the same. */

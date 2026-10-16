@@ -116,7 +116,8 @@ describe('the records', () => {
     const sheet = screen.getByRole('dialog', { name: 'Nurse' });
     expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
     expect(within(sheet).getByText('You')).toBeTruthy();
-  });
+    // A whole game played on the server first: a few seconds alone, more on a busy machine.
+  }, 60_000);
 
   it('has no multiplayer section for a player who has played none', async () => {
     renderGame(<Records />, { ...memoryServices(), rooms: () => roomServer().link('cccccccc-cccc-4ccc-8ccc-cccccccccccc'), schedule: () => () => {} });

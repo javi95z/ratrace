@@ -1,8 +1,10 @@
+import { roomBadges } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
 import { Unreachable } from '@/session/errors';
+import { tellProfile } from '@/session/profile';
 import { GRACE_MS, RoomRefused, RoomSessions } from '@/session/room';
 import type { RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '@/session/room';
 import type { PlayerStore } from '@/session/types';
@@ -41,6 +43,8 @@ export interface RoomStoreState {
   closed: boolean;
   /** True when the room plays other rules than this page: its life cannot be played here, and the page says to reload. */
   otherRules: boolean;
+  /** The multiplayer badges the room that is over has just earned the player, for the end to show. */
+  earned: string[];
 }
 
 export interface RoomActions {
@@ -85,7 +89,18 @@ export interface RoomStoreOptions {
   onSaveError?(error: unknown): void;
 }
 
-const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false };
+const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, earned: [] };
+
+/** How a room that is over ended for the player, for its badges. */
+export function resultOf(room: RoomState): { won: boolean; players: number; rematch: boolean } {
+  const me = room.members.find((member) => member.me);
+  // Everyone whose life began: they have stood somewhere since the first round turned.
+  const played = room.members.filter((member) => member.standing !== null);
+  const stayed = played.filter((member) => !member.left);
+  const mine = me && !me.left ? me.standing : null;
+  const won = mine !== null && stayed.every((member) => (member.standing?.score ?? 0) <= mine.score);
+  return { won, players: played.length, rematch: room.rematchOf };
+}
 
 /**
  * The room the player is in, as this page follows it: it hears of every change, and asks the server
@@ -111,6 +126,8 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
   let timedOut: string | null = null;
   /** The room the player left from this page: whatever is heard of it afterwards is not the player's any more. */
   let left: string | null = null;
+  /** The rooms over whose badges this page has judged, so that each is judged once. */
+  const judged = new Set<string>();
   /** The last round, by room, in which this page saw the player ready: a round they played, not one the clock played for them. */
   const readyIn = new Map<string, number>();
 
@@ -226,8 +243,12 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           void again.catch((error: unknown) => console.error('the life in the room could not be brought up to date:', error));
         }
       }
-      set({ status: 'in', room, skew, game, missed, otherRules });
+      set({ status: 'in', room, skew, game, missed, otherRules, earned: was?.id === room.id ? get().earned : [] });
       release(room);
+      if (room.status === 'finished' && !judged.has(room.id)) {
+        judged.add(room.id);
+        void judge(room);
+      }
       // A room that is over is still listened to: its rematch is heard of the moment someone opens it.
       if (room.status === 'closed') {
         stopClocks();
@@ -235,6 +256,18 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       } else {
         watch(room);
         setClocks(room, skew);
+      }
+    }
+
+    /** Tells the profile the badges of a room that is over, and keeps those that are new for the end to show. */
+    async function judge(room: RoomState) {
+      const earned = roomBadges(resultOf(room));
+      if (earned.length === 0) return;
+      try {
+        const told = await tellProfile(options.store, options.content, options.lives, { gameId: room.id, at: now(), earned, collection: [], over: false });
+        if (get().room?.id === room.id && told.earned.length > 0) set({ earned: told.earned });
+      } catch (error) {
+        options.onSaveError?.(error);
       }
     }
 

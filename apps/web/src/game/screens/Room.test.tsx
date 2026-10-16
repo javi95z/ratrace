@@ -132,6 +132,7 @@ describe('opening and joining a room', () => {
     await user.click(await screen.findByRole('button', { name: 'Start a game' }));
     const sheet = screen.getByRole('dialog', { name: 'Start a game' });
     expect(within(sheet).getByText(/the clock plays for them/)).toBeTruthy();
+    expect(within(within(sheet).getByRole('radiogroup', { name: 'Time for each round' })).getAllByRole('radio').map((radio) => radio.textContent)).toEqual(['1:30', '3:00', '5:00', '12 h', '1 day']);
     await user.click(within(sheet).getByRole('radio', { name: '1 day' }));
     expect(within(sheet).getByText(/a notice tells you when the next begins/)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Start the game' }));
@@ -375,7 +376,9 @@ describe('a round in a room', () => {
     await user.click(await screen.findByRole('button', { name: /See how it ended/ }, { timeout: 5_000 }));
     const final = await screen.findByRole('region', { name: 'How the game ended' });
     expect(within(final).getByText(/^Place [12] of 2$/)).toBeTruthy();
-    expect(within(final).getAllByRole('listitem')).toHaveLength(2);
+    // Everyone in the order, and the multiplayer badges the end earned: both played alike, so both won.
+    expect(final.querySelectorAll('ol > li')).toHaveLength(2);
+    expect(within(within(final).getByRole('list', { name: 'New badges' })).getByText('First win')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
     // A face on how it ended, for everyone to see, and off again with a second press.
     const faces = within(final).getByRole('group', { name: 'React to the round' });

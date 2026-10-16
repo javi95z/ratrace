@@ -3,9 +3,9 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@/session/memory';
 import { Unreachable } from '@/session/errors';
-import type { RoomsLink } from '@/session/room';
+import type { RoomMember, RoomsLink, RoomState } from '@/session/room';
 import { roomServer } from '@/testing/roomServer';
-import { createRoomStore, LOOK_EVERY_MS } from './room';
+import { createRoomStore, LOOK_EVERY_MS, resultOf } from './room';
 import type { RoomStore } from './room';
 import type { GameStore } from './store';
 
@@ -476,3 +476,30 @@ describe('the room a page follows', () => {
     expect(host.rooms.getState().room?.members.find((m) => m.userId === B)?.left).toBe(true);
   });
 });
+
+describe('how a room over ended for the player, for its badges', () => {
+  const member = (score: number | null, over: Partial<RoomMember> = {}): RoomMember => ({
+    userId: `u${Math.random()}`, name: null, me: false, host: false, ready: false, left: false, reaction: null,
+    standing: score === null ? null : { score, netWorth: 0, status: 0, escaped: false, bankruptcies: 0 }, ...over,
+  });
+  const over = (members: RoomMember[], rematchOf = false): RoomState => ({
+    id: 'r', code: 'ABCDEF', host: '', lifeId: 'nurse', engineVersion: '', contentVersion: '', seconds: 90, status: 'finished', round: 20, rounds: 20,
+    deadline: null, now: 0, members, rematch: null, rematchOf,
+  });
+
+  it('is won by the best score among those who stayed, a tie too', () => {
+    expect(resultOf(over([member(300, { me: true }), member(200)]))).toEqual({ won: true, players: 2, rematch: false });
+    expect(resultOf(over([member(300, { me: true }), member(300)], true))).toEqual({ won: true, players: 2, rematch: true });
+    expect(resultOf(over([member(200, { me: true }), member(300)])).won).toBe(false);
+  });
+
+  it('counts whoever began the game, even if they left after, and not who left the lobby', () => {
+    const six = [member(500, { me: true }), ...[1, 2, 3, 4].map(() => member(100)), member(900, { left: true }), member(null, { left: true })];
+    expect(resultOf(over(six))).toEqual({ won: true, players: 6, rematch: false });
+  });
+
+  it('is not won by a player who left', () => {
+    expect(resultOf(over([member(900, { me: true, left: true }), member(100)])).won).toBe(false);
+  });
+});
+

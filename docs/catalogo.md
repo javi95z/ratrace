@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.35.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.36.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -16,7 +16,7 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
 | [Cartas](#cartas) | 181 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 46 |
+| [Insignias](#insignias) | 49 |
 
 ## Vidas
 
@@ -1290,3 +1290,11 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.ex_convict.png" alt="Expresidiario"> | Expresidiario | Cumple condena en la cárcel y sal. |
 | <img src="../art/clean/badges/badge.truly_innocent.png" alt="Inocente de verdad"> | Inocente de verdad | Que te acusen de algo que no hiciste, y quedar absuelto. |
 | <img src="../art/clean/badges/badge.audited.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |
+
+### Multijugador
+
+|  | Insignia | Cómo se consigue |
+| --- | --- | --- |
+| <img src="../art/clean/badges/badge.mp_first_win.png" alt="Primera victoria"> | Primera victoria | Gana una partida multijugador. |
+| <img src="../art/clean/badges/badge.mp_full_house.png" alt="Casa llena"> | Casa llena | Gana una partida multijugador de seis jugadores. |
+| <img src="../art/clean/badges/badge.mp_rematch_win.png" alt="La revancha"> | La revancha | Gana la revancha de una partida multijugador. |

@@ -4086,6 +4086,21 @@
       "width": 288,
       "height": 120
     },
+    "badge.mp_first_win": {
+      "file": "badges/badge.mp_first_win.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.mp_full_house": {
+      "file": "badges/badge.mp_full_house.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.mp_rematch_win": {
+      "file": "badges/badge.mp_rematch_win.png",
+      "width": 64,
+      "height": 64
+    },
     "badge.tax_free_year": {
       "file": "badges/badge.tax_free_year.png",
       "width": 64,

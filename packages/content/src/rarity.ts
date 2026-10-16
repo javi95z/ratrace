@@ -52,6 +52,10 @@ export const BADGE_RARITY: Record<string, { rarity: BadgeRarity; judged?: true }
   sold_business: { rarity: 'rare' },
   own_boss: { rarity: 'rare', judged: true },
   home_again: { rarity: 'uncommon', judged: true },
+  // How often players win against each other is not something the bots can say.
+  mp_first_win: { rarity: 'uncommon', judged: true },
+  mp_full_house: { rarity: 'legendary', judged: true },
+  mp_rematch_win: { rarity: 'rare', judged: true },
   tax_free_year: { rarity: 'uncommon', judged: true },
   tax_haven: { rarity: 'rare', judged: true },
   off_the_grid: { rarity: 'rare', judged: true },

@@ -406,6 +406,9 @@ export const en: ContentText = {
     tax_haven: { name: 'Tax haven', how: 'Keep a company abroad three rounds without ever being inspected.' },
     off_the_grid: { name: 'Off the grid', how: 'Leave the rat race without the tax office ever inspecting you.' },
     home_again: { name: 'Home again', how: 'Move back to the city your life began in.' },
+    mp_first_win: { name: 'First win', how: 'Win a multiplayer game.' },
+    mp_full_house: { name: 'Full house', how: 'Win a multiplayer game of six players.' },
+    mp_rematch_win: { name: 'Payback', how: 'Win the rematch of a multiplayer game.' },
     own_boss: { name: 'Your own boss', how: 'Leave your job to live from your business.' },
     rode_out_recession: { name: 'Rode it out', how: 'Hold your investments through a recession without selling any.' },
     bankrupt: { name: 'Bankrupt', how: 'Go bankrupt. It happens to the best.' },
@@ -417,7 +420,7 @@ export const en: ContentText = {
     more_cars_than_spaces: { name: 'More cars than spaces', how: 'Own a parking space, and more cars than parking spaces.' },
     bought_the_top: { name: 'Bought the top', how: 'Hold an investment worth half or less of what you paid for it.' },
   },
-  badgeGroups: { wealth: 'Wealth', escape: 'Escape', investing: 'Investing', status: 'Status', life: 'Life', misfortune: 'Misfortune' },
+  badgeGroups: { wealth: 'Wealth', escape: 'Escape', investing: 'Investing', status: 'Status', life: 'Life', misfortune: 'Misfortune', multiplayer: 'Multiplayer' },
   optionLocks: {
     skill: 'You are not practised enough for this yet.',
     condition: 'Not open to you as things stand.',

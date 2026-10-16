@@ -249,6 +249,21 @@
     "w": 64,
     "h": 64
   },
+  "badge.mp_first_win": {
+    "src": "badges/badge.mp_first_win.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.mp_full_house": {
+    "src": "badges/badge.mp_full_house.png",
+    "w": 64,
+    "h": 64
+  },
+  "badge.mp_rematch_win": {
+    "src": "badges/badge.mp_rematch_win.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.new": {
     "src": "badges/badge.new.png",
     "w": 64,

@@ -7,7 +7,7 @@ import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, PlayerStore, Sessions, StepResult } from './types';
 
 /** How long a round of a room may take, in seconds: the host chooses one. The server keeps to the same. */
-export const ROUND_SECONDS = [90, 180, 300, 86_400] as const;
+export const ROUND_SECONDS = [90, 180, 300, 43_200, 86_400] as const;
 export type RoundSeconds = (typeof ROUND_SECONDS)[number];
 /** How long after its deadline the server still waits for a round's orders. */
 export const GRACE_MS = 5_000;

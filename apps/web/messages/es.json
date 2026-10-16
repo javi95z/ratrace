@@ -1561,6 +1561,9 @@
     "rematchAbout": "Una partida nueva con la misma gente y el mismo ritmo, {time} por ronda. Los demás lo verán aquí y recibirán un aviso.",
     "rematchCreate": "Proponer la revancha",
     "rematchWaiting": "Ya hay una revancha esperando.",
-    "rematchJoin": "Unirse a la revancha"
+    "rematchJoin": "Unirse a la revancha",
+    "hours": "{n} h",
+    "newBadge": "Insignia nueva",
+    "newBadges": "Insignias nuevas"
   }
 }
