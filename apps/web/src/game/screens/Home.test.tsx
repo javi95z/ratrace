@@ -71,7 +71,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
     // Where it is kept is said behind the settings, not on the door.
     expect(screen.queryByText('Your life saves itself after every step.')).toBeNull();
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Settings' }));
+    await userEvent.setup().click(screen.getAllByRole('button', { name: 'Settings' })[0]);
     expect(within(screen.getByRole('dialog', { name: 'Settings' })).getByText('Your life saves itself after every step.')).toBeTruthy();
   });
 
@@ -81,7 +81,7 @@ describe('the front door', () => {
     await screen.findByRole('link', { name: 'New life' });
     expect(screen.queryByRole('group', { name: 'Language' })).toBeNull();
     expect(screen.queryAllByRole('switch')).toEqual([]);
-    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    await user.click(screen.getAllByRole('button', { name: 'Settings' })[0]);
     const sheet = screen.getByRole('dialog', { name: 'Settings' });
     expect(within(within(sheet).getByRole('group', { name: 'Language' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['English', 'Español', 'Русский']);
     expect(within(sheet).getAllByRole('switch').map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false', 'true']);
@@ -95,7 +95,7 @@ describe('the front door', () => {
     expect((await screen.findByRole('link', { name: 'Новая жизнь' })).getAttribute('href')).toBe('/new');
     expect(screen.getByRole('link', { name: 'Коллекция' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Рекорды' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Настройки' })).toBeTruthy();
+    expect(screen.getAllByRole('button', { name: 'Настройки' })[0]).toBeTruthy();
     // Nothing of another language is left on it, but the game's own name and the names of the languages.
     expect(document.body.textContent?.replace(/The Rat Race|English|Español/g, '')).not.toMatch(/[A-Za-z]{3,}/);
   });

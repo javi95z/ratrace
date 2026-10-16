@@ -6,18 +6,19 @@ import { useAccountSaves, useGame, useRanking, useRuns, useSaving, useT, useWord
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
-import { Button } from '@/ui/kit';
+import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
-import { HomePreferences, SaveStatus } from './Settings';
+import { HomePreferences, HomeSettingsPanel } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
   const common = useT('common');
+  const settings = useT('settings');
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
   const lost = useGame((s) => s.lost);
@@ -136,7 +137,10 @@ export function Home() {
         )}
       </div>
 
-      <SaveStatus />
+      {/* At the foot, as it always was: the account and the settings, also behind the gear above. */}
+      <Panel className="mt-auto w-full" label={settings('title')}>
+        <HomeSettingsPanel />
+      </Panel>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
         <p role="alert" className="frame w-full bg-wine-900 px-3 py-2 text-[13px]">
@@ -146,7 +150,7 @@ export function Home() {
 
       {/* At the foot, from the second visit on, until the player says no: an offer, not something the page is for. */}
       {install.shown ? (
-        <div className="mt-auto w-full">
+        <div className="w-full">
           <InstallApp onDismiss={install.dismiss} />
         </div>
       ) : null}

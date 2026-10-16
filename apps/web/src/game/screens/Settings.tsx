@@ -101,20 +101,6 @@ function AccountBlock({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Saving, as the front door says it: only while the account is being written, or when it is not. Saved goes unsaid. */
-export function SaveStatus() {
-  const t = useT('account');
-  const { state } = useAccount();
-  const { status } = useAccountSaves();
-  if (state.kind === 'offline' || status === 'off' || status === 'saved') return null;
-  return (
-    <p role="status" className="flex items-center justify-center gap-2 text-[12px] text-ink-200">
-      <span aria-hidden className={`size-2 shrink-0 ${status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
-      {t(status)}
-    </p>
-  );
-}
-
 /** The languages the game speaks, each under its own name, the one in use marked. */
 function LanguagePick() {
   const home = useT('home');
@@ -207,15 +193,29 @@ function Version() {
   return <p className="text-center text-[11px] text-ink-300 opacity-70">{t('version', { content: CONTENT_VERSION, engine: ENGINE_VERSION })}</p>;
 }
 
-/**
- * The same on the front door, where there is a game to get to: one button in the corner, and
- * behind it the account, the language and the switches.
- */
-export function HomePreferences() {
+/** What the settings of the front door hold: the account, where things are kept, the language, the switches and the version. */
+function HomeSettingsSheet({ open, onClose }: { open: boolean; onClose(): void }) {
   const t = useT('settings');
   const home = useT('home');
   const common = useT('common');
   const { state: account } = useAccount();
+  return (
+    <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
+      <div className="flex flex-col gap-3">
+        {/* The account first: whether the game is kept in it, and the way into one. */}
+        <AccountBlock compact />
+        {account.kind === 'offline' ? <p className="text-[13px] text-ink-300">{home('savedHere')}</p> : null}
+        <LanguagePick />
+        <Switches />
+        <Version />
+      </div>
+    </Sheet>
+  );
+}
+
+/** The settings of the front door, from the corner: one button with a gear. */
+export function HomePreferences() {
+  const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -228,17 +228,27 @@ export function HomePreferences() {
       >
         <Sprite id="icon.settings" />
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
-        <div className="flex flex-col gap-3">
-          {/* The account first: whether the game is kept in it, and the way into one. */}
-          <AccountBlock compact />
-          {account.kind === 'offline' ? <p className="text-[13px] text-ink-300">{home('savedHere')}</p> : null}
-          <LanguagePick />
-          <Switches />
-          <Version />
-        </div>
-      </Sheet>
+      <HomeSettingsSheet open={open} onClose={() => setOpen(false)} />
     </>
+  );
+}
+
+/**
+ * The same at the foot of the front door, as it always was: the account in sight, with the way
+ * into Google, and the settings a button below it.
+ */
+export function HomeSettingsPanel() {
+  const t = useT('settings');
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      <AccountBlock compact />
+      <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        <Sprite id="icon.settings" />
+        {t('title')}
+      </Button>
+      <HomeSettingsSheet open={open} onClose={() => setOpen(false)} />
+    </div>
   );
 }
 
