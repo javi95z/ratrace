@@ -64,7 +64,7 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, reaction: null, shout: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, shout: null }]);
     expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false });
   });
 
@@ -444,31 +444,6 @@ describe('the standings of a round', () => {
       const was = first.members.find((m) => m.userId === member.userId);
       expect((member.standing as { before: unknown }).before).toEqual({ score: was?.standing?.score, place: order.indexOf(member.userId) + 1 });
     }
-  });
-});
-
-describe('reactions', () => {
-  it('put a member\'s face on the round that turned last, for everyone to see until the next one turns', async () => {
-    const { server, room } = await begun(roomServer(), 90);
-    // Nothing has turned yet: there is nothing to react to.
-    expect(await server.ask(B, { action: 'react', roomId: room, reaction: 0 })).toMatchObject({ status: 409, body: { error: 'closed' } });
-    server.wait(90_000 + GRACE_MS + 1);
-    const reacted = await server.ask(B, { action: 'react', roomId: room, reaction: 3 });
-    expect(roomOf(reacted).round).toBe(1);
-    const seen = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
-    expect(seen.members.map((m) => (m as unknown as { reaction: number | null }).reaction)).toEqual([null, 3]);
-    // Taken off, then the next round turns with none.
-    await server.ask(HOST, { action: 'react', roomId: room, reaction: 1 });
-    server.wait(90_000 + GRACE_MS + 1);
-    const later = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
-    expect(later.members.map((m) => (m as unknown as { reaction: number | null }).reaction)).toEqual([null, null]);
-  });
-
-  it('are one of the few faces, or none', async () => {
-    const { server, room } = await begun(roomServer(), 90);
-    server.wait(90_000 + GRACE_MS + 1);
-    for (const reaction of [5, -1, 1.5, '1', undefined]) expect((await server.ask(B, { action: 'react', roomId: room, reaction })).status, String(reaction)).toBe(400);
-    expect((await server.ask(B, { action: 'react', roomId: room, reaction: null })).status).toBe(200);
   });
 });
 

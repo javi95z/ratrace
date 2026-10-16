@@ -479,7 +479,7 @@ describe('the room a page follows', () => {
 
 describe('how a room over ended for the player, for its badges', () => {
   const member = (score: number | null, over: Partial<RoomMember> = {}): RoomMember => ({
-    userId: `u${Math.random()}`, name: null, me: false, host: false, ready: false, left: false, reaction: null, shout: null,
+    userId: `u${Math.random()}`, name: null, me: false, host: false, ready: false, left: false, shout: null,
     standing: score === null ? null : { score, netWorth: 0, status: 0, escaped: false, bankruptcies: 0, before: null, cityId: null, career: null }, ...over,
   });
   const over = (members: RoomMember[], rematchOf = false): RoomState => ({

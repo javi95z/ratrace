@@ -4,7 +4,7 @@ import { roomStory } from './roomStory';
 
 /** A member who scored `score`, after `before` and a place the round before. */
 const member = (id: string, score: number, before: [number, number] | null, over: Partial<RoomMember> = {}): RoomMember => ({
-  userId: id, name: id, me: false, host: false, ready: false, left: false, reaction: null, shout: null,
+  userId: id, name: id, me: false, host: false, ready: false, left: false, shout: null,
   standing: { score, netWorth: 0, status: 0, escaped: false, bankruptcies: 0, before: before ? { score: before[0], place: before[1] } : null, cityId: null, career: null },
   ...over,
 });

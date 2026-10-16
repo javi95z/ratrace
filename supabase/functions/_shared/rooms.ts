@@ -66,9 +66,6 @@ export interface MemberRow {
   left_at: string | null;
   standing: Standing | null;
   joined_at: string;
-  /** The face the member put on a round, and which round: shown until the next one turns. */
-  reaction: number | null;
-  reaction_round: number | null;
   /** The last thing the member shouted to the others, and when. */
   shout: number | null;
   shout_at: string | null;
@@ -149,8 +146,6 @@ export interface RoomsDeps {
   saveRun(run: RunRow): Promise<void>;
   /** Opens the rematch of a room that is over. `rematch-open`, with its room and code, if another member opened it first. */
   rematch(oldRoom: string, room: { id: string; host: string; life_id: string; engine_version: string; content_version: string; seconds: number }): Promise<{ room: string; code: string } | { error: string; room?: string; code?: string }>;
-  /** Puts a member's face on the round that turned last, or takes it off with null. `closed` if the room or the member is not in play. */
-  react(roomId: string, userId: string, reaction: number | null): Promise<'ok' | 'closed'>;
   /** Sends a member's shout to everyone in the room. `soon` if they sent one a moment ago, `closed` if they cannot. */
   shout(roomId: string, userId: string, shout: number, now: Date): Promise<'ok' | 'soon' | 'closed'>;
   /** The rooms the player was in that are over, the latest first, at most `limit`, each with everyone who was in it. */
@@ -162,8 +157,6 @@ export interface RoomsDeps {
 /** What a game with friends tells its players by a notice. */
 export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' }>;
 
-/** How many faces a member may put on a round: the page draws them, the server keeps their number. */
-export const REACTIONS = 5;
 /** How many shouts there are to choose from: the page draws them, the server keeps their number. */
 export const SHOUTS = 14;
 /** How long a shout is news: a page that comes back later does not show it. */
@@ -314,7 +307,6 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
       left: m.left_at !== null,
       standing: m.standing ?? null,
       // A face put on the round that turned last; an older one is no longer news.
-      reaction: m.left_at === null && m.reaction !== null && m.reaction_round === room.round ? m.reaction : null,
       shout: m.left_at === null && m.shout !== null && m.shout_at !== null && deps.now().getTime() - Date.parse(m.shout_at) < SHOUT_FRESH_MS ? { n: m.shout, at: new Date(m.shout_at).toISOString() } : null,
     })),
     // The rematch of a room that is over, while it waits in its lobby for whoever wants it.
@@ -465,7 +457,6 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
       case 'view':
       case 'card':
       case 'submit':
-      case 'react':
       case 'shout':
         return await inRoom(games, deps, userId, raw);
       default:
@@ -627,13 +618,6 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const said = await deps.shout(room.id, userId, shout as number, deps.now());
     if (said === 'closed') return closed;
     if (said === 'soon') return { status: 409, body: { error: 'soon' } };
-    return await answerRoom(games, deps, room.id, userId);
-  }
-
-  if (raw.action === 'react') {
-    const { reaction } = raw;
-    if (reaction !== null && !(Number.isInteger(reaction) && (reaction as number) >= 0 && (reaction as number) < REACTIONS)) return bad('reaction');
-    if ((await deps.react(room.id, userId, reaction as number | null)) === 'closed') return closed;
     return await answerRoom(games, deps, room.id, userId);
   }
 

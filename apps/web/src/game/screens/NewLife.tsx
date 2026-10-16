@@ -159,8 +159,9 @@ export function NewLife() {
         })}
       </div>
 
-      <div className="pb-safe fixed inset-x-0 bottom-0 z-10 bg-night-900 px-3 pt-3">
-        <div className="mx-auto w-full max-w-md">
+      <div className="pb-safe fixed inset-x-0 bottom-0 z-10 bg-night-900 pt-3">
+        {/* As wide as the page above it: the same column, the same margins. */}
+        <div className="mx-auto w-full max-w-md px-3">
           {ranking === 'yes' ? (
             <div className="mb-2">
               {/* Two ways to play, side by side, each saying in a few words what it is. */}

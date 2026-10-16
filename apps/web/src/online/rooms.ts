@@ -1,6 +1,6 @@
 import { Unreachable } from '@/session/errors';
 import type { RankedRun, RankedStep } from '@/session/ranked';
-import { REACTIONS, RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
+import { RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
 import type { RoomGameOver, RoomLife, RoomMember, RoomsApi, RoomState } from '@/session/room';
 
 /**
@@ -51,7 +51,6 @@ function memberOf(raw: unknown): RoomMember | null {
                 ? { id: standing.career.id, level: standing.career.level }
                 : null,
           },
-    reaction: Number.isInteger(raw.reaction) && (raw.reaction as number) >= 0 && (raw.reaction as number) < REACTIONS.length ? (raw.reaction as number) : null,
     shout: shoutOf(raw.shout),
   };
 }
@@ -212,11 +211,6 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       return step;
     },
     rematch: async (roomId, lifeId, versions) => room(await ask({ action: 'rematch', roomId, lifeId, engineVersion: versions.engine, contentVersion: versions.content })),
-    async react(roomId, reaction) {
-      const reply = await ask({ action: 'react', roomId, reaction });
-      if (reply.status === 404 || reply.status === 409) return 'gone';
-      return room(reply);
-    },
     async shout(roomId, shout) {
       const reply = await ask({ action: 'shout', roomId, shout });
       if (reply.status === 409 && isRecord(reply.body) && reply.body.error === 'soon') return 'soon';

@@ -412,13 +412,6 @@ describe('a round in a room', () => {
     expect(final.querySelectorAll('ol > li')).toHaveLength(2);
     expect(within(within(final).getByRole('list', { name: 'New badges' })).getByText('First win')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
-    // A face on how it ended, for everyone to see, and off again with a second press.
-    const faces = within(final).getByRole('group', { name: 'React to the round' });
-    await user.click(within(faces).getByRole('button', { name: 'Living large' }));
-    await waitFor(() => expect(within(faces).getByRole('button', { name: 'Living large' }).getAttribute('aria-pressed')).toBe('true'));
-    expect(within(final).getByRole('img', { name: 'Living large' })).toBeTruthy();
-    await user.click(within(faces).getByRole('button', { name: 'Living large' }));
-    await waitFor(() => expect(within(final).queryByRole('img', { name: 'Living large' })).toBeNull());
     await user.click(within(final).getByRole('button', { name: 'Leave the game' }));
     expect(await screen.findByRole('button', { name: 'Start a game' })).toBeTruthy();
     expect((await services.store.listRuns())[0]).toMatchObject({ room: true });

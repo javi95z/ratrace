@@ -21,7 +21,7 @@ import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
 import { watched } from '../_shared/watch.ts';
 
 const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of';
-const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, reaction, reaction_round, shout, shout_at';
+const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, shout, shout_at';
 const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
 
 export default {
@@ -90,7 +90,6 @@ export default {
         saveRun: async (run: RunRow) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
         rematch: (old, room) =>
           call('room_rematch', { p_old: old, p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
-        react: (room, user, reaction) => call('room_react', { p_room: room, p_member: user, p_reaction: reaction }),
         shout: (room, user, shout, now) => call('room_shout', { p_room: room, p_member: user, p_shout: shout, p_now: now.toISOString() }),
         history: async (user, limit) => {
           const mine = must(

@@ -12,7 +12,7 @@ import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
+export { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
 export type { RoomGameOver, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
@@ -59,8 +59,6 @@ export interface RoomActions {
   leave(): Promise<void>;
   /** Opens the rematch of the room that is over, with a life, or joins it if someone opened it first. */
   rematch(lifeId: string): Promise<boolean>;
-  /** Puts a face on the round that turned last, or takes it off with null. Quietly does nothing if it cannot. */
-  react(reaction: number | null): Promise<void>;
   /** The games over the player was in, the latest first. Null when they cannot be asked for just now. */
   history(): Promise<RoomGameOver[] | null>;
   /** Shouts to the others. `soon` if the player shouted a moment ago; `failed` if it did not get through. */
@@ -378,19 +376,6 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           left = null;
           return next;
         });
-      },
-
-      async react(reaction) {
-        const room = get().room;
-        const rooms = api();
-        if (room === null || rooms === null) return;
-        try {
-          const now = await rooms.react(room.id, reaction);
-          if (now !== 'gone' && get().room?.id === now.id) adopt(now);
-        } catch (error) {
-          // A face that did not get through is no loss: the round goes on without it.
-          if (!(error instanceof Unreachable) && !(error instanceof RoomRefused)) throw error;
-        }
       },
 
       async shout(n) {

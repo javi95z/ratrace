@@ -1101,7 +1101,8 @@
       "uncommon": "Poco común",
       "rare": "Rara",
       "legendary": "Legendaria"
-    }
+    },
+    "unlockedMany": "{count} vidas nuevas desbloqueadas"
   },
   "collection": {
     "title": "Colección",
@@ -1555,12 +1556,6 @@
     "joinInvite": "Unirse a la partida",
     "share": "Compartir",
     "copyLink": "Copiar enlace",
-    "react": "Reacciona a la ronda",
-    "face0": "Me parto",
-    "face1": "Qué susto",
-    "face2": "Dinero, dinero",
-    "face3": "Por todo lo alto",
-    "face4": "No quiero mirar",
     "rematch": "Revancha",
     "rematchAbout": "Una partida nueva con la misma gente y el mismo ritmo, {time} por ronda. Los demás lo verán aquí y recibirán un aviso.",
     "rematchCreate": "Proponer la revancha",

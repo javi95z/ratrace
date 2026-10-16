@@ -6,7 +6,7 @@ import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
 import type { GameStore } from '@/game/store';
 import { Link } from '@/i18n/navigation';
-import { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/game/room';
+import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/game/room';
 import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
@@ -21,8 +21,6 @@ const REFUSALS = new Set(['unknown-room', 'started', 'full', 'other-version', 'i
 /** Seconds as a clock reads them: 1:30; hours and minutes for a round of a day, 23h 05m. */
 const clock = (seconds: number) =>
   seconds >= 3_600 ? `${Math.floor(seconds / 3_600)}h ${String(Math.floor((seconds % 3_600) / 60)).padStart(2, '0')}m` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-/** What each face of `REACTIONS` is called, for whoever does not see it. */
-const FACES = ['face0', 'face1', 'face2', 'face3', 'face4'] as const;
 /** A round of a day is a day; one of hours, its hours; a quick one, its clock. */
 const DAY = 86_400;
 const HOUR = 3_600;
@@ -386,30 +384,6 @@ function Rematch({ room }: { room: RoomState }) {
   );
 }
 
-/** The faces a member may put on the round that turned last, one at a time: pressed again, it comes off. */
-function Reactions({ room }: { room: RoomState }) {
-  const t = useT('room');
-  const react = useRoom((s) => s.react);
-  const me = room.members.find((member) => member.me);
-  if (!me || me.left || room.round < 1 || (room.status !== 'playing' && room.status !== 'finished')) return null;
-  return (
-    <div role="group" aria-label={t('react')} className="mt-3 flex justify-center gap-2 border-t-2 border-night-900 pt-3">
-      {REACTIONS.map((face, at) => (
-        <button
-          key={face}
-          type="button"
-          aria-pressed={me.reaction === at}
-          aria-label={t(FACES[at])}
-          onClick={() => void react(me.reaction === at ? null : at)}
-          className={`frame-raised flex size-11 items-center justify-center text-[22px] ${me.reaction === at ? 'frame-gold bg-night-500' : 'bg-night-700'}`}
-        >
-          <span aria-hidden>{face}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 /** Asks before leaving, saying what leaving does here: a host closes the lobby; in play the life ends. */
 function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; onClose(): void }) {
   const t = useT('room');
@@ -692,13 +666,14 @@ function Heard({ room }: { room: RoomState }) {
         const name = member ? nameOf(member) : '';
         const face = shout.n < SHOUT_FACES.length;
         return (
-          <div key={shout.key} className="frame-raised flex max-w-sm animate-rise items-center gap-2.5 bg-night-700 px-3 py-2">
-            <span aria-hidden className="pixel flex size-8 shrink-0 items-center justify-center bg-night-900 text-[15px] text-gold-500">
+          // Gold on the night, with a shadow under it: it sits over the game, and says someone is talking.
+          <div key={shout.key} className="frame-raised frame-gold flex w-full max-w-sm animate-rise items-center gap-3 bg-night-600 px-3 py-2.5 shadow-[4px_4px_0_rgb(0_0_0/0.5)]">
+            <span aria-hidden className="pixel flex size-11 shrink-0 items-center justify-center bg-gold-500 text-[20px] text-ink-900">
               {name.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[12px] text-ink-300">{name}</span>
-              <span className={face ? 'inline-block animate-pop text-[26px] leading-none' : 'pixel block text-[16px] text-cream'}>{textOf(shout.n)}</span>
+            <span className="min-w-0 flex-1">
+              <span className="pixel block truncate text-[12px] uppercase tracking-wider text-gold-200">{name}</span>
+              <span className={face ? 'mt-0.5 inline-block animate-pop text-[34px] leading-none' : 'pixel mt-0.5 block text-[20px] leading-tight text-cream'}>{textOf(shout.n)}</span>
             </span>
           </div>
         );
@@ -752,11 +727,6 @@ function Standings({ room, live = false }: { room: RoomState; live?: boolean }) 
                 <span className="flex items-center gap-1.5">
                   <span className="truncate text-[15px]">{nameOf(member)}</span>
                   {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
-                  {member.reaction !== null ? (
-                    <span role="img" aria-label={t(FACES[member.reaction])} className="text-[17px] leading-none">
-                      {REACTIONS[member.reaction]}
-                    </span>
-                  ) : null}
                 </span>
                 {standing && (standing.cityId || standing.career) ? (
                   <span className="block truncate text-[12px] text-ink-200">
@@ -852,7 +822,6 @@ function RoomBar({ room }: { room: RoomState }) {
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={common('close')}>
         <Standings room={room} live />
-        <Reactions room={room} />
         {room.status === 'playing' ? (
           <div className="mt-4 flex justify-center">
             <button type="button" onClick={() => setLeaving(true)} className="min-h-11 px-3 text-[13px] text-ink-300 underline underline-offset-4">
@@ -923,7 +892,6 @@ function RoomScreens({ room }: { room: RoomState }) {
     resolved: (
       <Panel title={order} label={order}>
         <Standings room={room} />
-        <Reactions room={room} />
       </Panel>
     ),
     end: (
@@ -943,7 +911,6 @@ function RoomScreens({ room }: { room: RoomState }) {
           </ul>
         ) : null}
         <Standings room={room} />
-        <Reactions room={room} />
         <div className="mt-3 flex flex-col gap-2 border-t-2 border-night-900 pt-3">
           <Rematch room={room} />
           <Refusal plain />

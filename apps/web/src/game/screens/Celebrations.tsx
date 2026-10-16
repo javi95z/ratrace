@@ -1,6 +1,6 @@
 'use client';
 
-import { rarityOf } from '@ratrace/content';
+import { portraitArt, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { useGame, useT, useWords } from '@/game/context';
 import { Bare } from '@/ui/kit';
@@ -45,18 +45,28 @@ export function Celebrations() {
           </div>
         </div>
       ))}
-      {unlocked.map((id) => (
-        <div key={id} role="status" className="frame frame-gold flex animate-rise items-center gap-3 bg-gold-500 p-2 text-ink-900">
-          <Bare className="size-10">
+      {/* Lives unlocked together are told together: one card, each life with its face and what it is good at. */}
+      {unlocked.length > 0 ? (
+        <div role="status" className="frame frame-gold flex animate-rise flex-col gap-2 bg-gold-500 p-2 text-ink-900">
+          <p className="pixel flex items-center gap-2 text-[12px] uppercase tracking-wider">
             <Sprite id="icon.star" />
-          </Bare>
-          <div className="min-w-0">
-            <p className="pixel text-[12px] uppercase tracking-wider">{t('unlocked')}</p>
-            <p className="pixel text-[18px]">{text.lives[id]?.name ?? id}</p>
-            <p className="text-[13px] leading-snug">{text.lives[id]?.perk}</p>
-          </div>
+            {t(unlocked.length === 1 ? 'unlocked' : 'unlockedMany', { count: unlocked.length })}
+          </p>
+          <ul className="flex flex-col gap-2">
+            {unlocked.map((id) => (
+              <li key={id} className="flex items-center gap-3">
+                <Bare className="size-12 shrink-0 bg-gold-200">
+                  <Sprite id={portraitArt(id, 22)} fallback={{ w: 64, h: 64 }} className="!h-full !w-full" />
+                </Bare>
+                <div className="min-w-0">
+                  <p className="pixel text-[18px] leading-tight">{text.lives[id]?.name ?? id}</p>
+                  <p className="text-[13px] leading-snug">{text.lives[id]?.perk}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-      ))}
+      ) : null}
     </>
   );
 }

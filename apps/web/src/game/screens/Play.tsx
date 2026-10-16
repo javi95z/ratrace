@@ -329,8 +329,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
         {afterStage}
       </main>
       {hasActions ? (
-        <div id="round-actions" tabIndex={-1} className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 px-3 pt-3">
-          <div className="mx-auto w-full max-w-md">{actions}</div>
+        <div id="round-actions" tabIndex={-1} className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 pt-3">
+          <div className="mx-auto w-full max-w-md px-3">{actions}</div>
         </div>
       ) : null}
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />

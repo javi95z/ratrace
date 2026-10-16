@@ -1101,7 +1101,8 @@
       "uncommon": "Uncommon",
       "rare": "Rare",
       "legendary": "Legendary"
-    }
+    },
+    "unlockedMany": "{count} new lives unlocked"
   },
   "collection": {
     "title": "Collection",
@@ -1555,12 +1556,6 @@
     "joinInvite": "Join the game",
     "share": "Share",
     "copyLink": "Copy link",
-    "react": "React to the round",
-    "face0": "Cracking up",
-    "face1": "What a scare",
-    "face2": "Money, money",
-    "face3": "Living large",
-    "face4": "Can't look",
     "rematch": "Rematch",
     "rematchAbout": "A new game with the same people and the same pace, {time} a round. The others will see it here and get a notice.",
     "rematchCreate": "Ask for a rematch",

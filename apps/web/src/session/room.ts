@@ -43,8 +43,6 @@ export interface RoomMember {
   left: boolean;
   /** As of the last round that turned; null before the first. */
   standing: RoomStanding | null;
-  /** The face they put on the round that turned last, as a number of `REACTIONS`; null for none. */
-  reaction: number | null;
   /** The last thing they shouted to everyone, as a number of `SHOUTS`, and when by the server's clock; null for nothing lately. */
   shout: { n: number; at: number } | null;
 }
@@ -55,8 +53,6 @@ export const SHOUT_PHRASES = 8;
 /** How long after a shout the server takes another from the same member. */
 export const SHOUT_EVERY_MS = 10_000;
 
-/** The faces a member may put on a round, in the order the server numbers them. */
-export const REACTIONS = ['😂', '😱', '💸', '👑', '🙈'] as const;
 
 /** A room as a member may see it. */
 export interface RoomState {
@@ -140,8 +136,6 @@ export interface RoomsApi {
   submit(roomId: string, step: number, orders: Order[]): Promise<{ room: RoomState; result: RankedStep | null } | 'moved'>;
   /** Opens the rematch of a room that is over, or joins it if someone else opened it first. Throws `RoomRefused` when the server says no. */
   rematch(roomId: string, lifeId: string, versions: { engine: string; content: string }): Promise<RoomState>;
-  /** Puts a face on the round that turned last, or takes it off with null. `gone` if the room is not in play for the player. */
-  react(roomId: string, reaction: number | null): Promise<RoomState | 'gone'>;
   /** The games over the player was in, the latest first. */
   history(): Promise<RoomGameOver[]>;
   /** Shouts to everyone in the room. `soon` if the player shouted a moment ago, `gone` if they are not in it. */
