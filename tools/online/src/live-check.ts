@@ -59,6 +59,8 @@ const statusOf = (result: { error: unknown }): number => {
 /** Asks the linked database through the CLI, as its owner: for the rows this check makes and removes itself. Null if it could not. */
 function asOwner(sql: string): Array<Record<string, unknown>> | null {
   const run = spawnSync('supabase', ['db', 'query', '--linked', sql], { cwd: root, encoding: 'utf8' });
+  // A query that fails says why: the check that needed it is the one that fails.
+  if (run.status !== 0) console.error(`  supabase db query failed (${run.status ?? run.error?.message}): ${`${run.stderr}`.trim().slice(-300)}`);
   return run.status === 0 ? (rowsOf(`${run.stdout}`) as Array<Record<string, unknown>> | null) : null;
 }
 
@@ -335,6 +337,12 @@ try {
   const seeded = asOwner(`insert into public.error_kinds (fingerprint, source, place, message, seen, first_seen, last_seen, alerted_at) values ('${probe}', 'page', '/play', '${keptSaid}', 1, now(), now(), now()) returning seen`);
   const reported = await a.functions.invoke('report-error', { body: { reports: [{ message: said, stack: null, place: '/es/play?code=QQQ#x', build: 'live-check', browser: 'live-check' }] } });
   const noted = asOwner(`select seen, place, message, build, browser from public.error_kinds where fingerprint = '${probe}'`)?.[0];
+  // When the report does not go through, what each step gave is the first thing to know.
+  if (seeded === null || statusOf(reported) !== 200 || (reported.data as { noted?: number } | null)?.noted !== 1 || noted?.seen !== 2) {
+    const context = (reported.error as { context?: { text?: () => Promise<string> } } | null)?.context;
+    const answer = reported.error ? ((await context?.text?.().catch(() => '')) ?? reported.error.message) : JSON.stringify(reported.data);
+    console.error(`  the errors check saw: seeded ${JSON.stringify(seeded)}, report-error answered ${statusOf(reported)}: ${answer}, kept ${JSON.stringify(noted ?? null)}`);
+  }
   check(seeded !== null && statusOf(reported) === 200 && (reported.data as { noted?: number } | null)?.noted === 1, 'a signed-in player reports the errors of a page');
   check(noted?.seen === 2 && noted.place === '/play' && noted.message === keptSaid && noted.build === 'live-check', 'the server keeps them by kind, cleaned: no address, no query, no language');
   check(statusOf(await nobody.functions.invoke('report-error', { body: { reports: [{ message: 'x', place: '/' }] } })) === 401, 'nobody with no account can report one');
