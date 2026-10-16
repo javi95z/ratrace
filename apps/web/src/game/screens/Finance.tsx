@@ -1641,7 +1641,7 @@ export function Finance() {
 
   return (
     <div>
-      <div className="sticky top-0 z-10 bg-night-800">
+      <div className="top-safe sticky z-10 bg-night-800">
         <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={tabs.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
       </div>
       <div ref={panel} role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} onKeyDown={navigateItems} className="px-3 pt-1">

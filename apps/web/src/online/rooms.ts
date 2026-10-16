@@ -33,6 +33,10 @@ function memberOf(raw: unknown): RoomMember | null {
             status: Number(standing.status) || 0,
             escaped: standing.escaped === true,
             bankruptcies: Number(standing.bankruptcies) || 0,
+            before:
+              isRecord(standing.before) && typeof standing.before.score === 'number' && typeof standing.before.place === 'number'
+                ? { score: standing.before.score, place: standing.before.place }
+                : null,
           },
     reaction: Number.isInteger(raw.reaction) && (raw.reaction as number) >= 0 && (raw.reaction as number) < REACTIONS.length ? (raw.reaction as number) : null,
   };

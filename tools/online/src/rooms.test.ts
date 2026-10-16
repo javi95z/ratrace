@@ -431,6 +431,22 @@ describe('a rematch', () => {
   });
 });
 
+describe('the standings of a round', () => {
+  it('keep how each member stood the round before: their score and their place', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    server.wait(90_000 + GRACE_MS + 1);
+    const first = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(first.members.map((m) => (m.standing as { before: unknown }).before)).toEqual([null, null]);
+    server.wait(90_000 + GRACE_MS + 1);
+    const second = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    const order = [...first.members].sort((a, b) => (b.standing?.score as number) - (a.standing?.score as number)).map((m) => m.userId);
+    for (const member of second.members) {
+      const was = first.members.find((m) => m.userId === member.userId);
+      expect((member.standing as { before: unknown }).before).toEqual({ score: was?.standing?.score, place: order.indexOf(member.userId) + 1 });
+    }
+  });
+});
+
 describe('reactions', () => {
   it('put a member\'s face on the round that turned last, for everyone to see until the next one turns', async () => {
     const { server, room } = await begun(roomServer(), 90);

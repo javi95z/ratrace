@@ -1514,11 +1514,9 @@
     "confirmLeave": "Salir",
     "stay": "Quedarme",
     "bar": "La partida: quedan {time}, han jugado {ready} de {total}",
-    "timeLeft": "Quedan {time}",
     "waiting": "Esperando a los demás",
     "waitingCount": "Han jugado {ready} de {total}",
-    "choosing": "Aún eligen: {names}",
-    "standings": "La partida",
+    "choosing": "Aún juegan: {names}",
     "afterRound": "Tras la ronda {n}",
     "final": "Cómo acabó la partida",
     "score": "Puntos",
@@ -1564,6 +1562,14 @@
     "rematchJoin": "Unirse a la revancha",
     "hours": "{n} h",
     "newBadge": "Insignia nueva",
-    "newBadges": "Insignias nuevas"
+    "newBadges": "Insignias nuevas",
+    "sheetTitle": "Ronda {round} de {total} · quedan {time}",
+    "playedShort": "{ready}/{total} han jugado",
+    "placeShort": "{place}.º",
+    "played": "Ya ha jugado",
+    "playing": "Jugando…",
+    "movedUp": "Sube {n}",
+    "movedDown": "Baja {n}",
+    "worth": "Patrimonio {worth}"
   }
 }

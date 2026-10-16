@@ -25,6 +25,8 @@ export interface RoomStanding {
   status: number;
   escaped: boolean;
   bankruptcies: number;
+  /** How they stood the round before: their score and their place. Null after the first round. */
+  before: { score: number; place: number } | null;
 }
 
 export interface RoomMember {

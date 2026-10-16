@@ -51,6 +51,8 @@ export interface Standing {
   status: number;
   escaped: boolean;
   bankruptcies: number;
+  /** How the member stood the round before, for what changed: their score and their place. Null after the first round. */
+  before?: { score: number; place: number } | null;
 }
 
 /** A row of `room_players`, without its room. */
@@ -338,7 +340,10 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
   for (let attempt = 0; attempt < TURN_TRIES; attempt++) {
     const game = games[versionsOf(room)];
     if (!game?.viewOf) throw new Error(`room ${room.id} is on versions the server does not hold`);
-    const members = (await deps.members(room.id)).filter((m) => m.left_at === null);
+    const everyone = await deps.members(room.id);
+    const members = everyone.filter((m) => m.left_at === null);
+    // Where each stood when the round before turned, as the standings showed it then: those who left last.
+    const placesBefore = new Map(placed(everyone.filter((m) => m.standing !== null)).map((m, at) => [m.user_id, at + 1]));
     const kept = await deps.loadOrders(room.id, room.round);
     const lives: TurnLife[] = [];
     const ends: Array<{ row: RoomGameRow; played: Played }> = [];
@@ -363,7 +368,9 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
         next = withStep(answered.log, { orders: [] });
         played = play(next);
       }
-      lives.push({ user: member.user_id, game: row.id, as_read: row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready, standing: standingOf(game, played) });
+      const was = member.standing;
+      const before = was ? { score: was.score, place: placesBefore.get(member.user_id) ?? 0 } : null;
+      lives.push({ user: member.user_id, game: row.id, as_read: row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready, standing: { ...standingOf(game, played), before } });
       ends.push({ row, played });
     }
     const over = lives.length > 0 && lives.every((life) => life.finished);

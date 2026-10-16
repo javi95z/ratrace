@@ -111,7 +111,7 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, ini
   if (!open) return null;
 
   return createPortal(
-    <div data-sheet-root className="fixed inset-0 z-50 flex items-end justify-center desk:items-center desk:p-6">
+    <div data-sheet-root className="pt-safe fixed inset-0 z-50 flex items-end justify-center desk:items-center desk:p-6">
       <div aria-hidden data-sheet-backdrop className="absolute inset-0 bg-night-900/80" onClick={onClose} />
       <div
         ref={panel}

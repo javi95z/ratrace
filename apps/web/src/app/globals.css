@@ -297,6 +297,10 @@ html {
 
 body {
   min-height: 100dvh;
+  /* Installed on a phone the page runs under the status bar and round the notch: what is there is kept clear. */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
   /* A weave of single pixels, one shade off the night: enough to say "surface", too little to read as a pattern. */
   background: var(--color-night-800) radial-gradient(var(--color-night-700) 1px, transparent 1px) 0 0 / 6px 6px;
   color: var(--color-cream);
@@ -521,6 +525,16 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* The safe area at the top of a phone, for what sticks to the top as the page scrolls. */
+@utility top-safe {
+  top: env(safe-area-inset-top);
+}
+
+/* The safe area at the top of a phone, for layers that cover the whole screen. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
 }
 
 /* The safe area at the bottom of a phone, for bars that sit on the edge. */

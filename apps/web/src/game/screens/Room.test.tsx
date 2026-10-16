@@ -207,7 +207,7 @@ describe('a round in a room', () => {
     await user.click(screen.getByRole('button', { name: /Play the round/ }));
     expect(await screen.findByText('Waiting for the others')).toBeTruthy();
     const waiting = screen.getByText('1 of 2 have played').closest('[role="status"]') as HTMLElement;
-    expect(waiting.textContent).toContain('Still choosing: Rat BBBB');
+    expect(waiting.textContent).toContain('Still playing: Rat BBBB');
     expect(screen.queryByRole('button', { name: /Play the round/ })).toBeNull();
 
     await bPlays(server, room.id);
@@ -225,8 +225,10 @@ describe('a round in a room', () => {
     const user = userEvent.setup();
     renderGame(<Room />, services);
     await user.click(await screen.findByRole('button', { name: /^The game:/ }));
-    const sheet = screen.getByRole('dialog', { name: 'The game' });
+    // The round and its time in the title; where everyone is in the round beside their name.
+    const sheet = screen.getByRole('dialog', { name: /^Round 1 of \d+ · \d:\d\d left$/ });
     expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(sheet).getAllByText('Playing…')).toHaveLength(2);
     await user.click(within(sheet).getByRole('button', { name: 'Leave the game' }));
     const asking = screen.getByRole('dialog', { name: 'Leave the game?' });
     expect(within(asking).getByText('Your life in the game ends here. The others play on without you.')).toBeTruthy();

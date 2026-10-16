@@ -528,48 +528,85 @@ function Lobby({ room }: { room: RoomState }) {
   );
 }
 
-/** The members of the room in order, with what the last round left each of them. Bare: whoever holds it frames it. */
-function Standings({ room }: { room: RoomState }) {
+/** A member's place: one more than everyone still in with a higher score, so that a tie shares it. */
+function rankOf(members: readonly RoomMember[], member: RoomMember): number {
+  const score = member.standing?.score ?? Number.NEGATIVE_INFINITY;
+  return 1 + members.filter((other) => !other.left && (other.standing?.score ?? Number.NEGATIVE_INFINITY) > score).length;
+}
+
+/**
+ * The members of the room in order, with what the last round left each of them: their place and
+ * how it moved, their net worth, their score and what the round added to it, and the face they put
+ * on it. `live` adds where each is in the round being played. Bare: whoever holds it frames it.
+ */
+function Standings({ room, live = false }: { room: RoomState; live?: boolean }) {
   const t = useT('room');
   const { fmt } = useWords();
   const nameOf = useNameOf();
+  const list = ordered(room.members);
+  const inPlay = live && room.status === 'playing';
   return (
     <div>
       <p aria-hidden className="text-right text-[11px] uppercase tracking-wider text-ink-300">
         {t('score')}
       </p>
       <ol className="divide-y-2 divide-night-900">
-        {ordered(room.members).map((member, at) => (
-          <li key={member.userId} className={`flex min-h-11 items-center gap-3 py-1.5 ${member.left ? 'opacity-60' : ''}`}>
-            <span className="pixel w-5 shrink-0 text-[16px] text-ink-300">{member.left ? '·' : at + 1}</span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
-                <span className="truncate text-[15px]">{nameOf(member)}</span>
-                {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
-                {member.reaction !== null ? (
-                  <span role="img" aria-label={t(FACES[member.reaction])} className="text-[17px] leading-none">
-                    {REACTIONS[member.reaction]}
+        {list.map((member, at) => {
+          const standing = member.left ? null : member.standing;
+          const tied = standing !== null && list.some((other) => other !== member && !other.left && other.standing?.score === standing.score);
+          const before = standing?.before ?? null;
+          // Places move by the order shown, the order the server kept the round before.
+          const moved = before === null ? 0 : before.place - (at + 1);
+          const gained = standing !== null && before !== null ? standing.score - before.score : 0;
+          return (
+            <li key={member.userId} className={`flex min-h-12 items-center gap-3 py-1.5 ${member.left ? 'opacity-60' : ''}`}>
+              <span className="flex w-7 shrink-0 flex-col items-center leading-none">
+                <span className="pixel text-[16px] text-ink-300">{member.left ? '·' : `${rankOf(room.members, member)}${tied ? '=' : ''}`}</span>
+                {moved !== 0 ? (
+                  <span role="img" aria-label={t(moved > 0 ? 'movedUp' : 'movedDown', { n: Math.abs(moved) })} className={`mt-0.5 text-[11px] ${moved > 0 ? 'text-teal-300' : 'text-wine-300'}`}>
+                    {moved > 0 ? '▲' : '▼'}
+                    {Math.abs(moved)}
                   </span>
                 ) : null}
               </span>
-              {member.left ? (
-                <span className="block text-[12px] text-ink-300">{t('left')}</span>
-              ) : member.standing?.escaped ? (
-                <span className="block text-[12px] text-teal-300">{t('escaped')}</span>
-              ) : null}
-            </span>
-            <span className="pixel shrink-0 text-[18px] text-gold-500">
-              {member.standing ? fmt.number(member.standing.score) : '—'}
-              <span className="sr-only"> {t('score')}</span>
-            </span>
-          </li>
-        ))}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-[15px]">{nameOf(member)}</span>
+                  {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
+                  {member.reaction !== null ? (
+                    <span role="img" aria-label={t(FACES[member.reaction])} className="text-[17px] leading-none">
+                      {REACTIONS[member.reaction]}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="flex flex-wrap gap-x-2 text-[12px] text-ink-300">
+                  {member.left ? <span>{t('left')}</span> : null}
+                  {standing ? <span>{t('worth', { worth: fmt.compact(standing.netWorth) })}</span> : null}
+                  {standing?.escaped ? <span className="text-teal-300">{t('escaped')}</span> : null}
+                  {inPlay && !member.left ? <span className={member.ready ? 'text-teal-300' : ''}>{t(member.ready ? 'played' : 'playing')}</span> : null}
+                </span>
+              </span>
+              <span className="flex shrink-0 flex-col items-end leading-tight">
+                <span className="pixel text-[18px] text-gold-500">
+                  {member.standing ? fmt.number(member.standing.score) : '—'}
+                  <span className="sr-only"> {t('score')}</span>
+                </span>
+                {gained !== 0 ? (
+                  <span className={`text-[12px] ${gained > 0 ? 'text-teal-300' : 'text-wine-300'}`}>
+                    {gained > 0 ? '+' : '−'}
+                    {fmt.number(Math.abs(gained))}
+                  </span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
 }
 
-/** Above the round: the time left, who has played, and the way to the room's order and to leaving. */
+/** Above the round: the time left and how it runs out, who has played, the player's place, and the way to the room's order and to leaving. */
 function RoomBar({ room }: { room: RoomState }) {
   const t = useT('room');
   const common = useT('common');
@@ -579,8 +616,12 @@ function RoomBar({ room }: { room: RoomState }) {
   const [leaving, setLeaving] = useState(false);
   const here = room.members.filter((member) => !member.left);
   const ready = here.filter((member) => member.ready).length;
+  const me = here.find((member) => member.me);
+  const place = me?.standing ? rankOf(room.members, me) : null;
   const time = left === null ? '—' : clock(left);
   const low = left !== null && left <= 20;
+  const share = left === null || room.seconds <= 0 ? 0 : Math.max(0, Math.min(1, left / room.seconds));
+  const title = room.status === 'playing' ? t('sheetTitle', { round: Math.min(room.round + 1, room.rounds), total: room.rounds, time }) : t('final');
   return (
     <>
       <button
@@ -588,34 +629,51 @@ function RoomBar({ room }: { room: RoomState }) {
         aria-haspopup="dialog"
         aria-label={t('bar', { time, ready, total: here.length })}
         onClick={() => setOpen(true)}
-        className="frame-raised flex min-h-11 w-full items-center gap-3 bg-night-700 px-3 py-1.5 text-left"
+        className="frame-raised flex w-full flex-col bg-night-700 text-left"
       >
-        <span aria-hidden className={`pixel min-w-14 shrink-0 text-[22px] tabular-nums ${low ? 'text-wine-300' : 'text-gold-500'}`}>
-          {time}
-        </span>
-        <span aria-hidden className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-          {here.map((member) => (
-            <span
-              key={member.userId}
-              title={nameOf(member)}
-              className={`pixel flex size-7 shrink-0 items-center justify-center text-[13px] ${member.ready ? 'bg-teal-600 text-cream' : 'bg-night-900 text-ink-300'} ${member.me ? 'ring-2 ring-inset ring-gold-500' : ''}`}
-            >
-              {nameOf(member).slice(0, 1).toUpperCase()}
+        <span className="flex min-h-11 w-full items-center gap-3 px-3 py-1.5">
+          <span aria-hidden className={`pixel min-w-14 shrink-0 text-[22px] tabular-nums ${low ? 'text-wine-300' : 'text-gold-500'}`}>
+            {time}
+          </span>
+          <span aria-hidden className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden pt-1">
+            {here.map((member) => (
+              <span
+                key={member.userId}
+                title={nameOf(member)}
+                className={`pixel relative flex size-7 shrink-0 items-center justify-center text-[13px] ${member.ready ? 'bg-teal-600 text-cream' : 'bg-night-900 text-ink-300'} ${member.me ? 'ring-2 ring-inset ring-gold-500' : ''}`}
+              >
+                {nameOf(member).slice(0, 1).toUpperCase()}
+                {member.ready ? <span className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center bg-teal-300 font-sans text-[10px] font-bold leading-none text-night-900">✓</span> : null}
+              </span>
+            ))}
+          </span>
+          <span aria-hidden className="shrink-0 text-[12px] text-ink-300">
+            {t('playedShort', { ready, total: here.length })}
+          </span>
+          {place !== null ? (
+            <span aria-hidden className="pixel shrink-0 text-[16px] text-cream">
+              {t('placeShort', { place })}
             </span>
-          ))}
+          ) : null}
+          <span aria-hidden className="pixel shrink-0 text-[15px] text-ink-300">
+            ▸
+          </span>
         </span>
-        <span aria-hidden className="pixel shrink-0 text-[15px] text-ink-300">
-          ▸
-        </span>
+        {/* The round's time, running out: gold, and wine for the last seconds. */}
+        {room.status === 'playing' && left !== null ? (
+          <span aria-hidden className="block h-1 w-full bg-night-900">
+            <span className={`block h-full transition-[width] duration-300 ease-linear ${low ? 'bg-wine-300' : 'bg-gold-500'}`} style={{ width: `${share * 100}%` }} />
+          </span>
+        ) : null}
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title={t('standings')} closeLabel={common('close')}>
-        <p className="mb-2 text-[13px] text-ink-300">{t('timeLeft', { time })}</p>
-        <Standings room={room} />
+      <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={common('close')}>
+        <Standings room={room} live />
+        <Reactions room={room} />
         {room.status === 'playing' ? (
-          <div className="mt-4 border-t-2 border-night-900 pt-3">
-            <Button variant="quiet" wide onClick={() => setLeaving(true)}>
+          <div className="mt-4 flex justify-center">
+            <button type="button" onClick={() => setLeaving(true)} className="min-h-11 px-3 text-[13px] text-ink-300 underline underline-offset-4">
               {t('leave')}
-            </Button>
+            </button>
           </div>
         ) : null}
       </Sheet>
@@ -670,7 +728,7 @@ function RoomScreens({ room }: { room: RoomState }) {
   const stage = useGame((s) => s.stage);
   const me = room.members.find((member) => member.me);
   const here = room.members.filter((member) => !member.left);
-  const place = ordered(room.members).findIndex((member) => member.me) + 1;
+  const place = me && !me.left && me.standing ? rankOf(room.members, me) : 0;
   // Played, and waiting for the others: whether this page sent the round or the page before it did.
   const waiting = room.status === 'playing' && me?.ready === true && stage === 'finance';
   const order = room.status === 'finished' ? t('final') : t('afterRound', { n: room.round });

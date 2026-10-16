@@ -1514,11 +1514,9 @@
     "confirmLeave": "Выйти",
     "stay": "Остаться",
     "bar": "Партия: осталось {time}, сыграли {ready} из {total}",
-    "timeLeft": "Осталось {time}",
     "waiting": "Ждём остальных",
     "waitingCount": "Сыграли {ready} из {total}",
-    "choosing": "Ещё выбирают: {names}",
-    "standings": "Партия",
+    "choosing": "Ещё играют: {names}",
     "afterRound": "После раунда {n}",
     "final": "Итоги партии",
     "score": "Очки",
@@ -1564,6 +1562,14 @@
     "rematchJoin": "Присоединиться к реваншу",
     "hours": "{n} ч",
     "newBadge": "Новый значок",
-    "newBadges": "Новые значки"
+    "newBadges": "Новые значки",
+    "sheetTitle": "Раунд {round} из {total} · осталось {time}",
+    "playedShort": "{ready}/{total} сыграли",
+    "placeShort": "{place}-е",
+    "played": "Ход сделан",
+    "playing": "Играет…",
+    "movedUp": "Вверх на {n}",
+    "movedDown": "Вниз на {n}",
+    "worth": "Капитал {worth}"
   }
 }

@@ -1514,11 +1514,9 @@
     "confirmLeave": "Leave",
     "stay": "Stay",
     "bar": "The game: {time} left, {ready} of {total} have played",
-    "timeLeft": "{time} left",
     "waiting": "Waiting for the others",
     "waitingCount": "{ready} of {total} have played",
-    "choosing": "Still choosing: {names}",
-    "standings": "The game",
+    "choosing": "Still playing: {names}",
     "afterRound": "After round {n}",
     "final": "How the game ended",
     "score": "Score",
@@ -1564,6 +1562,14 @@
     "rematchJoin": "Join the rematch",
     "hours": "{n} h",
     "newBadge": "New badge",
-    "newBadges": "New badges"
+    "newBadges": "New badges",
+    "sheetTitle": "Round {round} of {total} · {time} left",
+    "playedShort": "{ready}/{total} played",
+    "placeShort": "#{place}",
+    "played": "Has played",
+    "playing": "Playing…",
+    "movedUp": "Up {n}",
+    "movedDown": "Down {n}",
+    "worth": "Net worth {worth}"
   }
 }

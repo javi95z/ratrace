@@ -280,7 +280,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
     return (
       <div className="mx-auto grid min-h-dvh w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
         {skipLinks}
-        <aside id="player-profile" tabIndex={-1} aria-label={profile('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden pb-5 pt-2">
+        <aside id="player-profile" tabIndex={-1} aria-label={profile('title')} className="no-scrollbar top-safe sticky flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden pb-5 pt-2">
           {heading}
           {/* No negative margin to line it up: a column that scrolls down would then scroll sideways too. */}
           <Hud skyline={false} flush />
@@ -303,7 +303,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           ) : null}
         </div>
 
-        <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar sticky top-0 flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
+        <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar top-safe sticky flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden py-5">
           <Headlines />
           {stage === 'finance' ? (
             <div id="round-orders" tabIndex={-1}><Panel title={finance('basketTitle')}><BasketList /></Panel></div>
