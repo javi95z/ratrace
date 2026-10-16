@@ -35,12 +35,17 @@ export function listOf(rows: readonly KindRow[], now: number): string[] {
 
 /** The rows of what `supabase db query` printed, or null if it printed none. */
 export function rowsOf(output: string): KindRow[] | null {
-  const start = output.indexOf('{');
-  const end = output.lastIndexOf('}');
-  if (start < 0 || end < start) return null;
+  // Asked for JSON, the CLI answers a plain list in a terminal, and the rows wrapped with a warning for an agent.
+  const starts = [output.indexOf('['), output.indexOf('{')].filter((at) => at >= 0);
+  if (starts.length === 0) return null;
+  const start = Math.min(...starts);
+  const end = Math.max(output.lastIndexOf(']'), output.lastIndexOf('}'));
+  if (end < start) return null;
   try {
-    const parsed = JSON.parse(output.slice(start, end + 1)) as { rows?: unknown };
-    return Array.isArray(parsed.rows) ? (parsed.rows as KindRow[]) : null;
+    const parsed = JSON.parse(output.slice(start, end + 1)) as unknown;
+    if (Array.isArray(parsed)) return parsed as KindRow[];
+    const rows = (parsed as { rows?: unknown } | null)?.rows;
+    return Array.isArray(rows) ? (rows as KindRow[]) : null;
   } catch {
     return null;
   }

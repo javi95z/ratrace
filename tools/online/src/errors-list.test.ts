@@ -31,6 +31,9 @@ describe('the list of errors', () => {
 
   it('reads the rows the database printed, and nothing that is not them', () => {
     expect(rowsOf('Initialising...\n{"rows":[{"source":"page"}],"warning":"untrusted"}')).toEqual([{ source: 'page' }]);
+    // In a terminal, asked for JSON, the CLI answers a plain list.
+    expect(rowsOf('Initialising login role...\n[\n  {\n    "source": "page"\n  }\n]\n')).toEqual([{ source: 'page' }]);
+    expect(rowsOf('[]')).toEqual([]);
     expect(rowsOf('no json here')).toBeNull();
     expect(rowsOf('{"message":"no rows"}')).toBeNull();
   });

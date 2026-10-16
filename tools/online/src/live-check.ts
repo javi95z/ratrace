@@ -58,7 +58,7 @@ const statusOf = (result: { error: unknown }): number => {
 
 /** Asks the linked database through the CLI, as its owner: for the rows this check makes and removes itself. Null if it could not. */
 function asOwner(sql: string): Array<Record<string, unknown>> | null {
-  const run = spawnSync('supabase', ['db', 'query', '--linked', sql], { cwd: root, encoding: 'utf8' });
+  const run = spawnSync('supabase', ['db', 'query', '--linked', '--output-format', 'json', sql], { cwd: root, encoding: 'utf8' });
   // A query that fails says why: the check that needed it is the one that fails.
   if (run.status !== 0) console.error(`  supabase db query failed (${run.status ?? run.error?.message}): ${`${run.stderr}`.trim().slice(-300)}`);
   return run.status === 0 ? (rowsOf(`${run.stdout}`) as Array<Record<string, unknown>> | null) : null;
