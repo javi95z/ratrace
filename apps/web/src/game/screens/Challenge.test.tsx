@@ -131,18 +131,18 @@ describe('the weekly challenge on the front door', () => {
 
   it('says the attempt is still to play, and how long the week has left', async () => {
     draw({ challengeEntry: async () => ({ entered: false, score: null }) });
-    expect(await screen.findByText(/^To play · ends (today|in \d days?)$/)).toBeTruthy();
+    expect(await screen.findByText(/^(Ends today|\d days? left)$/)).toBeTruthy();
   });
 
-  it('says where the player came once they have played it', async () => {
+  it('says only that it is played, once it is', async () => {
     const ranking: ChallengeRanking = { rows: [{ place: 3, userId: 'me', nickname: null, score: 300, finishedAt: 0, mine: true }] as unknown as ChallengeRanking['rows'], entrants: 41 };
     draw({ challengeEntry: async () => ({ entered: true, score: 300 }), challengeRanking: async () => ranking });
-    expect(await screen.findByText('Played · #3 of 41')).toBeTruthy();
+    expect(await screen.findByText('Played')).toBeTruthy();
   });
 
   it('says how long is left to a player with no account', async () => {
     draw(null);
-    expect(await screen.findByText(/^To play · /)).toBeTruthy();
+    expect(await screen.findByText(/^(Ends today|\d days? left)$/)).toBeTruthy();
   });
 });
 

@@ -38,19 +38,14 @@ export function WeeklyChallengeCard() {
   const week = useThisWeek();
   const ruleText = useRuleText();
   const community = useCommunity();
-  // Where the player stands in the week: not asked where nobody is signed in, and said only once known.
-  const [standing, setStanding] = useState<{ entered: boolean; place: number | null; entrants: number } | null>(null);
+  // Whether the player has had their attempt: not asked where nobody is signed in, and said only once known.
+  const [entered, setEntered] = useState<boolean | null>(null);
   useEffect(() => {
     if (week === null || community === null) return;
     let live = true;
-    void (async () => {
-      const entry = await community.challengeEntry(week.week);
-      if (!live || entry === null) return;
-      if (!entry.entered) return setStanding({ entered: false, place: null, entrants: 0 });
-      const ranking = await community.challengeRanking(week.week);
-      if (!live) return;
-      setStanding({ entered: true, place: ranking?.rows.find((row) => row.mine)?.place ?? null, entrants: ranking?.entrants ?? 0 });
-    })();
+    void community.challengeEntry(week.week).then((entry) => {
+      if (live && entry !== null) setEntered(entry.entered);
+    });
     return () => {
       live = false;
     };
@@ -59,31 +54,18 @@ export function WeeklyChallengeCard() {
   const rule = ruleText(week.rule);
   // The days left of the week, today not counted: none on its Sunday.
   const days = Math.max(0, Math.floor((lastDay(week.week) + 86_400_000 - Date.now()) / 86_400_000));
-  const state =
-    standing?.entered === true
-      ? standing.place !== null
-        ? t('cardPlayedAt', { place: standing.place, total: standing.entrants })
-        : t('cardPlayed')
-      : t('cardPending', { days });
 
   return (
-    <Link href="/challenge" className="frame-raised frame-gold flex min-h-[84px] w-full items-center gap-3 bg-night-600 p-2 text-left">
-      <Well className="size-[64px]">
-        <Sprite id={portraitArt(week.lifeId, 22)} fallback={{ w: 60, h: 60 }} />
-      </Well>
-      <span className="flex min-w-0 flex-1 flex-col justify-center">
-        <span className="pixel flex items-center gap-1.5 text-[13px] uppercase tracking-wider text-gold-500">
-          <Sprite id={CHALLENGE_ART.icon} />
-          {t('title')}
+    <Link href="/challenge" className="frame-raised flex min-h-12 w-full items-center gap-2.5 bg-night-600 px-3 py-1.5 text-left">
+      <Sprite id={CHALLENGE_ART.icon} />
+      <span className="min-w-0 flex-1">
+        <span className="pixel block truncate text-[15px] text-gold-500">{t('title')}</span>
+        <span className="block truncate text-[12px] text-ink-200">
+          {text.lives[week.lifeId]?.name ?? week.lifeId} · {rule.name}
         </span>
-        <span className="pixel mt-0.5 block truncate text-[19px] text-cream">{text.lives[week.lifeId]?.name ?? week.lifeId}</span>
-        <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[12px] text-ink-200">
-          <Sprite id={ruleArt[week.rule]} />
-          <span className="truncate">{rule.name}</span>
-        </span>
-        <span className={`mt-0.5 block truncate text-[12px] ${standing?.entered ? 'text-teal-300' : 'text-gold-200'}`}>{state}</span>
       </span>
-      <span aria-hidden className="pixel shrink-0 px-1 text-[18px] text-gold-500">
+      <span className={`shrink-0 text-right text-[12px] ${entered ? 'text-teal-300' : 'text-gold-200'}`}>{entered ? t('cardPlayed') : t('cardPending', { days })}</span>
+      <span aria-hidden className="pixel shrink-0 text-[16px] text-gold-500">
         ›
       </span>
     </Link>

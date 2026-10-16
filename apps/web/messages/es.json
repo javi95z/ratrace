@@ -67,7 +67,7 @@
     "room": "Multijugador",
     "inRoom": "Volver a tu partida",
     "roomLobby": "Esperando para empezar · {count} de {max}",
-    "roomOver": "Acabada · {place}.º de {total}",
+    "roomOver": "Acabada · #{place} de {total}",
     "roomTurn": "Te toca · quedan {time}",
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
@@ -237,7 +237,7 @@
       "government": "Gobierno"
     },
     "paper": "El Diario de la Rueda",
-    "issue": "Nº {n}"
+    "issue": "Núm. {n}"
   },
   "crisis": {
     "label": "Crisis · año {year} de {of}",
@@ -1139,7 +1139,7 @@
     "practice": "Práctica {week}",
     "multiplayer": "Multijugador",
     "players": "{count, plural, one {# jugador} other {# jugadores}}",
-    "placeShort": "{place}.º de {total}"
+    "placeShort": "#{place} de {total}"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -1458,9 +1458,8 @@
         "about": "Empiezas con {amount} más y una familia que no te deja vivir por debajo de lo acomodado."
       }
     },
-    "cardPending": "Pendiente · {days, plural, =0 {acaba hoy} one {acaba en # día} other {acaba en # días}}",
-    "cardPlayed": "Jugado",
-    "cardPlayedAt": "Jugado · {place}.º de {total}"
+    "cardPending": "{days, plural, =0 {Acaba hoy} one {Queda # día} other {Quedan # días}}",
+    "cardPlayed": "Jugado"
   },
   "rivals": {
     "topic": "Tu gente",
@@ -1572,11 +1571,36 @@
     "newBadges": "Insignias nuevas",
     "sheetTitle": "Ronda {round} de {total} · quedan {time}",
     "playedShort": "{ready}/{total} han jugado",
-    "placeShort": "{place}.º",
+    "placeShort": "#{place}",
     "played": "Ya ha jugado",
     "playing": "Jugando…",
     "movedUp": "Sube {n}",
     "movedDown": "Baja {n}",
-    "worth": "Patrimonio {worth}"
+    "worth": "Patrimonio {worth}",
+    "nameYourself": "Ponte nombre",
+    "renameShort": "Cambiar",
+    "renameTitle": "Tu nombre",
+    "renameAbout": "Así te verán los demás en las partidas y en las clasificaciones. De 3 a 16 letras, números o _.",
+    "shoutTitle": "Decir algo",
+    "shoutAbout": "Lo verán todos en la partida durante un momento.",
+    "shoutWait": "Puedes volver a decir algo en {n} s",
+    "shout0": "¡Bien jugado!",
+    "shout1": "¡Voy a por ti!",
+    "shout2": "¡Qué suerte!",
+    "shout3": "Vaya ronda…",
+    "shout4": "¡A la luna!",
+    "shout5": "Me arruino",
+    "shout6": "Paciencia…",
+    "shout7": "¡Date prisa!",
+    "paperTopic": "Tu partida",
+    "paperLead": "{who} se pone en cabeza de la partida",
+    "paperLeadMe": "Te pones en cabeza de la partida",
+    "paperPassed": "Adelantas a {who}",
+    "paperPassedBy": "{who} te adelanta",
+    "paperJump": "{who} da el pelotazo: +{n} puntos",
+    "paperJumpMe": "Das el pelotazo: +{n} puntos",
+    "paperDrop": "{who} se hunde: −{n} puntos",
+    "paperDropMe": "Te hundes: −{n} puntos",
+    "paperNeck": "Empate técnico en cabeza entre {who} y {other}"
   }
 }

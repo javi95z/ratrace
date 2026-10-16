@@ -1458,9 +1458,8 @@
         "about": "You start with {amount} more, and a family who will not see you live below the comfortable."
       }
     },
-    "cardPending": "To play · {days, plural, =0 {ends today} one {ends in # day} other {ends in # days}}",
-    "cardPlayed": "Played",
-    "cardPlayedAt": "Played · #{place} of {total}"
+    "cardPending": "{days, plural, =0 {Ends today} one {# day left} other {# days left}}",
+    "cardPlayed": "Played"
   },
   "rivals": {
     "topic": "Your people",
@@ -1577,6 +1576,31 @@
     "playing": "Playing…",
     "movedUp": "Up {n}",
     "movedDown": "Down {n}",
-    "worth": "Net worth {worth}"
+    "worth": "Net worth {worth}",
+    "nameYourself": "Name yourself",
+    "renameShort": "Change",
+    "renameTitle": "Your name",
+    "renameAbout": "How the others will see you in games and in the rankings. 3 to 16 letters, numbers or _.",
+    "shoutTitle": "Say something",
+    "shoutAbout": "Everyone in the game sees it for a moment.",
+    "shoutWait": "You can say something again in {n} s",
+    "shout0": "Well played!",
+    "shout1": "Coming for you!",
+    "shout2": "Lucky you!",
+    "shout3": "What a round…",
+    "shout4": "To the moon!",
+    "shout5": "I'm going broke",
+    "shout6": "Patience…",
+    "shout7": "Hurry up!",
+    "paperTopic": "Your game",
+    "paperLead": "{who} takes the lead of the game",
+    "paperLeadMe": "You take the lead of the game",
+    "paperPassed": "You overtake {who}",
+    "paperPassedBy": "{who} overtakes you",
+    "paperJump": "{who} strikes it rich: +{n} points",
+    "paperJumpMe": "You strike it rich: +{n} points",
+    "paperDrop": "{who} sinks: −{n} points",
+    "paperDropMe": "You sink: −{n} points",
+    "paperNeck": "Neck and neck at the top: {who} and {other}"
   }
 }

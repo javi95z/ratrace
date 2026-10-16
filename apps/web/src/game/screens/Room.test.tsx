@@ -224,6 +224,29 @@ describe('a round in a room', () => {
     expect(within(order).getByText('You')).toBeTruthy();
   });
 
+  it('shouts to the others from the bar, one every ten seconds, and shows what they shout', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Say something' }));
+    const sheet = screen.getByRole('dialog', { name: 'Say something' });
+    await user.click(within(sheet).getByRole('button', { name: 'Well played!' }));
+    await waitFor(() => expect(server.db.members.find((m) => m.user_id === HOST)?.shout).toBe(6));
+    // Again at once: the sheet says to wait.
+    await user.click(screen.getByRole('button', { name: 'Say something' }));
+    expect(within(screen.getByRole('dialog', { name: 'Say something' })).getByText(/^You can say something again in \d+ s$/)).toBeTruthy();
+    expect((within(screen.getByRole('dialog', { name: 'Say something' })).getByRole('button', { name: 'Hurry up!' }) as HTMLButtonElement).disabled).toBe(true);
+    // What the other shouts comes to this page as it hears the room change.
+    await act(async () => {
+      await server.ask(B, { action: 'shout', roomId: room.id, shout: 0 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    await waitFor(() => expect(screen.getAllByRole('status').some((status) => status.textContent === 'RRat BBBB😂')).toBe(true));
+  });
+
   it('opens the room\'s order and the way out from the bar, and asks before giving the life up', async () => {
     const server = roomServer();
     const room = await lobby(server);

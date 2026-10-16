@@ -64,7 +64,7 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, reaction: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, reaction: null, shout: null }]);
     expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false });
   });
 
@@ -469,6 +469,30 @@ describe('reactions', () => {
     server.wait(90_000 + GRACE_MS + 1);
     for (const reaction of [5, -1, 1.5, '1', undefined]) expect((await server.ask(B, { action: 'react', roomId: room, reaction })).status, String(reaction)).toBe(400);
     expect((await server.ask(B, { action: 'react', roomId: room, reaction: null })).status).toBe(200);
+  });
+});
+
+describe('shouts', () => {
+  it('reach everyone in the game, one every ten seconds at most, from the list alone', async () => {
+    const opened = await begun(roomServer(), 90);
+    const { server, room } = opened;
+    expect((await server.ask(B, { action: 'shout', roomId: room, shout: 7 })).status).toBe(200);
+    const seen = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(seen.members.map((m) => (m as unknown as { shout: { n: number } | null }).shout?.n ?? null)).toEqual([null, 7]);
+    expect(await server.ask(B, { action: 'shout', roomId: room, shout: 1 })).toMatchObject({ status: 409, body: { error: 'soon' } });
+    server.wait(10_001);
+    expect((await server.ask(B, { action: 'shout', roomId: room, shout: 1 })).status).toBe(200);
+    for (const shout of [14, -1, 2.5, 'hola', null]) expect((await server.ask(B, { action: 'shout', roomId: room, shout })).status, String(shout)).toBe(400);
+    // A minute on, it is no longer news.
+    server.wait(61_000);
+    const later = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(later.members.every((m) => (m as unknown as { shout: unknown }).shout === null)).toBe(true);
+  });
+
+  it('can be sent while waiting for the game to start', async () => {
+    const server = roomServer();
+    const opened = roomOf(await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 90, ...VERSIONS }));
+    expect((await server.ask(HOST, { action: 'shout', roomId: opened.id, shout: 0 })).status).toBe(200);
   });
 });
 

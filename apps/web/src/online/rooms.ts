@@ -1,6 +1,6 @@
 import { Unreachable } from '@/session/errors';
 import type { RankedRun, RankedStep } from '@/session/ranked';
-import { REACTIONS, RoomRefused } from '@/session/room';
+import { REACTIONS, RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
 import type { RoomGameOver, RoomLife, RoomMember, RoomsApi, RoomState } from '@/session/room';
 
 /**
@@ -12,6 +12,14 @@ export type RoomsCall = (body: Record<string, unknown>) => Promise<{ status: num
 
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const STATUSES = new Set(['open', 'playing', 'finished', 'closed']);
+
+/** A shout as the server tells of it, or null if it is not one the page knows. */
+function shoutOf(raw: unknown): { n: number; at: number } | null {
+  if (!isRecord(raw) || !Number.isInteger(raw.n) || typeof raw.at !== 'string') return null;
+  const n = raw.n as number;
+  const at = Date.parse(raw.at);
+  return n >= 0 && n < SHOUT_FACES.length + SHOUT_PHRASES && !Number.isNaN(at) ? { n, at } : null;
+}
 
 /** A member as the server tells of them, or null if it is not one. */
 function memberOf(raw: unknown): RoomMember | null {
@@ -37,8 +45,14 @@ function memberOf(raw: unknown): RoomMember | null {
               isRecord(standing.before) && typeof standing.before.score === 'number' && typeof standing.before.place === 'number'
                 ? { score: standing.before.score, place: standing.before.place }
                 : null,
+            cityId: typeof standing.cityId === 'string' ? standing.cityId : null,
+            career:
+              isRecord(standing.career) && typeof standing.career.id === 'string' && typeof standing.career.level === 'number'
+                ? { id: standing.career.id, level: standing.career.level }
+                : null,
           },
     reaction: Number.isInteger(raw.reaction) && (raw.reaction as number) >= 0 && (raw.reaction as number) < REACTIONS.length ? (raw.reaction as number) : null,
+    shout: shoutOf(raw.shout),
   };
 }
 
@@ -200,6 +214,12 @@ export function roomsApi(call: RoomsCall): RoomsApi {
     rematch: async (roomId, lifeId, versions) => room(await ask({ action: 'rematch', roomId, lifeId, engineVersion: versions.engine, contentVersion: versions.content })),
     async react(roomId, reaction) {
       const reply = await ask({ action: 'react', roomId, reaction });
+      if (reply.status === 404 || reply.status === 409) return 'gone';
+      return room(reply);
+    },
+    async shout(roomId, shout) {
+      const reply = await ask({ action: 'shout', roomId, shout });
+      if (reply.status === 409 && isRecord(reply.body) && reply.body.error === 'soon') return 'soon';
       if (reply.status === 404 || reply.status === 409) return 'gone';
       return room(reply);
     },

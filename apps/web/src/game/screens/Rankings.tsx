@@ -18,8 +18,8 @@ import { WorthGraph } from './WorthGraph';
 type Kind = 'all' | 'week' | 'friends' | 'challenge';
 const KINDS: readonly Kind[] = ['all', 'week', 'friends', 'challenge'];
 /** How a name is written. The database checks it again, and what it says. */
-const NAME = /^[A-Za-z0-9_]{3,16}$/;
-const FIELD = 'sunk min-h-11 w-full bg-night-900 px-3 text-[16px] text-cream';
+export const NAME = /^[A-Za-z0-9_]{3,16}$/;
+export const FIELD = 'sunk min-h-11 w-full bg-night-900 px-3 text-[16px] text-cream';
 
 /** What a player with no name is told apart by: the start of their id. */
 const tagOf = (userId: string) => userId.slice(0, 4).toUpperCase();

@@ -53,6 +53,9 @@ export interface Standing {
   bankruptcies: number;
   /** How the member stood the round before, for what changed: their score and their place. Null after the first round. */
   before?: { score: number; place: number } | null;
+  /** Where they live, and their job and its rung: what the others may know of a life once the round has turned. */
+  cityId?: string;
+  career?: { id: string; level: number } | null;
 }
 
 /** A row of `room_players`, without its room. */
@@ -66,6 +69,9 @@ export interface MemberRow {
   /** The face the member put on a round, and which round: shown until the next one turns. */
   reaction: number | null;
   reaction_round: number | null;
+  /** The last thing the member shouted to the others, and when. */
+  shout: number | null;
+  shout_at: string | null;
 }
 
 /** A member's game, as far as a room reads it. */
@@ -145,6 +151,8 @@ export interface RoomsDeps {
   rematch(oldRoom: string, room: { id: string; host: string; life_id: string; engine_version: string; content_version: string; seconds: number }): Promise<{ room: string; code: string } | { error: string; room?: string; code?: string }>;
   /** Puts a member's face on the round that turned last, or takes it off with null. `closed` if the room or the member is not in play. */
   react(roomId: string, userId: string, reaction: number | null): Promise<'ok' | 'closed'>;
+  /** Sends a member's shout to everyone in the room. `soon` if they sent one a moment ago, `closed` if they cannot. */
+  shout(roomId: string, userId: string, shout: number, now: Date): Promise<'ok' | 'soon' | 'closed'>;
   /** The rooms the player was in that are over, the latest first, at most `limit`, each with everyone who was in it. */
   history(userId: string, limit: number): Promise<Array<{ room: RoomRow; members: MemberRow[] }>>;
   /** Tells players, on the devices that asked for notices, that their game needs them. Never fails: a notice lost is no reason to refuse a move. */
@@ -156,6 +164,10 @@ export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 
 
 /** How many faces a member may put on a round: the page draws them, the server keeps their number. */
 export const REACTIONS = 5;
+/** How many shouts there are to choose from: the page draws them, the server keeps their number. */
+export const SHOUTS = 14;
+/** How long a shout is news: a page that comes back later does not show it. */
+const SHOUT_FRESH_MS = 60_000;
 /** How many games over a history holds. */
 export const HISTORY_LIMIT = 20;
 
@@ -230,6 +242,8 @@ function standingOf(game: GameModule, played: Played): Standing {
     status: game.livedStatus(played.state),
     escaped: played.state.player.escapedAtRound !== null,
     bankruptcies: played.bankruptcies,
+    ...(played.state.player.cityId ? { cityId: played.state.player.cityId } : {}),
+    career: played.state.player.life?.career ? { id: played.state.player.life.career.id, level: played.state.player.life.career.level } : null,
   };
 }
 
@@ -301,6 +315,7 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
       standing: m.standing ?? null,
       // A face put on the round that turned last; an older one is no longer news.
       reaction: m.left_at === null && m.reaction !== null && m.reaction_round === room.round ? m.reaction : null,
+      shout: m.left_at === null && m.shout !== null && m.shout_at !== null && deps.now().getTime() - Date.parse(m.shout_at) < SHOUT_FRESH_MS ? { n: m.shout, at: new Date(m.shout_at).toISOString() } : null,
     })),
     // The rematch of a room that is over, while it waits in its lobby for whoever wants it.
     rematch: room.rematch === null ? null : await rematchOf(deps, room.rematch),
@@ -451,6 +466,7 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
       case 'card':
       case 'submit':
       case 'react':
+      case 'shout':
         return await inRoom(games, deps, userId, raw);
       default:
         return bad('action');
@@ -604,6 +620,15 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   const game = games[versionsOf(room)];
 
   if (raw.action === 'state') return { status: 200, body: { room: await roomBody(games, deps, room, members, userId) } };
+
+  if (raw.action === 'shout') {
+    const { shout } = raw;
+    if (!(Number.isInteger(shout) && (shout as number) >= 0 && (shout as number) < SHOUTS)) return bad('shout');
+    const said = await deps.shout(room.id, userId, shout as number, deps.now());
+    if (said === 'closed') return closed;
+    if (said === 'soon') return { status: 409, body: { error: 'soon' } };
+    return await answerRoom(games, deps, room.id, userId);
+  }
 
   if (raw.action === 'react') {
     const { reaction } = raw;

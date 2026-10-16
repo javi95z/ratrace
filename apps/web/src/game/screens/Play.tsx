@@ -290,7 +290,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
 
         <div className="@container flex min-h-dvh min-w-0 flex-col">
           {/* Art is drawn at twice its size only where the column has room for a card that wide. */}
-          {room ? <div className="mx-auto w-full max-w-[680px] pt-3">{room.bar}</div> : null}
+          {room ? <div className="mx-auto w-full max-w-[680px] px-3 pt-3">{room.bar}</div> : null}
           <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
             <StageView stage={stage} desk />
             {afterStage}

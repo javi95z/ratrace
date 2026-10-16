@@ -3,15 +3,17 @@
 import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
-import { GameScope, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
+import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
 import type { GameStore } from '@/game/store';
 import { Link } from '@/i18n/navigation';
-import { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS } from '@/game/room';
+import { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/game/room';
 import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { Play } from './Play';
+import { FIELD, NAME } from './Rankings';
+import { RoomPaper } from '@/game/roomStory';
 import type { RoomSlots } from './Play';
 
 /** The refusals the server gives in words of its own. Any other is told as a refusal with no reason. */
@@ -502,6 +504,7 @@ function Lobby({ room }: { room: RoomState }) {
               <span className="min-w-0 flex-1 truncate text-[15px]">{nameOf(member)}</span>
               {member.host ? <Tag>{t('host')}</Tag> : null}
               {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
+              {member.me ? <RenameButton named={member.name !== null} /> : null}
             </li>
           ))}
         </ul>
@@ -519,12 +522,188 @@ function Lobby({ room }: { room: RoomState }) {
         </p>
       )}
       <Refusal />
+      <ShoutButton wide />
+      <Heard room={room} />
       <Button variant="quiet" wide disabled={busy} onClick={() => (me?.host ? setAsking(true) : void leave())}>
         {t('leave')}
       </Button>
       <LeaveSheet room={room} open={asking} onClose={() => setAsking(false)} />
       <Toast message={copied ? t('copied') : null} onDone={() => setCopied(false)} />
     </Page>
+  );
+}
+
+/** The way for the player to name themselves where the others will see it: in the lobby, before the game begins. */
+function RenameButton({ named }: { named: boolean }) {
+  const t = useT('room');
+  const ranks = useT('rankings');
+  const common = useT('common');
+  const community = useCommunity();
+  const refresh = useRoom((s) => s.refresh);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [problem, setProblem] = useState<'invalid' | 'taken' | 'refused' | 'failed' | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (community === null) return null;
+  const save = async () => {
+    const asked = name.trim();
+    // How it is written is checked here, before anyone is asked. What it says is the database's to judge.
+    if (!NAME.test(asked)) return setProblem('invalid');
+    setBusy(true);
+    const answer = await community.rename(asked);
+    setBusy(false);
+    if (answer !== 'ok') return setProblem(answer);
+    setOpen(false);
+    await refresh();
+  };
+  return (
+    <>
+      <Button
+        variant="quiet"
+        className="shrink-0 px-2 text-[13px]"
+        onClick={() => {
+          setName('');
+          setProblem(null);
+          setOpen(true);
+        }}
+      >
+        {t(named ? 'renameShort' : 'nameYourself')}
+      </Button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('renameTitle')} closeLabel={common('close')}>
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save();
+          }}
+        >
+          <p className="text-[14px] leading-snug text-ink-200">{t('renameAbout')}</p>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {ranks('name')}
+            <input value={name} onChange={(event) => setName(event.target.value)} maxLength={16} autoComplete="off" autoCapitalize="off" spellCheck={false} className={FIELD} />
+          </label>
+          {problem ? (
+            <p role="alert" className="text-[13px] text-wine-300">
+              {ranks(problem)}
+            </p>
+          ) : null}
+          <Button variant="primary" wide type="submit" disabled={busy}>
+            {ranks('save')}
+          </Button>
+        </form>
+      </Sheet>
+    </>
+  );
+}
+
+/** The phrases a member may shout, by their number after the faces. */
+const PHRASES = ['shout0', 'shout1', 'shout2', 'shout3', 'shout4', 'shout5', 'shout6', 'shout7'] as const;
+/** How long a shout stays on screen. */
+const SHOUT_SHOWN_MS = 4_000;
+
+/** What a shout says: a face, or one of the phrases. */
+function useShoutText() {
+  const t = useT('room');
+  return (n: number) => (n < SHOUT_FACES.length ? SHOUT_FACES[n] : t(PHRASES[Math.min(n - SHOUT_FACES.length, SHOUT_PHRASES - 1)]));
+}
+
+/** The way to shout to the others: a face or a phrase from a short list, one every ten seconds. */
+function ShoutButton({ wide = false }: { wide?: boolean }) {
+  const t = useT('room');
+  const common = useT('common');
+  const shout = useRoom((s) => s.shout);
+  const textOf = useShoutText();
+  const [open, setOpen] = useState(false);
+  const [until, setUntil] = useState(0);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (until <= Date.now()) return;
+    const timer = setInterval(() => tick((n) => n + 1), 500);
+    return () => clearInterval(timer);
+  }, [until]);
+  const wait = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  const send = async (n: number) => {
+    const said = await shout(n);
+    if (said === 'ok') {
+      setUntil(Date.now() + SHOUT_EVERY_MS);
+      setOpen(false);
+    } else if (said === 'soon') setUntil(Date.now() + SHOUT_EVERY_MS);
+  };
+  return (
+    <>
+      {wide ? (
+        <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
+          <span aria-hidden>💬</span>
+          {t('shoutTitle')}
+        </Button>
+      ) : (
+        <button type="button" aria-haspopup="dialog" aria-label={t('shoutTitle')} onClick={() => setOpen(true)} className="frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 text-[20px]">
+          <span aria-hidden>💬</span>
+        </button>
+      )}
+      <Sheet open={open} onClose={() => setOpen(false)} title={t('shoutTitle')} closeLabel={common('close')}>
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-6 gap-2">
+            {SHOUT_FACES.map((face, n) => (
+              <button key={face} type="button" disabled={wait > 0} aria-label={face} onClick={() => void send(n)} className="frame-raised flex aspect-square items-center justify-center bg-night-700 text-[24px] disabled:opacity-50">
+                {face}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {PHRASES.map((key, at) => (
+              <button
+                key={key}
+                type="button"
+                disabled={wait > 0}
+                onClick={() => void send(SHOUT_FACES.length + at)}
+                className="frame-raised min-h-11 bg-night-600 px-2 py-1.5 text-left text-[14px] leading-tight disabled:opacity-50"
+              >
+                {textOf(SHOUT_FACES.length + at)}
+              </button>
+            ))}
+          </div>
+          <p role="status" className="text-center text-[12px] text-ink-300">
+            {wait > 0 ? t('shoutWait', { n: wait }) : t('shoutAbout')}
+          </p>
+        </div>
+      </Sheet>
+    </>
+  );
+}
+
+/** What the others shouted, each for a moment at the top of the screen, as they come. */
+function Heard({ room }: { room: RoomState }) {
+  const heard = useRoom((s) => s.heard);
+  const dismiss = useRoom((s) => s.dismissHeard);
+  const nameOf = useNameOf();
+  const textOf = useShoutText();
+  const first = heard[0];
+  useEffect(() => {
+    if (!first) return;
+    const timer = setTimeout(() => dismiss(first.key), SHOUT_SHOWN_MS);
+    return () => clearTimeout(timer);
+  }, [first, dismiss]);
+  if (heard.length === 0) return null;
+  return (
+    <div role="status" aria-live="polite" className="top-safe pointer-events-none fixed inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 pt-3">
+      {heard.map((shout) => {
+        const member = room.members.find((one) => one.userId === shout.userId);
+        const name = member ? nameOf(member) : '';
+        const face = shout.n < SHOUT_FACES.length;
+        return (
+          <div key={shout.key} className="frame-raised flex max-w-sm animate-rise items-center gap-2.5 bg-night-700 px-3 py-2">
+            <span aria-hidden className="pixel flex size-8 shrink-0 items-center justify-center bg-night-900 text-[15px] text-gold-500">
+              {name.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[12px] text-ink-300">{name}</span>
+              <span className={face ? 'inline-block animate-pop text-[26px] leading-none' : 'pixel block text-[16px] text-cream'}>{textOf(shout.n)}</span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -541,7 +720,7 @@ function rankOf(members: readonly RoomMember[], member: RoomMember): number {
  */
 function Standings({ room, live = false }: { room: RoomState; live?: boolean }) {
   const t = useT('room');
-  const { fmt } = useWords();
+  const { fmt, names, text } = useWords();
   const nameOf = useNameOf();
   const list = ordered(room.members);
   const inPlay = live && room.status === 'playing';
@@ -579,6 +758,11 @@ function Standings({ room, live = false }: { room: RoomState; live?: boolean }) 
                     </span>
                   ) : null}
                 </span>
+                {standing && (standing.cityId || standing.career) ? (
+                  <span className="block truncate text-[12px] text-ink-200">
+                    {[standing.cityId ? names.cities[standing.cityId] : null, standing.career ? text.careers[standing.career.id]?.levels[standing.career.level] : null].filter(Boolean).join(' · ')}
+                  </span>
+                ) : null}
                 <span className="flex flex-wrap gap-x-2 text-[12px] text-ink-300">
                   {member.left ? <span>{t('left')}</span> : null}
                   {standing ? <span>{t('worth', { worth: fmt.compact(standing.netWorth) })}</span> : null}
@@ -623,13 +807,13 @@ function RoomBar({ room }: { room: RoomState }) {
   const share = left === null || room.seconds <= 0 ? 0 : Math.max(0, Math.min(1, left / room.seconds));
   const title = room.status === 'playing' ? t('sheetTitle', { round: Math.min(room.round + 1, room.rounds), total: room.rounds, time }) : t('final');
   return (
-    <>
+    <div className="flex gap-2">
       <button
         type="button"
         aria-haspopup="dialog"
         aria-label={t('bar', { time, ready, total: here.length })}
         onClick={() => setOpen(true)}
-        className="frame-raised flex w-full flex-col bg-night-700 text-left"
+        className="frame-raised flex min-w-0 flex-1 flex-col bg-night-700 text-left"
       >
         <span className="flex min-h-11 w-full items-center gap-3 px-3 py-1.5">
           <span aria-hidden className={`pixel min-w-14 shrink-0 text-[22px] tabular-nums ${low ? 'text-wine-300' : 'text-gold-500'}`}>
@@ -678,7 +862,8 @@ function RoomBar({ room }: { room: RoomState }) {
         ) : null}
       </Sheet>
       <LeaveSheet room={room} open={leaving} onClose={() => setLeaving(false)} />
-    </>
+      <ShoutButton />
+    </div>
   );
 }
 
@@ -771,17 +956,20 @@ function RoomScreens({ room }: { room: RoomState }) {
   };
   return (
     <>
-      <Play room={slots} />
+      <RoomPaper.Provider value={room.members}>
+        <Play room={slots} />
+      </RoomPaper.Provider>
+      <Heard room={room} />
       <Toast message={missed > 0 ? t('missed', { count: missed }) : null} onDone={clearMissed} ms={6_000} />
     </>
   );
 }
 
-/** True when the player's game is in play and waits for them: they have not played the round yet. */
-export function useRoomTurn(): boolean {
+/** True while the player is in a game that is not over: waiting to start, or in play, whoever it waits for. */
+export function useRoomLive(): boolean {
   return useRoom((s) => {
     const me = s.room?.members.find((member) => member.me);
-    return s.status === 'in' && s.room?.status === 'playing' && me !== undefined && !me.left && !me.ready;
+    return s.status === 'in' && (s.room?.status === 'open' || s.room?.status === 'playing') && me !== undefined && !me.left;
   });
 }
 

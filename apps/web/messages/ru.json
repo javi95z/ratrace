@@ -67,7 +67,7 @@
     "room": "Мультиплеер",
     "inRoom": "Вернуться в партию",
     "roomLobby": "Ждём начала · {count} из {max}",
-    "roomOver": "Окончена · {place}-е из {total}",
+    "roomOver": "Окончена · #{place} из {total}",
     "roomTurn": "Твой ход · осталось {time}",
     "roomWaiting": "Ждём: {names}",
     "roomRematch": "Реванш ждёт",
@@ -1139,7 +1139,7 @@
     "practice": "Тренировка {week}",
     "multiplayer": "Мультиплеер",
     "players": "{count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
-    "placeShort": "{place}-е из {total}"
+    "placeShort": "#{place} из {total}"
   },
   "share": {
     "open": "Поделиться жизнью",
@@ -1458,9 +1458,8 @@
         "about": "Старт с лишними {amount} и семьёй, которая не позволит жить ниже уровня «с комфортом»."
       }
     },
-    "cardPending": "Не сыграно · {days, plural, =0 {заканчивается сегодня} one {остался # день} few {осталось # дня} many {осталось # дней} other {осталось # дня}}",
-    "cardPlayed": "Сыграно",
-    "cardPlayedAt": "Сыграно · {place}-е из {total}"
+    "cardPending": "{days, plural, =0 {Сегодня последний день} one {Остался # день} few {Осталось # дня} many {Осталось # дней} other {Осталось # дня}}",
+    "cardPlayed": "Сыграно"
   },
   "rivals": {
     "topic": "Твои люди",
@@ -1572,11 +1571,36 @@
     "newBadges": "Новые значки",
     "sheetTitle": "Раунд {round} из {total} · осталось {time}",
     "playedShort": "{ready}/{total} сыграли",
-    "placeShort": "{place}-е",
+    "placeShort": "#{place}",
     "played": "Ход сделан",
     "playing": "Играет…",
     "movedUp": "Вверх на {n}",
     "movedDown": "Вниз на {n}",
-    "worth": "Капитал {worth}"
+    "worth": "Капитал {worth}",
+    "nameYourself": "Выбрать имя",
+    "renameShort": "Изменить",
+    "renameTitle": "Твоё имя",
+    "renameAbout": "Так тебя увидят другие в партиях и рейтингах. От 3 до 16 букв, цифр или _.",
+    "shoutTitle": "Сказать",
+    "shoutAbout": "Все в партии увидят это на мгновение.",
+    "shoutWait": "Снова сказать можно через {n} с",
+    "shout0": "Хорошо сыграно!",
+    "shout1": "Иду за тобой!",
+    "shout2": "Везёт же!",
+    "shout3": "Ну и раунд…",
+    "shout4": "На Луну!",
+    "shout5": "Я разоряюсь",
+    "shout6": "Терпение…",
+    "shout7": "Поторопись!",
+    "paperTopic": "Твоя партия",
+    "paperLead": "{who} выходит в лидеры партии",
+    "paperLeadMe": "Ты выходишь в лидеры партии",
+    "paperPassed": "Ты обгоняешь: {who}",
+    "paperPassedBy": "Тебя обгоняет {who}",
+    "paperJump": "{who} срывает куш: +{n} очков",
+    "paperJumpMe": "Ты срываешь куш: +{n} очков",
+    "paperDrop": "{who} идёт ко дну: −{n} очков",
+    "paperDropMe": "Ты идёшь ко дну: −{n} очков",
+    "paperNeck": "Ноздря в ноздрю на вершине: {who} и {other}"
   }
 }

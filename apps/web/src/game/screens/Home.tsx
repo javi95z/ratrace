@@ -10,7 +10,7 @@ import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { WeeklyChallengeCard } from './Challenge';
-import { RoomCard, useRoomTurn } from './Room';
+import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, SaveStatus } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
@@ -36,8 +36,8 @@ export function Home() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const inProgress = status === 'playing' && view !== null && lifeId !== null && stage !== 'end';
-  // A game with friends waiting for the player comes before everything else, in gold.
-  const turn = useRoomTurn();
+  // A game with friends that is not over comes before everything else, in gold.
+  const turn = useRoomLive();
   // Whoever has played before knows the game: the rat and its line make way for what they came for.
   const runs = useRuns();
   const returning = inProgress || (runs !== null && runs.length > 0);

@@ -27,6 +27,9 @@ export interface RoomStanding {
   bankruptcies: number;
   /** How they stood the round before: their score and their place. Null after the first round. */
   before: { score: number; place: number } | null;
+  /** Where they live, and their job and its rung, as the round left them. Null where the server did not say. */
+  cityId: string | null;
+  career: { id: string; level: number } | null;
 }
 
 export interface RoomMember {
@@ -42,7 +45,15 @@ export interface RoomMember {
   standing: RoomStanding | null;
   /** The face they put on the round that turned last, as a number of `REACTIONS`; null for none. */
   reaction: number | null;
+  /** The last thing they shouted to everyone, as a number of `SHOUTS`, and when by the server's clock; null for nothing lately. */
+  shout: { n: number; at: number } | null;
 }
+
+/** What a member may shout to the others: six faces, then eight phrases, by their number. Only these, so there is nothing to moderate. */
+export const SHOUT_FACES = ['😂', '😱', '🔥', '💸', '👑', '👋'] as const;
+export const SHOUT_PHRASES = 8;
+/** How long after a shout the server takes another from the same member. */
+export const SHOUT_EVERY_MS = 10_000;
 
 /** The faces a member may put on a round, in the order the server numbers them. */
 export const REACTIONS = ['😂', '😱', '💸', '👑', '🙈'] as const;
@@ -133,6 +144,8 @@ export interface RoomsApi {
   react(roomId: string, reaction: number | null): Promise<RoomState | 'gone'>;
   /** The games over the player was in, the latest first. */
   history(): Promise<RoomGameOver[]>;
+  /** Shouts to everyone in the room. `soon` if the player shouted a moment ago, `gone` if they are not in it. */
+  shout(roomId: string, shout: number): Promise<RoomState | 'soon' | 'gone'>;
 }
 
 /** The rooms of the player's account: the server, and a way to hear of every change to one room. */

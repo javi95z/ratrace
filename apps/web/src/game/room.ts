@@ -12,7 +12,7 @@ import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS } from '@/session/room';
+export { MAX_MEMBERS, MIN_MEMBERS, REACTIONS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
 export type { RoomGameOver, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
@@ -45,6 +45,8 @@ export interface RoomStoreState {
   otherRules: boolean;
   /** The multiplayer badges the room that is over has just earned the player, for the end to show. */
   earned: string[];
+  /** What the others have shouted that the page has still to show, the oldest first. */
+  heard: Array<{ key: string; userId: string; n: number }>;
 }
 
 export interface RoomActions {
@@ -61,6 +63,10 @@ export interface RoomActions {
   react(reaction: number | null): Promise<void>;
   /** The games over the player was in, the latest first. Null when they cannot be asked for just now. */
   history(): Promise<RoomGameOver[] | null>;
+  /** Shouts to the others. `soon` if the player shouted a moment ago; `failed` if it did not get through. */
+  shout(n: number): Promise<'ok' | 'soon' | 'failed'>;
+  /** Takes a shout off once it has been shown. */
+  dismissHeard(key: string): void;
   /** Asks the server how the room stands now. */
   refresh(): Promise<void>;
   clearRefusal(): void;
@@ -89,7 +95,10 @@ export interface RoomStoreOptions {
   onSaveError?(error: unknown): void;
 }
 
-const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, earned: [] };
+const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, earned: [], heard: [] };
+
+/** The most shouts waiting to be shown at once: past that, the oldest go unshown. */
+const HEARD_MAX = 3;
 
 /** How a room that is over ended for the player, for its badges. */
 export function resultOf(room: RoomState): { won: boolean; players: number; rematch: boolean } {
@@ -128,6 +137,8 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
   let left: string | null = null;
   /** The rooms over whose badges this page has judged, so that each is judged once. */
   const judged = new Set<string>();
+  /** The last shout of each member this page has heard, by when it was shouted. */
+  const shoutsHeard = new Map<string, number>();
   /** The last round, by room, in which this page saw the player ready: a round they played, not one the clock played for them. */
   const readyIn = new Map<string, number>();
 
@@ -243,7 +254,16 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           void again.catch((error: unknown) => console.error('the life in the room could not be brought up to date:', error));
         }
       }
-      set({ status: 'in', room, skew, game, missed, otherRules, earned: was?.id === room.id ? get().earned : [] });
+      // What the others shouted since this page last heard: each shout once, the player's own never.
+      let heard = was?.id === room.id ? get().heard : [];
+      for (const member of room.members) {
+        if (member.me || member.shout === null) continue;
+        const key = `${room.id}/${member.userId}`;
+        if ((shoutsHeard.get(key) ?? 0) >= member.shout.at) continue;
+        shoutsHeard.set(key, member.shout.at);
+        heard = [...heard, { key: `${key}/${member.shout.at}`, userId: member.userId, n: member.shout.n }].slice(-HEARD_MAX);
+      }
+      set({ status: 'in', room, skew, game, missed, otherRules, earned: was?.id === room.id ? get().earned : [], heard });
       release(room);
       if (room.status === 'finished' && !judged.has(room.id)) {
         judged.add(room.id);
@@ -371,6 +391,26 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           // A face that did not get through is no loss: the round goes on without it.
           if (!(error instanceof Unreachable) && !(error instanceof RoomRefused)) throw error;
         }
+      },
+
+      async shout(n) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const now = await rooms.shout(room.id, n);
+          if (now === 'soon') return 'soon';
+          if (now === 'gone') return 'failed';
+          if (get().room?.id === now.id) adopt(now);
+          return 'ok';
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      dismissHeard(key) {
+        set({ heard: get().heard.filter((shout) => shout.key !== key) });
       },
 
       async history() {

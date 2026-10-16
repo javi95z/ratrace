@@ -13,7 +13,8 @@ export interface GameState {
   finished: boolean;
   /** Whether the round is waiting for its cards to be answered, or for its orders. */
   phase: 'cards' | 'finance';
-  player: { escapedAtRound: number | null };
+  /** What a room may tell the others of a player once a round has turned: where they live, and their job. */
+  player: { escapedAtRound: number | null; cityId?: string; life?: { career?: { id: string; level: number } | null } };
 }
 
 /** A life played again, with the record of it: what the badges and the graph of a finished life are made from. */

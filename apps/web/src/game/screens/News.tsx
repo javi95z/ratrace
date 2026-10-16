@@ -5,6 +5,8 @@ import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
 import { rivalNews } from '@/game/rivals';
+import { roomStory, useRoomPaper } from '@/game/roomStory';
+import type { RoomStory } from '@/game/roomStory';
 import { useRivals } from '@/game/useRivals';
 import { Panel } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
@@ -41,6 +43,25 @@ const TOPIC: Record<Headline['topic'], string> = {
   government: 'bg-sky-200',
 };
 
+/** The story of a game with friends in the words of the paper. */
+function storyText(t: (key: string, values?: Record<string, string | number>) => string, story: RoomStory): string {
+  const name = (member: { name: string | null; userId: string }) => member.name ?? t('nameless', { tag: member.userId.slice(0, 4).toUpperCase() });
+  switch (story.kind) {
+    case 'lead':
+      return story.me ? t('paperLeadMe') : t('paperLead', { who: name(story.who) });
+    case 'passed':
+      return t('paperPassed', { who: name(story.who) });
+    case 'passedBy':
+      return t('paperPassedBy', { who: name(story.who) });
+    case 'jump':
+      return story.me ? t('paperJumpMe', { n: story.points }) : t('paperJump', { who: name(story.who), n: story.points });
+    case 'drop':
+      return story.me ? t('paperDropMe', { n: story.points }) : t('paperDrop', { who: name(story.who), n: story.points });
+    case 'neck':
+      return t('paperNeck', { who: name(story.who), other: name(story.other) });
+  }
+}
+
 /** The headlines about the next two years, and the gauges of the economy. */
 export function Headlines() {
   const t = useT('news');
@@ -50,10 +71,14 @@ export function Headlines() {
   const history = useGame((s) => s.history);
   const people = useRivals();
   const r = useT('rivals');
+  const room = useT('room');
+  const players = useRoomPaper();
   if (!view) return null;
   const world = view.timeline[view.round];
-  // The people the player grew up with make the paper too, now and then.
-  const gossip = people ? rivalNews(people.rivals, history, view.round) : null;
+  // In a game with friends the paper tells of the players themselves; alone, of the people the player grew up with, now and then.
+  const story = players ? roomStory(players) : null;
+  const gossip = players === null && people ? rivalNews(people.rivals, history, view.round) : null;
+  const told = story ? storyText(room, story) : gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -85,16 +110,16 @@ export function Headlines() {
               </span>
             </li>
           ))}
-          {gossip && people ? (
+          {told ? (
             <li className="flex items-center gap-2.5 border-t border-dashed border-ink-300 py-1.5">
               <span aria-hidden className="flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 bg-gold-200 p-1">
-                <Sprite id="icon.percentile" />
+                <Sprite id={story ? 'icon.skill_network' : 'icon.percentile'} />
               </span>
               <span className="min-w-0">
                 <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
-                  {r('topic')}
+                  {story ? room('paperTopic') : r('topic')}
                 </span>
-                <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{r(`stories.${gossip.story}`, { who: people.who(gossip.rival) })}</span>
+                <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{told}</span>
               </span>
             </li>
           ) : null}
