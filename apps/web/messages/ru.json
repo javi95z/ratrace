@@ -95,7 +95,12 @@
     "modeRanked": "Рейтинговая",
     "modeRankedHint": "В рейтинг",
     "modeFree": "Офлайн",
-    "modeFreeHint": "Только для тебя"
+    "modeFreeHint": "Только для тебя",
+    "difficulty": "Сложность: {level}",
+    "level1": "легко",
+    "level2": "средне",
+    "level3": "сложно",
+    "lockedMany": "{count, plural, one {# жизнь ещё закрыта} few {# жизни ещё закрыты} many {# жизней ещё закрыто} other {# жизни ещё закрыты}}"
   },
   "hud": {
     "cash": "Наличные",

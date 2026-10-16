@@ -95,7 +95,12 @@
     "modeRanked": "Ranked",
     "modeRankedHint": "For the ranking",
     "modeFree": "Offline",
-    "modeFreeHint": "Just for you"
+    "modeFreeHint": "Just for you",
+    "difficulty": "Difficulty: {level}",
+    "level1": "easy",
+    "level2": "normal",
+    "level3": "hard",
+    "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}"
   },
   "hud": {
     "cash": "Cash",

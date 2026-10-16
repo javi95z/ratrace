@@ -6,17 +6,18 @@ import type { KeyboardEvent } from 'react';
 import { useGame, useProfile, useRanking, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
-import { Button, Segmented, Tag, Well } from '@/ui/kit';
+import { Button, Segmented, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useKeyboardContext } from '@/ui/keyboard';
+import { Difficulty, LifeSummary } from './LifeSummary';
 
 /** Choose who to be. A locked life shows what unlocks it. */
 export function NewLife() {
   useKeyboardContext('new-life');
   const t = useT('newLife');
   const common = useT('common');
-  const { content, text, names, fmt } = useWords();
+  const { content, text } = useWords();
   const router = useRouter();
   const start = useGame((s) => s.start);
   const elsewhere = useGame((s) => s.elsewhere);
@@ -44,6 +45,8 @@ export function NewLife() {
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
   const available = lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id));
+  const locked = lives.filter((life) => !available.includes(life));
+  const [showLocked, setShowLocked] = useState(false);
   const chooseAndFocus = (id: string) => {
     setChosen(id);
     const button = lifeList.current?.querySelector<HTMLElement>(`[data-life="${id}"]`);
@@ -52,7 +55,7 @@ export function NewLife() {
   };
   const moveLife = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.altKey || event.ctrlKey || event.metaKey || available.length === 0) return;
-    const direction = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+    const direction = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0;
     if (direction || event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
       const at = Math.max(0, available.findIndex((life) => life.id === chosen));
@@ -117,10 +120,9 @@ export function NewLife() {
         <h1 className="pixel text-[24px] text-gold-500">{t('title')}</h1>
       </div>
 
-      <div ref={lifeList} role="radiogroup" aria-label={t('title')} aria-orientation="vertical" onKeyDown={moveLife} className="flex flex-col gap-3">
-        {lives.map((life) => {
-          const written = text.lives[life.id];
-          const locked = life.unlock !== 'default' && !Object.hasOwn(unlocked, life.id);
+      {/* The lives that can be lived, two to a row; the one chosen opens across the row with what it is. */}
+      <div ref={lifeList} role="radiogroup" aria-label={t('title')} onKeyDown={moveLife} className="grid grid-flow-row-dense grid-cols-2 gap-2">
+        {available.map((life) => {
           const on = chosen === life.id;
           return (
             <button
@@ -130,34 +132,63 @@ export function NewLife() {
               aria-checked={on}
               tabIndex={on ? 0 : -1}
               data-life={life.id}
-              disabled={locked}
               onClick={() => setChosen(life.id)}
-              className={`frame-raised flex gap-3 p-2 text-left ${on ? 'frame-gold bg-night-600' : 'bg-night-700'} ${locked ? 'opacity-60' : ''}`}
+              className={`frame-raised flex min-h-[72px] items-center gap-2 p-1.5 text-left ${on ? 'frame-gold col-span-2 bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}
             >
-              <Well className="size-[68px]">
-                <Sprite id={locked ? 'icon.locked' : portraitArt(life.id, 22)} fallback={{ w: 64, h: 64 }} />
+              <Well className={on ? 'size-[68px]' : 'size-[52px]'}>
+                <Sprite id={portraitArt(life.id, 22)} fallback={{ w: 64, h: 64 }} />
               </Well>
-              <span className="min-w-0 flex-1">
-                <span className="pixel block text-[18px]">{written.name}</span>
-                {locked ? (
-                  <span className="mt-1 block text-[13px] text-ink-200">
-                    <span className="pixel text-gold-500">{t('unlock')}: </span>
-                    {written.unlock}
-                  </span>
-                ) : (
-                  <span className="mt-0.5 block text-[12px] text-ink-200">
-                    {t('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}
-                  </span>
-                )}
-                <span className="mt-1.5 flex flex-col items-start gap-1">
-                  <Tag tone="good">{written.perk}</Tag>
-                  <Tag tone="bad">{written.handicap}</Tag>
+              {on ? (
+                <LifeSummary lifeId={life.id} light />
+              ) : (
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span className="text-[13px] leading-tight">{text.lives[life.id].name}</span>
+                  <Difficulty lifeId={life.id} />
                 </span>
-              </span>
+              )}
             </button>
           );
         })}
       </div>
+
+      {/* What is still locked waits at the foot, folded: what unlocks each is there for whoever wants to know. */}
+      {locked.length > 0 ? (
+        <section className="mt-3">
+          <button
+            type="button"
+            aria-expanded={showLocked}
+            onClick={() => setShowLocked((open) => !open)}
+            className="frame-raised flex min-h-11 w-full items-center justify-between gap-2 bg-night-800 px-3 text-left text-[14px] text-ink-200"
+          >
+            <span className="flex items-center gap-2">
+              <Sprite id="icon.locked" />
+              {t('lockedMany', { count: locked.length })}
+            </span>
+            <span aria-hidden className="pixel text-ink-300">
+              {showLocked ? '▴' : '▾'}
+            </span>
+          </button>
+          {showLocked ? (
+            <ul className="mt-2 flex flex-col divide-y-2 divide-night-900">
+              {locked.map((life) => (
+                <li key={life.id} className="flex items-center gap-3 py-2 opacity-80">
+                  <Well className="size-11">
+                    <Sprite id="icon.locked" fallback={{ w: 32, h: 32 }} />
+                  </Well>
+                  <span className="min-w-0 flex-1">
+                    <span className="pixel block text-[15px]">{text.lives[life.id].name}</span>
+                    <span className="block text-[12px] leading-snug text-ink-300">
+                      <span className="text-gold-500">{t('unlock')}: </span>
+                      {text.lives[life.id].unlock}
+                    </span>
+                  </span>
+                  <Difficulty lifeId={life.id} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="pb-safe fixed inset-x-0 bottom-0 z-10 bg-night-900 pt-3">
         {/* As wide as the page above it: the same column, the same margins. */}

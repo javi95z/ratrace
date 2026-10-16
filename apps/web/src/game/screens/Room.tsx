@@ -1,6 +1,6 @@
 'use client';
 
-import { badgeArt, cityIcon, lives, portraitArt } from '@ratrace/content';
+import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
@@ -11,6 +11,7 @@ import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
+import { Difficulty, LifeSummary } from './LifeSummary';
 import { Play } from './Play';
 import { FIELD, NAME } from './Rankings';
 import { RoomPaper } from '@/game/roomStory';
@@ -288,38 +289,18 @@ function LifePicker({ label, lives: choices, value, onChange }: { label: string;
             className={`frame-raised flex min-h-[72px] items-center gap-2 px-1 py-1 text-left ${on ? 'frame-cream col-span-2 bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
           >
             <Sprite id={portraitArt(life.id, 22)} className="shrink-0" fallback={{ w: 64, h: 64 }} />
-            {on ? <LifeAbout lifeId={life.id} /> : <span className="min-w-0 text-[13px] leading-tight">{life.name}</span>}
+            {on ? (
+              <LifeSummary lifeId={life.id} light />
+            ) : (
+              <span className="flex min-w-0 flex-col gap-1">
+                <span className="text-[13px] leading-tight">{life.name}</span>
+                <Difficulty lifeId={life.id} />
+              </span>
+            )}
           </button>
         );
       })}
     </div>
-  );
-}
-
-/** What a life chosen for a game is: where it starts and with how much, what it is good at, and what holds it back. */
-function LifeAbout({ lifeId }: { lifeId: string }) {
-  const newLife = useT('newLife');
-  const { text, names, fmt } = useWords();
-  const life = lives.find((one) => one.id === lifeId);
-  const written = text.lives[lifeId];
-  if (!life || !written) return null;
-  return (
-    <span className="flex min-w-0 flex-1 flex-col items-start gap-1 py-1 pr-1">
-      <span className="pixel text-[16px] leading-tight">{written.name}</span>
-      <span className="sr-only">{newLife('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>
-      <span aria-hidden className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-900">
-        <span className="flex items-center gap-1">
-          <Sprite id={cityIcon(life.start.cityId)} />
-          {names.cities[life.start.cityId]}
-        </span>
-        <span className="pixel flex items-center gap-1 text-[14px]">
-          <Sprite id="icon.cash" />
-          {fmt.money(life.start.cash)}
-        </span>
-      </span>
-      <Tag tone="good">{written.perk}</Tag>
-      <Tag tone="bad">{written.handicap}</Tag>
-    </span>
   );
 }
 

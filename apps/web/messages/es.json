@@ -95,7 +95,12 @@
     "modeRanked": "Clasificatoria",
     "modeRankedHint": "Para el ranking",
     "modeFree": "Offline",
-    "modeFreeHint": "Solo para ti"
+    "modeFreeHint": "Solo para ti",
+    "difficulty": "Dificultad: {level}",
+    "level1": "fácil",
+    "level2": "media",
+    "level3": "difícil",
+    "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}"
   },
   "hud": {
     "cash": "Efectivo",
