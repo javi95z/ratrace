@@ -53,6 +53,7 @@ function accountInTheCloud() {
     },
     listRuns: async () => held.runs,
     finishRun: async () => 'done',
+    reportErrors: async () => 'sent',
     rankedLife: async () => null,
     giveUpRanked: async () => {},
     ranked: {} as Cloud['ranked'],

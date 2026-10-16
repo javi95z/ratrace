@@ -1,5 +1,6 @@
 import type { RankedApi } from '@/session/ranked';
 import type { RoomsLink } from '@/session/room';
+import type { ErrorReport, Sent } from './errors';
 import type { SyncCloud } from './mirror';
 import type { Account, AccountNotice, AccountState, Community } from './types';
 
@@ -34,6 +35,8 @@ export interface Cloud extends SyncCloud {
   ensureProfile(userId: string, language: string): Promise<void>;
   /** Calls `listener` whenever who is signed in changes. Returns how to stop. */
   onUser(listener: (user: CloudUser | null) => void): () => void;
+  /** Sends the errors a page met, to be kept with the server's: see `docs/errors.md`. */
+  reportErrors(reports: ErrorReport[]): Promise<Sent>;
 }
 
 const FAILURES = ['error', 'error_code', 'error_description'];

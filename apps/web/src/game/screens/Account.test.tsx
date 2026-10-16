@@ -163,6 +163,7 @@ describe('the account in the settings', () => {
       saveProgress: async () => {},
       listRuns: async () => [],
       finishRun: async () => 'done',
+      reportErrors: async () => 'sent',
       rankedLife: async () => null,
     giveUpRanked: async () => {},
       ranked: {} as Cloud['ranked'],

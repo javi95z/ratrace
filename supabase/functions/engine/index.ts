@@ -8,13 +8,16 @@
 // code runs (`verify_jwt`, on by default), and `withSupabase` checks it again, reads who it is,
 // and answers a browser's preflight with the headers the Supabase client sends.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
+import { watched } from '../_shared/watch.ts';
 import { GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { allowed } from '../_shared/rate.ts';
 import { replayRequest } from '../_shared/replay.ts';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+  fetch: withSupabase({ auth: 'user' }, watched('engine', async (req: Request, ctx: SupabaseContext) => {
     const userId = ctx.userClaims?.id;
     if (typeof userId !== 'string') return json(401, { error: 'no-player' });
     const read = await readJson(req);
@@ -23,5 +26,5 @@ export default {
     if (!(await allowed(ctx.supabaseAdmin, userId, 'engine'))) return json(429, { error: 'too-many' });
     const reply = replayRequest(GAMES, read.value);
     return json(reply.status, reply.body);
-  }),
+  }, noting)),
 };

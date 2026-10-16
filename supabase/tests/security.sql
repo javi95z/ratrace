@@ -41,6 +41,8 @@ declare
   room_t uuid := gen_random_uuid();
   ge uuid := gen_random_uuid();
   gd uuid := gen_random_uuid();
+  fp text := 'test-' || replace(gen_random_uuid()::text, '-', '');
+  far timestamptz := '2099-06-01 12:00:00+00';
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -915,6 +917,45 @@ begin
   exception when others then
     failed := array_append(failed, format('the rooms after review stopped on: %s (%s)', sqlerrm, sqlstate));
   end;
+
+  -- ---------------------------------------------------------------- errors
+  reset role;
+  -- Nobody but the server reads or writes the errors, or notes one.
+  if (select count(*) from information_schema.role_table_grants where table_schema = 'public' and table_name = 'error_kinds' and grantee in ('anon', 'authenticated')) = 0
+     and not has_function_privilege('authenticated', 'public.note_error(text, text, text, text, text, text, text, timestamptz)', 'execute')
+     and not has_function_privilege('anon', 'public.note_error(text, text, text, text, text, text, text, timestamptz)', 'execute')
+    then passed := passed + 1; else failed := array_append(failed, 'a player or a visitor can reach the errors'); end if;
+  -- (Every test row is dated far ahead, where no real error is, and the whole block is undone at the end.)
+  -- A kind seen for the first time is kept, and says it is worth an alert; seen again at once, it is counted and not alerted again.
+  j := public.note_error(fp, 'page', '/play', 'boom', 'at play (app.js)', '0.1.0/1.0.0', 'Chrome 140', far);
+  if (j ->> 'alert')::boolean and (j ->> 'seen')::int = 1 then passed := passed + 1; else failed := array_append(failed, format('a new kind of error answered %s', j)); end if;
+  j := public.note_error(fp, 'page', '/play', 'boom again', 'at play (app.js)', '0.1.1/1.0.0', 'Firefox 131', far + interval '1 minute');
+  if not (j ->> 'alert')::boolean and (j ->> 'seen')::int = 2
+     and (select message || ' ' || build || ' ' || browser from public.error_kinds where fingerprint = fp) = 'boom again 0.1.1/1.0.0 Firefox 131'
+     and (select first_seen from public.error_kinds where fingerprint = fp) = far
+    then passed := passed + 1; else failed := array_append(failed, format('a kind seen again answered %s', j)); end if;
+  -- Back after a quiet day, it is worth an alert again.
+  j := public.note_error(fp, 'page', '/play', 'boom', null, null, null, far + interval '25 hours');
+  if (j ->> 'alert')::boolean and (j ->> 'seen')::int = 3 then passed := passed + 1; else failed := array_append(failed, format('a kind back after a day answered %s', j)); end if;
+  -- No more than ten alerts in an hour, whatever comes: the eleventh new kind is kept, and not alerted.
+  for n in 1..10 loop
+    perform public.note_error(fp || '-' || n, 'function', 'ranked', 'kind ' || n, null, null, null, far + interval '3 days' + n * interval '1 second');
+  end loop;
+  j := public.note_error(fp || '-11', 'function', 'ranked', 'kind 11', null, null, null, far + interval '3 days' + interval '20 seconds');
+  if not (j ->> 'alert')::boolean and exists (select 1 from public.error_kinds where fingerprint = fp || '-11')
+    then passed := passed + 1; else failed := array_append(failed, format('the eleventh alert of an hour answered %s', j)); end if;
+  -- What is not one of the two sources, or too long to be an error, is refused.
+  begin
+    perform public.note_error(fp || '-x', 'mail', '/play', 'boom', null, null, null, far);
+    failed := array_append(failed, 'an error of an unknown source was kept');
+  exception when check_violation then passed := passed + 1;
+  end;
+  -- The table holds a thousand kinds at most: the ones seen longest ago make room.
+  for n in 1..1001 loop
+    perform public.note_error(fp || '-old-' || n, 'page', '/', 'old ' || n, null, null, null, timestamptz '2000-01-01 00:00:00+00' + n * interval '1 second');
+  end loop;
+  if not exists (select 1 from public.error_kinds where fingerprint = fp || '-old-1') and exists (select 1 from public.error_kinds where fingerprint = fp || '-old-1001')
+    then passed := passed + 1; else failed := array_append(failed, 'the kinds seen longest ago did not make room'); end if;
 
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;

@@ -6,6 +6,9 @@
 //   any other since.
 // Neither is sent to a player who has had their notice of the day already.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
+import { watched } from '../_shared/watch.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { isoWeek, noticeOf } from '../_shared/notice.ts';
 import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
@@ -20,7 +23,7 @@ const PAGE = 500;
 const WEEK_MS = 7 * 86_400_000;
 
 export default {
-  fetch: withSupabase({ auth: 'secret' }, async (req: Request, ctx) => {
+  fetch: withSupabase({ auth: 'secret' }, watched('weekly-notice', async (req: Request, ctx: SupabaseContext) => {
     if (!vapid()) return json(500, { error: 'no-vapid-keys' });
     const read = await readJson(req);
     const kind = 'value' in read && (read.value as { kind?: unknown } | null)?.kind === 'idle' ? 'idle' : 'weekly';
@@ -59,5 +62,5 @@ export default {
       if (rows.length < PAGE) break;
     }
     return json(200, { kind, sent, removed, skipped });
-  }),
+  }, noting)),
 };

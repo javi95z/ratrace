@@ -8,6 +8,9 @@
 // It reads and writes with the project's secret key, which the platform gives it and which skips
 // the rules that keep players out of ranked games. Who is asking comes from the token, never the body.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
+import { watched } from '../_shared/watch.ts';
 import type { RunRow } from '../_shared/finish.ts';
 import { CURRENT, GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
@@ -19,7 +22,7 @@ import { allowed } from '../_shared/rate.ts';
 const ROW = 'id, user_id, mode, life_id, engine_version, content_version, round, status, log, updated_at, challenge';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+  fetch: withSupabase({ auth: 'user' }, watched('ranked', async (req: Request, ctx: SupabaseContext) => {
     const userId = ctx.userClaims?.id;
     if (typeof userId !== 'string') return json(401, { error: 'no-player' });
     const read = await readJson(req);
@@ -84,5 +87,5 @@ export default {
       read.value,
     );
     return json(reply.status, reply.body);
-  }),
+  }, noting)),
 };

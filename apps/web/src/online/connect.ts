@@ -406,6 +406,13 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       if (word === 'unknown-version') return 'unknown-version';
       return word !== null && REFUSALS.has(word) ? 'refused' : 'failed';
     },
+    async reportErrors(reports) {
+      const { error } = await client.functions.invoke('report-error', { body: { reports } });
+      if (!error) return 'sent';
+      // The function's own no, to these reports or to this many in an hour: sent again, they would get the same.
+      const word = await wordOf(error);
+      return word === 'bad-request' || word === 'too-many' ? 'never' : 'later';
+    },
   };
 }
 

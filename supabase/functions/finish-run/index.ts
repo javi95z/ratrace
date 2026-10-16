@@ -7,6 +7,9 @@
 // It reads and writes with the project's secret key, which the platform gives it and which skips
 // the rules that keep players out of `runs`. Who is asking comes from the token, never the body.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
+import { watched } from '../_shared/watch.ts';
 import { finishRun } from '../_shared/finish.ts';
 import type { GameRow, RunRow } from '../_shared/finish.ts';
 import { GAMES } from '../_shared/game/index.ts';
@@ -14,7 +17,7 @@ import { json, readJson } from '../_shared/http.ts';
 import { allowed } from '../_shared/rate.ts';
 
 export default {
-  fetch: withSupabase({ auth: 'user' }, async (req: Request, ctx) => {
+  fetch: withSupabase({ auth: 'user' }, watched('finish-run', async (req: Request, ctx: SupabaseContext) => {
     const userId = ctx.userClaims?.id;
     if (typeof userId !== 'string') return json(401, { error: 'no-player' });
     const read = await readJson(req);
@@ -40,5 +43,5 @@ export default {
       read.value,
     );
     return json(reply.status, reply.body);
-  }),
+  }, noting)),
 };

@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@/session/memory';
-import { browserOnline, browserPage, givenUpIn, onlineOver } from './index';
+import { CONTENT_VERSION } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
+import type { ErrorReport } from './errors';
+import { browserOnline, browserPage, givenUpIn, onlineOver, watchErrors } from './index';
 import { offlineAccount } from './offline';
 import type { Cloud } from './supabase';
 
@@ -109,6 +112,62 @@ describe('the cloud of this browser', () => {
     expect(online.account.state()).toMatchObject({ kind: 'guest', userId: 'u-1' });
     expect(online.ranked()).toBe(ranked);
     expect(online.community()).toBe(community);
+  });
+
+  it('sends the errors of the page as whoever is signed in, and holds them while nobody is', async () => {
+    const sent: ErrorReport[][] = [];
+    const cloud = {
+      currentUser: async () => ({ id: 'u-1', is_anonymous: true }),
+      ensureProfile: async () => {},
+      onUser: () => () => {},
+      playingGames: async () => [],
+      loadProgress: async () => null,
+      listRuns: async () => [],
+      rankedLife: async () => null,
+      reportErrors: async (reports: ErrorReport[]) => (sent.push(reports), 'sent' as const),
+    } as unknown as Cloud;
+    const online = onlineOver(new MemoryStore(), {
+      connect: async () => cloud,
+      address: () => 'http://localhost/en',
+      clean: () => {},
+      page: { onOnline: () => () => {}, onShown: () => () => {}, now: () => 0 },
+      remember: { read: () => [], write: () => {} },
+      schedule: () => {},
+      newId: () => 'never',
+    });
+    const due: Array<() => void> = [];
+    const page = new EventTarget();
+    const log = { error: (...args: unknown[]) => void args };
+    const stop = watchErrors(online, page, log, (run) => void due.push(run));
+    log.error('the game refused a step:', new Error('no'));
+    for (const run of due.splice(0)) run();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // Nobody is signed in: there is nobody to send it as, and it waits.
+    expect(sent).toEqual([]);
+    await online.account.start('en');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(sent).toEqual([[{ message: 'the game refused a step: no', stack: expect.any(String), place: '/', build: `${ENGINE_VERSION}/${CONTENT_VERSION}`, browser: 'other' }]]);
+    stop();
+  });
+
+  it('watches the errors of a page only in a production build with a project', () => {
+    const own = console.error;
+    try {
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
+      browserOnline(new MemoryStore());
+      // Out of production, an error is the developer's to read, not to send.
+      expect(console.error).toBe(own);
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '');
+      browserOnline(new MemoryStore());
+      expect(console.error).toBe(own);
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
+      browserOnline(new MemoryStore());
+      expect(console.error).not.toBe(own);
+    } finally {
+      console.error = own;
+    }
   });
 
   it('keeps the note of lives given up where a closed page does not lose it, and reads nonsense there as nothing', () => {

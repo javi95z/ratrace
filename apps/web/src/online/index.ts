@@ -5,6 +5,8 @@ import type { RoomsLink } from '@/session/room';
 import type { PlayerStore } from '@/session/types';
 import { turnstile } from './captcha';
 import { connectSupabase } from './connect';
+import { browserOf, buildOf, errorWatch, watchPage } from './errors';
+import type { ErrorReport, Sent } from './errors';
 import { follow } from './follow';
 import type { Page } from './follow';
 import { MirroredStore } from './mirror';
@@ -26,6 +28,8 @@ export interface Online {
   rooms(): RoomsLink | null;
   /** The other players, while someone is signed in, and null otherwise. */
   community(): Community | null;
+  /** Sends the errors a page met, as whoever is signed in: 'later' while nobody is. */
+  reportErrors(reports: ErrorReport[]): Promise<Sent>;
 }
 
 /** What the cloud is made of. The browser's own in the game; a test hands in stand-ins for the network and the page. */
@@ -52,7 +56,36 @@ export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
   const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule, newId: parts.newId });
   follow(account, mirror, parts.page);
-  return { account, store: mirror, saves: mirror, ranked: () => account.cloud()?.ranked ?? null, rooms: () => account.cloud()?.rooms ?? null, community: () => account.cloud()?.community ?? null };
+  return {
+    account,
+    store: mirror,
+    saves: mirror,
+    ranked: () => account.cloud()?.ranked ?? null,
+    rooms: () => account.cloud()?.rooms ?? null,
+    community: () => account.cloud()?.community ?? null,
+    reportErrors: async (reports) => account.cloud()?.reportErrors(reports) ?? 'later',
+  };
+}
+
+/**
+ * Watches what goes wrong on this page and sends it, cleaned, as whoever is signed in: at once if
+ * someone is, and as soon as someone is if nobody is yet. See `docs/errors.md`. Returns how to stop.
+ */
+export function watchErrors(online: Pick<Online, 'account' | 'reportErrors'>, page: EventTarget, log: { error(...args: unknown[]): void }, schedule: (run: () => void, ms: number) => void): () => void {
+  const watch = errorWatch({
+    send: online.reportErrors,
+    place: () => window.location.pathname,
+    // Named in full, as the project's values below: the build writes it into the page only where it sees it so.
+    build: buildOf(ENGINE_VERSION, CONTENT_VERSION, process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA),
+    browser: browserOf(navigator.userAgent),
+    schedule,
+  });
+  const stopHearing = watchPage(watch, page, log);
+  const stopFollowing = online.account.subscribe(() => void watch.flush());
+  return () => {
+    stopHearing();
+    stopFollowing();
+  };
 }
 
 /**
@@ -105,12 +138,12 @@ export function browserOnline(device: PlayerStore): Online {
   // Named in full, because the build writes these two values into the page only where it sees them so.
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null, rooms: () => null, community: () => null };
+  if (!url || !key || typeof window === 'undefined') return { account: offlineAccount, store: device, saves: null, ranked: () => null, rooms: () => null, community: () => null, reportErrors: async () => 'never' };
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.NEXT_PUBLIC_SUPABASE_REGION || undefined;
   // The site key of the guard at the door of guest sign-in. Named, a guest is made only with its word; left out, there is no guard.
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || undefined;
-  return onlineOver(device, {
+  const online = onlineOver(device, {
     connect: () => connectSupabase(url, key, { region, captcha: siteKey ? turnstile(siteKey) : undefined }),
     address: () => window.location.href,
     clean: (address) => window.history.replaceState(window.history.state, '', address),
@@ -118,4 +151,7 @@ export function browserOnline(device: PlayerStore): Online {
     remember: givenUpIn(() => window.localStorage),
     newId: () => crypto.randomUUID(),
   });
+  // Out of production, an error is the developer's to read in the console, not to send. It lasts as long as the page.
+  if (process.env.NODE_ENV === 'production') watchErrors(online, window, console, (run, ms) => void window.setTimeout(run, ms));
+  return online;
 }

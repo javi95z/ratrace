@@ -13,6 +13,7 @@ const NO_SYNC = {
   saveProgress: async () => {},
   listRuns: async () => [],
   finishRun: async () => 'done' as const,
+  reportErrors: async () => 'sent' as const,
   rankedLife: async () => null,
   giveUpRanked: async () => {},
   // No test of the account plays a ranked life: that has tests of its own.

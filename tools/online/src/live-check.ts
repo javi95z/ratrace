@@ -16,6 +16,8 @@ import { content, CONTENT_VERSION, lives, replayLife } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, stateHash } from '@ratrace/engine';
 import type { LoggedRound } from '@ratrace/engine';
 import { createClient } from '@supabase/supabase-js';
+import { fingerprintOf, scrub } from '../../../supabase/functions/_shared/errors.ts';
+import { rowsOf } from './errors-list';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 // The two public values are read from the game's own file. A second checkout of the repository has no such
@@ -53,6 +55,12 @@ const statusOf = (result: { error: unknown }): number => {
   const context = (result.error as { context?: { status?: number } }).context;
   return typeof context?.status === 'number' ? context.status : 0;
 };
+
+/** Asks the linked database through the CLI, as its owner: for the rows this check makes and removes itself. Null if it could not. */
+function asOwner(sql: string): Array<Record<string, unknown>> | null {
+  const run = spawnSync('supabase', ['db', 'query', '--linked', sql], { cwd: root, encoding: 'utf8' });
+  return run.status === 0 ? (rowsOf(`${run.stdout}`) as Array<Record<string, unknown>> | null) : null;
+}
 
 const results: Array<{ ok: boolean; what: string }> = [];
 const check = (ok: boolean, what: string) => results.push({ ok, what });
@@ -103,6 +111,8 @@ const a = guest();
 const b = guest();
 const nobody = guest();
 const made: string[] = [];
+/** The kind of error this check notes, to be removed after it. */
+let probe: string | null = null;
 
 try {
   const inA = await a.auth.signInAnonymously();
@@ -315,6 +325,24 @@ try {
   const givenUp = await askRanked(a, { action: 'abandon', gameId: (third.data as { gameId: string }).gameId });
   check(statusOf(givenUp) === 200 && statusOf(await askRanked(a, { action: 'view', gameId: (third.data as { gameId: string }).gameId })) === 409, 'and a ranked life can be given up');
 
+  // ---------------------------------------------------------------- errors
+  // A page's error, sent as the game sends it. The kind is put there first, as if it had been seen a moment ago: the
+  // report is then the same kind again, which is noted and sends no alert, so this check never wakes anyone up.
+  const word = Array.from(crypto.getRandomValues(new Uint8Array(10)), (byte) => 'abcdefghijklmnopqrstuvwxyz'[byte % 26]).join('');
+  const said = `live check probe ${word} for ana@example.com`;
+  const keptSaid = scrub(said);
+  probe = await fingerprintOf('page', '/play', keptSaid, null);
+  const seeded = asOwner(`insert into public.error_kinds (fingerprint, source, place, message, seen, first_seen, last_seen, alerted_at) values ('${probe}', 'page', '/play', '${keptSaid}', 1, now(), now(), now()) returning seen`);
+  const reported = await a.functions.invoke('report-error', { body: { reports: [{ message: said, stack: null, place: '/es/play?code=QQQ#x', build: 'live-check', browser: 'live-check' }] } });
+  const noted = asOwner(`select seen, place, message, build, browser from public.error_kinds where fingerprint = '${probe}'`)?.[0];
+  check(seeded !== null && statusOf(reported) === 200 && (reported.data as { noted?: number } | null)?.noted === 1, 'a signed-in player reports the errors of a page');
+  check(noted?.seen === 2 && noted.place === '/play' && noted.message === keptSaid && noted.build === 'live-check', 'the server keeps them by kind, cleaned: no address, no query, no language');
+  check(statusOf(await nobody.functions.invoke('report-error', { body: { reports: [{ message: 'x', place: '/' }] } })) === 401, 'nobody with no account can report one');
+  check(statusOf(await a.functions.invoke('report-error', { body: { reports: [] } })) === 400, 'and nothing that is not a batch of reports is taken');
+  const peeked = await a.from('error_kinds').select('fingerprint').limit(1);
+  const forgedNote = await a.rpc('note_error', { p_fingerprint: 'x', p_source: 'page', p_place: '/', p_message: 'x', p_stack: null, p_build: null, p_browser: null, p_now: new Date().toISOString() });
+  check((peeked.error !== null || (peeked.data ?? []).length === 0) && forgedNote.error !== null, 'no player can read the errors kept, or note one past the function');
+
   // ---------------------------------------------------------------- rooms
   // The two guests open a room and join it, hear of it through Realtime, and play it through the real function a round
   // at a time: alike for three rounds, then one leaves while the other waits, which turns the round, and the other plays
@@ -420,6 +448,8 @@ try {
 } catch (error) {
   check(false, error instanceof Error ? error.message : String(error));
 } finally {
+  // The kind of error noted here goes, and nothing else of the errors.
+  if (probe !== null && /^[0-9a-f]{32}$/.test(probe)) check(asOwner(`delete from public.error_kinds where fingerprint = '${probe}' returning fingerprint`)?.length === 1, 'the error noted was removed afterwards');
   // The two guests and everything of theirs go, so the project is left as it was found.
   if (made.length > 0 && made.every((id) => /^[0-9a-f-]{36}$/.test(id))) {
     const gone = spawnSync('supabase', ['db', 'query', '--linked', `delete from auth.users where id in (${made.map((id) => `'${id}'`).join(', ')})`], { cwd: root, encoding: 'utf8' });

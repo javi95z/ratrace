@@ -261,6 +261,25 @@ describe('what the cloud keeps of a player', () => {
     }
   });
 
+  it('sends the errors of a page, and tells what the server will never take from what is worth another try', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    const reports = [{ message: 'boom', stack: null, place: '/play', build: '0.35.0/1.35.0', browser: 'Chrome 140 Android' }];
+    client.answers.invoke = { data: { noted: 1 }, error: null };
+    expect(await cloud.reportErrors(reports)).toBe('sent');
+    expect(client.asked).toEqual([['invoke', 'report-error', { body: { reports } }]]);
+    // The function's own no: these reports, or this many in an hour, it will not take.
+    const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
+    client.answers.invoke = said(400, { error: 'bad-request', field: 'reports' });
+    expect(await cloud.reportErrors(reports)).toBe('never');
+    client.answers.invoke = said(429, { error: 'too-many' });
+    expect(await cloud.reportErrors(reports)).toBe('never');
+    // Anything else is worth another try: not deployed yet, a session that has just run out, the server down, no network.
+    for (const context of [new Response('Not Found', { status: 404 }), new Response('{}', { status: 401 }), new Response('{"error":"server"}', { status: 500 }), undefined, new TypeError('failed to fetch')]) {
+      client.answers.invoke = { data: null, error: { context } };
+      expect(await cloud.reportErrors(reports)).toBe('later');
+    }
+  });
+
   it('gives up on a request that gets no answer, so that one stuck request does not stop everything after it', async () => {
     await connectSupabase('u', 'k');
     const through = (client.created[0][2] as { global: { fetch: typeof fetch } }).global.fetch;
