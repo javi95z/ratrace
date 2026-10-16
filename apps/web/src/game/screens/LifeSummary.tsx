@@ -7,10 +7,20 @@ import { Sprite } from '@/ui/Sprite';
 
 const LEVELS = ['level1', 'level2', 'level3'] as const;
 
-/** How hard a life is, as dots: one to three filled of three, and its word for whoever does not see them. */
-export function Difficulty({ lifeId, light = false }: { lifeId: string; light?: boolean }) {
+/**
+ * How hard a life is: as dots, one to three filled of three, with its word for whoever does not see
+ * them; or, where there is room, as the word itself.
+ */
+export function Difficulty({ lifeId, light = false, word = false }: { lifeId: string; light?: boolean; word?: boolean }) {
   const t = useT('newLife');
   const level = difficultyOf(lifeId);
+  if (word) {
+    return (
+      <span className={`pixel shrink-0 px-1.5 text-[11px] uppercase tracking-wider ${level === 1 ? 'bg-teal-600 text-cream' : level === 2 ? 'bg-gold-500 text-ink-900' : 'bg-wine-500 text-cream'}`}>
+        {t(LEVELS[level - 1])}
+      </span>
+    );
+  }
   return (
     <span role="img" aria-label={t('difficulty', { level: t(LEVELS[level - 1]) })} className={`pixel shrink-0 text-[11px] tracking-[0.15em] ${light ? 'text-ink-700' : 'text-gold-500'}`}>
       {'●'.repeat(level)}
@@ -33,7 +43,7 @@ export function LifeSummary({ lifeId, light = false }: { lifeId: string; light?:
     <span className="flex min-w-0 flex-1 flex-col items-start gap-1 py-1 pr-1">
       <span className="flex w-full items-center justify-between gap-2">
         <span className="pixel text-[17px] leading-tight">{written.name}</span>
-        <Difficulty lifeId={lifeId} light={light} />
+        <Difficulty lifeId={lifeId} light={light} word />
       </span>
       <span className="sr-only">{t('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>
       <span aria-hidden className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] ${light ? 'text-ink-900' : 'text-ink-200'}`}>
@@ -46,10 +56,8 @@ export function LifeSummary({ lifeId, light = false }: { lifeId: string; light?:
           {fmt.money(life.start.cash)}
         </span>
       </span>
-      <span className="text-[12px] leading-snug">
-        <span className={light ? 'text-teal-800' : 'text-teal-300'}>＋ {written.perk}</span>{' '}
-        <span className={light ? 'text-wine-700' : 'text-wine-300'}>− {written.handicap}</span>
-      </span>
+      <span className={`text-[12px] leading-snug ${light ? 'text-teal-800' : 'text-teal-300'}`}>＋ {written.perk}</span>
+      <span className={`text-[12px] leading-snug ${light ? 'text-wine-700' : 'text-wine-300'}`}>− {written.handicap}</span>
     </span>
   );
 }

@@ -135,7 +135,8 @@ export function NewLife() {
               onClick={() => setChosen(life.id)}
               className={`frame-raised flex min-h-[72px] items-center gap-2 p-1.5 text-left ${on ? 'frame-gold col-span-2 bg-cream text-ink-900' : 'bg-night-700 text-ink-200'}`}
             >
-              <Well className={on ? 'size-[68px]' : 'size-[52px]'}>
+              {/* The portrait at its own size: drawn at 64 pixels, any other size blurs it. */}
+              <Well className="size-[68px] shrink-0">
                 <Sprite id={portraitArt(life.id, 22)} fallback={{ w: 64, h: 64 }} />
               </Well>
               {on ? (
