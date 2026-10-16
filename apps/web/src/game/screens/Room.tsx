@@ -258,7 +258,7 @@ function LifePicker({ label, lives: choices, value, onChange }: { label: string;
     group.current?.querySelector<HTMLElement>(`[data-life="${next.id}"]`)?.focus();
   };
   return (
-    <div ref={group} role="radiogroup" aria-label={label} onKeyDown={move} className="grid grid-cols-2 gap-2">
+    <div ref={group} role="radiogroup" aria-label={label} onKeyDown={move} className="grid grid-flow-row-dense grid-cols-2 gap-2">
       {choices.map((life) => {
         const on = life.id === value;
         return (
@@ -270,14 +270,32 @@ function LifePicker({ label, lives: choices, value, onChange }: { label: string;
             tabIndex={on ? 0 : -1}
             data-life={life.id}
             onClick={() => onChange(life.id)}
-            className={`frame-raised flex min-h-[72px] items-center gap-2 px-1 py-1 text-left ${on ? 'frame-cream bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
+            // The life chosen opens across both columns, with what it is: the rest stay small, so the list stays short.
+            className={`frame-raised flex min-h-[72px] items-center gap-2 px-1 py-1 text-left ${on ? 'frame-cream col-span-2 bg-cream text-ink-900' : 'bg-night-600 text-ink-200'}`}
           >
             <Sprite id={portraitArt(life.id, 22)} className="shrink-0" fallback={{ w: 64, h: 64 }} />
-            <span className="min-w-0 text-[13px] leading-tight">{life.name}</span>
+            {on ? <LifeAbout lifeId={life.id} /> : <span className="min-w-0 text-[13px] leading-tight">{life.name}</span>}
           </button>
         );
       })}
     </div>
+  );
+}
+
+/** What a life chosen for a game is: where it starts and with how much, what it is good at, and what holds it back. */
+function LifeAbout({ lifeId }: { lifeId: string }) {
+  const newLife = useT('newLife');
+  const { text, names, fmt } = useWords();
+  const life = lives.find((one) => one.id === lifeId);
+  const written = text.lives[lifeId];
+  if (!life || !written) return null;
+  return (
+    <span className="flex min-w-0 flex-1 flex-col items-start gap-1 py-1 pr-1">
+      <span className="pixel text-[16px] leading-tight">{written.name}</span>
+      <span className="text-[12px] leading-tight text-ink-700">{newLife('startsIn', { city: names.cities[life.start.cityId], cash: fmt.money(life.start.cash) })}</span>
+      <Tag tone="good">{written.perk}</Tag>
+      <Tag tone="bad">{written.handicap}</Tag>
+    </span>
   );
 }
 
