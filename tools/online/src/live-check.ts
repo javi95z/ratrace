@@ -142,6 +142,11 @@ try {
   const life = wholeLife('live-check-parity');
   const replayed = await a.functions.invoke('engine', { body: { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION, lifeId: 'nurse', seed: 'live-check-parity', log: life.log } });
   const answer = replayed.data as { hash?: string; score?: number; finished?: boolean } | null;
+  // When the server does not play the life, what it answered is the first thing to know.
+  if (replayed.error) {
+    const context = (replayed.error as { context?: { text?: () => Promise<string> } }).context;
+    console.error(`  the engine function answered ${statusOf(replayed)}: ${(await context?.text?.().catch(() => '')) ?? replayed.error.message}`);
+  }
   check(replayed.error === null && answer?.finished === true, 'the engine function plays a whole life for a signed-in guest');
   check(answer?.hash === stateHash(life.state), 'the server ends that life on the same state as this checkout does');
   check(answer?.score === finalScore(content, life.state), 'and gives it the same score');
