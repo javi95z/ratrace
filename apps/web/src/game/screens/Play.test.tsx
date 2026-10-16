@@ -219,8 +219,8 @@ describe('the play screen', () => {
     const [run] = await services.store.listRuns();
     expect(run.history).toHaveLength(21);
     const score = screen.getByRole('group', { name: 'Score' });
-    // The score counts up as it is shown; it is read out as it ends.
-    expect(within(score).getByLabelText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
+    // The score counts up as it is shown; it is read out as it ends, from words only a screen reader hears.
+    expect(within(score).getByText(new Intl.NumberFormat('en-US').format(run.score), { selector: '.sr-only' })).toBeTruthy();
     expect(within(score).getByText('Wealth')).toBeTruthy();
     expect(within(score).getByText('Status')).toBeTruthy();
     expect(within(score).getByText(String(run.status))).toBeTruthy();
@@ -268,7 +268,7 @@ describe('the play screen', () => {
     cleanup();
     renderGame(<Play />, memoryServices(services.store));
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: 'Score' })).getByLabelText(new Intl.NumberFormat('en-US').format(run.score))).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score), { selector: '.sr-only' })).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
   });
 

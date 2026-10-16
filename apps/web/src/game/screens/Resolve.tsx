@@ -34,8 +34,10 @@ const PASSIVE: ReadonlySet<string> = new Set(['dividends', 'interest', 'rent', '
 function CashCount({ from, to, delay }: { from: number; to: number; delay: number }) {
   const { fmt } = useWords();
   const shown = useCountUp(to, { from, delay, ms: 800 });
+  // A span cannot carry a label: the amount it ends on is read from hidden words, not the figure counting up.
   return (
-    <span data-coin-to aria-label={fmt.money(to)}>
+    <span data-coin-to>
+      <span className="sr-only">{fmt.money(to)}</span>
       <span aria-hidden>{fmt.money(shown)}</span>
     </span>
   );
@@ -70,7 +72,8 @@ function WorthRise({ from, to, delay }: { from: number; to: number; delay: numbe
           <p className="text-[12px] text-ink-300">{t('before', { amount: fmt.money(from) })}</p>
         </div>
         <div className="relative flex flex-col items-end">
-          <span aria-label={fmt.money(to)} className={`pixel block text-[28px] leading-none ${landed && !up ? 'text-wine-300' : 'text-gold-500'} ${landed && change !== 0 ? (up ? 'animate-pop' : 'animate-sink') : ''}`}>
+          <span className={`pixel block text-[28px] leading-none ${landed && !up ? 'text-wine-300' : 'text-gold-500'} ${landed && change !== 0 ? (up ? 'animate-pop' : 'animate-sink') : ''}`}>
+            <span className="sr-only">{fmt.money(to)}</span>
             <span aria-hidden>{fmt.money(shown)}</span>
           </span>
           <span className={`pixel mt-1 px-1.5 text-[14px] ${landed ? 'animate-rise' : 'invisible'} ${up ? 'bg-teal-800 text-teal-300' : 'bg-wine-900 text-wine-300'}`}>{fmt.signed(change)}</span>

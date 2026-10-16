@@ -323,7 +323,8 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
       {/* The skyline opens and closes a round. In between, the room goes to the cards and the finances. */}
       <Hud compact={stage !== 'news' && stage !== 'resolve'} onProfile={() => setProfileOpen(true)} />
       {room ? <div className="px-3 pt-2">{room.bar}</div> : null}
-      <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
+      {/* Clipped at the sides: the paper spinning in, or a card dragged away, would otherwise make the page wider than the phone for a moment, and the browser would let it pan. */}
+      <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 overflow-x-clip pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
         <StageView stage={stage} desk={false} />
         {afterStage}
       </main>

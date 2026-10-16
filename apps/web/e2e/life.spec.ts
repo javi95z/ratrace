@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { answerHand, auditOf, cutLabels, fitsWidth, playRound, settle, smallTargets, startLife, watch, WORDS } from './game';
+import { answerHand, auditOf, cutLabels, fitsWidth, playRound, settle, settled, smallTargets, startLife, watch, WORDS } from './game';
 import type { Lang } from './game';
 
 /** Set RATRACE_SHOTS to a folder to keep a picture of every screen the tests pass through. */
@@ -9,8 +9,8 @@ const SHOTS = process.env.RATRACE_SHOTS;
 const shot = async (page: Page, name: string, project: string) => {
   if (!SHOTS) return;
   // Let whatever is rising into place arrive first, and every picture finish loading.
+  await settled(page);
   await page.evaluate(async () => {
-    await Promise.all(document.getAnimations().map((animation) => animation.finished));
     await Promise.all([...document.images].filter((image) => !image.complete).map((image) => new Promise((done) => image.addEventListener('load', done, { once: true }))));
   });
   await page.screenshot({ path: `${SHOTS}/${project}-${name}.png` });
@@ -185,13 +185,14 @@ test('an order is placed, shown, taken back and placed again, and the round play
   await shot(page, 'finance', info.project.name);
 
   // The pension takes what it says it takes: all of what is offered is accepted.
-  await expect(page.getByText(/^Up to \$[\d,]+ more this round$/)).toBeVisible();
   await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await expect(page.getByRole('dialog').getByText(/^Up to \$[\d,]+$/)).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: '100%' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /^Confirm/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByText(/^Not possible/)).toHaveCount(0);
-  await expect(page.getByText('Nothing more can go in this round.')).toBeVisible();
+  // The room is used up: nothing more is offered.
+  await expect(page.getByRole('button', { name: 'Add', exact: true })).toHaveCount(0);
   if (wide) await page.getByRole('complementary', { name: w.news }).getByRole('button', { name: /^Remove: Pension/ }).click();
   else {
     await page.getByRole('button', { name: '1 order' }).click();
@@ -321,10 +322,22 @@ async function walk(page: Page, lang: Lang, wide: boolean, check: (name: string)
     await settle(page);
   }
 
-  for (const [i, tab] of w.tabs.entries()) {
-    await page.getByRole('tab', { name: tab, exact: true }).click();
-    await check(`finance-${WORDS.en.tabs[i].toLowerCase()}`);
-  }
+  // A first life opens the tabs of the money a few at a time: the first ones are measured with the guide's tip
+  // on screen, and the rest once the guide is turned off, which opens them all.
+  const measured = new Set<string>();
+  const measureTabs = async () => {
+    for (const [i, tab] of w.tabs.entries()) {
+      const button = page.getByRole('tab', { name: tab, exact: true });
+      if (measured.has(tab) || (await button.count()) === 0) continue;
+      await button.click();
+      await check(`finance-${WORDS.en.tabs[i].toLowerCase()}`);
+      measured.add(tab);
+    }
+  };
+  await measureTabs();
+  await page.getByRole('note', { name: w.guide }).getByRole('button', { name: w.skipGuide }).click();
+  await measureTabs();
+  expect([...measured].sort()).toEqual([...w.tabs].sort());
   // A sheet is a screen too.
   await page.getByRole('tab', { name: w.tabs[0], exact: true }).click();
   // The first thing the tab lets this life do. A life left without cash by its cards can do nothing here, and then there is no sheet to look at.
@@ -412,6 +425,29 @@ test('the smallest phone, in Russian, where the words are longer still: every sc
   expect(cut).toEqual([]);
 });
 
+test('the paper spinning in at the start of a round never makes the page wider than the phone', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'a matter of a small screen');
+  const screen = page.viewportSize()?.width ?? 0;
+  await page.goto('/en/new');
+  await page.getByRole('button', { name: WORDS.en.start }).click();
+  await expect(page).toHaveURL(/\/en\/play$/);
+  // Watched frame by frame for as long as it spins, and a little after. A page wider for a moment can be panned, and the buttons move with it.
+  const widest = await page.evaluate(
+    () =>
+      new Promise<number>((done) => {
+        let widest = 0;
+        const started = performance.now();
+        const look = () => {
+          widest = Math.max(widest, document.documentElement.scrollWidth);
+          if (performance.now() - started < 1500) requestAnimationFrame(look);
+          else done(widest);
+        };
+        look();
+      }),
+  );
+  expect(widest).toBeLessThanOrEqual(screen);
+});
+
 test('a double tap never does a second thing: no card answered, no round played, no ledger skipped', async ({ page }) => {
   const problems = watch(page);
   const w = WORDS.en;
@@ -492,8 +528,10 @@ test('a card follows the finger, says which way picks which, and a short drag pi
   }
   const options = page.getByRole('group', { name: w.choices }).getByRole('button');
   expect(await options.count()).toBe(2);
-  const second = (await options.nth(1).locator('.pixel').first().textContent()) ?? '';
-  const first = (await options.nth(0).locator('.pixel').first().textContent()) ?? '';
+  // An option's name, without the key that picks it.
+  const label = (option: number) => options.nth(option).locator('.pixel').first().evaluate((node) => node.firstChild?.textContent ?? '');
+  const second = await label(1);
+  const first = await label(0);
   // Each side of the card says what it picks.
   await expect(page.getByText(`← ${first}`)).toBeVisible();
   await expect(page.getByText(`${second} →`)).toBeVisible();
@@ -726,7 +764,7 @@ test('a first life is guided, one tip at a time, until the player says enough', 
   const w = WORDS.en;
   await startLife(page, 'en', 'Nurse');
   const tip = page.getByRole('note', { name: w.guide });
-  await expect(tip).toContainText('Every round opens with the news');
+  await expect(tip).toContainText('Every round opens with the paper');
   // The two typefaces of the game: Chakra Petch for what is read as a sentence, Jersey 15 for titles and figures.
   const faceOf = (locator: ReturnType<typeof page.locator>) => locator.evaluate((node) => getComputedStyle(node).fontFamily);
   expect(await faceOf(tip.locator('p').nth(1))).toMatch(/^"?Chakra Petch/);

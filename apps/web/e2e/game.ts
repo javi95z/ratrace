@@ -7,23 +7,23 @@ export const WORDS = {
   en: {
     newLife: 'New life', start: 'Start this life', toCards: 'See what life brings', nextCard: 'Next card', toFinance: 'To your finances',
     play: 'Play the round', nextRound: 'Next round', finish: 'See how it ended', theEnd: 'The end', news: 'News', choices: /^Your choices/,
-    happened: 'What happened', later: 'Two years later', card: (n: number) => new RegExp(`^Card ${n} of \\d`), round: (n: number) => `Round ${n} of 20`,
+    happened: 'What happened', later: 'Two years later', card: (n: number) => new RegExp(`^Card ${n} of \\d`), round: (n: number) => new RegExp(`^(Round )?${n} of 20( ·|$)`),
     continue: /Continue your life/, yourLife: 'Your life', orders: "This round's orders", again: 'Live another life',
-    tabs: ['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle', 'Shop', 'Taxes'], openProfile: 'Open your profile', collection: 'Collection', records: 'Records', rankings: 'Rankings', guide: 'Guide', skipGuide: 'Skip the guide',
+    tabs: ['Portfolio', 'Market', 'Property', 'Business', 'Debt', 'Lifestyle', 'Shop', 'Taxes'], openProfile: 'Open your profile', collection: 'Collection', records: 'Records', rankings: 'Rankings', guide: 'Guide', skipGuide: 'Skip the guide',
   },
   es: {
     newLife: 'Nueva vida', start: 'Empezar esta vida', toCards: 'Ver qué trae la vida', nextCard: 'Siguiente carta', toFinance: 'A tus finanzas',
     play: 'Jugar la ronda', nextRound: 'Siguiente ronda', finish: 'Ver cómo acabó', theEnd: 'Fin', news: 'Noticias', choices: /^Tus opciones/,
-    happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => `Ronda ${n} de 20`,
+    happened: 'Qué ha pasado', later: 'Dos años después', card: (n: number) => new RegExp(`^Carta ${n} de \\d`), round: (n: number) => new RegExp(`^(Ronda )?${n} de 20( ·|$)`),
     continue: /Seguir con tu vida/, yourLife: 'Tu vida', orders: 'Las órdenes de esta ronda', again: 'Vivir otra vida',
-    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Clasificaciones', guide: 'Guía', skipGuide: 'Quitar la guía',
+    tabs: ['Cartera', 'Mercado', 'Vivienda', 'Negocios', 'Deuda', 'Vida', 'Tienda', 'Impuestos'], openProfile: 'Abrir tu perfil', collection: 'Colección', records: 'Récords', rankings: 'Clasificaciones', guide: 'Guía', skipGuide: 'Quitar la guía',
   },
   ru: {
     newLife: 'Новая жизнь', start: 'Начать эту жизнь', toCards: 'Что приготовила жизнь', nextCard: 'Следующая карта', toFinance: 'К финансам',
     play: 'Сыграть раунд', nextRound: 'Следующий раунд', finish: 'Чем всё закончилось', theEnd: 'Конец', news: 'Новости', choices: /^Твои варианты/,
-    happened: 'Что случилось', later: 'Два года спустя', card: (n: number) => new RegExp(`^Карта ${n} из \\d`), round: (n: number) => `Раунд ${n} из 20`,
+    happened: 'Что случилось', later: 'Два года спустя', card: (n: number) => new RegExp(`^Карта ${n} из \\d`), round: (n: number) => new RegExp(`^(Раунд )?${n} из 20( ·|$)`),
     continue: /Продолжить жизнь/, yourLife: 'Твоя жизнь', orders: 'Планы на раунд', again: 'Ещё одна жизнь',
-    tabs: ['Портфель', 'Рынок', 'Недвижимость', 'Долги', 'Жизнь', 'Магазин', 'Налоги'], openProfile: 'Открыть профиль', collection: 'Коллекция', records: 'Рекорды', rankings: 'Рейтинги', guide: 'Подсказки', skipGuide: 'Без подсказок',
+    tabs: ['Портфель', 'Рынок', 'Недвижимость', 'Бизнес', 'Долги', 'Жизнь', 'Магазин', 'Налоги'], openProfile: 'Открыть профиль', collection: 'Коллекция', records: 'Рекорды', rankings: 'Рейтинги', guide: 'Подсказки', skipGuide: 'Без подсказок',
   },
 } as const;
 
@@ -116,12 +116,26 @@ export async function playRound(page: Page, lang: Lang, pick = 0) {
 }
 
 /**
+ * Waits until whatever is moving into place has arrived. An animation cut short, as when its element
+ * gives way to another, has arrived as much as it ever will; one that never ends is not waited for.
+ */
+export const settled = (page: Page) =>
+  page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+
+/**
  * What an accessibility audit finds wrong with the page as it stands: every breach of WCAG 2 A and AA
  * that axe can see, one line each, with the first element it is about. A clean page gives none.
  */
 export async function auditOf(page: Page): Promise<string[]> {
   // Whatever is rising into place is still half transparent, and would be measured as unreadable.
-  await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished)));
+  await settled(page);
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   return violations.flatMap((violation) => violation.nodes.map((node) => `${violation.id} (${violation.impact}): ${node.html.slice(0, 120)}`));
 }
@@ -154,7 +168,8 @@ export const smallTargets = (page: Page) =>
       .filter((el) => {
         const box = el.getBoundingClientRect();
         const style = getComputedStyle(el);
-        const shown = box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && !el.closest('nextjs-portal');
+        // The skip links wait above the top of the screen until a key brings them down: no thumb can reach them there.
+        const shown = box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && !el.closest('nextjs-portal, .skip-links:not(:focus-within)');
         return shown && (box.height < 44 || box.width < 44);
       })
       .map((el) => `${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40)}" ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`),

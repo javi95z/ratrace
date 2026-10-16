@@ -186,7 +186,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
 
           <section role="group" aria-label={t('score')} className="bevel frame-gold animate-rise bg-night-700 p-4 text-center">
             <p className="pixel text-[15px] uppercase tracking-[0.1em] text-gold-200">{t('score')}</p>
-            <p aria-label={fmt.number(score.total)} className="pixel mt-1 text-[60px] leading-none text-gold-500">
+            {/* A paragraph cannot carry a label: the whole score is read from hidden words, not the figure counting up. */}
+            <p className="pixel mt-1 text-[60px] leading-none text-gold-500">
+              <span className="sr-only">{fmt.number(score.total)}</span>
               <span aria-hidden>{fmt.number(counted)}</span>
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2">

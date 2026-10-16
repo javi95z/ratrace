@@ -296,7 +296,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       {/* Away from the news, where the bar of a crisis is whole, a strip keeps it in sight. */}
       {compact ? <CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact /> : null}
 
-      <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block w-full text-left">
+      <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block min-h-11 w-full text-left">
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
           <span className="pixel">{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
           <span className="pixel text-[14px] text-ink-200">
