@@ -209,7 +209,7 @@ describe('the terminal game', () => {
     expect(shown).toContain('Возраст 22 · Раунд 1 из 20 · Мадрид');
     expect(shown).toContain('Возраст 60 · Раунд 20 из 20');
     expect(shown).toContain('НОВОСТИ');
-    expect(shown).toContain('ТЫ  Госслужащий · Госслужба (Специалист)');
+    expect(shown).toContain('ТЫ  Госслужащая · Госслужба (Специалист)');
     expect(shown).toMatch(/КАРТА 1 из \d/);
     expect(shown).toMatch(/: твой выбор — «[^»]+»/);
     expect(shown).toContain('КОМАНДЫ');
