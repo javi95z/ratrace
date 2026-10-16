@@ -1,0 +1,25 @@
+import { weekOf } from '@ratrace/content';
+import { describe, expect, it } from 'vitest';
+import { clock, isoWeek, noticeOf } from '../../../supabase/functions/_shared/notice.ts';
+
+describe('what a notice says', () => {
+  it('names the week as the game does, every day of a few years', () => {
+    for (let day = Date.UTC(2025, 11, 20); day < Date.UTC(2028, 0, 10); day += 86_400_000) expect(isoWeek(day)).toBe(weekOf(day));
+  });
+
+  it('tells the place of last week with the new challenge, or only the new one to who did not play', () => {
+    expect(noticeOf('es', { kind: 'weekly', place: 3, entrants: 41 })).toEqual({ title: 'Nuevo reto semanal', body: 'Quedaste #3 de 41 la semana pasada. Ya hay uno nuevo.', url: '/es/challenge', tag: 'weekly-challenge' });
+    expect(noticeOf('en', { kind: 'weekly', place: null, entrants: null }).body).toContain('See where you rank this week');
+  });
+
+  it('leads a game\'s notices to the game, and a life left halfway to the game in play', () => {
+    expect(noticeOf('es', { kind: 'yourTurn', round: 6, rounds: 20, secondsLeft: 72 })).toEqual({ title: 'Faltas tú', body: 'Los demás ya han jugado la ronda 6 de 20. Quedan 1:12.', url: '/es/room', tag: 'room' });
+    expect(noticeOf('ru', { kind: 'roomStarted', seconds: 90 }).url).toBe('/ru/room');
+    expect(noticeOf('en', { kind: 'idle' })).toMatchObject({ url: '/en/play', tag: 'idle-life' });
+  });
+
+  it('reads in English for a language the game does not have, and shows seconds as a clock does', () => {
+    expect(noticeOf('fr', { kind: 'idle' }).title).toBe('Your life is waiting');
+    expect([clock(5), clock(90), clock(300)]).toEqual(['0:05', '1:30', '5:00']);
+  });
+});

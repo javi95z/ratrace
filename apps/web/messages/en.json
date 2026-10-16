@@ -172,7 +172,7 @@
     "practice": "Challenge practice",
     "points": "{n} pts",
     "weeklyNotice": "Turn on notifications",
-    "weeklyNoticeHint": "A notice every Monday, when a new weekly challenge begins.",
+    "weeklyNoticeHint": "The weekly challenge, your games with friends and lives left halfway. One notice a day at most, except in a game.",
     "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings."
   },
   "play": {

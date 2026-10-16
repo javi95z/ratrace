@@ -11,6 +11,8 @@ import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { RunRow } from '../_shared/finish.ts';
 import { CURRENT, GAMES } from '../_shared/game/index.ts';
 import { json, readJson } from '../_shared/http.ts';
+import { noticeOf } from '../_shared/notice.ts';
+import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { allowed } from '../_shared/rate.ts';
 import { rooms } from '../_shared/rooms.ts';
 import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
@@ -83,6 +85,15 @@ export default {
         submit: (room, round, user, orders) => call('room_submit', { p_room: room, p_round: round, p_member: user, p_orders: orders }),
         turn: (room, round, deadline, lives) => call('room_turn', { p_room: room, p_round: round, p_deadline: deadline === null ? null : deadline.toISOString(), p_lives: lives }),
         saveRun: async (run: RunRow) => void must(await db.from('runs').upsert(run, { onConflict: 'id', ignoreDuplicates: true })),
+        notify: async (users, about) => {
+          // Sent after the answer, so that a player's move does not wait on push services.
+          const sending = subscriptionsOf(db, users)
+            .then((rows) => deliver(db, rows, (row) => noticeOf(row.locale, about), about.kind === 'yourTurn' ? Math.max(1, about.secondsLeft) : 3_600, 'high'))
+            .catch((error: unknown) => console.error('room notice failed:', error instanceof Error ? error.message : error));
+          const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
+          if (runtime) runtime.waitUntil(sending);
+          else await sending;
+        },
       },
       userId,
       read.value,

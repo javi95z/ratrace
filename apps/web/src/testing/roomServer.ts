@@ -3,7 +3,7 @@ import { CURRENT, GAMES } from '../../../../supabase/functions/_shared/game/inde
 import type { LoggedRound } from '@ratrace/engine';
 import { canonical } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rooms } from '../../../../supabase/functions/_shared/rooms.ts';
-import type { MemberRow, RoomGameRow, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
+import type { MemberRow, RoomGameRow, RoomNotice, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { Reply } from '../../../../supabase/functions/_shared/replay.ts';
 import { roomsApi } from '@/online/rooms';
 import type { RoomsLink } from '@/session/room';
@@ -24,6 +24,8 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const seeds = new Map<string, string>();
   const orders = new Map<string, unknown[]>();
   const runs: RunRow[] = [];
+  /** The notices the server sent, to whom, in order. */
+  const notices: Array<{ user: string; about: RoomNotice }> = [];
   const names = new Map<string, string | null>();
   const unlocked = new Map<string, string[]>();
   const state = { ids: 0, codes: 0, stamps: 0, now: start, allowed: true, asked: [] as string[] };
@@ -200,6 +202,9 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     saveRun: async (run) => {
       if (!runs.some((one) => one.id === run.id)) runs.push(structuredClone(run));
     },
+    notify: async (users, about) => {
+      for (const user of users) notices.push({ user, about: structuredClone(about) });
+    },
   };
 
   /** The pages listening to each room, and the network between page and server, which a test may cut. */
@@ -225,6 +230,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     hooks,
     network,
     db: { rooms: roomsById, members, games, seeds, orders, runs, names, unlocked },
+    notices,
     /** Asks the server as `user`, with nothing between. */
     ask,
     /**

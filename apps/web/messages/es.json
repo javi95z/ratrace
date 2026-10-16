@@ -172,7 +172,7 @@
     "practice": "Práctica del reto",
     "points": "{n} puntos",
     "weeklyNotice": "Activar notificaciones",
-    "weeklyNoticeHint": "Un aviso cada lunes, cuando empieza un nuevo reto semanal.",
+    "weeklyNoticeHint": "El reto semanal, tus partidas con amigos y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
     "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador."
   },
   "play": {

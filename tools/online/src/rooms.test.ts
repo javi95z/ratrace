@@ -383,6 +383,37 @@ describe('two members who choose the same', () => {
   });
 });
 
+describe('the notices of a room', () => {
+  it('tells everyone but the host that the room has started, with the time a round takes', async () => {
+    const { server } = await begun(roomServer(), 90, [C]);
+    expect(server.notices).toEqual([
+      { user: B, about: { kind: 'roomStarted', seconds: 90 } },
+      { user: C, about: { kind: 'roomStarted', seconds: 90 } },
+    ]);
+  });
+
+  it('tells the one member still to play, once, when everyone else has played, with the time left', async () => {
+    const { server, room } = await begun(roomServer(), 180, [C]);
+    server.notices.length = 0;
+    server.wait(30_000);
+    await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [] });
+    expect(server.notices).toEqual([]);
+    const step = await answerHand(server, B, room);
+    await server.ask(B, { action: 'submit', roomId: room, step, orders: [] });
+    // The same orders sent again, as a page does when its answer was lost, tell nobody again.
+    await server.ask(B, { action: 'submit', roomId: room, step, orders: [] });
+    expect(server.notices).toEqual([{ user: C, about: { kind: 'yourTurn', round: 1, rounds: content.rounds, secondsLeft: 150 } }]);
+  });
+
+  it('tells nobody when the round is about to turn anyway', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    server.notices.length = 0;
+    server.wait(75_000);
+    await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [] });
+    expect(server.notices).toEqual([]);
+  });
+});
+
 describe('leaving a room, and coming back', () => {
   it('takes a member out of the lobby, and the host leaving closes it for everyone', async () => {
     const server = roomServer();

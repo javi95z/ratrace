@@ -1,6 +1,7 @@
 import type { RunRow } from './finish.ts';
 import type { GameModule, LoggedRound, ReplayedStep } from './game/types.ts';
 import { lastIs, stepsOf, withStep } from './ranked.ts';
+import type { NoticeAbout } from './notice.ts';
 import type { Choice } from './ranked.ts';
 import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
@@ -131,6 +132,28 @@ export interface RoomsDeps {
   turn(roomId: string, round: number, deadline: Date | null, lives: TurnLife[]): Promise<'ok' | 'moved' | 'closed' | 'invalid'>;
   /** Writes the run unless one with its id is already there. */
   saveRun(run: RunRow): Promise<void>;
+  /** Tells players, on the devices that asked for notices, that their game needs them. Never fails: a notice lost is no reason to refuse a move. */
+  notify(userIds: string[], about: RoomNotice): Promise<void>;
+}
+
+/** What a game with friends tells its players by a notice. */
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' }>;
+
+/** A round with less than this left is not worth a notice: by the time it is read, the round has turned. */
+const NOTICE_MIN_MS = 20_000;
+
+/**
+ * Once everyone but one has played a round, the one left is told the others are waiting, with the
+ * time left. Told once a round: only the play that leaves exactly one waiting tells them.
+ */
+async function tellTheLastOne(deps: RoomsDeps, room: RoomRow, rounds: number): Promise<void> {
+  if (room.deadline === null) return;
+  const left = Date.parse(room.deadline) - deps.now().getTime();
+  if (left < NOTICE_MIN_MS) return;
+  const here = (await deps.members(room.id)).filter((m) => m.left_at === null);
+  const waiting = here.filter((m) => m.ready_round !== room.round);
+  if (here.length < 2 || waiting.length !== 1) return;
+  await deps.notify([waiting[0].user_id], { kind: 'yourTurn', round: room.round + 1, rounds, secondsLeft: Math.round(left / 1000) });
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -488,6 +511,8 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     for (const member of members) if (member.left_at === null) named[member.user_id] = deps.newId();
     const begun = await deps.start(room.id, userId, deps.newSeed(), named, new Date(deps.now().getTime() + room.seconds * 1000));
     if ('error' in begun) return { status: begun.error === 'not-host' ? 403 : 409, body: { error: begun.error } };
+    // Those waiting in the lobby may have put the phone down.
+    await deps.notify(Object.keys(named).filter((user) => user !== userId), { kind: 'roomStarted', seconds: room.seconds });
     return await answerRoom(games, deps, room.id, userId);
   }
 
@@ -572,7 +597,10 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   if (kept.kept === 'other') return { status: 409, body: { error: 'ready' } };
   if (kept.kept === 'moved') return moved;
   if (kept.kept === 'closed') return closed;
-  if (!kept.all) return await answerRoom(games, deps, room.id, userId, { result: null });
+  if (!kept.all) {
+    if (kept.kept === 'new') await tellTheLastOne(deps, room, game.content.rounds);
+    return await answerRoom(games, deps, room.id, userId, { result: null });
+  }
 
   // The last to play turns the round, and is answered their round as a step is.
   const before = room.round;

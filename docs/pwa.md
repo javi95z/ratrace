@@ -41,17 +41,25 @@ For a manual check, use `pnpm build && pnpm --filter @ratrace/web start --port 3
 `http://localhost:3010`, install from Home, then disable the network and relaunch the app. Service
 workers work on localhost and HTTPS; they intentionally do not register under `next dev`.
 
-## Weekly challenge notice
+## Notifications
 
-A player with an account can ask, in Settings, to be told when a new weekly challenge begins. The
-switch only shows where the browser can receive a push and the build has a VAPID public key. On iPhone
-and iPad it needs the game installed to the Home screen (iOS 16.4 or later).
+A player with an account can turn notifications on in Settings. The switch only shows where the
+browser can receive a push and the build has a VAPID public key. On iPhone and iPad it needs the game
+installed to the Home screen (iOS 16.4 or later).
 
+| Notice | When | Sent by | Capped |
+|---|---|---|---|
+| New weekly challenge, with last week's place | Mondays 08:00 UTC | `weekly-notice` (job `weekly-notice`) | yes |
+| A life left halfway | daily 17:00 UTC, for a life untouched 7 to 8 days, none played since | `weekly-notice` with `{"kind":"idle"}` (job `idle-notice`) | yes |
+| A game with friends has started | when the host starts it, to everyone else | `rooms` | no |
+| Everyone else has played the round | when one member is left to play, with 20 s or more left | `rooms` | no |
+
+- Capped notices take the player's one notice of the day (`notice_claim`, table `notice_days`, by UTC
+  day). The notices of a game with friends are urgent and never capped.
 - The browser subscription lives in `public.push_subscriptions`, one row per browser, owned by the
-  player through RLS. The language of the notice is the one the player had when subscribing.
-- `pg_cron` calls the `weekly-notice` Edge Function every Monday at 08:00 UTC. It sends one notice to
-  every subscription and deletes those the push service reports gone (404/410).
-- A tap on the notice opens `/{locale}/challenge`, in an open window of the game if there is one.
+  player through RLS. A notice is written in the language the player had when subscribing.
+- Browsers the push service reports gone (404/410) are deleted when a notice to them fails.
+- A tap opens the notice's page, in an open window of the game if there is one.
 
 ### Setup, once
 
