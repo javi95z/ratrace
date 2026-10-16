@@ -13,8 +13,9 @@ export const LIMITS = {
   'room-make': [20, 3600],
   // Every call about a room in play, the page's own looks at it included: a card or two a second at most, and a look every few seconds.
   'room-step': [240, 60],
-  // The errors a page met: it sends ten at most, so thirty an hour is a page that keeps failing, and enough.
-  errors: [30, 3600],
+  // The errors a page met: ten kinds at most a page, a call or two each, so twenty a day is a player whose every page fails.
+  // Counted by the day, so that one player can make up no more than two hundred kinds a day.
+  errors: [20, 86_400],
 } as const;
 
 export type Counted = keyof typeof LIMITS;

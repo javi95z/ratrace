@@ -150,6 +150,20 @@ describe('the cloud of this browser', () => {
     stop();
   });
 
+  it('plays on in a page whose log cannot be written to', () => {
+    const own = Object.getOwnPropertyDescriptor(console, 'error');
+    Object.defineProperty(console, 'error', { value: own?.value, writable: false, configurable: true });
+    try {
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
+      vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
+      const device = new MemoryStore();
+      expect(browserOnline(device).store).not.toBe(device);
+    } finally {
+      if (own) Object.defineProperty(console, 'error', own);
+    }
+  });
+
   it('watches the errors of a page only in a production build with a project', () => {
     const own = console.error;
     try {

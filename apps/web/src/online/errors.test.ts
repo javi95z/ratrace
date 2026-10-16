@@ -46,10 +46,27 @@ describe('what leaves the page', () => {
       'fetch https://riat.supabase.co/rest/v1/games?select=*&id=eq.1#access_token=x failed',
       'key sb_publishable_AbCdEfGhIjKlMnOpQrStUvWx12 refused',
       'call +34612345678 or 123456',
+      'could not open /en/room?code=K7M2QX#access_token=x for 192.168.1.20',
+      'what? /x # y engine 0.35.0/1.35.0',
       STACK,
     ];
     for (const sample of samples) expect(scrub(sample)).toBe(scrubOnTheServer(sample));
     expect(scrub('no player for ana@x.com')).toBe('no player for <email>');
+  });
+
+  it('never holds the page up, however long and odd what was written is', async () => {
+    const { watch, sent, tick } = watching();
+    const worst = ['a'.repeat(200_000), 'a.'.repeat(100_000), 'eyJ'.repeat(70_000), 'http://'.repeat(30_000), '/a'.repeat(100_000), '1.'.repeat(100_000)];
+    for (const [n, text] of worst.entries()) {
+      const started = performance.now();
+      watch.report(`${n} ${text}`, text);
+      expect(performance.now() - started, text.slice(0, 12)).toBeLessThan(250);
+    }
+    await tick();
+    for (const one of sent.flat()) {
+      expect(one.message.length).toBeLessThanOrEqual(500);
+      expect(one.stack?.length ?? 0).toBeLessThanOrEqual(4000);
+    }
   });
 
   it('says what was said, and where in the code, of whatever the page wrote as an error', () => {

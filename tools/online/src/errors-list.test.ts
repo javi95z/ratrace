@@ -23,6 +23,12 @@ describe('the list of errors', () => {
     expect(listOf([], NOW)).toEqual(['No errors kept.']);
   });
 
+  it('prints nothing a terminal would take as a command of its own', () => {
+    const lines = listOf([row({ place: '/play\u001b]52;c;aGk=\u0007', message: 'boom\u001b[2J\u009b', build: '\u001b[31mred', browser: null })], NOW);
+    expect(lines.join('\n')).not.toMatch(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/);
+    expect(lines[1].trim()).toBe('boom [2J');
+  });
+
   it('reads the rows the database printed, and nothing that is not them', () => {
     expect(rowsOf('Initialising...\n{"rows":[{"source":"page"}],"warning":"untrusted"}')).toEqual([{ source: 'page' }]);
     expect(rowsOf('no json here')).toBeNull();

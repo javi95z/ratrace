@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { alertRequest, fingerprintOf, placeOf, reportErrors, scrub } from '../../../supabase/functions/_shared/errors.ts';
+import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it, vi } from 'vitest';
+import { alertRequest, fingerprintOf, PAGES, placeOf, reportErrors, scrub } from '../../../supabase/functions/_shared/errors.ts';
 import type { ErrorRow, ErrorsDeps } from '../../../supabase/functions/_shared/errors.ts';
 import { watched } from '../../../supabase/functions/_shared/watch.ts';
 
@@ -38,23 +40,46 @@ describe('what a report never carries', () => {
     expect(scrub('fetch https://riat.supabase.co/rest/v1/games?select=*&id=eq.1#access_token=x failed')).toBe('fetch https://riat.supabase.co/rest/v1/games failed');
     expect(scrub('key sb_publishable_AbCdEfGhIjKlMnOpQrStUvWx12 refused')).toBe('key <token> refused');
     expect(scrub('call +34612345678 or 123456')).toBe('call +<number> or <number>');
+    // An address of the game's own, with what a room or a sign-in carries after it, and a machine's address.
+    expect(scrub('could not open /en/room?code=K7M2QX#access_token=x for 192.168.1.20')).toBe('could not open /en/room for <ip>');
+    expect(scrub('engine 0.35.0/1.35.0')).toBe('engine 0.35.0/1.35.0');
     // What an error says to be useful stays.
     expect(scrub('Cannot read properties of undefined (reading \'round\') at play (page-3f2a1b9c.js:1:2345)')).toBe('Cannot read properties of undefined (reading \'round\') at play (page-3f2a1b9c.js:1:2345)');
   });
 
-  it('keeps a page as its path alone: no query, no hash, no language', () => {
+  it('cleans in a time that grows with the text, not with its square, whatever the text', () => {
+    const worst = ['a'.repeat(50_000), 'a.'.repeat(25_000), 'eyJ'.repeat(17_000), 'http://'.repeat(7_000), '/a'.repeat(25_000), `${'a'.repeat(30_000)}@`, '1.'.repeat(25_000)];
+    for (const text of worst) {
+      const started = performance.now();
+      scrub(text);
+      expect(performance.now() - started, text.slice(0, 12)).toBeLessThan(250);
+    }
+  });
+
+  it('keeps a page as one of the game\'s own, and nothing a player could make up: no query, no hash, no language', () => {
     expect(placeOf('/es/play?code=ABC123#x')).toBe('/play');
     expect(placeOf('/ru')).toBe('/');
     expect(placeOf('/en/room')).toBe('/room');
     expect(placeOf('/play')).toBe('/play');
-    expect(placeOf('nonsense')).toBe('/');
-    expect(placeOf(`/${'ab/'.repeat(150)}`)).toHaveLength(200);
-    // A path that is one long word is a token, and is taken out as one.
-    expect(placeOf(`/${'x'.repeat(400)}`)).toBe('/<token>');
+    expect(placeOf('/es/room/0a4fb313-975e-4fbb-a503-2087414daddf')).toBe('/room');
+    expect(placeOf('nonsense')).toBe('/other');
+    expect(placeOf('/es/@everyone click https://evil.example')).toBe('/other');
+    expect(placeOf(`/${'x'.repeat(400)}`)).toBe('/other');
+  });
+
+  it('knows every page the game has', () => {
+    const app = fileURLToPath(new URL('../../../apps/web/src/app/[locale]/', import.meta.url));
+    const pages = readdirSync(app, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => `/${entry.name}`);
+    expect([...PAGES].sort()).toEqual(['/', ...pages].sort());
   });
 });
 
 describe('what makes two errors one kind', () => {
+  it('reads the place in the code from the stack, never the numbers in its first line', async () => {
+    const at = (round: number) => `Error: invariant broken at round ${round} (rng.cards): not a saved stream.\n    at check (https://a.app/_next/static/chunks/page-3f2a1b9c8d.js:1:2345)`;
+    expect(await fingerprintOf('page', '/play', 'invariant broken at round 12 (rng.cards): not a saved stream.', at(12))).toBe(await fingerprintOf('page', '/play', 'invariant broken at round 13 (rng.cards): not a saved stream.', at(13)));
+  });
+
   it('is the source, the place, the message and the first frame of the stack, whatever the build, the line or the numbers in it', async () => {
     const one = await fingerprintOf('page', '/play', 'step 12 refused', 'Error\n    at play (https://a.app/_next/static/chunks/page-3f2a1b9c8d.js:1:2345)');
     const two = await fingerprintOf('page', '/play', 'step 13 refused', 'Error\n    at play (https://a.app/_next/static/chunks/page-77aa0e1f42.js:1:9999)');
@@ -76,9 +101,9 @@ describe('reporting the errors of a page', () => {
     expect(JSON.stringify(noted)).not.toContain(ME);
   });
 
-  it('cuts what is too long to be an error, rather than refusing it', async () => {
+  it('cuts what is longer than is kept, rather than refusing it', async () => {
     const { deps, noted } = fake();
-    await reportErrors(deps, ME, { reports: [report({ message: 'x '.repeat(600), stack: 'at a\n'.repeat(2000), build: 'b'.repeat(200), browser: 'c'.repeat(200) })] });
+    await reportErrors(deps, ME, { reports: [report({ message: 'x '.repeat(450), stack: 'at a\n'.repeat(1500), build: 'b'.repeat(150), browser: 'c'.repeat(150) })] });
     expect(noted[0].message.length).toBeLessThanOrEqual(500);
     expect(noted[0].stack?.length).toBeLessThanOrEqual(4000);
     expect(noted[0].build?.length).toBeLessThanOrEqual(80);
@@ -112,6 +137,21 @@ describe('reporting the errors of a page', () => {
     expect(asked).toEqual([ME]);
   });
 
+  it('refuses, before counting the call, a report too long to be a page\'s', async () => {
+    const { deps, noted, asked } = fake();
+    for (const over of [{ message: 'x'.repeat(1001) }, { stack: 'x'.repeat(8001) }, { place: '/'.repeat(501) }, { build: 'b'.repeat(201) }, { browser: 'c'.repeat(201) }]) {
+      expect(await reportErrors(deps, ME, { reports: [report(over)] }), Object.keys(over)[0]).toMatchObject({ status: 400 });
+    }
+    expect(noted).toEqual([]);
+    expect(asked).toEqual([]);
+  });
+
+  it('takes out what a terminal or the database would read as something else: control characters and halves of a character', async () => {
+    const { deps, noted } = fake();
+    await reportErrors(deps, ME, { reports: [report({ message: 'a\u0000b\u001b]52;c;aGk=\u0007c\ud83d', stack: 'line one\n\tat x (a.js)\u001b[2J', build: 'v\u0000', browser: 'B\u009b' })] });
+    expect(noted[0]).toMatchObject({ message: 'a b ]52;c;aGk= c\ufffd', stack: 'line one\n\tat x (a.js) [2J', build: 'v ', browser: 'B ' });
+  });
+
   it('refuses what is not a batch of reports', async () => {
     const { deps, noted, asked } = fake();
     expect(await reportErrors(deps, ME, 'boom')).toMatchObject({ status: 400 });
@@ -126,11 +166,20 @@ describe('reporting the errors of a page', () => {
 
 describe('the alert', () => {
   it('speaks each service in its own way, and only over https', () => {
-    expect(alertRequest('https://hooks.slack.com/services/T/B/x', 'Title', 'Body')).toEqual({ url: 'https://hooks.slack.com/services/T/B/x', init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Title\nBody' }) } });
-    expect(alertRequest('https://discord.com/api/webhooks/1/x', 'Title', 'Body')?.init.body).toBe(JSON.stringify({ content: 'Title\nBody' }));
+    expect(alertRequest('https://hooks.slack.com/services/T/B/x', 'Title', 'Body')).toEqual({ url: 'https://hooks.slack.com/services/T/B/x', init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'Title\n```Body```' }) } });
+    expect(alertRequest('https://discord.com/api/webhooks/1/x', 'Title', 'Body')?.init.body).toBe(JSON.stringify({ content: 'Title\n```\nBody\n```', allowed_mentions: { parse: [] } }));
     expect(alertRequest('https://ntfy.sh/ratrace-x1y2', 'Title', 'Body')).toEqual({ url: 'https://ntfy.sh/ratrace-x1y2', init: { method: 'POST', headers: { Title: 'Title', 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Body' } });
     expect(alertRequest('http://ntfy.sh/x', 'Title', 'Body')).toBeNull();
     expect(alertRequest('not an address', 'Title', 'Body')).toBeNull();
+    // What a player wrote is shown as text, never as a mention, a link or a command of the service.
+    const said = '@everyone <!channel> [win](https://evil.example) ``` & <https://evil|click>';
+    const discord = JSON.parse(alertRequest('https://discord.com/api/webhooks/1/x', 'Title', said)?.init.body as string) as { content: string; allowed_mentions: unknown };
+    expect(discord.allowed_mentions).toEqual({ parse: [] });
+    expect(discord.content).toBe("Title\n```\n@everyone <!channel> [win](https://evil.example) ''' & <https://evil|click>\n```");
+    const slack = JSON.parse(alertRequest('https://hooks.slack.com/services/T/B/x', 'Title', said)?.init.body as string) as { text: string };
+    expect(slack.text).toBe("Title\n```@everyone &lt;!channel&gt; [win](https://evil.example) ''' &amp; &lt;https://evil|click&gt;```");
+    // A header carries plain printable characters only, or the alert would not be sent at all.
+    expect(alertRequest('https://ntfy.sh/x', 'The Rat Race: é\nnew', 'Body')?.init.headers.Title).toBe('The Rat Race: ? new');
     // Discord takes two thousand characters at most.
     expect((alertRequest('https://discord.com/api/webhooks/1/x', 'T', 'b'.repeat(5000))?.init.body as string).length).toBeLessThan(2100);
   });
@@ -138,8 +187,9 @@ describe('the alert', () => {
 
 describe('the errors of a function', () => {
   const ok = new Response('{}', { status: 200 });
-  it('notes what a function throws, under its name, and answers 500', async () => {
+  it('notes what a function throws, under its name, writes the whole of it to the logs, and answers 500', async () => {
     const { deps, noted } = fake([{ seen: 1, alert: true }]);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const alerts: string[] = [];
     const handler = watched('ranked', async () => {
       throw new Error(`the life ${ME} cannot be opened`);
@@ -149,6 +199,9 @@ describe('the errors of a function', () => {
     expect(await res.json()).toEqual({ error: 'server' });
     expect(noted[0]).toMatchObject({ source: 'function', place: 'ranked', message: 'the life <id> cannot be opened' });
     expect(alerts[0]).toContain('ranked');
+    // The stack stays in the function's logs, as it was before the function was watched.
+    expect(logged.mock.calls[0][1]).toBeInstanceOf(Error);
+    logged.mockRestore();
   });
 
   it('notes an answer of 500 and above with its word, and nothing else', async () => {

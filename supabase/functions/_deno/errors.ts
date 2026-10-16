@@ -8,8 +8,21 @@ import type { ErrorRow, NoteDeps } from '../_shared/errors.ts';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
 
-/** How long an alert may take to be taken: it is never worth holding a player's answer for. */
+/** How long an alert may take to be taken. */
 const ALERT_PATIENCE_MS = 5_000;
+
+/** The runtime's way to finish work after the answer has gone, where there is one (the Edge Runtime has). */
+const runtime = (globalThis as { EdgeRuntime?: { waitUntil(work: Promise<unknown>): void } }).EdgeRuntime;
+
+/** Sends one alert. Never throws: an alert that cannot be sent is only written to the logs. */
+async function send(request: NonNullable<ReturnType<typeof alertRequest>>): Promise<void> {
+  try {
+    const answer = await fetch(request.url, { ...request.init, signal: AbortSignal.timeout(ALERT_PATIENCE_MS) });
+    if (!answer.ok) console.error(`the alert was refused: ${answer.status}`);
+  } catch (error) {
+    console.error('the alert could not be sent:', error instanceof Error ? error.message : error);
+  }
+}
 
 /** Noting errors with a function's own database client, as the server. */
 export function notingIn(db: Db): NoteDeps {
@@ -38,12 +51,10 @@ export function notingIn(db: Db): NoteDeps {
         console.error('ALERT_URL is not an https address: no alert was sent');
         return;
       }
-      try {
-        const answer = await fetch(request.url, { ...request.init, signal: AbortSignal.timeout(ALERT_PATIENCE_MS) });
-        if (!answer.ok) console.error(`the alert was refused: ${answer.status}`);
-      } catch (error) {
-        console.error('the alert could not be sent:', error instanceof Error ? error.message : error);
-      }
+      // The player's answer never waits for an alert: the runtime finishes sending it after the answer has gone.
+      const sending = send(request);
+      if (runtime) runtime.waitUntil(sending);
+      else await sending;
     },
   };
 }

@@ -6,8 +6,14 @@ const MAX_MESSAGE = 500;
 const MAX_STACK = 4000;
 const MAX_PLACE = 200;
 const MAX_SMALL = 80;
-/** No message of an error is longer than this before it is cut: anything longer is not one. */
-const MAX_RAW = 20_000;
+/**
+ * The longest a page sends of each part, with room to spare: a page cuts its own before sending,
+ * so anything longer is not a page's report, and is refused before any work is done on it.
+ */
+const MOST_SENT = { message: 1000, stack: 8000, place: 500, build: 200, browser: 200 } as const;
+
+/** The game's pages, by their path with no language: an error elsewhere is kept as on '/other'. A test holds this to the app. */
+export const PAGES: readonly string[] = ['/', '/challenge', '/collection', '/new', '/play', '/rankings', '/records', '/room'];
 
 /** One kind of error as the database keeps it. */
 export interface ErrorRow {
@@ -38,35 +44,60 @@ const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'obj
 const bad = (field: string): Reply => ({ status: 400, body: { error: 'bad-request', field } });
 const tooMany: Reply = { status: 429, body: { error: 'too-many' } };
 
+/** A run of text with no space or quote in it, which may be an address with a query or a hash. */
+const WORD = /[^\s'")]+/g;
+
 /**
  * Takes out of a text what could say who someone is, or let someone in: e-mail addresses, tokens,
- * ids, long numbers, and whatever follows `?` or `#` in an address. What an error says to be useful,
- * its words and where in the code it happened, stays. The page does the same before it sends.
+ * ids, machines' addresses, long numbers, and whatever follows `?` or `#` in an address or a path.
+ * What an error says to be useful, its words and where in the code it happened, stays. Every rule
+ * takes a time that grows with the text, never with its square: the text is anyone's. The page
+ * cleans the same way before it sends (`apps/web/src/online/errors.ts`); a test holds them together.
  */
 export function scrub(text: string): string {
   return text
-    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '<email>')
-    .replace(/eyJ[\w-]*\.[\w-]*\.[\w-]*/g, '<token>')
+    .replace(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,8}/g, '<email>')
+    .replace(/eyJ[\w-]{0,256}\.[\w-]{0,4096}\.[\w-]{0,512}/g, '<token>')
     .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, '<id>')
-    .replace(/(https?:\/\/[^\s?#'")]*)[?#][^\s'")]*/g, '$1')
+    .replace(WORD, (word) => {
+      const at = word.search(/[?#]/);
+      return at > 0 && word.slice(0, at).includes('/') ? word.slice(0, at) : word;
+    })
+    .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '<ip>')
     .replace(/[A-Za-z0-9_-]{24,}/g, '<token>')
     .replace(/\d{6,}/g, '<number>');
 }
 
-/** A page's path, as kept: no query, no hash, and no language in front of it. */
-export function placeOf(path: string): string {
-  const bare = path.split(/[?#]/)[0];
-  if (!bare.startsWith('/')) return '/';
-  const plain = bare.replace(/^\/(en|es|ru)(?=\/|$)/, '') || '/';
-  return scrub(plain).slice(0, MAX_PLACE);
+/**
+ * Takes out what a terminal or the database would read as something else: control characters
+ * (the line breaks and tabs of a stack stay) and halves of a character, which a cut can leave.
+ */
+function plain(text: string): string {
+  return text.replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g, ' ').replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '\ufffd');
 }
 
-/** The first line of a stack that says where in the code it happened, with what changes from build to build taken out. */
+/**
+ * A page's path, as kept: the game's page it is, with no language, no query, no hash and nothing
+ * after the page's own name. Anything else is '/other': a place is in every alert's title, and a
+ * player could send any.
+ */
+export function placeOf(path: string): string {
+  const bare = path.split(/[?#]/)[0];
+  if (!bare.startsWith('/')) return '/other';
+  const page = `/${bare.replace(/^\/(en|es|ru)(?=\/|$)/, '').split('/')[1] ?? ''}`;
+  return PAGES.includes(page) ? page : '/other';
+}
+
+/**
+ * The first line of a stack that says where in the code it happened (`at f (file:1:2)`, or
+ * `f@file:1:2`), with what changes from build to build, and every number, taken out.
+ */
 function firstFrame(stack: string | null): string {
-  const frame = (stack ?? '').split('\n').find((line) => /\bat\b|@|\(/.test(line) && /[/.]/.test(line)) ?? '';
+  const frame = (stack ?? '').split('\n').find((line) => /^\s*at\s|@\S*:\d+/.test(line)) ?? '';
   return frame
     .replace(/:\d+(:\d+)?/g, '')
     .replace(/[0-9a-f]{6,}/gi, '#')
+    .replace(/\d+/g, '#')
     .trim();
 }
 
@@ -86,11 +117,11 @@ export async function fingerprintOf(source: string, place: string, message: stri
 function readReport(raw: unknown): { message: string; stack: string | null; place: string; build: string | null; browser: string | null } | null {
   if (!isRecord(raw)) return null;
   const { message, stack, place, build, browser } = raw;
-  if (typeof message !== 'string' || message.trim() === '' || message.length > MAX_RAW) return null;
-  if (stack !== undefined && stack !== null && (typeof stack !== 'string' || stack.length > MAX_RAW * 2)) return null;
-  if (typeof place !== 'string' || place.length > MAX_RAW) return null;
-  if (build !== undefined && build !== null && typeof build !== 'string') return null;
-  if (browser !== undefined && browser !== null && typeof browser !== 'string') return null;
+  if (typeof message !== 'string' || message.trim() === '' || message.length > MOST_SENT.message) return null;
+  if (stack !== undefined && stack !== null && (typeof stack !== 'string' || stack.length > MOST_SENT.stack)) return null;
+  if (typeof place !== 'string' || place.length > MOST_SENT.place) return null;
+  if (build !== undefined && build !== null && (typeof build !== 'string' || build.length > MOST_SENT.build)) return null;
+  if (browser !== undefined && browser !== null && (typeof browser !== 'string' || browser.length > MOST_SENT.browser)) return null;
   return { message, stack: typeof stack === 'string' ? stack : null, place, build: typeof build === 'string' ? build : null, browser: typeof browser === 'string' ? browser : null };
 }
 
@@ -101,16 +132,16 @@ function ignorable(message: string, stack: string | null): boolean {
 
 /** One kind of error, cleaned and cut to what the database keeps. */
 async function rowOf(source: ErrorRow['source'], place: string, message: string, stack: string | null, build: string | null, browser: string | null): Promise<ErrorRow> {
-  const said = scrub(message).trim().slice(0, MAX_MESSAGE) || 'no message';
-  const trace = stack === null ? null : scrub(stack).slice(0, MAX_STACK);
+  const said = plain(scrub(message).trim().slice(0, MAX_MESSAGE)) || 'no message';
+  const trace = stack === null ? null : plain(scrub(stack).slice(0, MAX_STACK));
   return {
     fingerprint: await fingerprintOf(source, place, said, trace),
     source,
     place,
     message: said,
     stack: trace,
-    build: build === null ? null : scrub(build).slice(0, MAX_SMALL),
-    browser: browser === null ? null : scrub(browser).slice(0, MAX_SMALL),
+    build: build === null ? null : plain(scrub(build).slice(0, MAX_SMALL)),
+    browser: browser === null ? null : plain(scrub(browser).slice(0, MAX_SMALL)),
   };
 }
 
@@ -157,9 +188,16 @@ export async function noteFunctionError(deps: NoteDeps, name: string, error: unk
   await noted(deps, await rowOf('function', name.slice(0, MAX_PLACE), message, stack, null, null));
 }
 
+/** Slack reads these three as its own commands: a mention, a link. Written so, they are text. */
+const slackText = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** A fence of three backticks in the text would end the block it is shown in. */
+const unfenced = (text: string) => text.replace(/`/g, "'");
+
 /**
  * How an alert is sent to an address: Slack and Discord take JSON, each its own; anything else, such
- * as an ntfy topic, takes the text with a title. Null for an address that is not https.
+ * as an ntfy topic, takes the text with a title. Null for an address that is not https. The text of
+ * an alert holds what a player sent, so it is shown as text and nothing else: in a block of code,
+ * with no mention that may ping anyone, and a title of plain printable characters for a header.
  */
 export function alertRequest(address: string, title: string, text: string): { url: string; init: { method: 'POST'; headers: Record<string, string>; body: string } } | null {
   let url: URL;
@@ -169,9 +207,14 @@ export function alertRequest(address: string, title: string, text: string): { ur
     return null;
   }
   if (url.protocol !== 'https:') return null;
-  if (url.hostname === 'hooks.slack.com') return { url: address, init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: `${title}\n${text}` }) } };
-  if (/(^|\.)discord(app)?\.com$/.test(url.hostname)) {
-    return { url: address, init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: `${title}\n${text}`.slice(0, 1900) }) } };
+  if (url.hostname === 'hooks.slack.com') {
+    return { url: address, init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: `${slackText(title)}\n\`\`\`${unfenced(slackText(text))}\`\`\`` }) } };
   }
-  return { url: address, init: { method: 'POST', headers: { Title: title, 'Content-Type': 'text/plain; charset=utf-8' }, body: text } };
+  if (/(^|\.)discord(app)?\.com$/.test(url.hostname)) {
+    // Two thousand characters at most in all.
+    const shown = unfenced(text).slice(0, Math.max(0, 1900 - title.length));
+    return { url: address, init: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: `${title}\n\`\`\`\n${shown}\n\`\`\``, allowed_mentions: { parse: [] } }) } };
+  }
+  const header = title.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/[^\x20-\x7e]/g, '?');
+  return { url: address, init: { method: 'POST', headers: { Title: header, 'Content-Type': 'text/plain; charset=utf-8' }, body: text } };
 }

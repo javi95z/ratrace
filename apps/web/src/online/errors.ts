@@ -46,20 +46,40 @@ const TRIES = 5;
 const MAX_MESSAGE = 500;
 const MAX_STACK = 4000;
 const MAX_PLACE = 200;
+/** How much of what was written is looked at, at most: far more than is kept, so what is kept is whole. */
+const READ_MESSAGE = 2000;
+const READ_STACK = 8000;
+
+/** A run of text with no space or quote in it, which may be an address with a query or a hash. */
+const WORD = /[^\s'")]+/g;
 
 /**
  * Takes out of a text what could say who someone is, or let someone in: e-mail addresses, tokens,
- * ids, long numbers, and whatever follows `?` or `#` in an address. The same rules as the server's
- * own (`supabase/functions/_shared/errors.ts`); a test holds the two together.
+ * ids, machines' addresses, long numbers, and whatever follows `?` or `#` in an address or a path.
+ * Every rule takes a time that grows with the text, never with its square. The same rules as the
+ * server's own (`supabase/functions/_shared/errors.ts`); a test holds the two together.
  */
 export function scrub(text: string): string {
   return text
-    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '<email>')
-    .replace(/eyJ[\w-]*\.[\w-]*\.[\w-]*/g, '<token>')
+    .replace(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,8}/g, '<email>')
+    .replace(/eyJ[\w-]{0,256}\.[\w-]{0,4096}\.[\w-]{0,512}/g, '<token>')
     .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi, '<id>')
-    .replace(/(https?:\/\/[^\s?#'")]*)[?#][^\s'")]*/g, '$1')
+    .replace(WORD, (word) => {
+      const at = word.search(/[?#]/);
+      return at > 0 && word.slice(0, at).includes('/') ? word.slice(0, at) : word;
+    })
+    .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '<ip>')
     .replace(/[A-Za-z0-9_-]{24,}/g, '<token>')
     .replace(/\d{6,}/g, '<number>');
+}
+
+/**
+ * The start of a text, for cleaning: cut where a word ends, so that no half of an address is left
+ * for the rules to miss. What is kept is far shorter, so a word longer than a cut can carry loses
+ * only its end.
+ */
+function head(text: string, most: number): string {
+  return text.length <= most ? text : text.slice(0, most).replace(/\S{1,254}$/, '');
 }
 
 /** Noise of other people's code, which says nothing of the game. The server leaves it out too. */
@@ -154,11 +174,11 @@ export function errorWatch(parts: ErrorWatchParts): ErrorWatch {
     report(message, stack) {
       if (seen.size >= MOST || ignorable(message, stack)) return;
       const place = scrub(parts.place().split(/[?#]/)[0]).slice(0, MAX_PLACE);
-      const cleaned = scrub(message).trim().slice(0, MAX_MESSAGE);
+      const cleaned = scrub(head(message, READ_MESSAGE)).trim().slice(0, MAX_MESSAGE);
       const kind = `${place}\u0000${cleaned.replace(/\d+/g, '#').toLowerCase()}`;
       if (seen.has(kind)) return;
       seen.add(kind);
-      waiting.push({ message: cleaned, stack: stack === null ? null : scrub(stack).slice(0, MAX_STACK), place, build: parts.build, browser: parts.browser });
+      waiting.push({ message: cleaned, stack: stack === null ? null : scrub(head(stack, READ_STACK)).slice(0, MAX_STACK), place, build: parts.build, browser: parts.browser });
       soon(GATHER_MS);
     },
     flush,

@@ -21,7 +21,7 @@ export function watched<C>(name: string, handler: (req: Request, ctx: C) => Prom
     try {
       res = await handler(req, ctx);
     } catch (error) {
-      console.error(`${name} failed:`, error instanceof Error ? error.message : error);
+      console.error(`${name} failed:`, error);
       await note(ctx, error);
       return json(500, { error: 'server' });
     }

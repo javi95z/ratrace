@@ -19,14 +19,17 @@ export function ago(at: string, now: number): string {
   return `${Math.floor(seconds / 86_400)}d`;
 }
 
+/** A text as a terminal may print it: what it would take as a command of its own (an escape, a bell) is a space. */
+const shown = (text: string): string => text.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ');
+
 /** The kinds, the latest first, one line each and a line of what they said under it. None, and it says so. */
 export function listOf(rows: readonly KindRow[], now: number): string[] {
   if (rows.length === 0) return ['No errors kept.'];
   return [...rows]
     .sort((a, b) => Date.parse(b.last_seen) - Date.parse(a.last_seen))
     .flatMap((row) => [
-      `${ago(row.last_seen, now).padStart(4)} ago  ×${String(row.seen).padEnd(5)} ${row.source === 'page' ? 'page    ' : 'function'} ${row.place}  (first ${ago(row.first_seen, now)} ago${row.build ? `, ${row.build}` : ''}${row.browser ? `, ${row.browser}` : ''})`,
-      `           ${row.message.replace(/\s+/g, ' ').slice(0, 160)}`,
+      shown(`${ago(row.last_seen, now).padStart(4)} ago  ×${String(row.seen).padEnd(5)} ${row.source === 'page' ? 'page    ' : 'function'} ${row.place}  (first ${ago(row.first_seen, now)} ago${row.build ? `, ${row.build}` : ''}${row.browser ? `, ${row.browser}` : ''})`),
+      `           ${shown(row.message).replace(/\s+/g, ' ').slice(0, 160)}`,
     ]);
 }
 

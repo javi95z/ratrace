@@ -43,6 +43,8 @@ declare
   gd uuid := gen_random_uuid();
   fp text := 'test-' || replace(gen_random_uuid()::text, '-', '');
   far timestamptz := '2099-06-01 12:00:00+00';
+  pages integer;
+  functions integer;
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -944,18 +946,32 @@ begin
   j := public.note_error(fp || '-11', 'function', 'ranked', 'kind 11', null, null, null, far + interval '3 days' + interval '20 seconds');
   if not (j ->> 'alert')::boolean and exists (select 1 from public.error_kinds where fingerprint = fp || '-11')
     then passed := passed + 1; else failed := array_append(failed, format('the eleventh alert of an hour answered %s', j)); end if;
+  -- The pages and the functions have ten each: a flood of one never silences the other.
+  j := public.note_error(fp || '-page', 'page', '/play', 'a page kind in a busy hour', null, null, null, far + interval '3 days' + interval '30 seconds');
+  if (j ->> 'alert')::boolean then passed := passed + 1; else failed := array_append(failed, format('a page kind in an hour of function alerts answered %s', j)); end if;
+  -- A kind that found no alert left is alerted when it comes again and there is one, not a day later.
+  j := public.note_error(fp || '-11', 'function', 'ranked', 'kind 11', null, null, null, far + interval '3 days' + interval '2 hours');
+  if (j ->> 'alert')::boolean and (j ->> 'seen')::int = 2 then passed := passed + 1; else failed := array_append(failed, format('a kind that missed its alert answered %s', j)); end if;
   -- What is not one of the two sources, or too long to be an error, is refused.
   begin
     perform public.note_error(fp || '-x', 'mail', '/play', 'boom', null, null, null, far);
     failed := array_append(failed, 'an error of an unknown source was kept');
   exception when check_violation then passed := passed + 1;
   end;
-  -- The table holds a thousand kinds at most: the ones seen longest ago make room.
-  for n in 1..1001 loop
+  -- A thousand kinds of each source at most: the ones seen longest ago make room, and pages make room only among pages.
+  -- An old function kind, older than any page's, is not what a flood of pages pushes out.
+  perform public.note_error(fp || '-old-function', 'function', 'engine', 'old', null, null, null, timestamptz '1999-01-01 00:00:00+00');
+  select count(*) into functions from public.error_kinds where source = 'function';
+  select count(*) into pages from public.error_kinds where source = 'page';
+  -- Enough old pages to go one over a thousand, whatever the project already holds.
+  pages := 1001 - least(pages, 999);
+  for n in 1..pages loop
     perform public.note_error(fp || '-old-' || n, 'page', '/', 'old ' || n, null, null, null, timestamptz '2000-01-01 00:00:00+00' + n * interval '1 second');
   end loop;
-  if not exists (select 1 from public.error_kinds where fingerprint = fp || '-old-1') and exists (select 1 from public.error_kinds where fingerprint = fp || '-old-1001')
-    then passed := passed + 1; else failed := array_append(failed, 'the kinds seen longest ago did not make room'); end if;
+  if not exists (select 1 from public.error_kinds where fingerprint = fp || '-old-1') and exists (select 1 from public.error_kinds where fingerprint = fp || '-old-' || pages)
+     and (select count(*) from public.error_kinds where source = 'page') = 1000
+     and (select count(*) from public.error_kinds where source = 'function') = functions
+    then passed := passed + 1; else failed := array_append(failed, 'the kinds seen longest ago did not make room, or a page pushed out a function'); end if;
 
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;

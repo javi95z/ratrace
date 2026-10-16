@@ -151,7 +151,14 @@ export function browserOnline(device: PlayerStore): Online {
     remember: givenUpIn(() => window.localStorage),
     newId: () => crypto.randomUUID(),
   });
-  // Out of production, an error is the developer's to read in the console, not to send. It lasts as long as the page.
-  if (process.env.NODE_ENV === 'production') watchErrors(online, window, console, (run, ms) => void window.setTimeout(run, ms));
+  // Out of production, an error is the developer's to read in the console, not to send. It lasts as long as the page,
+  // and a page that will not be watched (its log cannot be written to) plays on all the same.
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      watchErrors(online, window, console, (run, ms) => void window.setTimeout(run, ms));
+    } catch {
+      // Nothing is watched: the game is what it is without it.
+    }
+  }
   return online;
 }
