@@ -324,12 +324,13 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
       <Hud compact={stage !== 'news' && stage !== 'resolve'} onProfile={() => setProfileOpen(true)} />
       {room ? <div className="px-3 pt-2">{room.bar}</div> : null}
       {/* Clipped at the sides: the paper spinning in, or a card dragged away, would otherwise make the page wider than the phone for a moment, and the browser would let it pan. */}
-      <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 overflow-x-clip pt-3 outline-none ${hasActions ? (stage === 'finance' ? 'pb-36' : 'pb-28') : 'pb-8'}`}>
+      <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`flex-1 overflow-x-clip pt-3 outline-none ${hasActions ? 'pb-4' : 'pb-8'}`}>
         <StageView stage={stage} desk={false} />
         {afterStage}
       </main>
+      {/* Stuck to the foot of the page rather than fixed to the screen: on a phone a fixed bar can be left behind mid-page when the browser's own bars come and go. */}
       {hasActions ? (
-        <div id="round-actions" tabIndex={-1} className="pb-safe fixed inset-x-0 bottom-0 z-20 bg-night-900 pt-3">
+        <div id="round-actions" tabIndex={-1} className="pb-safe sticky bottom-0 z-20 bg-night-900 pt-3">
           <div className="mx-auto w-full max-w-md px-3">{actions}</div>
         </div>
       ) : null}

@@ -839,6 +839,7 @@
     "businessClosed": "Tu negocio ha cerrado: {name}.",
     "businessClosedHint": "Ya no quedaba nada dentro.",
     "skill": "Mejoras en {skill}: nivel {level}.",
+    "skills": "Mejoras: {list}.",
     "repair": "Reparación de tu {item}: {amount}.",
     "audit": "Inspección de Hacienda: pagas {amount}.",
     "auditHint": "{evaded} de impuestos, {fine} de multa y {goods} por lo comprado sin factura. Ya no ocultas nada.",

@@ -839,6 +839,7 @@
     "businessClosed": "Бизнес закрылся: {name}.",
     "businessClosedHint": "В нём уже ничего не оставалось.",
     "skill": "{skill}: теперь уровень {level}.",
+    "skills": "Навыки выросли: {list}.",
     "repair": "Ремонт ({item}): {amount}.",
     "audit": "Налоговая проверка: платишь {amount}.",
     "auditHint": "{evaded} налогов, {fine} штрафа и {goods} за купленное без чека. Больше ничего не скрыто.",

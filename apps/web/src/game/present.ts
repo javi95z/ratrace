@@ -304,6 +304,7 @@ const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankru
 export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
   const told: Array<{ rank: number; note: RoundNote }> = [];
   const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
+  const levelled: Array<Extract<GameEvent, { kind: 'skill' }>> = [];
   for (const event of events) {
     switch (event.kind) {
       case 'escaped':
@@ -339,7 +340,7 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         add(event, { tone: 'bad', icon: repairArt(content.items.find((item) => item.id === event.itemId)?.ladder ?? ''), title: t('repair', { item: names.items[event.itemId], amount: fmt.money(event.amount) }) });
         break;
       case 'skill':
-        add(event, { tone: 'good', icon: skillArt[event.skill], title: t('skill', { skill: text.skills[event.skill], level: event.level }) });
+        levelled.push(event);
         break;
       case 'businessSold':
         add(event, { tone: 'good', icon: businessArt(event.typeId), title: t('businessSold', { name: text.businessTypes[event.typeId]?.name ?? event.typeId, amount: fmt.money(event.price) }) });
@@ -405,6 +406,14 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
       default:
         break;
     }
+  }
+  // Skills that rose in the same round are one line, not one each.
+  if (levelled.length === 1) {
+    const [only] = levelled;
+    told.push({ rank: TOLD.indexOf('skill'), note: { tone: 'good', icon: skillArt[only.skill], title: t('skill', { skill: text.skills[only.skill], level: only.level }) } });
+  } else if (levelled.length > 1) {
+    const list = levelled.map((event) => `${text.skills[event.skill]} ${event.level}`).join(', ');
+    told.push({ rank: TOLD.indexOf('skill'), note: { tone: 'good', icon: skillArt[levelled[0].skill], title: t('skills', { list }) } });
   }
   // A stable sort: two events of a kind stay in the order they happened.
   return told.sort((a, b) => a.rank - b.rank).map((entry) => entry.note);

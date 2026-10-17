@@ -65,13 +65,20 @@ self.addEventListener('push', (event) => {
     notice = {};
   }
   if (!notice.title) return;
-  event.waitUntil(self.registration.showNotification(notice.title, {
-    body: notice.body,
-    tag: notice.tag,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    data: { url: notice.url || '/' },
-  }));
+  event.waitUntil((async () => {
+    // A notice is for someone who is away: with the game open in front of them, it says nothing the screen does not.
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (open.some((client) => client.visibilityState === 'visible')) return;
+    // One of each kind is enough: an older one still in the tray goes before the new one comes.
+    if (notice.tag) for (const old of await self.registration.getNotifications({ tag: notice.tag })) old.close();
+    await self.registration.showNotification(notice.title, {
+      body: notice.body,
+      tag: notice.tag,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: notice.url || '/' },
+    });
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {

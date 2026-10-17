@@ -839,6 +839,7 @@
     "businessClosed": "Your business has closed: {name}.",
     "businessClosedHint": "There was nothing left in it.",
     "skill": "{skill} up: level {level}.",
+    "skills": "Skills up: {list}.",
     "repair": "Repair for your {item}: {amount}.",
     "audit": "Tax inspection: you pay {amount}.",
     "auditHint": "{evaded} of tax, a {fine} fine and {goods} for what you bought without an invoice. Nothing is hidden any more.",
