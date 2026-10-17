@@ -771,6 +771,8 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     if (!Number.isSafeInteger(rateBp) || (rateBp as number) < 0 || (rateBp as number) > LOAN_LIMITS.maxRateBp || (rateBp as number) % LOAN_LIMITS.rateStepBp !== 0) return bad('rateBp');
     if (!Number.isSafeInteger(rounds) || (rounds as number) < 1 || (rounds as number) > LOAN_LIMITS.maxRounds) return bad('rounds');
     if (room.status !== 'playing' || me.left_at !== null) return closed;
+    // A game on rules from before loans could not pay one out: its lives would never hear of it.
+    if (!game?.roomStart) return { status: 409, body: { error: 'cannot-loan' } };
     const loan = { id: deps.newId(), room_id: room.id, round: room.round, proposer: userId, lender: lend ? userId : to, borrower: lend ? to : userId, amount: amount as number, rate_bp: rateBp as number, rounds: rounds as number };
     const said = await deps.offerLoan(loan);
     if (said === 'closed') return closed;

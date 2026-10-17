@@ -813,6 +813,8 @@ function RoomBar({ room }: { room: RoomState }) {
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [picked, setPicked] = useState<RoomMember | null>(null);
+  // Loans need a life on rules that know them: a game begun before them goes on without.
+  const loans = useGame((s) => (s.view ? Object.hasOwn(s.view.player.life.flags, 'in_room') : false));
   const here = room.members.filter((member) => !member.left);
   const ready = here.filter((member) => member.ready).length;
   const me = here.find((member) => member.me);
@@ -869,12 +871,16 @@ function RoomBar({ room }: { room: RoomState }) {
         <Standings
           room={room}
           live
-          onPick={(member) => {
-            setOpen(false);
-            setPicked(member);
-          }}
+          onPick={
+            loans
+              ? (member) => {
+                  setOpen(false);
+                  setPicked(member);
+                }
+              : undefined
+          }
         />
-        {room.status === 'playing' ? <p className="mt-2 text-center text-[12px] text-ink-300">{t('loan.pickHint')}</p> : null}
+        {room.status === 'playing' && loans ? <p className="mt-2 text-center text-[12px] text-ink-300">{t('loan.pickHint')}</p> : null}
         {room.status === 'playing' ? (
           <div className="mt-4 flex justify-center">
             <button type="button" onClick={() => setLeaving(true)} className="min-h-11 px-3 text-[13px] text-ink-300 underline underline-offset-4">
