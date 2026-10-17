@@ -1,13 +1,13 @@
 'use client';
 
-import { portraitArt } from '@ratrace/content';
+import { LifeFace } from './LifeFace';
+
 import { useState } from 'react';
 import { useRuns, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { recordsOf } from '@/game/records';
 import { Link } from '@/i18n/navigation';
 import type { FinishedRun } from '@/session/types';
-import { Face } from '@/ui/Face';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RoomHistory } from './RoomHistory';
@@ -77,7 +77,7 @@ export function Records() {
                 <li key={run.runId}>
                   {/* A line each, the face as the life is chosen: the rest of it a tap away. */}
                   <button type="button" aria-haspopup="dialog" onClick={() => setOpen(run)} className="bevel flex min-h-12 w-full items-center gap-3 bg-night-700 px-2 py-1.5 text-left">
-                    <Face id={portraitArt(run.lifeId, 22)} size="md" />
+                    <LifeFace lifeId={run.lifeId} size="md" />
                     <span className="min-w-0 flex-1">
                       <span className="pixel flex items-center gap-1.5 text-[15px]">
                         <span className="truncate">{lifeName(run)}</span>

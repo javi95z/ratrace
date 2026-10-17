@@ -913,7 +913,15 @@
     "homeHelped": "Your family put you up: {amount} saved.",
     "homeFriends": "Old friends open doors: more contacts, and no rung lost.",
     "businessFailed": "{name} did not make it",
-    "businessFailedHint": "It closed in its first round. Sold for parts: {amount} back."
+    "businessFailedHint": "It closed in its first round. Sold for parts: {amount} back.",
+    "milestones": {
+      "home": "Your first home",
+      "wedding": "Wedding day",
+      "child": "Your first child",
+      "businessSold": "Business sold",
+      "retired": "Retirement",
+      "promotion": "The top of your career"
+    }
   },
   "profile": {
     "title": "Your life",
@@ -1087,7 +1095,9 @@
       "escaped": "Out of the rat race",
       "escapeLost": "Back in the race",
       "bankrupt": "Bankrupt"
-    }
+    },
+    "map": "Where your life went",
+    "mapLabel": "A map of the world with your route: {cities}"
   },
   "epilogue": {
     "title": "Your life, told",

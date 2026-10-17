@@ -1,5 +1,8 @@
 'use client';
 
+import { milestoneArt } from '@ratrace/content';
+import type { MilestoneScene } from '@ratrace/content';
+import { milestoneOf } from '@/game/milestones';
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
@@ -26,6 +29,16 @@ const NOTE: Record<RoundNote['tone'], string> = {
 const ROLL_MS = 80;
 /** How long a line takes to rise into place. */
 const RISE_MS = 280;
+
+/** What each milestone is called on screen: the key of each is written out. */
+const MILESTONE_TITLE: Record<MilestoneScene, string> = {
+  home: 'milestones.home',
+  wedding: 'milestones.wedding',
+  child: 'milestones.child',
+  businessSold: 'milestones.businessSold',
+  retired: 'milestones.retired',
+  promotion: 'milestones.promotion',
+};
 
 /** Money that came in on its own: it flies to the cash as coins once the ledger has rolled. */
 const PASSIVE: ReadonlySet<string> = new Set(['dividends', 'interest', 'rent', 'otherPassive', 'business']);
@@ -94,6 +107,7 @@ export function Resolve() {
   const words = useWords();
   const { content, text, fmt } = words;
   const resolved = useGame((s) => s.resolved);
+  const story = useGame((s) => s.story);
   const view = useGame((s) => s.view);
   const members = useRoom((s) => s.room?.members);
   const room = useT('room');
@@ -101,6 +115,7 @@ export function Resolve() {
   if (!resolved || !view) return null;
 
   const { before, events } = resolved;
+  const scene = milestoneOf(story, before.round, view.round);
   // Who did something to this life, in a game with friends, by the name the room shows.
   const whoIs = (userId: string) => members?.find((member) => member.userId === userId)?.name ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
   const notes = roundNotes(words, t, events, whoIs);
@@ -127,6 +142,15 @@ export function Resolve() {
       </div>
 
       <Celebrations />
+      {/* A milestone of the life gets its picture, on the round it happened in. */}
+      {scene ? (
+        <figure className="frame frame-cream mx-auto max-w-full animate-rise bg-cream text-ink-900" style={{ width: 'calc(288px * var(--art) + 4px)' }}>
+          <div className="border-2 border-cream leading-[0]">
+            <Sprite id={milestoneArt[scene]} scale="art" fallback={{ w: 288, h: 120 }} />
+          </div>
+          <figcaption className="pixel px-3 py-2 text-center text-[17px]">{t(MILESTONE_TITLE[scene])}</figcaption>
+        </figure>
+      ) : null}
       {ended ? (
         <div role="status" className="frame flex animate-rise items-center gap-3 bg-teal-800 p-2">
           <Bare className="size-10">

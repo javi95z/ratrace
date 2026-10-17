@@ -119,6 +119,56 @@
     "w": 48,
     "h": 48
   },
+  "backdrop.bangkok": {
+    "src": "portraits/backdrop.bangkok.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.dubai": {
+    "src": "portraits/backdrop.dubai.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.london": {
+    "src": "portraits/backdrop.london.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.madrid": {
+    "src": "portraits/backdrop.madrid.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.mexico_city": {
+    "src": "portraits/backdrop.mexico_city.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.moscow": {
+    "src": "portraits/backdrop.moscow.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.new_york": {
+    "src": "portraits/backdrop.new_york.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.singapore": {
+    "src": "portraits/backdrop.singapore.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.tokyo": {
+    "src": "portraits/backdrop.tokyo.png",
+    "w": 64,
+    "h": 64
+  },
+  "backdrop.zurich": {
+    "src": "portraits/backdrop.zurich.png",
+    "w": 64,
+    "h": 64
+  },
   "badge.audited": {
     "src": "badges/badge.audited.png",
     "w": 64,
@@ -399,8 +449,38 @@
     "w": 64,
     "h": 64
   },
+  "business.app.1": {
+    "src": "items/business.app.1.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.app.2": {
+    "src": "items/business.app.2.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.app.3": {
+    "src": "items/business.app.3.png",
+    "w": 64,
+    "h": 64
+  },
   "business.bar": {
     "src": "items/business.bar.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.bar.1": {
+    "src": "items/business.bar.1.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.bar.2": {
+    "src": "items/business.bar.2.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.bar.3": {
+    "src": "items/business.bar.3.png",
     "w": 64,
     "h": 64
   },
@@ -409,13 +489,58 @@
     "w": 64,
     "h": 64
   },
+  "business.franchise.1": {
+    "src": "items/business.franchise.1.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.franchise.2": {
+    "src": "items/business.franchise.2.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.franchise.3": {
+    "src": "items/business.franchise.3.png",
+    "w": 64,
+    "h": 64
+  },
   "business.services": {
     "src": "items/business.services.png",
     "w": 64,
     "h": 64
   },
+  "business.services.1": {
+    "src": "items/business.services.1.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.services.2": {
+    "src": "items/business.services.2.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.services.3": {
+    "src": "items/business.services.3.png",
+    "w": 64,
+    "h": 64
+  },
   "business.shop": {
     "src": "items/business.shop.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.shop.1": {
+    "src": "items/business.shop.1.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.shop.2": {
+    "src": "items/business.shop.2.png",
+    "w": 64,
+    "h": 64
+  },
+  "business.shop.3": {
+    "src": "items/business.shop.3.png",
     "w": 64,
     "h": 64
   },
@@ -1014,6 +1139,16 @@
     "w": 288,
     "h": 120
   },
+  "card.moment_business_sold": {
+    "src": "cards/card.moment_business_sold.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_child": {
+    "src": "cards/card.moment_child.png",
+    "w": 288,
+    "h": 120
+  },
   "card.moment_crash": {
     "src": "cards/card.moment_crash.png",
     "w": 288,
@@ -1034,8 +1169,28 @@
     "w": 288,
     "h": 120
   },
+  "card.moment_home": {
+    "src": "cards/card.moment_home.png",
+    "w": 288,
+    "h": 120
+  },
   "card.moment_million": {
     "src": "cards/card.moment_million.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_promotion": {
+    "src": "cards/card.moment_promotion.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_retired": {
+    "src": "cards/card.moment_retired.png",
+    "w": 288,
+    "h": 120
+  },
+  "card.moment_wedding": {
+    "src": "cards/card.moment_wedding.png",
     "w": 288,
     "h": 120
   },
@@ -3264,6 +3419,11 @@
     "w": 32,
     "h": 32
   },
+  "map.world": {
+    "src": "cards/map.world.png",
+    "w": 576,
+    "h": 240
+  },
   "portrait.banker.22": {
     "src": "portraits/portrait.banker.22.png",
     "w": 64,
@@ -3743,6 +3903,86 @@
     "src": "portraits/portrait.waiter.58.png",
     "w": 64,
     "h": 64
+  },
+  "rat.cheer": {
+    "src": "brand/rat.cheer.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.count": {
+    "src": "brand/rat.count.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.exit": {
+    "src": "brand/rat.exit.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.head.beanie": {
+    "src": "brand/rat.head.beanie.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.cap": {
+    "src": "brand/rat.head.cap.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.chef": {
+    "src": "brand/rat.head.chef.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.crown": {
+    "src": "brand/rat.head.crown.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.headphones": {
+    "src": "brand/rat.head.headphones.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.plain": {
+    "src": "brand/rat.head.plain.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.sunglasses": {
+    "src": "brand/rat.head.sunglasses.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.head.top_hat": {
+    "src": "brand/rat.head.top_hat.png",
+    "w": 64,
+    "h": 64
+  },
+  "rat.hide": {
+    "src": "brand/rat.hide.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.shock": {
+    "src": "brand/rat.shock.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.sleep": {
+    "src": "brand/rat.sleep.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.think": {
+    "src": "brand/rat.think.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.wave": {
+    "src": "brand/rat.wave.png",
+    "w": 128,
+    "h": 128
   },
   "rim.bronze": {
     "src": "badges/rim.bronze.png",

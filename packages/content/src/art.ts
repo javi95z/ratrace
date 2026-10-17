@@ -262,6 +262,11 @@ export const skillArt: Record<SkillId | 'finance' | 'career', string> = {
 };
 /** The sign of each kind of business. */
 export const businessArt = (typeId: string): string => `business.${typeId}`;
+/**
+ * A business as big as it has grown: just started, doing well, thriving, by how much of its full
+ * size its capital has reached.
+ */
+export const businessStageArt = (typeId: string, capital: number, scale: number): string => `business.${typeId}.${capital * 3 >= scale * 2 ? 3 : capital * 3 >= scale ? 2 : 1}`;
 /** The second-hand shop: its sign, and the repair of a thing of each ladder, with a sign for any other. */
 export const USED_ART = 'icon.used';
 export const repairArt = (ladder: string): string => (ladder === 'car' ? 'icon.repair_car' : ladder === 'watch' ? 'icon.repair_watch' : 'icon.repair');
@@ -309,6 +314,44 @@ export const momentArt: Record<string, string> = {
   crash: 'card.moment_crash',
   energy: 'card.moment_energy',
   debt: 'card.moment_debt',
+};
+
+/** The milestones of a life, each with its scene, told on the round it happens in. */
+export type MilestoneScene = 'home' | 'wedding' | 'child' | 'businessSold' | 'retired' | 'promotion';
+export const milestoneArt: Record<MilestoneScene, string> = {
+  home: 'card.moment_home',
+  wedding: 'card.moment_wedding',
+  child: 'card.moment_child',
+  businessSold: 'card.moment_business_sold',
+  retired: 'card.moment_retired',
+  promotion: 'card.moment_promotion',
+};
+
+/** The rat of the game, in the poses it takes on screen. */
+export type RatPose = 'cheer' | 'hide' | 'exit' | 'count' | 'sleep' | 'shock' | 'think' | 'wave';
+export const ratArt = (pose: RatPose): string => `rat.${pose}`;
+export const RAT_POSES: readonly RatPose[] = ['cheer', 'hide', 'exit', 'count', 'sleep', 'shock', 'think', 'wave'];
+
+/** The night sky of a city with its landmark, behind a portrait: lives tell apart by where they began. */
+export const backdropArt = (cityId: string): string => `backdrop.${cityId}`;
+
+/** The world at night, the cities of the game marked on it. */
+export const MAP_ART = 'map.world';
+/**
+ * Where each city's light is on the map, as a share of its width and height: the route of a life is
+ * drawn between them.
+ */
+export const MAP_PLACES: Readonly<Record<string, { x: number; y: number }>> = {
+  new_york: { x: 0.268, y: 0.314 },
+  mexico_city: { x: 0.175, y: 0.45 },
+  london: { x: 0.455, y: 0.243 },
+  madrid: { x: 0.443, y: 0.33 },
+  zurich: { x: 0.491, y: 0.28 },
+  moscow: { x: 0.566, y: 0.222 },
+  dubai: { x: 0.611, y: 0.44 },
+  bangkok: { x: 0.73, y: 0.509 },
+  singapore: { x: 0.741, y: 0.587 },
+  tokyo: { x: 0.848, y: 0.364 },
 };
 
 /** A life is drawn at four ages. */

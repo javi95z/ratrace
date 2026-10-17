@@ -1,11 +1,11 @@
 'use client';
 
-import { portraitArt } from '@ratrace/content';
+import { LifeFace } from './LifeFace';
+
 import { useEffect, useState } from 'react';
 import { useRoom, useT, useWords } from '@/game/context';
 import type { RoomGameOver } from '@/game/room';
 import type { FinishedRun } from '@/session/types';
-import { Face } from '@/ui/Face';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RunDetail } from './RunDetail';
@@ -76,7 +76,7 @@ export function RoomHistory({ runs }: { runs: FinishedRun[] }) {
               return (
                 <li key={game.id}>
                   <button type="button" aria-haspopup="dialog" onClick={() => setOpen(game)} className="bevel flex min-h-12 w-full items-center gap-3 bg-night-700 px-2 py-1.5 text-left">
-                    <Face id={portraitArt(game.lifeId, 22)} size="md" />
+                    <LifeFace lifeId={game.lifeId} size="md" />
                     <span className="min-w-0 flex-1">
                       <span className="pixel flex items-center gap-1.5 text-[15px]">
                         <span className="truncate">{lifeName(game.lifeId)}</span>
@@ -94,7 +94,7 @@ export function RoomHistory({ runs }: { runs: FinishedRun[] }) {
           : runs.map((run) => (
               <li key={run.runId}>
                 <button type="button" aria-haspopup="dialog" onClick={() => setOpenRun(run)} className="bevel flex min-h-12 w-full items-center gap-3 bg-night-700 px-2 py-1.5 text-left">
-                  <Face id={portraitArt(run.lifeId, 22)} size="md" />
+                  <LifeFace lifeId={run.lifeId} size="md" />
                   <span className="min-w-0 flex-1">
                     <span className="pixel block truncate text-[15px]">{lifeName(run.lifeId)}</span>
                     <span className="block text-[12px] text-ink-300">{fmt.day(run.finishedAt)}</span>
@@ -110,7 +110,7 @@ export function RoomHistory({ runs }: { runs: FinishedRun[] }) {
           <div className="flex flex-col gap-3">
             {/* The game: when, how long its rounds were, and where the player came. */}
             <div className="flex items-center gap-3">
-              <Face id={portraitArt(open.lifeId, 22)} size="md" />
+              <LifeFace lifeId={open.lifeId} size="md" />
               <p className="min-w-0 flex-1 text-[13px] leading-snug text-ink-200">
                 {fmt.day(open.playedAt)} · {room('round', { time: pace(open.seconds) })}
                 {open.rematchOf ? ` · ${room('rematch')}` : ''}

@@ -382,4 +382,15 @@ export const SHEETS: SheetSpec[] = [
   { file: 'badges/badges-09', group: 'badges', kind: 'objects', cols: 4, rows: 1, width: 64, height: 64, ids: ['badge.tax_free_year', 'badge.tax_haven', 'badge.off_the_grid', 'badge.home_again'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
+  // v14: the rat in eight poses, and its head in eight hats (the avatars in layers of v15 take their place).
+  { file: 'brand/brand-02', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 128, height: 128, ids: ['rat.cheer', 'rat.hide', 'rat.exit', 'rat.count', 'rat.sleep', 'rat.shock', 'rat.think', 'rat.wave'] },
+  { file: 'brand/rats-01', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 64, height: 64, ids: ['rat.head.plain', 'rat.head.cap', 'rat.head.beanie', 'rat.head.top_hat', 'rat.head.headphones', 'rat.head.crown', 'rat.head.sunglasses', 'rat.head.chef'] },
+  // A backdrop behind a portrait, one for each city, to tell lives apart at a glance.
+  { file: 'portraits/backdrops-01', group: 'portraits', kind: 'scenes', cols: 5, rows: 2, width: 64, height: 64, ids: ['backdrop.madrid', 'backdrop.london', 'backdrop.new_york', 'backdrop.dubai', 'backdrop.singapore', 'backdrop.bangkok', 'backdrop.tokyo', 'backdrop.moscow', 'backdrop.mexico_city', 'backdrop.zurich'] },
+  // The milestones of a life, told on the round they happen in.
+  { file: 'cards/cards-36', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.moment_home', 'card.moment_wedding', 'card.moment_child', 'card.moment_business_sold', 'card.moment_retired', 'card.moment_promotion'] },
+  // Every business at three sizes: just started, doing well, thriving.
+  { file: 'items/business-02', group: 'items', kind: 'objects', cols: 3, rows: 5, width: 64, height: 64, ids: ['business.services.1', 'business.services.2', 'business.services.3', 'business.shop.1', 'business.shop.2', 'business.shop.3', 'business.app.1', 'business.app.2', 'business.app.3', 'business.bar.1', 'business.bar.2', 'business.bar.3', 'business.franchise.1', 'business.franchise.2', 'business.franchise.3'] },
+  // The world at night, the cities of the game marked; the route of a life is drawn over it.
+  { file: 'cards/map-01', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 576, height: 240, ids: ['map.world'] },
 ];

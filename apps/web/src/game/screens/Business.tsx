@@ -1,6 +1,6 @@
 'use client';
 
-import { businessArt, HANDOVER_ART } from '@ratrace/content';
+import { businessArt, businessStageArt, HANDOVER_ART } from '@ratrace/content';
 import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
@@ -17,6 +17,12 @@ type Kind = BusinessesQuote['kinds'][number];
 
 const signedPct = (pct: number) => (pct > 0 ? `+${pct}` : pct < 0 ? `−${-pct}` : '0');
 
+
+/** An owned business drawn as big as it has grown: its capital against the size its kind reaches. */
+function grownArt(business: { typeId: string; capital: number }, types: ReadonlyArray<{ id: string; scale: number }>): string {
+  const kind = types.find((type) => type.id === business.typeId);
+  return kind ? businessStageArt(business.typeId, business.capital, kind.scale) : businessArt(business.typeId);
+}
 /**
  * The one order that leaves a business set as asked: what it pays out and who runs it. Only what
  * differs from how it stands is ordered, and nothing at all when nothing differs.
@@ -66,7 +72,7 @@ function QuickSwitch({ on, disabled, label, onChange }: { on: boolean; disabled?
  */
 function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: BusinessesQuote; onOpen(): void }) {
   const t = useT('finance.business');
-  const { text, fmt } = useWords();
+  const { content, text, fmt } = useWords();
   const view = useGame((s) => s.view);
   const runLine = useRunLine();
   const run = runLine(business);
@@ -78,7 +84,7 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
     <li className="border-t-2 border-night-900 py-2 first:border-t-0 first:pt-0">
       <button type="button" aria-haspopup="dialog" onClick={onOpen} className="flex min-h-11 w-full items-center gap-3 text-left">
         <Bare className="size-16 shrink-0">
-          <Sprite id={businessArt(business.typeId)} />
+          <Sprite id={grownArt(business, content.business.types)} />
         </Bare>
         <span className="min-w-0 flex-1">
           <span className="pixel block truncate text-[17px]">{text.businessTypes[business.typeId].name}</span>
@@ -301,7 +307,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Bare className="p-1 leading-[0]">
-            <Sprite id={businessArt(business.typeId)} />
+            <Sprite id={grownArt(business, content.business.types)} />
           </Bare>
           <div className="min-w-0">
             <KeyFigure className="block">{fmt.money(business.capital)}</KeyFigure>

@@ -1,5 +1,6 @@
 'use client';
 
+import { ratArt } from '@ratrace/content';
 import { CHALLENGE_ART } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useAccount, useAccountSaves, useCommunity, useGame, useRanking, useRuns, useSaving, useT, useWords } from '@/game/context';
@@ -64,7 +65,8 @@ export function Home() {
       <div className="absolute right-3 top-4">
         <HomePreferences />
       </div>
-      <Sprite id="brand.mascot" alt="" className={returning ? '-mb-1 !h-32 !w-32' : '-mb-2'} fallback={{ w: 256, h: 256 }} />
+      {/* A first visit meets the mascot; someone coming back is waved at. */}
+      {returning ? <Sprite id={ratArt('wave')} alt="" className="-mb-1" fallback={{ w: 128, h: 128 }} /> : <Sprite id="brand.mascot" alt="" className="-mb-2" fallback={{ w: 256, h: 256 }} />}
       <div className="text-center">
         <h1 className={`pixel leading-none text-gold-500 ${returning ? 'text-[28px]' : 'text-[34px]'}`}>{meta('title')}</h1>
         {returning ? null : <p className="mt-2 text-ink-200">{meta('description')}</p>}

@@ -4145,6 +4145,246 @@
       "file": "brand/brand.mascot.png",
       "width": 256,
       "height": 256
+    },
+    "rat.cheer": {
+      "file": "brand/rat.cheer.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hide": {
+      "file": "brand/rat.hide.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.exit": {
+      "file": "brand/rat.exit.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.count": {
+      "file": "brand/rat.count.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.sleep": {
+      "file": "brand/rat.sleep.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.shock": {
+      "file": "brand/rat.shock.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.think": {
+      "file": "brand/rat.think.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.wave": {
+      "file": "brand/rat.wave.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.head.plain": {
+      "file": "brand/rat.head.plain.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.cap": {
+      "file": "brand/rat.head.cap.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.beanie": {
+      "file": "brand/rat.head.beanie.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.top_hat": {
+      "file": "brand/rat.head.top_hat.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.headphones": {
+      "file": "brand/rat.head.headphones.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.crown": {
+      "file": "brand/rat.head.crown.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.sunglasses": {
+      "file": "brand/rat.head.sunglasses.png",
+      "width": 64,
+      "height": 64
+    },
+    "rat.head.chef": {
+      "file": "brand/rat.head.chef.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.madrid": {
+      "file": "portraits/backdrop.madrid.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.london": {
+      "file": "portraits/backdrop.london.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.new_york": {
+      "file": "portraits/backdrop.new_york.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.dubai": {
+      "file": "portraits/backdrop.dubai.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.singapore": {
+      "file": "portraits/backdrop.singapore.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.bangkok": {
+      "file": "portraits/backdrop.bangkok.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.tokyo": {
+      "file": "portraits/backdrop.tokyo.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.moscow": {
+      "file": "portraits/backdrop.moscow.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.mexico_city": {
+      "file": "portraits/backdrop.mexico_city.png",
+      "width": 64,
+      "height": 64
+    },
+    "backdrop.zurich": {
+      "file": "portraits/backdrop.zurich.png",
+      "width": 64,
+      "height": 64
+    },
+    "card.moment_home": {
+      "file": "cards/card.moment_home.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_wedding": {
+      "file": "cards/card.moment_wedding.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_child": {
+      "file": "cards/card.moment_child.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_business_sold": {
+      "file": "cards/card.moment_business_sold.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_retired": {
+      "file": "cards/card.moment_retired.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.moment_promotion": {
+      "file": "cards/card.moment_promotion.png",
+      "width": 288,
+      "height": 120
+    },
+    "business.services.1": {
+      "file": "items/business.services.1.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.services.2": {
+      "file": "items/business.services.2.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.services.3": {
+      "file": "items/business.services.3.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.shop.1": {
+      "file": "items/business.shop.1.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.shop.2": {
+      "file": "items/business.shop.2.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.shop.3": {
+      "file": "items/business.shop.3.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.app.1": {
+      "file": "items/business.app.1.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.app.2": {
+      "file": "items/business.app.2.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.app.3": {
+      "file": "items/business.app.3.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.bar.1": {
+      "file": "items/business.bar.1.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.bar.2": {
+      "file": "items/business.bar.2.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.bar.3": {
+      "file": "items/business.bar.3.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.franchise.1": {
+      "file": "items/business.franchise.1.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.franchise.2": {
+      "file": "items/business.franchise.2.png",
+      "width": 64,
+      "height": 64
+    },
+    "business.franchise.3": {
+      "file": "items/business.franchise.3.png",
+      "width": 64,
+      "height": 64
+    },
+    "map.world": {
+      "file": "cards/map.world.png",
+      "width": 576,
+      "height": 240
     }
   }
 }

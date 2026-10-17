@@ -913,7 +913,15 @@
     "homeHelped": "Tu familia te acoge: {amount} ahorrados.",
     "homeFriends": "Los amigos de siempre abren puertas: más contactos y ningún escalón perdido.",
     "businessFailed": "{name} no salió adelante",
-    "businessFailedHint": "Cerró en su primera ronda. Vendido por piezas: recuperas {amount}."
+    "businessFailedHint": "Cerró en su primera ronda. Vendido por piezas: recuperas {amount}.",
+    "milestones": {
+      "home": "Tu primera casa",
+      "wedding": "Día de boda",
+      "child": "Tu primer hijo",
+      "businessSold": "Negocio vendido",
+      "retired": "Llega la jubilación",
+      "promotion": "Lo más alto de tu carrera"
+    }
   },
   "profile": {
     "title": "Tu vida",
@@ -1087,7 +1095,9 @@
       "escaped": "Fuera de la rueda",
       "escapeLost": "De vuelta a la rueda",
       "bankrupt": "Bancarrota"
-    }
+    },
+    "map": "Por dónde pasó tu vida",
+    "mapLabel": "Mapa del mundo con tu ruta: {cities}"
   },
   "epilogue": {
     "title": "Tu vida, contada",

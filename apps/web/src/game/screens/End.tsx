@@ -1,5 +1,6 @@
 'use client';
 
+import { LifeMap, routeOf } from './LifeMap';
 import { badgeArt, endingArt, GIFT_ART, lives, PERCENTILE_ART, portraitArt, rarityOf } from '@ratrace/content';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -276,6 +277,10 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
             <p className="mt-2 text-center text-[12px] text-ink-300">{t('graph')}</p>
           </Panel>
 
+          {/* Where the life went: the world at night, and the way across it. */}
+          <Panel title={t('map')} label={t('map')}>
+            <LifeMap route={routeOf(lifeId, story)} label={t('mapLabel', { cities: routeOf(lifeId, story).map((city) => names.cities[city]).join(', ') })} />
+          </Panel>
           <RivalsBoard history={history} />
 
           <LifeLine view={view} story={story} />

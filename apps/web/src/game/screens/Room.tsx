@@ -3,7 +3,7 @@
 import { ratColourOf } from '@/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { LoanOffers, PlayerSheet } from './RoomLoans';
-import { badgeArt, lives, portraitArt } from '@ratrace/content';
+import { badgeArt, lives, portraitArt, ratArt } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
@@ -918,6 +918,8 @@ function Waiting({ room }: { room: RoomState }) {
   const choosing = here.filter((member) => !member.ready).map(nameOf);
   return (
     <div className="flex flex-col items-center gap-0.5 py-1 text-center">
+      {/* The rat naps while the others play. */}
+      <Sprite id={ratArt('sleep')} fallback={{ w: 128, h: 128 }} className="!h-16 !w-16" />
       <p className="pixel text-[17px] text-cream">
         {t('waiting')}
         {/* The clock is in the room's bar for a screen reader; said here every second it would drown the rest. */}

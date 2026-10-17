@@ -3,7 +3,7 @@
 import { Explain } from './Explain';
 import { ratOutfit } from '@/game/quips';
 import { Loop } from './Loop';
-import { FRAME_STATUS, frameArt, portraitArt } from '@ratrace/content';
+import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
@@ -152,11 +152,10 @@ function RatRace({ shown }: { shown: GameView }) {
   return (
     <>
       {/* Still in the race: the rat runs in its wheel, the harder the less of the year its money pays. */}
-      {escaped ? null : (
-        <div aria-hidden className="mt-1 flex justify-center">
-          <Loop name="wheel" outfit={ratOutfit(shown)} scale={2} ms={Math.round(90 + pct * 1.4)} />
-        </div>
-      )}
+      {/* Still in the race, the rat runs in its wheel, the harder the less it covers; out of it, it walks out of the door. */}
+      <div aria-hidden className="mt-1 flex justify-center">
+        {escaped ? <Sprite id={ratArt('exit')} fallback={{ w: 128, h: 128 }} /> : <Loop name="wheel" outfit={ratOutfit(shown)} scale={2} ms={Math.round(90 + pct * 1.4)} />}
+      </div>
       <div className="my-2 flex items-baseline justify-between gap-3">
         <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('wayOut.covered')}</span>
         <KeyFigure tone={escaped ? 'teal' : 'gold'}>{pct}%</KeyFigure>

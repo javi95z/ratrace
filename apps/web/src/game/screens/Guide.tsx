@@ -1,5 +1,7 @@
 'use client';
 
+import { ratArt } from '@ratrace/content';
+import { Sprite } from '@/ui/Sprite';
 import { useRef, useState } from 'react';
 import { useGame, useGuide, useRuns, useT, useWords } from '@/game/context';
 import { isFirst, nextTip } from '@/game/guide';
@@ -52,8 +54,14 @@ export function Guide() {
     {/* The rest of the page steps back a little while a tip is there, so it is read first. Nothing is blocked. */}
     <div aria-hidden data-guide-shade className="pointer-events-none fixed inset-0 z-40 bg-night-900/55" />
     <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold relative z-50 mx-3 mb-3 animate-rise bg-night-700 p-3 shadow-[0_0_0_3px_var(--color-gold-500)]">
+      <div className="flex items-start gap-3">
+      {/* The rat, thinking it over with the player. */}
+      <Sprite id={ratArt('think')} fallback={{ w: 128, h: 128 }} className="!h-16 !w-16 shrink-0" />
+      <div className="min-w-0">
       <p className="pixel mb-1 text-[14px] uppercase tracking-[0.1em] text-gold-500">{isFirst(tip) ? t('firstTitle') : t('title')}</p>
       <p className="text-[14px] leading-snug">{t(tip, { rate: fmt.rate(content.debt.creditCardRateBp) })}</p>
+      </div>
+      </div>
       <div className="mt-3 flex gap-2">
         <Button
           className="flex-1 text-[15px]"
