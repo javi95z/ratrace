@@ -388,7 +388,7 @@ export const cards: Record<string, CardText> = {
   ]),
 
   // Luck
-  luck_lottery: c('{brand:el_gordo}', 'The office is buying Christmas lottery tickets. Everyone is in.', [
+  luck_lottery: c('The office Christmas lottery', 'Everyone at work is chipping in for tickets. You are not going to be the one who misses out.', [
     'No ticket for you',
     ['Buy a ticket', ...lotteryResults],
     ['Buy ten', ...lotteryResults],

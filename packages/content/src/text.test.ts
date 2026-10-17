@@ -236,7 +236,10 @@ describe.each(TRANSLATED)('content text: %s beside the English', (locale) => {
   it('uses the same placeholders in the same sentences', () => {
     const placeholders = (sentence: string) => (sentence.match(/\{[^}]*\}/g) ?? []).sort();
     const translated = new Map(strings(rawText(locale)));
+    /** Names only one language knows, given there and told in its own words elsewhere: the Spanish Christmas lottery. */
+    const ownNames: Record<string, Set<string>> = { es: new Set(['cards.luck_lottery.title']), ru: new Set() };
     for (const [path, sentence] of strings(rawText('en'))) {
+      if (ownNames[locale].has(path)) continue;
       expect(placeholders(translated.get(path) ?? ''), path).toEqual(placeholders(sentence));
     }
   });
@@ -244,7 +247,7 @@ describe.each(TRANSLATED)('content text: %s beside the English', (locale) => {
   it('is really another language: its card text is not a copy of the English', () => {
     /** Words that are the same in English and in this language. */
     const same: Record<string, Set<string>> = {
-      es: new Set(['cards.life_ibiza.title', 'cards.life_black_friday.title', 'cards.luck_lottery.title', 'cards.career_remote_work.options.2.outcomes.1']),
+      es: new Set(['cards.life_ibiza.title', 'cards.life_black_friday.title', 'cards.career_remote_work.options.2.outcomes.1']),
       ru: new Set(),
     };
     const translated = new Map(strings(rawText(locale).cards, 'cards'));
