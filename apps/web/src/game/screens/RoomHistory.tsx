@@ -4,9 +4,9 @@ import { portraitArt } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useRoom, useT, useWords } from '@/game/context';
 import type { RoomGameOver } from '@/game/room';
-import { Tag, Well } from '@/ui/kit';
+import { Face } from '@/ui/Face';
+import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
-import { Sprite } from '@/ui/Sprite';
 
 /** Where the player came in a game over: their place among those who stayed to the end, or null if they left. */
 export function placeIn(game: RoomGameOver): { place: number; total: number } | null {
@@ -24,7 +24,7 @@ export function RoomHistory() {
   const t = useT('records');
   const room = useT('room');
   const common = useT('common');
-  const { text, fmt } = useWords();
+  const { text, names, fmt } = useWords();
   const status = useRoom((s) => s.status);
   const history = useRoom((s) => s.history);
   const [games, setGames] = useState<RoomGameOver[] | null>(null);
@@ -52,9 +52,7 @@ export function RoomHistory() {
           return (
             <li key={game.id}>
               <button type="button" onClick={() => setOpen(game)} className="bevel flex w-full items-center gap-3 bg-night-700 p-2 text-left">
-                <Well className="size-[52px] shrink-0">
-                  <Sprite id={portraitArt(game.lifeId, 22)} fallback={{ w: 64, h: 64 }} />
-                </Well>
+                <Face id={portraitArt(game.lifeId, 22)} size="md" />
                 <span className="min-w-0 flex-1">
                   <span className="pixel flex flex-wrap items-center gap-x-2 text-[16px]">
                     {lifeName(game)}
@@ -76,10 +74,24 @@ export function RoomHistory() {
             {open.players.map((player, at) => (
               <li key={`${player.tag}-${at}`} className={`flex min-h-11 items-center gap-3 py-1.5 ${player.left ? 'opacity-60' : ''}`}>
                 <span className="pixel w-5 shrink-0 text-[16px] text-ink-300">{player.left ? '·' : at + 1}</span>
-                <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                  <span className="truncate text-[15px]">{nameOf(player)}</span>
-                  {player.me ? <Tag tone="good">{room('you')}</Tag> : null}
-                  {player.left ? <span className="text-[12px] text-ink-300">{room('left')}</span> : null}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="truncate text-[15px]">{nameOf(player)}</span>
+                    {player.me ? <Tag tone="good">{room('you')}</Tag> : null}
+                    {player.left ? <span className="text-[12px] text-ink-300">{room('left')}</span> : null}
+                  </span>
+                  {/* Where they ended up, doing what, and what they had: in the dollars the life began with, as the records count. */}
+                  {player.cityId || player.career || player.netWorth !== null ? (
+                    <span className="block truncate text-[12px] text-ink-300">
+                      {[
+                        player.cityId ? names.cities[player.cityId] : null,
+                        player.career ? text.careers[player.career.id]?.levels[player.career.level] : null,
+                        player.netWorth !== null ? room('worth', { worth: fmt.compact(player.netWorth) }) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  ) : null}
                 </span>
                 <span className="pixel shrink-0 text-[18px] text-gold-500">{player.score === null ? '—' : fmt.number(player.score)}</span>
               </li>

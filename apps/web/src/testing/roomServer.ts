@@ -181,7 +181,10 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
         .filter((m) => m.user_id === user && roomsById.get(m.room_id)?.status === 'finished')
         .sort((a, b) => b.joined_at.localeCompare(a.joined_at))
         .slice(0, limit)
-        .map((mine) => ({ room: structuredClone(roomsById.get(mine.room_id) as RoomRow), members: structuredClone(members.filter((m) => m.room_id === mine.room_id).sort((a, b) => a.joined_at.localeCompare(b.joined_at))) })),
+        .map((mine) => ({
+          room: structuredClone(roomsById.get(mine.room_id) as RoomRow),
+          members: structuredClone(members.filter((m) => m.room_id === mine.room_id).sort((a, b) => a.joined_at.localeCompare(b.joined_at))).map((m) => ({ ...m, quit: m.game_id !== null && games.get(m.game_id)?.status === 'abandoned' })),
+        })),
     closeIfStale: async (roomId, now) => {
       const room = roomsById.get(roomId);
       if (!room) return false;

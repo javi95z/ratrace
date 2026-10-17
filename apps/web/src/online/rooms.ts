@@ -112,6 +112,9 @@ function gameOverOf(raw: unknown): RoomGameOver | null {
       me: p.me === true,
       score: typeof p.score === 'number' ? p.score : null,
       left: p.left === true,
+      netWorth: typeof p.netWorth === 'number' ? p.netWorth : null,
+      cityId: typeof p.cityId === 'string' ? p.cityId : null,
+      career: isRecord(p.career) && typeof p.career.id === 'string' && typeof p.career.level === 'number' ? { id: p.career.id, level: p.career.level } : null,
     })),
   };
 }

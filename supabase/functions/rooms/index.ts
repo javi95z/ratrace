@@ -109,7 +109,11 @@ export default {
           ) as unknown as Array<{ room_id: string; rooms: RoomRow }>;
           if (mine.length === 0) return [];
           const all = must(await db.from('room_players').select(`room_id, ${MEMBER}`).in('room_id', mine.map((row) => row.room_id)).order('joined_at', { ascending: true })) as Array<MemberRow & { room_id: string }>;
-          return mine.map((row) => ({ room: row.rooms, members: all.filter((m) => m.room_id === row.room_id) }));
+          // Who gave their life up before the end: their game was abandoned, not finished.
+          const ids = all.map((m) => m.game_id).filter((id): id is string => id !== null);
+          const lives = ids.length === 0 ? [] : (must(await db.from('games').select('id, status').in('id', ids)) as Array<{ id: string; status: string }>);
+          const quit = new Set(lives.filter((life) => life.status === 'abandoned').map((life) => life.id));
+          return mine.map((row) => ({ room: row.rooms, members: all.filter((m) => m.room_id === row.room_id).map((m) => ({ ...m, quit: m.game_id !== null && quit.has(m.game_id) })) }));
         },
         notify: async (users, about) => {
           // Sent after the answer, so that a player's move does not wait on push services.

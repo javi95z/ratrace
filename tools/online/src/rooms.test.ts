@@ -595,6 +595,11 @@ describe('a player\'s history', () => {
     expect(games[0].players.filter((p) => p.me)).toHaveLength(1);
     const scores = games[0].players.map((p) => p.score as number);
     expect(scores).toEqual([...scores].sort((x, y) => y - x));
+    // Where each ended up, doing what, with what; and leaving a game once it is over is not having left it.
+    for (const who of [HOST, B]) await server.ask(who, { action: 'leave', roomId: room });
+    const after = ((await server.ask(B, { action: 'history' })).body.games as Array<{ players: Array<{ left: boolean; cityId: string | null; career: unknown; netWorth: number | null }> }>)[0];
+    expect(after.players.every((p) => !p.left)).toBe(true);
+    expect(after.players.every((p) => p.cityId === 'madrid' && p.career !== null && typeof p.netWorth === 'number')).toBe(true);
     // Nothing of a game in play, and nothing of anyone else's.
     await begun(server, 90);
     expect(((await server.ask(HOST, { action: 'history' })).body.games as unknown[]).length).toBe(1);

@@ -168,7 +168,7 @@ export interface RoomsDeps {
   /** Sends a member's shout to everyone in the room. `soon` if they sent one a moment ago, `closed` if they cannot. */
   shout(roomId: string, userId: string, shout: number, now: Date): Promise<'ok' | 'soon' | 'closed'>;
   /** The rooms the player was in that are over, the latest first, at most `limit`, each with everyone who was in it. */
-  history(userId: string, limit: number): Promise<Array<{ room: RoomRow; members: MemberRow[] }>>;
+  history(userId: string, limit: number): Promise<Array<{ room: RoomRow; members: Array<MemberRow & { quit: boolean }> }>>;
   /** Every loan offered in the room, in any round. */
   loans(roomId: string): Promise<LoanRow[]>;
   /** Offers a loan in the round the room is in, in place of the proposer's last offer to the same player that round. */
@@ -702,7 +702,19 @@ async function history(deps: RoomsDeps, userId: string): Promise<Reply> {
         seconds: room.seconds,
         playedAt: new Date(room.created_at).toISOString(),
         rematchOf: room.rematch_of !== null,
-        players: placed(members).map((m) => ({ name: names[m.user_id] ?? null, tag: m.user_id.slice(0, 4).toUpperCase(), me: m.user_id === userId, score: m.standing?.score ?? null, left: m.left_at !== null })),
+        // Everyone leaves a game once it is over: only those who gave their life up before the end left it.
+        players: [...members]
+          .sort((a, b) => Number(a.quit) - Number(b.quit) || (b.standing?.score ?? Number.NEGATIVE_INFINITY) - (a.standing?.score ?? Number.NEGATIVE_INFINITY))
+          .map((m) => ({
+            name: names[m.user_id] ?? null,
+            tag: m.user_id.slice(0, 4).toUpperCase(),
+            me: m.user_id === userId,
+            score: m.standing?.score ?? null,
+            left: m.quit,
+            netWorth: m.standing?.netWorth ?? null,
+            cityId: m.standing?.cityId ?? null,
+            career: m.standing?.career ?? null,
+          })),
       })),
     },
   };

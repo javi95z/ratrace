@@ -646,3 +646,12 @@ html[data-motion='reduced'] *::after {
     -2px 0 0 0 var(--color-gold-900),
     2px 0 0 0 var(--color-gold-900);
 }
+
+/* Anything that can be tapped says so to a mouse: buttons, and the rows that act as one. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
+}

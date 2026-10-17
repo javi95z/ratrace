@@ -63,25 +63,28 @@ describe('the records', () => {
     expect((within(bests).getByText('Youngest escape').closest('li') as HTMLElement).textContent).toContain('None yet');
   });
 
-  it('lists every past life, the latest first, with its score, how it ended and its graph', async () => {
+  it('lists every past life, the latest first, a line each, and opens the whole of one on a tap', async () => {
     const services = memoryServices();
     await services.store.addRun(run('old', { lifeId: 'nurse', score: 301, finishedAt: Date.UTC(2026, 0, 5, 12), badges: ['first_100k'] }));
     await services.store.addRun(run('new', { lifeId: 'civil_servant', score: 402, finishedAt: Date.UTC(2026, 9, 13, 12), escapedAtRound: 12, badges: ['first_100k', 'escaped', 'millionaire'], cities: ['madrid', 'dubai'] }));
+    const user = userEvent.setup();
     renderGame(<Records />, services);
 
     const history = await screen.findByRole('region', { name: 'Past lives' });
     const lives = within(history).getAllByRole('listitem');
     expect(lives).toHaveLength(2);
     expect(lives[0].textContent).toContain('Civil servant');
-    expect(lives[0].textContent).toContain('Score 402');
-    expect(lives[0].textContent).toContain('Out at 46');
-    expect(lives[0].textContent).toContain('3 badges');
+    expect(lives[0].textContent).toContain('402');
     expect(lives[0].textContent).toContain('13 Oct 2026');
-    expect(lives[0].textContent).toContain('Madrid · Dubai');
-    expect(within(lives[0]).getByRole('img', { name: 'Net worth through this life' })).toBeTruthy();
     expect(lives[1].textContent).toContain('Nurse');
-    expect(lives[1].textContent).toContain('Never escaped');
-    expect(lives[1].textContent).toContain('1 badge');
+    // The rest is in a sheet.
+    await user.click(within(lives[0]).getByRole('button'));
+    const sheet = screen.getByRole('dialog', { name: 'Civil servant' });
+    expect(sheet.textContent).toContain('Score 402');
+    expect(sheet.textContent).toContain('Out at 46');
+    expect(sheet.textContent).toContain('3 badges');
+    expect(sheet.textContent).toContain('Madrid · Dubai');
+    expect(within(sheet).getByRole('img', { name: 'Net worth through this life' })).toBeTruthy();
   });
 
   it('marks the lives the server played, which are the ones in the rankings', async () => {
