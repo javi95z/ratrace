@@ -72,7 +72,8 @@
     "roomTurn": "Your turn · {time} left",
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
-    "roomDone": "Over"
+    "roomDone": "Over",
+    "lostWaiting": "Your life began on an earlier version of the game. Connect to the internet to go on with it: nothing is lost."
   },
   "newLife": {
     "title": "Choose a life",

@@ -6,6 +6,8 @@ import { startFor } from './challenge';
 import { StaleSession } from './errors';
 import { tellProfile } from './profile';
 import { recordStart, recordStep } from './record';
+import { OlderSession } from './legacy';
+import type { LoadRules } from './legacy';
 import { openSave } from './save';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, Lost, PlayerStore, SavedGame, Sessions, StepResult } from './types';
@@ -17,6 +19,8 @@ export interface SessionDeps {
   now(): number;
   /** Told when a save could not be written. The game goes on; only the safety net is gone. */
   onSaveError?(error: unknown): void;
+  /** The rules of older versions, to finish a life begun under them. Left out, such a life cannot be taken up. */
+  loadRules?: LoadRules;
 }
 
 /**
@@ -249,6 +253,8 @@ export class LocalSessions implements Sessions {
     const raw = await this.store.loadGame();
     if (raw === null || raw === undefined) return { session: null, lost: null };
     const opened = openSave(raw, this.content, this.lives);
+    // A life begun under rules that have changed since is played to its end under them.
+    if (!opened.ok && opened.lost === 'outdated') return await this.resumeOlder(raw);
     if (!opened.ok) {
       // A save this page is too old to read is not this page's to throw away: the newer page that wrote it can open it.
       if (opened.lost !== 'newer') await this.store.clearGame();
@@ -266,6 +272,37 @@ export class LocalSessions implements Sessions {
   async abandon(): Promise<void> {
     await this.store.clearGame();
   }
+
+  /**
+   * Takes up a life saved under other rules than this page's. One written by a newer page is that
+   * page's to go on with. One begun under older rules is played on under them, loaded for it; while
+   * they cannot be had, it waits, kept. Only a life whose rules no version holds any more is let go.
+   */
+  private async resumeOlder(raw: unknown): Promise<{ session: GameSession | null; lost: Lost | null }> {
+    const save = raw as SavedGame;
+    const versions = { engine: String(save.engineVersion), content: String(save.contentVersion) };
+    if (newerThan(versions, { engine: ENGINE_VERSION, content: CONTENT_VERSION })) return { session: null, lost: 'newer' };
+    const fits = typeof save.seed === 'string' && typeof save.lifeId === 'string' && typeof save.gameId === 'string' && Array.isArray(save.log);
+    const rules = fits && this.deps.loadRules ? await this.deps.loadRules(versions) : 'gone';
+    if (rules === 'unreachable') return { session: null, lost: 'waiting' };
+    const session = rules === 'gone' ? null : OlderSession.open(save, rules, { store: this.store, content: this.content, lives: this.lives, now: this.deps.now, onSaveError: this.deps.onSaveError });
+    if (session === null) {
+      await this.store.clearGame();
+      return { session: null, lost: 'outdated' };
+    }
+    void session.tellProfile();
+    return { session, lost: null };
+  }
+}
+
+/** True if one engine and content are newer than another's, the engine first. */
+function newerThan(a: { engine: string; content: string }, b: { engine: string; content: string }): boolean {
+  const parts = (version: string) => version.split('.').map((n) => Number(n) || 0);
+  for (const key of ['engine', 'content'] as const) {
+    const [x, y] = [parts(a[key]), parts(b[key])];
+    for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
+  }
+  return false;
 }
 
 export { StaleSession };

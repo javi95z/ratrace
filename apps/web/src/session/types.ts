@@ -53,7 +53,8 @@ export interface GameSession {
  * Why a saved life could not be opened: it was played under older rules; it cannot be read or
  * rebuilt; or it was written by a newer version of the game than this page, which must leave it be.
  */
-export type Lost = 'outdated' | 'damaged' | 'newer';
+/** `waiting`: a life begun under older rules, kept, whose rules cannot be loaded just now (no connection). */
+export type Lost = 'outdated' | 'damaged' | 'newer' | 'waiting';
 
 export interface Sessions {
   /**

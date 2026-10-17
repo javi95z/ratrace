@@ -12,7 +12,7 @@ const notExact = 'Not identical across JavaScript engines. Use + - * /, Math.flo
 const noClock = 'The engine has no clock.';
 
 export default [
-  { ignores: ['**/dist/**', '**/node_modules/**', '.worktrees/**', '**/.next/**', '**/next-env.d.ts', '**/playwright-report/**', '**/test-results/**', 'supabase/functions/_shared/game/v*.js'] },
+  { ignores: ['**/dist/**', '**/node_modules/**', '.worktrees/**', '**/.next/**', '**/next-env.d.ts', '**/playwright-report/**', '**/test-results/**', 'supabase/functions/_shared/game/v*.js', 'apps/web/public/rules/v*.js'] },
   ...tseslint.configs.recommended,
   {
     files: ['packages/engine/src/**/*.ts'],

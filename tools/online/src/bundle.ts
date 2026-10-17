@@ -11,7 +11,7 @@
  *   pnpm online:bundle --force     rewrites a shipped bundle all the same (see `mayWrite`)
  */
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONTENT_VERSION } from '@ratrace/content';
@@ -97,6 +97,21 @@ export function registrySource(files: readonly string[], current: string): strin
   ].join('\n');
 }
 
+/** Where the web finds the rules of older versions, to finish on a device a life begun under them. */
+export const WEB_RULES_DIR = join(GAME_DIR, '../../../../apps/web/public/rules');
+
+/**
+ * Copies every bundle the server still holds, but the current one, to where the web can load it.
+ * A life a device began under rules that have since changed is played to its end under them, there
+ * as on the server: the page loads them only for such a life. Bundles no longer held are removed.
+ */
+export function mirrorRules(current: string): void {
+  mkdirSync(WEB_RULES_DIR, { recursive: true });
+  const held = readdirSync(GAME_DIR).filter((file) => /^v[\d.]+-[\d.]+\.js$/.test(file) && file !== `v${current.replace('/', '-')}.js`);
+  for (const file of readdirSync(WEB_RULES_DIR)) if (!held.includes(file)) rmSync(join(WEB_RULES_DIR, file));
+  for (const file of held) copyFileSync(join(GAME_DIR, file), join(WEB_RULES_DIR, file));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const flags = new Set(process.argv.slice(2));
   const versions = `${ENGINE_VERSION}/${CONTENT_VERSION}`;
@@ -112,6 +127,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   writeFileSync(join(GAME_DIR, name), code);
   writeFileSync(join(GAME_DIR, 'index.ts'), registrySource(readdirSync(GAME_DIR), versions));
+  mirrorRules(versions);
   // A shipped bundle that was forced is noted as it now is; `--shipped` notes one for the first time.
   if (flags.has('--shipped') || Object.hasOwn(shipped, versions)) keep({ ...shipped, [versions]: fingerprint(code) });
   console.log(`bundled ${name} (${Math.round(code.length / 1024)} KB)${flags.has('--shipped') ? ', noted as shipped' : ''}`);

@@ -72,7 +72,8 @@
     "roomTurn": "Te toca · quedan {time}",
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
-    "roomDone": "Acabada"
+    "roomDone": "Acabada",
+    "lostWaiting": "Tu vida empezó con una versión anterior del juego. Conéctate a internet para seguir con ella: no se ha perdido."
   },
   "newLife": {
     "title": "Elige una vida",

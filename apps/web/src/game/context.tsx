@@ -1,5 +1,6 @@
 'use client';
 
+import { loadRulesFromSite } from '@/session/legacy';
 import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Locale } from '@ratrace/content';
@@ -113,6 +114,8 @@ function browserServices(): Services {
     newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
     now: () => Date.now(),
     onSaveError: (error: unknown) => console.warn('could not save the game:', error),
+    // A life begun under older rules is finished under them, loaded from the site for it.
+    loadRules: loadRulesFromSite,
   };
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
