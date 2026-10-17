@@ -5,7 +5,7 @@ import type { GameView, Order, RoundPreview } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { adviserQuip } from '@/game/quips';
-import { Bar, Panel, Segmented, Toggle } from '@/ui/kit';
+import { Bar, Button, Panel, Segmented, Toggle } from '@/ui/kit';
 
 type Want = { blackPct: number; shell: boolean; hideCrypto: boolean };
 
@@ -41,6 +41,18 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
   const want: Want = { blackPct: quote.blackPct, shell: quote.shell, hideCrypto: quote.hideCrypto };
   const change = (part: Partial<Want>) => setOrder((order) => order.type === 'setEvasion', evasionOrder(view, { ...want, ...part }));
   const saved = (amount: number) => (amount > 0 ? t('saved', { amount: fmt.money(amount) }) : t('savedNothing'));
+
+  // Where nothing is taxed, what is still hidden from elsewhere can only be given up: one line, one button.
+  if (taxFree) {
+    return (
+      <Panel title={t('title')} label={t('title')}>
+        <p className="text-[13px] leading-snug text-ink-200">{t('taxFree')}</p>
+        <Button className="mt-2" wide onClick={() => change({ blackPct: 0, shell: false, hideCrypto: false })}>
+          {t('stopHiding')}
+        </Button>
+      </Panel>
+    );
+  }
 
   return (
     <Panel title={t('title')} label={t('title')}>

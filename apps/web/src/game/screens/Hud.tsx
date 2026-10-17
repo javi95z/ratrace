@@ -1,5 +1,7 @@
 'use client';
 
+import { ratOutfit } from '@/game/quips';
+import { Loop } from './Loop';
 import { FRAME_STATUS, frameArt, portraitArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
@@ -148,6 +150,12 @@ function RatRace({ shown }: { shown: GameView }) {
 
   return (
     <>
+      {/* Still in the race: the rat runs in its wheel, the harder the less of the year its money pays. */}
+      {escaped ? null : (
+        <div aria-hidden className="sunk mx-auto mt-1 flex w-fit justify-center bg-night-900 px-6 py-1">
+          <Loop name="wheel" outfit={ratOutfit(shown)} scale={2} ms={Math.round(90 + pct * 1.4)} />
+        </div>
+      )}
       <div className="my-2 flex items-baseline justify-between gap-3">
         <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('wayOut.covered')}</span>
         <span className={`pixel text-[26px] leading-none ${escaped ? 'text-teal-300' : 'text-gold-500'}`}>{pct}%</span>

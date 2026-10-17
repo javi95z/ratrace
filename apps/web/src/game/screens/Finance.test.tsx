@@ -490,12 +490,12 @@ describe('investing every round', () => {
 
     // The row counts this round's purchase too, as every figure of the finances does.
     const buys = preview.plans[0].reason === null;
-    expect(row.textContent).toContain(buys ? 'Put in $3,000 over 3 rounds' : 'Put in $2,000 over 2 rounds');
+    expect(row.textContent).toContain(buys ? '$3,000 over 3 rounds' : '$2,000 over 2 rounds');
     expect(row.textContent?.includes('No cash for it this round')).toBe(!buys);
     // How today's price stands to the average paid, the engine's own figure.
     const [shown] = quotePlans({ ...viewOf(state), player: preview.player });
     if (shown.priceVsAverageBp !== null && shown.priceVsAverageBp !== 0) {
-      expect(row.textContent).toContain(`Worth ${fmt.rate(Math.abs(shown.priceVsAverageBp))} ${shown.priceVsAverageBp > 0 ? 'more' : 'less'} today than your average price`);
+      expect(row.textContent).toContain(`${shown.priceVsAverageBp > 0 ? '▲' : '▼'} ${fmt.rate(Math.abs(shown.priceVsAverageBp))} ${shown.priceVsAverageBp > 0 ? 'above' : 'below'} your average`);
     }
 
     // Changed: the sheet opens on what the plan is, and a new amount is an order.
