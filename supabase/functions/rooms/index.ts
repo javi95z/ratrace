@@ -17,12 +17,13 @@ import { noticeOf } from '../_shared/notice.ts';
 import { deliver, subscriptionsOf } from '../_deno/push.ts';
 import { allowed } from '../_shared/rate.ts';
 import { rooms } from '../_shared/rooms.ts';
-import type { MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
+import type { LoanRow, MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
 import { watched } from '../_shared/watch.ts';
 
 const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of';
 const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, shout, shout_at';
 const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
+const LOAN = 'id, room_id, round, proposer, lender, borrower, amount, rate_bp, rounds, status';
 
 export default {
   fetch: withSupabase({ auth: 'user' }, watched('rooms', async (req: Request, ctx: SupabaseContext) => {
@@ -91,6 +92,11 @@ export default {
         rematch: (old, room) =>
           call('room_rematch', { p_old: old, p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
         shout: (room, user, shout, now) => call('room_shout', { p_room: room, p_member: user, p_shout: shout, p_now: now.toISOString() }),
+        loans: async (room) => must(await db.from('room_loans').select(LOAN).eq('room_id', room).order('created_at', { ascending: true })) as LoanRow[],
+        offerLoan: (loan) =>
+          call('room_loan_offer', { p_id: loan.id, p_room: loan.room_id, p_round: loan.round, p_proposer: loan.proposer, p_lender: loan.lender, p_borrower: loan.borrower, p_amount: loan.amount, p_rate: loan.rate_bp, p_rounds: loan.rounds }),
+        answerLoan: (id, user, yes) => call('room_loan_answer', { p_id: id, p_member: user, p_yes: yes }),
+        closeLoans: async (room, round, paid) => void (await call('room_loans_close', { p_room: room, p_round: round, p_paid: paid })),
         history: async (user, limit) => {
           const mine = must(
             await db

@@ -12,8 +12,8 @@ import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
-export type { RoomGameOver, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
+export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
+export type { RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
 export const LOOK_EVERY_MS = 15_000;
@@ -63,6 +63,10 @@ export interface RoomActions {
   history(): Promise<RoomGameOver[] | null>;
   /** Shouts to the others. `soon` if the player shouted a moment ago; `failed` if it did not get through. */
   shout(n: number): Promise<'ok' | 'soon' | 'failed'>;
+  /** Offers another player a loan, to lend or to borrow. `failed` if it did not get through, or either of them is gone. */
+  offerLoan(loan: { to: string; lend: boolean; amount: number; rateBp: number; rounds: number }): Promise<'ok' | 'failed'>;
+  /** Says yes or no to an offer, or takes back the player's own with a no. `failed` if it is no longer open. */
+  answerLoan(loanId: string, yes: boolean): Promise<'ok' | 'failed'>;
   /** Takes a shout off once it has been shown. */
   dismissHeard(key: string): void;
   /** Asks the server how the room stands now. */
@@ -386,6 +390,39 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           const now = await rooms.shout(room.id, n);
           if (now === 'soon') return 'soon';
           if (now === 'gone') return 'failed';
+          if (get().room?.id === now.id) adopt(now);
+          return 'ok';
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      async offerLoan(loan) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const now = await rooms.offerLoan(room.id, loan);
+          if (now === 'gone') return 'failed';
+          if (get().room?.id === now.id) adopt(now);
+          return 'ok';
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      async answerLoan(loanId, yes) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const now = await rooms.answerLoan(room.id, loanId, yes);
+          if (now === 'gone') {
+            void get().refresh();
+            return 'failed';
+          }
           if (get().room?.id === now.id) adopt(now);
           return 'ok';
         } catch (error) {

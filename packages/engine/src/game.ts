@@ -10,7 +10,7 @@ import { FLAG_UNSTABLE_PAY, hasFlag } from './life/flags';
 import { settleEvasion } from './evasion';
 import { repairUsed } from './life/orders';
 import { ageLife, turnPage } from './life/roundEnd';
-import type { Cents } from './money';
+import type { Bp, Cents } from './money';
 import { executeOrder } from './orders';
 import { newPlayer } from './player';
 import { growPortfolio, pensionRoom, reinvestDividends, runPlans } from './portfolio';
@@ -288,6 +288,8 @@ export function applyRound(
 
   p.cash += income.salary + passive - outgoings - bill.total;
   applyDebtPayments(p, expenses.service);
+  // What others owe comes back as their loans are paid: the same share, round by round.
+  p.cash += collectLent(p);
   const repairs = repairUsed(p, content, now, rng);
   let repaired = 0;
   for (const repair of repairs) {
@@ -368,6 +370,31 @@ export function applyRound(
 }
 
 /**
+ * The principal that comes back this round on what the player lent, as `debtServiceForRound` has the
+ * borrower pay it: a share by the rounds left, and the rest at the last. Paid-up loans are dropped.
+ */
+function collectLent(p: PlayerState): Cents {
+  if (!p.lent) return 0;
+  let back = 0;
+  for (const loan of p.lent) {
+    const due = loan.roundsLeft <= 1 ? loan.principal : Math.ceil(loan.principal / loan.roundsLeft);
+    loan.principal -= due;
+    loan.roundsLeft = Math.max(0, loan.roundsLeft - 1);
+    back += due;
+  }
+  p.lent = p.lent.filter((loan) => loan.principal > 0);
+  if (p.lent.length === 0) delete p.lent;
+  return back;
+}
+
+/** Most a loan between players may be, and how long and how dear: a bound on what a log may hold, not a rule of the game. */
+const PEER_MAX: Cents = 1_000_000_000_00;
+const PEER_MAX_RATE: Bp = 2_000;
+const PEER_MAX_ROUNDS = 10;
+const isText = (x: unknown): x is string => typeof x === 'string' && x.length > 0 && x.length <= 64;
+const isWhole = (x: unknown, max: number, min = 0): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= min && x <= max;
+
+/**
  * Plays what the other players of a game with friends did to this life in the round just played,
  * as the server wrote it into the log when the round turned. A tease takes status from the round
  * to come. Anything else is refused: the log is not one a game could have been played with.
@@ -378,12 +405,36 @@ export function applyRoomEvents(content: Content, state: GameState, room: readon
   if (state.phase === 'cards' && state.answered > 0) throw new Error('applyRoomEvents: a round is half answered');
   const next = structuredClone(state);
   const events: GameEvent[] = [];
+  const p = next.player;
   for (const event of room) {
-    const { kind, by } = (typeof event === 'object' && event !== null ? event : {}) as { kind?: unknown; by?: unknown };
-    if (kind !== 'teased' || typeof by !== 'string' || by.length === 0 || by.length > 64) throw new Error('applyRoomEvents: not a room event');
-    if (next.finished) continue;
-    next.player.life.statusNudge = (next.player.life.statusNudge ?? 0) - content.life.teasedStatus;
-    events.push({ kind: 'teased', by, status: -content.life.teasedStatus });
+    const e = (typeof event === 'object' && event !== null ? event : {}) as Record<string, unknown>;
+    if (e.kind === 'teased' && isText(e.by)) {
+      if (next.finished) continue;
+      p.life.statusNudge = (p.life.statusNudge ?? 0) - content.life.teasedStatus;
+      events.push({ kind: 'teased', by: e.by, status: -content.life.teasedStatus });
+    } else if ((e.kind === 'lent' || e.kind === 'borrowed') && isText(e.id) && isText(e.kind === 'lent' ? e.to : e.from) && isWhole(e.amount, PEER_MAX, 1) && isWhole(e.rateBp, PEER_MAX_RATE) && isWhole(e.rounds, PEER_MAX_ROUNDS, 1)) {
+      const peer = (e.kind === 'lent' ? e.to : e.from) as string;
+      const terms = { amount: e.amount, rateBp: e.rateBp, rounds: e.rounds };
+      if (next.finished) continue;
+      if (e.kind === 'lent') {
+        // The server pays out only what the lender has: anything else is not a game that was played.
+        if (p.cash < terms.amount || p.lent?.some((loan) => loan.id === e.id)) throw new Error('applyRoomEvents: a loan the lender cannot pay out');
+        p.cash -= terms.amount;
+        p.lent = [...(p.lent ?? []), { id: e.id, peer, principal: terms.amount, fixedRateBp: terms.rateBp, roundsLeft: terms.rounds }];
+        events.push({ kind: 'lent', to: peer, ...terms });
+      } else {
+        if (p.debts.some((debt) => debt.id === e.id)) throw new Error('applyRoomEvents: a loan already owed');
+        p.cash += terms.amount;
+        p.debts.push({ id: e.id, kind: 'personalLoan', principal: terms.amount, fixedRateBp: terms.rateBp, roundsLeft: terms.rounds, peer });
+        events.push({ kind: 'borrowed', from: peer, ...terms });
+      }
+    } else if (e.kind === 'defaulted' && isText(e.id)) {
+      const loan = p.lent?.find((each) => each.id === e.id);
+      if (!loan) continue;
+      p.lent = p.lent?.filter((each) => each.id !== e.id);
+      if (p.lent?.length === 0) delete p.lent;
+      events.push({ kind: 'defaulted', by: loan.peer, lost: loan.principal });
+    } else throw new Error('applyRoomEvents: not a room event');
   }
   if (events.length === 0) return { state: next, events };
   refreshDerived(next.player, content, next.round);

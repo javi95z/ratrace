@@ -62,7 +62,9 @@ export function incomeForRound(p: PlayerState, content: Content, world: WorldSta
   let dividends = 0;
   for (const paid of dividendsByAsset(p, content, world)) dividends += paid.amount;
 
-  const interest = applyBp(p.deposit, depositRateBp(content, world) * years);
+  let interest = applyBp(p.deposit, depositRateBp(content, world) * years);
+  // What another player owes pays its interest as their loan charges it: the very same sum.
+  for (const loan of p.lent ?? []) interest += applyBp(loan.principal, loan.fixedRateBp * years);
 
   let rent = 0;
   for (const property of p.properties) {

@@ -484,7 +484,7 @@ describe('how a room over ended for the player, for its badges', () => {
   });
   const over = (members: RoomMember[], rematchOf = false): RoomState => ({
     id: 'r', code: 'ABCDEF', host: '', lifeId: 'nurse', engineVersion: '', contentVersion: '', seconds: 90, status: 'finished', round: 20, rounds: 20,
-    deadline: null, now: 0, members, rematch: null, rematchOf,
+    deadline: null, now: 0, members, rematch: null, rematchOf, loans: [],
   });
 
   it('is won by the best score among those who stayed, a tie too', () => {

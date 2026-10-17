@@ -1,5 +1,6 @@
 'use client';
 
+import { LoanOffers, PlayerSheet } from './RoomLoans';
 import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
@@ -711,7 +712,7 @@ function rankOf(members: readonly RoomMember[], member: RoomMember): number {
  * how it moved, their net worth, their score and what the round added to it, and the face they put
  * on it. `live` adds where each is in the round being played. Bare: whoever holds it frames it.
  */
-function Standings({ room, live = false }: { room: RoomState; live?: boolean }) {
+function Standings({ room, live = false, onPick }: { room: RoomState; live?: boolean; /** Opens another player still in a game in play, to offer them a loan. */ onPick?(member: RoomMember): void }) {
   const t = useT('room');
   const { fmt, names, text } = useWords();
   const nameOf = useNameOf();
@@ -730,8 +731,11 @@ function Standings({ room, live = false }: { room: RoomState; live?: boolean }) 
           // Places move by the order shown, the order the server kept the round before.
           const moved = before === null ? 0 : before.place - (at + 1);
           const gained = standing !== null && before !== null ? standing.score - before.score : 0;
+          const pick = onPick && room.status === 'playing' && !member.me && !member.left ? () => onPick(member) : undefined;
           return (
-            <li key={member.userId} className={`flex min-h-12 items-center gap-3 py-1.5 ${member.left ? 'opacity-60' : ''}`}>
+            <li key={member.userId} className={member.left ? 'opacity-60' : ''}>
+              {/* Another player still in the game opens, to offer them a loan. */}
+              <Line pick={pick}>
               <span className="flex w-7 shrink-0 flex-col items-center leading-none">
                 <span className="pixel text-[16px] text-ink-300">{member.left ? '·' : `${rankOf(room.members, member)}${tied ? '=' : ''}`}</span>
                 {moved !== 0 ? (
@@ -770,11 +774,24 @@ function Standings({ room, live = false }: { room: RoomState; live?: boolean }) 
                   </span>
                 ) : null}
               </span>
+              </Line>
             </li>
           );
         })}
       </ol>
     </div>
+  );
+}
+
+/** A line of the room's order: a button when it opens something, a plain line when it does not. */
+function Line({ pick, children }: { pick?: () => void; children: ReactNode }) {
+  const look = 'flex min-h-12 w-full items-center gap-3 py-1.5 text-left';
+  return pick ? (
+    <button type="button" aria-haspopup="dialog" onClick={pick} className={look}>
+      {children}
+    </button>
+  ) : (
+    <div className={look}>{children}</div>
   );
 }
 
@@ -786,6 +803,7 @@ function RoomBar({ room }: { room: RoomState }) {
   const left = useSecondsLeft();
   const [open, setOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [picked, setPicked] = useState<RoomMember | null>(null);
   const here = room.members.filter((member) => !member.left);
   const ready = here.filter((member) => member.ready).length;
   const me = here.find((member) => member.me);
@@ -839,7 +857,15 @@ function RoomBar({ room }: { room: RoomState }) {
         ) : null}
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={common('close')}>
-        <Standings room={room} live />
+        <Standings
+          room={room}
+          live
+          onPick={(member) => {
+            setOpen(false);
+            setPicked(member);
+          }}
+        />
+        {room.status === 'playing' ? <p className="mt-2 text-center text-[12px] text-ink-300">{t('loan.pickHint')}</p> : null}
         {room.status === 'playing' ? (
           <div className="mt-4 flex justify-center">
             <button type="button" onClick={() => setLeaving(true)} className="min-h-11 px-3 text-[13px] text-ink-300 underline underline-offset-4">
@@ -849,6 +875,7 @@ function RoomBar({ room }: { room: RoomState }) {
         ) : null}
       </Sheet>
       <LeaveSheet room={room} open={leaving} onClose={() => setLeaving(false)} />
+      <PlayerSheet member={picked} nameOf={nameOf} onClose={() => setPicked(null)} />
       <ShoutButton />
     </div>
   );
@@ -891,6 +918,7 @@ function RoomPlay({ room, game }: { room: RoomState; game: GameStore }) {
 
 function RoomScreens({ room }: { room: RoomState }) {
   const t = useT('room');
+  const nameOf = useNameOf();
   const missed = useRoom((s) => s.missed);
   const earned = useRoom((s) => s.earned);
   const { text } = useWords();
@@ -905,7 +933,12 @@ function RoomScreens({ room }: { room: RoomState }) {
   const waiting = room.status === 'playing' && me?.ready === true && stage === 'finance';
   const order = room.status === 'finished' ? t('final') : t('afterRound', { n: room.round });
   const slots: RoomSlots = {
-    bar: <RoomBar room={room} />,
+    bar: (
+      <div className="flex flex-col gap-2">
+        <RoomBar room={room} />
+        <LoanOffers room={room} nameOf={nameOf} />
+      </div>
+    ),
     actions: waiting ? <Waiting room={room} /> : null,
     resolved: (
       <Panel title={order} label={order}>

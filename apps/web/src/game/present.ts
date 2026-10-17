@@ -85,10 +85,13 @@ export function perkLines(t: Translate, perks: ItemPerks | undefined): string[] 
 
 /**
  * What a debt is called: its kind, and what it bought. A mortgage is named for the home it is on,
- * found among the properties given; a loan taken to buy a thing, for the thing.
+ * found among the properties given; a loan taken to buy a thing, for the thing; a loan from another
+ * player, for them, by `whoIs`.
  */
-export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'forAsset'> & { id?: string }, properties: ReadonlyArray<Property> = []): string {
+export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'forAsset' | 'peer'> & { id?: string }, properties: ReadonlyArray<Property> = [], whoIs?: (userId: string) => string): string {
   const kind = words.text.debts[debt.kind];
+  // A loan from another player of the room is named for them.
+  if (debt.peer !== undefined && whoIs) return `${kind} · ${whoIs(debt.peer)}`;
   const home = debt.id === undefined ? undefined : properties.find((property) => property.mortgageId === debt.id);
   if (home) return `${kind} · ${homeName(words.text, home.typeId, home.cityId)}, ${words.names.cities[home.cityId]}`;
   if (debt.forAsset !== undefined && words.names.assets[debt.forAsset] !== undefined) return `${kind} · ${words.names.assets[debt.forAsset].name}`;
@@ -298,7 +301,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'teased', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'defaulted', 'borrowed', 'lent', 'teased', 'orderRejected'];
 
 /** The ways a tease is told, turned by who made it. The keys are written out, one by one. */
 const TEASED = ['teased', 'teased2', 'teased3'] as const;
@@ -408,6 +411,15 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
         break;
       case 'orderRejected':
         add(event, { tone: 'bad', icon: 'icon.locked', title: t('refused', { reason: text.reasons[event.reason] }) });
+        break;
+      case 'lent':
+        add(event, { tone: 'plain', icon: 'icon.loan', title: t('lent', { amount: fmt.money(event.amount), who: whoIs(event.to) }), hint: t('loanTerms', { rate: fmt.rate(event.rateBp), rounds: event.rounds }) });
+        break;
+      case 'borrowed':
+        add(event, { tone: 'plain', icon: 'icon.loan', title: t('borrowed', { amount: fmt.money(event.amount), who: whoIs(event.from) }), hint: t('loanTerms', { rate: fmt.rate(event.rateBp), rounds: event.rounds }) });
+        break;
+      case 'defaulted':
+        add(event, { tone: 'bad', icon: 'icon.loan', title: t('defaulted', { amount: fmt.money(event.lost), who: whoIs(event.by) }), hint: t('defaultedHint') });
         break;
       case 'teased': {
         let mix = 0;

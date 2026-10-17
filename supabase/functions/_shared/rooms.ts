@@ -102,6 +102,23 @@ export interface TurnLife {
   standing: Standing;
 }
 
+/** A loan offered between two players of a room, as the database keeps it. Amounts in cents, the rate in basis points. */
+export interface LoanRow {
+  id: string;
+  room_id: string;
+  round: number;
+  proposer: string;
+  lender: string;
+  borrower: string;
+  amount: number;
+  rate_bp: number;
+  rounds: number;
+  status: 'open' | 'accepted' | 'refused' | 'withdrawn' | 'paid' | 'failed' | 'expired';
+}
+
+/** What a loan between players may be: from a hundred dollars to ten million, up to twenty per cent a year in whole points, for one to five rounds. */
+export const LOAN_LIMITS = { minAmount: 10_000, maxAmount: 1_000_000_000, maxRateBp: 2_000, rateStepBp: 100, maxRounds: 5 } as const;
+
 /** The kinds of call a room counts. How many of each a player may make is in `rate.ts`. */
 export type RoomCounted = 'room-make' | 'room-step';
 
@@ -152,12 +169,20 @@ export interface RoomsDeps {
   shout(roomId: string, userId: string, shout: number, now: Date): Promise<'ok' | 'soon' | 'closed'>;
   /** The rooms the player was in that are over, the latest first, at most `limit`, each with everyone who was in it. */
   history(userId: string, limit: number): Promise<Array<{ room: RoomRow; members: MemberRow[] }>>;
+  /** Every loan offered in the room, in any round. */
+  loans(roomId: string): Promise<LoanRow[]>;
+  /** Offers a loan in the round the room is in, in place of the proposer's last offer to the same player that round. */
+  offerLoan(loan: Omit<LoanRow, 'status'>): Promise<'ok' | 'closed' | 'moved'>;
+  /** The other player's answer to an open offer, or its proposer withdrawing it with a no. `gone` for one no longer open. */
+  answerLoan(id: string, userId: string, yes: boolean): Promise<'ok' | 'gone'>;
+  /** Writes what came of the offers of a round that has turned: `paid` were paid out. */
+  closeLoans(roomId: string, round: number, paid: string[]): Promise<void>;
   /** Tells players, on the devices that asked for notices, that their game needs them. Never fails: a notice lost is no reason to refuse a move. */
   notify(userIds: string[], about: RoomNotice): Promise<void>;
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' }>;
 
 /** How many shouts there are to choose from: the page draws them, the server keeps their number. */
 export const SHOUTS = 14;
@@ -281,7 +306,7 @@ function stepAnswer(game: GameModule, played: Played, step: number, roundBefore:
 
 /** The room as a member may see it: who is in it, who is ready, how each stood when the last round turned, and the clocks. */
 async function roomBody(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[], userId: string): Promise<Record<string, unknown>> {
-  const names = await deps.names(members.map((m) => m.user_id));
+  const [names, loans] = await Promise.all([deps.names(members.map((m) => m.user_id)), room.status === 'playing' || room.status === 'finished' ? deps.loans(room.id) : Promise.resolve([])]);
   return {
     id: room.id,
     code: room.code,
@@ -310,7 +335,33 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
     // The rematch of a room that is over, while it waits in its lobby for whoever wants it.
     rematch: room.rematch === null ? null : await rematchOf(deps, room.rematch),
     rematchOf: room.rematch_of !== null,
+    loans: loansFor(loans, room, userId),
   };
+}
+
+/**
+ * The loans a player of a room is told of: the offers of the round in play that are theirs to
+ * answer or that they made, and what came of those of the round that turned last.
+ */
+function loansFor(loans: readonly LoanRow[], room: RoomRow, userId: string) {
+  return loans
+    .filter((loan) => loan.lender === userId || loan.borrower === userId)
+    .filter((loan) =>
+      loan.round === room.round
+        ? loan.status === 'open' || loan.status === 'accepted' || (loan.status === 'refused' && loan.proposer === userId)
+        : loan.round === room.round - 1 && (loan.status === 'paid' || loan.status === 'failed' || (loan.status === 'expired' && loan.proposer === userId)),
+    )
+    .map((loan) => ({
+      id: loan.id,
+      round: loan.round,
+      lend: loan.lender === userId,
+      other: loan.lender === userId ? loan.borrower : loan.lender,
+      mine: loan.proposer === userId,
+      amount: loan.amount,
+      rateBp: loan.rate_bp,
+      rounds: loan.rounds,
+      status: loan.status,
+    }));
 }
 
 /** A rematch as a room that is over tells of it: its code while it can still be joined, and whether it can. */
@@ -377,8 +428,14 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       }
       taken.push({ member, row, player, answered: answered.log, next, played, ready });
     }
-    // What the players did to each other this round: each tease that was taken, at whoever it was aimed at still in the room.
+    // What the players did to each other this round: each tease that was taken, at whoever it was aimed at still in the room,
+    // and the loans they agreed, paid out, or lost to whoever owed them going under.
     const done = teasesOf(taken.map((life) => ({ user: life.member.user_id, orders: life.next[life.next.length - 1].orders ?? [], events: life.played.last?.events ?? [] })), new Set(members.map((m) => m.user_id)));
+    const lent = loansAt(
+      (await deps.loans(room.id)).filter((loan) => loan.round === room.round && loan.status === 'accepted'),
+      new Map(taken.map((life) => [life.member.user_id, life.played.state])),
+    );
+    for (const [user, events] of lent.events) done.set(user, [...(done.get(user) ?? []), ...events]);
     const lives: TurnLife[] = [];
     const ends: Array<{ row: RoomGameRow; played: Played }> = [];
     for (const life of taken) {
@@ -397,6 +454,7 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
     const over = lives.length > 0 && lives.every((life) => life.finished);
     const said = await deps.turn(room.id, room.round, over ? null : new Date(deps.now().getTime() + room.seconds * 1000), lives);
     if (said === 'ok') {
+      await deps.closeLoans(room.id, room.round, lent.paid);
       if (over) for (const end of ends) await deps.saveRun(runOf(end.row, game, end.played, deps.now()));
       // In a slow room nobody is looking: everyone but whoever turned it is told the next round is theirs.
       else if (room.seconds >= SLOW_SECONDS) await deps.notify(lives.map((life) => life.user).filter((user) => user !== by), { kind: 'newRound', round: room.round + 2, rounds: game.content.rounds, seconds: room.seconds });
@@ -414,6 +472,41 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
     room = now;
   }
   throw new Error(`room ${room.id}: the round could not be turned`);
+}
+
+/** What a life of a room holds that a loan between players needs: its cash, what it owes, what it has lent, and whether it is over. */
+type LoanState = { finished: boolean; player: { cash: number; debts: Array<{ id: string }>; lent?: Array<{ id: string; peer: string }> } };
+
+/**
+ * The loans of a round as it turns, by the lives as the round left them: each one agreed is paid out
+ * if both are still in the game and the lender has the cash, in the order they were offered; and
+ * what is lent to someone gone from the game, or who no longer owes it because they went bankrupt,
+ * is lost. Answers the room events each life takes, and the loans paid out.
+ */
+export function loansAt(accepted: readonly LoanRow[], lives: ReadonlyMap<string, LoanState>): { events: Map<string, RoomEvent[]>; paid: string[] } {
+  const events = new Map<string, RoomEvent[]>();
+  const add = (user: string, event: RoomEvent) => events.set(user, [...(events.get(user) ?? []), event]);
+  const paid: string[] = [];
+  for (const [user, life] of lives) {
+    for (const loan of life.player.lent ?? []) {
+      const owes = lives.get(loan.peer)?.player.debts.some((debt) => debt.id === loan.id) ?? false;
+      if (!owes) add(user, { kind: 'defaulted', id: loan.id });
+    }
+  }
+  // Cash already promised this turn by each lender, so two loans are not paid out of the same money.
+  const promised = new Map<string, number>();
+  for (const loan of accepted) {
+    const lender = lives.get(loan.lender);
+    const borrower = lives.get(loan.borrower);
+    const spent = promised.get(loan.lender) ?? 0;
+    if (!lender || !borrower || lender.finished || borrower.finished || lender.player.cash - spent < loan.amount) continue;
+    promised.set(loan.lender, spent + loan.amount);
+    const terms = { id: loan.id, amount: loan.amount, rateBp: loan.rate_bp, rounds: loan.rounds };
+    add(loan.lender, { kind: 'lent', to: loan.borrower, ...terms });
+    add(loan.borrower, { kind: 'borrowed', from: loan.lender, ...terms });
+    paid.push(loan.id);
+  }
+  return { events, paid };
 }
 
 /** A tease among a round's orders: the use of focus aimed at another player of the room. */
@@ -505,6 +598,8 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
       case 'card':
       case 'submit':
       case 'shout':
+      case 'loan':
+      case 'loanAnswer':
         return await inRoom(games, deps, userId, raw);
       default:
         return bad('action');
@@ -664,6 +759,32 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const said = await deps.shout(room.id, userId, shout as number, deps.now());
     if (said === 'closed') return closed;
     if (said === 'soon') return { status: 409, body: { error: 'soon' } };
+    return await answerRoom(games, deps, room.id, userId);
+  }
+
+  if (raw.action === 'loan') {
+    const { to, lend, amount, rateBp, rounds } = raw;
+    const others = members.filter((m) => m.left_at === null && m.user_id !== userId).map((m) => m.user_id);
+    if (typeof to !== 'string' || !others.includes(to)) return bad('to');
+    if (typeof lend !== 'boolean') return bad('lend');
+    if (!Number.isSafeInteger(amount) || (amount as number) < LOAN_LIMITS.minAmount || (amount as number) > LOAN_LIMITS.maxAmount) return bad('amount');
+    if (!Number.isSafeInteger(rateBp) || (rateBp as number) < 0 || (rateBp as number) > LOAN_LIMITS.maxRateBp || (rateBp as number) % LOAN_LIMITS.rateStepBp !== 0) return bad('rateBp');
+    if (!Number.isSafeInteger(rounds) || (rounds as number) < 1 || (rounds as number) > LOAN_LIMITS.maxRounds) return bad('rounds');
+    if (room.status !== 'playing' || me.left_at !== null) return closed;
+    const loan = { id: deps.newId(), room_id: room.id, round: room.round, proposer: userId, lender: lend ? userId : to, borrower: lend ? to : userId, amount: amount as number, rate_bp: rateBp as number, rounds: rounds as number };
+    const said = await deps.offerLoan(loan);
+    if (said === 'closed') return closed;
+    if (said === 'moved') return moved;
+    const names = await deps.names([userId]);
+    await deps.notify([to], { kind: 'loanOffer', who: names[userId] ?? null, lend, amount: loan.amount, rateBp: loan.rate_bp, rounds: loan.rounds });
+    return await answerRoom(games, deps, room.id, userId);
+  }
+
+  if (raw.action === 'loanAnswer') {
+    const { loanId, yes } = raw;
+    if (typeof loanId !== 'string' || !UUID.test(loanId)) return bad('loanId');
+    if (typeof yes !== 'boolean') return bad('yes');
+    if ((await deps.answerLoan(loanId, userId, yes)) === 'gone') return { status: 409, body: { error: 'gone' } };
     return await answerRoom(games, deps, room.id, userId);
   }
 

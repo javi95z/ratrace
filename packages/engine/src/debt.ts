@@ -149,6 +149,7 @@ export function executeRepay(p: PlayerState, order: Extract<Order, { type: 'repa
   if (!isAmount(order.amount)) return 'bad-amount';
   const d = p.debts.find((x) => x.id === order.debtId);
   if (!d) return 'unknown-debt';
+  if (d.peer !== undefined) return 'peer-loan';
   if (order.amount > d.principal) return 'exceeds-debt';
   if (order.amount > p.cash) return 'not-enough-cash';
   d.principal -= order.amount;

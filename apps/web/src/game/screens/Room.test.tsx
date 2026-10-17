@@ -250,6 +250,47 @@ describe('a round in a room', () => {
     expect(b.events).toContainEqual({ kind: 'teased', by: HOST, status: -2 });
   });
 
+  it('offers a loan to another player from the room\'s order, on terms the player sets', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: /^The game: / }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /Rat BBBB/ }));
+    await user.click(within(await screen.findByRole('dialog', { name: 'Rat BBBB' })).getByRole('button', { name: 'Offer a loan' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Lend to Rat BBBB' });
+    await user.click(within(sheet).getByRole('button', { name: '$1,000' }));
+    await user.click(within(sheet).getByRole('radio', { name: /^10(\.0)?%$/ }));
+    await user.click(within(sheet).getByRole('radio', { name: '2' }));
+    expect(within(sheet).getByText(/^Rat BBBB will pay you \$\d/)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'Offer it to Rat BBBB' }));
+    await waitFor(() => expect(server.db.loans).toHaveLength(1));
+    expect(server.db.loans[0]).toMatchObject({ lender: HOST, borrower: B, amount: 100_000, rate_bp: 1_000, rounds: 2, status: 'open' });
+    // The offer waits on screen, and can be taken back.
+    expect(await screen.findByText('Waiting for Rat BBBB')).toBeTruthy();
+  });
+
+  it('shows an offer from another player, and takes the answer', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await screen.findByRole('button', { name: /^The game: / });
+    await act(async () => {
+      await server.ask(B, { action: 'loan', roomId: room.id, to: HOST, lend: true, amount: 200_000, rateBp: 500, rounds: 3 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const offer = await screen.findByRole('region', { name: 'Rat BBBB offers you a loan' });
+    expect(within(offer).getByText(/^You would pay \$[\d,]+ the first round and \$[\d,]+ in all\.$/)).toBeTruthy();
+    await user.click(within(offer).getByRole('button', { name: 'Accept' }));
+    await waitFor(() => expect(server.db.loans[0].status).toBe('accepted'));
+    expect(await screen.findByText('Accepted: paid out when the round ends', { exact: false })).toBeTruthy();
+  });
+
   it('shouts to the others from the bar, one every ten seconds, and shows what they shout', async () => {
     const server = roomServer();
     const room = await lobby(server);

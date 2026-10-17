@@ -21,6 +21,7 @@ export interface Notice {
  * - `newRound`: in a game of a round a day, the next round has begun.
  * - `rematch`: someone from a game that is over has opened its rematch.
  * - `idle`: a life left halfway, a week ago.
+ * - `loanOffer`: another player of the game offers to lend the player money, or asks to borrow it.
  */
 export type NoticeAbout =
   | { kind: 'weekly'; place: number | null; entrants: number | null }
@@ -28,7 +29,8 @@ export type NoticeAbout =
   | { kind: 'yourTurn'; round: number; rounds: number; secondsLeft: number }
   | { kind: 'newRound'; round: number; rounds: number; seconds: number }
   | { kind: 'rematch' }
-  | { kind: 'idle' };
+  | { kind: 'idle' }
+  | { kind: 'loanOffer'; who: string | null; lend: boolean; amount: number; rateBp: number; rounds: number };
 
 const langOf = (locale: string): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
 
@@ -46,6 +48,14 @@ export function span(seconds: number, lang: NoticeLocale): string {
   return minutes === 0 ? `${hours} ${h}` : `${hours} ${h} ${minutes} ${min}`;
 }
 
+/** Whole dollars from cents, written as each language writes money: $10,000, 10.000 $, 10 000 $. */
+export function money(cents: number, lang: NoticeLocale): string {
+  const digits = String(Math.round(Math.abs(cents) / 100));
+  const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'en' ? ',' : lang === 'es' ? '.' : ' ');
+  return lang === 'en' ? `$${grouped}` : `${grouped} $`;
+}
+const pct = (bp: number) => `${bp / 100}%`;
+
 type Words = (about: never) => { title: string; body: string };
 
 const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<NoticeAbout, { kind: K }>) => { title: string; body: string } }> = {
@@ -59,6 +69,10 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     newRound: (a) => ({ title: `Round ${a.round} of ${a.rounds}`, body: `A new round of your game has begun. You have ${span(a.seconds, 'en')} to play it.` }),
     rematch: () => ({ title: 'Rematch!', body: 'Someone from your last game wants another. Join them from the game.' }),
     idle: () => ({ title: 'Your life is waiting', body: 'You left a life halfway. Pick it up where you left it.' }),
+    loanOffer: (a) => ({
+      title: a.lend ? `${a.who ?? 'A rival'} offers you a loan` : `${a.who ?? 'A rival'} asks you for a loan`,
+      body: `${money(a.amount, 'en')} at ${pct(a.rateBp)} over ${a.rounds} ${a.rounds === 1 ? 'round' : 'rounds'}. Answer before the round turns.`,
+    }),
   },
   es: {
     weekly: (a) => ({
@@ -70,6 +84,10 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     newRound: (a) => ({ title: `Ronda ${a.round} de ${a.rounds}`, body: `Empieza una ronda nueva de tu partida. Tienes ${span(a.seconds, 'es')} para jugarla.` }),
     rematch: () => ({ title: '¡Revancha!', body: 'Alguien de tu última partida quiere otra. Únete desde la partida.' }),
     idle: () => ({ title: 'Tu vida te espera', body: 'Dejaste una vida a medias. Sigue donde la dejaste.' }),
+    loanOffer: (a) => ({
+      title: a.lend ? `${a.who ?? 'Un rival'} te ofrece un préstamo` : `${a.who ?? 'Un rival'} te pide un préstamo`,
+      body: `${money(a.amount, 'es')} al ${pct(a.rateBp)} en ${a.rounds} ${a.rounds === 1 ? 'ronda' : 'rondas'}. Responde antes de que acabe la ronda.`,
+    }),
   },
   ru: {
     weekly: (a) => ({
@@ -81,11 +99,15 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
     newRound: (a) => ({ title: `Раунд ${a.round} из ${a.rounds}`, body: `В твоей партии начался новый раунд. На него у тебя ${span(a.seconds, 'ru')}.` }),
     rematch: () => ({ title: 'Реванш!', body: 'Кто-то из твоей последней партии хочет ещё одну. Присоединяйся из партии.' }),
     idle: () => ({ title: 'Твоя жизнь ждёт', body: 'Одна из твоих жизней осталась на полпути. Продолжи с того же места.' }),
+    loanOffer: (a) => ({
+      title: a.lend ? `${a.who ?? 'Соперник'} предлагает тебе заём` : `${a.who ?? 'Соперник'} просит у тебя в долг`,
+      body: `${money(a.amount, 'ru')} под ${pct(a.rateBp)} на ${a.rounds} ${a.rounds === 1 ? 'раунд' : a.rounds < 5 ? 'раунда' : 'раундов'}. Ответь до конца раунда.`,
+    }),
   },
 };
 
-const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play' };
-const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life' };
+const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', loanOffer: 'room' };
+const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', loanOffer: 'room-loan' };
 
 /** The notice for a browser that asked for notices in a language; one the game does not have reads in English. */
 export function noticeOf(locale: string, about: NoticeAbout): Notice {

@@ -19,6 +19,7 @@ const COLOUR: Record<WealthKind, string> = {
   property: 'bg-skin-500',
   business: 'bg-teal-600',
   things: 'bg-ink-500',
+  lent: 'bg-wine-500',
 };
 
 /**

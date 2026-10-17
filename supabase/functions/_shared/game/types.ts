@@ -10,11 +10,12 @@ export interface LoggedRound {
   room?: RoomEvent[];
 }
 
-/** One thing another player of a room did to a life: `by` is who, by user id. */
-export interface RoomEvent {
-  kind: 'teased';
-  by: string;
-}
+/** One thing another player of a room did to a life, written by the rooms function: who, by user id, and with what. */
+export type RoomEvent =
+  | { kind: 'teased'; by: string }
+  | { kind: 'lent'; id: string; to: string; amount: number; rateBp: number; rounds: number }
+  | { kind: 'borrowed'; id: string; from: string; amount: number; rateBp: number; rounds: number }
+  | { kind: 'defaulted'; id: string };
 
 export interface GameState {
   round: number;
@@ -22,7 +23,15 @@ export interface GameState {
   /** Whether the round is waiting for its cards to be answered, or for its orders. */
   phase: 'cards' | 'finance';
   /** What a room may tell the others of a player once a round has turned: where they live, and their job. */
-  player: { escapedAtRound: number | null; cityId?: string; life?: { career?: { id: string; level: number } | null } };
+  player: {
+    escapedAtRound: number | null;
+    cityId?: string;
+    life?: { career?: { id: string; level: number } | null };
+    /** What a loan between players of a room needs: the cash to pay it out, the debts owed, and what was lent to others. */
+    cash: number;
+    debts: Array<{ id: string }>;
+    lent?: Array<{ id: string; peer: string }>;
+  };
 }
 
 /** A life played again, with the record of it: what the badges and the graph of a finished life are made from. */

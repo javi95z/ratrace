@@ -493,7 +493,7 @@ export function quotePlans(view: GameView): PlanQuote[] {
 }
 
 /** The kinds of thing wealth is held in, as the portfolio is read at a glance. */
-export type WealthKind = 'cash' | 'savings' | 'pension' | 'equity' | 'bond' | 'crypto' | 'gold' | 'property' | 'business' | 'things';
+export type WealthKind = 'cash' | 'savings' | 'pension' | 'equity' | 'bond' | 'crypto' | 'gold' | 'property' | 'business' | 'things' | 'lent';
 
 /** Past this share of what is invested, one holding is the player's fate: the screen says so. */
 export const CONCENTRATION_PCT = 50;
@@ -523,7 +523,9 @@ export interface PortfolioQuote {
 export function quotePortfolio(content: Content, view: GameView): PortfolioQuote {
   const p = view.player;
   const world = view.timeline[view.round];
-  const held: Record<WealthKind, Cents> = { cash: p.cash, savings: p.deposit, pension: p.pension, equity: 0, bond: 0, crypto: 0, gold: 0, property: 0, business: 0, things: 0 };
+  const held: Record<WealthKind, Cents> = { cash: p.cash, savings: p.deposit, pension: p.pension, equity: 0, bond: 0, crypto: 0, gold: 0, property: 0, business: 0, things: 0, lent: 0 };
+  // What other players of a game with friends owe the player is theirs to collect: wealth like any other.
+  for (const loan of p.lent ?? []) held.lent += loan.principal;
   let largest: PortfolioQuote['largest'] = null;
   const consider = (kind: 'asset' | 'property' | 'business', id: string, value: Cents) => {
     if (largest === null || value > largest.value) largest = { kind, id, value, shareBp: 0 };

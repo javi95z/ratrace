@@ -237,6 +237,87 @@ describe('a round in a room', () => {
     }
   });
 
+  /** Plays the round of every member named, with no orders: the last one turns it. */
+  async function playRound(server: ReturnType<typeof roomServer>, room: string, who: string[]) {
+    for (const member of who) expect((await server.ask(member, { action: 'submit', roomId: room, step: await answerHand(server, member, room), orders: [] })).status).toBe(200);
+  }
+  type Loan = { id: string; lend: boolean; other: string; mine: boolean; amount: number; rateBp: number; rounds: number; status: string };
+  const loansOf = async (server: ReturnType<typeof roomServer>, who: string, room: string) => ((await server.ask(who, { action: 'state', roomId: room })).body.room as { loans: Loan[] }).loans;
+  const offer = { action: 'loan', lend: true, amount: 100_000, rateBp: 800, rounds: 2 };
+
+  it('pays a loan out as the round turns, once the other has said yes: one lends, the other owes, both told', async () => {
+    const { server, room } = await begun();
+    server.db.names.set(HOST, 'Ana');
+    expect((await server.ask(HOST, { ...offer, roomId: room, to: B })).status).toBe(200);
+    expect(server.notices.at(-1)).toEqual({ user: B, about: { kind: 'loanOffer', who: 'Ana', lend: true, amount: 100_000, rateBp: 800, rounds: 2 } });
+    const [seen] = await loansOf(server, B, room);
+    expect(seen).toMatchObject({ lend: false, other: HOST, mine: false, amount: 100_000, rateBp: 800, rounds: 2, status: 'open' });
+    // Nobody else hears of it.
+    expect(await loansOf(server, HOST, room)).toHaveLength(1);
+    expect((await server.ask(B, { action: 'loanAnswer', roomId: room, loanId: seen.id, yes: true })).status).toBe(200);
+    const hostBefore = (await lifeOf(server, HOST, room)).view.player.cash;
+    await playRound(server, room, [HOST, B]);
+    expect(server.logOf(HOST, room)[0].room).toEqual([{ kind: 'lent', id: seen.id, to: B, amount: 100_000, rateBp: 800, rounds: 2 }]);
+    expect(server.logOf(B, room)[0].room).toEqual([{ kind: 'borrowed', id: seen.id, from: HOST, amount: 100_000, rateBp: 800, rounds: 2 }]);
+    const host = await lifeOf(server, HOST, room);
+    const b = await lifeOf(server, B, room);
+    expect(host.view.player.lent).toEqual([{ id: seen.id, peer: B, principal: 100_000, fixedRateBp: 800, roundsLeft: 2 }]);
+    expect(b.view.player.debts).toContainEqual({ id: seen.id, kind: 'personalLoan', principal: 100_000, fixedRateBp: 800, roundsLeft: 2, peer: HOST });
+    expect(host.events).toContainEqual({ kind: 'lent', to: B, amount: 100_000, rateBp: 800, rounds: 2 });
+    expect(hostBefore).toBeGreaterThan(0);
+    expect((await loansOf(server, B, room))[0]).toMatchObject({ status: 'paid' });
+    // And what each sees is the life its log plays back to.
+    const seed = [...server.db.seeds.values()][0];
+    expect(b.view).toEqual(viewOf(replayLife(content, roomStart(nurse.start), seed, server.logOf(B, room)).state));
+  });
+
+  it('pays out nothing refused, left unanswered, or more than the lender has once the round is played', async () => {
+    const { server, room } = await begun(roomServer(), 180, [C]);
+    await server.ask(HOST, { ...offer, roomId: room, to: B });
+    await server.ask(HOST, { ...offer, roomId: room, to: C, lend: false });
+    await server.ask(B, { ...offer, roomId: room, to: C, amount: 1_000_000_000 });
+    const [toB] = await loansOf(server, B, room);
+    const fromB = (await loansOf(server, B, room)).find((loan) => loan.mine) as Loan;
+    expect((await server.ask(B, { action: 'loanAnswer', roomId: room, loanId: toB.id, yes: false })).status).toBe(200);
+    expect((await server.ask(C, { action: 'loanAnswer', roomId: room, loanId: fromB.id, yes: true })).status).toBe(200);
+    // Answered once: there is nothing left to answer.
+    expect((await server.ask(B, { action: 'loanAnswer', roomId: room, loanId: toB.id, yes: true })).status).toBe(409);
+    expect((await loansOf(server, HOST, room)).find((loan) => loan.other === B)).toMatchObject({ status: 'refused' });
+    await playRound(server, room, [HOST, B, C]);
+    for (const who of [HOST, B, C]) expect(server.logOf(who, room)[0].room, who).toBeUndefined();
+    expect(server.db.loans.map((loan) => loan.status)).toEqual(['refused', 'expired', 'failed']);
+  });
+
+  it('takes an offer to the same player again in place of the last, and refuses what is not one', async () => {
+    const { server, room } = await begun();
+    await server.ask(HOST, { ...offer, roomId: room, to: B });
+    await server.ask(HOST, { ...offer, roomId: room, to: B, amount: 200_000 });
+    expect(server.db.loans.map((loan) => [loan.amount, loan.status])).toEqual([[100_000, 'withdrawn'], [200_000, 'open']]);
+    for (const wrong of [{ to: HOST }, { to: C }, { amount: 50 }, { amount: 1.5 }, { rateBp: 850 }, { rateBp: 2_100 }, { rounds: 0 }, { rounds: 6 }, { lend: 'yes' }]) {
+      expect((await server.ask(HOST, { ...offer, roomId: room, to: B, ...wrong })).status, JSON.stringify(wrong)).toBe(400);
+    }
+    // Its maker may take it back.
+    const [mine] = await loansOf(server, HOST, room);
+    expect((await server.ask(HOST, { action: 'loanAnswer', roomId: room, loanId: mine.id, yes: false })).status).toBe(200);
+    expect(server.db.loans.at(-1)?.status).toBe('withdrawn');
+  });
+
+  it('loses what is still lent to someone who leaves the game', async () => {
+    const { server, room } = await begun(roomServer(), 180, [C]);
+    await server.ask(HOST, { ...offer, roomId: room, to: B, rounds: 3 });
+    const [seen] = await loansOf(server, B, room);
+    await server.ask(B, { action: 'loanAnswer', roomId: room, loanId: seen.id, yes: true });
+    await playRound(server, room, [HOST, B, C]);
+    expect((await server.ask(B, { action: 'leave', roomId: room })).status).toBe(200);
+    await playRound(server, room, [HOST, C]);
+    // The round it was paid out in keeps it; the next one, where it was lost, says so.
+    expect(server.logOf(HOST, room)[0].room).toEqual([{ kind: 'lent', id: seen.id, to: B, amount: 100_000, rateBp: 800, rounds: 3 }]);
+    expect(server.logOf(HOST, room)[1].room).toEqual([{ kind: 'defaulted', id: seen.id }]);
+    const host = await lifeOf(server, HOST, room);
+    expect(host.view.player.lent).toBeUndefined();
+    expect(host.events).toContainEqual(expect.objectContaining({ kind: 'defaulted', by: B }));
+  });
+
   it('plays the round for whoever has not chosen once the deadline and its grace have passed: first options and no orders', async () => {
     const { server, room } = await begun();
     const life = await lifeOf(server, HOST, room);

@@ -457,6 +457,7 @@ export const es: ContentText = {
     'too-many-businesses': 'Ya llevas todos los negocios que puede llevar una persona.',
     'bad-payout': 'Un negocio reparte nada, la mitad o todo su beneficio.',
     'unknown-debt': 'Esa deuda no existe.',
+    'peer-loan': 'Un préstamo de otro jugador se devuelve en sus plazos, no antes.',
     'exceeds-debt': 'Es más de lo que debes.',
     'unknown-property-type': 'Ese tipo de vivienda no existe.',
     'unknown-mortgage-type': 'Ese tipo de hipoteca no existe.',

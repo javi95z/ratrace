@@ -408,7 +408,9 @@
       "gain": "+{amount}",
       "loss": "−{amount}",
       "pays": "Pays {amount}/round",
-      "planBuys": "Plan: +{amount}"
+      "planBuys": "Plan: +{amount}",
+      "lent": "Lent to other players",
+      "lentTerms": "{rate} a year · {rounds, plural, one {1 round left} other {# rounds left}}"
     },
     "market": {
       "funds": "Index funds",
@@ -694,7 +696,8 @@
         "gold": "Gold",
         "property": "Property",
         "things": "Things",
-        "business": "Businesses"
+        "business": "Businesses",
+        "lent": "Lent out"
       },
       "concentrated": "{pct} of what you have invested is in one thing: {name}. If it does badly, so do you.",
       "largest": "The heaviest of what is invested: {name}, {pct}.",
@@ -831,6 +834,11 @@
     "teased2": "{who} tells everyone your flat is a broom cupboard",
     "teased3": "{who} tells the group chat you always buy the top",
     "teasedHint": "You start this round {n} status down.",
+    "lent": "You lend {who} {amount}",
+    "borrowed": "{who} lends you {amount}",
+    "loanTerms": "At {rate} a year, over {rounds, plural, one {# round} other {# rounds}}.",
+    "defaulted": "{who} will not pay back {amount}",
+    "defaultedHint": "They went bankrupt or left the game: what was left is lost.",
     "next": "Next round",
     "finish": "See how it ended",
     "lapsed": "You lost {item}.",
@@ -1640,6 +1648,44 @@
     "paperLastMe": "Still rooted to the bottom. Surely a strategy",
     "paperLastMe2": "The wooden spoon beckons. Chin up, there are rounds to go",
     "paperLastMe3": "You prop up the table and call it a 'reinvestment phase'",
-    "invitedAbout": "You will all live the same life, in the same world. Whoever ends with the most points wins."
+    "invitedAbout": "You will all live the same life, in the same world. Whoever ends with the most points wins.",
+    "loan": {
+      "pickHint": "Tap a player to lend them money, or ask them for some.",
+      "about": "Lend money to another player, or borrow it. It is paid back by the round with interest, and if whoever owes it goes bankrupt or leaves, what is left is lost.",
+      "offer": "Offer a loan",
+      "ask": "Ask for a loan",
+      "offerTitle": "Lend to {who}",
+      "askTitle": "Borrow from {who}",
+      "amount": "Amount",
+      "rate": "Yearly interest",
+      "rounds": "Rounds to pay it back",
+      "moreThanCash": "You have {cash} now: it is only paid out if you have enough when the round ends.",
+      "amountRange": "Between {min} and {max}.",
+      "theyPay": "{who} will pay you {first} the first round and {total} in all.",
+      "youPay": "You will pay {first} the first round and {total} in all.",
+      "rules": "Paid out when the round ends, if they say yes in time and the lender has the cash. It cannot be paid back early.",
+      "failed": "It did not go through. Try again.",
+      "sendOffer": "Offer it to {who}",
+      "sendAsk": "Ask {who}",
+      "worth": "Net worth {worth}",
+      "terms": "{amount} at {rate} · {rounds, plural, one {# round} other {# rounds}}",
+      "askedTitle": "{who} asks you for a loan",
+      "offeredTitle": "{who} offers you a loan",
+      "youWouldGet": "You would get {total} back in all.",
+      "youWouldPay": "You would pay {first} the first round and {total} in all.",
+      "untilTurn": "Answer before the round ends.",
+      "accept": "Accept",
+      "refuse": "Turn down",
+      "withdraw": "Withdraw",
+      "state": {
+        "open": "Waiting for {who}",
+        "accepted": "{who} says yes: paid out when the round ends",
+        "refused": "{who} says no",
+        "paid": "Paid out",
+        "failed": "Not paid out: not enough cash",
+        "expired": "{who} did not answer in time",
+        "youAccepted": "Accepted: paid out when the round ends"
+      }
+    }
   }
 }

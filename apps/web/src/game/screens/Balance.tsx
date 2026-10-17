@@ -1,5 +1,6 @@
 'use client';
 
+import { usePeerName } from '@/game/usePeerName';
 import { assetKind, assetLogo, debtArt, homeName, itemArt, propertyArt } from '@ratrace/content';
 import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWorth, quoteOwnedProperty, realNetWorth } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
@@ -34,6 +35,7 @@ const Gain = ({ cents, text }: { cents: number; text: string }) => <span classNa
  * buying, selling and repaying are done in the finances. `onItem` opens one thing of those owned.
  */
 export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLine; shown: GameView; onClose(): void; onItem(itemId: string): void }) {
+  const whoIs = usePeerName();
   const t = useT('balance');
   const profile = useT('profile');
   const common = useT('common');
@@ -224,7 +226,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
                     <Bare className="size-8">
                       <Sprite id={debtArt(debt)} />
                     </Bare>
-                    <span className="pixel min-w-0 text-[16px]">{debtLabel(words, debt, p.properties)}</span>
+                    <span className="pixel min-w-0 text-[16px]">{debtLabel(words, debt, p.properties, whoIs)}</span>
                   </span>
                   <span className="pixel text-wine-300">{fmt.money(debt.principal)}</span>
                 </div>

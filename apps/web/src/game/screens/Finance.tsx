@@ -1,5 +1,6 @@
 'use client';
 
+import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch } from '@ratrace/engine';
@@ -46,6 +47,7 @@ function useRound() {
 type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'sell'; asset: AssetDef };
 
 function Portfolio() {
+  const whoIs = usePeerName();
   const t = useT('finance.portfolio');
   const amount = useT('finance.amount');
   const { content, names, fmt } = useWords();
@@ -146,6 +148,20 @@ function Portfolio() {
           );
         })}
       </Panel>
+      {p.lent && p.lent.length > 0 ? (
+        // What other players of the room owe: collected round by round, as they pay their loans.
+        <Panel title={t('lent')} label={t('lent')}>
+          {p.lent.map((loan) => (
+            <div key={loan.id} className="flex items-center gap-3 border-t-2 border-night-900 py-1.5 first:border-t-0">
+              <div className="min-w-0 flex-1">
+                <div className="truncate">{whoIs(loan.peer)}</div>
+                <div className="text-[12px] text-ink-300">{t('lentTerms', { rate: fmt.rate(loan.fixedRateBp), rounds: loan.roundsLeft })}</div>
+              </div>
+              <div className="pixel">{fmt.money(loan.principal)}</div>
+            </div>
+          ))}
+        </Panel>
+      ) : null}
       <Payouts />
       <Plans />
       {sheet}
@@ -815,6 +831,7 @@ function PropertyTab() {
 // Debt
 
 function DebtTab() {
+  const whoIs = usePeerName();
   const t = useT('finance.debt');
   const amount = useT('finance.amount');
   const words = useWords();
@@ -838,7 +855,7 @@ function DebtTab() {
               <Bare className="size-8">
                 <Sprite id={debtArt(debt)} />
               </Bare>
-              <div className="min-w-0 flex-1 truncate">{debtLabel(words, debt, p.properties)}</div>
+              <div className="min-w-0 flex-1 truncate">{debtLabel(words, debt, p.properties, whoIs)}</div>
               <div className="pixel">{fmt.money(debt.principal)}</div>
             </div>
             {/* Under the name, so a long one is not cut short: what it costs and what is left, and the way to pay it off. */}
@@ -853,9 +870,12 @@ function DebtTab() {
                 {/* A mortgage can be switched between fixed and variable: said under it, opened in a sheet. Not while it rests from the last switch. */}
                 <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
               </div>
-              <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
-                {t('repay')}
-              </Button>
+              {/* A loan from another player is paid by its term: there is nothing to pay off early. */}
+              {debt.peer === undefined ? (
+                <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
+                  {t('repay')}
+                </Button>
+              ) : null}
             </div>
           </div>
         ))}
@@ -881,7 +901,7 @@ function DebtTab() {
       {switching ? <SwitchSheet debtId={switching} onClose={() => setSwitching(null)} /> : null}
       {repaying ? (
         <AmountSheet
-          title={amount('repay', { name: debtLabel(words, repaying, p.properties) })}
+          title={amount('repay', { name: debtLabel(words, repaying, p.properties, whoIs) })}
           max={Math.min(repaying.principal, p.cash)}
           onClose={() => setRepaying(null)}
           onConfirm={(a) => addOrder({ type: 'repay', debtId: repaying.id, amount: a })}
@@ -931,6 +951,7 @@ function SwitchLink({ debtId, onOpen }: { debtId: string; onOpen(): void }) {
  * it can be switched again.
  */
 function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
+  const whoIs = usePeerName();
   const t = useT('finance.debt');
   const common = useT('common');
   const words = useWords();
@@ -949,7 +970,7 @@ function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
   return (
     <Sheet open onClose={onClose} title={t(toFixed ? 'switchTitleFixed' : 'switchTitleVariable')} closeLabel={common('close')}>
       <div className="flex flex-col gap-2">
-        <p className="text-[14px] leading-snug text-ink-200">{debtLabel(words, debt, view.player.properties)}</p>
+        <p className="text-[14px] leading-snug text-ink-200">{debtLabel(words, debt, view.player.properties, whoIs)}</p>
         <p className="text-[13px] leading-snug text-ink-200">{t(toFixed ? 'switchAboutFixed' : 'switchAboutVariable')}</p>
         <Row left={t('switchRate')} right={`${fmt.rate(quote.rateNowBp)} → ${fmt.rate(quote.rateAfterBp)}`} />
         <Row left={t('switchInterest')} right={`${fmt.money(yearly(quote.rateNowBp))} → ${fmt.money(yearly(quote.rateAfterBp))}`} />

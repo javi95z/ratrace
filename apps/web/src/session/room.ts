@@ -77,7 +77,31 @@ export interface RoomState {
   rematch: { code: string; open: boolean } | null;
   /** True for a room that is the rematch of another. */
   rematchOf: boolean;
+  /** The loans the player is part of: offers of the round in play, and what came of those of the round before. */
+  loans: RoomLoan[];
 }
+
+/**
+ * A loan between the player and another in their room, from the player's side: `lend` when the
+ * player is the one who lends, `mine` when they made the offer. Amounts in cents.
+ */
+export interface RoomLoan {
+  id: string;
+  round: number;
+  lend: boolean;
+  other: string;
+  mine: boolean;
+  amount: number;
+  rateBp: number;
+  rounds: number;
+  status: 'open' | 'accepted' | 'refused' | 'paid' | 'failed' | 'expired';
+}
+
+/** What a loan between players may be, as the server holds it to: rates in whole points up to twenty, terms of one to five rounds. */
+export const LOAN_RATES_BP = [0, 300, 500, 800, 1_000, 1_500, 2_000] as const;
+export const LOAN_ROUNDS = [1, 2, 3, 4, 5] as const;
+export const LOAN_MIN = 10_000;
+export const LOAN_MAX = 1_000_000_000;
 
 /** A game over, as a player's history keeps it. */
 export interface RoomGameOver {
@@ -140,6 +164,10 @@ export interface RoomsApi {
   history(): Promise<RoomGameOver[]>;
   /** Shouts to everyone in the room. `soon` if the player shouted a moment ago, `gone` if they are not in it. */
   shout(roomId: string, shout: number): Promise<RoomState | 'soon' | 'gone'>;
+  /** Offers another player a loan: to lend them money, or to borrow it from them. `gone` if either is no longer in the game. */
+  offerLoan(roomId: string, loan: { to: string; lend: boolean; amount: number; rateBp: number; rounds: number }): Promise<RoomState | 'gone'>;
+  /** Says yes or no to an offer, or takes back one's own with a no. `gone` if it is no longer open. */
+  answerLoan(roomId: string, loanId: string, yes: boolean): Promise<RoomState | 'gone'>;
 }
 
 /** The rooms of the player's account: the server, and a way to hear of every change to one room. */

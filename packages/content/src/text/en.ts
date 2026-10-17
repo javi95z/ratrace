@@ -457,6 +457,7 @@ export const en: ContentText = {
     'too-many-businesses': 'You already run as many businesses as one person can.',
     'bad-payout': 'A business pays out none, half or all of its profit.',
     'unknown-debt': 'That debt does not exist.',
+    'peer-loan': 'A loan from another player is paid back by its term, not early.',
     'exceeds-debt': 'That is more than you owe.',
     'unknown-property-type': 'That kind of property does not exist.',
     'unknown-mortgage-type': 'That kind of mortgage does not exist.',

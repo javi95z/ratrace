@@ -1,7 +1,7 @@
 import { Unreachable } from '@/session/errors';
 import type { RankedRun, RankedStep } from '@/session/ranked';
 import { RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
-import type { RoomGameOver, RoomLife, RoomMember, RoomsApi, RoomState } from '@/session/room';
+import type { RoomGameOver, RoomLife, RoomLoan, RoomMember, RoomsApi, RoomState } from '@/session/room';
 
 /**
  * Asks the `rooms` function one thing and hands back its answer: the status and the body. It
@@ -81,7 +81,18 @@ export function roomOf(raw: unknown): RoomState | null {
     members: members as RoomMember[],
     rematch: isRecord(raw.rematch) && typeof raw.rematch.code === 'string' ? { code: raw.rematch.code, open: raw.rematch.open === true } : null,
     rematchOf: raw.rematchOf === true,
+    loans: Array.isArray(raw.loans) ? raw.loans.map(loanOf).filter((loan): loan is RoomLoan => loan !== null) : [],
   };
+}
+
+const LOAN_STATUSES = new Set<string>(['open', 'accepted', 'refused', 'paid', 'failed', 'expired']);
+/** A loan as the server tells of it, or null if it is not one. */
+function loanOf(raw: unknown): RoomLoan | null {
+  if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.other !== 'string' || typeof raw.status !== 'string' || !LOAN_STATUSES.has(raw.status)) return null;
+  const whole = (x: unknown) => (typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 ? x : null);
+  const [round, amount, rateBp, rounds] = [whole(raw.round), whole(raw.amount), whole(raw.rateBp), whole(raw.rounds)];
+  if (round === null || amount === null || rateBp === null || rounds === null) return null;
+  return { id: raw.id, round, lend: raw.lend === true, other: raw.other, mine: raw.mine === true, amount, rateBp, rounds, status: raw.status as RoomLoan['status'] };
 }
 
 /** A game over as the server tells of it, or null if it is not one. */
@@ -214,6 +225,16 @@ export function roomsApi(call: RoomsCall): RoomsApi {
     async shout(roomId, shout) {
       const reply = await ask({ action: 'shout', roomId, shout });
       if (reply.status === 409 && isRecord(reply.body) && reply.body.error === 'soon') return 'soon';
+      if (reply.status === 404 || reply.status === 409) return 'gone';
+      return room(reply);
+    },
+    async offerLoan(roomId, loan) {
+      const reply = await ask({ action: 'loan', roomId, ...loan });
+      if (reply.status === 404 || reply.status === 409) return 'gone';
+      return room(reply);
+    },
+    async answerLoan(roomId, loanId, yes) {
+      const reply = await ask({ action: 'loanAnswer', roomId, loanId, yes });
       if (reply.status === 404 || reply.status === 409) return 'gone';
       return room(reply);
     },

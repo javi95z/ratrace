@@ -985,6 +985,21 @@ export interface Debt {
   forAsset?: string;
   /** The round a mortgage was last switched between fixed and variable. Absent: never. */
   switchedAt?: number;
+  /** Who lent it, in a game with friends: another player, by the id the server gave them. It is paid by its term, never early. */
+  peer?: string;
+}
+
+/**
+ * Money lent to another player of a game with friends: paid back by the same term, at the same
+ * rate, as the loan they owe for it, round by round, until it is paid or they go bankrupt.
+ */
+export interface Lent {
+  id: string;
+  /** Who owes it, by the id the server gave them. */
+  peer: string;
+  principal: Cents;
+  fixedRateBp: Bp;
+  roundsLeft: number;
 }
 
 export interface Property {
@@ -1149,6 +1164,8 @@ export interface PlayerState {
   reinvest: boolean;
   properties: Property[];
   debts: Debt[];
+  /** What this player has lent to others in a game with friends. Absent in a life alone. */
+  lent?: Lent[];
   lifestyleTier: LifestyleTier;
   life: LifeState;
   /**
@@ -1297,6 +1314,8 @@ export type RejectReason =
   | 'too-many-businesses'
   | 'bad-payout'
   | 'unknown-debt'
+  /** A loan from another player is paid by its term, never early. */
+  | 'peer-loan'
   | 'exceeds-debt'
   | 'unknown-property-type'
   | 'unknown-mortgage-type'
@@ -1380,12 +1399,23 @@ export type LedgerLine =
  * What another player of a game with friends did to this life, written into its log by the server
  * when the round turned, and played after that round: `by` names who, for the screens alone.
  */
-export type RoomEvent = { kind: 'teased'; by: string };
+export type RoomEvent =
+  | { kind: 'teased'; by: string }
+  /** A loan the player agreed with another, paid out between rounds: lent to `to`, or borrowed from `from`. */
+  | { kind: 'lent'; id: string; to: string; amount: Cents; rateBp: Bp; rounds: number }
+  | { kind: 'borrowed'; id: string; from: string; amount: Cents; rateBp: Bp; rounds: number }
+  /** Whoever owed the loan `id` went bankrupt or left the game: what is left of it is lost. */
+  | { kind: 'defaulted'; id: string };
 
 export type GameEvent =
   | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
   /** A rival of a game with friends teased the player: their status is down for the round to come. */
   | { kind: 'teased'; by: string; status: number }
+  /** A loan between players paid out: the player lent `amount` to `to`, or borrowed it from `from`. */
+  | { kind: 'lent'; to: string; amount: Cents; rateBp: Bp; rounds: number }
+  | { kind: 'borrowed'; from: string; amount: Cents; rateBp: Bp; rounds: number }
+  /** What was still owed on a loan to `by` is lost: they went bankrupt or left the game. */
+  | { kind: 'defaulted'; by: string; lost: Cents }
   | { kind: 'ledger'; line: LedgerLine; amount: Cents }
   | { kind: 'escaped'; round: number }
   /** Passive income stopped covering expenses, and the escape is over. It can be won again. */

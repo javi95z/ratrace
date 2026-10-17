@@ -84,7 +84,8 @@ export type Choice = { card: number } | { orders: unknown[] };
 
 /** The log with one more step in it. The log it was given is not changed. */
 export function withStep(log: readonly LoggedRound[], choice: Choice): LoggedRound[] {
-  const next = log.map((entry) => ({ picks: [...entry.picks], orders: entry.orders }));
+  // What the others did to the life in a round of a room stays with that round.
+  const next = log.map((entry) => ({ picks: [...entry.picks], orders: entry.orders, ...(entry.room ? { room: entry.room } : {}) }));
   const open = next.length > 0 && next[next.length - 1].orders === null ? next[next.length - 1] : null;
   if ('card' in choice) {
     if (open) open.picks.push(choice.card);

@@ -17,7 +17,14 @@ const bad = (field: string): Reply => ({ status: 400, body: { error: 'bad-reques
 
 /** No room holds anywhere near this many players to do something to one life in a round. */
 const MAX_ROOM_EVENTS = 16;
-const isRoomEvent = (x: unknown): boolean => isRecord(x) && x.kind === 'teased' && isText(x.by, 64);
+const isWhole = (x: unknown): boolean => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
+/** The shape of a room event; what its figures may be is the engine's to judge. */
+const isRoomEvent = (x: unknown): boolean =>
+  isRecord(x) &&
+  ((x.kind === 'teased' && isText(x.by, 64)) ||
+    (x.kind === 'lent' && isText(x.id, 64) && isText(x.to, 64) && isWhole(x.amount) && isWhole(x.rateBp) && isWhole(x.rounds)) ||
+    (x.kind === 'borrowed' && isText(x.id, 64) && isText(x.from, 64) && isWhole(x.amount) && isWhole(x.rateBp) && isWhole(x.rounds)) ||
+    (x.kind === 'defaulted' && isText(x.id, 64)));
 
 /**
  * Reads a log, or null if it is not one. Its length is bounded before anything is played. What the

@@ -408,7 +408,9 @@
       "gain": "+{amount}",
       "loss": "−{amount}",
       "pays": "Paga {amount}/ronda",
-      "planBuys": "Tu plan: +{amount}"
+      "planBuys": "Tu plan: +{amount}",
+      "lent": "Prestado a otros jugadores",
+      "lentTerms": "{rate} al año · {rounds, plural, one {queda 1 ronda} other {quedan # rondas}}"
     },
     "market": {
       "funds": "Fondos indexados",
@@ -694,7 +696,8 @@
         "gold": "Oro",
         "property": "Vivienda",
         "things": "Cosas",
-        "business": "Negocios"
+        "business": "Negocios",
+        "lent": "Prestado"
       },
       "concentrated": "El {pct} de lo que tienes invertido está en una sola cosa: {name}. Si le va mal, te va mal.",
       "largest": "Lo que más pesa de lo invertido: {name}, el {pct}.",
@@ -831,6 +834,11 @@
     "teased2": "{who} va contando que tu piso es un trastero",
     "teased3": "{who} dice en el grupo que compras siempre en máximos",
     "teasedHint": "Empiezas esta ronda con {n} de estatus menos.",
+    "lent": "Prestas {amount} a {who}",
+    "borrowed": "{who} te presta {amount}",
+    "loanTerms": "Al {rate} al año, en {rounds, plural, one {# ronda} other {# rondas}}.",
+    "defaulted": "{who} no te devolverá {amount}",
+    "defaultedHint": "Quebró o dejó la partida: lo que quedaba se pierde.",
     "next": "Siguiente ronda",
     "finish": "Ver cómo acabó",
     "lapsed": "Has perdido {item}.",
@@ -1640,6 +1648,44 @@
     "paperLastMe": "Sigues a la cola, pero seguro que es una estrategia",
     "paperLastMe2": "Farolillo rojo para ti. Ánimo, que quedan rondas",
     "paperLastMe3": "Cierras la tabla y lo llamas «fase de reinversión»",
-    "invitedAbout": "Todos viviréis la misma vida, en el mismo mundo. Gana quien acabe con más puntos."
+    "invitedAbout": "Todos viviréis la misma vida, en el mismo mundo. Gana quien acabe con más puntos.",
+    "loan": {
+      "pickHint": "Toca a un jugador para prestarle dinero o pedírselo.",
+      "about": "Presta o pide dinero a otro jugador. Se devuelve por rondas con intereses, y si quien debe quiebra o se va, se pierde lo que quede.",
+      "offer": "Ofrecer préstamo",
+      "ask": "Pedir préstamo",
+      "offerTitle": "Prestar a {who}",
+      "askTitle": "Pedir a {who}",
+      "amount": "Cantidad",
+      "rate": "Interés al año",
+      "rounds": "Rondas para devolverlo",
+      "moreThanCash": "Ahora tienes {cash}: solo se paga si al acabar la ronda tienes bastante.",
+      "amountRange": "Entre {min} y {max}.",
+      "theyPay": "{who} te pagará {first} la primera ronda y {total} en total.",
+      "youPay": "Pagarás {first} la primera ronda y {total} en total.",
+      "rules": "Se paga al acabar la ronda si te dicen que sí antes y quien presta tiene el efectivo. No se devuelve antes de tiempo.",
+      "failed": "No se ha podido enviar. Inténtalo otra vez.",
+      "sendOffer": "Ofrecérselo a {who}",
+      "sendAsk": "Pedírselo a {who}",
+      "worth": "Patrimonio {worth}",
+      "terms": "{amount} al {rate} · {rounds, plural, one {# ronda} other {# rondas}}",
+      "askedTitle": "{who} te pide un préstamo",
+      "offeredTitle": "{who} te ofrece un préstamo",
+      "youWouldGet": "Te devolvería {total} en total.",
+      "youWouldPay": "Pagarías {first} la primera ronda y {total} en total.",
+      "untilTurn": "Responde antes de que acabe la ronda.",
+      "accept": "Aceptar",
+      "refuse": "Rechazar",
+      "withdraw": "Retirar",
+      "state": {
+        "open": "Esperando a {who}",
+        "accepted": "{who} acepta: se paga al acabar la ronda",
+        "refused": "{who} no acepta",
+        "paid": "Pagado",
+        "failed": "No se pagó: faltaba efectivo",
+        "expired": "{who} no respondió a tiempo",
+        "youAccepted": "Aceptado: se paga al acabar la ronda"
+      }
+    }
   }
 }

@@ -3,7 +3,7 @@ import { CURRENT, GAMES } from '../../../../supabase/functions/_shared/game/inde
 import type { LoggedRound } from '@ratrace/engine';
 import { canonical } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rooms } from '../../../../supabase/functions/_shared/rooms.ts';
-import type { MemberRow, RoomGameRow, RoomNotice, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
+import type { LoanRow, MemberRow, RoomGameRow, RoomNotice, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { Reply } from '../../../../supabase/functions/_shared/replay.ts';
 import { roomsApi } from '@/online/rooms';
 import type { RoomsLink } from '@/session/room';
@@ -24,6 +24,8 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const seeds = new Map<string, string>();
   const orders = new Map<string, unknown[]>();
   const runs: RunRow[] = [];
+  /** The loans offered in every room, in the order they were offered. */
+  const loans: LoanRow[] = [];
   /** The notices the server sent, to whom, in order. */
   const notices: Array<{ user: string; about: RoomNotice }> = [];
   const names = new Map<string, string | null>();
@@ -144,6 +146,36 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       Object.assign(m, { shout, shout_at: now.toISOString() });
       return 'ok';
     },
+    loans: async (roomId) => structuredClone(loans.filter((loan) => loan.room_id === roomId)),
+    offerLoan: async (loan) => {
+      const room = roomsById.get(loan.room_id);
+      if (!room || room.status !== 'playing') return 'closed';
+      if (room.round !== loan.round) return 'moved';
+      if (active(loan.room_id).filter((m) => m.user_id === loan.lender || m.user_id === loan.borrower).length !== 2) return 'closed';
+      const other = (row: { proposer: string; lender: string; borrower: string }) => (row.lender === row.proposer ? row.borrower : row.lender);
+      for (const old of loans) {
+        if (old.room_id === loan.room_id && old.round === loan.round && old.proposer === loan.proposer && ['open', 'accepted'].includes(old.status) && other(old) === other(loan)) old.status = 'withdrawn';
+      }
+      loans.push({ ...loan, status: 'open' });
+      return 'ok';
+    },
+    answerLoan: async (id, user, yes) => {
+      const loan = loans.find((each) => each.id === id);
+      if (!loan || loan.status !== 'open' || (user !== loan.lender && user !== loan.borrower)) return 'gone';
+      const room = roomsById.get(loan.room_id);
+      if (!room || room.status !== 'playing' || room.round !== loan.round) return 'gone';
+      if (user === loan.proposer) {
+        if (yes) return 'gone';
+        loan.status = 'withdrawn';
+      } else loan.status = yes ? 'accepted' : 'refused';
+      return 'ok';
+    },
+    closeLoans: async (roomId, round, paid) => {
+      for (const loan of loans) {
+        if (loan.room_id !== roomId || loan.round !== round || !['open', 'accepted'].includes(loan.status)) continue;
+        loan.status = paid.includes(loan.id) ? 'paid' : loan.status === 'accepted' ? 'failed' : 'expired';
+      }
+    },
     history: async (user, limit) =>
       members
         .filter((m) => m.user_id === user && roomsById.get(m.room_id)?.status === 'finished')
@@ -240,7 +272,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const listeners = new Map<string, Set<() => void>>();
   const network = { down: false };
   /** What a page could hear about: the rooms and who is in them. */
-  const snapshot = () => JSON.stringify([[...roomsById.values()], members]);
+  const snapshot = () => JSON.stringify([[...roomsById.values()], members, loans]);
   /** Asks the server as `user`. What it changed is told, once the answer is back, to every page listening, as Realtime tells it. */
   const ask = async (user: string, body: Record<string, unknown>): Promise<Reply> => {
     const before = snapshot();
@@ -258,7 +290,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     state,
     hooks,
     network,
-    db: { rooms: roomsById, members, games, seeds, orders, runs, names, unlocked },
+    db: { rooms: roomsById, members, games, seeds, orders, runs, names, unlocked, loans },
     notices,
     /** Asks the server as `user`, with nothing between. */
     ask,

@@ -1,4 +1,4 @@
-import { applyCard, applyRound, applyRoundWith, createGame, livedStatus, replayLog, stateHash, viewOf } from '@ratrace/engine';
+import { applyCard, applyRoomEvents, applyRound, applyRoundWith, createGame, livedStatus, replayLog, stateHash, viewOf } from '@ratrace/engine';
 import type { GameState, LoggedRound, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { content } from './content';
@@ -84,5 +84,65 @@ describe('teasing a rival', () => {
   it('leaves a life with no room event exactly as it was', () => {
     const log: LoggedRound[] = [{ picks: replayLife(content, nurse, 'same', []).state.hand.map(() => 0), orders: [] }];
     expect(stateHash(replayLog(content, nurse, 'same', log))).toBe(stateHash(replayLog(content, nurse, 'same', [{ ...log[0], room: [] }])));
+  });
+});
+
+describe('a loan between players', () => {
+  const terms = { id: 'loan-1', amount: 1_000_000, rateBp: 800, rounds: 3 };
+  /** Two lives of a room, one round played each, the loan paid out between them. */
+  function lentAndBorrowed() {
+    const play = (state: GameState, orders: Order[] = []) => {
+      let next = state;
+      while (next.phase === 'cards') next = applyCard(content, next, 0).state;
+      return applyRound(content, next, { orders }).state;
+    };
+    const start = createGame({ content, start: roomStart(lives[4].start) }, 'lender');
+    const lender = applyRoomEvents(content, play(start), [{ kind: 'lent', to: 'bo', ...terms }]);
+    const borrower = applyRoomEvents(content, play(createGame({ content, start: roomStart(nurse) }, 'borrower')), [{ kind: 'borrowed', from: 'ana', ...terms }]);
+    return { play, lender, borrower };
+  }
+
+  it('pays the money out from one and into the other, as a loan owed and a loan to collect', () => {
+    const { lender, borrower } = lentAndBorrowed();
+    expect(lender.events).toEqual([{ kind: 'lent', to: 'bo', amount: 1_000_000, rateBp: 800, rounds: 3 }]);
+    expect(borrower.events).toEqual([{ kind: 'borrowed', from: 'ana', amount: 1_000_000, rateBp: 800, rounds: 3 }]);
+    expect(lender.state.player.lent).toEqual([{ id: 'loan-1', peer: 'bo', principal: 1_000_000, fixedRateBp: 800, roundsLeft: 3 }]);
+    expect(borrower.state.player.debts).toContainEqual({ id: 'loan-1', kind: 'personalLoan', principal: 1_000_000, fixedRateBp: 800, roundsLeft: 3, peer: 'ana' });
+  });
+
+  it('is paid back round by round by the same sums the other collects, until nothing is owed', () => {
+    const { play, lender, borrower } = lentAndBorrowed();
+    let a = lender.state;
+    let b = borrower.state;
+    for (let round = 0; round < 3; round++) {
+      const owed = b.player.debts.find((debt) => debt.id === 'loan-1')?.principal ?? 0;
+      a = play(a);
+      b = play(b);
+      const left = b.player.debts.find((debt) => debt.id === 'loan-1')?.principal ?? 0;
+      expect(a.player.lent?.find((loan) => loan.id === 'loan-1')?.principal ?? 0, `round ${round}`).toBe(left);
+      expect(left).toBeLessThan(owed);
+    }
+    expect(a.player.lent).toBeUndefined();
+    expect(b.player.debts.some((debt) => debt.id === 'loan-1')).toBe(false);
+  });
+
+  it('cannot be paid early', () => {
+    const { borrower } = lentAndBorrowed();
+    let b = borrower.state;
+    while (b.phase === 'cards') b = applyCard(content, b, 0).state;
+    const round = applyRound(content, b, { orders: [{ type: 'repay', debtId: 'loan-1', amount: 1_000 }] });
+    expect(round.events).toContainEqual(expect.objectContaining({ kind: 'orderRejected', reason: 'peer-loan' }));
+  });
+
+  it('is lost when whoever owes it goes under, and what was left is told', () => {
+    const { lender } = lentAndBorrowed();
+    const lost = applyRoomEvents(content, lender.state, [{ kind: 'defaulted', id: 'loan-1' }]);
+    expect(lost.events).toEqual([{ kind: 'defaulted', by: 'bo', lost: 1_000_000 }]);
+    expect(lost.state.player.lent).toBeUndefined();
+  });
+
+  it('refuses to pay out more than the lender has', () => {
+    const start = createGame({ content, start: roomStart(nurse) }, 'poor');
+    expect(() => applyRoomEvents(content, start, [{ kind: 'lent', to: 'bo', ...terms, amount: start.player.cash + 1 }])).toThrow();
   });
 });
