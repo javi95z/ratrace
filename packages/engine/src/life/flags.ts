@@ -8,6 +8,9 @@ export const FLAG_UNSTABLE_PAY = 'unstable_pay';
 /** Mortgages cost less. */
 export const FLAG_CHEAP_MORTGAGE = 'cheap_mortgage';
 
+/** A life played in a game with friends, which may tease the others. Set by the server, never by a life of the content. */
+export const FLAG_IN_ROOM = 'in_room';
+
 /** Set for good the day a business is sold, by order or through a card. */
 export const FLAG_SOLD_BUSINESS = 'sold_business';
 /** The boss said yes to working from home, whatever the job and the rung. */

@@ -7,7 +7,7 @@ import { content, CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { SavedGame } from '@/session/types';
 import { roomServer } from '@/testing/roomServer';
-import { memoryServices, renderGame } from '@/testing/render';
+import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Home } from './Home';
 import { Room } from './Room';
 
@@ -226,6 +226,28 @@ describe('a round in a room', () => {
     const order = screen.getByRole('region', { name: 'After round 1' });
     expect(within(order).getAllByRole('listitem')).toHaveLength(2);
     expect(within(order).getByText('You')).toBeTruthy();
+  });
+
+  it('teases a rival from the focus of the round, and the rival is told who did it', async () => {
+    setWidth('desk');
+    const server = roomServer();
+    const room = await lobby(server);
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance(user);
+    await user.click(within(await screen.findByRole('region', { name: 'Work' })).getByText('Focus this round'));
+    const sheet = await screen.findByRole('dialog', { name: 'Focus' });
+    await user.click(within(sheet).getByRole('switch', { name: /Tease a rival/ }));
+    const rival = within(sheet).getByRole('radio', { name: 'Rat BBBB' });
+    expect(rival.getAttribute('aria-checked')).toBe('true');
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await user.click(screen.getByRole('button', { name: /Play the round/ }));
+    await screen.findByText('Waiting for the others');
+    await bPlays(server, room.id);
+    const b = (await server.ask(B, { action: 'view', roomId: room.id })).body as { events: unknown[] };
+    expect(b.events).toContainEqual({ kind: 'teased', by: HOST, status: -2 });
   });
 
   it('shouts to the others from the bar, one every ten seconds, and shows what they shout', async () => {

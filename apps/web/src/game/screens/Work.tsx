@@ -5,7 +5,7 @@ import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
 import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import { useGame, useRoom, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -456,6 +456,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
               icon={focusArt[use.action]}
             />
           ))}
+          <TeaseUse left={work.focus.left} />
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -475,5 +476,56 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
       <p className="text-[13px] leading-snug text-ink-200">{t('focusAlso')}</p>
       <p className="text-center text-[12px] text-ink-300">{open ? t('focusPick') : t('focusWhere')}</p>
     </>
+  );
+}
+
+/**
+ * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it
+ * is aimed at. The teaser gains status this round; the rival starts the next one with less, and
+ * reads who did it. Nothing here in a life alone.
+ */
+function TeaseUse({ left }: { left: number }) {
+  const t = useT('work');
+  const room = useT('room');
+  const { text } = useWords();
+  const view = useGame((s) => s.view);
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  const members = useRoom((s) => s.room?.members);
+  const rivals = (members ?? []).filter((member) => !member.me && !member.left);
+  if (!view || !Object.hasOwn(view.player.life.flags, 'in_room') || rivals.length === 0) return null;
+  const isTease = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'tease';
+  const aimed = orders.find((order) => isTease(order)) as { target?: string } | undefined;
+  const target = rivals.some((rival) => rival.userId === aimed?.target) ? aimed?.target : undefined;
+  const aim = (userId: string | null) => setOrder(isTease, userId === null ? null : { type: 'focus', action: 'tease', target: userId });
+  const nameOf = (rival: (typeof rivals)[number]) => rival.name ?? room('nameless', { tag: rival.userId.slice(0, 4).toUpperCase() });
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Toggle
+        on={aimed !== undefined}
+        onChange={(on) => aim(on ? (target ?? rivals[0].userId) : null)}
+        disabled={aimed === undefined && left < 1}
+        label={text.focusActions.tease}
+        hint={t('teaseGives')}
+        icon={focusArt.tease}
+      />
+      {aimed !== undefined ? (
+        <div role="radiogroup" aria-label={t('teaseAt')} className="flex flex-wrap gap-1.5 pl-2">
+          {rivals.map((rival) => (
+            <button
+              key={rival.userId}
+              type="button"
+              role="radio"
+              aria-checked={rival.userId === target}
+              onClick={() => aim(rival.userId)}
+              className={`frame-raised min-h-11 px-3 text-[14px] ${rival.userId === target ? 'bg-gold-500 text-ink-900' : 'bg-night-600'}`}
+            >
+              {nameOf(rival)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }

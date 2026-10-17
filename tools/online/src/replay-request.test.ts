@@ -2,8 +2,8 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedStatus, realNetWorth, stateHash } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { GAMES } from '../../../supabase/functions/_shared/game/index.ts';
-import { replayRequest } from '../../../supabase/functions/_shared/replay.ts';
+import { CURRENT, GAMES } from '../../../supabase/functions/_shared/game/index.ts';
+import { readLog, replayRequest } from '../../../supabase/functions/_shared/replay.ts';
 
 const start = lives.find((life) => life.id === 'nurse')?.start;
 if (!start) throw new Error('no nurse');
@@ -103,5 +103,21 @@ describe('asking the server to play a game again', () => {
     const other = ask({ seed: 'another' }, log);
     if (other.status === 200) expect(other.body.hash).not.toBe(stateHash(state));
     else expect(other.status).toBe(422);
+  });
+});
+
+describe('room events in a log', () => {
+  const game = GAMES[CURRENT];
+  const entry = { picks: [0], orders: [], room: [{ kind: 'teased', by: 'someone' }] };
+
+  it('are left out of any log but one the rooms function reads', () => {
+    expect(readLog([entry], game)).toEqual([{ picks: [0], orders: [] }]);
+    expect(readLog([entry], game, true)).toEqual([entry]);
+  });
+
+  it('make a room log no log when they are not ones', () => {
+    for (const room of [{}, [{ kind: 'gift', by: 'x' }], [{ kind: 'teased', by: '' }], Array.from({ length: 17 }, () => ({ kind: 'teased', by: 'x' }))]) {
+      expect(readLog([{ ...entry, room }], game, true)).toBeNull();
+    }
   });
 });

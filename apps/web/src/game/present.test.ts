@@ -6,12 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
+import ru from '../../messages/ru.json';
 import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
-const words = (locale: 'en' | 'es'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
-const t = (locale: 'en' | 'es', namespace: 'effects' | 'orders' | 'resolve'): Translate =>
-  createTranslator({ locale, messages: locale === 'en' ? en : es, namespace }) as unknown as Translate;
+const words = (locale: 'en' | 'es' | 'ru'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
+const t = (locale: 'en' | 'es' | 'ru', namespace: 'effects' | 'orders' | 'resolve'): Translate =>
+  createTranslator({ locale, messages: { en, es, ru }[locale], namespace }) as unknown as Translate;
 
 const state = createGame({ content, start: lives[1].start }, 'present');
 const world = state.timeline[0];
@@ -306,6 +307,16 @@ describe('priceHistory', () => {
 
 describe('roundNotes', () => {
   const notes = (events: GameEvent[], locale: 'en' | 'es' = 'en') => roundNotes(words(locale), t(locale, 'resolve'), events);
+
+  it('tells who teased the player, by name, and what it cost, in each language', () => {
+    for (const locale of ['en', 'es', 'ru'] as const) {
+      const [note] = roundNotes(words(locale), t(locale, 'resolve'), [{ kind: 'teased', by: 'user-ana', status: -2 }], (id) => (id === 'user-ana' ? 'Ana' : '?'));
+      expect(note.tone).toBe('bad');
+      expect(note.title).toContain('Ana');
+      expect(note.hint).toContain('2');
+      expect(`${note.title} ${note.hint}`).not.toMatch(/[{}]/);
+    }
+  });
 
   it('tells what happened besides the money, the biggest news first', () => {
     const told = notes([

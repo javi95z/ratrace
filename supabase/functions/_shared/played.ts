@@ -1,4 +1,4 @@
-import type { GameModule, LoggedRound, Replayed, ReplayedStep } from './game/types.ts';
+import type { GameModule, LoggedRound, Replayed, ReplayedStep, RoomEvent } from './game/types.ts';
 
 /** What a player chose on one card, in the order the life was played. */
 export interface CardPick {
@@ -74,7 +74,7 @@ export function lifePlayer(game: GameModule, id: string, versions: string, start
   };
 
   /** The life after one more step: `next` is `log` with `choice` at its end. Throws on a step that cannot be taken. */
-  const step = (log: readonly LoggedRound[], next: readonly LoggedRound[], choice: { card: number } | { orders: unknown[] }): Played => {
+  const step = (log: readonly LoggedRound[], next: readonly LoggedRound[], choice: { card: number } | { orders: unknown[]; room?: RoomEvent[] }): Played => {
     const from = game.stepLife ? found(log) : null;
     if (!from || !game.stepLife) return play(next);
     let last: ReplayedStep | null = null;

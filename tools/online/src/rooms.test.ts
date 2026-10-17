@@ -1,4 +1,4 @@
-import { content, lives, replayLife } from '@ratrace/content';
+import { content, lives, replayLife, roomStart } from '@ratrace/content';
 import { finalScore, viewOf } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
@@ -205,6 +205,38 @@ describe('a round in a room', () => {
     expect(host.events.length).toBeGreaterThan(0);
   });
 
+  it('lets a member tease another: the teaser gains status that round, and the one teased loses some the next, both written into the logs', async () => {
+    const { server, room } = await begun(roomServer(), 180, [C]);
+    const tease = { type: 'focus', action: 'tease', target: B };
+    // Every life of a room is marked as one, so it may tease.
+    expect((await lifeOf(server, HOST, room)).view.player.life.flags).toHaveProperty('in_room');
+    expect((await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [tease] })).status).toBe(200);
+    await server.ask(C, { action: 'submit', roomId: room, step: await answerHand(server, C, room), orders: [] });
+    await server.ask(B, { action: 'submit', roomId: room, step: await answerHand(server, B, room), orders: [] });
+    expect(server.logOf(B, room)[0].room).toEqual([{ kind: 'teased', by: HOST }]);
+    expect(server.logOf(HOST, room)[0].room).toBeUndefined();
+    expect(server.logOf(C, room)[0].room).toBeUndefined();
+    const b = await lifeOf(server, B, room);
+    const c = await lifeOf(server, C, room);
+    expect(b.events).toContainEqual({ kind: 'teased', by: HOST, status: -content.life.teasedStatus });
+    // B and C chose alike: B starts the round with less status, by the tease.
+    expect(c.view.player.statusPoints - b.view.player.statusPoints).toBe(content.life.teasedStatus);
+    const host = await lifeOf(server, HOST, room);
+    expect(host.view.player.statusSum - c.view.player.statusSum).toBe(content.life.teaseStatus);
+    // And what the server shows is the life its log plays back to.
+    const seed = [...server.db.seeds.values()][0];
+    expect(b.view).toEqual(viewOf(replayLife(content, roomStart(nurse.start), seed, server.logOf(B, room)).state));
+  });
+
+  it('refuses a tease at nobody, at oneself, or at someone not in the room', async () => {
+    const { server, room } = await begun();
+    const step = await answerHand(server, HOST, room);
+    for (const target of [undefined, HOST, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc']) {
+      const reply = await server.ask(HOST, { action: 'submit', roomId: room, step, orders: [{ type: 'focus', action: 'tease', ...(target ? { target } : {}) }] });
+      expect(reply.status, String(target)).toBe(400);
+    }
+  });
+
   it('plays the round for whoever has not chosen once the deadline and its grace have passed: first options and no orders', async () => {
     const { server, room } = await begun();
     const life = await lifeOf(server, HOST, room);
@@ -220,7 +252,7 @@ describe('a round in a room', () => {
     expect(entry.orders).toEqual([]);
     // The host's own life says the same as the life the engine plays from that log.
     const seed = [...server.db.seeds.values()][0];
-    expect((await lifeOf(server, HOST, room)).view).toEqual(viewOf(replayLife(content, nurse.start, seed, server.logOf(HOST, room)).state));
+    expect((await lifeOf(server, HOST, room)).view).toEqual(viewOf(replayLife(content, roomStart(nurse.start), seed, server.logOf(HOST, room)).state));
   });
 
   it('turns a round nobody touched, with every card of every member taking its first option, and gives the next the room\'s seconds', async () => {
@@ -367,7 +399,7 @@ describe('two members who choose the same', () => {
     expect(end).toMatchObject({ status: 'finished', deadline: null, round: content.rounds });
     expect(server.logOf(HOST, room)).toEqual(server.logOf(B, room));
     const seed = [...server.db.seeds.values()][0];
-    const played = replayLife(content, nurse.start, seed, server.logOf(HOST, room)).state;
+    const played = replayLife(content, roomStart(nurse.start), seed, server.logOf(HOST, room)).state;
     const score = finalScore(content, played);
     expect(end.members.map((m) => m.standing?.score)).toEqual([score, score]);
     expect(server.db.runs.map((run) => [run.user_id, run.mode, run.score, run.verified])).toEqual([

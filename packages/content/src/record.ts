@@ -1,5 +1,5 @@
-import { applyCard, applyRound, realNetWorth, replayLog, viewOf } from '@ratrace/engine';
-import type { Content, GameEvent, GameState, LoggedRound, Order, StartConfig } from '@ratrace/engine';
+import { applyCard, applyRoundWith, FLAG_IN_ROOM, realNetWorth, replayLog, viewOf } from '@ratrace/engine';
+import type { Content, GameEvent, GameState, LoggedRound, Order, RoomEvent, StartConfig } from '@ratrace/engine';
 import { badgesEarned, journalAfter, journalStart } from './badges';
 import type { Journal } from './badges';
 
@@ -72,13 +72,26 @@ export function replayLife(content: Content, start: StartConfig, seed: string, l
  * Takes one more step of a life already played: the answer to its next card, or its round. Gives
  * back exactly what playing the whole log again, with this step at its end, would give, without
  * playing the steps before it again. So a server that keeps the life it last played can take the
- * next step at once. `from` is never changed. It throws on a step that cannot be taken.
+ * next step at once. A round may bring what the others of a game with friends did to the life in
+ * it, as its log entry does. `from` is never changed. It throws on a step that cannot be taken.
  */
-export function stepLife(content: Content, from: Replayed, step: { card: number } | { orders: Order[] }, onStep?: (step: ReplayedStep) => void): Replayed {
+export function stepLife(content: Content, from: Replayed, step: { card: number } | { orders: Order[]; room?: RoomEvent[] }, onStep?: (step: ReplayedStep) => void): Replayed {
   const { state: before, ...record } = from;
   const orders = 'orders' in step ? step.orders : null;
-  const result = orders === null ? applyCard(content, before, (step as { card: number }).card) : applyRound(content, before, { orders });
+  const result = orders === null ? applyCard(content, before, (step as { card: number }).card) : applyRoundWith(content, before, orders, (step as { room?: RoomEvent[] }).room);
   const taken = recordStep(content, record, before, result.state, result.events, orders ?? []);
   onStep?.({ events: result.events, earned: taken.earned, record: taken.record });
   return { state: result.state, ...taken.record };
+}
+
+/**
+ * How a life begins in a game with friends: as it begins alone, and marked as played among others,
+ * so that it may tease them. The server starts every life of a room with this.
+ */
+export function roomStart(start: StartConfig): StartConfig {
+  const life = start.life;
+  // Every life of the content has a life of its own; one without cannot be told apart from the others anyway.
+  if (!life) return start;
+  const flags = life.flags ?? [];
+  return { ...start, life: { ...life, flags: flags.includes(FLAG_IN_ROOM) ? flags : [...flags, FLAG_IN_ROOM] } };
 }

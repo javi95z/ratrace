@@ -1,5 +1,5 @@
-import { applyCard, applyRound, createGame } from './game';
-import type { Content, GameEvent, GameState, Order, StartConfig } from './types';
+import { applyCard, applyRoomEvents, applyRound, createGame } from './game';
+import type { Content, GameEvent, GameState, Order, RoomEvent, StartConfig } from './types';
 
 /**
  * What a player chose in one round: the choice made on each card, in the order of the hand, and
@@ -9,6 +9,20 @@ import type { Content, GameEvent, GameState, Order, StartConfig } from './types'
 export interface LoggedRound {
   picks: number[];
   orders: Order[] | null;
+  /** What the other players of a game with friends did to this life in this round, written by the server as it turned. Never in a life alone. */
+  room?: RoomEvent[];
+}
+
+/**
+ * Plays a round and then what the others of a game with friends did to the life in it, as one step:
+ * the events of both, in that order. Without `room`, exactly `applyRound`.
+ */
+export function applyRoundWith(content: Content, state: GameState, orders: Order[], room?: readonly unknown[]): { state: GameState; events: GameEvent[] } {
+  const round = applyRound(content, state, { orders });
+  if (room === undefined) return round;
+  if (!Array.isArray(room)) throw new Error('the room events of a round are not a list');
+  const after = applyRoomEvents(content, round.state, room);
+  return { state: after.state, events: [...round.events, ...after.events] };
 }
 
 /** One step of a game being played again: the game before it, what it did, and the orders if it was a round. */
@@ -35,9 +49,10 @@ export function replayLog(content: Content, start: StartConfig, seed: string, lo
     }
     if (entry.orders === null) {
       if (i < log.length - 1) throw new Error('the log goes on after a round that was never played');
+      if (entry.room !== undefined) throw new Error('the log has a room event in a round that was never played');
       return;
     }
-    take(applyRound(content, state, { orders: entry.orders }), entry.orders);
+    take(applyRoundWith(content, state, entry.orders, entry.room), entry.orders);
   });
   return state;
 }

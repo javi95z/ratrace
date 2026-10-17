@@ -214,7 +214,7 @@ export function validateContent(c: Content): string[] {
   }
 
   const life = c.life as unknown as Record<string, unknown>;
-  for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp']) {
+  for (const field of ['childCostPct', 'partnerCostPct', 'moveCostPct', 'workSkill', 'studySkill', 'jobHuntRaisePct', 'cheapMortgageBp', 'teaseStatus', 'teasedStatus']) {
     if (!isCount(life[field])) errors.push(`life.${field} must be a whole, non-negative number`);
   }
   if (typeof life.dealOnlyChoices !== 'boolean') errors.push('life.dealOnlyChoices must be true or false');

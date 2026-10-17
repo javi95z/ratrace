@@ -298,10 +298,16 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'teased', 'orderRejected'];
 
-/** What happened in a round besides the money, the biggest news first. `t` translates the `resolve` section. */
-export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[]): RoundNote[] {
+/** The ways a tease is told, turned by who made it. The keys are written out, one by one. */
+const TEASED = ['teased', 'teased2', 'teased3'] as const;
+
+/**
+ * What happened in a round besides the money, the biggest news first. `t` translates the `resolve`
+ * section; `whoIs` names a player of a game with friends by their id.
+ */
+export function roundNotes({ content, text, names, fmt }: Words, t: Translate, events: GameEvent[], whoIs: (userId: string) => string = () => '?'): RoundNote[] {
   const told: Array<{ rank: number; note: RoundNote }> = [];
   const add = (event: GameEvent, note: RoundNote) => told.push({ rank: TOLD.indexOf(event.kind), note });
   const levelled: Array<Extract<GameEvent, { kind: 'skill' }>> = [];
@@ -403,6 +409,12 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
       case 'orderRejected':
         add(event, { tone: 'bad', icon: 'icon.locked', title: t('refused', { reason: text.reasons[event.reason] }) });
         break;
+      case 'teased': {
+        let mix = 0;
+        for (const char of event.by) mix += char.charCodeAt(0);
+        add(event, { tone: 'bad', icon: 'icon.mood', title: t(TEASED[mix % TEASED.length], { who: whoIs(event.by) }), hint: t('teasedHint', { n: -event.status }) });
+        break;
+      }
       default:
         break;
     }

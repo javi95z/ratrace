@@ -464,6 +464,9 @@ export interface LifeRules {
   unstablePayPct: number;
   /** Mortgage spread saved by a life with the `cheap_mortgage` flag, in bp. */
   cheapMortgageBp: Bp;
+  /** In a game with friends: the status a tease gives whoever makes it, and takes from its target, for one round. */
+  teaseStatus: number;
+  teasedStatus: number;
   /** Personal cards drawn each round. */
   cardsPerRound: number;
   skills: SkillRules;
@@ -1105,6 +1108,11 @@ export interface LifeState {
   seen: Record<string, number>;
   /** Lasting status from cards. May be negative; total status never is. */
   bonusStatus: number;
+  /**
+   * Status for this round only, in a game with friends: what a tease gave whoever made it, or took
+   * from whoever it was aimed at. Counted in the round it is set for, then gone. Absent otherwise.
+   */
+  statusNudge?: number;
   /** City the player moves to when this round has resolved. */
   movingTo: string | null;
   /** True when that move is a transfer a card offered: an employer places the player, so it costs the career nothing. */
@@ -1198,7 +1206,8 @@ export type Order =
   | { type: 'buyProperty'; typeId: string; downPayment: Cents; mortgage: 'fixed' | 'variable' | 'none'; rented: boolean }
   | { type: 'sellProperty'; propertyId: string }
   | { type: 'setRented'; propertyId: string; rented: boolean }
-  | { type: 'focus'; action: FocusAction }
+  /** `target` names the rival a tease is aimed at, in a game with friends: the server reads it, the engine does not. */
+  | { type: 'focus'; action: FocusAction; target?: string }
   | { type: 'buyItem'; itemId: string; financed?: boolean; used?: boolean; noInvoice?: boolean }
   /** What is hidden from the tax office from this round on. What is left out stays as it is. */
   | { type: 'setEvasion'; blackPct?: number; shell?: boolean; hideCrypto?: boolean }
@@ -1223,7 +1232,7 @@ export type Order =
   | { type: 'setResidency'; on: boolean };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction;
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction | 'tease';
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1367,8 +1376,16 @@ export type LedgerLine =
  * What happened in a round. Ledger amounts are signed from the point of view of the player's cash:
  * positive is money in, negative is money out. `purchaseTax` was paid while executing orders.
  */
+/**
+ * What another player of a game with friends did to this life, written into its log by the server
+ * when the round turned, and played after that round: `by` names who, for the screens alone.
+ */
+export type RoomEvent = { kind: 'teased'; by: string };
+
 export type GameEvent =
   | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
+  /** A rival of a game with friends teased the player: their status is down for the round to come. */
+  | { kind: 'teased'; by: string; status: number }
   | { kind: 'ledger'; line: LedgerLine; amount: Cents }
   | { kind: 'escaped'; round: number }
   /** Passive income stopped covering expenses, and the escape is over. It can be won again. */

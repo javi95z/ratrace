@@ -90,6 +90,7 @@ export const ru: ContentText = {
     studyLanguages: 'Ходить на языковые курсы',
     networking: 'Заводить знакомства',
     exercise: 'Заниматься спортом',
+    tease: 'Подколоть соперника',
   },
   skills: { negotiation: 'Переговоры', languages: 'Языки', network: 'Связи', management: 'Управление', health: 'Здоровье' },
   debts: { mortgageFixed: 'Фиксированная ипотека', mortgageVariable: 'Плавающая ипотека', personalLoan: 'Потребительский кредит', creditCard: 'Кредитная карта', margin: 'Маржинальный кредит' },

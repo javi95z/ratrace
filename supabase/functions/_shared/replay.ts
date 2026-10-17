@@ -15,8 +15,16 @@ const MAX_PICKS = 20;
 
 const bad = (field: string): Reply => ({ status: 400, body: { error: 'bad-request', field } });
 
-/** Reads a log, or null if it is not one. Its length is bounded before anything is played. */
-export function readLog(raw: unknown, game: GameModule): LoggedRound[] | null {
+/** No room holds anywhere near this many players to do something to one life in a round. */
+const MAX_ROOM_EVENTS = 16;
+const isRoomEvent = (x: unknown): boolean => isRecord(x) && x.kind === 'teased' && isText(x.by, 64);
+
+/**
+ * Reads a log, or null if it is not one. Its length is bounded before anything is played. What the
+ * others of a game with friends did to the life is kept only with `room`, for a log the server
+ * wrote itself in a room: anywhere else it is left out, and nobody can write it into their own life.
+ */
+export function readLog(raw: unknown, game: GameModule, room = false): LoggedRound[] | null {
   if (!Array.isArray(raw) || raw.length > game.content.rounds) return null;
   const log: LoggedRound[] = [];
   for (const entry of raw) {
@@ -24,7 +32,10 @@ export function readLog(raw: unknown, game: GameModule): LoggedRound[] | null {
     const { picks, orders } = entry;
     if (!Array.isArray(picks) || picks.length > MAX_PICKS || !picks.every(isCount)) return null;
     if (orders !== null && (!Array.isArray(orders) || orders.length > game.content.maxOrdersPerRound)) return null;
-    log.push({ picks, orders });
+    if (room && entry.room !== undefined) {
+      if (!Array.isArray(entry.room) || entry.room.length > MAX_ROOM_EVENTS || !entry.room.every(isRoomEvent)) return null;
+      log.push({ picks, orders, room: entry.room as LoggedRound['room'] });
+    } else log.push({ picks, orders });
   }
   return log;
 }

@@ -11,7 +11,7 @@ export { badges, badgesEarned, galleryBadges, journalAfter, journalStart, ROOM_B
 export type { BadgeDef, BadgeGroup, Journal, RoomResult, Step } from './badges';
 export { BADGE_RARITY, RARITIES, RARITY_BANDS, rarityOf } from './rarity';
 export type { BadgeRarity } from './rarity';
-export { recordStart, recordStep, replayLife, stepLife } from './record';
+export { recordStart, recordStep, replayLife, roomStart, stepLife } from './record';
 export type { LifeRecord, Replayed, ReplayedStep } from './record';
 export { WORTH_MARKS } from './story';
 export type { Milestone, Story } from './story';

@@ -236,6 +236,8 @@ const base: Content = {
     rentOutMinFinanceSkill: 0,
     unstablePayPct: 30,
     cheapMortgageBp: 50,
+    teaseStatus: 1,
+    teasedStatus: 2,
     cardsPerRound: 3,
     // Nothing is sold second hand here: tests of the used shop set their own terms.
     used: {},

@@ -3,7 +3,7 @@
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import { useGame, useRoom, useT, useWords } from '@/game/context';
 import { useCountUp, useStill } from '@/game/motion';
 import { ageAt, roundNotes } from '@/game/present';
 import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
@@ -95,11 +95,15 @@ export function Resolve() {
   const { content, text, fmt } = words;
   const resolved = useGame((s) => s.resolved);
   const view = useGame((s) => s.view);
+  const members = useRoom((s) => s.room?.members);
+  const room = useT('room');
   const area = useRef<HTMLDivElement>(null);
   if (!resolved || !view) return null;
 
   const { before, events } = resolved;
-  const notes = roundNotes(words, t, events);
+  // Who did something to this life, in a game with friends, by the name the room shows.
+  const whoIs = (userId: string) => members?.find((member) => member.userId === userId)?.name ?? room('nameless', { tag: userId.slice(0, 4).toUpperCase() });
+  const notes = roundNotes(words, t, events, whoIs);
   const lines = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
   // A crisis that was on when the round was played and is not now has just ended.
   const ended = before.timeline[before.round]?.crisis && !view.timeline[view.round]?.crisis ? before.timeline[before.round].crisis : null;

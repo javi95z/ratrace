@@ -90,6 +90,7 @@ export const es: ContentText = {
     studyLanguages: 'Ir a clases de idiomas',
     networking: 'Salir a hacer contactos',
     exercise: 'Hacer deporte',
+    tease: 'Picar a un rival',
   },
   skills: { negotiation: 'Negociación', languages: 'Idiomas', network: 'Contactos', management: 'Gestión', health: 'Salud' },
   debts: { mortgageFixed: 'Hipoteca fija', mortgageVariable: 'Hipoteca variable', personalLoan: 'Préstamo personal', creditCard: 'Tarjeta de crédito', margin: 'Préstamo de margen' },

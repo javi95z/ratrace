@@ -1,5 +1,5 @@
 import type { RunRow } from './finish.ts';
-import type { GameModule, LoggedRound } from './game/types.ts';
+import type { GameModule, LoggedRound, RoomEvent } from './game/types.ts';
 import { lifePlayer } from './played.ts';
 import type { Played } from './played.ts';
 import { lastIs, stepsOf, withStep } from './ranked.ts';
@@ -207,7 +207,8 @@ const roundsIn = (log: readonly LoggedRound[]) => log.filter((entry) => entry.or
 function playerOf(game: GameModule, room: RoomRow, gameId: string, seed: string) {
   const life = game.lives.find((one) => one.id === room.life_id);
   if (!life) throw new Error(`the life ${room.life_id} is not in the content of the room`);
-  return lifePlayer(game, gameId, versionsOf(room), life.start, seed);
+  // A life of a room is marked as one, so that it may tease the others: on the versions that know how.
+  return lifePlayer(game, gameId, versionsOf(room), game.roomStart ? game.roomStart(life.start) : life.start, seed);
 }
 type Player = ReturnType<typeof playerOf>;
 
@@ -353,11 +354,10 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       deps.loadOrders(room.id, room.round),
       Promise.all(members.map(async (member) => (member.game_id ? await Promise.all([deps.loadGame(member.game_id), deps.loadSeed(member.game_id)]) : ([null, null] as const)))),
     ]);
-    const lives: TurnLife[] = [];
-    const ends: Array<{ row: RoomGameRow; played: Played }> = [];
+    const taken: Array<{ member: MemberRow; row: RoomGameRow; player: Player; answered: LoggedRound[]; next: LoggedRound[]; played: Played; ready: boolean }> = [];
     for (const [at, member] of members.entries()) {
       const [row, seed] = rows[at];
-      const log = row ? readLog(row.log, game) : null;
+      const log = row ? readLog(row.log, game, true) : null;
       if (row === null || seed === null || log === null) throw new Error(`room ${room.id}: the life of ${member.user_id} cannot be opened`);
       const player = playerOf(game, room, row.id, seed);
       const answered = withCardsAnswered(player, log);
@@ -375,10 +375,24 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
         next = withStep(answered.log, { orders: [] });
         played = player.step(answered.log, next, { orders: [] });
       }
-      const was = member.standing;
-      const before = was ? { score: was.score, place: placesBefore.get(member.user_id) ?? 0 } : null;
-      lives.push({ user: member.user_id, game: row.id, as_read: row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready, standing: { ...standingOf(game, played), before } });
-      ends.push({ row, played });
+      taken.push({ member, row, player, answered: answered.log, next, played, ready });
+    }
+    // What the players did to each other this round: each tease that was taken, at whoever it was aimed at still in the room.
+    const done = teasesOf(taken.map((life) => ({ user: life.member.user_id, orders: life.next[life.next.length - 1].orders ?? [], events: life.played.last?.events ?? [] })), new Set(members.map((m) => m.user_id)));
+    const lives: TurnLife[] = [];
+    const ends: Array<{ row: RoomGameRow; played: Played }> = [];
+    for (const life of taken) {
+      let { next, played } = life;
+      const room = done.get(life.member.user_id);
+      if (room) {
+        const last = next[next.length - 1];
+        next = [...next.slice(0, -1), { ...last, room }];
+        played = life.player.step(life.answered, next, { orders: last.orders ?? [], room });
+      }
+      const was = life.member.standing;
+      const before = was ? { score: was.score, place: placesBefore.get(life.member.user_id) ?? 0 } : null;
+      lives.push({ user: life.member.user_id, game: life.row.id, as_read: life.row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready: life.ready, standing: { ...standingOf(game, played), before } });
+      ends.push({ row: life.row, played });
     }
     const over = lives.length > 0 && lives.every((life) => life.finished);
     const said = await deps.turn(room.id, room.round, over ? null : new Date(deps.now().getTime() + room.seconds * 1000), lives);
@@ -400,6 +414,27 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
     room = now;
   }
   throw new Error(`room ${room.id}: the round could not be turned`);
+}
+
+/** A tease among a round's orders: the use of focus aimed at another player of the room. */
+const isTease = (order: unknown): order is { type: 'focus'; action: 'tease'; target: string } =>
+  typeof order === 'object' && order !== null && (order as { type?: unknown }).type === 'focus' && (order as { action?: unknown }).action === 'tease';
+
+/**
+ * Who was teased in a round, and by whom: for each player's life, the room events its log takes.
+ * A tease counts when its life took it (it had the focus, once a round) and its target is another
+ * player still in the room; one aimed at nobody, at oneself or at someone gone gives its maker their
+ * status all the same, and does nothing to anyone.
+ */
+export function teasesOf(lives: ReadonlyArray<{ user: string; orders: readonly unknown[]; events: readonly unknown[] }>, inRoom: ReadonlySet<string>): Map<string, RoomEvent[]> {
+  const done = new Map<string, RoomEvent[]>();
+  for (const life of lives) {
+    const refused = life.events.some((event) => (event as { kind?: unknown }).kind === 'orderRejected' && isTease((event as { order?: unknown }).order));
+    const tease = life.orders.find(isTease);
+    if (!tease || refused || typeof tease.target !== 'string' || tease.target === life.user || !inRoom.has(tease.target)) continue;
+    done.set(tease.target, [...(done.get(tease.target) ?? []), { kind: 'teased', by: life.user }]);
+  }
+  return done;
 }
 
 /**
@@ -660,7 +695,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   // The game and its seed at once: they are the same game's.
   const [row, seed] = me.game_id ? await Promise.all([deps.loadGame(me.game_id), deps.loadSeed(me.game_id)]) : [null, null];
   if (row === null || row.status === 'abandoned') return closed;
-  const log = game ? readLog(row.log, game) : null;
+  const log = game ? readLog(row.log, game, true) : null;
   // A game the server made itself can always be opened. One that cannot is broken, and that is the server's fault.
   if (!game?.viewOf || seed === null || log === null) throw new Error(`room ${room.id}: the life of ${userId} cannot be opened`);
   const viewOf = game.viewOf;
@@ -723,6 +758,9 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
 
   // Orders for the round: tried now, played when the round turns.
   if (picked.orders.length > game.content.maxOrdersPerRound || JSON.stringify(picked.orders).length > MAX_ORDERS_CHARS) return bad('orders');
+  // A tease is aimed at another player still in the room, or it is not sent.
+  const others = new Set(members.filter((m) => m.left_at === null && m.user_id !== userId).map((m) => m.user_id));
+  if (picked.orders.some((order) => isTease(order) && (typeof order.target !== 'string' || !others.has(order.target)))) return bad('orders');
   if (raw.step !== steps) return { status: 409, body: { error: 'out-of-step', step: steps } };
   if (roundsIn(log) !== room.round) return moved;
   const answered = withCardsAnswered(player, log);
@@ -746,7 +784,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   const now = await deps.loadRoom(room.id);
   if (now !== null && now.round === before) await turn(games, deps, now, userId);
   const after = await deps.loadGame(row.id);
-  const played = after ? readLog(after.log, game) : null;
+  const played = after ? readLog(after.log, game, true) : null;
   if (after === null || played === null || roundsIn(played) <= before) return await answerRoom(games, deps, room.id, userId, { result: null });
   const mine = play(played);
   const run = mine.state.finished ? runOf(after, game, mine, deps.now()) : null;

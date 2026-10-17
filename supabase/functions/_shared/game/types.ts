@@ -6,6 +6,14 @@
 export interface LoggedRound {
   picks: number[];
   orders: unknown[] | null;
+  /** What the others of a game with friends did to the life in this round. Only ever written by the rooms function. */
+  room?: RoomEvent[];
+}
+
+/** One thing another player of a room did to a life: `by` is who, by user id. */
+export interface RoomEvent {
+  kind: 'teased';
+  by: string;
 }
 
 export interface GameState {
@@ -51,7 +59,9 @@ export interface GameModule {
   /** The same, keeping the record of the life alongside. The newer versions tell of every step as it is played. */
   replayLife(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[], onStep?: (step: ReplayedStep) => void): Replayed;
   /** Takes one more step of a life already played, giving what playing its whole log again would. Missing from the versions before 0.36 / 1.38. */
-  stepLife?(content: unknown, from: Replayed, step: { card: number } | { orders: unknown[] }, onStep?: (step: ReplayedStep) => void): Replayed;
+  stepLife?(content: unknown, from: Replayed, step: { card: number } | { orders: unknown[]; room?: RoomEvent[] }, onStep?: (step: ReplayedStep) => void): Replayed;
+  /** How a life begins in a room: marked as played among others, so it may tease them. Missing from the versions before 0.38 / 1.39. */
+  roomStart?(start: unknown): unknown;
   stateHash(state: unknown): string;
   finalScore(content: unknown, state: unknown): number;
   realNetWorth(state: unknown): number;

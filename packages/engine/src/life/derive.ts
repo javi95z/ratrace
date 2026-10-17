@@ -282,7 +282,7 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     job: life.career ? mulDiv(levelOf(content, life.career).status, workModeRule(p, content).jobStatusPct, 100) : (ownBossStatus(p, content) ?? (isRetired(p) ? rules.retiredStatus : 0)),
     city: cityOf(content, p.cityId).prestige,
     lifestyle: lifestyleStatusAt(content, round)[p.lifestyleTier],
-    bonus: life.bonusStatus,
+    bonus: life.bonusStatus + (life.statusNudge ?? 0),
     network: skillLevel(p, 'network', content) * rules.skills.networkStatus,
   };
 }

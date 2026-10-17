@@ -7,10 +7,10 @@ import type { Cents } from '../money';
 import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
 import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from './derive';
-import { FLAG_CAME_HOME_RICH, FLAG_HAD_ILLNESS, FLAG_REMOTE_WORK, hasFlag } from './flags';
+import { FLAG_CAME_HOME_RICH, FLAG_HAD_ILLNESS, FLAG_IN_ROOM, FLAG_REMOTE_WORK, hasFlag } from './flags';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise', 'tease'];
 
 export type LifeOrder = Extract<
   Order,
@@ -40,6 +40,8 @@ export function focusTotal(p: PlayerState): number {
  */
 export function focusLock(p: PlayerState, action: FocusAction, content: Content): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
+  // There is nobody to tease in a life alone.
+  if (action === 'tease') return hasFlag(p.life.flags, FLAG_IN_ROOM) ? null : 'unknown-action';
   // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
   if (p.life.career === null && !isStudy(action) && action !== 'studyFinance') return 'no-job';
   if (isStudy(action) && skillLevel(p, STUDY_OF[action], content) >= 3) return 'skill-maxed';
@@ -93,6 +95,8 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): R
   if (focusLeft(p) < 1) return 'no-focus';
   p.life.focusUsed += 1;
   ctx.tally.focusActions.push(action);
+  // A tease is worth its status in this very round.
+  if (action === 'tease') p.life.statusNudge = (p.life.statusNudge ?? 0) + ctx.content.life.teaseStatus;
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
   if (action === 'overtime' && p.life.career !== null) p.life.salaryBoostPct += overtimeOf(p, ctx.content);
   return null;

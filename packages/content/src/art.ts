@@ -277,6 +277,7 @@ export const focusArt: Record<FocusAction, string> = {
   studyLanguages: skillArt.languages,
   networking: skillArt.network,
   exercise: skillArt.health,
+  tease: 'icon.mood',
 };
 /** What a headline is about. */
 export const topicArt: Record<Headline['topic'], string> = {

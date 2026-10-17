@@ -270,6 +270,8 @@ export function applyRound(
 
   // The status this round was lived with: after the cards and the orders, before anything ages.
   p.statusSum += p.statusPoints;
+  // What a tease gave or took was for this round alone.
+  delete p.life.statusNudge;
 
   const { income, expenses, passive, outgoings, escape, bill, evaded } = flowsOf(content, p, now, tally);
   const paid = dividendsByAsset(p, content, now);
@@ -361,6 +363,30 @@ export function applyRound(
     beginRound(content, next, rng);
   }
   next.rng.cards = rng.snapshot();
+  assertInvariants(content, next);
+  return { state: next, events };
+}
+
+/**
+ * Plays what the other players of a game with friends did to this life in the round just played,
+ * as the server wrote it into the log when the round turned. A tease takes status from the round
+ * to come. Anything else is refused: the log is not one a game could have been played with.
+ *
+ * The state passed in is never changed.
+ */
+export function applyRoomEvents(content: Content, state: GameState, room: readonly unknown[]): { state: GameState; events: GameEvent[] } {
+  if (state.phase === 'cards' && state.answered > 0) throw new Error('applyRoomEvents: a round is half answered');
+  const next = structuredClone(state);
+  const events: GameEvent[] = [];
+  for (const event of room) {
+    const { kind, by } = (typeof event === 'object' && event !== null ? event : {}) as { kind?: unknown; by?: unknown };
+    if (kind !== 'teased' || typeof by !== 'string' || by.length === 0 || by.length > 64) throw new Error('applyRoomEvents: not a room event');
+    if (next.finished) continue;
+    next.player.life.statusNudge = (next.player.life.statusNudge ?? 0) - content.life.teasedStatus;
+    events.push({ kind: 'teased', by, status: -content.life.teasedStatus });
+  }
+  if (events.length === 0) return { state: next, events };
+  refreshDerived(next.player, content, next.round);
   assertInvariants(content, next);
   return { state: next, events };
 }
