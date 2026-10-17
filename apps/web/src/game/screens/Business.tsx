@@ -6,7 +6,7 @@ import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { reviewStars } from '@/game/quips';
-import { Bare, Button, Panel, Row, Segmented, Tag, Toggle } from '@/ui/kit';
+import { Bare, Button, Panel, Row, Segmented, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { AmountSheet } from './AmountSheet';
@@ -304,7 +304,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
             <Sprite id={businessArt(business.typeId)} />
           </Bare>
           <div className="min-w-0">
-            <p className="pixel text-[22px] leading-none text-gold-500">{fmt.money(business.capital)}</p>
+            <KeyFigure className="block">{fmt.money(business.capital)}</KeyFigure>
             <p className="text-[12px] text-ink-300">{t('capitalHint')}</p>
           </div>
         </div>

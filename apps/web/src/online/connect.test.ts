@@ -367,7 +367,7 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     client.answers.profiles = { data: { nickname: 'Rata_Uno', friend_code: 'ABCD2345' }, error: null };
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.community.me()).toEqual({ nickname: 'Rata_Uno', friendCode: 'ABCD2345' });
-    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
+    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code, portrait'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
     client.answers.profiles = { data: null, error: null };
     expect(await cloud.community.me()).toBeNull();
     client.answers.profiles = { data: null, error: new Error('offline') };

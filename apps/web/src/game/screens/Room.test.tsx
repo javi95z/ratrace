@@ -305,7 +305,7 @@ describe('a round in a room', () => {
     await user.click(within(sheet).getByRole('button', { name: 'Well played!' }));
     await waitFor(() => expect(server.db.members.find((m) => m.user_id === HOST)?.shout).toBe(6));
     // The player sees what they shouted, as the others do.
-    await waitFor(() => expect(screen.getAllByRole('status').map((status) => status.textContent)).toContain('RRat AAAAWell played!'), { timeout: 3_000 });
+    await waitFor(() => expect(screen.getAllByRole('status').map((status) => status.textContent)).toContain('Rat AAAAWell played!'), { timeout: 3_000 });
     // Again at once: the sheet says to wait.
     await user.click(screen.getByRole('button', { name: 'Say something' }));
     expect(within(screen.getByRole('dialog', { name: 'Say something' })).getByText(/^You can say something again in \d+ s$/)).toBeTruthy();
@@ -316,7 +316,7 @@ describe('a round in a room', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
     // Shown after the player's own, while that one is still on screen.
-    await waitFor(() => expect(screen.getAllByRole('status').some((status) => status.textContent?.endsWith('RRat BBBB😂'))).toBe(true));
+    await waitFor(() => expect(screen.getAllByRole('status').some((status) => status.textContent?.endsWith('Rat BBBB😂'))).toBe(true));
   });
 
   it('opens the room\'s order and the way out from the bar, and asks before giving the life up', async () => {

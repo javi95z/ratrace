@@ -24,9 +24,11 @@ interface Coin {
  * Coins that fly, once, from every element marked `data-coin-from` inside `area` to the one marked
  * `data-coin-to`, after `startMs`: money that came in on its own going where it is kept. The places
  * are read from the page when the flight begins, so they are where the lines have settled.
- * Decoration only; nothing at all where motion is left out.
+ * With `target`, the coins fly to the element it selects anywhere on the page instead (the cash
+ * in the HUD, from a card that paid), over everything. Decoration only; nothing at all where
+ * motion is left out.
  */
-export function FlyingCoins({ area, startMs }: { area: RefObject<HTMLElement | null>; startMs: number }) {
+export function FlyingCoins({ area, startMs, target }: { area: RefObject<HTMLElement | null>; startMs: number; target?: string }) {
   const still = useStill();
   const sound = useSound();
   const [coins, setCoins] = useState<Coin[]>([]);
@@ -34,10 +36,11 @@ export function FlyingCoins({ area, startMs }: { area: RefObject<HTMLElement | n
     if (still) return;
     const take = setTimeout(() => {
       const box = area.current;
-      const target = box?.querySelector('[data-coin-to]');
-      if (!box || !target) return;
-      const origin = box.getBoundingClientRect();
-      const to = target.getBoundingClientRect();
+      const goal = target ? document.querySelector(target) : box?.querySelector('[data-coin-to]');
+      if (!box || !goal) return;
+      // Flying across the page, the coins are placed by the window, not by the area they leave.
+      const origin = target ? { left: 0, top: 0 } : box.getBoundingClientRect();
+      const to = goal.getBoundingClientRect();
       const tx = to.left + to.width / 2 - origin.left;
       const ty = to.top + to.height / 2 - origin.top;
       const flown: Coin[] = [];
@@ -63,7 +66,7 @@ export function FlyingCoins({ area, startMs }: { area: RefObject<HTMLElement | n
 
   if (coins.length === 0) return null;
   return (
-    <div aria-hidden data-motion-only className="pointer-events-none absolute inset-0 z-10 overflow-visible">
+    <div aria-hidden data-motion-only className={`pointer-events-none inset-0 overflow-visible ${target ? 'fixed z-50' : 'absolute z-10'}`}>
       {coins.map((coin, i) => (
         <span
           key={i}

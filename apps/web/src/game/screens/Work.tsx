@@ -8,7 +8,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useRoom, useT, useWords } from '@/game/context';
 import { ageAt, jobFocusName } from '@/game/present';
-import { Bar, Bare, Panel, Row, Tag, Toggle } from '@/ui/kit';
+import { Bar, Bare, Panel, Row, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { masteredLast, useFocusNote } from './focusNote';
@@ -442,7 +442,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
         {work.focus.lost > 0 ? t('focusBurnout', { n: work.focus.lost }) : ''}
       </p>
       <div className="frame bg-night-800 px-3 py-2 text-center">
-        <span className="pixel text-[22px] text-gold-500">{`${work.focus.left}/${work.focus.total}`}</span>
+        <KeyFigure>{`${work.focus.left}/${work.focus.total}`}</KeyFigure>
         <p className="text-[12px] text-ink-300">{t('focusLeft')}</p>
       </div>
       {work.level === null ? <p className="text-[14px] leading-snug text-ink-200">{t('focusNoJob')}</p> : null}

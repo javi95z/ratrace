@@ -1,5 +1,7 @@
 'use client';
 
+import { ratColourOf } from '@/game/avatar';
+import { RatAvatar } from '@/ui/RatAvatar';
 import { topicArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
@@ -137,9 +139,14 @@ export function Headlines() {
           ))}
           {told ? (
             <li className="flex items-center gap-2.5 border-t border-dashed border-ink-300 py-1.5">
-              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 bg-gold-200 p-1">
-                <Sprite id={story ? 'icon.skill_network' : 'icon.percentile'} />
-              </span>
+              {/* A story of the game with friends shows the rat it is about. */}
+              {story ? (
+                <RatAvatar colour={ratColourOf(story.who.avatar, story.who.userId)} size="md" />
+              ) : (
+                <span aria-hidden className="flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 bg-gold-200 p-1">
+                  <Sprite id="icon.percentile" />
+                </span>
+              )}
               <span className="min-w-0">
                 <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
                   {story ? room('paperTopic') : r('topic')}

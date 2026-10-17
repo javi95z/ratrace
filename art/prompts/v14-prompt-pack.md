@@ -1,6 +1,6 @@
 # Art prompt pack: v14
 
-Five sheets: the rat in eight poses, a backdrop for each city behind the portraits, six scenes of a
+Six sheets: the rat in eight poses, what a player's rat can wear, a backdrop for each city behind the portraits, six scenes of a
 life's milestones, every business at three sizes, and a map of the world at night.
 
 Use the same ChatGPT project and the same **style block** (in `v1-prompt-pack.md`). Each sheet below
@@ -87,6 +87,24 @@ Attach `art/raw/skylines/` (any approved night skyline sheet).
 Landscape image, 12:5. Scene sheet with a single panel filling the image inside a magenta gutter. A stylised pixel-art map of the whole world at night: deep navy oceans with faint wave lines, continents in dark slate with a thin gold coastline, city lights as small warm dots scattered over the land. Ten slightly brighter gold dots mark, by their real positions: Madrid, London, New York, Dubai, Singapore, Bangkok, Tokyo, Moscow, Mexico City and Zurich. No labels, no borders between countries, no routes: the game draws those.
 ```
 
+## 104. What a player's rat can wear
+
+Save as `art/raw/brand/rats-01.png` — `rat.head.plain`, `rat.head.cap`, `rat.head.beanie`, `rat.head.top_hat`, `rat.head.headphones`, `rat.head.crown`, `rat.head.sunglasses`, `rat.head.chef`
+
+Attach `art/raw/brand/brand-01.webp`. These are the avatars players pick in their profile: the head only, facing a little to the right, the same rat, centred, filling the cell.
+
+```text
+Landscape image, 2:1. Object sheet: 4 columns by 2 rows, 8 objects. Every object is the head and shoulders of the same cartoon rat as the mascot in the attached sheet, the same size and pose in every cell, so that only what it wears changes. Left to right, top to bottom:
+1. Nothing extra: the plain rat in its navy suit collar and gold tie.
+2. A red baseball cap, worn backwards.
+3. A knitted emerald beanie with a cream pom-pom.
+4. A tall black top hat with a gold band.
+5. Big navy headphones over its ears.
+6. A small gold crown tilted on one ear.
+7. Dark sunglasses pushed down its nose.
+8. A tall white chef's hat.
+```
+
 ## Where each goes
 
 | # | File | What | Size |
@@ -96,6 +114,7 @@ Landscape image, 12:5. Scene sheet with a single panel filling the image inside 
 | 101 | `cards/cards-36.png` | Milestones: home, wedding, child, business sold, retired, promotion | 288×120 |
 | 102 | `items/business-02.png` | Each business at three sizes | 64×64 |
 | 103 | `cards/map-01.png` | The world at night, ten cities marked | 576×240 |
+| 104 | `brand/rats-01.png` | A player's rat: plain, cap, beanie, top hat, headphones, crown, sunglasses, chef | 64×64 |
 
 Once a sheet is in, it is cut with `pnpm -s art` after its line in `tools/art/src/sheets.ts`, then
 `pnpm --filter @ratrace/web exec tsx scripts/sprites.ts`.

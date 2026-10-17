@@ -8,7 +8,7 @@ import { useCountUp, useStill } from '@/game/motion';
 import { ageAt, roundNotes } from '@/game/present';
 import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
 import type { RoundNote } from '@/game/present';
-import { Bare, Panel, Row } from '@/ui/kit';
+import { Bare, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
@@ -72,10 +72,10 @@ function WorthRise({ from, to, delay }: { from: number; to: number; delay: numbe
           <p className="text-[12px] text-ink-300">{t('before', { amount: fmt.money(from) })}</p>
         </div>
         <div className="relative flex flex-col items-end">
-          <span className={`pixel block text-[28px] leading-none ${landed && !up ? 'text-wine-300' : 'text-gold-500'} ${landed && change !== 0 ? (up ? 'animate-pop' : 'animate-sink') : ''}`}>
+          <KeyFigure tone={landed && !up ? 'wine' : 'gold'} className={`block ${landed && change !== 0 ? (up ? 'animate-pop' : 'animate-sink') : ''}`}>
             <span className="sr-only">{fmt.money(to)}</span>
             <span aria-hidden>{fmt.money(shown)}</span>
-          </span>
+          </KeyFigure>
           <span className={`pixel mt-1 px-1.5 text-[14px] ${landed ? 'animate-rise' : 'invisible'} ${up ? 'bg-teal-800 text-teal-300' : 'bg-wine-900 text-wine-300'}`}>{fmt.signed(change)}</span>
           {landed && !still && change > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={12} reach={48} /> : null}
         </div>

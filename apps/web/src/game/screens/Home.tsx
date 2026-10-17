@@ -1,8 +1,10 @@
 'use client';
 
 import { CHALLENGE_ART } from '@ratrace/content';
-import { useState } from 'react';
-import { useAccountSaves, useGame, useRanking, useRuns, useSaving, useT, useWords } from '@/game/context';
+import { useEffect, useState } from 'react';
+import { useAccount, useAccountSaves, useCommunity, useGame, useRanking, useRuns, useSaving, useT, useWords } from '@/game/context';
+import { ratColourOf } from '@/game/avatar';
+import { RatAvatar } from '@/ui/RatAvatar';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
@@ -124,6 +126,7 @@ export function Home() {
                 <Sprite id="icon.trophy" />
                 {t('records')}
               </Link>
+              <ProfileLink />
               {ranking !== 'no' ? (
                 <Link href="/rankings" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
                   <Sprite id="icon.status" />
@@ -175,5 +178,32 @@ export function Home() {
         ) : null}
       </Sheet>
     </main>
+  );
+}
+
+/**
+ * The way to the player's profile, with their rat on it: there for someone signed in with Google,
+ * whose profile the others see, and for nobody else.
+ */
+function ProfileLink() {
+  const t = useT('home');
+  const { state } = useAccount();
+  const community = useCommunity();
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const userId = state.kind === 'member' ? state.userId : null;
+  useEffect(() => {
+    if (userId === null || community === null) return;
+    let live = true;
+    void community.me().then((me) => live && setAvatar(me?.avatar ?? null));
+    return () => {
+      live = false;
+    };
+  }, [userId, community]);
+  if (userId === null) return null;
+  return (
+    <Link href="/player" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+      <RatAvatar colour={ratColourOf(avatar, userId)} size="sm" />
+      {t('profile')}
+    </Link>
   );
 }

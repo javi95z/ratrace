@@ -153,9 +153,12 @@ export interface Friend {
  * read just now is null, and what cannot be done says so in a word.
  */
 export interface Community {
-  me(): Promise<{ nickname: string | null; friendCode: string } | null>;
+  /** `avatar` is the rat the player chose, as kept in the profile (`rat_<colour>`), or null for none yet. */
+  me(): Promise<{ nickname: string | null; friendCode: string; avatar: string | null } | null>;
   /** `taken`: someone has that name. `refused`: the name is not accepted. */
   rename(nickname: string): Promise<'ok' | 'taken' | 'refused' | 'failed'>;
+  /** Keeps the rat the player chose. False if it could not be. */
+  setAvatar(avatar: string): Promise<boolean>;
   /** The first fifty, and the asker's own line if it is further down. */
   ranking(query: RankingQuery): Promise<RankingRow[] | null>;
   friends(): Promise<Friend[] | null>;

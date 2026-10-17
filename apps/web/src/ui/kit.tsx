@@ -302,3 +302,13 @@ export function Row({ left, right, sub, className }: { left: ReactNode; right?: 
     </div>
   );
 }
+
+const FIGURE_TONE = { gold: 'text-gold-500', teal: 'text-teal-300', wine: 'text-wine-300', cream: 'text-cream' } as const;
+
+/**
+ * The one figure a screen or a sheet is about: always this size, this weight and this gold, so the
+ * eye finds it in the same place everywhere. A tone says when it is good news or bad.
+ */
+export function KeyFigure({ children, tone = 'gold', className = '' }: { children: ReactNode; tone?: keyof typeof FIGURE_TONE; className?: string }) {
+  return <span className={join('pixel text-[28px] leading-none tabular-nums', FIGURE_TONE[tone], className)}>{children}</span>;
+}

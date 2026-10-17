@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { characterName } from '@/game/characters';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
 import { ageAt, cityLight, portraitAge } from '@/game/present';
-import { Bar, Row, Stat, Tag, Well } from '@/ui/kit';
+import { Bar, Row, Stat, Tag, Well, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
@@ -159,7 +159,7 @@ function RatRace({ shown }: { shown: GameView }) {
       )}
       <div className="my-2 flex items-baseline justify-between gap-3">
         <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('wayOut.covered')}</span>
-        <span className={`pixel text-[26px] leading-none ${escaped ? 'text-teal-300' : 'text-gold-500'}`}>{pct}%</span>
+        <KeyFigure tone={escaped ? 'teal' : 'gold'}>{pct}%</KeyFigure>
       </div>
       <Bar value={passive} max={outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
       <div className="mt-3">
@@ -191,7 +191,7 @@ function ScoreNow({ shown }: { shown: GameView }) {
     <section aria-label={t('scoreNow')} className="frame mt-3 bg-night-800 px-3 py-2">
       <div className="flex items-baseline justify-between gap-3">
         <span className="pixel text-[13px] uppercase tracking-wider text-gold-200">{t('scoreNow')}</span>
-        <span className="pixel text-[22px] leading-none text-gold-500">{fmt.number(score.total)}</span>
+        <KeyFigure>{fmt.number(score.total)}</KeyFigure>
       </div>
       <div aria-hidden className="sunk mt-2 flex h-3 bg-ink-900">
         <span className="bg-gold-500" style={{ width: `${100 - share}%` }} />
@@ -337,7 +337,10 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       ) : null}
       <div className="@container">
         <div className="grid grid-cols-3 gap-1.5">
-          <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => setOpen('cash')} />
+          {/* Where money that comes in lands: coins fly here from a card that paid. */}
+          <div data-hud-cash className="contents">
+            <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => setOpen('cash')} />
+          </div>
           <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} onOpen={() => setOpen('flow')} />
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => setOpen('status')} />
         </div>

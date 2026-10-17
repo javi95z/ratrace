@@ -4,7 +4,7 @@ import { assetKind, homeName } from '@ratrace/content';
 import { quotePortfolio } from '@ratrace/engine';
 import type { WealthKind } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
-import { Panel, Row, Toggle } from '@/ui/kit';
+import { Panel, Row, Toggle, KeyFigure } from '@/ui/kit';
 import { useShown } from './Hud';
 
 /** One colour a kind, the same in the bar and in its legend. */
@@ -44,7 +44,7 @@ export function PortfolioGlance() {
     <Panel title={t('title')} label={t('title')}>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[13px] text-ink-300">{t('total')}</span>
-        <span className="pixel text-[20px] text-gold-500">{fmt.money(quote.total)}</span>
+        <KeyFigure>{fmt.money(quote.total)}</KeyFigure>
       </div>
       {quote.total > 0 ? (
         <>

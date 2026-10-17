@@ -646,6 +646,7 @@ describe('the end of a life, beside the lives of others', () => {
   const others = (answer: { below: number; total: number } | null, asked: unknown[]): Community => ({
     me: async () => null,
     rename: async () => 'failed',
+    setAvatar: async () => false,
     ranking: async () => null,
     friends: async () => null,
     compare: async (query) => (asked.push(query), answer),

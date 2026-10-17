@@ -1,5 +1,7 @@
 'use client';
 
+import { ratColourOf } from '@/game/avatar';
+import { RatAvatar } from '@/ui/RatAvatar';
 import { LoanOffers, PlayerSheet } from './RoomLoans';
 import { badgeArt, lives, portraitArt } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
@@ -505,6 +507,7 @@ function Lobby({ room }: { room: RoomState }) {
         <ul className="divide-y-2 divide-night-900">
           {here.map((member) => (
             <li key={member.userId} className="flex min-h-11 items-center gap-2 py-1.5">
+              <MemberRat member={member} />
               <span className="min-w-0 flex-1 truncate text-[15px]">{nameOf(member)}</span>
               {member.host ? <Tag>{t('host')}</Tag> : null}
               {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
@@ -697,9 +700,7 @@ function Heard({ room }: { room: RoomState }) {
         return (
           // Gold on the night, with a shadow under it: it sits over the game, and says someone is talking.
           <div key={shout.key} className="frame-raised frame-gold flex w-full max-w-sm animate-rise items-center gap-3 bg-night-600 px-3 py-2.5 shadow-[4px_4px_0_rgb(0_0_0/0.5)]">
-            <span aria-hidden className="pixel flex size-11 shrink-0 items-center justify-center bg-gold-500 text-[20px] text-ink-900">
-              {name.slice(0, 1).toUpperCase()}
-            </span>
+            {member ? <MemberRat member={member} size="md" /> : null}
             <span className="min-w-0 flex-1">
               <span className="pixel block truncate text-[12px] uppercase tracking-wider text-gold-200">{name}</span>
               <span className={face ? 'mt-0.5 inline-block animate-pop text-[34px] leading-none' : 'pixel mt-0.5 block text-[20px] leading-tight text-cream'}>{textOf(shout.n)}</span>
@@ -762,6 +763,7 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-center gap-1.5">
+                  <MemberRat member={member} />
                   <span className="truncate text-[15px]">{nameOf(member)}</span>
                   {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
                 </span>
@@ -800,6 +802,11 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
       </ol>
     </div>
   );
+}
+
+/** A player's rat, in the colour they chose, or the one their id gives them. */
+export function MemberRat({ member, size = 'sm' }: { member: Pick<RoomMember, 'userId' | 'avatar'>; size?: 'sm' | 'md' }) {
+  return <RatAvatar colour={ratColourOf(member.avatar, member.userId)} size={size} />;
 }
 
 /** A line of the room's order: a button when it opens something, a plain line when it does not. */
@@ -848,12 +855,8 @@ function RoomBar({ room }: { room: RoomState }) {
           </span>
           <span aria-hidden className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden pt-1">
             {here.map((member) => (
-              <span
-                key={member.userId}
-                title={nameOf(member)}
-                className={`pixel relative flex size-7 shrink-0 items-center justify-center text-[13px] ${member.ready ? 'bg-teal-600 text-cream' : 'bg-night-900 text-ink-300'} ${member.me ? 'ring-2 ring-inset ring-gold-500' : ''}`}
-              >
-                {nameOf(member).slice(0, 1).toUpperCase()}
+              <span key={member.userId} title={nameOf(member)} className={`relative flex shrink-0 ${member.me ? 'outline outline-2 outline-gold-500' : ''} ${member.ready ? '' : 'opacity-60'}`}>
+                <MemberRat member={member} />
                 {member.ready ? <span className="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center bg-teal-300 font-sans text-[10px] font-bold leading-none text-night-900">✓</span> : null}
               </span>
             ))}

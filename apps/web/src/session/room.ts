@@ -43,6 +43,8 @@ export interface RoomMember {
   left: boolean;
   /** As of the last round that turned; null before the first. */
   standing: RoomStanding | null;
+  /** The rat they chose to be seen as (`rat_<colour>`), or null: one is picked for them from their id. */
+  avatar: string | null;
   /** The last thing they shouted to everyone, as a number of `SHOUTS`, and when by the server's clock; null for nothing lately. */
   shout: { n: number; at: number } | null;
 }

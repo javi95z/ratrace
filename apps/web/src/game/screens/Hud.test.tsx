@@ -76,7 +76,7 @@ describe('the figures of the HUD', () => {
     const wealth = Number(within(score).getByText(/ for net worth$/).textContent?.split(' ')[0]);
     const status = Number(within(score).getByText(/ for status$/).textContent?.split(' ')[0]);
     // The two parts add up to the figure, which is the engine's own: nobody has got out of the rat race at twenty-two.
-    expect(score.querySelector('.text-\\[22px\\]')?.textContent).toBe(String(wealth + status));
+    expect(score.querySelector('.text-\\[28px\\]')?.textContent).toBe(String(wealth + status));
     expect(within(score).getByText(/^The score adds the points of your net worth to your average status\./)).toBeTruthy();
   });
 

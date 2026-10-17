@@ -73,6 +73,12 @@ export default {
           const rows = must(await db.from('profiles').select('user_id, nickname').in('user_id', ids)) as Array<{ user_id: string; nickname: string | null }>;
           return Object.fromEntries(rows.map((row) => [row.user_id, row.nickname]));
         },
+        avatars: async (ids) => {
+          if (ids.length === 0) return {};
+          const rows = must(await db.from('profiles').select('user_id, portrait').in('user_id', ids)) as Array<{ user_id: string; portrait: string | null }>;
+          // Only a rat is an avatar: a portrait of a life, from before rats, is not one.
+          return Object.fromEntries(rows.map((row) => [row.user_id, row.portrait?.startsWith('rat_') ? row.portrait : null]));
+        },
         open: (room) => call('room_open', { p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
         join: (code, user, engine, content) => call('room_join', { p_code: code, p_member: user, p_engine: engine, p_content: content }),
         start: (room, host, seed, games, deadline) => call('room_start', { p_room: room, p_host: host, p_seed: seed, p_games: games, p_deadline: deadline.toISOString() }),

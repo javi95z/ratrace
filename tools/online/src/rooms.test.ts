@@ -64,7 +64,7 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, me: true, host: true, ready: false, left: false, standing: null, shout: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, ready: false, left: false, standing: null, shout: null }]);
     expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false });
   });
 
@@ -100,6 +100,15 @@ describe('opening a room', () => {
 });
 
 describe('joining a room', () => {
+  it('shows everyone the rat each player chose', async () => {
+    const server = roomServer();
+    server.db.avatars.set(HOST, 'rat_wine');
+    const opened = roomOf(await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 180, ...VERSIONS }));
+    await server.ask(B, { action: 'join', code: opened.code, ...VERSIONS });
+    const seen = roomOf(await server.ask(B, { action: 'state', roomId: opened.id })).members as unknown as Array<{ userId: string; avatar: string | null }>;
+    expect(seen.map((m) => [m.userId, m.avatar])).toEqual([[HOST, 'rat_wine'], [B, null]]);
+  });
+
   it('lets a player in by the code however it is typed, and says who is who to each', async () => {
     const server = roomServer();
     server.db.names.set(HOST, 'Ana_88');

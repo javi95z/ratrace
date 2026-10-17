@@ -9,7 +9,8 @@
       "records": "Récords",
       "rankings": "Clasificaciones",
       "challenge": "Reto de la semana",
-      "room": "Multijugador"
+      "room": "Multijugador",
+      "player": "Tu perfil"
     },
     "imageAlt": "The Rat Race en píxeles: una rata en su rueda, los skylines nocturnos de Nueva York y Madrid y el nombre del juego en dorado.",
     "keywords": "rat race,simulador de vida,juego de finanzas personales,juego de inversión,independencia financiera,pixel art"
@@ -73,7 +74,8 @@
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
     "roomDone": "Acabada",
-    "lostWaiting": "Tu vida empezó con una versión anterior del juego. Conéctate a internet para seguir con ella: no se ha perdido."
+    "lostWaiting": "Tu vida empezó con una versión anterior del juego. Conéctate a internet para seguir con ella: no se ha perdido.",
+    "profile": "Tu perfil"
   },
   "newLife": {
     "title": "Elige una vida",
@@ -1720,5 +1722,25 @@
     },
     "worthShort": "Patrimonio",
     "olderRules": "Esta partida empezó con una versión anterior del juego: se juega igual, pero las cifras que se prevén en pantalla pueden variar un poco."
+  },
+  "player": {
+    "title": "Tu perfil",
+    "preview": "Así te ven",
+    "about": "Así te ven los demás en las partidas multijugador y en las clasificaciones.",
+    "rat": "Tu rata",
+    "noName": "Sin nombre",
+    "signIn": "Inicia sesión con Google para tener un perfil que vean los demás.",
+    "saved": "Guardado",
+    "notSaved": "No se ha podido guardar. Inténtalo de nuevo.",
+    "colours": {
+      "gold": "Dorada",
+      "teal": "Turquesa",
+      "wine": "Granate",
+      "sky": "Celeste",
+      "coral": "Salmón",
+      "emerald": "Esmeralda",
+      "cream": "Crema",
+      "slate": "Pizarra"
+    }
   }
 }

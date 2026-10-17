@@ -144,6 +144,8 @@ export interface RoomsDeps {
   members(roomId: string): Promise<MemberRow[]>;
   /** The names players chose, by id; null for one who has none. */
   names(userIds: string[]): Promise<Record<string, string | null>>;
+  /** The rat each player chose to be seen as (`rat_<colour>`), by id; null for one who has not chosen. */
+  avatars(userIds: string[]): Promise<Record<string, string | null>>;
   open(room: { id: string; host: string; life_id: string; engine_version: string; content_version: string; seconds: number }): Promise<{ room: string; code: string } | { error: string; room?: string }>;
   join(code: string, userId: string, engineVersion: string, contentVersion: string): Promise<{ room: string } | { error: string; room?: string; engineVersion?: string; contentVersion?: string }>;
   /** Starts the room with the games named for its members, all on one seed. */
@@ -306,7 +308,8 @@ function stepAnswer(game: GameModule, played: Played, step: number, roundBefore:
 
 /** The room as a member may see it: who is in it, who is ready, how each stood when the last round turned, and the clocks. */
 async function roomBody(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[], userId: string): Promise<Record<string, unknown>> {
-  const [names, loans] = await Promise.all([deps.names(members.map((m) => m.user_id)), room.status === 'playing' || room.status === 'finished' ? deps.loans(room.id) : Promise.resolve([])]);
+  const ids = members.map((m) => m.user_id);
+  const [names, avatars, loans] = await Promise.all([deps.names(ids), deps.avatars(ids), room.status === 'playing' || room.status === 'finished' ? deps.loans(room.id) : Promise.resolve([])]);
   return {
     id: room.id,
     code: room.code,
@@ -324,6 +327,7 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
     members: members.map((m) => ({
       userId: m.user_id,
       name: names[m.user_id] ?? null,
+      avatar: avatars[m.user_id] ?? null,
       me: m.user_id === userId,
       host: m.user_id === room.host,
       ready: room.status === 'playing' && m.left_at === null && m.ready_round === room.round,

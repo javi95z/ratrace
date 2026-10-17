@@ -13,7 +13,7 @@ const MAX_SMALL = 80;
 const MOST_SENT = { message: 1000, stack: 8000, place: 500, build: 200, browser: 200 } as const;
 
 /** The game's pages, by their path with no language: an error elsewhere is kept as on '/other'. A test holds this to the app. */
-export const PAGES: readonly string[] = ['/', '/challenge', '/collection', '/new', '/play', '/rankings', '/records', '/room'];
+export const PAGES: readonly string[] = ['/', '/challenge', '/collection', '/new', '/play', '/player', '/rankings', '/records', '/room'];
 
 /** One kind of error as the database keeps it. */
 export interface ErrorRow {

@@ -252,9 +252,9 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     community: {
       async me() {
         try {
-          const { data, error } = await client.from('profiles').select('nickname, friend_code').eq('user_id', await me()).maybeSingle();
-          const row = data as { nickname: string | null; friend_code: string } | null;
-          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code };
+          const { data, error } = await client.from('profiles').select('nickname, friend_code, portrait').eq('user_id', await me()).maybeSingle();
+          const row = data as { nickname: string | null; friend_code: string; portrait: string | null } | null;
+          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code, avatar: row.portrait };
         } catch {
           return null;
         }
@@ -268,6 +268,14 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return error.code === UNWELCOME || error.code === NOT_A_NAME ? 'refused' : 'failed';
         } catch {
           return 'failed';
+        }
+      },
+      async setAvatar(avatar) {
+        try {
+          const { error } = await client.from('profiles').update({ portrait: avatar }).eq('user_id', await me());
+          return !error;
+        } catch {
+          return false;
         }
       },
       async ranking(query) {

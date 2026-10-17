@@ -6,7 +6,7 @@ import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { ageAt } from '@/game/present';
 import type { Community, Friend, RankedLifeDetail, RankingRow } from '@/online/types';
-import { Bare, Button, Panel, Row } from '@/ui/kit';
+import { Bare, Button, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
 import { Face } from '@/ui/Face';
@@ -228,7 +228,7 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
             <p className="pixel truncate text-[16px]">{text.lives[row.lifeId]?.name ?? row.lifeId}</p>
             <p className="text-[12px] text-ink-300">{t('place', { place: row.place, day: fmt.day(row.finishedAt) })}</p>
           </div>
-          <p className="pixel text-[26px] text-gold-500">{fmt.number(row.score)}</p>
+          <KeyFigure className="block">{fmt.number(row.score)}</KeyFigure>
         </div>
         {life === undefined ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
         {life === null ? <p className="text-[13px] text-ink-200">{t('runUnreachable')}</p> : null}

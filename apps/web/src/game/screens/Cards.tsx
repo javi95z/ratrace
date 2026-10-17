@@ -12,6 +12,7 @@ import { Panel, Tag } from '@/ui/kit';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { Celebrations } from './Celebrations';
+import { FlyingCoins } from './FlyingCoins';
 import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
 
 /** How far a card must be dragged before letting go answers it. */
@@ -103,6 +104,9 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
     </button>
   );
 }
+
+/** How long the result of a card is on screen before what it paid flies to the cash: once its panel has risen. */
+const COINS_AFTER_MS = 450;
 
 /** The card on screen. A card with two options can be swiped; every card can be answered with a tap. */
 export function CardStage() {
@@ -236,12 +240,15 @@ export function Outcome() {
   const offered = useGame((s) => s.offered);
   const pending = useGame((s) => s.pending);
   const picked = useGame((s) => s.picked);
+  const area = useRef<HTMLDivElement>(null);
   if (pending && offered && picked !== null) return <Pending cardId={offered.cardId} option={picked} />;
   const cards = events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
   const money = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
 
+  const paid = cards.some((event) => event.cash > 0);
   return (
-    <div className="flex flex-col gap-3 px-3">
+    <div ref={area} className="relative flex flex-col gap-3 px-3">
+      {paid ? <FlyingCoins area={area} startMs={COINS_AFTER_MS} target="[data-hud-cash] > *" /> : null}
       <h2 className="pixel text-center text-[20px] text-gold-500">{t('results')}</h2>
       <Celebrations />
       {cards.map((event) => {
@@ -284,7 +291,10 @@ export function Outcome() {
             </article>
 
             <Panel title={t('changes')} label={t('changes')} className="animate-rise">
-              <Tags cash={event.cash} tags={tags} empty={t('nothing')} />
+              {/* Money a card paid flies to the cash in the HUD. */}
+              <span data-coin-from={event.cash > 0 ? '' : undefined} className="inline-block">
+                <Tags cash={event.cash} tags={tags} empty={t('nothing')} />
+              </span>
             </Panel>
 
           </div>

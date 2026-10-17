@@ -27,7 +27,7 @@ const row = (place: number, userId: string, over: Partial<RankingRow> = {}): Ran
 function community(over: Partial<Community> = {}) {
   const asked: string[] = [];
   const state = {
-    me: { nickname: null as string | null, friendCode: 'ABCD2345' },
+    me: { nickname: null as string | null, friendCode: 'ABCD2345', avatar: null as string | null },
     friends: [] as Friend[],
     board: (query: RankingQuery): RankingRow[] | null => [row(1, 'aaaa1111-0000', { nickname: 'Otra_Rata', lifeId: 'engineer' }), row(2, 'bbbb2222-0000'), row(9, 'me', { mine: true, score: 120 })].filter(() => query.period === 'all' || true),
   };
@@ -37,6 +37,11 @@ function community(over: Partial<Community> = {}) {
       asked.push(`rename ${name}`);
       state.me = { ...state.me, nickname: name };
       return 'ok';
+    },
+    setAvatar: async (avatar) => {
+      asked.push(`avatar ${avatar}`);
+      state.me = { ...state.me, avatar };
+      return true;
     },
     ranking: async (query) => {
       asked.push(`ranking ${query.period} ${query.friends ? 'friends' : 'everyone'} ${query.lifeId ?? 'any'}`);
@@ -206,7 +211,7 @@ describe('the rankings', () => {
 
   it('lets a name that is already chosen be changed, starting from it, and lets the player think better of it', async () => {
     const { community: c, asked, state } = community();
-    state.me = { nickname: 'Rata_Uno', friendCode: 'ABCD2345' };
+    state.me = { nickname: 'Rata_Uno', friendCode: 'ABCD2345', avatar: null };
     const user = userEvent.setup();
     show(c);
     const you = await screen.findByRole('region', { name: 'You' });

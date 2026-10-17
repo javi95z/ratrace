@@ -53,6 +53,7 @@ function memberOf(raw: unknown): RoomMember | null {
                 : null,
           },
     shout: shoutOf(raw.shout),
+    avatar: typeof raw.avatar === 'string' && raw.avatar.startsWith('rat_') ? raw.avatar : null,
   };
 }
 

@@ -29,6 +29,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   /** The notices the server sent, to whom, in order. */
   const notices: Array<{ user: string; about: RoomNotice }> = [];
   const names = new Map<string, string | null>();
+  const avatars = new Map<string, string | null>();
   const unlocked = new Map<string, string[]>();
   const state = { ids: 0, codes: 0, stamps: 0, now: start, allowed: true, asked: [] as string[] };
   /** Called with each turn before it is written: a test may change the database there, as another call would have. */
@@ -64,6 +65,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
         user_id: m.user_id, game_id: m.game_id, ready_round: m.ready_round, left_at: m.left_at, standing: m.standing, joined_at: m.joined_at, shout: m.shout, shout_at: m.shout_at,
       })),
     names: async (ids) => Object.fromEntries(ids.map((id) => [id, names.get(id) ?? null])),
+    avatars: async (ids) => Object.fromEntries(ids.map((id) => [id, avatars.get(id) ?? null])),
     open: async (row) => {
       const other = activeRoomOf(row.host);
       if (other) return { error: 'in-a-room', room: other };
@@ -293,7 +295,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     state,
     hooks,
     network,
-    db: { rooms: roomsById, members, games, seeds, orders, runs, names, unlocked, loans },
+    db: { rooms: roomsById, members, games, seeds, orders, runs, names, avatars, unlocked, loans },
     notices,
     /** Asks the server as `user`, with nothing between. */
     ask,

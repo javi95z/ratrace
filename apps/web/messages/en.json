@@ -9,7 +9,8 @@
       "records": "Records",
       "rankings": "Rankings",
       "challenge": "Weekly challenge",
-      "room": "Multiplayer"
+      "room": "Multiplayer",
+      "player": "Your profile"
     },
     "imageAlt": "The Rat Race in pixels: a rat in a wheel, the night skylines of New York and Madrid, and the game's name in gold.",
     "keywords": "rat race,life simulator,personal finance game,investing game,financial independence,pixel art"
@@ -73,7 +74,8 @@
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
     "roomDone": "Over",
-    "lostWaiting": "Your life began on an earlier version of the game. Connect to the internet to go on with it: nothing is lost."
+    "lostWaiting": "Your life began on an earlier version of the game. Connect to the internet to go on with it: nothing is lost.",
+    "profile": "Your profile"
   },
   "newLife": {
     "title": "Choose a life",
@@ -1720,5 +1722,25 @@
     },
     "worthShort": "Net worth",
     "olderRules": "This game began on an earlier version of the game: it plays the same, but the figures forecast on screen may be a little off."
+  },
+  "player": {
+    "title": "Your profile",
+    "preview": "How others see you",
+    "about": "This is how others see you in multiplayer games and in the rankings.",
+    "rat": "Your rat",
+    "noName": "No name",
+    "signIn": "Sign in with Google to have a profile others can see.",
+    "saved": "Saved",
+    "notSaved": "It could not be saved. Try again.",
+    "colours": {
+      "gold": "Gold",
+      "teal": "Teal",
+      "wine": "Wine",
+      "sky": "Sky",
+      "coral": "Coral",
+      "emerald": "Emerald",
+      "cream": "Cream",
+      "slate": "Slate"
+    }
   }
 }
