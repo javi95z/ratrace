@@ -131,17 +131,24 @@ export function ownPay(p: PlayerState, content: Content, level?: number): Cents 
   const life = p.life;
   // Nobody is paid from a cell.
   if (life.jailRounds > 0 && level === undefined) return 0;
-  const median = cityOf(content, p.cityId).medianSalaryAnnual;
+  // From home the pay is the one of the city the job is in, not the one the player lives in.
+  const remote = workModeOf(p, content) === 'remote';
+  const paidFrom = remote ? life.workCityId : p.cityId;
+  const median = cityOf(content, paidFrom).medianSalaryAnnual;
   const rung = life.career ? levelOf(content, level === undefined ? life.career : { id: life.career.id, level }) : null;
   // A trade is paid by where it is plied: finance in a city of banks, more than the same desk elsewhere.
-  const here = life.career ? (cityOf(content, p.cityId).careerPayPct?.[life.career.id] ?? 100) : 100;
+  const here = life.career ? (cityOf(content, paidFrom).careerPayPct?.[life.career.id] ?? 100) : 100;
   const base = rung ? mulDiv(mulDiv(median, rung.salaryPct, 100), here, 100) : life.baseSalaryAnnual;
   // Languages pay abroad, and knowing how to run things pays where people are led.
   const skills = content.life.skills;
   const abroad = p.cityId !== life.homeCityId ? skillLevel(p, 'languages', content) * skills.languagesAbroadPayPct : 0;
   const leads = rung && life.career && (level ?? life.career.level) >= skills.managementPayFromLevel ? skillLevel(p, 'management', content) * skills.managementPayPct : 0;
   const full = mulDiv(base, Math.max(0, 100 + life.salaryModPct + life.salaryBoostPct + perksOf(p, content).salaryPct + abroad + leads), 100);
-  return mulDiv(full, workModeRule(p, content).payPct, 100);
+  const kept = mulDiv(full, workModeRule(p, content).payPct, 100);
+  if (!remote || paidFrom === p.cityId) return kept;
+  // A job paid from a dearer city, done from a cheaper one: paid less, and never more than a multiple of what the city pays.
+  const rules = content.life.remoteAbroad;
+  return Math.min(mulDiv(kept, rules.payPct, 100), mulDiv(cityOf(content, p.cityId).medianSalaryAnnual, rules.capPct, 100));
 }
 
 /** Yearly salary in start-of-game dollars: the player's own pay, plus their partner's. */

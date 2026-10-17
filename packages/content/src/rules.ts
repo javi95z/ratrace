@@ -157,6 +157,8 @@ export const life: LifeRules = {
     remote: { focus: 1, payPct: 100, jobStatusPct: 100, workSkill: true, fromLevel: 2, huntOffPct: 8 },
     partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0, huntOffPct: 0 },
   },
+  // Home from another city keeps the pay of the city the job is in, less a quarter, and at most two and a half times what the city lived in pays.
+  remoteAbroad: { payPct: 75, capPct: 250 },
   // Leaving the job for one's own: a business that made three fifths of the pay two rounds running.
   // Run full time it makes three fifths more, frees a point of focus, and its owner is somebody by
   // its size; going back to a job starts a rung lower.

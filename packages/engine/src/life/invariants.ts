@@ -45,6 +45,7 @@ export function lifeBreaks(content: Content, state: GameView): string[] {
     if (!(isCount(evasion.suspicion) && evasion.suspicion <= 100)) breaks.push(`life.evasion.suspicion is not a whole number from 0 to 100: ${evasion.suspicion}`);
     if (!Array.isArray(evasion.evaded) || evasion.evaded.some((entry) => !isCount(entry.round) || !isCount(entry.amount) || entry.amount === 0)) breaks.push('life.evasion.evaded holds something other than rounds and positive amounts');
   }
+  if (!content.cities.some((city) => city.id === life.workCityId)) breaks.push(`life.workCityId is not a known city: ${life.workCityId}`);
   if (!content.cities.some((city) => city.id === life.homeCityId)) breaks.push(`life.homeCityId is not a known city: ${life.homeCityId}`);
   if (life.rentTier !== 0 && life.rentTier !== 1) breaks.push(`life.rentTier is not 0 or 1: ${life.rentTier}`);
   if (![0, 1, 2, 3].includes(life.minLifestyleTier)) {

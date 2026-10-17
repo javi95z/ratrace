@@ -21,6 +21,40 @@ const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select
  */
 type InitialFocus = 'panel' | 'close' | 'first' | RefObject<HTMLElement | null>;
 
+/**
+ * What a sheet takes from the page while it is open, counted: the page behind goes inert and stops
+ * scrolling for as long as any sheet is open, and comes back only when the last one closes. Each
+ * sheet putting back what it found would, when two overlap and close in the other order, leave the
+ * page dead to every tap.
+ */
+const held = new Map<HTMLElement, { count: number; inert: boolean }>();
+let scrollLocks = 0;
+let scrollWas = '';
+
+function lockPage(root: HTMLElement | null): () => void {
+  const nodes = [...document.body.children].filter((node): node is HTMLElement => node instanceof HTMLElement && node !== root);
+  if (scrollLocks++ === 0) {
+    scrollWas = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  for (const node of nodes) {
+    const entry = held.get(node);
+    if (entry) entry.count += 1;
+    else held.set(node, { count: 1, inert: Boolean(node.inert) });
+    node.inert = true;
+  }
+  return () => {
+    for (const node of nodes) {
+      const entry = held.get(node);
+      if (!entry) continue;
+      if (--entry.count > 0) continue;
+      node.inert = entry.inert;
+      held.delete(node);
+    }
+    if (--scrollLocks === 0) document.body.style.overflow = scrollWas;
+  };
+}
+
 export function Sheet({ open, onClose, title, closeLabel, back = true, tone, initialFocus = 'panel', children }: { open: boolean; onClose(): void; title: ReactNode; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; initialFocus?: InitialFocus; children: ReactNode }) {
   const panel = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -39,15 +73,9 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, ini
     const first = () => box.querySelector<HTMLElement>(FOCUSABLE);
     const wanted = typeof initialFocus === 'object' ? initialFocus.current : initialFocus === 'close' ? closeButton.current : initialFocus === 'first' ? first() : box;
     (wanted ?? box).focus();
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     // Everything except the top-level sheet is removed from sequential focus and the accessibility
-    // tree by `inert`. Previous values are restored, which also makes nested sheets safe.
-    const root = box.closest<HTMLElement>('[data-sheet-root]');
-    const behind = [...document.body.children]
-      .filter((node): node is HTMLElement => node instanceof HTMLElement && node !== root)
-      .map((node) => ({ node, inert: Boolean(node.inert) }));
-    for (const entry of behind) entry.node.inert = true;
+    // tree by `inert`, and the page stops scrolling. Counted, so that nested sheets are safe.
+    const unlock = lockPage(box.closest<HTMLElement>('[data-sheet-root]'));
 
     let lastStop = 0;
     const rememberFocus = () => {
@@ -102,8 +130,7 @@ export function Sheet({ open, onClose, title, closeLabel, back = true, tone, ini
       watcher.disconnect();
       box.removeEventListener('focusin', rememberFocus);
       document.removeEventListener('keydown', onKeyDown, true);
-      document.body.style.overflow = overflow;
-      for (const entry of behind) entry.node.inert = entry.inert;
+      unlock();
       opener?.focus?.();
     };
   }, [open, back, initialFocus]);

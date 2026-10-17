@@ -239,6 +239,7 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     // The focus a way of working gives counts from the round it starts in.
     const before = focusBonusOf(p, at.content);
     life.workMode = effects.workMode;
+    if (effects.workMode !== 'remote') life.workCityId = p.cityId;
     life.focusBonus += focusBonusOf(p, at.content) - before;
   }
   if (effects.jail !== undefined) {

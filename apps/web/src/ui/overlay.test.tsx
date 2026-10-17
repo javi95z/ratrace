@@ -309,6 +309,34 @@ describe('Sheet', () => {
   });
 });
 
+describe('Sheets that overlap', () => {
+  it('leave the page alive when the first to open closes first', async () => {
+    function Two() {
+      const [a, setA] = useState(false);
+      const [b, setB] = useState(false);
+      return (
+        <div data-page>
+          <button onClick={() => setA(true)}>Open A</button>
+          <Sheet open={a} onClose={() => setA(false)} title="A" closeLabel="Close A">
+            <button onClick={() => setB(true)}>Open B</button>
+          </Sheet>
+          <Sheet open={b} onClose={() => setB(false)} title="B" closeLabel="Close B">
+            <button onClick={() => setA(false)}>Close A first</button>
+          </Sheet>
+        </div>
+      );
+    }
+    const user = userEvent.setup();
+    const { container } = render(<Two />);
+    await user.click(screen.getByRole('button', { name: 'Open A' }));
+    await user.click(screen.getByRole('button', { name: 'Open B' }));
+    await user.click(screen.getByRole('button', { name: 'Close A first' }));
+    await user.click(screen.getByRole('button', { name: 'Close B' }));
+    expect(container.inert).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+  });
+});
+
 describe('Tabs', () => {
   function Strip() {
     const [tab, setTab] = useState<'a' | 'b' | 'c'>('a');

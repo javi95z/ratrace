@@ -2,7 +2,7 @@ import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
 import type { Content, GameEvent, ItemPerks, PlayerState, RoundTally, WorldState } from '../types';
-import { focusBonusOf, perksOf, workModeRule } from './derive';
+import { focusBonusOf, perksOf, workModeOf, workModeRule } from './derive';
 import { FLAG_CAME_HOME_RICH } from './flags';
 import { lapsingIn, raiseChance } from './orders';
 import { addFinancePoints, addSkillPoints, learnSkills, skillLevel } from './skills';
@@ -18,6 +18,8 @@ export function landingOf(p: PlayerState, content: Content, transfer: boolean): 
   if (transfer) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
   // Home again, old contacts open doors at once: no rung lost, and a partner finds work straight away.
   if (p.cityId === p.life.homeCityId) return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
+  // Working from home, nobody there has to get to know them: the job stays where it was.
+  if (workModeOf(p, content) === 'remote') return { level: job ? job.level : null, rungsLost: 0, partnerSettling: p.life.partnerSettling };
   // Someone who speaks the language is known for what they can do from the first day, and their partner too.
   const languages = skillLevel(p, 'languages', content);
   const rules = content.life.skills;
@@ -201,6 +203,8 @@ export function turnPage(p: PlayerState, content: Content, events: GameEvent[]):
     life.movingTransfer = false;
     if (life.career) life.career.level = landing.level ?? life.career.level;
     life.partnerSettling = landing.partnerSettling;
+    // Someone at the workplace has a new workplace; someone at home keeps the job they have.
+    if (workModeOf(p, content) !== 'remote') life.workCityId = p.cityId;
     events.push({ kind: 'moved', cityId: p.cityId, rungsLost: landing.rungsLost, partnerIdle: landing.partnerSettling > 0 });
     if (p.cityId === life.homeCityId && life.homecoming !== null) {
       const back = life.homecoming;

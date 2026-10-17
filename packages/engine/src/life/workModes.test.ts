@@ -32,6 +32,27 @@ describe('ways of working', () => {
     expect(statusParts(player, c, 0).job).toBe(Math.floor(job / 2));
   });
 
+  it('from home in a cheaper city, the pay stays the one of the city the job is in, less a quarter and under a cap', () => {
+    const c = content(true);
+    const state = createGame({ content: c, start: { ...fixtureStart(), cityId: 'haven', cash: 50_000_00, life: office } }, 'abroad');
+    const there = ownPay(state.player, c);
+    const p = structuredClone(state.player);
+    p.life.workMode = 'remote';
+    p.cityId = 'home';
+    const rules = c.life.remoteAbroad;
+    const cap = Math.floor((c.cities.find((city) => city.id === 'home')!.medianSalaryAnnual * rules.capPct) / 100);
+    // The job is still paid from 'haven'.
+    expect(ownPay(p, c)).toBe(Math.min(Math.floor((there * rules.payPct) / 100), cap));
+    expect(ownPay(p, c)).toBeGreaterThan(Math.floor((c.cities.find((city) => city.id === 'home')!.medianSalaryAnnual * office.career!.level) / 100));
+    // At the workplace it is the pay of the city lived in again.
+    p.life.workMode = 'office';
+    expect(ownPay(p, c)).not.toBe(there);
+    // And the cap holds: a pay far above what the city lived in pays is cut to it.
+    c.life.remoteAbroad = { payPct: 100, capPct: 10 };
+    p.life.workMode = 'remote';
+    expect(ownPay(p, c)).toBe(Math.floor((c.cities.find((city) => city.id === 'home')!.medianSalaryAnnual * 10) / 100));
+  });
+
   it('from home only a few rungs up: trust comes first', () => {
     const c = content(true);
     const state = createGame({ content: c, start: { ...fixtureStart(), life: { ...office, career: { id: 'office', level: 0 }, careerSkill: 0 } } }, 'junior');

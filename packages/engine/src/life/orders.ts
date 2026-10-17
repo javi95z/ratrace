@@ -81,6 +81,7 @@ function executeSetWorkMode(p: PlayerState, mode: WorkMode, ctx: OrderContext): 
   if (lock !== null) return lock;
   const before = workModeRule(p, ctx.content).focus;
   p.life.workMode = mode;
+  if (mode !== 'remote') p.life.workCityId = p.cityId;
   p.life.focusBonus += workModeRule(p, ctx.content).focus - before;
   return null;
 }

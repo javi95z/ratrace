@@ -36,6 +36,7 @@ export function newPlayer(content: Content, start: StartConfig, world: WorldStat
     huntMisses: 0,
     huntRest: 0,
     workMode: 'office',
+    workCityId: start.cityId,
     raiseRest: 0,
     formerCareer: null,
     lodger: false,

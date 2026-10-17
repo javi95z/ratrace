@@ -225,6 +225,7 @@ const base: Content = {
     jobHuntRaisePct: 8,
     dealOnlyChoices: false,
     workModes: { remote: { focus: 1, payPct: 100, jobStatusPct: 50, workSkill: true, fromLevel: 1, huntOffPct: 10 }, partTime: { focus: 2, payPct: 60, jobStatusPct: 50, workSkill: false, fromLevel: 0, huntOffPct: 0 } },
+    remoteAbroad: { payPct: 75, capPct: 250 },
     raise: { chancePct: 40, perNegotiationPct: 10, pct: 5, restRounds: 2 },
     fullTime: { strongPct: 60, strongRounds: 2, profitPct: 150, focus: 1, status: [[0, 5], [1_000_000_00, 10]], rungsLost: 1 },
     lodger: { rentPct: 30, statusLost: 3 },

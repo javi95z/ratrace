@@ -436,6 +436,12 @@ export interface LifeRules {
   /** Working from home, and working half the day. */
   workModes: Record<Exclude<WorkMode, 'office'>, WorkModeRule>;
   /**
+   * Working from home for a job paid from another city: the pay kept, in percent, because the
+   * employer pays less for someone who lives where life is cheaper; and the most it can be, in
+   * percent of the median salary of the city they live in.
+   */
+  remoteAbroad: { payPct: number; capPct: number };
+  /**
    * Leaving the job for a business: the rounds in a row it must have made `strongPct` of the pay;
    * what giving it all the time adds to its profit, in percent, and the focus it frees; the status
    * of running one's own, by its capital; and how far back down the ladder a return to work starts.
@@ -1056,6 +1062,11 @@ export interface LifeState {
   huntRest: number;
   /** How the player works. It counts only while the job allows it: see `workModeOf`. */
   workMode: WorkMode;
+  /**
+   * The city the job is paid from: where the player last worked at the workplace. Working from home
+   * keeps it when they move, and the pay follows it; at the workplace it is the city they live in.
+   */
+  workCityId: string;
   /** Rounds still to wait before asking for a raise again. */
   raiseRest: number;
   /** The job left to run a business full time, to go back to; null if none was. */
