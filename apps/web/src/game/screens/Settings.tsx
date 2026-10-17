@@ -30,7 +30,8 @@ const CYRILLIC = { fontFamily: 'var(--font-pixel-cyrillic-alone), var(--font-pix
  * their Google already has. Nothing is shown at all where the game has no cloud behind it, or
  * could not reach it.
  */
-function AccountBlock({ compact = false }: { compact?: boolean }) {
+/** `signOut` offers to sign out: in the settings themselves, not on the panel of the home page. */
+function AccountBlock({ compact = false, signOut: offerSignOut = false }: { compact?: boolean; signOut?: boolean }) {
   const t = useT('account');
   const { state, keepWithGoogle, dismissNotice, signOut } = useAccount();
   const common = useT('common');
@@ -75,9 +76,11 @@ function AccountBlock({ compact = false }: { compact?: boolean }) {
             {state.email ? <span className="min-w-0 truncate text-[13px] text-ink-300">{t('memberAs', { email: maskEmail(state.email) })}</span> : null}
           </p>
           {saved}
-          <button type="button" onClick={() => setLeavingAccount(true)} className="min-h-11 self-start text-[13px] text-ink-300 underline underline-offset-4">
-            {t('signOut')}
-          </button>
+          {offerSignOut ? (
+            <button type="button" onClick={() => setLeavingAccount(true)} className="min-h-11 self-start text-[13px] text-ink-300 underline underline-offset-4">
+              {t('signOut')}
+            </button>
+          ) : null}
           <Sheet open={leavingAccount} onClose={() => setLeavingAccount(false)} title={t('signOutTitle')} closeLabel={common('close')}>
             <p className="text-[14px] leading-snug text-ink-200">{t('signOutAbout')}</p>
             {/* What has not reached the account yet would be lost with the device's copy: wait for it. */}
@@ -211,7 +214,7 @@ export function Preferences() {
       <LanguagePick />
       <Switches />
       <KeyboardGuide />
-      <AccountBlock />
+      <AccountBlock signOut />
     </div>
   );
 }
@@ -232,7 +235,7 @@ function HomeSettingsSheet({ open, onClose }: { open: boolean; onClose(): void }
     <Sheet open={open} onClose={onClose} title={t('title')} closeLabel={common('close')}>
       <div className="flex flex-col gap-3">
         {/* The account first: whether the game is kept in it, and the way into one. */}
-        <AccountBlock compact />
+        <AccountBlock compact signOut />
         {account.kind === 'offline' ? <p className="text-[13px] text-ink-300">{home('savedHere')}</p> : null}
         <LanguagePick />
         <Switches />

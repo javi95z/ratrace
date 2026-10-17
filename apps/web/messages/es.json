@@ -1584,7 +1584,7 @@
     "afterRound": "Tras la ronda {n}",
     "final": "Cómo acabó la partida",
     "score": "Puntos",
-    "left": "Se fue",
+    "left": "Abandonó",
     "escaped": "Fuera de la rueda",
     "place": "Puesto {place} de {total}",
     "missed": "{count, plural, one {El reloj jugó # ronda por ti.} other {El reloj jugó # rondas por ti.}}",

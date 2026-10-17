@@ -1584,7 +1584,7 @@
     "afterRound": "After round {n}",
     "final": "How the game ended",
     "score": "Score",
-    "left": "Left",
+    "left": "Quit",
     "escaped": "Out of the race",
     "place": "Place {place} of {total}",
     "missed": "{count, plural, one {The clock played # round for you.} other {The clock played # rounds for you.}}",
