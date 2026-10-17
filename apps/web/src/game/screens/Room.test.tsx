@@ -362,8 +362,8 @@ describe('a round in a room', () => {
     const server = roomServer();
     const room = await lobby(server);
     await server.ask(HOST, { action: 'start', roomId: room.id });
-    // The game began under rules this page no longer plays.
-    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '0.1.0' });
+    // The game is on newer rules than this page: the page was opened before they came out.
+    Object.assign(server.db.rooms.get(room.id) as object, { engine_version: '99.0.0' });
     const { services } = inRooms(server);
     renderGame(<Room />, services);
     expect(await screen.findByText('This game plays another version. Reload the page to play it.')).toBeTruthy();

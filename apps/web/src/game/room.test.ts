@@ -377,17 +377,22 @@ describe('the room a page follows', () => {
     expect(b.rooms.getState()).toMatchObject({ status: 'in', room: { status: 'open' } });
   });
 
-  it('does not open a life in a room that plays other rules than the page, and says so', async () => {
+  it('plays a room begun on older rules than the page, and says so; one on newer rules waits for the page to be reloaded', async () => {
     const w = world();
     const host = w.page(HOST);
     await host.rooms.getState().open('nurse', 180);
     await w.server.ask(B, { action: 'join', code: host.rooms.getState().room?.code, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
     await host.rooms.getState().start();
-    // A page on newer rules, opened after the room began.
+    // A page on newer rules, opened after the room began: the server plays the room by its own rules, the page shows it.
     const newer = w.page(B, () => w.server.link(B), new MemoryStore(), undefined, { engine: '99.0.0', content: CONTENT_VERSION });
     await newer.rooms.getState().boot();
-    expect(newer.rooms.getState()).toMatchObject({ status: 'in', otherRules: true, game: null });
-    expect(host.rooms.getState().otherRules).toBe(false);
+    expect(newer.rooms.getState()).toMatchObject({ status: 'in', otherRules: false, olderRules: true });
+    expect(newer.rooms.getState().game).not.toBeNull();
+    // A page on older rules than the room's cannot show what it does not know: it is to be reloaded.
+    const older = w.page(B, () => w.server.link(B), new MemoryStore(), undefined, { engine: '0.0.1', content: CONTENT_VERSION });
+    await older.rooms.getState().boot();
+    expect(older.rooms.getState()).toMatchObject({ status: 'in', otherRules: true, game: null });
+    expect(host.rooms.getState()).toMatchObject({ otherRules: false, olderRules: false });
   });
 
   it('wakes after sleeping through rounds while it waited, with no ledger of the wrong round, and says how many the clock played', async () => {

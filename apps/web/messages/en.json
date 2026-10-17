@@ -1711,6 +1711,8 @@
       "clock": "Each round lasts {time}: whoever has not played in time plays it with the first options and no orders.",
       "win": "The most points at the end wins: net worth and status. Getting out of the rat race multiplies them.",
       "others": "During the game you can tease a rival from your focus, or lend them money and borrow it by tapping their name in the standings."
-    }
+    },
+    "worthShort": "Net worth",
+    "olderRules": "This game began on an earlier version of the game: it plays the same, but the figures forecast on screen may be a little off."
   }
 }

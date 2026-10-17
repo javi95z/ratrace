@@ -858,7 +858,7 @@ Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier ha
 
 | Inversión | Ticker | Clase | Finanzas | Renta | Qué es |
 | --- | --- | --- | --- | --- | --- |
-| Letras del Tesoro EE. UU. | TBILL | Bonos | 0 | Cupón según los tipos | Préstamos cortos al Gobierno de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve. |
+| Letras del Tesoro EE. UU. | TBILL | Bonos | 0 | Cupón según los tipos | Letras del Tesoro de EE. UU. que se renuevan cada ronda. Pagan algo menos que el tipo del momento y su precio nunca se mueve. |
 | Bono EE. UU. 2 años | UST2 | Bonos | 0 | Cupón según los tipos | Prestas al Gobierno de EE. UU. a dos años. Paga el tipo del momento y apenas se mueve. |
 | Bono EE. UU. 10 años | UST10 | Bonos | 0 | Cupón según los tipos | Diez años de cupones del Tesoro de EE. UU. Su precio cae con fuerza cuando suben los tipos. |
 | Bund alemán | BUND | Bonos | 0 | Cupón según los tipos | Deuda pública alemana. Paga un poco menos y deja dormir un poco mejor. |
@@ -877,7 +877,7 @@ Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier ha
 | Santander | SAN | Acciones | 0 | 5 % al año | Un banco: mucho dividendo y un precio que no va a ninguna parte. |
 | Coca-Cola | KO | Acciones | 0 | 3,2 % al año | Defensiva. También se bebe en las recesiones. |
 | Bitcoin | BTC | Cripto | 2 |  | La primera criptomoneda. Tiene sus propias estaciones, y sus inviernos son largos. |
-| Ethereum | ETH | Cripto | 2 |  | La segunda criptomoneda. Hace lo mismo que bitcoin, pero más fuerte. |
+| Ethereum | ETH | Cripto | 2 |  | La segunda criptomoneda. Se mueve como bitcoin, pero más fuerte. |
 | Dogecoin | DOGE | Cripto | 2 |  | Una broma con precio. A veces la broma es el precio. |
 | Oro | XAU | Oro | 1 |  | No paga nada y no se preocupa por nada. Brilla cuando los precios se disparan. |
 
@@ -1196,7 +1196,7 @@ Los mercados caen en picado y la vivienda va detrás. Los bancos centrales bajan
 
 ### La Crisis Energética
 
-Falta combustible y todos los precios suben tras él. Los tipos suben para frenar la inflación. Pierden el efectivo y los bonos; gana el oro.
+Falta combustible y todos los precios suben detrás. Los tipos suben para frenar la inflación. Pierden el efectivo y los bonos; gana el oro.
 
 | Año | Qué pasa | Al llegar | Sobre lo que rinde la ronda |
 | --- | --- | --- | --- |
@@ -1220,11 +1220,11 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 |  | Insignia | Cómo se consigue |
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.first_100k.png" alt="Primeros 100.000"> | Primeros 100.000 | Ten un patrimonio de 100.000 $, descontando la inflación. |
-| <img src="../art/clean/badges/badge.millionaire.png" alt="Millonario"> | Millonario | Ten un patrimonio de un millón, descontando la inflación. |
-| <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Millonario a los 35"> | Millonario a los 35 | Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación. |
+| <img src="../art/clean/badges/badge.millionaire.png" alt="Primer millón"> | Primer millón | Ten un patrimonio de un millón, descontando la inflación. |
+| <img src="../art/clean/badges/badge.millionaire_by_35.png" alt="Un millón a los 35"> | Un millón a los 35 | Ten un patrimonio de un millón a los 35 años o antes, descontando la inflación. |
 | <img src="../art/clean/badges/badge.ten_million.png" alt="Diez millones"> | Diez millones | Ten un patrimonio de diez millones, descontando la inflación. |
-| <img src="../art/clean/badges/badge.swiss_banker.png" alt="Banquero suizo"> | Banquero suizo | Ten un patrimonio de 1.000.000 $ viviendo en Zúrich. |
-| <img src="../art/clean/badges/badge.fiscally_creative.png" alt="Fiscalmente creativo"> | Fiscalmente creativo | Oculta 100.000 $ a Hacienda sin que te inspeccionen nunca. |
+| <img src="../art/clean/badges/badge.swiss_banker.png" alt="Banca suiza"> | Banca suiza | Ten un patrimonio de 1.000.000 $ viviendo en Zúrich. |
+| <img src="../art/clean/badges/badge.fiscally_creative.png" alt="Creatividad fiscal"> | Creatividad fiscal | Oculta 100.000 $ a Hacienda sin que te inspeccionen nunca. |
 | <img src="../art/clean/badges/badge.tax_free_year.png" alt="Un año sin Hacienda"> | Un año sin Hacienda | Cobra un sueldo y no pagues nada de IRPF en una ronda. |
 | <img src="../art/clean/badges/badge.tax_haven.png" alt="Paraíso fiscal"> | Paraíso fiscal | Ten una sociedad en el extranjero tres rondas sin que te inspeccionen nunca. |
 | <img src="../art/clean/badges/badge.debt_free_at_40.png" alt="Sin deudas a los 40"> | Sin deudas a los 40 | No debas nada de nada el día que cumplas 40, sin haber quebrado nunca. |
@@ -1259,7 +1259,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | --- | --- | --- |
 | <img src="../art/clean/badges/badge.first_luxury_watch.png" alt="Primer reloj de lujo"> | Primer reloj de lujo | Ten un Omega Speedmaster o algo mejor. |
 | <img src="../art/clean/badges/badge.supercar.png" alt="Superdeportivo"> | Superdeportivo | Ten un Lamborghini Aventador. |
-| <img src="../art/clean/items/badge.shipowner.png" alt="Armador"> | Armador | Ten barco propio: el Velero Beneteau o el Yate Sunseeker. |
+| <img src="../art/clean/items/badge.shipowner.png" alt="Barco propio"> | Barco propio | Ten tu propio barco: el Velero Beneteau o el Yate Sunseeker. |
 | <img src="../art/clean/badges/badge.penthouse.png" alt="Ático"> | Ático | Ten un ático en propiedad. |
 | <img src="../art/clean/badges/badge.status_100.png" alt="Estatus 100"> | Estatus 100 | Llega a 100 de estatus. |
 | <img src="../art/clean/badges/badge.twenty_items.png" alt="Veinte cosas"> | Veinte cosas | Ten veinte cosas distintas, contando todas tus vidas. |
@@ -1276,7 +1276,7 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.family_of_four.png" alt="Familia de cuatro"> | Familia de cuatro | Comparte tu vida con una pareja y dos hijos. |
 | <img src="../art/clean/badges/badge.mba.png" alt="MBA"> | MBA | Consigue el MBA en el IESE. |
 | <img src="../art/clean/badges/badge.sold_business.png" alt="Negocio vendido"> | Negocio vendido | Monta un negocio y véndelo. |
-| <img src="../art/clean/badges/badge.own_boss.png" alt="Tu propio jefe"> | Tu propio jefe | Deja tu trabajo para vivir de tu negocio. |
+| <img src="../art/clean/badges/badge.own_boss.png" alt="Sin jefe"> | Sin jefe | Deja tu trabajo para vivir de tu negocio. |
 | <img src="../art/clean/badges/badge.home_again.png" alt="De vuelta a casa"> | De vuelta a casa | Vuelve a la ciudad donde empezó tu vida. |
 | <img src="../art/clean/badges/badge.rode_out_recession.png" alt="Aguantar la recesión"> | Aguantar la recesión | Mantén tus inversiones durante una recesión sin vender ninguna. |
 
@@ -1287,8 +1287,8 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.bankrupt.png" alt="Quiebra"> | Quiebra | Quiebra. Les pasa a los mejores. |
 | <img src="../art/clean/badges/badge.room_at_40.png" alt="Una habitación a los 40"> | Una habitación a los 40 | Cumple 40 años viviendo aún en una habitación alquilada. |
 | <img src="../art/clean/badges/badge.ronin.png" alt="Rōnin"> | Rōnin | Pierde tu trabajo en Tokio. |
-| <img src="../art/clean/badges/badge.ex_convict.png" alt="Expresidiario"> | Expresidiario | Cumple condena en la cárcel y sal. |
-| <img src="../art/clean/badges/badge.truly_innocent.png" alt="Inocente de verdad"> | Inocente de verdad | Que te acusen de algo que no hiciste, y quedar absuelto. |
+| <img src="../art/clean/badges/badge.ex_convict.png" alt="Condena cumplida"> | Condena cumplida | Cumple condena en la cárcel y sal. |
+| <img src="../art/clean/badges/badge.truly_innocent.png" alt="Inocente de verdad"> | Inocente de verdad | Que te acusen de algo que no hiciste y ganar el juicio. |
 | <img src="../art/clean/badges/badge.audited.png" alt="Hacienda somos todos"> | Hacienda somos todos | Que te pille una inspección de Hacienda. |
 
 ### Multijugador

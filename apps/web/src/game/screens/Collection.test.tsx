@@ -111,7 +111,7 @@ describe('the collection', () => {
     const user = userEvent.setup();
     renderGame(<Collection />, services, 'es');
     await user.click(await screen.findByRole('tab', { name: 'Insignias' }));
-    expect(screen.getByText('Millonario')).toBeTruthy();
+    expect(screen.getByText('Primer millón')).toBeTruthy();
     expect(screen.queryByText(/2026/)).toBeNull();
   });
 });

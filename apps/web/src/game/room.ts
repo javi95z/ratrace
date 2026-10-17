@@ -43,6 +43,8 @@ export interface RoomStoreState {
   closed: boolean;
   /** True when the room plays other rules than this page: its life cannot be played here, and the page says to reload. */
   otherRules: boolean;
+  /** True for a game begun on older rules than this page's: it is played all the same, and the player is told the page's forecasts may be a little off. */
+  olderRules: boolean;
   /** The multiplayer badges the room that is over has just earned the player, for the end to show. */
   earned: string[];
   /** What has been shouted, by the others and by the player, that the page has still to show, the oldest first. */
@@ -97,7 +99,19 @@ export interface RoomStoreOptions {
   onSaveError?(error: unknown): void;
 }
 
-const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, earned: [], heard: [] };
+/** A version as numbers: "0.38.0" → [0, 38, 0]. */
+const parts = (version: string) => version.split('.').map((n) => Number(n) || 0);
+/** True if one engine and content are newer than another's, the engine first. */
+export function newer(a: { engine: string; content: string }, b: { engine: string; content: string }): boolean {
+  for (const key of ['engine', 'content'] as const) {
+    const x = parts(a[key]);
+    const y = parts(b[key]);
+    for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) > (y[i] ?? 0);
+  }
+  return false;
+}
+
+const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, olderRules: false, earned: [], heard: [] };
 
 /** The most shouts waiting to be shown at once: past that, the oldest go unshown. */
 const HEARD_MAX = 3;
@@ -239,7 +253,10 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       if (room.members.find((m) => m.me)?.ready) readyIn.set(room.id, room.round);
       // Every round beyond the one the player played and waited for was played by the clock.
       for (const waiter of waiters) if (room.round > waiter.round + 1) missed += room.round - waiter.round - 1;
-      const otherRules = room.engineVersion !== options.versions.engine || room.contentVersion !== options.versions.content;
+      // A game on newer rules than this page can only be played once the page is reloaded; one on older rules is played
+      // here all the same: the server plays it by its own rules, and the page only shows it.
+      const otherRules = newer({ engine: room.engineVersion, content: room.contentVersion }, options.versions);
+      const olderRules = !otherRules && (room.engineVersion !== options.versions.engine || room.contentVersion !== options.versions.content);
       const inPlay = room.status === 'playing' || room.status === 'finished';
       if (game === null && inPlay && !otherRules) game = lifeOf(room);
       else if (game !== null && inPlay && game.getState().status === 'none') {
@@ -265,7 +282,7 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
         shoutsHeard.set(key, member.shout.at);
         heard = [...heard, { key: `${key}/${member.shout.at}`, userId: member.userId, n: member.shout.n }].slice(-HEARD_MAX);
       }
-      set({ status: 'in', room, skew, game, missed, otherRules, earned: was?.id === room.id ? get().earned : [], heard });
+      set({ status: 'in', room, skew, game, missed, otherRules, olderRules, earned: was?.id === room.id ? get().earned : [], heard });
       release(room);
       if (room.status === 'finished' && !judged.has(room.id)) {
         judged.add(room.id);

@@ -2,6 +2,7 @@
 
 import { LoanOffers, PlayerSheet } from './RoomLoans';
 import { badgeArt, lives, portraitArt } from '@ratrace/content';
+import { indexed } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
@@ -727,10 +728,15 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
   const nameOf = useNameOf();
   const list = ordered(room.members);
   const inPlay = live && room.status === 'playing';
+  // The server counts net worth in the dollars a life began with; the page shows it in today's, as the HUD does.
+  // Everyone in the room lives in the same world, so the player's own prices serve for all.
+  const world = useGame((s) => s.view?.timeline[s.view.round] ?? null);
+  const worth = (real: number) => fmt.compact(world ? indexed(real, world) : real);
   return (
     <div>
-      <p aria-hidden className="text-right text-[11px] uppercase tracking-wider text-ink-300">
-        {t('score')}
+      <p aria-hidden className="flex justify-end gap-0 text-[11px] uppercase tracking-wider text-ink-300">
+        <span className="w-16 text-right">{t('worthShort')}</span>
+        <span className="w-14 text-right">{t('score')}</span>
       </p>
       <ol className="divide-y-2 divide-night-900">
         {list.map((member, at) => {
@@ -766,12 +772,16 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
                 ) : null}
                 <span className="flex flex-wrap gap-x-2 text-[12px] text-ink-300">
                   {member.left ? <span>{t('left')}</span> : null}
-                  {standing ? <span>{t('worth', { worth: fmt.compact(standing.netWorth) })}</span> : null}
                   {standing?.escaped ? <span className="text-teal-300">{t('escaped')}</span> : null}
                   {inPlay && !member.left ? <span className={member.ready ? 'text-teal-300' : ''}>{t(member.ready ? 'played' : 'playing')}</span> : null}
                 </span>
               </span>
-              <span className="flex shrink-0 flex-col items-end leading-tight">
+              {/* Net worth in a column of its own, beside the points. */}
+              <span className="w-16 shrink-0 text-right text-[13px] tabular-nums text-ink-200">
+                {standing ? worth(standing.netWorth) : '—'}
+                <span className="sr-only"> {t('worthShort')}</span>
+              </span>
+              <span className="flex w-14 shrink-0 flex-col items-end leading-tight">
                 <span className="pixel text-[18px] text-gold-500">
                   {member.standing ? fmt.number(member.standing.score) : '—'}
                   <span className="sr-only"> {t('score')}</span>
@@ -934,6 +944,7 @@ function RoomPlay({ room, game }: { room: RoomState; game: GameStore }) {
 function RoomScreens({ room }: { room: RoomState }) {
   const t = useT('room');
   const nameOf = useNameOf();
+  const olderRules = useRoom((s) => s.olderRules);
   const missed = useRoom((s) => s.missed);
   const earned = useRoom((s) => s.earned);
   const { text } = useWords();
@@ -951,6 +962,7 @@ function RoomScreens({ room }: { room: RoomState }) {
     bar: (
       <div className="flex flex-col gap-2">
         <RoomBar room={room} />
+        {olderRules ? <p className="text-[12px] leading-snug text-ink-300">{t('olderRules')}</p> : null}
         <LoanOffers room={room} nameOf={nameOf} />
       </div>
     ),

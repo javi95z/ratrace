@@ -141,10 +141,24 @@ const runOf = (raw: unknown): RankedRun | null => {
   };
 };
 
+/**
+ * A life as a server on older rules shows it, made whole for the rules of this page: what those
+ * rules know of that the older ones did not is given the value it would have had. Only fills in;
+ * nothing the server said is changed.
+ */
+export function upToDateView<T>(view: T): T {
+  if (!isRecord(view) || !isRecord(view.player) || !isRecord(view.player.life)) return view;
+  const player = view.player;
+  const life = player.life as Record<string, unknown>;
+  // Engine 0.37: where a remote job is based. Before it, always where the player lives.
+  if (typeof life.workCityId !== 'string' && typeof player.cityId === 'string') return { ...view, player: { ...player, life: { ...life, workCityId: player.cityId } } } as T;
+  return view;
+}
+
 /** A step's answer, or null if it is not one. */
 function stepOf(raw: unknown): RankedStep | null {
   if (!isRecord(raw) || typeof raw.step !== 'number' || !isRecord(raw.view) || !isRecord(raw.record) || !Array.isArray(raw.events)) return null;
-  return { ...(raw as unknown as RankedStep), world: isRecord(raw.world) ? (raw.world as unknown as RankedStep['world']) : null, run: runOf(raw.run) };
+  return { ...(raw as unknown as RankedStep), view: upToDateView(raw.view) as unknown as RankedStep['view'], world: isRecord(raw.world) ? (raw.world as unknown as RankedStep['world']) : null, run: runOf(raw.run) };
 }
 
 /**
@@ -207,7 +221,7 @@ export function roomsApi(call: RoomsCall): RoomsApi {
         gameId: body.gameId,
         lifeId: String(body.lifeId),
         step: body.step,
-        view: body.view as unknown as RoomLife['view'],
+        view: upToDateView(body.view) as unknown as RoomLife['view'],
         record: body.record as unknown as RoomLife['record'],
         events: Array.isArray(body.events) ? (body.events as RoomLife['events']) : [],
         run: runOf(body.run),
