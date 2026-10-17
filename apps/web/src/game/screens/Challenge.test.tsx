@@ -50,7 +50,7 @@ describe('the weekly challenge page', () => {
       return start(lifeId, options?.challenge ? { challenge: options.challenge } : undefined);
     };
     const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
-    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
     const community = { challengeEntry: async () => entry } as unknown as Community;
     return { services: { ...services, account, community: () => community }, asked };
   }

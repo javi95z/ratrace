@@ -150,7 +150,7 @@ describe('choosing between a ranked life and a casual one', () => {
       asked.push(options);
       return start(lifeId);
     };
-    const account: Account = { state: () => state, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const account: Account = { state: () => state, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
     return { services: { ...services, account }, asked };
   }
 
@@ -206,7 +206,7 @@ describe('choosing between a ranked life and a casual one', () => {
 
 describe('a ranked life in progress on another device', { timeout: 60_000 }, () => {
   const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
-  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+  const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
   /** A device of the player, over a server of ranked lives several devices can share. */
   function deviceOf(server: ReturnType<typeof rankedServer>, versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION }) {
     const store = new MemoryStore();

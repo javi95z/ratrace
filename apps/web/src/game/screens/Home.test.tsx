@@ -112,7 +112,7 @@ describe('the front door', () => {
     expect(screen.queryByRole('link', { name: 'Rankings' })).toBeNull();
     cleanup();
     const guest: AccountState = { kind: 'guest', userId: 'u', notice: null };
-    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const account: Account = { state: () => guest, subscribe: () => () => {}, start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
     renderGame(<Home />, { ...memoryServices(), account });
     expect((await screen.findByRole('link', { name: 'Rankings' })).getAttribute('href')).toBe('/rankings');
   });
@@ -129,7 +129,7 @@ describe('the front door', () => {
     let api: RankedApi | null = null;
     let state: AccountState = { kind: 'offline' };
     const watching = new Set<() => void>();
-    const account: Account = { state: () => state, subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)), start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {} };
+    const account: Account = { state: () => state, subscribe: (listener) => (watching.add(listener), () => watching.delete(listener)), start: async () => {}, keepWithGoogle: async () => true, useExistingAccount: async () => true, dismissNotice: () => {}, signOut: async () => false };
     const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(() => api, store, content, lives, versions, deps), versions);
     renderGame(<Home />, { sessions, store, account, tapGuardMs: 0 });
     await screen.findByRole('link', { name: 'New life' });

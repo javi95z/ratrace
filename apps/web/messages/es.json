@@ -1184,7 +1184,8 @@
     "practice": "Práctica {week}",
     "multiplayer": "Multijugador",
     "players": "{count, plural, one {# jugador} other {# jugadores}}",
-    "placeShort": "#{place} de {total}"
+    "placeShort": "#{place} de {total}",
+    "yourLife": "Tu vida"
   },
   "share": {
     "open": "Compartir esta vida",
@@ -1268,7 +1269,11 @@
     "saved": "Todo guardado",
     "sending": "Guardando…",
     "waiting": "Sin conexión: guardado solo aquí",
-    "joining": "Ya tienes cuenta. Entrando…"
+    "joining": "Ya tienes cuenta. Entrando…",
+    "signOut": "Cerrar sesión",
+    "signOutTitle": "¿Cerrar sesión?",
+    "signOutAbout": "Tus vidas y tu progreso siguen en tu cuenta, pero se quitan de este dispositivo. Para recuperarlos, vuelve a entrar con Google.",
+    "signOutUnsaved": "Aún hay cambios subiendo a tu cuenta. Espera a que se guarden para no perderlos."
   },
   "work": {
     "title": "Trabajo",

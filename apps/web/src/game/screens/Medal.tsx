@@ -4,7 +4,8 @@ import { badgeArt, rarityOf, RIM_ART } from '@ratrace/content';
 import { Sprite } from '@/ui/Sprite';
 
 /** How large a medal is drawn: the rim, and the badge inside it. */
-const SIZES = { md: { rim: 96, badge: 64 }, sm: { rim: 54, badge: 36 } } as const;
+/** The small rim at its own size, so its pixels stay sharp. */
+const SIZES = { md: { rim: 96, badge: 64 }, sm: { rim: 64, badge: 42 } } as const;
 
 /**
  * A badge set in the rim of its rarity: bronze, silver, gold or the gem. A badge not earned yet is

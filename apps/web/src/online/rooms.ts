@@ -107,6 +107,7 @@ function gameOverOf(raw: unknown): RoomGameOver | null {
     seconds: Number(raw.seconds) || 0,
     playedAt,
     rematchOf: raw.rematchOf === true,
+    gameId: typeof raw.gameId === 'string' ? raw.gameId : null,
     players: raw.players.filter(isRecord).map((p) => ({
       name: typeof p.name === 'string' ? p.name : null,
       tag: typeof p.tag === 'string' ? p.tag : '',

@@ -10,5 +10,6 @@ export const offlineAccount: Account = {
   start: async () => {},
   keepWithGoogle: async () => false,
   useExistingAccount: async () => false,
+  signOut: async () => false,
   dismissNotice: () => {},
 };

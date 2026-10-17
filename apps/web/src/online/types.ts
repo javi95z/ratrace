@@ -40,6 +40,8 @@ export interface Account {
   useExistingAccount(returnTo: string): Promise<boolean>;
   /** The player has read the notice. */
   dismissNotice(): void;
+  /** Signs this browser out of the account. False if it could not. Whoever comes next starts as a new guest. */
+  signOut(): Promise<boolean>;
 }
 
 /**

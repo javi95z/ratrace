@@ -208,6 +208,7 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
   const { content, text, names, fmt } = useWords();
   /** `undefined` while it is on its way; null when it could not be read. */
   const [life, setLife] = useState<RankedLifeDetail | null | undefined>(undefined);
+  const [badge, setBadge] = useState<string | null>(null);
   useEffect(() => {
     let wanted = true;
     void community.run(row).then((found) => {
@@ -252,13 +253,24 @@ function RunSheet({ community, row, name, onClose }: { community: Community; row
               </p>
             ) : null}
             {life.badges.length > 0 ? (
-              <ul aria-label={t('runBadges')} className="flex flex-wrap gap-1">
-                {life.badges.map((id) => (
-                  <li key={id} title={text.badges[id]?.name ?? id}>
-                    <Medal badgeId={id} size="sm" alt={text.badges[id]?.name ?? id} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul aria-label={t('runBadges')} className="flex flex-wrap gap-1">
+                  {life.badges.map((id) => (
+                    <li key={id}>
+                      {/* Its name on hover, and on a tap where there is no hover. */}
+                      <button type="button" title={text.badges[id]?.name ?? id} aria-pressed={badge === id} onClick={() => setBadge(badge === id ? null : id)} className="leading-[0]">
+                        <Medal badgeId={id} size="sm" alt={text.badges[id]?.name ?? id} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {badge ? (
+                  <p role="status" className="text-[13px] leading-snug">
+                    <span className="pixel text-gold-500">{text.badges[badge]?.name ?? badge}</span>
+                    {text.badges[badge]?.how ? <span className="text-ink-200"> · {text.badges[badge]?.how}</span> : null}
+                  </p>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : null}

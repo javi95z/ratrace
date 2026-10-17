@@ -393,8 +393,8 @@ export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
 const NOBODY: AccountState = { kind: 'offline' };
 
 /** Who is playing, as the cloud knows them, and the two things a player can do about it. */
-export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void } {
-  const { account } = useGameContext();
+export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
+  const { account, store } = useGameContext();
   const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
   // Back to the very page the player is on, without whatever a sign-in left after the hash.
   const here = () => window.location.href.split('#')[0];
@@ -403,6 +403,18 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     keepWithGoogle: () => account.keepWithGoogle(here()),
     useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
+    // What the account keeps goes from this device with it, so that the guest who comes next does not take it into an
+    // account of their own: the life in progress, the finished ones and the progress. Only the settings stay. Signing
+    // in with Google again brings it all back.
+    signOut: async () => {
+      const settings = (await store.loadProfile()).settings;
+      if (!(await account.signOut())) return false;
+      await store.clearGame();
+      for (const run of await store.listRuns()) await store.removeRun(run.runId);
+      await store.saveProfile({ ...newProfile(), settings });
+      window.location.reload();
+      return true;
+    },
   };
 }
 

@@ -41,6 +41,9 @@ function fakeCloud(over: Partial<Cloud> = {}) {
       calls.push(`sign-in ${redirectTo}`);
       return true;
     },
+    signOut: async () => {
+      calls.push('sign-out');
+    },
     ensureProfile: async (userId, language) => {
       calls.push(`profile ${userId} ${language}`);
     },

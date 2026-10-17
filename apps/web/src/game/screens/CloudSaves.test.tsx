@@ -35,7 +35,7 @@ function accountInTheCloud() {
     currentUser: async () => ({ id: 'player-1', is_anonymous: true, email: undefined }),
     signInAsGuest: async () => null,
     linkGoogle: async () => true,
-    signInWithGoogle: async () => true,
+    signInWithGoogle: async () => true, signOut: async () => undefined,
     ensureProfile: async () => {},
     onUser: () => () => {},
     playingGames: async () => held.games.filter((game) => game.status === 'playing'),

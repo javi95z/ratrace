@@ -32,7 +32,10 @@ const CYRILLIC = { fontFamily: 'var(--font-pixel-cyrillic-alone), var(--font-pix
  */
 function AccountBlock({ compact = false }: { compact?: boolean }) {
   const t = useT('account');
-  const { state, keepWithGoogle, dismissNotice } = useAccount();
+  const { state, keepWithGoogle, dismissNotice, signOut } = useAccount();
+  const common = useT('common');
+  const [leavingAccount, setLeavingAccount] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { status } = useAccountSaves();
   const [leaving, setLeaving] = useState(false);
   // A page brought back from Google by the Back button is the page as it was left, button pressed and all.
@@ -72,6 +75,32 @@ function AccountBlock({ compact = false }: { compact?: boolean }) {
             {state.email ? <span className="min-w-0 truncate text-[13px] text-ink-300">{t('memberAs', { email: maskEmail(state.email) })}</span> : null}
           </p>
           {saved}
+          <button type="button" onClick={() => setLeavingAccount(true)} className="min-h-11 self-start text-[13px] text-ink-300 underline underline-offset-4">
+            {t('signOut')}
+          </button>
+          <Sheet open={leavingAccount} onClose={() => setLeavingAccount(false)} title={t('signOutTitle')} closeLabel={common('close')}>
+            <p className="text-[14px] leading-snug text-ink-200">{t('signOutAbout')}</p>
+            {/* What has not reached the account yet would be lost with the device's copy: wait for it. */}
+            {status === 'sending' || status === 'waiting' ? <p className="mt-2 text-[13px] leading-snug text-wine-300">{t('signOutUnsaved')}</p> : null}
+            <div className="mt-4 flex flex-col gap-2">
+              <Button wide onClick={() => setLeavingAccount(false)}>
+                {common('cancel')}
+              </Button>
+              <Button
+                variant="danger"
+                wide
+                disabled={signingOut || status === 'sending' || status === 'waiting'}
+                onClick={() => {
+                  setSigningOut(true);
+                  void signOut().then((done) => {
+                    if (!done) setSigningOut(false);
+                  });
+                }}
+              >
+                {t('signOut')}
+              </Button>
+            </div>
+          </Sheet>
         </>
       ) : state.notice === 'joining' ? (
         // Not a fault but good news: the player is already known, and is being taken into their account.

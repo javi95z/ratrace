@@ -110,8 +110,14 @@ describe('the records', () => {
       server.wait(96_000);
       await server.ask(HOST, { action: 'state', roomId: opened.id });
     }
-    renderGame(<Records />, { ...memoryServices(), rooms: () => server.link(B), schedule: () => () => {} });
+    // B's device keeps their life in the game among its finished ones, under the id of that life.
+    const services = memoryServices();
+    const gameId = server.db.members.find((m) => m.user_id === B)?.game_id as string;
+    await services.store.addRun(run(gameId, { lifeId: 'nurse', score: 300, room: true }));
+    renderGame(<Records />, { ...services, rooms: () => server.link(B), schedule: () => () => {} });
     const section = await screen.findByRole('region', { name: 'Multiplayer' });
+    // That life is told with its game, not again among the lives lived alone.
+    expect(screen.queryByRole('region', { name: 'Past lives' })).toBeNull();
     const row = within(section).getByRole('button', { name: /Nurse/ });
     expect(row.textContent).toMatch(/#[12] of 2/);
     expect(row.textContent).toContain('2 players');
@@ -119,6 +125,10 @@ describe('the records', () => {
     const sheet = screen.getByRole('dialog', { name: 'Nurse' });
     expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
     expect(within(sheet).getByText('You')).toBeTruthy();
+    // Everyone's city and job, and the player's own life in it.
+    expect(within(sheet).getAllByText(/Madrid · /)).toHaveLength(2);
+    expect(within(sheet).getByRole('region', { name: 'Your life' }).textContent).toContain('Score 300');
+    expect(within(sheet).getByText(/90 seconds|1:30/)).toBeTruthy();
     // A whole game played on the server first: a few seconds alone, more on a busy machine.
   }, 60_000);
 

@@ -31,6 +31,8 @@ export interface Cloud extends SyncCloud {
   linkGoogle(redirectTo: string): Promise<boolean>;
   /** Starts signing in as the player a Google account already belongs to. False if it could not start. */
   signInWithGoogle(redirectTo: string): Promise<boolean>;
+  /** Signs this browser out. Throws if it could not. */
+  signOut(): Promise<void>;
   /** Writes the player's profile row: made if it is not there, and its language brought up to date. */
   ensureProfile(userId: string, language: string): Promise<void>;
   /** Calls `listener` whenever who is signed in changes. Returns how to stop. */
@@ -173,6 +175,17 @@ export class SupabaseAccount implements Account {
     }
     return begun;
   }
+
+  readonly signOut = async (): Promise<boolean> => {
+    if (this.link === null || this.current.kind === 'offline') return false;
+    try {
+      await this.link.signOut();
+    } catch {
+      return false;
+    }
+    this.set({ kind: 'offline' });
+    return true;
+  };
 
   readonly dismissNotice = (): void => {
     this.notice = null;

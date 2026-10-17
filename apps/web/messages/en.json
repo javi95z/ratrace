@@ -1184,7 +1184,8 @@
     "practice": "Practice {week}",
     "multiplayer": "Multiplayer",
     "players": "{count, plural, one {# player} other {# players}}",
-    "placeShort": "#{place} of {total}"
+    "placeShort": "#{place} of {total}",
+    "yourLife": "Your life"
   },
   "share": {
     "open": "Share this life",
@@ -1268,7 +1269,11 @@
     "saved": "All saved",
     "sending": "Saving…",
     "waiting": "Offline: saved on this device only",
-    "joining": "You already have an account. Signing you in…"
+    "joining": "You already have an account. Signing you in…",
+    "signOut": "Sign out",
+    "signOutTitle": "Sign out?",
+    "signOutAbout": "Your lives and progress stay in your account, but leave this device. Sign in with Google again to bring them back.",
+    "signOutUnsaved": "Some changes are still on their way to your account. Wait for them to be saved so you do not lose them."
   },
   "work": {
     "title": "Work",

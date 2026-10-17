@@ -48,6 +48,10 @@ function fakeAccount(initial: AccountState, kept = true) {
       if (state.kind === 'guest') state = { ...state, notice: null };
       for (const listener of listeners) listener();
     },
+    signOut: async () => {
+      asked.push('sign out');
+      return true;
+    },
   };
   return { account, asked };
 }
@@ -63,6 +67,31 @@ const savesAt = (status: CloudSaving): AccountSaves => ({
 const show = (account?: Account, locale: 'en' | 'es' = 'en', saves?: AccountSaves) => renderGame(<Preferences />, { ...memoryServices(), account, saves }, locale);
 
 describe('the account in the settings', () => {
+  it('signs a member out once asked twice, taking the account\'s things off the device and keeping the settings', async () => {
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...window.location, href: window.location.href, reload } });
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const { account, asked } = fakeAccount({ kind: 'member', userId: 'u', email: null });
+    const user = userEvent.setup();
+    renderGame(<Preferences />, { ...services, account, saves: savesAt('saved') }, 'en');
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    const sheet = screen.getByRole('dialog', { name: 'Sign out?' });
+    await user.click(within(sheet).getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(reload).toHaveBeenCalled());
+    expect(asked).toContain('sign out');
+    expect(await services.store.loadGame()).toBeNull();
+  });
+
+  it('does not sign out while changes are still on their way to the account', async () => {
+    const { account } = fakeAccount({ kind: 'member', userId: 'u', email: null });
+    const user = userEvent.setup();
+    show(account, 'en', savesAt('waiting'));
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    const sheet = screen.getByRole('dialog', { name: 'Sign out?' });
+    expect((within(sheet).getByRole('button', { name: 'Sign out' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('is not there at all in a game with no cloud behind it', () => {
     show();
     expect(screen.queryByRole('region', { name: 'Account' })).toBeNull();
@@ -153,7 +182,7 @@ describe('the account in the settings', () => {
       currentUser: async () => null,
       signInAsGuest: async () => ({ id: 'user-1', is_anonymous: true, email: undefined }),
       linkGoogle: async () => true,
-      signInWithGoogle: async () => true,
+      signInWithGoogle: async () => true, signOut: async () => undefined,
       ensureProfile: async () => {},
       onUser: () => () => {},
       playingGames: async () => [],

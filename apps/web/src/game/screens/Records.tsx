@@ -11,16 +11,19 @@ import { Face } from '@/ui/Face';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RoomHistory } from './RoomHistory';
-import { WorthGraph } from './WorthGraph';
+import { RunDetail } from './RunDetail';
 
 /** Personal bests, and every life lived to the end with its graph. */
 export function Records() {
   const t = useT('records');
   const common = useT('common');
-  const { content, text, names, fmt } = useWords();
+  const { content, text, fmt } = useWords();
   const runs = useRuns();
   const lifeName = (run: FinishedRun) => text.lives[run.lifeId]?.name ?? run.lifeId;
   const records = recordsOf(runs ?? []);
+  // Lives lived in a game with friends are told with their game, among the multiplayer ones.
+  const alone = (runs ?? []).filter((run) => !run.room);
+  const together = (runs ?? []).filter((run) => run.room);
   const [open, setOpen] = useState<FinishedRun | null>(null);
 
   const best = (label: string, run: FinishedRun | null, figure: (run: FinishedRun) => string) => (
@@ -45,7 +48,7 @@ export function Records() {
       {runs === null ? <p className="pixel animate-blink text-center text-ink-300">{common('loading')}</p> : null}
       {runs !== null && runs.length === 0 ? <p className="frame bg-night-700 p-3 text-[14px] text-ink-200">{t('empty')}</p> : null}
       {/* On a device with no life of its own yet, the account's multiplayer games are still there. */}
-      {runs !== null && runs.length === 0 ? <RoomHistory /> : null}
+      {runs !== null && runs.length === 0 ? <RoomHistory runs={[]} /> : null}
 
       {runs !== null && runs.length > 0 ? (
         <>
@@ -64,12 +67,13 @@ export function Records() {
             </p>
           </section>
 
-          <RoomHistory />
+          <RoomHistory runs={together} />
 
+          {alone.length > 0 ? (
           <section aria-label={t('history')}>
             <h2 className="pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500">{t('history')}</h2>
             <ul className="flex flex-col gap-1.5">
-              {runs.map((run) => (
+              {alone.map((run) => (
                 <li key={run.runId}>
                   {/* A line each, the face as the life is chosen: the rest of it a tap away. */}
                   <button type="button" aria-haspopup="dialog" onClick={() => setOpen(run)} className="bevel flex min-h-12 w-full items-center gap-3 bg-night-700 px-2 py-1.5 text-left">
@@ -87,32 +91,9 @@ export function Records() {
               ))}
             </ul>
           </section>
+          ) : null}
           <Sheet open={open !== null} onClose={() => setOpen(null)} title={open ? lifeName(open) : ''} closeLabel={common('close')}>
-            {open ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {open.ranked ? <Tag tone="good">{t('ranked')}</Tag> : null}
-                  {open.room ? <Tag>{t('multiplayer')}</Tag> : null}
-                  {open.challenge ? <Tag>{t(open.ranked ? 'challenge' : 'practice', { week: open.challenge })}</Tag> : null}
-                </div>
-                <p className="text-[13px] text-ink-300">
-                  {fmt.day(open.finishedAt)} · {open.cities.map((city) => names.cities[city] ?? city).join(' · ')}
-                </p>
-                <p className={`text-[14px] ${open.escapedAtRound === null ? 'text-ink-200' : 'text-teal-300'}`}>
-                  {open.escapedAtRound === null ? t('never') : t('escapedAt', { age: ageAt(content, open.escapedAtRound) })} · {t('badges', { count: open.badges.length })}
-                </p>
-                <div className="flex items-baseline justify-between gap-3 border-t-2 border-night-900 pt-2">
-                  <span className="pixel text-[18px] text-gold-500">{t('score', { score: fmt.number(open.score) })}</span>
-                  <span className="text-right">
-                    <span className="pixel block text-[16px]">{fmt.compact(open.netWorth)}</span>
-                    <span className="block text-[11px] text-ink-300">{t('realWorth')}</span>
-                  </span>
-                </div>
-                <div className="overflow-x-auto">
-                  <WorthGraph history={open.history} label={t('graph')} height={64} />
-                </div>
-              </div>
-            ) : null}
+            {open ? <RunDetail run={open} /> : null}
           </Sheet>
         </>
       ) : null}

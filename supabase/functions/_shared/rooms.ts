@@ -702,6 +702,8 @@ async function history(deps: RoomsDeps, userId: string): Promise<Reply> {
         seconds: room.seconds,
         playedAt: new Date(room.created_at).toISOString(),
         rematchOf: room.rematch_of !== null,
+        // The player's own life in it, which their device keeps among its finished lives under this id.
+        gameId: members.find((m) => m.user_id === userId)?.game_id ?? null,
         // Everyone leaves a game once it is over: only those who gave their life up before the end left it.
         players: [...members]
           .sort((a, b) => Number(a.quit) - Number(b.quit) || (b.standing?.score ?? Number.NEGATIVE_INFINITY) - (a.standing?.score ?? Number.NEGATIVE_INFINITY))
