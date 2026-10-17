@@ -819,7 +819,7 @@ function RoomBar({ room }: { room: RoomState }) {
               </span>
             ))}
           </span>
-          <span aria-hidden className="shrink-0 text-[12px] text-ink-300">
+          <span aria-hidden className="shrink-0 text-[12px] text-ink-300 max-sm:hidden">
             {t('playedShort', { ready, total: here.length })}
           </span>
           {place !== null ? (

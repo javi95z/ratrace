@@ -405,8 +405,8 @@
       "holdings": "Your investments",
       "none": "You hold no investments yet. The Market tab is where they are bought.",
       "sell": "Sell",
-      "gain": "{amount} gain",
-      "loss": "{amount} loss",
+      "gain": "+{amount}",
+      "loss": "−{amount}",
       "pays": "Pays {amount}/round",
       "planBuys": "Plan: +{amount}"
     },

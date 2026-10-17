@@ -405,8 +405,8 @@
       "holdings": "Tus inversiones",
       "none": "Aún no tienes inversiones. Se compran en la pestaña Mercado.",
       "sell": "Vender",
-      "gain": "{amount} de ganancia",
-      "loss": "{amount} de pérdida",
+      "gain": "+{amount}",
+      "loss": "−{amount}",
       "pays": "Paga {amount}/ronda",
       "planBuys": "Tu plan: +{amount}"
     },

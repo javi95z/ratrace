@@ -31,10 +31,13 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
   const { content, fmt } = useWords();
   const view = useGame((s) => s.view);
   const city = content.cities.find((each) => each.id === shown.player.cityId);
-  const gainsBp = city ? effectiveTax(city, shown.timeline[shown.round]).capitalGainsBp : 0;
+  const tax = city ? effectiveTax(city, shown.timeline[shown.round]) : null;
+  const gainsBp = tax?.capitalGainsBp ?? 0;
+  // Where nothing is taxed there is nothing to hide, unless something hidden elsewhere is still in force.
+  const taxFree = tax !== null && [...tax.incomeRatesBp, tax.capitalGainsBp, tax.dividendBp, tax.rentBp].every((rate) => rate === 0);
   const setOrder = useGame((s) => s.setOrder);
   const quote = quoteEvasion(content, shown, preview.evaded, preview.noInvoiceSold);
-  if (!view) return null;
+  if (!view || (taxFree && !quote.shell && !quote.hideCrypto && quote.blackPct === 0)) return null;
   const want: Want = { blackPct: quote.blackPct, shell: quote.shell, hideCrypto: quote.hideCrypto };
   const change = (part: Partial<Want>) => setOrder((order) => order.type === 'setEvasion', evasionOrder(view, { ...want, ...part }));
   const saved = (amount: number) => (amount > 0 ? t('saved', { amount: fmt.money(amount) }) : t('savedNothing'));
