@@ -164,10 +164,10 @@ describe('the play screen', () => {
     renderGame(<Play />, services);
 
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
-    await user.click(screen.getByRole('switch', { name: /^Study/ }));
+    await user.click(screen.getByRole('switch', { name: /^Clinical training/ }));
     await user.click(button('1 order'));
     const basket = screen.getByRole('dialog', { name: "This round's orders" });
-    await user.click(within(basket).getByRole('button', { name: 'Remove: Study' }));
+    await user.click(within(basket).getByRole('button', { name: 'Remove: Clinical training' }));
     expect(within(basket).getByText(/Nothing yet/)).toBeTruthy();
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -538,11 +538,11 @@ describe('the play screen on a wide screen', () => {
 
     // The orders of the round sit beside the tabs instead of behind a button.
     await user.click(screen.getByRole('tab', { name: 'Lifestyle' }));
-    await user.click(screen.getByRole('switch', { name: /^Study/ }));
+    await user.click(screen.getByRole('switch', { name: /^Clinical training/ }));
     const orders = within(world).getByRole('list', { name: "This round's orders" });
-    expect(within(orders).getByText('Study')).toBeTruthy();
+    expect(within(orders).getByText('Clinical training')).toBeTruthy();
     expect(screen.queryByRole('button', { name: '1 order' })).toBeNull();
-    await user.click(within(orders).getByRole('button', { name: 'Remove: Study' }));
+    await user.click(within(orders).getByRole('button', { name: 'Remove: Clinical training' }));
     expect(within(world).getByText(/Nothing yet/)).toBeTruthy();
   });
 });

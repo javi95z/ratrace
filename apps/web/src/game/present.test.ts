@@ -261,9 +261,12 @@ describe('orderLabel', () => {
     expect(label({ type: 'sellProperty', propertyId: 'property-9' })).toBe('Sell: Flat in Chamberí');
     expect(label({ type: 'setRented', propertyId: 'property-9', rented: true })).toBe('Rent out: Flat in Chamberí');
     expect(label({ type: 'setRented', propertyId: 'property-9', rented: false })).toBe('Stop renting out: Flat in Chamberí');
-    expect(label({ type: 'focus', action: 'overtime' })).toBe('Overtime');
-    expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Study');
-    expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Job hunt');
+    // Work is named as the player's job names it: an engineer's overtime is on call.
+    expect(label({ type: 'focus', action: 'overtime' })).toBe('On-call shifts');
+    expect(label({ type: 'focus', action: 'studyCareer' })).toBe('Learn a new stack');
+    expect(label({ type: 'focus', action: 'jobHunt' })).toBe('Move to another company');
+    expect(label({ type: 'focus', action: 'askRaise' })).toBe('Ask for a raise');
+    expect(label({ type: 'focus', action: 'tease', target: 'someone' })).toBe('Tease a rival');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 200_000 })).toBe('Invest $2,000 every round in S&P 500');
     expect(label({ type: 'setPlan', assetId: 'sp500', amount: 0 })).toBe('Stop investing in S&P 500');
     expect(label({ type: 'buy', assetId: 'sp500', amount: 100_000, margin: 100_000 })).toBe('Buy $2,000 of S&P 500 on margin (you put in $1,000)');

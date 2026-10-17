@@ -7,7 +7,7 @@ import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useRoom, useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
+import { ageAt, jobFocusName } from '@/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -411,9 +411,11 @@ function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
  */
 function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const t = useT('work');
-  const { text } = useWords();
+  const words = useWords();
+  const { text } = words;
   const stage = useGame((s) => s.stage);
   const view = useGame((s) => s.view);
+  const career = view?.player.life.career?.id;
   const orders = useGame((s) => s.orders);
   const setOrder = useGame((s) => s.setOrder);
   const open = stage === 'finance' && view !== null;
@@ -421,9 +423,9 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const note = useFocusNote();
   const use = (action: FocusAction, name: string, gives: string) => ({ action, name, note: note(work, action, gives) });
   const job = [
-    use('overtime', t('overtime'), t('overtimeGives', { pct: work.overtimePct })),
-    use('studyCareer', t('study'), t('studyGives', { n: work.studySkill })),
-    use('jobHunt', t('hunt'), t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct })),
+    use('overtime', jobFocusName(words, career, 'overtime', t('overtime')), t('overtimeGives', { pct: work.overtimePct })),
+    use('studyCareer', jobFocusName(words, career, 'studyCareer', t('study')), t('studyGives', { n: work.studySkill })),
+    use('jobHunt', jobFocusName(words, career, 'jobHunt', t('hunt')), t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct })),
   ];
   // Learning needs no job: it is on the list whatever the player does for a living. What is mastered goes last.
   const learning = masteredLast([

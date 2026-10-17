@@ -19,7 +19,8 @@ export interface ContentText {
   cities: Record<string, { tagline: string }>;
   assets: Record<string, { blurb: string }>;
   assetClasses: Record<AssetClass, string>;
-  careers: Record<string, { name: string; levels: string[] }>;
+  /** Each career, its rungs, and what its uses of focus at work are called in it: the same rules, in the words of that job. */
+  careers: Record<string, { name: string; levels: string[]; focus: Record<'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise', string> }>;
   ladders: Record<string, string>;
   propertyTypes: Record<string, string>;
   rentTiers: [string, string];

@@ -10,7 +10,7 @@ import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGame, useGuided, useIntroducesTabs, useT, useWords } from '@/game/context';
 import { TAB_FROM_ROUND } from '@/game/guide';
-import { ageAt, debtLabel, headlineText, loanPlan, orderLabel, priceHistory } from '@/game/present';
+import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';
@@ -1167,7 +1167,8 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
 function Lifestyle() {
   const t = useT('finance.lifestyle');
   const wording = useT('work');
-  const { content, text, names, fmt } = useWords();
+  const words = useWords();
+  const { content, text, names, fmt } = words;
   const { view, shown, p } = useRound();
   const orders = useGame((s) => s.orders);
   const setOrder = useGame((s) => s.setOrder);
@@ -1188,7 +1189,7 @@ function Lifestyle() {
         ['studyCareer', t('study'), t('studyHint', { n: work.studySkill })],
         ['jobHunt', t('hunt'), t('huntHint', { pct: work.jobHuntChancePct })],
         ['askRaise', t('raise'), t('raiseHint', { chance: work.raise.chancePct, pct: work.raise.pct })],
-      ] as const).map(([action, label, gives]) => ({ action, label, note: note(work, action, gives) }))
+      ] as const).map(([action, label, gives]) => ({ action, label: jobFocusName(words, career.id, action, label), note: note(work, action, gives) }))
     : [];
   const learnUses = masteredLast([
     { action: skills.finance.study, label: text.focusActions[skills.finance.study], note: note(work, skills.finance.study, t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })) },

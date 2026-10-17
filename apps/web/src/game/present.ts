@@ -191,6 +191,14 @@ export function chancePct(weight: number, total: number): string {
 }
 
 /** An order in the basket, as a line of text. `t` translates the `orders` section. */
+/** A use of focus at work: the same rule in every job, called as each job calls it. */
+export type JobFocus = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise';
+
+/** What a use of focus at work is called in the player's career, or `fallback` with no career. */
+export function jobFocusName(words: Words, careerId: string | null | undefined, action: JobFocus, fallback: string): string {
+  return (careerId ? words.text.careers[careerId]?.focus[action] : undefined) ?? fallback;
+}
+
 export function orderLabel(words: Words, t: Translate, player: PlayerState, order: Order): string {
   const { text, names, fmt, content } = words;
   const home = (propertyId: string) => {
@@ -240,7 +248,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'setRented':
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
-      return isStudy(order.action) ? text.focusActions[order.action] : t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt');
+      if (isStudy(order.action) || order.action === 'studyFinance' || order.action === 'tease') return text.focusActions[order.action];
+      return jobFocusName(words, player.life.career?.id, order.action, t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt'));
     case 'setWorkMode':
       return t(`work.${order.mode}`);
     case 'goFullTime':

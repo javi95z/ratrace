@@ -719,7 +719,7 @@ describe('what a thing is good for', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
-    expect(screen.getByRole('switch', { name: /^Study/ }).textContent).toContain(`+${content.life.studySkill + 1} career skill`);
+    expect(screen.getByRole('switch', { name: /^Clinical training/ }).textContent).toContain(`+${content.life.studySkill + 1} career skill`);
   });
 });
 
@@ -1095,7 +1095,7 @@ describe('the limits of focus', () => {
     expect((course as HTMLButtonElement).disabled).toBe(true);
     expect(within(course).getByText('Mastered')).toBeTruthy();
 
-    const overtime = screen.getByRole('switch', { name: /Overtime/ });
+    const overtime = screen.getByRole('switch', { name: /Work night shifts/ });
     expect(within(overtime).getByText(/· −1 health$/)).toBeTruthy();
   });
 });
