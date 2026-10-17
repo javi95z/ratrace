@@ -38,16 +38,9 @@ export class GameSessions implements Sessions {
   async resume(): Promise<{ session: GameSession | null; lost: Lost | null }> {
     const note = rankedOf(await this.store.loadGame());
     if (note === null) return this.local.resume();
-    // A ranked life goes on under the rules it began with, on the server. This page can only show and
-    // preview a life of its own rules, so one begun under others cannot be continued here.
-    if (note.engineVersion !== this.versions.engine || note.contentVersion !== this.versions.content) {
-      // Written by a newer page than this one: it is not this page's to throw away, and the newer page can go on with it.
-      if (later({ engine: note.engineVersion, content: note.contentVersion }, this.versions)) return { session: null, lost: 'newer' };
-      // Begun under older rules. The note goes from this device; the life is left on the server, where
-      // another device may still be living it under the rules it began with.
-      await this.store.clearGame();
-      return { session: null, lost: 'outdated' };
-    }
+    // A ranked life goes on under the rules it began with, on the server, whatever rules this page
+    // plays: the page only shows it. One written by a newer page than this is that page's to go on with.
+    if (later({ engine: note.engineVersion, content: note.contentVersion }, this.versions)) return { session: null, lost: 'newer' };
     return { session: await this.ranked.resume(note), lost: null };
   }
 
@@ -57,7 +50,8 @@ export class GameSessions implements Sessions {
    * rules than this page plays.
    */
   async takeUp(life: RankedLifeInTheWay): Promise<GameSession | null> {
-    if (life.engineVersion !== this.versions.engine || life.contentVersion !== this.versions.content) return null;
+    // A life on older rules is played by the server under them; one on newer rules waits for a newer page.
+    if (later({ engine: life.engineVersion, content: life.contentVersion }, this.versions)) return null;
     return this.ranked.take(life);
   }
 

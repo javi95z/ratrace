@@ -353,18 +353,18 @@ describe('choosing between a ranked life and a casual one', { timeout: 120_000 }
     expect(await held(d.store)).toBeNull();
   });
 
-  it('cannot continue a ranked life begun under older rules than this build plays: it says so, and leaves the life where it is', async () => {
-    // The page can only show and preview a life of its own rules. But another device may still be living this one
-    // under the rules it began with: it is not this page's to end.
+  it('goes on with a ranked life begun under older rules than this build plays: the server plays it under the rules it began with', async () => {
     for (const newer of [{ engine: '99.0.0', content: CONTENT_VERSION }, { engine: ENGINE_VERSION, content: '99.0.0' }]) {
       const server = rankedServer();
       const d = device(server);
       const session = await d.sessions.start('nurse', { ranked: true });
-      server.state.calls.length = 0;
-      expect(await device(server, d.store, newer).sessions.resume()).toEqual({ session: null, lost: 'outdated' });
-      expect(await held(d.store)).toBeNull();
+      const opened = await device(server, d.store, newer).sessions.resume();
+      expect(opened.lost).toBeNull();
+      expect(opened.session?.gameId).toBe(session.gameId);
+      // And it plays on, on the server.
+      await opened.session?.answerCard(0);
       expect(server.games.get(session.gameId)?.status).toBe('playing');
-      expect(server.state.calls).toEqual([]);
+      expect(opened.session?.view().answered).toBe(1);
     }
   });
 

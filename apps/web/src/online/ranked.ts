@@ -1,3 +1,4 @@
+import { upToDateView } from '@/session/upgrade';
 import { RankedInProgress, Unreachable } from '@/session/errors';
 import type { RankedApi, RankedRun, RankedStanding, RankedStep } from '@/session/ranked';
 
@@ -38,7 +39,7 @@ const runOf = (raw: unknown): RankedRun | null => {
 
 /** An answer that says where a life stands, or null if it is not one. */
 const standingOf = (body: unknown): RankedStanding | null =>
-  isRecord(body) && typeof body.step === 'number' && isRecord(body.view) && Array.isArray(body.view.timeline) && isRecord(body.record) ? (body as unknown as RankedStanding) : null;
+  isRecord(body) && typeof body.step === 'number' && isRecord(body.view) && Array.isArray(body.view.timeline) && isRecord(body.record) ? ({ ...body, view: upToDateView(body.view) } as unknown as RankedStanding) : null;
 
 /**
  * The server of ranked lives, as the game's sessions ask for it. What the function answers in
@@ -65,7 +66,7 @@ export function rankedApi(call: RankedCall): RankedApi {
     if (reply.status !== 200) return 'moved';
     const answer = reply.body;
     if (!isRecord(answer) || typeof answer.step !== 'number' || !isRecord(answer.view) || !isRecord(answer.record) || !Array.isArray(answer.events)) throw new Unreachable('the server answered something that is not a step');
-    return { ...(answer as unknown as RankedStep), world: isRecord(answer.world) ? (answer.world as unknown as RankedStep['world']) : null, run: runOf(answer.run) };
+    return { ...(answer as unknown as RankedStep), view: upToDateView(answer.view) as unknown as RankedStep['view'], world: isRecord(answer.world) ? (answer.world as unknown as RankedStep['world']) : null, run: runOf(answer.run) };
   };
 
   return {
