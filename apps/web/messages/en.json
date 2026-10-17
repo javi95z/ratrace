@@ -1745,6 +1745,18 @@
       "emerald": "Emerald",
       "cream": "Cream",
       "slate": "Slate"
-    }
+    },
+    "rename": "Change your name",
+    "copy": "Copy",
+    "copied": "Code copied",
+    "figures": "Your figures",
+    "lives": "Lives",
+    "best": "Best",
+    "badges": "Badges",
+    "games": "Games",
+    "more": "More",
+    "toRecords": "Records",
+    "toCollection": "Collection",
+    "toRankings": "Rankings"
   }
 }

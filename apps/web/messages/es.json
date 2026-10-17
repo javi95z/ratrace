@@ -1745,6 +1745,18 @@
       "emerald": "Esmeralda",
       "cream": "Crema",
       "slate": "Pizarra"
-    }
+    },
+    "rename": "Cambiar el nombre",
+    "copy": "Copiar",
+    "copied": "Código copiado",
+    "figures": "Tus cifras",
+    "lives": "Vidas",
+    "best": "Mejor",
+    "badges": "Insignias",
+    "games": "Partidas",
+    "more": "Más",
+    "toRecords": "Récords",
+    "toCollection": "Colección",
+    "toRankings": "Clasificaciones"
   }
 }

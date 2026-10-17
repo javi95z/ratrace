@@ -4,7 +4,7 @@ import type { RatColour } from '@/game/avatar';
 import { Sprite } from './Sprite';
 
 /** Each colour as the ground the rat stands on: bright enough to tell players apart, dark enough for the rat to read on it. */
-const GROUND: Record<RatColour, string> = {
+export const GROUND: Record<RatColour, string> = {
   gold: 'bg-gold-500',
   teal: 'bg-teal-300',
   wine: 'bg-wine-300',

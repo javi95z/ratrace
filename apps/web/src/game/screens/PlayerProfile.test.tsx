@@ -78,7 +78,10 @@ describe('the player\'s profile', () => {
     const { community, asked } = profile();
     const user = userEvent.setup();
     show({ kind: 'member', userId: 'u-1', email: null }, community);
-    const field = await screen.findByRole('textbox', { name: 'Name' });
+    // The name is shown as it is, and changed in place on a tap.
+    expect(await screen.findByText('Rata_Uno')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Change your name' }));
+    const field = screen.getByRole('textbox', { name: 'Name' });
     await waitFor(() => expect((field as HTMLInputElement).value).toBe('Rata_Uno'));
     await user.clear(field);
     await user.type(field, 'no');
