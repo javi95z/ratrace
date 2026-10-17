@@ -72,7 +72,8 @@ export const crimeCards: CardDef[] = [
     {},
     {
       effects: { cash: usd(-10_000) },
-      outcomes: [{ weight: 50, effects: { cash: usd(30_000) } }, { weight: 25, effects: { cash: usd(30_000), setFlags: [CHARGED] } }, { weight: 25, effects: {} }],
+      // The deal goes through; it goes through and the regulator notices you sold in a hurry; or there was no deal, and the shares fall.
+      outcomes: [{ weight: 50, effects: { cash: usd(30_000) } }, { weight: 25, effects: { cash: usd(18_000), setFlags: [CHARGED] } }, { weight: 25, effects: { cash: usd(6_000) } }],
     },
   ]),
   // A business that takes cash can wash what is hidden: the slate is clean, and the office looks harder.

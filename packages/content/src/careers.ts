@@ -1,4 +1,5 @@
 import type { CareerDef } from '@ratrace/engine';
+import { usd } from './money';
 
 /**
  * Eleven career ladders. A level pays a share of the median salary of the player's city,
@@ -35,6 +36,8 @@ export const careers: CareerDef[] = [
   {
     // A job for life with slow raises.
     id: 'public',
+    // Already a civil servant: the way up is the internal promotion, an exam prepared over two rounds.
+    moves: [{ id: 'internalPromotion', fromLevel: 0, toLevel: 2, rounds: 2, restRounds: 2, outcomes: [{ weight: 55, result: { rungs: 1, status: 2 } }, { weight: 45, result: {} }] }],
     overtimePct: 4,
     levels: [
       { salaryPct: 95, minSkill: 0, status: 3 },
@@ -46,6 +49,12 @@ export const careers: CareerDef[] = [
   {
     // Deliveries, hospitality and retail: low floor, plenty of overtime, a long climb.
     id: 'service',
+    // A rider changes app; a manager asks for another area; at the top, a warehouse of one's own.
+    moves: [
+      { id: 'changeApp', fromLevel: 0, toLevel: 0, rounds: 1, restRounds: 2, outcomes: [{ weight: 60, result: { salaryPct: 10 } }, { weight: 40, result: { salaryPct: -5 } }] },
+      { id: 'otherZone', fromLevel: 1, toLevel: 3, rounds: 1, restRounds: 2, outcomes: [{ weight: 50, result: { salaryPct: 8 } }, { weight: 50, result: {} }] },
+      { id: 'ownWarehouse', fromLevel: 4, toLevel: 4, rounds: 1, restRounds: 4, outcomes: [{ weight: 55, result: { passiveAnnual: usd(8_000) } }, { weight: 45, result: { status: -2 } }] },
+    ],
     overtimePct: 10,
     levels: [
       { salaryPct: 65, minSkill: 0, status: 0 },
@@ -71,6 +80,8 @@ export const careers: CareerDef[] = [
   {
     // Long hours and a slow first step, then pay only finance beats. Nothing leads here: it is where the doctor starts.
     id: 'medicine',
+    // From specialist on, a private practice in the afternoons: income for good, and a toll on health.
+    moves: [{ id: 'privatePractice', fromLevel: 2, toLevel: 3, rounds: 1, restRounds: 99, outcomes: [{ weight: 85, result: { passiveAnnual: usd(12_000), health: -1 } }, { weight: 15, result: {} }] }],
     overtimePct: 8,
     levels: [
       { salaryPct: 110, minSkill: 0, status: 5 },
@@ -82,6 +93,11 @@ export const careers: CareerDef[] = [
   {
     // The longest apprenticeship and the highest ceiling of all: years of drafting for others, then a name on the door.
     id: 'law',
+    // One rung below partner, the bid to join the partnership; as a partner, a big client brought in.
+    moves: [
+      { id: 'partnerBid', fromLevel: 2, toLevel: 2, rounds: 1, restRounds: 3, skill: 'negotiation', pctPerSkillLevel: 10, outcomes: [{ weight: 35, result: { rungs: 1, status: 3, passiveAnnual: usd(12_000) } }, { weight: 65, result: { status: -3 } }] },
+      { id: 'bigClient', fromLevel: 3, toLevel: 4, rounds: 1, restRounds: 3, skill: 'network', pctPerSkillLevel: 8, outcomes: [{ weight: 50, result: { salaryPct: 10 } }, { weight: 50, result: {} }] },
+    ],
     overtimePct: 6,
     remote: true,
     levels: [
@@ -107,6 +123,11 @@ export const careers: CareerDef[] = [
   {
     // Fast money and more status than anything pays, for the young: from thirty-four the audience moves on.
     id: 'influencer',
+    // Starting out, going viral or going down; a star, a brand of one's own that outlasts the fame.
+    moves: [
+      { id: 'goViral', fromLevel: 0, toLevel: 1, rounds: 1, restRounds: 2, skill: 'network', pctPerSkillLevel: 5, outcomes: [{ weight: 30, result: { rungs: 2, status: 5 } }, { weight: 20, result: { status: -4, salaryPct: -10 } }, { weight: 50, result: {} }] },
+      { id: 'ownBrand', fromLevel: 3, toLevel: 3, rounds: 1, restRounds: 4, outcomes: [{ weight: 60, result: { passiveAnnual: usd(15_000), status: 3 } }, { weight: 40, result: { status: -3 } }] },
+    ],
     overtimePct: 12,
     remote: true,
     fade: { fromRound: 6, pctPerRound: 12, maxPct: 70 },

@@ -8,9 +8,10 @@ import type { Rng } from '../rng';
 import type { CityDef, Content, FocusAction, InsuranceKind, ItemDef, Order, OrderContext, OwnedItem, PlayerState, RejectReason, UsedRule, WorkMode, WorldState } from '../types';
 import { focusBonusOf, INSURANCE_KINDS, lodgerOf, perksOf, workModeRule } from './derive';
 import { FLAG_CAME_HOME_RICH, FLAG_HAD_ILLNESS, FLAG_IN_ROOM, FLAG_REMOTE_WORK, hasFlag } from './flags';
+import { moveLock } from './moves';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise', 'tease'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise', 'tease', 'careerMove'];
 
 export type LifeOrder = Extract<
   Order,
@@ -88,13 +89,15 @@ function executeSetWorkMode(p: PlayerState, mode: WorkMode, ctx: OrderContext): 
   return null;
 }
 
-function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext): RejectReason | null {
-  const lock = focusLock(p, action, ctx.content);
+function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext, move?: unknown): RejectReason | null {
+  const lock = action === 'careerMove' ? moveLock(p, ctx.content, move, ctx.round) : focusLock(p, action, ctx.content);
   if (lock !== null) return lock;
   if (ctx.tally.focusActions.includes(action)) return 'already-done';
   if (focusLeft(p) < 1) return 'no-focus';
   p.life.focusUsed += 1;
   ctx.tally.focusActions.push(action);
+  // A move of the career is judged as the round ends, as a job hunt is.
+  if (action === 'careerMove') ctx.tally.careerMove = move as string;
   // A tease is worth its status in this very round.
   if (action === 'tease') p.life.statusNudge = (p.life.statusNudge ?? 0) + ctx.content.life.teaseStatus;
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
@@ -391,7 +394,7 @@ export function retire(p: PlayerState, round: number): void {
 export function executeLifeOrder(p: PlayerState, order: LifeOrder, ctx: OrderContext): RejectReason | null {
   switch (order.type) {
     case 'focus':
-      return executeFocus(p, order.action, ctx);
+      return executeFocus(p, order.action, ctx, order.move);
     case 'buyItem':
       return executeBuyItem(p, order, ctx);
     case 'sellItem':

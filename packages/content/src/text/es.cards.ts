@@ -796,7 +796,7 @@ export const cards: Record<string, CardText> = {
   ]),
   crime_insider_tip: c('Tu cuñado sabe algo', 'Trabaja en un banco. El lunes se anuncia una opa, y nadie lo sabe todavía.', [
     'Cambiar de tema',
-    ['Comprar antes del lunes', 'Llega el lunes, las acciones suben. Vendes.', 'Suben las acciones, y también el interés del regulador.', 'No había opa. Se refería a otro banco.'],
+    ['Comprar antes del lunes', 'Llega el lunes, las acciones suben. Vendes.', 'Suben, vendes con prisas… y el regulador te imputa por uso de información privilegiada.', 'No había opa: era otro banco. Vendes con pérdidas.'],
   ]),
   crime_laundering: c('Dinero limpio', 'Tu negocio cobra mucho en efectivo. Un amigo te explica cómo podría cobrar un poco más, sobre el papel.', [
     'Llevar las cuentas honestas',

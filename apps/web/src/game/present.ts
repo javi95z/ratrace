@@ -124,6 +124,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
   for (const flag of effects.setFlags ?? []) {
     const pct = flagCover(content, flag);
     if (pct > 0) add('good', t('coversInspection', { pct }));
+    // A charge is what makes an outcome dear long after the money: it is said, not hidden.
+    if (flag === 'charged') add('bad', t('charged'));
   }
   if (effects.focus) add('bad', t('focus', { value: signed(-effects.focus) }));
   for (const entry of effects.recurring ?? []) {
@@ -248,6 +250,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
     case 'setRented':
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
+      if (order.action === 'careerMove') return (player.life.career && order.move ? text.careers[player.life.career.id]?.moves?.[order.move]?.name : undefined) ?? text.focusActions.careerMove;
       if (isStudy(order.action) || order.action === 'studyFinance' || order.action === 'tease') return text.focusActions[order.action];
       return jobFocusName(words, player.life.career?.id, order.action, t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt'));
     case 'setWorkMode':
@@ -310,7 +313,7 @@ export interface RoundNote {
 }
 
 /** The order the news of a round is told in: what changes the life first, what was merely not done last. */
-const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'homecoming', 'lapsed', 'defaulted', 'borrowed', 'lent', 'teased', 'orderRejected'];
+const TOLD: ReadonlyArray<GameEvent['kind']> = ['escaped', 'escapeLost', 'bankrupt', 'audit', 'charged', 'released', 'promoted', 'financeSkill', 'skill', 'repair', 'marginCall', 'businessFailed', 'businessClosed', 'businessSold', 'jobHunt', 'raise', 'overworked', 'planRan', 'moved', 'careerMove', 'homecoming', 'lapsed', 'defaulted', 'borrowed', 'lent', 'teased', 'orderRejected'];
 
 /** The ways a tease is told, turned by who made it. The keys are written out, one by one. */
 const TEASED = ['teased', 'teased2', 'teased3'] as const;
@@ -421,6 +424,12 @@ export function roundNotes({ content, text, names, fmt }: Words, t: Translate, e
       case 'orderRejected':
         add(event, { tone: 'bad', icon: 'icon.locked', title: t('refused', { reason: text.reasons[event.reason] }) });
         break;
+      case 'careerMove': {
+        const told = text.careers[event.careerId]?.moves?.[event.move];
+        // The first outcome is the hoped-for one; what else comes of a move is a setback, or nothing at all.
+        if (told) add(event, { tone: event.outcome === 0 ? 'good' : 'plain', icon: careerArt(event.careerId), title: told.name, hint: told.outcomes[event.outcome], cheer: event.outcome === 0 && event.levels > 0 });
+        break;
+      }
       case 'lent':
         add(event, { tone: 'plain', icon: 'icon.loan', title: t('lent', { amount: fmt.money(event.amount), who: whoIs(event.to) }), hint: t('loanTerms', { rate: fmt.rate(event.rateBp), rounds: event.rounds }) });
         break;

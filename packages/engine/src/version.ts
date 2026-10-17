@@ -3,4 +3,4 @@
  * Every saved game records it, with the content version, so a game is always replayed
  * under the rules it was played with.
  */
-export const ENGINE_VERSION = '0.38.0';
+export const ENGINE_VERSION = '0.39.0';

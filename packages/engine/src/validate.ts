@@ -179,6 +179,20 @@ export function validateContent(c: Content): string[] {
       continue;
     }
     if (career.levels[0].minSkill !== 0) errors.push(`career ${career.id} must start at skill 0`);
+    const moveIds = new Set<string>();
+    for (const move of career.moves ?? []) {
+      const name = `career ${career.id} move ${move.id}`;
+      if (moveIds.has(move.id)) errors.push(`${name} is named twice`);
+      moveIds.add(move.id);
+      if (!isCount(move.fromLevel) || !isCount(move.toLevel) || move.fromLevel > move.toLevel || move.toLevel >= career.levels.length) errors.push(`${name} needs rungs of its ladder, the first not after the last`);
+      if (!isCount(move.rounds) || move.rounds < 1 || !isCount(move.restRounds)) errors.push(`${name} needs at least a round, and whole rounds of rest`);
+      if (move.outcomes.length === 0 || move.outcomes.some((outcome) => !isCount(outcome.weight)) || move.outcomes.every((outcome) => outcome.weight === 0)) errors.push(`${name} needs outcomes of whole, non-negative weights, not all nothing`);
+      for (const { result } of move.outcomes) {
+        if ((result.rungs !== undefined && !isCount(result.rungs)) || (result.passiveAnnual !== undefined && !isCount(result.passiveAnnual))) errors.push(`${name} has an outcome of rungs or income that is not a whole, non-negative number`);
+        for (const figure of [result.status, result.salaryPct, result.health]) if (figure !== undefined && !isWhole(figure)) errors.push(`${name} has an outcome that is not whole`);
+      }
+      if ((move.skill === undefined) !== (move.pctPerSkillLevel === undefined) || (move.pctPerSkillLevel !== undefined && !isCount(move.pctPerSkillLevel))) errors.push(`${name} needs a skill and its weight together`);
+    }
     career.levels.forEach((level, i) => {
       const name = `career ${career.id} level ${i}`;
       if (!(isFiniteNumber(level.salaryPct) && level.salaryPct > 0)) errors.push(`${name} needs a positive salary percentage`);

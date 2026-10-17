@@ -283,6 +283,41 @@ export interface CareerDef {
   focus?: number;
   /** A job that can be done from home. Absent: only at the workplace. */
   remote?: boolean;
+  /** The moves of this career that only some of its rungs can make: a partnership, an exam, a brand of one's own. */
+  moves?: CareerMove[];
+}
+
+/**
+ * A move a career makes at some of its rungs, with a point of focus each round it takes: tried
+ * over `rounds` rounds, and judged as the last of them ends, by one of its outcomes. Afterwards it
+ * rests `restRounds` before it can be tried again.
+ */
+export interface CareerMove {
+  id: string;
+  /** The rungs it is open at, by their place in the ladder, both included. */
+  fromLevel: number;
+  toLevel: number;
+  /** Rounds of focus it takes before it is judged. */
+  rounds: number;
+  restRounds: number;
+  /** What may come of it, by weight. The first is the hoped-for one: `skill` adds to its weight, `pctPerSkillLevel` per level. */
+  outcomes: Array<{ weight: number; result: CareerMoveResult }>;
+  skill?: SkillId;
+  pctPerSkillLevel?: number;
+}
+
+/** What a move does when it is judged. Every part is optional; none at all is a move that came to nothing. */
+export interface CareerMoveResult {
+  /** Rungs up the ladder, as far as its top. */
+  rungs?: number;
+  /** Lasting status. */
+  status?: number;
+  /** Pay, for good, in percent. */
+  salaryPct?: number;
+  /** Income for good that needs no work, a year, in start-of-game dollars. */
+  passiveAnnual?: Cents;
+  /** Points of the health skill, lost or gained. */
+  health?: number;
 }
 
 /** How the player works: at the workplace all day, from home, or half the day. */
@@ -1128,6 +1163,8 @@ export interface LifeState {
    * from whoever it was aimed at. Counted in the round it is set for, then gone. Absent otherwise.
    */
   statusNudge?: number;
+  /** The moves of the career under way or resting, by id: rounds put in so far, and the round from which it may be tried again. Absent until one is made. */
+  moves?: Record<string, { progress: number; restUntil: number }>;
   /** City the player moves to when this round has resolved. */
   movingTo: string | null;
   /** True when that move is a transfer a card offered: an employer places the player, so it costs the career nothing. */
@@ -1224,7 +1261,7 @@ export type Order =
   | { type: 'sellProperty'; propertyId: string }
   | { type: 'setRented'; propertyId: string; rented: boolean }
   /** `target` names the rival a tease is aimed at, in a game with friends: the server reads it, the engine does not. */
-  | { type: 'focus'; action: FocusAction; target?: string }
+  | { type: 'focus'; action: FocusAction; target?: string; move?: string }
   | { type: 'buyItem'; itemId: string; financed?: boolean; used?: boolean; noInvoice?: boolean }
   /** What is hidden from the tax office from this round on. What is left out stays as it is. */
   | { type: 'setEvasion'; blackPct?: number; shell?: boolean; hideCrypto?: boolean }
@@ -1249,7 +1286,7 @@ export type Order =
   | { type: 'setResidency'; on: boolean };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction | 'tease';
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction | 'tease' | 'careerMove';
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1268,6 +1305,8 @@ export interface RoundTally {
   purchaseTaxPaid: Cents;
   /** Focus actions ordered this round. */
   focusActions: FocusAction[];
+  /** The move of the career a point of focus went on this round, if one did. */
+  careerMove?: string;
   /** Cash spent on status items, raised by selling them, and spent on moving city. */
   itemsBought: Cents;
   itemsSold: Cents;
@@ -1316,6 +1355,9 @@ export type RejectReason =
   | 'unknown-debt'
   /** A loan from another player is paid by its term, never early. */
   | 'peer-loan'
+  /** A move of the career rests after it was tried, or is not one this rung makes. */
+  | 'move-resting'
+  | 'no-move'
   | 'exceeds-debt'
   | 'unknown-property-type'
   | 'unknown-mortgage-type'
@@ -1409,6 +1451,8 @@ export type RoomEvent =
 
 export type GameEvent =
   | { kind: 'orderRejected'; order: unknown; reason: RejectReason }
+  /** A move of the career was judged: `outcome` is the place of what came of it among its outcomes. */
+  | { kind: 'careerMove'; careerId: string; move: string; outcome: number; levels: number }
   /** A rival of a game with friends teased the player: their status is down for the round to come. */
   | { kind: 'teased'; by: string; status: number }
   /** A loan between players paid out: the player lent `amount` to `to`, or borrowed it from `from`. */

@@ -20,7 +20,7 @@ export interface ContentText {
   assets: Record<string, { blurb: string }>;
   assetClasses: Record<AssetClass, string>;
   /** Each career, its rungs, and what its uses of focus at work are called in it: the same rules, in the words of that job. */
-  careers: Record<string, { name: string; levels: string[]; focus: Record<'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise', string> }>;
+  careers: Record<string, { name: string; levels: string[]; focus: Record<'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise', string>; /** Each move of the career: its name, what it is, and a line for each of its outcomes, in their order. */ moves?: Record<string, { name: string; about: string; outcomes: string[] }> }>;
   ladders: Record<string, string>;
   propertyTypes: Record<string, string>;
   rentTiers: [string, string];

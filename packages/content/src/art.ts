@@ -278,6 +278,7 @@ export const focusArt: Record<FocusAction, string> = {
   networking: skillArt.network,
   exercise: skillArt.health,
   tease: 'icon.mood',
+  careerMove: 'icon.star',
 };
 /** What a headline is about. */
 export const topicArt: Record<Headline['topic'], string> = {

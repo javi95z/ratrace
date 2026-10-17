@@ -74,7 +74,7 @@
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
     "roomDone": "Over",
-    "lostWaiting": "Your life began on an earlier version of the game. Connect to the internet to go on with it: nothing is lost.",
+    "lostWaiting": "Your life began on an earlier version of the game and cannot be opened just now. It is kept: try again in a while, with a connection.",
     "profile": "Your profile"
   },
   "newLife": {
@@ -380,7 +380,8 @@
     "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}",
     "remote": "Work from home: +1 focus",
     "endLodger": "The lodger moves out",
-    "partnerPay": "Partner earns {pct}% of the median"
+    "partnerPay": "Partner earns {pct}% of the median",
+    "charged": "Charged: a trial will follow"
   },
   "finance": {
     "tabs": {
@@ -1375,7 +1376,10 @@
     "retireGives": "You leave work for good: no more salary. While you take up no career, +{focus} focus every round and {status} status.",
     "retireLater": "You can retire from {age}.",
     "retireOpen": "You can retire now, from your finances.",
-    "focusBurnout": "{n} less this round: you burnt out from overtime."
+    "focusBurnout": "{n} less this round: you burnt out from overtime.",
+    "moveChance": "{pct}% chance it comes off",
+    "moveRounds": "{done} of {rounds} rounds",
+    "moveResting": "You tried it recently"
   },
   "rankings": {
     "title": "Rankings",

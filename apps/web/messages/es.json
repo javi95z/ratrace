@@ -74,7 +74,7 @@
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
     "roomDone": "Acabada",
-    "lostWaiting": "Tu vida empezó con una versión anterior del juego. Conéctate a internet para seguir con ella: no se ha perdido.",
+    "lostWaiting": "Tu vida empezó con una versión anterior del juego y ahora mismo no se puede abrir. Está guardada: vuelve a intentarlo en un rato, con conexión.",
     "profile": "Tu perfil"
   },
   "newLife": {
@@ -380,7 +380,8 @@
     "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}",
     "remote": "Teletrabajo: +1 de foco",
     "endLodger": "El inquilino se va",
-    "partnerPay": "Tu pareja cobra el {pct} % del sueldo medio"
+    "partnerPay": "Tu pareja cobra el {pct} % del sueldo medio",
+    "charged": "Te imputan: habrá juicio"
   },
   "finance": {
     "tabs": {
@@ -1375,7 +1376,10 @@
     "retireGives": "Dejas de trabajar para siempre: sin sueldo. Mientras no vuelvas a una carrera, +{focus} de foco cada ronda y {status} de estatus.",
     "retireLater": "Podrás jubilarte a partir de los {age} años.",
     "retireOpen": "Ya puedes jubilarte, desde tus finanzas.",
-    "focusBurnout": "{n} menos esta ronda: te quemaste de tantas horas extra."
+    "focusBurnout": "{n} menos esta ronda: te quemaste de tantas horas extra.",
+    "moveChance": "{pct} % de que salga bien",
+    "moveRounds": "{done} de {rounds} rondas",
+    "moveResting": "Hace poco que lo intentaste"
   },
   "rankings": {
     "title": "Clasificaciones",

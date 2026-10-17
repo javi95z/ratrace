@@ -1,5 +1,6 @@
 'use client';
 
+import { CareerMoves } from './CareerMoves';
 import { Explain } from './Explain';
 import { careerArt, focusArt, RETIRED_ART, skillArt, workArt } from '@ratrace/content';
 import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
@@ -459,6 +460,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
               icon={focusArt[use.action]}
             />
           ))}
+          <CareerMoves work={work} left={work.focus.left} />
           <TeaseUse left={work.focus.left} />
         </div>
       ) : (

@@ -796,7 +796,7 @@ export const cards: Record<string, CardText> = {
   ]),
   crime_insider_tip: c('Your brother-in-law knows something', 'He works at a bank. A takeover is coming on Monday, and nobody knows yet.', [
     'Change the subject',
-    ['Buy before Monday', 'Monday comes, the shares jump. You sell.', 'The shares jump, and so does the regulator.', 'There was no takeover. He meant another bank.'],
+    ['Buy before Monday', 'Monday comes, the shares jump. You sell.', 'The shares jump, you sell in a hurry… and the regulator charges you with insider trading.', 'There was no takeover: it was another bank. You sell at a loss.'],
   ]),
   crime_laundering: c('Clean money', 'Your business takes plenty of cash. A friend explains how it could take a little more, on paper.', [
     'Keep the books honest',

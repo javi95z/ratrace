@@ -1,5 +1,6 @@
 'use client';
 
+import { CareerMoves } from './CareerMoves';
 import { Explain } from './Explain';
 import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
@@ -1233,6 +1234,7 @@ function Lifestyle() {
             {jobUses.map((use) => (
               <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />
             ))}
+            <CareerMoves work={work} left={left} />
           </div>
         ) : work.backToWork ? (
           // Left for a business: the way back, a rung lower.

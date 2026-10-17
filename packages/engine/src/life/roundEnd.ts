@@ -1,3 +1,4 @@
+import { advanceMove } from './moves';
 import { careerOf, itemOf } from '../lookup';
 import { BP, mulDiv } from '../money';
 import type { Rng } from '../rng';
@@ -136,6 +137,9 @@ export function ageLife(
     // A round without looking and the next search starts afresh.
     life.huntMisses = 0;
   }
+
+  // A move of the career, put in or judged. From a cell nothing is moved.
+  if (tally.careerMove !== undefined && !jailed) advanceMove(p, content, tally.careerMove, now.round, rng, events);
 
   // Asked or not given, the boss is not asked again for a while.
   if (tally.focusActions.includes('askRaise')) {

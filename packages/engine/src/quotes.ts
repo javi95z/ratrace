@@ -1,3 +1,4 @@
+import { moveChancePct, moveLock, movesOpen } from './life/moves';
 import { businessLock, businessRound, failChance, businessSalePrice, businessTypeOf, managerShare } from './business';
 import type { BusinessRound } from './business';
 import { debtRateBp, loanRoom, marginOn, personalLoanRateBp } from './debt';
@@ -409,6 +410,11 @@ export interface WorkQuote {
    * retired, and what it gives while no career is taken up: focus on top each round, and status.
    */
   retirement: { fromRound: number; open: boolean; retired: boolean; focus: number; status: number };
+  /**
+   * The moves the career makes at this rung: the chance it comes to what is hoped, the rounds it
+   * takes and those already put in, and why it cannot be made this round, if it cannot.
+   */
+  moves: Array<{ id: string; chancePct: number; rounds: number; progress: number; lock: RejectReason | null }>;
 }
 
 /** The player's working life in figures: the ladder they are on and what each way of spending focus is worth to them. */
@@ -441,6 +447,7 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     jobHuntRaisePct: jobHuntRaise(content, p),
     promotionRaisePct: promotionRaise(content, p),
     focus: { left: focusLeft(p), total: focusTotal(p), bonus: p.life.focusBonus, lost: p.life.focusLost },
+    moves: movesOpen(p, content).map((move) => ({ id: move.id, chancePct: moveChancePct(p, content, move), rounds: move.rounds, progress: p.life.moves?.[move.id]?.progress ?? 0, lock: moveLock(p, content, move.id, view.round) })),
     perks,
     traits: {
       ...careerSwing(p, content, world.regime, view.round),
