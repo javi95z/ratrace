@@ -304,7 +304,7 @@ describe('what the investments pay', () => {
     renderGame(<Play />, services);
     const pays = await screen.findByRole('region', { name: 'What you are paid' });
     expect(within(pays).getByText(fmt.signed(quote.dividendsTotal))).toBeTruthy();
-    for (const paid of quote.dividends) expect(screen.getByText(`Pays ${fmt.money(paid.amount)} this round`)).toBeTruthy();
+    for (const paid of quote.dividends) expect(screen.getByText(`Pays ${fmt.money(paid.amount)}/round`)).toBeTruthy();
 
     const toggle = within(pays).getByRole('switch', { name: /^Reinvest the dividends/ });
     expect(toggle.getAttribute('aria-checked')).toBe('false');

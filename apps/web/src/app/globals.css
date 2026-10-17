@@ -527,6 +527,17 @@ html[data-input='keyboard'] [data-card-option]:has(.keyboard-hint) { padding-rig
   }
 }
 
+/* Under a translucent status bar, what scrolls by is covered: nothing shows through above the sticky bars. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: var(--color-night-900);
+  z-index: 60;
+  pointer-events: none;
+}
+
 /* The safe area at the top of a phone, for what sticks to the top as the page scrolls. */
 @utility top-safe {
   top: env(safe-area-inset-top);

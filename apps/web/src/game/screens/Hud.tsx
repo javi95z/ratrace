@@ -217,6 +217,21 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const [open, setOpen] = useState<Figure | null>(null);
   const [settings, setSettings] = useState(false);
   const [paper, setPaper] = useState(false);
+  // What sticks to the top tells the tabs under it how far down to stick.
+  const stuck = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stuck.current;
+    if (!el || flush) return;
+    const root = document.documentElement;
+    const measure = () => root.style.setProperty('--hud-stick', `${el.offsetHeight}px`);
+    measure();
+    const watch = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    watch?.observe(el);
+    return () => {
+      watch?.disconnect();
+      root.style.removeProperty('--hud-stick');
+    };
+  }, [flush]);
   const p = shown.player;
   const age = ageAt(content, shown.round);
   const years = content.yearsPerRound;
@@ -246,16 +261,17 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       {portrait}
       <Sprite id={frameArt(p.statusPoints)} fallback={{ w: 80, h: 80 }} className="pointer-events-none absolute inset-0" />
       {rose > 0 ? <Sparks colours={['bg-gold-500', 'bg-gold-200', 'bg-cream']} count={14} reach={52} size={4} /> : null}
-      {rose > 0 ? <span aria-hidden data-motion-only className="pointer-events-none absolute inset-0 overflow-hidden"><span className="absolute inset-y-0 left-0 w-1/4 animate-glint bg-white/40 [animation-iteration-count:1]" /></span> : null}
+      {rose > 0 ? <span aria-hidden data-motion-only className="pointer-events-none absolute inset-0 overflow-hidden"><span className="absolute inset-y-0 left-0 w-1/4 animate-glint opacity-0 bg-white/40 [animation-iteration-count:1]" /></span> : null}
     </span>
   );
 
   return (
-    <header className={`flex flex-col gap-2 pt-3 ${flush ? '' : 'px-3'}`}>
+    // On a phone the header dissolves into the page, so the figures and the way-out bar can stick to the top for the whole of it.
+    <header className={flush ? 'flex flex-col gap-2 pt-3' : 'contents'}>
       {/* A round opens in the first light and closes at night; a boom and a crisis each have a sky of their own. */}
-      {skyline ? <CityBanner cityId={p.cityId} light={cityLight(shown.timeline[shown.round], stage === 'news')} /> : null}
+      {skyline ? <div className={flush ? '' : 'mt-3 px-3'}><CityBanner cityId={p.cityId} light={cityLight(shown.timeline[shown.round], stage === 'news')} /></div> : null}
 
-      <div className="flex items-center gap-3">
+      <div className={`flex items-center gap-3 ${flush ? '' : `px-3 ${skyline ? 'mt-2' : 'mt-3'}`}`}>
         {onProfile ? (
           <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="shrink-0 leading-[0]">
             {framed}
@@ -290,6 +306,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         </button>
       </div>
 
+      <div ref={stuck} className={flush ? 'flex flex-col gap-2' : 'sticky top-safe z-30 mt-2 flex flex-col gap-2 bg-night-800 px-3 pb-2 pt-1'}>
       <div className="@container">
         <div className="grid grid-cols-3 gap-1.5">
           <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => setOpen('cash')} />
@@ -310,6 +327,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         </div>
         <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
       </button>
+      </div>
 
       <Sheet open={open !== null} onClose={() => setOpen(null)} title={open ? t(open) : ''} closeLabel={common('close')}>
         {open ? <Details figure={open} shown={shown} /> : null}

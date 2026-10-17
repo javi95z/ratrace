@@ -407,8 +407,8 @@
       "sell": "Vender",
       "gain": "{amount} de ganancia",
       "loss": "{amount} de pérdida",
-      "pays": "Paga {amount} esta ronda",
-      "planBuys": "{amount} los compra tu plan al jugar la ronda"
+      "pays": "Paga {amount}/ronda",
+      "planBuys": "Tu plan: +{amount}"
     },
     "market": {
       "funds": "Fondos indexados",

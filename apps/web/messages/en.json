@@ -407,8 +407,8 @@
       "sell": "Sell",
       "gain": "{amount} gain",
       "loss": "{amount} loss",
-      "pays": "Pays {amount} this round",
-      "planBuys": "{amount} of it your plan buys as the round is played"
+      "pays": "Pays {amount}/round",
+      "planBuys": "Plan: +{amount}"
     },
     "market": {
       "funds": "Index funds",

@@ -833,25 +833,30 @@ function DebtTab() {
       <Panel>
         {p.debts.length === 0 ? <p className="text-[14px] text-ink-300">{t('none')}</p> : <Row left={t('total')} right={fmt.money(total)} />}
         {p.debts.map((debt) => (
-          <div key={debt.id} className="flex items-center gap-3 border-t-2 border-night-900 py-2">
-            <Bare className="size-8">
-              <Sprite id={debtArt(debt)} />
-            </Bare>
-            <div className="min-w-0 flex-1">
-              <div className="truncate">{debtLabel(words, debt, p.properties)}</div>
-              <div className="text-[12px] text-ink-300">
-                {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })}
-                {/* A broker's loan has no term: it is paid back when the holding is sold. */}
-                {debt.kind === 'margin' ? null : ` · ${t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}`}
-              </div>
-              {debt.kind === 'margin' && debt.forAsset ? <MarginGauge assetId={debt.forAsset} /> : null}
-              {/* A mortgage can be switched between fixed and variable: said under it, opened in a sheet. Not while it rests from the last switch. */}
-              <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
+          <div key={debt.id} className="border-t-2 border-night-900 py-2">
+            <div className="flex items-center gap-3">
+              <Bare className="size-8">
+                <Sprite id={debtArt(debt)} />
+              </Bare>
+              <div className="min-w-0 flex-1 truncate">{debtLabel(words, debt, p.properties)}</div>
+              <div className="pixel">{fmt.money(debt.principal)}</div>
             </div>
-            <div className="pixel">{fmt.money(debt.principal)}</div>
-            <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
-              {t('repay')}
-            </Button>
+            {/* Under the name, so a long one is not cut short: what it costs and what is left, and the way to pay it off. */}
+            <div className="mt-1 flex items-end justify-between gap-3 pl-11">
+              <div className="min-w-0">
+                <div className="text-[12px] text-ink-300">
+                  {t('rate', { rate: fmt.rate(debtRateBp(debt, content, world, p)) })}
+                  {/* A broker's loan has no term: it is paid back when the holding is sold. */}
+                  {debt.kind === 'margin' ? null : ` · ${t('left', { rounds: debt.kind === 'creditCard' ? 0 : debt.roundsLeft })}`}
+                </div>
+                {debt.kind === 'margin' && debt.forAsset ? <MarginGauge assetId={debt.forAsset} /> : null}
+                {/* A mortgage can be switched between fixed and variable: said under it, opened in a sheet. Not while it rests from the last switch. */}
+                <SwitchLink debtId={debt.id} onOpen={() => setSwitching(debt.id)} />
+              </div>
+              <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
+                {t('repay')}
+              </Button>
+            </div>
           </div>
         ))}
       </Panel>
@@ -1716,7 +1721,7 @@ export function Finance() {
 
   return (
     <div>
-      <div className="top-safe sticky z-10 bg-night-800">
+      <div className="sticky top-[calc(env(safe-area-inset-top)+var(--hud-stick,0px))] z-10 bg-night-800">
         <Tabs<TabId> label={t('tabsLabel')} idPrefix={ids} tabs={tabs.map((id) => ({ id, label: t(`tabs.${id}`) }))} value={tab} onChange={setTab} />
       </div>
       <div ref={panel} role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} onKeyDown={navigateItems} className="px-3 pt-1">
