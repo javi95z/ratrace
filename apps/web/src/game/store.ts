@@ -52,6 +52,13 @@ export interface RoundState {
   resolved: { before: GameView; events: GameEvent[] } | null;
   /** True while an answer or a round is being played. */
   busy: boolean;
+  /** The option of the card being answered, from the tap until its result is on screen. */
+  picked: number | null;
+  /**
+   * True while the result of a card a server plays is on its way: the card is already shown as
+   * answered, with the choice made, and what followed comes in when the server says.
+   */
+  pending: boolean;
   /** True once the life was found to have moved on in another tab or on another device, until the player has been told. The store has already opened it as it now stands. */
   moved: boolean;
   /** True when the game itself refused a step. The life cannot go on from here; the screen says so. */
@@ -130,6 +137,9 @@ export interface RoundActions {
 
 export type GameStore = StoreApi<RoundState & RoundActions>;
 
+/** How long a server may take over a card before the card turns to wait for its result: a quick answer is never shown waiting. */
+export const PENDING_AFTER_MS = 150;
+
 const blank: RoundState = {
   status: 'none',
   lost: null,
@@ -151,6 +161,8 @@ const blank: RoundState = {
   alsoRemoved: 0,
   resolved: null,
   busy: false,
+  picked: null,
+  pending: false,
   moved: false,
   fault: false,
   ranked: false,
@@ -348,23 +360,28 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       async pick(option) {
         const { view, busy, stage } = get();
         if (!view || !session || busy || stage !== 'cards' || !settled()) return;
-        set({ busy: true });
+        set({ busy: true, picked: option });
+        // What every option offered is asked before the answer: afterwards the card is no longer in the hand to be judged.
+        const cardId = view.hand[view.answered];
+        const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
+        // A server takes a moment to answer. The tap is seen at once on the option; then the card turns, its choice made, while the dice roll there.
+        const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], pending: true }), PENDING_AFTER_MS) : null;
         try {
-          // What every option offered is asked before the answer: afterwards the card is no longer in the hand to be judged.
-          const cardId = view.hand[view.answered];
-          const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
           const result = await session.answerCard(option);
-          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', unreachable: false });
+          set({ offered, view: result.view, cardEvents: result.events, badges: session.badges(), story: session.story(), earned: result.earned, unlocked: result.unlocked, stage: 'outcome', pending: false, unreachable: false });
         } catch (error) {
+          // The card was not answered after all: it is back, to be answered again.
+          if (get().pending) set({ stage: 'cards', offered: null, pending: false });
           await refused(error);
         } finally {
-          set({ busy: false });
+          if (turning !== null) clearTimeout(turning);
+          set({ busy: false, picked: null, pending: false });
         }
       },
 
       afterCard() {
-        const { view, stage } = get();
-        if (!view || stage !== 'outcome' || !settled()) return;
+        const { view, stage, pending } = get();
+        if (!view || stage !== 'outcome' || pending || !settled()) return;
         if (view.phase === 'cards') set({ stage: 'cards', cardEvents: [], offered: null, earned: [], unlocked: [] });
         else {
           set({ cardEvents: [], offered: null, earned: [], unlocked: [] });

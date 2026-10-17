@@ -169,6 +169,7 @@ export interface RoomSessionDeps {
  */
 export class RoomSession implements GameSession {
   readonly ranked = false;
+  readonly served = true;
   /** Steps run one after another, in the order they were asked for. */
   private tail: Promise<unknown> = Promise.resolve();
   private ofGallery: string[] = [];

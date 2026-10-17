@@ -53,7 +53,7 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
       );
     case 'outcome':
       return (
-        <Button variant="primary" wide data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={afterCard}>
+        <Button variant="primary" wide disabled={busy} data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={afterCard}>
           {cardsWait ? cards('next') : cards('toFinance')}
           <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
         </Button>

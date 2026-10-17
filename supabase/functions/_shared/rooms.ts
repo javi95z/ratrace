@@ -1,5 +1,7 @@
 import type { RunRow } from './finish.ts';
-import type { GameModule, LoggedRound, ReplayedStep } from './game/types.ts';
+import type { GameModule, LoggedRound } from './game/types.ts';
+import { lifePlayer } from './played.ts';
+import type { Played } from './played.ts';
 import { lastIs, stepsOf, withStep } from './ranked.ts';
 import type { NoticeAbout } from './notice.ts';
 import type { Choice } from './ranked.ts';
@@ -201,29 +203,24 @@ const moved: Reply = { status: 409, body: { error: 'moved' } };
 const versionsOf = (room: RoomRow) => `${room.engine_version}/${room.content_version}`;
 const roundsIn = (log: readonly LoggedRound[]) => log.filter((entry) => entry.orders !== null).length;
 
-/** A life of a room, played from its seed: what it is now, its record, and what its last step did. */
-function playerOf(game: GameModule, lifeId: string, seed: string) {
-  const life = game.lives.find((one) => one.id === lifeId);
-  if (!life) throw new Error(`the life ${lifeId} is not in the content of the room`);
-  return (log: readonly LoggedRound[]) => {
-    let last: ReplayedStep | null = null;
-    const whole = game.replayLife(game.content, life.start, seed, log, (step) => {
-      last = step;
-    });
-    return { ...whole, last: last as ReplayedStep | null };
-  };
+/** A member's life in a room, played from its seed: to where a log leaves it, or one step further. */
+function playerOf(game: GameModule, room: RoomRow, gameId: string, seed: string) {
+  const life = game.lives.find((one) => one.id === room.life_id);
+  if (!life) throw new Error(`the life ${room.life_id} is not in the content of the room`);
+  return lifePlayer(game, gameId, versionsOf(room), life.start, seed);
 }
-type Played = ReturnType<ReturnType<typeof playerOf>>;
+type Player = ReturnType<typeof playerOf>;
 
 /** The log with every card still waiting in its open round answered with the first option, as a member who did not choose answers it. */
-function withCardsAnswered(play: (log: readonly LoggedRound[]) => Played, log: LoggedRound[]): { log: LoggedRound[]; played: Played } {
+function withCardsAnswered(player: Player, log: LoggedRound[]): { log: LoggedRound[]; played: Played } {
   let next = log;
-  let played = play(next);
+  let played = player.play(next);
   for (let n = 0; !played.state.finished && played.state.phase === 'cards'; n++) {
     if (n >= MAX_HAND) throw new Error('a hand that does not end');
     // The engine takes the first open option for a number that is not one: so does the log, and it plays back the same.
+    const was = next;
     next = withStep(next, { card: 0 });
-    played = play(next);
+    played = player.step(was, next, { card: 0 });
   }
   return { log: next, played };
 }
@@ -351,16 +348,19 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
     const members = everyone.filter((m) => m.left_at === null);
     // Where each stood when the round before turned, as the standings showed it then: those who left last.
     const placesBefore = new Map(placed(everyone.filter((m) => m.standing !== null)).map((m, at) => [m.user_id, at + 1]));
-    const kept = await deps.loadOrders(room.id, room.round);
+    // Every life of the room is read at once: a turn waits for one trip to the database, not two for each member.
+    const [kept, rows] = await Promise.all([
+      deps.loadOrders(room.id, room.round),
+      Promise.all(members.map(async (member) => (member.game_id ? await Promise.all([deps.loadGame(member.game_id), deps.loadSeed(member.game_id)]) : ([null, null] as const)))),
+    ]);
     const lives: TurnLife[] = [];
     const ends: Array<{ row: RoomGameRow; played: Played }> = [];
-    for (const member of members) {
-      const row = member.game_id ? await deps.loadGame(member.game_id) : null;
-      const seed = row ? await deps.loadSeed(row.id) : null;
+    for (const [at, member] of members.entries()) {
+      const [row, seed] = rows[at];
       const log = row ? readLog(row.log, game) : null;
       if (row === null || seed === null || log === null) throw new Error(`room ${room.id}: the life of ${member.user_id} cannot be opened`);
-      const play = playerOf(game, room.life_id, seed);
-      const answered = withCardsAnswered(play, log);
+      const player = playerOf(game, room, row.id, seed);
+      const answered = withCardsAnswered(player, log);
       const ready = Object.hasOwn(kept, member.user_id);
       const orders = !bare && ready && Array.isArray(kept[member.user_id]) ? kept[member.user_id] : [];
       let next = withStep(answered.log, { orders });
@@ -368,12 +368,12 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       if (JSON.stringify(next).length > MAX_LOG_CHARS) next = withStep(answered.log, { orders: [] });
       let played: Played;
       try {
-        played = play(next);
+        played = player.step(answered.log, next, { orders: next[next.length - 1].orders ?? [] });
       } catch (error) {
         // Orders are tried when they are kept, so this does not happen; if it did, the round is played with none rather than not at all.
         console.error('room orders refused at the turn:', error instanceof Error ? error.message : error);
         next = withStep(answered.log, { orders: [] });
-        played = play(next);
+        played = player.step(answered.log, next, { orders: [] });
       }
       const was = member.standing;
       const before = was ? { score: was.score, place: placesBefore.get(member.user_id) ?? 0 } : null;
@@ -403,6 +403,18 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
 }
 
 /**
+ * Whether a room may have gone quiet long enough to be closed, by the rule `room_close` keeps: a
+ * lobby never started, or a round left waiting, for a day or three rounds, whichever is longer.
+ * Only a room this says yes to is handed to the database, which decides; the rest are not.
+ */
+export function mayBeStale(room: RoomRow, now: Date): boolean {
+  const quiet = Math.max(86_400_000, 3 * room.seconds * 1000);
+  if (room.status === 'open') return Date.parse(room.created_at) < now.getTime() - quiet;
+  if (room.status === 'playing') return room.deadline !== null && Date.parse(room.deadline) < now.getTime() - quiet;
+  return false;
+}
+
+/**
  * What every look at a room does first: a room nobody has moved for a day is closed, and a round
  * that is due is turned. Answers the room and its members as they then stand, and whether a round
  * turned in this very call.
@@ -411,7 +423,7 @@ async function upkeep(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   let changed = false;
   let turned = false;
   try {
-    if ((room.status === 'open' || room.status === 'playing') && (await deps.closeIfStale(room.id, deps.now()))) changed = true;
+    if (mayBeStale(room, deps.now()) && (await deps.closeIfStale(room.id, deps.now()))) changed = true;
     else if (due(room, members, deps.now())) {
       await turn(games, deps, room, by);
       changed = true;
@@ -601,10 +613,9 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     // What is logged must play back to the same game: a whole number, or the first option, which is what the engine falls back to.
     choice = raw.action === 'card' ? { card: isCount(raw.option) ? raw.option : 0 } : { orders: raw.orders as unknown[] };
   }
-  if (!(await deps.allow(userId, 'room-step'))) return tooMany;
-
-  const found = await deps.loadRoom(roomId);
-  const everyone = found === null ? [] : await deps.members(roomId);
+  // Counted whatever it turns out to ask for, and the room looked up meanwhile: one trip to the database, not three.
+  const [allowed, found, everyone] = await Promise.all([deps.allow(userId, 'room-step'), deps.loadRoom(roomId), deps.members(roomId)]);
+  if (!allowed) return tooMany;
   if (found === null || !everyone.some((m) => m.user_id === userId)) return unknownRoom;
   const { room, members, turned } = await upkeep(games, deps, found, everyone, userId);
   const me = members.find((m) => m.user_id === userId) as MemberRow;
@@ -646,14 +657,15 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   // The rest is about the member's own life in the room.
   if (me.left_at !== null) return closed;
   if (room.status === 'open') return { status: 409, body: { error: 'not-started' } };
-  const row = me.game_id ? await deps.loadGame(me.game_id) : null;
+  // The game and its seed at once: they are the same game's.
+  const [row, seed] = me.game_id ? await Promise.all([deps.loadGame(me.game_id), deps.loadSeed(me.game_id)]) : [null, null];
   if (row === null || row.status === 'abandoned') return closed;
-  const seed = await deps.loadSeed(row.id);
   const log = game ? readLog(row.log, game) : null;
   // A game the server made itself can always be opened. One that cannot is broken, and that is the server's fault.
   if (!game?.viewOf || seed === null || log === null) throw new Error(`room ${room.id}: the life of ${userId} cannot be opened`);
   const viewOf = game.viewOf;
-  const play = playerOf(game, room.life_id, seed);
+  const player = playerOf(game, room, row.id, seed);
+  const { play } = player;
   const steps = stepsOf(log);
 
   if (raw.action === 'view') {
@@ -696,7 +708,7 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const next = withStep(log, picked);
     let played: Played;
     try {
-      played = play(next);
+      played = player.step(log, next, picked);
     } catch (error) {
       // The engine refuses what cannot happen: a card when none is waiting.
       console.error('room card refused:', error instanceof Error ? error.message : error);
@@ -713,9 +725,9 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
   if (picked.orders.length > game.content.maxOrdersPerRound || JSON.stringify(picked.orders).length > MAX_ORDERS_CHARS) return bad('orders');
   if (raw.step !== steps) return { status: 409, body: { error: 'out-of-step', step: steps } };
   if (roundsIn(log) !== room.round) return moved;
-  const answered = withCardsAnswered(play, log);
+  const answered = withCardsAnswered(player, log);
   try {
-    play(withStep(answered.log, picked));
+    player.step(answered.log, withStep(answered.log, picked), picked);
   } catch (error) {
     console.error('room orders refused:', error instanceof Error ? error.message : error);
     return { status: 422, body: { error: 'cannot-play' } };

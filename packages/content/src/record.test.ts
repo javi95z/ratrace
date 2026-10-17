@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { journalStart } from './badges';
 import { content } from './content';
 import { lives } from './lives';
-import { recordStart, recordStep, replayLife } from './record';
-import type { LifeRecord } from './record';
+import { recordStart, recordStep, replayLife, stepLife } from './record';
+import type { LifeRecord, Replayed, ReplayedStep } from './record';
 
 const nurse = lives[0].start;
 
@@ -145,5 +145,55 @@ describe('a life played again from its log', () => {
     expect(heard.every((step) => step.events > 0)).toBe(true);
     expect(heard.flatMap((step) => step.earned)).toEqual(record.journal.earned);
     expect(again.history).toEqual(record.history);
+  });
+});
+
+describe('a life taken one step further', () => {
+  /** Answers each card with an option that moves along the hand, and plays every round with the same orders. */
+  const choicesOf = (round: number, hand: number): number => (round + hand) % 3;
+  const ORDERS = [[], [{ type: 'focus', action: 'studyCareer' }], [{ type: 'setLifestyle', tier: 2 }]] as const;
+
+  for (const life of [lives[0], lives[3], lives[8], lives[14]]) {
+    it(`gives what playing the whole log again gives, at every step of the ${life.id}`, () => {
+      const seed = `step-${life.id}`;
+      const log: LoggedRound[] = [];
+      let from: Replayed = replayLife(content, life.start, seed, []);
+      while (!from.state.finished) {
+        const round = from.state.round;
+        const entry: LoggedRound = { picks: [], orders: null };
+        log.push(entry);
+        while (from.state.phase === 'cards') {
+          const card = choicesOf(round, entry.picks.length);
+          entry.picks.push(card);
+          let heard: ReplayedStep | null = null;
+          from = stepLife(content, from, { card }, (step) => (heard = step));
+          let last: ReplayedStep | null = null;
+          const whole = replayLife(content, life.start, seed, log, (step) => (last = step));
+          expect(stateHash(from.state)).toBe(stateHash(whole.state));
+          expect({ ...from, state: null }).toEqual({ ...whole, state: null });
+          expect(heard).toEqual(last);
+        }
+        const orders = structuredClone(ORDERS[round % ORDERS.length]) as LoggedRound['orders'] & object;
+        entry.orders = orders;
+        from = stepLife(content, from, { orders });
+        const whole = replayLife(content, life.start, seed, log);
+        expect(stateHash(from.state)).toBe(stateHash(whole.state));
+        expect({ ...from, state: null }).toEqual({ ...whole, state: null });
+      }
+    });
+  }
+
+  it('does not change the life it was given', () => {
+    const from = replayLife(content, nurse, 'still', []);
+    const copy = structuredClone(from);
+    stepLife(content, from, { card: 1 });
+    expect(from).toEqual(copy);
+  });
+
+  it('refuses a step that cannot be taken, as playing the log again does', () => {
+    const begun = replayLife(content, nurse, 'refuse', []);
+    let from = begun;
+    while (from.state.phase === 'cards') from = stepLife(content, from, { card: 0 });
+    expect(() => stepLife(content, from, { card: 0 })).toThrow();
   });
 });

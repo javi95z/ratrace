@@ -76,3 +76,43 @@ describe('what a card did', () => {
     expect(screen.queryByRole('button', { name: /did not choose/ })).toBeNull();
   });
 });
+
+describe('a card a server answers slowly', () => {
+  it('turns the card with the choice made while the dice roll, then shows what came up', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    // The life on screen played as a server plays it: every answer held until the test lets it go.
+    let release = () => {};
+    const resume = services.sessions.resume.bind(services.sessions);
+    services.sessions.resume = async () => {
+      const found = await resume();
+      const session = found.session;
+      if (!session) return found;
+      const answer = session.answerCard.bind(session);
+      const served = Object.assign(Object.create(session) as typeof session, {
+        served: true,
+        answerCard: async (option: number) => {
+          await new Promise<void>((resolve) => (release = resolve));
+          return answer(option);
+        },
+      });
+      return { ...found, session: served };
+    };
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    const choices = within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button');
+    await user.click(choices[0]);
+    // At once: the option taken, pressed.
+    expect(choices[0].getAttribute('aria-pressed')).toBe('true');
+    // A moment later: the card turned, its choice made, waiting for the server.
+    await screen.findByRole('heading', { name: 'What happened' });
+    const card = screen.getByRole('article');
+    expect(within(card).getByText(/^You chose: /)).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'What changes' })).toBeNull();
+    expect((screen.getByRole('button', { name: /^(Next card|To your finances)/ }) as HTMLButtonElement).disabled).toBe(true);
+    release();
+    await screen.findByRole('region', { name: 'What changes' });
+    expect((screen.getByRole('button', { name: /^(Next card|To your finances)/ }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});

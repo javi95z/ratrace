@@ -85,7 +85,10 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
 function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { def: CardDef; index: number; number: number; preview: OptionPreview; onPick(): void; disabled: boolean; tabIndex: number }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
   const partnered = useGame((s) => s.view?.player.life.partner ?? false);
+  // The option tapped is shown taken at once, pressed and lit, and the others step back, while the answer is on its way.
+  const picked = useGame((s) => s.picked);
   if (!world) return null;
+  const look = picked === null ? '' : picked === index ? 'translate-y-[2px] outline outline-2 outline-gold-500' : 'opacity-50';
   return (
     <button
       type="button"
@@ -93,7 +96,8 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
       disabled={disabled || !preview.available}
       tabIndex={tabIndex}
       data-card-option={index}
-      className="frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-transform enabled:active:translate-y-[2px]"
+      aria-pressed={picked === index ? true : undefined}
+      className={`frame-raised relative flex min-h-11 w-full flex-col gap-1.5 bg-night-700 px-3 py-2 text-left transition-[transform,opacity] enabled:active:translate-y-[2px] ${look}`}
     >
       <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} partnered={partnered} />
     </button>
@@ -230,6 +234,9 @@ export function Outcome() {
   const { content, text, fmt } = words;
   const events = useGame((s) => s.cardEvents);
   const offered = useGame((s) => s.offered);
+  const pending = useGame((s) => s.pending);
+  const picked = useGame((s) => s.picked);
+  if (pending && offered && picked !== null) return <Pending cardId={offered.cardId} option={picked} />;
   const cards = events.filter((e): e is Extract<GameEvent, { kind: 'card' }> => e.kind === 'card');
   const money = events.filter((e): e is Extract<GameEvent, { kind: 'ledger' }> => e.kind === 'ledger');
 
@@ -293,6 +300,40 @@ export function Outcome() {
           ))}
         </Panel>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * A card answered whose result a server has still to give: the card, the choice made, and what
+ * followed when nothing was left to chance. When there were dice, they are still rolling.
+ */
+function Pending({ cardId, option }: { cardId: string; option: number }) {
+  const t = useT('cards');
+  const { content, text } = useWords();
+  const written = text.cards[cardId];
+  const chosen = content.cards.find((card) => card.id === cardId)?.options[option];
+  const dice = (chosen?.outcomes?.length ?? 0) > 0;
+  return (
+    <div className="flex flex-col gap-3 px-3" aria-busy>
+      <h2 className="pixel text-center text-[20px] text-gold-500">{t('results')}</h2>
+      <article className="frame frame-cream mx-auto max-w-full bg-cream text-ink-900" style={{ width: 'calc(288px * var(--art) + 4px)' }}>
+        <div className="border-2 border-cream leading-[0]">
+          <Sprite id={cardArt[cardId] ?? ''} scale="art" fallback={{ w: 288, h: 120 }} />
+        </div>
+        <div className="px-3 pb-3 pt-2">
+          <h3 className="pixel text-[19px]">{written.title}</h3>
+          <p className="pixel mt-0.5 text-[13px] uppercase tracking-wider text-ink-500">{t('chose', { label: written.options[option].label })}</p>
+          {dice ? (
+            <p className="mt-2 flex items-center gap-2 text-[15px] leading-snug" role="status">
+              <span aria-hidden data-motion-only className="inline-block size-3 animate-spin bg-ink-900" />
+              {t('rolling')}
+            </p>
+          ) : (
+            <p className="mt-2 text-[15px] leading-snug">{written.options[option].after}</p>
+          )}
+        </div>
+      </article>
     </div>
   );
 }

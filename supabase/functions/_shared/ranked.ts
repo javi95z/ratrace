@@ -1,6 +1,8 @@
 import type { RunRow } from './finish.ts';
-import type { GameModule, LoggedRound, ReplayedStep } from './game/types.ts';
+import type { GameModule, LoggedRound } from './game/types.ts';
 import { isWeek, startOf } from './challenge.ts';
+import { canonical, lifePlayer } from './played.ts';
+import type { CardPick } from './played.ts';
 import { readLog } from './replay.ts';
 import type { Reply } from './replay.ts';
 
@@ -21,11 +23,8 @@ export interface RankedGameRow {
   challenge: string | null;
 }
 
-/** What a player chose on one card of a challenge, in the order the life was played. */
-export interface CardPick {
-  cardId: string;
-  option: number;
-}
+export { canonical } from './played.ts';
+export type { CardPick } from './played.ts';
 
 /** The kinds of call a ranked life counts. How many of each a player may make is in `rate.ts`. */
 export type Counted = 'ranked-start' | 'ranked-step';
@@ -64,9 +63,6 @@ export interface RankedDeps {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** The event of a card answered, as far as a challenge keeps it. */
-const isCardEvent = (x: unknown): x is { kind: 'card'; cardId: string; option: number } =>
-  typeof x === 'object' && x !== null && (x as { kind?: unknown }).kind === 'card' && typeof (x as { cardId?: unknown }).cardId === 'string' && typeof (x as { option?: unknown }).option === 'number';
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isText = (x: unknown, max: number): x is string => typeof x === 'string' && x.length >= 1 && x.length <= max;
 const isCount = (x: unknown): x is number => typeof x === 'number' && Number.isSafeInteger(x) && x >= 0;
@@ -81,14 +77,6 @@ export function stepsOf(log: readonly LoggedRound[]): number {
   let steps = 0;
   for (const entry of log) steps += entry.picks.length + (entry.orders === null ? 0 : 1);
   return steps;
-}
-
-/** A value as text with its keys in order, so that two that say the same read the same. */
-export function canonical(value: unknown): string {
-  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
-  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
-  const record = value as Record<string, unknown>;
-  return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${canonical(record[key])}`).join(',')}}`;
 }
 
 /** What a player chose in one step: the option of a card, or the orders of a round. */
@@ -119,22 +107,14 @@ export function lastIs(log: readonly LoggedRound[], choice: Choice): boolean {
  * run of a life that is over. Null if the server cannot open it: it no longer holds the game's
  * versions, or the game has no seed or no sound log.
  */
-async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, row: RankedGameRow) {
+async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, row: RankedGameRow, seedRead?: Promise<string | null>) {
   const game = games[`${row.engine_version}/${row.content_version}`];
   const start = game ? startOf(game, row.life_id, row.challenge ?? null) : null;
-  const seed = await deps.loadSeed(row.id);
+  const seed = await (seedRead ?? deps.loadSeed(row.id));
   const log = game ? readLog(row.log, game) : null;
   if (!game || !game.viewOf || start === null || log === null || seed === null) return null;
   const viewOf = game.viewOf;
-  const play = (played: readonly LoggedRound[]) => {
-    let last: ReplayedStep | null = null;
-    const picks: CardPick[] = [];
-    const whole = game.replayLife(game.content, start, seed, played, (step) => {
-      last = step;
-      for (const event of step.events) if (isCardEvent(event)) picks.push({ cardId: event.cardId, option: event.option });
-    });
-    return { ...whole, last: last as ReplayedStep | null, picks };
-  };
+  const { play, step } = lifePlayer(game, row.id, `${row.engine_version}/${row.content_version}`, start, seed);
   /** Writes the run of a life that is over and closes its game. Done again, it changes nothing. */
   const settle = async (played: ReturnType<typeof play>): Promise<RunRow> => {
     const run: RunRow = {
@@ -163,7 +143,7 @@ async function opened(games: Readonly<Record<string, GameModule>>, deps: RankedD
     await deps.closeGame(row.id, played.state.round, 'finished');
     return run;
   };
-  return { game, viewOf, log, play, settle };
+  return { game, viewOf, log, play, step, settle };
 }
 
 /**
@@ -205,9 +185,12 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
       choice = raw.action === 'card' ? { card: isCount(raw.option) ? raw.option : 0 } : { orders: raw.orders as unknown[] };
     }
 
-    // Counted before anything is looked up: a call costs the same whatever it turns out to ask for.
-    if (!(await deps.allow(userId, 'ranked-step'))) return tooMany;
-    const row = await deps.loadGame(gameId);
+    // Counted whatever it turns out to ask for, and looked up meanwhile: a step waits for one trip to the database, not three.
+    // The seed is read with the rest and used only for a game that is the player's.
+    const seedRead = deps.loadSeed(gameId);
+    seedRead.catch(() => undefined);
+    const [allowed, row] = await Promise.all([deps.allow(userId, 'ranked-step'), deps.loadGame(gameId)]);
+    if (!allowed) return tooMany;
     if (row === null || row.user_id !== userId || row.mode !== 'ranked') return unknownGame;
     if (raw.action === 'abandon') {
       if (row.status === 'playing' && !(await settledIfOver(games, deps, row))) await deps.closeGame(row.id, row.round, 'abandoned');
@@ -215,10 +198,10 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
     }
     if (row.status === 'abandoned') return closed;
 
-    const life = await opened(games, deps, row);
+    const life = await opened(games, deps, row, seedRead);
     // A ranked game the server made itself can always be opened. One that cannot is broken, and that is the server's fault.
     if (life === null) throw new Error(`ranked game ${row.id} cannot be opened`);
-    const { game, viewOf, log, play, settle } = life;
+    const { game, viewOf, log, play, step, settle } = life;
     const recordOf = (played: ReturnType<typeof play>) => ({ history: played.history, bankruptcies: played.bankruptcies, journal: played.journal });
 
     const steps = stepsOf(log);
@@ -275,7 +258,7 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
     const next = withStep(log, choice);
     let played;
     try {
-      played = play(next);
+      played = step(log, next, choice);
     } catch (error) {
       // The engine refuses what cannot happen: a card when none is waiting, an order that is not one.
       console.error('ranked step refused:', error instanceof Error ? error.message : error);

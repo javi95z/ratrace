@@ -8,7 +8,7 @@ import { GameSessions } from '@/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
 import { MemoryStore } from '@/session/memory';
 import type { SavedGame } from '@/session/types';
-import { createGameStore } from './store';
+import { createGameStore, PENDING_AFTER_MS } from './store';
 
 /** `guardMs` and `clock` are for the tests of taps that come too soon; without them no tap is ever too soon. */
 function setup(store = new MemoryStore(), guardMs = 0, clock = { at: 0 }) {
@@ -789,6 +789,69 @@ describe('a ranked life on screen', { timeout: 60_000 }, () => {
     server.state.down = false;
     await get().play();
     expect(get()).toMatchObject({ stage: 'resolve', unreachable: false });
+  });
+
+  /** A server that holds every answer to a card until the test lets it go. */
+  function slowServer() {
+    const server = rankedServer();
+    let release = () => {};
+    const held = () => new Promise<void>((resolve) => (release = resolve));
+    let gate = held();
+    const api = { ...server.api, card: async (...args: Parameters<typeof server.api.card>) => {
+      await gate;
+      gate = held();
+      return server.api.card(...args);
+    } };
+    return { server: { ...server, api }, release: () => release() };
+  }
+  const later = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  it('shows the option tapped at once, then the card answered with its choice, while a slow server rolls the dice', async () => {
+    const { server, release } = slowServer();
+    const { get } = rankedSetup(server);
+    await get().start('nurse', { ranked: true });
+    get().leaveNews();
+    const answering = get().pick(1);
+    expect(get()).toMatchObject({ busy: true, picked: 1, stage: 'cards', pending: false });
+    await later(PENDING_AFTER_MS + 30);
+    expect(get()).toMatchObject({ stage: 'outcome', pending: true, picked: 1, cardEvents: [] });
+    expect(get().offered?.cardId).toBe(get().view?.hand[0]);
+    // Nothing to go on to until the result is in.
+    get().afterCard();
+    expect(get().stage).toBe('outcome');
+    release();
+    await answering;
+    expect(get()).toMatchObject({ stage: 'outcome', pending: false, picked: null, busy: false });
+    expect(get().cardEvents.some((event) => event.kind === 'card')).toBe(true);
+    expect(get().view?.answered).toBe(1);
+  });
+
+  it('puts the card back to be answered again when the slow server does not answer', async () => {
+    const { server, release } = slowServer();
+    const { get } = rankedSetup(server);
+    await get().start('nurse', { ranked: true });
+    get().leaveNews();
+    const before = get().view;
+    const answering = get().pick(0);
+    await later(PENDING_AFTER_MS + 30);
+    expect(get().pending).toBe(true);
+    server.state.down = true;
+    release();
+    await answering;
+    expect(get()).toMatchObject({ stage: 'cards', pending: false, picked: null, busy: false, unreachable: true, offered: null });
+    expect(get().view).toBe(before);
+  });
+
+  it('never shows a quick answer waiting', async () => {
+    const { get } = rankedSetup();
+    await get().start('nurse', { ranked: true });
+    get().leaveNews();
+    const answering = get().pick(0);
+    expect(get().picked).toBe(0);
+    await answering;
+    await later(PENDING_AFTER_MS + 30);
+    expect(get()).toMatchObject({ stage: 'outcome', pending: false, picked: null });
+    expect(get().cardEvents.length).toBeGreaterThan(0);
   });
 
   it('opens the life as it stands, and says it moved, when the server is further along than the screen', async () => {

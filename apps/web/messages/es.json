@@ -294,6 +294,7 @@
     "chance": "{pct} %",
     "results": "Qué ha pasado",
     "chose": "Elegiste: {label}",
+    "rolling": "Tirando los dados…",
     "toFinance": "A tus finanzas",
     "next": "Siguiente carta",
     "swipe": "Desliza la carta o toca una opción",

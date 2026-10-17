@@ -50,6 +50,8 @@ export interface GameModule {
   replayLog(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[]): GameState;
   /** The same, keeping the record of the life alongside. The newer versions tell of every step as it is played. */
   replayLife(content: unknown, start: unknown, seed: string, log: readonly LoggedRound[], onStep?: (step: ReplayedStep) => void): Replayed;
+  /** Takes one more step of a life already played, giving what playing its whole log again would. Missing from the versions before 0.36 / 1.38. */
+  stepLife?(content: unknown, from: Replayed, step: { card: number } | { orders: unknown[] }, onStep?: (step: ReplayedStep) => void): Replayed;
   stateHash(state: unknown): string;
   finalScore(content: unknown, state: unknown): number;
   realNetWorth(state: unknown): number;

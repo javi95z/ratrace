@@ -294,6 +294,7 @@
     "chance": "{pct}%",
     "results": "What happened",
     "chose": "You chose: {label}",
+    "rolling": "Rolling the dice…",
     "toFinance": "To your finances",
     "next": "Next card",
     "swipe": "Swipe the card, or tap a choice",

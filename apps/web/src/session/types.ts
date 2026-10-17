@@ -21,6 +21,8 @@ export interface GameSession {
   readonly lifeId: string;
   /** True for a life the server plays, step by step: its result can be set beside everyone else's. Left out, the device plays it. */
   readonly ranked?: boolean;
+  /** True for a life a server plays, a ranked one or one in a room: each answer takes a trip there. Left out, the device plays it at once. */
+  readonly served?: boolean;
   /** The week whose challenge this life is: the ranked attempt, or a practice. Left out for any other life. */
   readonly challenge?: string;
   /** The game as the player may see it. The same object until the next answer or round. */

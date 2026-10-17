@@ -124,6 +124,7 @@ type Seen = RankedGame & { view: GameView; journal: Journal };
  */
 class RankedSession implements GameSession {
   readonly ranked = true;
+  readonly served = true;
   /** Steps run one after another, in the order they were asked for. */
   private tail: Promise<unknown> = Promise.resolve();
   /** The `updatedAt` of the note the store last took from this session or gave to it. Null until there is one. */
