@@ -43,22 +43,47 @@ const TOPIC: Record<Headline['topic'], string> = {
   government: 'bg-sky-200',
 };
 
-/** The story of a game with friends in the words of the paper. */
-function storyText(t: (key: string, values?: Record<string, string | number>) => string, story: RoomStory): string {
+/**
+ * How the paper may tell each story of a game with friends: three ways each, as a tabloid would, so
+ * the same news does not read the same twice in a row. The keys are written out, one by one.
+ */
+const PAPER = {
+  lead: ['paperLead', 'paperLead2', 'paperLead3'],
+  leadMe: ['paperLeadMe', 'paperLeadMe2', 'paperLeadMe3'],
+  passed: ['paperPassed', 'paperPassed2', 'paperPassed3'],
+  passedBy: ['paperPassedBy', 'paperPassedBy2', 'paperPassedBy3'],
+  jump: ['paperJump', 'paperJump2', 'paperJump3'],
+  jumpMe: ['paperJumpMe', 'paperJumpMe2', 'paperJumpMe3'],
+  drop: ['paperDrop', 'paperDrop2', 'paperDrop3'],
+  dropMe: ['paperDropMe', 'paperDropMe2', 'paperDropMe3'],
+  neck: ['paperNeck', 'paperNeck2', 'paperNeck3'],
+  last: ['paperLast', 'paperLast2', 'paperLast3'],
+  lastMe: ['paperLastMe', 'paperLastMe2', 'paperLastMe3'],
+} as const;
+
+/** The story of a game with friends in the words of the paper: one of its ways, turned by the round and by who it is about. */
+export function storyText(t: (key: string, values?: Record<string, string | number>) => string, story: RoomStory, round: number): string {
   const name = (member: { name: string | null; userId: string }) => member.name ?? t('nameless', { tag: member.userId.slice(0, 4).toUpperCase() });
+  const way = (keys: readonly string[]) => {
+    let mix = round;
+    for (const char of story.who.userId) mix += char.charCodeAt(0);
+    return keys[mix % keys.length];
+  };
   switch (story.kind) {
     case 'lead':
-      return story.me ? t('paperLeadMe') : t('paperLead', { who: name(story.who) });
+      return story.me ? t(way(PAPER.leadMe)) : t(way(PAPER.lead), { who: name(story.who) });
     case 'passed':
-      return t('paperPassed', { who: name(story.who) });
+      return t(way(PAPER.passed), { who: name(story.who) });
     case 'passedBy':
-      return t('paperPassedBy', { who: name(story.who) });
+      return t(way(PAPER.passedBy), { who: name(story.who) });
     case 'jump':
-      return story.me ? t('paperJumpMe', { n: story.points }) : t('paperJump', { who: name(story.who), n: story.points });
+      return story.me ? t(way(PAPER.jumpMe), { n: story.points }) : t(way(PAPER.jump), { who: name(story.who), n: story.points });
     case 'drop':
-      return story.me ? t('paperDropMe', { n: story.points }) : t('paperDrop', { who: name(story.who), n: story.points });
+      return story.me ? t(way(PAPER.dropMe), { n: story.points }) : t(way(PAPER.drop), { who: name(story.who), n: story.points });
     case 'neck':
-      return t('paperNeck', { who: name(story.who), other: name(story.other) });
+      return t(way(PAPER.neck), { who: name(story.who), other: name(story.other) });
+    case 'last':
+      return story.me ? t(way(PAPER.lastMe)) : t(way(PAPER.last), { who: name(story.who) });
   }
 }
 
@@ -78,7 +103,7 @@ export function Headlines() {
   // In a game with friends the paper tells of the players themselves; alone, of the people the player grew up with, now and then.
   const story = players ? roomStory(players) : null;
   const gossip = players === null && people ? rivalNews(people.rivals, history, view.round) : null;
-  const told = story ? storyText(room, story) : gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
+  const told = story ? storyText(room, story, view.round) : gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
 
   return (
     <div className="flex flex-col gap-3">

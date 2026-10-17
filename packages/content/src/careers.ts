@@ -114,7 +114,7 @@ export const careers: CareerDef[] = [
       { salaryPct: 70, minSkill: 0, status: 6 },
       { salaryPct: 130, minSkill: 3, status: 14 },
       { salaryPct: 220, minSkill: 8, status: 24 },
-      { salaryPct: 300, minSkill: 14, status: 34 },
+      { salaryPct: 250, minSkill: 14, status: 34 },
     ],
   },
   {

@@ -12,18 +12,22 @@ export type RoomStory =
   | { kind: 'passedBy'; who: RoomMember }
   | { kind: 'jump'; who: RoomMember; me: boolean; points: number }
   | { kind: 'drop'; who: RoomMember; me: boolean; points: number }
-  | { kind: 'neck'; who: RoomMember; other: RoomMember };
+  | { kind: 'neck'; who: RoomMember; other: RoomMember }
+  | { kind: 'last'; who: RoomMember; me: boolean };
 
 /** A round's gain worth a story: this many points, and this share of what the player had. */
 const JUMP_POINTS = 30;
 const JUMP_SHARE = 0.15;
 /** Two leaders this close, as a share of the score, are neck and neck. */
 const NECK_SHARE = 0.02;
+/** The last of three or more, under this share of the leader's score, is far enough behind to be teased. */
+const LAST_SHARE = 0.6;
 
 /**
  * The one story worth printing about the round that turned last, or null after the first round, in
  * a quiet one, or for a player no longer in the game. In order: a new leader, the player
- * overtaking someone or overtaken, a big gain, a big loss, and two leaders neck and neck.
+ * overtaking someone or overtaken, a big gain, a big loss, two leaders neck and neck, and one left
+ * far behind.
  */
 export function roomStory(members: readonly RoomMember[]): RoomStory | null {
   const stayed = members.filter((member) => !member.left && member.standing !== null);
@@ -52,6 +56,8 @@ export function roomStory(members: readonly RoomMember[]): RoomStory | null {
 
   const second = order[1];
   if (score(leader) > 0 && score(leader) - score(second) <= NECK_SHARE * score(leader)) return { kind: 'neck', who: leader, other: second };
+  const last = order[order.length - 1];
+  if (order.length >= 3 && score(leader) > 0 && score(last) < LAST_SHARE * score(leader)) return { kind: 'last', who: last, me: last.me };
   return null;
 }
 

@@ -127,7 +127,7 @@ export const en: ContentText = {
     newcomer: {
       name: 'Newcomer abroad',
       perk: 'Four focus points and a second language.',
-      handicap: 'Little cash, and money sent home every year.',
+      handicap: 'Little cash, and money sent home for the first ten years.',
       unlock: 'Live in three cities in one life.',
     },
     banker: {

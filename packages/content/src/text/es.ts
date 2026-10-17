@@ -127,7 +127,7 @@ export const es: ContentText = {
     newcomer: {
       name: 'Recién llegada',
       perk: 'Cuatro puntos de foco y un segundo idioma.',
-      handicap: 'Poco dinero, y cada año manda una parte a casa.',
+      handicap: 'Poco dinero, y los diez primeros años manda una parte a casa.',
       unlock: 'Vive en tres ciudades en una misma vida.',
     },
     banker: {

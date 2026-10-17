@@ -200,7 +200,7 @@ export const life: LifeRules = {
   },
   rentOutMinFinanceSkill: 2,
   unstablePayPct: 30,
-  cheapMortgageBp: 60,
+  cheapMortgageBp: 100,
   cardsPerRound: 3,
   // A car or a watch second hand: about half or two thirds of the price, a couple of rounds old, and
   // now and then a repair. A car loses status with those rounds; a watch holds it, so a watch is

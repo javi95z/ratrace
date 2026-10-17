@@ -116,18 +116,18 @@ export const lives: LifeDef[] = [
     },
   },
   {
-    // Four focus points and a second language; little cash, and money sent home every year.
+    // Four focus points and a second language; little cash, and money sent home for the first rounds.
     id: 'newcomer',
     unlock: 'three_cities',
     start: {
       cityId: 'london',
-      cash: usd(1_500),
+      cash: usd(3_500),
       salaryAnnual: 0,
       lifestyleTier: 0,
       debts: [],
       life: {
         lifeId: 'newcomer', career: { id: 'service', level: 0 }, careerSkill: 2, financeSkill: 0, skills: { languages: 6 }, focus: 4, rentTier: 0,
-        recurring: [{ tag: 'remittance', kind: 'expense', annual: usd(2_400), roundsLeft: null }],
+        recurring: [{ tag: 'remittance', kind: 'expense', annual: usd(2_400), roundsLeft: 5 }],
         flags: ['bilingual'],
       },
     },
@@ -154,7 +154,7 @@ export const lives: LifeDef[] = [
       cash: usd(1_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
-      debts: [{ kind: 'personalLoan', principal: usd(60_000), fixedRateBp: 500, roundsLeft: 8 }],
+      debts: [{ kind: 'personalLoan', principal: usd(90_000), fixedRateBp: 500, roundsLeft: 8 }],
       life: { lifeId: 'doctor', career: { id: 'medicine', level: 0 }, careerSkill: 0, financeSkill: 0, skills: { health: 3 }, focus: 2, rentTier: 0, flags: ['layoff_proof'] },
     },
   },
@@ -212,7 +212,7 @@ export const lives: LifeDef[] = [
       cash: usd(1_000),
       salaryAnnual: 0,
       lifestyleTier: 1,
-      debts: [{ kind: 'personalLoan', principal: usd(24_000), fixedRateBp: 600, roundsLeft: 6 }],
+      debts: [{ kind: 'personalLoan', principal: usd(80_000), fixedRateBp: 600, roundsLeft: 8 }],
       life: { lifeId: 'lawyer', career: { id: 'law', level: 0 }, careerSkill: 0, financeSkill: 1, skills: { negotiation: 3 }, focus: 3 },
     },
   },
@@ -317,7 +317,7 @@ export const lives: LifeDef[] = [
     challengeFrom: '2026-W43',
     start: {
       cityId: 'zurich',
-      cash: usd(10_000),
+      cash: usd(8_000),
       salaryAnnual: 0,
       lifestyleTier: 2,
       debts: [],

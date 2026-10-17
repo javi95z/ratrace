@@ -103,13 +103,13 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Londres, con 1.500 $ |
+| Empieza en | Londres, con 3.500 $ |
 | Trabajo | Repartidor (Servicios) |
 | Experiencia · Finanzas · Foco | 2 · 0/3 · 4 |
 | Modo de vida | Austero |
 | Empieza con | Gasto fijo de 2.400 $ al año |
 | Ventaja | Cuatro puntos de foco y un segundo idioma. |
-| Desventaja | Poco dinero, y cada año manda una parte a casa. |
+| Desventaja | Poco dinero, y los diez primeros años manda una parte a casa. |
 | Se desbloquea | Vive en tres ciudades en una misma vida. |
 
 ### Banquero de inversión
@@ -137,7 +137,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Trabajo | Médica residente (Medicina) |
 | Experiencia · Finanzas · Foco | 0 · 0/3 · 2 |
 | Modo de vida | Normal |
-| Empieza con | Préstamo personal de 60.000 $ al 5 % |
+| Empieza con | Préstamo personal de 90.000 $ al 5 % |
 | Ventaja | No la pueden despedir, y acaba cobrando muy bien. |
 | Desventaja | Dos puntos de foco por ronda, y un préstamo de estudios largo. |
 | Se desbloquea | Sal de la rueda. |
@@ -197,7 +197,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 | Trabajo | Pasante (Derecho) |
 | Experiencia · Finanzas · Foco | 0 · 1/3 · 3 |
 | Modo de vida | Normal |
-| Empieza con | Préstamo personal de 24.000 $ al 6 % |
+| Empieza con | Préstamo personal de 80.000 $ al 6 % |
 | Ventaja | La escalera más alta del juego: nadie acaba cobrando más. |
 | Desventaja | La subida es la más lenta, y empieza con un préstamo de estudios. |
 | Se desbloquea | Compra tu primer reloj de lujo. |
@@ -313,7 +313,7 @@ Cada vida se dibuja a los 22, 32, 45 y 58 años.
 
 |  |  |
 | --- | --- |
-| Empieza en | Zúrich, con 10.000 $ |
+| Empieza en | Zúrich, con 8.000 $ |
 | Trabajo | Analista (Finanzas) |
 | Experiencia · Finanzas · Foco | 0 · 2/3 · 3 |
 | Modo de vida | Cómodo (no puede bajar de Cómodo) |
@@ -450,7 +450,7 @@ Horas extra: +12 % de sueldo esa ronda. Oficio de jóvenes: desde los 34 años, 
 | Creador novato | 70 % del sueldo medio | 0 | +6 |
 | Creador | 130 % del sueldo medio | 3 | +14 |
 | Influencer | 220 % del sueldo medio | 8 | +24 |
-| Estrella | 300 % del sueldo medio | 14 | +34 |
+| Estrella | 250 % del sueldo medio | 14 | +34 |
 
 ### Hostelería
 
@@ -587,7 +587,7 @@ Impuestos bajos, alquileres altos y ganancias libres de impuestos.
 | Impuesto sobre la renta | 5 % · 15 % · 22 % |
 | Impuesto sobre ganancias | 0 % |
 | Estatus por vivir aquí | +12 |
-| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % · Educación +15 % |
+| Carreras que paga mejor | Tecnología +20 % · Finanzas +10 % · Educación +25 % |
 
 ### <img src="../art/clean/icons/icon.city_bangkok.png" alt=""> Bangkok
 

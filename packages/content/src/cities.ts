@@ -210,7 +210,7 @@ export const cities: CityDef[] = [
     tax: singaporeTax,
     prestige: 12,
     taxOfficePct: 90,
-    careerPayPct: { tech: 120, finance: 110, education: 115 },
+    careerPayPct: { tech: 120, finance: 110, education: 125 },
   },
   {
     id: 'bangkok',
