@@ -152,7 +152,7 @@ function RatRace({ shown }: { shown: GameView }) {
     <>
       {/* Still in the race: the rat runs in its wheel, the harder the less of the year its money pays. */}
       {escaped ? null : (
-        <div aria-hidden className="sunk mx-auto mt-1 flex w-fit justify-center bg-night-900 px-6 py-1">
+        <div aria-hidden className="mt-1 flex justify-center">
           <Loop name="wheel" outfit={ratOutfit(shown)} scale={2} ms={Math.round(90 + pct * 1.4)} />
         </div>
       )}
