@@ -406,8 +406,8 @@
       "sell": "Продать",
       "gain": "Прибыль {amount}",
       "loss": "Убыток {amount}",
-      "pays": "Выплаты в этом раунде: {amount}",
-      "planBuys": "{amount} купит твой план, когда раунд будет сыгран"
+      "pays": "Выплаты: {amount}/раунд",
+      "planBuys": "План: +{amount}"
     },
     "market": {
       "funds": "Индексные фонды",
