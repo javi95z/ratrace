@@ -226,6 +226,8 @@ describe('a round in a room', () => {
     const order = screen.getByRole('region', { name: 'After round 1' });
     expect(within(order).getAllByRole('listitem')).toHaveLength(2);
     expect(within(order).getByText('You')).toBeTruthy();
+    // The rivals of a game with friends are the other players: the made-up ones of a life alone are not here.
+    expect(screen.queryByRole('region', { name: 'Your rivals' })).toBeNull();
   });
 
   it('teases a rival from the focus of the round, and the rival is told who did it', async () => {

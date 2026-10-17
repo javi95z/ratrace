@@ -1,5 +1,6 @@
 'use client';
 
+import { useRoomPaper } from '@/game/roomStory';
 import { scoreBreakdown } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { rivalScore } from '@/game/rivals';
@@ -17,7 +18,9 @@ export function RivalsBoard({ history }: { history: number[] }) {
   const { content, fmt } = useWords();
   const view = useGame((s) => s.view);
   const people = useRivals();
-  if (!people || !view || history.length === 0) return null;
+  // In a game with friends the rivals are the other players, and the room's order is theirs: no made-up ones.
+  const room = useRoomPaper();
+  if (room !== null || !people || !view || history.length === 0) return null;
   const last = history.length - 1;
   const rows = [
     { key: 'you', name: t('you'), score: scoreBreakdown(content, view).total, you: true },
