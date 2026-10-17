@@ -40,6 +40,8 @@ describe('the figures of the HUD', () => {
     const about = screen.getByRole('dialog', { name: 'Cash' });
     expect(about.getAttribute('aria-modal')).toBe('true');
     expect(document.querySelector('[data-sheet-backdrop]')).toBeTruthy();
+    // What it means is a tap away, so the figures come first.
+    await user.click(within(about).getByRole('button', { name: 'What is this?' }));
     expect(within(about).getByText(/The money you have on hand/)).toBeTruthy();
     expect(within(about).getByText('Net worth')).toBeTruthy();
 

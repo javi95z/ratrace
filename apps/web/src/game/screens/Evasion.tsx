@@ -1,5 +1,6 @@
 'use client';
 
+import { Explain } from './Explain';
 import { effectiveTax, quoteEvasion } from '@ratrace/engine';
 import type { GameView, Order, RoundPreview } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
@@ -57,7 +58,7 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
   return (
     <Panel title={t('title')} label={t('title')}>
       <div className="flex flex-col gap-3">
-        <p className="text-[13px] leading-snug text-ink-200">{t('about')}</p>
+        <Explain>{t('about')}</Explain>
         <Segmented<number>
           label={t('black')}
           value={quote.blackPct}

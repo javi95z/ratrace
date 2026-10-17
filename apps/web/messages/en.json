@@ -22,7 +22,8 @@
     "cancel": "Cancel",
     "back": "Back",
     "loading": "Loading…",
-    "notSaved": "This browser is not saving right now. Keep this tab open: closing it would lose what you have played."
+    "notSaved": "This browser is not saving right now. Keep this tab open: closing it would lose what you have played.",
+    "whatIsThis": "What is this?"
   },
   "install": {
     "title": "Keep the game",
@@ -219,7 +220,13 @@
     "business": "Businesses are open now. Starting one takes a point of focus and money; run it yourself or pay a manager. If it pays most of your salary for two rounds, you can quit for it.",
     "move": "Moving to another city is in Life, under where you live. Each city pays and costs differently; going back home has its perks.",
     "workMode": "In Life, How you work: half the day frees focus for less pay; working from home comes a few rungs up, in the trades that allow it.",
-    "taxes": "In Taxes you can hide part of your pay, open a company abroad, or keep crypto gains quiet. It saves money now and builds suspicion; an inspection takes it back with a fine."
+    "taxes": "In Taxes you can hide part of your pay, open a company abroad, or keep crypto gains quiet. It saves money now and builds suspicion; an inspection takes it back with a fine.",
+    "firstTitle": "First time",
+    "firstCrisis": "Your first crisis. Prices fall and some lose their jobs. Whoever has cash and does not sell in a panic usually comes out ahead: what is cheap today tends to recover.",
+    "firstCard": "You owe money on the credit card, at {rate} a year: the dearest debt in the game. Pay it off before investing, because no investment earns that much.",
+    "firstMargin": "You bought with the broker's money: you win and lose faster. If the asset falls far enough, the broker sells it all without asking. Keep an eye on the gauge in Debt.",
+    "firstMortgage": "You have a mortgage now. Fixed: you pay the same whatever happens. Variable: it follows rates, cheaper when they fall and painful when they rise. You can switch it in Debt.",
+    "firstHalfway": "Your passive income already covers half your outgoings. Once it covers all of them two rounds running, you are out of the rat race."
   },
   "news": {
     "title": "News",
@@ -810,7 +817,18 @@
       "officeStrict": "The tax office here is strict: inspections come more often.",
       "officeUsual": "The tax office here is like most.",
       "officeLax": "The tax office here looks the other way: inspections are rare."
-    }
+    },
+    "removed": "Order removed.",
+    "undo": "Undo",
+    "basketSummary": "{count, plural, one {# order} other {# orders}} · cash {from} → {to}",
+    "warn": {
+      "title": "Before you play the round",
+      "card": "You are {amount} short: it goes on the credit card, at {rate} a year.",
+      "margin": "If {name} falls {pct}, the broker sells all of it.",
+      "review": "Review",
+      "playAnyway": "Play anyway"
+    },
+    "basketCount": "{count, plural, one {# order} other {# orders}}"
   },
   "resolve": {
     "title": "Two years later",
@@ -1686,6 +1704,13 @@
         "expired": "{who} did not answer in time",
         "youAccepted": "Accepted: paid out when the round ends"
       }
+    },
+    "rules": {
+      "title": "How it works",
+      "same": "You all live the same life, in the same world.",
+      "clock": "Each round lasts {time}: whoever has not played in time plays it with the first options and no orders.",
+      "win": "The most points at the end wins: net worth and status. Getting out of the rat race multiplies them.",
+      "others": "During the game you can tease a rival from your focus, or lend them money and borrow it by tapping their name in the standings."
     }
   }
 }

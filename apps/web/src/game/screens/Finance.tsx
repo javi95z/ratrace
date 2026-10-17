@@ -1,5 +1,6 @@
 'use client';
 
+import { Explain } from './Explain';
 import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
@@ -311,7 +312,7 @@ function Plans() {
             </Button>
           }
         >
-          <p className="mb-2 text-[14px] leading-snug text-ink-200">{t('editHint')}</p>
+          <Explain className="mb-2">{t('editHint')}</Explain>
           {open.basis > 0 ? (
             <div className="mb-3 text-[14px]">
               <Row left={t('held')} right={fmt.money(open.value)} />
@@ -1048,7 +1049,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
         <CityDetail city={open.city} quote={open.quote} onBack={() => setChosen(null)} onMoved={onClose} />
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-[13px] leading-snug text-ink-200">{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</p>
+          <Explain>{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</Explain>
           <div className="flex justify-end text-[11px] uppercase tracking-wider text-ink-300">{t('left')}</div>
           <ul className="flex flex-col gap-1.5">
             {[...(here ? [here] : []), ...others].map(({ city, quote }) => {
@@ -1653,12 +1654,41 @@ export function BasketList() {
   const words = useWords();
   const view = useGame((s) => s.view);
   const orders = useGame((s) => s.orders);
+  const preview = useGame((s) => s.preview);
   const removeOrder = useGame((s) => s.removeOrder);
+  const undo = useGame((s) => s.undo);
+  const undoRemove = useGame((s) => s.undoRemove);
   if (!view) return null;
   const moving = view.player.life.movingTo;
-  if (orders.length === 0 && !moving) return <p className="py-1 text-[14px] text-ink-300">{t('basketEmpty')}</p>;
+  // What was just taken out can be put back, until the basket changes again.
+  const putBack =
+    undo !== null ? (
+      <div role="status" className="flex min-h-11 items-center justify-between gap-3 text-[13px] text-ink-300">
+        <span>{t('removed')}</span>
+        <button type="button" onClick={undoRemove} className="min-h-11 px-2 text-sky-300 underline underline-offset-4">
+          {t('undo')}
+        </button>
+      </div>
+    ) : null;
+  if (orders.length === 0 && !moving) {
+    return (
+      <>
+        <p className="py-1 text-[14px] text-ink-300">{t('basketEmpty')}</p>
+        {putBack}
+      </>
+    );
+  }
 
   return (
+    <>
+    {/* The basket at a glance: how many orders, and the cash they leave before the round is played. */}
+    {orders.length > 0 && preview ? (
+      <p className="mb-2 text-[13px] text-ink-200">
+        {preview.player.cash === view.player.cash
+          ? t('basketCount', { count: orders.length })
+          : t('basketSummary', { count: orders.length, from: words.fmt.money(view.player.cash), to: words.fmt.money(preview.player.cash) })}
+      </p>
+    ) : null}
     <ol aria-label={t('basketTitle')} className="flex flex-col gap-2">
       {moving ? (
         <li className="frame flex min-h-11 items-center justify-between gap-3 bg-night-600 px-3 py-1">
@@ -1681,6 +1711,8 @@ export function BasketList() {
         );
       })}
     </ol>
+    {putBack}
+    </>
   );
 }
 

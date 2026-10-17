@@ -22,7 +22,8 @@
     "cancel": "Cancelar",
     "back": "Volver",
     "loading": "Cargando…",
-    "notSaved": "Este navegador no está guardando ahora mismo. No cierres esta pestaña: perderías lo que has jugado."
+    "notSaved": "Este navegador no está guardando ahora mismo. No cierres esta pestaña: perderías lo que has jugado.",
+    "whatIsThis": "¿Qué es esto?"
   },
   "install": {
     "title": "Llévate el juego",
@@ -219,7 +220,13 @@
     "business": "Ya puedes montar negocios. Montar uno cuesta un punto de foco y dinero; llévalo tú o paga un encargado. Si te da casi todo tu sueldo dos rondas seguidas, puedes dejar tu trabajo por él.",
     "move": "Mudarte a otra ciudad está en Vida, en dónde vives. Cada ciudad paga y cuesta distinto; volver a tu ciudad de origen tiene ventajas.",
     "workMode": "En Vida, Cómo trabajas: media jornada te deja más foco a cambio de sueldo; el teletrabajo llega unos escalones más arriba, en los oficios que lo permiten.",
-    "taxes": "En Impuestos puedes cobrar parte en negro, abrir una sociedad fuera o callarte las ganancias en cripto. Ahorras ahora y levantas sospechas; una inspección se lo lleva todo con multa."
+    "taxes": "En Impuestos puedes cobrar parte en negro, abrir una sociedad fuera o callarte las ganancias en cripto. Ahorras ahora y levantas sospechas; una inspección se lo lleva todo con multa.",
+    "firstTitle": "Primera vez",
+    "firstCrisis": "Primera crisis. Los precios caen y algunos pierden el trabajo. Quien tiene efectivo y no vende con pánico suele salir ganando: lo que hoy está barato suele recuperarse.",
+    "firstCard": "Debes dinero en la tarjeta de crédito, al {rate} al año: la deuda más cara del juego. Págala antes de invertir, porque ninguna inversión rinde tanto.",
+    "firstMargin": "Has comprado con dinero del bróker: ganas y pierdes más deprisa. Si el activo cae lo bastante, el bróker lo vende todo sin preguntar. Vigila el indicador en Deuda.",
+    "firstMortgage": "Ya tienes hipoteca. Fija: pagas lo mismo pase lo que pase. Variable: sigue a los tipos, baja si bajan y duele si suben. Puedes cambiarla en Deuda.",
+    "firstHalfway": "Tus ingresos pasivos ya cubren la mitad de tus gastos. Cuando los cubran del todo dos rondas seguidas, sales de la rueda."
   },
   "news": {
     "title": "Noticias",
@@ -810,7 +817,18 @@
       "officeStrict": "Aquí Hacienda es estricta: las inspecciones llegan más a menudo.",
       "officeUsual": "Aquí Hacienda es como en la mayoría de sitios.",
       "officeLax": "Aquí Hacienda mira hacia otro lado: las inspecciones son raras."
-    }
+    },
+    "removed": "Orden quitada.",
+    "undo": "Deshacer",
+    "basketSummary": "{count, plural, one {# orden} other {# órdenes}} · efectivo {from} → {to}",
+    "warn": {
+      "title": "Antes de jugar la ronda",
+      "card": "Te faltan {amount}: irán a la tarjeta de crédito, al {rate} al año.",
+      "margin": "Si {name} cae un {pct}, el bróker lo vende todo.",
+      "review": "Revisar",
+      "playAnyway": "Jugar igualmente"
+    },
+    "basketCount": "{count, plural, one {# orden} other {# órdenes}}"
   },
   "resolve": {
     "title": "Dos años después",
@@ -1686,6 +1704,13 @@
         "expired": "{who} no respondió a tiempo",
         "youAccepted": "Aceptado: se paga al acabar la ronda"
       }
+    },
+    "rules": {
+      "title": "Cómo se juega",
+      "same": "Todos vivís la misma vida, en el mismo mundo.",
+      "clock": "Cada ronda dura {time}: si no juegas a tiempo, se juega sola, con las primeras opciones y sin órdenes.",
+      "win": "Gana quien acabe con más puntos: patrimonio y estatus. Salir de la rueda los multiplica.",
+      "others": "Durante la partida puedes picar a un rival desde tu foco, o prestarle dinero y pedírselo tocando su nombre en la clasificación."
     }
   }
 }

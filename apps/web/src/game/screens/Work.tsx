@@ -1,5 +1,6 @@
 'use client';
 
+import { Explain } from './Explain';
 import { careerArt, focusArt, RETIRED_ART, skillArt, workArt } from '@ratrace/content';
 import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
 import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
@@ -297,7 +298,7 @@ function CareerLadder({ work, shown }: { work: WorkQuote; shown: GameView }) {
 
   return (
     <>
-      <p className="text-[14px] leading-snug">{t('careerAbout', { career: text.careers[job.id].name, work: work.workSkill, study: work.studySkill })}</p>
+      <Explain>{t('careerAbout', { career: text.careers[job.id].name, work: work.workSkill, study: work.studySkill })}</Explain>
       {/* What sets this career apart from the others, in the figures of this round. */}
       {traits.follows || traits.fade || traits.focus > 0 ? (
         <ul aria-label={t('traits')} className="flex flex-col gap-1 border-l-4 border-gold-500 pl-3 text-[13px] leading-snug">
@@ -473,7 +474,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
           ))}
         </ul>
       )}
-      <p className="text-[13px] leading-snug text-ink-200">{t('focusAlso')}</p>
+      <Explain>{t('focusAlso')}</Explain>
       <p className="text-center text-[12px] text-ink-300">{open ? t('focusPick') : t('focusWhere')}</p>
     </>
   );

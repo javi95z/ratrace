@@ -1,5 +1,6 @@
 'use client';
 
+import { Explain } from './Explain';
 import { applyBp } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useRoom, useT, useWords } from '@/game/context';
@@ -126,7 +127,7 @@ export function PlayerSheet({ member, nameOf, onClose }: { member: RoomMember | 
             {t('worth', { worth: fmt.compact(standing.netWorth) })}
           </p>
         ) : null}
-        <p className="mt-2 text-[13px] leading-snug text-ink-300">{t('about')}</p>
+        <Explain className="mt-2">{t('about')}</Explain>
         <div className="mt-3 flex gap-2">
           <Button variant="primary" wide onClick={() => setLend(true)}>
             {t('offer')}
@@ -196,7 +197,7 @@ function LoanSheet({ member, lend, nameOf, onClose }: { member: RoomMember; lend
         ) : (
           <p className="text-[12px] text-wine-300">{t('amountRange', { min: fmt.money(LOAN_MIN), max: fmt.money(LOAN_MAX) })}</p>
         )}
-        <p className="text-[12px] leading-snug text-ink-300">{t('rules')}</p>
+        <Explain>{t('rules')}</Explain>
         {state === 'failed' ? <p role="alert" className="text-[13px] text-wine-300">{t('failed')}</p> : null}
         <Button variant="primary" wide disabled={!valid || state === 'sending'} onClick={() => void send()}>
           {t(lend ? 'sendOffer' : 'sendAsk', { who: name })}

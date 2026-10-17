@@ -1,5 +1,6 @@
 'use client';
 
+import { roundWarnings } from '@/game/roundWarnings';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
@@ -8,7 +9,7 @@ import { ageAt } from '@/game/present';
 import type { Stage } from '@/game/store';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
-import { Toast } from '@/ui/overlay';
+import { Sheet, Toast } from '@/ui/overlay';
 import { useIsDesk } from '@/ui/useMedia';
 import { KeyboardHint, useKeyboardContext, useKeyboardScope } from '@/ui/keyboard';
 import { CardStage, Outcome } from './Cards';
@@ -21,6 +22,53 @@ import { PageTurn } from './PageTurn';
 import { Headlines, NewsPanel, RoundOpener } from './News';
 import { Leave, ProfileBody, ProfileSheet } from './Profile';
 import { Resolve } from './Resolve';
+
+/**
+ * Plays the round. When the orders would make a costly mistake (cash running out onto the credit
+ * card, a margin loan a small fall from its forced sale) it says so first, and plays only if asked again.
+ */
+function PlayRound() {
+  const t = useT('finance');
+  const common = useT('common');
+  const { content, names, fmt } = useWords();
+  const view = useGame((s) => s.view);
+  const preview = useGame((s) => s.preview);
+  const busy = useGame((s) => s.busy);
+  const play = useGame((s) => s.play);
+  const [asking, setAsking] = useState(false);
+  const warnings = view && preview ? roundWarnings(content, view, preview) : [];
+  const go = () => {
+    setAsking(false);
+    void play();
+  };
+  return (
+    <>
+      <Button variant="primary" wide disabled={busy} data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={() => (warnings.length > 0 ? setAsking(true) : go())}>
+        {t('play')}
+        <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
+      </Button>
+      <Sheet open={asking} onClose={() => setAsking(false)} title={t('warn.title')} tone="wine" closeLabel={common('close')}>
+        <ul className="flex flex-col gap-2 text-[14px] leading-snug">
+          {warnings.map((warning) => (
+            <li key={warning.kind === 'card' ? 'card' : warning.assetId}>
+              {warning.kind === 'card'
+                ? t('warn.card', { amount: fmt.money(warning.amount), rate: fmt.rate(warning.rateBp) })
+                : t('warn.margin', { name: names.assets[warning.assetId]?.name ?? warning.assetId, pct: fmt.rate(warning.dropBp) })}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex flex-col gap-2">
+          <Button wide onClick={() => setAsking(false)}>
+            {t('warn.review')}
+          </Button>
+          <Button variant="danger" wide disabled={busy} onClick={go}>
+            {t('warn.playAnyway')}
+          </Button>
+        </div>
+      </Sheet>
+    </>
+  );
+}
 
 /**
  * The one thing to do next, where a thumb rests. In the finance phase it also says what the round
@@ -38,7 +86,6 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
   const busy = useGame((s) => s.busy);
   const leaveNews = useGame((s) => s.leaveNews);
   const afterCard = useGame((s) => s.afterCard);
-  const play = useGame((s) => s.play);
   const next = useGame((s) => s.next);
   if (!view) return null;
   const cardsWait = view.phase === 'cards';
@@ -73,10 +120,7 @@ function Actions({ stage, desk, onBasket }: { stage: Stage; desk: boolean; onBas
                 {finance('basket', { count: orders.length })}
               </Button>
             )}
-            <Button variant="primary" wide disabled={busy} data-primary-action aria-keyshortcuts="Control+Enter Meta+Enter" onClick={() => void play()}>
-              {finance('play')}
-              <KeyboardHint>Ctrl/⌘ ↵</KeyboardHint>
-            </Button>
+            <PlayRound />
           </div>
         </div>
       );

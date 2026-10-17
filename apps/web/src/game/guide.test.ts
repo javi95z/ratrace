@@ -45,3 +45,22 @@ describe('the guide of a first life', () => {
     expect(nextTip(facts({ stage: 'finance', off: true, round: 4 }))).toBeNull();
   });
 });
+
+describe('the notes of a first time', () => {
+  const none = { crisis: false, creditCard: false, mortgage: false, margin: false, halfway: false };
+  const veteran = (over: Partial<GuideFacts> = {}) => facts({ livesFinished: 3, ...over });
+
+  it('come in any life, once each, on the stage where they matter', () => {
+    expect(nextTip(veteran({ stage: 'news', firsts: { ...none, crisis: true } }))).toBe('firstCrisis');
+    expect(nextTip(veteran({ stage: 'finance', firsts: { ...none, crisis: true } }))).toBeNull();
+    expect(nextTip(veteran({ stage: 'finance', firsts: { ...none, creditCard: true, mortgage: true } }))).toBe('firstCard');
+    expect(nextTip(veteran({ stage: 'finance', seen: ['firstCard'], firsts: { ...none, creditCard: true, mortgage: true } }))).toBe('firstMortgage');
+    expect(nextTip(veteran({ stage: 'finance', firsts: none }))).toBeNull();
+  });
+
+  it('wait for the tips of a first life, and are silenced with them', () => {
+    expect(nextTip(facts({ stage: 'news', firsts: { ...none, crisis: true } }))).toBe('news');
+    expect(nextTip(facts({ stage: 'news', seen: ['news'], firsts: { ...none, crisis: true } }))).toBe('firstCrisis');
+    expect(nextTip(veteran({ off: true, stage: 'news', firsts: { ...none, crisis: true } }))).toBeNull();
+  });
+});

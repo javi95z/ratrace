@@ -75,6 +75,7 @@ describe('the work panel of the profile', () => {
       if (rung.status > 0) expect(within(rungs[i]).getByText(`Status +${rung.status}`)).toBeTruthy();
       if (i > 0) expect(within(rungs[i]).getByText(`Career skill ${rung.minSkill} · ${rung.minSkill - work.skill} to go`)).toBeTruthy();
     });
+    await user.click(within(sheet).getByRole('button', { name: 'What is this?' }));
     expect(within(sheet).getByText(/^A career in Healthcare\. Each round worked gives \+1 career skill, and studying \+1 more\./)).toBeTruthy();
     expect(within(sheet).getByText('Pay in Madrid today, with the raises and cuts you already carry.')).toBeTruthy();
   });
@@ -125,6 +126,7 @@ describe('the work panel of the profile', () => {
     expect(within(sheet).getByText(`+${work.overtimePct}% pay this round.`)).toBeTruthy();
     expect(within(sheet).getByText(`+${work.studySkill} career skill, on top of what working gives · ${work.rungStudy.left} of ${work.rungStudy.max} left at this rung`)).toBeTruthy();
     expect(within(sheet).getByText(`${work.jobHuntChancePct}% chance of a ${work.jobHuntRaisePct}% raise for good.`)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: 'What is this?' }));
     expect(within(sheet).getByText(/^Moving city takes 1 focus/)).toBeTruthy();
   });
 

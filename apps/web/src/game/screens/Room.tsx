@@ -491,6 +491,15 @@ function Lobby({ room }: { room: RoomState }) {
           </div>
         </div>
       </Panel>
+      {/* What a newcomer needs before the first round: three rules, and what can be done to the others. */}
+      <Panel title={t('rules.title')} label={t('rules.title')}>
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-[14px] leading-snug">
+          <li>{t('rules.same')}</li>
+          <li>{t('rules.clock', { time: paceOf(room.seconds) })}</li>
+          <li>{t('rules.win')}</li>
+        </ul>
+        <p className="mt-2 text-[13px] leading-snug text-ink-300">{t('rules.others')}</p>
+      </Panel>
       <Panel title={t('members', { count: here.length, max: MAX_MEMBERS })} label={t('members', { count: here.length, max: MAX_MEMBERS })}>
         <ul className="divide-y-2 divide-night-900">
           {here.map((member) => (

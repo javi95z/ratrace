@@ -11,6 +11,17 @@ export interface GuideFacts {
   livesFinished: number;
   /** True if the player holds, or has in this round's orders, savings or an investment. */
   hasInvested: boolean;
+  /** What is new in the life as it stands, for the notes of a first time. Left out, none is due. */
+  firsts?: FirstFacts;
+}
+
+/** What the notes of a first time look for: a crisis on, a debt of each costly kind, and half the way out. */
+export interface FirstFacts {
+  crisis: boolean;
+  creditCard: boolean;
+  mortgage: boolean;
+  margin: boolean;
+  halfway: boolean;
 }
 
 interface Tip {
@@ -46,6 +57,21 @@ export const TIPS: readonly Tip[] = [
 ];
 
 /**
+ * Notes of a first time: said once, the first time a costly or decisive thing turns up in any life,
+ * however many lives the player has finished, on the stage where it matters. Each once, ever.
+ */
+export const FIRSTS: ReadonlyArray<{ id: string; stage: Stage; when: (facts: FirstFacts) => boolean }> = [
+  { id: 'firstCrisis', stage: 'news', when: (facts) => facts.crisis },
+  { id: 'firstCard', stage: 'finance', when: (facts) => facts.creditCard },
+  { id: 'firstMargin', stage: 'finance', when: (facts) => facts.margin },
+  { id: 'firstMortgage', stage: 'finance', when: (facts) => facts.mortgage },
+  { id: 'firstHalfway', stage: 'finance', when: (facts) => facts.halfway },
+];
+
+/** True for the id of a note of a first time, rather than a tip of the first life. */
+export const isFirst = (id: string): boolean => FIRSTS.some((first) => first.id === id);
+
+/**
  * The round from which each tab of the money is on screen in a guided first life: the first round
  * shows what a first round needs, and the rest come as their tips do, so nothing is learnt all at once.
  */
@@ -57,7 +83,11 @@ export const TAB_FROM_ROUND: Readonly<Record<string, number>> = { portfolio: 0, 
  * the guide off, sees none.
  */
 export function nextTip(facts: GuideFacts): string | null {
-  if (facts.off || facts.livesFinished > 0) return null;
-  const due = TIPS.find((tip) => tip.stage === facts.stage && facts.round >= tip.fromRound && !facts.seen.includes(tip.id) && !tip.unless?.(facts));
-  return due ? due.id : null;
+  if (facts.off) return null;
+  const due = facts.livesFinished > 0 ? undefined : TIPS.find((tip) => tip.stage === facts.stage && facts.round >= tip.fromRound && !facts.seen.includes(tip.id) && !tip.unless?.(facts));
+  if (due) return due.id;
+  // Past the tips of the first life, or between them: the first time of something that matters.
+  const { firsts } = facts;
+  const first = firsts ? FIRSTS.find((each) => each.stage === facts.stage && !facts.seen.includes(each.id) && each.when(firsts)) : undefined;
+  return first ? first.id : null;
 }

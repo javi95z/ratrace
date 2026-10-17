@@ -1,5 +1,6 @@
 'use client';
 
+import { Explain } from './Explain';
 import { ratOutfit } from '@/game/quips';
 import { Loop } from './Loop';
 import { FRAME_STATUS, frameArt, portraitArt } from '@ratrace/content';
@@ -114,7 +115,7 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
 
   return (
     <>
-      <p className="mb-1 text-[13px] leading-snug text-ink-200">{t(`about.${figure}`)}</p>
+      <Explain className="mb-1">{t(`about.${figure}`)}</Explain>
       <div className="text-[14px]">{rows}</div>
     </>
   );
@@ -227,6 +228,16 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const [paper, setPaper] = useState(false);
   // What sticks to the top tells the tabs under it how far down to stick.
   const stuck = useRef<HTMLDivElement>(null);
+  // The row with the portrait, watched so that once it has scrolled away the strip that sticks says whose life and which round it is.
+  const top = useRef<HTMLDivElement>(null);
+  const [away, setAway] = useState(false);
+  useEffect(() => {
+    const el = top.current;
+    if (!el || flush || typeof IntersectionObserver === 'undefined') return;
+    const watch = new IntersectionObserver(([entry]) => setAway(!entry.isIntersecting), { threshold: 0 });
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [flush]);
   useEffect(() => {
     const el = stuck.current;
     if (!el || flush) return;
@@ -279,7 +290,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       {/* A round opens in the first light and closes at night; a boom and a crisis each have a sky of their own. */}
       {skyline ? <div className={flush ? '' : 'mt-3 px-3'}><CityBanner cityId={p.cityId} light={cityLight(shown.timeline[shown.round], stage === 'news')} /></div> : null}
 
-      <div className={`flex items-center gap-3 ${flush ? '' : `px-3 ${skyline ? 'mt-2' : 'mt-3'}`}`}>
+      <div ref={top} className={`flex items-center gap-3 ${flush ? '' : `px-3 ${skyline ? 'mt-2' : 'mt-3'}`}`}>
         {onProfile ? (
           <button type="button" onClick={onProfile} aria-label={t('openProfile')} className="shrink-0 leading-[0]">
             {framed}
@@ -315,6 +326,15 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
       </div>
 
       <div ref={stuck} className={flush ? 'flex flex-col gap-2' : 'sticky top-safe z-30 mt-2 flex flex-col gap-2 bg-night-800 px-3 pb-2 pt-1'}>
+      {away ? (
+        <div className="flex items-baseline justify-between gap-2 text-[13px] text-ink-200">
+          <span className="pixel truncate">
+            {character ? <span className="text-gold-500">{character} · </span> : null}
+            {common('age', { age })}
+          </span>
+          <span className="shrink-0">{t('roundShort', { n: Math.min(shown.round + 1, content.rounds), total: content.rounds })}</span>
+        </div>
+      ) : null}
       <div className="@container">
         <div className="grid grid-cols-3 gap-1.5">
           <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => setOpen('cash')} />

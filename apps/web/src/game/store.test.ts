@@ -179,6 +179,22 @@ describe('the finance phase', () => {
     expect(get()).toMatchObject({ orders: [], alsoRemoved: 0 });
   });
 
+  it('puts back what was taken out of the basket, until the basket changes again', async () => {
+    const { get } = await inFinance('engineer');
+    expect(get().addOrder(study)).toBe(true);
+    expect(get().addOrder(overtime)).toBe(true);
+    get().removeOrder(0);
+    expect(get().orders).toEqual([overtime]);
+    get().undoRemove();
+    expect(get()).toMatchObject({ orders: [study, overtime], undo: null });
+    // A change made after taking one out is the one kept.
+    get().removeOrder(1);
+    expect(get().setOrder(isLifestyle, { type: 'setLifestyle', tier: 0 })).toBe(true);
+    expect(get().undo).toBeNull();
+    get().undoRemove();
+    expect(get().orders).toEqual([study, { type: 'setLifestyle', tier: 0 }]);
+  });
+
   it('switches a choice on and off, and replaces a setting instead of stacking it', async () => {
     const { get } = await inFinance();
     expect(get().setOrder(isFocus('overtime'), overtime)).toBe(true);

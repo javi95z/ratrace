@@ -44,6 +44,8 @@ export interface RoundState {
   orders: Order[];
   /** What the round will pay and charge with the basket as it is. Null outside the finance phase. */
   preview: RoundPreview | null;
+  /** The basket as it was before an order was taken out of it, while that can still be undone; null otherwise. */
+  undo: Order[] | null;
   /** Why the last order was not taken. */
   refusal: RejectReason | null;
   /** How many other orders went with the last one removed, because they only worked thanks to it. The player is told. */
@@ -109,6 +111,8 @@ export interface RoundActions {
   addOrder(order: Order): boolean;
   /** Takes an order out, together with any later order that only worked because of it. */
   removeOrder(index: number): void;
+  /** Puts back the basket as it was before the last order was taken out of it. */
+  undoRemove(): void;
   /**
    * For choices that are switches or settings: takes out every order that `same` matches,
    * then adds `order` unless it is null. If the new order is refused the basket is left as it was.
@@ -156,6 +160,7 @@ const blank: RoundState = {
   cardEvents: [],
   offered: null,
   orders: [],
+  undo: null,
   preview: null,
   refusal: null,
   alsoRemoved: 0,
@@ -239,6 +244,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
           unlocked: result.unlocked,
           resolved: { before: view, events: result.events },
           orders: [],
+          undo: null,
           preview: null,
           refusal: null,
           alsoRemoved: 0,
@@ -392,7 +398,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       toFinance() {
         const { view } = get();
         if (!view || view.finished || view.phase !== 'finance') return;
-        set({ stage: 'finance', refusal: null, ...settle(view, []) });
+        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, []) });
       },
 
       addOrder(order) {
@@ -404,12 +410,20 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         if (!view) return;
         const without = orders.filter((_, i) => i !== index);
         const settled = settle(view, without);
-        set({ refusal: null, alsoRemoved: without.length - settled.orders.length, ...settled });
+        set({ refusal: null, alsoRemoved: without.length - settled.orders.length, undo: without.length < orders.length ? orders : get().undo, ...settled });
+      },
+
+      undoRemove() {
+        const { view, undo } = get();
+        if (!view || undo === null) return;
+        set({ refusal: null, alsoRemoved: 0, undo: null, ...settle(view, undo) });
       },
 
       setOrder(same, order) {
         const { view, orders } = get();
         if (!view) return false;
+        // A new change to the basket is the one to keep: what was taken out before it is not put back.
+        set({ undo: null });
         const base = orders.filter((existing) => !same(existing));
         if (order === null) {
           set({ refusal: null, alsoRemoved: 0, ...settle(view, base) });
