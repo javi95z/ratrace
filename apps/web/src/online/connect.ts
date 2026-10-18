@@ -343,6 +343,23 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return false;
         }
       },
+      async marketNotice(endpoint) {
+        try {
+          const { data, error } = await client.from('push_subscriptions').select('market_moved').eq('endpoint', endpoint).maybeSingle();
+          const row = data as { market_moved: boolean } | null;
+          return error || row === null ? null : row.market_moved;
+        } catch {
+          return null;
+        }
+      },
+      async setMarketNotice(endpoint, on) {
+        try {
+          const { error } = await client.from('push_subscriptions').update({ market_moved: on }).eq('endpoint', endpoint);
+          return !error;
+        } catch {
+          return false;
+        }
+      },
       async challengeChoices(week) {
         try {
           const { data, error } = await client.rpc('challenge_choices', { week_id: week });

@@ -439,6 +439,10 @@ verify_jwt = true
 [functions.weekly-notice]
 verify_jwt = false
 
+# "Your market moved": the same, called every evening by a job of the database.
+[functions.market-notice]
+verify_jwt = false
+
 # The errors a page met, kept in one place without anything of who met them. Signed-in players only.
 [functions.report-error]
 verify_jwt = true

@@ -186,7 +186,9 @@
     "points": "{n} puntos",
     "weeklyNotice": "Activar notificaciones",
     "weeklyNoticeHint": "El reto semanal, tus partidas multijugador y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
-    "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador."
+    "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador.",
+    "marketNotice": "Avisarme si se mueve mi mercado",
+    "marketNoticeHint": "Cuando algo que tienes en una vida clasificatoria se ha movido un 5 % o más en tu última ronda. Como mucho un aviso al día."
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
