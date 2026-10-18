@@ -98,6 +98,28 @@ describe('the collection', () => {
     expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
   });
 
+  it('says how seldom each rarity is earned in lives, never in real players, and hides judged badges until won', async () => {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' } } });
+    const user = userEvent.setup();
+    renderGame(<Collection />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Badges' }));
+    const panel = screen.getByRole('tabpanel', { name: 'Badges' });
+    expect(within(panel).getAllByText(/More than 30 in 100 lives/).length).toBeGreaterThan(0);
+    expect(within(panel).getAllByText(/Fewer than 2 in 100 lives/).length).toBeGreaterThan(0);
+    expect(within(panel).getAllByText(/10 to 30 in 100 lives/).length).toBeGreaterThan(0);
+    expect(within(panel).getAllByText(/2 to 10 in 100 lives/).length).toBeGreaterThan(0);
+    expect(panel.textContent).not.toMatch(/% of players|players have/i);
+    // A judged badge, not yet won: its name is not told, only the group it belongs to.
+    expect(within(panel).queryByText('Swiss banker')).toBeNull();
+    const secrets = [...panel.querySelectorAll('[data-secret]')];
+    expect(secrets.length).toBeGreaterThan(0);
+    expect(within(secrets[0] as HTMLElement).getByText('???')).toBeTruthy();
+    expect(within(secrets[0] as HTMLElement).getByText(/Something to do with: /)).toBeTruthy();
+    // A measured badge is still named while locked.
+    expect(within(panel).getByText('Ten million')).toBeTruthy();
+  });
+
   it('starts empty for someone new, and leads back home', async () => {
     renderGame(<Collection />, memoryServices());
     expect(await screen.findByText(`0 of ${content.items.length} owned`)).toBeTruthy();
