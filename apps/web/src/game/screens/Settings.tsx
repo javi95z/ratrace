@@ -4,6 +4,7 @@ import { CONTENT_VERSION, portraitArt } from '@ratrace/content';
 import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useAccount, useAccountSaves, useCommunity, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { canNotify, currentSubscription, subscribe, unsubscribe } from '@/pwa/notifications';
 import { ageAt, portraitAge } from '@/game/present';
@@ -269,12 +270,14 @@ export function HomePreferences() {
  * The same at the foot of the front door, as it always was: the account in sight, with the way
  * into Google, and the settings a button below it.
  */
-export function HomeSettingsPanel() {
+export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
   const t = useT('settings');
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col gap-2">
       <AccountBlock compact />
+      {/* The player's profile, next to the account it belongs to. */}
+      {profile}
       <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
         <Sprite id="icon.settings" />
         {t('title')}

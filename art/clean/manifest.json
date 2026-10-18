@@ -4126,6 +4126,246 @@
       "width": 64,
       "height": 64
     },
+    "rat.body.grey": {
+      "file": "rat_body/rat.body.grey.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.brown": {
+      "file": "rat_body/rat.body.brown.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.white": {
+      "file": "rat_body/rat.body.white.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.black": {
+      "file": "rat_body/rat.body.black.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.ginger": {
+      "file": "rat_body/rat.body.ginger.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.golden": {
+      "file": "rat_body/rat.body.golden.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.slate": {
+      "file": "rat_body/rat.body.slate.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.body.spotted": {
+      "file": "rat_body/rat.body.spotted.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.suit": {
+      "file": "rat_outfit/rat.outfit.suit.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.tracksuit": {
+      "file": "rat_outfit/rat.outfit.tracksuit.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.tuxedo": {
+      "file": "rat_outfit/rat.outfit.tuxedo.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.hoodie": {
+      "file": "rat_outfit/rat.outfit.hoodie.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.scrubs": {
+      "file": "rat_outfit/rat.outfit.scrubs.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.hivis": {
+      "file": "rat_outfit/rat.outfit.hivis.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.chef": {
+      "file": "rat_outfit/rat.outfit.chef.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.leather": {
+      "file": "rat_outfit/rat.outfit.leather.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.cap": {
+      "file": "rat_hat/rat.hat.cap.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.beanie": {
+      "file": "rat_hat/rat.hat.beanie.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.beret": {
+      "file": "rat_hat/rat.hat.beret.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.hardhat": {
+      "file": "rat_hat/rat.hat.hardhat.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.cowboy": {
+      "file": "rat_hat/rat.hat.cowboy.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.headphones": {
+      "file": "rat_hat/rat.hat.headphones.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.bandana": {
+      "file": "rat_hat/rat.hat.bandana.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.chef": {
+      "file": "rat_hat/rat.hat.chef.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.tophat": {
+      "file": "rat_hat/rat.hat.tophat.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.crown": {
+      "file": "rat_hat/rat.hat.crown.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.graduate": {
+      "file": "rat_hat/rat.hat.graduate.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.party": {
+      "file": "rat_hat/rat.hat.party.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.viking": {
+      "file": "rat_hat/rat.hat.viking.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.flowers": {
+      "file": "rat_hat/rat.hat.flowers.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.wizard": {
+      "file": "rat_hat/rat.hat.wizard.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.hat.halo": {
+      "file": "rat_hat/rat.hat.halo.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.sunglasses": {
+      "file": "rat_eyes/rat.eyes.sunglasses.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.round": {
+      "file": "rat_eyes/rat.eyes.round.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.aviators": {
+      "file": "rat_eyes/rat.eyes.aviators.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.monocle": {
+      "file": "rat_eyes/rat.eyes.monocle.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.patch": {
+      "file": "rat_eyes/rat.eyes.patch.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.visor": {
+      "file": "rat_eyes/rat.eyes.visor.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.moustache": {
+      "file": "rat_eyes/rat.eyes.moustache.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.eyes.heart": {
+      "file": "rat_eyes/rat.eyes.heart.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.stars": {
+      "file": "rat_backdrop/rat.backdrop.stars.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.city": {
+      "file": "rat_backdrop/rat.backdrop.city.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.coins": {
+      "file": "rat_backdrop/rat.backdrop.coins.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.chart": {
+      "file": "rat_backdrop/rat.backdrop.chart.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.cheese": {
+      "file": "rat_backdrop/rat.backdrop.cheese.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.confetti": {
+      "file": "rat_backdrop/rat.backdrop.confetti.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.wheel": {
+      "file": "rat_backdrop/rat.backdrop.wheel.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.backdrop.beach": {
+      "file": "rat_backdrop/rat.backdrop.beach.png",
+      "width": 128,
+      "height": 128
+    },
     "brand.logo": {
       "file": "brand/brand.logo.png",
       "width": 256,

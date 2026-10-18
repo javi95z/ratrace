@@ -31,6 +31,11 @@ const CONTACT_LAYOUT: Record<string, { columns: number; scale: number; backgroun
   cards: { columns: 3, scale: 2, backgrounds: [NAVY] },
   skylines: { columns: 2, scale: 2, backgrounds: [NAVY] },
   brand: { columns: 4, scale: 1, backgrounds: [NAVY, CREAM] },
+  rat_body: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
+  rat_outfit: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
+  rat_hat: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
+  rat_eyes: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
+  rat_backdrop: { columns: 8, scale: 2, backgrounds: [NAVY] },
 };
 
 const exists = (file: string) => access(file).then(() => true, () => false);
@@ -58,14 +63,18 @@ async function main(): Promise<void> {
   const missing: string[] = [];
   const sprites: Sprite[] = [];
 
+  const found = async (name: string) => {
+    const base = path.join(RAW, name);
+    return (await exists(`${base}.png`)) ? `${base}.png` : (await exists(`${base}.webp`)) ? `${base}.webp` : null;
+  };
   for (const spec of SHEETS) {
-    const base = path.join(RAW, spec.file);
-    const file = (await exists(`${base}.png`)) ? `${base}.png` : (await exists(`${base}.webp`)) ? `${base}.webp` : null;
-    if (file === null) {
+    const file = await found(spec.file);
+    const overFile = spec.over === undefined ? null : await found(spec.over);
+    if (file === null || (spec.over !== undefined && overFile === null)) {
       missing.push(spec.file);
       continue;
     }
-    sprites.push(...cutSheet(await readImage(file), spec));
+    sprites.push(...cutSheet(await readImage(file), spec, overFile === null ? undefined : await readImage(overFile)));
   }
 
   const ids = new Set<string>();
@@ -88,8 +97,12 @@ async function main(): Promise<void> {
       palettes[group] = buildPalette(FIXED_PALETTE, histogram, EXTRA_COLOURS);
     }
   }
+  // A group new since the palettes were made gets its own, leaving those of the others as they were.
   for (const group of groups) {
-    if (!palettes[group]) throw new Error(`art/clean/palette.json has no palette for ${group}; run with --rebuild-palette`);
+    if (palettes[group]) continue;
+    const histogram = new Histogram();
+    for (const sprite of sprites) if (sprite.group === group) histogram.addImage(sprite.image);
+    palettes[group] = buildPalette(FIXED_PALETTE, histogram, EXTRA_COLOURS);
   }
 
   await rm(CLEAN, { recursive: true, force: true });

@@ -1,6 +1,6 @@
 'use client';
 
-import { ratColourOf } from '@/game/avatar';
+import { ratLookOf } from '@/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { LoanOffers, PlayerSheet } from './RoomLoans';
 import { badgeArt, lives, portraitArt, ratArt } from '@ratrace/content';
@@ -804,9 +804,9 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
   );
 }
 
-/** A player's rat, in the colour they chose, or the one their id gives them. */
+/** A player's rat, as they dressed it, or the one their id gives them. */
 export function MemberRat({ member, size = 'sm' }: { member: Pick<RoomMember, 'userId' | 'avatar'>; size?: 'sm' | 'md' }) {
-  return <RatAvatar colour={ratColourOf(member.avatar, member.userId)} size={size} />;
+  return <RatAvatar look={ratLookOf(member.avatar, member.userId)} size={size} />;
 }
 
 /** A line of the room's order: a button when it opens something, a plain line when it does not. */

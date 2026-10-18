@@ -8,8 +8,10 @@ export interface SheetSpec {
    * objects: things on the key colour, found by their outline.
    * portraits: busts that fill their cells, cut on the fixed grid.
    * scenes: full pictures separated by dividing lines.
+   * layers: pieces of the player's rat, cut on the fixed grid and placed over the reference rat
+   *   (the first cell of `over`), so that any body takes any outfit, hat or eyewear.
    */
-  kind: 'objects' | 'portraits' | 'scenes';
+  kind: 'objects' | 'portraits' | 'scenes' | 'layers';
   cols: number;
   rows: number;
   /** Sprite size in pixels. */
@@ -17,6 +19,10 @@ export interface SheetSpec {
   height: number;
   /** Cell names, left to right and top to bottom. An empty name skips the cell. */
   ids: string[];
+  /** For layers: the sheet whose first cell is the rat every piece is placed over. */
+  over?: string;
+  /** For layers: drawn over a pale guide of the rat, which is not part of the piece. */
+  guided?: boolean;
 }
 
 const LIVES_A = ['nurse', 'engineer', 'civil_servant', 'rider'];
@@ -381,6 +387,25 @@ export const SHEETS: SheetSpec[] = [
   { file: 'badges/badges-10', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.mp_first_win', 'badge.mp_full_house', 'badge.mp_rematch_win'] },
   { file: 'badges/badges-09', group: 'badges', kind: 'objects', cols: 4, rows: 1, width: 64, height: 64, ids: ['badge.tax_free_year', 'badge.tax_haven', 'badge.off_the_grid', 'badge.home_again'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
+  // A player's rat in layers, back to front: backdrop, body, outfit, eyewear, headwear. The faces of
+  // rat-face-01 are not cut: the bodies came with eyes and a smile of their own, which a face would double.
+  ...(
+    [
+      ['rat-body-01', 'body', false, ['grey', 'brown', 'white', 'black', 'ginger', 'golden', 'slate', 'spotted']],
+      ['rat-outfit-01', 'outfit', true, ['suit', 'tracksuit', 'tuxedo', 'hoodie', 'scrubs', 'hivis', 'chef', 'leather']],
+      ['rat-outfit-02', 'outfit', true, ['lab', 'sweater', 'hawaiian', 'varsity', 'robe', 'kimono', 'fur', 'gold']],
+      ['rat-hat-01', 'hat', true, ['cap', 'beanie', 'beret', 'hardhat', 'cowboy', 'headphones', 'bandana', 'chef']],
+      ['rat-hat-02', 'hat', true, ['tophat', 'crown', 'graduate', 'party', 'viking', 'flowers', 'wizard', 'halo']],
+      ['rat-eyes-01', 'eyes', true, ['sunglasses', 'round', 'aviators', 'monocle', 'patch', 'visor', 'moustache', 'heart']],
+    ] as const
+  ).map(([file, layer, guided, names]): SheetSpec => ({
+    file: `brand/${file}`, group: `rat_${layer}`, kind: 'layers', cols: 4, rows: 2, width: 128, height: 128,
+    ids: names.map((name) => `rat.${layer}.${name}`), over: 'brand/rat-body-01', guided,
+  })),
+  {
+    file: 'brand/rat-backdrop-01', group: 'rat_backdrop', kind: 'scenes', cols: 4, rows: 2, width: 128, height: 128,
+    ids: ['stars', 'city', 'coins', 'chart', 'cheese', 'confetti', 'wheel', 'beach'].map((name) => `rat.backdrop.${name}`),
+  },
   { file: 'brand/brand-01', group: 'brand', kind: 'objects', cols: 2, rows: 2, width: 256, height: 256, ids: ['brand.logo', 'brand.wordmark', 'brand.app_icon', 'brand.mascot'] },
   // v14: the rat in eight poses, and its head in eight hats (the avatars in layers of v15 take their place).
   { file: 'brand/brand-02', group: 'brand', kind: 'objects', cols: 4, rows: 2, width: 128, height: 128, ids: ['rat.cheer', 'rat.hide', 'rat.exit', 'rat.count', 'rat.sleep', 'rat.shock', 'rat.think', 'rat.wave'] },

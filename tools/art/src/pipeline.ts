@@ -2,6 +2,7 @@ import { assignCells, gridBox, labelBlobs } from './blobs';
 import { blank } from './image';
 import type { Box, Image } from './image';
 import { erode, keyMask } from './key';
+import { layerCells, layerSprite, placeOver, referenceShape } from './layers';
 import { fitInto, resample } from './scale';
 import { cropToAspect, dividerFlags, panelBoxes } from './scenes';
 import type { SheetSpec } from './sheets';
@@ -121,12 +122,36 @@ function cutScenes(sheet: Image, spec: SheetSpec): Sprite[] {
   return sprites;
 }
 
-/** Cuts every named cell of a sheet into a sprite of the sheet's size. Colours are not yet snapped to the palette. */
-export function cutSheet(sheet: Image, spec: SheetSpec): Sprite[] {
+/** Each piece of a layer sheet, placed where the reference rat stands. */
+function cutLayers(sheet: Image, spec: SheetSpec, over: Image): Sprite[] {
+  const reference = layerCells(over, 4, 2)[0];
+  const shape = referenceShape(reference);
+  const size = { width: reference.width, height: reference.height };
+  const cells = layerCells(sheet, spec.cols, spec.rows);
+  const sprites: Sprite[] = [];
+  spec.ids.forEach((id, index) => {
+    if (id === '') return;
+    const guided = spec.guided === true;
+    const image = layerSprite(cells[index], guided, placeOver(cells[index], guided, shape, size), size, spec.width, spec.height);
+    const flags: Flag[] = opaqueCount(image) === 0 ? ['empty'] : [];
+    sprites.push({ id, group: spec.group, image, flags });
+  });
+  return sprites;
+}
+
+/**
+ * Cuts every named cell of a sheet into a sprite of the sheet's size. Colours are not yet snapped to the palette.
+ * Layers need the sheet they are placed over.
+ */
+export function cutSheet(sheet: Image, spec: SheetSpec, over?: Image): Sprite[] {
   if (spec.ids.length !== spec.cols * spec.rows) {
     throw new Error(`${spec.file}: ${spec.ids.length} names for ${spec.cols * spec.rows} cells`);
   }
   if (spec.kind === 'objects') return cutObjects(sheet, spec);
   if (spec.kind === 'portraits') return cutPortraits(sheet, spec);
+  if (spec.kind === 'layers') {
+    if (!over) throw new Error(`${spec.file}: a layer sheet needs the sheet it is placed over`);
+    return cutLayers(sheet, spec, over);
+  }
   return cutScenes(sheet, spec);
 }

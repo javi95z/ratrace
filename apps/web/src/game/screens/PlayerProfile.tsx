@@ -1,27 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { avatarOf, RAT_COLOURS, ratColourOf } from '@/game/avatar';
-import type { RatColour } from '@/game/avatar';
+import { avatarOf, ratLookOf } from '@/game/avatar';
+import type { RatLook } from '@/game/avatar';
 import { useAccount, useCommunity, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
 import { Toast } from '@/ui/overlay';
-import { GROUND } from '@/ui/RatAvatar';
-import { Sprite } from '@/ui/Sprite';
+import { GROUND, RatLayers } from '@/ui/RatAvatar';
+import { RatEditor } from './RatEditor';
 import { FIELD, NAME } from './Rankings';
-
-/** Each colour, by the word for it: the key of each is written out. */
-const COLOUR_NAME: Record<RatColour, string> = {
-  gold: 'colours.gold',
-  teal: 'colours.teal',
-  wine: 'colours.wine',
-  sky: 'colours.sky',
-  coral: 'colours.coral',
-  emerald: 'colours.emerald',
-  cream: 'colours.cream',
-  slate: 'colours.slate',
-};
 
 /**
  * How the others see the player: the rat they play as, in rooms and rankings, and the name under
@@ -41,7 +29,7 @@ export function PlayerProfile() {
   const [editing, setEditing] = useState(false);
   const runs = useRuns();
   const profile = useProfile();
-  const { fmt } = useWords();
+  const { fmt, text } = useWords();
 
   useEffect(() => {
     if (community === null) return;
@@ -74,10 +62,11 @@ export function PlayerProfile() {
     );
   }
 
-  const colour = ratColourOf(me?.avatar, userId);
-  const pick = async (next: RatColour) => {
-    if (next === colour) return;
+  const look = ratLookOf(me?.avatar, userId);
+  const colour = look.colour;
+  const pick = async (next: RatLook) => {
     const avatar = avatarOf(next);
+    if (avatar === avatarOf(look)) return;
     const before = me;
     // Shown at once; put back if the server would not keep it.
     setMe((was) => (was ? { ...was, avatar } : was));
@@ -129,8 +118,8 @@ export function PlayerProfile() {
         <span aria-hidden className={`absolute inset-x-0 top-0 h-24 opacity-60 ${GROUND[colour]}`} />
         <div className="relative flex flex-col items-center gap-2">
           <span className={`frame-double inline-flex leading-[0] [--ring:var(--color-gold-500)] ${GROUND[colour]}`}>
-            {/* The mascot at half its size: every pixel of it, none smudged. */}
-            <Sprite id="brand.mascot" fallback={{ w: 256, h: 256 }} className="!h-32 !w-32" />
+            {/* The rat at the size it was drawn: every pixel of it, none smudged. */}
+            <RatLayers look={look} className="size-32" />
           </span>
           {editing ? (
             <form
@@ -188,26 +177,9 @@ export function PlayerProfile() {
         ))}
       </section>
 
-      {/* The colour of the rat: a swatch each, named; the rat above shows it at once. */}
+      {/* The rat, a part at a time; the one above shows each choice at once. */}
       <Panel title={t('rat')} label={t('rat')}>
-        <div role="radiogroup" aria-label={t('rat')} className="grid grid-cols-4 gap-2">
-          {RAT_COLOURS.map((each) => (
-            <button
-              key={each}
-              type="button"
-              role="radio"
-              aria-checked={each === colour}
-              aria-label={t(COLOUR_NAME[each])}
-              onClick={() => void pick(each)}
-              className={`frame-raised flex min-h-14 flex-col items-center justify-center gap-1 bg-night-700 p-1.5 ${each === colour ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
-            >
-              <span aria-hidden className={`relative size-7 border-2 border-night-900 ${GROUND[each]}`}>
-                {each === colour ? <span className="absolute inset-0 flex items-center justify-center text-[14px] font-bold text-night-900">✓</span> : null}
-              </span>
-              <span className="text-[11px] leading-none text-ink-200">{t(COLOUR_NAME[each])}</span>
-            </button>
-          ))}
-        </div>
+        <RatEditor look={look} earned={profile.badges} badgeName={(id) => text.badges[id]?.name ?? id} onPick={(next) => void pick(next)} onLocked={setTold} />
       </Panel>
 
       {/* Where the rest of the player's game is. */}

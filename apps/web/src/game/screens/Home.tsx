@@ -4,7 +4,7 @@ import { ratArt } from '@ratrace/content';
 import { CHALLENGE_ART } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useAccount, useAccountSaves, useCommunity, useGame, useRanking, useRuns, useSaving, useT, useWords } from '@/game/context';
-import { ratColourOf } from '@/game/avatar';
+import { ratLookOf } from '@/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { ageAt } from '@/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -128,7 +128,6 @@ export function Home() {
                 <Sprite id="icon.trophy" />
                 {t('records')}
               </Link>
-              <ProfileLink />
               {ranking !== 'no' ? (
                 <Link href="/rankings" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
                   <Sprite id="icon.status" />
@@ -144,7 +143,7 @@ export function Home() {
 
       {/* At the foot, as it always was: the account and the settings, also behind the gear above. */}
       <Panel className="mt-auto w-full" label={settings('title')}>
-        <HomeSettingsPanel />
+        <HomeSettingsPanel profile={<ProfileLink />} />
       </Panel>
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
@@ -203,8 +202,8 @@ function ProfileLink() {
   }, [userId, community]);
   if (userId === null) return null;
   return (
-    <Link href="/player" className="pixel frame-raised col-span-2 flex min-h-11 items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
-      <RatAvatar colour={ratColourOf(avatar, userId)} size="sm" />
+    <Link href="/player" className="pixel frame-raised flex min-h-11 w-full items-center justify-center gap-2 bg-night-700 px-2 py-2 text-[15px] text-ink-200">
+      <RatAvatar look={ratLookOf(avatar, userId)} size="sm" />
       {t('profile')}
     </Link>
   );

@@ -1771,6 +1771,85 @@
     "more": "Más",
     "toRecords": "Récords",
     "toCollection": "Colección",
-    "toRankings": "Clasificaciones"
+    "toRankings": "Clasificaciones",
+    "layers": {
+      "body": "Pelaje",
+      "outfit": "Ropa",
+      "hat": "Cabeza",
+      "eyes": "Cara",
+      "backdrop": "Fondo",
+      "colour": "Color"
+    },
+    "pieces": {
+      "body": {
+        "grey": "Gris",
+        "brown": "Parda",
+        "white": "Blanca",
+        "black": "Negra",
+        "ginger": "Pelirroja",
+        "golden": "Dorada",
+        "slate": "Azulada",
+        "spotted": "Manchada"
+      },
+      "outfit": {
+        "suit": "Traje",
+        "tracksuit": "Chándal",
+        "tuxedo": "Esmoquin",
+        "hoodie": "Sudadera",
+        "scrubs": "Pijama de hospital",
+        "hivis": "Chaleco reflectante",
+        "chef": "Chaqueta de chef",
+        "leather": "Cazadora de cuero",
+        "lab": "Bata de laboratorio",
+        "sweater": "Jersey",
+        "hawaiian": "Camisa hawaiana",
+        "varsity": "Chaqueta universitaria",
+        "robe": "Albornoz",
+        "kimono": "Quimono",
+        "fur": "Abrigo de piel",
+        "gold": "Chaqueta dorada"
+      },
+      "hat": {
+        "cap": "Gorra",
+        "beanie": "Gorro de lana",
+        "beret": "Boina",
+        "hardhat": "Casco de obra",
+        "cowboy": "Sombrero vaquero",
+        "headphones": "Auriculares",
+        "bandana": "Pañuelo",
+        "chef": "Gorro de chef",
+        "tophat": "Chistera",
+        "crown": "Corona",
+        "graduate": "Birrete",
+        "party": "Gorro de fiesta",
+        "viking": "Casco vikingo",
+        "flowers": "Corona de flores",
+        "wizard": "Sombrero de mago",
+        "halo": "Aureola"
+      },
+      "eyes": {
+        "sunglasses": "Gafas de sol",
+        "round": "Gafas redondas",
+        "aviators": "Gafas de aviador",
+        "monocle": "Monóculo",
+        "patch": "Parche",
+        "visor": "Visor",
+        "moustache": "Bigote",
+        "heart": "Gafas de corazón"
+      },
+      "backdrop": {
+        "stars": "Noche estrellada",
+        "city": "Ciudad",
+        "coins": "Monedas",
+        "chart": "Gráfico",
+        "cheese": "Queso",
+        "confetti": "Confeti",
+        "wheel": "Rueda",
+        "beach": "Playa"
+      }
+    },
+    "none": "Nada",
+    "locked": "Se consigue con la insignia «{badge}»",
+    "layer": "Qué cambiar"
   }
 }

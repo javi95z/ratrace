@@ -54,6 +54,11 @@ function shrink(src: Image, mask: Uint8Array | null, box: Box, width: number, he
   return out;
 }
 
+/** Shrinks a whole rectangle to an exact size, keeping only what the mask covers. Used for layers that must stay where they were drawn. */
+export function shrinkMasked(src: Image, mask: Uint8Array, box: Box, width: number, height: number): Image {
+  return shrink(src, mask, box, width, height);
+}
+
 /** Shrinks a whole rectangle to an exact size, with no transparency. Used for scenes. */
 export function resample(src: Image, box: Box, width: number, height: number): Image {
   return shrink(src, null, box, width, height);

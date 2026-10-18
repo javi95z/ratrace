@@ -1771,6 +1771,85 @@
     "more": "More",
     "toRecords": "Records",
     "toCollection": "Collection",
-    "toRankings": "Rankings"
+    "toRankings": "Rankings",
+    "layers": {
+      "body": "Fur",
+      "outfit": "Clothes",
+      "hat": "Headwear",
+      "eyes": "Face",
+      "backdrop": "Backdrop",
+      "colour": "Colour"
+    },
+    "pieces": {
+      "body": {
+        "grey": "Grey",
+        "brown": "Brown",
+        "white": "White",
+        "black": "Black",
+        "ginger": "Ginger",
+        "golden": "Golden",
+        "slate": "Slate",
+        "spotted": "Spotted"
+      },
+      "outfit": {
+        "suit": "Suit",
+        "tracksuit": "Tracksuit",
+        "tuxedo": "Tuxedo",
+        "hoodie": "Hoodie",
+        "scrubs": "Scrubs",
+        "hivis": "Hi-vis vest",
+        "chef": "Chef's jacket",
+        "leather": "Leather jacket",
+        "lab": "Lab coat",
+        "sweater": "Jumper",
+        "hawaiian": "Hawaiian shirt",
+        "varsity": "Varsity jacket",
+        "robe": "Bathrobe",
+        "kimono": "Kimono",
+        "fur": "Fur coat",
+        "gold": "Gold jacket"
+      },
+      "hat": {
+        "cap": "Cap",
+        "beanie": "Beanie",
+        "beret": "Beret",
+        "hardhat": "Hard hat",
+        "cowboy": "Cowboy hat",
+        "headphones": "Headphones",
+        "bandana": "Bandana",
+        "chef": "Chef's hat",
+        "tophat": "Top hat",
+        "crown": "Crown",
+        "graduate": "Mortarboard",
+        "party": "Party hat",
+        "viking": "Viking helmet",
+        "flowers": "Flower crown",
+        "wizard": "Wizard hat",
+        "halo": "Halo"
+      },
+      "eyes": {
+        "sunglasses": "Sunglasses",
+        "round": "Round glasses",
+        "aviators": "Aviators",
+        "monocle": "Monocle",
+        "patch": "Eye patch",
+        "visor": "Cyber visor",
+        "moustache": "Moustache",
+        "heart": "Heart glasses"
+      },
+      "backdrop": {
+        "stars": "Starry night",
+        "city": "City",
+        "coins": "Coins",
+        "chart": "Chart",
+        "cheese": "Cheese",
+        "confetti": "Confetti",
+        "wheel": "Wheel",
+        "beach": "Beach"
+      }
+    },
+    "none": "None",
+    "locked": "Earned with the badge \"{badge}\"",
+    "layer": "What to change"
   }
 }

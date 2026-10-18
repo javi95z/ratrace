@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ratColourOf } from '@/game/avatar';
+import { avatarOf, ratColourOf, ratLookOf } from '@/game/avatar';
 import type { Account, AccountState, Community } from '@/online/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { PlayerProfile } from './PlayerProfile';
@@ -60,18 +60,30 @@ describe('the player\'s profile', () => {
     expect(screen.queryByRole('radiogroup')).toBeNull();
   });
 
-  it('keeps the rat the player picks, and shows it chosen', async () => {
+  it('keeps the rat the player dresses, a part at a time, and shows each part chosen', async () => {
     const { community, asked } = profile();
     const user = userEvent.setup();
     show({ kind: 'member', userId: 'u-1', email: null }, community);
-    const rats = await screen.findByRole('radiogroup', { name: 'Your rat' });
-    // One is theirs before they choose, the same every time.
-    const given = ratColourOf(null, 'u-1');
-    expect(within(rats).getAllByRole('radio').filter((radio) => radio.getAttribute('aria-checked') === 'true')).toHaveLength(1);
-    const other = given === 'teal' ? 'Gold' : 'Teal';
-    await user.click(within(rats).getByRole('radio', { name: other }));
-    await waitFor(() => expect(asked).toEqual([`avatar rat_${other.toLowerCase()}`]));
-    expect(within(rats).getByRole('radio', { name: other }).getAttribute('aria-checked')).toBe('true');
+    // One is theirs before they choose, the same every time: a fur, a colour, and nothing on.
+    const given = ratLookOf(null, 'u-1');
+    const furs = await screen.findByRole('radiogroup', { name: 'Fur' });
+    expect(within(furs).getAllByRole('radio').filter((radio) => radio.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+    // A hat, kept at once and shown chosen.
+    await user.click(screen.getByRole('tab', { name: 'Headwear' }));
+    const hats = screen.getByRole('radiogroup', { name: 'Headwear' });
+    expect(within(hats).getByRole('radio', { name: 'None' }).getAttribute('aria-checked')).toBe('true');
+    await user.click(within(hats).getByRole('radio', { name: 'Beanie' }));
+    const capped = { ...given, hat: 'beanie' as const };
+    await waitFor(() => expect(asked).toEqual([`avatar ${avatarOf(capped)}`]));
+    expect(within(hats).getByRole('radio', { name: 'Beanie' }).getAttribute('aria-checked')).toBe('true');
+    // A crown is for whoever escaped the race: until then it says so, and nothing is kept.
+    await user.click(within(hats).getByRole('radio', { name: 'Crown' }));
+    expect(asked).toHaveLength(1);
+    // And the colour of the ground, kept with the hat.
+    await user.click(screen.getByRole('tab', { name: 'Colour' }));
+    const other = given.colour === 'teal' ? 'gold' : 'teal';
+    await user.click(within(screen.getByRole('radiogroup', { name: 'Colour' })).getByRole('radio', { name: other === 'gold' ? 'Gold' : 'Teal' }));
+    await waitFor(() => expect(asked.at(-1)).toBe(`avatar ${avatarOf({ ...capped, colour: other })}`));
   });
 
   it('changes the name, and says why one is not taken', async () => {
@@ -102,8 +114,18 @@ describe('the player\'s profile', () => {
 describe('a player\'s rat', () => {
   it('is the one chosen, or the same one picked from their id every time', () => {
     expect(ratColourOf('rat_wine', 'anyone')).toBe('wine');
-    expect(ratColourOf(null, 'u-7')).toBe(ratColourOf(null, 'u-7'));
-    expect(ratColourOf('nurse', 'u-7')).toBe(ratColourOf(null, 'u-7'));
-    expect(ratColourOf('rat_purple', 'u-7')).toBe(ratColourOf(null, 'u-7'));
+    expect(ratLookOf(null, 'u-7')).toEqual(ratLookOf(null, 'u-7'));
+    expect(ratLookOf('nurse', 'u-7')).toEqual(ratLookOf(null, 'u-7'));
+    expect(ratLookOf('rat_purple', 'u-7')).toEqual(ratLookOf(null, 'u-7'));
+    expect(ratLookOf('rat_xzzzzzz', 'u-7')).toEqual({ ...ratLookOf(null, 'u-7') });
+  });
+
+  it('is kept in a word the profile takes, and read back the same', () => {
+    const look = { colour: 'sky', body: 'spotted', outfit: 'tuxedo', hat: 'halo', eyes: null, backdrop: 'beach' } as const;
+    const kept = avatarOf(look);
+    expect(kept).toMatch(/^[a-z0-9_]{1,40}$/);
+    expect(ratLookOf(kept, 'anyone')).toEqual(look);
+    // An older choice of a colour alone keeps its colour.
+    expect(ratLookOf('rat_gold', 'u-7')).toEqual({ ...ratLookOf(null, 'u-7'), colour: 'gold' });
   });
 });

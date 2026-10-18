@@ -1,0 +1,98 @@
+'use client';
+
+import { useState } from 'react';
+import { prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@/game/avatar';
+import type { RatColour, RatLayer, RatLook } from '@/game/avatar';
+import { useT } from '@/game/context';
+import { GROUND, RatLayers } from '@/ui/RatAvatar';
+import { Sprite, spriteOf } from '@/ui/Sprite';
+
+/** Each colour, by the word for it: the key of each is written out. */
+const COLOUR_NAME: Record<RatColour, string> = {
+  gold: 'colours.gold',
+  teal: 'colours.teal',
+  wine: 'colours.wine',
+  sky: 'colours.sky',
+  coral: 'colours.coral',
+  emerald: 'colours.emerald',
+  cream: 'colours.cream',
+  slate: 'colours.slate',
+};
+
+type Part = RatLayer | 'colour';
+const PARTS: Part[] = ['body', 'outfit', 'hat', 'eyes', 'backdrop', 'colour'];
+
+/** One choice of a part: a piece, nothing at all, or a colour. */
+interface Choice {
+  key: string;
+  label: string;
+  look: RatLook;
+  /** The badge it asks for, when the player has not earned it yet. */
+  locked: string | null;
+}
+
+/**
+ * The player's rat, a part at a time: its fur, what it wears, what it has on its face and head, what
+ * is behind it and the colour of its ground. Each choice shows the rat as it would be. A piece kept
+ * for a badge shows how it is won; a piece not drawn yet is not offered.
+ */
+export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look: RatLook; earned: Record<string, unknown>; badgeName: (id: string) => string; onPick: (next: RatLook) => void; onLocked: (message: string) => void }) {
+  const t = useT('player');
+  const [part, setPart] = useState<Part>('body');
+
+  const choices = (): Choice[] => {
+    if (part === 'colour') return RAT_COLOURS.map((colour) => ({ key: colour, label: t(COLOUR_NAME[colour]), look: { ...look, colour }, locked: null }));
+    const pieces = (RAT_LAYERS[part] as readonly string[]).filter((piece) => spriteOf(ratSprite(part, piece)) !== null);
+    const drawn: Choice[] = pieces.map((piece) => {
+      const prize = prizeOf(part, piece);
+      return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: prize !== null && !Object.hasOwn(earned, prize) ? prize : null };
+    });
+    return part === 'body' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
+  };
+  const chosen = (choice: Choice) => (part === 'colour' ? look.colour === choice.key : (look[part] ?? 'none') === choice.key);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+        {PARTS.map((each) => (
+          <button
+            key={each}
+            type="button"
+            role="tab"
+            aria-selected={each === part}
+            onClick={() => setPart(each)}
+            className={`pixel min-h-11 px-1 text-[13px] ${each === part ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
+          >
+            {t(`layers.${each}`)}
+          </button>
+        ))}
+      </div>
+      <div role="radiogroup" aria-label={t(`layers.${part}`)} className="grid grid-cols-4 gap-2">
+        {choices().map((choice) => {
+          const on = chosen(choice);
+          return (
+            <button
+              key={choice.key}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-disabled={choice.locked !== null || undefined}
+              aria-label={choice.label}
+              title={choice.locked ? t('locked', { badge: badgeName(choice.locked) }) : choice.label}
+              onClick={() => (choice.locked ? onLocked(t('locked', { badge: badgeName(choice.locked) })) : onPick(choice.look))}
+              className={`frame-raised flex flex-col items-center gap-1 bg-night-700 p-1.5 ${on ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
+            >
+              <span aria-hidden className={`relative flex size-16 overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]} `}>
+                <RatLayers look={choice.look} className={`size-20 shrink-0 -ml-2.5 -mt-1 ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
+                {choice.locked ? <span className="absolute inset-0 flex items-center justify-center">
+                    <Sprite id="icon.locked" />
+                  </span> : null}
+              </span>
+              <span className="line-clamp-2 text-center text-[11px] leading-tight text-ink-200">{choice.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
