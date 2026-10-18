@@ -1044,6 +1044,24 @@
       "note": "Se llevan, se hacen crecer y se venden en la pestaña Negocios."
     }
   },
+  "rank": {
+    "title": "Rango de rata",
+    "progress": "Progreso hacia el siguiente rango",
+    "step": "Rango {n} de {of}",
+    "toNext": "{points, plural, one {# punto} other {# puntos}} para {rank}",
+    "toNextShort": "{points, plural, one {# punto} other {# puntos}} para {rank}",
+    "top": "La cima del montón, con {points, plural, one {# punto} other {# puntos}}. Solo estatus: el rango no da ventaja en el juego.",
+    "gained": "+{points, plural, one {# punto} other {# puntos}}",
+    "promoted": "¡Nuevo rango: {rank}!",
+    "names": {
+      "sewer": "Rata de alcantarilla",
+      "office": "Rata de oficina",
+      "stock": "Rata de bolsa",
+      "wall_street": "Rata de Wall Street",
+      "tycoon": "Rata magnate",
+      "king": "Rata rey"
+    }
+  },
   "end": {
     "title": "Fin",
     "age": "{age} años",

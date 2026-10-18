@@ -1,7 +1,7 @@
 import type { LifeDef, LifeRecord, Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, Order, RoundChoices } from '@ratrace/engine';
 import { StaleSession, Unreachable } from './errors';
-import { tellProfile } from './profile';
+import { settleRank, tellProfile } from './profile';
 import type { RankedRun, RankedStep } from './ranked';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, PlayerStore, Sessions, StepResult } from './types';
@@ -329,6 +329,7 @@ export class RoomSession implements GameSession {
       if (life.run !== null && !this.kept) {
         await this.store.addRun(this.asRun(life.run));
         this.kept = true;
+        await settleRank(this.store);
       }
       return { earned: told.earned, unlocked: told.unlocked };
     } catch (error) {

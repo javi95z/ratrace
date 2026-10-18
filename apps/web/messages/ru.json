@@ -1044,6 +1044,24 @@
       "note": "Управлять делом, растить и продавать его можно на вкладке «Бизнес»."
     }
   },
+  "rank": {
+    "title": "Крысиный ранг",
+    "progress": "Прогресс до следующего ранга",
+    "step": "Ранг {n} из {of}",
+    "toNext": "До «{rank}»: {points, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+    "toNextShort": "До «{rank}»: {points, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+    "top": "Вершина кучи, {points, plural, one {# очко} few {# очка} many {# очков} other {# очка}}. Только статус: ранг не даёт преимуществ в игре.",
+    "gained": "+{points, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+    "promoted": "Новый ранг: {rank}!",
+    "names": {
+      "sewer": "Канализационная крыса",
+      "office": "Офисная крыса",
+      "stock": "Биржевая крыса",
+      "wall_street": "Крыса с Уолл-стрит",
+      "tycoon": "Крыса-магнат",
+      "king": "Крысиный король"
+    }
+  },
   "end": {
     "title": "Конец",
     "age": "{age, plural, one {# год} few {# года} many {# лет} other {# года}}",
