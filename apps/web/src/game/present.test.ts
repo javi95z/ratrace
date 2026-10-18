@@ -308,6 +308,15 @@ describe('priceHistory', () => {
   });
 });
 
+describe('a yearly payment an outcome ends', () => {
+  it('is named by what it was worth, or said plainly when that is not known', () => {
+    const effects = t('en', 'effects');
+    const income = [{ tag: 'crowdfunding', kind: 'passive', annual: 80_000 }];
+    expect(effectTags(words('en'), effects, world, { endRecurring: ['crowdfunding'] }, false, income)).toEqual([{ tone: 'bad', text: 'The +$800/yr stops' }]);
+    expect(effectTags(words('en'), effects, world, { endRecurring: ['crowdfunding'] })).toEqual([{ tone: 'bad', text: 'A yearly payment stops' }]);
+  });
+});
+
 describe('roundNotes', () => {
   const notes = (events: GameEvent[], locale: 'en' | 'es' = 'en') => roundNotes(words(locale), t(locale, 'resolve'), events);
 

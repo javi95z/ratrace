@@ -103,7 +103,7 @@ export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'f
  * engine's preview gives, which already counts insurance, discounts and purchase tax.
  * `t` translates the `effects` section.
  */
-export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined, partnered = false): EffectTag[] {
+export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined, partnered = false, recurring: ReadonlyArray<{ tag: string; kind: string; annual: number }> = []): EffectTag[] {
   if (effects === undefined) return [];
   const { content, text, names, fmt } = words;
   // A tag is read at a glance: the amount is given in round figures, and the exact one is on the ledger.
@@ -133,6 +133,12 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     const amount = dollars(entry.annual);
     if (entry.roundsLeft === null) add(income ? 'good' : 'bad', t(income ? 'yearlyIncome' : 'yearlyCost', { amount }));
     else add(income ? 'good' : 'bad', t(income ? 'yearlyIncomeFor' : 'yearlyCostFor', { amount, years: entry.roundsLeft * content.yearsPerRound }));
+  }
+  // A yearly payment the outcome ends, named by what it was worth: `recurring` holds those it may end.
+  for (const tag of effects.endRecurring ?? []) {
+    const ended = recurring.find((entry) => entry.tag === tag);
+    if (!ended) add('bad', t('yearlyEnds'));
+    else add(ended.kind === 'passive' ? 'bad' : 'good', t(ended.kind === 'passive' ? 'yearlyIncomeEnds' : 'yearlyCostEnds', { amount: dollars(ended.annual) }));
   }
   if (effects.retire) add('plain', t('retire'));
   if (effects.focusBase) add(toneOf(effects.focusBase), t('focusBase', { value: signed(effects.focusBase) }));

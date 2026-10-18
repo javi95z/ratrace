@@ -316,7 +316,8 @@
     "thanksCover": "Gracias a tu {cover}",
     "thanksTrade": "Gracias a tu oficio",
     "covers": "El seguro paga {amount}",
-    "saved": "Tu seguro te ahorró {amount}"
+    "saved": "Tu seguro te ahorró {amount}",
+    "asPlanned": "Sale como se espera"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -381,7 +382,10 @@
     "remote": "Teletrabajo: +1 de foco",
     "endLodger": "El inquilino se va",
     "partnerPay": "Tu pareja cobra el {pct} % del sueldo medio",
-    "charged": "Te imputan: habrá juicio"
+    "charged": "Te imputan: habrá juicio",
+    "yearlyEnds": "Se corta un pago anual",
+    "yearlyIncomeEnds": "Se cortan los +{amount}/año",
+    "yearlyCostEnds": "Se acaban los −{amount}/año"
   },
   "finance": {
     "tabs": {

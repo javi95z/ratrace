@@ -316,7 +316,8 @@
     "thanksCover": "Thanks to your {cover}",
     "thanksTrade": "Thanks to your trade",
     "covers": "Cover pays {amount}",
-    "saved": "Your cover saved you {amount}"
+    "saved": "Your cover saved you {amount}",
+    "asPlanned": "Goes as expected"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -381,7 +382,10 @@
     "remote": "Work from home: +1 focus",
     "endLodger": "The lodger moves out",
     "partnerPay": "Partner earns {pct}% of the median",
-    "charged": "Charged: a trial will follow"
+    "charged": "Charged: a trial will follow",
+    "yearlyEnds": "A yearly payment stops",
+    "yearlyIncomeEnds": "The +{amount}/yr stops",
+    "yearlyCostEnds": "The −{amount}/yr ends"
   },
   "finance": {
     "tabs": {

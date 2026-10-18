@@ -39,6 +39,8 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
   const effects = useT('effects');
   const words = useWords();
   const option = def.options[index];
+  // What the player is paid or pays every year: an outcome may end one of them.
+  const owned = useGame((s) => s.view?.player.life.recurring);
   const written = words.text.cards[def.id].options[index];
   let total = 0;
   for (const outcome of preview.outcomes) total += outcome.weight;
@@ -75,7 +77,8 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
       {(option.outcomes ?? []).map((outcome, k) => (
         <span key={k} className={`flex items-start gap-2 ${dim}`}>
           <span className="pixel w-12 shrink-0 text-right text-[13px] text-gold-500">{t('chance', { pct: chancePct(preview.outcomes[k].weight, total) })}</span>
-          <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects, partnered)} empty={t('nothing')} />
+          {/* An outcome that changes nothing more leaves the option as it says: that is how it goes, not nothing at all. */}
+          <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])])} empty={t('asPlanned')} />
         </span>
       ))}
     </>
@@ -264,7 +267,7 @@ export function Outcome() {
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
         const partnered = view?.player.life.partner ?? false;
-        const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered)] : [];
+        const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered, chosen?.effects?.recurring ?? [])] : [];
         // What the player's cover paid, when it paid: the reason to have it.
         const covered = was?.options[event.option]?.covered ?? 0;
 
