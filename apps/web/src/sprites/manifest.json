@@ -3994,6 +3994,21 @@
     "w": 128,
     "h": 128
   },
+  "rat.clip.fur": {
+    "src": "rat_clip/rat.clip.fur.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.gold": {
+    "src": "rat_clip/rat.clip.gold.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.hawaiian": {
+    "src": "rat_clip/rat.clip.hawaiian.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.clip.hivis": {
     "src": "rat_clip/rat.clip.hivis.png",
     "w": 128,
@@ -4004,8 +4019,23 @@
     "w": 128,
     "h": 128
   },
+  "rat.clip.kimono": {
+    "src": "rat_clip/rat.clip.kimono.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.lab": {
+    "src": "rat_clip/rat.clip.lab.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.clip.leather": {
     "src": "rat_clip/rat.clip.leather.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.robe": {
+    "src": "rat_clip/rat.clip.robe.png",
     "w": 128,
     "h": 128
   },
@@ -4019,6 +4049,11 @@
     "w": 128,
     "h": 128
   },
+  "rat.clip.sweater": {
+    "src": "rat_clip/rat.clip.sweater.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.clip.tracksuit": {
     "src": "rat_clip/rat.clip.tracksuit.png",
     "w": 128,
@@ -4026,6 +4061,11 @@
   },
   "rat.clip.tuxedo": {
     "src": "rat_clip/rat.clip.tuxedo.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.varsity": {
+    "src": "rat_clip/rat.clip.varsity.png",
     "w": 128,
     "h": 128
   },
@@ -4209,6 +4249,21 @@
     "w": 128,
     "h": 128
   },
+  "rat.outfit.fur": {
+    "src": "rat_outfit/rat.outfit.fur.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.outfit.gold": {
+    "src": "rat_outfit/rat.outfit.gold.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.outfit.hawaiian": {
+    "src": "rat_outfit/rat.outfit.hawaiian.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.outfit.hivis": {
     "src": "rat_outfit/rat.outfit.hivis.png",
     "w": 128,
@@ -4219,8 +4274,23 @@
     "w": 128,
     "h": 128
   },
+  "rat.outfit.kimono": {
+    "src": "rat_outfit/rat.outfit.kimono.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.outfit.lab": {
+    "src": "rat_outfit/rat.outfit.lab.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.outfit.leather": {
     "src": "rat_outfit/rat.outfit.leather.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.outfit.robe": {
+    "src": "rat_outfit/rat.outfit.robe.png",
     "w": 128,
     "h": 128
   },
@@ -4234,6 +4304,11 @@
     "w": 128,
     "h": 128
   },
+  "rat.outfit.sweater": {
+    "src": "rat_outfit/rat.outfit.sweater.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.outfit.tracksuit": {
     "src": "rat_outfit/rat.outfit.tracksuit.png",
     "w": 128,
@@ -4241,6 +4316,11 @@
   },
   "rat.outfit.tuxedo": {
     "src": "rat_outfit/rat.outfit.tuxedo.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.outfit.varsity": {
+    "src": "rat_outfit/rat.outfit.varsity.png",
     "w": 128,
     "h": 128
   },
