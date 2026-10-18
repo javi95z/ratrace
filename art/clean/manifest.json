@@ -4246,6 +4246,86 @@
       "width": 128,
       "height": 128
     },
+    "rat.outfit.lab": {
+      "file": "rat_outfit/rat.outfit.lab.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.lab": {
+      "file": "rat_clip/rat.clip.lab.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.sweater": {
+      "file": "rat_outfit/rat.outfit.sweater.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.sweater": {
+      "file": "rat_clip/rat.clip.sweater.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.hawaiian": {
+      "file": "rat_outfit/rat.outfit.hawaiian.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.hawaiian": {
+      "file": "rat_clip/rat.clip.hawaiian.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.varsity": {
+      "file": "rat_outfit/rat.outfit.varsity.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.varsity": {
+      "file": "rat_clip/rat.clip.varsity.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.robe": {
+      "file": "rat_outfit/rat.outfit.robe.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.robe": {
+      "file": "rat_clip/rat.clip.robe.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.kimono": {
+      "file": "rat_outfit/rat.outfit.kimono.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.kimono": {
+      "file": "rat_clip/rat.clip.kimono.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.fur": {
+      "file": "rat_outfit/rat.outfit.fur.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.fur": {
+      "file": "rat_clip/rat.clip.fur.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.outfit.gold": {
+      "file": "rat_outfit/rat.outfit.gold.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.gold": {
+      "file": "rat_clip/rat.clip.gold.png",
+      "width": 128,
+      "height": 128
+    },
     "rat.hat.cap": {
       "file": "rat_hat/rat.hat.cap.png",
       "width": 128,

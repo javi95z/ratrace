@@ -117,7 +117,7 @@ const cachedFirst = async (request) => {
 const LANGUAGE_CACHE = 'rat-race-language';
 const LANGUAGE_KEY = '/__language';
 const keepLanguage = async (address) => {
-  const found = new URL(address).pathname.match(/^\/(en|es|ru)(?:\/|$)/);
+  const found = new URL(address).pathname.match(/^\\/(en|es|ru)(?:\\/|$)/);
   if (!found) return;
   const cache = await caches.open(LANGUAGE_CACHE);
   await cache.put(LANGUAGE_KEY, new Response(found[1]));
