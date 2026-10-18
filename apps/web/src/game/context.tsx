@@ -10,6 +10,7 @@ import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { formatFor } from '@/lib/format';
 import { browserOnline, browserPage } from '@/online';
+import { followAccountLanguage } from '@/online/language';
 import { offlineAccount } from '@/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@/online/types';
 import { LocalStore } from '@/session/indexeddb';
@@ -218,6 +219,9 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       stopAccount();
     };
   }, [made]);
+
+  // Someone signing in on this device brings the language of their account with them.
+  useEffect(() => followAccountLanguage(made.account, made.community, locale, (address) => window.location.replace(address)), [made, locale]);
 
   // The player is signed in as a guest in the background. The game does not wait for it and does not need it.
   useEffect(() => {

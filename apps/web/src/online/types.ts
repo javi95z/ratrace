@@ -159,7 +159,9 @@ export interface Friend {
  */
 export interface Community {
   /** `avatar` is the rat the player chose, as kept in the profile (`rat_<colour>`), or null for none yet. */
-  me(): Promise<{ nickname: string | null; friendCode: string; avatar: string | null } | null>;
+  me(): Promise<{ nickname: string | null; friendCode: string; avatar: string | null; language?: string | null } | null>;
+  /** Keeps the language the player chose with their account, for the next device they sign in on. */
+  setLanguage?(language: string): Promise<boolean>;
   /** `taken`: someone has that name. `refused`: the name is not accepted. */
   rename(nickname: string): Promise<'ok' | 'taken' | 'refused' | 'failed'>;
   /** Keeps the rat the player chose. False if it could not be. */

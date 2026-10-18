@@ -597,7 +597,8 @@
       "back": "Volver a trabajar de {job}",
       "backHint": "Un escalón por debajo de donde lo dejaste. Tu negocio sigue siendo tuyo, con tu foco libre.",
       "homeHelped": "De vuelta a casa: tu familia te ayuda con la mudanza y te acoge una temporada. Los amigos de siempre abren puertas y no pierdes escalón.",
-      "homeBack": "De vuelta a casa: los amigos de siempre abren puertas y no pierdes escalón. Si vuelves con más dinero que cuando te fuiste, es un triunfo."
+      "homeBack": "De vuelta a casa: los amigos de siempre abren puertas y no pierdes escalón. Si vuelves con más dinero que cuando te fuiste, es un triunfo.",
+      "rivals": "Los otros jugadores"
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",

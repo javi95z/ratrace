@@ -123,10 +123,11 @@ describe('the cloud, made from the Supabase client', () => {
     expect(await cloud.signInWithGoogle('x')).toBe(false);
   });
 
-  it('writes the player\'s profile with the language of the page every time, so a change of language is kept', async () => {
+  it('makes the player\'s profile in the language of the page, and leaves the language of one already made alone', async () => {
     const cloud = await connectSupabase('u', 'k');
     await cloud.ensureProfile('u-1', 'es');
-    expect(client.asked).toEqual([['profiles', ['upsert', { user_id: 'u-1', language: 'es' }, { onConflict: 'user_id' }]]]);
+    // A page opened in the browser's language is not the player's choice: only the player changes it.
+    expect(client.asked).toEqual([['profiles', ['upsert', { user_id: 'u-1', language: 'es' }, { onConflict: 'user_id', ignoreDuplicates: true }]]]);
     client.answers.profiles = { error: new Error('offline') };
     await expect(cloud.ensureProfile('u-1', 'es')).rejects.toThrow('offline');
   });
@@ -367,7 +368,7 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     client.answers.profiles = { data: { nickname: 'Rata_Uno', friend_code: 'ABCD2345' }, error: null };
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.community.me()).toEqual({ nickname: 'Rata_Uno', friendCode: 'ABCD2345' });
-    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code, portrait'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
+    expect(client.asked).toEqual([['profiles', ['select', 'nickname, friend_code, portrait, language'], ['eq', 'user_id', 'u-1'], ['maybeSingle']]]);
     client.answers.profiles = { data: null, error: null };
     expect(await cloud.community.me()).toBeNull();
     client.answers.profiles = { data: null, error: new Error('offline') };
@@ -386,6 +387,15 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
       client.answers.profiles = { error: { code, message: 'no' } };
       expect(await cloud.community.rename('Rata_Uno'), code).toBe(word);
     }
+  });
+
+  it('keeps the language the player chooses with their account', async () => {
+    client.answers.getSession = signedIn;
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.setLanguage?.('es')).toBe(true);
+    expect(client.asked).toEqual([['profiles', ['update', { language: 'es' }], ['eq', 'user_id', 'u-1']]]);
+    client.answers.profiles = { error: { code: '08006', message: 'no' } };
+    expect(await cloud.community.setLanguage?.('ru')).toBe(false);
   });
 
   it('counts the lives of others from the same start, and those of them that scored less, without reading a row', async () => {

@@ -33,7 +33,7 @@ export interface Cloud extends SyncCloud {
   signInWithGoogle(redirectTo: string): Promise<boolean>;
   /** Signs this browser out. Throws if it could not. */
   signOut(): Promise<void>;
-  /** Writes the player's profile row: made if it is not there, and its language brought up to date. */
+  /** Makes the player's profile row if it is not there, in the language of the page. One already there is left as it is. */
   ensureProfile(userId: string, language: string): Promise<void>;
   /** Calls `listener` whenever who is signed in changes. Returns how to stop. */
   onUser(listener: (user: CloudUser | null) => void): () => void;
@@ -159,7 +159,8 @@ export class SupabaseAccount implements Account {
       this.link = cloud;
       this.show(user);
       this.stopListening ??= cloud.onUser((next) => this.show(next));
-      // The profile row is the player's own first write. If it cannot be made now, the next launch makes it.
+      // The profile row is the player's own first write. If it cannot be made now, the next launch makes it. Its language
+      // is not written over: it is the one the player chose, which a page opened in the browser's language is not.
       void cloud.ensureProfile(user.id, language).catch(() => undefined);
       // Sent back from Google to a guest whose Google account is already a player's: straight on into it.
       // What is on this device joins that account, as it does for any sign-in.

@@ -24,6 +24,7 @@ import { Payouts, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { EvasionPanel } from './Evasion';
+import { TeaseUse } from './Work';
 import { ItemUses } from './ItemUses';
 import { masteredLast, useFocusNote } from './focusNote';
 
@@ -1287,6 +1288,9 @@ function Lifestyle() {
           ))}
         </div>
       </Panel>
+
+      {/* With friends, a round's focus can go on teasing one of them: here too, beside the rest of the focus. */}
+      <TeaseUse left={left} title={t('rivals')} />
 
       <Panel title={t('tier')}>
         <Segmented<LifestyleTier>

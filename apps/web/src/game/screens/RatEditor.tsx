@@ -84,7 +84,8 @@ export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look:
             >
               {/* The picture says which it is; the name is there for a pointer that rests on it and for a screen reader. */}
               <span aria-hidden className={`relative flex aspect-square w-full overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]}`}>
-                <RatLayers look={choice.look} className={`size-[125%] shrink-0 -ml-[16%] -mt-[6%] ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
+                {/* A colour is only the ground: shown alone, as the rat would hide it behind itself and any backdrop. */}
+                {part === 'colour' ? null : <RatLayers look={choice.look} className={`size-[125%] shrink-0 -ml-[16%] -mt-[6%] ${choice.locked ? 'opacity-40 grayscale' : ''}`} />}
                 {choice.locked ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <Sprite id="icon.locked" />

@@ -152,7 +152,8 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       if (error) throw error;
     },
     async ensureProfile(userId, language) {
-      const { error } = await client.from('profiles').upsert({ user_id: userId, language }, { onConflict: 'user_id' });
+      // Made with the language it was first opened in; an existing one keeps its own, which only the player changes.
+      const { error } = await client.from('profiles').upsert({ user_id: userId, language }, { onConflict: 'user_id', ignoreDuplicates: true });
       if (error) throw error;
     },
     onUser(listener) {
@@ -252,9 +253,9 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     community: {
       async me() {
         try {
-          const { data, error } = await client.from('profiles').select('nickname, friend_code, portrait').eq('user_id', await me()).maybeSingle();
-          const row = data as { nickname: string | null; friend_code: string; portrait: string | null } | null;
-          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code, avatar: row.portrait };
+          const { data, error } = await client.from('profiles').select('nickname, friend_code, portrait, language').eq('user_id', await me()).maybeSingle();
+          const row = data as { nickname: string | null; friend_code: string; portrait: string | null; language: string | null } | null;
+          return error || row === null ? null : { nickname: row.nickname, friendCode: row.friend_code, avatar: row.portrait, language: row.language };
         } catch {
           return null;
         }
@@ -268,6 +269,14 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return error.code === UNWELCOME || error.code === NOT_A_NAME ? 'refused' : 'failed';
         } catch {
           return 'failed';
+        }
+      },
+      async setLanguage(language) {
+        try {
+          const { error } = await client.from('profiles').update({ language }).eq('user_id', await me());
+          return !error;
+        } catch {
+          return false;
         }
       },
       async setAvatar(avatar) {

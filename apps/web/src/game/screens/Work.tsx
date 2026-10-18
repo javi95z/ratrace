@@ -487,9 +487,9 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
 /**
  * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it
  * is aimed at. The teaser gains status this round; the rival starts the next one with less, and
- * reads who did it. Nothing here in a life alone.
+ * reads who did it. Nothing here in a life alone. With a `title`, it stands in a panel of its own.
  */
-function TeaseUse({ left }: { left: number }) {
+export function TeaseUse({ left, title }: { left: number; title?: string }) {
   const t = useT('work');
   const room = useT('room');
   const { text } = useWords();
@@ -505,7 +505,7 @@ function TeaseUse({ left }: { left: number }) {
   const aim = (userId: string | null) => setOrder(isTease, userId === null ? null : { type: 'focus', action: 'tease', target: userId });
   const nameOf = (rival: (typeof rivals)[number]) => rival.name ?? room('nameless', { tag: rival.userId.slice(0, 4).toUpperCase() });
 
-  return (
+  const use = (
     <div className="flex flex-col gap-1.5">
       <Toggle
         on={aimed !== undefined}
@@ -532,5 +532,12 @@ function TeaseUse({ left }: { left: number }) {
         </div>
       ) : null}
     </div>
+  );
+  return title === undefined ? (
+    use
+  ) : (
+    <Panel title={title} label={title}>
+      {use}
+    </Panel>
   );
 }

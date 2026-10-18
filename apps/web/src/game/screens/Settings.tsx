@@ -139,6 +139,7 @@ function LanguagePick() {
   const home = useT('home');
   const { locale } = useSettings();
   const pathname = usePathname();
+  const community = useCommunity();
   return (
     <div role="group" aria-label={home('language')} className="grid grid-cols-3 gap-2">
       {routing.locales.map((code) => (
@@ -146,6 +147,10 @@ function LanguagePick() {
           key={code}
           href={pathname}
           locale={code}
+          // Kept with the account too, so that the next device the player signs in on speaks it.
+          onClick={() => {
+            if (code !== locale) void community?.setLanguage?.(code);
+          }}
           lang={code}
           style={/[\u0400-\u04ff]/.test(LANGUAGES[code]) ? CYRILLIC : undefined}
           aria-current={code === locale ? 'true' : undefined}

@@ -252,6 +252,21 @@ describe('a round in a room', () => {
     expect(b.events).toContainEqual({ kind: 'teased', by: HOST, status: -2 });
   });
 
+  it('teases a rival from the Lifestyle tab too, beside the rest of the focus', async () => {
+    setWidth('desk');
+    const server = roomServer();
+    await lobby(server);
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Start' }));
+    await toFinance(user);
+    await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
+    const others = await screen.findByRole('region', { name: 'The other players' });
+    await user.click(within(others).getByRole('switch', { name: /Tease a rival/ }));
+    expect(within(others).getByRole('radio', { name: 'Rat BBBB' }).getAttribute('aria-checked')).toBe('true');
+  });
+
   it('offers a loan to another player from the room\'s order, on terms the player sets', async () => {
     const server = roomServer();
     const room = await lobby(server);

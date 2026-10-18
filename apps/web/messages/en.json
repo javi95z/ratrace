@@ -597,7 +597,8 @@
       "back": "Go back to work as {job}",
       "backHint": "A rung below where you left it. Your business stays yours, for your spare focus.",
       "homeHelped": "Home again: your family carries you back and puts you up for a while. Old friends open doors, and no rung is lost.",
-      "homeBack": "Home again: old friends open doors, and no rung is lost. Come back richer than you left and it is a triumph."
+      "homeBack": "Home again: old friends open doors, and no rung is lost. Come back richer than you left and it is a triumph.",
+      "rivals": "The other players"
     },
     "shop": {
       "viewLabel": "What to show in the shop",
