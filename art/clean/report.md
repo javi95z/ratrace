@@ -1,6 +1,6 @@
 # Art report
 
-Sprites: 933. Every group uses the 31 interface colours plus its own.
+Sprites: 949. Every group uses the 31 interface colours plus its own.
 
 | Group | Sprites | Size | Colours |
 |---|---|---|---|
@@ -13,14 +13,14 @@ Sprites: 933. Every group uses the 31 interface colours plus its own.
 | cards | 238 | 288×120 | 64 |
 | skylines | 40 | 312×66 | 64 |
 | rat_body | 8 | 128×128 | 64 |
-| rat_outfit | 8 | 128×128 | 64 |
-| rat_clip | 8 | 128×128 | 31 |
+| rat_outfit | 16 | 128×128 | 64 |
+| rat_clip | 16 | 128×128 | 31 |
 | rat_hat | 16 | 128×128 | 64 |
 | rat_eyes | 8 | 128×128 | 64 |
 | rat_backdrop | 8 | 128×128 | 64 |
 | brand | 20 | 256×256 | 64 |
 
-Missing sheets: brand/rat-outfit-02
+No sheets missing.
 
 | Sprite | Notes |
 |---|---|

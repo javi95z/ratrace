@@ -15,6 +15,11 @@ describe('the installable app', () => {
     expect(worker).toContain("caches.match('/offline.html')");
   });
 
+  it('generates a worker the browser can read', () => {
+    // Parsed, not run: a slip in the template (an escape lost in a regular expression) would stop the worker installing.
+    expect(() => new Function(serviceWorker('test-version', ['/en']))).not.toThrow();
+  });
+
   it('opens the bare address offline in the language last played, not the browser\'s', () => {
     const worker = serviceWorker('test-version', ['/en']);
     expect(worker).toContain('keepLanguage(response.url || request.url)');
