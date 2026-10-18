@@ -540,7 +540,9 @@
       "sellHomeRent": "It is your home: you move out and pay {amount} more a year for housing.",
       "sellStatus": "You lose the {n} status it gave you.",
       "sellDo": "Sell and keep {amount}",
-      "sellUndo": "Until the round is played you can take it off your orders."
+      "sellUndo": "Until the round is played you can take it off your orders.",
+      "estateStatus": "Grand home: +{n} status",
+      "estateHint": "A grand home gives half its status even when you do not live in it: the two best count."
     },
     "debt": {
       "none": "You owe nothing.",
@@ -637,7 +639,8 @@
       "backHint": "A rung below where you left it. Your business stays yours, for your spare focus.",
       "homeHelped": "Home again: your family carries you back and puts you up for a while. Old friends open doors, and no rung is lost.",
       "homeBack": "Home again: old friends open doors, and no rung is lost. Come back richer than you left and it is a triumph.",
-      "rivals": "The other players"
+      "rivals": "The other players",
+      "moveCostFar": "Moving costs {amount} and 1 focus: it is {km} km away"
     },
     "shop": {
       "viewLabel": "What to show in the shop",
@@ -1864,9 +1867,10 @@
     "toRankings": "Rankings",
     "layers": {
       "body": "Fur",
+      "face": "Face",
       "outfit": "Clothes",
       "hat": "Headwear",
-      "eyes": "Face",
+      "eyes": "Eyewear",
       "backdrop": "Backdrop",
       "colour": "Colour"
     },
@@ -1936,6 +1940,16 @@
         "confetti": "Confetti",
         "wheel": "Wheel",
         "beach": "Beach"
+      },
+      "face": {
+        "calm": "Calm",
+        "grin": "Grin",
+        "smug": "Smug",
+        "wink": "Wink",
+        "shock": "Shocked",
+        "sleepy": "Sleepy",
+        "fierce": "Fierce",
+        "tears": "Tears of laughter"
       }
     },
     "none": "None",

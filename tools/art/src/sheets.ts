@@ -248,7 +248,7 @@ export const SHEETS: SheetSpec[] = [
     file: 'icons/icons-09', group: 'icons', kind: 'objects', cols: 4, rows: 3, width: 32, height: 32,
     ids: [
       'icon.rule_index_only', 'icon.rule_no_loans', 'icon.rule_no_moving', 'icon.rule_no_property',
-      'icon.rule_start_in_debt', 'icon.challenge', 'icon.top_tenth', 'icon.retired',
+      'icon.rule_start_in_debt', 'icon.challenge', 'icon.top_tenth', '',
       'icon.gift', 'icon.handover', 'icon.health_risk', 'icon.practice',
     ],
   },
@@ -390,12 +390,20 @@ export const SHEETS: SheetSpec[] = [
   { file: 'cards/cards-35', group: 'cards', kind: 'scenes', cols: 2, rows: 3, width: 288, height: 120, ids: ['card.red_licence', 'card.red_appointment', 'card.red_works_stopped', 'card.red_inheritance', 'card.red_grant', 'card.refuge_bank_freeze'] },
   { file: 'badges/badges-10', group: 'badges', kind: 'objects', cols: 3, rows: 1, width: 64, height: 64, ids: ['badge.mp_first_win', 'badge.mp_full_house', 'badge.mp_rematch_win'] },
   { file: 'badges/badges-09', group: 'badges', kind: 'objects', cols: 4, rows: 1, width: 64, height: 64, ids: ['badge.tax_free_year', 'badge.tax_haven', 'badge.off_the_grid', 'badge.home_again'] },
+  // v16: playing with friends, the rat ranks, and two icons (the retirement one drawn again with room round it).
+  {
+    file: 'icons/multiplayer-01', group: 'icons', kind: 'objects', cols: 4, rows: 2, width: 32, height: 32,
+    ids: ['icon.multiplayer', 'icon.room_lobby', 'icon.room_ready', 'icon.room_rematch', 'icon.room_shout', 'icon.room_loan', 'icon.room_tease', 'icon.room_podium'],
+  },
+  { file: 'badges/rat-ranks-01', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['rank.sewer', 'rank.office', 'rank.stock', 'rank.wall_street', 'rank.tycoon', 'rank.king'] },
+  { file: 'icons/icons-11', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.retired', 'icon.estates'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
-  // A player's rat in layers, back to front: backdrop, body, outfit, eyewear, headwear. The faces of
-  // rat-face-01 are not cut: the bodies came with eyes and a smile of their own, which a face would double.
+  // A player's rat in layers, back to front: backdrop, body, face, outfit, eyewear, headwear. The bodies
+  // of rat-body-02 have their faces left blank, so that the faces of rat-face-01 can be worn on them.
   ...(
     [
-      ['rat-body-01', 'body', false, ['grey', 'brown', 'white', 'black', 'ginger', 'golden', 'slate', 'spotted']],
+      ['rat-body-02', 'body', false, ['grey', 'brown', 'white', 'black', 'ginger', 'golden', 'slate', 'spotted']],
+      ['rat-face-01', 'face', true, ['calm', 'grin', 'smug', 'wink', 'shock', 'sleepy', 'fierce', 'tears']],
       ['rat-outfit-01', 'outfit', true, ['suit', 'tracksuit', 'tuxedo', 'hoodie', 'scrubs', 'hivis', 'chef', 'leather']],
       ['rat-outfit-02', 'outfit', true, ['lab', 'sweater', 'hawaiian', 'varsity', 'robe', 'kimono', 'fur', 'gold']],
       ['rat-hat-01', 'hat', true, ['cap', 'beanie', 'beret', 'hardhat', 'cowboy', 'headphones', 'bandana', 'chef']],
@@ -404,7 +412,7 @@ export const SHEETS: SheetSpec[] = [
     ] as const
   ).map(([file, layer, guided, names]): SheetSpec => ({
     file: `brand/${file}`, group: `rat_${layer}`, kind: 'layers', cols: 4, rows: 2, width: 128, height: 128,
-    ids: names.map((name) => `rat.${layer}.${name}`), over: 'brand/rat-body-01', guided,
+    ids: names.map((name) => `rat.${layer}.${name}`), over: 'brand/rat-body-02', guided,
     worn: layer === 'outfit' ? 'body' : layer === 'body' ? 'all' : 'head',
     thinnest: layer === 'outfit' ? 3 : 0,
   })),

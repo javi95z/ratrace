@@ -137,10 +137,12 @@ describe('a player\'s rat', () => {
   });
 
   it('is kept in a word the profile takes, and read back the same', () => {
-    const look = { colour: 'sky', body: 'spotted', outfit: 'tuxedo', hat: 'halo', eyes: null, backdrop: 'beach' } as const;
+    const look = { colour: 'sky', body: 'spotted', face: 'smug', outfit: 'tuxedo', hat: 'halo', eyes: null, backdrop: 'beach' } as const;
     const kept = avatarOf(look);
     expect(kept).toMatch(/^[a-z0-9_]{1,40}$/);
     expect(ratLookOf(kept, 'anyone')).toEqual(look);
+    // One kept before rats had faces of their own wears the calm one.
+    expect(ratLookOf('rat_x7a0g03', 'u-7')).toMatchObject({ body: 'spotted', face: 'calm', colour: 'sky' });
     // An older choice of a colour alone keeps its colour.
     expect(ratLookOf('rat_gold', 'u-7')).toEqual({ ...ratLookOf(null, 'u-7'), colour: 'gold' });
   });

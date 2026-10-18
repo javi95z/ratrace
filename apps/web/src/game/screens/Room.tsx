@@ -401,6 +401,7 @@ function Rematch({ room }: { room: RoomState }) {
   return (
     <>
       <Button variant="primary" wide disabled={busy} onClick={() => setAsking(true)}>
+        <Sprite id="icon.room_rematch" />
         {t('rematch')}
       </Button>
       <RematchSheet room={room} open={asking} onClose={() => setAsking(false)} />
@@ -639,12 +640,12 @@ function ShoutButton({ wide = false }: { wide?: boolean }) {
     <>
       {wide ? (
         <Button wide aria-haspopup="dialog" onClick={() => setOpen(true)}>
-          <span aria-hidden>💬</span>
+          <Sprite id="icon.room_shout" />
           {t('shoutTitle')}
         </Button>
       ) : (
         <button type="button" aria-haspopup="dialog" aria-label={t('shoutTitle')} onClick={() => setOpen(true)} className="frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 text-[20px]">
-          <span aria-hidden>💬</span>
+          <Sprite id="icon.room_shout" />
         </button>
       )}
       <Sheet open={open} onClose={() => setOpen(false)} title={t('shoutTitle')} closeLabel={common('close')}>
@@ -979,7 +980,12 @@ function RoomScreens({ room }: { room: RoomState }) {
     ),
     end: (
       <Panel title={t('final')} label={t('final')}>
-        {place > 0 ? <p className="pixel mb-2 text-[20px] text-gold-500">{t('place', { place, total: here.length })}</p> : null}
+        {place > 0 ? (
+          <p className="pixel mb-2 flex items-center gap-2 text-[20px] text-gold-500">
+            <Sprite id="icon.room_podium" />
+            {t('place', { place, total: here.length })}
+          </p>
+        ) : null}
         {earned.length > 0 ? (
           <ul aria-label={t('newBadges')} className="mb-2 flex flex-col gap-1.5">
             {earned.map((id) => (
@@ -1056,7 +1062,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
       className={`pixel frame-raised flex min-h-12 flex-col items-center justify-center gap-0.5 px-4 py-2 text-center ${primary ? 'frame-gold bg-gold-500 text-ink-900' : 'bg-night-600 text-cream'}`}
     >
       <span className={`flex items-center gap-2 ${primary ? 'text-[19px]' : 'text-[17px]'}`}>
-        <Sprite id="icon.skill_network" />
+        <Sprite id={over ? 'icon.room_podium' : room?.rematch?.open && inRoom ? 'icon.room_rematch' : inRoom && room?.status === 'open' ? 'icon.room_lobby' : 'icon.multiplayer'} />
         {over ? t('roomResult') : inRoom ? t('inRoom') : t('room')}
       </span>
       {detail ? <span className={`font-sans text-[13px] font-normal ${primary ? 'text-ink-700' : 'text-ink-200'}`}>{detail}</span> : null}

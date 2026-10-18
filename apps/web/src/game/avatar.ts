@@ -6,8 +6,9 @@ import type { RankId } from '@ratrace/content';
  * `portrait`. It is built in layers, back to front: the colour of the ground, a backdrop, the rat
  * itself, and what it wears on its body, its eyes and its head.
  *
- * Kept as `rat_x` and one letter a layer (`rat_x305200`): the database takes nothing but lower-case
- * letters, digits and underscores. An older `rat_<colour>` is still read, as that colour and a rat
+ * Kept as `rat_x` and one letter a layer (`rat_x3052001`): the database takes nothing but lower-case
+ * letters, digits and underscores. The face came last, as a seventh letter: one kept before it has
+ * the calm face. An older `rat_<colour>` is still read, as that colour and a rat
  * picked for the player. Someone who never chose has one all the same, the same every time, from who
  * they are.
  */
@@ -15,18 +16,21 @@ export const RAT_COLOURS = ['gold', 'teal', 'wine', 'sky', 'coral', 'emerald', '
 export type RatColour = (typeof RAT_COLOURS)[number];
 
 export const RAT_BODIES = ['grey', 'brown', 'white', 'black', 'ginger', 'golden', 'slate', 'spotted'] as const;
+export const RAT_FACES = ['calm', 'grin', 'smug', 'wink', 'shock', 'sleepy', 'fierce', 'tears'] as const;
 export const RAT_OUTFITS = ['suit', 'tracksuit', 'tuxedo', 'hoodie', 'scrubs', 'hivis', 'chef', 'leather', 'lab', 'sweater', 'hawaiian', 'varsity', 'robe', 'kimono', 'fur', 'gold'] as const;
 export const RAT_HATS = ['cap', 'beanie', 'beret', 'hardhat', 'cowboy', 'headphones', 'bandana', 'chef', 'tophat', 'crown', 'graduate', 'party', 'viking', 'flowers', 'wizard', 'halo'] as const;
 export const RAT_EYES = ['sunglasses', 'round', 'aviators', 'monocle', 'patch', 'visor', 'moustache', 'heart'] as const;
 export const RAT_BACKDROPS = ['stars', 'city', 'coins', 'chart', 'cheese', 'confetti', 'wheel', 'beach'] as const;
 
 /** The layers a player chooses from, and what each may be. A layer other than the body may be left bare. */
-export const RAT_LAYERS = { body: RAT_BODIES, outfit: RAT_OUTFITS, hat: RAT_HATS, eyes: RAT_EYES, backdrop: RAT_BACKDROPS } as const;
+export const RAT_LAYERS = { body: RAT_BODIES, face: RAT_FACES, outfit: RAT_OUTFITS, hat: RAT_HATS, eyes: RAT_EYES, backdrop: RAT_BACKDROPS } as const;
 export type RatLayer = keyof typeof RAT_LAYERS;
 
 export interface RatLook {
   colour: RatColour;
   body: (typeof RAT_BODIES)[number];
+  /** The face, drawn on a body that has none of its own: there is always one. */
+  face: (typeof RAT_FACES)[number];
   outfit: (typeof RAT_OUTFITS)[number] | null;
   hat: (typeof RAT_HATS)[number] | null;
   eyes: (typeof RAT_EYES)[number] | null;
@@ -92,6 +96,7 @@ export function avatarOf(look: RatLook): string {
     optional(RAT_EYES, look.eyes),
     optional(RAT_BACKDROPS, look.backdrop),
     DIGITS[RAT_COLOURS.indexOf(look.colour)],
+    DIGITS[RAT_FACES.indexOf(look.face)],
   ].join('');
 }
 
@@ -107,6 +112,7 @@ function givenLook(userId: string): RatLook {
   return {
     colour: RAT_COLOURS[mixOf(userId, 0) % RAT_COLOURS.length],
     body: RAT_BODIES[mixOf(userId, 7) % RAT_BODIES.length],
+    face: 'calm',
     outfit: null,
     hat: null,
     eyes: null,
@@ -120,7 +126,7 @@ export function ratLookOf(portrait: string | null | undefined, userId: string): 
   if (!portrait?.startsWith('rat_')) return given;
   const rest = portrait.slice(4);
   if ((RAT_COLOURS as readonly string[]).includes(rest)) return { ...given, colour: rest as RatColour };
-  if (!/^x[0-9a-z]{6}$/.test(rest)) return given;
+  if (!/^x[0-9a-z]{6,7}$/.test(rest)) return given;
   const at = (i: number) => DIGITS.indexOf(rest[i + 1]);
   const required = <T>(list: readonly T[], i: number, fallback: T): T => list[at(i)] ?? fallback;
   const optional = <T>(list: readonly T[], i: number): T | null => (at(i) === 0 ? null : (list[at(i) - 1] ?? null));
@@ -131,6 +137,7 @@ export function ratLookOf(portrait: string | null | undefined, userId: string): 
     eyes: optional(RAT_EYES, 3),
     backdrop: optional(RAT_BACKDROPS, 4),
     colour: required(RAT_COLOURS, 5, given.colour),
+    face: rest.length > 7 ? required(RAT_FACES, 6, given.face) : given.face,
   };
 }
 

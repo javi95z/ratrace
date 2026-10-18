@@ -8,6 +8,7 @@ import { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS } from '@/game/room';
 import type { RoomLoan, RoomMember, RoomState } from '@/game/room';
 import { Button, Panel, Segmented } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
+import { Sprite } from '@/ui/Sprite';
 
 /** What became of an offer, told from the player's side: as the one who lends, or the one who borrows. Each key written out. */
 const STATE = {
@@ -76,7 +77,10 @@ export function LoanOffers({ room, nameOf }: { room: RoomState; nameOf(member: R
         const cost = loanCost(loan.amount, loan.rateBp, loan.rounds, content.yearsPerRound);
         return (
           <Panel key={loan.id} title={t(loan.lend ? 'askedTitle' : 'offeredTitle', { who: who(loan) })} label={t(loan.lend ? 'askedTitle' : 'offeredTitle', { who: who(loan) })}>
-            <p className="pixel text-[17px] text-gold-500">{terms(loan)}</p>
+            <p className="pixel flex items-center gap-2 text-[17px] text-gold-500">
+              <Sprite id="icon.room_loan" />
+              {terms(loan)}
+            </p>
             <p className="mt-1 text-[13px] leading-snug text-ink-200">
               {loan.lend ? t('youWouldGet', { total: fmt.money(cost.total) }) : t('youWouldPay', { first: fmt.money(cost.first), total: fmt.money(cost.total) })}
             </p>

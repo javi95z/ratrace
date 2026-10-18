@@ -194,7 +194,7 @@ say(
 say(
   '## Ciudades',
   'Cada ciudad tiene su perfil de noche, de día, en bonanza y en crisis, y un icono.',
-  `Mudarse cuesta el ${content.life.moveCostPct} % del coste de vida anual del destino y 1 de foco; con pareja, un ${content.life.movePartnerPct} % más, y un ${content.life.moveChildPct} % más por cada hijo. Quien se muda por su cuenta llega ${content.life.moveRungsLost} puesto por debajo, hasta su siguiente ascenso, y su pareja pasa ${content.life.partnerSettlingRounds * content.yearsPerRound} años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.`,
+  `Mudarse cuesta el ${content.life.moveCostPct} % del coste de vida anual del destino${content.life.moveDistancePctPer1000Km ? `, un ${content.life.moveDistancePctPer1000Km} % más por cada 1.000 km de distancia` : ''}, y 1 de foco; con pareja, un ${content.life.movePartnerPct} % más, y un ${content.life.moveChildPct} % más por cada hijo. Quien se muda por su cuenta llega ${content.life.moveRungsLost} puesto por debajo, hasta su siguiente ascenso, y su pareja pasa ${content.life.partnerSettlingRounds * content.yearsPerRound} años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.`,
 );
 for (const city of content.cities) {
   say(

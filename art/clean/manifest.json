@@ -2136,11 +2136,6 @@
       "width": 32,
       "height": 32
     },
-    "icon.retired": {
-      "file": "icons/icon.retired.png",
-      "width": 32,
-      "height": 32
-    },
     "icon.gift": {
       "file": "icons/icon.gift.png",
       "width": 32,
@@ -4121,6 +4116,86 @@
       "width": 64,
       "height": 64
     },
+    "icon.multiplayer": {
+      "file": "icons/icon.multiplayer.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_lobby": {
+      "file": "icons/icon.room_lobby.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_ready": {
+      "file": "icons/icon.room_ready.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_rematch": {
+      "file": "icons/icon.room_rematch.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_shout": {
+      "file": "icons/icon.room_shout.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_loan": {
+      "file": "icons/icon.room_loan.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_tease": {
+      "file": "icons/icon.room_tease.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.room_podium": {
+      "file": "icons/icon.room_podium.png",
+      "width": 32,
+      "height": 32
+    },
+    "rank.sewer": {
+      "file": "badges/rank.sewer.png",
+      "width": 64,
+      "height": 64
+    },
+    "rank.office": {
+      "file": "badges/rank.office.png",
+      "width": 64,
+      "height": 64
+    },
+    "rank.stock": {
+      "file": "badges/rank.stock.png",
+      "width": 64,
+      "height": 64
+    },
+    "rank.wall_street": {
+      "file": "badges/rank.wall_street.png",
+      "width": 64,
+      "height": 64
+    },
+    "rank.tycoon": {
+      "file": "badges/rank.tycoon.png",
+      "width": 64,
+      "height": 64
+    },
+    "rank.king": {
+      "file": "badges/rank.king.png",
+      "width": 64,
+      "height": 64
+    },
+    "icon.retired": {
+      "file": "icons/icon.retired.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.estates": {
+      "file": "icons/icon.estates.png",
+      "width": 32,
+      "height": 32
+    },
     "badge.own_boss": {
       "file": "badges/badge.own_boss.png",
       "width": 64,
@@ -4163,6 +4238,46 @@
     },
     "rat.body.spotted": {
       "file": "rat_body/rat.body.spotted.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.calm": {
+      "file": "rat_face/rat.face.calm.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.grin": {
+      "file": "rat_face/rat.face.grin.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.smug": {
+      "file": "rat_face/rat.face.smug.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.wink": {
+      "file": "rat_face/rat.face.wink.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.shock": {
+      "file": "rat_face/rat.face.shock.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.sleepy": {
+      "file": "rat_face/rat.face.sleepy.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.fierce": {
+      "file": "rat_face/rat.face.fierce.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.face.tears": {
+      "file": "rat_face/rat.face.tears.png",
       "width": 128,
       "height": 128
     },

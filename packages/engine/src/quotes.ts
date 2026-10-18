@@ -71,6 +71,23 @@ export interface OwnedPropertyQuote {
   mortgage: { principal: Cents; rateBp: Bp; roundsLeft: number; variable: boolean } | null;
   /** What a sale would leave after the mortgage is repaid, before any tax on the gain. */
   netOnSale: Cents;
+  /** What it adds to status as a grand home owned besides the one lived in; 0 when it does not count so. */
+  estateStatus: number;
+}
+
+/** What a grand home owned besides the one lived in adds to status, by its place among them; 0 for any other. */
+function estateStatusOf(p: PlayerState, content: Content, property: { id: string; typeId: string }): number {
+  const grand = content.life.estates;
+  const home = homeOf(p, content);
+  if (!grand || home?.id === property.id) return 0;
+  const ranked = p.properties
+    .filter((x) => x.id !== home?.id)
+    .map((x) => ({ id: x.id, status: propertyTypeOf(content, x.typeId).status }))
+    .filter((x) => x.status >= grand.minStatus)
+    .sort((a, b) => b.status - a.status)
+    .slice(0, grand.counted);
+  const mine = ranked.find((x) => x.id === property.id);
+  return mine ? mulDiv(mine.status, grand.pct, 100) : 0;
 }
 
 /** Everything about a property the player owns, or null if they do not own it. */
@@ -95,6 +112,7 @@ export function quoteOwnedProperty(content: Content, view: GameView, propertyId:
       ? { principal: debt.principal, rateBp: debtRateBp(debt, content, view.timeline[view.round], p), roundsLeft: debt.roundsLeft, variable: debt.kind === 'mortgageVariable' }
       : null,
     netOnSale: property.value - (debt?.principal ?? 0),
+    estateStatus: estateStatusOf(p, content, property),
   };
 }
 

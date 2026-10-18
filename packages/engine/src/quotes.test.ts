@@ -95,6 +95,20 @@ describe('quoteOwnedProperty', () => {
   });
 });
 
+describe('a grand home owned besides the one lived in', () => {
+  it('says what it adds to status: half its own for the two best, nothing for the home lived in or the rest', () => {
+    const ruled = fixtureContent();
+    ruled.life.estates = { minStatus: 25, pct: 50, counted: 2 };
+    const state = createGame({ content: ruled, start: fixtureStart() }, 'estate-quote');
+    const city = state.player.cityId;
+    const own = (id: string, typeId: string, rented: boolean) => ({ id, cityId: city, typeId, value: 0, basis: 0, rented, mortgageId: null });
+    state.player.properties = [own('lived', 'penthouse', false), own('v1', 'villa', true), own('v2', 'villa', true), own('p1', 'penthouse', true), own('h1', 'house', true)];
+    const estate = (id: string) => quoteOwnedProperty(ruled, viewOf(state), id)?.estateStatus;
+    expect(estate('lived')).toBe(0);
+    expect([estate('v1'), estate('v2'), estate('p1'), estate('h1')]).toEqual([20, 20, 0, 0]);
+  });
+});
+
 describe('quoteItem', () => {
   it('quotes exactly what an item costs today and what it would resell for', () => {
     for (const state of [game(5_000_000), later(game(5_000_000))]) {

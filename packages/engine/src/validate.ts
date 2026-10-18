@@ -110,6 +110,13 @@ export function validateContent(c: Content): string[] {
   }
 
   for (const city of c.cities) {
+    // Distances, when given, are to other cities only, whole and positive, and the same both ways.
+    for (const [other, km] of Object.entries(city.distanceKm ?? {})) {
+      const there = c.cities.find((x) => x.id === other);
+      if (!there || other === city.id) errors.push(`city ${city.id} has a distance to ${other}, which is not another city`);
+      else if (!(isWhole(km) && km > 0)) errors.push(`city ${city.id} needs a whole, positive distance to ${other}`);
+      else if (there.distanceKm !== undefined && there.distanceKm[city.id] !== km) errors.push(`city ${city.id} and ${other} disagree on how far apart they are`);
+    }
     if (city.residency !== undefined && !(isCount(city.residency.feeAnnual) && isCount(city.residency.dividendBp) && city.residency.dividendBp <= 10_000)) errors.push(`city ${city.id} offers a residency without a fee and a rate`);
     const rates = [...city.tax.incomeRatesBp, city.tax.capitalGainsBp, city.tax.dividendBp, city.tax.rentBp];
     if (rates.some((r) => !within(r, 0, 10_000))) errors.push(`city ${city.id} has a tax rate outside 0..10000 bp`);
@@ -269,6 +276,7 @@ export function validateContent(c: Content): string[] {
   for (const field of ['jobHuntChancePct', 'lesserItemPct']) {
     if (!within(life[field], 0, 100)) errors.push(`life.${field} must be between 0 and 100`);
   }
+  if (life.moveDistancePctPer1000Km !== undefined && !isCount(life.moveDistancePctPer1000Km)) errors.push('life.moveDistancePctPer1000Km must be a whole number from 0');
   const estates = life.estates as { minStatus?: unknown; pct?: unknown; counted?: unknown } | undefined;
   if (estates !== undefined) {
     if (!isCount(estates.minStatus)) errors.push('life.estates.minStatus must be a whole number from 0');

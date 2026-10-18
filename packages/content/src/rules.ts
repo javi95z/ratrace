@@ -140,7 +140,9 @@ export const life: LifeRules = {
   // A car and a gadget are worth less to look at as they are worth less to sell: down to a quarter of what they gave new.
   agingLadders: ['car', 'tech'],
   agingFloorPct: 25,
-  moveCostPct: 25,
+  // A move costs a fifth of a year's living where it goes, and more the further it goes: four percent more every thousand kilometres.
+  moveCostPct: 20,
+  moveDistancePctPer1000Km: 4,
   // A household is dearer to move, and a move of one's own costs a rung and a partner's pay for a round:
   // the cheap way to another city is to be sent there.
   movePartnerPct: 50,

@@ -2649,6 +2649,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.estates": {
+    "src": "icons/icon.estates.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.exit_door": {
     "src": "icons/icon.exit_door.png",
     "w": 32,
@@ -2794,6 +2799,11 @@
     "w": 32,
     "h": 32
   },
+  "icon.multiplayer": {
+    "src": "icons/icon.multiplayer.png",
+    "w": 32,
+    "h": 32
+  },
   "icon.news": {
     "src": "icons/icon.news.png",
     "w": 32,
@@ -2856,6 +2866,41 @@
   },
   "icon.retired": {
     "src": "icons/icon.retired.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_loan": {
+    "src": "icons/icon.room_loan.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_lobby": {
+    "src": "icons/icon.room_lobby.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_podium": {
+    "src": "icons/icon.room_podium.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_ready": {
+    "src": "icons/icon.room_ready.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_rematch": {
+    "src": "icons/icon.room_rematch.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_shout": {
+    "src": "icons/icon.room_shout.png",
+    "w": 32,
+    "h": 32
+  },
+  "icon.room_tease": {
+    "src": "icons/icon.room_tease.png",
     "w": 32,
     "h": 32
   },
@@ -3904,6 +3949,36 @@
     "w": 64,
     "h": 64
   },
+  "rank.king": {
+    "src": "badges/rank.king.png",
+    "w": 64,
+    "h": 64
+  },
+  "rank.office": {
+    "src": "badges/rank.office.png",
+    "w": 64,
+    "h": 64
+  },
+  "rank.sewer": {
+    "src": "badges/rank.sewer.png",
+    "w": 64,
+    "h": 64
+  },
+  "rank.stock": {
+    "src": "badges/rank.stock.png",
+    "w": 64,
+    "h": 64
+  },
+  "rank.tycoon": {
+    "src": "badges/rank.tycoon.png",
+    "w": 64,
+    "h": 64
+  },
+  "rank.wall_street": {
+    "src": "badges/rank.wall_street.png",
+    "w": 64,
+    "h": 64
+  },
   "rat.backdrop.beach": {
     "src": "rat_backdrop/rat.backdrop.beach.png",
     "w": 128,
@@ -4116,6 +4191,46 @@
   },
   "rat.eyes.visor": {
     "src": "rat_eyes/rat.eyes.visor.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.calm": {
+    "src": "rat_face/rat.face.calm.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.fierce": {
+    "src": "rat_face/rat.face.fierce.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.grin": {
+    "src": "rat_face/rat.face.grin.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.shock": {
+    "src": "rat_face/rat.face.shock.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.sleepy": {
+    "src": "rat_face/rat.face.sleepy.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.smug": {
+    "src": "rat_face/rat.face.smug.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.tears": {
+    "src": "rat_face/rat.face.tears.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.face.wink": {
+    "src": "rat_face/rat.face.wink.png",
     "w": 128,
     "h": 128
   },

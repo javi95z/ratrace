@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.42.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.43.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -516,7 +516,7 @@ Un negocio rinde sobre el capital que trabaja en él: todo el de uno pequeño, y
 
 Cada ciudad tiene su perfil de noche, de día, en bonanza y en crisis, y un icono.
 
-Mudarse cuesta el 25 % del coste de vida anual del destino y 1 de foco; con pareja, un 50 % más, y un 25 % más por cada hijo. Quien se muda por su cuenta llega 1 puesto por debajo, hasta su siguiente ascenso, y su pareja pasa 2 años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.
+Mudarse cuesta el 20 % del coste de vida anual del destino, un 4 % más por cada 1.000 km de distancia, y 1 de foco; con pareja, un 50 % más, y un 25 % más por cada hijo. Quien se muda por su cuenta llega 1 puesto por debajo, hasta su siguiente ascenso, y su pareja pasa 2 años sin sueldo. Un traslado ofrecido por una carta no cuesta nada de eso.
 
 ### <img src="../art/clean/icons/icon.city_madrid.png" alt=""> Madrid
 

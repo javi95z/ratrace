@@ -282,7 +282,7 @@ export const focusArt: Record<FocusAction, string> = {
   studyLanguages: skillArt.languages,
   networking: skillArt.network,
   exercise: skillArt.health,
-  tease: 'icon.mood',
+  tease: 'icon.room_tease',
   careerMove: 'icon.star',
 };
 /** What a headline is about. */

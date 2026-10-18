@@ -6,6 +6,10 @@ import { useEffect } from 'react';
 import { useProfile, useSound, useT } from '@/game/context';
 import { useStill } from '@/game/motion';
 import { Bar, Panel } from '@/ui/kit';
+import { Sprite } from '@/ui/Sprite';
+
+/** The emblem of a rank. */
+export const rankArt = (rank: RankId): string => `rank.${rank}`;
 
 /** The name of a rank, in the language of the game. */
 export function useRankName(): (rank: RankId) => string {
@@ -21,12 +25,16 @@ export function RankCard() {
   const progress = progressOf(profile.rank.points);
   return (
     <Panel className="w-full" label={t('title')}>
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="pixel text-[17px] text-gold-500">
-          <span className="sr-only">{t('title')}: </span>
-          {name(progress.rank)}
-        </p>
-        <p className="text-[12px] text-ink-300">{t('step', { n: RANKS.indexOf(progress.rank) + 1, of: RANKS.length })}</p>
+      <div className="flex items-center gap-3">
+        {/* The rank's emblem: grander, the higher the rat has climbed. */}
+        <Sprite id={rankArt(progress.rank)} fallback={{ w: 64, h: 64 }} className="!h-12 !w-12 shrink-0" />
+        <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+          <p className="pixel text-[17px] text-gold-500">
+            <span className="sr-only">{t('title')}: </span>
+            {name(progress.rank)}
+          </p>
+          <p className="text-[12px] text-ink-300">{t('step', { n: RANKS.indexOf(progress.rank) + 1, of: RANKS.length })}</p>
+        </div>
       </div>
       <div className="mt-2">
         <Bar value={progress.share} max={1} label={t('progress')} tone="teal" />
@@ -59,7 +67,8 @@ export function RankGain({ gameId }: { gameId: string }) {
   return (
     <div className="flex flex-col gap-2">
       {rose ? (
-        <p role="status" data-promotion={after.rank} className={`frame frame-gold pixel bg-gold-500 px-3 py-3 text-center text-[18px] text-ink-900 ${still ? '' : 'animate-rise'}`}>
+        <p role="status" data-promotion={after.rank} className={`frame frame-gold pixel flex items-center justify-center gap-3 bg-gold-500 px-3 py-3 text-center text-[18px] text-ink-900 ${still ? '' : 'animate-rise'}`}>
+          <Sprite id={rankArt(after.rank)} fallback={{ w: 64, h: 64 }} />
           {t('promoted', { rank: name(after.rank) })}
         </p>
       ) : null}

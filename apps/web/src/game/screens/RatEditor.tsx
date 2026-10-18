@@ -21,7 +21,7 @@ const COLOUR_NAME: Record<RatColour, string> = {
 };
 
 type Part = RatLayer | 'colour';
-const PARTS: Part[] = ['body', 'outfit', 'hat', 'eyes', 'backdrop', 'colour'];
+const PARTS: Part[] = ['body', 'face', 'outfit', 'hat', 'eyes', 'backdrop', 'colour'];
 
 /** One choice of a part: a piece, nothing at all, or a colour. */
 interface Choice {
@@ -49,13 +49,14 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
       const how = prize === null || mayWear(part, piece, earned, rank) ? null : 'badge' in prize ? t('locked', { badge: badgeName(prize.badge) }) : t('lockedRank', { rank: rankName(prize.rank) });
       return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: how };
     });
-    return part === 'body' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
+    // A rat always has a fur and a face: only what it wears may be left off.
+    return part === 'body' || part === 'face' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
   };
   const chosen = (choice: Choice) => (part === 'colour' ? look.colour === choice.key : (look[part] ?? 'none') === choice.key);
 
   return (
     <div className="flex flex-col gap-3">
-      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
         {PARTS.map((each) => (
           <button
             key={each}

@@ -254,3 +254,21 @@ describe('switching a mortgage', () => {
     expect(previewRound(c, after, { orders: [{ type: 'switchMortgage', debtId: 'debt-m' }] }).rejected.map((r) => r.reason)).toEqual(['switch-resting']);
   });
 });
+
+describe('a move across the world', () => {
+  it('costs more the further it goes, by whole kilometres, and nothing more where no distance is given', async () => {
+    const { moveCost } = await import('./orders');
+    const ruled = fixtureContent();
+    const state = createGame({ content: ruled, start: fixtureStart() }, 'distance');
+    const haven = ruled.cities.find((city) => city.id === 'haven')!;
+    const world = state.timeline[state.round];
+    const plain = moveCost(ruled, world, haven, state.player);
+    // Ten thousand kilometres, at four percent a thousand: forty percent more.
+    ruled.life.moveDistancePctPer1000Km = 4;
+    const far = { ...haven, distanceKm: { home: 10_000 } };
+    expect(moveCost(ruled, world, far, state.player)).toBe(Math.floor((plain * 140) / 100));
+    const near = { ...haven, distanceKm: { home: 499 } };
+    expect(moveCost(ruled, world, near, state.player)).toBe(Math.floor((plain * 101) / 100));
+    expect(moveCost(ruled, world, haven, state.player)).toBe(plain);
+  });
+});

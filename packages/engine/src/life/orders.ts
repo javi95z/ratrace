@@ -173,7 +173,10 @@ export function helpedHome(content: Content, world: WorldState, cityId: string, 
 export function moveCost(content: Content, world: WorldState, city: CityDef, p: PlayerState): Cents {
   // Family carries a returning child home for nothing.
   if (helpedHome(content, world, city.id, p)) return 0;
-  const alone = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+  const near = mulDiv(indexed(city.livingCostAnnual, world), content.life.moveCostPct, 100);
+  // The further it goes, the dearer: a flight and a container across the world cost more than a van across a border.
+  const km = city.distanceKm?.[p.cityId] ?? 0;
+  const alone = mulDiv(near, 100 + Math.floor((km * (content.life.moveDistancePctPer1000Km ?? 0)) / 1000), 100);
   // A household is dearer to move than a suitcase: a partner and each child add their share.
   const family = (p.life.partner ? content.life.movePartnerPct : 0) + p.life.children.length * content.life.moveChildPct;
   const full = mulDiv(alone, 100 + family, 100);

@@ -596,7 +596,8 @@ describe('moving to another city', () => {
       expect(line('Your pay'), city.id).toBe(`${fmt.compact(quote.here.payAnnual)}→${fmt.compact(quote.there.payAnnual)}`);
       expect(line('Income tax'), city.id).toBe(`${fmt.compact(quote.here.taxAnnual)}→${fmt.compact(quote.there.taxAnnual)}`);
       expect(within(card).getByText(`Status +${city.prestige}`)).toBeTruthy();
-      expect(within(card).getByText(`Moving costs ${fmt.money(quote.cost)} and 1 focus`)).toBeTruthy();
+      // What the move costs, and how far it goes: the further, the dearer.
+      expect(within(card).getByText(`Moving costs ${fmt.money(quote.cost)} and 1 focus: it is ${fmt.number(city.distanceKm?.madrid ?? 0)} km away`)).toBeTruthy();
       // A nurse on the first rung, alone: nothing more to lose by going.
       expect(within(card).queryByText(/^You arrive as/)).toBeNull();
       expect(within(card).getByRole('button', { name: 'Move here' })).toBeTruthy();

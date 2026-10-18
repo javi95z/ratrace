@@ -32,6 +32,7 @@ const CONTACT_LAYOUT: Record<string, { columns: number; scale: number; backgroun
   skylines: { columns: 2, scale: 2, backgrounds: [NAVY] },
   brand: { columns: 4, scale: 1, backgrounds: [NAVY, CREAM] },
   rat_body: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
+  rat_face: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
   rat_outfit: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
   rat_hat: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },
   rat_eyes: { columns: 8, scale: 2, backgrounds: [NAVY, CREAM] },

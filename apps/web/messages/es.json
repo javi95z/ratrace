@@ -540,7 +540,9 @@
       "sellHomeRent": "Es tu casa: dejas de vivir aquí y pasas a pagar {amount} más al año de vivienda.",
       "sellStatus": "Pierdes {n} de estatus que te daba.",
       "sellDo": "Vender y quedarte {amount}",
-      "sellUndo": "Hasta jugar la ronda puedes quitarlo de tus órdenes."
+      "sellUndo": "Hasta jugar la ronda puedes quitarlo de tus órdenes.",
+      "estateStatus": "Patrimonio de lujo: +{n} de estatus",
+      "estateHint": "Una vivienda de lujo da la mitad de su estatus aunque no vivas en ella: cuentan las dos mejores."
     },
     "debt": {
       "none": "No debes nada.",
@@ -637,7 +639,8 @@
       "backHint": "Un escalón por debajo de donde lo dejaste. Tu negocio sigue siendo tuyo, con tu foco libre.",
       "homeHelped": "De vuelta a casa: tu familia te ayuda con la mudanza y te acoge una temporada. Los amigos de siempre abren puertas y no pierdes escalón.",
       "homeBack": "De vuelta a casa: los amigos de siempre abren puertas y no pierdes escalón. Si vuelves con más dinero que cuando te fuiste, es un triunfo.",
-      "rivals": "Los otros jugadores"
+      "rivals": "Los otros jugadores",
+      "moveCostFar": "Mudarte cuesta {amount} y 1 de foco: está a {km} km"
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",
@@ -1864,9 +1867,10 @@
     "toRankings": "Clasificaciones",
     "layers": {
       "body": "Pelaje",
+      "face": "Cara",
       "outfit": "Ropa",
       "hat": "Cabeza",
-      "eyes": "Cara",
+      "eyes": "Gafas y más",
       "backdrop": "Fondo",
       "colour": "Color"
     },
@@ -1936,6 +1940,16 @@
         "confetti": "Confeti",
         "wheel": "Rueda",
         "beach": "Playa"
+      },
+      "face": {
+        "calm": "Tranquila",
+        "grin": "Sonriente",
+        "smug": "Chulita",
+        "wink": "Guiño",
+        "shock": "Asombro",
+        "sleepy": "Dormida",
+        "fierce": "Decidida",
+        "tears": "Risa con lágrimas"
       }
     },
     "none": "Nada",

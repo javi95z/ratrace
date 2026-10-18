@@ -18,7 +18,7 @@ export const GROUND: Record<RatColour, string> = {
 
 /** The pieces of a look, back to front, that have art: one not drawn yet is left off, never shown as a hole. */
 function piecesOf(look: RatLook): string[] {
-  const order: Array<[RatLayer, string | null]> = [['backdrop', look.backdrop], ['body', look.body], ['outfit', look.outfit], ['eyes', look.eyes], ['hat', look.hat]];
+  const order: Array<[RatLayer, string | null]> = [['backdrop', look.backdrop], ['body', look.body], ['face', look.face], ['outfit', look.outfit], ['eyes', look.eyes], ['hat', look.hat]];
   return order.flatMap(([layer, piece]) => (piece !== null && spriteOf(ratSprite(layer, piece)) ? [ratSprite(layer, piece)] : []));
 }
 

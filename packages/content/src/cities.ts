@@ -139,6 +139,7 @@ const zurichTax: TaxProfile = {
 export const cities: CityDef[] = [
   {
     id: 'madrid',
+    distanceKm: { london: 1_260, new_york: 5_770, dubai: 5_660, singapore: 11_380, bangkok: 10_180, tokyo: 10_760, moscow: 3_440, mexico_city: 9_060, zurich: 1_250 },
     medianSalaryAnnual: usd(32_000),
     livingCostAnnual: usd(26_000),
     flatPrice: usd(280_000),
@@ -154,6 +155,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'london',
+    distanceKm: { madrid: 1_260, new_york: 5_570, dubai: 5_470, singapore: 10_850, bangkok: 9_530, tokyo: 9_560, moscow: 2_500, mexico_city: 8_930, zurich: 780 },
     medianSalaryAnnual: usd(58_000),
     livingCostAnnual: usd(47_000),
     flatPrice: usd(620_000),
@@ -169,6 +171,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'new_york',
+    distanceKm: { madrid: 5_770, london: 5_570, dubai: 11_010, singapore: 15_330, bangkok: 13_930, tokyo: 10_850, moscow: 7_510, mexico_city: 3_360, zurich: 6_320 },
     medianSalaryAnnual: usd(75_000),
     livingCostAnnual: usd(60_000),
     flatPrice: usd(700_000),
@@ -184,6 +187,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'dubai',
+    distanceKm: { madrid: 5_660, london: 5_470, new_york: 11_010, singapore: 5_840, bangkok: 4_880, tokyo: 7_930, moscow: 3_690, mexico_city: 14_330, zurich: 4_760 },
     medianSalaryAnnual: usd(56_000),
     livingCostAnnual: usd(45_000),
     flatPrice: usd(330_000),
@@ -199,6 +203,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'singapore',
+    distanceKm: { madrid: 11_380, london: 10_850, new_york: 15_330, dubai: 5_840, bangkok: 1_430, tokyo: 5_310, moscow: 8_420, mexico_city: 16_610, zurich: 10_290 },
     medianSalaryAnnual: usd(58_000),
     livingCostAnnual: usd(47_000),
     flatPrice: usd(640_000),
@@ -214,6 +219,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'bangkok',
+    distanceKm: { madrid: 10_180, london: 9_530, new_york: 13_930, dubai: 4_880, singapore: 1_430, tokyo: 4_600, moscow: 7_060, mexico_city: 15_740, zurich: 9_030 },
     // Thailand taxes what is earned abroad only when it is brought in: a residency for whoever leaves it there.
     residency: { feeAnnual: usd(2_000), dividendBp: 0 },
     medianSalaryAnnual: usd(13_000),
@@ -232,6 +238,7 @@ export const cities: CityDef[] = [
   {
     // Prices that have hardly moved in thirty years, and rates that barely move them now.
     id: 'tokyo',
+    distanceKm: { madrid: 10_760, london: 9_560, new_york: 10_850, dubai: 7_930, singapore: 5_310, bangkok: 4_600, moscow: 7_480, mexico_city: 11_310, zurich: 9_580 },
     medianSalaryAnnual: usd(42_000),
     livingCostAnnual: usd(33_000),
     flatPrice: usd(450_000),
@@ -248,6 +255,7 @@ export const cities: CityDef[] = [
   {
     // A flat tax and cheap property, in a market that swings hard with the rates.
     id: 'moscow',
+    distanceKm: { madrid: 3_440, london: 2_500, new_york: 7_510, dubai: 3_690, singapore: 8_420, bangkok: 7_060, tokyo: 7_480, mexico_city: 10_720, zurich: 2_190 },
     medianSalaryAnnual: usd(18_000),
     livingCostAnnual: usd(14_000),
     flatPrice: usd(220_000),
@@ -263,6 +271,7 @@ export const cities: CityDef[] = [
   },
   {
     id: 'mexico_city',
+    distanceKm: { madrid: 9_060, london: 8_930, new_york: 3_360, dubai: 14_330, singapore: 16_610, bangkok: 15_740, tokyo: 11_310, moscow: 10_720, zurich: 9_680 },
     medianSalaryAnnual: usd(12_000),
     livingCostAnnual: usd(10_000),
     flatPrice: usd(140_000),
@@ -279,6 +288,7 @@ export const cities: CityDef[] = [
   {
     // The highest pay and the dearest flats in the game, and a quiet market.
     id: 'zurich',
+    distanceKm: { madrid: 1_250, london: 780, new_york: 6_320, dubai: 4_760, singapore: 10_290, bangkok: 9_030, tokyo: 9_580, moscow: 2_190, mexico_city: 9_680 },
     medianSalaryAnnual: usd(95_000),
     livingCostAnnual: usd(70_000),
     flatPrice: usd(1_400_000),

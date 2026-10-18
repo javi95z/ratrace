@@ -242,6 +242,11 @@ export interface CityDef {
    * rate it charges on dividends and interest earned abroad, which stay abroad. Absent: none.
    */
   residency?: { feeAnnual: Cents; dividendBp: Bp };
+  /**
+   * How far the other cities are, in kilometres, by their ids: a move costs more the further it goes.
+   * Worked out once, as whole numbers, so that every engine that plays a life counts alike.
+   */
+  distanceKm?: Readonly<Record<string, number>>;
 }
 
 export interface PropertyTypeDef {
@@ -448,6 +453,8 @@ export interface LifeRules {
   estates?: { minStatus: number; pct: number; counted: number };
   /** Cost of moving, as a percent of the destination's yearly living cost. */
   moveCostPct: number;
+  /** A move costs this many percent more for every thousand kilometres it goes. Left out, distance changes nothing. */
+  moveDistancePctPer1000Km?: number;
   /** Moving a partner costs this percent more, and each child this percent more again. */
   movePartnerPct: number;
   moveChildPct: number;

@@ -685,7 +685,15 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
         <div className="flex flex-wrap justify-center gap-1.5">
           <Tag tone={quote.rented || quote.livedIn ? 'good' : 'plain'}>{quote.rented ? t('rented') : quote.livedIn ? t('livedIn') : t('empty')}</Tag>
           {quote.livedIn && quote.status > 0 ? <Tag tone="good">{t('status', { n: quote.status })}</Tag> : null}
+          {/* A grand home not lived in is a standing all the same: half its status, for the two best. */}
+          {quote.estateStatus > 0 ? (
+            <span className="flex items-center gap-1">
+              <Sprite id="icon.estates" />
+              <Tag tone="good">{t('estateStatus', { n: quote.estateStatus })}</Tag>
+            </span>
+          ) : null}
         </div>
+        {quote.estateStatus > 0 ? <p className="text-center text-[12px] leading-snug text-ink-300">{t('estateHint')}</p> : null}
 
         <Panel>
           <Row left={t('worth')} right={<span className="text-gold-500">{fmt.money(quote.value)}</span>} />
@@ -775,6 +783,7 @@ function PropertyTab() {
                   <span className="block text-[13px] text-ink-200">{names.cities[property.cityId]}</span>
                   <span className="pixel mt-1 block text-[17px] text-gold-500">{fmt.money(property.value)}</span>
                   {rent !== undefined ? <span className="pixel block text-[14px] text-teal-300">{t('rentYear', { amount: fmt.money(rent) })}</span> : null}
+                  {owned && owned.estateStatus > 0 ? <span className="pixel block text-[14px] text-gold-500">{t('estateStatus', { n: owned.estateStatus })}</span> : null}
                   <span className="mt-1 block text-[12px] text-ink-300">
                     {state}
                     {mortgage ? ` · ${t('mortgageLeft', { amount: fmt.money(mortgage.principal) })}` : ''}
@@ -1226,7 +1235,8 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
       {here ? null : (
         <>
           <ul className="my-1 flex flex-col gap-1 text-[13px] leading-snug">
-            <li>{t('moveCost', { amount: fmt.money(quote.cost) })}</li>
+            {/* How far it is, beside what it costs: the further, the dearer. */}
+            <li>{city.distanceKm?.[p.cityId] ? t('moveCostFar', { amount: fmt.money(quote.cost), km: fmt.number(city.distanceKm[p.cityId]) }) : t('moveCost', { amount: fmt.money(quote.cost) })}</li>
             {/* Going home: what is waiting there, said before the move is ordered. */}
             {quote.home ? <li className="text-teal-300">{t(quote.home.helped ? 'homeHelped' : 'homeBack')}</li> : null}
             {job && quote.rungsLost > 0 && there.level !== null ? <li className="text-wine-300">{t('moveRung', { title: text.careers[job.id].levels[there.level] })}</li> : null}
