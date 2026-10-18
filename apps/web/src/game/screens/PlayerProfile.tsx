@@ -10,6 +10,8 @@ import { Toast } from '@/ui/overlay';
 import { GROUND, RatLayers } from '@/ui/RatAvatar';
 import { RatEditor } from './RatEditor';
 import { FIELD, NAME } from './Rankings';
+import { RankCard, useRankName } from './RankCard';
+import { progressOf } from '@ratrace/content';
 
 /**
  * How the others see the player: the rat they play as, in rooms and rankings, and the name under
@@ -31,6 +33,7 @@ export function PlayerProfile() {
   const runs = useRuns();
   const profile = useProfile();
   const { fmt, text } = useWords();
+  const rankName = useRankName();
 
   useEffect(() => {
     if (community === null) return;
@@ -169,6 +172,8 @@ export function PlayerProfile() {
         </div>
       </section>
 
+      <RankCard />
+
       {/* What the player has lived, at a glance: this device's records. */}
       <section aria-label={t('figures')} className="grid grid-cols-4 gap-2">
         {figures.map((figure) => (
@@ -181,7 +186,15 @@ export function PlayerProfile() {
 
       {/* The rat, a part at a time; the one above shows each choice at once. */}
       <Panel title={t('rat')} label={t('rat')}>
-        <RatEditor look={look} earned={profile.badges} badgeName={(id) => text.badges[id]?.name ?? id} onPick={(next) => void pick(next)} onLocked={setTold} />
+        <RatEditor
+          look={look}
+          earned={profile.badges}
+          rank={progressOf(profile.rank.points).rank}
+          badgeName={(id) => text.badges[id]?.name ?? id}
+          rankName={rankName}
+          onPick={(next) => void pick(next)}
+          onLocked={setTold}
+        />
       </Panel>
 
       {/* Where the rest of the player's game is. */}

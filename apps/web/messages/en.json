@@ -104,7 +104,27 @@
     "level1": "easy",
     "level2": "normal",
     "level3": "hard",
-    "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}"
+    "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}",
+    "progressFinished": "Lives finished: {n} of {total}",
+    "hints": {
+      "rider": "Someone who knows every shortcut in town, and what none of them pay.",
+      "heir": "A head start nobody earned. What does it do to a person?",
+      "newcomer": "Three cities teach you how to start over from nothing.",
+      "banker": "The long hours come with a very big door at the end.",
+      "doctor": "Years of study first. Then people trust you with everything.",
+      "comeback": "Everyone loves a story that starts at the bottom.",
+      "founder": "A bet on yourself, with other people's money riding on it.",
+      "crypto_kid": "Born online, rich on paper. Until the winter comes.",
+      "lawyer": "Every rule has a price, and somebody knows it.",
+      "teacher": "The least money and the most thanks. Who pays more in the end?",
+      "influencer": "Millions watching. Is anybody paying?",
+      "waiter": "Tips, tired feet, and a close look at how others spend.",
+      "salesperson": "A smile, a target, and a commission that never sits still.",
+      "robotics_engineer": "The machines are coming. Some people are building them.",
+      "programmer": "Quiet work, loud pay, and a career at risk from its own tools.",
+      "chef": "A kitchen, a fire, and a restaurant that may never turn a profit.",
+      "private_banker": "Other people's fortunes, and a view of how the rich really live."
+    }
   },
   "hud": {
     "cash": "Cash",
@@ -186,7 +206,9 @@
     "points": "{n} pts",
     "weeklyNotice": "Turn on notifications",
     "weeklyNoticeHint": "The weekly challenge, your multiplayer games and lives left halfway. One notice a day at most, except in a game.",
-    "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings."
+    "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings.",
+    "marketNotice": "Tell me when my market moves",
+    "marketNoticeHint": "When something you hold in a ranked life moved 5% or more in your last round. One notice a day at most."
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",
@@ -317,7 +339,8 @@
     "thanksTrade": "Thanks to your trade",
     "covers": "Cover pays {amount}",
     "saved": "Your cover saved you {amount}",
-    "asPlanned": "Goes as expected"
+    "asPlanned": "Goes as expected",
+    "lostStake": "You lose what you put in"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -365,7 +388,7 @@
       "trains": "Trains {skill}: +{n} point every round",
       "best": "Within a ladder only the best you own counts."
     },
-    "openBusiness": "You open a business: {name}",
+    "openBusiness": "You open a business: {name}, with {amount}",
     "skill": "{skill} {value}",
     "coversInspection": "Pays {pct}% of a tax inspection",
     "retire": "You retire, for good",
@@ -501,7 +524,19 @@
       "netOnSale": "A sale would leave you",
       "netOnSaleHint": "After the mortgage is repaid and before tax on the gain.",
       "lodger": "Let the spare room",
-      "lodgerHint": "+{amount} a year · −{status} home status: the flat is shared"
+      "lodgerHint": "+{amount} a year · −{status} home status: the flat is shared",
+      "sellTitle": "Sell {home}",
+      "sellPrice": "Sale price",
+      "sellMortgage": "Mortgage paid off",
+      "sellTax": "Tax on the gain, this round",
+      "sellGain": "{amount} more than you paid",
+      "sellKept": "You keep",
+      "sellRentLost": "Rent you stop receiving",
+      "sellHome": "It is your home: you move out.",
+      "sellHomeRent": "It is your home: you move out and pay {amount} more a year for housing.",
+      "sellStatus": "You lose the {n} status it gave you.",
+      "sellDo": "Sell and keep {amount}",
+      "sellUndo": "Until the round is played you can take it off your orders."
     },
     "debt": {
       "none": "You owe nothing.",
@@ -1044,6 +1079,24 @@
       "note": "They are run, grown and sold in the Business tab."
     }
   },
+  "rank": {
+    "title": "Rat rank",
+    "progress": "Progress to the next rank",
+    "step": "Rank {n} of {of}",
+    "toNext": "{points, plural, one {# point} other {# points}} to {rank}",
+    "toNextShort": "{points, plural, one {# point} other {# points}} to {rank}",
+    "top": "The top of the pile, with {points, plural, one {# point} other {# points}}. Status only: a rank gives no edge in the game.",
+    "gained": "+{points, plural, one {# point} other {# points}}",
+    "promoted": "New rank: {rank}!",
+    "names": {
+      "sewer": "Sewer rat",
+      "office": "Office rat",
+      "stock": "Stock rat",
+      "wall_street": "Wall Street rat",
+      "tycoon": "Tycoon rat",
+      "king": "King rat"
+    }
+  },
   "end": {
     "title": "The end",
     "age": "Age {age}",
@@ -1105,7 +1158,10 @@
       "bankrupt": "Bankrupt"
     },
     "map": "Where your life went",
-    "mapLabel": "A map of the world with your route: {cities}"
+    "mapLabel": "A map of the world with your route: {cities}",
+    "unlockedTitle": "A new life is open",
+    "unlockedBody": "{life} is open to you. {perk}",
+    "tryNow": "Try it now"
   },
   "epilogue": {
     "title": "Your life, told",
@@ -1167,7 +1223,11 @@
       "rare": "Rare",
       "legendary": "Legendary"
     },
-    "unlockedMany": "{count} new lives unlocked"
+    "unlockedMany": "{count} new lives unlocked",
+    "hiddenName": "???",
+    "hiddenHint": "Something to do with: {group}",
+    "legendaryKicker": "Legendary badge",
+    "legendaryGo": "Continue"
   },
   "collection": {
     "title": "Collection",
@@ -1873,6 +1933,7 @@
     },
     "none": "None",
     "locked": "Earned with the badge \"{badge}\"",
-    "layer": "What to change"
+    "layer": "What to change",
+    "lockedRank": "Unlocked on reaching {rank}"
   }
 }

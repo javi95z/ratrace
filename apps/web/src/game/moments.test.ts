@@ -99,7 +99,7 @@ describe('what the game sounds like', () => {
   });
 
   it('rings a badge earned for the first time, unless a moment already has the floor', () => {
-    const earned = ['first_share'];
+    const earned = ['first_100k'];
     expect(cuesFor(heard({ stage: 'resolve', resolved: resolved([]), earned }), heard({ stage: 'finance', earned: NONE }))).toEqual(['round', 'badge']);
     expect(cuesFor(heard({ stage: 'resolve', resolved: resolved([{ kind: 'escaped', round: 5 }]), earned }), heard({ stage: 'finance', earned: NONE }))).toEqual(['escape']);
     expect(cuesFor(heard({ stage: 'outcome', earned }), heard({ stage: 'cards', earned: NONE }))).toEqual(['pick', 'badge']);

@@ -51,9 +51,8 @@ export function Guide() {
 
   return (
     <>
-    {/* The rest of the page steps back a little while a tip is there, so it is read first. Nothing is blocked. */}
-    <div aria-hidden data-guide-shade className="pointer-events-none fixed inset-0 z-40 bg-night-900/55" />
-    <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold relative z-50 mx-3 mb-3 animate-rise bg-night-700 p-3 shadow-[0_0_0_3px_var(--color-gold-500)]">
+    {/* A note in the flow of the page and nothing more: a shade over the screen made the sticky bars look to jump as the page scrolled. */}
+    <aside ref={note} role="note" aria-label={t('title')} className="bevel frame-gold relative mx-3 mb-3 animate-rise bg-night-700 p-3 shadow-[0_0_0_3px_var(--color-gold-500)]">
       <div className="flex items-start gap-3">
       {/* The rat, thinking it over with the player. */}
       <Sprite id={ratArt('think')} fallback={{ w: 128, h: 128 }} className="!h-16 !w-16 shrink-0" />

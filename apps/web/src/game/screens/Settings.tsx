@@ -210,7 +210,46 @@ function WeeklyNotice() {
       setOn(false);
     }
   };
-  return <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? t('weeklyNoticeBlocked') : t('weeklyNoticeHint')} />;
+  return (
+    <>
+      <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? t('weeklyNoticeBlocked') : t('weeklyNoticeHint')} />
+      {on ? <MarketNotice /> : null}
+    </>
+  );
+}
+
+/**
+ * The notice that something held in a ranked life moved, on its own: it can be turned off while the
+ * rest are kept. Shown only while this browser is subscribed, and only once the server has said
+ * what it is now, so the switch never shows a guess.
+ */
+function MarketNotice() {
+  const t = useT('settings');
+  const community = useCommunity();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [endpoint, setEndpoint] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    void currentSubscription().then(
+      async (held) => {
+        if (!held || community === null) return;
+        const now = await community.marketNotice(held.endpoint);
+        if (live) {
+          setEndpoint(held.endpoint);
+          setOn(now);
+        }
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [community]);
+  if (community === null || endpoint === null || on === null) return null;
+  const change = async (want: boolean) => {
+    if (await community.setMarketNotice(endpoint, want)) setOn(want);
+  };
+  return <Toggle on={on} onChange={(want) => void change(want)} label={t('marketNotice')} hint={t('marketNoticeHint')} />;
 }
 
 /** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */

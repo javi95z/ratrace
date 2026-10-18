@@ -244,6 +244,10 @@ describe('the play screen', () => {
     expect(within(sheet).getByText(badgeText.how)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: 'Close' }));
     expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
+    // The life unlocked gets a card of its own, with a way to begin it at once.
+    const card = screen.getByRole('region', { name: 'A new life is open' });
+    expect(within(card).getByText(/Delivery rider is open to you/)).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Try it now' })).toBeTruthy();
     // Nothing to beat in a first life, so no personal best is claimed.
     expect(screen.queryByText('New best score')).toBeNull();
     expect(screen.getByRole('link', { name: 'See your collection' }).getAttribute('href')).toBe('/collection');
@@ -272,6 +276,10 @@ describe('the play screen', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Score' })).getByText(new Intl.NumberFormat('en-US').format(run.score), { selector: '.sr-only' })).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
+
+    // The card offers the life it unlocked, and "Try it now" starts it.
+    await user.click(within(screen.getByRole('region', { name: 'A new life is open' })).getByRole('button', { name: 'Try it now' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
   });
 
   it('guides a first life: one tip a stage, each read once, and remembered', async () => {
@@ -658,6 +666,8 @@ describe('the end of a life, beside the lives of others', () => {
     challengeChoices: async () => null,
     notifyMe: async () => true,
     stopNotifying: async () => true,
+    marketNotice: async () => true,
+    setMarketNotice: async () => true,
   });
   const ended = async (answer: { below: number; total: number } | null) => {
     const asked: unknown[] = [];

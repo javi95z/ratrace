@@ -1,6 +1,6 @@
 'use client';
 
-import { badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
+import { BADGE_RARITY, badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { useId, useState } from 'react';
 import { useProfile, useT, useWords } from '@/game/context';
@@ -9,6 +9,7 @@ import { Bare, Segmented } from '@/ui/kit';
 import { Tabs } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { Medal } from './Medal';
+import { RARITY_TONE } from './rarityStyle';
 
 type Tab = 'items' | 'badges';
 
@@ -47,8 +48,6 @@ function Things() {
   );
 }
 
-/** The colour each rarity is named in, after its rim. */
-export const RARITY_TONE: Record<BadgeRarity, string> = { common: 'text-[#c98a4b]', uncommon: 'text-ink-100', rare: 'text-gold-500', legendary: 'text-teal-300' };
 
 /** All thirty badges with how each is earned. Earned ones are drawn, with the day; the rest show the lock. */
 function Badges() {
@@ -87,15 +86,20 @@ function Badges() {
               .filter((badge) => badge.group === group)
               .map((badge) => {
                 const got = Object.hasOwn(earned, badge.id) ? earned[badge.id] : null;
+                // A badge whose rarity is a judgement is a secret until won: no name, only the group it belongs to.
+                const secret = !got && BADGE_RARITY[badge.id]?.judged === true;
+                const rarity = rarityOf(badge.id);
                 return (
-                  <li key={badge.id} className={`flex items-center gap-3 p-2 ${got ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700'}`}>
+                  <li key={badge.id} data-rarity={rarity} data-secret={secret || undefined} className={`flex items-center gap-3 p-2 ${got ? 'bevel frame-gold bg-night-600' : 'frame bg-night-700 grayscale'}`}>
                     <Medal badgeId={badge.id} locked={!got} />
                     <div className="min-w-0 flex-1">
-                      <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{text.badges[badge.id].name}</p>
-                      <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarityOf(badge.id)]}`}>{labels(`rarity.${rarityOf(badge.id)}`)}</p>
+                      <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{secret ? labels('hiddenName') : text.badges[badge.id].name}</p>
+                      <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarity]}`}>
+                        {labels(`rarity.${rarity}`)}
+                      </p>
                       {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
                       {got ? <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p> : null}
-                      {got ? null : <p className="mt-0.5 text-[12px] text-ink-300">{labels('notYet')}</p>}
+                      {got ? null : <p className="mt-0.5 text-[12px] text-ink-300">{secret ? labels('hiddenHint', { group: text.badgeGroups[badge.group] }) : labels('notYet')}</p>}
                     </div>
                   </li>
                 );

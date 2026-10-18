@@ -143,6 +143,10 @@ class RankedSession implements GameSession {
     this.stored = stored ? game.updatedAt : null;
   }
 
+  get rules(): string {
+    return this.game.engineVersion;
+  }
+
   get gameId(): string {
     return this.game.gameId;
   }

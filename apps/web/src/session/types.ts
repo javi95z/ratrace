@@ -25,6 +25,11 @@ export interface GameSession {
   readonly served?: boolean;
   /** The week whose challenge this life is: the ranked attempt, or a practice. Left out for any other life. */
   readonly challenge?: string;
+  /**
+   * The engine version of the rules the life is played under, when they are not this page's own: a life
+   * begun under older rules is finished under them, and is offered nothing they do not know.
+   */
+  readonly rules?: string;
   /** The game as the player may see it. The same object until the next answer or round. */
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */
@@ -192,6 +197,12 @@ export interface Profile {
   unlocked: Record<string, Earned>;
   /** The guided first life: the tips already shown, and whether the player turned the guide off. */
   guide: { seen: string[]; off: boolean };
+  /**
+   * The rat rank: points for every life finished, by the id of the life, so a life counts once. The
+   * total is their sum. It is a title and nothing more: no score, ranking or rule reads it. A
+   * profile from before ranks has none; it is filled from the finished lives on the device.
+   */
+  rank: { points: number; lives: Record<string, number> };
 }
 
 export const newProfile = (): Profile => ({
@@ -201,6 +212,7 @@ export const newProfile = (): Profile => ({
   gallery: [],
   unlocked: {},
   guide: { seen: [], off: false },
+  rank: { points: 0, lives: {} },
 });
 
 /** Where everything the player has is kept. Today that is this device. */

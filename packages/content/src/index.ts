@@ -11,6 +11,8 @@ export { badges, badgesEarned, galleryBadges, journalAfter, journalStart, ROOM_B
 export type { BadgeDef, BadgeGroup, Journal, RoomResult, Step } from './badges';
 export { BADGE_RARITY, RARITIES, RARITY_BANDS, rarityOf } from './rarity';
 export type { BadgeRarity } from './rarity';
+export { lifePoints, POINTS_BADGE, POINTS_BADGES_MAX, POINTS_CHALLENGE, POINTS_ESCAPED, POINTS_FINISHED, progressOf, promoted, RANK_FROM, RANKS, rankOf } from './rank';
+export type { RankedLife, RankId, RankProgress } from './rank';
 export { recordStart, recordStep, replayLife, roomStart, stepLife } from './record';
 export type { LifeRecord, Replayed, ReplayedStep } from './record';
 export { WORTH_MARKS } from './story';

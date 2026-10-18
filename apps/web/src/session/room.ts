@@ -1,7 +1,7 @@
 import type { LifeDef, LifeRecord, Milestone } from '@ratrace/content';
 import type { Content, GameEvent, GameView, Order, RoundChoices } from '@ratrace/engine';
 import { StaleSession, Unreachable } from './errors';
-import { tellProfile } from './profile';
+import { settleRank, tellProfile } from './profile';
 import type { RankedRun, RankedStep } from './ranked';
 import { SAVE_FORMAT } from './types';
 import type { FinishedRun, GameSession, PlayerStore, Sessions, StepResult } from './types';
@@ -124,6 +124,8 @@ export interface RoomGameOver {
 export interface RoomLife {
   gameId: string;
   lifeId: string;
+  /** The engine version of the room's rules, when the server says. */
+  engineVersion?: string;
   step: number;
   view: GameView;
   record: LifeRecord;
@@ -217,6 +219,10 @@ export class RoomSession implements GameSession {
     private readonly lives: ReadonlyArray<LifeDef>,
     private readonly deps: RoomSessionDeps,
   ) {}
+
+  get rules(): string | undefined {
+    return this.life.engineVersion;
+  }
 
   get gameId(): string {
     return this.life.gameId;
@@ -329,6 +335,7 @@ export class RoomSession implements GameSession {
       if (life.run !== null && !this.kept) {
         await this.store.addRun(this.asRun(life.run));
         this.kept = true;
+        await settleRank(this.store);
       }
       return { earned: told.earned, unlocked: told.unlocked };
     } catch (error) {

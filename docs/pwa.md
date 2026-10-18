@@ -51,6 +51,7 @@ installed to the Home screen (iOS 16.4 or later).
 |---|---|---|---|
 | New weekly challenge, with last week's place | Mondays 08:00 UTC | `weekly-notice` (job `weekly-notice`) | yes |
 | A life left halfway | daily 17:00 UTC, for a life untouched 7 to 8 days, none played since | `weekly-notice` with `{"kind":"idle"}` (job `idle-notice`) | yes |
+| Something held in a ranked life moved 5% or more in the last round played | daily 17:30 UTC, for a life untouched 20 hours to 6 days | `market-notice` (job `market-notice`) | yes |
 | A game with friends has started | when the host starts it, to everyone else | `rooms` | no |
 | Everyone else has played the round | when one member is left to play, with 20 s or more left | `rooms` | no |
 
@@ -58,6 +59,10 @@ installed to the Home screen (iOS 16.4 or later).
   day). The notices of a game with friends are urgent and never capped.
 - The browser subscription lives in `public.push_subscriptions`, one row per browser, owned by the
   player through RLS. A notice is written in the language the player had when subscribing.
+- The market notice is told only what the player's own round already shows (`timeline[round]`, the
+  return of each asset over the round just ended); the next round's market is never read, since in a
+  ranked life it would be the future. It can be switched off on its own in Settings
+  (`push_subscriptions.market_moved`, per browser).
 - Browsers the push service reports gone (404/410) are deleted when a notice to them fails.
 - A tap opens the notice's page, in an open window of the game if there is one.
 
@@ -70,7 +75,7 @@ installed to the Home screen (iOS 16.4 or later).
    `select vault.create_secret('https://<ref>.supabase.co', 'project_url');`
    `select vault.create_secret('<secret key>', 'secret_key');`
 4. In Vercel, `NEXT_PUBLIC_VAPID_PUBLIC_KEY=<public>` for the web build.
-5. `supabase db push`, then `pnpm online:deploy` (it deploys `weekly-notice` too).
+5. `supabase db push`, then `pnpm online:deploy` (it deploys `weekly-notice` and `market-notice` too).
 
 To try it without waiting for Monday, call the function with the secret key:
 `curl -X POST https://<ref>.supabase.co/functions/v1/weekly-notice -H "apikey: <secret key>"`.

@@ -1,3 +1,6 @@
+import { RANKS } from '@ratrace/content';
+import type { RankId } from '@ratrace/content';
+
 /**
  * The rat a player plays as, in the rooms and wherever others see them, kept in the profile's
  * `portrait`. It is built in layers, back to front: the colour of the ground, a backdrop, the rat
@@ -34,19 +37,47 @@ export interface RatLook {
 export const ratSprite = (layer: RatLayer, piece: string): string => `rat.${layer}.${piece}`;
 
 /**
- * Pieces kept for what a player has done in their lives, by the badge that opens each. The rest are
- * for everyone.
+ * Pieces kept for what a player has done in their lives, by the badge that opens each: something
+ * done once, worn as proof of it.
  */
 export const RAT_PRIZES: Partial<Record<`${RatLayer}.${string}`, string>> = {
-  'hat.crown': 'escaped',
   'outfit.gold': 'escaped',
-  'hat.tophat': 'millionaire',
   'hat.graduate': 'mba',
   'hat.halo': 'truly_innocent',
 };
 
-/** The badge a piece asks for, or null when it is free. */
-export const prizeOf = (layer: RatLayer, piece: string): string | null => RAT_PRIZES[`${layer}.${piece}`] ?? null;
+/**
+ * Pieces opened by the rat's rank, as lives are played: dressing up the higher the rat climbs. The
+ * rest are for everyone.
+ */
+export const RAT_RANK_PRIZES: Partial<Record<`${RatLayer}.${string}`, RankId>> = {
+  'outfit.suit': 'office',
+  'backdrop.city': 'office',
+  'eyes.aviators': 'stock',
+  'backdrop.chart': 'stock',
+  'outfit.tuxedo': 'wall_street',
+  'eyes.monocle': 'wall_street',
+  'backdrop.coins': 'wall_street',
+  'outfit.fur': 'tycoon',
+  'hat.tophat': 'tycoon',
+  'hat.crown': 'king',
+};
+
+/** What a piece asks for: a badge, a rank, or nothing at all. */
+export function prizeOf(layer: RatLayer, piece: string): { badge: string } | { rank: RankId } | null {
+  const badge = RAT_PRIZES[`${layer}.${piece}`];
+  if (badge) return { badge };
+  const rank = RAT_RANK_PRIZES[`${layer}.${piece}`];
+  return rank ? { rank } : null;
+}
+
+/** Whether a player with these badges, at this rank, may wear a piece. */
+export function mayWear(layer: RatLayer, piece: string, earned: Record<string, unknown>, rank: RankId): boolean {
+  const prize = prizeOf(layer, piece);
+  if (prize === null) return true;
+  if ('badge' in prize) return Object.hasOwn(earned, prize.badge);
+  return RANKS.indexOf(rank) >= RANKS.indexOf(prize.rank);
+}
 
 const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
 

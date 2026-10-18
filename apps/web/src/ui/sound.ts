@@ -19,6 +19,9 @@ export type Cue =
   | 'bad'
   | 'promote'
   | 'badge'
+  | 'badgeUncommon'
+  | 'badgeRare'
+  | 'badgeLegendary'
   | 'million'
   | 'escape'
   | 'bankrupt'
@@ -81,6 +84,21 @@ export const SCORE: Record<Cue, Note[]> = {
   promote: [...run('square', [C5, G5, C6], 0.09, 0.16, 0, 0.26), ...run('triangle', [pitch('E', 4), pitch('G', 4), pitch('C', 5)], 0.09, 0.22, 0, 0.26)],
   // A badge: a climb with a sparkle on top.
   badge: [...run('square', [G5, pitch('B', 5), pitch('D', 6), pitch('G', 6)], 0.07, 0.14, 0, 0.3), { wave: 'triangle', hz: pitch('G', 7), at: 0.28, for: 0.18, loud: 0.12 }],
+  // An uncommon badge: the same climb, a fifth higher and a note longer.
+  badgeUncommon: [...run('square', [pitch('B', 5), pitch('D', 6), pitch('G', 6), pitch('B', 6)], 0.07, 0.14, 0, 0.34), { wave: 'triangle', hz: pitch('D', 7), at: 0.28, for: 0.24, loud: 0.13 }],
+  // A rare badge: a rising run under a held chord of gold.
+  badgeRare: [
+    ...run('square', [G5, pitch('B', 5), pitch('D', 6), pitch('G', 6), pitch('B', 6)], 0.08, 0.14, 0, 0.5),
+    ...[pitch('G', 4), pitch('B', 4), pitch('D', 5)].map((hz) => ({ wave: 'triangle' as const, hz, at: 0.32, for: 0.6, loud: 0.17 })),
+    { wave: 'triangle', hz: pitch('D', 7), at: 0.4, for: 0.5, loud: 0.12 },
+  ],
+  // A legendary badge: a slow fanfare, a full chord, and a bell that rings on after it.
+  badgeLegendary: [
+    ...run('square', [C5, G5, C6, E5, G5, pitch('E', 6)], 0.11, 0.15, 0, 0.3),
+    ...run('square', [G5, C6, pitch('E', 6), pitch('G', 6)], 0.14, 0.16, 0.66, 0.9),
+    ...[pitch('C', 3), C5, E5, G5, C6].map((hz) => ({ wave: 'triangle' as const, hz, at: 1.0, for: 0.9, loud: 0.18 })),
+    { wave: 'triangle', hz: pitch('C', 7), at: 1.2, for: 0.7, loud: 0.1 },
+  ],
   // The first million: three coins, each higher, then the chord they add up to.
   million: [
     ...[0, 0.14, 0.28].flatMap((at, i) => [

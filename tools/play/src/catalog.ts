@@ -152,6 +152,23 @@ for (const career of content.careers) {
       ['Puesto', 'Sueldo', 'Experiencia', 'Estatus'],
       career.levels.map((level, i) => [text.careers[career.id].levels[i], `${level.salaryPct} % del sueldo medio`, `${level.minSkill}`, signed(level.status)]),
     ),
+    // The moves of a career at some of its rungs: a point of focus for some rounds, and a chance at each outcome.
+    ...(career.moves?.length
+      ? [table(
+          ['Movimiento', 'En los puestos', 'Rondas · descanso', 'Qué puede salir'],
+          career.moves.map((move) => {
+            const told = text.careers[career.id].moves?.[move.id];
+            const total = move.outcomes.reduce((sum, outcome) => sum + outcome.weight, 0);
+            const rungs = [move.fromLevel, move.toLevel].map((level) => text.careers[career.id].levels[level]);
+            return [
+              `**${told?.name ?? move.id}**<br>${told?.about ?? ''}`,
+              rungs[0] === rungs[1] ? rungs[0] : `${rungs[0]} a ${rungs[1]}`,
+              `${move.rounds} · ${move.restRounds}`,
+              move.outcomes.map((outcome, i) => `${Math.round((outcome.weight * 100) / total)} %: ${told?.outcomes[i] ?? ''}`).join('<br>') + (move.skill && move.pctPerSkillLevel ? `<br>+${move.pctPerSkillLevel} puntos de probabilidad por nivel de ${text.skills[move.skill]}` : ''),
+            ];
+          }),
+        )]
+      : []),
   );
 }
 

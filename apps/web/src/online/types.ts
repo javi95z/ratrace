@@ -188,4 +188,8 @@ export interface Community {
   notifyMe(keys: { endpoint: string; p256dh: string; auth: string }, locale: string): Promise<boolean>;
   /** Forgets a browser that no longer wants to be told. */
   stopNotifying(endpoint: string): Promise<boolean>;
+  /** Whether this browser is told when something the player holds in a ranked life moved. Null where it cannot be read. */
+  marketNotice(endpoint: string): Promise<boolean | null>;
+  /** Turns "your market moved" on or off for this browser, apart from the other notices. False if it could not. */
+  setMarketNotice(endpoint: string, on: boolean): Promise<boolean>;
 }

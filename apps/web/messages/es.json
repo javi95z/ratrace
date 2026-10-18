@@ -104,7 +104,27 @@
     "level1": "fácil",
     "level2": "media",
     "level3": "difícil",
-    "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}"
+    "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}",
+    "progressFinished": "Vidas terminadas: {n} de {total}",
+    "hints": {
+      "rider": "Alguien que conoce cada atajo de la ciudad y lo poco que paga ninguno.",
+      "heir": "Una ventaja que nadie ha ganado. ¿Qué le hace eso a una persona?",
+      "newcomer": "Tres ciudades enseñan a empezar de cero.",
+      "banker": "Las horas son larguísimas, pero al final hay una puerta enorme.",
+      "doctor": "Primero, años de estudio. Después, todos confían en ti.",
+      "comeback": "A todo el mundo le gusta una historia que empieza desde abajo.",
+      "founder": "Una apuesta por ti mismo, con dinero ajeno en juego.",
+      "crypto_kid": "Nacido en internet, rico sobre el papel. Hasta que llega el invierno.",
+      "lawyer": "Cada norma tiene un precio, y alguien lo conoce.",
+      "teacher": "El sueldo más modesto y el mayor agradecimiento. ¿Quién sale ganando?",
+      "influencer": "Millones de personas mirando. ¿Alguien paga?",
+      "waiter": "Propinas, pies cansados y una mirada de cerca a cómo gasta la gente.",
+      "salesperson": "Una sonrisa, un objetivo y una comisión que nunca se queda quieta.",
+      "robotics_engineer": "Las máquinas vienen. Alguien las está construyendo.",
+      "programmer": "Trabajo callado, sueldo ruidoso y una carrera amenazada por sus propias herramientas.",
+      "chef": "Una cocina, un fuego y un restaurante que quizá nunca dé beneficios.",
+      "private_banker": "Las fortunas de otros y una vista de cómo vive de verdad la gente rica."
+    }
   },
   "hud": {
     "cash": "Efectivo",
@@ -186,7 +206,9 @@
     "points": "{n} puntos",
     "weeklyNotice": "Activar notificaciones",
     "weeklyNoticeHint": "El reto semanal, tus partidas multijugador y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
-    "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador."
+    "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador.",
+    "marketNotice": "Avisarme si se mueve mi mercado",
+    "marketNoticeHint": "Cuando algo que tienes en una vida clasificatoria se ha movido un 5 % o más en tu última ronda. Como mucho un aviso al día."
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",
@@ -317,7 +339,8 @@
     "thanksTrade": "Gracias a tu oficio",
     "covers": "El seguro paga {amount}",
     "saved": "Tu seguro te ahorró {amount}",
-    "asPlanned": "Sale como se espera"
+    "asPlanned": "Sale como se espera",
+    "lostStake": "Pierdes lo que pusiste"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -365,7 +388,7 @@
       "trains": "Entrena {skill}: +{n} punto cada ronda",
       "best": "De cada gama solo cuenta lo mejor que tengas."
     },
-    "openBusiness": "Abres un negocio: {name}",
+    "openBusiness": "Abres un negocio: {name}, con {amount}",
     "skill": "{skill} {value}",
     "coversInspection": "Paga el {pct} % de una inspección de Hacienda",
     "retire": "Te jubilas, para siempre",
@@ -501,7 +524,19 @@
       "netOnSale": "Te quedaría al vender",
       "netOnSaleHint": "Tras devolver la hipoteca y antes del impuesto sobre la ganancia.",
       "lodger": "Alquilar una habitación",
-      "lodgerHint": "+{amount} al año · −{status} de estatus de casa: compartes piso"
+      "lodgerHint": "+{amount} al año · −{status} de estatus de casa: compartes piso",
+      "sellTitle": "Vender {home}",
+      "sellPrice": "Precio de venta",
+      "sellMortgage": "Hipoteca que se cancela",
+      "sellTax": "Impuesto sobre la ganancia, esta ronda",
+      "sellGain": "Ganas {amount} sobre lo que pagaste",
+      "sellKept": "Te queda",
+      "sellRentLost": "Renta que dejas de cobrar",
+      "sellHome": "Es tu casa: dejas de vivir aquí.",
+      "sellHomeRent": "Es tu casa: dejas de vivir aquí y pasas a pagar {amount} más al año de vivienda.",
+      "sellStatus": "Pierdes {n} de estatus que te daba.",
+      "sellDo": "Vender y quedarte {amount}",
+      "sellUndo": "Hasta jugar la ronda puedes quitarlo de tus órdenes."
     },
     "debt": {
       "none": "No debes nada.",
@@ -1044,6 +1079,24 @@
       "note": "Se llevan, se hacen crecer y se venden en la pestaña Negocios."
     }
   },
+  "rank": {
+    "title": "Rango de rata",
+    "progress": "Progreso hacia el siguiente rango",
+    "step": "Rango {n} de {of}",
+    "toNext": "{points, plural, one {# punto} other {# puntos}} para {rank}",
+    "toNextShort": "{points, plural, one {# punto} other {# puntos}} para {rank}",
+    "top": "La cima del montón, con {points, plural, one {# punto} other {# puntos}}. Solo estatus: el rango no da ventaja en el juego.",
+    "gained": "+{points, plural, one {# punto} other {# puntos}}",
+    "promoted": "¡Nuevo rango: {rank}!",
+    "names": {
+      "sewer": "Rata de alcantarilla",
+      "office": "Rata de oficina",
+      "stock": "Rata de bolsa",
+      "wall_street": "Rata de Wall Street",
+      "tycoon": "Rata magnate",
+      "king": "Rata rey"
+    }
+  },
   "end": {
     "title": "Fin",
     "age": "{age} años",
@@ -1105,7 +1158,10 @@
       "bankrupt": "Bancarrota"
     },
     "map": "Por dónde pasó tu vida",
-    "mapLabel": "Mapa del mundo con tu ruta: {cities}"
+    "mapLabel": "Mapa del mundo con tu ruta: {cities}",
+    "unlockedTitle": "Se abre una vida nueva",
+    "unlockedBody": "Ya puedes vivir como {life}. {perk}",
+    "tryNow": "Probarla ya"
   },
   "epilogue": {
     "title": "Tu vida, contada",
@@ -1167,7 +1223,11 @@
       "rare": "Rara",
       "legendary": "Legendaria"
     },
-    "unlockedMany": "{count} vidas nuevas desbloqueadas"
+    "unlockedMany": "{count} vidas nuevas desbloqueadas",
+    "hiddenName": "¿?",
+    "hiddenHint": "Algo relacionado con: {group}",
+    "legendaryKicker": "Insignia legendaria",
+    "legendaryGo": "Continuar"
   },
   "collection": {
     "title": "Colección",
@@ -1873,6 +1933,7 @@
     },
     "none": "Nada",
     "locked": "Se consigue con la insignia «{badge}»",
-    "layer": "Qué cambiar"
+    "layer": "Qué cambiar",
+    "lockedRank": "Se desbloquea al llegar a {rank}"
   }
 }
