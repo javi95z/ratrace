@@ -7,7 +7,7 @@ import { formatFor } from '@/lib/format';
 import en from '../../messages/en.json';
 import es from '../../messages/es.json';
 import ru from '../../messages/ru.json';
-import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 
 const words = (locale: 'en' | 'es' | 'ru'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -72,7 +72,7 @@ describe('the sky over the city', () => {
 
 describe('a business, in words', () => {
   it('names what a card does with one, what is ordered of one, and what became of one', () => {
-    expect(tags({ business: { typeId: 'bar', capital: 4_000_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar' }]);
+    expect(tags({ business: { typeId: 'bar', capital: 4_000_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar, with $40k' }]);
     expect(tags({ sellBusiness: { pricePct: 170 } })).toEqual([{ tone: 'good', text: 'You sell your largest business for 170% of what it is worth' }]);
     const notes = (events: GameEvent[]) => roundNotes(words('en'), t('en', 'resolve'), events);
     expect(notes([{ kind: 'businessSold', typeId: 'shop', capital: 5_000_000, price: 4_500_000 }])).toEqual([{ tone: 'good', icon: 'business.shop', title: 'You sold your business (Online shop) for $45,000.' }]);
@@ -406,5 +406,21 @@ describe('loanPlan', () => {
   it('charges an even slice of the loan each round, with the interest of that round on what is still owed', () => {
     // 30,000 at 10% a year, two years a round, over three rounds.
     expect(loanPlan(30_000_00, 1_000, 3, 2)).toEqual({ payments: [16_000_00, 14_000_00, 12_000_00], interest: 12_000_00 });
+  });
+});
+
+describe('a card that sets up a business, or only costs', () => {
+  it('tells two openings of the same business apart by what each starts with', () => {
+    expect(tags({ business: { typeId: 'bar', capital: 5_500_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar, with $55k' }]);
+    expect(tags({ business: { typeId: 'bar', capital: 3_500_000 } })).toEqual([{ tone: 'plain', text: 'You open a business: Bar, with $35k' }]);
+  });
+
+  it('knows an option that only costs, so an outcome that adds nothing to it loses the stake', () => {
+    expect(onlyCosts({ cash: -4_000_000, focus: 1 })).toBe(true);
+    expect(onlyCosts({ cash: -1_500_000 })).toBe(true);
+    // Something comes with the cost: an outcome with nothing more still leaves that.
+    expect(onlyCosts({ cash: -500_000, skills: { languages: 1 } })).toBe(false);
+    expect(onlyCosts({ focus: 1 })).toBe(false);
+    expect(onlyCosts(undefined)).toBe(false);
   });
 });

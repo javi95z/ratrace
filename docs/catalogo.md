@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.40.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.42.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -383,6 +383,10 @@ Horas extra: +4 % de sueldo esa ronda.
 | Técnico superior | 118 % del sueldo medio | 14 | +10 |
 | Jefe de unidad | 132 % del sueldo medio | 24 | +16 |
 
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Preparar la promoción interna**<br>Dos rondas estudiando para el concurso del cuerpo superior. Si apruebas, subes un puesto. | Auxiliar a Técnico superior | 2 · 2 | 55 %: Apruebas la promoción interna: subes un puesto.<br>45 %: No apruebas esta vez. Habrá otra convocatoria. |
+
 ### Servicios
 
 Horas extra: +10 % de sueldo esa ronda.
@@ -394,6 +398,12 @@ Horas extra: +10 % de sueldo esa ronda.
 | Encargado de tienda | 98 % del sueldo medio | 10 | +6 |
 | Jefe de zona | 122 % del sueldo medio | 18 | +11 |
 | Director de operaciones | 155 % del sueldo medio | 28 | +18 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Cambiar de app**<br>Otra plataforma de reparto: puede pagar mejor… o peor. | Repartidor | 1 · 2 | 60 %: La nueva app paga mejor: +10 % de sueldo.<br>40 %: La nueva app paga peor: −5 % de sueldo. |
+| **Pedir otra zona**<br>Una zona con más movimiento puede pagar más. | Jefe de turno a Jefe de zona | 1 · 2 | 50 %: Te dan una zona mejor: +8 % de sueldo.<br>50 %: Te quedas donde estabas. |
+| **Abrir un almacén propio**<br>Tu propio centro de reparto: ingresos sin trabajar si sale bien. | Director de operaciones | 1 · 4 | 55 %: El almacén funciona: ingresos pasivos para siempre.<br>45 %: No sale: la jugada te cuesta estatus. |
 
 ### Finanzas
 
@@ -418,6 +428,10 @@ Horas extra: +8 % de sueldo esa ronda.
 | Especialista | 200 % del sueldo medio | 14 | +17 |
 | Jefa de servicio | 260 % del sueldo medio | 24 | +26 |
 
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Abrir consulta privada**<br>Por las tardes, pacientes propios: ingresos para siempre, pero cansa. | Especialista a Jefa de servicio | 1 · 99 | 85 %: La consulta se llena: ingresos para siempre, con algo menos de salud.<br>15 %: No consigues pacientes. La consulta cierra. |
+
 ### Derecho
 
 Horas extra: +6 % de sueldo esa ronda.
@@ -429,6 +443,11 @@ Horas extra: +6 % de sueldo esa ronda.
 | Abogado | 160 % del sueldo medio | 14 | +15 |
 | Socio | 240 % del sueldo medio | 24 | +24 |
 | Socio director | 380 % del sueldo medio | 34 | +32 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Optar a entrar en la sociedad**<br>Pedir entrar como socio del bufete. Ayuda saber negociar. | Abogado | 1 · 3 | 35 %: Entras en la sociedad: subes un puesto y cobras parte de los beneficios.<br>65 %: Te dicen que todavía no. Toca esperar y tragar orgullo.<br>+10 puntos de probabilidad por nivel de Negociación |
+| **Captar un gran cliente**<br>Traer al bufete una cuenta importante. Ayudan los contactos. | Socio a Socio director | 1 · 3 | 50 %: Cierras el cliente: +10 % de sueldo para siempre.<br>50 %: Se va con la competencia.<br>+8 puntos de probabilidad por nivel de Contactos |
 
 ### Educación
 
@@ -451,6 +470,11 @@ Horas extra: +12 % de sueldo esa ronda. Oficio de jóvenes: desde los 34 años, 
 | Creador | 130 % del sueldo medio | 3 | +14 |
 | Influencer | 220 % del sueldo medio | 8 | +24 |
 | Estrella | 250 % del sueldo medio | 14 | +34 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Ir a por un viral**<br>Un vídeo arriesgado: puede lanzarte… o hundirte. | Creador novato a Creador | 1 · 2 | 30 %: ¡Viral! Subes dos escalones de golpe.<br>20 %: Polémica: pierdes estatus y anunciantes.<br>50 %: Pasa sin pena ni gloria.<br>+5 puntos de probabilidad por nivel de Contactos |
+| **Lanzar tu propia marca**<br>Una marca con tu nombre que dure más que la fama. | Estrella | 1 · 4 | 60 %: La marca vende sola: ingresos para siempre.<br>40 %: La marca no arranca y se nota. |
 
 ### Hostelería
 

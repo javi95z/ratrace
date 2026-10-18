@@ -339,7 +339,8 @@
     "thanksTrade": "Gracias a tu oficio",
     "covers": "El seguro paga {amount}",
     "saved": "Tu seguro te ahorró {amount}",
-    "asPlanned": "Sale como se espera"
+    "asPlanned": "Sale como se espera",
+    "lostStake": "Pierdes lo que pusiste"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -387,7 +388,7 @@
       "trains": "Entrena {skill}: +{n} punto cada ronda",
       "best": "De cada gama solo cuenta lo mejor que tengas."
     },
-    "openBusiness": "Abres un negocio: {name}",
+    "openBusiness": "Abres un negocio: {name}, con {amount}",
     "skill": "{skill} {value}",
     "coversInspection": "Paga el {pct} % de una inspección de Hacienda",
     "retire": "Te jubilas, para siempre",
@@ -1932,6 +1933,7 @@
     },
     "none": "Nada",
     "locked": "Se consigue con la insignia «{badge}»",
-    "layer": "Qué cambiar"
+    "layer": "Qué cambiar",
+    "lockedRank": "Se desbloquea al llegar a {rank}"
   }
 }

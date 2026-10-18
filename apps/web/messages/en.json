@@ -339,7 +339,8 @@
     "thanksTrade": "Thanks to your trade",
     "covers": "Cover pays {amount}",
     "saved": "Your cover saved you {amount}",
-    "asPlanned": "Goes as expected"
+    "asPlanned": "Goes as expected",
+    "lostStake": "You lose what you put in"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -387,7 +388,7 @@
       "trains": "Trains {skill}: +{n} point every round",
       "best": "Within a ladder only the best you own counts."
     },
-    "openBusiness": "You open a business: {name}",
+    "openBusiness": "You open a business: {name}, with {amount}",
     "skill": "{skill} {value}",
     "coversInspection": "Pays {pct}% of a tax inspection",
     "retire": "You retire, for good",
@@ -1932,6 +1933,7 @@
     },
     "none": "None",
     "locked": "Earned with the badge \"{badge}\"",
-    "layer": "What to change"
+    "layer": "What to change",
+    "lockedRank": "Unlocked on reaching {rank}"
   }
 }
