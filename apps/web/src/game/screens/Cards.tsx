@@ -266,7 +266,7 @@ export function Outcome() {
         const odds = was?.options[event.option]?.outcomes ?? [];
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
-        const partnered = view?.player.life.partner ?? false;
+        const partnered = offered?.cardId === event.cardId ? offered.partnered : (view?.player.life.partner ?? false);
         const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered, chosen?.effects?.recurring ?? [])] : [];
         // What the player's cover paid, when it paid: the reason to have it.
         const covered = was?.options[event.option]?.covered ?? 0;

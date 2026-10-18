@@ -612,6 +612,15 @@ describe('what a step earned', () => {
     expect(third.getState().orders).toEqual([]);
   });
 
+  it('remembers whether the player had a partner when a card was answered, for a card that brings one in', async () => {
+    const { get } = setup();
+    await get().start('nurse');
+    get().leaveNews();
+    const before = get().view?.player.life.partner;
+    await get().pick(0);
+    expect(get().offered?.partnered).toBe(before);
+  });
+
   it('includes the life unlocked by finishing a first one', async () => {
     const { get } = setup();
     await get().start('civil_servant');

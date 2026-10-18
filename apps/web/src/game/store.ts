@@ -42,7 +42,7 @@ export interface RoundState {
    * The card just answered as it stood when it was answered: what each of its options offered, and
    * the world they were offered in. Kept with the result, to say how likely what came up was.
    */
-  offered: { cardId: string; options: OptionPreview[]; world: WorldState } | null;
+  offered: { cardId: string; options: OptionPreview[]; world: WorldState; partnered: boolean } | null;
   /** The basket: orders for this round, in the order they will run. None of them will be refused. */
   orders: Order[];
   /** What the round will pay and charge with the basket as it is. Null outside the finance phase. */
@@ -380,7 +380,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         set({ busy: true, picked: option });
         // What every option offered is asked before the answer: afterwards the card is no longer in the hand to be judged.
         const cardId = view.hand[view.answered];
-        const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
+        // And whether the player had a partner then: a card that brings one in is told as that, not as a change of their pay.
+        const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round], partnered: view.player.life.partner };
         // A server takes a moment to answer. The tap is seen at once on the option; then the card turns, its choice made, while the dice roll there.
         const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], pending: true }), PENDING_AFTER_MS) : null;
         try {

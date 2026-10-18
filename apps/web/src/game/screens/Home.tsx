@@ -13,7 +13,6 @@ import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { WeeklyChallengeCard } from './Challenge';
-import { RankCard } from './RankCard';
 import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, HomeSettingsPanel } from './Settings';
 
@@ -72,8 +71,6 @@ export function Home() {
         <h1 className={`pixel leading-none text-gold-500 ${returning ? 'text-[28px]' : 'text-[34px]'}`}>{meta('title')}</h1>
         {returning ? null : <p className="mt-2 text-ink-200">{meta('description')}</p>}
       </div>
-
-      {returning ? <RankCard /> : null}
 
       <div className="flex w-full flex-col gap-3">
         {status === 'booting' ? (
