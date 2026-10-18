@@ -9,7 +9,7 @@ import { Sheet } from '@/ui/overlay';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { Medal } from './Medal';
-import { RARITY_GLOW, RARITY_TONE, RarityBand } from './RarityBand';
+import { hasBand, RARITY_GLOW, RARITY_TONE, RarityBand } from './RarityBand';
 
 /** The sparks of a badge won are the colours of its rim: bronze, silver, gold, and the gem's green and cream. */
 const SPARKS: Record<BadgeRarity, readonly string[]> = {
@@ -48,7 +48,6 @@ export function Celebrations() {
               <Sparks colours={SPARKS.legendary} count={18} reach={52} delayMs={500} />
             </span>
             <p className="text-[15px] leading-snug">{text.badges[grand]?.how}</p>
-            <RarityBand rarity="legendary" className="pixel text-[13px] uppercase tracking-[0.1em] text-teal-300" />
             <Button variant="primary" wide onClick={dismiss}>
               {t('legendaryGo')}
             </Button>
@@ -68,7 +67,7 @@ export function Celebrations() {
             <p className="pixel text-[12px] uppercase tracking-wider text-gold-500">{t('earned')}</p>
             <p className="pixel text-[18px]">{text.badges[id]?.name ?? id}</p>
             <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarityOf(id)]}`}>
-              <span>{t(`rarity.${rarityOf(id)}`)}</span> ·<RarityBand rarity={rarityOf(id)} />
+              <span>{t(`rarity.${rarityOf(id)}`)}</span>{hasBand(rarityOf(id)) ? ' · ' : null}<RarityBand rarity={rarityOf(id)} />
             </p>
             <p className="text-[13px] leading-snug text-ink-200">{text.badges[id]?.how}</p>
           </div>

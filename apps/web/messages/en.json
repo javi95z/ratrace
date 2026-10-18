@@ -1173,8 +1173,7 @@
     "band": {
       "common": "More than {lo} in 100 lives",
       "uncommon": "{lo} to {hi} in 100 lives",
-      "rare": "{lo} to {hi} in 100 lives",
-      "legendary": "Fewer than {hi} in 100 lives"
+      "rare": "{lo} to {hi} in 100 lives"
     },
     "hiddenName": "???",
     "hiddenHint": "Something to do with: {group}",

@@ -33,7 +33,7 @@ describe('a badge earned', () => {
     renderGame(<Celebrations />, memoryServices());
     const card = screen.getByRole('dialog');
     expect(within(card).getByText('Legendary badge')).toBeTruthy();
-    expect(within(card).getByText('Fewer than 2 in 100 lives')).toBeTruthy();
+    expect(within(card).queryByText(/in 100 lives/)).toBeNull();
     await user.click(within(card).getByRole('button', { name: 'Continue' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     // The small card stays with the step's result.
@@ -43,9 +43,11 @@ describe('a badge earned', () => {
   it('speaks Spanish and Russian', () => {
     shown.earned = [idOf('legendary')];
     renderGame(<Celebrations />, memoryServices(), 'es');
-    expect(screen.getAllByText('Menos de 2 de cada 100 vidas').length).toBeGreaterThan(0);
+    expect(screen.getByText('Insignia legendaria')).toBeTruthy();
+    expect(screen.queryByText(/Menos de 2 de cada 100/)).toBeNull();
     cleanup();
     renderGame(<Celebrations />, memoryServices(), 'ru');
-    expect(screen.getAllByText('Менее чем в 2 из 100 жизней').length).toBeGreaterThan(0);
+    expect(screen.getByText('Легендарный значок')).toBeTruthy();
+    expect(screen.queryByText(/Менее чем в 2 из 100/)).toBeNull();
   });
 });

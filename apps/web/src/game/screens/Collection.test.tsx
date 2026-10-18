@@ -106,7 +106,7 @@ describe('the collection', () => {
     await user.click(await screen.findByRole('tab', { name: 'Badges' }));
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
     expect(within(panel).getAllByText(/More than 30 in 100 lives/).length).toBeGreaterThan(0);
-    expect(within(panel).getAllByText(/Fewer than 2 in 100 lives/).length).toBeGreaterThan(0);
+    expect(within(panel).queryByText(/Fewer than 2 in 100 lives/)).toBeNull();
     expect(within(panel).getAllByText(/10 to 30 in 100 lives/).length).toBeGreaterThan(0);
     expect(within(panel).getAllByText(/2 to 10 in 100 lives/).length).toBeGreaterThan(0);
     expect(panel.textContent).not.toMatch(/% of players|players have/i);

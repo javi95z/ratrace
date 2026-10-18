@@ -9,7 +9,7 @@ import { Bare, Segmented } from '@/ui/kit';
 import { Tabs } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { Medal } from './Medal';
-import { RARITY_TONE, RarityBand } from './RarityBand';
+import { hasBand, RARITY_TONE, RarityBand } from './RarityBand';
 
 type Tab = 'items' | 'badges';
 
@@ -95,7 +95,7 @@ function Badges() {
                     <div className="min-w-0 flex-1">
                       <p className={`pixel text-[16px] ${got ? '' : 'text-ink-200'}`}>{secret ? labels('hiddenName') : text.badges[badge.id].name}</p>
                       <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarity]}`}>
-                        <span>{labels(`rarity.${rarity}`)}</span> · <RarityBand rarity={rarity} />
+                        <span>{labels(`rarity.${rarity}`)}</span>{hasBand(rarity) ? ' · ' : null}<RarityBand rarity={rarity} />
                       </p>
                       {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
                       {got ? <p className="text-[13px] leading-snug text-ink-200">{text.badges[badge.id].how}</p> : null}

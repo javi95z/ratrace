@@ -16,11 +16,15 @@ export const RARITY_GLOW: Record<BadgeRarity, string> = {
 };
 
 /**
- * How seldom a badge of this rarity is earned, as the band the rarity stands for ("Fewer than 2 in
- * 100 lives"). A band set by judgement and by the balance bots, never a count of real players.
+ * How seldom a badge of this rarity is earned, as the band the rarity stands for ("10 to 30 in 100
+ * lives"). A band set by judgement and by the balance bots, never a count of real players. A
+ * legendary badge says no such thing: its name says enough. Nothing is drawn for it, see `hasBand`.
  */
+export const hasBand = (rarity: BadgeRarity): boolean => rarity !== 'legendary';
+
 export function RarityBand({ rarity, className }: { rarity: BadgeRarity; className?: string }) {
   const t = useT('badges');
+  if (!hasBand(rarity)) return null;
   const [lo, hi] = RARITY_BANDS[rarity];
-  return <span className={className}>{t(`band.${rarity}`, { lo, hi })}</span>;
+  return <span className={className}>{t(`band.${rarity as Exclude<BadgeRarity, 'legendary'>}`, { lo, hi })}</span>;
 }
