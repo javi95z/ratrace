@@ -1046,6 +1046,24 @@
       "note": "They are run, grown and sold in the Business tab."
     }
   },
+  "rank": {
+    "title": "Rat rank",
+    "progress": "Progress to the next rank",
+    "step": "Rank {n} of {of}",
+    "toNext": "{points, plural, one {# point} other {# points}} to {rank}",
+    "toNextShort": "{points, plural, one {# point} other {# points}} to {rank}",
+    "top": "The top of the pile, with {points, plural, one {# point} other {# points}}. Status only: a rank gives no edge in the game.",
+    "gained": "+{points, plural, one {# point} other {# points}}",
+    "promoted": "New rank: {rank}!",
+    "names": {
+      "sewer": "Sewer rat",
+      "office": "Office rat",
+      "stock": "Stock rat",
+      "wall_street": "Wall Street rat",
+      "tycoon": "Tycoon rat",
+      "king": "King rat"
+    }
+  },
   "end": {
     "title": "The end",
     "age": "Age {age}",

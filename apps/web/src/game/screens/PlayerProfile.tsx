@@ -10,6 +10,7 @@ import { Toast } from '@/ui/overlay';
 import { GROUND, RatLayers } from '@/ui/RatAvatar';
 import { RatEditor } from './RatEditor';
 import { FIELD, NAME } from './Rankings';
+import { RankCard } from './RankCard';
 
 /**
  * How the others see the player: the rat they play as, in rooms and rankings, and the name under
@@ -168,6 +169,8 @@ export function PlayerProfile() {
           <p className="text-center text-[12px] leading-snug text-ink-300">{t('about')}</p>
         </div>
       </section>
+
+      <RankCard />
 
       {/* What the player has lived, at a glance: this device's records. */}
       <section aria-label={t('figures')} className="grid grid-cols-4 gap-2">

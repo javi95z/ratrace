@@ -19,7 +19,7 @@ import { RankedSessions } from '@/session/ranked';
 import type { RoomsLink } from '@/session/room';
 import { GameSessions } from '@/session/sessions';
 import { MemoryStore } from '@/session/memory';
-import { updateProfile } from '@/session/profile';
+import { settleRank, updateProfile } from '@/session/profile';
 import { ResilientStore } from '@/session/resilient';
 import { newProfile } from '@/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions } from '@/session/types';
@@ -187,6 +187,15 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     const refresh = () => {
       void made.store.loadProfile().then((loaded) => mounted && setProfile(loaded));
       void made.store.listRuns().then((loaded) => mounted && setRuns(loaded));
+      // Lives finished before ranks, or on another device, count towards the rank the first time they are seen.
+      void Promise.all([made.store.loadProfile(), made.store.listRuns()])
+        .then(async ([held, finished]) => {
+          if (finished.some((run) => !Object.hasOwn(held.rank.lives, run.runId))) {
+            const next = await settleRank(made.store, finished);
+            if (mounted) setProfile(next);
+          }
+        })
+        .catch(() => undefined);
     };
     if (!booted.has(made.game)) {
       booted.add(made.game);

@@ -23,6 +23,7 @@ import { LifeLine } from './LifeLine';
 import { Loop } from './Loop';
 import { Medal } from './Medal';
 import { ShareCard } from './ShareCard';
+import { RankGain } from './RankCard';
 import { RivalsBoard } from './Rivals';
 import { WorthGraph } from './WorthGraph';
 
@@ -218,6 +219,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
               </Link>
             ) : null}
           </section>
+
+          {/* What the life did for the rat's rank, and the step up when it made one. */}
+          {gameId !== null ? <RankGain gameId={gameId} /> : null}
 
           {/* A rare or legendary badge won for the first time is cheered, the rarest first. */}
           {prized ? (
