@@ -1295,6 +1295,7 @@ function Lifestyle() {
       <Panel title={t('tier')}>
         <Segmented<LifestyleTier>
           label={t('tier')}
+          gridClassName="grid-cols-2"
           value={p.lifestyleTier}
           onChange={(tier) => setOrder((order) => order.type === 'setLifestyle', tier === view.player.lifestyleTier ? null : { type: 'setLifestyle', tier })}
           options={([0, 1, 2, 3] as const).map((tier) => ({

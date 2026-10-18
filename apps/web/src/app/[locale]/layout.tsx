@@ -8,6 +8,7 @@ import { GameProvider } from '@/game/context';
 import { metadataOf, SITE_URL } from '@/i18n/metadata';
 import { routing } from '@/i18n/routing';
 import { PwaProvider } from '@/pwa/runtime';
+import { ViewportSync } from '@/pwa/ViewportSync';
 import '../globals.css';
 
 const pixel = Jersey_15({ subsets: ['latin', 'latin-ext'], weight: '400', variable: '--font-jersey', display: 'swap' });
@@ -86,6 +87,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body>
         <NextIntlClientProvider>
           <PwaProvider>
+            <ViewportSync />
             <GameProvider>{children}</GameProvider>
           </PwaProvider>
         </NextIntlClientProvider>
