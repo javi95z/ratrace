@@ -66,15 +66,15 @@ export function WorkPanel({ shown }: { shown: GameView }) {
   return (
     <Panel title={t('title')} label={t('title')}>
       <Opener onOpen={() => setAbout('career')}>
-        {/* Where the player works, as it looks from the rung they are on. */}
+        {/* Where the player works, as it looks from the rung they are on, as wide as the panel: no bands either side. */}
         {job && rung ? (
           <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
-            <Sprite id={workArt(job.id, rung.level, work.ladder.length)} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+            <Sprite id={workArt(job.id, rung.level, work.ladder.length)} fallback={{ w: 288, h: 120 }} className="!h-auto !w-full max-w-none" />
           </div>
         ) : work.retirement.retired ? (
           // A life after work, where the workplace was.
           <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
-            <Sprite id={RETIRED_ART.scene} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+            <Sprite id={RETIRED_ART.scene} fallback={{ w: 288, h: 120 }} className="!h-auto !w-full max-w-none" />
           </div>
         ) : null}
         <div className="flex items-start justify-between gap-3 pt-1">
@@ -84,7 +84,8 @@ export function WorkPanel({ shown }: { shown: GameView }) {
                 <Sprite id={careerArt(job.id)} />
               </Bare>
             ) : work.retirement.retired ? (
-              <Bare className="size-8">
+              // The watering can is drawn to the edges of its square: a little room round it.
+              <Bare className="size-9 p-0.5">
                 <Sprite id={RETIRED_ART.icon} />
               </Bare>
             ) : null}

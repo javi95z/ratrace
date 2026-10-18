@@ -65,7 +65,7 @@ export function ProfileBody() {
         {/* Who is at home, when someone is. */}
         {household ? (
           <div className="frame sunk mb-2 mt-1 flex justify-center overflow-hidden bg-night-900 leading-[0]">
-            <Sprite id={household} fallback={{ w: 288, h: 120 }} className="max-w-none" />
+            <Sprite id={household} fallback={{ w: 288, h: 120 }} className="!h-auto !w-full max-w-none" />
           </div>
         ) : null}
         <Row
