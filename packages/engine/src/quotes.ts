@@ -6,7 +6,7 @@ import { marginLock } from './portfolio';
 import { dividendsByAsset, livingCostAnnual } from './economy';
 import { effectiveTax, incomeTaxAnnual } from './tax';
 import { lodgerOf, workModeOf } from './life/derive';
-import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt } from './life/derive';
+import { careerSwing, homeOf, INSURANCE_KINDS, insurancePremium, isRetired, itemStatus, lifestyleStatusAt, nextStatusStep, ownPay, perksOf, refreshDerived, rentStatusAt, statusParts } from './life/derive';
 import { helpedHome, raiseChance, workModeLock } from './life/orders';
 import { canSellItem, financeLock, focusLeft, focusLock, focusTotal, FOCUS_ACTIONS, itemFinance, itemTerms, lapsingIn, moveCost, noInvoiceTerms, overtimeOf, soldIn, usedTerms } from './life/orders';
 import { FLAG_HAD_ILLNESS, hasFlag } from './life/flags';
@@ -20,7 +20,7 @@ import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
 import { SKILLS } from './types';
-import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorkMode, WorldState } from './types';
+import type { Business, Content, Evaded, FinanceSkill, FocusAction, GameView, InsuranceKind, ItemPerks, LifestyleTier, OwnedItem, PctStep, PlayerState, RejectReason, RentTier, SkillId, SkillLevel, StatusStep, StudyAction, WorkMode, WorldState } from './types';
 
 /**
  * Quotes: what things cost this player right now. An interface shows these instead of working
@@ -114,6 +114,12 @@ export interface ItemQuote {
   paid: Cents | null;
   /** What is still owed on the loans that bought it on instalments. It stays owed after a sale. */
   owed: Cents;
+  /**
+   * What it does for the player's status, all told: what buying it would add, if it is not owned;
+   * what it counts for, if it is. Not its own status alone: within a ladder the best thing counts
+   * whole and the rest for less, or for nothing, so a lesser thing beside a better one may give little or none.
+   */
+  statusReal: number;
   /** False for something only a card can give. */
   forSale: boolean;
   /** False where the shops of the player's city do not sell it. */
@@ -163,6 +169,34 @@ export interface ItemFinanceQuote {
   lock: RejectReason | null;
 }
 
+/**
+ * What an item does for the player's status all told. Not owned: what buying it would add, the
+ * other things of its ladder ranked again with it. Owned: what it counts for now, by its place in
+ * its ladder: whole if it is the best, a share or nothing if not.
+ */
+function itemStatusReal(content: Content, view: GameView, itemId: string): number {
+  const p = view.player;
+  const held = p.life.items.find((owned) => owned.itemId === itemId);
+  if (!held) {
+    const now = statusParts(p, content, view.round).items;
+    const items = [...p.life.items, { itemId, value: 0, roundsLeft: null, paid: 0, age: 0 } as OwnedItem];
+    return statusParts({ ...p, life: { ...p.life, items } }, content, view.round).items - now;
+  }
+  const item = itemOf(content, itemId);
+  const mine = itemStatus(item, held.age, content);
+  const at = p.life.items.indexOf(held);
+  // Its place in the ladder, as the status of the player ranks it: of two alike, the one owned first goes ahead.
+  const place = p.life.items.filter((owned, i) => {
+    if (owned === held || itemOf(content, owned.itemId).ladder !== item.ladder) return false;
+    const status = itemStatus(itemOf(content, owned.itemId), owned.age, content);
+    return status > mine || (status === mine && i < at);
+  }).length;
+  if (place === 0) return mine;
+  const rule = content.life.lesserItems?.[item.ladder];
+  if (place >= (rule?.counted ?? Number.POSITIVE_INFINITY)) return 0;
+  return mulDiv(mine, rule?.pct ?? content.life.lesserItemPct, 100);
+}
+
 export function quoteItem(content: Content, view: GameView, itemId: string): ItemQuote {
   const item = itemOf(content, itemId);
   const world = view.timeline[view.round];
@@ -171,7 +205,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   // Nothing is sold twice: there are no terms for what the player already owns.
   const plan = held ? null : itemFinance(item, content, world);
   const second = held || item.cardOnly === true || !soldIn(item, view.player.cityId) ? null : usedTerms(item, content, world);
-  const blank = held || !soldIn(item, view.player.cityId) ? null : noInvoiceTerms(item, content, world);
+  const blank = held || !soldIn(item, view.player.cityId) ? null : noInvoiceTerms(item, content, world, view.player.cityId);
   const rateBp = personalLoanRateBp(content, world);
   const termRounds = content.debt.personalLoanTermRounds;
   const years = content.yearsPerRound;
@@ -186,6 +220,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
     owned: held !== undefined,
     paid: held ? held.paid : null,
     owed: view.player.debts.reduce((sum, debt) => (debt.forItem === itemId ? sum + debt.principal : sum), 0),
+    statusReal: itemStatusReal(content, view, itemId),
     forSale: item.cardOnly !== true,
     soldHere: soldIn(item, view.player.cityId),
     local: item.kind === 'membership' && item.cities !== undefined,

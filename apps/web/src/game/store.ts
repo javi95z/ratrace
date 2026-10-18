@@ -7,6 +7,9 @@ import type { StoreApi } from 'zustand/vanilla';
 import { RankedInProgress, StaleSession, Unreachable } from '@/session/errors';
 import type { RankedLifeInTheWay } from '@/session/errors';
 import type { GameSession, Lost, Sessions, StepResult } from '@/session/types';
+import { knownOrders } from './rules';
+import { memoryBasket } from './basket';
+import type { BasketKeep } from './basket';
 
 /** Where the player is within a round. */
 export type Stage = 'news' | 'cards' | 'outcome' | 'finance' | 'resolve' | 'end';
@@ -39,7 +42,7 @@ export interface RoundState {
    * The card just answered as it stood when it was answered: what each of its options offered, and
    * the world they were offered in. Kept with the result, to say how likely what came up was.
    */
-  offered: { cardId: string; options: OptionPreview[]; world: WorldState } | null;
+  offered: { cardId: string; options: OptionPreview[]; world: WorldState; partnered: boolean } | null;
   /** The basket: orders for this round, in the order they will run. None of them will be refused. */
   orders: Order[];
   /** What the round will pay and charge with the basket as it is. Null outside the finance phase. */
@@ -67,6 +70,8 @@ export interface RoundState {
   fault: boolean;
   /** True for a life the server plays: its result is set beside everyone else's. */
   ranked: boolean;
+  /** The engine version of the rules the life is played under: this page's own, or older ones a life begun under them keeps. */
+  rules: string;
   /** The week whose challenge the life is: the attempt, when ranked, or a practice. Null for any other life. */
   challenge: string | null;
   /** True once a life asked for as ranked began as a casual one, because a ranked one could not be had just then, until the player has been told. */
@@ -171,6 +176,7 @@ const blank: RoundState = {
   moved: false,
   fault: false,
   ranked: false,
+  rules: ENGINE_VERSION,
   challenge: null,
   fellBack: false,
   unreachable: false,
@@ -189,13 +195,15 @@ export interface GameStoreOptions {
    * plays a round, or skips the ledger. Zero, the default, ignores nothing.
    */
   guardMs?: number;
+  /** Where the orders of the round being planned are kept until it is played. Left out, nowhere beyond the page. */
+  basket?: BasketKeep;
 }
 
 /**
  * The state of the round on screen. It talks to the game through a `GameSession` only,
  * and asks the engine's own preview what each order would do: no rule of the game lives here.
  */
-export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 }: GameStoreOptions): GameStore {
+export function createGameStore({ sessions, content, now = () => 0, guardMs = 0, basket = memoryBasket() }: GameStoreOptions): GameStore {
   let session: GameSession | null = null;
   /** When the stage on screen last changed. */
   let changedAt = Number.NEGATIVE_INFINITY;
@@ -260,7 +268,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       if (!session) return;
       set({ busy: true });
       try {
-        shown(view, await session.playRound({ orders }));
+        // Only what the life's rules know is sent: an order of newer rules would be refused, as an action that does not exist.
+        shown(view, await session.playRound({ orders: knownOrders(session.rules ?? ENGINE_VERSION, orders) }));
       } catch (error) {
         await refused(error);
       } finally {
@@ -282,12 +291,14 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         badges: opened.badges(),
         story: opened.story(),
         ranked: opened.ranked === true,
+        rules: opened.rules ?? ENGINE_VERSION,
         challenge: opened.challenge ?? null,
       };
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
-      else set({ ...base, stage: 'finance', ...settle(view, []) });
+      // Orders planned for this round before the page was closed are taken up again, as the engine still allows them.
+      else set({ ...base, stage: 'finance', ...settle(view, basket.load(opened.gameId, view.round)) });
     };
 
     return {
@@ -369,7 +380,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         set({ busy: true, picked: option });
         // What every option offered is asked before the answer: afterwards the card is no longer in the hand to be judged.
         const cardId = view.hand[view.answered];
-        const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round] };
+        // And whether the player had a partner then: a card that brings one in is told as that, not as a change of their pay.
+        const offered = { cardId, options: previewCard(content, view, cardId), world: view.timeline[view.round], partnered: view.player.life.partner };
         // A server takes a moment to answer. The tap is seen at once on the option; then the card turns, its choice made, while the dice roll there.
         const turning = session.served ? setTimeout(() => get().picked === option && get().busy && set({ stage: 'outcome', offered, cardEvents: [], earned: [], unlocked: [], pending: true }), PENDING_AFTER_MS) : null;
         try {
@@ -396,9 +408,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       },
 
       toFinance() {
-        const { view } = get();
+        const { view, gameId } = get();
         if (!view || view.finished || view.phase !== 'finance') return;
-        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, []) });
+        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, gameId === null ? [] : basket.load(gameId, view.round)) });
       },
 
       addOrder(order) {
@@ -497,6 +509,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
   // Every change of screen starts the short wait in which a tap is taken for the tail of the last one.
   store.subscribe((state, before) => {
     if (state.stage !== before.stage) changedAt = now();
+    // The basket is kept as it changes, and emptied once the round it was for is played.
+    if (state.orders !== before.orders && state.gameId !== null && state.view !== null && state.stage === 'finance') basket.save(state.gameId, state.view.round, state.orders);
+    if (state.view !== null && before.view !== null && state.gameId !== null && state.view.round !== before.view.round) basket.save(state.gameId, before.view.round, []);
   });
   return store;
 }

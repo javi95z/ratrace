@@ -262,19 +262,26 @@ export function soldWithoutInvoice(item: ItemDef, content: Content): boolean {
   return item.kind === 'durable' && item.cardOnly !== true && content.evasion.noInvoiceLadders.includes(item.ladder);
 }
 
+/** True where a city takes no tax on pay: there is nothing to save by leaving out an invoice, so nobody offers it. */
+export function taxFreeCity(content: Content, cityId: string): boolean {
+  const tax = content.cities.find((city) => city.id === cityId)?.tax;
+  return tax !== undefined && tax.incomeRatesBp.every((rate) => rate === 0);
+}
+
 /**
  * What a thing costs without an invoice today, and what it is worth the moment it is bought, or
- * null where it is not sold so. Worth the same share of what it cost as one bought properly.
+ * null where it is not sold so: a thing of another kind, or any thing in a city with no tax. Worth
+ * the same share of what it cost as one bought properly.
  */
-export function noInvoiceTerms(item: ItemDef, content: Content, world: WorldState): { price: Cents; resale: Cents } | null {
-  if (!soldWithoutInvoice(item, content)) return null;
+export function noInvoiceTerms(item: ItemDef, content: Content, world: WorldState, cityId: string): { price: Cents; resale: Cents } | null {
+  if (!soldWithoutInvoice(item, content) || taxFreeCity(content, cityId)) return null;
   const price = mulDiv(itemTerms(item, world).price, 100 - content.evasion.noInvoiceDiscountPct, 100);
   return { price, resale: mulDiv(price, item.resaleStartPct, 100) };
 }
 
 /** Buys a thing without an invoice: in cash, cheaper, and marked, so that a sale or an inspection asks about it. */
 function buyWithoutInvoice(p: PlayerState, item: ItemDef, ctx: OrderContext, financed: boolean): RejectReason | null {
-  const terms = noInvoiceTerms(item, ctx.content, ctx.world);
+  const terms = noInvoiceTerms(item, ctx.content, ctx.world, p.cityId);
   if (terms === null) return 'not-sold-without-invoice';
   if (financed) return 'cannot-finance';
   if (terms.price > p.cash) return 'not-enough-cash';

@@ -576,7 +576,10 @@ describe('shouts', () => {
     expect((await server.ask(B, { action: 'shout', roomId: room, shout: 7 })).status).toBe(200);
     const seen = roomOf(await server.ask(HOST, { action: 'state', roomId: room }));
     expect(seen.members.map((m) => (m as unknown as { shout: { n: number } | null }).shout?.n ?? null)).toEqual([null, 7]);
+    // Told to the others' devices once, and not for one the server turned away.
+    expect(server.notices.filter((n) => n.about.kind === 'shout')).toEqual([{ user: HOST, about: { kind: 'shout', who: null, n: 7 } }]);
     expect(await server.ask(B, { action: 'shout', roomId: room, shout: 1 })).toMatchObject({ status: 409, body: { error: 'soon' } });
+    expect(server.notices.filter((n) => n.about.kind === 'shout')).toHaveLength(1);
     server.wait(10_001);
     expect((await server.ask(B, { action: 'shout', roomId: room, shout: 1 })).status).toBe(200);
     for (const shout of [14, -1, 2.5, 'hola', null]) expect((await server.ask(B, { action: 'shout', roomId: room, shout })).status, String(shout)).toBe(400);

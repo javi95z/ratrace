@@ -6,7 +6,7 @@ import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ra
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
-import { cardRarity, chancePct, effectTags } from '@/game/present';
+import { cardRarity, chancePct, effectTags, onlyCosts } from '@/game/present';
 import type { EffectTag } from '@/game/present';
 import { Panel, Tag } from '@/ui/kit';
 import { Sparks } from '@/ui/Sparks';
@@ -74,13 +74,20 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <span className="text-[13px] leading-snug text-cream">{lockWords(preview.lock)}</span> : null}
       <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered), ...(preview.covered > 0 ? [{ tone: 'good' as const, text: t('covers', { amount: words.fmt.brief(preview.covered) }) }] : [])]} className={dim} />
-      {(option.outcomes ?? []).map((outcome, k) => (
+      {(option.outcomes ?? []).map((outcome, k) => {
+        const outcomeTags = (said: typeof outcome.effects) => {
+          const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])]);
+          // Nothing more on top of an option that only cost: what was put in is gone, and that is said in red.
+          return tags.length === 0 && preview.outcomes[k].cash === 0 && onlyCosts(option.effects) ? [{ tone: 'bad' as const, text: t('lostStake') }] : tags;
+        };
+        return (
         <span key={k} className={`flex items-start gap-2 ${dim}`}>
           <span className="pixel w-12 shrink-0 text-right text-[13px] text-gold-500">{t('chance', { pct: chancePct(preview.outcomes[k].weight, total) })}</span>
           {/* An outcome that changes nothing more leaves the option as it says: that is how it goes, not nothing at all. */}
-          <Tags cash={preview.outcomes[k].cash} tags={effectTags(words, effects, world, outcome.effects, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])])} empty={t('asPlanned')} />
+          <Tags cash={preview.outcomes[k].cash} tags={outcomeTags(outcome.effects)} empty={t('asPlanned')} />
         </span>
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -266,7 +273,7 @@ export function Outcome() {
         const odds = was?.options[event.option]?.outcomes ?? [];
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
-        const partnered = view?.player.life.partner ?? false;
+        const partnered = offered?.cardId === event.cardId ? offered.partnered : (view?.player.life.partner ?? false);
         const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered, chosen?.effects?.recurring ?? [])] : [];
         // What the player's cover paid, when it paid: the reason to have it.
         const covered = was?.options[event.option]?.covered ?? 0;

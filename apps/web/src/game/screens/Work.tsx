@@ -7,7 +7,7 @@ import { quoteSkills, quoteWork, SKILLS } from '@ratrace/engine';
 import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, WorkQuote } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { useGame, useRoom, useT, useWords } from '@/game/context';
+import { useGame, useKnows, useRoom, useT, useWords } from '@/game/context';
 import { ageAt, jobFocusName } from '@/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -498,7 +498,8 @@ export function TeaseUse({ left, title }: { left: number; title?: string }) {
   const setOrder = useGame((s) => s.setOrder);
   const members = useRoom((s) => s.room?.members);
   const rivals = (members ?? []).filter((member) => !member.me && !member.left);
-  if (!view || !Object.hasOwn(view.player.life.flags, 'in_room') || rivals.length === 0) return null;
+  const known = useKnows()('focus:tease');
+  if (!known || !view || !Object.hasOwn(view.player.life.flags, 'in_room') || rivals.length === 0) return null;
   const isTease = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'tease';
   const aimed = orders.find((order) => isTease(order)) as { target?: string } | undefined;
   const target = rivals.some((rival) => rival.userId === aimed?.target) ? aimed?.target : undefined;

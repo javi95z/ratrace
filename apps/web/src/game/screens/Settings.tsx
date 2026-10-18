@@ -56,12 +56,12 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false }: { comp
     });
   };
 
-  // One line of truth about saving. The device always has everything; this says whether the account does too.
-  // Saved is how things should be, and goes unsaid: only saving, or saving on the device alone, is told.
+  // The device always has everything. Saving to the account goes on unsaid, as it should; only an account out of
+  // reach, with things kept on the device alone for now, is told.
   const saved =
-    status === 'off' || status === 'saved' ? null : (
+    status !== 'waiting' ? null : (
       <p role="status" className="flex items-center gap-2 text-[12px] text-ink-200">
-        <span aria-hidden className={`size-2 shrink-0 ${status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
+        <span aria-hidden className="size-2 shrink-0 bg-gold-500" />
         {t(status)}
       </p>
     );
@@ -210,7 +210,46 @@ function WeeklyNotice() {
       setOn(false);
     }
   };
-  return <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? t('weeklyNoticeBlocked') : t('weeklyNoticeHint')} />;
+  return (
+    <>
+      <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? t('weeklyNoticeBlocked') : t('weeklyNoticeHint')} />
+      {on ? <MarketNotice /> : null}
+    </>
+  );
+}
+
+/**
+ * The notice that something held in a ranked life moved, on its own: it can be turned off while the
+ * rest are kept. Shown only while this browser is subscribed, and only once the server has said
+ * what it is now, so the switch never shows a guess.
+ */
+function MarketNotice() {
+  const t = useT('settings');
+  const community = useCommunity();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [endpoint, setEndpoint] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    void currentSubscription().then(
+      async (held) => {
+        if (!held || community === null) return;
+        const now = await community.marketNotice(held.endpoint);
+        if (live) {
+          setEndpoint(held.endpoint);
+          setOn(now);
+        }
+      },
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [community]);
+  if (community === null || endpoint === null || on === null) return null;
+  const change = async (want: boolean) => {
+    if (await community.setMarketNotice(endpoint, want)) setOn(want);
+  };
+  return <Toggle on={on} onChange={(want) => void change(want)} label={t('marketNotice')} hint={t('marketNoticeHint')} />;
 }
 
 /** Everything the player can set, at once: the settings of a life in progress, already in a sheet of their own. */

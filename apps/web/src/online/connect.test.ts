@@ -503,6 +503,24 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.notifyMe({ endpoint: 'https://push.example/1', p256dh: 'p', auth: 'a' }, 'es')).toBe(false);
   });
 
+  it('reads and sets whether a browser is told that the market moved', async () => {
+    client.answers.getSession = signedIn;
+    client.answers.push_subscriptions = { data: { market_moved: false }, error: null };
+    const cloud = await connectSupabase('u', 'k');
+    expect(await cloud.community.marketNotice('https://push.example/1')).toBe(false);
+    client.answers.push_subscriptions = { data: null, error: null };
+    expect(await cloud.community.marketNotice('https://push.example/1')).toBeNull();
+    expect(await cloud.community.setMarketNotice('https://push.example/1', true)).toBe(true);
+    expect(client.asked).toEqual([
+      ['push_subscriptions', ['select', 'market_moved'], ['eq', 'endpoint', 'https://push.example/1'], ['maybeSingle']],
+      ['push_subscriptions', ['select', 'market_moved'], ['eq', 'endpoint', 'https://push.example/1'], ['maybeSingle']],
+      ['push_subscriptions', ['update', { market_moved: true }], ['eq', 'endpoint', 'https://push.example/1']],
+    ]);
+    client.answers.push_subscriptions = { data: null, error: new Error('offline') };
+    expect(await cloud.community.marketNotice('https://push.example/1')).toBeNull();
+    expect(await cloud.community.setMarketNotice('https://push.example/1', false)).toBe(false);
+  });
+
   it('says whether the player has had their attempt at a week, and its score once it is over', async () => {
     client.answers.getSession = signedIn;
     client.answers.challenge_entries = { data: { week: '2026-W42' }, error: null };

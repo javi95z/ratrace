@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@/game/avatar';
+import { mayWear, prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@/game/avatar';
+import type { RankId } from '@ratrace/content';
 import type { RatColour, RatLayer, RatLook } from '@/game/avatar';
 import { useT } from '@/game/context';
 import { GROUND, RatLayers } from '@/ui/RatAvatar';
@@ -27,7 +28,7 @@ interface Choice {
   key: string;
   label: string;
   look: RatLook;
-  /** The badge it asks for, when the player has not earned it yet. */
+  /** How it is won, when the player has not won it yet. */
   locked: string | null;
 }
 
@@ -36,7 +37,7 @@ interface Choice {
  * is behind it and the colour of its ground. Each choice shows the rat as it would be. A piece kept
  * for a badge shows how it is won; a piece not drawn yet is not offered.
  */
-export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look: RatLook; earned: Record<string, unknown>; badgeName: (id: string) => string; onPick: (next: RatLook) => void; onLocked: (message: string) => void }) {
+export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onLocked }: { look: RatLook; earned: Record<string, unknown>; rank: RankId; badgeName: (id: string) => string; rankName: (rank: RankId) => string; onPick: (next: RatLook) => void; onLocked: (message: string) => void }) {
   const t = useT('player');
   const [part, setPart] = useState<Part>('body');
 
@@ -45,7 +46,8 @@ export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look:
     const pieces = (RAT_LAYERS[part] as readonly string[]).filter((piece) => spriteOf(ratSprite(part, piece)) !== null);
     const drawn: Choice[] = pieces.map((piece) => {
       const prize = prizeOf(part, piece);
-      return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: prize !== null && !Object.hasOwn(earned, prize) ? prize : null };
+      const how = prize === null || mayWear(part, piece, earned, rank) ? null : 'badge' in prize ? t('locked', { badge: badgeName(prize.badge) }) : t('lockedRank', { rank: rankName(prize.rank) });
+      return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: how };
     });
     return part === 'body' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
   };
@@ -78,8 +80,8 @@ export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look:
               aria-checked={on}
               aria-disabled={choice.locked !== null || undefined}
               aria-label={choice.label}
-              title={choice.locked ? t('locked', { badge: badgeName(choice.locked) }) : choice.label}
-              onClick={() => (choice.locked ? onLocked(t('locked', { badge: badgeName(choice.locked) })) : onPick(choice.look))}
+              title={choice.locked ?? choice.label}
+              onClick={() => (choice.locked ? onLocked(choice.locked) : onPick(choice.look))}
               className={`frame-raised flex bg-night-700 p-1 ${on ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
             >
               {/* The picture says which it is; the name is there for a pointer that rests on it and for a screen reader. */}

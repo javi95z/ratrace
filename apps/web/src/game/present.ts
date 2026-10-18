@@ -103,6 +103,18 @@ export function debtLabel(words: Words, debt: Pick<Debt, 'kind' | 'forItem' | 'f
  * engine's preview gives, which already counts insurance, discounts and purchase tax.
  * `t` translates the `effects` section.
  */
+/**
+ * True for the effects of an option that only cost: money, a loan or focus, and nothing else. An
+ * outcome that adds nothing to such an option leaves the player with the cost alone: the stake is
+ * lost, which is not how it was hoped to go.
+ */
+export function onlyCosts(effects: Effects | undefined): boolean {
+  if (effects === undefined) return false;
+  const keys = Object.keys(effects).filter((key) => effects[key as keyof Effects] !== undefined);
+  const costs = new Set(['cash', 'loan', 'focus']);
+  return keys.length > 0 && keys.every((key) => costs.has(key)) && ((effects.cash ?? 0) < 0 || (effects.loan ?? 0) > 0);
+}
+
 export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined, partnered = false, recurring: ReadonlyArray<{ tag: string; kind: string; annual: number }> = []): EffectTag[] {
   if (effects === undefined) return [];
   const { content, text, names, fmt } = words;
@@ -173,7 +185,8 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
       if (pricePct < 100) add('plain', t('itemUsual', { amount: dollars(item.price) }));
     }
   }
-  if (effects.business) add('plain', t('openBusiness', { name: text.businessTypes[effects.business.typeId]?.name ?? effects.business.typeId }));
+  // A business opens with the capital it starts with: two outcomes that both open one are told apart by it.
+  if (effects.business) add('plain', t('openBusiness', { name: text.businessTypes[effects.business.typeId]?.name ?? effects.business.typeId, amount: dollars(effects.business.capital) }));
   if (effects.sellBusiness) add('good', t('sellBusiness', { pct: effects.sellBusiness.pricePct }));
   if (effects.invest) add('plain', t('invest', { amount: dollars(effects.invest.amount), asset: names.assets[effects.invest.assetId].name }));
   if (effects.pension) add('good', t('pension', { amount: dollars(effects.pension) }));

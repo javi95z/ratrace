@@ -77,7 +77,7 @@ export class OlderSession implements GameSession {
 
   constructor(
     private save: SavedGame,
-    private readonly rules: OlderRules,
+    private readonly older: OlderRules,
     private readonly start: unknown,
     private readonly store: PlayerStore,
     private readonly content: Content,
@@ -103,6 +103,10 @@ export class OlderSession implements GameSession {
     } catch {
       return null;
     }
+  }
+
+  get rules(): string {
+    return this.save.engineVersion;
   }
 
   get gameId(): string {
@@ -174,7 +178,7 @@ export class OlderSession implements GameSession {
   }
 
   private shown(): GameView {
-    return upToDateView(this.rules.viewOf(this.save.state)) as GameView;
+    return upToDateView(this.older.viewOf(this.save.state)) as GameView;
   }
 
   /** One step under the older rules: from where the life stands when they can take a single one, by playing the log again when not. */
@@ -188,9 +192,9 @@ export class OlderSession implements GameSession {
         last = step;
       };
       const { state, history, bankruptcies, journal } = this.save;
-      const life = this.rules.stepLife
-        ? this.rules.stepLife(this.rules.content, { state, history, bankruptcies, journal }, choice, heard)
-        : this.rules.replayLife(this.rules.content, this.start, this.save.seed, log, heard);
+      const life = this.older.stepLife
+        ? this.older.stepLife(this.older.content, { state, history, bankruptcies, journal }, choice, heard)
+        : this.older.replayLife(this.older.content, this.start, this.save.seed, log, heard);
       this.save = { ...this.save, log, state: life.state, history: life.history, bankruptcies: life.bankruptcies, journal: life.journal, updatedAt: this.now() };
       this.current = this.shown();
       await this.persist();
@@ -217,7 +221,7 @@ export class OlderSession implements GameSession {
   }
 
   private asRun(): FinishedRun {
-    const { save, rules } = this;
+    const { save, older: rules } = this;
     return {
       format: SAVE_FORMAT,
       runId: save.gameId,

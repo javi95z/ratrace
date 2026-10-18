@@ -152,6 +152,23 @@ for (const career of content.careers) {
       ['Puesto', 'Sueldo', 'Experiencia', 'Estatus'],
       career.levels.map((level, i) => [text.careers[career.id].levels[i], `${level.salaryPct} % del sueldo medio`, `${level.minSkill}`, signed(level.status)]),
     ),
+    // The moves of a career at some of its rungs: a point of focus for some rounds, and a chance at each outcome.
+    ...(career.moves?.length
+      ? [table(
+          ['Movimiento', 'En los puestos', 'Rondas · descanso', 'Qué puede salir'],
+          career.moves.map((move) => {
+            const told = text.careers[career.id].moves?.[move.id];
+            const total = move.outcomes.reduce((sum, outcome) => sum + outcome.weight, 0);
+            const rungs = [move.fromLevel, move.toLevel].map((level) => text.careers[career.id].levels[level]);
+            return [
+              `**${told?.name ?? move.id}**<br>${told?.about ?? ''}`,
+              rungs[0] === rungs[1] ? rungs[0] : `${rungs[0]} a ${rungs[1]}`,
+              `${move.rounds} · ${move.restRounds}`,
+              move.outcomes.map((outcome, i) => `${Math.round((outcome.weight * 100) / total)} %: ${told?.outcomes[i] ?? ''}`).join('<br>') + (move.skill && move.pctPerSkillLevel ? `<br>+${move.pctPerSkillLevel} puntos de probabilidad por nivel de ${text.skills[move.skill]}` : ''),
+            ];
+          }),
+        )]
+      : []),
   );
 }
 
@@ -204,7 +221,14 @@ for (const city of content.cities) {
 // ---------------------------------------------------------------------------------------------
 say(
   '## Objetos',
-  'Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.',
+  [
+    `Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un ${content.life.lesserItemPct} % del suyo.`,
+    ...Object.entries(content.life.lesserItems ?? {}).map(([ladder, rule]) =>
+      rule.counted !== undefined
+        ? `${text.ladders[ladder] ?? ladder}: solo cuentan ${rule.counted === 1 ? 'la mejor' : `las ${rule.counted} mejores, la primera entera y las otras un ${rule.pct} %`}.`
+        : `${text.ladders[ladder] ?? ladder}: ${rule.pct === 0 ? 'solo cuenta la mejor; las demás no dan estatus' : `las demás un ${rule.pct} %`}.`,
+    ),
+  ].join(' '),
   '«Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.',
   `Los objetos de ${content.life.agingLadders.map((ladder) => text.ladders[ladder].toLowerCase()).join(' y ')} pierden estatus al envejecer, al mismo ritmo que pierden valor, hasta quedarse en el ${content.life.agingFloorPct} % de lo que daban nuevos.`,
   '«Reventa» es lo que vale el día que se compra, sobre su precio, y lo que cambia cada ronda aparte de la inflación.',
@@ -260,6 +284,11 @@ const madrid = content.cities[0];
 say(
   '## Inmuebles',
   `El precio es un porcentaje del piso de referencia de cada ciudad. Como ejemplo va el precio en ${names.cities[madrid.id]}.`,
+  ...(content.life.estates
+    ? [
+        `El estatus de la vivienda es el de la casa en la que vives. Además, las viviendas de lujo que tengas sin vivir en ellas (desde +${content.life.estates.minStatus}), alquiladas o en otra ciudad, dan un ${content.life.estates.pct} % del suyo: las ${content.life.estates.counted} mejores.`,
+      ]
+    : []),
   table(
     ['', 'Inmueble', 'Precio', `En ${names.cities[madrid.id]}`, 'Estatus si vives en él', 'Uso', 'Alquiler'],
     [...content.propertyTypes]

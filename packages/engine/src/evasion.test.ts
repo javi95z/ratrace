@@ -237,6 +237,18 @@ describe('buying without an invoice', () => {
   });
 });
 
+describe('buying without an invoice where there is no tax', () => {
+  it('is not offered, and is refused, in a city that takes no tax on pay', () => {
+    const content = contentWith();
+    const state = game(content);
+    const home = content.cities.find((city) => city.id === state.player.cityId);
+    if (!home) throw new Error('the player lives in a city');
+    home.tax = { ...home.tax, incomeRatesBp: [0, 0, 0] };
+    expect(quoteItem(content, viewOf(state), 'watch_gold').noInvoice).toBeNull();
+    expect(rejected(applyRound(content, state, { orders: [{ type: 'buyItem', itemId: 'watch_gold', noInvoice: true }] }).events)).toEqual(['not-sold-without-invoice']);
+  });
+});
+
 describe('the rules and the state', () => {
   it('are checked', () => {
     const bad = fixtureContent();

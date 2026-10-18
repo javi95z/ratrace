@@ -1,9 +1,10 @@
 import { badges, galleryBadges, unlockedLives } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
+import { rankAfter } from './rank';
 import { isDay } from './runs';
 import { newProfile, SAVE_FORMAT } from './types';
-import type { Earned, PlayerStore, Profile } from './types';
+import type { Earned, FinishedRun, PlayerStore, Profile } from './types';
 
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const strings = (x: unknown): string[] => (Array.isArray(x) ? [...new Set(x.filter((entry): entry is string => typeof entry === 'string'))] : []);
@@ -16,6 +17,15 @@ function earnedOf(x: unknown): Record<string, Earned> {
     if (isRecord(entry) && isDay(entry.at) && typeof entry.gameId === 'string') out[id] = { at: entry.at, gameId: entry.gameId };
   }
   return out;
+}
+
+/** The points of each life in a stored rank that are whole; the total is always their sum. */
+function rankOf(x: unknown): Profile['rank'] {
+  const lives: Record<string, number> = {};
+  if (isRecord(x) && isRecord(x.lives)) {
+    for (const [id, points] of Object.entries(x.lives)) if (typeof points === 'number' && Number.isSafeInteger(points) && points >= 0) lives[id] = points;
+  }
+  return { points: Object.values(lives).reduce((sum, points) => sum + points, 0), lives };
 }
 
 /**
@@ -37,6 +47,7 @@ export function readProfile(raw: unknown): Profile {
     gallery: strings(raw.gallery),
     unlocked: earnedOf(raw.unlocked),
     guide: { seen: strings(guide.seen), off: guide.off === true },
+    rank: rankOf(raw.rank),
   };
 }
 
@@ -62,6 +73,12 @@ export function updateProfile(store: PlayerStore, change: (profile: Profile) => 
   return result;
 }
 
+/** Counts the finished lives into the profile's rank, each once. `runs` are given when the caller has just read them. */
+export async function settleRank(store: PlayerStore, runs?: readonly FinishedRun[]): Promise<Profile> {
+  const finished = runs ?? (await store.listRuns().catch(() => []));
+  return updateProfile(store, (current) => rankAfter(current, finished));
+}
+
 /**
  * Tells the profile everything a life has earned and owned so far: badges it has not held
  * before, the gallery, and the lives those unlock. It tells all of it every time, not only the
@@ -79,11 +96,13 @@ export async function tellProfile(
   const runs = await store.listRuns().catch(() => []);
   const step: LifeStep = { gameId: life.gameId, at: life.at, earned: life.earned, collection: life.collection, finished: Math.max(runs.length, life.over ? 1 : 0) };
   let news = { earned: [] as string[], unlocked: [] as string[] };
-  const profile = await updateProfile(store, (current) => {
+  let profile = await updateProfile(store, (current) => {
     const after = profileAfter(content, lives, current, step);
     news = { earned: after.earned, unlocked: after.unlocked };
     return after.profile;
   });
+  // A life that ends gives rank points, and a profile from before ranks is filled from the lives it has finished. A failure here costs the badges nothing.
+  if (life.over || profile.rank.points === 0) profile = await settleRank(store, runs).catch(() => profile);
   return { ...news, ofGallery: Object.keys(profile.badges).filter((id) => profile.badges[id].gameId === life.gameId && !life.earned.includes(id)) };
 }
 

@@ -134,13 +134,13 @@ describe('the account in the settings', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
-  it('says where the player\'s things are only when they are not yet in the account: on their way to it, or waiting for a connection', () => {
+  it('says where the player\'s things are only when the account is out of reach, and keeps quiet while they are on their way to it', () => {
     const member: AccountState = { kind: 'member', userId: 'u', email: null };
     show(fakeAccount(member).account, 'en', savesAt('saved'));
     expect(screen.queryByRole('status')).toBeNull();
     cleanup();
     show(fakeAccount(member).account, 'en', savesAt('sending'));
-    expect(screen.getByRole('status').textContent).toBe('Saving…');
+    expect(screen.queryByRole('status')).toBeNull();
     cleanup();
     show(fakeAccount({ kind: 'guest', userId: 'u', notice: null }).account, 'es', savesAt('waiting'));
     expect(screen.getByRole('status').textContent).toBe('Sin conexión: guardado solo aquí');

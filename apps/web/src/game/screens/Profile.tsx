@@ -18,6 +18,7 @@ import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
 import { RivalsBoard } from './Rivals';
+import { realStatus, StatusNote } from './StatusNote';
 import { WorkPanel } from './Work';
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];
@@ -336,12 +337,13 @@ function OwnedSheet({ owned, shown, onClose }: { owned: OwnedItem; shown: GameVi
         </div>
         <p className="pixel text-center text-[13px] uppercase tracking-wider text-ink-300">{text.ladders[item.ladder]}</p>
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Tag tone="good">{shop('status', { n: quote.status })}</Tag>
+          <Tag tone={realStatus(quote) > 0 ? 'good' : undefined}>{shop('status', { n: realStatus(quote) })}</Tag>
           {quote.status < quote.statusNew ? <Tag>{shop('statusWas', { n: quote.statusNew })}</Tag> : null}
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{shop('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {quote.ownedUsed ? <Tag>{shop('usedTag')}</Tag> : null}
           {quote.ownedNoInvoice ? <Tag tone="bad">{shop('noInvoiceTag')}</Tag> : null}
         </div>
+        <StatusNote quote={quote} owned />
         {quote.ownedUsed ? <p className="text-center text-[13px] text-ink-300">{shop('usedOwned', { pct: content.life.used[item.ladder]?.repairChancePct ?? 0 })}</p> : null}
         <ItemUses item={item} />
         {quote.ages ? <p className="text-center text-[13px] text-ink-300">{shop(quote.status < quote.statusNew ? 'aged' : 'ages')}</p> : null}

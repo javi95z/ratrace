@@ -212,6 +212,7 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       const life: RoomLife = {
         gameId: body.gameId,
         lifeId: String(body.lifeId),
+        ...(typeof body.engineVersion === 'string' ? { engineVersion: body.engineVersion } : {}),
         step: body.step,
         view: upToDateView(body.view) as unknown as RoomLife['view'],
         record: body.record as unknown as RoomLife['record'],

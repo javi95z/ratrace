@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.40.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.42.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -383,6 +383,10 @@ Horas extra: +4 % de sueldo esa ronda.
 | Técnico superior | 118 % del sueldo medio | 14 | +10 |
 | Jefe de unidad | 132 % del sueldo medio | 24 | +16 |
 
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Preparar la promoción interna**<br>Dos rondas estudiando para el concurso del cuerpo superior. Si apruebas, subes un puesto. | Auxiliar a Técnico superior | 2 · 2 | 55 %: Apruebas la promoción interna: subes un puesto.<br>45 %: No apruebas esta vez. Habrá otra convocatoria. |
+
 ### Servicios
 
 Horas extra: +10 % de sueldo esa ronda.
@@ -394,6 +398,12 @@ Horas extra: +10 % de sueldo esa ronda.
 | Encargado de tienda | 98 % del sueldo medio | 10 | +6 |
 | Jefe de zona | 122 % del sueldo medio | 18 | +11 |
 | Director de operaciones | 155 % del sueldo medio | 28 | +18 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Cambiar de app**<br>Otra plataforma de reparto: puede pagar mejor… o peor. | Repartidor | 1 · 2 | 60 %: La nueva app paga mejor: +10 % de sueldo.<br>40 %: La nueva app paga peor: −5 % de sueldo. |
+| **Pedir otra zona**<br>Una zona con más movimiento puede pagar más. | Jefe de turno a Jefe de zona | 1 · 2 | 50 %: Te dan una zona mejor: +8 % de sueldo.<br>50 %: Te quedas donde estabas. |
+| **Abrir un almacén propio**<br>Tu propio centro de reparto: ingresos sin trabajar si sale bien. | Director de operaciones | 1 · 4 | 55 %: El almacén funciona: ingresos pasivos para siempre.<br>45 %: No sale: la jugada te cuesta estatus. |
 
 ### Finanzas
 
@@ -418,6 +428,10 @@ Horas extra: +8 % de sueldo esa ronda.
 | Especialista | 200 % del sueldo medio | 14 | +17 |
 | Jefa de servicio | 260 % del sueldo medio | 24 | +26 |
 
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Abrir consulta privada**<br>Por las tardes, pacientes propios: ingresos para siempre, pero cansa. | Especialista a Jefa de servicio | 1 · 99 | 85 %: La consulta se llena: ingresos para siempre, con algo menos de salud.<br>15 %: No consigues pacientes. La consulta cierra. |
+
 ### Derecho
 
 Horas extra: +6 % de sueldo esa ronda.
@@ -429,6 +443,11 @@ Horas extra: +6 % de sueldo esa ronda.
 | Abogado | 160 % del sueldo medio | 14 | +15 |
 | Socio | 240 % del sueldo medio | 24 | +24 |
 | Socio director | 380 % del sueldo medio | 34 | +32 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Optar a entrar en la sociedad**<br>Pedir entrar como socio del bufete. Ayuda saber negociar. | Abogado | 1 · 3 | 35 %: Entras en la sociedad: subes un puesto y cobras parte de los beneficios.<br>65 %: Te dicen que todavía no. Toca esperar y tragar orgullo.<br>+10 puntos de probabilidad por nivel de Negociación |
+| **Captar un gran cliente**<br>Traer al bufete una cuenta importante. Ayudan los contactos. | Socio a Socio director | 1 · 3 | 50 %: Cierras el cliente: +10 % de sueldo para siempre.<br>50 %: Se va con la competencia.<br>+8 puntos de probabilidad por nivel de Contactos |
 
 ### Educación
 
@@ -451,6 +470,11 @@ Horas extra: +12 % de sueldo esa ronda. Oficio de jóvenes: desde los 34 años, 
 | Creador | 130 % del sueldo medio | 3 | +14 |
 | Influencer | 220 % del sueldo medio | 8 | +24 |
 | Estrella | 250 % del sueldo medio | 14 | +34 |
+
+| Movimiento | En los puestos | Rondas · descanso | Qué puede salir |
+| --- | --- | --- | --- |
+| **Ir a por un viral**<br>Un vídeo arriesgado: puede lanzarte… o hundirte. | Creador novato a Creador | 1 · 2 | 30 %: ¡Viral! Subes dos escalones de golpe.<br>20 %: Polémica: pierdes estatus y anunciantes.<br>50 %: Pasa sin pena ni gloria.<br>+5 puntos de probabilidad por nivel de Contactos |
+| **Lanzar tu propia marca**<br>Una marca con tu nombre que dure más que la fama. | Estrella | 1 · 4 | 60 %: La marca vende sola: ingresos para siempre.<br>40 %: La marca no arranca y se nota. |
 
 ### Hostelería
 
@@ -686,7 +710,7 @@ Los sueldos más altos del juego, los pisos más caros y cero impuestos sobre la
 
 ## Objetos
 
-Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.
+Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un 25 % del suyo. Relojes: solo cuenta la mejor; las demás no dan estatus. Moda: solo cuenta la mejor; las demás no dan estatus. Coches y motos: solo cuentan las 2 mejores, la primera entera y las otras un 25 %.
 
 «Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.
 
@@ -707,25 +731,25 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/cars/car.seat_ibiza.png" alt="SEAT Ibiza"> | SEAT Ibiza | 18.000 $ | 1.500 $/año | +4 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.motorbike.png" alt="Ducati Monster"> | Ducati Monster | 22.000 $ | 1.200 $/año | +9 | 80 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.toyota_corolla.png" alt="Toyota Corolla"> | Toyota Corolla | 26.000 $ | 1.600 $/año | +6 | 82 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.vw_golf_gti.png" alt="VW Golf GTI"> | VW Golf GTI | 42.000 $ | 2.200 $/año | +10 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.tesla_model_3.png" alt="Tesla Model 3"> | Tesla Model 3 | 48.000 $ | 1.800 $/año | +14 | 78 %, -24 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.bmw_m3.png" alt="BMW M3"> | BMW M3 | 95.000 $ | 4.000 $/año | +24 | 78 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.porsche_911.png" alt="Porsche 911"> | Porsche 911 | 150.000 $ | 6.000 $/año | +38 | 85 %, -12 % por ronda | Mudarse cuesta un 30 % menos |  |
-| <img src="../art/clean/cars/car.lamborghini_aventador.png" alt="Lamborghini Aventador"> | Lamborghini Aventador | 480.000 $ | 15.000 $/año | +60 | 85 %, -8 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.seat_ibiza.png" alt="SEAT Ibiza"> | SEAT Ibiza | 18.000 $ | 1.500 $/año | +3 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.motorbike.png" alt="Ducati Monster"> | Ducati Monster | 22.000 $ | 1.200 $/año | +5 | 80 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.toyota_corolla.png" alt="Toyota Corolla"> | Toyota Corolla | 26.000 $ | 1.600 $/año | +4 | 82 %, -20 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.vw_golf_gti.png" alt="VW Golf GTI"> | VW Golf GTI | 42.000 $ | 2.200 $/año | +6 | 80 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.tesla_model_3.png" alt="Tesla Model 3"> | Tesla Model 3 | 48.000 $ | 1.800 $/año | +8 | 78 %, -24 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.bmw_m3.png" alt="BMW M3"> | BMW M3 | 95.000 $ | 4.000 $/año | +14 | 78 %, -22 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.porsche_911.png" alt="Porsche 911"> | Porsche 911 | 150.000 $ | 6.000 $/año | +22 | 85 %, -12 % por ronda | Mudarse cuesta un 30 % menos |  |
+| <img src="../art/clean/cars/car.lamborghini_aventador.png" alt="Lamborghini Aventador"> | Lamborghini Aventador | 480.000 $ | 15.000 $/año | +35 | 85 %, -8 % por ronda | Mudarse cuesta un 30 % menos |  |
 
 ### Relojes
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/items/item.watch_casio.png" alt="Casio F-91W"> | Casio F-91W | 20 $ |  | +1 | 50 %, -10 % por ronda |  |  |
-| <img src="../art/clean/items/item.watch_tissot.png" alt="Tissot PRX"> | Tissot PRX | 750 $ |  | +3 | 60 %, -8 % por ronda | +2 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.watch_omega.png" alt="Omega Speedmaster"> | Omega Speedmaster | 7.000 $ | 100 $/año | +10 | 75 %, -3 % por ronda | +4 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.watch_rolex.png" alt="Rolex Submariner"> | Rolex Submariner | 11.000 $ | 150 $/año | +18 | 90 %, +2 % por ronda | +6 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.watch_ap.png" alt="Audemars Piguet Royal Oak"> | Audemars Piguet Royal Oak | 38.000 $ | 300 $/año | +32 | 92 %, +3 % por ronda | +8 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.watch_patek.png" alt="Patek Philippe Nautilus"> | Patek Philippe Nautilus | 90.000 $ | 400 $/año | +45 | 95 %, +4 % por ronda | +10 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.watch_tissot.png" alt="Tissot PRX"> | Tissot PRX | 750 $ |  | +2 | 60 %, -8 % por ronda | +2 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.watch_omega.png" alt="Omega Speedmaster"> | Omega Speedmaster | 7.000 $ | 100 $/año | +6 | 75 %, -3 % por ronda | +4 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.watch_rolex.png" alt="Rolex Submariner"> | Rolex Submariner | 11.000 $ | 150 $/año | +10 | 90 %, +2 % por ronda | +6 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.watch_ap.png" alt="Audemars Piguet Royal Oak"> | Audemars Piguet Royal Oak | 38.000 $ | 300 $/año | +16 | 92 %, +3 % por ronda | +8 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.watch_patek.png" alt="Patek Philippe Nautilus"> | Patek Philippe Nautilus | 90.000 $ | 400 $/año | +22 | 95 %, +4 % por ronda | +10 puntos al buscar trabajo |  |
 
 ### Tecnología
 
@@ -743,25 +767,25 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/items/item.fashion_blazer.png" alt="Blazer de Zara"> | Blazer de Zara | 150 $ |  | +1 | 20 %, -60 % por ronda | +3 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.fashion_sneakers.png" alt="Air Jordan 1"> | Air Jordan 1 | 350 $ |  | +2 | 90 %, +2 % por ronda |  |  |
-| <img src="../art/clean/items/item.fashion_sunglasses.png" alt="Gafas Persol"> | Gafas Persol | 450 $ |  | +2 | 30 %, -40 % por ronda |  |  |
-| <img src="../art/clean/items/item.fashion_polo.png" alt="Polo Ralph Lauren"> | Polo Ralph Lauren | 600 $ |  | +3 | 25 %, -50 % por ronda |  |  |
-| <img src="../art/clean/items/item.fashion_loafers.png" alt="Mocasines de Gucci"> | Mocasines de Gucci | 950 $ |  | +6 | 40 %, -30 % por ronda | +4 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.fashion_duffel.png" alt="Louis Vuitton Keepall"> | Louis Vuitton Keepall | 2.800 $ |  | +11 | 60 %, -15 % por ronda |  |  |
-| <img src="../art/clean/items/item.fashion_suit.png" alt="Traje de Savile Row"> | Traje de Savile Row | 6.000 $ |  | +14 | 20 %, -50 % por ronda | +10 puntos al buscar trabajo | Solo en Londres; se pierde al mudarse |
-| <img src="../art/clean/items/item.fashion_birkin.png" alt="Hermès Birkin"> | Hermès Birkin | 14.000 $ |  | +25 | 95 %, +3 % por ronda | +6 puntos al buscar trabajo |  |
-| <img src="../art/clean/items/item.fashion_coat.png" alt="Abrigo de alta costura Chanel"> | Abrigo de alta costura Chanel | 25.000 $ |  | +30 | 40 %, -25 % por ronda | +8 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.fashion_sneakers.png" alt="Air Jordan 1"> | Air Jordan 1 | 350 $ |  | +1 | 90 %, +2 % por ronda |  |  |
+| <img src="../art/clean/items/item.fashion_sunglasses.png" alt="Gafas Persol"> | Gafas Persol | 450 $ |  | +1 | 30 %, -40 % por ronda |  |  |
+| <img src="../art/clean/items/item.fashion_polo.png" alt="Polo Ralph Lauren"> | Polo Ralph Lauren | 600 $ |  | +2 | 25 %, -50 % por ronda |  |  |
+| <img src="../art/clean/items/item.fashion_loafers.png" alt="Mocasines de Gucci"> | Mocasines de Gucci | 950 $ |  | +3 | 40 %, -30 % por ronda | +4 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.fashion_duffel.png" alt="Louis Vuitton Keepall"> | Louis Vuitton Keepall | 2.800 $ |  | +6 | 60 %, -15 % por ronda |  |  |
+| <img src="../art/clean/items/item.fashion_suit.png" alt="Traje de Savile Row"> | Traje de Savile Row | 6.000 $ |  | +8 | 20 %, -50 % por ronda | +10 puntos al buscar trabajo | Solo en Londres; se pierde al mudarse |
+| <img src="../art/clean/items/item.fashion_birkin.png" alt="Hermès Birkin"> | Hermès Birkin | 14.000 $ |  | +12 | 95 %, +3 % por ronda | +6 puntos al buscar trabajo |  |
+| <img src="../art/clean/items/item.fashion_coat.png" alt="Abrigo de alta costura Chanel"> | Abrigo de alta costura Chanel | 25.000 $ |  | +14 | 40 %, -25 % por ronda | +8 puntos al buscar trabajo |  |
 
 ### Arte
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.art_local_print.png" alt="Lámina firmada de artista local"> | Lámina firmada de artista local | 600 $ |  | +2 | 50 %, -5 % por ronda |  |  |
-| <img src="../art/clean/items/item.art_photo.png" alt="Fotografía de edición limitada"> | Fotografía de edición limitada | 5.000 $ |  | +6 | 80 %, 0 % por ronda |  |  |
-| <img src="../art/clean/items/item.art_stencil.png" alt="Serigrafía de Banksy"> | Serigrafía de Banksy | 28.000 $ |  | +14 | 90 %, +5 % por ronda |  |  |
-| <img src="../art/clean/items/item.art_cubist.png" alt="Litografía de Picasso"> | Litografía de Picasso | 60.000 $ |  | +25 | 92 %, +4 % por ronda |  |  |
-| <img src="../art/clean/items/item.art_bronze.png" alt="Escultura de bronce"> | Escultura de bronce | 150.000 $ |  | +38 | 92 %, +3 % por ronda |  |  |
-| <img src="../art/clean/items/item.art_old_master.png" alt="Óleo de un maestro antiguo"> | Óleo de un maestro antiguo | 900.000 $ |  | +60 | 95 %, +4 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_local_print.png" alt="Lámina firmada de artista local"> | Lámina firmada de artista local | 600 $ |  | +1 | 50 %, -5 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_photo.png" alt="Fotografía de edición limitada"> | Fotografía de edición limitada | 5.000 $ |  | +4 | 80 %, 0 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_stencil.png" alt="Serigrafía de Banksy"> | Serigrafía de Banksy | 28.000 $ |  | +8 | 90 %, +5 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_cubist.png" alt="Litografía de Picasso"> | Litografía de Picasso | 60.000 $ |  | +14 | 92 %, +4 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_bronze.png" alt="Escultura de bronce"> | Escultura de bronce | 150.000 $ |  | +22 | 92 %, +3 % por ronda |  |  |
+| <img src="../art/clean/items/item.art_old_master.png" alt="Óleo de un maestro antiguo"> | Óleo de un maestro antiguo | 900.000 $ |  | +40 | 95 %, +4 % por ronda |  |  |
 
 ### Viajes
 
@@ -769,23 +793,23 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | <img src="../art/clean/items/item.travel_weekend.png" alt="Escapada con Ryanair"> | Escapada con Ryanair | 300 $ |  | +2 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_interrail.png" alt="Pase de Interrail"> | Pase de Interrail | 1.200 $ |  | +3 |  |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.travel_ibiza.png" alt="Verano en Ibiza"> | Verano en Ibiza | 2.500 $ |  | +5 |  |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +7 |  |  | El estatus dura 2 años. Solo en Madrid, Londres, Zúrich; se pierde al mudarse |
-| <img src="../art/clean/items/item.travel_business_class.png" alt="Business de Emirates"> | Business de Emirates | 6.000 $ |  | +9 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
-| <img src="../art/clean/items/item.travel_safari.png" alt="Safari en el Masái Mara"> | Safari en el Masái Mara | 9.000 $ |  | +12 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
-| <img src="../art/clean/items/item.travel_maldives.png" alt="Resort en Maldivas"> | Resort en Maldivas | 14.000 $ |  | +15 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
-| <img src="../art/clean/items/item.travel_world_first.png" alt="Vuelta al mundo en primera"> | Vuelta al mundo en primera | 40.000 $ |  | +22 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_ibiza.png" alt="Verano en Ibiza"> | Verano en Ibiza | 2.500 $ |  | +4 |  |  | El estatus dura 2 años |
+| <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +5 |  |  | El estatus dura 2 años. Solo en Madrid, Londres, Zúrich; se pierde al mudarse |
+| <img src="../art/clean/items/item.travel_business_class.png" alt="Business de Emirates"> | Business de Emirates | 6.000 $ |  | +6 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_safari.png" alt="Safari en el Masái Mara"> | Safari en el Masái Mara | 9.000 $ |  | +8 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_maldives.png" alt="Resort en Maldivas"> | Resort en Maldivas | 14.000 $ |  | +9 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
+| <img src="../art/clean/items/item.travel_world_first.png" alt="Vuelta al mundo en primera"> | Vuelta al mundo en primera | 40.000 $ |  | +14 |  | +1 de foco la ronda siguiente | El estatus dura 4 años |
 
 ### Aire y mar
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.sea_sailing_course.png" alt="Curso de vela"> | Curso de vela | 2.500 $ |  | +4 |  |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.air_helicopter.png" alt="Vuelo en helicóptero"> | Vuelo en helicóptero | 6.000 $ |  | +8 |  |  | El estatus dura 2 años |
-| <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Semana en yate"> | Semana en yate | 45.000 $ |  | +25 |  |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.air_jet_charter.png" alt="Vuelo con NetJets"> | Vuelo con NetJets | 80.000 $ |  | +30 |  |  | El estatus dura 4 años |
-| <img src="../art/clean/items/item.sea_sailboat.png" alt="Velero Beneteau"> | Velero Beneteau | 180.000 $ | 12.000 $/año | +35 | 75 %, -12 % por ronda |  |  |
-| <img src="../art/clean/items/item.sea_motor_yacht.png" alt="Yate Sunseeker"> | Yate Sunseeker | 1.200.000 $ | 90.000 $/año | +70 | 70 %, -15 % por ronda |  | Solo en Dubái, Singapur; se pierde al mudarse |
+| <img src="../art/clean/items/item.sea_sailing_course.png" alt="Curso de vela"> | Curso de vela | 2.500 $ |  | +3 |  |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.air_helicopter.png" alt="Vuelo en helicóptero"> | Vuelo en helicóptero | 6.000 $ |  | +5 |  |  | El estatus dura 2 años |
+| <img src="../art/clean/items/item.sea_yacht_charter.png" alt="Semana en yate"> | Semana en yate | 45.000 $ |  | +14 |  |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.air_jet_charter.png" alt="Vuelo con NetJets"> | Vuelo con NetJets | 80.000 $ |  | +18 |  |  | El estatus dura 4 años |
+| <img src="../art/clean/items/item.sea_sailboat.png" alt="Velero Beneteau"> | Velero Beneteau | 180.000 $ | 12.000 $/año | +22 | 75 %, -12 % por ronda |  |  |
+| <img src="../art/clean/items/item.sea_motor_yacht.png" alt="Yate Sunseeker"> | Yate Sunseeker | 1.200.000 $ | 90.000 $/año | +55 | 70 %, -15 % por ronda |  | Solo en Dubái, Singapur; se pierde al mudarse |
 
 ### Mascotas
 
@@ -823,6 +847,8 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 ## Inmuebles
 
 El precio es un porcentaje del piso de referencia de cada ciudad. Como ejemplo va el precio en Madrid.
+
+El estatus de la vivienda es el de la casa en la que vives. Además, las viviendas de lujo que tengas sin vivir en ellas (desde +37), alquiladas o en otra ciudad, dan un 50 % del suyo: las 2 mejores.
 
 |  | Inmueble | Precio | En Madrid | Estatus si vives en él | Uso | Alquiler |
 | --- | --- | --- | --- | --- | --- | --- |

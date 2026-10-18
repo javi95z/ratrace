@@ -1,3 +1,4 @@
+import { rarityOf } from '@ratrace/content';
 import type { Cue } from '@/ui/sound';
 import { momentsOf } from './moments';
 import type { Moment } from './moments';
@@ -30,6 +31,15 @@ function newsCue(state: Heard): Cue | null {
   if (moment) return MOMENT[moment.kind];
   const was = view.round > 0 ? (view.timeline[view.round - 1]?.crisis ?? null) : null;
   return was && !view.timeline[view.round]?.crisis ? 'calm' : null;
+}
+
+/** The ring of the rarest of the badges earned together: the rarer, the longer and fuller. */
+export function badgeCue(earned: readonly string[]): Cue {
+  const rarities = earned.map(rarityOf);
+  if (rarities.includes('legendary')) return 'badgeLegendary';
+  if (rarities.includes('rare')) return 'badgeRare';
+  if (rarities.includes('uncommon')) return 'badgeUncommon';
+  return 'badge';
 }
 
 /**
@@ -68,6 +78,6 @@ export function cuesFor(state: Heard, before: Heard): Cue[] {
   }
 
   // A badge earned for the first time ever rings, unless the moment it came with already has the floor.
-  if (state.earned.length > 0 && state.earned !== before.earned && !cues.some((cue) => LONG.includes(cue))) cues.push('badge');
+  if (state.earned.length > 0 && state.earned !== before.earned && !cues.some((cue) => LONG.includes(cue))) cues.push(badgeCue(state.earned));
   return cues;
 }
