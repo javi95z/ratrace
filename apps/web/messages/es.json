@@ -1174,7 +1174,7 @@
       "rare": "De {lo} a {hi} de cada 100 vidas",
       "legendary": "Menos de {hi} de cada 100 vidas"
     },
-    "hiddenName": "???",
+    "hiddenName": "¿?",
     "hiddenHint": "Algo relacionado con: {group}",
     "legendaryKicker": "Insignia legendaria",
     "legendaryGo": "Continuar"
