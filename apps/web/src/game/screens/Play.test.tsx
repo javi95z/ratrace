@@ -658,6 +658,8 @@ describe('the end of a life, beside the lives of others', () => {
     challengeChoices: async () => null,
     notifyMe: async () => true,
     stopNotifying: async () => true,
+    marketNotice: async () => true,
+    setMarketNotice: async () => true,
   });
   const ended = async (answer: { below: number; total: number } | null) => {
     const asked: unknown[] = [];

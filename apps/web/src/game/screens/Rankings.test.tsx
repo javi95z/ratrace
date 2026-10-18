@@ -65,6 +65,8 @@ function community(over: Partial<Community> = {}) {
     challengeChoices: async () => [],
     notifyMe: async () => true,
     stopNotifying: async () => true,
+    marketNotice: async () => true,
+    setMarketNotice: async () => true,
     ...over,
   };
   return { community: all, asked, state };

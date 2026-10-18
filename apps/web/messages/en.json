@@ -186,7 +186,9 @@
     "points": "{n} pts",
     "weeklyNotice": "Turn on notifications",
     "weeklyNoticeHint": "The weekly challenge, your multiplayer games and lives left halfway. One notice a day at most, except in a game.",
-    "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings."
+    "weeklyNoticeBlocked": "Notices are blocked for this site: allow them in your browser's settings.",
+    "marketNotice": "Tell me when my market moves",
+    "marketNoticeHint": "When something you hold in a ranked life moved 5% or more in your last round. One notice a day at most."
   },
   "play": {
     "moved": "This life was played on in another tab or on another device. Here is where it stands now.",

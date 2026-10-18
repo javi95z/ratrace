@@ -1,0 +1,60 @@
+// "Your market moved", called every evening by a job of the database (see the migration of this
+// notice) with the project's secret key, never by a player: to a player with a ranked life in
+// progress, left alone for between 20 hours and 6 days, that holds something that moved 5% or more
+// in the round they last played.
+//
+// What is said is worked out in `_shared/market.ts`, where it is tested: the life is played again
+// from its seed and log, and only the world the player is already in is read, never the next round.
+// A player is claimed their notice of the day only when there is something to say, and who has had
+// theirs already is left alone. A browser that turned this notice off is not even read.
+import { withSupabase } from 'npm:@supabase/server@1.9.0';
+import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
+import { noting } from '../_deno/errors.ts';
+import { watched } from '../_shared/watch.ts';
+import { json } from '../_shared/http.ts';
+import { GAMES } from '../_shared/game/index.ts';
+import { marketMover } from '../_shared/market.ts';
+import type { MarketRow } from '../_shared/market.ts';
+import { noticeOf } from '../_shared/notice.ts';
+import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
+import type { Subscription } from '../_deno/push.ts';
+
+type Browser = Subscription & MarketRow;
+
+const PAGE = 500;
+
+export default {
+  fetch: withSupabase({ auth: 'secret' }, watched('market-notice', async (_req: Request, ctx: SupabaseContext) => {
+    if (!vapid()) return json(500, { error: 'no-vapid-keys' });
+    const db = ctx.supabaseAdmin;
+    const now = new Date();
+    let sent = 0;
+    let removed = 0;
+    let skipped = 0;
+    let quiet = 0;
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await db.rpc('notice_market', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
+      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, quiet });
+      const rows = (data ?? []) as Array<Omit<Browser, 'game_id'> & { game_id: string }>;
+      for (const [user, browsers] of byPlayer(rows)) {
+        const life = browsers[0];
+        const seedRow = await db.from('game_secrets').select('seed').eq('game_id', life.game_id).maybeSingle();
+        const seed = (seedRow.data as { seed?: string } | null)?.seed;
+        const mover = typeof seed === 'string' ? marketMover(GAMES, life, seed) : null;
+        if (mover === null) {
+          quiet += 1;
+          continue;
+        }
+        if (!(await claimDay(db, user, now))) {
+          skipped += 1;
+          continue;
+        }
+        const done = await deliver(db, browsers, (row) => noticeOf(row.locale, { kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
+        sent += done.sent;
+        removed += done.removed;
+      }
+      if (rows.length < PAGE) break;
+    }
+    return json(200, { sent, removed, skipped, quiet });
+  }, noting)),
+};
