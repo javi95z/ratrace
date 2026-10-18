@@ -269,6 +269,10 @@ export function validateContent(c: Content): string[] {
   for (const field of ['jobHuntChancePct', 'lesserItemPct']) {
     if (!within(life[field], 0, 100)) errors.push(`life.${field} must be between 0 and 100`);
   }
+  for (const [ladder, rule] of Object.entries((life.lesserItems ?? {}) as Record<string, { pct?: unknown; counted?: unknown }>)) {
+    if (!within(rule.pct, 0, 100)) errors.push(`life.lesserItems.${ladder}.pct must be between 0 and 100`);
+    if (rule.counted !== undefined && !(isWhole(rule.counted) && (rule.counted as number) >= 1)) errors.push(`life.lesserItems.${ladder}.counted must be a positive whole number`);
+  }
   // It is added to a whole-number percentage of pay, so it must be whole too.
   if (!(isCount(life.unstablePayPct) && life.unstablePayPct <= 100)) errors.push('life.unstablePayPct must be a whole number from 0 to 100');
   const listOf = (x: unknown, length: number, ok: (v: unknown) => boolean) => Array.isArray(x) && x.length === length && x.every(ok);

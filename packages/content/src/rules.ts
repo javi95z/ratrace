@@ -133,6 +133,8 @@ export const life: LifeRules = {
   itemFinanceDownPct: 20,
   itemFinanceMinPrice: usd(5_000),
   lesserItemPct: 25,
+  // A cheaper watch or outfit beside a better one is not looked at; of cars, the two best are, the second for a quarter.
+  lesserItems: { watch: { pct: 0 }, fashion: { pct: 0 }, car: { pct: 25, counted: 2 } },
   // A car and a gadget are worth less to look at as they are worth less to sell: down to a quarter of what they gave new.
   agingLadders: ['car', 'tech'],
   agingFloorPct: 25,

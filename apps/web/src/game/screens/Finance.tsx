@@ -25,6 +25,7 @@ import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { EvasionPanel } from './Evasion';
 import { TeaseUse } from './Work';
+import { realStatus, StatusNote } from './StatusNote';
 import { ItemUses } from './ItemUses';
 import { masteredLast, useFocusNote } from './focusNote';
 
@@ -1522,11 +1523,12 @@ function ItemSheet({ item, onClose }: { item: ItemDef; onClose(): void }) {
           </Bare>
         </div>
         <div className="flex flex-wrap justify-center gap-1.5">
-          <Tag tone="good">{t('status', { n: quote.status })}</Tag>
+          <Tag tone={realStatus(quote) > 0 ? 'good' : undefined}>{t('status', { n: realStatus(quote) })}</Tag>
           {quote.status < quote.statusNew ? <Tag>{t('statusWas', { n: quote.statusNew })}</Tag> : null}
           {quote.upkeepAnnual > 0 ? <Tag tone="bad">{t('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
           {item.kind === 'experience' ? <Tag>{t('lasts', { years: item.boostRounds * years })}</Tag> : null}
         </div>
+        <StatusNote quote={quote} owned={held !== undefined} />
         <ItemUses item={item} />
         {quote.ages ? <p className="text-center text-[13px] text-ink-300">{t(quote.status < quote.statusNew ? 'aged' : 'ages')}</p> : null}
         {quote.local ? <p className="text-center text-[13px] text-ink-300">{t('local', { city: names.cities[p.cityId] })}</p> : null}
@@ -1638,7 +1640,8 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
                     <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 @min-[400px]:justify-start">
                       <span className={`pixel whitespace-nowrap text-[15px] leading-none ${owned ? 'text-teal-300' : 'text-gold-500'}`}>{owned ? t(quote.ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(quote.price)}</span>
                       <span className="whitespace-nowrap">
-                        <Tag tone="good">{t('status', { n: quote.status })}</Tag>
+                        {/* What it does to the player's status all told, not its own status: a lesser thing beside a better one adds little or none. */}
+                        <Tag tone={realStatus(quote) > 0 ? 'good' : undefined}>{t('status', { n: realStatus(quote) })}</Tag>
                       </span>
                       {/* A long trip is a rest too: the focus it gives says so beside the status. */}
                       {item.perks?.focus ? (

@@ -265,12 +265,16 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
     else ladders.set(item.ladder, [status]);
   }
   let items = 0;
-  for (const group of ladders.values()) {
-    let best = 0;
-    for (const status of group) best = Math.max(best, status);
-    let lesser = -mulDiv(best, rules.lesserItemPct, 100);
-    for (const status of group) lesser += mulDiv(status, rules.lesserItemPct, 100);
-    items += best + lesser;
+  for (const [ladder, group] of ladders) {
+    // The best of a ladder counts whole; the rest count for a share of theirs, and past `counted` for nothing.
+    const rule = rules.lesserItems?.[ladder];
+    const pct = rule?.pct ?? rules.lesserItemPct;
+    const counted = rule?.counted ?? Number.POSITIVE_INFINITY;
+    const ranked = [...group].sort((a, b) => b - a);
+    ranked.forEach((status, at) => {
+      if (at === 0) items += status;
+      else if (at < counted) items += mulDiv(status, pct, 100);
+    });
   }
 
   const home = homeOf(p, content);

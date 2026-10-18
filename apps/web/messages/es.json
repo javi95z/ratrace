@@ -680,7 +680,11 @@
       "noInvoiceRisk": "Un {pct} % más barato, al contado. Al venderlo te preguntarán de dónde salió (+{suspicion} de sospecha), y en una inspección se llevan el {goods} % de su valor.",
       "buyNoInvoice": "Comprar sin factura por {amount}",
       "noInvoiceTag": "Sin factura",
-      "focusTag": "Foco +{n}"
+      "focusTag": "Foco +{n}",
+      "statusLess": "Ya tienes algo mejor de este tipo: suma {n} de los {of} que da por sí solo.",
+      "statusNone": "Ya tienes algo mejor de este tipo: no suma estatus.",
+      "statusOwnedLess": "Tienes algo mejor de este tipo: cuenta {n} de sus {of}.",
+      "statusOwnedNone": "Tienes algo mejor de este tipo: no cuenta para tu estatus."
     },
     "taxes": {
       "tax": "Impuestos de {years} años",

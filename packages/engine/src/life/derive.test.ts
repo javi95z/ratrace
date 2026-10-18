@@ -120,6 +120,25 @@ describe('status', () => {
     expect(itemStatus(car, 5, content)).toBe(4);
   });
 
+  it('counts lesser things of a ladder its own way: none of a cheaper watch, of cars the two best only', () => {
+    const ruled = fixtureContent();
+    ruled.items = [...ruled.items, { id: 'watch_steel', ladder: 'watch', kind: 'durable', price: 200_000, upkeepAnnual: 0, status: 4, resaleStartPct: 90, resaleDriftBp: 300, boostRounds: 0 }];
+    const owning = (ids: string[], content = ruled) => {
+      const state = createGame({ content, start: fixtureStart() }, 'ladders');
+      state.player.life.items = ids.map((itemId) => ({ itemId, age: 0 }) as (typeof state.player.life.items)[number]);
+      return statusParts(state.player, content, 0).items;
+    };
+    // As it always was: a lesser thing counts for a quarter of its status.
+    expect(owning(['watch_gold', 'watch_steel'])).toBe(12 + 1);
+    expect(owning(['car_sports', 'car_basic', 'car_basic'])).toBe(40 + 1 + 1);
+    ruled.life.lesserItems = { watch: { pct: 0 }, car: { pct: 25, counted: 2 } };
+    expect(owning(['watch_gold', 'watch_steel'])).toBe(12);
+    expect(owning(['watch_steel'])).toBe(4);
+    expect(owning(['car_sports', 'car_basic', 'car_basic'])).toBe(40 + 1);
+    // Bought in any order, the best counts whole.
+    expect(owning(['car_basic', 'car_sports'])).toBe(40 + 1);
+  });
+
   it('counts an aged thing for what it gives now, in the status of the player and round after round', () => {
     const aging = fixtureContent();
     aging.life.agingLadders = ['car'];

@@ -710,7 +710,7 @@ Los sueldos más altos del juego, los pisos más caros y cero impuestos sobre la
 
 ## Objetos
 
-Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un cuarto.
+Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un 25 % del suyo. Relojes: solo cuenta la mejor; las demás no dan estatus. Moda: solo cuenta la mejor; las demás no dan estatus. Coches y motos: solo cuentan las 2 mejores, la primera entera y las otras un 25 %.
 
 «Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.
 

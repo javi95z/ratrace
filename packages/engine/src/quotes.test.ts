@@ -108,6 +108,29 @@ describe('quoteItem', () => {
     expect(quoteItem(content, viewOf(game(0)), 'car_basic')).toMatchObject({ price: 1_200_000, resale: 960_000, upkeepAnnual: 120_000, owned: false, paid: null, forSale: true, soldHere: true, local: false, sellable: false });
   });
 
+  it('tells what a thing does for status all told: beside a better one of its kind, little or nothing', () => {
+    const ruled = fixtureContent();
+    ruled.life.lesserItems = { car: { pct: 25, counted: 2 } };
+    const owning = (ids: string[]) => {
+      const state = createGame({ content: ruled, start: fixtureStart() }, 'status-real');
+      state.player.life.items = ids.map((itemId) => ({ itemId, value: 0, roundsLeft: null, paid: 0, age: 0 }));
+      return viewOf(state);
+    };
+    // Nothing of its kind: all of its own status.
+    expect(quoteItem(ruled, owning([]), 'car_basic')).toMatchObject({ status: 4, statusReal: 4 });
+    // Beside a sports car, a quarter of it.
+    expect(quoteItem(ruled, owning(['car_sports']), 'car_basic').statusReal).toBe(1);
+    // Where only the best of a kind counts, nothing at all.
+    ruled.life.lesserItems = { car: { pct: 25, counted: 1 } };
+    expect(quoteItem(ruled, owning(['car_sports']), 'car_basic').statusReal).toBe(0);
+    ruled.life.lesserItems = { car: { pct: 25, counted: 2 } };
+    // Owned: the best counts whole, a lesser one for its share, a third car for nothing.
+    expect(quoteItem(ruled, owning(['car_basic', 'car_sports']), 'car_sports').statusReal).toBe(40);
+    expect(quoteItem(ruled, owning(['car_basic', 'car_sports']), 'car_basic').statusReal).toBe(1);
+    // Bought over a lesser one, the better adds its own less what the lesser stops counting for.
+    expect(quoteItem(ruled, owning(['car_basic']), 'car_sports').statusReal).toBe(40 + 1 - 4);
+  });
+
   it('quotes the instalments exactly as the order will take them, and why they are refused when they are', () => {
     for (const state of [game(5_000_000), later(game(5_000_000))]) {
       const view = viewOf(state);

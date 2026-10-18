@@ -680,7 +680,11 @@
       "noInvoiceRisk": "{pct}% cheaper, in cash. Sell it and you will be asked where it came from (+{suspicion} suspicion); an inspection takes {goods}% of its value.",
       "buyNoInvoice": "Buy without an invoice for {amount}",
       "noInvoiceTag": "No invoice",
-      "focusTag": "Focus +{n}"
+      "focusTag": "Focus +{n}",
+      "statusLess": "You already own something better of its kind: it adds {n} of the {of} it gives on its own.",
+      "statusNone": "You already own something better of its kind: it adds no status.",
+      "statusOwnedLess": "You own something better of its kind: it counts for {n} of its {of}.",
+      "statusOwnedNone": "You own something better of its kind: it does not count towards your status."
     },
     "taxes": {
       "tax": "Tax over {years} years",
