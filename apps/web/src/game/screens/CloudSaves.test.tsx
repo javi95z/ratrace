@@ -103,7 +103,8 @@ describe('a player with an account, on two devices', { timeout: 60_000 }, () => 
     const session = await phone.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);
     await session.playRound({ orders: [] });
-    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Saving…'));
+    // Saving to the account goes on unsaid.
+    expect(screen.queryByRole('status')).toBeNull();
     await phone.later();
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
     expect(held.games).toHaveLength(1);

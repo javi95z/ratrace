@@ -1353,7 +1353,6 @@
     "failed": "Could not sign in. You are still a guest.",
     "dismiss": "OK",
     "saved": "All saved",
-    "sending": "Saving…",
     "waiting": "Offline: saved on this device only",
     "joining": "You already have an account. Signing you in…",
     "signOut": "Sign out",

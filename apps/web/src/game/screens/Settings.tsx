@@ -56,12 +56,12 @@ function AccountBlock({ compact = false, signOut: offerSignOut = false }: { comp
     });
   };
 
-  // One line of truth about saving. The device always has everything; this says whether the account does too.
-  // Saved is how things should be, and goes unsaid: only saving, or saving on the device alone, is told.
+  // The device always has everything. Saving to the account goes on unsaid, as it should; only an account out of
+  // reach, with things kept on the device alone for now, is told.
   const saved =
-    status === 'off' || status === 'saved' ? null : (
+    status !== 'waiting' ? null : (
       <p role="status" className="flex items-center gap-2 text-[12px] text-ink-200">
-        <span aria-hidden className={`size-2 shrink-0 ${status === 'waiting' ? 'bg-gold-500' : 'bg-ink-300'}`} />
+        <span aria-hidden className="size-2 shrink-0 bg-gold-500" />
         {t(status)}
       </p>
     );
