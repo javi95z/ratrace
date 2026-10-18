@@ -28,6 +28,8 @@ import type { Cue, SoundBoard } from '@/ui/sound';
 import { KeyboardProvider } from '@/ui/keyboard';
 import type { Translate, Words } from './present';
 import { rulesKnow } from './rules';
+import { browserBasket } from './basket';
+import type { BasketKeep } from './basket';
 import { cuesFor } from './sound';
 import { createRoomStore } from './room';
 import type { RoomActions, RoomStore, RoomStoreState } from './room';
@@ -58,6 +60,8 @@ export interface Services {
   rooms?: () => RoomsLink | null;
   /** Runs something later, for the clocks of a room. Left out, the browser's own timers. */
   schedule?: (run: () => void, ms: number) => () => void;
+  /** Where the orders of a round not yet played are kept, for a page opened again. Left out, only in the page. */
+  basket?: BasketKeep;
   /** True where the tabs of the money are opened one by one through a guided first life. Left out, every tab is there from the start. */
   introduceTabs?: boolean;
   /** What plays the sounds. Left out, a test hears nothing. */
@@ -122,7 +126,7 @@ function browserServices(): Services {
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
   const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
-  return { sessions, store, saving, account, saves, community, rooms, sound: createSoundBoard(), introduceTabs: true };
+  return { sessions, store, saving, account, saves, community, rooms, sound: createSoundBoard(), introduceTabs: true, basket: browserBasket };
 }
 
 /** Anything a tap is meant for: it answers with a tick. */
@@ -141,8 +145,8 @@ interface Made {
   introduceTabs: boolean;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, sound, introduceTabs }: Services): Made {
-  const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS });
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, sound, introduceTabs, basket }: Services): Made {
+  const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS, ...(basket ? { basket } : {}) });
   const roomStore = createRoomStore({
     link: rooms ?? (() => null),
     store,

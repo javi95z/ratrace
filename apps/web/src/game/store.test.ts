@@ -8,6 +8,7 @@ import { GameSessions } from '@/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
 import { MemoryStore } from '@/session/memory';
 import type { SavedGame } from '@/session/types';
+import { memoryBasket } from './basket';
 import { createGameStore, PENDING_AFTER_MS } from './store';
 
 /** `guardMs` and `clock` are for the tests of taps that come too soon; without them no tap is ever too soon. */
@@ -582,6 +583,33 @@ describe('what a step earned', () => {
     await game.getState().play();
     expect(sent).toHaveLength(1);
     expect(sent[0].map((order) => (order.type === 'focus' ? order.action : order.type))).toEqual(['overtime']);
+  });
+
+  it('keeps the orders of a round not yet played for a page opened again, and forgets them once it is played', async () => {
+    const store = new MemoryStore();
+    const basket = memoryBasket();
+    const page = () => {
+      let ids = 0;
+      const sessions = new LocalSessions(store, content, lives, { newId: () => `kept-${(ids += 1)}`, newSeed: () => 'basket-seed', now: () => (ids += 1) });
+      return createGameStore({ sessions, content, basket });
+    };
+    const first = page();
+    await first.getState().start('nurse');
+    await answerHand(first.getState);
+    first.getState().setOrder(isLifestyle, { type: 'setLifestyle', tier: 2 });
+    expect(first.getState().orders).toHaveLength(1);
+
+    // The page is reloaded before the round is played.
+    const second = page();
+    await second.getState().boot();
+    expect(second.getState().stage).toBe('finance');
+    expect(second.getState().orders).toEqual([{ type: 'setLifestyle', tier: 2 }]);
+
+    await second.getState().play();
+    expect(basket.kept).toBeNull();
+    const third = page();
+    await third.getState().boot();
+    expect(third.getState().orders).toEqual([]);
   });
 
   it('includes the life unlocked by finishing a first one', async () => {

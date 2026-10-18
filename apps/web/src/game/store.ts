@@ -8,6 +8,8 @@ import { RankedInProgress, StaleSession, Unreachable } from '@/session/errors';
 import type { RankedLifeInTheWay } from '@/session/errors';
 import type { GameSession, Lost, Sessions, StepResult } from '@/session/types';
 import { knownOrders } from './rules';
+import { memoryBasket } from './basket';
+import type { BasketKeep } from './basket';
 
 /** Where the player is within a round. */
 export type Stage = 'news' | 'cards' | 'outcome' | 'finance' | 'resolve' | 'end';
@@ -193,13 +195,15 @@ export interface GameStoreOptions {
    * plays a round, or skips the ledger. Zero, the default, ignores nothing.
    */
   guardMs?: number;
+  /** Where the orders of the round being planned are kept until it is played. Left out, nowhere beyond the page. */
+  basket?: BasketKeep;
 }
 
 /**
  * The state of the round on screen. It talks to the game through a `GameSession` only,
  * and asks the engine's own preview what each order would do: no rule of the game lives here.
  */
-export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 }: GameStoreOptions): GameStore {
+export function createGameStore({ sessions, content, now = () => 0, guardMs = 0, basket = memoryBasket() }: GameStoreOptions): GameStore {
   let session: GameSession | null = null;
   /** When the stage on screen last changed. */
   let changedAt = Number.NEGATIVE_INFINITY;
@@ -293,7 +297,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       if (view.finished) set({ ...base, stage: 'end' });
       // A hand left half answered opens on its next card: the news were read before the first.
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
-      else set({ ...base, stage: 'finance', ...settle(view, []) });
+      // Orders planned for this round before the page was closed are taken up again, as the engine still allows them.
+      else set({ ...base, stage: 'finance', ...settle(view, basket.load(opened.gameId, view.round)) });
     };
 
     return {
@@ -402,9 +407,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       },
 
       toFinance() {
-        const { view } = get();
+        const { view, gameId } = get();
         if (!view || view.finished || view.phase !== 'finance') return;
-        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, []) });
+        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, gameId === null ? [] : basket.load(gameId, view.round)) });
       },
 
       addOrder(order) {
@@ -503,6 +508,9 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
   // Every change of screen starts the short wait in which a tap is taken for the tail of the last one.
   store.subscribe((state, before) => {
     if (state.stage !== before.stage) changedAt = now();
+    // The basket is kept as it changes, and emptied once the round it was for is played.
+    if (state.orders !== before.orders && state.gameId !== null && state.view !== null && state.stage === 'finance') basket.save(state.gameId, state.view.round, state.orders);
+    if (state.view !== null && before.view !== null && state.gameId !== null && state.view.round !== before.view.round) basket.save(state.gameId, before.view.round, []);
   });
   return store;
 }
