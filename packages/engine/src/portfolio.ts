@@ -13,7 +13,7 @@ export function marginLock(p: PlayerState, content: Content, round: number): Rej
   return null;
 }
 
-export type PortfolioOrder = Extract<Order, { type: 'buy' | 'sell' | 'depositIn' | 'depositOut' | 'pensionIn' }>;
+export type PortfolioOrder = Extract<Order, { type: 'buy' | 'sell' | 'depositIn' | 'depositOut' | 'pensionIn' | 'pensionOut' }>;
 
 /**
  * Sets, changes or ends the plan to buy an asset every round. Whether the asset may be bought is
@@ -150,6 +150,17 @@ export function executePortfolioOrder(p: PlayerState, order: PortfolioOrder, ctx
       p.cash -= order.amount;
       p.pension += order.amount;
       ctx.tally.pensionContribution += order.amount;
+      return null;
+    }
+    case 'pensionOut': {
+      if (order.amount > p.pension) return 'exceeds-pension';
+      const received = order.amount - applyBp(order.amount, ctx.content.pensionEarlyPenaltyBp);
+      p.pension -= order.amount;
+      p.cash += received;
+      // What goes back out in the round it went in was never saved, so it earns no deduction.
+      const undone = Math.min(order.amount, ctx.tally.pensionContribution);
+      ctx.tally.pensionContribution -= undone;
+      ctx.tally.pensionWithdrawn += received;
       return null;
     }
   }

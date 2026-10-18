@@ -444,6 +444,7 @@ export const es: ContentText = {
     'exceeds-position': 'No tienes tanto.',
     'exceeds-deposit': 'No hay tanto en tu cuenta de ahorro.',
     'over-pension-limit': 'Supera el límite del plan de pensiones de esta ronda.',
+    'exceeds-pension': 'No hay tanto en tu plan de pensiones.',
     'would-be-insolvent': 'No puedes aportar al plan de pensiones mientras debas más de lo que tienes.',
     'no-credit': 'Tras tu quiebra, ningún banco te presta todavía.',
     'cannot-finance': 'Esto no se vende a plazos.',

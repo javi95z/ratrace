@@ -5,7 +5,7 @@ import { Explain } from './Explain';
 import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch } from '@ratrace/engine';
+import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
@@ -46,7 +46,7 @@ function useRound() {
 // ------------------------------------------------------------------------------------------------
 // Portfolio
 
-type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'sell'; asset: AssetDef };
+type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'pensionOut' } | { kind: 'sell'; asset: AssetDef };
 
 function Portfolio() {
   const whoIs = usePeerName();
@@ -75,6 +75,20 @@ function Portfolio() {
     if (move.kind === 'save') return <AmountSheet title={amount('save')} max={p.cash} onClose={close} onConfirm={(a) => addOrder({ type: 'depositIn', amount: a })} />;
     if (move.kind === 'withdraw') return <AmountSheet title={amount('withdraw')} max={p.deposit} onClose={close} onConfirm={(a) => addOrder({ type: 'depositOut', amount: a })} />;
     if (move.kind === 'pension') return <AmountSheet title={amount('pension')} max={pensionRoom} onClose={close} onConfirm={(a) => addOrder({ type: 'pensionIn', amount: a })} />;
+    if (move.kind === 'pensionOut') {
+      const penalty = content.pensionEarlyPenaltyBp;
+      return (
+        <AmountSheet
+          title={amount('pensionOut')}
+          max={p.pension}
+          onClose={close}
+          onConfirm={(a) => addOrder({ type: 'pensionOut', amount: a })}
+          preview={(a) => <p className="text-center text-[14px] text-ink-200">{amount('pensionOutGet', { amount: fmt.money(a - applyBp(a, penalty)) })}</p>}
+        >
+          <p className="mb-2 text-[13px] leading-snug text-ink-200">{amount('pensionOutRule', { penalty: penalty / 100 })}</p>
+        </AmountSheet>
+      );
+    }
     const name = names.assets[move.asset.id].name;
     return (
       <AmountSheet
@@ -111,11 +125,16 @@ function Portfolio() {
         </div>
         <div className="flex items-center gap-2 border-t-2 border-night-900 pt-1.5">
           <div className="min-w-0 flex-1">
-            <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
+            <Row left={t('pension')} sub={t('pensionHint', { penalty: content.pensionEarlyPenaltyBp / 100 })} right={fmt.money(p.pension)} />
           </div>
           {pensionRoom > 0 ? (
             <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pension' })}>
               {t('add')}
+            </Button>
+          ) : null}
+          {p.pension > 0 ? (
+            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pensionOut' })}>
+              {t('withdraw')}
             </Button>
           ) : null}
         </div>

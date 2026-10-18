@@ -53,7 +53,14 @@ export function flowsOf(content: Content, p: PlayerState, now: WorldState, tally
     p,
     tax,
     median,
-    { ...earned, salary: income.salary, pensionContribution: tally.pensionContribution, realisedGains: tally.realisedGains },
+    {
+      ...earned,
+      salary: income.salary,
+      // What was taken out of the pension early is taxed as income, in the round it came out.
+      otherIncome: earned.otherIncome + tally.pensionWithdrawn,
+      pensionContribution: tally.pensionContribution,
+      realisedGains: tally.realisedGains,
+    },
     tally.realisedCryptoGains,
   );
   // The same income with no salary and nothing sold: the tax a life of leisure would pay.

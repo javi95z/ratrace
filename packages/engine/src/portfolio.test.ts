@@ -77,6 +77,7 @@ describe('portfolio orders', () => {
         { type: 'depositIn', amount },
         { type: 'depositOut', amount },
         { type: 'pensionIn', amount },
+        { type: 'pensionOut', amount },
       ];
       for (const order of orders) expect(executePortfolioOrder(p, order, ctx)).toBe('bad-amount');
     }
@@ -127,6 +128,34 @@ describe('pension contributions', () => {
     const dearer = { ...ctx, world: { ...ctx.world, priceLevel: 2_000_000 } };
     expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 2_400_000 }, dearer)).toBeNull();
     expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 1 }, dearer)).toBe('over-pension-limit');
+  });
+});
+
+describe('pension withdrawals before their time', () => {
+  it('pays out what is taken less the penalty, and records it as income', () => {
+    const { p, ctx } = setup();
+    p.pension = 1_000_000;
+    expect(executePortfolioOrder(p, { type: 'pensionOut', amount: 500_000 }, ctx)).toBeNull();
+    expect(p.pension).toBe(500_000);
+    expect(p.cash).toBe(1_400_000);
+    expect(ctx.tally.pensionWithdrawn).toBe(400_000);
+  });
+
+  it('refuses more than the pension holds and changes nothing', () => {
+    const { p, ctx } = setup();
+    p.pension = 300_000;
+    const before = JSON.stringify({ p, tally: ctx.tally });
+    expect(executePortfolioOrder(p, { type: 'pensionOut', amount: 300_001 }, ctx)).toBe('exceeds-pension');
+    expect(JSON.stringify({ p, tally: ctx.tally })).toBe(before);
+  });
+
+  it('takes back the deduction of what goes in and out in the same round', () => {
+    const { p, ctx } = setup();
+    expect(executePortfolioOrder(p, { type: 'pensionIn', amount: 250_000 }, ctx)).toBeNull();
+    expect(executePortfolioOrder(p, { type: 'pensionOut', amount: 250_000 }, ctx)).toBeNull();
+    expect(ctx.tally.pensionContribution).toBe(0);
+    expect(p.pension).toBe(0);
+    expect(p.cash).toBe(950_000);
   });
 });
 

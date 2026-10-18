@@ -13,6 +13,7 @@ const ORDER_TYPES: ReadonlySet<string> = new Set<Order['type']>([
   'depositIn',
   'depositOut',
   'pensionIn',
+  'pensionOut',
   'setPlan',
   'setReinvest',
   'startBusiness',
@@ -118,6 +119,7 @@ export function executeOrder(p: PlayerState, raw: unknown, ctx: OrderContext): R
     case 'depositIn':
     case 'depositOut':
     case 'pensionIn':
+    case 'pensionOut':
       return executePortfolioOrder(p, order, ctx);
     case 'setPlan':
       return executeSetPlan(p, order, ctx);

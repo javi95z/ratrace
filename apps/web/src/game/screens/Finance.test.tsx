@@ -98,6 +98,27 @@ describe('the pension', () => {
     expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
   });
 
+  it('takes money out before its time, with the penalty and the tax told before it is confirmed', async () => {
+    const { services, session } = await inFinance('heir');
+    const room = previewRound(content, viewOf(await stateOf(services)), { orders: [] }).pensionRoom;
+    await session.playRound({ orders: [{ type: 'pensionIn', amount: room }] });
+    await toFinance(session);
+    const pension = (await stateOf(services)).player.pension;
+    expect(pension).toBeGreaterThan(0);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+
+    const row = (await screen.findByText('Taking it out before 62 costs 20%. Follows the world index.')).closest('div.border-t-2') as HTMLElement;
+    await user.click(within(row).getByRole('button', { name: 'Withdraw' }));
+    const sheet = screen.getByRole('dialog', { name: 'Take money out of your pension' });
+    expect(within(sheet).getByText('Before 62 you lose 20%, and what you receive is taxed as income this round.')).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: '100%' }));
+    expect(within(sheet).getByText(`You receive ${fmt.money(pension - pension / 5)} before tax`)).toBeTruthy();
+    await user.click(within(sheet).getByRole('button', { name: /^Confirm/ }));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(button('1 order')).toBeTruthy();
+  });
+
   it('offers nothing to someone who owes more than they own, instead of a sheet that refuses every amount', async () => {
     // The engineer starts with a student loan larger than their cash.
     const { services } = await inFinance('engineer');

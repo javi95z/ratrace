@@ -229,6 +229,8 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t('withdraw', { amount: fmt.money(order.amount) });
     case 'pensionIn':
       return t('pension', { amount: fmt.money(order.amount) });
+    case 'pensionOut':
+      return t('pensionOut', { amount: fmt.money(order.amount) });
     case 'setReinvest':
       return t(order.on ? 'reinvestOn' : 'reinvestOff');
     case 'startBusiness':

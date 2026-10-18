@@ -59,6 +59,7 @@ export function validateContent(c: Content): string[] {
   if (!within(c.housingSharePct, 0, 100)) errors.push('housingSharePct must be between 0 and 100');
   if (!isWhole(c.maxOrdersPerRound) || c.maxOrdersPerRound < 1) errors.push('maxOrdersPerRound must be a positive integer');
   if (!within(c.pensionContributionCapBp, 0, 10_000)) errors.push('pensionContributionCapBp must be between 0 and 10000');
+  if (!within(c.pensionEarlyPenaltyBp, 0, 10_000)) errors.push('pensionEarlyPenaltyBp must be between 0 and 10000');
 
   for (const a of c.assets) {
     if (a.class === 'bond' && (a.durationYears === undefined || a.yieldSpreadBp === undefined)) {

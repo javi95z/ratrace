@@ -938,6 +938,8 @@ export interface Content {
   pensionAssetId: string;
   /** Pension contributions in one round may total this share of the round's salary, in bp. */
   pensionContributionCapBp: Bp;
+  /** What is lost of any sum taken out of the pension before its time, in bp. The rest is taxed as income. */
+  pensionEarlyPenaltyBp: Bp;
   /** Orders beyond this many in one round are rejected. */
   maxOrdersPerRound: number;
   assets: ReadonlyArray<AssetDef>;
@@ -1242,6 +1244,7 @@ export type Order =
   | { type: 'depositIn'; amount: Cents }
   | { type: 'depositOut'; amount: Cents }
   | { type: 'pensionIn'; amount: Cents }
+  | { type: 'pensionOut'; amount: Cents }
   /** Opens a business of a kind with this much capital. It takes a point of focus. */
   | { type: 'startBusiness'; typeId: string; capital: Cents }
   /** Puts more money into a business. */
@@ -1301,6 +1304,8 @@ export type CardPicks = Record<string, number>;
 export interface RoundTally {
   realisedGains: Cents;
   pensionContribution: Cents;
+  /** What was taken out of the pension this round after the penalty, taxed as income. */
+  pensionWithdrawn: Cents;
   /** Property purchase tax already paid from cash while executing orders. */
   purchaseTaxPaid: Cents;
   /** Focus actions ordered this round. */
@@ -1343,6 +1348,7 @@ export type RejectReason =
   | 'exceeds-position'
   | 'exceeds-deposit'
   | 'over-pension-limit'
+  | 'exceeds-pension'
   | 'would-be-insolvent'
   | 'no-credit'
   | 'over-loan-limit'
