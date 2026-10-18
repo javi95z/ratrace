@@ -1684,17 +1684,29 @@ function Residency() {
   const t = useT('finance.taxes');
   const { content, names, fmt } = useWords();
   const { view, p, world } = useRound();
+  const orders = useGame((s) => s.orders);
   const setOrder = useGame((s) => s.setOrder);
-  const offer = content.cities.find((city) => city.id === p.cityId)?.residency;
-  if (!offer || !knows('setResidency')) return null;
+  const city = content.cities.find((x) => x.id === p.cityId);
+  const offer = city?.residency;
+  if (!city || !offer || !knows('setResidency')) return null;
+  // What it comes to this round, in the engine's figures: the round as planned with it and without it, the fee and the tax both.
+  const others = orders.filter((order) => order.type !== 'setResidency');
+  const held = view.player.life.residency;
+  const cashWith = previewRound(content, view, { orders: held ? others : [...others, { type: 'setResidency', on: true }] }).cashAfter;
+  const cashWithout = previewRound(content, view, { orders: held ? [...others, { type: 'setResidency', on: false }] : others }).cashAfter;
+  const yearly = Math.round((cashWith - cashWithout) / content.yearsPerRound);
   return (
-    <Panel title={t('residencyTitle', { city: names.cities[p.cityId] })}>
+    <Panel title={t('residencyTitle', { city: names.cities[p.cityId] })} label={t('residencyTitle', { city: names.cities[p.cityId] })}>
       <Toggle
         on={p.life.residency}
         onChange={(on) => setOrder((order) => order.type === 'setResidency', on === view.player.life.residency ? null : { type: 'setResidency', on })}
         label={t('residency')}
-        hint={t('residencyHint', { fee: fmt.money(indexed(offer.feeAnnual, world)), rate: fmt.rate(offer.dividendBp) })}
+        hint={t('residencyHint', { fee: fmt.money(indexed(offer.feeAnnual, world)), rate: fmt.rate(offer.dividendBp), usual: fmt.rate(effectiveTax(city, world).dividendBp) })}
       />
+      <p className={`mt-2 text-[13px] leading-snug ${yearly > 0 ? 'text-teal-300' : 'text-ink-300'}`}>
+        {yearly > 0 ? t('residencySaves', { amount: fmt.money(yearly) }) : t('residencyCosts', { amount: fmt.money(-yearly) })}
+      </p>
+      <p className="mt-1 text-[12px] leading-snug text-ink-300">{t('residencyWhy')}</p>
     </Panel>
   );
 }

@@ -709,7 +709,10 @@
       "inflationHint": "Your {cash} in cash buys {pct}% less than {years} years ago. Nobody charges it; it is simply gone.",
       "residencyTitle": "Tax residency in {city}",
       "residency": "Take the tax residency",
-      "residencyHint": "Dividends and interest earned abroad pay {rate} while they stay abroad. It costs {fee} a year, and ends if you move."
+      "residencyHint": "Your dividends and interest are taxed at {rate} instead of the usual {usual} here. It costs {fee} a year and ends if you move away.",
+      "residencySaves": "With what you earn now, it would save you {amount} a year.",
+      "residencyCosts": "With what you earn now, it would cost you {amount} a year more than it saves: it pays off once your investments earn more.",
+      "residencyWhy": "Thailand taxes what is earned abroad only when the money is brought into the country: whoever leaves it abroad pays nothing on it."
     },
     "decided": "Already decided",
     "plans": {

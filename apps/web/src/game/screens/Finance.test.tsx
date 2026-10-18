@@ -36,8 +36,8 @@ const openShop = async (user: ReturnType<typeof userEvent.setup>, view: 'afforda
 /** A life taken to the finances of its current round, without the screen. */
 async function inFinance(lifeId: string, { taught = false }: { taught?: boolean } = {}) {
   const services = memoryServices();
-  // The heir is a life a player has to unlock before choosing it.
-  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' }, crypto_kid: { at: 1, gameId: 'earlier' } } });
+  // The heir, the crypto kid and the rider are lives a player has to unlock before choosing them.
+  await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { heir: { at: 1, gameId: 'earlier' }, crypto_kid: { at: 1, gameId: 'earlier' }, rider: { at: 1, gameId: 'earlier' } } });
   const session = await services.sessions.start(lifeId);
   await toFinance(session);
   // Nothing on the market is open with no money sense: a life that is to invest first takes two rounds of a finance course.
@@ -1189,5 +1189,19 @@ describe('the market without Finance', () => {
     for (const name of ['S&P 500', 'Apple', 'Bund']) expect(within(panel).getByText(new RegExp(name)), name).toBeTruthy();
     for (const name of ['Bitcoin', 'Gold']) expect(within(panel).queryByText(name), name).toBeNull();
     expect(within(panel).queryByText(/^Finance \d/)).toBeNull();
+  });
+});
+
+describe('the tax residency of Bangkok', () => {
+  it('says what it is for, the rate it changes, and what it would come to for the player this year', async () => {
+    const { services } = await inFinance('rider');
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await user.click(await screen.findByRole('tab', { name: 'Taxes' }));
+    const panel = screen.getByRole('region', { name: 'Tax residency in Bangkok' });
+    expect(within(panel).getByText(/Your dividends and interest are taxed at 0(\.0)?% instead of the usual/)).toBeTruthy();
+    // A rider with nothing invested would pay the fee for nothing: it says so, and when it pays off.
+    expect(within(panel).getByText(/it would cost you .* a year more than it saves/)).toBeTruthy();
+    expect(within(panel).getByText(/Thailand taxes what is earned abroad only when the money is brought into the country/)).toBeTruthy();
   });
 });

@@ -709,7 +709,10 @@
       "inflationHint": "Tus {cash} en efectivo compran un {pct} % menos que hace {years} años. Nadie te lo cobra: simplemente desaparece.",
       "residencyTitle": "Residencia fiscal en {city}",
       "residency": "Hacerte residente fiscal",
-      "residencyHint": "Tus dividendos e intereses de fuera tributan al {rate} mientras no traigas el dinero. Cuesta {fee} al año y se pierde si te mudas."
+      "residencyHint": "Tus dividendos e intereses pagan un {rate} en vez del {usual} de aquí. Cuesta {fee} al año y se pierde si te mudas.",
+      "residencySaves": "Con lo que cobras ahora, te ahorraría {amount} al año.",
+      "residencyCosts": "Con lo que cobras ahora, te costaría {amount} al año más de lo que ahorra: compensa cuando tus inversiones rinden más.",
+      "residencyWhy": "Tailandia solo cobra impuestos por lo que ganas fuera si traes el dinero al país: quien lo deja fuera no paga."
     },
     "decided": "Ya decidido",
     "plans": {
