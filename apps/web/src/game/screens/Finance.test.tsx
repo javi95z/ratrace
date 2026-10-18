@@ -140,6 +140,13 @@ describe('the homes a player owns', () => {
     expect(within(owned).getByText(/You live here/)).toBeTruthy();
 
     await user.click(within(owned).getByRole('button', { name: /^Sell for/ }));
+    // The sale is told in full before it is ordered: nothing is ordered yet.
+    const sheet = await screen.findByRole('dialog', { name: 'Sell Apartment in the Marina' });
+    expect(within(sheet).getByText('Sale price')).toBeTruthy();
+    expect(within(sheet).getByText('You keep')).toBeTruthy();
+    expect(within(sheet).getByText(/It is your home: you move out/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '1 order' })).toBeNull();
+    await user.click(within(sheet).getByRole('button', { name: /^Sell and keep/ }));
     expect(button('1 order')).toBeTruthy();
     expect(within(owned).getByText('Apartment in the Marina')).toBeTruthy();
     const selling = within(owned).getByRole('button', { name: 'Sold when the round is played' }) as HTMLButtonElement;

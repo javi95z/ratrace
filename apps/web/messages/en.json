@@ -523,7 +523,19 @@
       "netOnSale": "A sale would leave you",
       "netOnSaleHint": "After the mortgage is repaid and before tax on the gain.",
       "lodger": "Let the spare room",
-      "lodgerHint": "+{amount} a year · −{status} home status: the flat is shared"
+      "lodgerHint": "+{amount} a year · −{status} home status: the flat is shared",
+      "sellTitle": "Sell {home}",
+      "sellPrice": "Sale price",
+      "sellMortgage": "Mortgage paid off",
+      "sellTax": "Tax on the gain, this round",
+      "sellGain": "{amount} more than you paid",
+      "sellKept": "You keep",
+      "sellRentLost": "Rent you stop receiving",
+      "sellHome": "It is your home: you move out.",
+      "sellHomeRent": "It is your home: you move out and pay {amount} more a year for housing.",
+      "sellStatus": "You lose the {n} status it gave you.",
+      "sellDo": "Sell and keep {amount}",
+      "sellUndo": "Until the round is played you can take it off your orders."
     },
     "debt": {
       "none": "You owe nothing.",

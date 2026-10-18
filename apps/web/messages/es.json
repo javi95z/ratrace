@@ -523,7 +523,19 @@
       "netOnSale": "Te quedaría al vender",
       "netOnSaleHint": "Tras devolver la hipoteca y antes del impuesto sobre la ganancia.",
       "lodger": "Alquilar una habitación",
-      "lodgerHint": "+{amount} al año · −{status} de estatus de casa: compartes piso"
+      "lodgerHint": "+{amount} al año · −{status} de estatus de casa: compartes piso",
+      "sellTitle": "Vender {home}",
+      "sellPrice": "Precio de venta",
+      "sellMortgage": "Hipoteca que se cancela",
+      "sellTax": "Impuesto sobre la ganancia, esta ronda",
+      "sellGain": "Ganas {amount} sobre lo que pagaste",
+      "sellKept": "Te queda",
+      "sellRentLost": "Renta que dejas de cobrar",
+      "sellHome": "Es tu casa: dejas de vivir aquí.",
+      "sellHomeRent": "Es tu casa: dejas de vivir aquí y pasas a pagar {amount} más al año de vivienda.",
+      "sellStatus": "Pierdes {n} de estatus que te daba.",
+      "sellDo": "Vender y quedarte {amount}",
+      "sellUndo": "Hasta jugar la ronda puedes quitarlo de tus órdenes."
     },
     "debt": {
       "none": "No debes nada.",

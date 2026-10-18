@@ -5,7 +5,7 @@ import { Explain } from './Explain';
 import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
-import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch } from '@ratrace/engine';
+import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch, previewRound } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
@@ -736,6 +736,7 @@ function PropertyTab() {
   const addOrder = useGame((s) => s.addOrder);
   const [buying, setBuying] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
+  const [toSell, setToSell] = useState<string | null>(null);
   const home = homeOf(p, content);
 
   // A home put up for sale this round stays in its place until the round is played: were it to
@@ -792,7 +793,8 @@ function PropertyTab() {
                       {property.rented ? t('stopRenting') : t('startRenting')}
                     </Button>
                   )}
-                  <Button variant="danger" onClick={() => addOrder({ type: 'sellProperty', propertyId: property.id })}>
+                  {/* A sale is told in full before it is ordered: what comes in, what goes, what stops. */}
+                  <Button variant="danger" aria-haspopup="dialog" onClick={() => setToSell(property.id)}>
                     {t('sell', { amount: fmt.compact(property.value) })}
                   </Button>
                 </div>
@@ -847,6 +849,7 @@ function PropertyTab() {
         );
       })}
       {buying ? <BuyHome typeId={buying} onClose={() => setBuying(null)} /> : null}
+      {toSell ? <SellPropertySheet propertyId={toSell} onClose={() => setToSell(null)} onSell={() => addOrder({ type: 'sellProperty', propertyId: toSell })} /> : null}
     </div>
   );
 }
@@ -956,6 +959,56 @@ function DebtTab() {
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * What selling a property comes to, before it is ordered: the price, the mortgage it pays off, the tax
+ * on the gain this round, and what is left in cash; then what stops, the rent it brought, the home
+ * lived in, the status it gave. The figures are the engine's: the round as planned, with and without
+ * the sale.
+ */
+function SellPropertySheet({ propertyId, onClose, onSell }: { propertyId: string; onClose(): void; onSell(): void }) {
+  const t = useT('finance.property');
+  const common = useT('common');
+  const { content, text, names, fmt } = useWords();
+  const { view } = useRound();
+  const orders = useGame((s) => s.orders);
+  const property = view.player.properties.find((x) => x.id === propertyId);
+  const quote = quoteOwnedProperty(content, view, propertyId);
+  if (!property || !quote) return null;
+  const before = previewRound(content, view, { orders });
+  const after = previewRound(content, view, { orders: [...orders, { type: 'sellProperty', propertyId }] });
+  const tax = Math.max(0, after.tax.total - before.tax.total);
+  const mortgage = quote.mortgage?.principal ?? 0;
+  const kept = quote.value - mortgage - tax;
+  const years = content.yearsPerRound;
+  const housing = Math.round((after.expenses.living - before.expenses.living) / years);
+  const minus = (amount: number) => <span className="text-wine-300">−{fmt.money(amount)}</span>;
+  return (
+    <Sheet open onClose={onClose} title={t('sellTitle', { home: homeName(text, property.typeId, property.cityId) })} closeLabel={common('close')}>
+      <div className="flex flex-col gap-2">
+        <p className="text-[13px] text-ink-200">{names.cities[property.cityId]}</p>
+        <Row left={t('sellPrice')} right={fmt.money(quote.value)} />
+        {mortgage > 0 ? <Row left={t('sellMortgage')} right={minus(mortgage)} /> : null}
+        {tax > 0 ? <Row left={t('sellTax')} sub={t('sellGain', { amount: fmt.money(Math.max(0, quote.value - quote.paid)) })} right={minus(tax)} /> : null}
+        <Row left={<span className="pixel">{t('sellKept')}</span>} right={<span className="pixel text-gold-500">{fmt.money(kept)}</span>} />
+        {quote.rented ? <Row left={t('sellRentLost')} right={<span className="text-wine-300">−{common('perYear', { amount: fmt.money(quote.rentAnnual) })}</span>} /> : null}
+        {quote.livedIn ? <p className="text-[13px] leading-snug text-ink-200">{housing > 0 ? t('sellHomeRent', { amount: fmt.money(housing) }) : t('sellHome')}</p> : null}
+        {quote.status > 0 ? <p className="text-[13px] leading-snug text-ink-200">{t('sellStatus', { n: quote.status })}</p> : null}
+        <Button
+          variant="danger"
+          wide
+          onClick={() => {
+            onSell();
+            onClose();
+          }}
+        >
+          {t('sellDo', { amount: fmt.money(kept) })}
+        </Button>
+        <p className="text-center text-[12px] text-ink-300">{t('sellUndo')}</p>
+      </div>
+    </Sheet>
   );
 }
 
