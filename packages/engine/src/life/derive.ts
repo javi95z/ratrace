@@ -212,6 +212,8 @@ export function derivePassive(p: PlayerState): Cents {
 export interface StatusParts {
   items: number;
   home: number;
+  /** Grand homes owned besides the one lived in: let, or in another city. */
+  estates: number;
   job: number;
   city: number;
   lifestyle: number;
@@ -278,8 +280,21 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
   }
 
   const home = homeOf(p, content);
+  // A grand home is a standing whether or not it is lived in: those owned besides the home count for a share, the best few.
+  let estates = 0;
+  const grand = rules.estates;
+  if (grand) {
+    const others = p.properties
+      .filter((property) => property !== home)
+      .map((property) => propertyTypeOf(content, property.typeId).status)
+      .filter((status) => status >= grand.minStatus)
+      .sort((a, b) => b - a)
+      .slice(0, grand.counted);
+    for (const status of others) estates += mulDiv(status, grand.pct, 100);
+  }
   return {
     items,
+    estates,
     // A lodger in the spare room is a flat shared.
     home: home ? propertyTypeOf(content, home.typeId).status - (lodgerOf(p, content) ? rules.lodger.statusLost : 0) : rentStatusAt(content, round)[life.rentTier],
     // A life of one's own after work is a standing too.
@@ -294,7 +309,7 @@ export function statusParts(p: PlayerState, content: Content, round: number): St
 /** Status points: items, home, job title, city, lifestyle and lasting bonuses from cards. Never negative. */
 export function deriveStatus(p: PlayerState, content: Content, round: number): number {
   const parts = statusParts(p, content, round);
-  return Math.max(0, parts.items + parts.home + parts.job + parts.city + parts.lifestyle + parts.bonus + parts.network);
+  return Math.max(0, parts.items + parts.home + parts.estates + parts.job + parts.city + parts.lifestyle + parts.bonus + parts.network);
 }
 
 /** Brings the derived fields of the player back in step with their life. Call after anything changes it. */

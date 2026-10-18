@@ -183,7 +183,10 @@
     },
     "roundShort": "Раунд {n} из {total}",
     "openNews": "Перечитать газету",
-    "newsTitle": "Газета"
+    "newsTitle": "Газета",
+    "statusEstates": "Элитная недвижимость",
+    "statusEstatesHint": "Две лучшие элитные квартиры или дома, где вы не живёте, — наполовину.",
+    "statusNetwork": "Связи"
   },
   "settings": {
     "version": "Версия {content} · движок {engine}",

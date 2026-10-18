@@ -183,7 +183,10 @@
     },
     "roundShort": "Round {n} of {total}",
     "openNews": "Read the paper again",
-    "newsTitle": "The paper"
+    "newsTitle": "The paper",
+    "statusEstates": "Grand homes owned",
+    "statusEstatesHint": "The two best grand homes you own besides the one you live in, at half.",
+    "statusNetwork": "Contacts"
   },
   "settings": {
     "version": "Version {content} · engine {engine}",

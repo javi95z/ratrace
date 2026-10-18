@@ -183,7 +183,10 @@
     },
     "roundShort": "Ronda {n} de {total}",
     "openNews": "Volver a leer el Diario",
-    "newsTitle": "El Diario"
+    "newsTitle": "El Diario",
+    "statusEstates": "Patrimonio de lujo",
+    "statusEstatesHint": "Las dos mejores viviendas de lujo que tienes y en las que no vives, a la mitad.",
+    "statusNetwork": "Contactos"
   },
   "settings": {
     "version": "Versión {content} · motor {engine}",

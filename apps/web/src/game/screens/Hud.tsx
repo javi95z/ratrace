@@ -102,9 +102,11 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
       <>
         <Row left={t('statusJob')} right={points(status.job)} />
         <Row left={t('statusHome')} right={points(status.home)} />
+        {status.estates !== 0 ? <Row left={t('statusEstates')} sub={t('statusEstatesHint')} right={points(status.estates)} /> : null}
         <Row left={t('statusCity')} right={points(status.city)} />
         <Row left={t('statusLifestyle')} right={points(status.lifestyle)} />
         <Row left={t('statusItems')} right={points(status.items)} />
+        {status.network !== 0 ? <Row left={t('statusNetwork')} right={points(status.network)} /> : null}
         {status.bonus !== 0 ? <Row left={t('statusBonus')} right={points(status.bonus)} /> : null}
         <Row className={total} left={t('statusNow')} right={fmt.number(status.total)} />
         <Row left={t('statusLived')} sub={t('statusLivedHint')} right={fmt.number(status.lived)} />

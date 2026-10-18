@@ -139,6 +139,20 @@ describe('status', () => {
     expect(owning(['car_basic', 'car_sports'])).toBe(40 + 1);
   });
 
+  it('counts grand homes owned besides the one lived in for half, the two best, and nothing of the rest', () => {
+    const ruled = fixtureContent();
+    const state = createGame({ content: ruled, start: fixtureStart() }, 'estates');
+    const city = state.player.cityId;
+    const own = (typeId: string, rented: boolean, cityId = city) => ({ id: `p-${typeId}-${rented}-${cityId}`, cityId, typeId, value: 0, basis: 0, rented, mortgageId: null });
+    state.player.properties = [own('penthouse', false), own('villa', true), own('villa', false, 'elsewhere'), own('house', true), own('penthouse', true)];
+    // Left out of the rules, only the home lived in counts.
+    expect(statusParts(state.player, ruled, 0)).toMatchObject({ home: 25, estates: 0 });
+    ruled.life.estates = { minStatus: 25, pct: 50, counted: 2 };
+    // Lived in: the penthouse. Besides it: two villas count, at half; a third grand home and the house do not.
+    expect(statusParts(state.player, ruled, 0)).toMatchObject({ home: 25, estates: 20 + 20 });
+    expect(deriveStatus(state.player, ruled, 0) - deriveStatus({ ...state.player, properties: [own('penthouse', false)] }, ruled, 0)).toBe(40);
+  });
+
   it('counts an aged thing for what it gives now, in the status of the player and round after round', () => {
     const aging = fixtureContent();
     aging.life.agingLadders = ['car'];
@@ -182,7 +196,7 @@ describe('status', () => {
       bonusStatus: 7,
       items: [{ itemId: 'trip', value: 0, roundsLeft: 2, paid: 0, age: 0 }],
     }, { cityId: 'haven', lifestyleTier: 3 });
-    expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, city: 5, lifestyle: 9, bonus: 7, items: 10, network: 0 });
+    expect(statusParts(fancy.player, content, 0)).toEqual({ job: 6, home: 2, estates: 0, city: 5, lifestyle: 9, bonus: 7, items: 10, network: 0 });
     // A loss from a card shows as it is, though the status itself stops at zero.
     expect(statusParts(life({}, { bonusStatus: -50 }).player, content, 0).bonus).toBe(-50);
   });

@@ -284,6 +284,11 @@ const madrid = content.cities[0];
 say(
   '## Inmuebles',
   `El precio es un porcentaje del piso de referencia de cada ciudad. Como ejemplo va el precio en ${names.cities[madrid.id]}.`,
+  ...(content.life.estates
+    ? [
+        `El estatus de la vivienda es el de la casa en la que vives. Además, las viviendas de lujo que tengas sin vivir en ellas (desde +${content.life.estates.minStatus}), alquiladas o en otra ciudad, dan un ${content.life.estates.pct} % del suyo: las ${content.life.estates.counted} mejores.`,
+      ]
+    : []),
   table(
     ['', 'Inmueble', 'Precio', `En ${names.cities[madrid.id]}`, 'Estatus si vives en él', 'Uso', 'Alquiler'],
     [...content.propertyTypes]

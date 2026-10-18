@@ -441,6 +441,11 @@ export interface LifeRules {
    * one adds nothing to how a player is seen; a second car still does, a third no more.
    */
   lesserItems?: Record<string, { pct: number; counted?: number }>;
+  /**
+   * Grand homes owned besides the one lived in: those whose status as a home is at least
+   * `minStatus` give `pct` percent of it, the `counted` best of them. Left out, they give nothing.
+   */
+  estates?: { minStatus: number; pct: number; counted: number };
   /** Cost of moving, as a percent of the destination's yearly living cost. */
   moveCostPct: number;
   /** Moving a partner costs this percent more, and each child this percent more again. */

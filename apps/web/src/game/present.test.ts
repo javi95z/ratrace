@@ -195,7 +195,7 @@ describe('effectTags', () => {
         lose: { what: 'crypto', pct: 40 }, lifestyleFloor: 1,
       }).map((tag) => tag.text),
     ).toEqual([
-      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', 'Status +18', '−$150/yr', '+6 points of chance on a job hunt', '$2k into Tesla', '+$4k pension', 'Loan of $12k',
+      'New career: Finance', 'Move to London', 'A shared life', 'A child', 'Rolex Submariner', 'Status +10', '−$150/yr', '+6 points of chance on a job hunt', '$2k into Tesla', '+$4k pension', 'Loan of $12k',
       'You buy a rental: Studio', 'Your variable mortgages go fixed, at 4.0%', 'Home value +$20k', 'Lose 40% of your crypto', 'Lifestyle at least: Normal',
     ]);
     expect(tags({ job: { leave: true }, partner: null, sellHome: true, lose: { what: 'deposit', pct: 15 } }).map((tag) => tag.text)).toEqual([
@@ -209,14 +209,14 @@ describe('effectTags', () => {
     // An upgrade at the gate: a trip, at two fifths of its price.
     expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } })).toEqual([
       { tone: 'plain', text: 'Emirates business class' },
-      { tone: 'good', text: 'Status +9 for 4 years' },
+      { tone: 'good', text: 'Status +6 for 4 years' },
       { tone: 'good', text: '+1 focus in the round after' },
       { tone: 'plain', text: 'Usually $6k' },
     ]);
     // At full price there is no bargain to name, and a thing that lasts gives its status for good.
     expect(tags({ buyItem: { itemId: 'watch_casio', pricePct: 100 } }).map((tag) => tag.text)).toEqual(['Casio F-91W', 'Status +1']);
     expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } }, 'es').map((tag) => tag.text.replace(/\u00a0/g, ' '))).toEqual([
-      'Business de Emirates', 'Estatus +9 durante 4 años', '+1 de foco en la ronda siguiente', 'Precio normal 6k $',
+      'Business de Emirates', 'Estatus +6 durante 4 años', '+1 de foco en la ronda siguiente', 'Precio normal 6k $',
     ]);
   });
 
