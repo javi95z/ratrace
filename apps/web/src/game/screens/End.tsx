@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useCommunity, useGame, useProfile, useRuns, useT, useWords } from '@/game/context';
+import { useCommunity, useGame, useProfile, useRanking, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@/game/epilogue';
 import { useCountUp } from '@/game/motion';
 import { obituary } from '@/game/quips';
@@ -14,8 +14,8 @@ import { ageAt, endingOf, prizedBadge } from '@/game/present';
 import { bestsOf } from '@/game/records';
 import { shareCard } from '@/game/share';
 import type { Best } from '@/game/records';
-import { Link } from '@/i18n/navigation';
-import { Panel, Tag, Well } from '@/ui/kit';
+import { Link, useRouter } from '@/i18n/navigation';
+import { Button, Panel, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { ChallengeResult } from './Challenge';
@@ -240,9 +240,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
                 </p>
               ))}
               {unlocked.map((id) => (
-                <p key={id} role="status" className="frame frame-gold pixel animate-rise bg-gold-500 px-3 py-2 text-center text-[16px] text-ink-900">
-                  {t('unlocked', { life: text.lives[id]?.name ?? id })}
-                </p>
+                <UnlockedLife key={id} lifeId={id} />
               ))}
             </div>
           ) : null}
@@ -345,5 +343,49 @@ function EarnedBadges({ earned, isNew }: { earned: string[]; isNew(id: string): 
         </Sheet>
       ) : null}
     </>
+  );
+}
+
+/**
+ * A life the one just finished opened: who it is, and a way to begin it at once. If it cannot begin
+ * from here (a ranked life is in progress elsewhere), the chooser, where that is asked, takes over.
+ */
+function UnlockedLife({ lifeId }: { lifeId: string }) {
+  const t = useT('end');
+  const { text } = useWords();
+  const router = useRouter();
+  const start = useGame((s) => s.start);
+  const ranking = useRanking();
+  const [starting, setStarting] = useState(false);
+  const words = text.lives[lifeId];
+  const tryIt = async () => {
+    setStarting(true);
+    try {
+      if (await start(lifeId, { ranked: ranking === 'yes' })) router.replace('/play');
+      else router.push('/new');
+    } catch (error) {
+      console.error('the life could not be started:', error);
+      router.push('/new');
+    } finally {
+      setStarting(false);
+    }
+  };
+  return (
+    <section aria-label={t('unlockedTitle')} className="frame frame-gold animate-rise bg-gold-500 p-2 text-ink-900">
+      <p role="status" className="pixel text-center text-[16px]">
+        {t('unlocked', { life: words?.name ?? lifeId })}
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <Well className="size-[68px]">
+          <Sprite id={portraitArt(lifeId, 22)} fallback={{ w: 64, h: 64 }} />
+        </Well>
+        <p className="min-w-0 flex-1 text-[13px] leading-snug">{t('unlockedBody', { life: words?.name ?? lifeId, perk: words?.perk ?? '' })}</p>
+      </div>
+      <div className="mt-2">
+        <Button variant="primary" wide disabled={starting} onClick={() => void tryIt()}>
+          {t('tryNow')}
+        </Button>
+      </div>
+    </section>
   );
 }

@@ -104,7 +104,27 @@
     "level1": "fácil",
     "level2": "media",
     "level3": "difícil",
-    "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}"
+    "lockedMany": "{count, plural, one {# vida por desbloquear} other {# vidas por desbloquear}}",
+    "progressFinished": "Vidas terminadas: {n} de {total}",
+    "hints": {
+      "rider": "Alguien que conoce cada atajo de la ciudad y lo poco que paga ninguno.",
+      "heir": "Una ventaja que nadie ha ganado. ¿Qué le hace eso a una persona?",
+      "newcomer": "Tres ciudades enseñan a empezar de cero.",
+      "banker": "Las horas son larguísimas, pero al final hay una puerta enorme.",
+      "doctor": "Primero, años de estudio. Después, todos confían en ti.",
+      "comeback": "A todo el mundo le gusta una historia que empieza desde abajo.",
+      "founder": "Una apuesta por ti mismo, con dinero ajeno en juego.",
+      "crypto_kid": "Nacido en internet, rico sobre el papel. Hasta que llega el invierno.",
+      "lawyer": "Cada norma tiene un precio, y alguien lo conoce.",
+      "teacher": "El sueldo más modesto y el mayor agradecimiento. ¿Quién sale ganando?",
+      "influencer": "Millones de personas mirando. ¿Alguien paga?",
+      "waiter": "Propinas, pies cansados y una mirada de cerca a cómo gasta la gente.",
+      "salesperson": "Una sonrisa, un objetivo y una comisión que nunca se queda quieta.",
+      "robotics_engineer": "Las máquinas vienen. Alguien las está construyendo.",
+      "programmer": "Trabajo callado, sueldo ruidoso y una carrera amenazada por sus propias herramientas.",
+      "chef": "Una cocina, un fuego y un restaurante que quizá nunca dé beneficios.",
+      "private_banker": "Las fortunas de otros y una vista de cómo vive de verdad la gente rica."
+    }
   },
   "hud": {
     "cash": "Efectivo",
@@ -1125,7 +1145,10 @@
       "bankrupt": "Bancarrota"
     },
     "map": "Por dónde pasó tu vida",
-    "mapLabel": "Mapa del mundo con tu ruta: {cities}"
+    "mapLabel": "Mapa del mundo con tu ruta: {cities}",
+    "unlockedTitle": "Se abre una vida nueva",
+    "unlockedBody": "Ya puedes vivir como {life}. {perk}",
+    "tryNow": "Probarla ya"
   },
   "epilogue": {
     "title": "Tu vida, contada",

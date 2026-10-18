@@ -68,6 +68,14 @@ describe('choosing a life', () => {
     expect(screen.getAllByText(/To unlock/)).toHaveLength(17);
   });
 
+  it('gives each locked life a hint, and counts the lives finished only where that is the goal', async () => {
+    renderGame(<NewLife />, memoryServices());
+    await userEvent.setup().click(await screen.findByRole('button', { name: '17 lives to unlock' }));
+    expect(screen.getByText('A head start nobody earned. What does it do to a person?')).toBeTruthy();
+    // Finishing one life is counted; a goal the device does not record has only its requirement.
+    expect(await screen.findAllByText('Lives finished: 0 of 1')).toHaveLength(1);
+  });
+
   it('opens a life the player has unlocked, and marks it', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
