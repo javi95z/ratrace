@@ -69,13 +69,14 @@
     "room": "Multiplayer",
     "inRoom": "Back to your game",
     "roomLobby": "Waiting to start · {count} of {max}",
-    "roomOver": "Over · #{place} of {total}",
     "roomTurn": "Your turn · {time} left",
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
     "roomDone": "Over",
     "lostWaiting": "Your life began on an earlier version of the game and cannot be opened just now. It is kept: try again in a while, with a connection.",
-    "profile": "Your profile"
+    "profile": "Your profile",
+    "roomResult": "See how your game ended",
+    "roomPlace": "You came #{place} of {total}"
   },
   "newLife": {
     "title": "Choose a life",

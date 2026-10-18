@@ -69,13 +69,14 @@
     "room": "Multijugador",
     "inRoom": "Volver a tu partida",
     "roomLobby": "Esperando para empezar · {count} de {max}",
-    "roomOver": "Acabada · #{place} de {total}",
     "roomTurn": "Te toca · quedan {time}",
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
     "roomDone": "Acabada",
     "lostWaiting": "Tu vida empezó con una versión anterior del juego y ahora mismo no se puede abrir. Está guardada: vuelve a intentarlo en un rato, con conexión.",
-    "profile": "Tu perfil"
+    "profile": "Tu perfil",
+    "roomResult": "Ver el resultado de tu partida",
+    "roomPlace": "Quedaste #{place} de {total}"
   },
   "newLife": {
     "title": "Elige una vida",

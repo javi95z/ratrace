@@ -1036,6 +1036,8 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
   const left = useSecondsLeft();
   if (status === 'booting' || status === 'unavailable') return null;
   const inRoom = status === 'in' && room !== null && room.status !== 'closed';
+  // A game that is over is kept for its result, and a rematch, until the player leaves it: it is not a game to go back to.
+  const over = inRoom && room?.status === 'finished' && room.rematch?.open !== true;
   const me = room?.members.find((member) => member.me);
   let detail: string | null = null;
   if (inRoom && room) {
@@ -1045,7 +1047,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
       const waitingFor = here.filter((member) => !member.ready && !member.me);
       detail = me && !me.ready ? t('roomTurn', { time: left === null ? '—' : clock(left) }) : t('roomWaiting', { names: waitingFor.map(nameOf).join(', ') });
     } else if (room.rematch?.open) detail = t('roomRematch');
-    else if (me && !me.left && me.standing) detail = t('roomOver', { place: rankOf(room.members, me), total: here.length });
+    else if (me && !me.left && me.standing) detail = t('roomPlace', { place: rankOf(room.members, me), total: here.length });
     else detail = t('roomDone');
   }
   return (
@@ -1055,7 +1057,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
     >
       <span className={`flex items-center gap-2 ${primary ? 'text-[19px]' : 'text-[17px]'}`}>
         <Sprite id="icon.skill_network" />
-        {inRoom ? t('inRoom') : t('room')}
+        {over ? t('roomResult') : inRoom ? t('inRoom') : t('room')}
       </span>
       {detail ? <span className={`font-sans text-[13px] font-normal ${primary ? 'text-ink-700' : 'text-ink-200'}`}>{detail}</span> : null}
     </Link>
