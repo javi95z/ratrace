@@ -26,6 +26,7 @@ export interface Notice {
  * - `loanOffer`: another player of the game offers to lend the player money, or asks to borrow it.
  * - `marketMoved`: something the player holds in their ranked life moved 5% or more in the round they last played.
  *   `percent` is signed, in whole percent; `asset` is the asset's id, named here in the player's language.
+ * - `shout`: another player of the game said something, by its number among the game's shouts.
  */
 export type NoticeAbout =
   | { kind: 'weekly'; place: number | null; entrants: number | null }
@@ -35,7 +36,21 @@ export type NoticeAbout =
   | { kind: 'rematch' }
   | { kind: 'idle' }
   | { kind: 'marketMoved'; asset: string; percent: number }
-  | { kind: 'loanOffer'; who: string | null; lend: boolean; amount: number; rateBp: number; rounds: number };
+  | { kind: 'loanOffer'; who: string | null; lend: boolean; amount: number; rateBp: number; rounds: number }
+  | { kind: 'shout'; who: string | null; n: number };
+
+/** The six faces a player may shout, which no language changes. The page's own list, held to it by a test. */
+export const SHOUT_FACES = ['😂', '😱', '🔥', '💸', '👑', '👋'] as const;
+
+/** The eight phrases a player may shout after the faces, in each language. The page's own, held to them by a test. */
+const SHOUT_PHRASES: Record<NoticeLocale, readonly string[]> = {
+  en: ['Well played!', 'Coming for you!', 'Lucky you!', 'What a round…', 'To the moon!', "I'm going broke", 'Patience…', 'Hurry up!'],
+  es: ['¡Bien jugado!', '¡Voy a por ti!', '¡Qué suerte!', 'Vaya ronda…', '¡A la luna!', 'Me arruino', 'Paciencia…', '¡Date prisa!'],
+  ru: ['Хорошо сыграно!', 'Иду за тобой!', 'Везёт же!', 'Ну и раунд…', 'На Луну!', 'Я разоряюсь', 'Терпение…', 'Поторопись!'],
+};
+
+/** What a shout says: a face, or a phrase. */
+export const shoutText = (n: number, lang: NoticeLocale): string => (n < SHOUT_FACES.length ? SHOUT_FACES[n] : (SHOUT_PHRASES[lang][n - SHOUT_FACES.length] ?? ''));
 
 const langOf = (locale: string): NoticeLocale => (locale === 'es' || locale === 'ru' ? locale : 'en');
 
@@ -81,6 +96,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: a.lend ? `${a.who ?? 'A rival'} offers you a loan` : `${a.who ?? 'A rival'} asks you for a loan`,
       body: `${money(a.amount, 'en')} at ${pct(a.rateBp)} over ${a.rounds} ${a.rounds === 1 ? 'round' : 'rounds'}. Answer before the round turns.`,
     }),
+    shout: (a) => ({ title: `${a.who ?? 'A rival'} says:`, body: shoutText(a.n, 'en') }),
   },
   es: {
     weekly: (a) => ({
@@ -97,6 +113,7 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: a.lend ? `${a.who ?? 'Un rival'} te ofrece un préstamo` : `${a.who ?? 'Un rival'} te pide un préstamo`,
       body: `${money(a.amount, 'es')} al ${pct(a.rateBp)} en ${a.rounds} ${a.rounds === 1 ? 'ronda' : 'rondas'}. Responde antes de que acabe la ronda.`,
     }),
+    shout: (a) => ({ title: `${a.who ?? 'Un rival'} dice:`, body: shoutText(a.n, 'es') }),
   },
   ru: {
     weekly: (a) => ({
@@ -113,11 +130,12 @@ const WORDS: Record<NoticeLocale, { [K in NoticeAbout['kind']]: (about: Extract<
       title: a.lend ? `${a.who ?? 'Соперник'} предлагает тебе заём` : `${a.who ?? 'Соперник'} просит у тебя в долг`,
       body: `${money(a.amount, 'ru')} под ${pct(a.rateBp)} на ${a.rounds} ${a.rounds === 1 ? 'раунд' : a.rounds < 5 ? 'раунда' : 'раундов'}. Ответь до конца раунда.`,
     }),
+    shout: (a) => ({ title: `${a.who ?? 'Соперник'} говорит:`, body: shoutText(a.n, 'ru') }),
   },
 };
 
-const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room' };
-const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan' };
+const PAGE: Record<NoticeAbout['kind'], string> = { weekly: 'challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'play', marketMoved: 'play', loanOffer: 'room', shout: 'room' };
+const TAG: Record<NoticeAbout['kind'], string> = { weekly: 'weekly-challenge', roomStarted: 'room', yourTurn: 'room', newRound: 'room', rematch: 'room', idle: 'idle-life', marketMoved: 'market-moved', loanOffer: 'room-loan', shout: 'room-shout' };
 
 /** The notice for a browser that asked for notices in a language; one the game does not have reads in English. */
 export function noticeOf(locale: string, about: NoticeAbout): Notice {
