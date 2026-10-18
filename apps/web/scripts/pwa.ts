@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CONTENT_VERSION } from '@ratrace/content';
@@ -225,13 +225,18 @@ async function writeShareImage() {
 async function main() {
   await writeIcons();
   await writeShareImage();
-  const publicAssets = filesBelow(publicDir).filter((path) => !path.endsWith('/sw.js')).map((path) => webPath(path, publicDir));
+  const publicFiles = filesBelow(publicDir).filter((path) => !path.endsWith('/sw.js'));
+  const publicAssets = publicFiles.map((path) => webPath(path, publicDir));
   const pages = ['', '/challenge', '/collection', '/new', '/play', '/rankings', '/records'];
   const routes = [...['en', 'es', 'ru'].flatMap((locale) => pages.map((page) => `/${locale}${page}`)), '/manifest.webmanifest'];
   const built = process.argv.includes('--build');
   const nextStatic = built ? filesBelow(join(app, '.next/static')).map((path) => webPath(path, join(app, '.next/static'), '/_next/static')) : [];
   const assets = [...routes, ...publicAssets, ...nextStatic];
-  const fingerprint = createHash('sha256').update(`${ENGINE_VERSION}/${CONTENT_VERSION}\n${assets.sort().join('\n')}`).digest('hex').slice(0, 12);
+  // What the files hold, not only their names: a sprite drawn again under the same name is served
+  // first from the cache, and only a new cache lets the player see the new drawing.
+  const hash = createHash('sha256').update(`${ENGINE_VERSION}/${CONTENT_VERSION}\n${assets.sort().join('\n')}`);
+  for (const path of publicFiles.sort()) hash.update(readFileSync(path));
+  const fingerprint = hash.digest('hex').slice(0, 12);
   writeFileSync(join(publicDir, 'sw.js'), serviceWorker(`${ENGINE_VERSION}-${CONTENT_VERSION}-${fingerprint}`, assets));
   console.log(`pwa: ${assets.length} files, cache ${fingerprint}`);
 }

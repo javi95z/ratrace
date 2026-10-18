@@ -67,7 +67,7 @@ export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look:
           </button>
         ))}
       </div>
-      <div role="radiogroup" aria-label={t(`layers.${part}`)} className="grid grid-cols-4 gap-2">
+      <div role="radiogroup" aria-label={t(`layers.${part}`)} className="grid grid-cols-5 gap-1.5">
         {choices().map((choice) => {
           const on = chosen(choice);
           return (
@@ -80,15 +80,17 @@ export function RatEditor({ look, earned, badgeName, onPick, onLocked }: { look:
               aria-label={choice.label}
               title={choice.locked ? t('locked', { badge: badgeName(choice.locked) }) : choice.label}
               onClick={() => (choice.locked ? onLocked(t('locked', { badge: badgeName(choice.locked) })) : onPick(choice.look))}
-              className={`frame-raised flex flex-col items-center gap-1 bg-night-700 p-1.5 ${on ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
+              className={`frame-raised flex bg-night-700 p-1 ${on ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
             >
-              <span aria-hidden className={`relative flex size-16 overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]} `}>
-                <RatLayers look={choice.look} className={`size-20 shrink-0 -ml-2.5 -mt-1 ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
-                {choice.locked ? <span className="absolute inset-0 flex items-center justify-center">
+              {/* The picture says which it is; the name is there for a pointer that rests on it and for a screen reader. */}
+              <span aria-hidden className={`relative flex aspect-square w-full overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]}`}>
+                <RatLayers look={choice.look} className={`size-[125%] shrink-0 -ml-[16%] -mt-[6%] ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
+                {choice.locked ? (
+                  <span className="absolute inset-0 flex items-center justify-center">
                     <Sprite id="icon.locked" />
-                  </span> : null}
+                  </span>
+                ) : null}
               </span>
-              <span className="line-clamp-2 text-center text-[11px] leading-tight text-ink-200">{choice.label}</span>
             </button>
           );
         })}
