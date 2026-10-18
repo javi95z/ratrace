@@ -3,8 +3,9 @@
 import { lives, portraitArt } from '@ratrace/content';
 import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useGame, useProfile, useRanking, useT, useWords } from '@/game/context';
+import { useGame, useProfile, useRanking, useRuns, useT, useWords } from '@/game/context';
 import { ageAt } from '@/game/present';
+import { unlockProgress } from '@/game/unlockProgress';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Segmented, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -44,6 +45,7 @@ export function NewLife() {
   }, []);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
+  const runs = useRuns();
   const available = lives.filter((life) => life.unlock === 'default' || Object.hasOwn(unlocked, life.id));
   const locked = lives.filter((life) => !available.includes(life));
   const [showLocked, setShowLocked] = useState(false);
@@ -167,22 +169,31 @@ export function NewLife() {
             </span>
           </button>
           {showLocked ? (
-            <ul className="mt-2 flex flex-col divide-y-2 divide-night-900">
-              {locked.map((life) => (
-                <li key={life.id} className="flex items-center gap-3 py-2 opacity-80">
-                  <Well className="size-11">
-                    <Sprite id="icon.locked" fallback={{ w: 32, h: 32 }} />
-                  </Well>
-                  <span className="min-w-0 flex-1">
-                    <span className="pixel block text-[15px]">{text.lives[life.id].name}</span>
-                    <span className="block text-[12px] leading-snug text-ink-300">
-                      <span className="text-gold-500">{t('unlock')}: </span>
-                      {text.lives[life.id].unlock}
+            <ul className="mt-2 flex flex-col gap-2">
+              {locked.map((life) => {
+                const progress = unlockProgress(life.unlock, runs?.length ?? null);
+                return (
+                  <li key={life.id} className="frame-raised flex items-center gap-3 bg-night-800 p-1.5">
+                    {/* Only the shape of who it is: the portrait waits for whoever opens the life. */}
+                    <Well className="relative size-[68px]">
+                      <Sprite id={portraitArt(life.id, 22)} fallback={{ w: 64, h: 64 }} silhouette />
+                      <span className="absolute bottom-0.5 right-0.5">
+                        <Sprite id="icon.locked" fallback={{ w: 16, h: 16 }} />
+                      </span>
+                    </Well>
+                    <span className="min-w-0 flex-1">
+                      <span className="pixel block text-[15px]">{text.lives[life.id].name}</span>
+                      <span className="block text-[12px] leading-snug text-ink-200">
+                        <span className="text-gold-500">{t('unlock')}: </span>
+                        {text.lives[life.id].unlock}
+                      </span>
+                      {progress ? <span className="block text-[12px] leading-snug text-teal-300">{t('progressFinished', { n: progress.have, total: progress.need })}</span> : null}
+                      <span className="block text-[12px] italic leading-snug text-ink-300">{t(`hints.${life.id}`)}</span>
                     </span>
-                  </span>
-                  <Difficulty lifeId={life.id} />
-                </li>
-              ))}
+                    <Difficulty lifeId={life.id} />
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </section>

@@ -104,7 +104,27 @@
     "level1": "easy",
     "level2": "normal",
     "level3": "hard",
-    "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}"
+    "lockedMany": "{count, plural, one {# life to unlock} other {# lives to unlock}}",
+    "progressFinished": "Lives finished: {n} of {total}",
+    "hints": {
+      "rider": "Someone who knows every shortcut in town, and what none of them pay.",
+      "heir": "A head start nobody earned. What does it do to a person?",
+      "newcomer": "Three cities teach you how to start over from nothing.",
+      "banker": "The long hours come with a very big door at the end.",
+      "doctor": "Years of study first. Then people trust you with everything.",
+      "comeback": "Everyone loves a story that starts at the bottom.",
+      "founder": "A bet on yourself, with other people's money riding on it.",
+      "crypto_kid": "Born online, rich on paper. Until the winter comes.",
+      "lawyer": "Every rule has a price, and somebody knows it.",
+      "teacher": "The least money and the most thanks. Who pays more in the end?",
+      "influencer": "Millions watching. Is anybody paying?",
+      "waiter": "Tips, tired feet, and a close look at how others spend.",
+      "salesperson": "A smile, a target, and a commission that never sits still.",
+      "robotics_engineer": "The machines are coming. Some people are building them.",
+      "programmer": "Quiet work, loud pay, and a career at risk from its own tools.",
+      "chef": "A kitchen, a fire, and a restaurant that may never turn a profit.",
+      "private_banker": "Other people's fortunes, and a view of how the rich really live."
+    }
   },
   "hud": {
     "cash": "Cash",
@@ -1105,7 +1125,10 @@
       "bankrupt": "Bankrupt"
     },
     "map": "Where your life went",
-    "mapLabel": "A map of the world with your route: {cities}"
+    "mapLabel": "A map of the world with your route: {cities}",
+    "unlockedTitle": "A new life is open",
+    "unlockedBody": "{life} is open to you. {perk}",
+    "tryNow": "Try it now"
   },
   "epilogue": {
     "title": "Your life, told",
