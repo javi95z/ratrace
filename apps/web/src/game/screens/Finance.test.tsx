@@ -1080,21 +1080,34 @@ describe('what is not declared', () => {
 
   it('sells a watch without an invoice, and marks it so among what the player owns', async () => {
     setWidth('desk');
-    const { services } = await inFinance('heir');
-    const quote = quoteItem(content, viewOf(await stateOf(services)), 'watch_omega');
+    const { services } = await inFinance('nurse');
+    const quote = quoteItem(content, viewOf(await stateOf(services)), 'watch_casio');
     const offer = quote.noInvoice;
     if (!offer) throw new Error('a watch is sold without an invoice');
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await openShop(user);
-    await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /Omega Speedmaster/ }));
-    const part = within(screen.getByRole('dialog', { name: 'Omega Speedmaster' })).getByRole('region', { name: 'Without an invoice' });
+    await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /Casio F-91W/ }));
+    const part = within(screen.getByRole('dialog', { name: 'Casio F-91W' })).getByRole('region', { name: 'Without an invoice' });
     expect(within(part).getByText(new RegExp(`^${offer.discountPct}% cheaper, in cash\\.`))).toBeTruthy();
     await user.click(within(part).getByRole('button', { name: `Buy without an invoice for ${fmt.money(offer.price)}` }));
-    expect(screen.getByText('Buy Omega Speedmaster without an invoice')).toBeTruthy();
+    expect(screen.getByText('Buy Casio F-91W without an invoice')).toBeTruthy();
     // A car is not sold so.
     await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /SEAT Ibiza/ }));
     expect(within(screen.getByRole('dialog', { name: 'SEAT Ibiza' })).queryByRole('region', { name: 'Without an invoice' })).toBeNull();
+  });
+
+  it('does not sell a watch without an invoice where no tax is paid', async () => {
+    setWidth('desk');
+    const { services } = await inFinance('heir');
+    const state = await stateOf(services);
+    expect(content.cities.find((city) => city.id === state.player.cityId)?.tax.incomeRatesBp).toEqual([0, 0, 0]);
+    expect(quoteItem(content, viewOf(state), 'watch_omega').noInvoice).toBeNull();
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openShop(user);
+    await user.click(within(screen.getByRole('tabpanel', { name: 'Shop' })).getByRole('button', { name: /Omega Speedmaster/ }));
+    expect(within(screen.getByRole('dialog', { name: 'Omega Speedmaster' })).queryByRole('region', { name: 'Without an invoice' })).toBeNull();
   });
 });
 

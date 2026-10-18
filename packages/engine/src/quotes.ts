@@ -171,7 +171,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
   // Nothing is sold twice: there are no terms for what the player already owns.
   const plan = held ? null : itemFinance(item, content, world);
   const second = held || item.cardOnly === true || !soldIn(item, view.player.cityId) ? null : usedTerms(item, content, world);
-  const blank = held || !soldIn(item, view.player.cityId) ? null : noInvoiceTerms(item, content, world);
+  const blank = held || !soldIn(item, view.player.cityId) ? null : noInvoiceTerms(item, content, world, view.player.cityId);
   const rateBp = personalLoanRateBp(content, world);
   const termRounds = content.debt.personalLoanTermRounds;
   const years = content.yearsPerRound;
