@@ -1170,11 +1170,6 @@
       "legendary": "Legendaria"
     },
     "unlockedMany": "{count} vidas nuevas desbloqueadas",
-    "band": {
-      "common": "Más de {lo} de cada 100 vidas",
-      "uncommon": "De {lo} a {hi} de cada 100 vidas",
-      "rare": "De {lo} a {hi} de cada 100 vidas"
-    },
     "hiddenName": "¿?",
     "hiddenHint": "Algo relacionado con: {group}",
     "legendaryKicker": "Insignia legendaria",

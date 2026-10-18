@@ -1170,11 +1170,6 @@
       "legendary": "Легендарный"
     },
     "unlockedMany": "Открыто новых жизней: {count}",
-    "band": {
-      "common": "Более чем в {lo} из 100 жизней",
-      "uncommon": "В {lo}–{hi} из 100 жизней",
-      "rare": "В {lo}–{hi} из 100 жизней"
-    },
     "hiddenName": "???",
     "hiddenHint": "Что-то связанное с: {group}",
     "legendaryKicker": "Легендарный значок",

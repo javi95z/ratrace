@@ -98,17 +98,14 @@ describe('the collection', () => {
     expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
   });
 
-  it('says how seldom each rarity is earned in lives, never in real players, and hides judged badges until won', async () => {
+  it('names each rarity without any count of lives or players, and hides judged badges until won', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' } } });
     const user = userEvent.setup();
     renderGame(<Collection />, services);
     await user.click(await screen.findByRole('tab', { name: 'Badges' }));
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
-    expect(within(panel).getAllByText(/More than 30 in 100 lives/).length).toBeGreaterThan(0);
-    expect(within(panel).queryByText(/Fewer than 2 in 100 lives/)).toBeNull();
-    expect(within(panel).getAllByText(/10 to 30 in 100 lives/).length).toBeGreaterThan(0);
-    expect(within(panel).getAllByText(/2 to 10 in 100 lives/).length).toBeGreaterThan(0);
+    expect(panel.textContent).not.toMatch(/in 100 lives/);
     expect(panel.textContent).not.toMatch(/% of players|players have/i);
     // A judged badge, not yet won: its name is not told, only the group it belongs to.
     expect(within(panel).queryByText('Swiss banker')).toBeNull();

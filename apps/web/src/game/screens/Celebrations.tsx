@@ -9,7 +9,7 @@ import { Sheet } from '@/ui/overlay';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { Medal } from './Medal';
-import { hasBand, RARITY_GLOW, RARITY_TONE, RarityBand } from './RarityBand';
+import { RARITY_GLOW, RARITY_TONE } from './rarityStyle';
 
 /** The sparks of a badge won are the colours of its rim: bronze, silver, gold, and the gem's green and cream. */
 const SPARKS: Record<BadgeRarity, readonly string[]> = {
@@ -67,7 +67,7 @@ export function Celebrations() {
             <p className="pixel text-[12px] uppercase tracking-wider text-gold-500">{t('earned')}</p>
             <p className="pixel text-[18px]">{text.badges[id]?.name ?? id}</p>
             <p className={`pixel text-[11px] uppercase tracking-[0.1em] ${RARITY_TONE[rarityOf(id)]}`}>
-              <span>{t(`rarity.${rarityOf(id)}`)}</span>{hasBand(rarityOf(id)) ? ' · ' : null}<RarityBand rarity={rarityOf(id)} />
+              {t(`rarity.${rarityOf(id)}`)}
             </p>
             <p className="text-[13px] leading-snug text-ink-200">{text.badges[id]?.how}</p>
           </div>
