@@ -859,6 +859,12 @@ function DebtTab() {
               </Bare>
               <div className="min-w-0 flex-1 truncate">{debtLabel(words, debt, p.properties, whoIs)}</div>
               <div className="pixel">{fmt.money(debt.principal)}</div>
+              {/* Where there is room, the way to pay it off sits beside what is owed. */}
+              {debt.peer === undefined ? (
+                <Button className="max-sm:hidden" onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
+                  {t('repay')}
+                </Button>
+              ) : null}
             </div>
             {/* Under the name, so a long one is not cut short: what it costs and what is left, and the way to pay it off. */}
             <div className="mt-1 flex items-end justify-between gap-3 pl-11">
@@ -874,7 +880,7 @@ function DebtTab() {
               </div>
               {/* A loan from another player is paid by its term: there is nothing to pay off early. */}
               {debt.peer === undefined ? (
-                <Button onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
+                <Button className="sm:hidden" onClick={() => setRepaying(debt)} disabled={p.cash <= 0}>
                   {t('repay')}
                 </Button>
               ) : null}
@@ -1744,7 +1750,9 @@ export function Finance() {
   const introduces = useIntroducesTabs();
   const guided = guidedLife && introduces;
   const round = useGame((s) => s.view?.round ?? 0);
-  const tabs = guided ? TABS.filter((id) => round >= (TAB_FROM_ROUND[id] ?? 0)) : TABS;
+  // A guided life opens the debt tab early for someone who already owes something: what is owed is always in sight.
+  const inDebt = useGame((s) => (s.view?.player.debts.length ?? 0) > 0);
+  const tabs = guided ? TABS.filter((id) => round >= (TAB_FROM_ROUND[id] ?? 0) || (id === 'debt' && inDebt)) : TABS;
   const [shopView, setShopView] = useState<ShopView>('affordable');
   const ids = useId();
   const panel = useRef<HTMLDivElement>(null);
