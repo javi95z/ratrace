@@ -4,7 +4,7 @@ import { businessArt, businessStageArt, HANDOVER_ART } from '@ratrace/content';
 import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
-import { useGame, useT, useWords } from '@/game/context';
+import { useGame, useKnows, useT, useWords } from '@/game/context';
 import { reviewStars } from '@/game/quips';
 import { Bare, Button, Panel, Row, Segmented, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
@@ -246,6 +246,7 @@ function Review({ business }: { business: Owned }) {
  * can be left for it; run full time it says so, and what it gives. Before that, nothing is shown.
  */
 function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
+  const knows = useKnows();
   const t = useT('finance.business');
   const { content, text } = useWords();
   const setOrder = useGame((s) => s.setOrder);
@@ -263,7 +264,7 @@ function OwnBoss({ business, view }: { business: Owned; view: GameView }) {
     );
   }
   const strong = business.strong ?? 0;
-  if (p.life.career === null || p.businesses.some((x) => x.fullTime === true)) return null;
+  if (!knows('goFullTime') || p.life.career === null || p.businesses.some((x) => x.fullTime === true)) return null;
   if (strong < rule.strongRounds) return null;
   const job = text.careers[p.life.career.id].levels[p.life.career.level];
   return (

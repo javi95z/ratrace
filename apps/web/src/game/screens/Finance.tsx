@@ -9,7 +9,7 @@ import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLe
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useGame, useGuided, useIntroducesTabs, useT, useWords } from '@/game/context';
+import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '@/game/context';
 import { TAB_FROM_ROUND } from '@/game/guide';
 import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
@@ -50,6 +50,7 @@ function useRound() {
 type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'pensionOut' } | { kind: 'sell'; asset: AssetDef };
 
 function Portfolio() {
+  const knows = useKnows();
   const whoIs = usePeerName();
   const t = useT('finance.portfolio');
   const amount = useT('finance.amount');
@@ -133,7 +134,7 @@ function Portfolio() {
               {t('add')}
             </Button>
           ) : null}
-          {p.pension > 0 ? (
+          {p.pension > 0 && knows('pensionOut') ? (
             <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pensionOut' })}>
               {t('withdraw')}
             </Button>
@@ -727,6 +728,7 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
 }
 
 function PropertyTab() {
+  const knows = useKnows();
   const t = useT('finance.property');
   const { content, text, names, fmt } = useWords();
   const { view, shown, p } = useRound();
@@ -757,7 +759,7 @@ function PropertyTab() {
           // What a year of letting it brings is the engine's figure, shown for what is let now.
           const owned = quoteOwnedProperty(content, shown, property.id);
           const rent = property.rented ? owned?.rentAnnual : undefined;
-          const lodger = sold ? null : (owned?.lodger ?? null);
+          const lodger = sold || !knows('setLodger') ? null : (owned?.lodger ?? null);
           const lodging = (order: Order) => order.type === 'setLodger';
           return (
             <div key={property.id} className="border-b-2 border-night-900 py-2 last:border-b-0">
@@ -959,13 +961,14 @@ function DebtTab() {
 
 /** The way into switching a mortgage: what it would become, or that it is being switched this round. Nothing while it may not be switched. */
 function SwitchLink({ debtId, onOpen }: { debtId: string; onOpen(): void }) {
+  const knows = useKnows();
   const t = useT('finance.debt');
   const { content } = useWords();
   const { view, world } = useRound();
   const orders = useGame((s) => s.orders);
   const ordered = orders.some((order) => order.type === 'switchMortgage' && order.debtId === debtId);
   const quote = mortgageSwitch(view.player, debtId, content, world, view.round);
-  if (quote === null || (quote.lock === 'switch-resting' && !ordered)) return null;
+  if (!knows('switchMortgage') || quote === null || (quote.lock === 'switch-resting' && !ordered)) return null;
   return (
     <button type="button" onClick={onOpen} className={`mt-0.5 text-[12px] underline underline-offset-2 ${ordered ? 'text-teal-300' : 'text-sky-300'}`}>
       {ordered ? t(quote.to === 'fixed' ? 'switchingToFixed' : 'switchingToVariable') : t(quote.to === 'fixed' ? 'switchToFixed' : 'switchToVariable')}
@@ -1192,6 +1195,7 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
 }
 
 function Lifestyle() {
+  const knows = useKnows();
   const t = useT('finance.lifestyle');
   const wording = useT('work');
   const words = useWords();
@@ -1216,7 +1220,9 @@ function Lifestyle() {
         ['studyCareer', t('study'), t('studyHint', { n: work.studySkill })],
         ['jobHunt', t('hunt'), t('huntHint', { pct: work.jobHuntChancePct })],
         ['askRaise', t('raise'), t('raiseHint', { chance: work.raise.chancePct, pct: work.raise.pct })],
-      ] as const).map(([action, label, gives]) => ({ action, label: jobFocusName(words, career.id, action, label), note: note(work, action, gives) }))
+      ] as const)
+        .filter(([action]) => knows(`focus:${action}`))
+        .map(([action, label, gives]) => ({ action, label: jobFocusName(words, career.id, action, label), note: note(work, action, gives) }))
     : [];
   const learnUses = masteredLast([
     { action: skills.finance.study, label: text.focusActions[skills.finance.study], note: note(work, skills.finance.study, t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })) },
@@ -1231,7 +1237,7 @@ function Lifestyle() {
   return (
     <div className="flex flex-col gap-3">
       {/* How the job is done, apart from the focus: half the day anywhere, and from home where the job allows it, a few rungs up. */}
-      {career ? (
+      {career && knows('setWorkMode') ? (
         <Panel title={t('mode')}>
           <div className="flex flex-col gap-2">
             <Segmented<WorkMode>
@@ -1262,7 +1268,7 @@ function Lifestyle() {
             ))}
             <CareerMoves work={work} left={left} />
           </div>
-        ) : work.backToWork ? (
+        ) : work.backToWork && knows('backToWork') ? (
           // Left for a business: the way back, a rung lower.
           <div className="flex flex-col gap-1.5">
             <Button
@@ -1608,12 +1614,13 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
  * switch. Nothing is shown in a city that offers none.
  */
 function Residency() {
+  const knows = useKnows();
   const t = useT('finance.taxes');
   const { content, names, fmt } = useWords();
   const { view, p, world } = useRound();
   const setOrder = useGame((s) => s.setOrder);
   const offer = content.cities.find((city) => city.id === p.cityId)?.residency;
-  if (!offer) return null;
+  if (!offer || !knows('setResidency')) return null;
   return (
     <Panel title={t('residencyTitle', { city: names.cities[p.cityId] })}>
       <Toggle

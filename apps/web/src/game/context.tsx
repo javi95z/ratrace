@@ -27,6 +27,7 @@ import { createSoundBoard } from '@/ui/sound';
 import type { Cue, SoundBoard } from '@/ui/sound';
 import { KeyboardProvider } from '@/ui/keyboard';
 import type { Translate, Words } from './present';
+import { rulesKnow } from './rules';
 import { cuesFor } from './sound';
 import { createRoomStore } from './room';
 import type { RoomActions, RoomStore, RoomStoreState } from './room';
@@ -323,6 +324,15 @@ function useGameContext(): Game {
 }
 
 /** A slice of the round on screen. The component redraws when that slice changes. */
+/**
+ * Whether the rules the life is played under know an order, named by its key (`focus:careerMove`,
+ * `pensionOut`...): a life begun under older rules is not offered what they do not know.
+ */
+export function useKnows(): (key: string) => boolean {
+  const rules = useGame((s) => s.rules);
+  return (key) => rulesKnow(rules, key);
+}
+
 export function useGame<T>(select: (state: RoundState & RoundActions) => T): T {
   return useStore(useGameContext().game, select);
 }

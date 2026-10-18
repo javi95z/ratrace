@@ -553,6 +553,37 @@ describe('what a step earned', () => {
     expect(game.getState()).toMatchObject({ earned: [], unlocked: [] });
   });
 
+  it('never sends a life on older rules an order those rules do not know', async () => {
+    const { sessions } = setup();
+    const real = await sessions.start('nurse');
+    const sent: Order[][] = [];
+    // A life begun under the rules of 0.38, before careers had moves of their own.
+    const game = createGameStore({
+      content,
+      sessions: {
+        ...sessions,
+        start: () => sessions.start('nurse'),
+        abandon: () => sessions.abandon(),
+        resume: async () => ({
+          lost: null,
+          session: {
+            gameId: real.gameId, lifeId: real.lifeId, rules: '0.38.0', view: () => real.view(), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [],
+            answerCard: (option: number) => real.answerCard(option),
+            playRound: (choices) => (sent.push(choices.orders), real.playRound(choices)),
+          },
+        }),
+      },
+    });
+    await game.getState().boot();
+    expect(game.getState().rules).toBe('0.38.0');
+    await answerHand(game.getState);
+    game.getState().setOrder(isFocus('overtime'), overtime);
+    game.getState().setOrder(isFocus('careerMove'), { type: 'focus', action: 'careerMove', move: 'anything' } as Order);
+    await game.getState().play();
+    expect(sent).toHaveLength(1);
+    expect(sent[0].map((order) => (order.type === 'focus' ? order.action : order.type))).toEqual(['overtime']);
+  });
+
   it('includes the life unlocked by finishing a first one', async () => {
     const { get } = setup();
     await get().start('civil_servant');

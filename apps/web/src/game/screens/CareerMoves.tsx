@@ -2,7 +2,7 @@
 
 import { careerArt } from '@ratrace/content';
 import type { WorkQuote } from '@ratrace/engine';
-import { useGame, useT, useWords } from '@/game/context';
+import { useGame, useKnows, useT, useWords } from '@/game/context';
 import { Toggle } from '@/ui/kit';
 
 /**
@@ -17,7 +17,9 @@ export function CareerMoves({ work, left }: { work: WorkQuote; left: number }) {
   const orders = useGame((s) => s.orders);
   const setOrder = useGame((s) => s.setOrder);
   const career = view?.player.life.career ?? null;
-  if (career === null || work.moves.length === 0) return null;
+  // A life begun before careers had moves of their own is played under rules that know none.
+  const known = useKnows()('focus:careerMove');
+  if (!known || career === null || work.moves.length === 0) return null;
   const isMove = (order: { type: string; action?: string }) => order.type === 'focus' && order.action === 'careerMove';
   const chosen = (orders.find(isMove) as { move?: string } | undefined)?.move;
   return (

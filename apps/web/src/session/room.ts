@@ -124,6 +124,8 @@ export interface RoomGameOver {
 export interface RoomLife {
   gameId: string;
   lifeId: string;
+  /** The engine version of the room's rules, when the server says. */
+  engineVersion?: string;
   step: number;
   view: GameView;
   record: LifeRecord;
@@ -217,6 +219,10 @@ export class RoomSession implements GameSession {
     private readonly lives: ReadonlyArray<LifeDef>,
     private readonly deps: RoomSessionDeps,
   ) {}
+
+  get rules(): string | undefined {
+    return this.life.engineVersion;
+  }
 
   get gameId(): string {
     return this.life.gameId;

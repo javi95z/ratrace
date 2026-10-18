@@ -25,6 +25,11 @@ export interface GameSession {
   readonly served?: boolean;
   /** The week whose challenge this life is: the ranked attempt, or a practice. Left out for any other life. */
   readonly challenge?: string;
+  /**
+   * The engine version of the rules the life is played under, when they are not this page's own: a life
+   * begun under older rules is finished under them, and is offered nothing they do not know.
+   */
+  readonly rules?: string;
   /** The game as the player may see it. The same object until the next answer or round. */
   view(): GameView;
   /** Net worth in start-of-game cents at the start and after every round played, for the graph. */

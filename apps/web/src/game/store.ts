@@ -7,6 +7,7 @@ import type { StoreApi } from 'zustand/vanilla';
 import { RankedInProgress, StaleSession, Unreachable } from '@/session/errors';
 import type { RankedLifeInTheWay } from '@/session/errors';
 import type { GameSession, Lost, Sessions, StepResult } from '@/session/types';
+import { knownOrders } from './rules';
 
 /** Where the player is within a round. */
 export type Stage = 'news' | 'cards' | 'outcome' | 'finance' | 'resolve' | 'end';
@@ -67,6 +68,8 @@ export interface RoundState {
   fault: boolean;
   /** True for a life the server plays: its result is set beside everyone else's. */
   ranked: boolean;
+  /** The engine version of the rules the life is played under: this page's own, or older ones a life begun under them keeps. */
+  rules: string;
   /** The week whose challenge the life is: the attempt, when ranked, or a practice. Null for any other life. */
   challenge: string | null;
   /** True once a life asked for as ranked began as a casual one, because a ranked one could not be had just then, until the player has been told. */
@@ -171,6 +174,7 @@ const blank: RoundState = {
   moved: false,
   fault: false,
   ranked: false,
+  rules: ENGINE_VERSION,
   challenge: null,
   fellBack: false,
   unreachable: false,
@@ -260,7 +264,8 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
       if (!session) return;
       set({ busy: true });
       try {
-        shown(view, await session.playRound({ orders }));
+        // Only what the life's rules know is sent: an order of newer rules would be refused, as an action that does not exist.
+        shown(view, await session.playRound({ orders: knownOrders(session.rules ?? ENGINE_VERSION, orders) }));
       } catch (error) {
         await refused(error);
       } finally {
@@ -282,6 +287,7 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0 
         badges: opened.badges(),
         story: opened.story(),
         ranked: opened.ranked === true,
+        rules: opened.rules ?? ENGINE_VERSION,
         challenge: opened.challenge ?? null,
       };
       if (view.finished) set({ ...base, stage: 'end' });
