@@ -180,14 +180,28 @@ function drawnOnly(cell: Image, guided: boolean): Uint8Array {
 /** Room left above the reference rat, and half as much on each side, for tall hats and halos. */
 export const HEADROOM = 48;
 
-/** A layer cell drawn where the reference rat stands, shrunk to `width` × `height`. The rat sits at the bottom, with room above it. */
-export function layerSprite(cell: Image, guided: boolean, at: Placement, refSize: { width: number; height: number }, width: number, height: number): Image {
+/** The last row of the reference rat: where it is cut off below, a row more than a stray pixel wide. */
+export function footOf(shape: Uint8Array, width: number, height: number): number {
+  for (let y = height - 1; y >= 0; y--) {
+    let count = 0;
+    for (let x = 0; x < width; x++) count += shape[y * width + x];
+    if (count >= 20) return y + 1;
+  }
+  return height;
+}
+
+/**
+ * A layer cell drawn where the reference rat stands, shrunk to `width` × `height`. The rat stands on
+ * the bottom edge, its cut-off shoulders against it, with room above it. `foot` is the row the
+ * reference rat ends at.
+ */
+export function layerSprite(cell: Image, guided: boolean, at: Placement, refSize: { width: number; height: number }, width: number, height: number, foot = refSize.height): Image {
   const mask = drawnOnly(cell, guided);
   const canvas = { width: refSize.width + HEADROOM, height: refSize.height + HEADROOM };
   const placed = blank(canvas.width, canvas.height);
   const kept = new Uint8Array(canvas.width * canvas.height);
   const cl = { x: cell.width / 2, y: cell.height / 2 };
-  const cr = { x: refSize.width / 2 + HEADROOM / 2, y: refSize.height / 2 + HEADROOM };
+  const cr = { x: refSize.width / 2 + HEADROOM / 2, y: canvas.height - foot + refSize.height / 2 };
   for (let y = 0; y < canvas.height; y++) {
     for (let x = 0; x < canvas.width; x++) {
       const lx = Math.round((x - cr.x - at.dx) / at.s + cl.x);

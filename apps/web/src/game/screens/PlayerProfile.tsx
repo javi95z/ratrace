@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { avatarOf, ratLookOf } from '@/game/avatar';
 import type { RatLook } from '@/game/avatar';
-import { useAccount, useCommunity, useProfile, useRuns, useT, useWords } from '@/game/context';
+import { useAccount, useAccountSettled, useCommunity, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
 import { Toast } from '@/ui/overlay';
@@ -20,6 +20,7 @@ export function PlayerProfile() {
   const ranks = useT('rankings');
   const common = useT('common');
   const { state } = useAccount();
+  const settled = useAccountSettled();
   const community = useCommunity();
   const [me, setMe] = useState<{ nickname: string | null; friendCode: string; avatar: string | null } | null | undefined>(undefined);
   const [name, setName] = useState('');
@@ -54,6 +55,8 @@ export function PlayerProfile() {
     </div>
   );
   if (userId === null || community === null) {
+    // Until the account has tried to sign in, nobody being signed in is no reason to ask for it.
+    if (!settled && state.kind === 'offline') return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">{header}</main>;
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
         {header}
@@ -70,8 +73,8 @@ export function PlayerProfile() {
     const before = me;
     // Shown at once; put back if the server would not keep it.
     setMe((was) => (was ? { ...was, avatar } : was));
-    if (await community.setAvatar(avatar)) setTold(t('saved'));
-    else {
+    // Kept quietly: the rat above already shows the change. Only a failure is told.
+    if (!(await community.setAvatar(avatar))) {
       setMe(before ?? null);
       setTold(t('notSaved'));
     }
@@ -111,7 +114,6 @@ export function PlayerProfile() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
       {header}
-      {me === undefined ? <p className="pixel text-center text-ink-300">{common('loading')}</p> : null}
 
       {/* The player as the others see them: their rat on their colour, their name, and the code to be followed by. */}
       <section aria-label={t('preview')} className="bevel relative overflow-hidden bg-night-700 px-3 pb-4 pt-5">
@@ -119,7 +121,7 @@ export function PlayerProfile() {
         <div className="relative flex flex-col items-center gap-2">
           <span className={`frame-double inline-flex leading-[0] [--ring:var(--color-gold-500)] ${GROUND[colour]}`}>
             {/* The rat at the size it was drawn: every pixel of it, none smudged. */}
-            <RatLayers look={look} className="size-32" />
+            <RatLayers look={look} className={`size-32 ${me === undefined ? 'invisible' : ''}`} />
           </span>
           {editing ? (
             <form
@@ -153,7 +155,7 @@ export function PlayerProfile() {
             </form>
           ) : (
             <button type="button" onClick={() => setEditing(true)} aria-label={t('rename')} className="group flex min-h-11 items-center gap-2 px-2">
-              <span className="pixel text-[24px] leading-none">{me?.nickname ?? t('noName')}</span>
+              <span className="pixel text-[24px] leading-none">{me === undefined ? '\u00a0' : (me?.nickname ?? t('noName'))}</span>
               <span aria-hidden className="text-[14px] text-ink-300 group-hover:text-gold-500">✎</span>
             </button>
           )}

@@ -2,7 +2,7 @@ import { assignCells, gridBox, labelBlobs } from './blobs';
 import { blank } from './image';
 import type { Box, Image } from './image';
 import { erode, keyMask } from './key';
-import { layerCells, layerSprite, placeOver, referenceShape } from './layers';
+import { footOf, layerCells, layerSprite, placeOver, referenceShape } from './layers';
 import { fitInto, resample } from './scale';
 import { cropToAspect, dividerFlags, panelBoxes } from './scenes';
 import type { SheetSpec } from './sheets';
@@ -127,12 +127,13 @@ function cutLayers(sheet: Image, spec: SheetSpec, over: Image): Sprite[] {
   const reference = layerCells(over, 4, 2)[0];
   const shape = referenceShape(reference);
   const size = { width: reference.width, height: reference.height };
+  const foot = footOf(shape, size.width, size.height);
   const cells = layerCells(sheet, spec.cols, spec.rows);
   const sprites: Sprite[] = [];
   spec.ids.forEach((id, index) => {
     if (id === '') return;
     const guided = spec.guided === true;
-    const image = layerSprite(cells[index], guided, placeOver(cells[index], guided, shape, size), size, spec.width, spec.height);
+    const image = layerSprite(cells[index], guided, placeOver(cells[index], guided, shape, size), size, spec.width, spec.height, foot);
     const flags: Flag[] = opaqueCount(image) === 0 ? ['empty'] : [];
     sprites.push({ id, group: spec.group, image, flags });
   });

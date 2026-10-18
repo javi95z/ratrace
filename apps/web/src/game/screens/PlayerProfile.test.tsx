@@ -54,6 +54,11 @@ function profile() {
 const show = (state: AccountState, community: Community | null) => renderGame(<PlayerProfile />, { ...memoryServices(), account: accountAs(state), community: () => community });
 
 describe('the player\'s profile', () => {
+  it('asks nobody to sign in before the account has tried to', () => {
+    renderGame(<PlayerProfile />, { ...memoryServices(), account: { ...accountAs({ kind: 'offline' }), settled: () => false }, community: () => null });
+    expect(screen.queryByText('Sign in with Google to have a profile others can see.')).toBeNull();
+  });
+
   it('asks a player with no Google account to sign in, and offers nothing to change', async () => {
     show({ kind: 'guest', userId: 'g', notice: null }, profile().community);
     expect(await screen.findByText('Sign in with Google to have a profile others can see.')).toBeTruthy();

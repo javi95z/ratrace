@@ -393,6 +393,12 @@ export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
 const NOBODY: AccountState = { kind: 'offline' };
 
 /** Who is playing, as the cloud knows them, and the two things a player can do about it. */
+/** Whether the account has tried to sign in yet: before, nobody being signed in says nothing. */
+export function useAccountSettled(): boolean {
+  const { account } = useGameContext();
+  return useSyncExternalStore(account.subscribe, () => account.settled?.() ?? true, () => false);
+}
+
 export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
   const { account, store } = useGameContext();
   const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);

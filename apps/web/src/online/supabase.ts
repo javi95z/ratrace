@@ -93,6 +93,8 @@ export class SupabaseAccount implements Account {
   private stopListening: (() => void) | null = null;
   /** The language the account was last started in, for trying again. */
   private language: string | null = null;
+  /** A start has ended, signed in or not. */
+  private tried = false;
 
   /**
    * `connect` loads the client, so a game that never goes online never downloads it.
@@ -109,6 +111,8 @@ export class SupabaseAccount implements Account {
 
   readonly state = (): AccountState => this.current;
 
+  readonly settled = (): boolean => this.tried;
+
   readonly subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
     return () => {
@@ -123,6 +127,10 @@ export class SupabaseAccount implements Account {
     return (this.starting ??= this.begin(language).finally(() => {
       // A start that ended offline may be tried again later; one that signed in is not repeated.
       this.starting = null;
+      if (!this.tried) {
+        this.tried = true;
+        for (const listener of this.listeners) listener();
+      }
     }));
   };
 

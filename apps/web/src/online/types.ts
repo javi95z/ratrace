@@ -21,8 +21,13 @@ export type AccountNotice = 'joining' | 'failed';
 /** The one way the screens learn who is playing and ask to keep the account. */
 export interface Account {
   state(): AccountState;
-  /** Calls `listener` whenever the state changes. Returns how to stop. */
+  /** Calls `listener` whenever the state changes, and when a first start has ended. Returns how to stop. */
   subscribe(listener: () => void): () => void;
+  /**
+   * Whether the account has tried to sign in at least once, however it went: until then `offline`
+   * only means it has not asked yet. Absent, it always has.
+   */
+  settled?(): boolean;
   /**
    * Signs in as a guest unless someone already is. Never throws: with no network the state stays
    * `offline`, and it can be asked again later.
