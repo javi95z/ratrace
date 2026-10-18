@@ -112,9 +112,25 @@ const cachedFirst = async (request) => {
   return remember(request, await fetch(request));
 };
 
+// The language of the last page the player opened, kept apart from the versioned cache so that a
+// new version does not forget it: opened offline, the bare address goes back to it.
+const LANGUAGE_CACHE = 'rat-race-language';
+const LANGUAGE_KEY = '/__language';
+const keepLanguage = async (address) => {
+  const found = new URL(address).pathname.match(/^\/(en|es|ru)(?:\/|$)/);
+  if (!found) return;
+  const cache = await caches.open(LANGUAGE_CACHE);
+  await cache.put(LANGUAGE_KEY, new Response(found[1]));
+};
+const lastLanguage = async () => {
+  const kept = await caches.match(LANGUAGE_KEY, { cacheName: LANGUAGE_CACHE });
+  return kept ? kept.text() : null;
+};
+
 const freshFirst = async (request, event, navigation = false) => {
   try {
     const response = (navigation && await event.preloadResponse) || await fetch(request);
+    if (navigation && response.ok) event.waitUntil(keepLanguage(response.url || request.url).catch(() => undefined));
     return remember(request, response);
   } catch {
     const cached = await caches.match(request);
@@ -123,7 +139,7 @@ const freshFirst = async (request, event, navigation = false) => {
 
     const url = new URL(request.url);
     if (url.pathname === '/') {
-      const language = (self.navigator.language || 'en').slice(0, 2);
+      const language = (await lastLanguage().catch(() => null)) || (self.navigator.language || 'en').slice(0, 2);
       const home = ['en', 'es', 'ru'].includes(language) ? '/' + language : '/en';
       const localized = await caches.match(home);
       if (localized) return localized;

@@ -3989,6 +3989,46 @@
     "w": 128,
     "h": 128
   },
+  "rat.clip.chef": {
+    "src": "rat_clip/rat.clip.chef.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.hivis": {
+    "src": "rat_clip/rat.clip.hivis.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.hoodie": {
+    "src": "rat_clip/rat.clip.hoodie.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.leather": {
+    "src": "rat_clip/rat.clip.leather.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.scrubs": {
+    "src": "rat_clip/rat.clip.scrubs.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.suit": {
+    "src": "rat_clip/rat.clip.suit.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.tracksuit": {
+    "src": "rat_clip/rat.clip.tracksuit.png",
+    "w": 128,
+    "h": 128
+  },
+  "rat.clip.tuxedo": {
+    "src": "rat_clip/rat.clip.tuxedo.png",
+    "w": 128,
+    "h": 128
+  },
   "rat.count": {
     "src": "brand/rat.count.png",
     "w": 128,

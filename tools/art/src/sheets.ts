@@ -23,6 +23,10 @@ export interface SheetSpec {
   over?: string;
   /** For layers: drawn over a pale guide of the rat, which is not part of the piece. */
   guided?: boolean;
+  /** For layers: where the piece is worn, the part of the rat it is fitted to. */
+  worn?: 'head' | 'body' | 'all';
+  /** For layers: strokes up to twice this many pixels wide, on the raw sheet, are taken out. */
+  thinnest?: number;
 }
 
 const LIVES_A = ['nurse', 'engineer', 'civil_servant', 'rider'];
@@ -401,6 +405,8 @@ export const SHEETS: SheetSpec[] = [
   ).map(([file, layer, guided, names]): SheetSpec => ({
     file: `brand/${file}`, group: `rat_${layer}`, kind: 'layers', cols: 4, rows: 2, width: 128, height: 128,
     ids: names.map((name) => `rat.${layer}.${name}`), over: 'brand/rat-body-01', guided,
+    worn: layer === 'outfit' ? 'body' : layer === 'body' ? 'all' : 'head',
+    thinnest: layer === 'outfit' ? 3 : 0,
   })),
   {
     file: 'brand/rat-backdrop-01', group: 'rat_backdrop', kind: 'scenes', cols: 4, rows: 2, width: 128, height: 128,

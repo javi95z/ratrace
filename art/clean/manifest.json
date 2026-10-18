@@ -4171,8 +4171,18 @@
       "width": 128,
       "height": 128
     },
+    "rat.clip.suit": {
+      "file": "rat_clip/rat.clip.suit.png",
+      "width": 128,
+      "height": 128
+    },
     "rat.outfit.tracksuit": {
       "file": "rat_outfit/rat.outfit.tracksuit.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.tracksuit": {
+      "file": "rat_clip/rat.clip.tracksuit.png",
       "width": 128,
       "height": 128
     },
@@ -4181,8 +4191,18 @@
       "width": 128,
       "height": 128
     },
+    "rat.clip.tuxedo": {
+      "file": "rat_clip/rat.clip.tuxedo.png",
+      "width": 128,
+      "height": 128
+    },
     "rat.outfit.hoodie": {
       "file": "rat_outfit/rat.outfit.hoodie.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.hoodie": {
+      "file": "rat_clip/rat.clip.hoodie.png",
       "width": 128,
       "height": 128
     },
@@ -4191,8 +4211,18 @@
       "width": 128,
       "height": 128
     },
+    "rat.clip.scrubs": {
+      "file": "rat_clip/rat.clip.scrubs.png",
+      "width": 128,
+      "height": 128
+    },
     "rat.outfit.hivis": {
       "file": "rat_outfit/rat.outfit.hivis.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.hivis": {
+      "file": "rat_clip/rat.clip.hivis.png",
       "width": 128,
       "height": 128
     },
@@ -4201,8 +4231,18 @@
       "width": 128,
       "height": 128
     },
+    "rat.clip.chef": {
+      "file": "rat_clip/rat.clip.chef.png",
+      "width": 128,
+      "height": 128
+    },
     "rat.outfit.leather": {
       "file": "rat_outfit/rat.outfit.leather.png",
+      "width": 128,
+      "height": 128
+    },
+    "rat.clip.leather": {
+      "file": "rat_clip/rat.clip.leather.png",
       "width": 128,
       "height": 128
     },

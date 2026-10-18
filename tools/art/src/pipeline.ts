@@ -2,7 +2,7 @@ import { assignCells, gridBox, labelBlobs } from './blobs';
 import { blank } from './image';
 import type { Box, Image } from './image';
 import { erode, keyMask } from './key';
-import { footOf, layerCells, layerSprite, placeOver, referenceShape } from './layers';
+import { clipOf, footOf, layerCells, layerSprite, placeOver, referenceShape } from './layers';
 import { fitInto, resample } from './scale';
 import { cropToAspect, dividerFlags, panelBoxes } from './scenes';
 import type { SheetSpec } from './sheets';
@@ -133,9 +133,11 @@ function cutLayers(sheet: Image, spec: SheetSpec, over: Image): Sprite[] {
   spec.ids.forEach((id, index) => {
     if (id === '') return;
     const guided = spec.guided === true;
-    const image = layerSprite(cells[index], guided, placeOver(cells[index], guided, shape, size), size, spec.width, spec.height, foot);
+    const image = layerSprite(cells[index], guided, placeOver(cells[index], guided, shape, size, spec.worn), size, spec.width, spec.height, foot, spec.thinnest ?? 0);
     const flags: Flag[] = opaqueCount(image) === 0 ? ['empty'] : [];
     sprites.push({ id, group: spec.group, image, flags });
+    // Clothes come with what they let show of the body under them.
+    if (spec.worn === 'body') sprites.push({ id: id.replace(/^rat\.outfit\./, 'rat.clip.'), group: 'rat_clip', image: clipOf(image), flags: [] });
   });
   return sprites;
 }

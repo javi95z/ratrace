@@ -15,6 +15,16 @@ describe('the installable app', () => {
     expect(worker).toContain("caches.match('/offline.html')");
   });
 
+  it('opens the bare address offline in the language last played, not the browser\'s', () => {
+    const worker = serviceWorker('test-version', ['/en']);
+    expect(worker).toContain('keepLanguage(response.url || request.url)');
+    expect(worker).toContain('(await lastLanguage().catch(() => null)) ||');
+    // Kept outside the versioned caches, which a new version clears.
+    expect(worker).toContain("const LANGUAGE_CACHE = 'rat-race-language'");
+    expect(worker).toContain("name.startsWith(CACHE_PREFIX)");
+    expect('rat-race-language'.startsWith('ratrace-')).toBe(false);
+  });
+
   it('has correctly sized ordinary, maskable and Apple icons', async () => {
     const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
     const expected = { 'icons/icon-192.png': 192, 'icons/icon-512.png': 512, 'icons/icon-maskable-512.png': 512, 'icons/apple-touch-icon.png': 180, 'favicon.ico': 32 };

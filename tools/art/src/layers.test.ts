@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { blank, paint } from './image';
 import type { Rgba } from './image';
-import { isGuide, layerSprite, placeOver, referenceShape } from './layers';
+import { clipOf, isGuide, layerSprite, placeOver, referenceShape } from './layers';
 
 const KEY: Rgba = [255, 0, 255, 255];
 const GUIDE: Rgba = [217, 194, 240, 255];
@@ -39,5 +39,18 @@ describe('the layers of a player\'s rat', () => {
     const colours = new Set<string>();
     for (let p = 0; p < sprite.data.length; p += 4) if (sprite.data[p + 3]) colours.add(`${sprite.data[p]},${sprite.data[p + 1]},${sprite.data[p + 2]}`);
     expect([...colours]).toEqual(['200,30,30']);
+  });
+
+  it('cut the body under clothes behind their back, and past their front only across the shoulders', () => {
+    const outfit = blank(20, 20);
+    paint(outfit, { x0: 12, y0: 8, x1: 15, y1: 10 }, RED); // a collar, narrow
+    paint(outfit, { x0: 6, y0: 10, x1: 18, y1: 20 }, RED); // the shoulders, wide
+    const clip = clipOf(outfit);
+    const shows = (x: number, y: number) => clip.data[(y * 20 + x) * 4 + 3] !== 0;
+    expect(shows(2, 4)).toBe(true); // above the clothes, the head
+    expect(shows(10, 9)).toBe(false); // behind the collar
+    expect(shows(17, 9)).toBe(true); // in front of the collar: the chin
+    expect(shows(3, 15)).toBe(false); // behind the shoulders
+    expect(shows(19, 15)).toBe(false); // past their front
   });
 });
