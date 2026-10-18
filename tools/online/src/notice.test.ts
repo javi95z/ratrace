@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { weekOf } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
-import { clock, isoWeek, noticeOf, span } from '../../../supabase/functions/_shared/notice.ts';
+import { clock, isoWeek, noticeOf, SHOUT_FACES, shoutText, span } from '../../../supabase/functions/_shared/notice.ts';
 
 describe('what a notice says', () => {
   it('names the week as the game does, every day of a few years', () => {
@@ -24,5 +25,14 @@ describe('what a notice says', () => {
     expect([clock(5), clock(90), clock(300)]).toEqual(['0:05', '1:30', '5:00']);
     expect([span(90, 'es'), span(86_400, 'es'), span(18_720, 'ru')]).toEqual(['1:30', '24 h', '5 ч 12 мин']);
     expect(noticeOf('es', { kind: 'newRound', round: 6, rounds: 20, seconds: 86_400 })).toMatchObject({ title: 'Ronda 6 de 20', body: 'Empieza una ronda nueva de tu partida. Tienes 24 h para jugarla.', url: '/es/room' });
+  });
+
+  it('says a shout as the player who sent it, in the words of the page', () => {
+    expect(noticeOf('es', { kind: 'shout', who: 'Ana', n: 13 })).toEqual({ title: 'Ana dice:', body: '¡Date prisa!', url: '/es/room', tag: 'room-shout' });
+    expect(noticeOf('en', { kind: 'shout', who: null, n: 2 })).toMatchObject({ title: 'A rival says:', body: '🔥' });
+    for (const lang of ['en', 'es', 'ru'] as const) {
+      const page = JSON.parse(readFileSync(new URL(`../../../apps/web/messages/${lang}.json`, import.meta.url), 'utf8')) as { room: Record<string, string> };
+      for (let i = 0; i < 8; i++) expect(shoutText(SHOUT_FACES.length + i, lang), `${lang} shout${i}`).toBe(page.room[`shout${i}`]);
+    }
   });
 });

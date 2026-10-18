@@ -184,7 +184,7 @@ export interface RoomsDeps {
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' } | { kind: 'shout' }>;
 
 /** How many shouts there are to choose from: the page draws them, the server keeps their number. */
 export const SHOUTS = 14;
@@ -777,6 +777,9 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const said = await deps.shout(room.id, userId, shout as number, deps.now());
     if (said === 'closed') return closed;
     if (said === 'soon') return { status: 409, body: { error: 'soon' } };
+    // For whoever is away from the screen: the others see it there already.
+    const names = await deps.names([userId]);
+    await deps.notify(members.filter((m) => m.left_at === null && m.user_id !== userId).map((m) => m.user_id), { kind: 'shout', who: names[userId] ?? null, n: shout as number });
     return await answerRoom(games, deps, room.id, userId);
   }
 

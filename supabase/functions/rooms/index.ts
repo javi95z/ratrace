@@ -124,7 +124,7 @@ export default {
         notify: async (users, about) => {
           // Sent after the answer, so that a player's move does not wait on push services.
           const sending = subscriptionsOf(db, users)
-            .then((rows) => deliver(db, rows, (row) => noticeOf(row.locale, about), about.kind === 'yourTurn' ? Math.max(1, about.secondsLeft) : about.kind === 'newRound' ? about.seconds : 3_600, 'high'))
+            .then((rows) => deliver(db, rows, (row) => noticeOf(row.locale, about), about.kind === 'yourTurn' ? Math.max(1, about.secondsLeft) : about.kind === 'newRound' ? about.seconds : about.kind === 'shout' ? 60 : 3_600, 'high'))
             .catch((error: unknown) => console.error('room notice failed:', error instanceof Error ? error.message : error));
           const runtime = (globalThis as { EdgeRuntime?: { waitUntil(promise: Promise<unknown>): void } }).EdgeRuntime;
           if (runtime) runtime.waitUntil(sending);
