@@ -271,7 +271,7 @@ describe('a round in a room', () => {
     await waitFor(() => expect(server.db.loans).toHaveLength(1));
     expect(server.db.loans[0]).toMatchObject({ lender: HOST, borrower: B, amount: 100_000, rate_bp: 1_000, rounds: 2, status: 'open' });
     // The offer waits on screen, and can be taken back.
-    expect(await screen.findByText('Waiting for Rat BBBB')).toBeTruthy();
+    expect(await screen.findByText('You offer Rat BBBB a loan: waiting for an answer')).toBeTruthy();
   });
 
   it('shows an offer from another player, and takes the answer', async () => {
@@ -290,7 +290,27 @@ describe('a round in a room', () => {
     expect(within(offer).getByText(/^You would pay \$[\d,]+ the first round and \$[\d,]+ in all\.$/)).toBeTruthy();
     await user.click(within(offer).getByRole('button', { name: 'Accept' }));
     await waitFor(() => expect(server.db.loans[0].status).toBe('accepted'));
-    expect(await screen.findByText('Accepted: paid out when the round ends', { exact: false })).toBeTruthy();
+    // Told from the player's side: who lends to whom, and when the money comes.
+    expect(await screen.findByText('Rat BBBB lends to you: the money comes when the round ends', { exact: false })).toBeTruthy();
+    expect(await screen.findByText(/\$2,000 at 5(\.0)?% · 3 rounds/)).toBeTruthy();
+  });
+
+  it('tells a loan at no interest as interest-free, from the side of the one who lends', async () => {
+    const server = roomServer();
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await screen.findByRole('button', { name: /^The game: / });
+    await act(async () => {
+      await server.ask(B, { action: 'loan', roomId: room.id, to: HOST, lend: false, amount: 2_500_000, rateBp: 0, rounds: 5 });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    const ask = await screen.findByRole('region', { name: 'Rat BBBB asks you for a loan' });
+    expect(within(ask).getByText('$25,000 interest-free · 5 rounds')).toBeTruthy();
+    await user.click(within(ask).getByRole('button', { name: 'Accept' }));
+    expect(await screen.findByText('You lend to Rat BBBB: the money goes when the round ends', { exact: false })).toBeTruthy();
   });
 
   it('shouts to the others from the bar, one every ten seconds, and shows what they shout', async () => {

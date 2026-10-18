@@ -1717,6 +1717,7 @@
       "sendAsk": "Pedírselo a {who}",
       "worth": "Patrimonio {worth}",
       "terms": "{amount} al {rate} · {rounds, plural, one {# ronda} other {# rondas}}",
+      "termsFree": "{amount} sin intereses · {rounds, plural, one {# ronda} other {# rondas}}",
       "askedTitle": "{who} te pide un préstamo",
       "offeredTitle": "{who} te ofrece un préstamo",
       "youWouldGet": "Te devolvería {total} en total.",
@@ -1726,13 +1727,30 @@
       "refuse": "Rechazar",
       "withdraw": "Retirar",
       "state": {
-        "open": "Esperando a {who}",
-        "accepted": "{who} acepta: se paga al acabar la ronda",
-        "refused": "{who} no acepta",
-        "paid": "Pagado",
-        "failed": "No se pagó: faltaba efectivo",
-        "expired": "{who} no respondió a tiempo",
-        "youAccepted": "Aceptado: se paga al acabar la ronda"
+        "open": {
+          "lend": "Ofreces un préstamo a {who}: espera su respuesta",
+          "borrow": "Pides un préstamo a {who}: espera su respuesta"
+        },
+        "accepted": {
+          "lend": "Prestas a {who}: el dinero sale al acabar la ronda",
+          "borrow": "{who} te presta: el dinero llega al acabar la ronda"
+        },
+        "refused": {
+          "lend": "{who} no quiere tu préstamo",
+          "borrow": "{who} no te lo presta"
+        },
+        "paid": {
+          "lend": "Le prestaste a {who}",
+          "borrow": "{who} te prestó"
+        },
+        "failed": {
+          "lend": "No se prestó: te faltaba efectivo",
+          "borrow": "No se prestó: a {who} le faltaba efectivo"
+        },
+        "expired": {
+          "lend": "{who} no respondió a tiempo",
+          "borrow": "{who} no respondió a tiempo"
+        }
       }
     },
     "rules": {

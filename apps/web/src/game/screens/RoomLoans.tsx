@@ -9,10 +9,15 @@ import type { RoomLoan, RoomMember, RoomState } from '@/game/room';
 import { Button, Panel, Segmented } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 
-/** What became of an offer, told to the player: each key written out. */
-const STATE = { open: 'state.open', accepted: 'state.accepted', refused: 'state.refused', paid: 'state.paid', failed: 'state.failed', expired: 'state.expired' } as const;
-/** An offer the player said yes to, told from their side. */
-const ACCEPTED_BY_ME = 'state.youAccepted';
+/** What became of an offer, told from the player's side: as the one who lends, or the one who borrows. Each key written out. */
+const STATE = {
+  open: { lend: 'state.open.lend', borrow: 'state.open.borrow' },
+  accepted: { lend: 'state.accepted.lend', borrow: 'state.accepted.borrow' },
+  refused: { lend: 'state.refused.lend', borrow: 'state.refused.borrow' },
+  paid: { lend: 'state.paid.lend', borrow: 'state.paid.borrow' },
+  failed: { lend: 'state.failed.lend', borrow: 'state.failed.borrow' },
+  expired: { lend: 'state.expired.lend', borrow: 'state.expired.borrow' },
+} as const;
 
 /** Amounts offered with one tap, in dollars. Any other can be typed. */
 const AMOUNTS = [1_000, 5_000, 10_000, 25_000] as const;
@@ -35,11 +40,11 @@ export function loanCost(amount: number, rateBp: number, rounds: number, yearsPe
   return { first, total };
 }
 
-/** A loan in a line: how much, at what rate, for how long. */
+/** A loan in a line: how much, at what rate (or none), for how long. */
 function useTerms() {
   const t = useT('room.loan');
   const { fmt } = useWords();
-  return (loan: { amount: number; rateBp: number; rounds: number }) => t('terms', { amount: fmt.money(loan.amount), rate: fmt.rate(loan.rateBp), rounds: loan.rounds });
+  return (loan: { amount: number; rateBp: number; rounds: number }) => loan.rateBp === 0 ? t('termsFree', { amount: fmt.money(loan.amount), rounds: loan.rounds }) : t('terms', { amount: fmt.money(loan.amount), rate: fmt.rate(loan.rateBp), rounds: loan.rounds });
 }
 
 /**
@@ -90,7 +95,7 @@ export function LoanOffers({ room, nameOf }: { room: RoomState; nameOf(member: R
       {told.map((loan) => (
         <div key={loan.id} role="status" className="frame flex items-center gap-2 bg-night-800 px-3 py-2 text-[13px]">
           <span className="min-w-0 flex-1 leading-snug">
-            {t(!loan.mine && loan.status === 'accepted' ? ACCEPTED_BY_ME : STATE[loan.status], { who: who(loan) })} <span className="text-ink-300">· {terms(loan)}</span>
+            {t(STATE[loan.status][loan.lend ? 'lend' : 'borrow'], { who: who(loan) })} <span className="text-ink-300">· {terms(loan)}</span>
           </span>
           {loan.mine && loan.status === 'open' ? (
             <button type="button" disabled={busy !== null} onClick={() => void reply(loan, false)} className="min-h-11 shrink-0 px-2 text-[13px] text-ink-300 underline underline-offset-4">

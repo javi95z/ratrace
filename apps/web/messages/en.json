@@ -1717,6 +1717,7 @@
       "sendAsk": "Ask {who}",
       "worth": "Net worth {worth}",
       "terms": "{amount} at {rate} · {rounds, plural, one {# round} other {# rounds}}",
+      "termsFree": "{amount} interest-free · {rounds, plural, one {# round} other {# rounds}}",
       "askedTitle": "{who} asks you for a loan",
       "offeredTitle": "{who} offers you a loan",
       "youWouldGet": "You would get {total} back in all.",
@@ -1726,13 +1727,30 @@
       "refuse": "Turn down",
       "withdraw": "Withdraw",
       "state": {
-        "open": "Waiting for {who}",
-        "accepted": "{who} says yes: paid out when the round ends",
-        "refused": "{who} says no",
-        "paid": "Paid out",
-        "failed": "Not paid out: not enough cash",
-        "expired": "{who} did not answer in time",
-        "youAccepted": "Accepted: paid out when the round ends"
+        "open": {
+          "lend": "You offer {who} a loan: waiting for an answer",
+          "borrow": "You ask {who} for a loan: waiting for an answer"
+        },
+        "accepted": {
+          "lend": "You lend to {who}: the money goes when the round ends",
+          "borrow": "{who} lends to you: the money comes when the round ends"
+        },
+        "refused": {
+          "lend": "{who} turns down your loan",
+          "borrow": "{who} will not lend to you"
+        },
+        "paid": {
+          "lend": "You lent to {who}",
+          "borrow": "{who} lent to you"
+        },
+        "failed": {
+          "lend": "Not lent: you were short of cash",
+          "borrow": "Not lent: {who} was short of cash"
+        },
+        "expired": {
+          "lend": "{who} did not answer in time",
+          "borrow": "{who} did not answer in time"
+        }
       }
     },
     "rules": {
