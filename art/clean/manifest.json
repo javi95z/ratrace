@@ -4116,6 +4116,216 @@
       "width": 64,
       "height": 64
     },
+    "celeb.mosk": {
+      "file": "portraits/celeb.mosk.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.grump": {
+      "file": "portraits/celeb.grump.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.poutine": {
+      "file": "portraits/celeb.poutine.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.bufe": {
+      "file": "portraits/celeb.bufe.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.bozos": {
+      "file": "portraits/celeb.bozos.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.zuckerbot": {
+      "file": "portraits/celeb.zuckerbot.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.puertas": {
+      "file": "portraits/celeb.puertas.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.nakamoro": {
+      "file": "portraits/celeb.nakamoro.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.kardashion": {
+      "file": "portraits/celeb.kardashion.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.mrfeast": {
+      "file": "portraits/celeb.mrfeast.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.ronalgo": {
+      "file": "portraits/celeb.ronalgo.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.swiftly": {
+      "file": "portraits/celeb.swiftly.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.bellfort": {
+      "file": "portraits/celeb.bellfort.png",
+      "width": 64,
+      "height": 64
+    },
+    "celeb.ortiga": {
+      "file": "portraits/celeb.ortiga.png",
+      "width": 64,
+      "height": 64
+    },
+    "card.celeb_mosk": {
+      "file": "cards/card.celeb_mosk.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_grump": {
+      "file": "cards/card.celeb_grump.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_poutine": {
+      "file": "cards/card.celeb_poutine.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_bufe": {
+      "file": "cards/card.celeb_bufe.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_bozos": {
+      "file": "cards/card.celeb_bozos.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_zuckerbot": {
+      "file": "cards/card.celeb_zuckerbot.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_puertas": {
+      "file": "cards/card.celeb_puertas.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_nakamoro": {
+      "file": "cards/card.celeb_nakamoro.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_kardashion": {
+      "file": "cards/card.celeb_kardashion.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_mrfeast": {
+      "file": "cards/card.celeb_mrfeast.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_ronalgo": {
+      "file": "cards/card.celeb_ronalgo.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_swiftly": {
+      "file": "cards/card.celeb_swiftly.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_bellfort": {
+      "file": "cards/card.celeb_bellfort.png",
+      "width": 288,
+      "height": 120
+    },
+    "card.celeb_ortiga": {
+      "file": "cards/card.celeb_ortiga.png",
+      "width": 288,
+      "height": 120
+    },
+    "badge.celeb_mosk": {
+      "file": "badges/badge.celeb_mosk.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_grump": {
+      "file": "badges/badge.celeb_grump.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_poutine": {
+      "file": "badges/badge.celeb_poutine.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_bufe": {
+      "file": "badges/badge.celeb_bufe.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_bozos": {
+      "file": "badges/badge.celeb_bozos.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_zuckerbot": {
+      "file": "badges/badge.celeb_zuckerbot.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_puertas": {
+      "file": "badges/badge.celeb_puertas.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_nakamoro": {
+      "file": "badges/badge.celeb_nakamoro.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_kardashion": {
+      "file": "badges/badge.celeb_kardashion.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_mrfeast": {
+      "file": "badges/badge.celeb_mrfeast.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_ronalgo": {
+      "file": "badges/badge.celeb_ronalgo.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_swiftly": {
+      "file": "badges/badge.celeb_swiftly.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_bellfort": {
+      "file": "badges/badge.celeb_bellfort.png",
+      "width": 64,
+      "height": 64
+    },
+    "badge.celeb_ortiga": {
+      "file": "badges/badge.celeb_ortiga.png",
+      "width": 64,
+      "height": 64
+    },
     "icon.multiplayer": {
       "file": "icons/icon.multiplayer.png",
       "width": 32,

@@ -6,6 +6,7 @@ import { familyCards, housingCards, lifestyleCards, lodgerCards, redTapeCards } 
 import { investingCards, taxCards, worldCards } from './markets';
 import { moreBusinessCards, moreCareerCards, moreEducationCards, moreFamilyCards, moreHousingCards, moreInvestingCards, moreLaterLifeCards, moreLifestyleCards, moreTaxCards } from './extra';
 import { businessCards, careerCards, educationCards } from './work';
+import { celebCards } from './celebs';
 
 /** The hundred cards of v1, in the order of spec section 3.11. */
 export const cards: CardDef[] = [
@@ -36,4 +37,6 @@ export const cards: CardDef[] = [
   ...cityCards,
   // The wrong side of the law, and prison.
   ...crimeCards,
+  // The famous, as parodies: rare, and once a life.
+  ...celebCards,
 ];

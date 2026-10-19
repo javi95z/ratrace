@@ -845,4 +845,65 @@ export const cards: Record<string, CardText> = {
     'Tirar de tu oro',
     'Pagar en cripto',
   ]),
+  // The famous, as parodies.
+  celeb_mosk: c('Elon Mosk quiere tu negocio', 'Lo ha visto en una publicación. En una respuesta, te ofrece el triple de lo que vale.', [
+    'Decir que no',
+    ['Cerrar el trato', 'Paga. El triple. Enmarcas la publicación.', 'Cambia de idea en otra publicación. El abogado te manda la factura igual.'],
+  ]),
+  celeb_grump: c('Un piso en la Grump Tower', 'Ronald Grump te la enseña en persona: «Los mejores pisos. Lo dice todo el mundo». Cuestan un 30 % más que el de al lado.', [
+    'Seguir buscando',
+    ['Firmar', 'Grifos dorados, portero y su nombre en la puerta. Se nota.', 'A la semana quitan su nombre del edificio. Ahora es solo un piso, y caro.'],
+  ]),
+  celeb_poutine: c('El yate de un oligarca, barato', 'Un señor nervioso vende su yate esta semana, muy por debajo de su precio. Vladimir Poutine mira desde el final de una mesa larguísima.', [
+    'No es tu barco',
+    ['Comprarlo', 'Es tuyo, y nadie pregunta de dónde salió.', 'Las sanciones lo congelan en el puerto. Los abogados para recuperarlo cuestan una fortuna.'],
+  ]),
+  celeb_bufe: c('Comida con Warren Bufé', 'El viejo inversor te invita a una hamburguesa y una cola de cereza. Puedes preguntarle una sola cosa.', [
+    'Hablar del tiempo',
+    'Preguntarle cómo lo hizo',
+    'Preguntarle qué comprar',
+  ]),
+  celeb_bozos: c('Vender a través de Jeff Bozos', 'Su plataforma llevaría tu negocio a todas las casas del país. A cambio de un treinta por ciento de cada venta.', [
+    'Seguir por tu cuenta',
+    ['Entrar en la plataforma', 'Pedidos de todas partes. Tu negocio nunca ha valido tanto.', 'Copia tu producto estrella y lo vende más barato. Pierdes terreno.'],
+  ]),
+  celeb_zuckerbot: c('Terreno en el metaverso', 'Mark Zuckerbot vende parcelas en su mundo virtual: «Todos viviremos aquí». Serías de los primeros.', [
+    'Quedarte en el mundo real',
+    ['Comprar una parcela', 'Una marca te compra la parcela para su tienda virtual. Vendes, y aún no te lo crees.', 'El metaverso se vacía. Tu parcela es un cuadrado de píxeles verdes que no visita nadie.'],
+  ]),
+  celeb_puertas: c('Una gala con Bill Puertas', 'Pasa la hucha en una gala benéfica, y la sala se queda en silencio cuando llega a ti.', [
+    'Pasarla sin echar nada',
+    'Dar una décima parte de todo lo que tienes',
+    'Echar un poco',
+  ]),
+  celeb_nakamoro: c('Un portátil viejo en el trastero', 'Tiene una cartera de monedas de los primeros tiempos. Bloqueada. La contraseña es algo que usarías entonces.', [
+    'Dejarlo en la caja',
+    ['Probar todas tus contraseñas', 'Se abre. Vendes antes de que te dejen de temblar las manos.', 'Ninguna funciona. Pierdes el finde, y una figura encapuchada sonríe en la pantalla.'],
+  ]),
+  celeb_kardashion: c('Una publicación patrocinada', 'Kim Kardashion quiere que salgas en una foto con su nueva agua: «Tú sonríe y di que te ha cambiado la vida».', [
+    'Decir que no',
+    'Hacer la foto',
+    'Hacerlo en serio, para tus seguidores',
+  ]),
+  celeb_mrfeast: c('Un reto de MrFeast', 'Quien aguante una semana dentro de un círculo de luz gana una fortuna. Lo verán millones.', [
+    'Verlo desde casa',
+    ['Participar', 'Eres quien aguanta hasta el final. El cheque es enorme, y de verdad.', 'Aguantas once horas. El vídeo de tu rendición tiene ocho millones de visitas.'],
+  ]),
+  celeb_ronalgo: c('La ropa interior de Cristiano Ronalgo', 'Su representante busca inversores para una nueva línea: «Se vende sola. Míralo».', [
+    'No es tu estilo',
+    ['Poner dinero', 'Se vende en todas partes. Llega un cheque cada año.', 'La moda pasa. Las cajas de calzoncillos no.'],
+  ]),
+  celeb_swiftly: c('Taylor Swiftly está de gira', 'Las entradas se agotaron en un minuto. Tienes dos, a un precio que te obliga a sentarte.', [
+    'Regalarlas',
+    'Ir al concierto',
+    ['Revenderlas', 'Las vendes por mucho más. Alguien llora de alegría.', 'Eran falsas. Pierdes la noche y el dinero.'],
+  ]),
+  celeb_bellfort: c('Una llamada de Jordan Bellfort', '«Tengo una acción que solo sube. Solo sube». Habla muy deprisa. Tienes un minuto.', [
+    'Colgar',
+    ['Comprar lo que vende', 'No se sabe cómo, pero sube. Vendes y no vuelves a cogerle el teléfono.', 'La empresa no existe. Tu dinero, ahora, tampoco.'],
+  ]),
+  celeb_ortiga: c('Amancio Ortiga abre enfrente', 'Una tienda enorme justo delante de tu negocio. Viene él en persona: «O te puedes unir a nosotros».', [
+    'Aguantar',
+    'Aceptar su franquicia',
+  ]),
 };

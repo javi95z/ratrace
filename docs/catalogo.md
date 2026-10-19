@@ -14,9 +14,9 @@ Los precios son en dólares del inicio de la partida; en el juego suben con la i
 | [Inmuebles](#inmuebles) | 16 |
 | [Inversiones](#inversiones) | 22 |
 | [Modo de vida, alquiler, seguros y foco](#modo-de-vida-alquiler-seguros-y-foco) | 4 + 2 + 4 + 3 |
-| [Cartas](#cartas) | 181 |
+| [Cartas](#cartas) | 195 |
 | [Crisis](#crisis) | 3 |
-| [Insignias](#insignias) | 49 |
+| [Insignias](#insignias) | 63 |
 
 ## Vidas
 
@@ -1011,7 +1011,7 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crime_jail_library.png" alt="La biblioteca de la cárcel"> | **La biblioteca de la cárcel**<br>Tres estanterías, un diccionario y mucho tiempo. | 1. Dormir<br>2. Aprender un idioma<br>3. Estudiar para tu oficio |
 | <img src="../art/clean/cards/card.crime_fake_mba.png" alt="Una pequeña mejora"> | **Una pequeña mejora**<br>Nadie comprueba un currículum. Un MBA quedaría muy bien en el tuyo. | 1. Dejar el currículum como está<br>2. Añadir el MBA |
 
-### Negocios (17)
+### Negocios (20)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1032,8 +1032,11 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_mexico_city_taqueria.png" alt="Un socio para la taquería"> | **Un socio para la taquería**<br>El taquero de tu esquina busca socio para abrir un segundo puesto. | 1. Desearle suerte<br>2. Poner dinero |
 | <img src="../art/clean/cards/card.crime_memoirs.png" alt="Memorias desde la celda"> | **Memorias desde la celda**<br>Una editorial cree que tu historia vendería. Un pódcast también. | 1. Guardártela<br>2. Contarlo todo |
 | <img src="../art/clean/cards/card.crime_laundering.png" alt="Dinero limpio"> | **Dinero limpio**<br>Tu negocio cobra mucho en efectivo. Un amigo te explica cómo podría cobrar un poco más, sobre el papel. | 1. Llevar las cuentas honestas<br>2. Lavar lo que tienes oculto |
+| <img src="../art/clean/cards/card.celeb_mosk.png" alt="Elon Mosk quiere tu negocio"> | **Elon Mosk quiere tu negocio**<br>Lo ha visto en una publicación. En una respuesta, te ofrece el triple de lo que vale. | 1. Decir que no<br>2. Cerrar el trato |
+| <img src="../art/clean/cards/card.celeb_bozos.png" alt="Vender a través de Jeff Bozos"> | **Vender a través de Jeff Bozos**<br>Su plataforma llevaría tu negocio a todas las casas del país. A cambio de un treinta por ciento de cada venta. | 1. Seguir por tu cuenta<br>2. Entrar en la plataforma |
+| <img src="../art/clean/cards/card.celeb_ortiga.png" alt="Amancio Ortiga abre enfrente"> | **Amancio Ortiga abre enfrente**<br>Una tienda enorme justo delante de tu negocio. Viene él en persona: «O te puedes unir a nosotros». | 1. Aguantar<br>2. Aceptar su franquicia |
 
-### Inversión (14)
+### Inversión (18)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1051,8 +1054,12 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.leveraged_chart.png" alt="Un fondo que multiplica por tres"> | **Un fondo que multiplica por tres**<br>Un influencer jura por un ETF apalancado: el triple de lo que haga el mercado. Hacia arriba y hacia abajo. | 1. Pasar<br>2. Meter dinero |
 | <img src="../art/clean/cards/card.crime_memecoin.png" alt="Lanza tu propia moneda"> | **Lanza tu propia moneda**<br>Llámala $RATA, paga a unos influencers y vende antes de que nadie se entere. ¿Qué puede salir mal? | 1. Conservar la dignidad<br>2. Lanzar $RATA |
 | <img src="../art/clean/cards/card.crime_insider_tip.png" alt="Tu cuñado sabe algo"> | **Tu cuñado sabe algo**<br>Trabaja en un banco. El lunes se anuncia una opa, y nadie lo sabe todavía. | 1. Cambiar de tema<br>2. Comprar antes del lunes |
+| <img src="../art/clean/cards/card.celeb_bufe.png" alt="Comida con Warren Bufé"> | **Comida con Warren Bufé**<br>El viejo inversor te invita a una hamburguesa y una cola de cereza. Puedes preguntarle una sola cosa. | 1. Hablar del tiempo<br>2. Preguntarle cómo lo hizo<br>3. Preguntarle qué comprar |
+| <img src="../art/clean/cards/card.celeb_zuckerbot.png" alt="Terreno en el metaverso"> | **Terreno en el metaverso**<br>Mark Zuckerbot vende parcelas en su mundo virtual: «Todos viviremos aquí». Serías de los primeros. | 1. Quedarte en el mundo real<br>2. Comprar una parcela |
+| <img src="../art/clean/cards/card.celeb_ronalgo.png" alt="La ropa interior de Cristiano Ronalgo"> | **La ropa interior de Cristiano Ronalgo**<br>Su representante busca inversores para una nueva línea: «Se vende sola. Míralo». | 1. No es tu estilo<br>2. Poner dinero |
+| <img src="../art/clean/cards/card.celeb_bellfort.png" alt="Una llamada de Jordan Bellfort"> | **Una llamada de Jordan Bellfort**<br>«Tengo una acción que solo sube. Solo sube». Habla muy deprisa. Tienes un minuto. | 1. Colgar<br>2. Comprar lo que vende |
 
-### Vivienda (17)
+### Vivienda (18)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1073,8 +1080,9 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_singapore_ballot.png" alt="Sorteo de vivienda pública"> | **Sorteo de vivienda pública**<br>El Estado construye pisos a una fracción del precio de mercado. Hay sorteo. | 1. No apuntarte<br>2. Apuntarte al sorteo |
 | <img src="../art/clean/cards/card.city_bangkok_flood.png" alt="Llegan las lluvias"> | **Llegan las lluvias**<br>El monzón inunda tu calle y, con ella, la planta baja. | 1. Que se encargue el seguro<br>2. Sacos de arena y limpiar tú |
 | <img src="../art/clean/cards/card.city_tokyo_earthquake.png" alt="Tiembla la tierra"> | **Tiembla la tierra**<br>Un terremoto fuerte sacude la ciudad. Tu casa sigue en pie, pero no ilesa. | 1. Llamar al seguro<br>2. Arreglar tú lo que puedas |
+| <img src="../art/clean/cards/card.celeb_grump.png" alt="Un piso en la Grump Tower"> | **Un piso en la Grump Tower**<br>Ronald Grump te la enseña en persona: «Los mejores pisos. Lo dice todo el mundo». Cuestan un 30 % más que el de al lado. | 1. Seguir buscando<br>2. Firmar |
 
-### Estilo de vida (22)
+### Estilo de vida (26)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1100,8 +1108,12 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.city_dubai_golden_visa.png" alt="Un visado dorado"> | **Un visado dorado**<br>Con lo que tienes, podrías tener diez años de residencia y el estatus que conlleva. | 1. No hace falta<br>2. Solicitarlo |
 | <img src="../art/clean/cards/card.crime_jail_commissary.png" alt="La economía de los fideos"> | **La economía de los fideos**<br>Dentro, los fideos instantáneos son dinero. Todo el mundo los quiere y nadie tiene bastantes. | 1. Comprar lo que necesitas<br>2. Montar el negocio de fideos |
 | <img src="../art/clean/cards/card.crime_ham_smuggling.png" alt="Una maleta llena de jamón"> | **Una maleta llena de jamón**<br>Un amigo pagará bien unos jamones ibéricos traídos en tu equipaje. La aduana puede no estar de acuerdo. | 1. Llevar solo ropa<br>2. Meter los jamones |
+| <img src="../art/clean/cards/card.celeb_poutine.png" alt="El yate de un oligarca, barato"> | **El yate de un oligarca, barato**<br>Un señor nervioso vende su yate esta semana, muy por debajo de su precio. Vladimir Poutine mira desde el final de una mesa larguísima. | 1. No es tu barco<br>2. Comprarlo |
+| <img src="../art/clean/cards/card.celeb_puertas.png" alt="Una gala con Bill Puertas"> | **Una gala con Bill Puertas**<br>Pasa la hucha en una gala benéfica, y la sala se queda en silencio cuando llega a ti. | 1. Pasarla sin echar nada<br>2. Dar una décima parte de todo lo que tienes<br>3. Echar un poco |
+| <img src="../art/clean/cards/card.celeb_kardashion.png" alt="Una publicación patrocinada"> | **Una publicación patrocinada**<br>Kim Kardashion quiere que salgas en una foto con su nueva agua: «Tú sonríe y di que te ha cambiado la vida». | 1. Decir que no<br>2. Hacer la foto<br>3. Hacerlo en serio, para tus seguidores |
+| <img src="../art/clean/cards/card.celeb_swiftly.png" alt="Taylor Swiftly está de gira"> | **Taylor Swiftly está de gira**<br>Las entradas se agotaron en un minuto. Tienes dos, a un precio que te obliga a sentarte. | 1. Regalarlas<br>2. Ir al concierto<br>3. Revenderlas |
 
-### Suerte (14)
+### Suerte (16)
 
 |  | Carta | Opciones |
 | --- | --- | --- |
@@ -1119,6 +1131,8 @@ Cada ronda reparte 3. La primera opción de cada carta es la que no cuesta ni co
 | <img src="../art/clean/cards/card.crime_wrongly_accused.png" alt="Inocente, de verdad"> | **Inocente, de verdad**<br>La policía está segura de que hiciste algo que no hiciste. Estabas en el dentista. | 1. Fiarte del abogado de oficio<br>2. Pagar un buen abogado |
 | <img src="../art/clean/cards/card.crime_jail_cellmate.png" alt="Tu compañero de celda, banquero"> | **Tu compañero de celda, banquero**<br>El de la litera de arriba dirigía un fondo de inversión. Tiene opiniones sobre tu cartera. | 1. Hacerte el dormido<br>2. Tomar apuntes |
 | <img src="../art/clean/cards/card.crime_illegal_betting.png" alt="Una apuesta segura"> | **Una apuesta segura**<br>Un señor en un bar jura que el partido de Segunda del domingo ya está decidido. | 1. Verlo gratis<br>2. Apostar dos mil |
+| <img src="../art/clean/cards/card.celeb_nakamoro.png" alt="Un portátil viejo en el trastero"> | **Un portátil viejo en el trastero**<br>Tiene una cartera de monedas de los primeros tiempos. Bloqueada. La contraseña es algo que usarías entonces. | 1. Dejarlo en la caja<br>2. Probar todas tus contraseñas |
+| <img src="../art/clean/cards/card.celeb_mrfeast.png" alt="Un reto de MrFeast"> | **Un reto de MrFeast**<br>Quien aguante una semana dentro de un círculo de luz gana una fortuna. Lo verán millones. | 1. Verlo desde casa<br>2. Participar |
 
 ### Familia (13)
 
@@ -1324,3 +1338,22 @@ Los prestamistas han dejado de fiarse de los gobiernos. Pedir prestado se encare
 | <img src="../art/clean/badges/badge.mp_first_win.png" alt="Primera victoria"> | Primera victoria | Gana una partida multijugador. |
 | <img src="../art/clean/badges/badge.mp_full_house.png" alt="Casa llena"> | Casa llena | Gana una partida multijugador de seis jugadores. |
 | <img src="../art/clean/badges/badge.mp_rematch_win.png" alt="La revancha"> | La revancha | Gana la revancha de una partida multijugador. |
+
+### Famosos
+
+|  | Insignia | Cómo se consigue |
+| --- | --- | --- |
+| <img src="../art/clean/badges/badge.celeb_mosk.png" alt="Negocios por tuit"> | Negocios por tuit | Acepta la oferta de Elon Mosk por tu negocio. |
+| <img src="../art/clean/badges/badge.celeb_grump.png" alt="Vecino de la torre"> | Vecino de la torre | Compra un piso en la Grump Tower. |
+| <img src="../art/clean/badges/badge.celeb_poutine.png" alt="El yate del oligarca"> | El yate del oligarca | Compra barato el yate de un oligarca. |
+| <img src="../art/clean/badges/badge.celeb_bufe.png" alt="Comiste con Bufé"> | Comiste con Bufé | Pregúntale algo a Warren Bufé durante la comida. |
+| <img src="../art/clean/badges/badge.celeb_bozos.png" alt="Prime para siempre"> | Prime para siempre | Vende tu negocio a través de Jeff Bozos. |
+| <img src="../art/clean/badges/badge.celeb_zuckerbot.png" alt="Vecino virtual"> | Vecino virtual | Compra terreno en el metaverso. |
+| <img src="../art/clean/badges/badge.celeb_puertas.png" alt="Filántropo"> | Filántropo | Da una décima parte de todo en la gala de Bill Puertas. |
+| <img src="../art/clean/badges/badge.celeb_nakamoro.png" alt="Llaves perdidas"> | Llaves perdidas | Intenta abrir la vieja cartera de monedas. |
+| <img src="../art/clean/badges/badge.celeb_kardashion.png" alt="Patrocinado"> | Patrocinado | Haz una publicación patrocinada para Kim Kardashion. |
+| <img src="../art/clean/badges/badge.celeb_mrfeast.png" alt="Viral sin querer"> | Viral sin querer | Participa en el reto de MrFeast. |
+| <img src="../art/clean/badges/badge.celeb_ronalgo.png" alt="¡Siuuu!"> | ¡Siuuu! | Invierte en la ropa interior de Cristiano Ronalgo. |
+| <img src="../art/clean/badges/badge.celeb_swiftly.png" alt="Fan de Swiftly"> | Fan de Swiftly | Consigue entradas para la gira de Taylor Swiftly. |
+| <img src="../art/clean/badges/badge.celeb_bellfort.png" alt="Primo de Wall Street"> | Primo de Wall Street | Compra lo que Jordan Bellfort te vende por teléfono. |
+| <img src="../art/clean/badges/badge.celeb_ortiga.png" alt="Ortigado"> | Ortigado | Que Amancio Ortiga abra una tienda enfrente de la tuya. |

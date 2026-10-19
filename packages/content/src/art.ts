@@ -202,6 +202,21 @@ export const cardArt: Record<string, string> = {
   late_motorbike: scene('motorbike_window'),
   late_mentor: scene('mentor_session'),
   late_scam_call: scene('scam_message'),
+  // The famous, as parodies.
+  celeb_mosk: scene('celeb_mosk'),
+  celeb_grump: scene('celeb_grump'),
+  celeb_poutine: scene('celeb_poutine'),
+  celeb_bufe: scene('celeb_bufe'),
+  celeb_bozos: scene('celeb_bozos'),
+  celeb_zuckerbot: scene('celeb_zuckerbot'),
+  celeb_puertas: scene('celeb_puertas'),
+  celeb_nakamoro: scene('celeb_nakamoro'),
+  celeb_kardashion: scene('celeb_kardashion'),
+  celeb_mrfeast: scene('celeb_mrfeast'),
+  celeb_ronalgo: scene('celeb_ronalgo'),
+  celeb_swiftly: scene('celeb_swiftly'),
+  celeb_bellfort: scene('celeb_bellfort'),
+  celeb_ortiga: scene('celeb_ortiga'),
 };
 
 /** Items are drawn by their own sprite. Cars live on their own sheet. */
@@ -285,6 +300,16 @@ export const focusArt: Record<FocusAction, string> = {
   tease: 'icon.room_tease',
   careerMove: 'icon.star',
 };
+/** The filler headlines from this one on are about the famous, one each, in the order of `CELEBS`. */
+export const CELEB_HEADLINES_FROM = 38;
+/** The famous, by the ids of their portraits. */
+export const CELEB_ART = ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `celeb.${id}`);
+/** The picture beside a headline: the portrait of the famous one it is about, or the icon of its topic. */
+export function headlineArt(h: Headline): string {
+  if (h.topic === 'noise' && h.id >= CELEB_HEADLINES_FROM) return CELEB_ART[h.id - CELEB_HEADLINES_FROM] ?? topicArt.noise;
+  return topicArt[h.topic];
+}
+
 /** What a headline is about. */
 export const topicArt: Record<Headline['topic'], string> = {
   regime: 'icon.economy',

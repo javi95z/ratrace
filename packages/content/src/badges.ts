@@ -9,7 +9,7 @@ import type { Story } from './story';
 /** A life begins at 22 and ages by the years of a round. */
 export const START_AGE = 22;
 
-export type BadgeGroup = 'wealth' | 'escape' | 'investing' | 'status' | 'life' | 'misfortune' | 'multiplayer';
+export type BadgeGroup = 'wealth' | 'escape' | 'investing' | 'status' | 'life' | 'misfortune' | 'multiplayer' | 'famous';
 
 export interface BadgeDef {
   id: string;
@@ -67,6 +67,21 @@ export const badges: BadgeDef[] = [
   { id: 'mp_first_win', group: 'multiplayer' },
   { id: 'mp_full_house', group: 'multiplayer' },
   { id: 'mp_rematch_win', group: 'multiplayer' },
+  // Met the famous: played along with one of their cards.
+  { id: 'celeb_mosk', group: 'famous' },
+  { id: 'celeb_grump', group: 'famous' },
+  { id: 'celeb_poutine', group: 'famous' },
+  { id: 'celeb_bufe', group: 'famous' },
+  { id: 'celeb_bozos', group: 'famous' },
+  { id: 'celeb_zuckerbot', group: 'famous' },
+  { id: 'celeb_puertas', group: 'famous' },
+  { id: 'celeb_nakamoro', group: 'famous' },
+  { id: 'celeb_kardashion', group: 'famous' },
+  { id: 'celeb_mrfeast', group: 'famous' },
+  { id: 'celeb_ronalgo', group: 'famous' },
+  { id: 'celeb_swiftly', group: 'famous' },
+  { id: 'celeb_bellfort', group: 'famous' },
+  { id: 'celeb_ortiga', group: 'famous' },
 ];
 
 /**
@@ -265,6 +280,21 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   sold_business: (f) => Object.hasOwn(f.p.life.flags, 'sold_business'),
   home_again: (f) => f.events.some((e) => e.kind === 'homecoming'),
   // The job left for a business of one's own, and a round lived from it.
+  // The famous: one played along with leaves their mark.
+  celeb_mosk: (f) => Object.hasOwn(f.p.life.flags, 'met_mosk'),
+  celeb_grump: (f) => Object.hasOwn(f.p.life.flags, 'met_grump'),
+  celeb_poutine: (f) => Object.hasOwn(f.p.life.flags, 'met_poutine'),
+  celeb_bufe: (f) => Object.hasOwn(f.p.life.flags, 'met_bufe'),
+  celeb_bozos: (f) => Object.hasOwn(f.p.life.flags, 'met_bozos'),
+  celeb_zuckerbot: (f) => Object.hasOwn(f.p.life.flags, 'met_zuckerbot'),
+  celeb_puertas: (f) => Object.hasOwn(f.p.life.flags, 'met_puertas'),
+  celeb_nakamoro: (f) => Object.hasOwn(f.p.life.flags, 'met_nakamoro'),
+  celeb_kardashion: (f) => Object.hasOwn(f.p.life.flags, 'met_kardashion'),
+  celeb_mrfeast: (f) => Object.hasOwn(f.p.life.flags, 'met_mrfeast'),
+  celeb_ronalgo: (f) => Object.hasOwn(f.p.life.flags, 'met_ronalgo'),
+  celeb_swiftly: (f) => Object.hasOwn(f.p.life.flags, 'met_swiftly'),
+  celeb_bellfort: (f) => Object.hasOwn(f.p.life.flags, 'met_bellfort'),
+  celeb_ortiga: (f) => Object.hasOwn(f.p.life.flags, 'met_ortiga'),
   own_boss: (f) => f.round && f.p.businesses.some((business) => business.fullTime === true),
   rode_out_recession: (f) => f.round && f.world.regime === 'recession' && f.heldBefore.length > 0 && keptAll(f, f.heldBefore),
 

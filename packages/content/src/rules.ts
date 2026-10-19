@@ -264,7 +264,8 @@ export const life: LifeRules = {
 export const world: WorldRules = {
   // Four a round: one is often filler that says nothing, to be told from the news that matters.
   headlinesPerRound: 4,
-  noiseHeadlines: 38,
+  // Thirty-eight of everyday life, then one about each of the famous (see CELEB_HEADLINES_FROM).
+  noiseHeadlines: 52,
   // The government as the paper sees it: busy, expensive, and always about to fix something.
   governmentHeadlines: 40,
   newsTruthPct: 70,

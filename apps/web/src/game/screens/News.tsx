@@ -2,7 +2,7 @@
 
 import { ratLookOf } from '@/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
-import { topicArt } from '@ratrace/content';
+import { headlineArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@/game/present';
@@ -126,8 +126,9 @@ export function Headlines() {
           {world.news.map((h, i) => (
             // One story after another, each under a rule, as the columns of a page.
             <li key={i} className={`flex items-center gap-2.5 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
-              <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 p-1 ${TOPIC[h.topic]}`}>
-                <Sprite id={topicArt[h.topic]} />
+              <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 ${headlineArt(h).startsWith('celeb.') ? '' : 'p-1'} ${TOPIC[h.topic]}`}>
+                {/* A story about one of the famous carries their portrait, the whole box; any other, its topic's icon. */}
+                <Sprite id={headlineArt(h)} className={headlineArt(h).startsWith('celeb.') ? '!h-full !w-full' : ''} />
               </span>
               <span className="min-w-0">
                 <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">

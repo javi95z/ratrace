@@ -845,4 +845,65 @@ export const cards: Record<string, CardText> = {
     'Fall back on your gold',
     'Pay in crypto',
   ]),
+  // The famous, as parodies.
+  celeb_mosk: c('Elon Mosk wants your business', 'He saw it in a post. In a reply, he offers three times what it is worth.', [
+    'Say no',
+    ['Shake on it', 'He pays. Three times over. You frame the post.', 'He changes his mind in a later post. The lawyer still sends you the bill.'],
+  ]),
+  celeb_grump: c('A flat in Grump Tower', 'Ronald Grump shows you round himself: "The best flats. Everybody says so." They cost 30% more than the one next door.', [
+    'Keep looking',
+    ['Sign', 'Gold taps, a doorman and the name over the door. People notice.', 'A week later his name comes off the building. It is just a flat now, and a dear one.'],
+  ]),
+  celeb_poutine: c('An oligarch\'s yacht, cheap', 'A nervous man must sell his yacht this week, far below its price. Vladimir Poutine watches from the far end of a very long table.', [
+    'Not your boat',
+    ['Buy it', 'It is yours, and nobody asks where it came from.', 'Sanctions freeze it at the quay. The lawyers who get it back cost a fortune.'],
+  ]),
+  celeb_bufe: c('Lunch with Warren Bufé', 'The old investor buys you a burger and a cherry cola. You may ask him one thing.', [
+    'Talk about the weather',
+    'Ask how he did it',
+    'Ask what to buy',
+  ]),
+  celeb_bozos: c('Sell through Jeff Bozos', 'His platform would take your business to every doorstep in the country. For thirty percent of each sale.', [
+    'Stay independent',
+    ['Join the platform', 'Orders from everywhere. Your business has never been worth more.', 'He copies your best seller and sells it cheaper. You lose ground.'],
+  ]),
+  celeb_zuckerbot: c('Land in the metaverse', 'Mark Zuckerbot is selling plots in his virtual world: "Everyone will live here." You would be among the first.', [
+    'Stay in the real world',
+    ['Buy a plot', 'A brand buys your plot for its virtual shop. You sell, and wonder.', 'The metaverse empties. Your plot is a square of green pixels nobody visits.'],
+  ]),
+  celeb_puertas: c('A gala with Bill Puertas', 'He passes the jar at a charity gala, and the room goes quiet as it reaches you.', [
+    'Pass it on',
+    'Give a tenth of everything you have',
+    'Give a little',
+  ]),
+  celeb_nakamoro: c('An old laptop in the attic', 'It has a coin wallet from the early days on it. Locked. The password is something you would have used back then.', [
+    'Leave it in the box',
+    ['Try every password you ever had', 'It opens. You sell before your hands stop shaking.', 'Nothing works. A weekend gone, and a hooded figure smiling in the black screen.'],
+  ]),
+  celeb_kardashion: c('A sponsored post', 'Kim Kardashion wants you to hold her new water in a photo: "Just smile and say it changed your life."', [
+    'Say no',
+    'Do the post',
+    'Do it properly, for your followers',
+  ]),
+  celeb_mrfeast: c('A challenge by MrFeast', 'The last one standing in a circle of light for a week wins a fortune. Millions will watch.', [
+    'Watch it at home',
+    ['Take part', 'You are the last one standing. The cheque is enormous, and real.', 'You last eleven hours. The clip of you giving up has eight million views.'],
+  ]),
+  celeb_ronalgo: c('Cristiano Ronalgo\'s underwear line', 'His manager is raising money for a new line: "It sells itself. Look at him."', [
+    'Not your style',
+    ['Put money in', 'It sells everywhere. A cheque comes every year.', 'Fashion moves on. The boxes of stock do not.'],
+  ]),
+  celeb_swiftly: c('Taylor Swiftly is on tour', 'The tickets sold out in a minute. You got two, at a price that makes you sit down.', [
+    'Give them away',
+    'Go to the concert',
+    ['Sell them on', 'They go for far more. Someone cried with joy.', 'They were fakes. The night is lost, and the money with it.'],
+  ]),
+  celeb_bellfort: c('A call from Jordan Bellfort', '"I\'ve got a stock for you that only goes up. Only goes up." He talks fast. You have a minute.', [
+    'Hang up',
+    ['Buy what he sells', 'Somehow it goes up. You sell, and never pick up again.', 'The company does not exist. Neither, now, does your money.'],
+  ]),
+  celeb_ortiga: c('Amancio Ortiga opens across the street', 'A big new store, right in front of your business. He comes over himself: "Or you could join us."', [
+    'Hold your ground',
+    'Take his franchise',
+  ]),
 };

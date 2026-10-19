@@ -187,6 +187,21 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
     misses: [{ player: (p) => Object.assign(p.life, { partner: true, children: [6] }) }, { player: (p) => Object.assign(p.life, { partner: false, children: [6, 8] }) }],
   },
   mba: { earns: { player: own('edu_mba') }, misses: [{ player: own('watch_casio') }] },
+  // The famous: played along with their card, or only met someone else's.
+  celeb_mosk: { earns: { player: (p) => (p.life.flags.met_mosk = 3) }, misses: [{ player: (p) => (p.life.flags.met_grump = 3) }] },
+  celeb_grump: { earns: { player: (p) => (p.life.flags.met_grump = 3) }, misses: [{ player: (p) => (p.life.flags.met_poutine = 3) }] },
+  celeb_poutine: { earns: { player: (p) => (p.life.flags.met_poutine = 3) }, misses: [{ player: (p) => (p.life.flags.met_bufe = 3) }] },
+  celeb_bufe: { earns: { player: (p) => (p.life.flags.met_bufe = 3) }, misses: [{ player: (p) => (p.life.flags.met_bozos = 3) }] },
+  celeb_bozos: { earns: { player: (p) => (p.life.flags.met_bozos = 3) }, misses: [{ player: (p) => (p.life.flags.met_zuckerbot = 3) }] },
+  celeb_zuckerbot: { earns: { player: (p) => (p.life.flags.met_zuckerbot = 3) }, misses: [{ player: (p) => (p.life.flags.met_puertas = 3) }] },
+  celeb_puertas: { earns: { player: (p) => (p.life.flags.met_puertas = 3) }, misses: [{ player: (p) => (p.life.flags.met_nakamoro = 3) }] },
+  celeb_nakamoro: { earns: { player: (p) => (p.life.flags.met_nakamoro = 3) }, misses: [{ player: (p) => (p.life.flags.met_kardashion = 3) }] },
+  celeb_kardashion: { earns: { player: (p) => (p.life.flags.met_kardashion = 3) }, misses: [{ player: (p) => (p.life.flags.met_mrfeast = 3) }] },
+  celeb_mrfeast: { earns: { player: (p) => (p.life.flags.met_mrfeast = 3) }, misses: [{ player: (p) => (p.life.flags.met_ronalgo = 3) }] },
+  celeb_ronalgo: { earns: { player: (p) => (p.life.flags.met_ronalgo = 3) }, misses: [{ player: (p) => (p.life.flags.met_swiftly = 3) }] },
+  celeb_swiftly: { earns: { player: (p) => (p.life.flags.met_swiftly = 3) }, misses: [{ player: (p) => (p.life.flags.met_bellfort = 3) }] },
+  celeb_bellfort: { earns: { player: (p) => (p.life.flags.met_bellfort = 3) }, misses: [{ player: (p) => (p.life.flags.met_ortiga = 3) }] },
+  celeb_ortiga: { earns: { player: (p) => (p.life.flags.met_ortiga = 3) }, misses: [{ player: (p) => (p.life.flags.met_mosk = 3) }] },
   sold_business: { earns: { player: (p) => (p.life.flags.sold_business = 4) }, misses: [{ player: (p) => (p.life.flags.has_business = 4) }] },
   own_boss: {
     earns: { player: (p) => p.businesses.push({ id: 'business-1', typeId: 'shop', capital: usd(50_000), basis: usd(50_000), payoutPct: 50, manager: false, tended: true, fullTime: true }) },
@@ -259,11 +274,11 @@ const CASES: Record<string, { earns: Change; misses: Change[] }> = {
 const GALLERY = ['twenty_items', 'every_car'];
 
 describe('the badges', () => {
-  it('are the thirty of the spec and nineteen since, each in one of seven groups', () => {
-    expect(badges).toHaveLength(49);
-    expect(new Set(badges.map((b) => b.id)).size).toBe(49);
+  it('are the thirty of the spec and thirty-three since, each in one of eight groups', () => {
+    expect(badges).toHaveLength(63);
+    expect(new Set(badges.map((b) => b.id)).size).toBe(63);
     const count = (group: string) => badges.filter((b) => b.group === group).length;
-    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune', 'multiplayer'].map(count)).toEqual([10, 5, 8, 8, 9, 6, 3]);
+    expect(['wealth', 'escape', 'investing', 'status', 'life', 'misfortune', 'multiplayer', 'famous'].map(count)).toEqual([10, 5, 8, 8, 9, 6, 3, 14]);
   });
 
   it('each have a name, a way to earn them, and a picture, in every language', () => {
@@ -271,7 +286,7 @@ describe('the badges', () => {
     for (const locale of ['en', 'es', 'ru'] as const) {
       const { text } = textFor(locale);
       expect(Object.keys(text.badges).sort(), locale).toEqual(badges.map((b) => b.id).sort());
-      expect(Object.keys(text.badgeGroups).sort(), locale).toEqual(['escape', 'investing', 'life', 'misfortune', 'multiplayer', 'status', 'wealth']);
+      expect(Object.keys(text.badgeGroups).sort(), locale).toEqual(['escape', 'famous', 'investing', 'life', 'misfortune', 'multiplayer', 'status', 'wealth']);
       for (const badge of badges) {
         expect(text.badges[badge.id].name.length, `${locale} ${badge.id}`).toBeGreaterThan(2);
         expect(text.badges[badge.id].name.length, `${locale} ${badge.id}`).toBeLessThanOrEqual(34);

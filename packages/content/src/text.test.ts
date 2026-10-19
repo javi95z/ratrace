@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import {
+import { CELEB_ART,
   assetClassArt,
   assetLogo,
   GOOGLE_LOGO,
@@ -319,10 +319,12 @@ describe('content art', () => {
       ...Object.values(milestoneArt),
       ...content.business.types.flatMap((type) => [1, 2, 3].map((n) => businessStageArt(type.id, n === 1 ? 0 : n === 2 ? type.scale / 2 : type.scale, type.scale))),
       MAP_ART,
+      // v17: the famous, a portrait each.
+      ...CELEB_ART,
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(181 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1));
+    expect(wanted.length).toBe(195 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.
