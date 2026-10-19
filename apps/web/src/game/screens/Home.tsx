@@ -85,8 +85,8 @@ export function Home() {
               >
                 {challenge !== null ? (
                   // A life of the weekly challenge says so before anything else: the attempt that counts, or a practice.
-                  <span className="mb-1 flex items-center gap-1 bg-ink-900 px-1.5 text-[11px] uppercase tracking-wider text-gold-500">
-                    <Sprite id={CHALLENGE_ART.icon} />
+                  <span className={`flex items-center gap-1 text-[11px] uppercase leading-none tracking-wider ${turn ? 'text-gold-500' : 'text-ink-700'}`}>
+                    <Sprite id={CHALLENGE_ART.icon} className="!h-4 !w-4" />
                     {t(ranked ? 'continueChallenge' : 'continuePractice')}
                   </span>
                 ) : null}

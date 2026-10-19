@@ -215,21 +215,21 @@ describe('the front door', () => {
     });
     const user = userEvent.setup();
     renderGame(<Home />, { ...services, saves });
-    const offer = await screen.findByRole('button', { name: /Continue the life in your account/ });
+    const offer = await screen.findByRole('button', { name: /Pick up the life from your other device/ });
     expect(offer.textContent).toContain('Software engineer · age 30 · Madrid');
     // Nothing has been asked of the account yet, and the life on this device is still the one to continue.
     expect(asked).toEqual([]);
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
 
     await user.click(offer);
-    const sheet = screen.getByRole('dialog', { name: 'A life in your account' });
-    expect(sheet.textContent).toContain('Continuing it ends the life you have on this device: Nurse, age 22.');
-    await user.click(within(sheet).getByRole('button', { name: 'Continue that life' }));
+    const sheet = screen.getByRole('dialog', { name: 'A life on another device' });
+    expect(sheet.textContent).toContain('Picking it up here ends the life on this device: Nurse, age 22.');
+    await user.click(within(sheet).getByRole('button', { name: 'Pick it up here' }));
     await waitFor(() => expect(went).toHaveBeenCalledWith('/play'));
     expect(asked).toEqual(['take']);
     // The game on screen is the one that was taken.
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Software engineer');
-    expect(screen.queryByRole('button', { name: /Continue the life in your account/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull();
   });
 
   it('lets the player end the life in the account instead, and keeps the one on this device', async () => {
@@ -238,16 +238,16 @@ describe('the front door', () => {
     const { saves, asked, offer } = accountWith(elsewhere);
     const user = userEvent.setup();
     renderGame(<Home />, { ...services, saves });
-    await user.click(await screen.findByRole('button', { name: /Continue the life in your account/ }));
-    await user.click(screen.getByRole('button', { name: 'End that life' }));
+    await user.click(await screen.findByRole('button', { name: /Pick up the life from your other device/ }));
+    await user.click(screen.getByRole('button', { name: 'End it' }));
     expect(asked).toEqual(['decline']);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(screen.queryByRole('button', { name: /Continue the life in your account/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull();
     expect(screen.getByRole('link', { name: /Continue your life/ }).textContent).toContain('Nurse');
     expect(went).not.toHaveBeenCalled();
     // Another life offered later is offered: the question does not ask itself.
     act(() => offer({ ...elsewhere, gameId: 'g-10', round: 7 }));
-    expect(screen.getByRole('button', { name: /Continue the life in your account/ }).textContent).toContain('age 36');
+    expect(screen.getByRole('button', { name: /Pick up the life from your other device/ }).textContent).toContain('age 36');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -255,14 +255,14 @@ describe('the front door', () => {
     const { saves, offer } = accountWith(elsewhere);
     const user = userEvent.setup();
     renderGame(<Home />, { ...memoryServices(), saves });
-    await user.click(await screen.findByRole('button', { name: /Continue the life in your account/ }));
-    expect(screen.getByRole('dialog', { name: 'A life in your account' })).toBeTruthy();
+    await user.click(await screen.findByRole('button', { name: /Pick up the life from your other device/ }));
+    expect(screen.getByRole('dialog', { name: 'A life on another device' })).toBeTruthy();
     // The other device ends that life while the sheet is open.
     act(() => offer(null));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     // Later the account brings another. It is offered; "End that life" is not put in front of anyone unasked.
     act(() => offer({ ...elsewhere, gameId: 'g-11', lifeId: 'nurse' }));
-    expect(screen.getByRole('button', { name: /Continue the life in your account/ }).textContent).toContain('Nurse');
+    expect(screen.getByRole('button', { name: /Pick up the life from your other device/ }).textContent).toContain('Nurse');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
@@ -270,19 +270,19 @@ describe('the front door', () => {
     const { saves, offer } = accountWith(null);
     renderGame(<Home />, { ...memoryServices(), saves });
     await screen.findByRole('link', { name: 'New life' });
-    expect(screen.queryByRole('button', { name: /Continue the life in your account/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pick up the life from your other device/ })).toBeNull();
     act(() => offer(elsewhere));
-    expect(screen.getByRole('button', { name: /Continue the life in your account/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Pick up the life from your other device/ })).toBeTruthy();
   });
 
   it('warns of nothing when no life is being lived on this device', async () => {
     const { saves } = accountWith(elsewhere);
     const user = userEvent.setup();
     renderGame(<Home />, { ...memoryServices(), saves }, 'es');
-    await user.click(await screen.findByRole('button', { name: /Continuar la vida de tu cuenta/ }));
-    const sheet = screen.getByRole('dialog', { name: 'Una vida en tu cuenta' });
+    await user.click(await screen.findByRole('button', { name: /Seguir la vida de tu otro dispositivo/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Tienes una vida en otro dispositivo' });
     expect(sheet.textContent).toContain('Ingeniero de software, 30 años, en Madrid. La dejaste en otro dispositivo.');
-    expect(sheet.textContent).not.toContain('termina la vida');
+    expect(sheet.textContent).not.toContain('se acaba la que tienes');
   });
 
   it('offers to install the game from the second visit on, until the player says no', async () => {
