@@ -1,6 +1,6 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { GameEvent, Order } from '@ratrace/engine';
+import type { GameEvent, GameView, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { RankedSessions } from '@ratrace/core/session/ranked';
@@ -500,6 +500,73 @@ describe('when something goes wrong', () => {
     broken.getState().leaveNews();
     await broken.getState().pick(0);
     expect(broken.getState()).toMatchObject({ fault: true, busy: false, moved: false, stage: 'cards' });
+  });
+
+  /** A life as a server shows it, with `change` made to every view of it: the life of a room on rules other than the page's. */
+  function shownAs(change: (player: GameView['player']) => void) {
+    const { sessions } = setup();
+    const as = (view: GameView): GameView => {
+      const shown = structuredClone(view);
+      change(shown.player);
+      return shown;
+    };
+    const game = createGameStore({
+      content,
+      sessions: {
+        ...sessions,
+        start: () => sessions.start('nurse'),
+        abandon: () => sessions.abandon(),
+        resume: async () => {
+          const real = (await sessions.resume()).session ?? (await sessions.start('nurse'));
+          return {
+            lost: null,
+            session: {
+              gameId: real.gameId, lifeId: real.lifeId, rules: '0.37.0', served: true, view: () => as(real.view()), history: () => real.history(), bankruptcies: () => 0, story: () => [], badges: () => [],
+              answerCard: async (option: number) => {
+                const result = await real.answerCard(option);
+                return { ...result, view: as(result.view) };
+              },
+              playRound: async (choices) => {
+                const result = await real.playRound(choices);
+                return { ...result, view: as(result.view) };
+              },
+            },
+          };
+        },
+      },
+    });
+    return game.getState;
+  }
+
+  it('goes from the last card to the finances of a life a server plays on older rules, whose standing its own content worked out', async () => {
+    // Older content scored the player's standing otherwise: the view is the server's, and this page's figure for it is not.
+    const get = shownAs((player) => {
+      player.statusPoints += 7;
+    });
+    await get().boot();
+    get().leaveNews();
+    while (get().stage === 'cards') {
+      await get().pick(0);
+      expect(get().cardEvents.length).toBeGreaterThan(0);
+      get().afterCard();
+    }
+    expect(get()).toMatchObject({ stage: 'finance', fault: false });
+    expect(get().preview).not.toBeNull();
+    await get().play();
+    expect(get()).toMatchObject({ stage: 'resolve', fault: false });
+  });
+
+  it('says so, rather than leave a card\'s result with a button that does nothing, when this page cannot judge the round at all', async () => {
+    const get = shownAs((player) => {
+      player.cash = -1;
+    });
+    await get().boot();
+    get().leaveNews();
+    while (get().stage === 'cards') {
+      await get().pick(0);
+      get().afterCard();
+    }
+    expect(get()).toMatchObject({ fault: true, busy: false });
   });
 });
 

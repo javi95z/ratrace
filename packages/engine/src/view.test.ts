@@ -121,6 +121,20 @@ describe('findViewBreaks', () => {
     expect(() => assertViewInvariants(content, view)).toThrow(/^invariant broken at round 2 \(state [0-9a-f]{16}\): cash is not/);
   });
 
+  it('takes the figures worked out from the life as the view gives them: a life on older rules was priced by its own content', () => {
+    const state = applyCards(content, played(2), {}).state;
+    // As a server on older rules shows it: the same life, its standing and salary as its own content worked them out.
+    const view = viewOf(state);
+    view.player.statusPoints += 7;
+    view.player.salaryAnnual += 100;
+    expect(findViewBreaks(content, view)).toEqual([]);
+    expect(() => previewRound(content, view, { orders: [] })).not.toThrow();
+    // The full game is played by these rules, and still held to them.
+    const whole = structuredClone(state);
+    whole.player.statusPoints += 7;
+    expect(findInvariantBreaks(content, whole)).toEqual([`statusPoints is out of step with the life: ${whole.player.statusPoints}, expected ${state.player.statusPoints}`]);
+  });
+
   it('needs the timeline to end at the current round, or to be whole', () => {
     const view = viewOf(played(3));
     view.timeline.pop();

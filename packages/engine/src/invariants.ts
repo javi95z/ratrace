@@ -130,7 +130,10 @@ function breaksOf(content: Content, state: GameView, whole: GameState | null): s
     if (!isStream) breaks.push('rng.cards is not a saved random stream');
   }
 
-  if (breaks.length === 0) {
+  // The figures worked out from the life are held to these rules only in a full game, which these rules play. A view
+  // may be of a life a server plays under older rules, whose content priced a job or a thing differently: its figures
+  // are that life's own, and a preview of it must not refuse them.
+  if (whole !== null && breaks.length === 0) {
     const derived: Array<[string, number, number]> = [
       ['salaryAnnual', p.salaryAnnual, deriveSalary(p, content)],
       ['extraExpensesAnnual', p.extraExpensesAnnual, deriveExpenses(p, content)],

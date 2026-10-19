@@ -112,7 +112,7 @@ export interface RoundActions {
   /** From a card's result to the next card, or to the finances after the last. */
   afterCard(): void;
   toFinance(): void;
-  /** Puts an order in the basket if the round would accept it. Returns false, and sets `refusal`, if not. */
+  /** Puts an order in the basket if the round would accept it, joined to one of the same kind on the same thing if there is one. Returns false, and sets `refusal`, if not. */
   addOrder(order: Order): boolean;
   /** Takes an order out, together with any later order that only worked because of it. */
   removeOrder(index: number): void;
@@ -200,6 +200,34 @@ export interface GameStoreOptions {
 }
 
 /**
+ * Two orders of the same kind on the same thing, as the one order of their sum: money into or out
+ * of the same place twice is one move. Null for orders that do not add up.
+ */
+function joined(a: Order, b: Order): Order | null {
+  switch (a.type) {
+    case 'buy': {
+      if (b.type !== 'buy' || b.assetId !== a.assetId) return null;
+      const margin = (a.margin ?? 0) + (b.margin ?? 0);
+      return margin > 0 ? { ...a, amount: a.amount + b.amount, margin } : { type: 'buy', assetId: a.assetId, amount: a.amount + b.amount };
+    }
+    case 'sell':
+      return b.type === 'sell' && b.assetId === a.assetId ? { ...a, amount: a.amount + b.amount } : null;
+    case 'investBusiness':
+      return b.type === 'investBusiness' && b.businessId === a.businessId ? { ...a, amount: a.amount + b.amount } : null;
+    case 'repay':
+      return b.type === 'repay' && b.debtId === a.debtId ? { ...a, amount: a.amount + b.amount } : null;
+    case 'depositIn':
+    case 'depositOut':
+    case 'pensionIn':
+    case 'pensionOut':
+    case 'borrow':
+      return b.type === a.type ? { ...a, amount: a.amount + b.amount } : null;
+    default:
+      return null;
+  }
+}
+
+/**
  * The state of the round on screen. It talks to the game through a `GameSession` only,
  * and asks the engine's own preview what each order would do: no rule of the game lives here.
  */
@@ -218,6 +246,20 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       if (preview.rejected.length === 0) return { orders: kept, preview };
       const refused = new Set(preview.rejected.map((r) => r.index));
       kept = kept.filter((_, i) => !refused.has(i));
+    }
+  };
+
+  /**
+   * The round's basket as it was kept, settled, with its preview; null when the engine of this page will not judge the
+   * round at all. Then the life cannot be planned from here, and the screen says so: a button that does nothing, on a
+   * card's result or anywhere, would be a dead end.
+   */
+  const plan = (view: GameView, gameId: string | null): ReturnType<typeof settle> | null => {
+    try {
+      return settle(view, gameId === null ? [] : basket.load(gameId, view.round));
+    } catch (error) {
+      console.error('the round could not be previewed:', error);
+      return null;
     }
   };
 
@@ -298,7 +340,10 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       // A hand left half answered opens on its next card: the news were read before the first.
       else if (view.phase === 'cards') set({ ...base, stage: view.answered === 0 ? 'news' : 'cards' });
       // Orders planned for this round before the page was closed are taken up again, as the engine still allows them.
-      else set({ ...base, stage: 'finance', ...settle(view, basket.load(opened.gameId, view.round)) });
+      else {
+        const planned = plan(view, opened.gameId);
+        set(planned === null ? { ...base, stage: 'finance', fault: true } : { ...base, stage: 'finance', ...planned });
+      }
     };
 
     return {
@@ -410,10 +455,22 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
       toFinance() {
         const { view, gameId } = get();
         if (!view || view.finished || view.phase !== 'finance') return;
-        set({ stage: 'finance', refusal: null, undo: null, ...settle(view, gameId === null ? [] : basket.load(gameId, view.round)) });
+        const planned = plan(view, gameId);
+        if (planned === null) set({ fault: true });
+        else set({ stage: 'finance', refusal: null, undo: null, ...planned });
       },
 
       addOrder(order) {
+        const { view, orders } = get();
+        // More of what the basket already holds goes into that order, where it stands, when the round takes the sum there.
+        const at = orders.findIndex((existing) => joined(existing, order) !== null);
+        if (view && at >= 0) {
+          const together = orders.map((existing, i) => (i === at ? (joined(existing, order) as Order) : existing));
+          if (previewRound(content, view, { orders: together }).rejected.length === 0) {
+            set({ undo: null, refusal: null, alsoRemoved: 0, ...settle(view, together) });
+            return true;
+          }
+        }
         return get().setOrder(() => false, order);
       },
 
