@@ -171,7 +171,7 @@ describe('effectTags', () => {
       { tone: 'bad', text: '−40% pay this round' },
       { tone: 'good', text: '+3 career skill' },
       { tone: 'good', text: '+1 Finance' },
-      { tone: 'bad', text: '−2 status' },
+      { tone: 'bad', text: 'Status −2 for good' },
       { tone: 'bad', text: '−2 focus' },
     ]);
   });
@@ -226,6 +226,11 @@ describe('effectTags', () => {
     ]);
     // At full price there is no bargain to name, and a thing that lasts gives its status for good.
     expect(tags({ buyItem: { itemId: 'watch_casio', pricePct: 100 } }).map((tag) => tag.text)).toEqual(['Casio F-91W', 'Status +1']);
+    // To someone who has it already, a thing says what it adds, the engine's figure, not what it is worth alone.
+    const rolex = (adds: number) => effectTags(words('en'), t('en', 'effects'), world, { buyItem: { itemId: 'watch_rolex', pricePct: 100 } }, false, [], () => adds).map((tag) => tag.text);
+    expect(rolex(3)).toContain('Status +3');
+    expect(rolex(0)).toContain('Adds no status');
+    expect(rolex(0).some((text) => text.startsWith('Status +'))).toBe(false);
     expect(tags({ buyItem: { itemId: 'travel_business_class', pricePct: 40 } }, 'es').map((tag) => tag.text.replace(/\u00a0/g, ' '))).toEqual([
       'Business de Emirates', 'Estatus +6 durante 4 años', '+1 de foco en la ronda siguiente', 'Precio normal 6k $',
     ]);

@@ -1,8 +1,8 @@
 'use client';
 
 import { cardArt } from '@ratrace/content';
-import { previewCard } from '@ratrace/engine';
-import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
+import { previewCard, quoteItem } from '@ratrace/engine';
+import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
@@ -20,6 +20,15 @@ import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
 
 /** How far a card must be dragged before letting go answers it. */
 const SWIPE = 90;
+
+/**
+ * What a thing a card hands over is worth in status to the player as they stand, the engine's figure:
+ * before the choice, what it would add; after it, what it counts for among what they own.
+ */
+function useItemStatus(view: GameView | null): ((itemId: string) => number) | undefined {
+  const { content } = useWords();
+  return view ? (itemId) => quoteItem(content, view, itemId).statusReal : undefined;
+}
 
 function Tags({ cash, tags, empty, className = '' }: { cash: number; tags: EffectTag[]; empty?: string; className?: string }) {
   const { fmt } = useWords();
@@ -44,6 +53,7 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
   const option = def.options[index];
   // What the player is paid or pays every year: an outcome may end one of them.
   const owned = useGame((s) => s.view?.player.life.recurring);
+  const itemStatus = useItemStatus(useGame((s) => s.view));
   const written = words.text.cards[def.id].options[index];
   let total = 0;
   for (const outcome of preview.outcomes) total += outcome.weight;
@@ -76,10 +86,10 @@ function Offer({ def, index, preview, world, shortcut, partnered }: { def: CardD
       </span>
       {/* Why it is locked is the engine's to say. */}
       {preview.lock ? <span className="text-[13px] leading-snug text-cream">{lockWords(preview.lock)}</span> : null}
-      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered), ...(preview.covered > 0 ? [{ tone: 'good' as const, text: t('covers', { amount: words.fmt.brief(preview.covered) }) }] : [])]} className={dim} />
+      <Tags cash={preview.cash} tags={[...effectTags(words, effects, world, option.effects, partnered, [], itemStatus), ...(preview.covered > 0 ? [{ tone: 'good' as const, text: t('covers', { amount: words.fmt.brief(preview.covered) }) }] : [])]} className={dim} />
       {(option.outcomes ?? []).map((outcome, k) => {
         const outcomeTags = (said: typeof outcome.effects) => {
-          const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])]);
+          const tags = effectTags(words, effects, world, said, partnered, [...(option.effects?.recurring ?? []), ...(owned ?? [])], itemStatus);
           // Nothing more on top of an option that only cost: what was put in is gone, and that is said in red.
           return tags.length === 0 && preview.outcomes[k].cash === 0 && onlyCosts(option.effects) ? [{ tone: 'bad' as const, text: t('lostStake') }] : tags;
         };
@@ -285,6 +295,7 @@ export function CardStage() {
  */
 export function Outcome() {
   const view = useGame((s) => s.view);
+  const itemStatus = useItemStatus(view);
   const t = useT('cards');
   const effects = useT('effects');
   const words = useWords();
@@ -317,7 +328,7 @@ export function Outcome() {
         let total = 0;
         for (const outcome of odds) total += outcome.weight;
         const partnered = offered?.cardId === event.cardId ? offered.partnered : (view?.player.life.partner ?? false);
-        const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered), ...effectTags(words, effects, world, rolled?.effects, partnered, chosen?.effects?.recurring ?? [])] : [];
+        const tags = world ? [...effectTags(words, effects, world, chosen?.effects, partnered, [], itemStatus), ...effectTags(words, effects, world, rolled?.effects, partnered, chosen?.effects?.recurring ?? [], itemStatus)] : [];
         // What the player's cover paid, when it paid: the reason to have it.
         const covered = was?.options[event.option]?.covered ?? 0;
 

@@ -126,7 +126,20 @@ export function onlyCosts(effects: Effects | undefined): boolean {
   return keys.length > 0 && keys.every((key) => costs.has(key)) && ((effects.cash ?? 0) < 0 || (effects.loan ?? 0) > 0);
 }
 
-export function effectTags(words: Words, t: Translate, world: WorldState, effects: Effects | undefined, partnered = false, recurring: ReadonlyArray<{ tag: string; kind: string; annual: number }> = []): EffectTag[] {
+/**
+ * The tags of what an effect does, at a glance. `itemStatus`, where given, says what a thing the
+ * effect hands over is worth in status to this player as they stand: a second watch counts for a share
+ * of the first, so the tag says what it adds, not what the thing is worth on its own.
+ */
+export function effectTags(
+  words: Words,
+  t: Translate,
+  world: WorldState,
+  effects: Effects | undefined,
+  partnered = false,
+  recurring: ReadonlyArray<{ tag: string; kind: string; annual: number }> = [],
+  itemStatus?: (itemId: string) => number,
+): EffectTag[] {
   if (effects === undefined) return [];
   const { content, text, names, fmt } = words;
   // A tag is read at a glance: the amount is given in round figures, and the exact one is on the ledger.
@@ -190,7 +203,10 @@ export function effectTags(words: Words, t: Translate, world: WorldState, effect
     const item = content.items.find((x) => x.id === itemId);
     add('plain', t('get', { item: names.items[itemId] }));
     if (item) {
-      if (item.status > 0) add('good', item.kind === 'experience' ? t('itemStatusFor', { n: item.status, years: item.boostRounds * content.yearsPerRound }) : t('itemStatus', { n: item.status }));
+      const status = itemStatus ? itemStatus(itemId) : item.status;
+      if (status > 0) add('good', item.kind === 'experience' ? t('itemStatusFor', { n: status, years: item.boostRounds * content.yearsPerRound }) : t('itemStatus', { n: status }));
+      // One more of what the player already has enough of adds nothing: said, so the number is never a surprise.
+      else if (item.status > 0) add('plain', t('itemNoStatus'));
       if (item.upkeepAnnual > 0) add('bad', t('yearlyCost', { amount: dollars(item.upkeepAnnual) }));
       for (const line of perkLines(t, item.perks)) add('good', line);
       if (pricePct < 100) add('plain', t('itemUsual', { amount: dollars(item.price) }));
