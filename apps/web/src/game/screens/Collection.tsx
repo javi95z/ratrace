@@ -115,7 +115,8 @@ function Badges() {
 export function Collection() {
   const t = useT('collection');
   const common = useT('common');
-  const [tab, setTab] = useState<Tab>('items');
+  // The badges first: what a player has done comes before what they have bought.
+  const [tab, setTab] = useState<Tab>('badges');
   const ids = useId();
 
   return (
@@ -128,7 +129,7 @@ export function Collection() {
       </div>
       <p className="mb-2 text-[13px] text-ink-300">{t('intro')}</p>
       <div className="-mx-3">
-        <Tabs<Tab> label={t('title')} idPrefix={ids} tabs={[{ id: 'items', label: t('items') }, { id: 'badges', label: t('badges') }]} value={tab} onChange={setTab} />
+        <Tabs<Tab> label={t('title')} idPrefix={ids} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]} value={tab} onChange={setTab} />
       </div>
       <div role="tabpanel" id={`${ids}-panel-${tab}`} aria-labelledby={`${ids}-tab-${tab}`} className="pt-2">
         {tab === 'items' ? <Things /> : <Badges />}

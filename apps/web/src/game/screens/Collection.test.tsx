@@ -24,8 +24,12 @@ describe('the collection', () => {
   it('shows every thing in the game, as a silhouette until it has been owned', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), gallery: ['watch_casio', 'car_seat_ibiza'] });
+    const user = userEvent.setup();
     renderGame(<Collection />, services);
 
+    // The badges come first; the things are the second tab.
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Badges', 'Things']);
+    await user.click(screen.getByRole('tab', { name: 'Things' }));
     expect(await screen.findByText(`2 of ${content.items.length} owned`)).toBeTruthy();
     const things = screen.getByRole('tabpanel', { name: 'Things' });
     expect(within(things).getAllByRole('listitem')).toHaveLength(content.items.length);
@@ -54,10 +58,9 @@ describe('the collection', () => {
   it('shows every badge, tells how it is earned only of those earned, and never says when', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: Date.UTC(2026, 9, 13, 12), gameId: 'g' }, bankrupt: { at: Date.UTC(2026, 0, 2, 12), gameId: 'g' } } });
-    const user = userEvent.setup();
     renderGame(<Collection />, services);
 
-    await user.click(await screen.findByRole('tab', { name: 'Badges' }));
+    expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByText(`2 of ${badges.length} earned`)).toBeTruthy();
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
     expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
@@ -85,7 +88,7 @@ describe('the collection', () => {
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' }, ten_million: { at: 1, gameId: 'g' } } });
     const user = userEvent.setup();
     renderGame(<Collection />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Badges' }));
+    expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
     const of = (rarity: string) => badges.filter((badge) => rarityOf(badge.id) === rarity);
     const rare = within(panel).getByRole('radio', { name: /^Rare/ });
@@ -101,9 +104,8 @@ describe('the collection', () => {
   it('names each rarity without any count of lives or players, and hides judged badges until won', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' } } });
-    const user = userEvent.setup();
     renderGame(<Collection />, services);
-    await user.click(await screen.findByRole('tab', { name: 'Badges' }));
+    expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     const panel = screen.getByRole('tabpanel', { name: 'Badges' });
     expect(panel.textContent).not.toMatch(/in 100 lives/);
     expect(panel.textContent).not.toMatch(/% of players|players have/i);
@@ -118,7 +120,9 @@ describe('the collection', () => {
   });
 
   it('starts empty for someone new, and leads back home', async () => {
+    const user = userEvent.setup();
     renderGame(<Collection />, memoryServices());
+    await user.click(await screen.findByRole('tab', { name: 'Things' }));
     expect(await screen.findByText(`0 of ${content.items.length} owned`)).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1, name: 'Collection' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Back' }).getAttribute('href')).toBe('/');
@@ -127,9 +131,8 @@ describe('the collection', () => {
   it('speaks Spanish', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: Date.UTC(2026, 9, 13, 12), gameId: 'g' } } });
-    const user = userEvent.setup();
     renderGame(<Collection />, services, 'es');
-    await user.click(await screen.findByRole('tab', { name: 'Insignias' }));
+    expect((await screen.findByRole('tab', { name: 'Insignias' })).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByText('Primer millón')).toBeTruthy();
     expect(screen.queryByText(/2026/)).toBeNull();
   });

@@ -80,10 +80,14 @@ describe('the player\'s profile', () => {
     expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(['Clothes', 'Headwear', 'Eyes']);
     const hats = screen.getByRole('radiogroup', { name: 'Headwear' });
     expect(within(hats).getByRole('radio', { name: 'None' }).getAttribute('aria-checked')).toBe('true');
+    // Each choice shows what it offers, on a plain rat: it does not change with the rest of the player's rat.
+    const suit = () => within(screen.getByRole('radiogroup', { name: 'Clothes' })).getByRole('radio', { name: 'Suit' }).innerHTML;
+    const suitBefore = suit();
     await user.click(within(hats).getByRole('radio', { name: 'Beanie' }));
     const capped = { ...given, hat: 'beanie' as const };
     await waitFor(() => expect(asked).toEqual([`avatar ${avatarOf(capped)}`]));
     expect(within(hats).getByRole('radio', { name: 'Beanie' }).getAttribute('aria-checked')).toBe('true');
+    expect(suit()).toBe(suitBefore);
     // A crown is for the highest rank of rat: until then it says how it is won, and nothing is kept.
     await user.click(within(hats).getByRole('radio', { name: 'Crown' }));
     expect(asked).toHaveLength(1);

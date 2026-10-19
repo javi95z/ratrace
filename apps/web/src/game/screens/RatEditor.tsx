@@ -37,15 +37,24 @@ const FRAME: Record<RatLayer, string> = {
   backdrop: 'size-[125%] -ml-[16%] -mt-[6%]',
   outfit: 'size-[160%] -ml-[34%] -mt-[52%]',
   hat: 'size-[165%] -ml-[42%] mt-0',
-  face: 'size-[220%] -ml-[78%] -mt-[52%]',
-  eyes: 'size-[220%] -ml-[78%] -mt-[52%]',
+  face: 'size-[200%] -ml-[76%] -mt-[62%]',
+  eyes: 'size-[200%] -ml-[76%] -mt-[62%]',
 };
+
+/**
+ * The rat every choice is shown on: one fur, one face, nothing worn, on a plain ground. A choice
+ * shows what it offers, and stays as it is whatever else the player picks; the rat as it will be is
+ * the one above the choices.
+ */
+const BASE: RatLook = { colour: 'slate', body: 'brown', face: 'calm', outfit: null, hat: null, eyes: null, backdrop: null };
 
 /** One choice of a part: a piece, nothing at all, or a colour. */
 interface Choice {
   key: string;
   label: string;
   look: RatLook;
+  /** What the choice shows: the piece alone on the plain rat. */
+  shown: RatLook;
   /** How it is won, when the player has not won it yet. */
   locked: string | null;
 }
@@ -81,32 +90,38 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
   };
 
   const choices = (part: Part): Choice[] => {
-    if (part === 'colour') return RAT_COLOURS.map((colour) => ({ key: colour, label: t(COLOUR_NAME[colour]), look: { ...look, colour }, locked: null }));
+    if (part === 'colour') return RAT_COLOURS.map((colour) => ({ key: colour, label: t(COLOUR_NAME[colour]), look: { ...look, colour }, shown: { ...BASE, colour }, locked: null }));
     const drawn: Choice[] = piecesOf(part).map(({ piece, open }) => {
       const prize = prizeOf(part, piece);
       const how = prize === null || open ? null : 'badge' in prize ? t('locked', { badge: badgeName(prize.badge) }) : t('lockedRank', { rank: rankName(prize.rank) });
-      return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: how };
+      return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, shown: { ...BASE, [part]: piece } as RatLook, locked: how };
     });
     // A rat always has a fur and a face: only what it wears may be left off.
-    return part === 'body' || part === 'face' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
+    return part === 'body' || part === 'face' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, shown: BASE, locked: null }, ...drawn];
   };
   const chosen = (part: Part, choice: Choice) => (part === 'colour' ? look.colour === choice.key : (look[part] ?? 'none') === choice.key);
 
   return (
     <div className="flex flex-col gap-3">
-      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-3 gap-1.5">
-        {GROUP_IDS.map((each) => (
-          <button
-            key={each}
-            type="button"
-            role="tab"
-            aria-selected={each === group}
-            onClick={() => setGroup(each)}
-            className={`pixel min-h-11 px-1 text-[15px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
-          >
-            {t(`groups.${each}`)}
-          </button>
-        ))}
+      {/* The rat as it will be, and the tabs, held at the top of the screen while the choices scroll under them. */}
+      <div className="sticky z-10 -mx-3 -mt-1 flex items-center gap-3 bg-night-700 px-3 py-2" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
+        <span aria-hidden className={`flex size-16 shrink-0 overflow-hidden border-2 border-night-900 ${GROUND[look.colour]}`}>
+          <RatLayers look={look} className="size-full shrink-0" />
+        </span>
+        <div role="tablist" aria-label={t('layer')} className="grid min-w-0 flex-1 grid-cols-3 gap-1.5">
+          {GROUP_IDS.map((each) => (
+            <button
+              key={each}
+              type="button"
+              role="tab"
+              aria-selected={each === group}
+              onClick={() => setGroup(each)}
+              className={`pixel min-h-11 px-1 text-[14px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
+            >
+              {t(`groups.${each}`)}
+            </button>
+          ))}
+        </div>
       </div>
       {GROUPS[group].map((part) => (
         // Each part of the tab under its own name, its choices beneath.
@@ -140,9 +155,13 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
               className={`frame-raised flex bg-night-700 p-1 ${on ? 'outline outline-2 outline-offset-2 outline-gold-500' : ''}`}
             >
               {/* The picture says which it is; the name is there for a pointer that rests on it and for a screen reader. */}
-              <span aria-hidden className={`relative flex aspect-square w-full overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]}`}>
-                {/* A colour is only the ground: shown alone, as the rat would hide it behind itself and any backdrop. */}
-                {part === 'colour' ? null : <RatLayers look={choice.look} className={`${FRAME[part]} shrink-0 ${choice.locked ? 'opacity-40 grayscale' : ''}`} />}
+              <span aria-hidden className={`relative flex aspect-square w-full overflow-hidden border-2 border-night-900 ${GROUND[choice.shown.colour]}`}>
+                {/* A colour is only the ground, and a backdrop only itself: each shown alone. Anything else, on the plain rat. */}
+                {part === 'colour' ? null : part === 'backdrop' ? (
+                  choice.shown.backdrop === null ? null : <Sprite id={ratSprite('backdrop', choice.shown.backdrop)} fallback={{ w: 128, h: 128 }} className={`!h-full !w-full ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
+                ) : (
+                  <RatLayers look={choice.shown} className={`${FRAME[part]} shrink-0 ${choice.locked ? 'opacity-40 grayscale' : ''}`} />
+                )}
                 {choice.locked ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <Sprite id="icon.locked" />
