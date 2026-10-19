@@ -46,7 +46,7 @@ describe('Panel', () => {
 });
 
 describe('Bar', () => {
-  const lit = (bar: HTMLElement) => [...bar.querySelectorAll('span')].filter((cell) => /\blamp\b/.test(cell.className)).length;
+  const lit = (bar: HTMLElement) => Number(bar.querySelector('[data-lamps]')?.getAttribute('data-lit'));
 
   it('lights its lamps from the left, and says how far along it is', () => {
     render(<Bar value={5} max={16} label="Progress" />);

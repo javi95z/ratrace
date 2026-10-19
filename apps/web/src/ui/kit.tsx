@@ -137,9 +137,10 @@ export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string;
   );
 }
 
+/** The colours of a lit lamp: its light, bright along the top and deep along the bottom. */
 const LAMP = {
-  gold: 'lamp bg-gold-500 [--hi:var(--color-gold-200)] [--lo:var(--color-gold-700)]',
-  teal: 'lamp bg-teal-300 [--hi:var(--color-sky-100)] [--lo:var(--color-teal-600)]',
+  gold: { base: 'var(--color-gold-500)', hi: 'var(--color-gold-200)', lo: 'var(--color-gold-700)' },
+  teal: { base: 'var(--color-teal-300)', hi: 'var(--color-sky-100)', lo: 'var(--color-teal-600)' },
 };
 
 /**
@@ -151,6 +152,21 @@ export function Bar({ value, max, label, tone = 'gold', door = false }: { value:
   const share = max <= 0 ? (value > 0 ? 1 : 0) : Math.max(0, Math.min(1, value / max));
   const filled = Math.floor(share * cells + 1e-9);
   const open = filled === cells;
+  const lamp = LAMP[tone];
+  // The lamps are painted on one strip, not drawn as a box each: boxes a fraction of a pixel wide are
+  // each rounded on their own, and on a phone's screen some of them stood a pixel lower than the rest.
+  const cell = `((100% - ${(cells - 1) * 2}px) / ${cells})`;
+  const strip = {
+    backgroundColor: 'var(--color-night-600)',
+    backgroundImage: [
+      // The gaps between the lamps.
+      `repeating-linear-gradient(to right, transparent 0 calc${cell}, var(--color-night-900) calc${cell} calc(${cell} + 2px))`,
+      // The lit ones, from the left.
+      `linear-gradient(to bottom, ${lamp.hi} 0 2px, ${lamp.base} 2px calc(100% - 2px), ${lamp.lo} calc(100% - 2px))`,
+    ].join(', '),
+    backgroundSize: `100% 100%, calc(${filled} * (${cell} + 2px)) 100%`,
+    backgroundRepeat: 'no-repeat',
+  };
   return (
     <div
       role="progressbar"
@@ -159,11 +175,9 @@ export function Bar({ value, max, label, tone = 'gold', door = false }: { value:
       aria-valuemax={100}
       aria-valuenow={Math.round(share * 100)}
       className="frame sunk grid items-center gap-[2px] bg-night-900 p-[3px]"
-      style={{ gridTemplateColumns: `repeat(${cells}, minmax(0, 1fr))${door ? ' 14px' : ''}` }}
+      style={{ gridTemplateColumns: door ? '1fr 14px' : '1fr' }}
     >
-      {Array.from({ length: cells }, (_, i) => (
-        <span key={i} className={join('h-2.5', i < filled ? LAMP[tone] : 'bg-night-600')} />
-      ))}
+      <span data-lamps={cells} data-lit={filled} className="block h-2.5" style={strip} />
       {door ? (
         // A door drawn in six pixels: a leaf, its frame, and a gold handle. Open, it is all light.
         <span aria-hidden data-door={open ? 'open' : 'shut'} className={join('relative ml-[2px] h-3.5', open ? 'bg-gold-200' : 'bg-teal-600 shadow-[inset_0_0_0_2px_var(--color-teal-800)]')}>
