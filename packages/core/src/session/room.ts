@@ -14,6 +14,8 @@ export const GRACE_MS = 5_000;
 /** The most members a room holds, and the fewest it starts with. */
 export const MAX_MEMBERS = 6;
 export const MIN_MEMBERS = 2;
+/** How many sit at a public game when it starts: rats take the seats nobody came for. The server keeps to the same. */
+export const TABLE = 4;
 
 /** How a member stood when the last round turned. */
 export interface RoomStanding {
@@ -38,6 +40,8 @@ export interface RoomMember {
   name: string | null;
   me: boolean;
   host: boolean;
+  /** For a rat the server plays in a public game, the kind of player it plays as (`saver`, `gambler`...); null for a person. */
+  bot: string | null;
   /** True once they have played the round in play. */
   ready: boolean;
   left: boolean;
@@ -79,6 +83,10 @@ export interface RoomState {
   rematch: { code: string; open: boolean } | null;
   /** True for a room that is the rematch of another. */
   rematchOf: boolean;
+  /** A public game: found rather than shared, started by anyone in it, and filled with rats when it starts. */
+  public: boolean;
+  /** When a public lobby starts by itself, in milliseconds by the server's clock. Null for any other room. */
+  startsAt: number | null;
   /** The loans the player is part of: offers of the round in play, and what came of those of the round before. */
   loans: RoomLoan[];
 }
@@ -113,11 +121,13 @@ export interface RoomGameOver {
   /** When it was opened, in milliseconds. */
   playedAt: number;
   rematchOf: boolean;
+  /** A public game, which rats may have sat in. */
+  public: boolean;
   /** The player's own life in it: the id their finished life is kept under. Null when the server does not say. */
   gameId: string | null;
   /** Everyone who was in it, in their final order; those who left last. */
-  /** `left` for one who gave their life up before the end. Net worth in the dollars the life began with, where it lived and its job, when the server says. */
-  players: Array<{ name: string | null; tag: string; me: boolean; score: number | null; left: boolean; netWorth: number | null; cityId: string | null; career: { id: string; level: number } | null }>;
+  /** `left` for one who gave their life up before the end; `bot`, the kind of a rat. Net worth in the dollars the life began with, where it lived and its job, when the server says. */
+  players: Array<{ name: string | null; tag: string; bot: string | null; me: boolean; score: number | null; left: boolean; netWorth: number | null; cityId: string | null; career: { id: string; level: number } | null }>;
 }
 
 /** A member's life in a room, as the server shows it: the whole of what they may see, and what its last step did. */
@@ -146,13 +156,15 @@ export class RoomRefused extends Error {
 
 /**
  * The server of rooms. Every one of these throws `Unreachable` when the server cannot answer just
- * now (nothing has changed then, and the same can be asked again), and the first four throw
+ * now (nothing has changed then, and the same can be asked again), and the first five throw
  * `RoomRefused` when it answers no.
  */
 export interface RoomsApi {
   /** The room the player is in, if any. */
   mine(): Promise<RoomState | null>;
   open(lifeId: string, seconds: RoundSeconds, versions: { engine: string; content: string }): Promise<RoomState>;
+  /** A seat in a public game: one waiting on these rules, or a new one. */
+  quick(versions: { engine: string; content: string }): Promise<RoomState>;
   join(code: string, versions: { engine: string; content: string }): Promise<RoomState>;
   start(roomId: string): Promise<RoomState>;
   /** Leaves the room. Null if the player was no longer in it. */

@@ -6,6 +6,7 @@ import { headlineArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
 import { ageAt, headlineText } from '@ratrace/core/game/present';
+import { memberName } from '@ratrace/core/game/room';
 import { rivalNews } from '@ratrace/core/game/rivals';
 import { roomStory, useRoomPaper } from '@/game/roomStory';
 import type { RoomStory } from '@/game/roomStory';
@@ -65,7 +66,7 @@ const PAPER = {
 
 /** The story of a game with friends in the words of the paper: one of its ways, turned by the round and by who it is about. */
 export function storyText(t: (key: string, values?: Record<string, string | number>) => string, story: RoomStory, round: number): string {
-  const name = (member: { name: string | null; userId: string }) => member.name ?? t('nameless', { tag: member.userId.slice(0, 4).toUpperCase() });
+  const name = (member: { name: string | null; userId: string; bot: string | null }) => memberName(t, member);
   const way = (keys: readonly string[]) => {
     let mix = round;
     for (const char of story.who.userId) mix += char.charCodeAt(0);

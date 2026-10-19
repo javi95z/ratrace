@@ -2,7 +2,7 @@ import { recordStart, recordStep } from '@ratrace/content';
 import type { LifeRecord } from '@ratrace/content';
 import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
 import type { Content, StartConfig } from '@ratrace/engine';
-import type { Bot } from './bots';
+import type { Bot } from '@ratrace/content';
 
 /**
  * How often each badge is earned: the share of lives, in percent to one decimal, in which every bot

@@ -10,7 +10,7 @@ import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
 import type { GameStore } from '@ratrace/core/game/store';
 import { Link } from '@/i18n/navigation';
-import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
+import { MAX_MEMBERS, memberName, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
 import type { RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
@@ -33,13 +33,23 @@ function usePaceOf() {
   const t = useT('room');
   return (seconds: number) => (seconds === DAY ? t('day') : seconds >= HOUR ? t('hours', { n: seconds / HOUR }) : clock(seconds));
 }
-/** Four characters of a player's id, for one with no name. */
-const tagOf = (userId: string) => userId.slice(0, 4).toUpperCase();
-
-/** What a member is called: their name, or the rat their id makes of them. */
+/** What a member is called: their name, the rat their id makes of them, or the kind of rat a bot is. */
 function useNameOf() {
   const t = useT('room');
-  return (member: RoomMember) => member.name ?? t('nameless', { tag: tagOf(member.userId) });
+  return (member: RoomMember) => memberName(t, member);
+}
+
+/** The seconds left before a public lobby starts by itself, by the server's clock, counted down as the page is shown. Null for any other room. */
+function useSecondsToStart(): number | null {
+  const startsAt = useRoom((s) => (s.room?.status === 'open' ? s.room.startsAt : null));
+  const skew = useRoom((s) => s.skew);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (startsAt === null) return;
+    const timer = setInterval(() => tick((n) => n + 1), 250);
+    return () => clearInterval(timer);
+  }, [startsAt]);
+  return startsAt === null ? null : Math.max(0, Math.ceil((startsAt - (Date.now() + skew)) / 1000));
 }
 
 /** The members still in, best first by the score the last round left them with; those who left after them. */
@@ -165,11 +175,12 @@ export function Room() {
   return <RoomPlay room={room} game={game} />;
 }
 
-/** In no room: open one, or join one with a code. A link with a code fills it in. */
+/** In no room: a quick game with whoever is looking for one, a game of one's own, or one joined with a code. A link with a code fills it in. */
 function Door() {
   const t = useT('room');
   const busy = useRoom((s) => s.busy);
   const join = useRoom((s) => s.join);
+  const quick = useRoom((s) => s.quick);
   const closed = useRoom((s) => s.closed);
   const clearClosed = useRoom((s) => s.clearClosed);
   const [opening, setOpening] = useState(false);
@@ -234,7 +245,23 @@ function Door() {
           {t('closed')}
         </p>
       ) : null}
-      <Button variant="primary" wide disabled={busy} onClick={() => setOpening(true)}>
+      {/* The quickest way in: a seat in a public game, with no code to pass round. */}
+      <div className="flex flex-col gap-1.5">
+        <Button
+          variant="primary"
+          wide
+          disabled={busy}
+          onClick={() => {
+            clearClosed();
+            void quick();
+          }}
+        >
+          <Sprite id="icon.multiplayer" />
+          {t('quick')}
+        </Button>
+        <p className="text-center text-[13px] leading-snug text-ink-300">{t('quickAbout')}</p>
+      </div>
+      <Button wide disabled={busy} onClick={() => setOpening(true)}>
         {t('open')}
       </Button>
       <Panel title={t('join')}>
@@ -376,13 +403,25 @@ function RematchSheet({ room, open, onClose }: { room: RoomState; open: boolean;
   );
 }
 
-/** What a room that is over offers next: its rematch to join once someone has opened it, or to open. */
+/**
+ * What a room that is over offers next: its rematch to join once someone has opened it, or to open.
+ * A public game offers another public game instead: its players did not come together.
+ */
 function Rematch({ room }: { room: RoomState }) {
   const t = useT('room');
   const busy = useRoom((s) => s.busy);
   const join = useRoom((s) => s.join);
+  const quick = useRoom((s) => s.quick);
   const [asking, setAsking] = useState(false);
   if (room.status !== 'finished') return null;
+  if (room.public) {
+    return (
+      <Button variant="primary" wide disabled={busy} onClick={() => void quick()}>
+        <Sprite id="icon.multiplayer" />
+        {t('quickAgain')}
+      </Button>
+    );
+  }
   const waiting = room.rematch?.open ? room.rematch : null;
   if (waiting) {
     return (
@@ -416,7 +455,8 @@ function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; o
   const leave = useRoom((s) => s.leave);
   const busy = useRoom((s) => s.busy);
   const me = room.members.find((member) => member.me);
-  const what = room.status === 'playing' ? t('leavePlaying') : me?.host ? t('leaveHost') : null;
+  // A public lobby goes on without whoever opened it: only a game among friends closes behind its host.
+  const what = room.status === 'playing' ? t('leavePlaying') : me?.host && !room.public ? t('leaveHost') : null;
   return (
     <Sheet open={open} onClose={onClose} title={t('leaveTitle')} closeLabel={common('close')} tone="wine">
       {what ? <p className="text-[15px] leading-snug text-ink-200">{what}</p> : null}
@@ -432,7 +472,10 @@ function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; o
   );
 }
 
-/** The lobby: the code to share, the life everyone will live, who is in, and the start, which is the host's. */
+/**
+ * The lobby: the code to share, the life everyone will live, who is in, and the start, which is the
+ * host's. A public one leads with how long until it starts by itself, and anyone in it may start it.
+ */
 function Lobby({ room }: { room: RoomState }) {
   const t = useT('room');
   const paceOf = usePaceOf();
@@ -454,6 +497,7 @@ function Lobby({ room }: { room: RoomState }) {
   const here = room.members.filter((member) => !member.left);
   const me = here.find((member) => member.me);
   const enough = here.length >= MIN_MEMBERS;
+  const toStart = useSecondsToStart();
 
   const share = async () => {
     if (url === null) return;
@@ -475,14 +519,26 @@ function Lobby({ room }: { room: RoomState }) {
 
   return (
     <Page title={t('title')}>
-      <section aria-label={t('code')} className="flex flex-col items-center gap-2 py-2 text-center">
-        <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('code')}</p>
-        <p className="pixel text-[44px] leading-none tracking-[0.18em] text-gold-500">{room.code}</p>
-        <div className="flex flex-wrap justify-center gap-2">
-          {canShare ? <Button onClick={() => void share()}>{t('share')}</Button> : null}
-          <Button onClick={() => void copy()}>{t('copyLink')}</Button>
-        </div>
-      </section>
+      {room.public ? (
+        // A public game is found, not shared: its clock comes first. Someone may still be invited to it.
+        <section aria-label={t('searching')} className="flex flex-col items-center gap-2 py-2 text-center">
+          <p className="pixel text-[18px] text-gold-500">{t('searching')}</p>
+          <p role="timer" className="pixel text-[36px] leading-none tabular-nums text-cream">
+            {toStart === null || toStart > 0 ? t('startsIn', { time: clock(toStart ?? 0) }) : t('startsSoon')}
+          </p>
+          <p className="text-[13px] leading-snug text-ink-300">{t('fillWithBots')}</p>
+          <Button onClick={() => void (canShare ? share() : copy())}>{t('invite')}</Button>
+        </section>
+      ) : (
+        <section aria-label={t('code')} className="flex flex-col items-center gap-2 py-2 text-center">
+          <p className="text-[12px] uppercase tracking-wider text-ink-300">{t('code')}</p>
+          <p className="pixel text-[44px] leading-none tracking-[0.18em] text-gold-500">{room.code}</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {canShare ? <Button onClick={() => void share()}>{t('share')}</Button> : null}
+            <Button onClick={() => void copy()}>{t('copyLink')}</Button>
+          </div>
+        </section>
+      )}
       <Panel>
         <div className="flex items-center gap-3">
           <Well className="size-[68px] shrink-0">
@@ -510,14 +566,20 @@ function Lobby({ room }: { room: RoomState }) {
             <li key={member.userId} className="flex min-h-11 items-center gap-2 py-1.5">
               <MemberRat member={member} />
               <span className="min-w-0 flex-1 truncate text-[15px]">{nameOf(member)}</span>
-              {member.host ? <Tag>{t('host')}</Tag> : null}
+              {member.host && !room.public ? <Tag>{t('host')}</Tag> : null}
+              {member.bot ? <Tag>{t('bot')}</Tag> : null}
               {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
               {member.me ? <RenameButton named={member.name !== null} /> : null}
             </li>
           ))}
         </ul>
       </Panel>
-      {me?.host ? (
+      {room.public ? (
+        // Anyone here may start it now, with rats in the empty seats, rather than wait for its clock.
+        <Button variant="primary" wide disabled={busy} onClick={() => void start()}>
+          {t('startNow')}
+        </Button>
+      ) : me?.host ? (
         <div className="flex flex-col gap-1.5">
           <Button variant="primary" wide disabled={busy || !enough} onClick={() => void start()}>
             {t('start')}
@@ -532,7 +594,7 @@ function Lobby({ room }: { room: RoomState }) {
       <Refusal />
       <ShoutButton wide />
       <Heard room={room} />
-      <Button variant="quiet" wide disabled={busy} onClick={() => (me?.host ? setAsking(true) : void leave())}>
+      <Button variant="quiet" wide disabled={busy} onClick={() => (me?.host && !room.public ? setAsking(true) : void leave())}>
         {t('leave')}
       </Button>
       <LeaveSheet room={room} open={asking} onClose={() => setAsking(false)} />
@@ -748,7 +810,8 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
           // Places move by the order shown, the order the server kept the round before.
           const moved = before === null ? 0 : before.place - (at + 1);
           const gained = standing !== null && before !== null ? standing.score - before.score : 0;
-          const pick = onPick && room.status === 'playing' && !member.me && !member.left ? () => onPick(member) : undefined;
+          // A rat lends and borrows nothing: only another player opens.
+          const pick = onPick && room.status === 'playing' && !member.me && !member.left && member.bot === null ? () => onPick(member) : undefined;
           return (
             <li key={member.userId} className={member.left ? 'opacity-60' : ''}>
               {/* Another player still in the game opens, to offer them a loan. */}
@@ -767,6 +830,7 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
                   <MemberRat member={member} />
                   <span className="truncate text-[15px]">{nameOf(member)}</span>
                   {member.me ? <Tag tone="good">{t('you')}</Tag> : null}
+                  {member.bot ? <Tag>{t('bot')}</Tag> : null}
                 </span>
                 {standing && (standing.cityId || standing.career) ? (
                   <span className="block truncate text-[12px] text-ink-200">
@@ -1040,6 +1104,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
   const status = useRoom((s) => s.status);
   const room = useRoom((s) => s.room);
   const left = useSecondsLeft();
+  const toStart = useSecondsToStart();
   if (status === 'booting' || status === 'unavailable') return null;
   const inRoom = status === 'in' && room !== null && room.status !== 'closed';
   // A game that is over is kept for its result, and a rematch, until the player leaves it: it is not a game to go back to.
@@ -1048,7 +1113,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
   let detail: string | null = null;
   if (inRoom && room) {
     const here = room.members.filter((member) => !member.left);
-    if (room.status === 'open') detail = t('roomLobby', { count: here.length, max: MAX_MEMBERS });
+    if (room.status === 'open') detail = room.public && toStart !== null ? t('roomSearching', { time: clock(toStart) }) : t('roomLobby', { count: here.length, max: MAX_MEMBERS });
     else if (room.status === 'playing') {
       const waitingFor = here.filter((member) => !member.ready && !member.me);
       detail = me && !me.ready ? t('roomTurn', { time: left === null ? '—' : clock(left) }) : t('roomWaiting', { names: waitingFor.map(nameOf).join(', ') });

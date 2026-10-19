@@ -1,6 +1,6 @@
 import { content, lives } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
-import type { Bot } from './bots';
+import type { Bot } from '@ratrace/content';
 import { compare, playLife, seedsFor } from './simulate';
 
 const idle = (id: string): Bot => ({ id, pick: () => 0, orders: () => [] });

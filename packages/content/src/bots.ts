@@ -4,7 +4,8 @@ import type { CardDef, Content, Effects, FocusAction, GameView, LifestyleTier, O
 /**
  * A bot plays a life the way one kind of player would. It is handed a view of the game, which is
  * all a player ever has: no seed, no dice, no world after the current round. So a bot cannot peek
- * even by mistake.
+ * even by mistake. The balance tool measures the rules with them; a public game seats them beside
+ * its players, played by the server under the game's own rules (they go into its bundle).
  */
 export interface Bot {
   id: string;
@@ -327,3 +328,9 @@ const random: Bot = {
 };
 
 export const bots: Bot[] = [saver, indexer, gambler, chaser, landlord, random];
+
+/**
+ * The rats a public game seats beside its players when too few come: each plays as one kind of
+ * player would. Not the random one, which is a test of the rules and no company.
+ */
+export const ROOM_BOTS: readonly string[] = ['saver', 'indexer', 'gambler', 'chaser', 'landlord'];

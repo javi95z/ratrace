@@ -19,6 +19,8 @@ export { WORTH_MARKS } from './story';
 export type { Milestone, Story } from './story';
 export { unlockedLives } from './unlocks';
 export type { Played } from './unlocks';
+export { bots, ROOM_BOTS } from './bots';
+export type { Bot } from './bots';
 export { assetKind } from './kinds';
 export { CHALLENGE_DEBT, CHALLENGE_RULES, HEIR_CASH, challengeLimits, challengeOf, challengeStart, weekOf, weekStart } from './challenges';
 export type { Challenge, ChallengeRule } from './challenges';

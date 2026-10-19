@@ -4,6 +4,7 @@ import { LifeFace } from './LifeFace';
 
 import { useEffect, useState } from 'react';
 import { useRoom, useT, useWords } from '@/game/context';
+import { memberName } from '@ratrace/core/game/room';
 import type { RoomGameOver } from '@ratrace/core/game/room';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
@@ -58,7 +59,7 @@ export function RoomHistory({ runs }: { runs: FinishedRun[] }) {
   }, [status, history]);
 
   const lifeName = (lifeId: string) => text.lives[lifeId]?.name ?? lifeId;
-  const nameOf = (player: RoomGameOver['players'][number]) => player.name ?? room('nameless', { tag: player.tag });
+  const nameOf = (player: RoomGameOver['players'][number]) => memberName(room, player);
   const runOf = (game: RoomGameOver) => (game.gameId === null ? null : (runs.find((run) => run.runId === game.gameId) ?? null));
   // With no games from the server, the lives this device keeps of them are listed as they are.
   const listed = games !== null && games.length > 0;

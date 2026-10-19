@@ -1,6 +1,6 @@
 import { content, lives } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
-import { bots } from './bots';
+import { bots } from '@ratrace/content';
 import { compare, seedsFor } from './simulate';
 import type { BotSummary } from './simulate';
 

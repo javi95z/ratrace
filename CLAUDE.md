@@ -9,12 +9,12 @@ Dependencies only point down this list:
 | Where | What |
 |---|---|
 | `packages/engine` | The rules: pure state machine (`createGame`, `applyRound`, quotes, score). `ENGINE_VERSION` in `src/version.ts`. |
-| `packages/content` | Data the engine runs on: cards, cities, careers, items, badges, headlines. `CONTENT_VERSION` in `src/content.ts`. |
+| `packages/content` | Data the engine runs on: cards, cities, careers, items, badges, headlines, and the bots (`bots.ts`: the balance tool's players, and the rats the server seats in public games; they go into each rules bundle). `CONTENT_VERSION` in `src/content.ts`. |
 | `packages/i18n` | The interface's words: `messages/{en,es,ru}.json`, `LOCALES`, `messagesFor`. |
 | `packages/core` | The game's logic, no UI and no browser: `session/*` (local, memory, resilient, rooms, ranked, saves, profile, rank), `game/*` (round store, present, records, guide, rivals, avatar, rules registry…), `lib/format`, `lib/mask`. Import as `@ratrace/core/<dir>/<name>`. |
 | `packages/online` | The client of the servers, on top of core: account (`supabase`, `types`, `offline`), cloud saves (`mirror`, `merge`, `follow`), ranked and rooms APIs, `connect` (the only file that names `@supabase/supabase-js`), error reports. Import as `@ratrace/online/<name>`. |
 | `apps/web` | Next.js + next-intl. Screens, UI kit, `game/context.tsx` (the one place that wires session, store and cloud), browser-only pieces (`session/indexeddb`, `game/browserBasket`, `session/rulesFromSite`, `online/index` (browser wiring), `online/captcha` (Turnstile), `online/language` (locale in the URL)), `testing/*` (ranked and room servers for tests, built on the real edge-function code). |
-| `supabase/` | Edge functions (they run bundled rules from `functions/_shared/game/v<engine>-<content>.js`) and migrations. |
+| `supabase/` | Edge functions (they run bundled rules from `functions/_shared/game/v<engine>-<content>.js`) and migrations. Rooms: `_shared/rooms.ts` (friends' games by code, public games via `quick` that start by themselves and fill empty seats with server-played rats from `room_bots`). |
 | `tools/` | `art` (sprites), `balance` (simulated lives), `play` (CLI, `catalog`), `online` (bundle, deploy checks). |
 
 Rules that guard this:

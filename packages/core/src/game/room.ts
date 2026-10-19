@@ -1,4 +1,4 @@
-import { roomBadges } from '@ratrace/content';
+import { roomBadges, ROOM_BOTS } from '@ratrace/content';
 import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
@@ -12,8 +12,20 @@ import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '../session/room';
+export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES, TABLE } from '../session/room';
 export type { RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '../session/room';
+
+/**
+ * What someone in a game is called: a rat of the server by its kind, a player by their name, or by
+ * the four characters of their id when they chose none. `t` is the translator of the rooms' words.
+ */
+export function memberName(
+  t: (key: string, values?: Record<string, string | number>) => string,
+  member: { name: string | null; bot?: string | null; userId?: string; tag?: string },
+): string {
+  if (member.bot) return ROOM_BOTS.includes(member.bot) ? t(`bots.${member.bot}`) : t('bot');
+  return member.name ?? t('nameless', { tag: member.tag ?? (member.userId ?? '').slice(0, 4).toUpperCase() });
+}
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
 export const LOOK_EVERY_MS = 15_000;
@@ -55,6 +67,8 @@ export interface RoomActions {
   /** Asks the server for the room the player is in. */
   boot(): Promise<void>;
   open(lifeId: string, seconds: RoundSeconds): Promise<boolean>;
+  /** Takes a seat in a public game: one waiting, or a new one. */
+  quick(): Promise<boolean>;
   join(code: string): Promise<boolean>;
   start(): Promise<void>;
   /** Leaves the room: out of the lobby, giving up the life in play, or done with a room that is over. */
@@ -124,7 +138,8 @@ export function resultOf(room: RoomState): { won: boolean; players: number; rema
   const stayed = played.filter((member) => !member.left);
   const mine = me && !me.left ? me.standing : null;
   const won = mine !== null && stayed.every((member) => (member.standing?.score ?? 0) <= mine.score);
-  return { won, players: played.length, rematch: room.rematchOf };
+  // The rats are there to be beaten, but a game is counted by the people in it: a win over rats alone earns nothing.
+  return { won, players: played.filter((member) => member.bot === null).length, rematch: room.rematchOf };
 }
 
 /**
@@ -196,9 +211,16 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       return game;
     };
 
-    /** Sets the clocks of the round in play: the time-up a second before the deadline, and a look once it is due. */
+    /**
+     * Sets the clocks of the room: in a public lobby, a look once it is to start, which starts it; in
+     * play, the time-up a second before the deadline, and a look once it is due.
+     */
     const setClocks = (room: RoomState, skew: number) => {
       stopClocks();
+      if (room.status === 'open' && room.startsAt !== null) {
+        clocks.push(schedule(() => void get().refresh(), room.startsAt - skew + AFTER_DUE_MS - now()));
+        return;
+      }
       if (room.status !== 'playing' || room.deadline === null) return;
       const deadline = room.deadline - skew;
       const key = `${room.id}/${room.round}`;
@@ -360,6 +382,13 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
       open: (lifeId, seconds) =>
         request(async (rooms) => {
           const room = await rooms.open(lifeId, seconds, options.versions);
+          left = null;
+          return room;
+        }),
+
+      quick: () =>
+        request(async (rooms) => {
+          const room = await rooms.quick(options.versions);
           left = null;
           return room;
         }),

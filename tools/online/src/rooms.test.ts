@@ -1,10 +1,10 @@
-import { content, lives, replayLife, roomStart } from '@ratrace/content';
+import { content, lives, replayLife, ROOM_BOTS, roomStart } from '@ratrace/content';
 import { finalScore, viewOf } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { CURRENT, GAMES } from '../../../supabase/functions/_shared/game/index.ts';
-import { GRACE_MS as GRACE_OF_SERVER } from '../../../supabase/functions/_shared/rooms.ts';
-import { roomServer } from '../../../apps/web/src/testing/roomServer.ts';
+import { GRACE_MS as GRACE_OF_SERVER, MAX_MEMBERS, QUICK_SECONDS, QUICK_WAIT_MS, rooms, TABLE } from '../../../supabase/functions/_shared/rooms.ts';
+import { RATS, roomServer } from '../../../apps/web/src/testing/roomServer.ts';
 
 // Several tests here play a whole life for two players: a few seconds alone, more on a busy machine.
 vi.setConfig({ testTimeout: 60_000 });
@@ -64,8 +64,8 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, ready: false, left: false, standing: null, shout: null }]);
-    expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false });
+    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, bot: null, ready: false, left: false, standing: null, shout: null }]);
+    expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false, public: false, startsAt: null });
   });
 
   it('refuses what is not a room: a round of other seconds, an unknown life, a locked one, rules the server does not play now', async () => {
@@ -751,5 +751,198 @@ describe('what is not a request', () => {
     expect(await server.ask(HOST, { action: 'dance' })).toMatchObject({ status: 400, body: { field: 'action' } });
     expect(await server.ask(HOST, { action: 'state', roomId: 'nope' })).toMatchObject({ status: 400, body: { field: 'roomId' } });
     expect(await server.ask(HOST, { action: 'card', roomId: '00000000-0000-4000-8000-000000000001', step: -1 })).toMatchObject({ status: 400, body: { field: 'step' } });
+  });
+});
+
+describe('a public game', () => {
+  const D = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  type Seat = Omit<Room, 'members'> & { public: boolean; startsAt: string | null; members: Array<Room['members'][number] & { bot: string | null }> };
+  const seatOf = (reply: { body: Body }) => reply.body.room as Seat;
+  const quick = (server: ReturnType<typeof roomServer>, who: string) => server.ask(who, { action: 'quick', ...VERSIONS });
+  const ratIds = new Set(RATS.map((rat) => rat.user));
+
+  it('seats whoever asks in a new public lobby of theirs, for a life everyone may play, starting by itself a little later', async () => {
+    const server = roomServer();
+    const reply = await quick(server, HOST);
+    expect(reply.status).toBe(200);
+    const seat = seatOf(reply);
+    expect(seat).toMatchObject({ status: 'open', public: true, seconds: QUICK_SECONDS, host: HOST, startsAt: new Date(server.state.now + QUICK_WAIT_MS).toISOString() });
+    expect(lives.find((life) => life.id === seat.lifeId)?.unlock).toBe('default');
+    expect(seat.members.map((m) => [m.userId, m.bot])).toEqual([[HOST, null]]);
+    expect(server.state.asked).toEqual([`${HOST}:room-make`]);
+  });
+
+  it('seats the next ones in the same lobby, the oldest first, and never in a game among friends or one they left', async () => {
+    const server = roomServer();
+    const friends = roomOf(await server.ask(C, { action: 'open', lifeId: 'nurse', seconds: 90, ...VERSIONS }));
+    const first = seatOf(await quick(server, HOST));
+    expect(first.id).not.toBe(friends.id);
+    server.wait(1_000);
+    expect(seatOf(await quick(server, B)).id).toBe(first.id);
+    // One game at a time: asked again from inside one, the player is shown the way to it.
+    expect(await quick(server, B)).toMatchObject({ status: 409, body: { error: 'in-a-room', roomId: first.id } });
+    // Out of it, and asking again, they are given another.
+    await server.ask(B, { action: 'leave', roomId: first.id });
+    const again = seatOf(await quick(server, B));
+    expect(again.id).not.toBe(first.id);
+    expect(again.members.map((m) => m.userId)).toEqual([B]);
+    // The first lobby went on without B, and the next player is seated there, the oldest.
+    expect(seatOf(await quick(server, D)).id).toBe(first.id);
+  });
+
+  it('is offered only on the rules the server plays now, and only by rules that hold rats', async () => {
+    const server = roomServer();
+    expect(await server.ask(HOST, { action: 'quick', engineVersion: '0.1.0', contentVersion: '1.0.0' })).toMatchObject({ status: 409, body: { error: 'cannot-room' } });
+    expect(await server.ask(HOST, { action: 'quick', engineVersion: ENGINE })).toMatchObject({ status: 400, body: { field: 'contentVersion' } });
+    const ratless = { ...GAMES, [CURRENT]: { ...GAMES[CURRENT], bots: undefined } };
+    expect(await rooms(ratless, server.deps, HOST, { action: 'quick', ...VERSIONS })).toMatchObject({ status: 409, body: { error: 'cannot-room' } });
+    server.state.allowed = false;
+    expect(await quick(server, HOST)).toEqual({ status: 429, body: { error: 'too-many' } });
+  });
+
+  it('starts by itself once its time has come, the first time anyone looks, with rats in the seats nobody came for', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    server.wait(QUICK_WAIT_MS - 1_000);
+    expect(seatOf(await server.ask(B, { action: 'state', roomId: seat.id })).status).toBe('open');
+    server.wait(1_000);
+    const started = seatOf(await server.ask(B, { action: 'state', roomId: seat.id }));
+    expect(started).toMatchObject({ status: 'playing', round: 0, startsAt: null, deadline: new Date(server.state.now + QUICK_SECONDS * 1000).toISOString() });
+    // Four at the table: the two who came, and two rats of different kinds.
+    expect(started.members).toHaveLength(TABLE);
+    const rats = started.members.filter((m) => m.bot !== null);
+    expect(rats).toHaveLength(2);
+    expect(new Set(rats.map((m) => m.bot)).size).toBe(2);
+    expect(rats.every((m) => ratIds.has(m.userId) && ROOM_BOTS.includes(m.bot as string))).toBe(true);
+    // The rats have played their first round already: its cards answered, its orders kept. The two players have not.
+    expect(started.members.map((m) => m.ready)).toEqual([false, false, true, true]);
+    for (const rat of rats) {
+      const log = server.logOf(rat.userId, seat.id);
+      expect(log.length).toBe(1);
+      expect(log[0].orders).toBeNull();
+      expect(server.db.orders.has(`${seat.id}/${rat.userId}/0`)).toBe(true);
+    }
+    // The two players are told it has begun; the rats are told nothing.
+    expect(server.notices.map((notice) => notice.user).every((user) => !ratIds.has(user))).toBe(true);
+    expect(server.notices).toContainEqual({ user: HOST, about: { kind: 'roomStarted', seconds: QUICK_SECONDS } });
+  });
+
+  it('is anyone\'s in it to start at once, and alone a player is given three rats', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    // B did not open it, and starts it all the same.
+    const started = seatOf(await server.ask(B, { action: 'start', roomId: seat.id }));
+    expect(started.status).toBe('playing');
+    expect(started.members.filter((m) => m.bot !== null)).toHaveLength(TABLE - 2);
+    // Someone not in it cannot.
+    const other = roomServer();
+    const alone = seatOf(await quick(other, C));
+    expect(await other.ask(D, { action: 'start', roomId: alone.id })).toMatchObject({ status: 404, body: { error: 'unknown-room' } });
+    const solo = seatOf(await other.ask(C, { action: 'start', roomId: alone.id }));
+    expect(solo.members.map((m) => m.bot === null)).toEqual([true, false, false, false]);
+  });
+
+  it('starts for those still in it, when the first to look once its time has come is someone who left', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    await server.ask(HOST, { action: 'leave', roomId: seat.id });
+    server.wait(QUICK_WAIT_MS);
+    // HOST left, and still looks: the game starts all the same, for B and the rats.
+    const seen = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(seen.status).toBe('playing');
+    expect(seen.members.filter((m) => !m.left).map((m) => m.bot === null)).toEqual([true, false, false, false]);
+    expect(server.notices).toContainEqual({ user: B, about: { kind: 'roomStarted', seconds: QUICK_SECONDS } });
+  });
+
+  it('starts at once when every seat is taken, with no rat in it', async () => {
+    const server = roomServer();
+    const players = [HOST, B, C, D, ...['1', '2'].map((n) => `eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee${n}`)];
+    let seat: Seat | null = null;
+    for (const who of players) seat = seatOf(await quick(server, who));
+    expect(seat?.status).toBe('playing');
+    expect(seat?.members.every((m) => m.bot === null)).toBe(true);
+    expect(seat?.members).toHaveLength(MAX_MEMBERS);
+  });
+
+  it('plays a whole life against rats, each round turning the moment the player plays it, and keeps no rat\'s life', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    for (let round = 0; round < content.rounds; round++) {
+      const reply = await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+      expect(reply.status).toBe(200);
+      // The rats had played already: the player was the last, and is answered their round.
+      expect(reply.body.result).not.toBeNull();
+      expect(seatOf(reply).round).toBe(round + 1);
+    }
+    const end = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(end.status).toBe('finished');
+    expect(end.members.every((m) => m.standing !== null)).toBe(true);
+    // Only the player's life is kept among the runs; every life of the game was played to its end.
+    expect(server.db.runs.map((run) => run.user_id)).toEqual([HOST]);
+    expect([...server.db.games.values()].every((game) => game.status === 'finished')).toBe(true);
+    // The rats played as their kinds: they did not live the life of one who does nothing.
+    const rats = end.members.filter((m) => m.bot !== null);
+    for (const rat of rats) expect(server.logOf(rat.userId, seat.id).some((round) => (round.orders ?? []).length > 0)).toBe(true);
+    // Nobody but the player was ever told anything.
+    expect(server.notices.every((notice) => notice.user === HOST)).toBe(true);
+    // The history says who the rats were.
+    const history = (await server.ask(HOST, { action: 'history' })).body.games as Array<{ public: boolean; players: Array<{ bot: string | null; me: boolean }> }>;
+    expect(history[0].public).toBe(true);
+    expect(history[0].players.filter((p) => p.bot !== null)).toHaveLength(TABLE - 1);
+    expect(history[0].players.find((p) => p.me)?.bot).toBeNull();
+  });
+
+  it('lets a player tease a rat, and lends no money to one', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    const started = seatOf(await server.ask(HOST, { action: 'start', roomId: seat.id }));
+    const rat = started.members.find((m) => m.bot !== null)?.userId as string;
+    expect(await server.ask(HOST, { action: 'loan', roomId: seat.id, to: rat, lend: true, amount: 100_000, rateBp: 500, rounds: 2 })).toMatchObject({ status: 400, body: { field: 'to' } });
+    const tease = { type: 'focus', action: 'tease', target: rat };
+    expect((await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [tease] })).status).toBe(200);
+    expect(server.logOf(rat, seat.id)[0].room).toEqual([{ kind: 'teased', by: HOST }]);
+  });
+
+  it('plays a rat that could not play on the next look, and turns the round if it was the last', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    const real = server.deps.loadSeed;
+    // The rats' seeds cannot be read just as the game starts: they are left to play later.
+    server.deps.loadSeed = async (id) => (ratIds.has(server.db.games.get(id)?.user_id ?? '') ? null : real(id));
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    server.deps.loadSeed = real;
+    expect(server.db.members.filter((m) => m.room_id === seat.id && ratIds.has(m.user_id)).every((m) => m.ready_round === null)).toBe(true);
+    // The player plays; the rats are behind, so the round waits for them...
+    const played = await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+    // ...but not long: the call played them, and the round turned.
+    expect(seatOf(played).round).toBe(1);
+  });
+
+  it('goes on without whoever opened it, closes when no player is left, and ends the rats\' lives when the last player leaves', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    await server.ask(HOST, { action: 'leave', roomId: seat.id });
+    expect(seatOf(await server.ask(B, { action: 'state', roomId: seat.id })).status).toBe('open');
+    await server.ask(B, { action: 'leave', roomId: seat.id });
+    expect(server.db.rooms.get(seat.id)?.status).toBe('closed');
+
+    const next = seatOf(await quick(server, C));
+    await server.ask(C, { action: 'start', roomId: next.id });
+    await server.ask(C, { action: 'leave', roomId: next.id });
+    expect(server.db.rooms.get(next.id)?.status).toBe('closed');
+    expect([...server.db.games.values()].filter((game) => game.room === next.id).every((game) => game.status === 'abandoned')).toBe(true);
+  });
+
+  it('leaves a game among friends exactly as it was: its host alone starts it, and no rat ever sits in it', async () => {
+    const { server, room } = await begun();
+    const state = seatOf(await server.ask(B, { action: 'state', roomId: room }));
+    expect(state).toMatchObject({ public: false, startsAt: null });
+    expect(state.members.every((m) => m.bot === null)).toBe(true);
+    expect(state.members).toHaveLength(2);
   });
 });

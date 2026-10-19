@@ -20,10 +20,13 @@ import { rooms } from '../_shared/rooms.ts';
 import type { LoanRow, MemberRow, RoomGameRow, RoomRow } from '../_shared/rooms.ts';
 import { watched } from '../_shared/watch.ts';
 
-const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of';
+const ROOM = 'id, code, host, life_id, engine_version, content_version, seconds, status, round, deadline, created_at, rematch, rematch_of, public, starts_at';
 const MEMBER = 'user_id, game_id, ready_round, left_at, standing, joined_at, shout, shout_at';
 const GAME = 'id, user_id, mode, life_id, engine_version, content_version, room, round, status, log, updated_at';
 const LOAN = 'id, room_id, round, proposer, lender, borrower, amount, rate_bp, rounds, status';
+
+/** The rats the server plays, read once for as long as this copy of the function lives: they never change while it does. */
+let rats: Promise<Array<{ user: string; persona: string }>> | null = null;
 
 export default {
   fetch: withSupabase({ auth: 'user' }, watched('rooms', async (req: Request, ctx: SupabaseContext) => {
@@ -81,6 +84,28 @@ export default {
         },
         open: (room) => call('room_open', { p_room: room.id, p_host: room.host, p_life: room.life_id, p_engine: room.engine_version, p_content: room.content_version, p_seconds: room.seconds }),
         join: (code, user, engine, content) => call('room_join', { p_code: code, p_member: user, p_engine: engine, p_content: content }),
+        quick: (room) =>
+          call('room_quick', {
+            p_room: room.id,
+            p_member: room.member,
+            p_life: room.life_id,
+            p_engine: room.engine_version,
+            p_content: room.content_version,
+            p_seconds: room.seconds,
+            p_starts_at: room.starts_at.toISOString(),
+          }),
+        bots: () => {
+          rats ??= db
+            .from('room_bots')
+            .select('user_id, persona')
+            .then((result) => (must(result) as Array<{ user_id: string; persona: string }>).map((row) => ({ user: row.user_id, persona: row.persona })));
+          // A failed read is not kept: the next call asks again.
+          rats.catch(() => {
+            rats = null;
+          });
+          return rats;
+        },
+        addBots: (room, users) => call('room_add_bots', { p_room: room, p_bots: users }),
         start: (room, host, seed, games, deadline) => call('room_start', { p_room: room, p_host: host, p_seed: seed, p_games: games, p_deadline: deadline.toISOString() }),
         leave: (room, user) => call('room_leave', { p_room: room, p_member: user }),
         closeIfStale: (room, now) => call('room_close', { p_room: room, p_now: now.toISOString() }),

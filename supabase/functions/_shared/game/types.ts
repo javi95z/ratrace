@@ -79,4 +79,10 @@ export interface GameModule {
   challengeOf?(week: string, lives: GameModule['lives']): { week: string; lifeId: string; rule: string } | null;
   /** How a week's challenge begins: its life under the week's rule. */
   challengeStart?(challenge: { week: string; lifeId: string; rule: string }, life: GameModule['lives'][number]): unknown;
+  /**
+   * The rats a public game seats beside its players, each playing as one kind of player would: the
+   * option it takes on the next card, and its orders for the round, from what a player may see.
+   * Missing from the versions before 0.42 / 1.45, whose games are never given any.
+   */
+  bots?: ReadonlyArray<{ id: string; pick(content: unknown, view: unknown): number; orders(content: unknown, view: unknown): unknown[] }>;
 }

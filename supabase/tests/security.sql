@@ -45,6 +45,16 @@ declare
   far timestamptz := '2099-06-01 12:00:00+00';
   pages integer;
   functions integer;
+  f uuid := gen_random_uuid();
+  g uuid := gen_random_uuid();
+  h uuid := gen_random_uuid();
+  room_p uuid := gen_random_uuid();
+  room_q uuid := gen_random_uuid();
+  room_u uuid := gen_random_uuid();
+  room_v uuid := gen_random_uuid();
+  j2 jsonb;
+  saver uuid;
+  indexer uuid;
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -918,6 +928,76 @@ begin
     then passed := passed + 1; else failed := array_append(failed, format('a member started a lobby with no host: %s', j)); end if;
   exception when others then
     failed := array_append(failed, format('the rooms after review stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
+
+  -- ---------------------------------------------------------------- public games and their rats
+  reset role;
+  begin
+  insert into auth.users (id, aud, role, is_anonymous) values (f, 'authenticated', 'authenticated', true), (g, 'authenticated', 'authenticated', true), (h, 'authenticated', 'authenticated', true);
+  select user_id into saver from public.room_bots where persona = 'saver';
+  select user_id into indexer from public.room_bots where persona = 'indexer';
+  -- Nobody but the server reads the rats, or seats anyone in a public game; and the rats are there.
+  if (select count(*) from information_schema.role_table_grants where table_schema = 'public' and table_name = 'room_bots' and grantee in ('anon', 'authenticated')) = 0
+     and not has_function_privilege('authenticated', 'public.room_quick(uuid, uuid, text, text, text, integer, timestamptz)', 'execute')
+     and not has_function_privilege('anon', 'public.room_quick(uuid, uuid, text, text, text, integer, timestamptz)', 'execute')
+     and not has_function_privilege('authenticated', 'public.room_add_bots(uuid, uuid[])', 'execute')
+     and (select count(*) from public.room_bots) = 5 and saver is not null and indexer is not null
+    then passed := passed + 1; else failed := array_append(failed, 'a player can reach the rats or seat themselves in a public game, or the rats are missing'); end if;
+  -- The first to ask is given a public lobby of their own, which starts by itself; the next is seated in it, never in a game among friends.
+  perform public.room_open(room_u, h, 'nurse', '9.9.0', '9.9.0', 180);
+  j := public.room_quick(room_p, f, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  j2 := public.room_quick(room_q, g, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  if (j ->> 'room')::uuid = room_p and (j2 ->> 'room')::uuid = room_p and j2 ->> 'code' = (select code from public.rooms where id = room_p)
+     and (select public and starts_at is not null from public.rooms where id = room_p)
+     and not exists (select 1 from public.rooms where id = room_q)
+     and (select count(*) from public.room_players where room_id = room_u) = 1
+    then passed := passed + 1; else failed := array_append(failed, format('two players asking for a public game answered %s and %s', j, j2)); end if;
+  -- One game at a time: asked again from inside one, the player is shown the way to it.
+  j := public.room_quick(gen_random_uuid(), g, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  if j ->> 'error' = 'in-a-room' and (j ->> 'room')::uuid = room_p
+    then passed := passed + 1; else failed := array_append(failed, format('a player in a game asking for another answered %s', j)); end if;
+  -- The server seats only rats, each once, and only in a public lobby.
+  nm := public.room_add_bots(room_p, array[h, saver, saver, indexer]);
+  if nm = 'ok' and (select count(*) from public.room_players where room_id = room_p and left_at is null) = 4
+     and not exists (select 1 from public.room_players where room_id = room_p and user_id = h)
+     and public.room_add_bots(room_u, array[saver]) = 'closed'
+    then passed := passed + 1; else failed := array_append(failed, format('seating rats answered %s', nm)); end if;
+  -- Anyone in a public lobby may start it, not only whoever opened it; then its clock is gone.
+  j := public.room_start(room_p, g, 'seed-p', (select jsonb_object_agg(user_id::text, gen_random_uuid()) from public.room_players where room_id = room_p and left_at is null), now() + interval '3 minutes');
+  if j ->> 'ok' = 'true' and (select status = 'playing' and starts_at is null from public.rooms where id = room_p)
+     and (select count(*) from public.games where room = room_p and status = 'playing') = 4
+    then passed := passed + 1; else failed := array_append(failed, format('a member starting a public lobby answered %s', j)); end if;
+  -- The last player to leave a public game in play closes it, and the rats' lives in it end with it.
+  perform public.room_leave(room_p, f);
+  yes1 := (select status from public.rooms where id = room_p) = 'playing';
+  perform public.room_leave(room_p, g);
+  if yes1 and (select status from public.rooms where id = room_p) = 'closed' and not exists (select 1 from public.games where room = room_p and status = 'playing')
+    then passed := passed + 1; else failed := array_append(failed, 'the last player leaving a public game left it in play, or the rats'' lives with it'); end if;
+  -- A public lobby goes on without whoever opened it, and closes when no player is left in it, rats or none.
+  room_q := gen_random_uuid();
+  perform public.room_quick(room_q, f, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  perform public.room_quick(gen_random_uuid(), g, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  perform public.room_add_bots(room_q, array[saver]);
+  perform public.room_leave(room_q, f);
+  yes1 := (select status from public.rooms where id = room_q) = 'open' and exists (select 1 from public.room_players where room_id = room_q and user_id = g and left_at is null);
+  perform public.room_leave(room_q, g);
+  if yes1 and (select status from public.rooms where id = room_q) = 'closed' and (select count(*) from public.room_players where room_id = room_q and left_at is null) = 0
+    then passed := passed + 1; else failed := array_append(failed, 'a public lobby closed behind whoever opened it, or stayed open with only rats in it'); end if;
+  -- A player who left a public lobby is not seated in it again: they are given another.
+  perform public.room_quick(room_v, f, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  perform public.room_quick(gen_random_uuid(), g, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  perform public.room_leave(room_v, g);
+  j := public.room_quick(gen_random_uuid(), g, 'nurse', '9.9.0', '9.9.0', 180, now() + interval '2 minutes');
+  if (j ->> 'room')::uuid is distinct from room_v and (select count(*) from public.room_players where room_id = room_v and left_at is null) = 1
+    then passed := passed + 1; else failed := array_append(failed, format('a player back after leaving a public lobby answered %s', j)); end if;
+  -- Only a public game has a clock to start by.
+  begin
+    update public.rooms set starts_at = now() where id = room_u;
+    failed := array_append(failed, 'a game among friends was given a clock to start by');
+  exception when check_violation then passed := passed + 1;
+  end;
+  exception when others then
+    failed := array_append(failed, format('the public games stopped on: %s (%s)', sqlerrm, sqlstate));
   end;
 
   -- ---------------------------------------------------------------- errors

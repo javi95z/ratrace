@@ -16,6 +16,7 @@ import * as g12 from './v0.40.0-1.41.0.js';
 import * as g13 from './v0.41.0-1.42.0.js';
 import * as g14 from './v0.42.0-1.43.0.js';
 import * as g15 from './v0.42.0-1.44.0.js';
+import * as g16 from './v0.42.0-1.45.0.js';
 
 /** Every engine and content pair the server can play, under "engine/content". */
 export const GAMES: Readonly<Record<string, GameModule>> = {
@@ -35,7 +36,8 @@ export const GAMES: Readonly<Record<string, GameModule>> = {
   '0.41.0/1.42.0': g13 as unknown as GameModule,
   '0.42.0/1.43.0': g14 as unknown as GameModule,
   '0.42.0/1.44.0': g15 as unknown as GameModule,
+  '0.42.0/1.45.0': g16 as unknown as GameModule,
 };
 
 /** The rules the game plays now. The others are held to finish lives lived under them. */
-export const CURRENT = '0.42.0/1.44.0';
+export const CURRENT = '0.42.0/1.45.0';

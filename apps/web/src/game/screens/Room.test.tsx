@@ -530,3 +530,75 @@ describe('a round in a room', () => {
     expect((await services.store.listRuns())[0]).toMatchObject({ room: true });
   });
 });
+
+describe('a public game', () => {
+  it('takes a seat from the door, says how long until it starts and that rats fill it, and anyone may start it now', async () => {
+    const { server, services } = inRooms();
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    expect(await screen.findByText(/If nobody turns up, bot rats fill the table/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Quick game' }));
+    const clock = await screen.findByRole('region', { name: 'Looking for players' });
+    expect(within(clock).getByRole('timer').textContent).toMatch(/^Starts in [12]:\d\d$/);
+    expect(within(clock).getByText('If no more players turn up, bot rats fill the table.')).toBeTruthy();
+    // Nobody hosts a public game: no tag says so, and leaving asks nothing.
+    const members = screen.getByRole('region', { name: 'In the game: 1 of 6' });
+    expect(within(members).queryByText('Host')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Start now' }));
+    // Alone, with three rats that have played already.
+    const bar = await screen.findByRole('button', { name: /^The game: \d:\d\d left, 3 of 4 have played$/ });
+    await user.click(bar);
+    const order = await screen.findByRole('dialog');
+    expect(within(order).getAllByText('Bot')).toHaveLength(3);
+    const rats = server.db.members.filter((m) => m.user_id !== HOST);
+    expect(rats).toHaveLength(3);
+    // A rat is named by its kind, and is not one to lend money to: its line opens nothing.
+    expect(within(order).getAllByText(/^(Saver|Index|Crypto|Show-off|Landlord) Rat$/)).toHaveLength(3);
+    expect(within(order).queryByRole('button', { name: /Rat$/ })).toBeNull();
+  });
+
+  it('starts by itself once its time has come, while the player watches its lobby', async () => {
+    const server = roomServer();
+    await server.ask(B, { action: 'quick', ...VERSIONS });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: 'Quick game' }));
+    // Seated in the lobby B was waiting in.
+    expect(await screen.findByRole('region', { name: 'In the game: 2 of 6' })).toBeTruthy();
+    await act(async () => {
+      server.wait(120_000);
+      // Whoever looks first starts it; this page hears of it.
+      await server.ask(B, { action: 'state', roomId: server.db.members[0].room_id });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(await screen.findByRole('button', { name: /^The game: \d:\d\d left, 2 of 4 have played$/ }, { timeout: 5_000 })).toBeTruthy();
+  });
+
+  it('says on the front door how long until the public game starts', async () => {
+    const { server, services } = inRooms();
+    await server.ask(HOST, { action: 'quick', ...VERSIONS });
+    renderGame(<Home />, services);
+    const back = await screen.findByRole('link', { name: /Back to your game/ });
+    expect(back.textContent).toMatch(/Looking for players · [12]:\d\d/);
+  });
+
+  it('offers another quick game at the end, in place of a rematch', async () => {
+    const server = roomServer();
+    const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    // Played to its end by the clock alone: the rats play, the player's rounds are played for them.
+    for (let guard = 0; guard < 50 && (server.db.rooms.get(seat.id)?.status ?? '') !== 'finished'; guard++) {
+      server.wait(186_000);
+      await server.ask(HOST, { action: 'state', roomId: seat.id });
+    }
+    expect(server.db.rooms.get(seat.id)?.status).toBe('finished');
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    const again = await screen.findByRole('button', { name: 'Another quick game' }, { timeout: 10_000 });
+    expect(screen.queryByRole('button', { name: 'Rematch' })).toBeNull();
+    await user.click(again);
+    expect(await screen.findByRole('region', { name: 'Looking for players' })).toBeTruthy();
+  });
+});

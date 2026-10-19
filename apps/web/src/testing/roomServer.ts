@@ -11,6 +11,16 @@ import type { RoomsLink } from '@ratrace/core/session/room';
 /** A member as the database keeps them, with the room they are in. */
 type Member = MemberRow & { room_id: string };
 
+/** The rats the server plays, as the migration of public games makes them: an account each, and the kind of player it is. */
+export const RATS: ReadonlyArray<{ user: string; persona: string }> = [
+  { user: 'b0700000-0000-4000-8000-000000000001', persona: 'saver' },
+  { user: 'b0700000-0000-4000-8000-000000000002', persona: 'indexer' },
+  { user: 'b0700000-0000-4000-8000-000000000003', persona: 'gambler' },
+  { user: 'b0700000-0000-4000-8000-000000000004', persona: 'chaser' },
+  { user: 'b0700000-0000-4000-8000-000000000005', persona: 'landlord' },
+];
+const isRat = (user: string) => RATS.some((rat) => rat.user === user);
+
 /**
  * The database of rooms, in memory, with every rule its functions keep in the real one: who may
  * open, join, start, play a card, play a round and turn it, each refused for the same reasons and
@@ -71,7 +81,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       if (other) return { error: 'in-a-room', room: other };
       let code = '';
       for (let n = (state.codes += 1); code.length < 6; n = Math.floor(n / 31)) code += ALPHABET[n % 31];
-      roomsById.set(row.id, { ...row, code, status: 'open', round: 0, deadline: null, created_at: nowIso(), rematch: null, rematch_of: null });
+      roomsById.set(row.id, { ...row, code, status: 'open', round: 0, deadline: null, created_at: nowIso(), rematch: null, rematch_of: null, public: false, starts_at: null });
       members.push({ room_id: row.id, user_id: row.host, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
       return { room: row.id, code };
     },
@@ -90,10 +100,39 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       else members.push({ room_id: room.id, user_id: user, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
       return { room: room.id };
     },
+    quick: async (row) => {
+      const other = activeRoomOf(row.member);
+      if (other) return { error: 'in-a-room', room: other };
+      // The oldest public lobby on these rules with a seat left, that the player has not left before.
+      const waiting = [...roomsById.values()]
+        .filter((r) => r.public && r.status === 'open' && r.engine_version === row.engine_version && r.content_version === row.content_version)
+        .filter((r) => active(r.id).length < 6 && memberOf(r.id, row.member) === null)
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
+      if (waiting) {
+        members.push({ room_id: waiting.id, user_id: row.member, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
+        return { room: waiting.id, code: waiting.code };
+      }
+      const made = await deps.open({ id: row.id, host: row.member, life_id: row.life_id, engine_version: row.engine_version, content_version: row.content_version, seconds: row.seconds });
+      if ('error' in made) return made;
+      Object.assign(roomsById.get(made.room) as RoomRow, { public: true, starts_at: row.starts_at.toISOString() });
+      return made;
+    },
+    bots: async () => RATS.map((rat) => ({ ...rat })),
+    addBots: async (roomId, users) => {
+      const room = roomsById.get(roomId);
+      if (!room || room.status !== 'open' || !room.public) return 'closed';
+      for (const user of users) {
+        if (active(roomId).length >= 6) break;
+        if (!isRat(user) || memberOf(roomId, user) !== null) continue;
+        members.push({ room_id: roomId, user_id: user, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
+      }
+      return 'ok';
+    },
     start: async (roomId, host, seed, named, deadline) => {
       const room = roomsById.get(roomId);
       if (!room || room.status !== 'open') return { error: 'started' };
-      if (room.host !== host) return { error: 'not-host' };
+      // The host's to start, or anyone's in it if it is public.
+      if (room.host !== host && !(room.public && memberOf(roomId, host)?.left_at === null)) return { error: 'not-host' };
       const here = active(roomId);
       if (here.length < 2) return { error: 'alone' };
       if (Object.keys(named).length !== here.length || here.some((m) => !Object.hasOwn(named, m.user_id))) return { error: 'moved' };
@@ -103,7 +142,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
         seeds.set(id, seed);
         Object.assign(m, { game_id: id, ready_round: null });
       }
-      Object.assign(room, { status: 'playing', round: 0, deadline: deadline.toISOString() });
+      Object.assign(room, { status: 'playing', round: 0, deadline: deadline.toISOString(), starts_at: null });
       return { ok: true };
     },
     leave: async (roomId, user) => {
@@ -111,16 +150,20 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       const m = memberOf(roomId, user);
       if (!room || !m || m.left_at !== null) return { error: 'not-in-room' };
       m.left_at = nowIso();
-      if (room.status === 'open' && room.host === user) {
-        room.status = 'closed';
+      // The host of a lobby closes it for everyone, unless it is public: that one closes when no player is left.
+      const nobody = active(roomId).every((one) => isRat(one.user_id));
+      if (room.status === 'open' && ((room.host === user && !room.public) || (room.public && nobody))) {
+        Object.assign(room, { status: 'closed', starts_at: null });
         for (const other of active(roomId)) other.left_at = nowIso();
         return { status: 'closed' };
       }
       if (room.status === 'playing') {
         const game = m.game_id ? games.get(m.game_id) : undefined;
         if (game && game.status === 'playing') Object.assign(game, { status: 'abandoned', updated_at: stamp() });
-        if (active(roomId).length === 0) {
+        // The last player to go closes the game, and the rats' lives in it end with it.
+        if (nobody) {
           Object.assign(room, { status: 'closed', deadline: null });
+          for (const life of games.values()) if (life.room === roomId && life.status === 'playing') Object.assign(life, { status: 'abandoned', updated_at: stamp() });
           return { status: 'closed' };
         }
       }

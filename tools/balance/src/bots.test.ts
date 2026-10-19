@@ -1,9 +1,8 @@
-import { content, lives } from '@ratrace/content';
+import { bots, content, lives } from '@ratrace/content';
 import { applyCard, applyRound, createGame, viewOf } from '@ratrace/engine';
+import type { Bot } from '@ratrace/content';
 import type { GameState, GameView, RejectReason } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { bots } from './bots';
-import type { Bot } from './bots';
 import { playLife } from './simulate';
 
 const bot = (id: string): Bot => {

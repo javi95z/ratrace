@@ -1,7 +1,7 @@
 import { BADGE_RARITY, badges, content, lives, RARITY_BANDS } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
 import { badgeShares } from './badges';
-import { bots } from './bots';
+import { bots } from '@ratrace/content';
 import { seedsFor } from './simulate';
 
 /**

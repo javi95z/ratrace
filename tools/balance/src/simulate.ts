@@ -1,6 +1,6 @@
 import { applyCard, applyRound, createGame, finalScore, livedStatus, realNetWorth, viewOf } from '@ratrace/engine';
 import type { Content, GameState, StartConfig } from '@ratrace/engine';
-import type { Bot } from './bots';
+import type { Bot } from '@ratrace/content';
 
 export interface LifeResult {
   bot: string;

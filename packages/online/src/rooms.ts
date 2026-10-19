@@ -31,6 +31,7 @@ function memberOf(raw: unknown): RoomMember | null {
     name: typeof raw.name === 'string' ? raw.name : null,
     me: raw.me === true,
     host: raw.host === true,
+    bot: typeof raw.bot === 'string' ? raw.bot : null,
     ready: raw.ready === true,
     left: raw.left === true,
     standing:
@@ -65,7 +66,8 @@ export function roomOf(raw: unknown): RoomState | null {
   if (members.some((member) => member === null)) return null;
   const now = Date.parse(raw.now);
   const deadline = typeof raw.deadline === 'string' ? Date.parse(raw.deadline) : null;
-  if (Number.isNaN(now) || (deadline !== null && Number.isNaN(deadline))) return null;
+  const startsAt = typeof raw.startsAt === 'string' ? Date.parse(raw.startsAt) : null;
+  if (Number.isNaN(now) || (deadline !== null && Number.isNaN(deadline)) || (startsAt !== null && Number.isNaN(startsAt))) return null;
   return {
     id: raw.id,
     code: raw.code,
@@ -83,6 +85,8 @@ export function roomOf(raw: unknown): RoomState | null {
     members: members as RoomMember[],
     rematch: isRecord(raw.rematch) && typeof raw.rematch.code === 'string' ? { code: raw.rematch.code, open: raw.rematch.open === true } : null,
     rematchOf: raw.rematchOf === true,
+    public: raw.public === true,
+    startsAt,
     loans: Array.isArray(raw.loans) ? raw.loans.map(loanOf).filter((loan): loan is RoomLoan => loan !== null) : [],
   };
 }
@@ -108,10 +112,12 @@ function gameOverOf(raw: unknown): RoomGameOver | null {
     seconds: Number(raw.seconds) || 0,
     playedAt,
     rematchOf: raw.rematchOf === true,
+    public: raw.public === true,
     gameId: typeof raw.gameId === 'string' ? raw.gameId : null,
     players: raw.players.filter(isRecord).map((p) => ({
       name: typeof p.name === 'string' ? p.name : null,
       tag: typeof p.tag === 'string' ? p.tag : '',
+      bot: typeof p.bot === 'string' ? p.bot : null,
       me: p.me === true,
       score: typeof p.score === 'number' ? p.score : null,
       left: p.left === true,
@@ -189,6 +195,7 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       return reply.body.room === null ? null : room(reply);
     },
     open: async (lifeId, seconds, versions) => room(await ask({ action: 'open', lifeId, seconds, engineVersion: versions.engine, contentVersion: versions.content })),
+    quick: async (versions) => room(await ask({ action: 'quick', engineVersion: versions.engine, contentVersion: versions.content })),
     join: async (code, versions) => room(await ask({ action: 'join', code, engineVersion: versions.engine, contentVersion: versions.content })),
     start: async (roomId) => room(await ask({ action: 'start', roomId })),
     async leave(roomId) {

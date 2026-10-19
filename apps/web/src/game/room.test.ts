@@ -484,12 +484,12 @@ describe('the room a page follows', () => {
 
 describe('how a room over ended for the player, for its badges', () => {
   const member = (score: number | null, over: Partial<RoomMember> = {}): RoomMember => ({
-    userId: `u${Math.random()}`, name: null, me: false, host: false, ready: false, left: false, shout: null, avatar: null,
+    userId: `u${Math.random()}`, name: null, me: false, host: false, bot: null, ready: false, left: false, shout: null, avatar: null,
     standing: score === null ? null : { score, netWorth: 0, status: 0, escaped: false, bankruptcies: 0, before: null, cityId: null, career: null }, ...over,
   });
   const over = (members: RoomMember[], rematchOf = false): RoomState => ({
     id: 'r', code: 'ABCDEF', host: '', lifeId: 'nurse', engineVersion: '', contentVersion: '', seconds: 90, status: 'finished', round: 20, rounds: 20,
-    deadline: null, now: 0, members, rematch: null, rematchOf, loans: [],
+    deadline: null, now: 0, members, rematch: null, rematchOf, public: false, startsAt: null, loans: [],
   });
 
   it('is won by the best score among those who stayed, a tie too', () => {
@@ -505,6 +505,13 @@ describe('how a room over ended for the player, for its badges', () => {
 
   it('is not won by a player who left', () => {
     expect(resultOf(over([member(900, { me: true, left: true }), member(100)])).won).toBe(false);
+  });
+
+  it('must beat the rats too, and counts only the people: a win over rats alone is no win among players', () => {
+    const rat = (score: number) => member(score, { bot: 'saver' });
+    expect(resultOf(over([member(300, { me: true }), rat(200), rat(100), rat(50)]))).toEqual({ won: true, players: 1, rematch: false });
+    expect(resultOf(over([member(300, { me: true }), member(100), rat(400)])).won).toBe(false);
+    expect(resultOf(over([member(300, { me: true }), member(100), rat(200)]))).toEqual({ won: true, players: 2, rematch: false });
   });
 });
 

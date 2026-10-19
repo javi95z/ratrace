@@ -158,7 +158,7 @@ describe('interface text', () => {
         return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
       });
     const source = roots.flatMap(files).map((path) => readFileSync(path, 'utf8')).join('\n');
-    const BUILT = [/^finance\.tabs\./, /^play\.stages\./, /^meta\.titles\./, /^guide\.(news|cards|finance|ledger|ratRace|invest|focus|flow)$/, /^end\.best(Score|NetWorth|Escape|Status)$/, /^effects\.perks\.(moveCostOffPct|studySkill|salaryPct|jobHuntPct|focus|healthCoverOffPct)$/, /^work\.financeOpens\.[0123]$/, /^finance\.glance\.kinds\./, /^badges\.rarity\./, /^news\.gossip\./, /^resolve\.(bank|family)\./, /^epilogue\.obituary\./, /^finance\.evasion\.advisor\./, /^finance\.business\.review\./, /^challenge\.rules\./, /^end\.line\./, /^newLife\.hints\./, /^rank\.names\./];
+    const BUILT = [/^finance\.tabs\./, /^play\.stages\./, /^meta\.titles\./, /^guide\.(news|cards|finance|ledger|ratRace|invest|focus|flow)$/, /^end\.best(Score|NetWorth|Escape|Status)$/, /^effects\.perks\.(moveCostOffPct|studySkill|salaryPct|jobHuntPct|focus|healthCoverOffPct)$/, /^work\.financeOpens\.[0123]$/, /^finance\.glance\.kinds\./, /^badges\.rarity\./, /^news\.gossip\./, /^resolve\.(bank|family)\./, /^epilogue\.obituary\./, /^finance\.evasion\.advisor\./, /^finance\.business\.review\./, /^challenge\.rules\./, /^end\.line\./, /^newLife\.hints\./, /^rank\.names\./, /^room\.bots\./];
     const unused = [...en.keys()].filter((key) => {
       if (BUILT.some((built) => built.test(key))) return false;
       const leaf = key.split('.').at(-1) as string;
@@ -171,8 +171,8 @@ describe('interface text', () => {
     /** Words that are the same in English and in another language. A sentence of placeholders and signs alone is the same in all. */
     const same: Record<string, Set<string>> = {
       // "Offline" is the word Spanish players use for a game that needs no connection.
-      // "h" is the hour's symbol in Spanish too.
-      es: new Set(['meta.title', 'finance.market.crypto', 'finance.property.variable', 'news.crypto', 'newLife.modeFree', 'room.hours']),
+      // "h" is the hour's symbol in Spanish too, and "Bot" the word Spanish players use for one.
+      es: new Set(['meta.title', 'finance.market.crypto', 'finance.property.variable', 'news.crypto', 'newLife.modeFree', 'room.hours', 'room.bot']),
       ru: new Set(['meta.title']),
     };
     const worded = (sentence: string) => /\p{L}/u.test(sentence.replace(/\{[^{}]*\}/g, ''));

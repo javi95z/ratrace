@@ -1,5 +1,5 @@
 import { content, lives } from '@ratrace/content';
-import { bots } from './bots';
+import { bots } from '@ratrace/content';
 import { compare, seedsFor } from './simulate';
 
 /**
