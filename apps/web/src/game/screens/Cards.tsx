@@ -12,6 +12,7 @@ import { Panel, Tag } from '@/ui/kit';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
 import { CareerPreview } from './CareerPreview';
+import { CityPreview } from './Finance';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins } from './FlyingCoins';
 import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
@@ -102,12 +103,14 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
   const view = useGame((s) => s.view);
   const t = useT('cards');
   const words = useWords();
-  const [seeing, setSeeing] = useState(false);
+  const [seeing, setSeeing] = useState<'career' | 'city' | null>(null);
   if (!world || !view) return null;
   const look = picked === null ? '' : picked === index ? 'translate-y-[2px] outline outline-2 outline-gold-500' : 'opacity-50';
   // An option that takes the player into another career can show that career whole before it is chosen.
   const job = def.options[index]?.effects?.job;
   const career = job?.career;
+  // An option that moves the player can show the city beside theirs before it is chosen.
+  const city = def.options[index]?.effects?.moveCity;
   const option = (
     <button
       type="button"
@@ -121,14 +124,25 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
       <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} partnered={partnered} />
     </button>
   );
-  if (!career) return option;
+  if (!career && !city) return option;
+  const link = 'px-1 text-[12px] text-sky-300 underline underline-offset-2';
   return (
     <div className="flex flex-col items-stretch gap-1">
       {option}
-      <button type="button" aria-haspopup="dialog" onClick={() => setSeeing(true)} className="self-end px-1 text-[12px] text-sky-300 underline underline-offset-2">
-        {t('seeCareer', { career: words.text.careers[career].name })}
-      </button>
-      {seeing ? <CareerPreview careerId={career} startLevel={job?.level ?? 0} shown={view} onClose={() => setSeeing(false)} /> : null}
+      <span className="flex flex-wrap justify-end gap-x-3">
+        {city ? (
+          <button type="button" aria-haspopup="dialog" onClick={() => setSeeing('city')} className={link}>
+            {t('seeCity', { city: words.names.cities[city] })}
+          </button>
+        ) : null}
+        {career ? (
+          <button type="button" aria-haspopup="dialog" onClick={() => setSeeing('career')} className={link}>
+            {t('seeCareer', { career: words.text.careers[career].name })}
+          </button>
+        ) : null}
+      </span>
+      {seeing === 'career' && career ? <CareerPreview careerId={career} startLevel={job?.level ?? 0} shown={view} onClose={() => setSeeing(null)} /> : null}
+      {seeing === 'city' && city ? <CityPreview cityId={city} view={view} onClose={() => setSeeing(null)} /> : null}
     </div>
   );
 }

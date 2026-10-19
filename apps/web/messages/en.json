@@ -345,7 +345,8 @@
     "saved": "Your cover saved you {amount}",
     "asPlanned": "Goes as expected",
     "lostStake": "You lose what you put in",
-    "seeCareer": "See the {career} career"
+    "seeCareer": "See the {career} career",
+    "seeCity": "See {city} beside your city"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",

@@ -345,7 +345,8 @@
     "saved": "Страховка сэкономила {amount}",
     "asPlanned": "Всё идёт как задумано",
     "lostStake": "Вложенное пропадает",
-    "seeCareer": "Карьера: {career}"
+    "seeCareer": "Карьера: {career}",
+    "seeCity": "Сравнить с твоим городом: {city}"
   },
   "effects": {
     "salaryMod": "{value}% к зарплате навсегда",

@@ -6,7 +6,7 @@ import { usePeerName } from '@/game/usePeerName';
 import { START_AGE, assetKind, assetLogo, cityIcon, crestArt, debtArt, focusArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, USED_ART, saleSignArt } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, quoteSkills, quoteWork, workModeOf, indexed, mortgageSwitch, previewRound } from '@ratrace/engine';
-import type { AssetDef, CityDef, Debt, FocusAction, GameView, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
+import type { AssetDef, CityDef, Debt, FocusAction, GameView, PlayerState, WorldState, WorkMode, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, RentTier, UsedQuote } from '@ratrace/engine';
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '@/game/context';
@@ -1091,6 +1091,19 @@ function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
   );
 }
 
+/** A city a card offers to move to, beside the one the player lives in: the same comparison as in the finances, nothing to order. */
+export function CityPreview({ cityId, view, onClose }: { cityId: string; view: GameView; onClose(): void }) {
+  const common = useT('common');
+  const { content, names } = useWords();
+  const city = content.cities.find((x) => x.id === cityId);
+  if (!city) return null;
+  return (
+    <Sheet open onClose={onClose} title={names.cities[city.id]} closeLabel={common('close')}>
+      <CityDetail city={city} quote={quoteMove(content, view, city.id)} p={view.player} world={view.timeline[view.round]} onBack={onClose} onMoved={onClose} asked />
+    </Sheet>
+  );
+}
+
 // ------------------------------------------------------------------------------------------------
 // Lifestyle
 
@@ -1127,7 +1140,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
   const t = useT('finance.lifestyle');
   const common = useT('common');
   const { content, names, fmt } = useWords();
-  const { shown, p } = useRound();
+  const { shown, p, world } = useRound();
   // One city at a time in full; the list is short, a row a city.
   const [chosen, setChosen] = useState<string | null>(null);
   const quotes = content.cities.map((city) => ({ city, quote: quoteMove(content, shown, city.id) }));
@@ -1139,7 +1152,7 @@ function MoveSheet({ onClose }: { onClose(): void }) {
   return (
     <Sheet open onClose={onClose} title={open ? names.cities[open.city.id] : t('moveTitle')} closeLabel={common('close')}>
       {open ? (
-        <CityDetail city={open.city} quote={open.quote} onBack={() => setChosen(null)} onMoved={onClose} />
+        <CityDetail city={open.city} quote={open.quote} p={p} world={world} onBack={() => setChosen(null)} onMoved={onClose} />
       ) : (
         <div className="flex flex-col gap-2">
           <Explain>{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</Explain>
@@ -1181,10 +1194,13 @@ function MoveSheet({ onClose }: { onClose(): void }) {
  * One city in full: what it is, what the year would leave there beside here, and the figures behind
  * that folded away until asked for; then what a move costs, and the move itself.
  */
-function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: ReturnType<typeof quoteMove>; onBack(): void; onMoved(): void }) {
+/**
+ * A city beside the one the player lives in. In the finances it is where a move is ordered; shown
+ * from a card that offers a move (`asked`), it only compares: the card says what the move costs.
+ */
+function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: { city: CityDef; quote: ReturnType<typeof quoteMove>; p: PlayerState; world: WorldState; onBack(): void; onMoved(): void; asked?: boolean }) {
   const t = useT('finance.lifestyle');
   const { content, text, names, fmt } = useWords();
-  const { p, world } = useRound();
   const setOrder = useGame((s) => s.setOrder);
   const [numbers, setNumbers] = useState(false);
   const job = p.life.career;
@@ -1195,9 +1211,11 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
 
   return (
     <section aria-label={names.cities[city.id]} className="flex flex-col gap-2">
-      <Button variant="quiet" className="self-start text-[14px]" onClick={onBack}>
-        {t('allCities')}
-      </Button>
+      {asked ? null : (
+        <Button variant="quiet" className="self-start text-[14px]" onClick={onBack}>
+          {t('allCities')}
+        </Button>
+      )}
       <div className="flex items-center gap-2">
         <Sprite id={crestArt(city.id)} fallback={{ w: 64, h: 64 }} />
         <div className="min-w-0">
@@ -1232,7 +1250,7 @@ function CityDetail({ city, quote, onBack, onMoved }: { city: CityDef; quote: Re
         </div>
       ) : null}
 
-      {here ? null : (
+      {here || asked ? null : (
         <>
           <ul className="my-1 flex flex-col gap-1 text-[13px] leading-snug">
             {/* How far it is, beside what it costs: the further, the dearer. */}

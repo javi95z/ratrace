@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.43.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.44.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -710,7 +710,7 @@ Los sueldos más altos del juego, los pisos más caros y cero impuestos sobre la
 
 ## Objetos
 
-Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un 25 % del suyo. Relojes: solo cuenta la mejor; las demás no dan estatus. Moda: solo cuenta la mejor; las demás no dan estatus. Coches y motos: solo cuentan las 2 mejores, la primera entera y las otras un 25 %.
+Dentro de una misma gama, la mejor cosa da su estatus entero y las demás un 25 % del suyo. Relojes: las demás un 25 %. Moda: las demás un 50 %. Coches y motos: solo cuentan las 2 mejores, la primera entera y las otras un 25 %.
 
 «Sirve para» es lo que da además del estatus. Dentro de una gama solo cuenta lo mejor que se tenga; entre gamas, se suma. Con coche se abre además una opción mejor en la carta del encargo por cuenta propia, y siendo socio de algo, en la de trabajar por tu cuenta.
 

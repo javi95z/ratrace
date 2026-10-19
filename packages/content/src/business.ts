@@ -13,10 +13,11 @@ import { usd } from './money';
 export const business: BusinessRules = {
   types: [
     // The player's own trade for their own clients: cheap to start, quick to pay, and never large. Only a trade that
-    // can be sold on its own takes clients of its own: code, the law, money, selling, teaching, care, a kitchen, an audience.
+    // can be sold on its own takes clients of its own: code, the law, money, selling, teaching, care, a kitchen. Not an
+    // influencer's: their audience is their own business already.
     {
       id: 'services', minCapital: usd(2_000), yieldBp: 2_200, scale: usd(30_000), cyclePct: { boom: 15, slowdown: -15, recession: -40 }, managerPct: 50, minFinanceSkill: 0, failPct: 10, onlyOne: true,
-      careers: ['tech', 'law', 'finance', 'sales', 'education', 'healthcare', 'medicine', 'hospitality', 'influencer'],
+      careers: ['tech', 'law', 'finance', 'sales', 'education', 'healthcare', 'medicine', 'hospitality'],
     },
     { id: 'shop', minCapital: usd(5_000), yieldBp: 2_000, scale: usd(80_000), cyclePct: { boom: 25, expansion: 5, slowdown: -25, recession: -70 }, managerPct: 40, minFinanceSkill: 2, failPct: 20 },
     // The best margins and the wildest swings.

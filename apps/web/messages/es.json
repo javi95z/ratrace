@@ -345,7 +345,8 @@
     "saved": "Tu seguro te ahorró {amount}",
     "asPlanned": "Sale como se espera",
     "lostStake": "Pierdes lo que pusiste",
-    "seeCareer": "Ver la carrera de {career}"
+    "seeCareer": "Ver la carrera de {career}",
+    "seeCity": "Ver {city} al lado de tu ciudad"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
