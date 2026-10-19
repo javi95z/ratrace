@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { content } from '@ratrace/content';
 import { FOCUS_ACTIONS } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { atLeast, knownOrders, ORDERS_SINCE, rulesKnow } from './rules';
+import { atLeast, knownOrders, ORDERS_SINCE, PROPERTIES_SINCE, rulesKnow, rulesSell } from './rules';
 
 const held = fileURLToPath(new URL('../../../../supabase/functions/_shared/game/', import.meta.url));
 const bundles = readdirSync(held)
@@ -29,6 +30,14 @@ describe('what the rules of each version know', () => {
     const keys = [...types.filter((type) => type !== 'focus'), ...FOCUS_ACTIONS.map((action) => `focus:${action}`)];
     const unlisted = keys.filter((key) => !holds(oldest.source, named(key)) && ORDERS_SINCE[key] === undefined);
     expect(unlisted).toEqual([]);
+  });
+
+  it('sells a kind of property from the version listed on, as the bundles hold it, and lists every kind the oldest do not sell', () => {
+    for (const { engine, source } of bundles) {
+      for (const typeId of Object.keys(PROPERTIES_SINCE)) expect(holds(source, typeId), `${typeId} in ${engine}`).toBe(rulesSell(engine, typeId));
+    }
+    const oldest = [...bundles].sort((a, b) => (atLeast(a.engine, b.engine) ? 1 : -1))[0];
+    expect(content.propertyTypes.filter((type) => !holds(oldest.source, type.id) && PROPERTIES_SINCE[type.id] === undefined).map((type) => type.id)).toEqual([]);
   });
 
   it('leaves out of a round what older rules would refuse', () => {

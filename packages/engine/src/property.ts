@@ -39,10 +39,18 @@ export function propertyTerms(p: PlayerState, content: Content, world: WorldStat
   };
 }
 
-/** The yearly rent of a property of this type and value in this city, as a share of its value. */
+/** The yearly rent of a property of this type and value in this city, as a share of its value: the kind's, as the city wants it. */
 export function rentYieldBp(content: Content, cityId: string, typeId: string): Bp {
   const type = content.propertyTypes.find((t) => t.id === typeId);
-  return Math.round((cityOf(content, cityId).rentYieldBp * (type?.rentPct ?? 100)) / 100);
+  const city = cityOf(content, cityId);
+  return Math.round((city.rentYieldBp * (type?.rentPct ?? 100) * (city.propertyRentPct?.[typeId] ?? 100)) / 10_000);
+}
+
+/** True where a kind of property is sold: a city's own kinds only there, and no city's missing ones. */
+export function propertySoldIn(content: Content, typeId: string, cityId: string): boolean {
+  const type = content.propertyTypes.find((t) => t.id === typeId);
+  if (!type) return false;
+  return (type.cities === undefined || type.cities.includes(cityId)) && !(type.notIn ?? []).includes(cityId);
 }
 
 /** True for a type nobody can live in: it is let from the day it is bought to the day it is sold. */
@@ -66,6 +74,7 @@ export function executeBuyProperty(
 ): RejectReason | null {
   const { content, world } = ctx;
   if (!content.propertyTypes.some((t) => t.id === order.typeId)) return 'unknown-property-type';
+  if (!propertySoldIn(content, order.typeId, p.cityId)) return 'not-sold-here';
   if (order.mortgage !== 'fixed' && order.mortgage !== 'variable' && order.mortgage !== 'none') {
     return 'unknown-mortgage-type';
   }

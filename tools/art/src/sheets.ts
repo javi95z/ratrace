@@ -440,4 +440,14 @@ export const SHEETS: SheetSpec[] = [
   { file: 'items/business-02', group: 'items', kind: 'objects', cols: 3, rows: 5, width: 64, height: 64, ids: ['business.services.1', 'business.services.2', 'business.services.3', 'business.shop.1', 'business.shop.2', 'business.shop.3', 'business.app.1', 'business.app.2', 'business.app.3', 'business.bar.1', 'business.bar.2', 'business.bar.3', 'business.franchise.1', 'business.franchise.2', 'business.franchise.3'] },
   // The world at night, the cities of the game marked; the route of a life is drawn over it.
   { file: 'cards/map-01', group: 'cards', kind: 'scenes', cols: 1, rows: 1, width: 576, height: 240, ids: ['map.world'] },
+  // v18: what each city sells to let, as it builds it, and the one thing to let only it sells. Where a whole block is not sold, its cell is left empty.
+  ...(
+    [
+      ['madrid', 'tourist_flat'], ['london', 'student_house'], ['new_york', 'billboard'], ['dubai', 'yacht_berth'], ['singapore', 'hawker_stall'],
+      ['bangkok', 'market_stall'], ['tokyo', 'capsule_hotel'], ['moscow', 'kiosk'], ['mexico_city', 'rooftop'], ['zurich', 'vault'],
+    ] as const
+  ).map(([city, local]): SheetSpec => ({
+    file: `homes/rentals-${city.replace('_', '-')}`, group: 'homes', kind: 'objects', cols: 3, rows: 2, width: 128, height: 128,
+    ids: [...['parking', 'shop', 'office', 'warehouse'].map((kind) => `home.${city}.${kind}`), city === 'singapore' || city === 'zurich' ? '' : `home.${city}.block`, `home.${local}`],
+  })),
 ];

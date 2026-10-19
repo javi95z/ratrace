@@ -11,6 +11,7 @@ import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '@/game/context';
 import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
+import { rulesSell } from '@ratrace/core/game/rules';
 import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
@@ -761,6 +762,7 @@ function OwnedPropertySheet({ propertyId, onClose }: { propertyId: string; onClo
 
 function PropertyTab() {
   const knows = useKnows();
+  const rules = useGame((s) => s.rules);
   const t = useT('finance.property');
   const { content, text, names, fmt } = useWords();
   const { view, shown, p } = useRound();
@@ -855,9 +857,11 @@ function PropertyTab() {
       {([false, true] as const).map((letOnly) => {
         const title = t(letOnly ? 'letTitle' : 'title', { city: names.cities[p.cityId] });
         // What can only be let is offered only to someone with the Finance to let it: without it, that shelf is not there.
+        // Only what this city sells, and what the rules the life is played under know.
         const tiles = content.propertyTypes
+          .filter((type) => rulesSell(rules, type.id))
           .map((type) => ({ type, quote: quoteProperty(content, shown, type.id) }))
-          .filter(({ quote }) => quote.letOnly === letOnly && (!quote.letOnly || quote.canRentOut));
+          .filter(({ quote }) => quote.soldHere && quote.letOnly === letOnly && (!quote.letOnly || quote.canRentOut));
         if (tiles.length === 0) return null;
         return (
           <Panel key={String(letOnly)} title={title} label={title}>

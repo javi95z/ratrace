@@ -21,6 +21,30 @@ export const ORDERS_SINCE: Readonly<Record<string, string>> = {
   pensionOut: '0.40.0',
 };
 
+/**
+ * When each kind of property came into the game's rules, by the engine version that first sold it: a
+ * life begun under older rules is not offered a kind those rules would refuse to sell. A kind not
+ * listed here is sold by every version still played. A test holds this list to the rules bundles.
+ */
+export const PROPERTIES_SINCE: Readonly<Record<string, string>> = {
+  kiosk: '0.43.0',
+  market_stall: '0.43.0',
+  hawker_stall: '0.43.0',
+  rooftop: '0.43.0',
+  billboard: '0.43.0',
+  yacht_berth: '0.43.0',
+  tourist_flat: '0.43.0',
+  vault: '0.43.0',
+  student_house: '0.43.0',
+  capsule_hotel: '0.43.0',
+};
+
+/** Whether rules of engine version `rules` sell a kind of property. */
+export function rulesSell(rules: string, typeId: string): boolean {
+  const since = PROPERTIES_SINCE[typeId];
+  return since === undefined || atLeast(rules, since);
+}
+
 /** How an order is named in that list: by its type, and a use of focus by its action too. */
 export const orderKey = (order: Pick<Order, 'type'> & { action?: unknown }): string => (order.type === 'focus' && typeof order.action === 'string' ? `focus:${order.action}` : order.type);
 

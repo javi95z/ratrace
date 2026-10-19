@@ -11,14 +11,28 @@ import { usd } from './money';
  * mean nobody ever let a flat. A parking space lets for a little less than a home: its small price
  * already puts a player on borrowed property rounds before a studio could, and with a rent
  * premium on top it was the best buy in the game.
+ *
+ * Each city also sells one thing to let that only it has, and the cheap ones among them, like the
+ * parking space, let for no more than a home. A whole block of flats is not for sale where land is
+ * the dearest of all. How much each kind lets for in each city is the city's to say (`propertyRentPct`).
  */
 export const propertyTypes: PropertyTypeDef[] = [
+  { id: 'kiosk', pricePct: 8, status: 0, rentalOnly: true, rentPct: 95, cities: ['moscow'] },
+  { id: 'market_stall', pricePct: 10, status: 0, rentalOnly: true, rentPct: 95, cities: ['bangkok'] },
   { id: 'parking', pricePct: 12, status: 0, rentalOnly: true, rentPct: 90 },
+  { id: 'hawker_stall', pricePct: 15, status: 0, rentalOnly: true, rentPct: 100, cities: ['singapore'] },
+  { id: 'rooftop', pricePct: 20, status: 0, rentalOnly: true, rentPct: 100, cities: ['mexico_city'] },
+  { id: 'billboard', pricePct: 25, status: 0, rentalOnly: true, rentPct: 105, cities: ['new_york'] },
+  { id: 'yacht_berth', pricePct: 30, status: 0, rentalOnly: true, rentPct: 105, cities: ['dubai'] },
   { id: 'studio', pricePct: 60, status: 8 },
+  { id: 'tourist_flat', pricePct: 70, status: 0, rentalOnly: true, rentPct: 130, cities: ['madrid'] },
+  { id: 'vault', pricePct: 90, status: 0, rentalOnly: true, rentPct: 100, cities: ['zurich'] },
   { id: 'flat', pricePct: 100, status: 14, spareRoom: true },
+  { id: 'student_house', pricePct: 110, status: 0, rentalOnly: true, rentPct: 120, cities: ['london'] },
   { id: 'loft', pricePct: 125, status: 18, spareRoom: true },
   { id: 'shop', pricePct: 130, status: 0, rentalOnly: true, rentPct: 125 },
   { id: 'townhouse', pricePct: 150, status: 21, spareRoom: true },
+  { id: 'capsule_hotel', pricePct: 180, status: 0, rentalOnly: true, rentPct: 120, cities: ['tokyo'] },
   { id: 'house', pricePct: 180, status: 24, spareRoom: true },
   { id: 'office', pricePct: 220, status: 0, rentalOnly: true, rentPct: 115 },
   { id: 'duplex', pricePct: 250, status: 31, spareRoom: true },
@@ -27,7 +41,7 @@ export const propertyTypes: PropertyTypeDef[] = [
   { id: 'penthouse', pricePct: 400, status: 42, spareRoom: true },
   { id: 'estate', pricePct: 550, status: 50, spareRoom: true },
   { id: 'villa', pricePct: 800, status: 60, spareRoom: true },
-  { id: 'block', pricePct: 900, status: 0, rentalOnly: true, rentPct: 110 },
+  { id: 'block', pricePct: 900, status: 0, rentalOnly: true, rentPct: 110, notIn: ['singapore', 'zurich'] },
   { id: 'mansion', pricePct: 1500, status: 80, spareRoom: true },
 ];
 

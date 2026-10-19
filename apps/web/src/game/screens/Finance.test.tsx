@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { content, lives, textFor } from '@ratrace/content';
+import { content, lives, propertyArt, textFor } from '@ratrace/content';
 import { createGame, previewRound, quoteItem, quoteLiving, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quotePortfolio, quoteProperty, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
@@ -190,14 +190,16 @@ describe('property that is only for letting', () => {
     const lets = screen.getByRole('region', { name: 'To let in Dubai' });
     // Each list in the order the game keeps them: the cheapest first. A home is drawn as Dubai builds it.
     expect(kinds(homes)).toEqual(content.propertyTypes.filter((type) => !type.rentalOnly).map((type) => `dubai.${type.id}`));
-    expect(kinds(lets)).toEqual(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id));
+    // What Dubai sells to let: the five every city sells, and its berths in the Marina.
+    const letHere = content.propertyTypes.filter((type) => type.rentalOnly && (type.cities ?? ['dubai']).includes('dubai'));
+    expect(kinds(lets)).toEqual(letHere.map((type) => propertyArt(type.id, 'dubai').replace(/^home\./, '')));
+    expect(letHere.map((type) => type.id)).toEqual(['parking', 'yacht_berth', 'shop', 'office', 'warehouse', 'block']);
     expect(kinds(homes)).toHaveLength(11);
-    expect(kinds(lets)).toHaveLength(5);
     // No tile is a cream card: property sits on the same navy as everything else that can be bought.
     for (const tile of [...within(homes).getAllByRole('button'), ...within(lets).getAllByRole('button')]) expect(tile.className).not.toMatch(/bg-cream/);
 
     const parking = quoteProperty(content, session.view(), 'parking');
-    const tile = within(lets).getByRole('button', { name: /^Parking space/ });
+    const tile = within(lets).getByRole('button', { name: /^Parking bay in Downtown/ });
     expect(within(tile).getByText(`Lets for ${fmt.compact(parking.rentAnnual)} a year`)).toBeTruthy();
     expect(within(tile).queryByText(/^Status/)).toBeNull();
     // A home says what living in it is worth.
@@ -223,14 +225,14 @@ describe('property that is only for letting', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
-    await user.click(screen.getByRole('button', { name: /^Parking space/ }));
-    const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking space' });
+    await user.click(screen.getByRole('button', { name: /^Parking bay in Downtown/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Buy to let: Parking bay in Downtown' });
     await user.click(within(sheet).getByRole('radio', { name: /^Pay in full/ }));
     await user.click(within(sheet).getByRole('button', { name: 'Buy' }));
     expect(screen.queryByRole('dialog')).toBeNull();
     // It is in the basket as a let, and in the list as rented out with nothing to switch off.
     const owned = screen.getByRole('region', { name: 'Your properties' });
-    expect(within(owned).getByText('Parking space')).toBeTruthy();
+    expect(within(owned).getByText('Parking bay in Downtown')).toBeTruthy();
     expect(within(owned).getByText(/Rented out/)).toBeTruthy();
     expect(within(owned).queryByRole('button', { name: 'Stop renting it out' })).toBeNull();
   });

@@ -19,6 +19,18 @@ describe('validateContent', () => {
     expect(validateContent(broken)).toContain('bond b needs durationYears and yieldSpreadBp');
   });
 
+  it('reports a kind of property sold nowhere, or let at a rent for a kind or city that does not exist', () => {
+    const c = fixtureContent();
+    const kinds = [...c.propertyTypes, { id: 'hut', pricePct: 10, status: 0, rentalOnly: true, cities: ['atlantis'] }, { id: 'den', pricePct: 10, status: 0, rentalOnly: true, notIn: ['home', 'haven'] }];
+    const cities = c.cities.map((city, i) => (i === 0 ? { ...city, propertyRentPct: { castle: 120, flat: 0 } } : city));
+    const errors = validateContent({ ...c, propertyTypes: kinds, cities });
+    expect(errors).toContain('property type hut names an unknown city in cities: atlantis');
+    expect(errors).toContain('property type hut is sold in no city');
+    expect(errors).toContain('property type den is sold in no city');
+    expect(errors).toContain('city home lets an unknown kind of property: castle');
+    expect(errors).toContain('city home needs a whole, positive rent percentage for flat');
+  });
+
   it('reports an unknown pension asset', () => {
     expect(validateContent({ ...fixtureContent(), pensionAssetId: 'nope' })).toContain('pensionAssetId nope is not an asset');
   });

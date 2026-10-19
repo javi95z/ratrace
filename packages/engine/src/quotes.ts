@@ -15,7 +15,7 @@ import { levelOfPoints, maxBusinessesOf, pointsOfLevel, practised, skillLevel, S
 import { careerOf, cityOf, itemOf, propertyTypeOf } from './lookup';
 import { applyBp, BP, mulDiv } from './money';
 import type { Bp, Cents } from './money';
-import { ownsHome, propertyTerms, rentalOnly, rentYieldBp } from './property';
+import { ownsHome, propertyTerms, propertySoldIn, rentalOnly, rentYieldBp } from './property';
 import type { PropertyTerms } from './property';
 import { depositRateBp, indexed } from './rates';
 import { auditBill, auditChance, suspicionAfter } from './evasion';
@@ -37,6 +37,8 @@ export interface PropertyQuote extends PropertyTerms {
   letOnly: boolean;
   /** What it would bring in a year if let, at today's price. */
   rentAnnual: Cents;
+  /** False where the city the player lives in sells none. */
+  soldHere: boolean;
 }
 
 export function quoteProperty(content: Content, view: GameView, typeId: string): PropertyQuote {
@@ -48,6 +50,7 @@ export function quoteProperty(content: Content, view: GameView, typeId: string):
     canRentOut: p.life.financeSkill >= content.life.rentOutMinFinanceSkill,
     letOnly: rentalOnly(content, typeId),
     rentAnnual: applyBp(terms.price, rentYieldBp(content, p.cityId, typeId)),
+    soldHere: propertySoldIn(content, typeId, p.cityId),
   };
 }
 

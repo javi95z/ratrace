@@ -152,6 +152,7 @@ export const cities: CityDef[] = [
     prestige: 6,
     taxOfficePct: 130,
     careerPayPct: { public: 115, healthcare: 110, education: 110 },
+    propertyRentPct: { shop: 90, parking: 110 },
   },
   {
     id: 'london',
@@ -168,6 +169,7 @@ export const cities: CityDef[] = [
     prestige: 12,
     taxOfficePct: 110,
     careerPayPct: { finance: 120, medicine: 110, law: 115, sales: 110 },
+    propertyRentPct: { shop: 85, office: 110 },
   },
   {
     id: 'new_york',
@@ -184,6 +186,7 @@ export const cities: CityDef[] = [
     prestige: 15,
     taxOfficePct: 120,
     careerPayPct: { finance: 125, tech: 110, law: 120, sales: 115 },
+    propertyRentPct: { office: 85, parking: 115 },
   },
   {
     id: 'dubai',
@@ -200,6 +203,7 @@ export const cities: CityDef[] = [
     prestige: 15,
     taxOfficePct: 30,
     careerPayPct: { service: 120, finance: 110, influencer: 120, hospitality: 115 },
+    propertyRentPct: { office: 80, warehouse: 115 },
   },
   {
     id: 'singapore',
@@ -216,6 +220,7 @@ export const cities: CityDef[] = [
     prestige: 12,
     taxOfficePct: 90,
     careerPayPct: { tech: 120, finance: 110, education: 125 },
+    propertyRentPct: { warehouse: 120, shop: 110 },
   },
   {
     id: 'bangkok',
@@ -234,6 +239,7 @@ export const cities: CityDef[] = [
     prestige: 6,
     taxOfficePct: 40,
     careerPayPct: { service: 115, tech: 110, hospitality: 120, influencer: 110 },
+    propertyRentPct: { block: 115, shop: 110 },
   },
   {
     // Prices that have hardly moved in thirty years, and rates that barely move them now.
@@ -251,6 +257,7 @@ export const cities: CityDef[] = [
     prestige: 13,
     taxOfficePct: 110,
     careerPayPct: { tech: 115, sales: 110, hospitality: 110 },
+    propertyRentPct: { parking: 120, office: 95 },
   },
   {
     // A flat tax and cheap property, in a market that swings hard with the rates.
@@ -268,6 +275,7 @@ export const cities: CityDef[] = [
     prestige: 9,
     taxOfficePct: 60,
     careerPayPct: { finance: 115, tech: 115, public: 110 },
+    propertyRentPct: { warehouse: 115, office: 85 },
   },
   {
     id: 'mexico_city',
@@ -284,6 +292,7 @@ export const cities: CityDef[] = [
     prestige: 7,
     taxOfficePct: 45,
     careerPayPct: { influencer: 115, hospitality: 110, sales: 115, law: 110 },
+    propertyRentPct: { block: 120, parking: 85 },
   },
   {
     // The highest pay and the dearest flats in the game, and a quiet market.
@@ -301,5 +310,6 @@ export const cities: CityDef[] = [
     prestige: 16,
     taxOfficePct: 90,
     careerPayPct: { finance: 125, medicine: 115, law: 115, tech: 110 },
+    propertyRentPct: { office: 110, parking: 115 },
   },
 ];

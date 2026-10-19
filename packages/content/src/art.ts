@@ -229,8 +229,22 @@ export const CITY_HOMES_DRAWN: readonly string[] = ['madrid', 'london', 'new_yor
 /** A kind of property, as the city it is in draws it, or plain where the city has no drawing of its own. */
 /** The "for sale" board of a city, as it puts one up, or the board of the city of the start when the city has none. */
 export const saleSignArt = (cityId: string): string => `home.${CITY_HOMES_DRAWN.includes(cityId) ? cityId : CITY_HOMES_DRAWN[0]}.sign`;
-export const propertyArt = (typeId: string, cityId?: string): string =>
-  cityId !== undefined && CITY_HOMES_DRAWN.includes(cityId) && (CITY_HOME_KINDS as readonly string[]).includes(typeId) ? `home.${cityId}.${typeId}` : `home.${typeId}`;
+/** The kinds bought to let that every city sells, and draws its own way once its sheet of them is cut. */
+export const CITY_RENTAL_KINDS = ['parking', 'shop', 'office', 'warehouse', 'block'] as const;
+/** The cities whose kinds to let are drawn: until a city's sheet is cut, they are the plain ones. */
+export const CITY_RENTALS_DRAWN: readonly string[] = [];
+/** What only one city sells, drawn: until it is, it is shown as the nearest thing that is. */
+export const LOCAL_RENTALS_DRAWN: readonly string[] = [];
+const LOCAL_STAND_IN: Readonly<Record<string, string>> = {
+  kiosk: 'home.shop', market_stall: 'home.shop', hawker_stall: 'home.shop', rooftop: 'home.block', billboard: 'home.office',
+  yacht_berth: 'home.parking', tourist_flat: 'home.madrid.studio', vault: 'home.office', student_house: 'home.london.townhouse', capsule_hotel: 'home.block',
+};
+export const propertyArt = (typeId: string, cityId?: string): string => {
+  if (typeId in LOCAL_STAND_IN && !LOCAL_RENTALS_DRAWN.includes(typeId)) return LOCAL_STAND_IN[typeId];
+  if (cityId === undefined) return `home.${typeId}`;
+  const drawn = (CITY_HOME_KINDS as readonly string[]).includes(typeId) ? CITY_HOMES_DRAWN : (CITY_RENTAL_KINDS as readonly string[]).includes(typeId) ? CITY_RENTALS_DRAWN : [];
+  return drawn.includes(cityId) ? `home.${cityId}.${typeId}` : `home.${typeId}`;
+};
 export const rentTierArt: readonly [string, string] = ['home.rented_room', 'home.rented_flat'];
 /** The skyline of a city: by night, or in the first light a round opens in. */
 /** How a city is drawn: by night, by day, in a boom with cranes and fireworks, or in a crisis under the rain. */

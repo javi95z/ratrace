@@ -28,6 +28,7 @@ import { CELEB_ART,
   skillArt,
   businessArt,
   CITY_HOME_KINDS,
+  CITY_RENTAL_KINDS,
   CITY_HOMES_DRAWN,
   USED_ART,
   PERCENTILE_ART,
@@ -276,7 +277,7 @@ describe('content art', () => {
     const wanted: string[] = [
       ...Object.values(cardArt),
       ...content.items.map((item) => itemArt(item.id)),
-      ...content.propertyTypes.map((type) => propertyArt(type.id)),
+      ...content.propertyTypes.flatMap((type) => [propertyArt(type.id), ...content.cities.map((city) => propertyArt(type.id, city.id))]),
       ...rentTierArt,
       ...content.cities.flatMap((city) => [...CITY_LIGHTS.map((light) => cityArt(city.id, light)), cityIcon(city.id)]),
       ...FAMILY_ART,
@@ -324,7 +325,8 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(195 + 67 + 5 + 4 + 2 + 3 + 6 + 16 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
+    expect(wanted.length).toBe(195 + 67 + 5 + 4 + 2 + 3 + 6 + 26 * 11 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
+    // Every kind of property, plain and as each of the ten cities draws it: the 26 * 11.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.
@@ -374,16 +376,17 @@ describe('content art', () => {
 });
 
 describe('the homes of each city', () => {
-  it('names every kind of home in every city, in every language, and nothing that is only bought to let', () => {
+  it('names every kind of home, and every kind to let it sells, in every city, in every language', () => {
     for (const locale of ['en', 'es', 'ru'] as const) {
       const { text } = textFor(locale);
       for (const city of content.cities) {
         const named = text.cityHomes[city.id] ?? {};
-        expect(Object.keys(named).sort(), `${locale} ${city.id}`).toEqual([...CITY_HOME_KINDS].sort());
-        for (const kind of CITY_HOME_KINDS) expect(homeName(text, kind, city.id), `${locale} ${city.id} ${kind}`).not.toBe(text.propertyTypes[kind]);
+        const sold = CITY_RENTAL_KINDS.filter((kind) => !(content.propertyTypes.find((type) => type.id === kind)?.notIn ?? []).includes(city.id));
+        expect(Object.keys(named).sort(), `${locale} ${city.id}`).toEqual([...CITY_HOME_KINDS, ...sold].sort());
+        for (const kind of [...CITY_HOME_KINDS, ...sold]) expect(homeName(text, kind, city.id), `${locale} ${city.id} ${kind}`).not.toBe(text.propertyTypes[kind]);
       }
-      // What is only bought to let keeps its plain name everywhere.
-      expect(homeName(text, 'parking', 'madrid')).toBe(text.propertyTypes.parking);
+      // What only one city sells is named for that city already.
+      for (const type of content.propertyTypes) expect(text.propertyTypes[type.id], `${locale} ${type.id}`).toBeTruthy();
     }
     // Every kind a city draws is a kind people live in.
     for (const kind of CITY_HOME_KINDS) expect(content.propertyTypes.find((type) => type.id === kind)?.rentalOnly, kind).not.toBe(true);

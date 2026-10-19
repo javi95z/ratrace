@@ -15,11 +15,15 @@ describe('the v1 content', () => {
     expect(content.assets).toHaveLength(22);
     expect(content.careers).toHaveLength(11);
     expect(content.items).toHaveLength(67);
-    expect(content.propertyTypes.map((type) => type.id)).toEqual([
+    expect(content.propertyTypes.filter((type) => type.cities === undefined).map((type) => type.id)).toEqual([
       'parking', 'studio', 'flat', 'loft', 'shop', 'townhouse', 'house', 'office', 'duplex', 'warehouse', 'chalet', 'penthouse', 'estate', 'villa', 'block', 'mansion',
     ]);
     // Five of them are investments only: nobody lives in a parking space, behind a shop counter, at a desk, among pallets, or in twelve flats at once.
-    expect(content.propertyTypes.filter((type) => type.rentalOnly).map((type) => type.id)).toEqual(['parking', 'shop', 'office', 'warehouse', 'block']);
+    expect(content.propertyTypes.filter((type) => type.rentalOnly && type.cities === undefined).map((type) => type.id)).toEqual(['parking', 'shop', 'office', 'warehouse', 'block']);
+    // And each city sells one thing to let of its own, which nobody lives in either.
+    const local = content.propertyTypes.filter((type) => type.cities !== undefined);
+    expect(local.map((type) => type.cities).flat().sort()).toEqual(content.cities.map((city) => city.id).sort());
+    for (const type of local) expect(type.rentalOnly, type.id).toBe(true);
     // Among homes, a dearer one is always the grander one: no home is a worse buy than a cheaper one for someone who wants status.
     const homes = content.propertyTypes.filter((type) => !type.rentalOnly);
     for (let i = 1; i < homes.length; i++) expect(homes[i].status, homes[i].id).toBeGreaterThan(homes[i - 1].status);

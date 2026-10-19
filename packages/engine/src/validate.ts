@@ -135,6 +135,15 @@ export function validateContent(c: Content): string[] {
         }
       }
     }
+    if (city.propertyRentPct !== undefined) {
+      if (!isRecord(city.propertyRentPct)) errors.push(`city ${city.id} needs its property rents as a record`);
+      else {
+        for (const [type, pct] of Object.entries(city.propertyRentPct)) {
+          if (!c.propertyTypes.some((x) => x.id === type)) errors.push(`city ${city.id} lets an unknown kind of property: ${type}`);
+          if (!(isWhole(pct) && pct > 0)) errors.push(`city ${city.id} needs a whole, positive rent percentage for ${type}`);
+        }
+      }
+    }
   }
 
   for (const type of c.propertyTypes) {
@@ -144,6 +153,14 @@ export function validateContent(c: Content): string[] {
     if (!isCount(type.status)) errors.push(`property type ${type.id} needs a whole, non-negative status`);
     if (type.rentalOnly === true && type.status !== 0) errors.push(`property type ${type.id} cannot be lived in, so it gives no status`);
     if (type.rentPct !== undefined && !(isCount(type.rentPct) && type.rentPct > 0)) errors.push(`property type ${type.id} needs a whole, positive rent percentage`);
+    for (const field of ['cities', 'notIn'] as const) {
+      const ids = type[field];
+      if (ids === undefined) continue;
+      if (!Array.isArray(ids) || ids.length === 0) errors.push(`property type ${type.id} needs ${field} as a list of cities, or none`);
+      else for (const id of ids) if (!c.cities.some((city) => city.id === id)) errors.push(`property type ${type.id} names an unknown city in ${field}: ${String(id)}`);
+    }
+    // Sold somewhere: a kind no city sells is a mistake, not a rule.
+    if (!c.cities.some((city) => (type.cities === undefined || type.cities.includes(city.id)) && !(type.notIn ?? []).includes(city.id))) errors.push(`property type ${type.id} is sold in no city`);
   }
 
   const business = c.business;

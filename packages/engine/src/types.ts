@@ -237,6 +237,8 @@ export interface CityDef {
   taxOfficePct?: number;
   /** What each career pays here against the usual, in percent: a city is the place for some trades. Absent: 100. */
   careerPayPct?: Readonly<Record<string, number>>;
+  /** What each kind of property lets for here against the usual, in percent, by its id: a city wants some more than others. Absent: 100. */
+  propertyRentPct?: Readonly<Record<string, number>>;
   /**
    * A tax residency the city offers to whoever lives there and pays for it: a fee a year, and the
    * rate it charges on dividends and interest earned abroad, which stay abroad. Absent: none.
@@ -261,6 +263,10 @@ export interface PropertyTypeDef {
   rentPct?: number;
   /** A home with a room to spare, which can be let to a lodger. */
   spareRoom?: boolean;
+  /** The only cities that sell one, by id: something of their own. Absent: every city. */
+  cities?: readonly string[];
+  /** The cities that sell none, by id. */
+  notIn?: readonly string[];
 }
 
 export interface CareerLevel {

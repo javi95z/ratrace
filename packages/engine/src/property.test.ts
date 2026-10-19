@@ -6,6 +6,8 @@ import {
   growProperties,
   ownsHome,
   propertyPrice,
+  propertySoldIn,
+  rentYieldBp,
 } from './property';
 import { newTally } from './tally';
 import { fixtureContent, fixturePlayer } from './testing/fixture';
@@ -90,6 +92,41 @@ describe('buying property', () => {
     expect(buy({})).toBe('no-credit');
     p.bankruptUntilRound = 0;
     expect(JSON.stringify({ p, tally: ctx.tally })).toBe(before);
+  });
+});
+
+describe('what each city sells and lets', () => {
+  const local = () => {
+    const { content: plain, p, ctx } = setup(50_000_000);
+    const content = {
+      ...plain,
+      propertyTypes: [...plain.propertyTypes, { id: 'stall', pricePct: 10, status: 0, rentalOnly: true, rentPct: 120, cities: ['haven'] }, { id: 'block', pricePct: 900, status: 0, rentalOnly: true, notIn: ['home'] }],
+      cities: plain.cities.map((city, i) => (i === 0 ? { ...city, propertyRentPct: { flat: 150 } } : city)),
+    };
+    ctx.content = content;
+    return { content, p, ctx };
+  };
+
+  it('sells a city\'s own kind only there, and a missing kind nowhere it is missing', () => {
+    const { content, p, ctx } = local();
+    expect(propertySoldIn(content, 'stall', 'haven')).toBe(true);
+    expect(propertySoldIn(content, 'stall', 'home')).toBe(false);
+    expect(propertySoldIn(content, 'block', 'home')).toBe(false);
+    expect(propertySoldIn(content, 'block', 'haven')).toBe(true);
+    expect(propertySoldIn(content, 'castle', 'home')).toBe(false);
+    const before = JSON.stringify(p);
+    for (const typeId of ['stall', 'block']) expect(executeBuyProperty(p, { type: 'buyProperty', typeId, downPayment: 0, mortgage: 'none', rented: true }, ctx)).toBe('not-sold-here');
+    expect(JSON.stringify(p)).toBe(before);
+    p.cityId = 'haven';
+    expect(executeBuyProperty(p, { type: 'buyProperty', typeId: 'stall', downPayment: 0, mortgage: 'none', rented: true }, ctx)).toBeNull();
+  });
+
+  it('lets a kind for what the city wants of it, on top of what the kind lets for', () => {
+    const { content } = local();
+    // Home: 450 bp, and flats let half as well again there; elsewhere a flat lets as usual.
+    expect(rentYieldBp(content, 'home', 'flat')).toBe(675);
+    expect(rentYieldBp(content, 'haven', 'flat')).toBe(600);
+    expect(rentYieldBp(content, 'haven', 'stall')).toBe(720);
   });
 });
 
