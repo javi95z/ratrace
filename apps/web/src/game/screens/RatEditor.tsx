@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { mayWear, prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@ratrace/core/game/avatar';
 import type { RankId } from '@ratrace/content';
 import type { RatColour, RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import { useT } from '@/game/context';
+import { Tabs } from '@/ui/overlay';
 import { GROUND, RatLayers } from '@/ui/RatAvatar';
 import { Sprite, spriteOf } from '@/ui/Sprite';
 
@@ -67,6 +68,7 @@ interface Choice {
 export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onLocked }: { look: RatLook; earned: Record<string, unknown>; rank: RankId; badgeName: (id: string) => string; rankName: (rank: RankId) => string; onPick: (next: RatLook) => void; onLocked: (message: string) => void }) {
   const t = useT('player');
   const [group, setGroup] = useState<Group>('body');
+  const ids = useId();
 
   /** The pieces of a layer that are drawn, and whether the player may wear each. */
   const piecesOf = (layer: RatLayer) =>
@@ -104,33 +106,24 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
   return (
     <div className="flex flex-col gap-3">
       {/* The rat as it will be, and the tabs, held at the top of the screen while the choices scroll under them. */}
-      {/* Inside the panel's own padding, so its edges stay whole; the rat as tall as the tabs, framed as they are. */}
-      <div className="sticky z-10 flex items-stretch gap-1.5 bg-night-700 py-1.5" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
-        <span aria-hidden className={`frame-raised flex size-14 shrink-0 overflow-hidden ${GROUND[look.colour]}`}>
+      {/* Inside the panel's own padding, so its edges stay whole: the rat as tall as the tabs, framed as they are, then the game's own tabs. */}
+      <div className="sticky z-10 flex items-center bg-night-700" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
+        <span aria-hidden className={`frame-raised flex size-11 shrink-0 overflow-hidden ${GROUND[look.colour]}`}>
           <RatLayers look={look} className="size-full shrink-0" />
         </span>
-        <div role="tablist" aria-label={t('layer')} className="grid min-w-0 flex-1 grid-cols-3 gap-1.5">
-          {GROUP_IDS.map((each) => (
-            <button
-              key={each}
-              type="button"
-              role="tab"
-              aria-selected={each === group}
-              onClick={() => setGroup(each)}
-              className={`pixel h-14 px-1 text-[14px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
-            >
-              {t(`groups.${each}`)}
-            </button>
-          ))}
+        <div className="min-w-0 flex-1">
+          <Tabs<Group> label={t('layer')} idPrefix={ids} tabs={GROUP_IDS.map((id) => ({ id, label: t(`groups.${id}`) }))} value={group} onChange={setGroup} />
         </div>
       </div>
-      {GROUPS[group].map((part) => (
-        // Each part of the tab under its own name, its choices beneath.
-        <div key={part} className="flex flex-col gap-1.5">
-          <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{t(`layers.${part}`)}</p>
-          {choicesOf(part)}
-        </div>
-      ))}
+      <div role="tabpanel" id={`${ids}-panel-${group}`} aria-labelledby={`${ids}-tab-${group}`} className="flex flex-col gap-3">
+        {GROUPS[group].map((part) => (
+          // Each part of the tab under its own name, its choices beneath.
+          <div key={part} className="flex flex-col gap-1.5">
+            <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{t(`layers.${part}`)}</p>
+            {choicesOf(part)}
+          </div>
+        ))}
+      </div>
       <button type="button" onClick={() => onPick(byChance())} className="min-h-11 self-center px-3 text-[14px] text-ink-200 underline underline-offset-4">
         {t('byChance')}
       </button>
