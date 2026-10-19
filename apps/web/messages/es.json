@@ -344,7 +344,8 @@
     "covers": "El seguro paga {amount}",
     "saved": "Tu seguro te ahorró {amount}",
     "asPlanned": "Sale como se espera",
-    "lostStake": "Pierdes lo que pusiste"
+    "lostStake": "Pierdes lo que pusiste",
+    "seeCareer": "Ver la carrera de {career}"
   },
   "effects": {
     "salaryMod": "{value} % de sueldo para siempre",
@@ -1471,7 +1472,13 @@
     "focusBurnout": "{n} menos esta ronda: te quemaste de tantas horas extra.",
     "moveChance": "{pct} % de que salga bien",
     "moveRounds": "{done} de {rounds} rondas",
-    "moveResting": "Hace poco que lo intentaste"
+    "moveResting": "Hace poco que lo intentaste",
+    "previewStart": "Empiezas como {title}, con {pay}.",
+    "previewTop": "Arriba del todo, {title}: {pay}.",
+    "previewNow": "Ahora eres {title} en {career}: dejarías ese trabajo y empezarías de cero en experiencia.",
+    "previewYouStart": "Empiezas aquí",
+    "previewNeeds": "Pide {skill} de experiencia",
+    "previewNote": "Sueldos de hoy en {city}, antes de lo tuyo: aumentos, habilidades o tu forma de trabajar."
   },
   "rankings": {
     "title": "Clasificaciones",

@@ -90,6 +90,31 @@ function estateStatusOf(p: PlayerState, content: Content, property: { id: string
   return mine ? mulDiv(mine.status, grand.pct, 100) : 0;
 }
 
+/** A career as a player would find it where they live: each rung with its pay there today, its status and the experience it asks. */
+export interface CareerQuote {
+  careerId: string;
+  ladder: Array<{ level: number; payAnnual: Cents; status: number; minSkill: number }>;
+}
+
+/**
+ * A career the player does not have, as it would be in their city: the pay of each rung before
+ * anything of their own (a raise, a skill, a way of working) is added, so careers compare alike.
+ */
+export function quoteCareer(content: Content, view: GameView, careerId: string): CareerQuote {
+  const city = cityOf(content, view.player.cityId);
+  const world = view.timeline[view.round];
+  const here = city.careerPayPct?.[careerId] ?? 100;
+  return {
+    careerId,
+    ladder: careerOf(content, careerId).levels.map((rung, level) => ({
+      level,
+      payAnnual: indexed(mulDiv(mulDiv(city.medianSalaryAnnual, rung.salaryPct, 100), here, 100), world),
+      status: rung.status,
+      minSkill: rung.minSkill,
+    })),
+  };
+}
+
 /** Everything about a property the player owns, or null if they do not own it. */
 export function quoteOwnedProperty(content: Content, view: GameView, propertyId: string): OwnedPropertyQuote | null {
   const p = view.player;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { debtServiceForRound } from './debt';
 import { applyRound, createGame, previewRound } from './game';
 import { executeOrder } from './orders';
-import { quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
+import { quoteCareer, quoteItem, quoteLiving, quoteLoan, quoteMove, quoteOwnedProperty, quoteProperty } from './quotes';
 import { statusBreakdown } from './selectors';
 import { newTally } from './tally';
 import { fixtureContent, fixtureStart } from './testing/fixture';
@@ -106,6 +106,18 @@ describe('a grand home owned besides the one lived in', () => {
     const estate = (id: string) => quoteOwnedProperty(ruled, viewOf(state), id)?.estateStatus;
     expect(estate('lived')).toBe(0);
     expect([estate('v1'), estate('v2'), estate('p1'), estate('h1')]).toEqual([20, 20, 0, 0]);
+  });
+});
+
+describe('quoteCareer', () => {
+  it('gives every rung of a career with its pay in the player\'s city today, its status and the experience it asks', () => {
+    const state = game(0);
+    const career = content.careers[0];
+    const city = content.cities.find((x) => x.id === state.player.cityId)!;
+    const quote = quoteCareer(content, viewOf(state), career.id);
+    expect(quote.ladder).toHaveLength(career.levels.length);
+    expect(quote.ladder[0]).toMatchObject({ level: 0, status: career.levels[0].status, minSkill: career.levels[0].minSkill });
+    expect(quote.ladder[0].payAnnual).toBe(Math.floor((Math.floor((city.medianSalaryAnnual * career.levels[0].salaryPct) / 100) * (city.careerPayPct?.[career.id] ?? 100)) / 100));
   });
 });
 

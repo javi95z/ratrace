@@ -344,7 +344,8 @@
     "covers": "Cover pays {amount}",
     "saved": "Your cover saved you {amount}",
     "asPlanned": "Goes as expected",
-    "lostStake": "You lose what you put in"
+    "lostStake": "You lose what you put in",
+    "seeCareer": "See the {career} career"
   },
   "effects": {
     "salaryMod": "{value}% salary for good",
@@ -1471,7 +1472,13 @@
     "focusBurnout": "{n} less this round: you burnt out from overtime.",
     "moveChance": "{pct}% chance it comes off",
     "moveRounds": "{done} of {rounds} rounds",
-    "moveResting": "You tried it recently"
+    "moveResting": "You tried it recently",
+    "previewStart": "You start as {title}, on {pay}.",
+    "previewTop": "At the very top, {title}: {pay}.",
+    "previewNow": "You are now {title} in {career}: you would leave that job and start again from no experience.",
+    "previewYouStart": "You start here",
+    "previewNeeds": "Needs {skill} experience",
+    "previewNote": "Pay as it is today in {city}, before anything of your own: raises, skills or how you work."
   },
   "rankings": {
     "title": "Rankings",

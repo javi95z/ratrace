@@ -4,13 +4,14 @@ import { cardArt } from '@ratrace/content';
 import { previewCard } from '@ratrace/engine';
 import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
 import { motion, useMotionValue, useTransform } from 'motion/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
 import { cardRarity, chancePct, effectTags, onlyCosts } from '@/game/present';
 import type { EffectTag } from '@/game/present';
 import { Panel, Tag } from '@/ui/kit';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';
+import { CareerPreview } from './CareerPreview';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins } from './FlyingCoins';
 import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
@@ -98,9 +99,16 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
   const partnered = useGame((s) => s.view?.player.life.partner ?? false);
   // The option tapped is shown taken at once, pressed and lit, and the others step back, while the answer is on its way.
   const picked = useGame((s) => s.picked);
-  if (!world) return null;
+  const view = useGame((s) => s.view);
+  const t = useT('cards');
+  const words = useWords();
+  const [seeing, setSeeing] = useState(false);
+  if (!world || !view) return null;
   const look = picked === null ? '' : picked === index ? 'translate-y-[2px] outline outline-2 outline-gold-500' : 'opacity-50';
-  return (
+  // An option that takes the player into another career can show that career whole before it is chosen.
+  const job = def.options[index]?.effects?.job;
+  const career = job?.career;
+  const option = (
     <button
       type="button"
       onClick={onPick}
@@ -112,6 +120,16 @@ function Option({ def, index, number, preview, onPick, disabled, tabIndex }: { d
     >
       <Offer def={def} index={index} preview={preview} world={world} shortcut={preview.available ? number : undefined} partnered={partnered} />
     </button>
+  );
+  if (!career) return option;
+  return (
+    <div className="flex flex-col items-stretch gap-1">
+      {option}
+      <button type="button" aria-haspopup="dialog" onClick={() => setSeeing(true)} className="self-end px-1 text-[12px] text-sky-300 underline underline-offset-2">
+        {t('seeCareer', { career: words.text.careers[career].name })}
+      </button>
+      {seeing ? <CareerPreview careerId={career} startLevel={job?.level ?? 0} shown={view} onClose={() => setSeeing(false)} /> : null}
+    </div>
   );
 }
 

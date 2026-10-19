@@ -344,7 +344,8 @@
     "covers": "Страховка платит {amount}",
     "saved": "Страховка сэкономила {amount}",
     "asPlanned": "Всё идёт как задумано",
-    "lostStake": "Вложенное пропадает"
+    "lostStake": "Вложенное пропадает",
+    "seeCareer": "Карьера: {career}"
   },
   "effects": {
     "salaryMod": "{value}% к зарплате навсегда",
@@ -1471,7 +1472,13 @@
     "focusBurnout": "На {n} меньше в этом раунде: выгорание от переработок.",
     "moveChance": "{pct}% на успех",
     "moveRounds": "{done} из {rounds} раундов",
-    "moveResting": "Недавно уже была попытка"
+    "moveResting": "Недавно уже была попытка",
+    "previewStart": "Вы начинаете как {title}: {pay}.",
+    "previewTop": "На самом верху — {title}: {pay}.",
+    "previewNow": "Сейчас вы {title} ({career}): эту работу придётся оставить и начать с нуля по опыту.",
+    "previewYouStart": "Начало здесь",
+    "previewNeeds": "Нужно {skill} опыта",
+    "previewNote": "Зарплаты на сегодня в городе {city}, без ваших надбавок, навыков и формата работы."
   },
   "rankings": {
     "title": "Рейтинги",
