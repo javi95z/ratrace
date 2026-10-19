@@ -526,6 +526,10 @@ export interface LifeRules {
   /** In a game with friends: the status a tease gives whoever makes it, and takes from its target, for one round. */
   teaseStatus: number;
   teasedStatus: number;
+  /** A round with the family, for whoever has a partner or children: status for that round. */
+  familyTimeStatus: number;
+  /** A round of rest: health points it gives back, and overtime that round takes no toll. */
+  restHealthPoints: number;
   /** Personal cards drawn each round. */
   cardsPerRound: number;
   skills: SkillRules;
@@ -1189,6 +1193,8 @@ export interface LifeState {
    * from whoever it was aimed at. Counted in the round it is set for, then gone. Absent otherwise.
    */
   statusNudge?: number;
+  /** Rounds before the player may tease again: a tease is never two rounds running. Absent: none. */
+  teaseRest?: number;
   /** The moves of the career under way or resting, by id: rounds put in so far, and the round from which it may be tried again. Absent until one is made. */
   moves?: Record<string, { progress: number; restUntil: number }>;
   /** City the player moves to when this round has resolved. */
@@ -1313,7 +1319,7 @@ export type Order =
   | { type: 'setResidency'; on: boolean };
 
 /** Each costs one focus point and can be done once a round. */
-export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction | 'tease' | 'careerMove';
+export type FocusAction = 'overtime' | 'studyCareer' | 'jobHunt' | 'askRaise' | 'studyFinance' | StudyAction | 'tease' | 'careerMove' | 'familyTime' | 'unwind';
 /** A round's study of a skill that is not the career's. Management is learnt by running a business, not here. */
 export type StudyAction = 'studyNegotiation' | 'studyLanguages' | 'networking' | 'exercise';
 
@@ -1406,6 +1412,10 @@ export type RejectReason =
   | 'studied-enough'
   | 'hunt-resting'
   | 'raise-resting'
+  /** A tease was made last round: not two rounds running. */
+  | 'tease-resting'
+  /** Time with the family needs a partner or a child. */
+  | 'no-family'
   | 'bad-mode'
   | 'no-remote'
   | 'needs-seniority'

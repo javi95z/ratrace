@@ -239,6 +239,8 @@ const base: Content = {
     cheapMortgageBp: 50,
     teaseStatus: 1,
     teasedStatus: 2,
+    familyTimeStatus: 2,
+    restHealthPoints: 1,
     cardsPerRound: 3,
     // Nothing is sold second hand here: tests of the used shop set their own terms.
     used: {},

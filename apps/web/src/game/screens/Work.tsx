@@ -12,7 +12,7 @@ import { ageAt, jobFocusName } from '@ratrace/core/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
-import { masteredLast, useFocusNote } from './focusNote';
+import { splitMastered, useFocusNote } from './focusNote';
 
 type About = 'career' | 'finance' | 'focus' | SkillId;
 const TITLE: Record<'career' | 'finance' | 'focus', string> = { career: 'careerTitle', finance: 'financeTitle', focus: 'focusTitle' };
@@ -407,6 +407,53 @@ function FinanceLevels({ finance }: { finance: SkillsQuote['finance'] }) {
   );
 }
 
+/** The skills at their top, named on one line: nothing more to learn, so nothing to switch. */
+export function MasteredLine({ names }: { names: string[] }) {
+  const t = useT('finance.lifestyle');
+  if (names.length === 0) return null;
+  return <p className="text-[12px] leading-snug text-teal-300">✓ {t('masteredLine', { skills: names.join(' · ') })}</p>;
+}
+
+/**
+ * Focus spent on the life rather than the job: time with the family, for whoever has one, and a rest.
+ * With a `title`, it stands in a panel of its own. Nothing on rules that do not know them.
+ */
+export function LifeUses({ left, title }: { left: number; title: string }) {
+  const t = useT('finance.lifestyle');
+  const { content, text } = useWords();
+  const knows = useKnows();
+  const view = useGame((s) => s.view);
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  if (!view) return null;
+  const work = quoteWork(content, view);
+  const has = (action: FocusAction) => orders.some((order) => order.type === 'focus' && order.action === action);
+  const uses = (
+    [
+      ['familyTime', t('familyHint', { n: work.familyTimeStatus })],
+      ['unwind', t('unwindHint', { n: work.restHealthPoints })],
+    ] as const
+  ).filter(([action]) => knows(`focus:${action}`) && work.focusLocks[action] === null);
+  if (uses.length === 0) return null;
+  return (
+    <Panel title={title} label={title}>
+      <div className="flex flex-col gap-2">
+        {uses.map(([action, hint]) => (
+          <Toggle
+            key={action}
+            on={has(action)}
+            onChange={(on) => setOrder((order) => order.type === 'focus' && order.action === action, on ? { type: 'focus', action } : null)}
+            disabled={!has(action) && left < 1}
+            label={text.focusActions[action]}
+            hint={hint}
+            icon={focusArt[action]}
+          />
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
 /**
  * What a round's focus can be spent on, and what each use is worth to this player as they stand.
  * While the finances are open each use is a switch, as in the Lifestyle tab: an order like any other.
@@ -423,18 +470,24 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
   const open = stage === 'finance' && view !== null;
   const has = (action: FocusAction) => orders.some((order) => order.type === 'focus' && order.action === action);
   const note = useFocusNote();
+  const knows = useKnows();
   const use = (action: FocusAction, name: string, gives: string) => ({ action, name, note: note(work, action, gives) });
   const job = [
     use('overtime', jobFocusName(words, career, 'overtime', t('overtime')), t('overtimeGives', { pct: work.overtimePct })),
     use('studyCareer', jobFocusName(words, career, 'studyCareer', t('study')), t('studyGives', { n: work.studySkill })),
     use('jobHunt', jobFocusName(words, career, 'jobHunt', t('hunt')), t('huntGives', { pct: work.jobHuntChancePct, raise: work.jobHuntRaisePct })),
   ];
-  // Learning needs no job: it is on the list whatever the player does for a living. What is mastered goes last.
-  const learning = masteredLast([
+  // Learning needs no job: it is on the list whatever the player does for a living. What is mastered is only named.
+  const learning = splitMastered([
     use(skills.finance.study, text.focusActions[skills.finance.study], t('learnGives', { n: skills.finance.studyPoints, skill: t('finance') })),
     ...skills.skills.flatMap((skill) => (skill.study === null ? [] : [use(skill.study, text.focusActions[skill.study], t('learnGives', { n: skill.studyPoints, skill: text.skills[skill.skill] }))])),
   ]);
-  const uses = [...(work.level === null ? [] : job), ...learning];
+  const life = useT('finance.lifestyle');
+  const lives = [
+    use('familyTime', text.focusActions.familyTime, life('familyHint', { n: work.familyTimeStatus })),
+    use('unwind', text.focusActions.unwind, life('unwindHint', { n: work.restHealthPoints })),
+  ].filter((each) => knows(`focus:${each.action}`) && !each.note.locked);
+  const uses = [...(work.level === null ? [] : job), ...learning.open, ...lives];
 
   return (
     <>
@@ -461,6 +514,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
               icon={focusArt[use.action]}
             />
           ))}
+          <MasteredLine names={learning.mastered.map((use) => use.name)} />
           <CareerMoves work={work} left={work.focus.left} />
           <TeaseUse left={work.focus.left} />
         </div>
@@ -479,6 +533,7 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
           ))}
         </ul>
       )}
+      {open ? null : <MasteredLine names={learning.mastered.map((use) => use.name)} />}
       <Explain>{t('focusAlso')}</Explain>
       <p className="text-center text-[12px] text-ink-300">{open ? t('focusPick') : t('focusWhere')}</p>
     </>

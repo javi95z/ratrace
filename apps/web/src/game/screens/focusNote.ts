@@ -34,7 +34,7 @@ export function useFocusNote(): (work: WorkQuote, action: FocusAction, gives: st
   };
 }
 
-/** Uses of focus in the order they are listed: what can still be learnt first, what is mastered last. */
-export function masteredLast<T extends { note: FocusNote }>(uses: T[]): T[] {
-  return [...uses.filter((use) => !use.note.mastered), ...uses.filter((use) => use.note.mastered)];
+/** Uses of focus split in two: what can still be learnt, each a switch; and what is mastered, which is only named. */
+export function splitMastered<T extends { note: FocusNote }>(uses: T[]): { open: T[]; mastered: T[] } {
+  return { open: uses.filter((use) => !use.note.mastered), mastered: uses.filter((use) => use.note.mastered) };
 }

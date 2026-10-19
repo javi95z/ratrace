@@ -53,6 +53,23 @@ describe('choosing a life', () => {
     expect(document.activeElement).toBe(screen.getByRole('radio', { name: /^Software engineer/ }));
   });
 
+  it('chooses one of the other open lives at random, and starts nothing by itself', async () => {
+    const user = userEvent.setup();
+    const services = memoryServices();
+    renderGame(<NewLife />, services);
+    const before = (await screen.findAllByRole('radio')).find((radio) => radio.getAttribute('aria-checked') === 'true');
+    for (let i = 0; i < 5; i++) {
+      const was = screen.getAllByRole('radio').find((radio) => radio.getAttribute('aria-checked') === 'true');
+      await user.click(screen.getByRole('button', { name: /At random/ }));
+      const now = screen.getAllByRole('radio').find((radio) => radio.getAttribute('aria-checked') === 'true');
+      expect(now).toBeTruthy();
+      expect(now?.getAttribute('data-life')).not.toBe(was?.getAttribute('data-life'));
+    }
+    expect(before).toBeTruthy();
+    expect(await saved(services)).toBeNull();
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
   it('offers the three starting lives, and shows what unlocks the others', async () => {
     renderGame(<NewLife />, memoryServices());
     expect(screen.queryByText('Weekly challenge')).toBeNull();

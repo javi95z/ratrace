@@ -281,8 +281,8 @@ describe('the lifestyle tab', () => {
       for (const choice of within(screen.getByRole('radiogroup', { name: group })).getAllByRole('radio')) expect(pictured(choice), `${group}: ${choice.textContent}`).toBe(true);
     }
     const switches = screen.getAllByRole('switch');
-    // Four uses of focus at work, five to learn, three insurances.
-    expect(switches).toHaveLength(4 + 5 + 3);
+    // Four uses of focus at work, five to learn, a rest (the nurse has no family yet), three insurances.
+    expect(switches).toHaveLength(4 + 5 + 1 + 3);
     for (const one of switches) expect(pictured(one), one.textContent ?? '').toBe(true);
   });
 });
@@ -961,8 +961,8 @@ describe('focus from the work panel', () => {
     await user.click(within(work).getByText('Focus this round'));
     const sheet = screen.getByRole('dialog', { name: 'Focus' });
     expect(within(sheet).getByText('Tap to choose. It takes effect when the round is played.')).toBeTruthy();
-    // Three ways to work and five to learn.
-    expect(within(sheet).getAllByRole('switch')).toHaveLength(8);
+    // Three ways to work, five to learn, and a rest.
+    expect(within(sheet).getAllByRole('switch')).toHaveLength(9);
     await user.click(within(sheet).getByRole('switch', { name: /^Exercise/ }));
     expect(within(sheet).getByRole('switch', { name: /^Exercise/ }).getAttribute('aria-checked')).toBe('true');
     expect(within(sheet).getByText('2/3')).toBeTruthy();
@@ -1148,7 +1148,7 @@ describe('what is not declared', () => {
 });
 
 describe('the limits of focus', () => {
-  it('closes a mastered skill and lists it last, and says what overtime round after round costs', async () => {
+  it('names a mastered skill on one line instead of a switch, and says what overtime round after round costs', async () => {
     const { services, session } = await inFinance('nurse', { taught: true });
     // A third finance course masters money sense; overtime this round makes the next one the second in a row.
     await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }, { type: 'focus', action: 'overtime' }] });
@@ -1159,11 +1159,9 @@ describe('the limits of focus', () => {
     await user.click(await screen.findByRole('tab', { name: 'Lifestyle' }));
 
     const learn = screen.getByRole('region', { name: 'Learn' });
-    const switches = within(learn).getAllByRole('switch');
-    const course = within(learn).getByRole('switch', { name: /Take a finance course/ });
-    expect(switches.at(-1)).toBe(course);
-    expect((course as HTMLButtonElement).disabled).toBe(true);
-    expect(within(course).getByText('Mastered')).toBeTruthy();
+    expect(within(learn).queryByRole('switch', { name: /Take a finance course/ })).toBeNull();
+    expect(within(learn).getByText('✓ Mastered: Take a finance course.')).toBeTruthy();
+    expect(within(learn).getAllByRole('switch')).toHaveLength(4);
 
     const overtime = screen.getByRole('switch', { name: /Work night shifts/ });
     expect(within(overtime).getByText(/· −1 health$/)).toBeTruthy();

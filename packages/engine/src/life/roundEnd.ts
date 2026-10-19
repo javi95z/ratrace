@@ -95,6 +95,9 @@ export function ageLife(
   life.focusLost = 0;
   if (life.huntRest > 0) life.huntRest -= 1;
   if (life.raiseRest > 0) life.raiseRest -= 1;
+  if ((life.teaseRest ?? 0) > 0) life.teaseRest = (life.teaseRest ?? 0) - 1;
+  // A tease made this round: none in the next.
+  if (tally.focusActions.includes('tease')) life.teaseRest = 1;
   // A round in prison is one less to serve; the last one served, the player walks out a rung lower.
   const jailed = life.jailRounds > 0;
   if (jailed) {
@@ -150,7 +153,9 @@ export function ageLife(
     events.push({ kind: 'raise', success, pct });
   }
 
-  if (tally.focusActions.includes('overtime')) {
+  // Overtime in a round of rest takes no toll, and its streak starts again.
+  const rested = tally.focusActions.includes('unwind');
+  if (tally.focusActions.includes('overtime') && !rested) {
     const toll = overtimeToll(p, content);
     life.overtimeStreak = toll.streak;
     // The dice are thrown only from the round burnout is possible, so a life that never gets there draws the same numbers as before.
@@ -165,6 +170,8 @@ export function ageLife(
   } else {
     life.overtimeStreak = 0;
   }
+
+  if (rested) addSkillPoints(p, content, { health: content.life.restHealthPoints }, events);
 
   learnSkills(p, content, tally, events);
 

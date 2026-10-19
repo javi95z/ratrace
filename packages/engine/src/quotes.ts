@@ -192,6 +192,8 @@ export interface UsedQuote {
   resale: Cents;
   /** The status it gives as it is bought: less than a new one's for a thing that ages. */
   status: number;
+  /** What it would add to the player's status as they stand, as `statusReal` does for a new one: a better one of its kind owned counts first. */
+  statusReal: number;
   /** How many rounds old it is on the day. */
   ageRounds: number;
   /** The chance each round that it needs a repair, and what one costs today. */
@@ -220,12 +222,12 @@ export interface ItemFinanceQuote {
  * other things of its ladder ranked again with it. Owned: what it counts for now, by its place in
  * its ladder: whole if it is the best, a share or nothing if not.
  */
-function itemStatusReal(content: Content, view: GameView, itemId: string): number {
+function itemStatusReal(content: Content, view: GameView, itemId: string, age = 0): number {
   const p = view.player;
   const held = p.life.items.find((owned) => owned.itemId === itemId);
   if (!held) {
     const now = statusParts(p, content, view.round).items;
-    const items = [...p.life.items, { itemId, value: 0, roundsLeft: null, paid: 0, age: 0 } as OwnedItem];
+    const items = [...p.life.items, { itemId, value: 0, roundsLeft: null, paid: 0, age } as OwnedItem];
     return statusParts({ ...p, life: { ...p.life, items } }, content, view.round).items - now;
   }
   const item = itemOf(content, itemId);
@@ -288,6 +290,7 @@ export function quoteItem(content: Content, view: GameView, itemId: string): Ite
             price: second.price,
             resale: second.resale,
             status: itemStatus(item, second.rule.ageRounds, content),
+            statusReal: itemStatusReal(content, view, itemId, second.rule.ageRounds),
             ageRounds: second.rule.ageRounds,
             repairChancePct: second.rule.repairChancePct,
             repairCost: mulDiv(terms.price, second.rule.repairPct, 100),
@@ -465,6 +468,9 @@ export interface WorkQuote {
   rungStudy: { left: number; max: number };
   /** Why each use of focus is closed to the player as they stand, whatever focus is left, or null. */
   focusLocks: Record<FocusAction, RejectReason | null>;
+  /** The status a round with the family gives, and the health a rest gives back. */
+  familyTimeStatus: number;
+  restHealthPoints: number;
   /** The chance in percent that a job hunt ends in a raise, counting what the player owns, and the raise. */
   /** Asking the boss for more: the chance it is given, and the lasting raise it brings, in percent. */
   raise: { chancePct: number; pct: number };
@@ -518,6 +524,8 @@ export function quoteWork(content: Content, view: GameView): WorkQuote {
     overtimeToll: overtimeToll(p, content),
     rungStudy: { left: Math.max(0, content.life.focusLimits.studyPerRung - p.life.rungStudy), max: content.life.focusLimits.studyPerRung },
     focusLocks: Object.fromEntries(FOCUS_ACTIONS.map((action) => [action, focusLock(p, action, content)])) as Record<FocusAction, RejectReason | null>,
+    familyTimeStatus: content.life.familyTimeStatus,
+    restHealthPoints: content.life.restHealthPoints,
     jobHuntChancePct: jobHuntChance(content, perks, p),
     raise: { chancePct: raiseChance(p, content), pct: content.life.raise.pct },
     backToWork:

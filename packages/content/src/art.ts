@@ -314,6 +314,8 @@ export const focusArt: Record<FocusAction, string> = {
   exercise: skillArt.health,
   tease: 'icon.room_tease',
   careerMove: 'icon.star',
+  familyTime: 'icon.family_four',
+  unwind: 'icon.mood',
 };
 /** The filler headlines from this one on are about the famous, one each, in the order of `CELEBS`. */
 export const CELEB_HEADLINES_FROM = 38;

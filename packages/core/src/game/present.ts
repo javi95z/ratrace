@@ -299,7 +299,7 @@ export function orderLabel(words: Words, t: Translate, player: PlayerState, orde
       return t(order.rented ? 'rentOn' : 'rentOff', { home: home(order.propertyId) });
     case 'focus':
       if (order.action === 'careerMove') return (player.life.career && order.move ? text.careers[player.life.career.id]?.moves?.[order.move]?.name : undefined) ?? text.focusActions.careerMove;
-      if (isStudy(order.action) || order.action === 'studyFinance' || order.action === 'tease') return text.focusActions[order.action];
+      if (isStudy(order.action) || order.action === 'studyFinance' || order.action === 'tease' || order.action === 'familyTime' || order.action === 'unwind') return text.focusActions[order.action];
       return jobFocusName(words, player.life.career?.id, order.action, t(order.action === 'overtime' ? 'overtime' : order.action === 'studyCareer' ? 'study' : order.action === 'askRaise' ? 'raise' : 'hunt'));
     case 'setWorkMode':
       return t(`work.${order.mode}`);

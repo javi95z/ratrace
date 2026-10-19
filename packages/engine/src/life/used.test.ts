@@ -39,6 +39,8 @@ describe('the second-hand shop', () => {
       resale: mulDiv(price, car.resaleStartPct, 100),
       // Two rounds of a car's loss of value come off its status too.
       status: itemStatus(car, 2, content),
+      // With no other car, it adds all of that.
+      statusReal: itemStatus(car, 2, content),
       ageRounds: 2,
       repairChancePct: 30,
       repairCost: mulDiv(quote.price, 10, 100),

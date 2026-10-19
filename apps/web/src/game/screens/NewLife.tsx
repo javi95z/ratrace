@@ -120,6 +120,19 @@ export function NewLife() {
           ←
         </Link>
         <h1 className="pixel text-[24px] text-gold-500">{t('title')}</h1>
+        {/* Someone who cannot choose lets the dice: one of the open lives, never the one already chosen. Started only with the usual button. */}
+        {available.length > 1 ? (
+          <button
+            type="button"
+            onClick={() => {
+              const others = available.filter((life) => life.id !== chosen);
+              chooseAndFocus(others[Math.floor(Math.random() * others.length)].id);
+            }}
+            className="pixel frame-raised ml-auto min-h-11 bg-night-700 px-3 text-[14px] text-ink-200"
+          >
+            {t('random')}
+          </button>
+        ) : null}
       </div>
 
       {/* The lives that can be lived, two to a row; the one chosen opens across the row with what it is. */}

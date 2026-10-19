@@ -19,6 +19,8 @@ export const ORDERS_SINCE: Readonly<Record<string, string>> = {
   'focus:tease': '0.38.0',
   'focus:careerMove': '0.39.0',
   pensionOut: '0.40.0',
+  'focus:familyTime': '0.43.0',
+  'focus:unwind': '0.43.0',
 };
 
 /**

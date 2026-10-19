@@ -127,7 +127,8 @@
       "programmer": "Quiet work, loud pay, and a career at risk from its own tools.",
       "chef": "A kitchen, a fire, and a restaurant that may never turn a profit.",
       "private_banker": "Other people's fortunes, and a view of how the rich really live."
-    }
+    },
+    "random": "🎲 At random"
   },
   "hud": {
     "cash": "Cash",
@@ -646,7 +647,11 @@
       "homeHelped": "Home again: your family carries you back and puts you up for a while. Old friends open doors, and no rung is lost.",
       "homeBack": "Home again: old friends open doors, and no rung is lost. Come back richer than you left and it is a triumph.",
       "rivals": "The other players",
-      "moveCostFar": "Moving costs {amount} and 1 focus: it is {km} km away"
+      "moveCostFar": "Moving costs {amount} and 1 focus: it is {km} km away",
+      "masteredLine": "Mastered: {skills}.",
+      "time": "Your time",
+      "familyHint": "Status +{n} this round.",
+      "unwindHint": "+{n} health, and overtime this round takes no toll."
     },
     "shop": {
       "viewLabel": "What to show in the shop",
@@ -1466,7 +1471,7 @@
     },
     "learnGives": "+{n} {skill}",
     "focusPick": "Tap to choose. It takes effect when the round is played.",
-    "teaseGives": "You get +1 status this round. Your rival starts the next one on −2, and will know it was you.",
+    "teaseGives": "You get +1 status this round. Your rival starts the next one on −2, and will know it was you. Not two rounds running.",
     "teaseAt": "Who you tease",
     "financeLiving": "You have money invested: +{n} when this round ends.",
     "retiredTitle": "Retired",

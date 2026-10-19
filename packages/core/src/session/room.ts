@@ -130,8 +130,8 @@ export interface RoomGameOver {
   /** The player's own life in it: the id their finished life is kept under. Null when the server does not say. */
   gameId: string | null;
   /** Everyone who was in it, in their final order; those who left last. */
-  /** `left` for one who gave their life up before the end; `bot`, the kind of a rat. Net worth in the dollars the life began with, where it lived and its job, when the server says. */
-  players: Array<{ name: string | null; tag: string; bot: string | null; me: boolean; score: number | null; left: boolean; netWorth: number | null; cityId: string | null; career: { id: string; level: number } | null }>;
+  /** `left` for one who gave their life up before the end; `bot`, the kind of a rat. Net worth in the dollars the life began with, where it lived and its job, when the server says. `userId` and `avatar`, for their rat, when the server says. */
+  players: Array<{ name: string | null; tag: string; userId: string | null; avatar: string | null; bot: string | null; me: boolean; score: number | null; left: boolean; netWorth: number | null; cityId: string | null; career: { id: string; level: number } | null }>;
 }
 
 /** A member's life in a room, as the server shows it: the whole of what they may see, and what its last step did. */

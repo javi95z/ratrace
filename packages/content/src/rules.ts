@@ -226,6 +226,8 @@ export const life: LifeRules = {
   cheapMortgageBp: 100,
   teaseStatus: 1,
   teasedStatus: 2,
+  familyTimeStatus: 2,
+  restHealthPoints: 1,
   cardsPerRound: 3,
   // A car or a watch second hand: about half or two thirds of the price, a couple of rounds old, and
   // now and then a repair. A car loses status with those rounds; a watch holds it, so a watch is

@@ -964,7 +964,8 @@ async function rematch(games: Readonly<Record<string, GameModule>>, deps: RoomsD
 async function history(deps: RoomsDeps, userId: string): Promise<Reply> {
   if (!(await deps.allow(userId, 'room-step'))) return tooMany;
   const rows = await deps.history(userId, HISTORY_LIMIT);
-  const names = await deps.names([...new Set(rows.flatMap((row) => row.members.map((m) => m.user_id)))]);
+  const everyone = [...new Set(rows.flatMap((row) => row.members.map((m) => m.user_id)))];
+  const [names, avatars] = await Promise.all([deps.names(everyone), deps.avatars(everyone)]);
   // The rats of the public games among them, by account.
   const rats = rows.some(({ room }) => room.public === true) ? await ratsIn(deps, { public: true }) : new Map<string, string>();
   return {
@@ -985,6 +986,9 @@ async function history(deps: RoomsDeps, userId: string): Promise<Reply> {
           .map((m) => ({
             name: names[m.user_id] ?? null,
             tag: m.user_id.slice(0, 4).toUpperCase(),
+            // Who they are and the rat they are seen as, so the end of a game shows the same faces as its play.
+            userId: m.user_id,
+            avatar: avatars[m.user_id] ?? null,
             bot: rats.get(m.user_id) ?? null,
             me: m.user_id === userId,
             score: m.standing?.score ?? null,

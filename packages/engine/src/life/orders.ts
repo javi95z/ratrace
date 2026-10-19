@@ -11,7 +11,7 @@ import { FLAG_CAME_HOME_RICH, FLAG_HAD_ILLNESS, FLAG_IN_ROOM, FLAG_REMOTE_WORK, 
 import { moveLock } from './moves';
 import { isStudy, skillLevel, STUDY_OF } from './skills';
 
-export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise', 'tease', 'careerMove'];
+export const FOCUS_ACTIONS: readonly FocusAction[] = ['overtime', 'studyCareer', 'jobHunt', 'askRaise', 'studyFinance', 'studyNegotiation', 'studyLanguages', 'networking', 'exercise', 'tease', 'careerMove', 'familyTime', 'unwind'];
 
 export type LifeOrder = Extract<
   Order,
@@ -41,8 +41,11 @@ export function focusTotal(p: PlayerState): number {
  */
 export function focusLock(p: PlayerState, action: FocusAction, content: Content): RejectReason | null {
   if (!FOCUS_ACTIONS.includes(action)) return 'unknown-action';
-  // There is nobody to tease in a life alone.
-  if (action === 'tease') return hasFlag(p.life.flags, FLAG_IN_ROOM) ? null : 'unknown-action';
+  // There is nobody to tease in a life alone, and never two rounds running.
+  if (action === 'tease') return !hasFlag(p.life.flags, FLAG_IN_ROOM) ? 'unknown-action' : (p.life.teaseRest ?? 0) > 0 ? 'tease-resting' : null;
+  // A rest needs nothing; time with the family needs a family.
+  if (action === 'unwind') return null;
+  if (action === 'familyTime') return p.life.partner || p.life.children.length > 0 ? null : 'no-family';
   // A skill of one's own can be studied without a job; overtime, the career and a job hunt need one.
   if (p.life.career === null && !isStudy(action) && action !== 'studyFinance') return 'no-job';
   if (isStudy(action) && skillLevel(p, STUDY_OF[action], content) >= 3) return 'skill-maxed';
@@ -98,8 +101,9 @@ function executeFocus(p: PlayerState, action: FocusAction, ctx: OrderContext, mo
   ctx.tally.focusActions.push(action);
   // A move of the career is judged as the round ends, as a job hunt is.
   if (action === 'careerMove') ctx.tally.careerMove = move as string;
-  // A tease is worth its status in this very round.
+  // A tease, and time with the family, are worth their status in this very round.
   if (action === 'tease') p.life.statusNudge = (p.life.statusNudge ?? 0) + ctx.content.life.teaseStatus;
+  if (action === 'familyTime') p.life.statusNudge = (p.life.statusNudge ?? 0) + ctx.content.life.familyTimeStatus;
   // Study and job hunting pay off when the round has resolved. Overtime is paid in this round.
   if (action === 'overtime' && p.life.career !== null) p.life.salaryBoostPct += overtimeOf(p, ctx.content);
   return null;

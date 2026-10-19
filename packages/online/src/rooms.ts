@@ -118,6 +118,8 @@ function gameOverOf(raw: unknown): RoomGameOver | null {
     players: raw.players.filter(isRecord).map((p) => ({
       name: typeof p.name === 'string' ? p.name : null,
       tag: typeof p.tag === 'string' ? p.tag : '',
+      userId: typeof p.userId === 'string' ? p.userId : null,
+      avatar: typeof p.avatar === 'string' ? p.avatar : null,
       bot: typeof p.bot === 'string' ? p.bot : null,
       me: p.me === true,
       score: typeof p.score === 'number' ? p.score : null,

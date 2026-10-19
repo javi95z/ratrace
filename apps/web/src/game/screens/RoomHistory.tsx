@@ -10,6 +10,7 @@ import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RunDetail } from './RunDetail';
+import { MemberRat } from './Room';
 
 /** Where the player came in a game over: their place among those who stayed to the end, or null if they left. */
 export function placeIn(game: RoomGameOver): { place: number; total: number } | null {
@@ -122,6 +123,8 @@ export function RoomHistory({ runs }: { runs: FinishedRun[] }) {
               {open.players.map((player, at) => (
                 <li key={`${player.tag}-${at}`} className={`flex min-h-11 items-center gap-3 py-1.5 ${player.left ? 'opacity-60' : ''}`}>
                   <span className="pixel w-5 shrink-0 text-[16px] text-ink-300">{player.left ? '·' : at + 1}</span>
+                  {/* The same rat as in the game; a game over told by an older server says nobody's. */}
+                  {player.userId !== null ? <MemberRat member={{ userId: player.userId, avatar: player.avatar }} /> : null}
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-[15px]">{nameOf(player)}</span>

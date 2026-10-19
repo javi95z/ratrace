@@ -21,7 +21,7 @@ export type { PublicPace, RoomGameOver, RoomLoan, RoomMember, RoomState, RoomSta
  */
 export function memberName(
   t: (key: string, values?: Record<string, string | number>) => string,
-  member: { name: string | null; bot?: string | null; userId?: string; tag?: string },
+  member: { name: string | null; bot?: string | null; userId?: string | null; tag?: string },
 ): string {
   if (member.bot) return ROOM_BOTS.includes(member.bot) ? t(`bots.${member.bot}`) : t('bot');
   return member.name ?? t('nameless', { tag: member.tag ?? (member.userId ?? '').slice(0, 4).toUpperCase() });

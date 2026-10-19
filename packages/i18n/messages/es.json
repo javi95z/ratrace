@@ -127,7 +127,8 @@
       "programmer": "Trabajo callado, sueldo ruidoso y una carrera amenazada por sus propias herramientas.",
       "chef": "Una cocina, un fuego y un restaurante que quizá nunca dé beneficios.",
       "private_banker": "Las fortunas de otros y una vista de cómo vive de verdad la gente rica."
-    }
+    },
+    "random": "🎲 Al azar"
   },
   "hud": {
     "cash": "Efectivo",
@@ -646,7 +647,11 @@
       "homeHelped": "De vuelta a casa: tu familia te ayuda con la mudanza y te acoge una temporada. Los amigos de siempre abren puertas y no pierdes escalón.",
       "homeBack": "De vuelta a casa: los amigos de siempre abren puertas y no pierdes escalón. Si vuelves con más dinero que cuando te fuiste, es un triunfo.",
       "rivals": "Los otros jugadores",
-      "moveCostFar": "Mudarte cuesta {amount} y 1 de foco: está a {km} km"
+      "moveCostFar": "Mudarte cuesta {amount} y 1 de foco: está a {km} km",
+      "masteredLine": "Dominadas: {skills}.",
+      "time": "Tu tiempo",
+      "familyHint": "Estatus +{n} esta ronda.",
+      "unwindHint": "+{n} de salud, y las horas extra de esta ronda no te pasan factura."
     },
     "shop": {
       "viewLabel": "Qué mostrar en la tienda",
@@ -1466,7 +1471,7 @@
     },
     "learnGives": "+{n} de {skill}",
     "focusPick": "Toca para elegir. Cuenta cuando se juegue la ronda.",
-    "teaseGives": "Tú, +1 de estatus esta ronda. Tu rival empieza la próxima con −2, y sabrá que has sido tú.",
+    "teaseGives": "Tú, +1 de estatus esta ronda. Tu rival empieza la próxima con −2, y sabrá que has sido tú. No dos rondas seguidas.",
     "teaseAt": "A quién picas",
     "financeLiving": "Tienes dinero invertido: +{n} al acabar esta ronda.",
     "retiredTitle": "Jubilación",

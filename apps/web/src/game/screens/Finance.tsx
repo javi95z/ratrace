@@ -25,10 +25,10 @@ import { Payouts, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { EvasionPanel } from './Evasion';
-import { TeaseUse } from './Work';
+import { LifeUses, MasteredLine, TeaseUse } from './Work';
 import { realStatus, StatusNote } from './StatusNote';
 import { ItemUses } from './ItemUses';
-import { masteredLast, useFocusNote } from './focusNote';
+import { splitMastered, useFocusNote } from './focusNote';
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
 type ShopView = 'affordable' | 'all';
@@ -1333,7 +1333,7 @@ function Lifestyle() {
         .filter(([action]) => knows(`focus:${action}`))
         .map(([action, label, gives]) => ({ action, label: jobFocusName(words, career.id, action, label), note: note(work, action, gives) }))
     : [];
-  const learnUses = masteredLast([
+  const learn = splitMastered([
     { action: skills.finance.study, label: text.focusActions[skills.finance.study], note: note(work, skills.finance.study, t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })) },
     ...skills.skills.flatMap((skill) =>
       skill.study === null ? [] : [{ action: skill.study, label: text.focusActions[skill.study], note: note(work, skill.study, t('learnHint', { n: skill.studyPoints, skill: text.skills[skill.skill], level: skill.level })) }],
@@ -1394,15 +1394,19 @@ function Lifestyle() {
       </Panel>
 
 
-      {/* Skills of one's own: each a point of focus, and no job needed. What is mastered goes last, and is closed. */}
+      {/* Skills of one's own: each a point of focus, and no job needed. What is mastered is only named, on one line. */}
       <Panel title={t('learn')} label={t('learn')}>
         <div className="flex flex-col gap-2">
-          <p className="text-[13px] text-ink-300">{t('learnAbout')}</p>
-          {learnUses.map((use) => (
+          {learn.open.length > 0 ? <p className="text-[13px] text-ink-300">{t('learnAbout')}</p> : null}
+          {learn.open.map((use) => (
             <Toggle key={use.action} on={has(use.action)} onChange={focus(use.action)} disabled={!has(use.action) && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} icon={focusArt[use.action]} />
           ))}
+          <MasteredLine names={learn.mastered.map((use) => use.label)} />
         </div>
       </Panel>
+
+      {/* What focus is for besides work and study: the family, and a rest. */}
+      <LifeUses left={left} title={t('time')} />
 
       {/* With friends, a round's focus can go on teasing one of them: here too, beside the rest of the focus. */}
       <TeaseUse left={left} title={t('rivals')} />
@@ -1517,9 +1521,11 @@ function SecondHand({ used, onBought }: { used: UsedQuote; onBought(): void }) {
         {t('usedTitle')}
       </p>
       <div className="flex flex-wrap justify-center gap-1.5">
-        <Tag tone="good">{t('status', { n: used.status })}</Tag>
+        {/* What it adds, as for a new one: a better one of its kind owned counts first. */}
+        {used.statusReal > 0 ? <Tag tone="good">{t('status', { n: used.statusReal })}</Tag> : null}
         <Tag>{t('usedAge', { years: used.ageRounds * content.yearsPerRound })}</Tag>
       </div>
+      {used.statusReal < used.status ? <p className="text-center text-[13px] leading-snug text-ink-300">{t(used.statusReal <= 0 ? 'statusNone' : 'statusLess', { n: used.statusReal, of: used.status })}</p> : null}
       <p className="text-center text-[13px] leading-snug text-ink-300">
         {t('usedRisk', { pct: used.repairChancePct, amount: fmt.money(used.repairCost) })} {t('usedWarranty')}
       </p>

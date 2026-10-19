@@ -325,8 +325,8 @@ describe('content art', () => {
     ];
     expect(wanted.filter((sprite) => !has(sprite))).toEqual([]);
     const rungs = content.careers.reduce((sum, career) => sum + career.levels.length, 0);
-    expect(wanted.length).toBe(195 + 67 + 5 + 4 + 2 + 3 + 6 + 26 * 11 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
-    // Every kind of property, plain and as each of the ten cities draws it: the 26 * 11.
+    expect(wanted.length).toBe(195 + 67 + 5 + 4 + 2 + 3 + 6 + 26 * 11 + 2 + 2 + 6 * 5 + 8 + 6 + 20 * 4 + 6 + (4 + 2 + 4 + 11 + 8) + (11 + rungs) + 5 + 4 + 8 + 4 + 6 + 3 * 4 + 3 + 3 + 7 + 5 + 2 + 3 + 13 + 1 + 4 * 7 + 5 + (8 + 10 + 6 + 15 + 1) + 14);
+    // Every kind of property, plain and as each of the ten cities draws it: the 26 * 11. Time with the family and a rest, a sign each: the 2.
     // Five rules of the weekly challenge came later, each with its icon: the last 5.
     // Four cities came later, each with its four skylines, a landmark, a crest and a "for sale" board: the 4 * 7.
     // A brand mark belongs to an asset the market has.
@@ -358,7 +358,7 @@ describe('content art', () => {
   it('gives each way of living, each insurance, each use of focus and each kind of news a picture', () => {
     expect(lifestyleArt).toHaveLength(content.lifestyleMultiplierPct.length);
     expect(keys(insuranceArt)).toEqual(keys(content.life.insurancePremiumBp));
-    expect(keys(focusArt)).toEqual(['askRaise', 'exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation', 'tease', 'careerMove'].sort());
+    expect(keys(focusArt)).toEqual(['askRaise', 'exercise', 'jobHunt', 'networking', 'overtime', 'studyCareer', 'studyFinance', 'studyLanguages', 'studyNegotiation', 'tease', 'careerMove', 'familyTime', 'unwind'].sort());
     expect(keys(skillArt)).toEqual(['career', 'finance', 'health', 'languages', 'management', 'negotiation', 'network']);
     expect(keys(topicArt)).toEqual(['asset', 'crypto', 'government', 'inflation', 'noise', 'property', 'rates', 'regime', 'taxes']);
     // As many filler headlines in every language as the world draws from.

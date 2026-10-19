@@ -5,6 +5,7 @@ import { fixtureContent, fixtureStart } from '../testing/fixture';
 import { createGame } from '../game';
 import type { Content, FocusAction, GameEvent, GameState, LifeStart, RoundTally } from '../types';
 import { validateContent } from '../validate';
+import { FLAG_IN_ROOM } from './flags';
 import { focusLock, focusTotal } from './orders';
 import { ageLife, careerStudyOf, jobHuntChance, overtimeToll, turnPage } from './roundEnd';
 import { perksOf } from './derive';
@@ -162,6 +163,47 @@ describe('a skill at its top', () => {
     expect(focusLock(p, 'studyNegotiation', content)).toBe('skill-maxed');
     p.life.financeSkill = 3;
     expect(focusLock(p, 'studyFinance', content)).toBe('skill-maxed');
+  });
+});
+
+describe('a tease', () => {
+  it('is never two rounds running', () => {
+    const content = limited();
+    const state = game(content);
+    const p = state.player;
+    p.life.flags[FLAG_IN_ROOM] = 0;
+    expect(focusLock(p, 'tease', content)).toBeNull();
+    live(content, state, ['tease']);
+    expect(focusLock(p, 'tease', content)).toBe('tease-resting');
+    live(content, state, []);
+    expect(focusLock(p, 'tease', content)).toBeNull();
+  });
+});
+
+describe('time with the family, and a rest', () => {
+  it('needs a family for the time with it, and nothing for a rest', () => {
+    const content = limited();
+    const p = game(content).player;
+    expect(focusLock(p, 'familyTime', content)).toBe('no-family');
+    p.life.children = [0];
+    expect(focusLock(p, 'familyTime', content)).toBeNull();
+    p.life.career = null;
+    expect(focusLock(p, 'unwind', content)).toBeNull();
+    expect(focusLock(p, 'familyTime', content)).toBeNull();
+  });
+
+  it('takes the toll off a round of overtime, starts its streak again, and gives health back', () => {
+    const content = limited();
+    const state = game(content);
+    const p = state.player;
+    p.life.skills.health = 4;
+    live(content, state, ['overtime']);
+    live(content, state, ['overtime']);
+    expect(p.life.skills.health).toBe(3);
+    // The third round running would burn out for certain; rested, it costs nothing and gives a point back.
+    expect(live(content, state, ['overtime', 'unwind']).some((event) => event.kind === 'overworked')).toBe(false);
+    expect(p.life.overtimeStreak).toBe(0);
+    expect(p.life.skills.health).toBe(3 + content.life.restHealthPoints);
   });
 });
 
