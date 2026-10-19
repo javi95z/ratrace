@@ -1,4 +1,4 @@
-import { badges, businessArt, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
+import { badges, businessArt, headlineVoice, homeName, careerArt, cityIcon, focusArt, RARITIES, rarityOf, repairArt, skillArt, START_AGE } from '@ratrace/content';
 import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { CardDef, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
@@ -28,17 +28,28 @@ export function portraitAge(age: number): 22 | 32 | 45 | 58 {
 /** One of the ways a forecast is said, the `n`th going round. */
 const way = (ways: readonly string[], n: number): string => ways[((n % ways.length) + ways.length) % ways.length];
 
-/** A headline as a sentence. `n` picks among the ways it can be said: the screen passes something that changes each round. */
-export function headlineText({ text, names }: Words, h: Headline, n = 0): string {
+/**
+ * A headline as a sentence. `n` picks among the ways it can be said: the screen passes something that
+ * changes each round. Given one, every other headline one of the famous has a line for is said by them.
+ */
+export function headlineText({ text, names }: Words, h: Headline, n?: number): string {
+  // Some news is said by one of the famous, when the screen varies the wording: the same news, in their words.
+  const voice = n === undefined ? null : headlineVoice(h, n);
+  if (voice !== null) {
+    const line = (text.headlines.celebs[voice.celeb] as Record<string, string>)[voice.line];
+    if (h.topic === 'property') return line.replace('{city}', names.cities[h.cityId]);
+    if (h.topic === 'asset') return line.replace('{asset}', names.assets[h.assetId]?.name ?? h.assetId);
+    return line;
+  }
   switch (h.topic) {
     case 'regime':
-      return way(text.headlines.regime[h.regime], n);
+      return way(text.headlines.regime[h.regime], n ?? 0);
     case 'crypto':
-      return way(text.headlines.crypto[h.phase], n);
+      return way(text.headlines.crypto[h.phase], n ?? 0);
     case 'rates':
-      return way(text.headlines.rates[h.trend], n);
+      return way(text.headlines.rates[h.trend], n ?? 0);
     case 'inflation':
-      return way(text.headlines.inflation[h.trend], n);
+      return way(text.headlines.inflation[h.trend], n ?? 0);
     case 'property':
       return text.headlines.property[h.trend].replace('{city}', names.cities[h.cityId]);
     case 'asset':

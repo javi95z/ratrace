@@ -1,6 +1,23 @@
 import type { AssetClass, CardCategory, CryptoPhase, DebtKind, FocusAction, InsuranceKind, LedgerLine, OptionLock, Regime, RejectReason, SkillId, Trend } from '@ratrace/engine';
 import type { BadgeGroup } from '../badges';
 
+/**
+ * What the famous say of the coming round. Each line says the same as the plain headline it stands
+ * for: crypto by its phase, an investment ({asset}) or homes in a city ({city}) going up or down,
+ * prices rising.
+ */
+export interface CelebHeadlines {
+  mosk: { bull: string; mania: string; up: string; down: string };
+  nakamoro: { accumulation: string; winter: string };
+  bufe: { up: string; down: string };
+  bozos: { up: string; down: string };
+  zuckerbot: { up: string; down: string };
+  ortiga: { up: string; down: string };
+  kardashion: { up: string; down: string };
+  poutine: { up: string; down: string; inflation: string };
+  grump: { up: string; down: string };
+}
+
 export interface CardText {
   title: string;
   body: string;
@@ -51,6 +68,8 @@ export interface ContentText {
     asset: Record<'up' | 'down', string>;
     /** With {city}. */
     taxes: Record<Trend, string>;
+    /** Some of the same news said by one of the famous, as `headlineVoice` picks them: {asset} and {city} as above. */
+    celebs: CelebHeadlines;
     /** Filler that tells nothing of what is coming, as many as `world.noiseHeadlines`. */
     noise: string[];
     /** The government at work, as many as `world.governmentHeadlines`. */

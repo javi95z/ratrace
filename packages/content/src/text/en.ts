@@ -288,6 +288,47 @@ export const en: ContentText = {
       down: '{city} weighs a tax cut',
       flat: '{city} will leave taxes alone, says its government',
     },
+    celebs: {
+      mosk: {
+        bull: 'Elon Mosk posts a rocket and a coin: crypto is taking off, he says',
+        mania: 'Elon Mosk makes a dog his profile picture and swears crypto is going to the Moon',
+        up: 'Elon Mosk promises {asset} will reach Mars, and the market believes him',
+        down: 'Elon Mosk picks a fight with half the internet; investors flee {asset}',
+      },
+      nakamoro: {
+        accumulation: 'Satoshi Nakamoro is buying quietly, they say; crypto stays asleep',
+        winter: 'A message signed by Satoshi Nakamoro warns: "Winter is coming"',
+      },
+      bufe: {
+        up: 'Warren Bufé buys {asset} "for ever", between sips of cola',
+        down: 'Warren Bufé sells {asset}: "I don\'t invest in what I don\'t understand"',
+      },
+      bozos: {
+        up: 'Jeff Bozos fills another giant warehouse, and {asset} climbs with it',
+        down: 'Jeff Bozos sells {asset} shares to pay for another rocket',
+      },
+      zuckerbot: {
+        up: 'Mark Zuckerbot, without blinking: "The whole future runs through {asset}"',
+        down: 'Mark Zuckerbot sells his {asset} shares without moving a muscle',
+      },
+      ortiga: {
+        up: 'Amancio Ortiga opens shops across half the world, and {asset} cheers',
+        down: 'Amancio Ortiga sees empty shops: hard times for {asset}',
+      },
+      kardashion: {
+        up: 'Kim Kardashion wears nothing but {asset} in her photos; her fans rush to buy',
+        down: 'Kim Kardashion unfollows {asset}, and so do her fans',
+      },
+      poutine: {
+        up: 'Vladimir Poutine fills the Kremlin basement with gold; central banks follow',
+        down: 'Vladimir Poutine sells his gold to pay for another long table',
+        inflation: 'Vladimir Poutine turns off the gas: power and petrol are going up',
+      },
+      grump: {
+        up: 'Ronald Grump buys half of {city}: "Prices will go up like never before, believe me"',
+        down: 'Ronald Grump sells everything he has in {city}: "A total disaster"',
+      },
+    },
     noise: [
       'Study confirms Mondays are longer than Fridays',
       'Record: a squirrel crosses Central Park without touching the grass',

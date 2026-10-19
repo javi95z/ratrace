@@ -84,6 +84,8 @@ interface Options {
   finishPerSync?: number;
   /** Where the lives given up are noted until the account has been told, so that closing the page does not forget them. */
   remember?: { read(): string[]; write(ids: string[]): void };
+  /** Where the finished lives the server would not take are noted, so that a page opened anew does not send them again. */
+  keepRefused?: { read(): string[]; write(ids: string[]): void };
 }
 
 /** What the account held when it was last read, kept up with what has been sent to it since. */
@@ -100,6 +102,8 @@ const NEXT_FEW = 5_000;
 /** How long after a failure the first new try comes. Each one after waits twice as long, up to the longest. */
 const RETRY = 30_000;
 const LONGEST_RETRY = 300_000;
+/** How many refused lives the device keeps a note of. A player has never lived as many. */
+const KEPT_REFUSALS = 200;
 
 const asRun = (run: CloudRun): FinishedRun => ({
   format: SAVE_FORMAT,
@@ -163,8 +167,11 @@ export class MirroredStore implements PlayerStore, AccountSaves {
   private known: Known | null = null;
   /** The life last sent and how it stood, so that nothing is sent when there is nothing new to say. */
   private sent: string | null = null;
-  /** Finished lives the server would not take. They are not sent to it again until the page is opened anew. */
-  private readonly refused = new Set<string>();
+  /**
+   * Finished lives the server would not take, by their ids on the device. Asked again it would say
+   * the same, whoever is signed in, so they are not sent again: not by this page, nor by the next.
+   */
+  private readonly refused: Set<string>;
   /** Pairs of versions the server said it does not hold. No life on them is sent until the page is opened anew. */
   private readonly unheld = new Set<string>();
 
@@ -180,6 +187,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
     private readonly options: Options,
   ) {
     this.abandoned = new Set(options.remember?.read() ?? []);
+    this.refused = new Set(options.keepRefused?.read() ?? []);
   }
 
   // ------------------------------------------------------------------ the device, as it always was
@@ -292,10 +300,15 @@ export class MirroredStore implements PlayerStore, AccountSaves {
    */
   readonly accountChanged = (): Promise<void> => {
     this.known = null;
-    this.refused.clear();
     this.setOffer(null);
     return this.run('meet');
   };
+
+  /** Notes a life the server would not finish, here and where the device keeps such notes: the latest few hundred. */
+  private refuse(runId: string): void {
+    this.refused.add(runId);
+    this.options.keepRefused?.write([...this.refused].slice(-KEPT_REFUSALS));
+  }
 
   // ------------------------------------------------------------------ when it runs
   private later(run: () => Promise<void>, ms: number): void {
@@ -595,7 +608,7 @@ export class MirroredStore implements PlayerStore, AccountSaves {
       // It answered, and would not: asking again will not change its mind. What it will not finish
       // is not left in the account as a life being played, where another device would be offered it.
       if (answer === 'unknown-version') this.unheld.add(versionsOf(run));
-      else this.refused.add(id);
+      else this.refuse(run.runId);
       await cloud.abandonGame(id);
     }
 

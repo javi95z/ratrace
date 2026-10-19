@@ -288,6 +288,47 @@ export const es: ContentText = {
       down: '{city} estudia bajar los impuestos',
       flat: '{city} no tocará los impuestos, dice su gobierno',
     },
+    celebs: {
+      mosk: {
+        bull: 'Elon Mosk tuitea un cohete y una moneda: las cripto despegan, asegura',
+        mania: 'Elon Mosk pone un perro en su perfil y jura que las cripto llegarán a la Luna',
+        up: 'Elon Mosk promete que {asset} llegará a Marte, y la bolsa le cree',
+        down: 'Elon Mosk discute con medio internet y los inversores huyen de {asset}',
+      },
+      nakamoro: {
+        accumulation: 'Satoshi Nakamoro compra en silencio, dicen; las cripto siguen dormidas',
+        winter: 'Un mensaje firmado por Satoshi Nakamoro avisa: «Se acerca el invierno»',
+      },
+      bufe: {
+        up: 'Warren Bufé compra {asset} «para siempre», entre sorbo y sorbo de cola',
+        down: 'Warren Bufé vende {asset}: «No invierto en lo que no entiendo»',
+      },
+      bozos: {
+        up: 'Jeff Bozos llena otro almacén gigante y {asset} sube con él',
+        down: 'Jeff Bozos vende acciones de {asset} para pagarse otro cohete',
+      },
+      zuckerbot: {
+        up: 'Mark Zuckerbot, sin parpadear: «Todo el futuro pasa por {asset}»',
+        down: 'Mark Zuckerbot vende sus acciones de {asset} sin mover un músculo',
+      },
+      ortiga: {
+        up: 'Amancio Ortiga abre tiendas por medio mundo y {asset} lo celebra',
+        down: 'Amancio Ortiga ve las tiendas vacías: malos tiempos para {asset}',
+      },
+      kardashion: {
+        up: 'Kim Kardashion solo viste {asset} en sus fotos y sus fans corren a comprar',
+        down: 'Kim Kardashion deja de seguir a {asset}, y sus fans también',
+      },
+      poutine: {
+        up: 'Vladimir Poutine llena de oro el sótano del Kremlin; los bancos centrales le imitan',
+        down: 'Vladimir Poutine vende su oro para pagarse otra mesa larga',
+        inflation: 'Vladimir Poutine cierra el grifo del gas: la luz y la gasolina subirán',
+      },
+      grump: {
+        up: 'Ronald Grump compra media {city}: «Los pisos subirán como nunca, créanme»',
+        down: 'Ronald Grump vende todo lo que tiene en {city}: «Un desastre total»',
+      },
+    },
     noise: [
       'Un estudio confirma que los lunes son más largos que los viernes',
       'Récord: una ardilla cruza Central Park sin pisar el césped',

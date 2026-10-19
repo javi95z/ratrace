@@ -4,7 +4,7 @@ import { MemoryStore } from '@ratrace/core/session/memory';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { ErrorReport } from '@ratrace/online/errors';
-import { browserOnline, browserPage, givenUpIn, onlineOver, watchErrors } from './index';
+import { browserOnline, browserPage, givenUpIn, onlineOver, refusedIn, watchErrors } from './index';
 import { offlineAccount } from '@ratrace/online/offline';
 import type { Cloud } from '@ratrace/online/supabase';
 
@@ -196,6 +196,13 @@ describe('the cloud of this browser', () => {
     expect(note.read()).toEqual(['a-1', 'a-3']);
     window.localStorage.setItem('ratrace:given-up', JSON.stringify({ not: 'a list' }));
     expect(note.read()).toEqual([]);
+  });
+
+  it('keeps the note of lives the server refused under a key of its own', () => {
+    refusedIn(() => window.localStorage).write(['r-1']);
+    expect(refusedIn(() => window.localStorage).read()).toEqual(['r-1']);
+    expect(window.localStorage.getItem('ratrace:refused')).toBe('["r-1"]');
+    expect(givenUpIn(() => window.localStorage).read()).not.toContain('r-1');
   });
 
   it('plays on in a browser that keeps nothing: the note is simply not kept', () => {

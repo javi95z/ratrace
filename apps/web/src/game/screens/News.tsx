@@ -123,21 +123,26 @@ export function Headlines() {
           <div aria-hidden className="h-px bg-ink-900" />
         </header>
         <ul>
-          {world.news.map((h, i) => (
-            // One story after another, each under a rule, as the columns of a page.
-            <li key={i} className={`flex items-center gap-2.5 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
-              <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 ${headlineArt(h).startsWith('celeb.') ? '' : 'p-1'} ${TOPIC[h.topic]}`}>
-                {/* A story about one of the famous carries their portrait, the whole box; any other, its topic's icon. */}
-                <Sprite id={headlineArt(h)} className={headlineArt(h).startsWith('celeb.') ? '!h-full !w-full' : ''} />
-              </span>
-              <span className="min-w-0">
-                <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
-                  {t(`topics.${h.topic}`)}
+          {world.news.map((h, i) => {
+            // The same number picks the words and, when one of the famous says them, the portrait.
+            const art = headlineArt(h, view.round + i);
+            const famous = art.startsWith('celeb.');
+            return (
+              // One story after another, each under a rule, as the columns of a page.
+              <li key={i} className={`flex items-center gap-2.5 py-1.5 ${i > 0 ? 'border-t border-dashed border-ink-300' : ''}`}>
+                <span aria-hidden className={`flex size-11 shrink-0 items-center justify-center overflow-hidden border border-ink-900 ${famous ? '' : 'p-1'} ${TOPIC[h.topic]}`}>
+                  {/* A story about one of the famous, or told by one, carries their portrait, the whole box; any other, its topic's icon. */}
+                  <Sprite id={art} className={famous ? '!h-full !w-full' : ''} />
                 </span>
-                <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{headlineText(words, h, view.round + i)}</span>
-              </span>
-            </li>
-          ))}
+                <span className="min-w-0">
+                  <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
+                    {t(`topics.${h.topic}`)}
+                  </span>
+                  <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{headlineText(words, h, view.round + i)}</span>
+                </span>
+              </li>
+            );
+          })}
           {told ? (
             <li className="flex items-center gap-2.5 border-t border-dashed border-ink-300 py-1.5">
               {/* A story of the game with friends shows the rat it is about. */}

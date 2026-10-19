@@ -1,4 +1,5 @@
 import type { ChallengeRule } from './challenges';
+import type { CelebHeadlines } from './text/types';
 import type { DebtKind, FocusAction, Headline, InsuranceKind, ItemPerks, SkillId } from '@ratrace/engine';
 
 /**
@@ -304,10 +305,56 @@ export const focusArt: Record<FocusAction, string> = {
 export const CELEB_HEADLINES_FROM = 38;
 /** The famous, by the ids of their portraits. */
 export const CELEB_ART = ['mosk', 'grump', 'poutine', 'bufe', 'bozos', 'zuckerbot', 'puertas', 'nakamoro', 'kardashion', 'mrfeast', 'ronalgo', 'swiftly', 'bellfort', 'ortiga'].map((id) => `celeb.${id}`);
-/** The picture beside a headline: the portrait of the famous one it is about, or the icon of its topic. */
-export function headlineArt(h: Headline): string {
+/** One of the famous saying a headline: who, and which of their lines (`CelebHeadlines`) says it. */
+export type HeadlineVoice = { [C in keyof CelebHeadlines]: { celeb: C; line: keyof CelebHeadlines[C] } }[keyof CelebHeadlines];
+
+/** Who speaks for an investment when its news is theirs to tell. */
+const ASSET_VOICES: Readonly<Record<string, 'mosk' | 'bufe' | 'bozos' | 'zuckerbot' | 'ortiga' | 'kardashion'>> = {
+  sp500: 'bufe',
+  msci_world: 'bufe',
+  coca_cola: 'bufe',
+  amazon: 'bozos',
+  tesla: 'mosk',
+  apple: 'zuckerbot',
+  microsoft: 'zuckerbot',
+  nvidia: 'zuckerbot',
+  inditex: 'ortiga',
+  lvmh: 'kardashion',
+};
+
+/**
+ * Which of the famous says a headline, if one does: the same news in their mouth, true or false
+ * as the plain one would be. Only the words and the picture change, never what the news tells, so
+ * no life's rules do. `n` is what the screen passes to vary the wording; on every other one the
+ * famous speak, so the plain headlines are still read.
+ */
+export function headlineVoice(h: Headline, n: number): HeadlineVoice | null {
+  if (n % 2 !== 0) return null;
+  switch (h.topic) {
+    case 'crypto':
+      return h.phase === 'bull' || h.phase === 'mania' ? { celeb: 'mosk', line: h.phase } : { celeb: 'nakamoro', line: h.phase };
+    case 'asset': {
+      if (h.assetId === 'gold') return { celeb: 'poutine', line: h.trend };
+      const celeb = ASSET_VOICES[h.assetId];
+      return celeb === undefined ? null : { celeb, line: h.trend };
+    }
+    case 'property':
+      return { celeb: 'grump', line: h.trend };
+    case 'inflation':
+      return h.trend === 'up' ? { celeb: 'poutine', line: 'inflation' } : null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * The picture beside a headline: the portrait of the famous one it is about or who says it, or the
+ * icon of its topic. `n` is the one its words were chosen with (see `headlineVoice`).
+ */
+export function headlineArt(h: Headline, n?: number): string {
   if (h.topic === 'noise' && h.id >= CELEB_HEADLINES_FROM) return CELEB_ART[h.id - CELEB_HEADLINES_FROM] ?? topicArt.noise;
-  return topicArt[h.topic];
+  const voice = n === undefined ? null : headlineVoice(h, n);
+  return voice === null ? topicArt[h.topic] : `celeb.${voice.celeb}`;
 }
 
 /** What a headline is about. */

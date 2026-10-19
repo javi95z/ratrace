@@ -42,6 +42,8 @@ export interface OnlineParts {
   page: Page;
   /** Where the lives given up are noted until the account has been told. */
   remember: { read(): string[]; write(ids: string[]): void };
+  /** Where the finished lives the server would not take are noted, so they are not sent again. */
+  keepRefused?: { read(): string[]; write(ids: string[]): void };
   schedule?(run: () => Promise<void>, ms: number): void;
   /** Makes an id for a life the account will not take under its own. */
   newId(): string;
@@ -54,7 +56,7 @@ export interface OnlineParts {
  */
 export function onlineOver(device: PlayerStore, parts: OnlineParts): Online {
   const account = new SupabaseAccount(parts.connect, parts.address, parts.clean);
-  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, schedule: parts.schedule, newId: parts.newId });
+  const mirror = new MirroredStore(device, account.cloud, { content, lives, versions: { engine: ENGINE_VERSION, content: CONTENT_VERSION }, remember: parts.remember, keepRefused: parts.keepRefused, schedule: parts.schedule, newId: parts.newId });
   follow(account, mirror, parts.page);
   return {
     account,
@@ -89,15 +91,14 @@ export function watchErrors(online: Pick<Online, 'account' | 'reportErrors'>, pa
 }
 
 /**
- * Where the lives given up are noted in a browser, until the account has been told: a list of ids
- * under one key. A browser that keeps nothing forgets them with the page, and the game plays on.
+ * A list of ids a browser keeps under one key. A browser that keeps nothing forgets them with the
+ * page, and the game plays on: what was to be noted is then only said again, or sent again.
  */
-const GIVEN_UP = 'ratrace:given-up';
-export function givenUpIn(storage: () => Storage): { read(): string[]; write(ids: string[]): void } {
+function idsIn(storage: () => Storage, key: string): { read(): string[]; write(ids: string[]): void } {
   return {
     read() {
       try {
-        const noted: unknown = JSON.parse(storage().getItem(GIVEN_UP) ?? '[]');
+        const noted: unknown = JSON.parse(storage().getItem(key) ?? '[]');
         return Array.isArray(noted) ? noted.filter((id): id is string => typeof id === 'string') : [];
       } catch {
         return [];
@@ -105,13 +106,18 @@ export function givenUpIn(storage: () => Storage): { read(): string[]; write(ids
     },
     write(ids) {
       try {
-        storage().setItem(GIVEN_UP, JSON.stringify(ids));
+        storage().setItem(key, JSON.stringify(ids));
       } catch {
-        // Nothing to do: the life is given up in the account if the page lives long enough to say so.
+        // Nothing to do: see above.
       }
     },
   };
 }
+
+/** Where the lives given up are noted in a browser, until the account has been told. */
+export const givenUpIn = (storage: () => Storage) => idsIn(storage, 'ratrace:given-up');
+/** Where the finished lives the server would not take are noted in a browser, so that no page sends them again. */
+export const refusedIn = (storage: () => Storage) => idsIn(storage, 'ratrace:refused');
 
 /** What the browser tells of the page. */
 export const browserPage: Page = {
@@ -149,6 +155,7 @@ export function browserOnline(device: PlayerStore): Online {
     clean: (address) => window.history.replaceState(window.history.state, '', address),
     page: browserPage,
     remember: givenUpIn(() => window.localStorage),
+    keepRefused: refusedIn(() => window.localStorage),
     newId: () => crypto.randomUUID(),
   });
   // Out of production, an error is the developer's to read in the console, not to send. It lasts as long as the page,

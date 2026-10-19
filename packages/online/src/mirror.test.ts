@@ -701,6 +701,25 @@ describe('the mirror', { timeout: 60_000 }, () => {
     expect(late.status()).toBe('saved');
   });
 
+  it('keeps a refusal where the device keeps such notes: a page opened anew, or another account, does not send that life again', async () => {
+    const { cloud, state } = fakeCloud();
+    const d = device(null);
+    for (let i = 0; i < 2; i++) await play(await d.sessions.start('nurse'), content.rounds);
+    const [later, sooner] = (await d.store.listRuns()).map((run) => run.runId);
+    state.refuses.add(later);
+    let kept: string[] = [];
+    const keepRefused = { read: () => kept, write: (ids: string[]) => void (kept = ids) };
+    const first = new MirroredStore(d.store, () => cloud, { content, lives, versions: VERSIONS, schedule: () => {}, keepRefused, newId: () => 'never' });
+    await first.sync();
+    expect(kept).toEqual([later]);
+    const next = new MirroredStore(d.store, () => cloud, { content, lives, versions: VERSIONS, schedule: () => {}, keepRefused, newId: () => 'never' });
+    await next.sync();
+    await next.accountChanged();
+    expect(state.asked.filter((line) => line === `finish ${later}`)).toHaveLength(1);
+    expect(state.runs.map((run) => run.id)).toEqual([sooner]);
+    expect(next.status()).toBe('saved');
+  });
+
   it('waits, and sends nothing more, when the server cannot be asked to finish a life', async () => {
     const { cloud, state } = fakeCloud();
     const d = device(null);

@@ -1,6 +1,6 @@
 import { content, lives, textFor } from '@ratrace/content';
 import { createGame, viewOf } from '@ratrace/engine';
-import type { Effects, GameEvent, Order } from '@ratrace/engine';
+import type { Effects, GameEvent, Headline, Order } from '@ratrace/engine';
 import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { formatFor } from '@ratrace/core/lib/format';
@@ -36,6 +36,17 @@ describe('headlineText', () => {
     expect(headlineText(w, { topic: 'rates', trend: 'up' })).toBe('Central bank hints at higher rates');
     expect(headlineText(w, { topic: 'property', cityId: 'new_york', trend: 'down' })).toBe('Estate agents in New York see prices falling');
     expect(headlineText(words('es'), { topic: 'property', cityId: 'new_york', trend: 'up' })).toBe('Las inmobiliarias de Nueva York ven subir los precios');
+  });
+
+  it('lets one of the famous say the same news on every other one, the name filled in', () => {
+    const w = words('en');
+    const amazon: Headline = { topic: 'asset', assetId: 'amazon', trend: 'up' };
+    expect(headlineText(w, amazon, 2)).toBe('Jeff Bozos fills another giant warehouse, and Amazon climbs with it');
+    expect(headlineText(w, amazon, 3)).toBe('Analysts say buy Amazon');
+    expect(headlineText(words('es'), { topic: 'property', cityId: 'new_york', trend: 'down' }, 4)).toBe('Ronald Grump vende todo lo que tiene en Nueva York: «Un desastre total»');
+    expect(headlineText(words('ru'), { topic: 'crypto', phase: 'winter' }, 0)).toBe('Сообщение за подписью Сатоси Накаморо: «Зима близко»');
+    // News nobody famous has a line for reads as it always did.
+    expect(headlineText(w, { topic: 'rates', trend: 'up' }, 0)).toBe('Central bank hints at higher rates');
   });
 });
 
