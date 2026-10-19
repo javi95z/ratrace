@@ -12,7 +12,7 @@ import { InstallApp, useInstallOffer } from '@/pwa/InstallApp';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
-import { WeeklyChallengeCard } from './Challenge';
+import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
 import { HomePreferences, HomeSettingsPanel } from './Settings';
 
@@ -48,6 +48,9 @@ export function Home() {
   const install = useInstallOffer();
   // A life that is over stays on the device until another begins, so its score can still be looked at.
   const over = status === 'playing' && view !== null && view.finished;
+  // The week's challenge has one button: carrying on with a life of it stands for it, attempt or practice.
+  const week = useThisWeek();
+  const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
 
   // The life waiting in the account, lived on another device. It is taken or ended only when the player says so.
   const answer = (how: () => Promise<unknown>, then?: () => void) => () => {
@@ -112,7 +115,7 @@ export function Home() {
             >
               {t('newLife')}
             </Link>
-            <WeeklyChallengeCard />
+            {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
             {over ? (
               <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">

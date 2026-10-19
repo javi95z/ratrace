@@ -34,6 +34,9 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
   const city = content.cities.find((each) => each.id === shown.player.cityId);
   const tax = city ? effectiveTax(city, shown.timeline[shown.round]) : null;
   const gainsBp = tax?.capitalGainsBp ?? 0;
+  // What an offshore company cuts is the tax on investments: gains, dividends (at the residency's rate, where one is held) and rent taxed apart from salary.
+  const dividendBp = shown.player.life.residency && city?.residency ? city.residency.dividendBp : (tax?.dividendBp ?? 0);
+  const investmentTaxed = tax !== null && (gainsBp > 0 || dividendBp > 0 || (!tax.rentAsIncome && tax.rentBp > 0));
   // Where nothing is taxed there is nothing to hide, unless something hidden elsewhere is still in force.
   const taxFree = tax !== null && [...tax.incomeRatesBp, tax.capitalGainsBp, tax.dividendBp, tax.rentBp].every((rate) => rate === 0);
   const setOrder = useGame((s) => s.setOrder);
@@ -66,8 +69,8 @@ export function EvasionPanel({ shown, preview }: { shown: GameView; preview: Rou
           options={quote.blackPcts.map((pct) => ({ value: pct, label: pct === 0 ? t('blackNone') : t('blackPct', { pct }), disabled: pct > 0 && !quote.canBlack }))}
         />
         <p className="-mt-1 text-[12px] text-ink-300">{quote.canBlack ? (quote.blackPct > 0 ? saved(quote.evaded.black) : t('blackHint')) : t('blackNoJob')}</p>
-        {/* An offshore company is offered only to someone who knows how to run one, or who already has one. */}
-        {quote.shell || quote.shellLock === null ? (
+        {/* An offshore company is offered only to someone who knows how to run one, where investments are taxed, or to whoever already has one. */}
+        {quote.shell || (quote.shellLock === null && investmentTaxed) ? (
           <Toggle
             on={quote.shell}
             onChange={(shell) => change({ shell })}

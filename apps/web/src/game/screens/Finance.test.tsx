@@ -1078,6 +1078,26 @@ describe('what is not declared', () => {
     expect(within(panel).queryByRole('switch', { name: /^Offshore company/ })).toBeNull();
   });
 
+  it('offers an offshore company only where investments are taxed', async () => {
+    // The same lives, having learnt to run one.
+    const skilled = async (lifeId: string) => {
+      const { services, session } = await inFinance(lifeId);
+      const view = (): GameView => ({ ...session.view(), player: { ...session.view().player, life: { ...session.view().player.life, financeSkill: 3 } } });
+      const investor: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+      services.sessions.resume = async () => ({ lost: null, session: investor });
+      setWidth('desk');
+      const user = userEvent.setup();
+      renderGame(<Play />, services);
+      await user.click(await screen.findByRole('tab', { name: 'Taxes' }));
+      const offered = within(screen.getByRole('region', { name: 'What you do not declare' })).queryByRole('switch', { name: /^Offshore company/ }) !== null;
+      cleanup();
+      return offered;
+    };
+    // Madrid taxes gains, dividends and rent; Singapore taxes none of them, and rent only with the salary.
+    expect(await skilled('nurse')).toBe(true);
+    expect(await skilled('crypto_kid')).toBe(false);
+  });
+
   it('offers to hide crypto gains only where gains are taxed', async () => {
     // The crypto kid begins where a gain pays nothing: there is nothing to hide.
     const { panel } = await openTaxes('crypto_kid');
