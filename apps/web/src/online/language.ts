@@ -1,5 +1,5 @@
 import { routing } from '@/i18n/routing';
-import type { Account, Community } from './types';
+import type { Account, Community } from '@ratrace/online/types';
 
 /** Where this device notes whose account it last saw signed in. */
 const LAST_ACCOUNT = 'ratrace.lastAccount';

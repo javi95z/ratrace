@@ -190,6 +190,11 @@ interface Log {
   error(...args: unknown[]): void;
 }
 
+/** What a page tells of an error nobody caught: a browser's `ErrorEvent`. */
+type Uncaught = Event & { message?: unknown; error?: unknown; filename?: string; lineno?: number; colno?: number };
+/** What a page tells of a promise nobody handled: a browser's `PromiseRejectionEvent`. */
+type Unhandled = Event & { reason?: unknown };
+
 /**
  * Has the watch hear what goes wrong on a page: errors nobody caught, promises nobody handled, and
  * everything written as an error, which is still written. A fault of the watch never reaches the
@@ -206,13 +211,13 @@ export function watchPage(watch: Pick<ErrorWatch, 'report'>, page: EventTarget, 
   };
   const uncaught = (event: Event) =>
     heard(() => {
-      const { message, error, filename, lineno, colno } = event as ErrorEvent;
+      const { message, error, filename, lineno, colno } = event as Uncaught;
       const stack = error instanceof Error && typeof error.stack === 'string' ? error.stack : filename ? `at ${filename}:${lineno}:${colno}` : null;
       return { message: typeof message === 'string' && message !== '' ? message : errorOf([error]).message, stack };
     });
   const unhandled = (event: Event) =>
     heard(() => {
-      const { message, stack } = errorOf([(event as PromiseRejectionEvent).reason]);
+      const { message, stack } = errorOf([(event as Unhandled).reason]);
       return { message: `unhandled: ${message}`, stack };
     });
   const original = log.error;

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { followAccountLanguage, inLanguage, languageOnSignIn } from './language';
-import type { Account, AccountState, Community } from './types';
+import type { Account, AccountState, Community } from '@ratrace/online/types';
 
 afterEach(() => window.localStorage.clear());
 

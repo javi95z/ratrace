@@ -1,9 +1,4 @@
-/**
- * Proof, for the cloud, that a person is at the door. Where the project asks for one, a guest is
- * made only with it. Resolves the word to hand over, good once, or null if none could be had. It
- * never throws.
- */
-export type Captcha = () => Promise<string | null>;
+import type { Captcha } from '@ratrace/online/connect';
 
 /** The part of Cloudflare's Turnstile this game uses. */
 interface Turnstile {

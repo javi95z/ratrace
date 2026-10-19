@@ -199,7 +199,7 @@ try {
   check(kept.error === null && readBack.data?.length === 1 && seenByOther.data?.length === 0, 'a player keeps what they have unlocked, and only they can read it');
 
   // Cloud saves, through the game's own code: one player on two devices, and another player beside them.
-  const adapter = fileURLToPath(new URL('../../../apps/web/src/online/connect.ts', import.meta.url));
+  const adapter = fileURLToPath(new URL('../../../packages/online/src/connect.ts', import.meta.url));
   const { cloudOf } = (await import(adapter)) as { cloudOf(client: unknown): GameCloud };
   const session = (await a.auth.getSession()).data.session;
   if (!session) throw new Error('the first guest has no session to take to a second device');

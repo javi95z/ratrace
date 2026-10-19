@@ -39,17 +39,34 @@ export default [
     },
   },
   {
-    // The game's logic is shared by every app: nothing of React, Next or a browser in it, and nothing of the web's own.
+    // The game's logic and its client of the servers are shared by every app: nothing of React, Next or a browser in
+    // them, and nothing of the web's own.
+    files: ['packages/core/src/**/*.ts', 'packages/online/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['react', 'react-dom', 'next', 'next-intl', 'idb'],
+          patterns: [{ group: ['@/*', 'next/*', 'react/*', 'apps/*'], message: 'The core and the online client are shared by every app: they import nothing of one of them.' }],
+        },
+      ],
+      'no-restricted-globals': ['error', 'window', 'document', 'localStorage', 'sessionStorage', 'indexedDB', 'navigator'],
+    },
+  },
+  {
+    // The core works with no server: what talks to one is built on it, never the other way round.
     files: ['packages/core/src/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           paths: ['react', 'react-dom', 'next', 'next-intl', 'idb'],
-          patterns: [{ group: ['@/*', 'next/*', 'react/*', 'apps/*'], message: 'The core is shared by every app: it imports nothing of one of them.' }],
+          patterns: [
+            { group: ['@/*', 'next/*', 'react/*', 'apps/*'], message: 'The core and the online client are shared by every app: they import nothing of one of them.' },
+            { group: ['@ratrace/online', '@ratrace/online/*', '@supabase/*'], message: 'The core works with no server: the online client is built on it, not the other way round.' },
+          ],
         },
       ],
-      'no-restricted-globals': ['error', 'window', 'document', 'localStorage', 'sessionStorage', 'indexedDB', 'navigator'],
     },
   },
   {

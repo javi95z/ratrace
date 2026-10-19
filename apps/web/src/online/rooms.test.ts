@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { RoomRefused } from '@ratrace/core/session/room';
 import { Unreachable } from '@ratrace/core/session/errors';
 import { roomServer } from '@/testing/roomServer';
-import { roomOf, roomsApi } from './rooms';
+import { roomOf, roomsApi } from '@ratrace/online/rooms';
 
 const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';

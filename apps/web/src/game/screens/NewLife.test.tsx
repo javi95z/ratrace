@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { Account, AccountState } from '@/online/types';
+import type { Account, AccountState } from '@ratrace/online/types';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { RankedSessions } from '@ratrace/core/session/ranked';

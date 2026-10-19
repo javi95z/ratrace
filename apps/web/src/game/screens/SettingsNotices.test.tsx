@@ -3,7 +3,7 @@ import { cleanup, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { CSSProperties, ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Community } from '@/online/types';
+import type { Community } from '@ratrace/online/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Preferences } from './Settings';
 

@@ -4,7 +4,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
+import type { Account, AccountState, ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { ChallengeResult, topTenth, WeeklyChallenge, WeeklyChallengeCard } from './Challenge';

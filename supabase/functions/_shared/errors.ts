@@ -52,7 +52,7 @@ const WORD = /[^\s'")]+/g;
  * ids, machines' addresses, long numbers, and whatever follows `?` or `#` in an address or a path.
  * What an error says to be useful, its words and where in the code it happened, stays. Every rule
  * takes a time that grows with the text, never with its square: the text is anyone's. The page
- * cleans the same way before it sends (`apps/web/src/online/errors.ts`); a test holds them together.
+ * cleans the same way before it sends (`packages/online/src/errors.ts`); a test holds them together.
  */
 export function scrub(text: string): string {
   return text

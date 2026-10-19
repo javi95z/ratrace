@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { upToDateView } from '@/online/rooms';
+import { upToDateView } from '@ratrace/online/rooms';
 import { newer } from '@ratrace/core/game/room';
 
 describe('games on other rules', () => {

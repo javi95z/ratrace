@@ -3,9 +3,9 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SupabaseAccount } from '@/online/supabase';
-import type { Cloud } from '@/online/supabase';
-import type { Account, AccountSaves, AccountState, CloudSaving } from '@/online/types';
+import { SupabaseAccount } from '@ratrace/online/supabase';
+import type { Cloud } from '@ratrace/online/supabase';
+import type { Account, AccountSaves, AccountState, CloudSaving } from '@ratrace/online/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Preferences } from './Settings';
 

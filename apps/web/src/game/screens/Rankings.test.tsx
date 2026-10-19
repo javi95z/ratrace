@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
-import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@/online/types';
+import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@ratrace/online/types';
 import { formatFor } from '@ratrace/core/lib/format';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Rankings } from './Rankings';

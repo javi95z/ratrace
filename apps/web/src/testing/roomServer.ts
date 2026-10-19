@@ -5,7 +5,7 @@ import { canonical } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rooms } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { LoanRow, MemberRow, RoomGameRow, RoomNotice, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { Reply } from '../../../../supabase/functions/_shared/replay.ts';
-import { roomsApi } from '@/online/rooms';
+import { roomsApi } from '@ratrace/online/rooms';
 import type { RoomsLink } from '@ratrace/core/session/room';
 
 /** A member as the database keeps them, with the room they are in. */

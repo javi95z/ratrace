@@ -1,5 +1,4 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import type { Captcha } from './captcha';
 import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
@@ -77,6 +76,13 @@ async function wordOf(error: unknown): Promise<string | null> {
     return null;
   }
 }
+
+/**
+ * Proof, for the cloud, that a person is at the door. Where the project asks for one, a guest is
+ * made only with it. Resolves the word to hand over, good once, or null if none could be had. It
+ * never throws.
+ */
+export type Captcha = () => Promise<string | null>;
 
 /** What a build may say about its cloud beyond where it is. */
 export interface CloudOptions {

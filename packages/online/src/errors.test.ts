@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scrub as scrubOnTheServer } from '../../../../supabase/functions/_shared/errors.ts';
+import { scrub as scrubOnTheServer } from '../../../supabase/functions/_shared/errors.ts';
 import { browserOf, buildOf, errorOf, errorWatch, scrub, watchPage } from './errors';
 import type { ErrorReport, Sent } from './errors';
 

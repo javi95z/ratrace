@@ -20,7 +20,7 @@
     "@ratrace/core": "workspace:*",
     "@ratrace/engine": "workspace:*",
     "@ratrace/i18n": "workspace:*",
-    "@supabase/supabase-js": "2.117.2",
+    "@ratrace/online": "workspace:*",
     "idb": "^8.0.4",
     "motion": "^14.1.0",
     "next": "16.4.0",

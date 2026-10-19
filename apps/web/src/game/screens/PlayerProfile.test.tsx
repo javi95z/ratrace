@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { avatarOf, mayWear, ratColourOf, ratLookOf } from '@ratrace/core/game/avatar';
-import type { Account, AccountState, Community } from '@/online/types';
+import type { Account, AccountState, Community } from '@ratrace/online/types';
 import { memoryServices, renderGame } from '@/testing/render';
 import { PlayerProfile } from './PlayerProfile';
 

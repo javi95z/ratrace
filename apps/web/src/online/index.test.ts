@@ -3,15 +3,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { ErrorReport } from './errors';
+import type { ErrorReport } from '@ratrace/online/errors';
 import { browserOnline, browserPage, givenUpIn, onlineOver, watchErrors } from './index';
-import { offlineAccount } from './offline';
-import type { Cloud } from './supabase';
+import { offlineAccount } from '@ratrace/online/offline';
+import type { Cloud } from '@ratrace/online/supabase';
 
 const connected = vi.hoisted(() => [] as unknown[][]);
 // The guard at the door, as this test knows it: by the site it was made for.
 vi.mock('./captcha', () => ({ turnstile: (siteKey: string) => `the guard of ${siteKey}` }));
-vi.mock('./connect', () => ({
+vi.mock('@ratrace/online/connect', () => ({
   connectSupabase: async (...values: unknown[]) => {
     connected.push(values);
     throw new Error('no network in a test');

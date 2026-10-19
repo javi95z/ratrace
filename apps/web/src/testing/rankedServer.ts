@@ -2,8 +2,8 @@ import type { RunRow } from '../../../../supabase/functions/_shared/finish.ts';
 import { CURRENT, GAMES } from '../../../../supabase/functions/_shared/game/index.ts';
 import { ranked } from '../../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../../supabase/functions/_shared/ranked.ts';
-import { rankedApi } from '@/online/ranked';
-import type { RankedCall } from '@/online/ranked';
+import { rankedApi } from '@ratrace/online/ranked';
+import type { RankedCall } from '@ratrace/online/ranked';
 
 /**
  * The server of ranked lives, in memory: the very logic the function runs, over a database kept

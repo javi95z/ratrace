@@ -4,16 +4,16 @@ import type { RankedApi } from '@ratrace/core/session/ranked';
 import type { RoomsLink } from '@ratrace/core/session/room';
 import type { PlayerStore } from '@ratrace/core/session/types';
 import { turnstile } from './captcha';
-import { connectSupabase } from './connect';
-import { browserOf, buildOf, errorWatch, watchPage } from './errors';
-import type { ErrorReport, Sent } from './errors';
-import { follow } from './follow';
-import type { Page } from './follow';
-import { MirroredStore } from './mirror';
-import { offlineAccount } from './offline';
-import { SupabaseAccount } from './supabase';
-import type { Cloud } from './supabase';
-import type { Account, AccountSaves, Community } from './types';
+import { connectSupabase } from '@ratrace/online/connect';
+import { browserOf, buildOf, errorWatch, watchPage } from '@ratrace/online/errors';
+import type { ErrorReport, Sent } from '@ratrace/online/errors';
+import { follow } from '@ratrace/online/follow';
+import type { Page } from '@ratrace/online/follow';
+import { MirroredStore } from '@ratrace/online/mirror';
+import { offlineAccount } from '@ratrace/online/offline';
+import { SupabaseAccount } from '@ratrace/online/supabase';
+import type { Cloud } from '@ratrace/online/supabase';
+import type { Account, AccountSaves, Community } from '@ratrace/online/types';
 
 /** What the game gets of the cloud: who is playing, the store to write to, and how the account's copy stands. */
 export interface Online {

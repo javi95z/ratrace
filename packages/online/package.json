@@ -1,0 +1,16 @@
+{
+  "name": "@ratrace/online",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@ratrace/content": "workspace:*",
+    "@ratrace/core": "workspace:*",
+    "@ratrace/engine": "workspace:*",
+    "@supabase/supabase-js": "2.117.2"
+  },
+  "sideEffects": false
+}

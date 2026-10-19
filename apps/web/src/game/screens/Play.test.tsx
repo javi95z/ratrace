@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
 import { ENGINE_VERSION, previewCard } from '@ratrace/engine';
 import { useGame } from '@/game/context';
-import type { Community } from '@/online/types';
+import type { Community } from '@ratrace/online/types';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import { RankedSessions } from '@ratrace/core/session/ranked';

@@ -56,9 +56,9 @@ importers:
       '@ratrace/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
-      '@supabase/supabase-js':
-        specifier: 2.117.2
-        version: 2.117.2
+      '@ratrace/online':
+        specifier: workspace:*
+        version: link:../../packages/online
       idb:
         specifier: ^8.0.4
         version: 8.0.4
@@ -146,6 +146,21 @@ importers:
   packages/engine: {}
 
   packages/i18n: {}
+
+  packages/online:
+    dependencies:
+      '@ratrace/content':
+        specifier: workspace:*
+        version: link:../content
+      '@ratrace/core':
+        specifier: workspace:*
+        version: link:../core
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@supabase/supabase-js':
+        specifier: 2.117.2
+        version: 2.117.2
 
   tools/art: {}
 

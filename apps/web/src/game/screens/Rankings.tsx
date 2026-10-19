@@ -6,7 +6,7 @@ import { useEffect, useId, useState } from 'react';
 import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { ageAt } from '@ratrace/core/game/present';
-import type { Community, Friend, RankedLifeDetail, RankingRow } from '@/online/types';
+import type { Community, Friend, RankedLifeDetail, RankingRow } from '@ratrace/online/types';
 import { Bare, Button, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';

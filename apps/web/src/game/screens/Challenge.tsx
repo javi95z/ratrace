@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useCommunity, useGame, useRanking, useT, useWords } from '@/game/context';
 import { ageAt } from '@ratrace/core/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
-import type { ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
+import type { ChallengeChoice, ChallengeRanking, Community } from '@ratrace/online/types';
 import { Button, Panel, Tag, Well } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
