@@ -104,8 +104,9 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
   return (
     <div className="flex flex-col gap-3">
       {/* The rat as it will be, and the tabs, held at the top of the screen while the choices scroll under them. */}
-      <div className="sticky z-10 -mx-3 -mt-1 flex items-center gap-3 bg-night-700 px-3 py-2" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
-        <span aria-hidden className={`flex size-16 shrink-0 overflow-hidden border-2 border-night-900 ${GROUND[look.colour]}`}>
+      {/* Inside the panel's own padding, so its edges stay whole; the rat as tall as the tabs, framed as they are. */}
+      <div className="sticky z-10 flex items-stretch gap-1.5 bg-night-700 py-1.5" style={{ top: 'env(safe-area-inset-top, 0px)' }}>
+        <span aria-hidden className={`frame-raised flex size-14 shrink-0 overflow-hidden ${GROUND[look.colour]}`}>
           <RatLayers look={look} className="size-full shrink-0" />
         </span>
         <div role="tablist" aria-label={t('layer')} className="grid min-w-0 flex-1 grid-cols-3 gap-1.5">
@@ -116,7 +117,7 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
               role="tab"
               aria-selected={each === group}
               onClick={() => setGroup(each)}
-              className={`pixel min-h-11 px-1 text-[14px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
+              className={`pixel h-14 px-1 text-[14px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
             >
               {t(`groups.${each}`)}
             </button>
