@@ -34,6 +34,19 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 20 | Phone apps | Android first, as the installable game wrapped for Google Play (about three weeks, most of it Google's closed test); iPhone later, with Capacitor or Expo on top of the shared packages | Planned | M | P3 |
 | 21 | Express life | A quick mode of ten rounds | Parked | M | P3 |
 
+## In the drawer
+
+Ideas kept for later, from looking at Busybodies (playbusybodies.com, a cosy settlement game for the browser), 2026-10-19:
+
+- Play from the front page: a newcomer answers their first card on `/`, with a life chosen for them, no menu first.
+- Characters who come back: the crypto brother-in-law, the boss, the landlord, with running jokes and consequences across a life.
+- Stories that remember: a rumour in the paper that comes true, or not, rounds later; a feud with a neighbour that ends well or badly.
+- Paid chapters: new lives or cities bought once (an inheritance, Silicon Valley, Japan in the 80s); never an edge in ranked.
+- A diorama on the front page: the pixel city alive behind it, the player's rat in it, day and night, rain in a crisis.
+- A newsletter, "El Diario de la Rueda", only when there is something new.
+- Pages for search: "for fans of Cashflow and BitLife", and questions answered on the front page.
+- A rat financial adviser to chat with (AI): appealing, but each message costs; later.
+
 Beside the steps: since 2026-10-13 the game is also played in Russian, a third language beside English and Spanish. Every sentence of the interface and of the content is translated, to the rules in `docs/i18n/russian.md`; whoever adds text adds it in all three.
 
 Design documents: `docs/superpowers/specs/2026-10-12-ratrace-v1-solo-design.md` (solo game) and `docs/superpowers/specs/2026-10-13-ratrace-online-design.md` (online).
