@@ -1,6 +1,6 @@
 # Catálogo del juego
 
-Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.45.0) con `pnpm catalog`: no lo edites a mano.
+Todo lo que hay en The Rat Race, con su dibujo y sus números. Generado desde el contenido y los textos del juego (contenido 1.46.0) con `pnpm catalog`: no lo edites a mano.
 
 Los precios son en dólares del inicio de la partida; en el juego suben con la inflación.
 
@@ -791,7 +791,7 @@ De segunda mano se venden algunas gamas, solo al contado. Lo usado tiene ya unos
 
 |  | Objeto | Precio | Mantenimiento | Estatus | Reventa | Sirve para | Notas |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <img src="../art/clean/items/item.travel_weekend.png" alt="Escapada con Ryanair"> | Escapada con Ryanair | 300 $ |  | +2 |  |  | El estatus dura 2 años |
+| <img src="../art/clean/items/item.travel_weekend.png" alt="Escapada con Ryanair"> | Escapada con Ryanair | 300 $ |  | +1 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_interrail.png" alt="Pase de Interrail"> | Pase de Interrail | 1.200 $ |  | +3 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_ibiza.png" alt="Verano en Ibiza"> | Verano en Ibiza | 2.500 $ |  | +4 |  |  | El estatus dura 2 años |
 | <img src="../art/clean/items/item.travel_ski.png" alt="Semana de esquí en Zermatt"> | Semana de esquí en Zermatt | 4.500 $ |  | +5 |  |  | El estatus dura 2 años. Solo en Madrid, Londres, Zúrich; se pierde al mudarse |

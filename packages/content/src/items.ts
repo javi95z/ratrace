@@ -84,7 +84,8 @@ const catalogue: ItemDef[] = [
     ['art_old_master', 900_000, 0, 40, 95, 400],
   ]),
 
-  experience('travel_weekend', 'travel', 300, 2, 1),
+  // A low-cost weekend is a photo, not a standing: one point, for the two years it is talked about.
+  experience('travel_weekend', 'travel', 300, 1, 1),
   experience('travel_interrail', 'travel', 1_200, 3, 1),
   experience('travel_ibiza', 'travel', 2_500, 4, 1),
   // The Alps are a short flight from Madrid and London, and the train from Zurich.

@@ -48,10 +48,9 @@ function useRound() {
 // ------------------------------------------------------------------------------------------------
 // Portfolio
 
-type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'pensionOut' } | { kind: 'sell'; asset: AssetDef };
+type Move = { kind: 'save' } | { kind: 'withdraw' } | { kind: 'pension' } | { kind: 'sell'; asset: AssetDef };
 
 function Portfolio() {
-  const knows = useKnows();
   const whoIs = usePeerName();
   const t = useT('finance.portfolio');
   const amount = useT('finance.amount');
@@ -61,8 +60,6 @@ function Portfolio() {
   const [move, setMove] = useState<Move | null>(null);
   const [buying, setBuying] = useState<AssetDef | null>(null);
   const held = content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id));
-  // The most the pension takes this round, from the engine: its cap, the cash there is, and solvency.
-  const pensionRoom = preview.pensionRoom;
   // What can be sold this round: what is held once the orders so far have run, without what a plan buys after them.
   // A plan buys when the round is played, after every order: the order cannot sell what it has not bought yet.
   const planned = (assetId: string): number => {
@@ -77,21 +74,7 @@ function Portfolio() {
     const close = () => setMove(null);
     if (move.kind === 'save') return <AmountSheet title={amount('save')} max={p.cash} onClose={close} onConfirm={(a) => addOrder({ type: 'depositIn', amount: a })} />;
     if (move.kind === 'withdraw') return <AmountSheet title={amount('withdraw')} max={p.deposit} onClose={close} onConfirm={(a) => addOrder({ type: 'depositOut', amount: a })} />;
-    if (move.kind === 'pension') return <AmountSheet title={amount('pension')} max={pensionRoom} onClose={close} onConfirm={(a) => addOrder({ type: 'pensionIn', amount: a })} />;
-    if (move.kind === 'pensionOut') {
-      const penalty = content.pensionEarlyPenaltyBp;
-      return (
-        <AmountSheet
-          title={amount('pensionOut')}
-          max={p.pension}
-          onClose={close}
-          onConfirm={(a) => addOrder({ type: 'pensionOut', amount: a })}
-          preview={(a) => <p className="text-center text-[14px] text-ink-200">{amount('pensionOutGet', { amount: fmt.money(a - applyBp(a, penalty)) })}</p>}
-        >
-          <p className="mb-2 text-[13px] leading-snug text-ink-200">{amount('pensionOutRule', { penalty: penalty / 100 })}</p>
-        </AmountSheet>
-      );
-    }
+    if (move.kind === 'pension') return <PensionSheet onClose={close} />;
     const name = names.assets[move.asset.id].name;
     return (
       <AmountSheet
@@ -126,21 +109,10 @@ function Portfolio() {
             </Button>
           ) : null}
         </div>
-        <div className="flex items-center gap-2 border-t-2 border-night-900 pt-1.5">
-          <div className="min-w-0 flex-1">
-            <Row left={t('pension')} sub={t('pensionHint', { penalty: content.pensionEarlyPenaltyBp / 100 })} right={fmt.money(p.pension)} />
-          </div>
-          {pensionRoom > 0 ? (
-            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pension' })}>
-              {t('add')}
-            </Button>
-          ) : null}
-          {p.pension > 0 && knows('pensionOut') ? (
-            <Button className="shrink-0 px-2 text-[13px]" onClick={() => setMove({ kind: 'pensionOut' })}>
-              {t('withdraw')}
-            </Button>
-          ) : null}
-        </div>
+        {/* The pension opens a sheet of its own: what it is, and the money put in or taken out. */}
+        <button type="button" data-finance-item aria-haspopup="dialog" onClick={() => setMove({ kind: 'pension' })} className="block w-full border-t-2 border-night-900 pt-1.5 text-left">
+          <Row left={t('pension')} sub={t('pensionHint')} right={fmt.money(p.pension)} />
+        </button>
       </Panel>
 
       <Panel title={t('holdings')} label={t('holdings')}>
@@ -191,6 +163,57 @@ function Portfolio() {
       {sheet}
       {buying ? <BuySheet asset={buying} onClose={() => setBuying(null)} /> : null}
     </div>
+  );
+}
+
+/**
+ * The pension plan, opened: what it is and what it holds, and the money put into it this round or,
+ * where the life's rules allow, taken out of it before its time, at a cost said beside the amount.
+ */
+function PensionSheet({ onClose }: { onClose(): void }) {
+  const knows = useKnows();
+  const t = useT('finance.portfolio');
+  const amount = useT('finance.amount');
+  const market = useT('finance.market');
+  const { content, names, fmt } = useWords();
+  const { p, preview } = useRound();
+  const addOrder = useGame((s) => s.addOrder);
+  const penalty = content.pensionEarlyPenaltyBp;
+  const age = ageAt(content, content.rounds);
+  // The most the pension takes this round, from the engine: its cap, the cash there is, and solvency.
+  const room = preview.pensionRoom;
+  const canOut = p.pension > 0 && knows('pensionOut');
+  const [out, setOut] = useState(room <= 0 && canOut);
+
+  return (
+    <AmountSheet
+      // A new sheet each way: the amount starts over.
+      key={out ? 'out' : 'in'}
+      title={t('pension')}
+      max={out ? p.pension : room}
+      onClose={onClose}
+      onConfirm={(a) => addOrder(out ? { type: 'pensionOut', amount: a } : { type: 'pensionIn', amount: a })}
+      preview={out ? (a) => <p className="text-center text-[14px] text-ink-200">{amount('pensionOutGet', { amount: fmt.money(a - applyBp(a, penalty)) })}</p> : undefined}
+    >
+      {canOut ? (
+        <div className="mb-3">
+          <Segmented<'in' | 'out'>
+            label={t('pension')}
+            value={out ? 'out' : 'in'}
+            onChange={(way) => setOut(way === 'out')}
+            options={[
+              { value: 'in', label: t('add') },
+              { value: 'out', label: t('withdraw') },
+            ]}
+          />
+        </div>
+      ) : null}
+      <p className="mb-2 text-[14px] leading-snug text-ink-200">{t('pensionAbout', { index: names.assets[content.pensionAssetId].name })}</p>
+      <p className="text-[13px] leading-snug text-ink-300">
+        {out ? amount('pensionOutRule', { penalty: penalty / 100 }) : knows('pensionOut') ? t('pensionKeep', { age, penalty: penalty / 100 }) : t('pensionLocked', { age })}
+      </p>
+      <p className="mb-3 mt-1 text-right text-[12px] text-ink-300">{market('youHold', { amount: fmt.money(p.pension) })}</p>
+    </AmountSheet>
   );
 }
 

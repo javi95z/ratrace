@@ -347,9 +347,6 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         </div>
       </div>
 
-      {/* Away from the news, where the bar of a crisis is whole, a strip keeps it in sight. */}
-      {compact ? <CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact /> : null}
-
       <button type="button" aria-haspopup="dialog" title={t('ratRaceHint')} onClick={() => setOpen('ratRace')} className="block min-h-11 w-full text-left">
         <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
           <span className="pixel">{escaped ? t('escaped', { age: ageAt(content, p.escapedAtRound ?? 0) }) : t('ratRace')}</span>
@@ -360,6 +357,13 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
         <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('ratRace')} tone={escaped ? 'teal' : 'gold'} door />
       </button>
       </div>
+
+      {/* Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page: only the figures stay stuck. */}
+      {compact ? (
+        <div className={flush ? '' : 'mt-2 px-3'}>
+          <CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact />
+        </div>
+      ) : null}
 
       <Sheet open={open !== null} onClose={() => setOpen(null)} title={open ? t(open) : ''} closeLabel={common('close')}>
         {open ? <Details figure={open} shown={shown} /> : null}

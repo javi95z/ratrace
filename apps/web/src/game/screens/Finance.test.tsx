@@ -86,16 +86,19 @@ describe('the pension', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
 
-    await user.click(await screen.findByRole('button', { name: 'Add' }));
-    const sheet = screen.getByRole('dialog', { name: 'Pay into your pension' });
+    await user.click(await screen.findByRole('button', { name: /^Pension plan/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Pension plan' });
+    // It says what it is, in full, and nothing is cut short on a phone.
+    expect(within(sheet).getByText(/^Money set aside for retirement/)).toBeTruthy();
     expect(within(sheet).getByText(`Up to ${fmt.money(room)}`)).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: '100%' }));
     await user.click(within(sheet).getByRole('button', { name: /^Confirm/ }));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
     expect(button('1 order')).toBeTruthy();
-    // The room is used up: the button is not offered, rather than a sheet that would refuse everything.
-    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
+    // The room is used up: the sheet opens on what can still be done, taking money out, rather than on amounts it would refuse.
+    await user.click(screen.getByRole('button', { name: /^Pension plan/ }));
+    expect(within(screen.getByRole('dialog', { name: 'Pension plan' })).getByRole('radio', { name: 'Withdraw' }).getAttribute('aria-checked')).toBe('true');
   });
 
   it('takes money out before its time, with the penalty and the tax told before it is confirmed', async () => {
@@ -108,9 +111,9 @@ describe('the pension', () => {
     const user = userEvent.setup();
     renderGame(<Play />, services);
 
-    const row = (await screen.findByText('Taking it out before 62 costs 20%. Follows the world index.')).closest('div.border-t-2') as HTMLElement;
-    await user.click(within(row).getByRole('button', { name: 'Withdraw' }));
-    const sheet = screen.getByRole('dialog', { name: 'Take money out of your pension' });
+    await user.click(await screen.findByRole('button', { name: /^Pension plan/ }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Pension plan' })).getByRole('radio', { name: 'Withdraw' }));
+    const sheet = screen.getByRole('dialog', { name: 'Pension plan' });
     expect(within(sheet).getByText('Before 62 you lose 20%, and what you receive is taxed as income this round.')).toBeTruthy();
     await user.click(within(sheet).getByRole('button', { name: '100%' }));
     expect(within(sheet).getByText(`You receive ${fmt.money(pension - pension / 5)} before tax`)).toBeTruthy();
@@ -124,8 +127,11 @@ describe('the pension', () => {
     const { services } = await inFinance('engineer');
     expect(previewRound(content, viewOf(await stateOf(services)), { orders: [] }).pensionRoom).toBe(0);
     renderGame(<Play />, services);
-    await screen.findByRole('button', { name: 'Save' });
-    expect(screen.queryByRole('button', { name: 'Add' })).toBeNull();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: /^Pension plan/ }));
+    const sheet = screen.getByRole('dialog', { name: 'Pension plan' });
+    expect(within(sheet).getByText('There is nothing to move.')).toBeTruthy();
+    expect(within(sheet).queryByRole('button', { name: /^Confirm/ })).toBeNull();
   });
 });
 
