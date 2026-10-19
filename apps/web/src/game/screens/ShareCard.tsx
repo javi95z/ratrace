@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSettings, useT } from '@/game/context';
 import { SITE_URL } from '@/lib/site';
-import { CARD, PIXEL_X_HEIGHT } from '@/game/share';
-import type { DrawOp } from '@/game/share';
+import { CARD, PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
+import type { DrawOp } from '@ratrace/core/game/share';
 import { Button } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { spriteOf } from '@/ui/Sprite';

@@ -1,15 +1,15 @@
 'use client';
 
 import { Explain } from './Explain';
-import { ratOutfit } from '@/game/quips';
+import { ratOutfit } from '@ratrace/core/game/quips';
 import { Loop } from './Loop';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
-import { characterName } from '@/game/characters';
+import { characterName } from '@ratrace/core/game/characters';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
-import { ageAt, cityLight, portraitAge } from '@/game/present';
+import { ageAt, cityLight, portraitAge } from '@ratrace/core/game/present';
 import { Bar, Row, Stat, Tag, Well, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sparks } from '@/ui/Sparks';

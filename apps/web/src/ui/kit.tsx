@@ -1,6 +1,6 @@
 import { forwardRef, useId, useRef } from 'react';
 import type { ButtonHTMLAttributes, KeyboardEvent, ReactNode } from 'react';
-import type { Tone } from '@/game/present';
+import type { Tone } from '@ratrace/core/game/present';
 import { Sprite } from './Sprite';
 
 const join = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');

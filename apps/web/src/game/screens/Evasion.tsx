@@ -4,8 +4,8 @@ import { Explain } from './Explain';
 import { effectiveTax, quoteEvasion } from '@ratrace/engine';
 import type { GameView, Order, RoundPreview } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
-import { adviserQuip } from '@/game/quips';
+import { ageAt } from '@ratrace/core/game/present';
+import { adviserQuip } from '@ratrace/core/game/quips';
 import { Bar, Button, Panel, Segmented, Toggle } from '@/ui/kit';
 
 type Want = { blackPct: number; shell: boolean; hideCrypto: boolean };

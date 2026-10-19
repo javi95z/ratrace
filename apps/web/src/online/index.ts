@@ -1,8 +1,8 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { RankedApi } from '@/session/ranked';
-import type { RoomsLink } from '@/session/room';
-import type { PlayerStore } from '@/session/types';
+import type { RankedApi } from '@ratrace/core/session/ranked';
+import type { RoomsLink } from '@ratrace/core/session/room';
+import type { PlayerStore } from '@ratrace/core/session/types';
 import { turnstile } from './captcha';
 import { connectSupabase } from './connect';
 import { browserOf, buildOf, errorWatch, watchPage } from './errors';

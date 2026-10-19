@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { newProfile } from '@/session/types';
-import type { FinishedRun, Profile } from '@/session/types';
+import { newProfile } from '@ratrace/core/session/types';
+import type { FinishedRun, Profile } from '@ratrace/core/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 

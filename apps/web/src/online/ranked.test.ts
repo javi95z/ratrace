@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RankedInProgress, Unreachable } from '@/session/errors';
+import { RankedInProgress, Unreachable } from '@ratrace/core/session/errors';
 import { rankedApi } from './ranked';
 import type { RankedCall } from './ranked';
 

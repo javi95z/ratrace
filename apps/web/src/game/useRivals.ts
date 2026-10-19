@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { RIVALS, rivalsOf } from './rivals';
-import type { Rival } from './rivals';
+import { RIVALS, rivalsOf } from '@ratrace/core/game/rivals';
+import type { Rival } from '@ratrace/core/game/rivals';
 
 /** How many names there are of each sex, in every language. */
 export const RIVAL_NAMES = 6;

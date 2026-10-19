@@ -4,7 +4,7 @@ import { ratArt } from '@ratrace/content';
 import { Sprite } from '@/ui/Sprite';
 import { useRef, useState } from 'react';
 import { useGame, useGuide, useRuns, useT, useWords } from '@/game/context';
-import { isFirst, nextTip } from '@/game/guide';
+import { isFirst, nextTip } from '@ratrace/core/game/guide';
 import { escapeProgress } from '@ratrace/engine';
 import { Button } from '@/ui/kit';
 

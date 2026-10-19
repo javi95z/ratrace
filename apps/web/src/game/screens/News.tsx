@@ -1,12 +1,12 @@
 'use client';
 
-import { ratLookOf } from '@/game/avatar';
+import { ratLookOf } from '@ratrace/core/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { headlineArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, headlineText } from '@/game/present';
-import { rivalNews } from '@/game/rivals';
+import { ageAt, headlineText } from '@ratrace/core/game/present';
+import { rivalNews } from '@ratrace/core/game/rivals';
 import { roomStory, useRoomPaper } from '@/game/roomStory';
 import type { RoomStory } from '@/game/roomStory';
 import { useRivals } from '@/game/useRivals';

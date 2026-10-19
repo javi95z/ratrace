@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { challengeOf, lives, textFor, weekOf } from '@ratrace/content';
 import type { ChallengeRow, Community, Friend, RankedLifeDetail, RankingQuery, RankingRow } from '@/online/types';
-import { formatFor } from '@/lib/format';
+import { formatFor } from '@ratrace/core/lib/format';
 import { memoryServices, renderGame } from '@/testing/render';
 import { Rankings } from './Rankings';
 

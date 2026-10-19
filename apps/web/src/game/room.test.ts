@@ -1,13 +1,13 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
-import { MemoryStore } from '@/session/memory';
-import { Unreachable } from '@/session/errors';
-import type { RoomMember, RoomsLink, RoomState } from '@/session/room';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { Unreachable } from '@ratrace/core/session/errors';
+import type { RoomMember, RoomsLink, RoomState } from '@ratrace/core/session/room';
 import { roomServer } from '@/testing/roomServer';
-import { createRoomStore, LOOK_EVERY_MS, resultOf } from './room';
-import type { RoomStore } from './room';
-import type { GameStore } from './store';
+import { createRoomStore, LOOK_EVERY_MS, resultOf } from '@ratrace/core/game/room';
+import type { RoomStore } from '@ratrace/core/game/room';
+import type { GameStore } from '@ratrace/core/game/store';
 
 // A room is two lives played a round at a time: a quarter of a minute alone, several times that on a busy machine.
 vi.setConfig({ testTimeout: 180_000 });

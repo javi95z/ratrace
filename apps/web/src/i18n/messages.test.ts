@@ -149,14 +149,15 @@ describe('interface text', () => {
   it('holds no sentence that nothing on screen uses', () => {
     // Every key must be asked for somewhere in the source: by its whole last name in quotes, or built from a
     // prefix the source spells out (`tabs.${id}`, `stages.${stage}`, a tip of the guide, a best of the end, a perk of an item, a level of money sense).
-    const root = fileURLToPath(new URL('..', import.meta.url));
+    // The web asks for them, and so does the game's logic it is built on.
+    const roots = [fileURLToPath(new URL('..', import.meta.url)), fileURLToPath(new URL('../../../../packages/core/src', import.meta.url))];
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((name) => {
         const path = join(dir, name);
         if (statSync(path).isDirectory()) return files(path);
         return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
       });
-    const source = files(root).map((path) => readFileSync(path, 'utf8')).join('\n');
+    const source = roots.flatMap(files).map((path) => readFileSync(path, 'utf8')).join('\n');
     const BUILT = [/^finance\.tabs\./, /^play\.stages\./, /^meta\.titles\./, /^guide\.(news|cards|finance|ledger|ratRace|invest|focus|flow)$/, /^end\.best(Score|NetWorth|Escape|Status)$/, /^effects\.perks\.(moveCostOffPct|studySkill|salaryPct|jobHuntPct|focus|healthCoverOffPct)$/, /^work\.financeOpens\.[0123]$/, /^finance\.glance\.kinds\./, /^badges\.rarity\./, /^news\.gossip\./, /^resolve\.(bank|family)\./, /^epilogue\.obituary\./, /^finance\.evasion\.advisor\./, /^finance\.business\.review\./, /^challenge\.rules\./, /^end\.line\./, /^newLife\.hints\./, /^rank\.names\./];
     const unused = [...en.keys()].filter((key) => {
       if (BUILT.some((built) => built.test(key))) return false;

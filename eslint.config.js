@@ -39,6 +39,20 @@ export default [
     },
   },
   {
+    // The game's logic is shared by every app: nothing of React, Next or a browser in it, and nothing of the web's own.
+    files: ['packages/core/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['react', 'react-dom', 'next', 'next-intl', 'idb'],
+          patterns: [{ group: ['@/*', 'next/*', 'react/*', 'apps/*'], message: 'The core is shared by every app: it imports nothing of one of them.' }],
+        },
+      ],
+      'no-restricted-globals': ['error', 'window', 'document', 'localStorage', 'sessionStorage', 'indexedDB', 'navigator'],
+    },
+  },
+  {
     // The web app: the rules of hooks, and a wall between the screens and the two things only the session layer may touch.
     files: ['apps/web/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },

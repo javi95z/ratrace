@@ -1,8 +1,8 @@
 'use client';
 
 import { cityIcon, lives } from '@ratrace/content';
-import { difficultyOf } from '@/game/difficulty';
-import { characterName } from '@/game/characters';
+import { difficultyOf } from '@ratrace/core/game/difficulty';
+import { characterName } from '@ratrace/core/game/characters';
 import { useSettings, useT, useWords } from '@/game/context';
 import { Sprite } from '@/ui/Sprite';
 

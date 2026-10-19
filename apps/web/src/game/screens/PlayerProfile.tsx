@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { avatarOf, ratLookOf } from '@/game/avatar';
-import type { RatLook } from '@/game/avatar';
+import { avatarOf, ratLookOf } from '@ratrace/core/game/avatar';
+import type { RatLook } from '@ratrace/core/game/avatar';
 import { useAccount, useAccountSettled, useCommunity, useProfile, useRuns, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';

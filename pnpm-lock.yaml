@@ -47,6 +47,9 @@ importers:
       '@ratrace/content':
         specifier: workspace:*
         version: link:../../packages/content
+      '@ratrace/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@ratrace/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -123,6 +126,22 @@ importers:
       '@ratrace/engine':
         specifier: workspace:*
         version: link:../engine
+
+  packages/core:
+    dependencies:
+      '@ratrace/content':
+        specifier: workspace:*
+        version: link:../content
+      '@ratrace/engine':
+        specifier: workspace:*
+        version: link:../engine
+      zustand:
+        specifier: ^5.0.15
+        version: 5.0.15(@types/react@19.3.0)(react@19.3.0)
+    devDependencies:
+      '@ratrace/i18n':
+        specifier: workspace:*
+        version: link:../i18n
 
   packages/engine: {}
 

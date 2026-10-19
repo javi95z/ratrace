@@ -3,8 +3,8 @@ import type { Milestone } from '@ratrace/content';
 import { createGame, viewOf } from '@ratrace/engine';
 import type { GameEvent, GameView } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { momentsOf } from './moments';
-import type { Seen } from './moments';
+import { momentsOf } from '@ratrace/core/game/moments';
+import type { Seen } from '@ratrace/core/game/moments';
 import { cuesFor } from './sound';
 import type { Heard } from './sound';
 

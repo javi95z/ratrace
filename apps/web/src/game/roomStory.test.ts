@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { RoomMember } from '@/session/room';
+import type { RoomMember } from '@ratrace/core/session/room';
 import { roomStory } from './roomStory';
 import { storyText } from './screens/News';
 import en from '@ratrace/i18n/messages/en.json';

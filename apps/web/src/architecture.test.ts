@@ -6,8 +6,16 @@ import { describe, expect, it } from 'vitest';
 /**
  * The wall of spec 8.9: a screen talks to the game through `GameSession` and to the device through
  * `PlayerStore`, and to nothing else. So moving the game to a server later changes no screen.
+ *
+ * The game's logic lives in `@ratrace/core`, laid out as it was here: `@ratrace/core/session/local`
+ * is the `@/session/local` it once was, and the rules below hold over both as one tree.
  */
 const SRC = fileURLToPath(new URL('.', import.meta.url));
+const CORE = fileURLToPath(new URL('../../../packages/core/src', import.meta.url));
+const ROOTS = [SRC, CORE];
+
+/** The tree a file belongs to. */
+const rootOf = (path: string) => ROOTS.find((root) => !relative(root, path).startsWith('..')) as string;
 
 function filesUnder(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -17,10 +25,11 @@ function filesUnder(dir: string): string[] {
   });
 }
 
-/** Where an import leads, as the rules below name places: a path beside the file becomes the `@/` path it stands for. */
+/** Where an import leads, as the rules below name places: a path beside the file, or one into the core, becomes the `@/` path it stands for. */
 function placeOf(path: string, from: string): string {
+  if (from.startsWith('@ratrace/core/')) return `@/${from.slice('@ratrace/core/'.length)}`;
   if (!from.startsWith('.')) return from;
-  const target = relative(SRC, join(dirname(path), from));
+  const target = relative(rootOf(path), join(dirname(path), from));
   return target.startsWith('..') ? from : `@/${target}`;
 }
 
@@ -37,8 +46,10 @@ function importsIn(path: string, source: string): Array<{ names: string; from: s
 }
 const importsOf = (path: string) => importsIn(path, readFileSync(path, 'utf8'));
 
-const rel = (path: string) => relative(SRC, path);
-const all = filesUnder(SRC);
+const rel = (path: string) => relative(rootOf(path), path);
+const all = ROOTS.flatMap(filesUnder);
+/** A file by the place the rules name it, in whichever tree it lives. */
+const fileAt = (place: string) => all.find((path) => rel(path) === place) as string;
 /** What draws the game: the pages, the screens, the UI kit. The session and the one file that wires it are behind the wall. */
 const screens = all.filter((path) => /^(app|ui|game\/screens)\//.test(rel(path)));
 const WIRING = ['game/context.tsx', 'testing/render.tsx'];
@@ -53,6 +64,13 @@ describe('the wall between the screens and the game', () => {
     expect(found("import '@/session/indexeddb';\nimport './Home';")).toEqual(['@/session/indexeddb', '@/game/screens/Home']);
     expect(found("import {\n  applyRound,\n  netWorth,\n} from '@ratrace/engine';")).toEqual(['@ratrace/engine']);
     expect(importsIn(screen, "import {\n  applyRound,\n} from '@ratrace/engine';")[0].names).toContain('applyRound');
+  });
+
+  it('sees the core as the tree it came from', () => {
+    expect(placeOf(join(SRC, 'game/screens/Anything.tsx'), '@ratrace/core/session/local')).toBe('@/session/local');
+    expect(placeOf(join(CORE, 'game/store.ts'), '../session/memory')).toBe('@/session/memory');
+    expect(rel(fileAt('game/present.ts'))).toBe('game/present.ts');
+    expect(rootOf(fileAt('game/present.ts'))).toBe(CORE);
   });
 
   it('finds the screens', () => {
@@ -71,7 +89,8 @@ describe('the wall between the screens and the game', () => {
   it('lets the round store reach the game only through the session too', () => {
     const MOVES = /\b(applyCard|applyCards|applyRound|createGame)\b/;
     for (const file of ['game/store.ts', 'game/present.ts', 'game/context.tsx']) {
-      const broke = importsOf(join(SRC, file)).filter((i) => i.from === '@ratrace/engine' && MOVES.test(i.names));
+      expect(fileAt(file), file).toBeDefined();
+      const broke = importsOf(fileAt(file)).filter((i) => i.from === '@ratrace/engine' && MOVES.test(i.names));
       expect(broke, file).toEqual([]);
     }
   });
@@ -114,7 +133,7 @@ describe('the wall between the screens and the game', () => {
   });
 
   it('keeps the engine and the content out of the browser database code', () => {
-    const idb = importsOf(join(SRC, 'session/indexeddb.ts')).map((i) => i.from);
+    const idb = importsOf(fileAt('session/indexeddb.ts')).map((i) => i.from);
     expect(idb).not.toContain('@ratrace/engine');
   });
 

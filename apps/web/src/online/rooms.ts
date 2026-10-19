@@ -1,8 +1,8 @@
-import { Unreachable } from '@/session/errors';
-import type { RankedRun, RankedStep } from '@/session/ranked';
-import { RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
-import { upToDateView } from '@/session/upgrade';
-import type { RoomGameOver, RoomLife, RoomLoan, RoomMember, RoomsApi, RoomState } from '@/session/room';
+import { Unreachable } from '@ratrace/core/session/errors';
+import type { RankedRun, RankedStep } from '@ratrace/core/session/ranked';
+import { RoomRefused, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/session/room';
+import { upToDateView } from '@ratrace/core/session/upgrade';
+import type { RoomGameOver, RoomLife, RoomLoan, RoomMember, RoomsApi, RoomState } from '@ratrace/core/session/room';
 
 /**
  * Asks the `rooms` function one thing and hands back its answer: the status and the body. It

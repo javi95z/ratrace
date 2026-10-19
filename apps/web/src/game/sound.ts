@@ -1,8 +1,8 @@
 import { rarityOf } from '@ratrace/content';
 import type { Cue } from '@/ui/sound';
-import { momentsOf } from './moments';
-import type { Moment } from './moments';
-import type { RoundState } from './store';
+import { momentsOf } from '@ratrace/core/game/moments';
+import type { Moment } from '@ratrace/core/game/moments';
+import type { RoundState } from '@ratrace/core/game/store';
 
 /** What of the round on screen the sounds listen to. */
 export type Heard = Pick<RoundState, 'stage' | 'view' | 'resolved' | 'orders' | 'refusal' | 'earned' | 'story'>;

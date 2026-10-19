@@ -2,15 +2,15 @@
 
 import { milestoneArt } from '@ratrace/content';
 import type { MilestoneScene } from '@ratrace/content';
-import { milestoneOf } from '@/game/milestones';
+import { milestoneOf } from '@ratrace/core/game/milestones';
 import { netWorth } from '@ratrace/engine';
 import type { GameEvent } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import { useGame, useRoom, useT, useWords } from '@/game/context';
 import { useCountUp, useStill } from '@/game/motion';
-import { ageAt, roundNotes } from '@/game/present';
-import { bankQuip, familyQuip, ratOutfit } from '@/game/quips';
-import type { RoundNote } from '@/game/present';
+import { ageAt, roundNotes } from '@ratrace/core/game/present';
+import { bankQuip, familyQuip, ratOutfit } from '@ratrace/core/game/quips';
+import type { RoundNote } from '@ratrace/core/game/present';
 import { Bare, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Celebrations } from './Celebrations';
 import { Sparks } from '@/ui/Sparks';

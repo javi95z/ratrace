@@ -4,7 +4,7 @@ import { CHALLENGE_ART, CHALLENGE_DEBT, HEIR_CASH, challengeOf, lives, portraitA
 import type { Challenge, ChallengeRule } from '@ratrace/content';
 import { useEffect, useState } from 'react';
 import { useCommunity, useGame, useRanking, useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
+import { ageAt } from '@ratrace/core/game/present';
 import { Link, useRouter } from '@/i18n/navigation';
 import type { ChallengeChoice, ChallengeRanking, Community } from '@/online/types';
 import { Button, Panel, Tag, Well } from '@/ui/kit';

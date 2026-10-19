@@ -6,7 +6,7 @@ import { assetYieldBp, cashflowLines, debtRateBp, depositRateBp, homeOf, netWort
 import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, debtLabel } from '@/game/present';
+import { ageAt, debtLabel } from '@ratrace/core/game/present';
 import { Bare, Panel, Row, Tag, TickerBadge } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';

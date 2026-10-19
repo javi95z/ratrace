@@ -3,7 +3,7 @@
 import { HEALTH_RISK_ART } from '@ratrace/content';
 import type { LivingQuote } from '@ratrace/engine';
 import { useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
+import { ageAt } from '@ratrace/core/game/present';
 import { Sprite } from '@/ui/Sprite';
 
 /**

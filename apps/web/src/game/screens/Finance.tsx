@@ -10,8 +10,8 @@ import type { AssetDef, CityDef, Debt, FocusAction, GameView, PlayerState, World
 import { useId, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '@/game/context';
-import { TAB_FROM_ROUND } from '@/game/guide';
-import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@/game/present';
+import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
+import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
 import { Bar, Bare, Button, Panel, Row, Segmented, Tag, TickerBadge, TILE, Toggle } from '@/ui/kit';
 import { useKeyboardScope } from '@/ui/keyboard';
 import { Sheet, Tabs, Toast } from '@/ui/overlay';

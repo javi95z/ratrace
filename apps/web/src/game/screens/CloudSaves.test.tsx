@@ -10,9 +10,9 @@ import type { CloudGame, Progress } from '@/online/merge';
 import type { CloudRun } from '@/online/mirror';
 import type { Cloud } from '@/online/supabase';
 import type { AccountSaves, DeviceChange } from '@/online/types';
-import { LocalSessions } from '@/session/local';
-import { MemoryStore } from '@/session/memory';
-import type { SavedGame } from '@/session/types';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import type { SavedGame } from '@ratrace/core/session/types';
 import { renderGame } from '@/testing/render';
 import { Home } from './Home';
 

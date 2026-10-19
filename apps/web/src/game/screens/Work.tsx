@@ -8,7 +8,7 @@ import type { Content, FocusAction, GameView, SkillId, SkillQuote, SkillsQuote, 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useKnows, useRoom, useT, useWords } from '@/game/context';
-import { ageAt, jobFocusName } from '@/game/present';
+import { ageAt, jobFocusName } from '@ratrace/core/game/present';
 import { Bar, Bare, Panel, Row, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';

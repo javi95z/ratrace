@@ -4,10 +4,10 @@ import { LifeFace } from './LifeFace';
 
 import { useState } from 'react';
 import { useRuns, useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
-import { recordsOf } from '@/game/records';
+import { ageAt } from '@ratrace/core/game/present';
+import { recordsOf } from '@ratrace/core/game/records';
 import { Link } from '@/i18n/navigation';
-import type { FinishedRun } from '@/session/types';
+import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RoomHistory } from './RoomHistory';

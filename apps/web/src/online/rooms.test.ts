@@ -1,8 +1,8 @@
 import { CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { RoomRefused } from '@/session/room';
-import { Unreachable } from '@/session/errors';
+import { RoomRefused } from '@ratrace/core/session/room';
+import { Unreachable } from '@ratrace/core/session/errors';
 import { roomServer } from '@/testing/roomServer';
 import { roomOf, roomsApi } from './rooms';
 

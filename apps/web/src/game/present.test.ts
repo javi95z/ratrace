@@ -3,12 +3,12 @@ import { createGame, viewOf } from '@ratrace/engine';
 import type { Effects, GameEvent, Order } from '@ratrace/engine';
 import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
-import { formatFor } from '@/lib/format';
+import { formatFor } from '@ratrace/core/lib/format';
 import en from '@ratrace/i18n/messages/en.json';
 import es from '@ratrace/i18n/messages/es.json';
 import ru from '@ratrace/i18n/messages/ru.json';
-import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
-import type { Translate, Words } from './present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from '@ratrace/core/game/present';
+import type { Translate, Words } from '@ratrace/core/game/present';
 
 const words = (locale: 'en' | 'es' | 'ru'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
 const t = (locale: 'en' | 'es' | 'ru', namespace: 'effects' | 'orders' | 'resolve'): Translate =>

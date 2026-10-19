@@ -1,12 +1,12 @@
 'use client';
 
-import { roundWarnings } from '@/game/roundWarnings';
+import { roundWarnings } from '@ratrace/core/game/roundWarnings';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
 import { useStill } from '@/game/motion';
-import { ageAt } from '@/game/present';
-import type { Stage } from '@/game/store';
+import { ageAt } from '@ratrace/core/game/present';
+import type { Stage } from '@ratrace/core/game/store';
 import { Link, useRouter } from '@/i18n/navigation';
 import { Button, Panel } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';

@@ -1,6 +1,6 @@
-import { readProfile } from '@/session/profile';
-import { SAVE_FORMAT } from '@/session/types';
-import type { Earned, FinishedRun, Profile } from '@/session/types';
+import { readProfile } from '@ratrace/core/session/profile';
+import { SAVE_FORMAT } from '@ratrace/core/session/types';
+import type { Earned, FinishedRun, Profile } from '@ratrace/core/session/types';
 
 /**
  * How two copies of a player's things become one, when a device meets its account. Everything

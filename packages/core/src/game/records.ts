@@ -1,4 +1,4 @@
-import type { FinishedRun } from '@/session/types';
+import type { FinishedRun } from '../session/types';
 
 /** The personal bests among the lives lived to the end. Each is the run that holds it, or null. */
 export interface Records {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MemoryStore } from '@/session/memory';
+import { MemoryStore } from '@ratrace/core/session/memory';
 import { CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { ErrorReport } from './errors';
@@ -210,7 +210,7 @@ describe('the cloud of this browser', () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://project.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
     const { content, lives } = await import('@ratrace/content');
-    const { LocalSessions } = await import('@/session/local');
+    const { LocalSessions } = await import('@ratrace/core/session/local');
     const online = browserOnline(new MemoryStore());
     let ids = 0;
     const sessions = new LocalSessions(online.store, content, lives, { newId: () => `life-${(ids += 1)}`, newSeed: () => 'seed', now: () => ids });

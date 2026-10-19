@@ -5,7 +5,7 @@ import { cleanup, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { GameSession } from '@/session/types';
+import type { GameSession } from '@ratrace/core/session/types';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import type { Cue, SoundBoard } from '@/ui/sound';
 import { Play } from './Play';

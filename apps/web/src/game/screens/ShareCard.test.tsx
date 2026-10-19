@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CARD, PIXEL_X_HEIGHT, shareCard } from '@/game/share';
+import { CARD, PIXEL_X_HEIGHT, shareCard } from '@ratrace/core/game/share';
 import { memoryServices } from '@/testing/render';
 import { GameProvider } from '@/game/context';
 import en from '@ratrace/i18n/messages/en.json';

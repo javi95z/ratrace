@@ -6,7 +6,7 @@ import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useGame, useInRoom, useSaving, useT, useWords } from '@/game/context';
-import { ageAt, insuranceCover } from '@/game/present';
+import { ageAt, insuranceCover } from '@ratrace/core/game/present';
 import { Link } from '@/i18n/navigation';
 import { Bare, Button, Panel, Row, Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';

@@ -5,7 +5,7 @@ import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
 import { useState } from 'react';
 import { useGame, useKnows, useT, useWords } from '@/game/context';
-import { reviewStars } from '@/game/quips';
+import { reviewStars } from '@ratrace/core/game/quips';
 import { Bare, Button, Panel, Row, Segmented, Tag, Toggle, KeyFigure } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';

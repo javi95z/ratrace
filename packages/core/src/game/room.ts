@@ -3,17 +3,17 @@ import type { LifeDef } from '@ratrace/content';
 import type { Content } from '@ratrace/engine';
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
-import { Unreachable } from '@/session/errors';
-import { tellProfile } from '@/session/profile';
-import { GRACE_MS, RoomRefused, RoomSessions } from '@/session/room';
-import type { RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '@/session/room';
-import type { PlayerStore } from '@/session/types';
+import { Unreachable } from '../session/errors';
+import { tellProfile } from '../session/profile';
+import { GRACE_MS, RoomRefused, RoomSessions } from '../session/room';
+import type { RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '../session/room';
+import type { PlayerStore } from '../session/types';
 import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
-export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/session/room';
-export type { RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '@/session/room';
+export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '../session/room';
+export type { RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '../session/room';
 
 /** How often a page in a room asks how it stands, besides whenever it hears that it changed. */
 export const LOOK_EVERY_MS = 15_000;

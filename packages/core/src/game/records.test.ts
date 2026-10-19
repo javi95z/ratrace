@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { FinishedRun } from '@/session/types';
+import type { FinishedRun } from '../session/types';
 import { bestsOf, recordsOf } from './records';
 
 const run = (runId: string, over: Partial<FinishedRun> = {}): FinishedRun => ({

@@ -3,7 +3,7 @@
 import { useRoomPaper } from '@/game/roomStory';
 import { scoreBreakdown } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
-import { rivalScore } from '@/game/rivals';
+import { rivalScore } from '@ratrace/core/game/rivals';
 import { useRivals } from '@/game/useRivals';
 import { Panel } from '@/ui/kit';
 

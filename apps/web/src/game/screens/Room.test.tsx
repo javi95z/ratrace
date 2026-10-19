@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { content, CONTENT_VERSION } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
-import type { SavedGame } from '@/session/types';
+import type { SavedGame } from '@ratrace/core/session/types';
 import { roomServer } from '@/testing/roomServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { Home } from './Home';

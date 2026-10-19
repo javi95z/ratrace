@@ -1,9 +1,9 @@
 import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION, stateHash } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
-import { LocalSessions } from '@/session/local';
-import { MemoryStore } from '@/session/memory';
-import type { GameSession, PlayerStore, RankedGame, SavedGame } from '@/session/types';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import type { GameSession, PlayerStore, RankedGame, SavedGame } from '@ratrace/core/session/types';
 import { stepsOf } from './merge';
 import type { CloudGame, Progress } from './merge';
 import { MirroredStore } from './mirror';

@@ -5,9 +5,9 @@ import type { Milestone } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useState } from 'react';
 import { useGame, useT, useWords } from '@/game/context';
-import { chapters } from '@/game/epilogue';
+import { chapters } from '@ratrace/core/game/epilogue';
 import { useStill } from '@/game/motion';
-import { ageAt, portraitAge } from '@/game/present';
+import { ageAt, portraitAge } from '@ratrace/core/game/present';
 import { Bare, Panel, Well } from '@/ui/kit';
 import { Sprite } from '@/ui/Sprite';
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { ratSprite } from '@/game/avatar';
-import type { RatColour, RatLayer, RatLook } from '@/game/avatar';
+import { ratSprite } from '@ratrace/core/game/avatar';
+import type { RatColour, RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import { Sprite, spriteOf } from './Sprite';
 
 /** Each colour as the ground the rat stands on: bright enough to tell players apart, dark enough for the rat to read on it. */

@@ -2,7 +2,7 @@ import { badges, businessArt, homeName, careerArt, cityIcon, focusArt, RARITIES,
 import type { BadgeDef, CityLight, ContentText, Ending, Names } from '@ratrace/content';
 import { indexed, isStudy, ITEM_PERKS, SKILLS } from '@ratrace/engine';
 import type { CardDef, Content, Debt, Effects, GameEvent, ItemPerks, GameView, Headline, InsuranceKind, Order, PlayerState, Property, WorldState } from '@ratrace/engine';
-import type { Format } from '@/lib/format';
+import type { Format } from '../lib/format';
 
 /** A translator for one section of the interface text, as next-intl gives it. */
 export type Translate = (key: string, values?: Record<string, string | number>) => string;

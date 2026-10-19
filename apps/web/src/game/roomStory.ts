@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { RoomMember } from '@/session/room';
+import type { RoomMember } from '@ratrace/core/session/room';
 
 /**
  * The story of a game with friends the round's newspaper prints, in place of the made-up people of

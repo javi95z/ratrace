@@ -1,6 +1,6 @@
 'use client';
 
-import { ratLookOf } from '@/game/avatar';
+import { ratLookOf } from '@ratrace/core/game/avatar';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { LoanOffers, PlayerSheet } from './RoomLoans';
 import { badgeArt, lives, portraitArt, ratArt } from '@ratrace/content';
@@ -8,10 +8,10 @@ import { indexed } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
 import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
-import type { GameStore } from '@/game/store';
+import type { GameStore } from '@ratrace/core/game/store';
 import { Link } from '@/i18n/navigation';
-import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@/game/room';
-import type { RoomMember, RoomState, RoundSeconds } from '@/game/room';
+import { MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
+import type { RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';

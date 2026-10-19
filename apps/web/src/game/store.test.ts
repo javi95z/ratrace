@@ -2,14 +2,14 @@ import { content, CONTENT_VERSION, lives } from '@ratrace/content';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { GameEvent, Order } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
-import { LocalSessions } from '@/session/local';
-import { RankedSessions } from '@/session/ranked';
-import { GameSessions } from '@/session/sessions';
+import { LocalSessions } from '@ratrace/core/session/local';
+import { RankedSessions } from '@ratrace/core/session/ranked';
+import { GameSessions } from '@ratrace/core/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
-import { MemoryStore } from '@/session/memory';
-import type { SavedGame } from '@/session/types';
-import { memoryBasket } from './basket';
-import { createGameStore, PENDING_AFTER_MS } from './store';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import type { SavedGame } from '@ratrace/core/session/types';
+import { memoryBasket } from '@ratrace/core/game/basket';
+import { createGameStore, PENDING_AFTER_MS } from '@ratrace/core/game/store';
 
 /** `guardMs` and `clock` are for the tests of taps that come too soon; without them no tap is ever too soon. */
 function setup(store = new MemoryStore(), guardMs = 0, clock = { at: 0 }) {

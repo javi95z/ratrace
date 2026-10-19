@@ -1,6 +1,6 @@
-import { upToDateView } from '@/session/upgrade';
-import { RankedInProgress, Unreachable } from '@/session/errors';
-import type { RankedApi, RankedRun, RankedStanding, RankedStep } from '@/session/ranked';
+import { upToDateView } from '@ratrace/core/session/upgrade';
+import { RankedInProgress, Unreachable } from '@ratrace/core/session/errors';
+import type { RankedApi, RankedRun, RankedStanding, RankedStep } from '@ratrace/core/session/ranked';
 
 /**
  * Asks the `ranked` function one thing and hands back its answer: the status and the body. It

@@ -5,7 +5,7 @@ import { cityIcon, lives, portraitArt } from '@ratrace/content';
 import { useEffect, useId, useState } from 'react';
 import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
-import { ageAt } from '@/game/present';
+import { ageAt } from '@ratrace/core/game/present';
 import type { Community, Friend, RankedLifeDetail, RankingRow } from '@/online/types';
 import { Bare, Button, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';

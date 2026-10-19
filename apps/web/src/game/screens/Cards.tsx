@@ -6,8 +6,8 @@ import type { CardDef, GameEvent, OptionPreview, SkillId, WorldState } from '@ra
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame, useSettings, useT, useWords } from '@/game/context';
-import { cardRarity, chancePct, effectTags, onlyCosts } from '@/game/present';
-import type { EffectTag } from '@/game/present';
+import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game/present';
+import type { EffectTag } from '@ratrace/core/game/present';
 import { Panel, Tag } from '@/ui/kit';
 import { Sparks } from '@/ui/Sparks';
 import { Sprite } from '@/ui/Sprite';

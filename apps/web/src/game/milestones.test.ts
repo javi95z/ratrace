@@ -2,7 +2,7 @@ import { businessStageArt } from '@ratrace/content';
 import type { Milestone } from '@ratrace/content';
 import { describe, expect, it } from 'vitest';
 import { routeOf } from './screens/LifeMap';
-import { milestoneOf } from './milestones';
+import { milestoneOf } from '@ratrace/core/game/milestones';
 
 describe('the milestone of a round', () => {
   it('tells the first of each, from the cards of the round to its end, the biggest first', () => {

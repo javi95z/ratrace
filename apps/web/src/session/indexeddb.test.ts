@@ -1,9 +1,9 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { LocalStore } from './indexeddb';
-import { MemoryStore } from './memory';
-import { newProfile } from './types';
-import type { FinishedRun, PlayerStore, SavedGame } from './types';
+import { MemoryStore } from '@ratrace/core/session/memory';
+import { newProfile } from '@ratrace/core/session/types';
+import type { FinishedRun, PlayerStore, SavedGame } from '@ratrace/core/session/types';
 
 const game = (over: Partial<SavedGame> = {}): SavedGame =>
   ({ format: 1, gameId: 'g', engineVersion: 'e', contentVersion: 'c', lifeId: 'nurse', seed: 's', log: [], history: [1], bankruptcies: 0, state: { round: 0 }, updatedAt: 1, ...over }) as SavedGame;

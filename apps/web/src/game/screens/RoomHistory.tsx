@@ -4,8 +4,8 @@ import { LifeFace } from './LifeFace';
 
 import { useEffect, useState } from 'react';
 import { useRoom, useT, useWords } from '@/game/context';
-import type { RoomGameOver } from '@/game/room';
-import type { FinishedRun } from '@/session/types';
+import type { RoomGameOver } from '@ratrace/core/game/room';
+import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
 import { Sheet } from '@/ui/overlay';
 import { RunDetail } from './RunDetail';

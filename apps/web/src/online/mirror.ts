@@ -1,10 +1,10 @@
 import type { LifeDef } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
 import type { Content } from '@ratrace/engine';
-import { rankedNote, rankedOf } from '@/session/ranked';
-import { openSave } from '@/session/save';
-import { SAVE_FORMAT } from '@/session/types';
-import type { Earned, FinishedRun, PlayerStore, Profile, SavedGame, StoredGame } from '@/session/types';
+import { rankedNote, rankedOf } from '@ratrace/core/session/ranked';
+import { openSave } from '@ratrace/core/session/save';
+import { SAVE_FORMAT } from '@ratrace/core/session/types';
+import type { Earned, FinishedRun, PlayerStore, Profile, SavedGame, StoredGame } from '@ratrace/core/session/types';
 import { chooseGame, mergeProgress, mergeRuns, progressOf, readProgress, sameProgress, stepsOf, withProgress } from './merge';
 import type { CloudGame, Progress } from './merge';
 import type { AccountLife, AccountSaves, CloudSaving, DeviceChange } from './types';

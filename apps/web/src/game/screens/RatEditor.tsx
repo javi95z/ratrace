@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { mayWear, prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@/game/avatar';
+import { mayWear, prizeOf, RAT_COLOURS, RAT_LAYERS, ratSprite } from '@ratrace/core/game/avatar';
 import type { RankId } from '@ratrace/content';
-import type { RatColour, RatLayer, RatLook } from '@/game/avatar';
+import type { RatColour, RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import { useT } from '@/game/context';
 import { GROUND, RatLayers } from '@/ui/RatAvatar';
 import { Sprite, spriteOf } from '@/ui/Sprite';

@@ -1,5 +1,5 @@
-import type { RankedApi } from '@/session/ranked';
-import type { RoomsLink } from '@/session/room';
+import type { RankedApi } from '@ratrace/core/session/ranked';
+import type { RoomsLink } from '@ratrace/core/session/room';
 import type { ErrorReport, Sent } from './errors';
 import type { SyncCloud } from './mirror';
 import type { Account, AccountNotice, AccountState, Community } from './types';

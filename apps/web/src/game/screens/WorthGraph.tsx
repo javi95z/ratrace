@@ -2,7 +2,7 @@
 
 import { useWords } from '@/game/context';
 import { START_AGE } from '@ratrace/content';
-import { worthBars } from '@/game/present';
+import { worthBars } from '@ratrace/core/game/present';
 
 /** One bar of the graph, in screen pixels: ten of bar and four of gap. */
 const BAR = 10;

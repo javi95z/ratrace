@@ -1,8 +1,8 @@
 import { openDB } from 'idb';
 import type { IDBPDatabase } from 'idb';
-import { readProfile } from './profile';
-import { readRuns } from './runs';
-import type { FinishedRun, PlayerStore, Profile, StoredGame } from './types';
+import { readProfile } from '@ratrace/core/session/profile';
+import { readRuns } from '@ratrace/core/session/runs';
+import type { FinishedRun, PlayerStore, Profile, StoredGame } from '@ratrace/core/session/types';
 
 const GAME = 'currentGame';
 const RUNS = 'runs';

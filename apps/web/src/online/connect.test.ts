@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Unreachable } from '@/session/errors';
+import { Unreachable } from '@ratrace/core/session/errors';
 import { connectSupabase } from './connect';
 
 /** The parts of the Supabase client the game uses, answering as told and remembering what they were asked. */

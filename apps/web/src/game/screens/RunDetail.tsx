@@ -1,8 +1,8 @@
 'use client';
 
 import { useT, useWords } from '@/game/context';
-import { ageAt } from '@/game/present';
-import type { FinishedRun } from '@/session/types';
+import { ageAt } from '@ratrace/core/game/present';
+import type { FinishedRun } from '@ratrace/core/session/types';
 import { Tag } from '@/ui/kit';
 import { WorthGraph } from './WorthGraph';
 
