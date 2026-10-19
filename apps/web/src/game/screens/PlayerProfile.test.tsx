@@ -73,8 +73,11 @@ describe('the player\'s profile', () => {
     const given = ratLookOf(null, 'u-1');
     const furs = await screen.findByRole('radiogroup', { name: 'Fur' });
     expect(within(furs).getAllByRole('radio').filter((radio) => radio.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+    // Three tabs: the rat itself, what it wears, what is behind it.
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Body', 'Clothes', 'Backdrop']);
     // A hat, kept at once and shown chosen.
-    await user.click(screen.getByRole('tab', { name: 'Headwear' }));
+    await user.click(screen.getByRole('tab', { name: 'Clothes' }));
+    expect(screen.getAllByRole('radiogroup').map((group) => group.getAttribute('aria-label'))).toEqual(['Clothes', 'Headwear', 'Eyes']);
     const hats = screen.getByRole('radiogroup', { name: 'Headwear' });
     expect(within(hats).getByRole('radio', { name: 'None' }).getAttribute('aria-checked')).toBe('true');
     await user.click(within(hats).getByRole('radio', { name: 'Beanie' }));
@@ -85,11 +88,33 @@ describe('the player\'s profile', () => {
     await user.click(within(hats).getByRole('radio', { name: 'Crown' }));
     expect(asked).toHaveLength(1);
     expect(within(hats).getByRole('radio', { name: 'Crown' }).getAttribute('title')).toMatch(/^Unlocked on reaching /);
+    // Nothing worn is marked as such.
+    expect(within(hats).getByRole('radio', { name: 'None' }).textContent).toBe('✕');
     // And the colour of the ground, kept with the hat.
-    await user.click(screen.getByRole('tab', { name: 'Colour' }));
+    await user.click(screen.getByRole('tab', { name: 'Backdrop' }));
     const other = given.colour === 'teal' ? 'gold' : 'teal';
     await user.click(within(screen.getByRole('radiogroup', { name: 'Colour' })).getByRole('radio', { name: other === 'gold' ? 'Gold' : 'Teal' }));
     await waitFor(() => expect(asked.at(-1)).toBe(`avatar ${avatarOf({ ...capped, colour: other })}`));
+  });
+
+  it('puts a rat together at random, from what the player may wear', async () => {
+    const { community, asked } = profile();
+    const user = userEvent.setup();
+    show({ kind: 'member', userId: 'u-1', email: null }, community);
+    // The last of every list: past what a new player has opened, were the locked ones not left out.
+    const dice = vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    try {
+      await user.click(await screen.findByRole('button', { name: '🎲 At random' }));
+    } finally {
+      dice.mockRestore();
+    }
+    await waitFor(() => expect(asked).toHaveLength(1));
+    const look = ratLookOf(asked[0].replace('avatar ', ''), 'u-1');
+    for (const layer of ['body', 'face', 'outfit', 'hat', 'eyes', 'backdrop'] as const) {
+      const piece = look[layer];
+      if (piece !== null) expect(mayWear(layer, piece, {}, 'sewer'), `${layer} ${piece}`).toBe(true);
+    }
+    expect(look.hat).not.toBeNull();
   });
 
   it('changes the name, and says why one is not taken', async () => {

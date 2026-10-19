@@ -1923,10 +1923,16 @@
       "face": "Cara",
       "outfit": "Ropa",
       "hat": "Cabeza",
-      "eyes": "Gafas y más",
+      "eyes": "Ojos",
       "backdrop": "Fondo",
       "colour": "Color"
     },
+    "groups": {
+      "body": "Cuerpo",
+      "wear": "Ropa",
+      "scene": "Fondo"
+    },
+    "byChance": "🎲 Al azar",
     "pieces": {
       "body": {
         "grey": "Gris",

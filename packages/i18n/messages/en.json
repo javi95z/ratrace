@@ -1923,10 +1923,16 @@
       "face": "Face",
       "outfit": "Clothes",
       "hat": "Headwear",
-      "eyes": "Eyewear",
+      "eyes": "Eyes",
       "backdrop": "Backdrop",
       "colour": "Colour"
     },
+    "groups": {
+      "body": "Body",
+      "wear": "Clothes",
+      "scene": "Backdrop"
+    },
+    "byChance": "🎲 At random",
     "pieces": {
       "body": {
         "grey": "Grey",

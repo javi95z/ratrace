@@ -21,7 +21,25 @@ const COLOUR_NAME: Record<RatColour, string> = {
 };
 
 type Part = RatLayer | 'colour';
-const PARTS: Part[] = ['body', 'face', 'outfit', 'hat', 'eyes', 'backdrop', 'colour'];
+
+/** The parts in three tabs: the rat itself, what it wears, and what is behind it. */
+type Group = 'body' | 'wear' | 'scene';
+const GROUPS: Record<Group, Part[]> = { body: ['body', 'face'], wear: ['outfit', 'hat', 'eyes'], scene: ['backdrop', 'colour'] };
+const GROUP_IDS = Object.keys(GROUPS) as Group[];
+
+/**
+ * How each part's choices frame the rat: the whole of it for the fur and what is behind it; closer,
+ * on the part itself, for what is worn: the whole rat shows a hat, a pair of glasses or a collar too
+ * small to tell one from another.
+ */
+const FRAME: Record<RatLayer, string> = {
+  body: 'size-[125%] -ml-[16%] -mt-[6%]',
+  backdrop: 'size-[125%] -ml-[16%] -mt-[6%]',
+  outfit: 'size-[160%] -ml-[34%] -mt-[52%]',
+  hat: 'size-[165%] -ml-[42%] mt-0',
+  face: 'size-[220%] -ml-[78%] -mt-[52%]',
+  eyes: 'size-[220%] -ml-[78%] -mt-[52%]',
+};
 
 /** One choice of a part: a piece, nothing at all, or a colour. */
 interface Choice {
@@ -39,40 +57,76 @@ interface Choice {
  */
 export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onLocked }: { look: RatLook; earned: Record<string, unknown>; rank: RankId; badgeName: (id: string) => string; rankName: (rank: RankId) => string; onPick: (next: RatLook) => void; onLocked: (message: string) => void }) {
   const t = useT('player');
-  const [part, setPart] = useState<Part>('body');
+  const [group, setGroup] = useState<Group>('body');
 
-  const choices = (): Choice[] => {
+  /** The pieces of a layer that are drawn, and whether the player may wear each. */
+  const piecesOf = (layer: RatLayer) =>
+    (RAT_LAYERS[layer] as readonly string[]).filter((piece) => spriteOf(ratSprite(layer, piece)) !== null).map((piece) => ({ piece, open: mayWear(layer, piece, earned, rank) }));
+
+  /** A rat put together by chance from what the player may wear: always a fur and a face, the rest worn or not. */
+  const byChance = (): RatLook => {
+    const any = <T,>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)];
+    const open = (layer: RatLayer) => piecesOf(layer).filter((one) => one.open).map((one) => one.piece);
+    const maybe = (layer: RatLayer) => any([null, ...open(layer)]);
+    return {
+      ...look,
+      colour: any(RAT_COLOURS),
+      body: any(open('body')) as RatLook['body'],
+      face: any(open('face')) as RatLook['face'],
+      outfit: maybe('outfit') as RatLook['outfit'],
+      hat: maybe('hat') as RatLook['hat'],
+      eyes: maybe('eyes') as RatLook['eyes'],
+      backdrop: maybe('backdrop') as RatLook['backdrop'],
+    };
+  };
+
+  const choices = (part: Part): Choice[] => {
     if (part === 'colour') return RAT_COLOURS.map((colour) => ({ key: colour, label: t(COLOUR_NAME[colour]), look: { ...look, colour }, locked: null }));
-    const pieces = (RAT_LAYERS[part] as readonly string[]).filter((piece) => spriteOf(ratSprite(part, piece)) !== null);
-    const drawn: Choice[] = pieces.map((piece) => {
+    const drawn: Choice[] = piecesOf(part).map(({ piece, open }) => {
       const prize = prizeOf(part, piece);
-      const how = prize === null || mayWear(part, piece, earned, rank) ? null : 'badge' in prize ? t('locked', { badge: badgeName(prize.badge) }) : t('lockedRank', { rank: rankName(prize.rank) });
+      const how = prize === null || open ? null : 'badge' in prize ? t('locked', { badge: badgeName(prize.badge) }) : t('lockedRank', { rank: rankName(prize.rank) });
       return { key: piece, label: t(`pieces.${part}.${piece}`), look: { ...look, [part]: piece } as RatLook, locked: how };
     });
     // A rat always has a fur and a face: only what it wears may be left off.
     return part === 'body' || part === 'face' ? drawn : [{ key: 'none', label: t('none'), look: { ...look, [part]: null }, locked: null }, ...drawn];
   };
-  const chosen = (choice: Choice) => (part === 'colour' ? look.colour === choice.key : (look[part] ?? 'none') === choice.key);
+  const chosen = (part: Part, choice: Choice) => (part === 'colour' ? look.colour === choice.key : (look[part] ?? 'none') === choice.key);
 
   return (
     <div className="flex flex-col gap-3">
-      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
-        {PARTS.map((each) => (
+      <div role="tablist" aria-label={t('layer')} className="grid grid-cols-3 gap-1.5">
+        {GROUP_IDS.map((each) => (
           <button
             key={each}
             type="button"
             role="tab"
-            aria-selected={each === part}
-            onClick={() => setPart(each)}
-            className={`pixel min-h-11 px-1 text-[13px] ${each === part ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
+            aria-selected={each === group}
+            onClick={() => setGroup(each)}
+            className={`pixel min-h-11 px-1 text-[15px] ${each === group ? 'frame-gold bg-night-600 text-gold-500' : 'frame-raised bg-night-700 text-ink-200'}`}
           >
-            {t(`layers.${each}`)}
+            {t(`groups.${each}`)}
           </button>
         ))}
       </div>
+      {GROUPS[group].map((part) => (
+        // Each part of the tab under its own name, its choices beneath.
+        <div key={part} className="flex flex-col gap-1.5">
+          <p className="pixel text-[13px] uppercase tracking-wider text-ink-300">{t(`layers.${part}`)}</p>
+          {choicesOf(part)}
+        </div>
+      ))}
+      <button type="button" onClick={() => onPick(byChance())} className="min-h-11 self-center px-3 text-[14px] text-ink-200 underline underline-offset-4">
+        {t('byChance')}
+      </button>
+    </div>
+  );
+
+  /** The choices of one part, each the rat as it would be with it. */
+  function choicesOf(part: Part) {
+    return (
       <div role="radiogroup" aria-label={t(`layers.${part}`)} className="grid grid-cols-5 gap-1.5">
-        {choices().map((choice) => {
-          const on = chosen(choice);
+        {choices(part).map((choice) => {
+          const on = chosen(part, choice);
           return (
             <button
               key={choice.key}
@@ -88,17 +142,21 @@ export function RatEditor({ look, earned, rank, badgeName, rankName, onPick, onL
               {/* The picture says which it is; the name is there for a pointer that rests on it and for a screen reader. */}
               <span aria-hidden className={`relative flex aspect-square w-full overflow-hidden border-2 border-night-900 ${GROUND[choice.look.colour]}`}>
                 {/* A colour is only the ground: shown alone, as the rat would hide it behind itself and any backdrop. */}
-                {part === 'colour' ? null : <RatLayers look={choice.look} className={`size-[125%] shrink-0 -ml-[16%] -mt-[6%] ${choice.locked ? 'opacity-40 grayscale' : ''}`} />}
+                {part === 'colour' ? null : <RatLayers look={choice.look} className={`${FRAME[part]} shrink-0 ${choice.locked ? 'opacity-40 grayscale' : ''}`} />}
                 {choice.locked ? (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <Sprite id="icon.locked" />
                   </span>
+                ) : null}
+                {/* Nothing worn: said with a cross, as the rat without the piece looks much like the rest. */}
+                {choice.key === 'none' ? (
+                  <span className="absolute right-0.5 top-0.5 flex size-5 items-center justify-center bg-night-900/85 font-sans text-[13px] font-bold leading-none text-cream">✕</span>
                 ) : null}
               </span>
             </button>
           );
         })}
       </div>
-    </div>
-  );
+    );
+  }
 }
