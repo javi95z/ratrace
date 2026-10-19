@@ -15,6 +15,7 @@ import { CareerPreview } from './CareerPreview';
 import { CityPreview } from './Finance';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins } from './FlyingCoins';
+import { JailSheet } from './Jail';
 import { KeyboardHint, useKeyboard, useKeyboardScope } from '@/ui/keyboard';
 
 /** How far a card must be dragged before letting go answers it. */
@@ -162,6 +163,8 @@ export function CardStage() {
   const tilt = useTransform(x, [-160, 160], [-6, 6]);
   const choices = useRef<HTMLDivElement>(null);
   const { keyboard } = useKeyboard();
+  const jailT = useT('jail');
+  const [seeingJail, setSeeingJail] = useState(false);
 
   // The card to answer is the next one of the hand, judged as the player stands after the ones before it.
   const waiting = view !== null && view.phase === 'cards';
@@ -211,6 +214,8 @@ export function CardStage() {
   const rarity = cardRarity(def);
   // Two choices on screen can be swiped, left for the first and right for the second.
   const swipeable = shown.length === 2 && !reducedMotion && !busy;
+  // A choice that may end in prison says what prison is, beside the choices, never inside one.
+  const mayJail = shown.some((i) => def.options[i].effects?.jail !== undefined || (def.options[i].outcomes ?? []).some((outcome) => outcome.effects?.jail !== undefined));
 
   return (
     <div className="flex flex-col gap-3 px-3">
@@ -263,6 +268,12 @@ export function CardStage() {
         </div>
       ) : null}
       {swipeable ? <p className="text-center text-[12px] text-ink-300">{t('swipe')}</p> : null}
+      {mayJail ? (
+        <button type="button" aria-haspopup="dialog" onClick={() => setSeeingJail(true)} className="min-h-11 self-center text-[13px] text-sky-300 underline underline-offset-4">
+          {jailT('see')}
+        </button>
+      ) : null}
+      <JailSheet open={seeingJail} onClose={() => setSeeingJail(false)} />
     </div>
   );
 }

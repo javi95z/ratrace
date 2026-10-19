@@ -17,6 +17,7 @@ import { Sprite } from '@/ui/Sprite';
 import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
 import { Headlines } from './News';
+import { JailSheet } from './Jail';
 import { SettingsSheet } from './Settings';
 
 /**
@@ -227,6 +228,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const [open, setOpen] = useState<Figure | null>(null);
   const [settings, setSettings] = useState(false);
   const [paper, setPaper] = useState(false);
+  const [jail, setJail] = useState(false);
   // What sticks to the top tells the tabs under it how far down to stick.
   const stuck = useRef<HTMLDivElement>(null);
   // The row with the portrait, watched so that once it has scrolled away the strip that sticks says whose life and which round it is.
@@ -310,10 +312,11 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
           {p.life.career ? <div className="truncate text-[12px] leading-tight text-ink-300">{text.careers[p.life.career.id].levels[p.life.career.level]}</div> : null}
           {/* Prison says so where the player always looks. */}
           {p.life.jailRounds > 0 ? (
-            <span className="mt-1 inline-flex">
-              <Tag tone="bad">{t('inJail')}</Tag>
-            </span>
+            <button type="button" aria-haspopup="dialog" onClick={() => setJail(true)} className="mt-1 inline-flex">
+              <Tag tone="bad">{t('inJail')} ›</Tag>
+            </button>
           ) : null}
+          <JailSheet open={jail && p.life.jailRounds > 0} onClose={() => setJail(false)} left={p.life.jailRounds} />
         </div>
         {/* The paper of the round, to read again once the round is under way. */}
         {stage !== 'news' ? (

@@ -2016,5 +2016,18 @@
     "locked": "Se consigue con la insignia «{badge}»",
     "layer": "Qué cambiar",
     "lockedRank": "Se desbloquea al llegar a {rank}"
+  },
+  "jail": {
+    "title": "La prisión",
+    "see": "¿Qué pasa en prisión?",
+    "left": "{n, plural, one {Te queda # ronda dentro} other {Te quedan # rondas dentro}}",
+    "inside": "Mientras estás dentro:",
+    "noPay": "No cobras sueldo.",
+    "noFocus": "No tienes enfoque: ni estudiar, ni buscar trabajo, ni pedir un aumento.",
+    "noCareer": "Tu carrera no avanza.",
+    "cards": "Solo te tocan cartas de la cárcel.",
+    "goesOn": "Tus gastos se siguen pagando y tus inversiones siguen su curso.",
+    "enter": "Entrar cuesta {status} de estatus.",
+    "leave": "{n, plural, one {Al salir bajas # puesto en tu carrera.} other {Al salir bajas # puestos en tu carrera.}}"
   }
 }

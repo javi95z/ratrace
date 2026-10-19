@@ -2016,5 +2016,18 @@
     "locked": "Earned with the badge \"{badge}\"",
     "layer": "What to change",
     "lockedRank": "Unlocked on reaching {rank}"
+  },
+  "jail": {
+    "title": "Prison",
+    "see": "What happens in prison?",
+    "left": "{n, plural, one {# round left to serve} other {# rounds left to serve}}",
+    "inside": "While inside:",
+    "noPay": "No salary.",
+    "noFocus": "No focus: no studying, job hunting or asking for a raise.",
+    "noCareer": "Your career stands still.",
+    "cards": "Only prison cards come up.",
+    "goesOn": "Your bills are still paid, and your investments go on as they were.",
+    "enter": "Going in costs {status} status.",
+    "leave": "{n, plural, one {Coming out, you drop # rung in your career.} other {Coming out, you drop # rungs in your career.}}"
   }
 }
