@@ -106,7 +106,7 @@ export default {
           return rats;
         },
         addBots: (room, users) => call('room_add_bots', { p_room: room, p_bots: users }),
-        openLobbies: (engine, content) => call('room_open_count', { p_engine: engine, p_content: content }),
+        openLobbies: (engine, content, seconds) => call('room_open_count', { p_engine: engine, p_content: content, p_seconds: seconds }),
         lastPublicLeft: async (user) => {
           const row = must(
             await db.from('room_players').select('left_at, standing, rooms!inner(public)').eq('user_id', user).order('joined_at', { ascending: false }).limit(1).maybeSingle(),

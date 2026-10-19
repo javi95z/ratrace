@@ -713,3 +713,34 @@ async function playRoundOf(server: ReturnType<typeof roomServer>, room: string, 
     await server.ask(who, { action: 'card', roomId: room, step: life.step, option: 0 });
   }
 }
+
+describe('a public game of a round a day', () => {
+  it('is chosen by its pace on the door, and its lobby says how such a game is played', async () => {
+    const { server, services } = inRooms();
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    const pace = await screen.findByRole('radiogroup', { name: 'Pace' });
+    await user.click(within(pace).getByRole('radio', { name: 'Now and then' }));
+    expect(screen.getByText(/A round a day with whoever is looking for a game/)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Game now and then' }));
+    const clock = await screen.findByRole('region', { name: 'Looking for players' });
+    expect(within(clock).getByRole('timer').textContent).toMatch(/^Starts in (30:00|29:\d\d)$/);
+    expect(within(clock).getByText(/a notice tells you when the next begins/)).toBeTruthy();
+    expect(screen.getByText('1 day a round')).toBeTruthy();
+    expect([...server.db.rooms.values()].map((room) => room.seconds)).toEqual([86_400]);
+  });
+
+  it('counts the games waiting at each pace apart', async () => {
+    const server = roomServer();
+    await server.ask(B, { action: 'quick', pace: 'slow', ...VERSIONS });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    // Played together, none is waiting; a round a day, one is.
+    await screen.findByRole('radiogroup', { name: 'Pace' });
+    await waitFor(() => expect(services.rooms()?.api).toBeTruthy());
+    expect(screen.queryByText(/looking for players right now/)).toBeNull();
+    await user.click(screen.getByRole('radio', { name: 'Now and then' }));
+    expect((await screen.findByRole('status')).textContent).toBe('1 game is looking for players right now');
+  });
+});

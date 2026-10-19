@@ -3,7 +3,7 @@ import { finalScore, viewOf } from '@ratrace/engine';
 import type { GameState, LoggedRound } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { CURRENT, GAMES } from '../../../supabase/functions/_shared/game/index.ts';
-import { GRACE_MS as GRACE_OF_SERVER, MAX_MEMBERS, QUICK_SECONDS, QUICK_WAIT_MS, rooms, TABLE } from '../../../supabase/functions/_shared/rooms.ts';
+import { GRACE_MS as GRACE_OF_SERVER, MAX_MEMBERS, PUBLIC_PACES, QUICK_SECONDS, QUICK_WAIT_MS, rooms, TABLE } from '../../../supabase/functions/_shared/rooms.ts';
 import { RATS, roomServer } from '../../../apps/web/src/testing/roomServer.ts';
 
 // Several tests here play a whole life for two players: a few seconds alone, more on a busy machine.
@@ -965,7 +965,7 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     // Past its time, nobody looked: whoever opened it has gone.
     server.wait(QUICK_WAIT_MS);
     expect(await lobbies(server)).toBe(0);
-    expect((await server.ask(D, { action: 'lobbies', engineVersion: '0.1.0', contentVersion: '1.0.0' })).body).toEqual({ open: 0, dropped: false });
+    expect((await server.ask(D, { action: 'lobbies', engineVersion: '0.1.0', contentVersion: '1.0.0' })).body).toEqual({ open: 0, slow: 0, dropped: false });
     expect(await server.ask(D, { action: 'lobbies', engineVersion: ENGINE })).toMatchObject({ status: 400, body: { field: 'contentVersion' } });
   });
 
@@ -1092,5 +1092,75 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     for (let n = 0; n < 199; n++) server.db.friendships.push({ follower: B, followed: `f${n}` });
     server.db.friendships.push({ follower: B, followed: 'f199' });
     expect(await server.ask(B, { action: 'follow', roomId: seat.id, userId: HOST })).toMatchObject({ status: 409, body: { error: 'full' } });
+  });
+});
+
+describe('a public game of a round a day', () => {
+  const D = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  type Seat = Omit<Room, 'members'> & { public: boolean; startsAt: string | null; members: Array<Room['members'][number] & { bot: string | null }> };
+  const seatOf = (reply: { body: Body }) => reply.body.room as Seat;
+  const slow = (server: ReturnType<typeof roomServer>, who: string) => server.ask(who, { action: 'quick', pace: 'slow', ...VERSIONS });
+  const DAY = PUBLIC_PACES.slow.seconds;
+
+  it('seats whoever asks for one in a lobby of a round a day, which waits half an hour for players', async () => {
+    const server = roomServer();
+    const seat = seatOf(await slow(server, HOST));
+    expect(seat).toMatchObject({ status: 'open', public: true, seconds: DAY, startsAt: new Date(server.state.now + PUBLIC_PACES.slow.waitMs).toISOString() });
+    expect(DAY).toBe(86_400);
+    expect(seatOf(await slow(server, B)).id).toBe(seat.id);
+    expect(await server.ask(C, { action: 'quick', pace: 'fast', ...VERSIONS })).toMatchObject({ status: 400, body: { field: 'pace' } });
+  });
+
+  it('never puts the two paces together, and counts each apart', async () => {
+    const server = roomServer();
+    const day = seatOf(await slow(server, HOST));
+    const live = seatOf(await server.ask(B, { action: 'quick', ...VERSIONS }));
+    expect(live.id).not.toBe(day.id);
+    expect(live.seconds).toBe(QUICK_SECONDS);
+    expect(seatOf(await slow(server, C)).id).toBe(day.id);
+    expect((await server.ask(D, { action: 'lobbies', ...VERSIONS })).body).toEqual({ open: 1, slow: 1, dropped: false });
+  });
+
+  it('turns a round as soon as everyone has played it, and tells each player when the next is theirs', async () => {
+    const server = roomServer();
+    const seat = seatOf(await slow(server, HOST));
+    await slow(server, B);
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    server.notices.length = 0;
+    // HOST plays at once; B a few hours later. The rats played already: nobody waits a day.
+    await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+    expect(server.notices).toEqual([{ user: B, about: { kind: 'yourTurn', round: 1, rounds: content.rounds, secondsLeft: DAY } }]);
+    server.wait(5 * 3_600_000);
+    const turned = await server.ask(B, { action: 'submit', roomId: seat.id, step: await answerHand(server, B, seat.id), orders: [] });
+    expect(seatOf(turned).round).toBe(1);
+    expect(seatOf(turned).deadline).toBe(new Date(server.state.now + DAY * 1000).toISOString());
+    // The new round is told to the player who did not turn it, and to no rat.
+    expect(server.notices.slice(1)).toEqual([{ user: HOST, about: { kind: 'newRound', round: 2, rounds: content.rounds, seconds: DAY } }]);
+  });
+
+  it('takes out whoever lets two days go by in a row, as in a game played together', async () => {
+    const server = roomServer();
+    const seat = seatOf(await slow(server, HOST));
+    await slow(server, B);
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    for (let round = 0; round < 2; round++) {
+      await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+      server.wait(DAY * 1000 + GRACE_MS + 1);
+      await server.ask(HOST, { action: 'state', roomId: seat.id });
+    }
+    const after = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(after.round).toBe(2);
+    expect(after.members.find((m) => m.userId === B)?.left).toBe(true);
+  });
+
+  it('starts by itself once its half hour is over, the first time anyone looks', async () => {
+    const server = roomServer();
+    const seat = seatOf(await slow(server, HOST));
+    server.wait(PUBLIC_PACES.slow.waitMs - 1_000);
+    expect(seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id })).status).toBe('open');
+    server.wait(1_000);
+    const started = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(started.status).toBe('playing');
+    expect(started.members.filter((m) => m.bot !== null)).toHaveLength(TABLE - 1);
   });
 });

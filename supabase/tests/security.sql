@@ -1009,7 +1009,7 @@ begin
   insert into auth.users (id, aud, role, is_anonymous) values (k, 'authenticated', 'authenticated', true);
   -- Nobody but the server counts the lobbies, reads the reports, reports a name or follows by a game.
   if (select count(*) from information_schema.role_table_grants where table_schema = 'public' and table_name = 'name_reports' and grantee in ('anon', 'authenticated')) = 0
-     and not has_function_privilege('authenticated', 'public.room_open_count(text, text)', 'execute')
+     and not has_function_privilege('authenticated', 'public.room_open_count(text, text, integer)', 'execute')
      and not has_function_privilege('authenticated', 'public.room_report_name(uuid, uuid, uuid)', 'execute')
      and not has_function_privilege('anon', 'public.room_report_name(uuid, uuid, uuid)', 'execute')
      and not has_function_privilege('authenticated', 'public.room_follow(uuid, uuid, uuid)', 'execute')
@@ -1018,10 +1018,17 @@ begin
   perform public.room_leave(room_id, user_id) from public.room_players where user_id in (f, g, h) and left_at is null;
   -- A lobby past its time is counted for nobody and seats nobody: whoever opened it has gone.
   perform public.room_quick(room_w, f, 'nurse', '9.8.0', '9.8.0', 180, now() - interval '1 minute');
-  n := public.room_open_count('9.8.0', '9.8.0');
+  n := public.room_open_count('9.8.0', '9.8.0', 180);
   j := public.room_quick(room_x, g, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');
-  if n = 0 and (j ->> 'room')::uuid = room_x and public.room_open_count('9.8.0', '9.8.0') = 1 and public.room_open_count('9.7.0', '9.8.0') = 0
+  if n = 0 and (j ->> 'room')::uuid = room_x and public.room_open_count('9.8.0', '9.8.0', 180) = 1 and public.room_open_count('9.7.0', '9.8.0', 180) = 0
     then passed := passed + 1; else failed := array_append(failed, format('a lobby past its time was counted (%s) or seated someone: %s', n, j)); end if;
+  -- A game of a round a day and one played together never meet: each pace has its lobbies, and its count.
+  room_v := gen_random_uuid();
+  j2 := public.room_quick(room_v, k, 'nurse', '9.8.0', '9.8.0', 86400, now() + interval '30 minutes');
+  if (j2 ->> 'room')::uuid = room_v and public.room_open_count('9.8.0', '9.8.0', 86400) = 1 and public.room_open_count('9.8.0', '9.8.0', 180) = 1
+     and (select seconds from public.rooms where id = room_v) = 86400
+    then passed := passed + 1; else failed := array_append(failed, format('a player asking for a game of a round a day answered %s', j2)); end if;
+  perform public.room_leave(room_v, k);
   -- A name reported: the first report is kept, the second of the month takes it away, and then there is nothing to report.
   perform public.room_quick(gen_random_uuid(), h, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');
   perform public.room_quick(gen_random_uuid(), k, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');

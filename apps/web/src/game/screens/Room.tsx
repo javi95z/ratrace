@@ -11,7 +11,7 @@ import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, use
 import type { GameStore } from '@ratrace/core/game/store';
 import { Link } from '@/i18n/navigation';
 import { MAX_MEMBERS, memberName, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
-import type { RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
+import type { PublicPace, RoomMember, RoomState, RoundSeconds } from '@ratrace/core/game/room';
 import { Button, Panel, Segmented, Tag, Well } from '@/ui/kit';
 import { Sheet, Toast } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
@@ -187,6 +187,9 @@ function Door() {
   const clearDropped = useRoom((s) => s.clearDropped);
   const lobbies = useRoom((s) => s.lobbies);
   const lookForLobbies = useRoom((s) => s.lookForLobbies);
+  // A public game played together, or a round a day with whoever comes.
+  const [pace, setPace] = useState<PublicPace>('live');
+  const waiting = lobbies?.[pace] ?? 0;
   useEffect(() => {
     void lookForLobbies();
   }, [lookForLobbies]);
@@ -257,8 +260,17 @@ function Door() {
           {t('dropped')}
         </p>
       ) : null}
-      {/* The quickest way in: a seat in a public game, with no code to pass round. */}
+      {/* The quickest way in: a seat in a public game, with no code to pass round, at the pace chosen. */}
       <div className="flex flex-col gap-1.5">
+        <Segmented<PublicPace>
+          label={t('publicPace')}
+          value={pace}
+          onChange={setPace}
+          options={[
+            { value: 'live', label: t('paceTogether') },
+            { value: 'slow', label: t('paceSlow') },
+          ]}
+        />
         <Button
           variant="primary"
           wide
@@ -266,18 +278,18 @@ function Door() {
           onClick={() => {
             clearClosed();
             clearDropped();
-            void quick();
+            void quick(pace);
           }}
         >
           <Sprite id="icon.multiplayer" />
-          {t('quick')}
+          {t(pace === 'live' ? 'quick' : 'quickSlow')}
         </Button>
-        {lobbies ? (
+        {waiting > 0 ? (
           <p role="status" className="text-center text-[13px] text-teal-300">
-            {t('openNow', { count: lobbies })}
+            {t('openNow', { count: waiting })}
           </p>
         ) : null}
-        <p className="text-center text-[13px] leading-snug text-ink-300">{t('quickAbout')}</p>
+        <p className="text-center text-[13px] leading-snug text-ink-300">{t(pace === 'live' ? 'quickAbout' : 'quickSlowAbout')}</p>
       </div>
       <Button wide disabled={busy} onClick={() => setOpening(true)}>
         {t('open')}
@@ -433,10 +445,12 @@ function Rematch({ room }: { room: RoomState }) {
   const [asking, setAsking] = useState(false);
   if (room.status !== 'finished') return null;
   if (room.public) {
+    // Another of the same pace as the one just played.
+    const slow = room.seconds >= HOUR;
     return (
-      <Button variant="primary" wide disabled={busy} onClick={() => void quick()}>
+      <Button variant="primary" wide disabled={busy} onClick={() => void quick(slow ? 'slow' : 'live')}>
         <Sprite id="icon.multiplayer" />
-        {t('quickAgain')}
+        {t(slow ? 'quickAgainSlow' : 'quickAgain')}
       </Button>
     );
   }
@@ -545,6 +559,8 @@ function Lobby({ room }: { room: RoomState }) {
             {toStart === null || toStart > 0 ? t('startsIn', { time: clock(toStart ?? 0) }) : t('startsSoon')}
           </p>
           <p className="text-[13px] leading-snug text-ink-300">{t('fillWithBots')}</p>
+          {/* A round a day: each plays theirs when they can, and a notice says when the next is theirs. */}
+          {room.seconds >= HOUR ? <p className="text-[13px] leading-snug text-ink-300">{t('paceDay')}</p> : null}
           <Button onClick={() => void (canShare ? share() : copy())}>{t('invite')}</Button>
         </section>
       ) : (
@@ -1149,7 +1165,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
     } else if (room.rematch?.open) detail = t('roomRematch');
     else if (me && !me.left && me.standing) detail = t('roomPlace', { place: rankOf(room.members, me), total: here.length });
     else detail = t('roomDone');
-  } else if (lobbies) detail = t('roomOpenNow', { count: lobbies });
+  } else if (lobbies && lobbies.live + lobbies.slow > 0) detail = t('roomOpenNow', { count: lobbies.live + lobbies.slow });
   return (
     <Link
       href="/room"

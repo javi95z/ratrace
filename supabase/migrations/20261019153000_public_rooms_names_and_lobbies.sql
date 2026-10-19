@@ -1,8 +1,10 @@
 -- Public games, the second part: names strangers see, the lobbies waiting now, and the players met.
 --
--- 1. A player is seated only in a public lobby whose time has not come. One past it was left by
+-- 1. A player is seated only in a public lobby whose time has not come, and of the pace they asked
+--    for: a game played together, or one played a round a day. One past its time was left by
 --    whoever opened it: nobody looked when it was due, so nobody is there to play with.
--- 2. How many public lobbies wait for players now, on some rules: what the front door says.
+-- 2. How many public lobbies wait for players now, on some rules and at some pace: what the front
+--    door says.
 -- 3. Names. More words are refused (Russian ones too, as they are written in Latin letters), the
 --    names already kept that the longer list refuses are taken away, and a player of a public game
 --    may report another's name: the one who reports no longer sees it, and two players who report
@@ -10,7 +12,7 @@
 -- 4. A player may follow anyone they have played a game with, without their code.
 
 -- ------------------------------------------------------------------------------------------------
--- 1. Seated only in a lobby still waiting for its time.
+-- 1. Seated only in a lobby still waiting for its time, at the pace asked for.
 create or replace function public.room_quick(p_room uuid, p_member uuid, p_life text, p_engine text, p_content text, p_seconds integer, p_starts_at timestamptz) returns jsonb
 language plpgsql
 security definer
@@ -27,7 +29,7 @@ begin
     return jsonb_build_object('error', 'in-a-room', 'room', other);
   end if;
   select * into r from public.rooms q
-    where q.public and q.status = 'open' and q.engine_version = p_engine and q.content_version = p_content and q.starts_at > now()
+    where q.public and q.status = 'open' and q.engine_version = p_engine and q.content_version = p_content and q.seconds = p_seconds and q.starts_at > now()
       and (select count(*) from public.room_players p where p.room_id = q.id and p.left_at is null) < 6
       and not exists (select 1 from public.room_players p where p.room_id = q.id and p.user_id = p_member)
     order by q.created_at
@@ -48,15 +50,15 @@ end;
 $$;
 
 -- ------------------------------------------------------------------------------------------------
--- 2. The public lobbies a player asking for one could be seated in now.
-create function public.room_open_count(p_engine text, p_content text) returns integer
+-- 2. The public lobbies a player asking for one at this pace could be seated in now.
+create function public.room_open_count(p_engine text, p_content text, p_seconds integer) returns integer
 language sql
 stable
 security definer
 set search_path = ''
 as $$
   select count(*)::integer from public.rooms q
-  where q.public and q.status = 'open' and q.engine_version = p_engine and q.content_version = p_content and q.starts_at > now()
+  where q.public and q.status = 'open' and q.engine_version = p_engine and q.content_version = p_content and q.seconds = p_seconds and q.starts_at > now()
     and (select count(*) from public.room_players p where p.room_id = q.id and p.left_at is null) < 6;
 $$;
 
@@ -183,10 +185,10 @@ end;
 $$;
 
 revoke all on function public.room_quick(uuid, uuid, text, text, text, integer, timestamptz) from public, anon, authenticated;
-revoke all on function public.room_open_count(text, text) from public, anon, authenticated;
+revoke all on function public.room_open_count(text, text, integer) from public, anon, authenticated;
 revoke all on function public.room_report_name(uuid, uuid, uuid) from public, anon, authenticated;
 revoke all on function public.room_follow(uuid, uuid, uuid) from public, anon, authenticated;
 grant execute on function public.room_quick(uuid, uuid, text, text, text, integer, timestamptz) to service_role;
-grant execute on function public.room_open_count(text, text) to service_role;
+grant execute on function public.room_open_count(text, text, integer) to service_role;
 grant execute on function public.room_report_name(uuid, uuid, uuid) to service_role;
 grant execute on function public.room_follow(uuid, uuid, uuid) to service_role;

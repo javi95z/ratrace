@@ -16,6 +16,8 @@ export const MAX_MEMBERS = 6;
 export const MIN_MEMBERS = 2;
 /** How many sit at a public game when it starts: rats take the seats nobody came for. The server keeps to the same. */
 export const TABLE = 4;
+/** The paces of a public game: played together, or a round a day, each playing theirs when they can. */
+export type PublicPace = 'live' | 'slow';
 
 /** How a member stood when the last round turned. */
 export interface RoomStanding {
@@ -165,10 +167,10 @@ export interface RoomsApi {
   /** The room the player is in, if any. */
   mine(): Promise<RoomState | null>;
   open(lifeId: string, seconds: RoundSeconds, versions: { engine: string; content: string }): Promise<RoomState>;
-  /** A seat in a public game: one waiting on these rules, or a new one. */
-  quick(versions: { engine: string; content: string }): Promise<RoomState>;
-  /** How many public games on these rules are waiting for players now; and whether the player's last game was a public one the clock took them out of. */
-  lobbies(versions: { engine: string; content: string }): Promise<{ open: number; dropped: boolean }>;
+  /** A seat in a public game at a pace: one waiting on these rules, or a new one. */
+  quick(versions: { engine: string; content: string }, pace?: PublicPace): Promise<RoomState>;
+  /** How many public games on these rules are waiting for players now, at each pace; and whether the player's last game was a public one the clock took them out of. */
+  lobbies(versions: { engine: string; content: string }): Promise<{ live: number; slow: number; dropped: boolean }>;
   /**
    * Reports another player's name in a public game: the player no longer sees it, and a second report
    * takes it away (`cleared`). `nameless` for a player with no name. `gone` if either is no longer in it.

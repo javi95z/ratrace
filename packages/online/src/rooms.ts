@@ -196,12 +196,14 @@ export function roomsApi(call: RoomsCall): RoomsApi {
       return reply.body.room === null ? null : room(reply);
     },
     open: async (lifeId, seconds, versions) => room(await ask({ action: 'open', lifeId, seconds, engineVersion: versions.engine, contentVersion: versions.content })),
-    quick: async (versions) => room(await ask({ action: 'quick', engineVersion: versions.engine, contentVersion: versions.content })),
+    quick: async (versions, pace = 'live') => room(await ask({ action: 'quick', pace, engineVersion: versions.engine, contentVersion: versions.content })),
     async lobbies(versions) {
       const reply = await ask({ action: 'lobbies', engineVersion: versions.engine, contentVersion: versions.content });
-      const open = isRecord(reply.body) ? reply.body.open : null;
-      if (reply.status !== 200 || typeof open !== 'number' || !Number.isSafeInteger(open) || open < 0) throw new Unreachable(`the server answered ${reply.status}`);
-      return { open, dropped: isRecord(reply.body) && reply.body.dropped === true };
+      const body = isRecord(reply.body) ? reply.body : {};
+      const count = (x: unknown) => (typeof x === 'number' && Number.isSafeInteger(x) && x >= 0 ? x : null);
+      const [live, slow] = [count(body.open), count(body.slow)];
+      if (reply.status !== 200 || live === null) throw new Unreachable(`the server answered ${reply.status}`);
+      return { live, slow: slow ?? 0, dropped: body.dropped === true };
     },
     async report(roomId, userId) {
       const reply = await ask({ action: 'report', roomId, userId });

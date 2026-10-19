@@ -18,6 +18,16 @@ export const MAX_MEMBERS = 6;
 export const QUICK_SECONDS = 180;
 /** How long a public lobby waits for players before it starts by itself. */
 export const QUICK_WAIT_MS = 120_000;
+/**
+ * The two paces of a public game: `live`, played together, three minutes a round; `slow`, a round a
+ * day, each playing theirs when they can, turned as soon as everyone has. A slow lobby waits longer
+ * for players: whoever comes to a game played at a distance comes at a distance too.
+ */
+export const PUBLIC_PACES = {
+  live: { seconds: QUICK_SECONDS, waitMs: QUICK_WAIT_MS },
+  slow: { seconds: 86_400, waitMs: 1_800_000 },
+} as const;
+export type PublicPace = keyof typeof PUBLIC_PACES;
 /** How many sit at a public game when it starts: rats take the seats nobody came for. */
 export const TABLE = 4;
 /** How many rounds in a row the clock may play for a player of a public game before they are taken out of it. */
@@ -162,14 +172,14 @@ export interface RoomsDeps {
   avatars(userIds: string[]): Promise<Record<string, string | null>>;
   open(room: { id: string; host: string; life_id: string; engine_version: string; content_version: string; seconds: number }): Promise<{ room: string; code: string } | { error: string; room?: string }>;
   join(code: string, userId: string, engineVersion: string, contentVersion: string): Promise<{ room: string } | { error: string; room?: string; engineVersion?: string; contentVersion?: string }>;
-  /** Seats a player in a public game: the oldest lobby on these rules with a seat left, or a new one of theirs, which starts by itself at `starts_at`. */
+  /** Seats a player in a public game: the oldest lobby on these rules and of this pace with a seat left, or a new one of theirs, which starts by itself at `starts_at`. */
   quick(room: { id: string; member: string; life_id: string; engine_version: string; content_version: string; seconds: number; starts_at: Date }): Promise<{ room: string; code: string } | { error: string; room?: string }>;
   /** The rats the server plays, each with the kind of player it plays as. */
   bots(): Promise<Array<{ user: string; persona: string }>>;
   /** Seats these rats in a public lobby, in this order, while there are seats. `closed` for a room that is not a public lobby. */
   addBots(roomId: string, users: string[]): Promise<'ok' | 'closed'>;
-  /** How many public lobbies on these rules a player asking for one could be seated in now. */
-  openLobbies(engineVersion: string, contentVersion: string): Promise<number>;
+  /** How many public lobbies on these rules, with rounds of these seconds, a player asking for one could be seated in now. */
+  openLobbies(engineVersion: string, contentVersion: string, seconds: number): Promise<number>;
   /**
    * The player's latest game, if it was a public one they are out of, with the standing it left
    * them, and when they went: whether it was they who left or the clock that took them out is read from it.
@@ -855,14 +865,17 @@ async function open(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
 }
 
 /**
- * A public game: the player is seated in one waiting on the rules the server plays now, or in a new
- * one, for a life everyone may play, with rounds played together. It starts by itself a little later,
- * at once when it is full, or when anyone in it says so, with rats in the seats nobody came for.
+ * A public game: the player is seated in one waiting on the rules the server plays now and at the
+ * pace asked for (played together unless they ask for a round a day), or in a new one, for a life
+ * everyone may play. It starts by itself a little later, at once when it is full, or when anyone in
+ * it says so, with rats in the seats nobody came for.
  */
 async function quick(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
   const { engineVersion, contentVersion } = raw;
   if (!isText(engineVersion, 20)) return bad('engineVersion');
   if (!isText(contentVersion, 20)) return bad('contentVersion');
+  const pace = raw.pace === undefined ? 'live' : raw.pace;
+  if (pace !== 'live' && pace !== 'slow') return bad('pace');
   if (!(await deps.allow(userId, 'room-make'))) return tooMany;
 
   const key = `${engineVersion}/${contentVersion}`;
@@ -880,8 +893,8 @@ async function quick(games: Readonly<Record<string, GameModule>>, deps: RoomsDep
     life_id: life.id,
     engine_version: engineVersion,
     content_version: contentVersion,
-    seconds: QUICK_SECONDS,
-    starts_at: new Date(deps.now().getTime() + QUICK_WAIT_MS),
+    seconds: PUBLIC_PACES[pace].seconds,
+    starts_at: new Date(deps.now().getTime() + PUBLIC_PACES[pace].waitMs),
   });
   if ('error' in made) return { status: 409, body: { error: made.error, ...(made.room ? { roomId: made.room } : {}) } };
   // The seat taken may have been the last: such a lobby starts at once.
@@ -897,13 +910,13 @@ async function lobbies(deps: RoomsDeps, userId: string, raw: Record<string, unkn
   if (!isText(engineVersion, 20)) return bad('engineVersion');
   if (!isText(contentVersion, 20)) return bad('contentVersion');
   if (!(await deps.allow(userId, 'room-step'))) return tooMany;
-  const [open, last] = await Promise.all([
-    `${engineVersion}/${contentVersion}` === deps.current ? deps.openLobbies(engineVersion, contentVersion) : Promise.resolve(0),
-    deps.lastPublicLeft(userId),
-  ]);
+  const current = `${engineVersion}/${contentVersion}` === deps.current;
+  const count = (pace: PublicPace) => (current ? deps.openLobbies(engineVersion, contentVersion, PUBLIC_PACES[pace].seconds) : Promise.resolve(0));
+  const [open, slow, last] = await Promise.all([count('live'), count('slow'), deps.lastPublicLeft(userId)]);
   // Taken out of their last game, a public one, for letting the clock play their rounds, in the last day: the door says why.
   const dropped = last !== null && (last.standing?.idle ?? 0) >= IDLE_ROUNDS && Date.parse(last.leftAt) > deps.now().getTime() - DROPPED_TOLD_MS;
-  return { status: 200, body: { open, dropped } };
+  // `open` are the games played together; `slow`, those of a round a day.
+  return { status: 200, body: { open, slow, dropped } };
 }
 
 /** How long after being taken out of a public game a player is told why. */

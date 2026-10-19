@@ -6,14 +6,14 @@ import type { StoreApi } from 'zustand/vanilla';
 import { Unreachable } from '../session/errors';
 import { tellProfile } from '../session/profile';
 import { GRACE_MS, RoomRefused, RoomSessions } from '../session/room';
-import type { RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '../session/room';
+import type { PublicPace, RoomGameOver, RoomsApi, RoomsLink, RoomState, RoundSeconds } from '../session/room';
 import type { PlayerStore } from '../session/types';
 import { createGameStore } from './store';
 import type { GameStore } from './store';
 
 // What the screens of a room need to know of one, without reaching past the round stores into the sessions.
 export { LOAN_MAX, LOAN_MIN, LOAN_RATES_BP, LOAN_ROUNDS, MAX_MEMBERS, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES, TABLE } from '../session/room';
-export type { RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '../session/room';
+export type { PublicPace, RoomGameOver, RoomLoan, RoomMember, RoomState, RoomStanding, RoundSeconds } from '../session/room';
 
 /**
  * What someone in a game is called: a rat of the server by its kind, a player by their name, or by
@@ -61,8 +61,8 @@ export interface RoomStoreState {
   earned: string[];
   /** What has been shouted, by the others and by the player, that the page has still to show, the oldest first. */
   heard: Array<{ key: string; userId: string; n: number }>;
-  /** How many public games are waiting for players now, as last asked; null before it was. */
-  lobbies: number | null;
+  /** How many public games are waiting for players now, at each pace, as last asked; null before it was. */
+  lobbies: { live: number; slow: number } | null;
   /** The player was taken out of a public game for letting the clock play their rounds, until they have been told. */
   dropped: boolean;
 }
@@ -71,8 +71,8 @@ export interface RoomActions {
   /** Asks the server for the room the player is in. */
   boot(): Promise<void>;
   open(lifeId: string, seconds: RoundSeconds): Promise<boolean>;
-  /** Takes a seat in a public game: one waiting, or a new one. */
-  quick(): Promise<boolean>;
+  /** Takes a seat in a public game at a pace (played together unless asked otherwise): one waiting, or a new one. */
+  quick(pace?: PublicPace): Promise<boolean>;
   join(code: string): Promise<boolean>;
   start(): Promise<void>;
   /** Leaves the room: out of the lobby, giving up the life in play, or done with a room that is over. */
@@ -405,9 +405,9 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
           return room;
         }),
 
-      quick: () =>
+      quick: (pace = 'live') =>
         request(async (rooms) => {
-          const room = await rooms.quick(options.versions);
+          const room = await rooms.quick(options.versions, pace);
           left = null;
           return room;
         }),
@@ -505,9 +505,9 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
         if (rooms === null || now() - lobbiesAsked < LOBBIES_EVERY_MS) return;
         lobbiesAsked = now();
         try {
-          const { open, dropped } = await rooms.lobbies(options.versions);
+          const { live, slow, dropped } = await rooms.lobbies(options.versions);
           // Taken out of their last game: said on the door, until they take a seat again.
-          set({ lobbies: open, dropped: dropped || get().dropped });
+          set({ lobbies: { live, slow }, dropped: dropped || get().dropped });
         } catch (error) {
           // Not known just now: nothing is said of them, and the next look asks again.
           if (!(error instanceof Unreachable)) throw error;

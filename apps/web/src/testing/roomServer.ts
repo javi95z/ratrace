@@ -44,8 +44,8 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   /** Who follows whom, as `friendships` keeps it. */
   const friendships: Array<{ follower: string; followed: string }> = [];
   /** A public lobby still waiting for its time: the only kind a player asking for one is seated in. */
-  const waitingLobby = (r: RoomRow, engine: string, contentVersion: string) =>
-    r.public && r.status === 'open' && r.engine_version === engine && r.content_version === contentVersion && r.starts_at !== null && Date.parse(r.starts_at) > state.now && active(r.id).length < 6;
+  const waitingLobby = (r: RoomRow, engine: string, contentVersion: string, seconds: number) =>
+    r.public && r.status === 'open' && r.engine_version === engine && r.content_version === contentVersion && r.seconds === seconds && r.starts_at !== null && Date.parse(r.starts_at) > state.now && active(r.id).length < 6;
   const avatars = new Map<string, string | null>();
   const unlocked = new Map<string, string[]>();
   const state = { ids: 0, codes: 0, stamps: 0, now: start, allowed: true, asked: [] as string[] };
@@ -112,7 +112,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       if (other) return { error: 'in-a-room', room: other };
       // The oldest public lobby on these rules with a seat left, that the player has not left before.
       const waiting = [...roomsById.values()]
-        .filter((r) => waitingLobby(r, row.engine_version, row.content_version) && memberOf(r.id, row.member) === null)
+        .filter((r) => waitingLobby(r, row.engine_version, row.content_version, row.seconds) && memberOf(r.id, row.member) === null)
         .sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
       if (waiting) {
         members.push({ room_id: waiting.id, user_id: row.member, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
@@ -124,7 +124,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       return made;
     },
     bots: async () => RATS.map((rat) => ({ ...rat })),
-    openLobbies: async (engine, contentVersion) => [...roomsById.values()].filter((r) => waitingLobby(r, engine, contentVersion)).length,
+    openLobbies: async (engine, contentVersion, seconds) => [...roomsById.values()].filter((r) => waitingLobby(r, engine, contentVersion, seconds)).length,
     lastPublicLeft: async (user) => {
       const last = members.filter((m) => m.user_id === user).sort((a, b) => b.joined_at.localeCompare(a.joined_at))[0];
       return last && last.left_at !== null && roomsById.get(last.room_id)?.public ? { leftAt: last.left_at, standing: structuredClone(last.standing) } : null;
