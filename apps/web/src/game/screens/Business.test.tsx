@@ -234,6 +234,27 @@ describe('the business tab', () => {
     expect(ordersOf()).not.toContain(`Change how ${text.businessTypes[shop.typeId].name} is run`);
   });
 
+  it('gives the focus back when a manager takes over a business the player was to run', async () => {
+    // A round on, the shop the founder opened waits to be run again.
+    const { services, session } = await inFinance('founder');
+    await session.playRound({ orders: [] });
+    await toFinance(session);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const panel = screen.getByRole('region', { name: 'Your businesses' });
+    const tend = () => within(panel).getByRole('button', { name: /Run it yourself/ }) as HTMLButtonElement;
+    await user.click(tend());
+    expect(tend().getAttribute('aria-pressed')).toBe('true');
+    await user.click(within(panel).getByRole('button', { name: /Manager · / }));
+    // Never both: the manager runs it, the order to run it oneself is gone, and nothing is stuck on.
+    expect(tend().getAttribute('aria-pressed')).toBe('false');
+    expect(tend().disabled).toBe(true);
+    // Without the manager, the player may run it again.
+    await user.click(within(panel).getByRole('button', { name: /Manager · / }));
+    expect(tend().disabled).toBe(false);
+  });
+
   it('offers a trade of the player\'s own only to a trade that can be sold on its own', async () => {
     const { services } = await inFinance('civil_servant');
     const quote = quoteBusinesses(content, viewOf(await stateOf(services)));

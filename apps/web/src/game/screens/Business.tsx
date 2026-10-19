@@ -46,7 +46,12 @@ function useRunning(view: GameView | null, business: Owned) {
   const isTending = (order: Order) => order.type === 'tendBusiness' && order.businessId === business.id;
   return {
     tend: (on: boolean) => setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null),
-    manage: (on: boolean) => (view ? setOrder(isSetting, settingOrder(view, business.id, { payoutPct: business.payoutPct, manager: on })) : false),
+    // A manager takes over from the owner: their focus is given back.
+    manage: (on: boolean) => {
+      if (!view) return false;
+      if (on) setOrder(isTending, null);
+      return setOrder(isSetting, settingOrder(view, business.id, { payoutPct: business.payoutPct, manager: on }));
+    },
   };
 }
 
@@ -105,7 +110,7 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
         <div className="mt-2 flex gap-2">
           <QuickSwitch
             on={business.tended}
-            disabled={business.manager || standing.tended || (!business.tended && quote.focusLeft < 1)}
+            disabled={standing.tended || (!business.tended && (business.manager || quote.focusLeft < 1))}
             label={t('quickTend')}
             onChange={(on) => running.tend(on)}
           />
@@ -341,12 +346,19 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
             <>
             <Toggle
               on={business.tended}
-              disabled={business.manager || standing.tended || (!business.tended && quote.focusLeft < 1)}
+              disabled={standing.tended || (!business.tended && (business.manager || quote.focusLeft < 1))}
               onChange={(on) => setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null)}
               label={t('tend')}
               hint={business.manager ? t('tendNoNeed') : t('tendHint', { left: quote.focusLeft })}
             />
-            <Toggle on={business.manager} onChange={(manager) => set({ manager })} label={t('manager')} hint={t('managerHint', { pct: business.managerPct })} />
+            <Toggle
+              on={business.manager}
+              onChange={(manager) => {
+                // A manager takes over from the owner: their focus is given back.
+                if (manager) setOrder(isTending, null);
+                set({ manager });
+              }}
+              label={t('manager')} hint={t('managerHint', { pct: business.managerPct })} />
             </>
             )}
             <div className="grid grid-cols-2 gap-2">
