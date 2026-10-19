@@ -604,16 +604,32 @@ begin
   if (select nickname from public.profiles where user_id = b) = 'Rata_Dos' then passed := passed + 1; else failed := array_append(failed, 'an innocent name was refused'); end if;
 
   -- ---------------------------------------------------------------- friends
-  -- B follows A by A's code, however it is typed, as often as they like. Nobody is made to follow anyone.
-  if public.add_friend(code_a) = 'ok' and public.add_friend(' ' || lower(code_a) || ' ') = 'ok' then passed := passed + 1; else failed := array_append(failed, 'B could not follow A by their code'); end if;
-  if public.add_friend(code_b) = 'self' and public.add_friend('ZZZZZZZZ') = 'unknown' and public.add_friend('') = 'unknown' then passed := passed + 1; else failed := array_append(failed, 'following oneself, or nobody, was not told apart'); end if;
-  select count(*) into n from public.friendships where follower = b and followed = a;
-  if n = 1 then passed := passed + 1; else failed := array_append(failed, format('B follows A %s times', n)); end if;
+  -- B asks A by A's code, however it is typed, as often as they like: one request, and no friendship until A says yes.
+  if public.add_friend(code_a) = 'ok' and public.add_friend(' ' || lower(code_a) || ' ') = 'ok' then passed := passed + 1; else failed := array_append(failed, 'B could not ask A by their code'); end if;
+  if public.add_friend(code_b) = 'self' and public.add_friend('ZZZZZZZZ') = 'unknown' and public.add_friend('') = 'unknown' then passed := passed + 1; else failed := array_append(failed, 'asking oneself, or nobody, was not told apart'); end if;
+  select count(*) into n from public.friend_requests where from_user = b and to_user = a;
+  select count(*) into held from public.friendships where b in (follower, followed);
+  if n = 1 and held = 0 then passed := passed + 1; else failed := array_append(failed, format('B asked A %s times, and is in %s friendships', n, held)); end if;
+  -- Nobody writes a friendship or a request of their own: only the server's functions do.
   begin
     insert into public.friendships (follower, followed) values (a, b);
-    failed := array_append(failed, 'B made A follow them');
+    failed := array_append(failed, 'B made A their friend');
   exception when insufficient_privilege then passed := passed + 1;
   end;
+  begin
+    insert into public.friend_requests (from_user, to_user) values (a, b);
+    failed := array_append(failed, 'B wrote a request from A');
+  exception when insufficient_privilege then passed := passed + 1;
+  end;
+  -- A asks back by B's code: a yes. Friends both ways, and the request gone. (Each call is a statement of
+  -- its own: a check in the same statement would read the tables as they were before it.)
+  perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  nm := public.add_friend(code_b);
+  if nm = 'ok'
+     and (select count(*) from public.friendships where (follower = a and followed = b) or (follower = b and followed = a)) = 2
+     and not exists (select 1 from public.friend_requests where a in (from_user, to_user))
+    then passed := passed + 1; else failed := array_append(failed, 'asking back did not make two friends'); end if;
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
 
   -- ---------------------------------------------------------------- rankings
   reset role;
@@ -631,7 +647,7 @@ begin
   -- Of one starting life.
   select array_agg(r.user_id order by r.place) into who from public.ranking('all', 'engineer', false, 100) r where r.user_id in (a, b);
   if who = array[b] then passed := passed + 1; else failed := array_append(failed, format('the ranking of one life is %s', who)); end if;
-  -- Among friends: the asker and whom they follow. B follows A; A follows nobody.
+  -- Among friends: the asker and their friends. A and B are friends.
   select array_agg(r.user_id order by r.place) into who from public.ranking('all', null, true) r;
   if who = array[a, b] then passed := passed + 1; else failed := array_append(failed, format('B''s ranking among friends is %s', who)); end if;
   -- The first so many, and the asker's own place if it is further down. Each with the name they chose.
@@ -641,17 +657,34 @@ begin
     then passed := passed + 1; else failed := array_append(failed, format('the first one and the asker are %s at %s', who, scores)); end if;
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
   select array_agg(r.user_id order by r.place) into who from public.ranking('all', null, true) r;
-  if who = array[a] then passed := passed + 1; else failed := array_append(failed, format('A''s ranking among friends is %s', who)); end if;
-  -- A sees who follows them, and cannot undo it for them. B can.
+  if who = array[a, b] then passed := passed + 1; else failed := array_append(failed, format('A''s ranking among friends is %s', who)); end if;
+  -- A sees the two rows of their friendship, and ends neither by hand: that would leave B still their friend.
   select count(*) into n from public.friendships;
-  delete from public.friendships where follower = b;
-  get diagnostics held = row_count;
-  if n = 1 and held = 0 then passed := passed + 1; else failed := array_append(failed, format('A sees %s follows and undid %s that are not theirs', n, held)); end if;
-  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
-  delete from public.friendships where follower = b and followed = a;
-  get diagnostics n = row_count;
-  if n = 1 then passed := passed + 1; else failed := array_append(failed, 'B could not stop following A'); end if;
+  begin
+    delete from public.friendships where follower = a;
+    failed := array_append(failed, 'A deleted a row of a friendship by hand');
+  exception when insufficient_privilege then
+    if n = 2 then passed := passed + 1; else failed := array_append(failed, format('A sees %s rows of friendships', n)); end if;
+  end;
   reset role;
+  -- The server ends it, for both; and a request answered no is gone, with no friendship.
+  nm := public.friend_remove(a, b);
+  held := (select count(*) from public.friendships where a in (follower, followed));
+  nm := nm || ' ' || (public.friend_request(b, code_a) ->> 'answer');
+  nm := nm || ' ' || public.friend_answer(a, b, false);
+  held := held + (select count(*) from public.friend_requests where a in (from_user, to_user)) + (select count(*) from public.friendships where a in (follower, followed));
+  nm := nm || ' ' || public.friend_answer(a, b, true);
+  if nm = 'ok sent declined gone' and held = 0
+    then passed := passed + 1; else failed := array_append(failed, format('ending a friendship, or saying no, answered %s and left %s rows', nm, held)); end if;
+  -- A yes from the server, as from asking back.
+  nm := public.friend_request(b, code_a) ->> 'answer';
+  nm := nm || ' ' || (public.friend_request(b, code_a) ->> 'answer');
+  nm := nm || ' ' || public.friend_answer(a, b, true);
+  nm := nm || ' ' || (public.friend_request(b, code_a) ->> 'answer');
+  nm := nm || ' ' || (public.friend_request(b, 'ZZZZZZZZ') ->> 'answer');
+  if nm = 'sent pending accepted friends unknown'
+    then passed := passed + 1; else failed := array_append(failed, format('the server''s requests answered %s', nm)); end if;
+  perform public.friend_remove(a, b);
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
   set local role anon;
   begin
@@ -1048,10 +1081,14 @@ begin
   update public.profiles set nickname = 'Gallo_10' where user_id = g;
   if not exists (select 1 from public.name_reports where reported = g) and (select nickname from public.profiles where user_id = g) = 'Gallo_10'
     then passed := passed + 1; else failed := array_append(failed, 'a new name kept the reports of the old one'); end if;
-  -- Someone met in a game can be followed without their code, once.
-  nm := public.room_follow(room_x, h, g);
-  if nm = 'ok' and public.room_follow(room_x, h, g) = 'ok' and (select count(*) from public.friendships where follower = h and followed = g) = 1
-    then passed := passed + 1; else failed := array_append(failed, format('following someone met in a game answered %s', nm)); end if;
+  -- Someone met in a game can be asked without their code, once; and asked back, they are friends.
+  nm := public.room_befriend(room_x, h, g);
+  nm := nm || ' ' || public.room_befriend(room_x, h, g) || ' ' || public.room_follow(room_x, h, g);
+  held := (select count(*) from public.friend_requests where from_user = h and to_user = g) * 10 + (select count(*) from public.friendships where follower = h and followed = g);
+  nm := nm || ' ' || public.room_befriend(room_x, g, h);
+  held := held * 10 + (select count(*) from public.friendships where (follower = h and followed = g) or (follower = g and followed = h));
+  if nm = 'sent pending ok accepted' and held = 102
+    then passed := passed + 1; else failed := array_append(failed, format('asking someone met in a game answered %s, with %s', nm, held)); end if;
   -- Nobody follows themselves, a rat, or someone never met in that game; and two hundred is the most.
   with many as (
     insert into auth.users (id, aud, role, is_anonymous) select gen_random_uuid(), 'authenticated', 'authenticated', true from generate_series(1, 200) returning id
@@ -1151,7 +1188,7 @@ begin
   delete from auth.users where id = a;
   select (select count(*) from public.profiles where user_id = a) + (select count(*) from public.player_progress where user_id = a) + (select count(*) from public.games where user_id = a)
        + (select count(*) from public.game_secrets where game_id = ranked_a) + (select count(*) from public.runs where user_id = a)
-       + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from private.rate_use where user_id = a)
+       + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from public.friend_requests where a in (from_user, to_user)) + (select count(*) from private.rate_use where user_id = a)
        + (select count(*) from public.rooms where host = a) + (select count(*) from public.room_players where user_id = a) + (select count(*) from public.room_orders where user_id = a)
        + (select count(*) from private.player_days where user_id = a) into n;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, (format('%s rows of a deleted account were left behind', n))::text); end if;

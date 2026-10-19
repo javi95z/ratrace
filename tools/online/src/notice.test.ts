@@ -27,6 +27,12 @@ describe('what a notice says', () => {
     expect(noticeOf('es', { kind: 'newRound', round: 6, rounds: 20, seconds: 86_400 })).toMatchObject({ title: 'Ronda 6 de 20', body: 'Empieza una ronda nueva de tu partida. Tienes 24 h para jugarla.', url: '/es/room' });
   });
 
+  it('tells of a friend request and of a yes, by name, and leads to the friends', () => {
+    expect(noticeOf('es', { kind: 'friendRequest', who: 'Ana' })).toEqual({ title: 'Solicitud de amistad', body: 'Ana quiere ser tu amigo. Acéptala y veréis vuestras vidas entre amigos.', url: '/es/rankings#friends', tag: 'friends' });
+    expect(noticeOf('en', { kind: 'friendAccepted', who: null })).toMatchObject({ title: 'You have a new friend', url: '/en/rankings#friends' });
+    expect(noticeOf('ru', { kind: 'friendRequest', who: null }).body.startsWith('Игрок')).toBe(true);
+  });
+
   it('says a shout as the player who sent it, in the words of the page', () => {
     expect(noticeOf('es', { kind: 'shout', who: 'Ana', n: 13 })).toEqual({ title: 'Ana dice:', body: '¡Date prisa!', url: '/es/room', tag: 'room-shout' });
     expect(noticeOf('en', { kind: 'shout', who: null, n: 2 })).toMatchObject({ title: 'A rival says:', body: '🔥' });

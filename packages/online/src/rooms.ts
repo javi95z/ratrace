@@ -33,6 +33,7 @@ function memberOf(raw: unknown): RoomMember | null {
     host: raw.host === true,
     bot: typeof raw.bot === 'string' ? raw.bot : null,
     followed: raw.followed === true,
+    friend: raw.friend === true,
     ready: raw.ready === true,
     left: raw.left === true,
     standing:

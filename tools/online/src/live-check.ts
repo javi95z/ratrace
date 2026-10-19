@@ -310,8 +310,15 @@ try {
   const goodName = await a.from('profiles').update({ nickname: `check_${idA.slice(0, 8)}` }).eq('user_id', idA);
   check((badName.error as { code?: string } | null)?.code === 'RR002' && goodName.error === null, 'a name is refused for what it says, and an innocent one is taken');
   const codeOfA = (await a.from('profiles').select('friend_code').eq('user_id', idA).maybeSingle()).data?.friend_code as string;
-  const followed = await b.rpc('add_friend', { code: codeOfA.toLowerCase() });
-  check(followed.data === 'ok' && (await b.rpc('add_friend', { code: 'ZZZZZZZZ' })).data === 'unknown', 'a player follows another by their code, and nobody by a code that is nobody\'s');
+  // Friends, both ways: B asks by A's code, A sees the request and says yes, and both are friends.
+  const asked = await b.functions.invoke('friends', { body: { action: 'request', code: codeOfA.toLowerCase() } });
+  const nobodys = await b.functions.invoke('friends', { body: { action: 'request', code: 'ZZZZZZZZ' } });
+  check((asked.data as { answer?: string } | null)?.answer === 'sent' && (nobodys.data as { answer?: string } | null)?.answer === 'unknown', 'a player asks another to be friends by their code, and nobody by a code that is nobody\'s');
+  const waiting = await a.functions.invoke('friends', { body: { action: 'list' } });
+  const fromB = ((waiting.data as { incoming?: Array<{ userId: string }> } | null)?.incoming ?? []).some((one) => one.userId === idB);
+  const yes = await a.functions.invoke('friends', { body: { action: 'answer', from: idB, yes: true } });
+  const both = await b.functions.invoke('friends', { body: { action: 'list' } });
+  check(fromB && (yes.data as { answer?: string } | null)?.answer === 'accepted' && ((both.data as { friends?: Array<{ userId: string }> } | null)?.friends ?? []).some((one) => one.userId === idA), 'the other sees the request, says yes, and they are friends both ways');
   const board = await b.rpc('ranking', { period: 'week', friends: true });
   const placed = ((board.data ?? []) as Array<{ user_id: string; score: number; nickname: string | null; place: number }>).find((one) => one.user_id === idA);
   check(board.error === null && placed?.score === rankedRun?.score && placed?.nickname === `check_${idA.slice(0, 8)}`, 'the ranked life is in the ranking of the week among friends, under its player\'s name');

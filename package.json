@@ -20,7 +20,7 @@
     "online:live-check": "pnpm --filter @ratrace/online-tools live-check",
     "online:errors": "pnpm --filter @ratrace/online-tools errors",
     "online:stats": "pnpm --filter @ratrace/online-tools stats",
-    "online:deploy": "pnpm online:bundle && for f in engine finish-run ranked rooms weekly-notice market-notice report-error; do supabase functions deploy $f --use-api || exit 1; done && pnpm online:bundle --shipped",
+    "online:deploy": "pnpm online:bundle && for f in engine finish-run ranked rooms friends weekly-notice market-notice report-error; do supabase functions deploy $f --use-api || exit 1; done && pnpm online:bundle --shipped",
     "catalog": "pnpm --filter @ratrace/play catalog"
   },
   "devDependencies": {

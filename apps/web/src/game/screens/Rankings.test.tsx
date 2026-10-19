@@ -28,7 +28,7 @@ function community(over: Partial<Community> = {}) {
   const asked: string[] = [];
   const state = {
     me: { nickname: null as string | null, friendCode: 'ABCD2345', avatar: null as string | null },
-    friends: [] as Friend[],
+    friends: { friends: [] as Friend[], incoming: [] as Friend[], outgoing: [] as Friend[] },
     board: (query: RankingQuery): RankingRow[] | null => [row(1, 'aaaa1111-0000', { nickname: 'Otra_Rata', lifeId: 'engineer' }), row(2, 'bbbb2222-0000'), row(9, 'me', { mine: true, score: 120 })].filter(() => query.period === 'all' || true),
   };
   const all: Community = {
@@ -50,14 +50,22 @@ function community(over: Partial<Community> = {}) {
     friends: async () => state.friends,
     compare: async () => null,
     run: async () => null,
-    follow: async (code) => {
-      asked.push(`follow ${code}`);
-      state.friends = [{ userId: 'aaaa1111-0000', nickname: 'Otra_Rata' }, ...state.friends];
-      return 'ok';
+    befriend: async (code) => {
+      asked.push(`befriend ${code}`);
+      state.friends = { ...state.friends, outgoing: [{ userId: 'aaaa1111-0000', nickname: 'Otra_Rata', avatar: null }, ...state.friends.outgoing] };
+      return 'sent';
     },
-    unfollow: async (userId) => {
-      asked.push(`unfollow ${userId}`);
-      state.friends = state.friends.filter((friend) => friend.userId !== userId);
+    answerFriend: async (userId, yes) => {
+      asked.push(`answer ${userId} ${yes ? 'yes' : 'no'}`);
+      const asking = state.friends.incoming.find((friend) => friend.userId === userId);
+      const incoming = state.friends.incoming.filter((friend) => friend.userId !== userId);
+      state.friends = { ...state.friends, incoming, friends: yes && asking ? [asking, ...state.friends.friends] : state.friends.friends };
+      return yes ? 'accepted' : 'declined';
+    },
+    unfriend: async (userId) => {
+      asked.push(`unfriend ${userId}`);
+      const without = (list: Friend[]) => list.filter((friend) => friend.userId !== userId);
+      state.friends = { friends: without(state.friends.friends), incoming: without(state.friends.incoming), outgoing: without(state.friends.outgoing) };
       return true;
     },
     challengeEntry: async () => ({ entered: false, score: null }),
@@ -274,67 +282,98 @@ describe('the rankings', () => {
     }
   });
 
-  it('shows the player their friend code, and follows another player by theirs', async () => {
+  it('shows the player their friend code, and asks another player to be friends by theirs', async () => {
     const { community: c, asked } = community();
     const user = userEvent.setup();
     show(c);
     expect((await screen.findByRole('region', { name: 'You' })).textContent).toContain('ABCD2345');
-    // Whom the player follows belongs with the ranking it decides, and is not shown beside the others.
-    expect(screen.queryByRole('region', { name: 'People you follow' })).toBeNull();
+    // The friends belong with the ranking they decide, and are not shown beside the others.
+    expect(screen.queryByRole('region', { name: 'Your friends' })).toBeNull();
     await user.click(screen.getByRole('tab', { name: 'Friends' }));
-    const friends = await screen.findByRole('region', { name: 'People you follow' });
-    expect(friends.textContent).toContain('You follow nobody yet.');
+    const friends = await screen.findByRole('region', { name: 'Your friends' });
+    expect(friends.textContent).toContain('No friends yet.');
     await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-    await user.click(within(friends).getByRole('button', { name: 'Follow' }));
-    await waitFor(() => expect(within(friends).getByRole('list').textContent).toContain('Otra_Rata'));
-    expect(asked).toContain('follow wxyz6789');
+    await user.click(within(friends).getByRole('button', { name: 'Send request' }));
+    expect((await within(friends).findByRole('status')).textContent).toBe('Request sent. Once they accept, you are friends.');
+    expect(asked).toContain('befriend wxyz6789');
     expect((within(friends).getByRole('textbox', { name: 'Friend code' }) as HTMLInputElement).value).toBe('');
-    // And stops, when asked.
-    await user.click(within(friends).getByRole('button', { name: 'Stop following Otra_Rata' }));
-    await waitFor(() => expect(friends.textContent).toContain('You follow nobody yet.'));
-    expect(asked).toContain('unfollow aaaa1111-0000');
-    // Each change of whom the player follows reads the friends' ranking again.
-    expect(asked.filter((line) => line === 'ranking all friends any')).toHaveLength(3);
+    // A request waits, apart from the friends, until it is answered.
+    const sent = await within(friends).findByRole('region', { name: 'Requests sent' });
+    expect(sent.textContent).toContain('Otra_Rata');
+    expect(sent.textContent).toContain('Waiting');
+    expect(within(friends).queryByRole('list')).toBeNull();
   });
 
-  it('follows nobody for an empty code, and names a player with no name by their id', async () => {
+  it('accepts a request where it is read, and ends a friendship only from the friend\'s sheet', async () => {
     const { community: c, asked, state } = community();
-    state.friends = [{ userId: 'cccc3333-0000', nickname: null }];
+    state.friends.incoming = [{ userId: 'bbbb2222-0000', nickname: 'Tercera', avatar: null }, { userId: 'dddd4444-0000', nickname: null, avatar: null }];
     const user = userEvent.setup();
     show(c);
     await user.click(await screen.findByRole('tab', { name: 'Friends' }));
-    const friends = await screen.findByRole('region', { name: 'People you follow' });
-    expect(await within(friends).findByRole('button', { name: 'Stop following Rat CCCC' })).toBeTruthy();
-    await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), '   ');
-    await user.click(within(friends).getByRole('button', { name: 'Follow' }));
-    expect(asked.filter((line) => line.startsWith('follow'))).toEqual([]);
-    // The spaces around a code that was pasted are not part of it.
-    await user.clear(within(friends).getByRole('textbox', { name: 'Friend code' }));
-    await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), ' wxyz6789 ');
-    await user.click(within(friends).getByRole('button', { name: 'Follow' }));
-    await waitFor(() => expect(asked).toContain('follow wxyz6789'));
+    const friends = await screen.findByRole('region', { name: 'Your friends' });
+    const requests = await within(friends).findByRole('region', { name: 'Friend requests' });
+    expect(requests.textContent).toContain('Rat DDDD');
+    await user.click(within(requests).getAllByRole('button', { name: 'Accept' })[0]);
+    expect((await within(friends).findByRole('status')).textContent).toBe('You are friends now!');
+    expect(asked).toContain('answer bbbb2222-0000 yes');
+    await user.click(within(friends).getByRole('button', { name: 'Decline' }));
+    await waitFor(() => expect(within(friends).queryByRole('region', { name: 'Friend requests' })).toBeNull());
+    expect(asked).toContain('answer dddd4444-0000 no');
+    // A friend is a line to tap, with nothing on it that ends the friendship.
+    const friend = await within(within(friends).getByRole('list')).findByRole('button', { name: /Tercera/ });
+    expect(within(friends).queryByRole('button', { name: /Remove|Stop/ })).toBeNull();
+    await user.click(friend);
+    const sheet = screen.getByRole('dialog', { name: 'Tercera' });
+    await user.click(within(sheet).getByRole('button', { name: 'Remove friend' }));
+    await waitFor(() => expect(friends.textContent).toContain('No friends yet.'));
+    expect(asked).toContain('unfriend bbbb2222-0000');
+    // Each change of the friends reads the friends' ranking again.
+    expect(asked.filter((line) => line === 'ranking all friends any').length).toBeGreaterThanOrEqual(4);
   });
 
-  it('says so when the people the player follows could not be read', async () => {
+  it('asks nobody for an empty code, and trims a pasted one', async () => {
+    const { community: c, asked } = community();
+    const user = userEvent.setup();
+    show(c);
+    await user.click(await screen.findByRole('tab', { name: 'Friends' }));
+    const friends = await screen.findByRole('region', { name: 'Your friends' });
+    await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), '   ');
+    await user.click(within(friends).getByRole('button', { name: 'Send request' }));
+    expect(asked.filter((line) => line.startsWith('befriend'))).toEqual([]);
+    await user.clear(within(friends).getByRole('textbox', { name: 'Friend code' }));
+    await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), ' wxyz6789 ');
+    await user.click(within(friends).getByRole('button', { name: 'Send request' }));
+    await waitFor(() => expect(asked).toContain('befriend wxyz6789'));
+  });
+
+  it('says so when the friends could not be read', async () => {
     const { community: c } = community({ friends: async () => null });
     const user = userEvent.setup();
     show(c);
     await user.click(await screen.findByRole('tab', { name: 'Friends' }));
-    const friends = await screen.findByRole('region', { name: 'People you follow' });
-    expect(await within(friends).findByText('The people you follow could not be read.')).toBeTruthy();
-    expect(friends.textContent).not.toContain('You follow nobody yet.');
+    const friends = await screen.findByRole('region', { name: 'Your friends' });
+    expect(await within(friends).findByText('Your friends could not be read.')).toBeTruthy();
+    expect(friends.textContent).not.toContain('No friends yet.');
   });
 
-  it('says why nobody was followed', async () => {
-    for (const [answer, said] of [['unknown', 'No player has that code.'], ['self', 'That is your own code.'], ['full', 'You follow as many players as one can.'], ['failed', 'That did not work. Try again.']] as const) {
-      const { community: c } = community({ follow: async () => answer });
+  it('says what a request came to', async () => {
+    for (const [answer, said, role] of [
+      ['accepted', 'You are friends now!', 'status'],
+      ['pending', 'You had already sent them a request.', 'status'],
+      ['friends', 'You are friends already.', 'status'],
+      ['unknown', 'No player has that code.', 'alert'],
+      ['self', 'That is your own code.', 'alert'],
+      ['full', 'You already have as many friends or waiting requests as one can.', 'alert'],
+      ['failed', 'That did not work. Try again.', 'alert'],
+    ] as const) {
+      const { community: c } = community({ befriend: async () => answer });
       const user = userEvent.setup();
       show(c);
       await user.click(await screen.findByRole('tab', { name: 'Friends' }));
-      const friends = await screen.findByRole('region', { name: 'People you follow' });
+      const friends = await screen.findByRole('region', { name: 'Your friends' });
       await user.type(within(friends).getByRole('textbox', { name: 'Friend code' }), 'wxyz6789');
-      await user.click(within(friends).getByRole('button', { name: 'Follow' }));
-      expect((await within(friends).findByRole('alert')).textContent, answer).toBe(said);
+      await user.click(within(friends).getByRole('button', { name: 'Send request' }));
+      expect((await within(friends).findByRole(role)).textContent, answer).toBe(said);
       cleanup();
     }
   });

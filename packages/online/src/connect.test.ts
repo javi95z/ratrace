@@ -538,40 +538,48 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.challengeEntry('2026-W42')).toBeNull();
   });
 
-  it('follows a player by their code, lists whom the player follows by name, and stops following', async () => {
+  it('asks a player to be friends by their code, answers a request, lists friends and requests, and ends a friendship, all through the server', async () => {
     client.answers.getSession = signedIn;
     const cloud = await connectSupabase('u', 'k');
-    client.answers.rpc = { data: 'ok', error: null };
-    expect(await cloud.community.follow(' abcd2345 ')).toBe('ok');
-    expect(client.asked).toEqual([['rpc', 'add_friend', { code: ' abcd2345 ' }]]);
-    for (const word of ['unknown', 'self', 'full'] as const) {
-      client.answers.rpc = { data: word, error: null };
-      expect(await cloud.community.follow('x')).toBe(word);
+    client.answers.invoke = { data: { answer: 'sent' }, error: null };
+    expect(await cloud.community.befriend(' abcd2345 ')).toBe('sent');
+    expect(client.asked).toEqual([['invoke', 'friends', { body: { action: 'request', code: ' abcd2345 ' } }]]);
+    for (const word of ['accepted', 'pending', 'friends', 'unknown', 'self', 'full'] as const) {
+      client.answers.invoke = { data: { answer: word }, error: null };
+      expect(await cloud.community.befriend('x')).toBe(word);
     }
-    client.answers.rpc = { data: 'something else', error: null };
-    expect(await cloud.community.follow('x')).toBe('failed');
-    client.answers.rpc = { data: null, error: new Error('offline') };
-    expect(await cloud.community.follow('x')).toBe('failed');
-    client.answers.rpc = { data: 'ok', error: new Error('half an answer') };
-    expect(await cloud.community.follow('x')).toBe('failed');
+    client.answers.invoke = { data: { answer: 'something else' }, error: null };
+    expect(await cloud.community.befriend('x')).toBe('failed');
+    client.answers.invoke = { data: null, error: new Error('offline') };
+    expect(await cloud.community.befriend('x')).toBe('failed');
 
     client.asked.length = 0;
-    client.answers.friendships = { data: [{ followed: 'u-9' }, { followed: 'u-8' }], error: null };
-    client.answers.profiles = { data: [{ user_id: 'u-9', nickname: 'Otra' }], error: null };
-    expect(await cloud.community.friends()).toEqual([{ userId: 'u-9', nickname: 'Otra' }, { userId: 'u-8', nickname: null }]);
-    expect(client.asked).toEqual([
-      ['friendships', ['select', 'followed'], ['eq', 'follower', 'u-1'], ['order', 'created_at', { ascending: false }]],
-      ['profiles', ['select', 'user_id, nickname'], ['in', 'user_id', ['u-9', 'u-8']]],
-    ]);
-    client.answers.friendships = { data: null, error: new Error('offline') };
+    client.answers.invoke = { data: { answer: 'accepted' }, error: null };
+    expect(await cloud.community.answerFriend('u-9', true)).toBe('accepted');
+    expect(client.asked).toEqual([['invoke', 'friends', { body: { action: 'answer', from: 'u-9', yes: true } }]]);
+    client.answers.invoke = { data: null, error: new Error('offline') };
+    expect(await cloud.community.answerFriend('u-9', false)).toBe('failed');
+
+    client.asked.length = 0;
+    client.answers.invoke = {
+      data: { friends: [{ userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold' }, { userId: 'u-8' }], incoming: [{ userId: 'u-7', nickname: null, avatar: null }], outgoing: [], junk: 1 },
+      error: null,
+    };
+    expect(await cloud.community.friends()).toEqual({
+      friends: [{ userId: 'u-9', nickname: 'Otra', avatar: 'rat_gold' }, { userId: 'u-8', nickname: null, avatar: null }],
+      incoming: [{ userId: 'u-7', nickname: null, avatar: null }],
+      outgoing: [],
+    });
+    expect(client.asked).toEqual([['invoke', 'friends', { body: { action: 'list' } }]]);
+    client.answers.invoke = { data: null, error: new Error('offline') };
     expect(await cloud.community.friends()).toBeNull();
 
     client.asked.length = 0;
-    client.answers.friendships = { error: null };
-    expect(await cloud.community.unfollow('u-9')).toBe(true);
-    expect(client.asked).toEqual([['friendships', ['delete'], ['eq', 'follower', 'u-1'], ['eq', 'followed', 'u-9']]]);
-    client.answers.friendships = { error: new Error('offline') };
-    expect(await cloud.community.unfollow('u-9')).toBe(false);
+    client.answers.invoke = { data: { answer: 'ok' }, error: null };
+    expect(await cloud.community.unfriend('u-9')).toBe(true);
+    expect(client.asked).toEqual([['invoke', 'friends', { body: { action: 'remove', userId: 'u-9' } }]]);
+    client.answers.invoke = { data: null, error: new Error('offline') };
+    expect(await cloud.community.unfriend('u-9')).toBe(false);
   });
 });
 

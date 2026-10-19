@@ -6,7 +6,9 @@ import { useEffect, useId, useState } from 'react';
 import { useAccount, useCommunity, useT, useWords } from '@/game/context';
 import { Link } from '@/i18n/navigation';
 import { ageAt } from '@ratrace/core/game/present';
-import type { Community, Friend, RankedLifeDetail, RankingRow } from '@ratrace/online/types';
+import type { Community, Friend, Friends, RankedLifeDetail, RankingRow } from '@ratrace/online/types';
+import { ratLookOf } from '@ratrace/core/game/avatar';
+import { RatAvatar } from '@/ui/RatAvatar';
 import { Bare, Button, Panel, Row, KeyFigure } from '@/ui/kit';
 import { Sheet, Tabs } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
@@ -112,22 +114,38 @@ function You({ community, onRenamed }: { community: Community; onRenamed(): void
   );
 }
 
-const FOLLOW_PROBLEM = { unknown: 'followUnknown', self: 'followSelf', full: 'followFull', failed: 'followFailed' } as const;
+/** What asking for a friend by their code came to, as the panel says it. */
+const ASKED = {
+  sent: 'requestSent',
+  accepted: 'nowFriends',
+  pending: 'alreadyAsked',
+  friends: 'alreadyFriends',
+  unknown: 'followUnknown',
+  self: 'followSelf',
+  full: 'followFull',
+  failed: 'followFailed',
+} as const;
 
-/** Whom the player follows, the way to follow one more by their code, and the way to stop. */
-function Following({ community, onChanged }: { community: Community; onChanged(): void }) {
+/**
+ * The player's friends, both ways, and the way to more: the requests waiting on the player, each to
+ * accept or decline; the friends, each a tap from their sheet, where a friendship is ended; the
+ * requests the player sent; and a friend code to ask with. Requests answered and sent are the server's.
+ */
+function Friendships({ community, onChanged }: { community: Community; onChanged(): void }) {
   const t = useT('rankings');
+  const common = useT('common');
   /** `undefined` until the answer comes; null when it could not be read. */
-  const [friends, setFriends] = useState<Friend[] | null | undefined>(undefined);
+  const [list, setList] = useState<Friends | null | undefined>(undefined);
   const [code, setCode] = useState('');
-  const [problem, setProblem] = useState<(typeof FOLLOW_PROBLEM)[keyof typeof FOLLOW_PROBLEM] | null>(null);
+  const [said, setSaid] = useState<{ key: (typeof ASKED)[keyof typeof ASKED] | 'answerGone'; bad: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
   const [turn, setTurn] = useState(0);
+  const [open, setOpen] = useState<{ friend: Friend; waiting: boolean } | null>(null);
 
   useEffect(() => {
     let wanted = true;
-    void community.friends().then((list) => {
-      if (wanted) setFriends(list);
+    void community.friends().then((found) => {
+      if (wanted) setList(found);
     });
     return () => {
       wanted = false;
@@ -138,41 +156,94 @@ function Following({ community, onChanged }: { community: Community; onChanged()
     setTurn((n) => n + 1);
     onChanged();
   };
-  const follow = async () => {
+  const ask = async () => {
     const asked = code.trim();
     if (asked === '') return;
     setBusy(true);
-    const answer = await community.follow(asked);
+    const answer = await community.befriend(asked);
     setBusy(false);
-    if (answer !== 'ok') return setProblem(FOLLOW_PROBLEM[answer]);
-    setCode('');
-    setProblem(null);
+    const good = answer === 'sent' || answer === 'accepted' || answer === 'pending' || answer === 'friends';
+    setSaid({ key: ASKED[answer], bad: !good });
+    if (good) {
+      setCode('');
+      changed();
+    }
+  };
+  const answer = async (friend: Friend, yes: boolean) => {
+    setBusy(true);
+    const answered = await community.answerFriend(friend.userId, yes);
+    setBusy(false);
+    if (answered === 'accepted') setSaid({ key: 'nowFriends', bad: false });
+    else if (answered === 'gone') setSaid({ key: 'answerGone', bad: true });
+    else if (answered === 'full' || answered === 'failed') setSaid({ key: answered === 'full' ? 'followFull' : 'followFailed', bad: true });
+    else setSaid(null);
+    changed();
+  };
+  const end = async (friend: Friend) => {
+    setBusy(true);
+    const done = await community.unfriend(friend.userId);
+    setBusy(false);
+    setOpen(null);
+    if (!done) setSaid({ key: 'followFailed', bad: true });
     changed();
   };
   const nameOf = (friend: Friend) => friend.nickname ?? t('nameless', { tag: tagOf(friend.userId) });
+  const face = (friend: Friend) => <RatAvatar look={ratLookOf(friend.avatar, friend.userId)} size="sm" />;
+  const line = 'bevel flex min-h-11 w-full items-center gap-2 bg-night-700 px-2 py-1.5 text-left';
 
   return (
     <Panel title={t('following')} label={t('following')}>
       <div className="flex flex-col gap-2">
-        {friends === null ? <p className="text-[13px] text-ink-200">{t('friendsUnreachable')}</p> : null}
-        {friends?.length === 0 ? <p className="text-[13px] text-ink-200">{t('nobody')}</p> : null}
-        {friends && friends.length > 0 ? (
-          <ul className="flex flex-col gap-1.5">
-            {friends.map((friend) => (
-              <li key={friend.userId} className="bevel flex items-center justify-between gap-2 bg-night-700 px-3 py-1.5">
-                <span className="min-w-0 truncate text-[14px]">{nameOf(friend)}</span>
-                <Button variant="quiet" className="shrink-0 text-[13px]" aria-label={t('stop', { name: nameOf(friend) })} onClick={() => void community.unfollow(friend.userId).then(changed)}>
-                  {t('stopShort')}
+        {list === null ? <p className="text-[13px] text-ink-200">{t('friendsUnreachable')}</p> : null}
+        {/* What waits on the player comes first: a request is answered where it is read. */}
+        {list && list.incoming.length > 0 ? (
+          <section aria-label={t('requests')} className="flex flex-col gap-1.5">
+            <p className="pixel text-[12px] uppercase tracking-[0.1em] text-gold-200">{t('requests')}</p>
+            {list.incoming.map((friend) => (
+              <div key={friend.userId} className={line}>
+                {face(friend)}
+                <span className="min-w-0 flex-1 truncate text-[14px]">{nameOf(friend)}</span>
+                <Button variant="primary" className="shrink-0 text-[13px]" disabled={busy} onClick={() => void answer(friend, true)}>
+                  {t('accept')}
                 </Button>
+                <Button variant="quiet" className="shrink-0 text-[13px]" disabled={busy} onClick={() => void answer(friend, false)}>
+                  {t('decline')}
+                </Button>
+              </div>
+            ))}
+          </section>
+        ) : null}
+        {list?.friends.length === 0 && list.incoming.length === 0 ? <p className="text-[13px] text-ink-200">{t('nobody')}</p> : null}
+        {list && list.friends.length > 0 ? (
+          <ul className="flex flex-col gap-1.5">
+            {list.friends.map((friend) => (
+              <li key={friend.userId}>
+                <button type="button" aria-haspopup="dialog" className={line} onClick={() => setOpen({ friend, waiting: false })}>
+                  {face(friend)}
+                  <span className="min-w-0 flex-1 truncate text-[14px]">{nameOf(friend)}</span>
+                  <span aria-hidden className="pixel shrink-0 text-[14px] text-ink-300">›</span>
+                </button>
               </li>
             ))}
           </ul>
+        ) : null}
+        {list && list.outgoing.length > 0 ? (
+          <section aria-label={t('sent')} className="flex flex-col gap-1.5">
+            <p className="pixel text-[12px] uppercase tracking-[0.1em] text-ink-300">{t('sent')}</p>
+            {list.outgoing.map((friend) => (
+              <button key={friend.userId} type="button" aria-haspopup="dialog" className={line} onClick={() => setOpen({ friend, waiting: true })}>
+                {face(friend)}
+                <span className="min-w-0 flex-1 truncate text-[14px] text-ink-200">{nameOf(friend)}</span>
+                <span className="shrink-0 text-[12px] text-ink-300">{t('pending')}</span>
+              </button>
+            ))}
+          </section>
         ) : null}
         <form
           className="flex items-end gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            void follow();
+            void ask();
           }}
         >
           <label className="flex min-w-0 flex-1 flex-col gap-1 text-[13px] text-ink-200">
@@ -183,12 +254,24 @@ function Following({ community, onChanged }: { community: Community; onChanged()
             {t('follow')}
           </Button>
         </form>
-        {problem ? (
-          <p role="alert" className="frame bg-wine-900 px-3 py-2 text-[13px]">
-            {t(problem)}
+        {said ? (
+          <p role={said.bad ? 'alert' : 'status'} className={`frame px-3 py-2 text-[13px] ${said.bad ? 'bg-wine-900' : 'bg-teal-800'}`}>
+            {t(said.key)}
           </p>
         ) : null}
       </div>
+      {/* A friend, or a request the player sent: their rat, and the one thing to do, which ends it for both. */}
+      <Sheet open={open !== null} onClose={() => setOpen(null)} title={open ? nameOf(open.friend) : ''} closeLabel={common('close')}>
+        {open ? (
+          <div className="flex flex-col items-center gap-3">
+            <RatAvatar look={ratLookOf(open.friend.avatar, open.friend.userId)} size="lg" />
+            {open.waiting ? <p className="text-[13px] text-ink-300">{t('pending')}</p> : <p className="text-center text-[13px] leading-snug text-ink-300">{t('unfriendAbout')}</p>}
+            <Button variant="danger" wide disabled={busy} onClick={() => void end(open.friend)}>
+              {t(open.waiting ? 'cancelRequest' : 'unfriend')}
+            </Button>
+          </div>
+        ) : null}
+      </Sheet>
     </Panel>
   );
 }
@@ -292,6 +375,10 @@ export function Rankings() {
   const community = useCommunity();
   const ids = useId();
   const [kind, setKind] = useState<Kind>('all');
+  // A link to the friends, from a notice or the front door, opens on them: `/rankings#friends`.
+  useEffect(() => {
+    if (window.location.hash === '#friends') setKind('friends');
+  }, []);
   const [lifeId, setLifeId] = useState<string | null>(null);
   /** The last answer, and what it answers: a ranking is shown only for what is being asked now. */
   const [answer, setAnswer] = useState<{ to: string; rows: RankingRow[] | null } | null>(null);
@@ -388,7 +475,7 @@ export function Rankings() {
             )}
           </div>
 
-          {kind === 'friends' ? <Following community={community} onChanged={again} /> : null}
+          {kind === 'friends' ? <Friendships community={community} onChanged={again} /> : null}
           {opened ? <RunSheet community={community} row={opened} name={nameOf(opened)} onClose={() => setOpened(null)} /> : null}
         </>
       )}

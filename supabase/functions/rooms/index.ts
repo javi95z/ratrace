@@ -115,9 +115,17 @@ export default {
         },
         reportName: (room, reporter, reported) => call('room_report_name', { p_room: room, p_reporter: reporter, p_reported: reported }),
         reportedBy: async (user) => (must(await db.from('name_reports').select('reported').eq('reporter', user)) as Array<{ reported: string }>).map((row) => row.reported),
-        follow: (room, follower, followed) => call('room_follow', { p_room: room, p_follower: follower, p_followed: followed }),
-        following: async (user, ids) =>
-          (must(await db.from('friendships').select('followed').eq('follower', user).in('followed', ids)) as Array<{ followed: string }>).map((row) => row.followed),
+        follow: (room, follower, followed) => call('room_befriend', { p_room: room, p_from: follower, p_to: followed }),
+        following: async (user, ids) => {
+          const [friends, asked] = await Promise.all([
+            db.from('friendships').select('followed').eq('follower', user).in('followed', ids),
+            db.from('friend_requests').select('to_user').eq('from_user', user).in('to_user', ids),
+          ]);
+          return {
+            friends: (must(friends) as Array<{ followed: string }>).map((row) => row.followed),
+            asked: (must(asked) as Array<{ to_user: string }>).map((row) => row.to_user),
+          };
+        },
         start: (room, host, seed, games, deadline) => call('room_start', { p_room: room, p_host: host, p_seed: seed, p_games: games, p_deadline: deadline.toISOString() }),
         leave: (room, user) => call('room_leave', { p_room: room, p_member: user }),
         closeIfStale: (room, now) => call('room_close', { p_room: room, p_now: now.toISOString() }),

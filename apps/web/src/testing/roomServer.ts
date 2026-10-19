@@ -5,6 +5,7 @@ import { canonical } from '../../../../supabase/functions/_shared/ranked.ts';
 import { rooms } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { LoanRow, MemberRow, RoomGameRow, RoomNotice, RoomRow, RoomsDeps, TurnLife } from '../../../../supabase/functions/_shared/rooms.ts';
 import type { Reply } from '../../../../supabase/functions/_shared/replay.ts';
+import type { Befriended } from '../../../../supabase/functions/_shared/friends.ts';
 import { roomsApi } from '@ratrace/online/rooms';
 import type { RoomsLink } from '@ratrace/core/session/room';
 
@@ -41,8 +42,25 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   const names = new Map<string, string | null>();
   /** Reports of names, as `name_reports` keeps them: one per reporter and player, with when. */
   const reports: Array<{ reporter: string; reported: string; at: number }> = [];
-  /** Who follows whom, as `friendships` keeps it. */
+  /** Friends, a row each way, as `friendships` keeps them; and requests waiting, as `friend_requests` does. */
   const friendships: Array<{ follower: string; followed: string }> = [];
+  const requests: Array<{ from: string; to: string }> = [];
+  /** As `private.befriend`: one asks, and the other asking back is a yes. */
+  const befriend = (from: string, to: string): Befriended => {
+    if (from === to) return 'self';
+    if (friendships.some((one) => one.follower === from && one.followed === to)) return 'friends';
+    const friendsOf = (user: string) => friendships.filter((one) => one.follower === user).length;
+    if (requests.some((one) => one.from === to && one.to === from)) {
+      if (friendsOf(from) >= 200 || friendsOf(to) >= 200) return 'full';
+      friendships.push({ follower: from, followed: to }, { follower: to, followed: from });
+      for (let i = requests.length - 1; i >= 0; i--) if ((requests[i].from === from && requests[i].to === to) || (requests[i].from === to && requests[i].to === from)) requests.splice(i, 1);
+      return 'accepted';
+    }
+    if (requests.some((one) => one.from === from && one.to === to)) return 'pending';
+    if (friendsOf(from) >= 200 || requests.filter((one) => one.from === from).length >= 50) return 'full';
+    requests.push({ from, to });
+    return 'sent';
+  };
   /** A public lobby still waiting for its time: the only kind a player asking for one is seated in. */
   const waitingLobby = (r: RoomRow, engine: string, contentVersion: string, seconds: number) =>
     r.public && r.status === 'open' && r.engine_version === engine && r.content_version === contentVersion && r.seconds === seconds && r.starts_at !== null && Date.parse(r.starts_at) > state.now && active(r.id).length < 6;
@@ -147,12 +165,12 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     reportedBy: async (user) => reports.filter((one) => one.reporter === user).map((one) => one.reported),
     follow: async (roomId, follower, followed) => {
       if (follower === followed || isRat(followed) || !memberOf(roomId, follower) || !memberOf(roomId, followed)) return 'closed';
-      if (friendships.some((one) => one.follower === follower && one.followed === followed)) return 'ok';
-      if (friendships.filter((one) => one.follower === follower).length >= 200) return 'full';
-      friendships.push({ follower, followed });
-      return 'ok';
+      return befriend(follower, followed);
     },
-    following: async (user, ids) => friendships.filter((one) => one.follower === user && ids.includes(one.followed)).map((one) => one.followed),
+    following: async (user, ids) => ({
+      friends: friendships.filter((one) => one.follower === user && ids.includes(one.followed)).map((one) => one.followed),
+      asked: requests.filter((one) => one.from === user && ids.includes(one.to)).map((one) => one.to),
+    }),
     addBots: async (roomId, users) => {
       const room = roomsById.get(roomId);
       if (!room || room.status !== 'open' || !room.public) return 'closed';
@@ -373,7 +391,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     state,
     hooks,
     network,
-    db: { rooms: roomsById, members, games, seeds, orders, runs, names, avatars, unlocked, loans, reports, friendships },
+    db: { rooms: roomsById, members, games, seeds, orders, runs, names, avatars, unlocked, loans, reports, friendships, requests },
     notices,
     /** Asks the server as `user`, with nothing between. */
     ask,

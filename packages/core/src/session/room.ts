@@ -44,8 +44,10 @@ export interface RoomMember {
   host: boolean;
   /** For a rat the server plays in a public game, the kind of player it plays as (`saver`, `gambler`...); null for a person. */
   bot: string | null;
-  /** True once the game is over, for another player the player follows. */
+  /** True once the game is over, for another player the player is friends with or has asked to be. */
   followed: boolean;
+  /** True once the game is over, for another player the player is friends with, both ways. */
+  friend: boolean;
   /** True once they have played the round in play. */
   ready: boolean;
   left: boolean;
@@ -176,7 +178,7 @@ export interface RoomsApi {
    * takes it away (`cleared`). `nameless` for a player with no name. `gone` if either is no longer in it.
    */
   report(roomId: string, userId: string): Promise<{ room: RoomState; report: 'ok' | 'cleared' | 'nameless' } | 'gone'>;
-  /** Follows another player of the room. `full` at the most one may follow; `gone` if either is no longer in it. */
+  /** Asks another player of the room to be friends, or says yes if they asked first. `full` at the most friends or requests; `gone` if either is no longer in it. */
   follow(roomId: string, userId: string): Promise<RoomState | 'full' | 'gone'>;
   join(code: string, versions: { engine: string; content: string }): Promise<RoomState>;
   start(roomId: string): Promise<RoomState>;

@@ -3,6 +3,8 @@ import type { GameModule, LoggedRound, RoomEvent } from './game/types.ts';
 import { lifePlayer } from './played.ts';
 import type { Played } from './played.ts';
 import { lastIs, stepsOf, withStep } from './ranked.ts';
+import { tellOf } from './friends.ts';
+import type { Befriended } from './friends.ts';
 import type { NoticeAbout } from './notice.ts';
 import type { Choice } from './ranked.ts';
 import { readLog } from './replay.ts';
@@ -189,10 +191,10 @@ export interface RoomsDeps {
   reportName(roomId: string, reporter: string, reported: string): Promise<'ok' | 'cleared' | 'nameless' | 'closed'>;
   /** The players whose names this player has reported, and so no longer sees. */
   reportedBy(userId: string): Promise<string[]>;
-  /** Follows a player met in this room. `full` at the most one may follow; `closed` for one never met there. */
-  follow(roomId: string, follower: string, followed: string): Promise<'ok' | 'full' | 'closed'>;
-  /** Of these players, those this player follows. */
-  following(userId: string, ids: string[]): Promise<string[]>;
+  /** Asks a player met in this room to be friends, or says yes to them if they asked first. `closed` for one never met there. */
+  follow(roomId: string, follower: string, followed: string): Promise<Befriended | 'closed'>;
+  /** Of these players, those this player is friends with, and those they have asked. */
+  following(userId: string, ids: string[]): Promise<{ friends: string[]; asked: string[] }>;
   /** Starts the room with the games named for its members, all on one seed: by its host, or by anyone in it if it is public. */
   start(roomId: string, host: string, seed: string, games: Record<string, string>, deadline: Date): Promise<{ ok: true } | { error: string }>;
   leave(roomId: string, userId: string): Promise<{ status: string } | { error: string }>;
@@ -229,7 +231,7 @@ export interface RoomsDeps {
 }
 
 /** What a game with friends tells its players by a notice. */
-export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' } | { kind: 'shout' }>;
+export type RoomNotice = Extract<NoticeAbout, { kind: 'roomStarted' } | { kind: 'yourTurn' } | { kind: 'newRound' } | { kind: 'rematch' } | { kind: 'loanOffer' } | { kind: 'shout' } | { kind: 'friendRequest' } | { kind: 'friendAccepted' }>;
 
 /** How many shouts there are to choose from: the page draws them, the server keeps their number. */
 export const SHOUTS = 14;
@@ -372,8 +374,8 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
     ratsIn(deps, room),
     // A name the player reported in a public game is not shown to them again.
     room.public === true ? deps.reportedBy(userId).then((list) => new Set(list)) : Promise.resolve(new Set<string>()),
-    // Whom the player already follows, for the end of a game, where they may follow the others.
-    room.status === 'finished' && others.length > 0 ? deps.following(userId, others).then((list) => new Set(list)) : Promise.resolve(new Set<string>()),
+    // Whom the player is already friends with, or has asked, for the end of a game, where they may ask the others.
+    room.status === 'finished' && others.length > 0 ? deps.following(userId, others) : Promise.resolve({ friends: [] as string[], asked: [] as string[] }),
   ]);
   return {
     id: room.id,
@@ -400,7 +402,9 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
       host: m.user_id === room.host,
       // The kind of player a rat plays as; null for a person.
       bot: rats.get(m.user_id) ?? null,
-      followed: followed.has(m.user_id),
+      // Asked, or friends already; and friends, both ways.
+      followed: followed.friends.includes(m.user_id) || followed.asked.includes(m.user_id),
+      friend: followed.friends.includes(m.user_id),
       ready: room.status === 'playing' && m.left_at === null && m.ready_round === room.round,
       left: m.left_at !== null,
       standing: m.standing ?? null,
@@ -1100,8 +1104,10 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     const other = await someone();
     if (other === null) return bad('userId');
     const said = await deps.follow(room.id, userId, other);
-    if (said === 'closed') return closed;
+    if (said === 'closed' || said === 'self') return closed;
     if (said === 'full') return { status: 409, body: { error: 'full' } };
+    // Whoever is asked hears of it; whoever asked first hears the yes.
+    await tellOf(deps, userId, other, said);
     return await answerRoom(games, deps, room.id, userId);
   }
 

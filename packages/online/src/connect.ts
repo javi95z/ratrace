@@ -4,6 +4,7 @@ import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
 import { roomsApi } from './rooms';
 import type { Cloud, CloudUser } from './supabase';
+import type { Friend } from './types';
 
 const userOf = (user: User | null | undefined): CloudUser | null => (user ? { id: user.id, is_anonymous: user.is_anonymous === true, email: user.email } : null);
 
@@ -412,30 +413,40 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       },
       async friends() {
         try {
-          const followed = await client.from('friendships').select('followed').eq('follower', await me()).order('created_at', { ascending: false });
-          if (followed.error) return null;
-          const ids = ((followed.data ?? []) as Array<{ followed: string }>).map((row) => row.followed);
-          if (ids.length === 0) return [];
-          const named = await client.from('profiles').select('user_id, nickname').in('user_id', ids);
-          if (named.error) return null;
-          const names = new Map(((named.data ?? []) as Array<{ user_id: string; nickname: string | null }>).map((row) => [row.user_id, row.nickname]));
-          return ids.map((userId) => ({ userId, nickname: names.get(userId) ?? null }));
+          const { data, error } = await client.functions.invoke('friends', { body: { action: 'list' } });
+          if (error || typeof data !== 'object' || data === null) return null;
+          const list = (raw: unknown): Friend[] =>
+            (Array.isArray(raw) ? raw : [])
+              .filter((row): row is Record<string, unknown> => typeof row === 'object' && row !== null && typeof (row as { userId?: unknown }).userId === 'string')
+              .map((row) => ({ userId: row.userId as string, nickname: typeof row.nickname === 'string' ? row.nickname : null, avatar: typeof row.avatar === 'string' ? row.avatar : null }));
+          const body = data as Record<string, unknown>;
+          return { friends: list(body.friends), incoming: list(body.incoming), outgoing: list(body.outgoing) };
         } catch {
           return null;
         }
       },
-      async follow(code) {
+      async befriend(code) {
         try {
-          const { data, error } = await client.rpc('add_friend', { code });
-          return !error && (data === 'ok' || data === 'unknown' || data === 'self' || data === 'full') ? data : 'failed';
+          const { data, error } = await client.functions.invoke('friends', { body: { action: 'request', code } });
+          const answer = error ? null : (data as { answer?: unknown } | null)?.answer;
+          return answer === 'sent' || answer === 'accepted' || answer === 'pending' || answer === 'friends' || answer === 'unknown' || answer === 'self' || answer === 'full' ? answer : 'failed';
         } catch {
           return 'failed';
         }
       },
-      async unfollow(userId) {
+      async answerFriend(userId, yes) {
         try {
-          const { error } = await client.from('friendships').delete().eq('follower', await me()).eq('followed', userId);
-          return error === null;
+          const { data, error } = await client.functions.invoke('friends', { body: { action: 'answer', from: userId, yes } });
+          const answer = error ? null : (data as { answer?: unknown } | null)?.answer;
+          return answer === 'accepted' || answer === 'declined' || answer === 'gone' || answer === 'full' ? answer : 'failed';
+        } catch {
+          return 'failed';
+        }
+      },
+      async unfriend(userId) {
+        try {
+          const { error } = await client.functions.invoke('friends', { body: { action: 'remove', userId } });
+          return !error;
         } catch {
           return false;
         }

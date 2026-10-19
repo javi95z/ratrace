@@ -117,6 +117,7 @@ export function Home() {
             </Link>
             {challengeInProgress ? null : <WeeklyChallengeCard />}
             {turn ? null : <RoomCard />}
+            <FriendRequests />
             {over ? (
               <Link href="/play" className="pixel frame-raised flex min-h-11 items-center justify-center bg-night-600 px-4 py-2 text-center text-[15px] text-cream">
                 {t('lastLife')}
@@ -182,6 +183,33 @@ export function Home() {
         ) : null}
       </Sheet>
     </main>
+  );
+}
+
+/**
+ * Friend requests waiting on the player, as a line that leads to them: there only when there are
+ * any, for someone signed in. Asked once as the front door opens.
+ */
+function FriendRequests() {
+  const t = useT('home');
+  const { state } = useAccount();
+  const community = useCommunity();
+  const [waiting, setWaiting] = useState(0);
+  const userId = state.kind === 'member' || state.kind === 'guest' ? state.userId : null;
+  useEffect(() => {
+    if (userId === null || community === null) return;
+    let live = true;
+    void community.friends().then((found) => live && setWaiting(found?.incoming.length ?? 0));
+    return () => {
+      live = false;
+    };
+  }, [userId, community]);
+  if (waiting === 0) return null;
+  return (
+    <Link href="/rankings#friends" className="pixel frame-raised frame-gold flex min-h-11 items-center justify-center gap-2 bg-night-600 px-3 py-2 text-[15px] text-gold-500">
+      <Sprite id="icon.multiplayer" />
+      {t('friendRequests', { n: waiting })}
+    </Link>
   );
 }
 

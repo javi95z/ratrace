@@ -169,9 +169,9 @@ export function PlayerSheet({ room, member: picked, nameOf, loans, onClose }: { 
         {over && member ? (
           <div className="mt-3 flex flex-col gap-1.5">
             <Button variant="primary" wide disabled={busy || member.followed} onClick={() => void ask(async () => ({ ok: 'followed', full: 'full', failed: 'failed' })[await follow(member.userId)])}>
-              {said(member.followed ? 'following' : 'follow')}
+              {said(member.friend ? 'friends' : member.followed ? 'following' : 'follow')}
             </Button>
-            <p className="text-center text-[13px] text-ink-300">{said('followAbout')}</p>
+            {member.friend ? null : <p className="text-center text-[13px] text-ink-300">{said('followAbout')}</p>}
           </div>
         ) : null}
         {room.public && member && member.name !== null ? (
@@ -186,7 +186,7 @@ export function PlayerSheet({ room, member: picked, nameOf, loans, onClose }: { 
             </button>
           </div>
         ) : null}
-        {told ? (
+        {told && !(told === 'followed' && member?.friend) ? (
           <p role="status" className="mt-2 text-center text-[13px] text-ink-200">
             {said(told)}
           </p>

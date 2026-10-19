@@ -435,6 +435,10 @@ verify_jwt = true
 [functions.rooms]
 verify_jwt = true
 
+# Friends, both ways: asking, answering and ending, and telling the other. Signed-in players only.
+[functions.friends]
+verify_jwt = true
+
 # The weekly notice: called by a job of the database with the project's secret key, never by a player.
 [functions.weekly-notice]
 verify_jwt = false

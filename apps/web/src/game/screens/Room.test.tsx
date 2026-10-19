@@ -645,7 +645,7 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     expect(await screen.findByText('You were taken out of the public game: the clock played two rounds in a row for you.')).toBeTruthy();
   });
 
-  it('follows another player from the end of the game, without their code', async () => {
+  it('asks another player to be friends from the end of the game, without their code', async () => {
     const server = roomServer();
     server.db.names.set(B, 'Bea_7');
     const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
@@ -656,15 +656,15 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     const user = userEvent.setup();
     renderGame(<Room />, services);
     const final = await screen.findByRole('region', { name: 'How the game ended' }, { timeout: 10_000 });
-    expect(within(final).getByText('Tap a player to follow them.')).toBeTruthy();
+    expect(within(final).getByText('Tap a player to add them as a friend.')).toBeTruthy();
     // The rats open nothing; the other player does.
     expect(within(final).queryByRole('button', { name: /Rat$/ })).toBeNull();
     await user.click(within(final).getByRole('button', { name: /Bea_7/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Bea_7' });
-    await user.click(within(sheet).getByRole('button', { name: 'Follow' }));
-    expect(await within(sheet).findByText('Done: you follow them now.')).toBeTruthy();
-    expect(server.db.friendships).toEqual([{ follower: HOST, followed: B }]);
-    expect((within(sheet).getByRole('button', { name: 'Following' }) as HTMLButtonElement).disabled).toBe(true);
+    await user.click(within(sheet).getByRole('button', { name: 'Add friend' }));
+    expect(await within(sheet).findByText('Request sent.')).toBeTruthy();
+    expect(server.db.requests).toEqual([{ from: HOST, to: B }]);
+    expect((within(sheet).getByRole('button', { name: 'Request sent' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('reports a name in a public game, which the player then no longer sees', async () => {

@@ -146,15 +146,30 @@ export interface ChallengeChoice {
   answered: number;
 }
 
-/** Someone the player follows. */
+/** Another player in the list of friends: a friend, or someone a request is waiting on. `avatar` is the rat they chose. */
 export interface Friend {
   userId: string;
   nickname: string | null;
+  avatar: string | null;
+}
+
+/** The player's friends, both ways; the requests sent to them, to answer; and those they sent, waiting. The latest first. */
+export interface Friends {
+  friends: Friend[];
+  incoming: Friend[];
+  outgoing: Friend[];
 }
 
 /**
+ * What asking someone to be friends did: `sent`; `accepted`, they had asked first and now are friends;
+ * `pending`, asked already; `friends`, already; `unknown`, no player has that code; `self`, the
+ * player's own; `full`, as many friends or requests as one may have; `failed`, nothing could be done.
+ */
+export type Befriended = 'sent' | 'accepted' | 'pending' | 'friends' | 'unknown' | 'self' | 'full' | 'failed';
+
+/**
  * The other players, as far as a screen is told of them: the rankings, the player's own name and
- * friend code, and whom they follow. It needs someone signed in and a connection; what cannot be
+ * friend code, and their friends. It needs someone signed in and a connection; what cannot be
  * read just now is null, and what cannot be done says so in a word.
  */
 export interface Community {
@@ -168,7 +183,7 @@ export interface Community {
   setAvatar(avatar: string): Promise<boolean>;
   /** The first fifty, and the asker's own line if it is further down. */
   ranking(query: RankingQuery): Promise<RankingRow[] | null>;
-  friends(): Promise<Friend[] | null>;
+  friends(): Promise<Friends | null>;
   /**
    * How a score stands among the lives other players have finished from the same start: how many
    * of them scored less, and how many there are. Ranked and casual alike; the asker's own are left out.
@@ -176,9 +191,12 @@ export interface Community {
   compare(query: { lifeId: string; score: number }): Promise<{ below: number; total: number } | null>;
   /** The life behind a line of a ranking, as far as anyone may see it. Null where it cannot be read. */
   run(row: Pick<RankingRow, 'userId' | 'lifeId' | 'score'>): Promise<RankedLifeDetail | null>;
-  /** Follows the player a friend code belongs to. `full`: the player follows as many as one may. */
-  follow(code: string): Promise<'ok' | 'unknown' | 'self' | 'full' | 'failed'>;
-  unfollow(userId: string): Promise<boolean>;
+  /** Asks the player a friend code belongs to to be friends: the other says yes or no. */
+  befriend(code: string): Promise<Befriended>;
+  /** Says yes or no to a request. `gone` if it is no longer there; `full` if either has as many friends as one may. */
+  answerFriend(userId: string, yes: boolean): Promise<'accepted' | 'declined' | 'gone' | 'full' | 'failed'>;
+  /** Ends a friendship, for both, or takes back a request. False if it could not be. */
+  unfriend(userId: string): Promise<boolean>;
   /** Whether the player has had their attempt at a week's challenge, and its score once it is over. Null where it cannot be read. */
   challengeEntry(week: string): Promise<{ entered: boolean; score: number | null } | null>;
   challengeRanking(week: string): Promise<ChallengeRanking | null>;

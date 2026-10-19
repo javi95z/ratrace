@@ -64,7 +64,7 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, bot: null, followed: false, ready: false, left: false, standing: null, shout: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, bot: null, followed: false, friend: false, ready: false, left: false, standing: null, shout: null }]);
     expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false, public: false, startsAt: null });
   });
 
@@ -1068,29 +1068,41 @@ describe('public games: who is waiting, who is gone, and the people met', () => 
     expect(await friends.server.ask(HOST, { action: 'report', roomId: friends.room, userId: B })).toMatchObject({ status: 409, body: { error: 'not-public' } });
   });
 
-  it('lets a player follow someone they played with, without their code, and says whom they follow at the end', async () => {
+  it('lets a player ask someone they played with to be friends, without their code; a yes back makes them friends; and says so at the end', async () => {
     const server = roomServer();
+    server.db.names.set(HOST, 'Hosta_1');
     const seat = seatOf(await quick(server, HOST));
     await quick(server, B);
     const started = seatOf(await server.ask(HOST, { action: 'start', roomId: seat.id }));
     const rat = started.members.find((m) => m.bot !== null)?.userId as string;
     expect(await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: rat })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    const told = server.notices.length;
     expect((await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: B })).status).toBe(200);
-    expect(server.db.friendships).toEqual([{ follower: HOST, followed: B }]);
-    // Followed once, it is not followed twice.
+    // A request, not a friendship; and whoever is asked hears of it, by the asker's name.
+    expect(server.db.friendships).toEqual([]);
+    expect(server.db.requests).toEqual([{ from: HOST, to: B }]);
+    expect(server.notices.slice(told)).toEqual([{ user: B, about: { kind: 'friendRequest', who: 'Hosta_1' } }]);
+    // Asked once, it is not asked twice, nor told twice.
     await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: B });
-    expect(server.db.friendships).toHaveLength(1);
-    // Played to its end by both: at the end, the page is told whom the player follows.
+    expect(server.db.requests).toHaveLength(1);
+    expect(server.notices.slice(told)).toHaveLength(1);
+    // Played to its end by both: at the end, the page is told whom the player has asked, and whom they are friends with.
     for (let round = 0; round < content.rounds; round++) {
       for (const who of [HOST, B]) await server.ask(who, { action: 'submit', roomId: seat.id, step: await answerHand(server, who, seat.id), orders: [] });
     }
     const end = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
     expect(end.status).toBe('finished');
-    expect(end.members.find((m) => m.userId === B)?.followed).toBe(true);
-    expect(end.members.find((m) => m.userId === rat)?.followed).toBe(false);
-    // At most two hundred.
-    for (let n = 0; n < 199; n++) server.db.friendships.push({ follower: B, followed: `f${n}` });
-    server.db.friendships.push({ follower: B, followed: 'f199' });
+    expect(end.members.find((m) => m.userId === B)).toMatchObject({ followed: true, friend: false });
+    expect(end.members.find((m) => m.userId === rat)).toMatchObject({ followed: false, friend: false });
+    // B asking back is a yes: friends both ways, the request gone, and the asker hears it.
+    expect((await server.ask(B, { action: 'follow', roomId: seat.id, userId: HOST })).status).toBe(200);
+    expect(server.db.friendships).toEqual([{ follower: B, followed: HOST }, { follower: HOST, followed: B }]);
+    expect(server.db.requests).toEqual([]);
+    expect(server.notices.at(-1)).toEqual({ user: HOST, about: { kind: 'friendAccepted', who: null } });
+    expect(seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id })).members.find((m) => m.userId === B)).toMatchObject({ followed: true, friend: true });
+    // At most two hundred friends.
+    server.db.friendships.length = 0;
+    for (let n = 0; n < 200; n++) server.db.friendships.push({ follower: B, followed: `f${n}` });
     expect(await server.ask(B, { action: 'follow', roomId: seat.id, userId: HOST })).toMatchObject({ status: 409, body: { error: 'full' } });
   });
 });
