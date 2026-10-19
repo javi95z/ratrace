@@ -25,7 +25,7 @@ Priority: P0 is needed for the first playable game. P1 is needed before friends 
 | 17c | Automatic checks | Unit tests, types, lint and the end-to-end walk on every push to `dev` and `main` (GitHub Actions), and `main` refused while they are red | Not started: there is still no CI | S | P2 |
 | 17d | Safe releases | `main` goes out only when the server holds the rules of its build (`shipped.json` checked before Vercel deploys) | Not started; done by hand on every release so far | S | P2 |
 | 17e | Error monitoring | The errors of the page and of the functions in one place, with an alert, and nothing personal in them | Done, in production; the alert waits on its address, the secret `ALERT_URL` | S | P3 |
-| 17f | Usage numbers | Lives begun and finished, players back after one day and after seven, accounts kept, games with friends played; no cookies | Not started | S | P3 |
+| 17f | Usage numbers | Lives begun and finished, players back after one day and after seven, accounts kept, games with friends played; no cookies | Built on `dev`: `pnpm online:stats [days]` from the database (the days each player played, kept by the database itself), and Vercel Web Analytics for visits and where they come from (to be turned on in the Vercel project) | S | P3 |
 | 17g | Health | An hourly check that a guest can sign in, play a step and open a game with friends, with an alert; the free project kept from pausing | Not started | S | P3 |
 | 17h | Backups | A daily copy of the database kept outside Supabase, and one restore tried for real | Not started | S | P2 |
 | 17i | Housekeeping | Guests who never came back removed after a while, old rooms and call counters cleared; the CAPTCHA on guest sign-in turned on with its keys | Not started | S | P3 |

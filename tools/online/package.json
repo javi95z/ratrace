@@ -7,7 +7,8 @@
     "test-db": "tsx src/test-db.ts",
     "bundle": "tsx src/bundle.ts",
     "live-check": "tsx src/live-check.ts",
-    "errors": "tsx src/errors.ts"
+    "errors": "tsx src/errors.ts",
+    "stats": "tsx src/stats.ts"
   },
   "dependencies": {
     "@ratrace/content": "workspace:*",

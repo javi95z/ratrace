@@ -1126,13 +1126,34 @@ begin
      and (select count(*) from public.error_kinds where source = 'function') = functions
     then passed := passed + 1; else failed := array_append(failed, 'the kinds seen longest ago did not make room, or a page pushed out a function'); end if;
 
+  -- ---------------------------------------------------------------- the days each player played
+  reset role;
+  begin
+  -- Nobody but the server reads them.
+  if (select count(*) from information_schema.role_table_grants where table_schema = 'private' and table_name = 'player_days' and grantee in ('anon', 'authenticated')) = 0
+     and not has_table_privilege('authenticated', 'private.player_days', 'select')
+    then passed := passed + 1; else failed := array_append(failed, 'a player can read the days others played'); end if;
+  -- A life saved notes the day its player played, once; a rat's life notes none.
+  delete from private.player_days where user_id in (a, saver);
+  update public.games set round = round where user_id = a;
+  update public.games set round = round where user_id = a;
+  update public.games set round = round where user_id = saver;
+  if exists (select 1 from public.games where user_id = a)
+     and (select count(*) from private.player_days where user_id = a) = 1 and (select day from private.player_days where user_id = a) = private.today()
+     and not exists (select 1 from private.player_days where user_id = saver)
+    then passed := passed + 1; else failed := array_append(failed, 'a life saved did not note its day once, or a rat played a day'); end if;
+  exception when others then
+    failed := array_append(failed, format('the days played stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
+
   -- ---------------------------------------------------------------- an account deleted takes its rows with it
   reset role;
   delete from auth.users where id = a;
   select (select count(*) from public.profiles where user_id = a) + (select count(*) from public.player_progress where user_id = a) + (select count(*) from public.games where user_id = a)
        + (select count(*) from public.game_secrets where game_id = ranked_a) + (select count(*) from public.runs where user_id = a)
        + (select count(*) from public.friendships where a in (follower, followed)) + (select count(*) from private.rate_use where user_id = a)
-       + (select count(*) from public.rooms where host = a) + (select count(*) from public.room_players where user_id = a) + (select count(*) from public.room_orders where user_id = a) into n;
+       + (select count(*) from public.rooms where host = a) + (select count(*) from public.room_players where user_id = a) + (select count(*) from public.room_orders where user_id = a)
+       + (select count(*) from private.player_days where user_id = a) into n;
   if n = 0 then passed := passed + 1; else failed := array_append(failed, (format('%s rows of a deleted account were left behind', n))::text); end if;
 
   -- The outcome travels as hex, so no quote in a message can be mistaken for the end of it.
