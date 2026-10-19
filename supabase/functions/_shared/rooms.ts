@@ -20,6 +20,8 @@ export const QUICK_SECONDS = 180;
 export const QUICK_WAIT_MS = 120_000;
 /** How many sit at a public game when it starts: rats take the seats nobody came for. */
 export const TABLE = 4;
+/** How many rounds in a row the clock may play for a player of a public game before they are taken out of it. */
+export const IDLE_ROUNDS = 2;
 /** No hand has anywhere near this many cards: answering more is a bug, not a hand. */
 const MAX_HAND = 20;
 /** How many times a turn is read and written again when something moved under it, before the call gives up. */
@@ -68,6 +70,8 @@ export interface Standing {
   /** Where they live, and their job and its rung: what the others may know of a life once the round has turned. */
   cityId?: string;
   career?: { id: string; level: number } | null;
+  /** How many rounds in a row turned with the clock playing for them. */
+  idle?: number;
 }
 
 /** A row of `room_players`, without its room. */
@@ -164,6 +168,21 @@ export interface RoomsDeps {
   bots(): Promise<Array<{ user: string; persona: string }>>;
   /** Seats these rats in a public lobby, in this order, while there are seats. `closed` for a room that is not a public lobby. */
   addBots(roomId: string, users: string[]): Promise<'ok' | 'closed'>;
+  /** How many public lobbies on these rules a player asking for one could be seated in now. */
+  openLobbies(engineVersion: string, contentVersion: string): Promise<number>;
+  /**
+   * The player's latest game, if it was a public one they are out of, with the standing it left
+   * them, and when they went: whether it was they who left or the clock that took them out is read from it.
+   */
+  lastPublicLeft(userId: string): Promise<{ leftAt: string; standing: Standing | null } | null>;
+  /** One player of a public game reports another's name: `cleared` when it was the second report, and the name is gone. */
+  reportName(roomId: string, reporter: string, reported: string): Promise<'ok' | 'cleared' | 'nameless' | 'closed'>;
+  /** The players whose names this player has reported, and so no longer sees. */
+  reportedBy(userId: string): Promise<string[]>;
+  /** Follows a player met in this room. `full` at the most one may follow; `closed` for one never met there. */
+  follow(roomId: string, follower: string, followed: string): Promise<'ok' | 'full' | 'closed'>;
+  /** Of these players, those this player follows. */
+  following(userId: string, ids: string[]): Promise<string[]>;
   /** Starts the room with the games named for its members, all on one seed: by its host, or by anyone in it if it is public. */
   start(roomId: string, host: string, seed: string, games: Record<string, string>, deadline: Date): Promise<{ ok: true } | { error: string }>;
   leave(roomId: string, userId: string): Promise<{ status: string } | { error: string }>;
@@ -335,11 +354,16 @@ function stepAnswer(game: GameModule, played: Played, step: number, roundBefore:
 /** The room as a member may see it: who is in it, who is ready, how each stood when the last round turned, and the clocks. */
 async function roomBody(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps, room: RoomRow, members: MemberRow[], userId: string): Promise<Record<string, unknown>> {
   const ids = members.map((m) => m.user_id);
-  const [names, avatars, loans, rats] = await Promise.all([
+  const others = ids.filter((id) => id !== userId);
+  const [names, avatars, loans, rats, reported, followed] = await Promise.all([
     deps.names(ids),
     deps.avatars(ids),
     room.status === 'playing' || room.status === 'finished' ? deps.loans(room.id) : Promise.resolve([]),
     ratsIn(deps, room),
+    // A name the player reported in a public game is not shown to them again.
+    room.public === true ? deps.reportedBy(userId).then((list) => new Set(list)) : Promise.resolve(new Set<string>()),
+    // Whom the player already follows, for the end of a game, where they may follow the others.
+    room.status === 'finished' && others.length > 0 ? deps.following(userId, others).then((list) => new Set(list)) : Promise.resolve(new Set<string>()),
   ]);
   return {
     id: room.id,
@@ -360,12 +384,13 @@ async function roomBody(games: Readonly<Record<string, GameModule>>, deps: Rooms
     now: deps.now().toISOString(),
     members: members.map((m) => ({
       userId: m.user_id,
-      name: names[m.user_id] ?? null,
+      name: reported.has(m.user_id) ? null : (names[m.user_id] ?? null),
       avatar: avatars[m.user_id] ?? null,
       me: m.user_id === userId,
       host: m.user_id === room.host,
       // The kind of player a rat plays as; null for a person.
       bot: rats.get(m.user_id) ?? null,
+      followed: followed.has(m.user_id),
       ready: room.status === 'playing' && m.left_at === null && m.ready_round === room.round,
       left: m.left_at !== null,
       standing: m.standing ?? null,
@@ -490,7 +515,9 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
       }
       const was = life.member.standing;
       const before = was ? { score: was.score, place: placesBefore.get(life.member.user_id) ?? 0 } : null;
-      lives.push({ user: life.member.user_id, game: life.row.id, as_read: life.row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready: life.ready, standing: { ...standingOf(game, played), before } });
+      // Rounds in a row the clock has played for them: none once they play one themselves.
+      const idle = life.ready ? 0 : (was?.idle ?? 0) + 1;
+      lives.push({ user: life.member.user_id, game: life.row.id, as_read: life.row.updated_at, log: next, round: played.state.round, finished: played.state.finished, ready: life.ready, standing: { ...standingOf(game, played), before, idle } });
       ends.push({ row: life.row, played });
     }
     const over = lives.length > 0 && lives.every((life) => life.finished);
@@ -501,8 +528,12 @@ async function turn(games: Readonly<Record<string, GameModule>>, deps: RoomsDeps
         for (const end of ends) if (!rats.has(end.row.user_id)) await deps.saveRun(runOf(end.row, game, end.played, deps.now()));
         return;
       }
+      // In a public game, whoever let the clock play their last rounds has gone: the others are not kept waiting for them.
+      // Among friends they keep their seat: friends know them, and wait.
+      const gone = room.public === true ? lives.filter((life) => !rats.has(life.user) && (life.standing.idle ?? 0) >= IDLE_ROUNDS).map((life) => life.user) : [];
+      for (const user of gone) await deps.leave(room.id, user);
       // In a slow room nobody is looking: everyone but whoever turned it is told the next round is theirs.
-      if (room.seconds >= SLOW_SECONDS) await deps.notify(people(lives.map((life) => life.user), rats).filter((user) => user !== by), { kind: 'newRound', round: room.round + 2, rounds: game.content.rounds, seconds: room.seconds });
+      if (room.seconds >= SLOW_SECONDS) await deps.notify(people(lives.map((life) => life.user), rats).filter((user) => user !== by && !gone.includes(user)), { kind: 'newRound', round: room.round + 2, rounds: game.content.rounds, seconds: room.seconds });
       if (rats.size > 0) {
         const next = await deps.loadRoom(room.id);
         if (next !== null) await playRats(games, deps, next);
@@ -754,6 +785,8 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
         return await open(games, deps, userId, raw);
       case 'quick':
         return await quick(games, deps, userId, raw);
+      case 'lobbies':
+        return await lobbies(deps, userId, raw);
       case 'join':
         return await join(games, deps, userId, raw);
       case 'rematch':
@@ -769,6 +802,8 @@ export async function rooms(games: Readonly<Record<string, GameModule>>, deps: R
       case 'shout':
       case 'loan':
       case 'loanAnswer':
+      case 'report':
+      case 'follow':
         return await inRoom(games, deps, userId, raw);
       default:
         return bad('action');
@@ -855,6 +890,24 @@ async function quick(games: Readonly<Record<string, GameModule>>, deps: RoomsDep
   const { room, members } = await upkeep(games, deps, found, await deps.members(found.id), userId);
   return { status: 200, body: { room: await roomBody(games, deps, room, members, userId) } };
 }
+
+/** How many public lobbies wait for players now on these rules: none on rules the server does not play now. */
+async function lobbies(deps: RoomsDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
+  const { engineVersion, contentVersion } = raw;
+  if (!isText(engineVersion, 20)) return bad('engineVersion');
+  if (!isText(contentVersion, 20)) return bad('contentVersion');
+  if (!(await deps.allow(userId, 'room-step'))) return tooMany;
+  const [open, last] = await Promise.all([
+    `${engineVersion}/${contentVersion}` === deps.current ? deps.openLobbies(engineVersion, contentVersion) : Promise.resolve(0),
+    deps.lastPublicLeft(userId),
+  ]);
+  // Taken out of their last game, a public one, for letting the clock play their rounds, in the last day: the door says why.
+  const dropped = last !== null && (last.standing?.idle ?? 0) >= IDLE_ROUNDS && Date.parse(last.leftAt) > deps.now().getTime() - DROPPED_TOLD_MS;
+  return { status: 200, body: { open, dropped } };
+}
+
+/** How long after being taken out of a public game a player is told why. */
+const DROPPED_TOLD_MS = 86_400_000;
 
 /**
  * The rematch of a room that is over: a new room with the same pace, on the rules the server plays
@@ -1007,6 +1060,31 @@ async function inRoom(games: Readonly<Record<string, GameModule>>, deps: RoomsDe
     if (said === 'moved') return moved;
     const names = await deps.names([userId]);
     await deps.notify([to], { kind: 'loanOffer', who: names[userId] ?? null, lend, amount: loan.amount, rateBp: loan.rate_bp, rounds: loan.rounds });
+    return await answerRoom(games, deps, room.id, userId);
+  }
+
+  // Another person of the room, as one the player names: not themselves, and not a rat.
+  const someone = async (): Promise<string | null> => {
+    const { userId: other } = raw;
+    const rats = await ratsIn(deps, room);
+    return typeof other === 'string' && other !== userId && !rats.has(other) && members.some((m) => m.user_id === other) ? other : null;
+  };
+
+  if (raw.action === 'report') {
+    const other = await someone();
+    if (other === null) return bad('userId');
+    if (room.public !== true) return { status: 409, body: { error: 'not-public' } };
+    const said = await deps.reportName(room.id, userId, other);
+    if (said === 'closed') return closed;
+    return await answerRoom(games, deps, room.id, userId, { report: said });
+  }
+
+  if (raw.action === 'follow') {
+    const other = await someone();
+    if (other === null) return bad('userId');
+    const said = await deps.follow(room.id, userId, other);
+    if (said === 'closed') return closed;
+    if (said === 'full') return { status: 409, body: { error: 'full' } };
     return await answerRoom(games, deps, room.id, userId);
   }
 

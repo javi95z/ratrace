@@ -70,6 +70,7 @@
     "inRoom": "Back to your game",
     "roomLobby": "Waiting to start · {count} of {max}",
     "roomSearching": "Looking for players · {time}",
+    "roomOpenNow": "{count, plural, one {# game is looking for players} other {# games are looking for players}}",
     "roomTurn": "Your turn · {time} left",
     "roomWaiting": "Waiting for {names}",
     "roomRematch": "A rematch is waiting",
@@ -1178,7 +1179,10 @@
     "mapLabel": "A map of the world with your route: {cities}",
     "unlockedTitle": "A new life is open",
     "unlockedBody": "{life} is open to you. {perk}",
-    "tryNow": "Try it now"
+    "tryNow": "Try it now",
+    "versusTitle": "Up for taking on others?",
+    "versusAbout": "In a quick game everyone lives the same life in the same world, and whoever ends with the most points wins.",
+    "versusQuick": "Quick game"
   },
   "epilogue": {
     "title": "Your life, told",
@@ -1655,6 +1659,7 @@
     "retry": "Try again",
     "quick": "Quick game",
     "quickAbout": "Play now with whoever is looking for a game. If nobody turns up, bot rats fill the table.",
+    "openNow": "{count, plural, one {# game is looking for players right now} other {# games are looking for players right now}}",
     "quickAgain": "Another quick game",
     "searching": "Looking for players",
     "startsIn": "Starts in {time}",
@@ -1678,6 +1683,7 @@
     "code": "Game code",
     "enter": "Join",
     "closed": "The game was closed.",
+    "dropped": "You were taken out of the public game: the clock played two rounds in a row for you.",
     "copied": "Link copied.",
     "inviteText": "Play The Rat Race with me in multiplayer. Game {code}",
     "everyone": "Everyone lives",
@@ -1701,6 +1707,7 @@
     "choosing": "Still playing: {names}",
     "afterRound": "After round {n}",
     "final": "How the game ended",
+    "followHint": "Tap a player to follow them.",
     "score": "Score",
     "left": "Quit",
     "escaped": "Out of the race",
@@ -1853,11 +1860,22 @@
         }
       }
     },
+    "player": {
+      "follow": "Follow",
+      "following": "Following",
+      "followAbout": "Their lives will show in your ranking among friends.",
+      "followed": "Done: you follow them now.",
+      "full": "You already follow 200 players, the most there can be.",
+      "failed": "That did not work. Try again.",
+      "report": "Report their name",
+      "reported": "Thank you. You will not see that name again."
+    },
     "rules": {
       "title": "How it works",
       "same": "You all live the same life, in the same world.",
       "clock": "Each round lasts {time}: whoever has not played in time plays it with the first options and no orders.",
       "win": "The most points at the end wins: net worth and status. Getting out of the rat race multiplies them.",
+      "idle": "If the clock plays two rounds in a row for you, you are out of the game.",
       "others": "During the game you can tease a rival from your focus, or lend them money and borrow it by tapping their name in the standings."
     },
     "worthShort": "Net worth",

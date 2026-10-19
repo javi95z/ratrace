@@ -42,6 +42,8 @@ export interface RoomMember {
   host: boolean;
   /** For a rat the server plays in a public game, the kind of player it plays as (`saver`, `gambler`...); null for a person. */
   bot: string | null;
+  /** True once the game is over, for another player the player follows. */
+  followed: boolean;
   /** True once they have played the round in play. */
   ready: boolean;
   left: boolean;
@@ -165,6 +167,15 @@ export interface RoomsApi {
   open(lifeId: string, seconds: RoundSeconds, versions: { engine: string; content: string }): Promise<RoomState>;
   /** A seat in a public game: one waiting on these rules, or a new one. */
   quick(versions: { engine: string; content: string }): Promise<RoomState>;
+  /** How many public games on these rules are waiting for players now; and whether the player's last game was a public one the clock took them out of. */
+  lobbies(versions: { engine: string; content: string }): Promise<{ open: number; dropped: boolean }>;
+  /**
+   * Reports another player's name in a public game: the player no longer sees it, and a second report
+   * takes it away (`cleared`). `nameless` for a player with no name. `gone` if either is no longer in it.
+   */
+  report(roomId: string, userId: string): Promise<{ room: RoomState; report: 'ok' | 'cleared' | 'nameless' } | 'gone'>;
+  /** Follows another player of the room. `full` at the most one may follow; `gone` if either is no longer in it. */
+  follow(roomId: string, userId: string): Promise<RoomState | 'full' | 'gone'>;
   join(code: string, versions: { engine: string; content: string }): Promise<RoomState>;
   start(roomId: string): Promise<RoomState>;
   /** Leaves the room. Null if the player was no longer in it. */

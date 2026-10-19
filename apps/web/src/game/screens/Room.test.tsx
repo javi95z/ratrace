@@ -64,6 +64,23 @@ async function bPlays(server: ReturnType<typeof roomServer>, room: string) {
   }
 }
 
+/** Plays every round of a game straight on the server, for each of `who`, answering each card with its first option. */
+async function playToTheEnd(server: ReturnType<typeof roomServer>, room: string, who: string[]) {
+  for (let guard = 0; guard < 40 && (server.db.rooms.get(room)?.status ?? '') === 'playing'; guard++) {
+    for (const one of who) {
+      for (;;) {
+        const life = (await server.ask(one, { action: 'view', roomId: room })).body as { step: number; view: { phase: string; finished: boolean } };
+        if (life.view.finished) break;
+        if (life.view.phase !== 'cards') {
+          await server.ask(one, { action: 'submit', roomId: room, step: life.step, orders: [] });
+          break;
+        }
+        await server.ask(one, { action: 'card', roomId: room, step: life.step, option: 0 });
+      }
+    }
+  }
+}
+
 /** Takes the player on screen from the news of a round to its finances, answering every card with its first option. */
 async function toFinance(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByRole('button', { name: /See what life brings|To your finances/ }));
@@ -587,11 +604,7 @@ describe('a public game', () => {
     const server = roomServer();
     const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
     await server.ask(HOST, { action: 'start', roomId: seat.id });
-    // Played to its end by the clock alone: the rats play, the player's rounds are played for them.
-    for (let guard = 0; guard < 50 && (server.db.rooms.get(seat.id)?.status ?? '') !== 'finished'; guard++) {
-      server.wait(186_000);
-      await server.ask(HOST, { action: 'state', roomId: seat.id });
-    }
+    await playToTheEnd(server, seat.id, [HOST]);
     expect(server.db.rooms.get(seat.id)?.status).toBe('finished');
     const { services } = inRooms(server);
     const user = userEvent.setup();
@@ -602,3 +615,101 @@ describe('a public game', () => {
     expect(await screen.findByRole('region', { name: 'Looking for players' })).toBeTruthy();
   });
 });
+
+describe('public games: who is waiting, who is gone, and the people met', () => {
+  it('says on the door and on the front page how many public games are looking for players', async () => {
+    const server = roomServer();
+    await server.ask(B, { action: 'quick', ...VERSIONS });
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    expect((await screen.findByRole('status', {}, { timeout: 5_000 })).textContent).toBe('1 game is looking for players right now');
+    cleanup();
+    renderGame(<Home />, services);
+    expect((await screen.findByRole('link', { name: /Multiplayer/ })).textContent).toContain('1 game is looking for players');
+  });
+
+  it('tells a player taken out of a public game why, once they are back', async () => {
+    const server = roomServer();
+    const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
+    await server.ask(B, { action: 'quick', ...VERSIONS });
+    await server.ask(B, { action: 'start', roomId: seat.id });
+    // B plays; HOST lets the clock play two rounds.
+    for (let round = 0; round < 2; round++) {
+      await playRoundOf(server, seat.id, B);
+      server.wait(186_000);
+      await server.ask(B, { action: 'state', roomId: seat.id });
+    }
+    expect(server.db.members.find((m) => m.room_id === seat.id && m.user_id === HOST)?.left_at).not.toBeNull();
+    const { services } = inRooms(server);
+    renderGame(<Room />, services);
+    expect(await screen.findByText('You were taken out of the public game: the clock played two rounds in a row for you.')).toBeTruthy();
+  });
+
+  it('follows another player from the end of the game, without their code', async () => {
+    const server = roomServer();
+    server.db.names.set(B, 'Bea_7');
+    const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
+    await server.ask(B, { action: 'quick', ...VERSIONS });
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    await playToTheEnd(server, seat.id, [HOST, B]);
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    const final = await screen.findByRole('region', { name: 'How the game ended' }, { timeout: 10_000 });
+    expect(within(final).getByText('Tap a player to follow them.')).toBeTruthy();
+    // The rats open nothing; the other player does.
+    expect(within(final).queryByRole('button', { name: /Rat$/ })).toBeNull();
+    await user.click(within(final).getByRole('button', { name: /Bea_7/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Bea_7' });
+    await user.click(within(sheet).getByRole('button', { name: 'Follow' }));
+    expect(await within(sheet).findByText('Done: you follow them now.')).toBeTruthy();
+    expect(server.db.friendships).toEqual([{ follower: HOST, followed: B }]);
+    expect((within(sheet).getByRole('button', { name: 'Following' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('reports a name in a public game, which the player then no longer sees', async () => {
+    const server = roomServer();
+    server.db.names.set(B, 'Rude_Name');
+    const seat = (await server.ask(HOST, { action: 'quick', ...VERSIONS })).body.room as { id: string };
+    await server.ask(B, { action: 'quick', ...VERSIONS });
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: /^The game: / }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /Rude_Name/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Rude_Name' });
+    await user.click(within(sheet).getByRole('button', { name: 'Report their name' }));
+    expect(await within(sheet).findByText('Thank you. You will not see that name again.')).toBeTruthy();
+    expect(server.db.reports).toMatchObject([{ reporter: HOST, reported: B }]);
+    // The sheet itself now calls them by the rat their id makes of them.
+    expect(await screen.findByRole('dialog', { name: 'Rat BBBB' })).toBeTruthy();
+  });
+
+  it('offers no report in a game among friends', async () => {
+    const server = roomServer();
+    server.db.names.set(B, 'Bea_7');
+    const room = await lobby(server);
+    await server.ask(HOST, { action: 'start', roomId: room.id });
+    const { services } = inRooms(server);
+    const user = userEvent.setup();
+    renderGame(<Room />, services);
+    await user.click(await screen.findByRole('button', { name: /^The game: / }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: /Bea_7/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Bea_7' });
+    expect(within(sheet).getByRole('button', { name: 'Offer a loan' })).toBeTruthy();
+    expect(within(sheet).queryByRole('button', { name: 'Report their name' })).toBeNull();
+  });
+});
+
+/** Plays one round of `who` straight on the server: every card with its first option, then no orders. */
+async function playRoundOf(server: ReturnType<typeof roomServer>, room: string, who: string) {
+  for (;;) {
+    const life = (await server.ask(who, { action: 'view', roomId: room })).body as { step: number; view: { phase: string } };
+    if (life.view.phase !== 'cards') {
+      await server.ask(who, { action: 'submit', roomId: room, step: life.step, orders: [] });
+      return;
+    }
+    await server.ask(who, { action: 'card', roomId: room, step: life.step, option: 0 });
+  }
+}

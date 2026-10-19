@@ -55,6 +55,9 @@ declare
   j2 jsonb;
   saver uuid;
   indexer uuid;
+  k uuid := gen_random_uuid();
+  room_w uuid := gen_random_uuid();
+  room_x uuid := gen_random_uuid();
 begin
   -- Two guests, as the sign-in service would have made them.
   insert into auth.users (id, aud, role, is_anonymous) values (a, 'authenticated', 'authenticated', true), (b, 'authenticated', 'authenticated', true);
@@ -998,6 +1001,69 @@ begin
   end;
   exception when others then
     failed := array_append(failed, format('the public games stopped on: %s (%s)', sqlerrm, sqlstate));
+  end;
+
+  -- ---------------------------------------------------------------- public games: names, lobbies, the people met
+  reset role;
+  begin
+  insert into auth.users (id, aud, role, is_anonymous) values (k, 'authenticated', 'authenticated', true);
+  -- Nobody but the server counts the lobbies, reads the reports, reports a name or follows by a game.
+  if (select count(*) from information_schema.role_table_grants where table_schema = 'public' and table_name = 'name_reports' and grantee in ('anon', 'authenticated')) = 0
+     and not has_function_privilege('authenticated', 'public.room_open_count(text, text)', 'execute')
+     and not has_function_privilege('authenticated', 'public.room_report_name(uuid, uuid, uuid)', 'execute')
+     and not has_function_privilege('anon', 'public.room_report_name(uuid, uuid, uuid)', 'execute')
+     and not has_function_privilege('authenticated', 'public.room_follow(uuid, uuid, uuid)', 'execute')
+    then passed := passed + 1; else failed := array_append(failed, 'a player can count the lobbies, read the reports, report a name or follow by a game'); end if;
+  -- Every player out of the games above, to begin again.
+  perform public.room_leave(room_id, user_id) from public.room_players where user_id in (f, g, h) and left_at is null;
+  -- A lobby past its time is counted for nobody and seats nobody: whoever opened it has gone.
+  perform public.room_quick(room_w, f, 'nurse', '9.8.0', '9.8.0', 180, now() - interval '1 minute');
+  n := public.room_open_count('9.8.0', '9.8.0');
+  j := public.room_quick(room_x, g, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');
+  if n = 0 and (j ->> 'room')::uuid = room_x and public.room_open_count('9.8.0', '9.8.0') = 1 and public.room_open_count('9.7.0', '9.8.0') = 0
+    then passed := passed + 1; else failed := array_append(failed, format('a lobby past its time was counted (%s) or seated someone: %s', n, j)); end if;
+  -- A name reported: the first report is kept, the second of the month takes it away, and then there is nothing to report.
+  perform public.room_quick(gen_random_uuid(), h, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');
+  perform public.room_quick(gen_random_uuid(), k, 'nurse', '9.8.0', '9.8.0', 180, now() + interval '2 minutes');
+  insert into public.profiles (user_id, nickname) values (g, 'Pollito_9') on conflict (user_id) do update set nickname = excluded.nickname;
+  nm := public.room_report_name(room_x, h, g);
+  code_a := public.room_report_name(room_x, k, g);
+  if nm = 'ok' and code_a = 'cleared' and (select nickname from public.profiles where user_id = g) is null
+     and not exists (select 1 from public.name_reports where reported = g) and public.room_report_name(room_x, h, g) = 'nameless'
+    then passed := passed + 1; else failed := array_append(failed, format('reporting a name answered %s, then %s', nm, code_a)); end if;
+  -- Nobody reports themselves, a rat, someone in another game, or anyone in a game among friends.
+  if public.room_report_name(room_x, h, h) = 'closed' and public.room_report_name(room_x, h, saver) = 'closed'
+     and public.room_report_name(room_x, h, f) = 'closed' and public.room_report_name(room_u, h, g) = 'closed'
+    then passed := passed + 1; else failed := array_append(failed, 'a name was reported by someone who could not have seen it'); end if;
+  -- A new name is a new start: the reports of the old one go.
+  update public.profiles set nickname = 'Pollito_10' where user_id = g;
+  perform public.room_report_name(room_x, h, g);
+  update public.profiles set nickname = 'Gallo_10' where user_id = g;
+  if not exists (select 1 from public.name_reports where reported = g) and (select nickname from public.profiles where user_id = g) = 'Gallo_10'
+    then passed := passed + 1; else failed := array_append(failed, 'a new name kept the reports of the old one'); end if;
+  -- Someone met in a game can be followed without their code, once.
+  nm := public.room_follow(room_x, h, g);
+  if nm = 'ok' and public.room_follow(room_x, h, g) = 'ok' and (select count(*) from public.friendships where follower = h and followed = g) = 1
+    then passed := passed + 1; else failed := array_append(failed, format('following someone met in a game answered %s', nm)); end if;
+  -- Nobody follows themselves, a rat, or someone never met in that game; and two hundred is the most.
+  with many as (
+    insert into auth.users (id, aud, role, is_anonymous) select gen_random_uuid(), 'authenticated', 'authenticated', true from generate_series(1, 200) returning id
+  )
+  insert into public.friendships (follower, followed) select k, id from many;
+  if public.room_follow(room_x, h, h) = 'closed' and public.room_follow(room_x, h, saver) = 'closed' and public.room_follow(room_x, h, f) = 'closed'
+     and public.room_follow(room_x, k, g) = 'full' and not exists (select 1 from public.friendships where follower = k and followed = g)
+    then passed := passed + 1; else failed := array_append(failed, 'a follow by a game went where it should not'); end if;
+  -- The longer list: Russian and the Spanish of the Americas, whole words where a real name could hold them.
+  if private.name_unwelcome('Blyat_99') and private.name_unwelcome('Suka') and private.name_unwelcome('GANDON') and private.name_unwelcome('xMalparidox')
+     and not private.name_unwelcome('Sukaina') and not private.name_unwelcome('Huy') and not private.name_unwelcome('Gandonnet')
+    then passed := passed + 1; else failed := array_append(failed, 'the longer list of names refused too much or too little'); end if;
+  begin
+    update public.profiles set nickname = 'Pizdec_1' where user_id = g;
+    failed := array_append(failed, 'a name of the longer list was accepted');
+  exception when sqlstate 'RR002' then passed := passed + 1;
+  end;
+  exception when others then
+    failed := array_append(failed, format('the names and lobbies stopped on: %s (%s)', sqlerrm, sqlstate));
   end;
 
   -- ---------------------------------------------------------------- errors

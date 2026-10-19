@@ -32,6 +32,7 @@ function memberOf(raw: unknown): RoomMember | null {
     me: raw.me === true,
     host: raw.host === true,
     bot: typeof raw.bot === 'string' ? raw.bot : null,
+    followed: raw.followed === true,
     ready: raw.ready === true,
     left: raw.left === true,
     standing:
@@ -196,6 +197,24 @@ export function roomsApi(call: RoomsCall): RoomsApi {
     },
     open: async (lifeId, seconds, versions) => room(await ask({ action: 'open', lifeId, seconds, engineVersion: versions.engine, contentVersion: versions.content })),
     quick: async (versions) => room(await ask({ action: 'quick', engineVersion: versions.engine, contentVersion: versions.content })),
+    async lobbies(versions) {
+      const reply = await ask({ action: 'lobbies', engineVersion: versions.engine, contentVersion: versions.content });
+      const open = isRecord(reply.body) ? reply.body.open : null;
+      if (reply.status !== 200 || typeof open !== 'number' || !Number.isSafeInteger(open) || open < 0) throw new Unreachable(`the server answered ${reply.status}`);
+      return { open, dropped: isRecord(reply.body) && reply.body.dropped === true };
+    },
+    async report(roomId, userId) {
+      const reply = await ask({ action: 'report', roomId, userId });
+      if (reply.status === 404 || reply.status === 409 || reply.status === 400) return 'gone';
+      const said = isRecord(reply.body) ? reply.body.report : null;
+      return { room: room(reply), report: said === 'cleared' || said === 'nameless' ? said : 'ok' };
+    },
+    async follow(roomId, userId) {
+      const reply = await ask({ action: 'follow', roomId, userId });
+      if (reply.status === 409 && isRecord(reply.body) && reply.body.error === 'full') return 'full';
+      if (reply.status === 404 || reply.status === 409 || reply.status === 400) return 'gone';
+      return room(reply);
+    },
     join: async (code, versions) => room(await ask({ action: 'join', code, engineVersion: versions.engine, contentVersion: versions.content })),
     start: async (roomId) => room(await ask({ action: 'start', roomId })),
     async leave(roomId) {

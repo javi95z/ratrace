@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useCommunity, useGame, useProfile, useRanking, useRuns, useT, useWords } from '@/game/context';
+import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useWords } from '@/game/context';
 import { epilogue } from '@ratrace/core/game/epilogue';
 import { useCountUp } from '@/game/motion';
 import { obituary } from '@ratrace/core/game/quips';
@@ -294,6 +294,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
             </Link>
           </Panel>
 
+          {/* A life alone that ends with an account and no game going offers one against others. In a room, the room says what is next. */}
+          {extra ? null : <VersusOthers />}
+
           <div className="flex flex-col gap-3 pt-2">
             <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} />
             <Link href="/new" className="pixel frame-raised frame-gold flex min-h-12 items-center justify-center bg-gold-500 px-4 py-2 text-center text-[19px] text-ink-900">
@@ -387,5 +390,32 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
         </Button>
       </div>
     </section>
+  );
+}
+
+/** After a life alone, for a player with an account and no game going: the same kind of life, against others, in one press. */
+function VersusOthers() {
+  const t = useT('end');
+  const router = useRouter();
+  const status = useRoom((s) => s.status);
+  const busy = useRoom((s) => s.busy);
+  const quick = useRoom((s) => s.quick);
+  if (status !== 'none') return null;
+  return (
+    <Panel title={t('versusTitle')} label={t('versusTitle')}>
+      <p className="text-[14px] leading-snug text-ink-200">{t('versusAbout')}</p>
+      <Button
+        wide
+        className="mt-3"
+        disabled={busy}
+        onClick={() => {
+          // Seated or not, the rooms' page says how it went: the lobby, or why not.
+          void quick().then(() => router.push('/room'));
+        }}
+      >
+        <Sprite id="icon.multiplayer" />
+        {t('versusQuick')}
+      </Button>
+    </Panel>
   );
 }

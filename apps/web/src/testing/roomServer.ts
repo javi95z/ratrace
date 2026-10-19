@@ -39,6 +39,13 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
   /** The notices the server sent, to whom, in order. */
   const notices: Array<{ user: string; about: RoomNotice }> = [];
   const names = new Map<string, string | null>();
+  /** Reports of names, as `name_reports` keeps them: one per reporter and player, with when. */
+  const reports: Array<{ reporter: string; reported: string; at: number }> = [];
+  /** Who follows whom, as `friendships` keeps it. */
+  const friendships: Array<{ follower: string; followed: string }> = [];
+  /** A public lobby still waiting for its time: the only kind a player asking for one is seated in. */
+  const waitingLobby = (r: RoomRow, engine: string, contentVersion: string) =>
+    r.public && r.status === 'open' && r.engine_version === engine && r.content_version === contentVersion && r.starts_at !== null && Date.parse(r.starts_at) > state.now && active(r.id).length < 6;
   const avatars = new Map<string, string | null>();
   const unlocked = new Map<string, string[]>();
   const state = { ids: 0, codes: 0, stamps: 0, now: start, allowed: true, asked: [] as string[] };
@@ -105,8 +112,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       if (other) return { error: 'in-a-room', room: other };
       // The oldest public lobby on these rules with a seat left, that the player has not left before.
       const waiting = [...roomsById.values()]
-        .filter((r) => r.public && r.status === 'open' && r.engine_version === row.engine_version && r.content_version === row.content_version)
-        .filter((r) => active(r.id).length < 6 && memberOf(r.id, row.member) === null)
+        .filter((r) => waitingLobby(r, row.engine_version, row.content_version) && memberOf(r.id, row.member) === null)
         .sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
       if (waiting) {
         members.push({ room_id: waiting.id, user_id: row.member, game_id: null, ready_round: null, left_at: null, standing: null, joined_at: `${nowIso()}#${state.stamps++}`, shout: null, shout_at: null });
@@ -118,6 +124,35 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
       return made;
     },
     bots: async () => RATS.map((rat) => ({ ...rat })),
+    openLobbies: async (engine, contentVersion) => [...roomsById.values()].filter((r) => waitingLobby(r, engine, contentVersion)).length,
+    lastPublicLeft: async (user) => {
+      const last = members.filter((m) => m.user_id === user).sort((a, b) => b.joined_at.localeCompare(a.joined_at))[0];
+      return last && last.left_at !== null && roomsById.get(last.room_id)?.public ? { leftAt: last.left_at, standing: structuredClone(last.standing) } : null;
+    },
+    reportName: async (roomId, reporter, reported) => {
+      const room = roomsById.get(roomId);
+      if (!room?.public || reporter === reported || isRat(reported) || !memberOf(roomId, reporter) || !memberOf(roomId, reported)) return 'closed';
+      if ((names.get(reported) ?? null) === null) return 'nameless';
+      const kept = reports.find((one) => one.reporter === reporter && one.reported === reported);
+      if (kept) kept.at = state.now;
+      else reports.push({ reporter, reported, at: state.now });
+      // Two players who reported it this month take the name away.
+      if (reports.filter((one) => one.reported === reported && one.at > state.now - 30 * 86_400_000).length >= 2) {
+        names.set(reported, null);
+        for (let i = reports.length - 1; i >= 0; i--) if (reports[i].reported === reported) reports.splice(i, 1);
+        return 'cleared';
+      }
+      return 'ok';
+    },
+    reportedBy: async (user) => reports.filter((one) => one.reporter === user).map((one) => one.reported),
+    follow: async (roomId, follower, followed) => {
+      if (follower === followed || isRat(followed) || !memberOf(roomId, follower) || !memberOf(roomId, followed)) return 'closed';
+      if (friendships.some((one) => one.follower === follower && one.followed === followed)) return 'ok';
+      if (friendships.filter((one) => one.follower === follower).length >= 200) return 'full';
+      friendships.push({ follower, followed });
+      return 'ok';
+    },
+    following: async (user, ids) => friendships.filter((one) => one.follower === user && ids.includes(one.followed)).map((one) => one.followed),
     addBots: async (roomId, users) => {
       const room = roomsById.get(roomId);
       if (!room || room.status !== 'open' || !room.public) return 'closed';
@@ -338,7 +373,7 @@ export function roomServer(start = Date.parse('2026-10-16T10:00:00.000Z')) {
     state,
     hooks,
     network,
-    db: { rooms: roomsById, members, games, seeds, orders, runs, names, avatars, unlocked, loans },
+    db: { rooms: roomsById, members, games, seeds, orders, runs, names, avatars, unlocked, loans, reports, friendships },
     notices,
     /** Asks the server as `user`, with nothing between. */
     ask,

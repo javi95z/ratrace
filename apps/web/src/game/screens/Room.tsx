@@ -183,6 +183,13 @@ function Door() {
   const quick = useRoom((s) => s.quick);
   const closed = useRoom((s) => s.closed);
   const clearClosed = useRoom((s) => s.clearClosed);
+  const dropped = useRoom((s) => s.dropped);
+  const clearDropped = useRoom((s) => s.clearDropped);
+  const lobbies = useRoom((s) => s.lobbies);
+  const lookForLobbies = useRoom((s) => s.lookForLobbies);
+  useEffect(() => {
+    void lookForLobbies();
+  }, [lookForLobbies]);
   const [opening, setOpening] = useState(false);
   const [code, setCode] = useState('');
   // An invitation is a link with the room's code: it is shown as one, to be joined with one press.
@@ -245,6 +252,11 @@ function Door() {
           {t('closed')}
         </p>
       ) : null}
+      {dropped ? (
+        <p role="status" className="frame bg-night-700 px-3 py-2 text-[14px]">
+          {t('dropped')}
+        </p>
+      ) : null}
       {/* The quickest way in: a seat in a public game, with no code to pass round. */}
       <div className="flex flex-col gap-1.5">
         <Button
@@ -253,12 +265,18 @@ function Door() {
           disabled={busy}
           onClick={() => {
             clearClosed();
+            clearDropped();
             void quick();
           }}
         >
           <Sprite id="icon.multiplayer" />
           {t('quick')}
         </Button>
+        {lobbies ? (
+          <p role="status" className="text-center text-[13px] text-teal-300">
+            {t('openNow', { count: lobbies })}
+          </p>
+        ) : null}
         <p className="text-center text-[13px] leading-snug text-ink-300">{t('quickAbout')}</p>
       </div>
       <Button wide disabled={busy} onClick={() => setOpening(true)}>
@@ -557,6 +575,7 @@ function Lobby({ room }: { room: RoomState }) {
           <li>{t('rules.same')}</li>
           <li>{t('rules.clock', { time: paceOf(room.seconds) })}</li>
           <li>{t('rules.win')}</li>
+          {room.public ? <li>{t('rules.idle')}</li> : null}
         </ul>
         <p className="mt-2 text-[13px] leading-snug text-ink-300">{t('rules.others')}</p>
       </Panel>
@@ -786,7 +805,7 @@ function rankOf(members: readonly RoomMember[], member: RoomMember): number {
  * how it moved, their net worth, their score and what the round added to it, and the face they put
  * on it. `live` adds where each is in the round being played. Bare: whoever holds it frames it.
  */
-function Standings({ room, live = false, onPick }: { room: RoomState; live?: boolean; /** Opens another player still in a game in play, to offer them a loan. */ onPick?(member: RoomMember): void }) {
+function Standings({ room, live = false, onPick }: { room: RoomState; live?: boolean; /** Opens another player still in the game: a loan in play, following them at the end, a name to report in a public game. */ onPick?(member: RoomMember): void }) {
   const t = useT('room');
   const { fmt, names, text } = useWords();
   const nameOf = useNameOf();
@@ -810,8 +829,8 @@ function Standings({ room, live = false, onPick }: { room: RoomState; live?: boo
           // Places move by the order shown, the order the server kept the round before.
           const moved = before === null ? 0 : before.place - (at + 1);
           const gained = standing !== null && before !== null ? standing.score - before.score : 0;
-          // A rat lends and borrows nothing: only another player opens.
-          const pick = onPick && room.status === 'playing' && !member.me && !member.left && member.bot === null ? () => onPick(member) : undefined;
+          // Another player opens, while the game is played and once it is over; a rat, never.
+          const pick = onPick && (room.status === 'playing' || room.status === 'finished') && !member.me && !member.left && member.bot === null ? () => onPick(member) : undefined;
           return (
             <li key={member.userId} className={member.left ? 'opacity-60' : ''}>
               {/* Another player still in the game opens, to offer them a loan. */}
@@ -950,7 +969,7 @@ function RoomBar({ room }: { room: RoomState }) {
           room={room}
           live
           onPick={
-            loans
+            loans || room.public
               ? (member) => {
                   setOpen(false);
                   setPicked(member);
@@ -968,7 +987,7 @@ function RoomBar({ room }: { room: RoomState }) {
         ) : null}
       </Sheet>
       <LeaveSheet room={room} open={leaving} onClose={() => setLeaving(false)} />
-      <PlayerSheet member={picked} nameOf={nameOf} onClose={() => setPicked(null)} />
+      <PlayerSheet room={room} member={picked} nameOf={nameOf} loans={loans} onClose={() => setPicked(null)} />
       <ShoutButton />
     </div>
   );
@@ -1022,6 +1041,7 @@ function RoomScreens({ room }: { room: RoomState }) {
   const leave = useRoom((s) => s.leave);
   const busy = useRoom((s) => s.busy);
   const stage = useGame((s) => s.stage);
+  const [picked, setPicked] = useState<RoomMember | null>(null);
   const me = room.members.find((member) => member.me);
   const here = room.members.filter((member) => !member.left);
   const place = me && !me.left && me.standing ? rankOf(room.members, me) : 0;
@@ -1063,7 +1083,10 @@ function RoomScreens({ room }: { room: RoomState }) {
             ))}
           </ul>
         ) : null}
-        <Standings room={room} />
+        {/* Another player opens, to be followed, or their name reported in a public game. */}
+        <Standings room={room} onPick={setPicked} />
+        {here.some((member) => !member.me && member.bot === null) ? <p className="mt-1 text-center text-[12px] text-ink-300">{t('followHint')}</p> : null}
+        <PlayerSheet room={room} member={picked} nameOf={nameOf} loans={false} onClose={() => setPicked(null)} />
         <div className="mt-3 flex flex-col gap-2 border-t-2 border-night-900 pt-3">
           <Rematch room={room} />
           <Refusal plain />
@@ -1105,6 +1128,12 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
   const room = useRoom((s) => s.room);
   const left = useSecondsLeft();
   const toStart = useSecondsToStart();
+  const lobbies = useRoom((s) => s.lobbies);
+  const lookForLobbies = useRoom((s) => s.lookForLobbies);
+  // Out of any game, the door says how many public games are waiting for players now.
+  useEffect(() => {
+    if (status === 'none') void lookForLobbies();
+  }, [status, lookForLobbies]);
   if (status === 'booting' || status === 'unavailable') return null;
   const inRoom = status === 'in' && room !== null && room.status !== 'closed';
   // A game that is over is kept for its result, and a rematch, until the player leaves it: it is not a game to go back to.
@@ -1120,7 +1149,7 @@ export function RoomCard({ primary = false }: { primary?: boolean }) {
     } else if (room.rematch?.open) detail = t('roomRematch');
     else if (me && !me.left && me.standing) detail = t('roomPlace', { place: rankOf(room.members, me), total: here.length });
     else detail = t('roomDone');
-  }
+  } else if (lobbies) detail = t('roomOpenNow', { count: lobbies });
   return (
     <Link
       href="/room"

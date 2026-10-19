@@ -61,6 +61,10 @@ export interface RoomStoreState {
   earned: string[];
   /** What has been shouted, by the others and by the player, that the page has still to show, the oldest first. */
   heard: Array<{ key: string; userId: string; n: number }>;
+  /** How many public games are waiting for players now, as last asked; null before it was. */
+  lobbies: number | null;
+  /** The player was taken out of a public game for letting the clock play their rounds, until they have been told. */
+  dropped: boolean;
 }
 
 export interface RoomActions {
@@ -85,6 +89,13 @@ export interface RoomActions {
   answerLoan(loanId: string, yes: boolean): Promise<'ok' | 'failed'>;
   /** Takes a shout off once it has been shown. */
   dismissHeard(key: string): void;
+  /** Asks how many public games are waiting for players now; not again within a little while. */
+  lookForLobbies(): Promise<void>;
+  /** Reports another player's name in a public game. `failed` if it did not get through. */
+  report(userId: string): Promise<'ok' | 'cleared' | 'nameless' | 'failed'>;
+  /** Follows another player of the room. `full` at the most one may follow; `failed` if it did not get through. */
+  follow(userId: string): Promise<'ok' | 'full' | 'failed'>;
+  clearDropped(): void;
   /** Asks the server how the room stands now. */
   refresh(): Promise<void>;
   clearRefusal(): void;
@@ -125,7 +136,10 @@ export function newer(a: { engine: string; content: string }, b: { engine: strin
   return false;
 }
 
-const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, olderRules: false, earned: [], heard: [] };
+const blank: RoomStoreState = { status: 'booting', room: null, skew: 0, game: null, busy: false, refusal: null, missed: 0, closed: false, otherRules: false, olderRules: false, earned: [], heard: [], lobbies: null, dropped: false };
+
+/** How long the count of public games waiting is good for: asked again only after that. */
+const LOBBIES_EVERY_MS = 20_000;
 
 /** The most shouts waiting to be shown at once: past that, the oldest go unshown. */
 const HEARD_MAX = 3;
@@ -172,6 +186,8 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
   const shoutsHeard = new Map<string, number>();
   /** The last round, by room, in which this page saw the player ready: a round they played, not one the clock played for them. */
   const readyIn = new Map<string, number>();
+  /** When this page last asked how many public games are waiting. */
+  let lobbiesAsked = Number.NEGATIVE_INFINITY;
 
   const store = createStore<RoomStoreState & RoomActions>()((set, get) => {
     const stopClocks = () => {
@@ -249,8 +265,11 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
     function adopt(room: RoomState | null) {
       // A room the player has left is not theirs, however late an answer about it comes. One closed under them says so.
       if (room !== null && (room.id === left || room.members.find((m) => m.me)?.left)) {
-        const closedUnder = room.id !== left && room.status === 'closed';
+        // Out of a room they did not leave from this page: a public game takes out whoever let the clock play their rounds; any other was closed under them.
+        const dropped = room.id !== left && room.public;
+        const closedUnder = room.id !== left && !room.public && room.status === 'closed';
         adopt(null);
+        if (dropped) set({ dropped: true });
         if (closedUnder) set({ closed: true });
         return;
       }
@@ -258,8 +277,8 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
         stopClocks();
         stopWatching();
         release(null);
-        // What the player has still to be told stays until they have been.
-        set({ ...blank, status: 'none', closed: get().closed });
+        // What the player has still to be told stays until they have been, and what is known of the public games.
+        set({ ...blank, status: 'none', closed: get().closed, dropped: get().dropped, lobbies: get().lobbies });
         return;
       }
       const skew = room.now - now();
@@ -479,6 +498,56 @@ export function createRoomStore(options: RoomStoreOptions): RoomStore {
 
       dismissHeard(key) {
         set({ heard: get().heard.filter((shout) => shout.key !== key) });
+      },
+
+      async lookForLobbies() {
+        const rooms = api();
+        if (rooms === null || now() - lobbiesAsked < LOBBIES_EVERY_MS) return;
+        lobbiesAsked = now();
+        try {
+          const { open, dropped } = await rooms.lobbies(options.versions);
+          // Taken out of their last game: said on the door, until they take a seat again.
+          set({ lobbies: open, dropped: dropped || get().dropped });
+        } catch (error) {
+          // Not known just now: nothing is said of them, and the next look asks again.
+          if (!(error instanceof Unreachable)) throw error;
+          lobbiesAsked = Number.NEGATIVE_INFINITY;
+        }
+      },
+
+      async report(userId) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const said = await rooms.report(room.id, userId);
+          if (said === 'gone') return 'failed';
+          if (get().room?.id === said.room.id) adopt(said.room);
+          return said.report;
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      async follow(userId) {
+        const room = get().room;
+        const rooms = api();
+        if (room === null || rooms === null) return 'failed';
+        try {
+          const now = await rooms.follow(room.id, userId);
+          if (now === 'full') return 'full';
+          if (now === 'gone') return 'failed';
+          if (get().room?.id === now.id) adopt(now);
+          return 'ok';
+        } catch (error) {
+          if (error instanceof Unreachable || error instanceof RoomRefused) return 'failed';
+          throw error;
+        }
+      },
+
+      clearDropped() {
+        set({ dropped: false });
       },
 
       async history() {

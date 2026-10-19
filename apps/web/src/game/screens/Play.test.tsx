@@ -13,6 +13,7 @@ import { RankedSessions } from '@ratrace/core/session/ranked';
 import { GameSessions } from '@ratrace/core/session/sessions';
 import type { GameSession, SavedGame } from '@ratrace/core/session/types';
 import { rankedServer } from '@/testing/rankedServer';
+import { roomServer } from '@/testing/roomServer';
 import { memoryServices, renderGame, setWidth } from '@/testing/render';
 import { COMPARE_MIN } from './End';
 import { Play } from './Play';
@@ -61,6 +62,28 @@ async function playRounds(session: GameSession, rounds: number) {
     await session.playRound({ orders: [] });
   }
 }
+
+describe('the end of a life alone, for a player with an account', () => {
+  it('offers a quick game against others, which seats the player and takes them to it', async () => {
+    const server = roomServer();
+    const services = { ...memoryServices(), rooms: () => server.link('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'), schedule: () => () => {} };
+    await playRounds(await services.sessions.start('civil_servant'), content.rounds);
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    const versus = await screen.findByRole('region', { name: 'Up for taking on others?' });
+    await user.click(within(versus).getByRole('button', { name: 'Quick game' }));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/room'));
+    expect([...server.db.rooms.values()].map((room) => room.public)).toEqual([true]);
+  });
+
+  it('offers nothing of the kind with no account to play with', async () => {
+    const services = memoryServices();
+    await playRounds(await services.sessions.start('civil_servant'), content.rounds);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Up for taking on others?' })).toBeNull();
+  });
+});
 
 describe('the play screen', () => {
   it('can advance a safe action and choose cards with the keyboard alone', async () => {

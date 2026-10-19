@@ -106,6 +106,18 @@ export default {
           return rats;
         },
         addBots: (room, users) => call('room_add_bots', { p_room: room, p_bots: users }),
+        openLobbies: (engine, content) => call('room_open_count', { p_engine: engine, p_content: content }),
+        lastPublicLeft: async (user) => {
+          const row = must(
+            await db.from('room_players').select('left_at, standing, rooms!inner(public)').eq('user_id', user).order('joined_at', { ascending: false }).limit(1).maybeSingle(),
+          ) as { left_at: string | null; standing: MemberRow['standing']; rooms: { public: boolean } } | null;
+          return row && row.left_at !== null && row.rooms.public ? { leftAt: row.left_at, standing: row.standing } : null;
+        },
+        reportName: (room, reporter, reported) => call('room_report_name', { p_room: room, p_reporter: reporter, p_reported: reported }),
+        reportedBy: async (user) => (must(await db.from('name_reports').select('reported').eq('reporter', user)) as Array<{ reported: string }>).map((row) => row.reported),
+        follow: (room, follower, followed) => call('room_follow', { p_room: room, p_follower: follower, p_followed: followed }),
+        following: async (user, ids) =>
+          (must(await db.from('friendships').select('followed').eq('follower', user).in('followed', ids)) as Array<{ followed: string }>).map((row) => row.followed),
         start: (room, host, seed, games, deadline) => call('room_start', { p_room: room, p_host: host, p_seed: seed, p_games: games, p_deadline: deadline.toISOString() }),
         leave: (room, user) => call('room_leave', { p_room: room, p_member: user }),
         closeIfStale: (room, now) => call('room_close', { p_room: room, p_now: now.toISOString() }),

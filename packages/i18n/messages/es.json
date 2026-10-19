@@ -70,6 +70,7 @@
     "inRoom": "Volver a tu partida",
     "roomLobby": "Esperando para empezar · {count} de {max}",
     "roomSearching": "Buscando jugadores · {time}",
+    "roomOpenNow": "{count, plural, one {# partida busca jugadores} other {# partidas buscan jugadores}}",
     "roomTurn": "Te toca · quedan {time}",
     "roomWaiting": "Esperando a {names}",
     "roomRematch": "Hay una revancha esperando",
@@ -1178,7 +1179,10 @@
     "mapLabel": "Mapa del mundo con tu ruta: {cities}",
     "unlockedTitle": "Se abre una vida nueva",
     "unlockedBody": "Ya puedes vivir como {life}. {perk}",
-    "tryNow": "Probarla ya"
+    "tryNow": "Probarla ya",
+    "versusTitle": "¿Te atreves contra otros?",
+    "versusAbout": "En una partida rápida todos viven la misma vida en el mismo mundo, y gana quien acabe con más puntos.",
+    "versusQuick": "Partida rápida"
   },
   "epilogue": {
     "title": "Tu vida, contada",
@@ -1655,6 +1659,7 @@
     "retry": "Reintentar",
     "quick": "Partida rápida",
     "quickAbout": "Juega ya con quien esté buscando partida. Si no llega nadie, completan la mesa ratas bot.",
+    "openNow": "{count, plural, one {Ahora mismo # partida busca jugadores} other {Ahora mismo # partidas buscan jugadores}}",
     "quickAgain": "Otra partida rápida",
     "searching": "Buscando jugadores",
     "startsIn": "Empieza en {time}",
@@ -1678,6 +1683,7 @@
     "code": "Código de la partida",
     "enter": "Unirse",
     "closed": "La partida se ha cerrado.",
+    "dropped": "Saliste de la partida pública: el reloj jugó dos rondas seguidas por ti.",
     "copied": "Enlace copiado.",
     "inviteText": "Juega conmigo a The Rat Race en multijugador. Partida {code}",
     "everyone": "Todos viven",
@@ -1701,6 +1707,7 @@
     "choosing": "Aún juegan: {names}",
     "afterRound": "Tras la ronda {n}",
     "final": "Cómo acabó la partida",
+    "followHint": "Toca a un jugador para seguirle.",
     "score": "Puntos",
     "left": "Abandonó",
     "escaped": "Fuera de la rueda",
@@ -1853,11 +1860,22 @@
         }
       }
     },
+    "player": {
+      "follow": "Seguir",
+      "following": "Ya le sigues",
+      "followAbout": "Sus vidas saldrán en tu clasificación de amigos.",
+      "followed": "Hecho: ya le sigues.",
+      "full": "Ya sigues a 200 jugadores, el máximo.",
+      "failed": "No se pudo. Prueba otra vez.",
+      "report": "Denunciar su nombre",
+      "reported": "Gracias. Ya no verás ese nombre."
+    },
     "rules": {
       "title": "Cómo se juega",
       "same": "Todos vivís la misma vida, en el mismo mundo.",
       "clock": "Cada ronda dura {time}: si no juegas a tiempo, se juega sola, con las primeras opciones y sin órdenes.",
       "win": "Gana quien acabe con más puntos: patrimonio y estatus. Salir de la rueda los multiplica.",
+      "idle": "Si el reloj juega dos rondas seguidas por ti, sales de la partida.",
       "others": "Durante la partida puedes picar a un rival desde tu foco, o prestarle o pedirle dinero tocando su nombre en la clasificación."
     },
     "worthShort": "Patrimonio",

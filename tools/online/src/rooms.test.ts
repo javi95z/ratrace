@@ -64,7 +64,7 @@ describe('opening a room', () => {
     const room = roomOf(reply);
     expect(room.code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(room).toMatchObject({ status: 'open', round: 0, seconds: 90, lifeId: 'nurse', host: HOST, deadline: null, rounds: content.rounds });
-    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, bot: null, ready: false, left: false, standing: null, shout: null }]);
+    expect(room.members).toEqual([{ userId: HOST, name: null, avatar: null, me: true, host: true, bot: null, followed: false, ready: false, left: false, standing: null, shout: null }]);
     expect(reply.body.room).toMatchObject({ rematch: null, rematchOf: false, public: false, startsAt: null });
   });
 
@@ -944,5 +944,153 @@ describe('a public game', () => {
     expect(state).toMatchObject({ public: false, startsAt: null });
     expect(state.members.every((m) => m.bot === null)).toBe(true);
     expect(state.members).toHaveLength(2);
+  });
+});
+
+describe('public games: who is waiting, who is gone, and the people met', () => {
+  const D = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+  type Seat = Omit<Room, 'members'> & { public: boolean; members: Array<Room['members'][number] & { bot: string | null; followed: boolean }> };
+  const seatOf = (reply: { body: Body }) => reply.body.room as Seat;
+  const quick = (server: ReturnType<typeof roomServer>, who: string) => server.ask(who, { action: 'quick', ...VERSIONS });
+  const lobbies = async (server: ReturnType<typeof roomServer>, who = D) => (await server.ask(who, { action: 'lobbies', ...VERSIONS })).body.open;
+
+  it('counts the public lobbies a player could be seated in now: not one past its time, not a full one, none on other rules', async () => {
+    const server = roomServer();
+    expect(await lobbies(server)).toBe(0);
+    await quick(server, HOST);
+    expect(await lobbies(server)).toBe(1);
+    // A game among friends is no lobby for strangers.
+    await server.ask(C, { action: 'open', lifeId: 'nurse', seconds: 90, ...VERSIONS });
+    expect(await lobbies(server)).toBe(1);
+    // Past its time, nobody looked: whoever opened it has gone.
+    server.wait(QUICK_WAIT_MS);
+    expect(await lobbies(server)).toBe(0);
+    expect((await server.ask(D, { action: 'lobbies', engineVersion: '0.1.0', contentVersion: '1.0.0' })).body).toEqual({ open: 0, dropped: false });
+    expect(await server.ask(D, { action: 'lobbies', engineVersion: ENGINE })).toMatchObject({ status: 400, body: { field: 'contentVersion' } });
+  });
+
+  it('never seats a player in a lobby past its time: whoever opened it is not there to play', async () => {
+    const server = roomServer();
+    const ghost = seatOf(await quick(server, HOST));
+    server.wait(QUICK_WAIT_MS + 1_000);
+    const fresh = seatOf(await quick(server, B));
+    expect(fresh.id).not.toBe(ghost.id);
+    expect(fresh.members.map((m) => m.userId)).toEqual([B]);
+    // The one who opened it comes back, and plays it with rats.
+    expect(seatOf(await server.ask(HOST, { action: 'state', roomId: ghost.id })).status).toBe('playing');
+  });
+
+  it('takes out of a public game whoever let the clock play two rounds in a row, and the others no longer wait for them', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    await server.ask(HOST, { action: 'start', roomId: seat.id });
+    // HOST plays each round; B has gone. The first round waits for its clock.
+    for (let round = 0; round < 2; round++) {
+      await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+      server.wait(QUICK_SECONDS * 1000 + GRACE_MS + 1);
+      await server.ask(HOST, { action: 'state', roomId: seat.id });
+    }
+    const after = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(after.round).toBe(2);
+    expect(after.members.find((m) => m.userId === B)?.left).toBe(true);
+    expect([...server.db.games.values()].find((g) => g.user_id === B)?.status).toBe('abandoned');
+    // From now on the round turns the moment HOST plays it.
+    const played = await server.ask(HOST, { action: 'submit', roomId: seat.id, step: await answerHand(server, HOST, seat.id), orders: [] });
+    expect(seatOf(played).round).toBe(3);
+    // One round missed and then played is no reason to go: only two in a row.
+    expect(after.members.find((m) => m.userId === HOST)?.left).toBe(false);
+  });
+
+  it('tells a player taken out of their last game why, for a day and until they take a seat again; not one who left', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    await server.ask(B, { action: 'start', roomId: seat.id });
+    const dropped = async (who: string) => (await server.ask(who, { action: 'lobbies', ...VERSIONS })).body.dropped;
+    for (let round = 0; round < 2; round++) {
+      await server.ask(B, { action: 'submit', roomId: seat.id, step: await answerHand(server, B, seat.id), orders: [] });
+      server.wait(QUICK_SECONDS * 1000 + GRACE_MS + 1);
+      await server.ask(B, { action: 'state', roomId: seat.id });
+    }
+    expect(await dropped(HOST)).toBe(true);
+    expect(await dropped(B)).toBe(false);
+    // B leaves of their own accord: nothing to explain.
+    await server.ask(B, { action: 'leave', roomId: seat.id });
+    expect(await dropped(B)).toBe(false);
+    // HOST takes a seat again: it is behind them.
+    await quick(server, HOST);
+    expect(await dropped(HOST)).toBe(false);
+  });
+
+  it('keeps everyone in a game among friends, however many rounds the clock plays for them', async () => {
+    const { server, room } = await begun(roomServer(), 90);
+    for (let round = 0; round < 3; round++) {
+      await server.ask(HOST, { action: 'submit', roomId: room, step: await answerHand(server, HOST, room), orders: [] });
+      server.wait(96_000);
+      await server.ask(HOST, { action: 'state', roomId: room });
+    }
+    const after = seatOf(await server.ask(HOST, { action: 'state', roomId: room }));
+    expect(after.round).toBe(3);
+    expect(after.members.every((m) => !m.left)).toBe(true);
+  });
+
+  it('lets a player of a public game report a name: they stop seeing it at once, and a second player\'s report takes it away', async () => {
+    const server = roomServer();
+    server.db.names.set(C, 'Rude_Name');
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    await quick(server, C);
+    const reported = await server.ask(HOST, { action: 'report', roomId: seat.id, userId: C });
+    expect(reported.status).toBe(200);
+    expect(reported.body.report).toBe('ok');
+    // The one who reported it no longer sees it; the others still do.
+    expect(seatOf(reported).members.find((m) => m.userId === C)?.name).toBeNull();
+    expect(seatOf(await server.ask(B, { action: 'state', roomId: seat.id })).members.find((m) => m.userId === C)?.name).toBe('Rude_Name');
+    // A second player reports it: the name is gone for everyone.
+    expect((await server.ask(B, { action: 'report', roomId: seat.id, userId: C })).body.report).toBe('cleared');
+    expect(server.db.names.get(C)).toBeNull();
+    expect(seatOf(await server.ask(C, { action: 'state', roomId: seat.id })).members.find((m) => m.me)?.name).toBeNull();
+    // Nothing more to report of a player with no name.
+    expect((await server.ask(HOST, { action: 'report', roomId: seat.id, userId: C })).body.report).toBe('nameless');
+  });
+
+  it('reports no name of oneself, of a rat, of a stranger, or in a game among friends', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    const started = seatOf(await server.ask(HOST, { action: 'start', roomId: seat.id }));
+    const rat = started.members.find((m) => m.bot !== null)?.userId as string;
+    expect(await server.ask(HOST, { action: 'report', roomId: seat.id, userId: HOST })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect(await server.ask(HOST, { action: 'report', roomId: seat.id, userId: rat })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect(await server.ask(HOST, { action: 'report', roomId: seat.id, userId: D })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect(await server.ask(D, { action: 'report', roomId: seat.id, userId: HOST })).toMatchObject({ status: 404, body: { error: 'unknown-room' } });
+    const friends = await begun(roomServer());
+    expect(await friends.server.ask(HOST, { action: 'report', roomId: friends.room, userId: B })).toMatchObject({ status: 409, body: { error: 'not-public' } });
+  });
+
+  it('lets a player follow someone they played with, without their code, and says whom they follow at the end', async () => {
+    const server = roomServer();
+    const seat = seatOf(await quick(server, HOST));
+    await quick(server, B);
+    const started = seatOf(await server.ask(HOST, { action: 'start', roomId: seat.id }));
+    const rat = started.members.find((m) => m.bot !== null)?.userId as string;
+    expect(await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: rat })).toMatchObject({ status: 400, body: { field: 'userId' } });
+    expect((await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: B })).status).toBe(200);
+    expect(server.db.friendships).toEqual([{ follower: HOST, followed: B }]);
+    // Followed once, it is not followed twice.
+    await server.ask(HOST, { action: 'follow', roomId: seat.id, userId: B });
+    expect(server.db.friendships).toHaveLength(1);
+    // Played to its end by both: at the end, the page is told whom the player follows.
+    for (let round = 0; round < content.rounds; round++) {
+      for (const who of [HOST, B]) await server.ask(who, { action: 'submit', roomId: seat.id, step: await answerHand(server, who, seat.id), orders: [] });
+    }
+    const end = seatOf(await server.ask(HOST, { action: 'state', roomId: seat.id }));
+    expect(end.status).toBe('finished');
+    expect(end.members.find((m) => m.userId === B)?.followed).toBe(true);
+    expect(end.members.find((m) => m.userId === rat)?.followed).toBe(false);
+    // At most two hundred.
+    for (let n = 0; n < 199; n++) server.db.friendships.push({ follower: B, followed: `f${n}` });
+    server.db.friendships.push({ follower: B, followed: 'f199' });
+    expect(await server.ask(B, { action: 'follow', roomId: seat.id, userId: HOST })).toMatchObject({ status: 409, body: { error: 'full' } });
   });
 });

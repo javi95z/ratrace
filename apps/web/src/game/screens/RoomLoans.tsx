@@ -113,18 +113,35 @@ export function LoanOffers({ room, nameOf }: { room: RoomState; nameOf(member: R
 }
 
 /**
- * Another player of the room, from the room's order: who they are, and a loan to offer them, either
- * way. Shown only while the game is played and both are in it.
+ * Another player of the room, from the room's order: who they are, and what the player may do with
+ * them. While the game is played, a loan either way, where its rules have loans; once it is over, to
+ * follow them; in a public game, to report their name.
  */
-export function PlayerSheet({ member, nameOf, onClose }: { member: RoomMember | null; nameOf(member: RoomMember): string; onClose(): void }) {
+export function PlayerSheet({ room, member: picked, nameOf, loans, onClose }: { room: RoomState; member: RoomMember | null; nameOf(member: RoomMember): string; loans: boolean; onClose(): void }) {
   const t = useT('room.loan');
+  const said = useT('room.player');
   const common = useT('common');
   const { fmt, names, text } = useWords();
+  const report = useRoom((s) => s.report);
+  const follow = useRoom((s) => s.follow);
   const [lend, setLend] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  // What the last thing asked here came to, said under it until the sheet is closed.
+  const [told, setTold] = useState<string | null>(null);
+  // The player as the room now shows them: a name reported, or a player followed, shows at once.
+  const member = picked ? (room.members.find((one) => one.userId === picked.userId) ?? picked) : null;
   const standing = member?.standing ?? null;
+  const playing = room.status === 'playing' && loans;
+  const over = room.status === 'finished';
   const close = () => {
     setLend(null);
+    setTold(null);
     onClose();
+  };
+  const ask = async (what: () => Promise<string>) => {
+    setBusy(true);
+    setTold(await what());
+    setBusy(false);
   };
   return (
     <>
@@ -136,15 +153,44 @@ export function PlayerSheet({ member, nameOf, onClose }: { member: RoomMember | 
             {t('worth', { worth: fmt.compact(standing.netWorth) })}
           </p>
         ) : null}
-        <Explain className="mt-2">{t('about')}</Explain>
-        <div className="mt-3 flex gap-2">
-          <Button variant="primary" wide onClick={() => setLend(true)}>
-            {t('offer')}
-          </Button>
-          <Button wide onClick={() => setLend(false)}>
-            {t('ask')}
-          </Button>
-        </div>
+        {playing ? (
+          <>
+            <Explain className="mt-2">{t('about')}</Explain>
+            <div className="mt-3 flex gap-2">
+              <Button variant="primary" wide onClick={() => setLend(true)}>
+                {t('offer')}
+              </Button>
+              <Button wide onClick={() => setLend(false)}>
+                {t('ask')}
+              </Button>
+            </div>
+          </>
+        ) : null}
+        {over && member ? (
+          <div className="mt-3 flex flex-col gap-1.5">
+            <Button variant="primary" wide disabled={busy || member.followed} onClick={() => void ask(async () => ({ ok: 'followed', full: 'full', failed: 'failed' })[await follow(member.userId)])}>
+              {said(member.followed ? 'following' : 'follow')}
+            </Button>
+            <p className="text-center text-[13px] text-ink-300">{said('followAbout')}</p>
+          </div>
+        ) : null}
+        {room.public && member && member.name !== null ? (
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void ask(async () => ({ ok: 'reported', cleared: 'reported', nameless: 'reported', failed: 'failed' })[await report(member.userId)])}
+              className="min-h-11 px-3 text-[13px] text-ink-300 underline underline-offset-4"
+            >
+              {said('report')}
+            </button>
+          </div>
+        ) : null}
+        {told ? (
+          <p role="status" className="mt-2 text-center text-[13px] text-ink-200">
+            {said(told)}
+          </p>
+        ) : null}
       </Sheet>
       {member && lend !== null ? <LoanSheet member={member} lend={lend} nameOf={nameOf} onClose={close} /> : null}
     </>
