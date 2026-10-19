@@ -31,7 +31,7 @@ describe('what a notice says', () => {
     expect(noticeOf('es', { kind: 'shout', who: 'Ana', n: 13 })).toEqual({ title: 'Ana dice:', body: '¡Date prisa!', url: '/es/room', tag: 'room-shout' });
     expect(noticeOf('en', { kind: 'shout', who: null, n: 2 })).toMatchObject({ title: 'A rival says:', body: '🔥' });
     for (const lang of ['en', 'es', 'ru'] as const) {
-      const page = JSON.parse(readFileSync(new URL(`../../../apps/web/messages/${lang}.json`, import.meta.url), 'utf8')) as { room: Record<string, string> };
+      const page = JSON.parse(readFileSync(new URL(`../../../packages/i18n/messages/${lang}.json`, import.meta.url), 'utf8')) as { room: Record<string, string> };
       for (let i = 0; i < 8; i++) expect(shoutText(SHOUT_FACES.length + i, lang), `${lang} shout${i}`).toBe(page.room[`shout${i}`]);
     }
   });

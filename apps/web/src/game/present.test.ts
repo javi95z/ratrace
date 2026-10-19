@@ -4,9 +4,9 @@ import type { Effects, GameEvent, Order } from '@ratrace/engine';
 import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
-import en from '../../messages/en.json';
-import es from '../../messages/es.json';
-import ru from '../../messages/ru.json';
+import en from '@ratrace/i18n/messages/en.json';
+import es from '@ratrace/i18n/messages/es.json';
+import ru from '@ratrace/i18n/messages/ru.json';
 import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from './present';
 import type { Translate, Words } from './present';
 

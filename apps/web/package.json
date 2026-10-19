@@ -18,6 +18,7 @@
   "dependencies": {
     "@ratrace/content": "workspace:*",
     "@ratrace/engine": "workspace:*",
+    "@ratrace/i18n": "workspace:*",
     "@supabase/supabase-js": "2.117.2",
     "idb": "^8.0.4",
     "motion": "^14.1.0",

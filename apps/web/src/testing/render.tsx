@@ -6,9 +6,9 @@ import { GameProvider } from '@/game/context';
 import type { Services } from '@/game/context';
 import { LocalSessions } from '@/session/local';
 import { MemoryStore } from '@/session/memory';
-import en from '../../messages/en.json';
-import es from '../../messages/es.json';
-import ru from '../../messages/ru.json';
+import en from '@ratrace/i18n/messages/en.json';
+import es from '@ratrace/i18n/messages/es.json';
+import ru from '@ratrace/i18n/messages/ru.json';
 
 /**
  * The game's services with nothing behind them but memory, and ids, seeds and a clock that never change.

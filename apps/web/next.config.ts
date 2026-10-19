@@ -5,8 +5,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const config: NextConfig = {
   reactStrictMode: true,
-  // The engine and the content are TypeScript sources in this workspace.
-  transpilePackages: ['@ratrace/engine', '@ratrace/content'],
+  // The engine, the content and the interface's words are TypeScript sources in this workspace.
+  transpilePackages: ['@ratrace/engine', '@ratrace/content', '@ratrace/i18n'],
   async headers() {
     return [
       {

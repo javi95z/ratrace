@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { CARD, PIXEL_X_HEIGHT, shareCard } from '@/game/share';
 import { memoryServices } from '@/testing/render';
 import { GameProvider } from '@/game/context';
-import en from '../../../messages/en.json';
+import en from '@ratrace/i18n/messages/en.json';
 import { drawCard, ShareCard } from './ShareCard';
 
 const ops = shareCard({

@@ -50,6 +50,9 @@ importers:
       '@ratrace/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@ratrace/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@supabase/supabase-js':
         specifier: 2.117.2
         version: 2.117.2
@@ -122,6 +125,8 @@ importers:
         version: link:../engine
 
   packages/engine: {}
+
+  packages/i18n: {}
 
   tools/art: {}
 

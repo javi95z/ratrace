@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import robots from '@/app/robots';
 import sitemap from '@/app/sitemap';
-import en from '../../messages/en.json';
-import es from '../../messages/es.json';
-import ru from '../../messages/ru.json';
+import en from '@ratrace/i18n/messages/en.json';
+import es from '@ratrace/i18n/messages/es.json';
+import ru from '@ratrace/i18n/messages/ru.json';
 import { PAGES, pageMetadata, SHARE_IMAGE, SITE_URL } from './metadata';
 
 const words = { name: 'The Rat Race', description: 'Forty years.', imageAlt: 'A rat in a wheel.' };

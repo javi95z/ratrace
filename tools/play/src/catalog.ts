@@ -39,7 +39,7 @@ import type { ItemDef } from '@ratrace/engine';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const OUT = path.join(ROOT, 'docs/catalogo.md');
 const { text, names } = textFor('es');
-const messages = JSON.parse(readFileSync(path.join(ROOT, 'apps/web/messages/es.json'), 'utf8')) as {
+const messages = JSON.parse(readFileSync(path.join(ROOT, 'packages/i18n/messages/es.json'), 'utf8')) as {
   challenge: {
     about: string;
     practiceHint: string;

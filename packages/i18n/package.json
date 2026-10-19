@@ -1,0 +1,11 @@
+{
+  "name": "@ratrace/i18n",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./messages/*.json": "./messages/*.json"
+  },
+  "sideEffects": false
+}

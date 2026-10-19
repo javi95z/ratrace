@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, LOCALES } from '@ratrace/i18n';
 import { defineRouting } from 'next-intl/routing';
 
 /** How long the language a player plays in is remembered: a year, renewed by every page they open. */
@@ -9,8 +10,8 @@ export const LOCALE_COOKIE_AGE = 60 * 60 * 24 * 365;
  * outlives closing the app (by default it would last only as long as the browser's session).
  */
 export const routing = defineRouting({
-  locales: ['en', 'es', 'ru'],
-  defaultLocale: 'en',
+  locales: LOCALES,
+  defaultLocale: DEFAULT_LOCALE,
   localeCookie: { name: 'NEXT_LOCALE', maxAge: LOCALE_COOKIE_AGE, sameSite: 'lax' },
 });
 

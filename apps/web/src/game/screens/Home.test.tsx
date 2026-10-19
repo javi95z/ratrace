@@ -13,7 +13,7 @@ import type { RankedApi } from '@/session/ranked';
 import { GameSessions } from '@/session/sessions';
 import { rankedServer } from '@/testing/rankedServer';
 import { memoryServices, renderGame } from '@/testing/render';
-import en from '../../../messages/en.json';
+import en from '@ratrace/i18n/messages/en.json';
 import { PwaProvider } from '@/pwa/runtime';
 import { Home } from './Home';
 

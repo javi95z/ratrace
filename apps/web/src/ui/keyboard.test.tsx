@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
-import en from '../../messages/en.json';
+import en from '@ratrace/i18n/messages/en.json';
 import { acceleratedRangeKey, KeyboardHint, KeyboardProvider, useKeyboardScope } from './keyboard';
 
 afterEach(cleanup);

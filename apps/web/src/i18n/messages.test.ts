@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { routing } from './routing';
 
 const read = (locale: string): unknown =>
-  JSON.parse(readFileSync(fileURLToPath(new URL(`../../messages/${locale}.json`, import.meta.url)), 'utf8'));
+  JSON.parse(readFileSync(fileURLToPath(new URL(`../../../../packages/i18n/messages/${locale}.json`, import.meta.url)), 'utf8'));
 
 /** Every sentence in a message file, with the path that leads to it. */
 function sentences(value: unknown, path = ''): Array<[string, string]> {

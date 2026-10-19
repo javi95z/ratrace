@@ -4,8 +4,8 @@ import { createGame, viewOf } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { formatFor } from '@/lib/format';
-import en from '../../messages/en.json';
-import es from '../../messages/es.json';
+import en from '@ratrace/i18n/messages/en.json';
+import es from '@ratrace/i18n/messages/es.json';
 import { chapters, epilogue } from './epilogue';
 import type { Translate, Words } from './present';
 

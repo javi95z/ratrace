@@ -1,6 +1,6 @@
 # Russian: how the game is written
 
-For whoever adds or changes Russian text: `apps/web/messages/ru.json`, `packages/content/src/text/ru*.ts`, the Russian names in `packages/content/src/names.ts`, and the Russian terminal strings in `tools/play`. The tests hold the mechanical rules: the same keys and placeholders as the English, every plural with its four forms, every sentence fillable by the page, typesetting, «ё» in the commonest words, the lengths of card text, and the crudest ways of giving the player a gender. This page holds the rules a test cannot check, and the words.
+For whoever adds or changes Russian text: `packages/i18n/messages/ru.json`, `packages/content/src/text/ru*.ts`, the Russian names in `packages/content/src/names.ts`, and the Russian terminal strings in `tools/play`. The tests hold the mechanical rules: the same keys and placeholders as the English, every plural with its four forms, every sentence fillable by the page, typesetting, «ё» in the commonest words, the lengths of card text, and the crudest ways of giving the player a gender. This page holds the rules a test cannot check, and the words.
 
 ## Voice
 

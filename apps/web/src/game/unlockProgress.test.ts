@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { lives } from '@ratrace/content';
-import en from '../../messages/en.json';
-import es from '../../messages/es.json';
-import ru from '../../messages/ru.json';
+import en from '@ratrace/i18n/messages/en.json';
+import es from '@ratrace/i18n/messages/es.json';
+import ru from '@ratrace/i18n/messages/ru.json';
 import { unlockProgress } from './unlockProgress';
 
 describe('progress towards a life', () => {
