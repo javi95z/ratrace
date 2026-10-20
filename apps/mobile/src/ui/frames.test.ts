@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { CREAM, GOLD, WINE, stripsOf } from './frames';
+import { CREAM, GOLD, WINE, anchorsOf, resolveAnchor, stripsOf } from './frames';
 
 const covers = (s: { x: number; y: number; w: number; h: number }, px: number, py: number) =>
   px >= s.x && px < s.x + s.w && py >= s.y && py < s.y + s.h;
@@ -77,4 +77,20 @@ test('tab is a night frame with a gold lit top and shaded bottom', () => {
   expect(at(s, 50, 0)).toBe('gold-200');
   expect(at(s, 50, 39)).toBe('gold-700');
   expect(at(s, -2, -2)).toBeUndefined();
+});
+
+test('anchored strips resolve to exactly the strips of stripsOf, for every kind and size', () => {
+  const kinds = ['frame', 'bevel', 'sunk', 'raised', 'lamp', 'double', 'tab'] as const;
+  for (const kind of kinds)
+    for (const tone of [{}, GOLD, CREAM, WINE, { ring: 'wine-500' as const }])
+      for (const [w, h] of [[100, 40], [4, 4], [300, 1], [0, 0], [3, 50]])
+        expect(anchorsOf(kind, tone).map((a) => resolveAnchor(a, w, h))).toEqual(stripsOf(kind, w, h, tone));
+});
+
+test('stripsOf never gives a negative size', () => {
+  for (const kind of ['frame', 'bevel', 'sunk', 'raised', 'lamp', 'double', 'tab'] as const)
+    for (const s of stripsOf(kind, 3, 0, {})) {
+      expect(s.w).toBeGreaterThanOrEqual(0);
+      expect(s.h).toBeGreaterThanOrEqual(0);
+    }
 });

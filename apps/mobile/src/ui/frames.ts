@@ -89,5 +89,93 @@ export function stripsOf(kind: FrameKind, w: number, h: number, tone: FrameTone)
       css = [...outline(w, h, 'night-900'), top(w, E, 'gold-200'), bottom(w, h, E, 'gold-700')];
       break;
   }
+  return css.reverse().map((c) => ({ ...c, w: Math.max(0, c.w), h: Math.max(0, c.h) }));
+}
+
+/**
+ * A strip placed by its distances from the box's edges, so it needs no measuring: along each axis
+ * either both insets (it stretches), or one inset and a size.
+ */
+export type Anchor = {
+  left?: number;
+  right?: number;
+  top?: number;
+  bottom?: number;
+  width?: number;
+  height?: number;
+  color: ColorToken;
+};
+
+const A = {
+  // outside strips, one per side, as long as the side
+  oTop: (c: ColorToken): Anchor => ({ top: -E, height: E, left: 0, right: 0, color: c }),
+  oBottom: (c: ColorToken): Anchor => ({ bottom: -E, height: E, left: 0, right: 0, color: c }),
+  oLeft: (c: ColorToken): Anchor => ({ left: -E, width: E, top: 0, bottom: 0, color: c }),
+  oRight: (c: ColorToken): Anchor => ({ right: -E, width: E, top: 0, bottom: 0, color: c }),
+  // inside strips
+  iTop: (t: number, c: ColorToken): Anchor => ({ top: 0, height: t, left: 0, right: 0, color: c }),
+  iBottom: (t: number, c: ColorToken): Anchor => ({ bottom: 0, height: t, left: 0, right: 0, color: c }),
+  iLeft: (t: number, c: ColorToken): Anchor => ({ left: 0, width: t, top: 0, bottom: 0, color: c }),
+  iRight: (t: number, c: ColorToken): Anchor => ({ right: 0, width: t, top: 0, bottom: 0, color: c }),
+};
+const outlineA = (c: ColorToken): Anchor[] => [A.oTop(c), A.oBottom(c), A.oLeft(c), A.oRight(c)];
+
+const ringA = (inner: number, outer: number, color: ColorToken): Anchor[] => {
+  const t = outer - inner;
+  return [
+    { top: -outer, height: t, left: -outer, right: -outer, color },
+    { bottom: -outer, height: t, left: -outer, right: -outer, color },
+    { left: -outer, width: t, top: -inner, bottom: -inner, color },
+    { right: -outer, width: t, top: -inner, bottom: -inner, color },
+  ];
+};
+
+/** The same strips as `stripsOf`, in the same order, placed without knowing the box's size. */
+export function anchorsOf(kind: FrameKind, tone: FrameTone): Anchor[] {
+  const frame = tone.frame ?? 'night-900';
+  const hi = tone.hi ?? 'night-500';
+  let css: Anchor[];
+  switch (kind) {
+    case 'frame':
+      css = outlineA(frame);
+      break;
+    case 'bevel': {
+      const lo = tone.lo ?? 'night-900';
+      css = [...outlineA(frame), A.iTop(E, hi), A.iLeft(E, hi), A.iBottom(E, lo), A.iRight(E, lo)];
+      break;
+    }
+    case 'sunk':
+      css = [A.iTop(E, 'night-900'), A.iLeft(E, 'night-900')];
+      break;
+    case 'raised':
+      css = [
+        ...outlineA(frame),
+        A.iTop(E, hi),
+        A.iBottom(3, tone.lo ?? 'night-800'),
+        { bottom: -4, height: 4, left: E, right: E, color: frame },
+      ];
+      break;
+    case 'lamp':
+      css = [A.iTop(E, hi), A.iBottom(E, tone.lo ?? 'night-900')];
+      break;
+    case 'double':
+      css = [...ringA(0, 2, 'night-900'), ...ringA(2, 4, tone.ring ?? 'gold-700'), ...ringA(4, 6, 'night-900')];
+      break;
+    case 'tab':
+      css = [...outlineA('night-900'), A.iTop(E, 'gold-200'), A.iBottom(E, 'gold-700')];
+      break;
+  }
   return css.reverse();
+}
+
+/** What an anchored strip covers in a w x h box (the inverse of `anchorsOf`, for tests). */
+export function resolveAnchor(a: Anchor, w: number, h: number): Strip {
+  const axis = (start: number | undefined, end: number | undefined, size: number | undefined, total: number) => {
+    if (start !== undefined && end !== undefined) return [start, Math.max(0, total - start - end)] as const;
+    if (start !== undefined && size !== undefined) return [start, size] as const;
+    return [total - (end as number) - (size as number), size as number] as const;
+  };
+  const [x, sw] = axis(a.left, a.right, a.width, w);
+  const [y, sh] = axis(a.top, a.bottom, a.height, h);
+  return { x, y, w: sw, h: sh, color: a.color };
 }
