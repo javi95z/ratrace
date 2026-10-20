@@ -7,9 +7,9 @@ import type { AppLocale } from './routing';
 export { SITE_URL } from '@/lib/site';
 
 /** The pages a link can lead to, by the path after the language. The front door is the empty one. */
-export const PAGES = ['', '/new', '/challenge', '/room', '/rankings', '/collection', '/records', '/play', '/player'] as const;
+export const PAGES = ['', '/new', '/challenge', '/room', '/rankings', '/collection', '/records', '/play', '/player', '/legal'] as const;
 export type Page = (typeof PAGES)[number];
-const TITLE_OF: Partial<Record<Page, 'new' | 'play' | 'collection' | 'records' | 'rankings' | 'challenge' | 'room' | 'player'>> = {
+const TITLE_OF: Partial<Record<Page, 'new' | 'play' | 'collection' | 'records' | 'rankings' | 'challenge' | 'room' | 'player' | 'legal'>> = {
   '/new': 'new',
   '/play': 'play',
   '/collection': 'collection',
@@ -18,6 +18,7 @@ const TITLE_OF: Partial<Record<Page, 'new' | 'play' | 'collection' | 'records' |
   '/challenge': 'challenge',
   '/room': 'room',
   '/player': 'player',
+  '/legal': 'legal',
 };
 
 /** How each language is written for the networks that read Open Graph. */

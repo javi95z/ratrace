@@ -10,7 +10,8 @@
       "rankings": "Rankings",
       "challenge": "Weekly challenge",
       "room": "Multiplayer",
-      "player": "Your profile"
+      "player": "Your profile",
+      "legal": "Privacy"
     },
     "imageAlt": "The Rat Race in pixels: a rat in a wheel, the night skylines of New York and Madrid, and the game's name in gold.",
     "keywords": "rat race,life simulator,personal finance game,investing game,financial independence,pixel art"
@@ -834,13 +835,13 @@
       "opensNow": "It opens when the round is played. From the next one you can run it, grow it or sell it.",
       "needsCash": "You are {amount} in cash short of opening it.",
       "review": {
-        "title": "Reviews",
-        "stars": "{n} of 5 stars",
         "1": "\"Not even the owner turns up here.\"",
         "2": "\"You can tell they are losing money. Even the plant looks sad.\"",
         "3": "\"Fine. The manager has no idea who the owner is.\"",
         "4": "\"Good. I will be back if nothing else is open.\"",
-        "5": "\"The owner counts every penny, but everything works.\""
+        "5": "\"The owner counts every penny, but everything works.\"",
+        "title": "Reviews",
+        "stars": "{n} of 5 stars"
       },
       "paysYou": "{amount} to you",
       "neglectedShort": "Nobody runs it this round: it makes less and loses value.",
@@ -2048,5 +2049,24 @@
     "goesOn": "Your bills are still paid, and your investments go on as they were.",
     "enter": "Going in costs {status} status.",
     "leave": "{n, plural, one {Coming out, you drop # rung in your career.} other {Coming out, you drop # rungs in your career.}}"
+  },
+  "legal": {
+    "title": "Privacy and legal notice",
+    "link": "Privacy and legal notice",
+    "updated": "Updated 20 October 2026.",
+    "noticeTitle": "Legal notice",
+    "noticeBody": "The Rat Race is a free game of fiction. The companies, people and news in it are parodies, and nothing it says is financial advice.",
+    "owner": "Owner: {name}.",
+    "contact": "Contact: {email}.",
+    "dataTitle": "What we keep",
+    "dataBody": "Opening the game creates an anonymous guest account. If you keep it with Google, also your Google email and name. What you play: lives, records, nickname, rat, friend code, friends and games. If you turn notices on, your browser's notification address and your language. And technical errors, cleaned of anything personal. Your nickname and rat are seen in rankings and games.",
+    "whyTitle": "What for",
+    "whyBody": "Only to make the game work: your life on every device, the rankings, games with friends and the notices you turn on. The basis is giving you the service you ask for and, for notices, your consent, which you withdraw any time in Settings. There are no ads and we sell no data.",
+    "whoTitle": "Who handles it",
+    "whoBody": "Supabase (accounts and database, in Japan), Vercel (the site and a count of visits with no cookies), Cloudflare Turnstile (stopping bots) and Google, if you sign in with Google. Outside the EU, under the European Commission's standard contractual clauses.",
+    "deviceTitle": "Cookies and your device",
+    "deviceBody": "We use no tracking cookies. The game keeps your life and settings in the browser, because without that it cannot be played.",
+    "rightsTitle": "How long, and your rights",
+    "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google."
   }
 }

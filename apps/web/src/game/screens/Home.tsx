@@ -22,6 +22,7 @@ export function Home() {
   const meta = useT('meta');
   const common = useT('common');
   const settings = useT('settings');
+  const legal = useT('legal');
   const { content, text, names } = useWords();
   const status = useGame((s) => s.status);
   const lost = useGame((s) => s.lost);
@@ -162,6 +163,11 @@ export function Home() {
           <InstallApp onDismiss={install.dismiss} />
         </div>
       ) : null}
+
+      {/* The small print, out of the way: only here, at the very foot. */}
+      <Link href="/legal" className="text-[12px] text-ink-300 underline-offset-2 hover:underline">
+        {legal('link')}
+      </Link>
 
       {/* Saying yes leaves this page for the game, so the sheet keeps no entry of its own in the history. */}
       <Sheet open={offer !== null && asking === offer.gameId} onClose={() => setAsking(null)} title={t('accountLifeTitle')} closeLabel={common('close')} back={false}>

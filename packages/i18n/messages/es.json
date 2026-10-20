@@ -10,7 +10,8 @@
       "rankings": "Clasificaciones",
       "challenge": "Reto de la semana",
       "room": "Multijugador",
-      "player": "Tu perfil"
+      "player": "Tu perfil",
+      "legal": "Privacidad"
     },
     "imageAlt": "The Rat Race en píxeles: una rata en su rueda, los skylines nocturnos de Nueva York y Madrid y el nombre del juego en dorado.",
     "keywords": "rat race,simulador de vida,juego de finanzas personales,juego de inversión,independencia financiera,pixel art"
@@ -834,13 +835,13 @@
       "opensNow": "Se abre al jugar la ronda. Desde la siguiente podrás llevarlo, hacerlo crecer o venderlo.",
       "needsCash": "Te faltan {amount} en efectivo para montarlo.",
       "review": {
-        "title": "Reseñas",
-        "stars": "{n} de 5 estrellas",
         "1": "«Aquí no aparece ni el dueño».",
         "2": "«Se nota que pierden dinero. Hasta la planta está triste».",
         "3": "«Correcto. El encargado no sabe quién es el dueño».",
         "4": "«Bien. Volveré si no hay otra cosa abierta».",
-        "5": "«El dueño cuenta los céntimos, pero todo funciona»."
+        "5": "«El dueño cuenta los céntimos, pero todo funciona».",
+        "title": "Reseñas",
+        "stars": "{n} de 5 estrellas"
       },
       "paysYou": "{amount} para ti",
       "neglectedShort": "Nadie lo lleva esta ronda: gana menos y pierde valor.",
@@ -2048,5 +2049,24 @@
     "goesOn": "Tus gastos se siguen pagando y tus inversiones siguen su curso.",
     "enter": "Entrar cuesta {status} de estatus.",
     "leave": "{n, plural, one {Al salir bajas # puesto en tu carrera.} other {Al salir bajas # puestos en tu carrera.}}"
+  },
+  "legal": {
+    "title": "Privacidad y aviso legal",
+    "link": "Privacidad y aviso legal",
+    "updated": "Actualizado el 20 de octubre de 2026.",
+    "noticeTitle": "Aviso legal",
+    "noticeBody": "The Rat Race es un juego gratuito de ficción. Las empresas, personas y noticias que salen son parodias, y nada de lo que dice es consejo financiero.",
+    "owner": "Titular: {name}.",
+    "contact": "Contacto: {email}.",
+    "dataTitle": "Qué datos guardamos",
+    "dataBody": "Al abrir el juego se crea una cuenta de invitado anónima. Si la guardas con Google, también tu correo y tu nombre de Google. Lo que juegas: vidas, récords, apodo, rata, código de amigo, amigos y partidas. Si activas los avisos, la dirección de notificación de tu navegador y tu idioma. Y los errores técnicos, limpios de datos personales. Tu apodo y tu rata se ven en clasificaciones y partidas.",
+    "whyTitle": "Para qué",
+    "whyBody": "Solo para que el juego funcione: guardar tu vida en todos tus dispositivos, las clasificaciones, las partidas con amigos y los avisos que tú enciendas. La base es prestarte el servicio que pides y, para los avisos, tu consentimiento, que retiras cuando quieras en Ajustes. No hay publicidad y no vendemos datos.",
+    "whoTitle": "Quién los trata",
+    "whoBody": "Supabase (cuentas y base de datos, en Japón), Vercel (la web y un recuento de visitas sin cookies), Cloudflare Turnstile (frenar bots) y Google, si entras con Google. Fuera de la UE, con las cláusulas contractuales tipo de la Comisión Europea.",
+    "deviceTitle": "Cookies y tu dispositivo",
+    "deviceBody": "No usamos cookies de seguimiento. El juego guarda tu vida y tus ajustes en el navegador, porque sin eso no se puede jugar.",
+    "rightsTitle": "Cuánto tiempo y tus derechos",
+    "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google."
   }
 }
