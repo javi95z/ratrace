@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { RatLook } from '@ratrace/core/game/avatar';
 
 // Skia draws on the phone only: here each of its pieces is a <div> that says what it was asked to draw.
@@ -31,7 +31,6 @@ vi.mock('@shopify/react-native-skia', () => {
     Group: node('Group'),
     Fill: node('Fill'),
     Path: node('Path'),
-    useImage: (source: unknown) => (source ? { src: String(source) } : null),
     Skia: { PathBuilder: { Make: () => ({ addRect: () => {}, detach: () => ({}) }) }, XYWHRect: (x: number, y: number, w: number, h: number) => ({ x, y, w, h }) },
     FilterMode: { Nearest: 0, Linear: 1 },
     MipmapMode: { None: 0 },
@@ -47,15 +46,28 @@ vi.mock('../sprites/sources', () => ({
   ),
 }));
 
+const { loadSpritesWith } = await import('./spriteImages');
 const { Sprite } = await import('./Sprite');
 const { RatAvatar, RatLayers } = await import('./RatAvatar');
 
 afterEach(() => vi.restoreAllMocks());
+// Every picture decoded as soon as it is asked for: what each test looks at is what is drawn once it is in.
+beforeEach(async () => {
+  loadSpritesWith(async (source) => ({ src: String(source) }) as never);
+});
+/** Renders, then lets the pictures asked for arrive. */
+async function drawn(ui: React.ReactElement) {
+  const result = render(ui);
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  return result;
+}
 
 const all = (root: Element, kind: string) => Array.from(root.querySelectorAll(`[data-skia="${kind}"]`));
 
-test('a sprite is drawn pixel for pixel: nearest neighbour, no mipmaps, at its box', () => {
-  const { container } = render(<Sprite id="icon.cash" scale={3} />);
+test('a sprite is drawn pixel for pixel: nearest neighbour, no mipmaps, at its box', async () => {
+  const { container } = await drawn(<Sprite id="icon.cash" scale={3} />);
   expect(all(container, 'Canvas')[0].getAttribute('data-size')).toBe('96x96');
   const [image] = all(container, 'Image');
   expect(image.getAttribute('data-image')).toBe('src:icon.cash');
@@ -63,8 +75,8 @@ test('a sprite is drawn pixel for pixel: nearest neighbour, no mipmaps, at its b
   expect(image.getAttribute('data-size')).toBe('96x96');
 });
 
-test('a silhouette is the sprite as a mask over night-900', () => {
-  const { container } = render(<Sprite id="icon.cash" silhouette />);
+test('a silhouette is the sprite as a mask over night-900', async () => {
+  const { container } = await drawn(<Sprite id="icon.cash" silhouette />);
   const [group] = all(container, 'Group');
   expect(group.getAttribute('data-layer')).toBe('yes');
   const fill = all(group, 'Fill')[0];
@@ -73,9 +85,9 @@ test('a silhouette is the sprite as a mask over night-900', () => {
   expect(all(group, 'Image')).toHaveLength(1);
 });
 
-test('a sprite that does not exist: the checkerboard at the fallback size, logged once, no crash', () => {
+test('a sprite that does not exist: the checkerboard at the fallback size, logged once, no crash', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-  const { container } = render(
+  const { container } = await drawn(
     <>
       <Sprite id="test.not_there" fallback={{ w: 20, h: 12 }} scale={2} />
       <Sprite id="test.not_there" fallback={{ w: 20, h: 12 }} scale={2} />
@@ -89,8 +101,8 @@ test('a sprite that does not exist: the checkerboard at the fallback size, logge
   expect(warn.mock.calls).toEqual([['sprite missing: test.not_there']]);
 });
 
-test('alt names the picture for a screen reader; without it the sprite is hidden from one', () => {
-  const { getByLabelText, container } = render(
+test('alt names the picture for a screen reader; without it the sprite is hidden from one', async () => {
+  const { getByLabelText, container } = await drawn(
     <>
       <Sprite id="icon.cash" alt="cash" />
       <Sprite id="icon.cash" />
@@ -102,8 +114,8 @@ test('alt names the picture for a screen reader; without it the sprite is hidden
 
 const look: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
 
-test('the rat: its layers in order on one canvas, the body cut by its outfit\'s clip', () => {
-  const { container } = render(<RatLayers look={look} size={92} />);
+test('the rat: its layers in order on one canvas, the body cut by its outfit\'s clip', async () => {
+  const { container } = await drawn(<RatLayers look={look} size={92} />);
   expect(all(container, 'Canvas')[0].getAttribute('data-size')).toBe('92x92');
   const images = all(container, 'Image').map((i) => [i.getAttribute('data-image'), i.getAttribute('data-blend')]);
   expect(images).toEqual([
@@ -119,9 +131,9 @@ test('the rat: its layers in order on one canvas, the body cut by its outfit\'s 
   expect(all(clipped!, 'Image').map((i) => i.getAttribute('data-image'))).toEqual(['src:rat.body.grey', 'src:rat.clip.suit']);
 });
 
-test('RatAvatar: the box at 32 / 44 / 96 with the whole rat inside its 2 pt border, on its colour', () => {
+test('RatAvatar: the box at 32 / 44 / 96 with the whole rat inside its 2 pt border, on its colour', async () => {
   for (const [size, box] of [['sm', 32], ['md', 44], ['lg', 96]] as const) {
-    const { container, unmount } = render(<RatAvatar look={look} size={size} />);
+    const { container, unmount } = await drawn(<RatAvatar look={look} size={size} />);
     const root = container.firstElementChild as HTMLElement;
     expect(root.style.width).toBe(`${box}px`);
     expect(root.style.height).toBe(`${box}px`);

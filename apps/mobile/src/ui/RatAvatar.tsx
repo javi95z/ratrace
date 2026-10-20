@@ -1,12 +1,13 @@
-import { Canvas, Group, Image, useImage, type SkImage } from '@shopify/react-native-skia';
+import { Canvas, Group, Image, type SkImage } from '@shopify/react-native-skia';
 import type { RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { AVATAR_BOX, RAT_GROUND, piecesOf } from './rat';
-import { PIXELATED, sourceOf } from './Sprite';
+import { PIXELATED } from './Sprite';
+import { useSpriteImage } from './spriteImages';
 import { COLORS } from './theme';
 
-const load = (id: string | null | undefined) => (id ? (sourceOf(id) as number | undefined) : undefined);
+const useLayer = (id: string | null | undefined) => useSpriteImage(id).image;
 
 /**
  * A player's rat, its layers one over another on one canvas, the whole 128 px rat filling `size` points.
@@ -17,16 +18,17 @@ const load = (id: string | null | undefined) => (id ? (sourceOf(id) as number | 
 export function RatLayers({ look, size }: { look: RatLook; size: number }): ReactNode {
   const pieces = piecesOf(look);
   const of = (layer: RatLayer) => pieces.find((p) => p.layer === layer);
-  // One image per layer, always in this order: hooks may not come and go with the look.
+  // One image per layer, always in this order: hooks may not come and go with the look. Each is decoded once for the
+  // whole app (spriteImages), so two rats of one look read every piece once.
   const images: Partial<Record<RatLayer, SkImage | null>> = {
-    backdrop: useImage(load(of('backdrop')?.id)),
-    body: useImage(load(of('body')?.id)),
-    face: useImage(load(of('face')?.id)),
-    outfit: useImage(load(of('outfit')?.id)),
-    eyes: useImage(load(of('eyes')?.id)),
-    hat: useImage(load(of('hat')?.id)),
+    backdrop: useLayer(of('backdrop')?.id),
+    body: useLayer(of('body')?.id),
+    face: useLayer(of('face')?.id),
+    outfit: useLayer(of('outfit')?.id),
+    eyes: useLayer(of('eyes')?.id),
+    hat: useLayer(of('hat')?.id),
   };
-  const clip = useImage(load(of('body')?.clip));
+  const clip = useLayer(of('body')?.clip);
 
   const draw = (image: SkImage, blendMode?: 'dstIn') => (
     <Image image={image} x={0} y={0} width={size} height={size} fit="fill" sampling={PIXELATED} blendMode={blendMode} />
