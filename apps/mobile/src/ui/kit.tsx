@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Children, Fragment, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
@@ -7,9 +7,17 @@ import { PixelText, ReadText } from './text';
 import { useTap } from './tap';
 import { COLORS, TOUCH, type ColorToken } from './theme';
 
-/** A string is set in the given text; anything else (an icon, a sprite) is placed as it is. */
-function setIn(child: ReactNode, text: (s: string) => ReactNode): ReactNode {
-  return typeof child === 'string' || typeof child === 'number' ? text(String(child)) : child;
+/** Text a piece can carry: a number is a string to be set. */
+type Words = string | number;
+
+/**
+ * Each string or number among the children is set in its own text; anything else (an icon, a sprite)
+ * is placed as it is. React Native cannot hold a bare string outside a Text.
+ */
+function setIn(child: ReactNode, text: (s: string) => ReactNode): ReactNode[] {
+  return Children.toArray(child).map((c, i) => (
+    <Fragment key={i}>{typeof c === 'string' || typeof c === 'number' ? text(String(c)) : c}</Fragment>
+  ));
 }
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'quiet';
@@ -109,14 +117,14 @@ export function Tile({ onPress, disabled = false, children }: PressProps) {
 }
 
 /** The title of a panel: a gold tab that hangs over its top edge. */
-export function TabTitle({ children }: { children: string }) {
+export function TabTitle({ children }: { children: Words }) {
   return (
     <View pointerEvents="none" accessibilityRole="header" style={{ position: 'absolute', top: -12, left: 8, right: 8, flexDirection: 'row' }}>
       <Framed
         kind="tab"
         style={{ backgroundColor: COLORS['gold-500'], paddingHorizontal: 8, paddingTop: 4, paddingBottom: 2, flexShrink: 1 }}
       >
-        <PixelText size={14} tone="ink-900" style={{ letterSpacing: 1.4 }}>{children.toUpperCase()}</PixelText>
+        <PixelText size={14} tone="ink-900" numberOfLines={1} style={{ letterSpacing: 1.4 }}>{String(children).toUpperCase()}</PixelText>
       </Framed>
     </View>
   );
@@ -126,18 +134,24 @@ export function TabTitle({ children }: { children: string }) {
  * A navy panel with a lit pixel frame. With a title, the title hangs on a gold tab. `label` names
  * the panel for a screen reader.
  */
-export function Panel({ children, title, label }: { children: ReactNode; title?: string; label?: string }) {
+export function Panel({ children, title, label }: { children: ReactNode; title?: Words; label?: string }) {
+  const has = title !== undefined && title !== '';
+  // As on the web: named only when given a label; named by its title where it has one, so the
+  // title is said once, and by the label itself where it has none.
+  const name = label === undefined ? undefined : has ? String(title) : label;
   return (
     <Framed
       kind="bevel"
-      accessibilityLabel={label ?? title}
+      accessible={name !== undefined}
+      accessibilityRole={name !== undefined ? 'summary' : undefined}
+      accessibilityLabel={name}
       style={{
         backgroundColor: COLORS['night-700'],
         padding: 12,
-        ...(title ? { marginTop: 12, paddingTop: 20 } : null),
+        ...(has ? { marginTop: 12, paddingTop: 20 } : null),
       }}
     >
-      {title ? <TabTitle>{title}</TabTitle> : null}
+      {has ? <TabTitle>{title}</TabTitle> : null}
       {children}
     </Framed>
   );
@@ -150,11 +164,11 @@ const TONE: Record<Tone, { bg: ColorToken; fg: ColorToken }> = {
 };
 
 /** A small label that says what something does. Green helps, red costs. */
-export function Tag({ tone = 'plain', children }: { tone?: Tone; children: string }) {
+export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words }) {
   const { bg, fg } = TONE[tone];
   return (
     <View style={{ alignSelf: 'flex-start', backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
-      <PixelText size={12} tone={fg} style={{ lineHeight: 15 }}>{children}</PixelText>
+      <PixelText size={12} tone={fg} style={{ lineHeight: 15 }}>{String(children)}</PixelText>
     </View>
   );
 }
@@ -181,11 +195,19 @@ export function Row({ left, right, sub }: { left: ReactNode; right?: ReactNode; 
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 }}>
       <View style={{ flexShrink: 1, minWidth: 0 }}>
-        {setIn(left, (s) => <ReadText>{s}</ReadText>)}
-        {sub ? setIn(sub, (s) => <ReadText size={12} tone="ink-300">{s}</ReadText>) : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {setIn(left, (s) => <ReadText numberOfLines={1} style={{ flexShrink: 1 }}>{s}</ReadText>)}
+        </View>
+        {sub ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {setIn(sub, (s) => <ReadText size={12} tone="ink-300" numberOfLines={1} style={{ flexShrink: 1 }}>{s}</ReadText>)}
+          </View>
+        ) : null}
       </View>
       {right !== undefined ? (
-        <View style={{ flexShrink: 0 }}>{setIn(right, (s) => <PixelText style={{ textAlign: 'right' }}>{s}</PixelText>)}</View>
+        <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {setIn(right, (s) => <PixelText style={{ textAlign: 'right' }}>{s}</PixelText>)}
+        </View>
       ) : null}
     </View>
   );
@@ -197,10 +219,10 @@ const FIGURE_TONE = { gold: 'gold-500', teal: 'teal-300', wine: 'wine-300', crea
  * The one figure a screen or a sheet is about: always this size and this gold, so the eye finds
  * it in the same place everywhere. A tone says when it is good news or bad.
  */
-export function KeyFigure({ children, tone = 'gold' }: { children: string; tone?: keyof typeof FIGURE_TONE }) {
+export function KeyFigure({ children, tone = 'gold' }: { children: Words; tone?: keyof typeof FIGURE_TONE }) {
   return (
     <PixelText size={28} tone={FIGURE_TONE[tone]} style={{ lineHeight: 28, fontVariant: ['tabular-nums'] }}>
-      {children}
+      {String(children)}
     </PixelText>
   );
 }

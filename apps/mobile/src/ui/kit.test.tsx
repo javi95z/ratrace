@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
+import { View } from 'react-native';
 import { COLORS } from './theme';
-import { Bare, Button, KeyFigure, Panel, Row, Tag, Tile, Well } from './kit';
+import { TabTitle, Bare, Button, KeyFigure, Panel, Row, Tag, Tile, Well } from './kit';
 import { TapProvider } from './tap';
 
 afterEach(cleanup);
@@ -154,4 +155,41 @@ test('KeyFigure is 28 pt in its tone', () => {
     expect(el.style.color).toBe(rgb(COLORS[token]));
     unmount();
   }
+});
+
+test('a Button holds an icon beside its words', () => {
+  render(<Button variant="secondary" onPress={() => {}}>{[<View key="i" testID="icon" />, 'Keep']}</Button>);
+  expect(screen.getByTestId('icon')).toBeTruthy();
+  expect(textOf('Keep').style.fontSize).toBe('17px');
+});
+
+test('a Row holds mixed left, sub and right', () => {
+  render(<Row left={[<View key="i" testID="ico" />, 'Rent']} sub={['a', 'b']} right={[7, 'x']} />);
+  expect(screen.getByTestId('ico')).toBeTruthy();
+  for (const t of ['Rent', 'a', 'b', '7', 'x']) expect(screen.getByText(t)).toBeTruthy();
+});
+
+test('a long TabTitle and a Row stay on one line', () => {
+  render(<Panel title={'A very long title indeed'}><Row left="Long left" sub="Long sub" /></Panel>);
+  const oneLine = (t: string) => /r-textOverflow-/.test(textOf(t).className);
+  for (const t of ['A VERY LONG TITLE INDEED', 'Long left', 'Long sub']) expect(oneLine(t)).toBe(true);
+});
+
+test('a Panel is named only when given a label, by its title where it has one', () => {
+  const named = (c: HTMLElement) => c.querySelector('[aria-label]');
+  let r = render(<Panel title="Wages" label="the wages"><span>b</span></Panel>);
+  expect(named(r.container)?.getAttribute('aria-label')).toBe('Wages');
+  r.unmount();
+  r = render(<Panel label="Money"><span>b</span></Panel>);
+  expect(named(r.container)?.getAttribute('aria-label')).toBe('Money');
+  r.unmount();
+  r = render(<Panel title="Wages"><span>b</span></Panel>);
+  expect(named(r.container)).toBeNull();
+});
+
+test('numbers are accepted as figure, title and tag text', () => {
+  render(<><KeyFigure>{1234}</KeyFigure><TabTitle>{7}</TabTitle><Tag>{3}</Tag></>);
+  expect(screen.getAllByText('1234')).toHaveLength(1);
+  expect(screen.getByText('7')).toBeTruthy();
+  expect(screen.getByText('3')).toBeTruthy();
 });

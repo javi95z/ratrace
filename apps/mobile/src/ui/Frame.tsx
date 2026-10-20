@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { View, type AccessibilityRole, type ViewStyle } from 'react-native';
 import { anchorsOf, type FrameKind, type FrameTone } from './frames';
 import { COLORS } from './theme';
 
@@ -8,6 +8,8 @@ interface FramedProps {
   tone?: FrameTone;
   style?: ViewStyle | ViewStyle[];
   accessibilityLabel?: string;
+  accessible?: boolean;
+  accessibilityRole?: AccessibilityRole;
   testID?: string;
   children?: ReactNode;
 }
@@ -17,9 +19,9 @@ interface FramedProps {
  * box's edges (so they are there on the first paint and follow every resize), and they take no
  * space: the children lie exactly where they would with no frame at all.
  */
-export function Framed({ kind, tone = {}, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
+export function Framed({ kind, tone = {}, style, accessibilityLabel, accessible, accessibilityRole, testID, children }: FramedProps): ReactNode {
   return (
-    <View style={style} accessibilityLabel={accessibilityLabel} testID={testID}>
+    <View style={style} accessibilityLabel={accessibilityLabel} accessible={accessible} accessibilityRole={accessibilityRole} testID={testID}>
       {anchorsOf(kind, tone).map(({ color, ...place }, i) => (
         <View
           key={i}
