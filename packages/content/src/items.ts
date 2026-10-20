@@ -60,11 +60,11 @@ const catalogue: ItemDef[] = [
     ['tech_ai_workstation', 18_000, 0, 4, 50, -4_000],
   ]),
   ...durables('fashion', [
-    ['fashion_blazer', 150, 0, 1, 20, -6_000],
-    // The one cheap thing that is worth more next year: a first lesson in collecting.
-    ['fashion_sneakers', 350, 0, 1, 90, 200],
-    ['fashion_sunglasses', 450, 0, 1, 30, -4_000],
-    ['fashion_polo', 600, 0, 2, 25, -5_000],
+    ['fashion_blazer', 100, 0, 1, 20, -6_000],
+    ['fashion_polo', 150, 0, 1, 25, -5_000],
+    // The one cheap thing that is worth more next year: a first lesson in collecting, and an icon.
+    ['fashion_sneakers', 350, 0, 2, 90, 200],
+    ['fashion_sunglasses', 450, 0, 2, 30, -4_000],
     ['fashion_loafers', 950, 0, 3, 40, -3_000],
     ['fashion_duffel', 2_800, 0, 6, 60, -1_500],
   ]),
