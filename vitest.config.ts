@@ -5,8 +5,12 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    // The web app imports its own files as `@/...`.
-    alias: { '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)) },
+    alias: [
+      // The web app imports its own files as `@/...`.
+      { find: /^@\//, replacement: fileURLToPath(new URL('./apps/web/src', import.meta.url)) + '/' },
+      // The phone app's components are tested on react-native-web, in jsdom.
+      { find: /^react-native$/, replacement: 'react-native-web' },
+    ],
   },
   test: {
     // A test is given half a minute, not five seconds: two sessions at work on one machine slow everything several times over,

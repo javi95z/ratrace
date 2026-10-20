@@ -70,6 +70,11 @@ export default [
     },
   },
   {
+    // Metro loads images and fonts through `require('./x.png')`: it is how React Native names an asset.
+    files: ['apps/mobile/**/*.{ts,tsx}'],
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
     // The web app: the rules of hooks, and a wall between the screens and the two things only the session layer may touch.
     files: ['apps/web/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },

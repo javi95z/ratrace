@@ -1,13 +1,14 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "The Rat Race",
+    "slug": "theratrace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hackio.theratrace"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,13 +17,23 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.hackio.theratrace"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      "expo-router",
+      "expo-font",
+      "expo-audio",
+      "expo-localization"
+    ],
+    "scheme": "theratrace",
+    "backgroundColor": "#141b33",
+    "splash": {
+      "backgroundColor": "#141b33"
+    }
   }
 }

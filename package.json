@@ -8,7 +8,7 @@
   "scripts": {
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p packages/i18n && tsc --noEmit -p packages/core && tsc --noEmit -p packages/online && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play && tsc --noEmit -p tools/online && pnpm --filter @ratrace/web typecheck",
+    "typecheck": "tsc --noEmit -p packages/engine && tsc --noEmit -p packages/content && tsc --noEmit -p packages/i18n && tsc --noEmit -p packages/core && tsc --noEmit -p packages/online && tsc --noEmit -p tools/art && tsc --noEmit -p tools/balance && tsc --noEmit -p tools/play && tsc --noEmit -p tools/online && pnpm --filter @ratrace/web typecheck && pnpm --filter @ratrace/mobile typecheck",
     "art": "pnpm --filter @ratrace/art-tool build-art",
     "balance": "pnpm --filter @ratrace/balance balance",
     "play": "pnpm --filter @ratrace/play play",
