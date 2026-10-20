@@ -4,7 +4,7 @@ import type { RatLook } from '@ratrace/core/game/avatar';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { Bar, Bare, Button, KeyFigure, Panel, Row, Segmented, sink, Stat, Tag, TickerBadge, Tile, Toggle, Well } from '../ui/kit';
+import { Bar, Bare, Button, KeyFigure, Panel, Row, Segmented, pressDown, Stat, Tag, TickerBadge, Tile, Toggle, Well } from '../ui/kit';
 import { Sheet, Tabs, Toast } from '../ui/overlay';
 import { Picker } from '../ui/Picker';
 import { RatAvatar } from '../ui/RatAvatar';
@@ -22,8 +22,8 @@ const SIZES = [11, 12, 14, 15, 16, 17, 19, 28] as const;
 const ES = { pixel: 'Año nuevo: 12.346 $', read: 'Pagas el alquiler y te quedan 1.234 $ para el mes.' };
 const RU = { pixel: 'Новый год: 12 346 $', read: 'Вы платите аренду, и на месяц остаётся 1 234 $.' };
 
-/** The pressed look, held still: a pressable's `sink`, as the web page copies `active:translate-y-[2px]`. */
-const Pressed = ({ children }: { children: ReactNode }) => <View style={sink(true)}>{children}</View>;
+/** The pressed look, held still: a pressable's `pressDown`, as the web page copies `active:translate-y-[2px]`. */
+const Pressed = ({ children }: { children: ReactNode }) => <View style={pressDown(true)}>{children}</View>;
 const Wrap = ({ children, gap = 8, end = false }: { children: ReactNode; gap?: number; end?: boolean }) => (
   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap, alignItems: end ? 'flex-end' : 'stretch' }}>{children}</View>
 );

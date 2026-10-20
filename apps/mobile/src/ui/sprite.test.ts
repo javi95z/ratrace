@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import type { RatLook } from '@ratrace/core/game/avatar';
-import { AVATAR_BOX, GROUND, piecesOf } from './rat';
+import { AVATAR_BOX, RAT_GROUND, piecesOf } from './rat';
 import { CHECKER, checkerCells, reportMissing, spriteBox, spriteOf } from './sprites';
 
 afterEach(() => vi.restoreAllMocks());
@@ -80,8 +80,8 @@ test('a piece without art is left off, never drawn as a hole', () => {
   expect(pieces.find((p) => p.layer === 'body')?.clip).toBeNull();
 });
 
-test("GROUND gives each colour the web's ground", () => {
-  expect(GROUND).toEqual({
+test("RAT_GROUND gives each colour the web's ground", () => {
+  expect(RAT_GROUND).toEqual({
     gold: 'gold-500',
     teal: 'teal-300',
     wine: 'wine-300',

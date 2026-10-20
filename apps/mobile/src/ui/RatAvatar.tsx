@@ -2,7 +2,7 @@ import { Canvas, Group, Image, useImage, type SkImage } from '@shopify/react-nat
 import type { RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { AVATAR_BOX, GROUND, piecesOf } from './rat';
+import { AVATAR_BOX, RAT_GROUND, piecesOf } from './rat';
 import { PIXELATED, sourceOf } from './Sprite';
 import { COLORS } from './theme';
 
@@ -67,7 +67,7 @@ export function RatAvatar({ look, size = 'sm', style }: { look: RatLook; size?: 
           overflow: 'hidden',
           borderWidth: AVATAR_BOX.border,
           borderColor: COLORS['night-900'],
-          backgroundColor: COLORS[GROUND[look.colour]],
+          backgroundColor: COLORS[RAT_GROUND[look.colour]],
         },
         style,
       ]}

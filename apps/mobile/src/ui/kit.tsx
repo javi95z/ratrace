@@ -32,7 +32,7 @@ const BUTTON: Record<ButtonVariant, { bg: ColorToken; fg: ColorToken; tone: Fram
 };
 
 /** The web's `active:translate-y-[2px]`: the pressable, and the frame with it, sinks 2 pt while held. */
-export const sink = (pressed: boolean): ViewStyle => ({ transform: [{ translateY: pressed ? 2 : 0 }] });
+export const pressDown = (pressed: boolean): ViewStyle => ({ transform: [{ translateY: pressed ? 2 : 0 }] });
 
 interface PressProps {
   onPress: () => void;
@@ -60,7 +60,7 @@ export function Button({ variant, wide = false, disabled = false, onPress, child
       disabled={disabled}
       onPress={press}
       style={({ pressed }) => ({
-        ...sink(pressed && !disabled),
+        ...pressDown(pressed && !disabled),
         opacity: disabled ? 0.45 : 1,
         ...(wide ? { width: '100%' } : { alignSelf: 'flex-start' }),
       })}
@@ -99,7 +99,7 @@ export function Tile({ onPress, disabled = false, children }: PressProps) {
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={press}
-      style={({ pressed }) => ({ ...sink(pressed && !disabled), opacity: disabled ? 0.45 : 1 })}
+      style={({ pressed }) => ({ ...pressDown(pressed && !disabled), opacity: disabled ? 0.45 : 1 })}
     >
       <Framed
         kind="raised"
@@ -304,7 +304,7 @@ export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: 
           accessibilityRole="button"
           accessibilityLabel={said}
           onPress={press}
-          style={({ pressed }) => sink(pressed)}
+          style={({ pressed }) => pressDown(pressed)}
         >
           <Framed kind="raised" style={{ ...box, minHeight: TOUCH }}>
             {body}
@@ -436,7 +436,7 @@ function Segment<T extends string | number>({ option, on, onChange, wide }: { op
       aria-checked={on}
       disabled={disabled}
       onPress={press}
-      style={({ pressed }) => ({ ...sink(pressed && !disabled), opacity: disabled ? 0.4 : 1, ...(wide ? { flex: 1, minWidth: 0 } : null) })}
+      style={({ pressed }) => ({ ...pressDown(pressed && !disabled), opacity: disabled ? 0.4 : 1, ...(wide ? { flex: 1, minWidth: 0 } : null) })}
     >
       <Framed
         kind="raised"
@@ -502,7 +502,7 @@ export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { 
       aria-checked={on}
       disabled={disabled}
       onPress={press}
-      style={({ pressed }) => ({ ...sink(pressed && !disabled), opacity: disabled ? 0.4 : 1, width: '100%' })}
+      style={({ pressed }) => ({ ...pressDown(pressed && !disabled), opacity: disabled ? 0.4 : 1, width: '100%' })}
     >
       <Framed
         kind="raised"

@@ -26,7 +26,7 @@ pnpm --filter @ratrace/web exec tsx ../mobile/scripts/kit-shots.ts [web] [app] [
   Expo Go's floating tools button is turned off (`defaults write host.exp.Exponent EXDevMenuShowFloatingActionButton -bool NO`),
   the status bar fixed at 9:41.
 - **Held still.** A Sheet is rendered open; the Toast is given a timeout of 10⁹ ms; a pressed Button is a copy of the
-  pressed look (the web's `active:translate-y-[2px]`, the app's `sink(true)`) around a plain Button, on both pages. The
+  pressed look (the web's `active:translate-y-[2px]`, the app's `pressDown(true)`) around a plain Button, on both pages. The
   web's keyboard focus ring (`:focus-visible`), which a sheet opened with no tap before it shows and a player's tap
   never does, is hidden in the shot; so is the Next.js dev badge.
 - **Compared** (`apps/mobile/scripts/kitCompare.ts`, tested): the screen between the safe areas (rows 62–840 pt).

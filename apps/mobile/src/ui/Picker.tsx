@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from './Frame';
 import { GOLD } from './frames';
-import { sink, usePress } from './kit';
+import { pressDown, usePress } from './kit';
 import { Sheet } from './overlay';
 import { Sprite } from './Sprite';
 import { ReadText } from './text';
@@ -76,7 +76,7 @@ export function Picker<T extends string | null>({ label, value, options, onChang
         accessibilityLabel={`${label}: ${chosen.label}`}
         accessibilityState={{ expanded: open }}
         onPress={show}
-        style={({ pressed }) => ({ ...sink(pressed), width: '100%' })}
+        style={({ pressed }) => ({ ...pressDown(pressed), width: '100%' })}
       >
         <Framed kind="raised" style={{ backgroundColor: COLORS['night-600'], minHeight: TOUCH, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12 }}>
           {mark(chosen)}

@@ -5,7 +5,7 @@ import dots from '../../assets/ui/dots.png';
 import { COLORS, SHELL_WIDTH } from './theme';
 
 /** The ground: dots.png (6 pt tile; @2x/@3x picked by the device) repeated, never stretched. */
-export const GROUND = { source: dots, resizeMode: 'repeat', tile: 6 } as const;
+export const PAGE_GROUND = { source: dots, resizeMode: 'repeat', tile: 6 } as const;
 
 /**
  * The web's body (globals.css): night-800 with a weave of single pixels (dots.png, one 6 pt tile in three
@@ -20,8 +20,8 @@ export function Page({ children }: { children: ReactNode }) {
       {/* The ground has no padding of its own: the image filling it is then the whole screen, to its foot. */}
       <View style={{ flex: 1, backgroundColor: COLORS['night-800'] }}>
         <Image
-          source={GROUND.source}
-          resizeMode={GROUND.resizeMode}
+          source={PAGE_GROUND.source}
+          resizeMode={PAGE_GROUND.resizeMode}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }}
         />
         <View style={{ flex: 1, paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }}>

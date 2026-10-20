@@ -6,7 +6,7 @@ import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { TILE } from '../../scripts/dots';
-import { BottomBar, GROUND, Page } from './Page';
+import { BottomBar, PAGE_GROUND, Page } from './Page';
 import { COLORS } from './theme';
 
 // The library's web build needs a native module vitest cannot load: a stand-in with the same two pieces Page uses.
@@ -50,17 +50,17 @@ test('Page puts its children in a centred column at most 448 wide; the 12 gutter
 });
 
 test('the ground is the dots tile, repeated, 6 pt', () => {
-  expect(GROUND.source).toBe(dots);
-  expect(GROUND.resizeMode).toBe('repeat');
-  expect(GROUND.tile).toBe(TILE);
+  expect(PAGE_GROUND.source).toBe(dots);
+  expect(PAGE_GROUND.resizeMode).toBe('repeat');
+  expect(PAGE_GROUND.tile).toBe(TILE);
 });
 
 test('Page paints the ground with exactly those props, and the top inset night-900', () => {
   seen.length = 0;
   const { container } = wrap({ ...none, top: 47, left: 5, right: 7 }, <Page><Text>hi</Text></Page>);
   expect(seen).toHaveLength(1);
-  expect(seen[0].source).toBe(GROUND.source);
-  expect(seen[0].resizeMode).toBe(GROUND.resizeMode);
+  expect(seen[0].source).toBe(PAGE_GROUND.source);
+  expect(seen[0].resizeMode).toBe(PAGE_GROUND.resizeMode);
   // An image laid over the whole screen behind the column (ImageBackground is deprecated in RN 0.88).
   expect(seen[0].style).toMatchObject({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 });
   // In a box with no padding, so its 100 % is the whole screen: in the padded one it fell short of the foot by the top inset.

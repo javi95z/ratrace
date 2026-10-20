@@ -4,7 +4,7 @@ import { spriteOf } from './sprites';
 import type { ColorToken } from './theme';
 
 /** Each colour as the ground the rat stands on (the web's RatAvatar.tsx GROUND). */
-export const GROUND: Record<RatColour, ColorToken> = {
+export const RAT_GROUND: Record<RatColour, ColorToken> = {
   gold: 'gold-500',
   teal: 'teal-300',
   wine: 'wine-300',

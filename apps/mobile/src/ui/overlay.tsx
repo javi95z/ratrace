@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
-import { sink, usePress } from './kit';
+import { pressDown, usePress } from './kit';
 import { PixelText, ReadText } from './text';
 import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
 
@@ -63,7 +63,7 @@ function SheetPanel({ onClose, title, closeLabel, tone, children }: { onClose():
                   accessibilityRole="button"
                   accessibilityLabel={closeLabel}
                   onPress={close}
-                  style={({ pressed }) => ({ ...sink(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
+                  style={({ pressed }) => ({ ...pressDown(pressed), width: TOUCH, height: TOUCH, marginRight: -8, marginTop: -8, flexShrink: 0, alignItems: 'center', justifyContent: 'center' })}
                 >
                   <PixelText size={20} tone="ink-300">{'✕'}</PixelText>
                 </Pressable>
@@ -85,7 +85,7 @@ function TabButton({ label, on, onPress }: { label: string; on: boolean; onPress
       accessibilityState={{ selected: on }}
       aria-selected={on}
       onPress={press}
-      style={({ pressed }) => ({ ...sink(pressed), flexShrink: 0 })}
+      style={({ pressed }) => ({ ...pressDown(pressed), flexShrink: 0 })}
     >
       <Framed
         kind="raised"
