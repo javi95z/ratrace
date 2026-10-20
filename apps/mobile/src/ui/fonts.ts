@@ -1,4 +1,5 @@
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
+import { useEffect } from 'react';
 import { ARIAL_COVERAGE } from './arialCoverage';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
 
@@ -36,14 +37,24 @@ export function familyFor(role: Role, weight: Weight, locale: string): string {
   return locale === 'ru' ? exo(weight) : chakra(weight);
 }
 
-/** Loads the game's fonts. True once they all are. */
+/**
+ * True once the fonts are settled: all in, or failed. A font that cannot load never holds the splash for good: the
+ * game goes on in the system font, and the failure is told (once; the error reporter is phase 3's).
+ */
+export function useFontsSettled([loaded, error]: readonly [boolean, Error | null]): boolean {
+  useEffect(() => {
+    if (error) console.warn('the game\'s fonts did not load:', error);
+  }, [error]);
+  return loaded || error !== null;
+}
+
+/** Loads the game's fonts. True once they all are, or once they failed to. */
 export function useGameFonts(): boolean {
   // Required here, not imported at the top: the .ttf files and expo-font are for the app, and a test of the
   // runs below must not need either.
   const { useFonts } = require('expo-font') as typeof import('expo-font');
   const { FONT_SOURCES } = require('./fontSources') as typeof import('./fontSources');
-  const [loaded] = useFonts(FONT_SOURCES);
-  return loaded;
+  return useFontsSettled(useFonts(FONT_SOURCES));
 }
 
 export interface Run {

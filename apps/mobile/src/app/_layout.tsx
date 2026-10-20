@@ -8,7 +8,8 @@ import { useGameFonts } from '../ui/fonts';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
 import { Page } from '../ui/Page';
 
-// The splash stays until the game's typefaces are in: nothing is ever drawn in the system font first.
+// The splash stays until the game's typefaces are in, so nothing is drawn in the system font first; if they fail to
+// load, it lifts all the same (useGameFonts tells why), and the game goes on in the system font.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 /**
