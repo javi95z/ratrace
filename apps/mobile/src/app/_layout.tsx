@@ -1,5 +1,3 @@
-// The phone's JavaScript is given what the game's packages use before any of them load.
-import '../polyfills';
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';

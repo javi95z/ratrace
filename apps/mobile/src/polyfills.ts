@@ -1,6 +1,6 @@
 /**
- * What the phone's JavaScript lacks that the game's packages use. Imported first by the root layout, before
- * any of them load.
+ * What the phone's JavaScript lacks that the game's packages use. Imported first by the app's entry (index.ts),
+ * before the router or any of them load.
  */
 import * as Crypto from 'expo-crypto';
 import { getCalendars } from 'expo-localization';
