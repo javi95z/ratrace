@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo-google-fonts/chakra-petch": "^0.4.1",
+    "@expo-google-fonts/exo-2": "^0.4.2",
+    "@expo-google-fonts/jersey-15": "^0.4.1",
+    "@expo-google-fonts/oswald": "^0.4.2",
     "@ratrace/content": "workspace:*",
     "@ratrace/core": "workspace:*",
     "@ratrace/engine": "workspace:*",
