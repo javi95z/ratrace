@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Button, KeyFigure, Panel, Row, Tag, Tile, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, KeyFigure, Panel, Row, Segmented, Stat, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
 import { TapProvider } from './tap';
+
+// Sprites are drawn with Skia on the phone only: here each is a <div> that names its id.
+vi.mock('./Sprite', () => ({ Sprite: ({ id }: { id: string }) => <div data-sprite={id} /> }));
 
 afterEach(cleanup);
 
@@ -204,4 +207,209 @@ test('a Button inside a labelled Panel stays reachable and the Panel is not acce
   expect(labelled.getAttribute('role')).toBeNull();
   fireEvent.click(screen.getByRole('button'));
   expect(onPress).toHaveBeenCalledTimes(1);
+});
+
+/**
+ * Fires the layout event the way React Native does. react-native-web hands `onLayout` to a
+ * ResizeObserver, which jsdom lacks, and keeps the handler on the node as `__reactLayoutHandler`:
+ * calling that is exactly what the observer does after it measures.
+ */
+function layOut(el: HTMLElement, width: number) {
+  const handler = (el as unknown as { __reactLayoutHandler?: (e: unknown) => void }).__reactLayoutHandler;
+  expect(handler).toBeTypeOf('function');
+  act(() => handler!({ nativeEvent: { layout: { x: 0, y: 0, width, height: 40 } } }));
+}
+
+test('a Bar with 5 of 16 lights exactly 5 lamps', () => {
+  render(<Bar value={5} max={16} label="Progress" tone="gold" />);
+  expect(screen.getAllByTestId('lamp-lit')).toHaveLength(5);
+  expect(screen.getAllByTestId('lamp-dark')).toHaveLength(11);
+  const bar = screen.getByRole('progressbar');
+  expect(bar.getAttribute('aria-valuenow')).toBe('31');
+});
+
+test.each([
+  ['gold', 'gold-500', 'gold-200', 'gold-700'],
+  ['teal', 'teal-300', 'sky-100', 'teal-600'],
+] as const)('a %s Bar paints lit lamps in %s with %s above and %s below', (tone, base, hi, lo) => {
+  render(<Bar value={16} max={16} label="P" tone={tone} />);
+  const lamp = screen.getAllByTestId('lamp-lit')[0];
+  expect(lamp.style.backgroundColor).toBe(rgb(COLORS[base]));
+  const strips = Array.from(lamp.children).map((c) => (c as HTMLElement).style.backgroundColor);
+  expect(strips).toContain(rgb(COLORS[hi]));
+  expect(strips).toContain(rgb(COLORS[lo]));
+});
+
+test('a Bar clamps: empty lights none, over the max lights all 16', () => {
+  render(<Bar value={0} max={0} label="P" />);
+  expect(screen.queryAllByTestId('lamp-lit')).toHaveLength(0);
+  cleanup();
+  render(<Bar value={99} max={16} label="P" />);
+  expect(screen.getAllByTestId('lamp-lit')).toHaveLength(16);
+});
+
+test('a Bar door is shut until the last lamp is lit', () => {
+  render(<Bar value={15} max={16} label="P" door />);
+  expect(screen.getByTestId('door').getAttribute('data-state')).toBe('shut');
+  cleanup();
+  render(<Bar value={16} max={16} label="P" door />);
+  expect(screen.getByTestId('door').getAttribute('data-state')).toBe('open');
+  cleanup();
+  render(<Bar value={16} max={16} label="P" />);
+  expect(screen.queryByTestId('door')).toBeNull();
+});
+
+test('a Stat shows its value and label, with its icon', () => {
+  render(<Stat icon="coin" value="1,200" label="Cash" />);
+  expect(screen.getByText('1,200')).toBeTruthy();
+  expect(screen.getByText('Cash')).toBeTruthy();
+  expect(textOf('1,200').style.fontSize).toBe('16px');
+  expect(textOf('Cash').style.fontSize).toBe('11px');
+  expect(textOf('Cash').style.color).toBe(rgb(COLORS['ink-200']));
+  expect(document.querySelector('[data-sprite="coin"]')).toBeTruthy();
+});
+
+test('a Stat laid out at 300 hides its icon and at 360 shows it', () => {
+  render(<Stat icon="coin" value="1" label="Cash" />);
+  const box = screen.getByTestId('stat');
+  layOut(box, 300);
+  expect(document.querySelector('[data-sprite="coin"]')).toBeNull();
+  layOut(box, 360);
+  expect(document.querySelector('[data-sprite="coin"]')).toBeTruthy();
+});
+
+test('a Stat tones its value', () => {
+  render(<Stat icon="coin" value="+5" label="Net" tone="good" />);
+  expect(textOf('+5').style.color).toBe(rgb(COLORS['teal-300']));
+  cleanup();
+  render(<Stat icon="coin" value="-5" label="Net" tone="bad" />);
+  expect(textOf('-5').style.color).toBe(rgb(COLORS['wine-300']));
+});
+
+test('a Stat with onOpen is a button that taps and opens; without it, it is not', () => {
+  const onOpen = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Stat icon="coin" value="1" label="Cash" onOpen={onOpen} />
+    </TapProvider>,
+  );
+  expect(screen.getByText('▸')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button'));
+  expect(onOpen).toHaveBeenCalledTimes(1);
+  expect(tap).toHaveBeenCalledTimes(1);
+  cleanup();
+  render(<Stat icon="coin" value="1" label="Cash" />);
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.queryByText('▸')).toBeNull();
+});
+
+const KINDS = [
+  ['bond', 'sky-500', 'cream'],
+  ['equity', 'teal-800', 'cream'],
+  ['crypto', 'gold-700', 'ink-900'],
+  ['gold', 'gold-500', 'ink-900'],
+] as const;
+
+test.each(KINDS)('a %s TickerBadge is 56 x 36 on %s with %s text', (kind, bg, fg) => {
+  render(<TickerBadge ticker="ABC" kind={kind} />);
+  const box = backed(screen.getByText('ABC'));
+  expect(box.style.backgroundColor).toBe(rgb(COLORS[bg]));
+  expect(box.style.width).toBe('56px');
+  expect(box.style.height).toBe('36px');
+  expect(textOf('ABC').style.color).toBe(rgb(COLORS[fg]));
+  expect(textOf('ABC').style.fontSize).toBe('14px');
+});
+
+test('a TickerBadge with a logo draws the logo and not the ticker', () => {
+  render(<TickerBadge ticker="ABC" kind="equity" logo="logo-abc" />);
+  expect(document.querySelector('[data-sprite="logo-abc"]')).toBeTruthy();
+  expect(screen.queryByText('ABC')).toBeNull();
+});
+
+const CHOICES = [
+  { value: 'a', label: 'Alpha' },
+  { value: 'b', label: 'Beta' },
+];
+
+test('Segmented marks the chosen option and calls onChange with the other', () => {
+  const onChange = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Segmented label="Pick" options={CHOICES} value="a" onChange={onChange} orientation="horizontal" />
+    </TapProvider>,
+  );
+  expect(screen.getByRole('radiogroup')).toBeTruthy();
+  const [alpha, beta] = screen.getAllByRole('radio');
+  expect(alpha.getAttribute('aria-checked')).toBe('true');
+  expect(beta.getAttribute('aria-checked')).toBe('false');
+  expect(backed(screen.getByText('Alpha')).style.backgroundColor).toBe(rgb(COLORS.cream));
+  expect(textOf('Alpha').style.color).toBe(rgb(COLORS['ink-900']));
+  expect(backed(screen.getByText('Beta')).style.backgroundColor).toBe(rgb(COLORS['night-600']));
+  expect(textOf('Beta').style.color).toBe(rgb(COLORS['ink-200']));
+  expect(textOf('Beta').style.fontSize).toBe('14px');
+  fireEvent.click(beta);
+  expect(onChange).toHaveBeenCalledWith('b');
+  expect(tap).toHaveBeenCalledTimes(1);
+});
+
+test('a disabled Segmented option does not change or tap', () => {
+  const onChange = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Segmented label="Pick" options={[CHOICES[0], { ...CHOICES[1], disabled: true }]} value="a" onChange={onChange} orientation="vertical" />
+    </TapProvider>,
+  );
+  fireEvent.click(screen.getAllByRole('radio')[1]);
+  expect(onChange).not.toHaveBeenCalled();
+  expect(tap).not.toHaveBeenCalled();
+});
+
+test('Segmented sets a hint under the label and an icon above it', () => {
+  render(<Segmented label="Pick" options={[{ value: 1, label: 'One', hint: 'First', icon: 'ic' }]} value={1} onChange={() => {}} orientation="horizontal" />);
+  expect(textOf('First').style.fontSize).toBe('11px');
+  expect(textOf('First').style.color).toBe(rgb(COLORS['ink-500']));
+  expect(document.querySelector('[data-sprite="ic"]')).toBeTruthy();
+});
+
+test('Toggle reports on through its checked state, and a press flips it', () => {
+  const onChange = vi.fn();
+  const tap = vi.fn();
+  const { rerender } = render(
+    <TapProvider value={tap}>
+      <Toggle on={false} onChange={onChange} label="Sound" hint="Beeps" />
+    </TapProvider>,
+  );
+  const sw = screen.getByRole('switch');
+  expect(sw.getAttribute('aria-checked')).toBe('false');
+  expect(screen.getByText('Beeps')).toBeTruthy();
+  expect(screen.getByTestId('switch').style.backgroundColor).toBe(rgb(COLORS['night-900']));
+  expect(screen.getByTestId('knob').style.left).toBe('0px');
+  fireEvent.click(sw);
+  expect(onChange).toHaveBeenCalledWith(true);
+  expect(tap).toHaveBeenCalledTimes(1);
+  rerender(
+    <TapProvider value={tap}>
+      <Toggle on onChange={onChange} label="Sound" />
+    </TapProvider>,
+  );
+  expect(screen.getByRole('switch').getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByTestId('switch').style.backgroundColor).toBe(rgb(COLORS['teal-600']));
+  expect(screen.getByTestId('knob').style.left).toBe('20px');
+  expect(screen.getByTestId('knob').style.backgroundColor).toBe(rgb(COLORS.cream));
+});
+
+test('a disabled Toggle does not change or tap', () => {
+  const onChange = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Toggle on={false} onChange={onChange} label="Sound" disabled />
+    </TapProvider>,
+  );
+  fireEvent.click(screen.getByRole('switch'));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(tap).not.toHaveBeenCalled();
 });

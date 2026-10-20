@@ -1,8 +1,9 @@
-import { Children, Fragment, type ReactNode } from 'react';
-import { Pressable, View, type ViewStyle } from 'react-native';
+import { Children, Fragment, useState, type ReactNode } from 'react';
+import { Pressable, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
-import { GOLD, WINE, type FrameTone } from './frames';
+import { CREAM, GOLD, WINE, type FrameTone } from './frames';
+import { Sprite } from './Sprite';
 import { PixelText, ReadText } from './text';
 import { useTap } from './tap';
 import { COLORS, TOUCH, type ColorToken } from './theme';
@@ -223,5 +224,293 @@ export function KeyFigure({ children, tone = 'gold' }: { children: Words; tone?:
     <PixelText size={28} tone={FIGURE_TONE[tone]} style={{ lineHeight: 28, fontVariant: ['tabular-nums'] }}>
       {String(children)}
     </PixelText>
+  );
+}
+
+/** The web's `sunk`, laid over a framed box: a dark edge along its top and left, inside it. */
+function SunkEdge() {
+  return <Framed kind="sunk" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />;
+}
+
+/** Narrower than this, a Stat gives up its icon so the number is never cut short (the web's `@max-[340px]`). */
+const STAT_ICON_MIN = 340;
+
+const STAT_TONE = { good: 'teal-300', bad: 'wine-300' } as const satisfies Record<string, ColorToken>;
+
+/**
+ * One figure of the HUD: an icon, a number, and what the number is. A box narrower than 340 pt has
+ * no room for the icon and drops it. The web asks its container; here the box measures itself.
+ * With `onOpen` it is a raised button that opens what the figure means.
+ */
+export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string; value: Words; label: Words; tone?: 'good' | 'bad'; hint?: string; onOpen?: () => void }) {
+  // Until the first measure the icon is shown, as on a roomy phone.
+  const [width, setWidth] = useState<number | null>(null);
+  const narrow = width !== null && width < STAT_ICON_MIN;
+  const press = usePress({ onPress: onOpen ?? (() => {}), disabled: false });
+  const body = (
+    <>
+      {narrow ? null : (
+        <View style={{ width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <Sprite id={icon} />
+        </View>
+      )}
+      <View style={{ flexShrink: 1, minWidth: 0 }}>
+        <PixelText size={16} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} style={{ letterSpacing: 0 }}>
+          {String(value)}
+        </PixelText>
+        <ReadText size={11} tone="ink-200" numberOfLines={1} style={{ lineHeight: 14 }}>{String(label)}</ReadText>
+      </View>
+    </>
+  );
+  const box: ViewStyle = {
+    backgroundColor: COLORS['night-700'],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    padding: 4,
+    ...(narrow ? { paddingHorizontal: 8 } : null),
+  };
+  return (
+    <View testID="stat" style={{ minWidth: 0 }} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
+      {onOpen ? (
+        // One that opens something stands off the page like every other thing that can be pressed.
+        <Pressable
+          accessibilityRole="button"
+          accessibilityHint={hint}
+          onPress={press}
+          style={({ pressed }) => sink(pressed)}
+        >
+          <Framed kind="raised" style={{ ...box, minHeight: TOUCH }}>
+            {body}
+            {/* Out of the flow, so it takes no width from the number. */}
+            <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', bottom: 2, right: 4 }}>
+              <PixelText size={10} tone="ink-300" style={{ lineHeight: 10 }}>▸</PixelText>
+            </View>
+          </Framed>
+        </Pressable>
+      ) : (
+        <Framed kind="bevel" accessibilityLabel={hint} style={box}>{body}</Framed>
+      )}
+    </View>
+  );
+}
+
+/** The colours of a lit lamp: its light, bright along the top and deep along the bottom. */
+const LAMP = {
+  gold: { base: 'gold-500', hi: 'gold-200', lo: 'gold-700' },
+  teal: { base: 'teal-300', hi: 'sky-100', lo: 'teal-600' },
+} as const satisfies Record<string, { base: ColorToken; hi: ColorToken; lo: ColorToken }>;
+
+const LAMPS = 16;
+
+/**
+ * A track of sixteen lamps that light from the left. With `door`, the track ends at a door: the
+ * way out of the rat race, which stands open once the last lamp is lit.
+ */
+export function Bar({ value, max, label, tone = 'gold', door = false }: { value: number; max: number; label: string; tone?: 'gold' | 'teal'; door?: boolean }) {
+  const share = max <= 0 ? (value > 0 ? 1 : 0) : Math.max(0, Math.min(1, value / max));
+  const filled = Math.floor(share * LAMPS + 1e-9);
+  const open = filled === LAMPS;
+  const lamp = LAMP[tone];
+  return (
+    <Framed
+      kind="frame"
+      style={{ backgroundColor: COLORS['night-900'], padding: 3, flexDirection: 'row', alignItems: 'center', gap: 2 }}
+    >
+      <SunkEdge />
+      <View
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={label}
+        accessibilityValue={{ min: 0, max: 100, now: Math.round(share * 100) }}
+        aria-valuenow={Math.round(share * 100)}
+        // The gaps between the lamps are the well showing through.
+        style={{ flex: 1, minWidth: 0, flexDirection: 'row', gap: 2, height: 10 }}
+      >
+        {Array.from({ length: LAMPS }, (_, i) =>
+          i < filled ? (
+            <Framed key={i} testID="lamp-lit" kind="lamp" tone={{ hi: lamp.hi, lo: lamp.lo }} style={{ flex: 1, backgroundColor: COLORS[lamp.base] }} />
+          ) : (
+            <View key={i} testID="lamp-dark" style={{ flex: 1, backgroundColor: COLORS['night-600'] }} />
+          ),
+        )}
+      </View>
+      {door ? (
+        // A door drawn in six pixels: a leaf, its frame, and a gold handle. Open, it is all light.
+        <View
+          testID="door"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          {...{ dataSet: { state: open ? 'open' : 'shut' } }}
+          style={{ width: 14, height: 14, marginLeft: 2, backgroundColor: COLORS[open ? 'gold-200' : 'teal-600'] }}
+        >
+          {open ? null : (
+            <>
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, backgroundColor: COLORS['teal-800'] }} />
+              <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, backgroundColor: COLORS['teal-800'] }} />
+              <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 2, backgroundColor: COLORS['teal-800'] }} />
+              <View style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 2, backgroundColor: COLORS['teal-800'] }} />
+              <View style={{ position: 'absolute', right: 3, top: 6, width: 2, height: 2, backgroundColor: COLORS['gold-200'] }} />
+            </>
+          )}
+        </View>
+      ) : null}
+    </Framed>
+  );
+}
+
+const BADGE = {
+  bond: { bg: 'sky-500', fg: 'cream', hi: 'sky-300', lo: 'night-500' },
+  equity: { bg: 'teal-800', fg: 'cream', hi: 'teal-600', lo: 'night-800' },
+  crypto: { bg: 'gold-700', fg: 'ink-900', hi: 'gold-500', lo: 'gold-900' },
+  gold: { bg: 'gold-500', fg: 'ink-900', hi: 'gold-200', lo: 'gold-700' },
+} as const satisfies Record<string, { bg: ColorToken; fg: ColorToken; hi: ColorToken; lo: ColorToken }>;
+
+/**
+ * An asset by its look: its brand mark on its own where it has one, its ticker on the colour of
+ * its class where it has not. The name is always written beside it, so the mark is decoration.
+ */
+export function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: keyof typeof BADGE; logo?: string }) {
+  const frame: ViewStyle = { width: 56, height: 36, flexShrink: 0, alignItems: 'center', justifyContent: 'center' };
+  if (logo) {
+    return (
+      <View style={frame}>
+        <Sprite id={logo} />
+      </View>
+    );
+  }
+  const look = BADGE[Object.hasOwn(BADGE, kind) ? kind : 'equity'];
+  return (
+    <Framed kind="lamp" tone={{ hi: look.hi, lo: look.lo }} style={{ ...frame, backgroundColor: COLORS[look.bg] }}>
+      <PixelText size={14} tone={look.fg} numberOfLines={1}>{ticker}</PixelText>
+    </Framed>
+  );
+}
+
+interface Choice<T> {
+  value: T;
+  label: Words;
+  disabled?: boolean;
+  hint?: Words;
+  /** A sprite drawn above the label. */
+  icon?: string;
+}
+
+function Segment<T extends string | number>({ option, on, onChange, wide }: { option: Choice<T>; on: boolean; onChange(value: T): void; wide: boolean }) {
+  const disabled = option.disabled ?? false;
+  const press = usePress({ onPress: () => onChange(option.value), disabled });
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: on, disabled }}
+      aria-checked={on}
+      disabled={disabled}
+      onPress={press}
+      style={({ pressed }) => ({ ...sink(pressed && !disabled), opacity: disabled ? 0.4 : 1, ...(wide ? { flex: 1, minWidth: 0 } : null) })}
+    >
+      <Framed
+        kind="raised"
+        tone={on ? CREAM : {}}
+        style={{
+          backgroundColor: COLORS[on ? 'cream' : 'night-600'],
+          minHeight: TOUCH,
+          paddingHorizontal: 4,
+          paddingVertical: 6,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {option.icon ? (
+          <View style={{ width: 36, height: 36, marginBottom: 4, alignItems: 'center', justifyContent: 'center' }}>
+            <Sprite id={option.icon} />
+          </View>
+        ) : null}
+        <PixelText size={14} tone={on ? 'ink-900' : 'ink-200'} style={{ textAlign: 'center' }}>{String(option.label)}</PixelText>
+        {option.hint !== undefined ? (
+          <ReadText size={11} tone={on ? 'ink-500' : 'ink-200'} style={{ textAlign: 'center', lineHeight: 14 }}>{String(option.hint)}</ReadText>
+        ) : null}
+      </Framed>
+    </Pressable>
+  );
+}
+
+/** A row (or a column) of choices of which exactly one is on. `label` names the group for a screen reader. */
+export function Segmented<T extends string | number>({
+  label,
+  options,
+  value,
+  onChange,
+  orientation = 'horizontal',
+}: {
+  label: string;
+  options: Array<Choice<T>>;
+  value: T;
+  onChange(value: T): void;
+  orientation?: 'horizontal' | 'vertical';
+}) {
+  const row = orientation === 'horizontal';
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={label}
+      style={{ flexDirection: row ? 'row' : 'column', gap: 8 }}
+    >
+      {options.map((option) => (
+        <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide={row} />
+      ))}
+    </View>
+  );
+}
+
+/** An on/off switch with its label, the whole row pressable. `icon` is a sprite shown before the label. */
+export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { on: boolean; onChange(on: boolean): void; label: Words; hint?: Words; disabled?: boolean; icon?: string }) {
+  const press = usePress({ onPress: () => onChange(!on), disabled });
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityState={{ checked: on, disabled }}
+      aria-checked={on}
+      disabled={disabled}
+      onPress={press}
+      style={({ pressed }) => ({ ...sink(pressed && !disabled), opacity: disabled ? 0.4 : 1, width: '100%' })}
+    >
+      <Framed
+        kind="raised"
+        style={{
+          backgroundColor: COLORS['night-600'],
+          minHeight: TOUCH,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingVertical: 8,
+          paddingRight: 12,
+          paddingLeft: icon ? 8 : 12,
+        }}
+      >
+        {icon ? (
+          <View style={{ width: 36, height: 36, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
+            <Sprite id={icon} />
+          </View>
+        ) : null}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <PixelText size={15}>{String(label)}</PixelText>
+          {hint !== undefined ? <ReadText size={12} tone="ink-200" style={{ lineHeight: 15 }}>{String(hint)}</ReadText> : null}
+        </View>
+        <Framed
+          kind="frame"
+          testID="switch"
+          style={{ width: 40, height: 20, flexShrink: 0, backgroundColor: COLORS[on ? 'teal-600' : 'night-900'] }}
+        >
+          <SunkEdge />
+          {/* The knob steps to its side at once. */}
+          <Framed
+            kind="lamp"
+            testID="knob"
+            tone={{ hi: 'white', lo: 'ink-200' }}
+            style={{ position: 'absolute', top: 0, left: on ? 20 : 0, width: 20, height: 20, backgroundColor: COLORS.cream }}
+          />
+        </Framed>
+      </Framed>
+    </Pressable>
   );
 }
