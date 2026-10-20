@@ -14,7 +14,7 @@ import { Sheet } from '@/ui/overlay';
 import { Sprite } from '@/ui/Sprite';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { RoomCard, useRoomLive } from './Room';
-import { HomePreferences, HomeSettingsPanel } from './Settings';
+import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
 
 /** The front door: carry on with the life in progress, or start another. */
 export function Home() {
@@ -66,7 +66,8 @@ export function Home() {
 
   return (
     <main className={`relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center px-3 pb-8 ${returning ? 'gap-4 pt-6' : 'gap-5 pt-10'}`}>
-      <div className="absolute right-3 top-4">
+      <div className="absolute right-3 top-4 flex gap-2">
+        <LanguageMenu />
         <HomePreferences />
       </div>
       {/* A first visit meets the mascot; someone coming back is waved at. */}

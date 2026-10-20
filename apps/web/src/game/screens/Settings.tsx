@@ -3,7 +3,7 @@
 import { CONTENT_VERSION, portraitArt } from '@ratrace/content';
 import { ENGINE_VERSION, netWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAccount, useAccountSaves, useCommunity, useGame, useGuide, useSaving, useSettings, useT, useWords } from '@/game/context';
 import { canNotify, currentSubscription, subscribe, unsubscribe } from '@/pwa/notifications';
@@ -159,6 +159,68 @@ function LanguagePick() {
           {LANGUAGES[code]}
         </Link>
       ))}
+    </div>
+  );
+}
+
+/** The language from the corner of the front door: a square with its code, and the languages dropping from it. */
+export function LanguageMenu() {
+  const home = useT('home');
+  const { locale } = useSettings();
+  const pathname = usePathname();
+  const community = useCommunity();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open]);
+  return (
+    <div ref={box} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={home('language')}
+        onClick={() => setOpen((was) => !was)}
+        className="pixel frame-raised flex size-11 items-center justify-center bg-night-700 text-[15px] uppercase text-ink-200"
+      >
+        {locale}
+      </button>
+      {open ? (
+        <div role="menu" className="frame-raised absolute right-0 top-full z-20 mt-2 flex w-36 flex-col bg-night-700 p-1">
+          {routing.locales.map((code) => (
+            <Link
+              key={code}
+              role="menuitem"
+              href={pathname}
+              locale={code}
+              // Kept with the account too, so that the next device the player signs in on speaks it.
+              onClick={() => {
+                setOpen(false);
+                if (code !== locale) void community?.setLanguage?.(code);
+              }}
+              lang={code}
+              style={/[\u0400-\u04ff]/.test(LANGUAGES[code]) ? CYRILLIC : undefined}
+              aria-current={code === locale ? 'true' : undefined}
+              className={`pixel flex min-h-11 items-center px-3 text-[15px] ${code === locale ? 'bg-cream text-ink-900' : 'text-ink-200 hover:bg-night-600'}`}
+            >
+              {LANGUAGES[code]}
+            </Link>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
