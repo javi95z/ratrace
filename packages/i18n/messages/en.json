@@ -1519,7 +1519,6 @@
     "hint": "The best ranked life of each player. Only lives played on the server count.",
     "following": "Your friends",
     "nobody": "No friends yet. Send a request with their code.",
-    "friendsUnreachable": "Your friends could not be read.",
     "friendCode": "Friend code",
     "follow": "Send request",
     "followUnknown": "No player has that code.",

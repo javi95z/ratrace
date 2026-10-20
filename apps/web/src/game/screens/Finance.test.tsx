@@ -180,8 +180,10 @@ describe('the homes a player owns', () => {
 
 describe('property that is only for letting', () => {
   it('shows homes and what is only for letting apart, every one on the same dark tile, and says of a parking space what it lets for', async () => {
-    // Two finance courses: Finance 2, which letting takes.
+    // Three finance courses: Finance 2, which letting takes.
     const { services, session } = await inFinance('heir', { taught: true });
+    await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }] });
+    await toFinance(session);
     const user = userEvent.setup();
     renderGame(<Play />, services);
     await user.click(await screen.findByRole('tab', { name: 'Property' }));
@@ -1150,7 +1152,11 @@ describe('what is not declared', () => {
 describe('the limits of focus', () => {
   it('names a mastered skill on one line instead of a switch, and says what overtime round after round costs', async () => {
     const { services, session } = await inFinance('nurse', { taught: true });
-    // A third finance course masters money sense; overtime this round makes the next one the second in a row.
+    // Two more courses, and a fifth masters money sense; overtime that round makes the next one the second in a row.
+    for (let round = 0; round < 2; round++) {
+      await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }] });
+      await toFinance(session);
+    }
     await session.playRound({ orders: [{ type: 'focus', action: 'studyFinance' }, { type: 'focus', action: 'overtime' }] });
     await toFinance(session);
     expect((await stateOf(services)).player.life.financeSkill).toBe(3);

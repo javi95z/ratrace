@@ -194,7 +194,7 @@ function Friendships({ community, onChanged }: { community: Community; onChanged
   return (
     <Panel title={t('following')} label={t('following')}>
       <div className="flex flex-col gap-2">
-        {list === null ? <p className="text-[13px] text-ink-200">{t('friendsUnreachable')}</p> : null}
+        {/* A list that cannot be read says nothing: the ranking among friends above already shows them. */}
         {/* What waits on the player comes first: a request is answered where it is read. */}
         {list && list.incoming.length > 0 ? (
           <section aria-label={t('requests')} className="flex flex-col gap-1.5">

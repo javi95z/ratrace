@@ -183,9 +183,11 @@ describe('the v1 content', () => {
     expect(content.debt).toMatchObject({ marginMaxPct: 50, marginCallPct: 75, marginMinFinanceSkill: 3 });
     // No life starts able to: it is earned by years with money invested.
     for (const life of lives) expect(life.start.life?.financeSkill ?? 0, life.id).toBeLessThan(3);
-    // Every level of every skill, money sense too, is the same step of points.
+    // Every skill, money sense too, has the same levels, each a longer step than the last: mastering one takes five rounds of study.
     const [one, two, three] = content.life.skills.levelPoints;
-    expect([two - one, three - two]).toEqual([one, one]);
+    expect(two - one).toBeGreaterThan(one);
+    expect(three - two).toBeGreaterThan(two - one);
+    expect(Math.ceil(three / content.life.skills.studyPoints)).toBe(5);
     // No asset asks for the fourth level: it opens borrowed money, not a market.
     for (const asset of content.assets) expect(asset.minFinanceSkill ?? 0, asset.id).toBeLessThan(3);
   });

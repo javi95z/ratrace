@@ -346,14 +346,16 @@ describe('the rankings', () => {
     await waitFor(() => expect(asked).toContain('befriend wxyz6789'));
   });
 
-  it('says so when the friends could not be read', async () => {
-    const { community: c } = community({ friends: async () => null });
+  it('says nothing of friends that could not be read, and still asks by code', async () => {
+    const { community: c, asked } = community({ friends: async () => null });
     const user = userEvent.setup();
     show(c);
     await user.click(await screen.findByRole('tab', { name: 'Friends' }));
     const friends = await screen.findByRole('region', { name: 'Your friends' });
-    expect(await within(friends).findByText('Your friends could not be read.')).toBeTruthy();
+    await waitFor(() => expect(asked).toContain('ranking all friends any'));
+    expect(within(friends).queryByRole('alert')).toBeNull();
     expect(friends.textContent).not.toContain('No friends yet.');
+    expect(within(friends).getByRole('button', { name: 'Send request' })).toBeTruthy();
   });
 
   it('says what a request came to', async () => {

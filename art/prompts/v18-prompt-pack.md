@@ -173,3 +173,20 @@ Image 3:2. Object sheet: 3 columns by 2 rows, 5 objects and one empty cell. Ever
 5. Leave this cell empty: plain background, nothing drawn.
 6. Bank vault on Paradeplatz: a round steel vault door standing open in a stone wall, a glimpse of gold bars and safe deposit boxes inside, a warm light.
 ```
+
+## 130. Two uses of focus: the family, and a rest
+
+Save as `art/raw/icons/icons-12.png` — `icon.focus_family`, `icon.focus_rest`
+
+Attach `art/raw/icons/icons-08.png` as the style reference: these two sit beside the uses of focus
+(overtime, study, job hunt) and the skills, and must read as the same family at 32×32.
+
+```text
+Landscape image, 2:1. Object sheet: 2 columns by 1 row, 2 icons, each a single bold object centred in its cell, smaller than its cell, with clear space all round it, the same size and weight as the attached icons. No text. Left to right:
+1. A small round dinner table seen from above at three-quarters, a big shared bowl in the middle and three plates around it, one of them small for a child, a warm light: time with the family.
+2. A striped hammock slung between two short posts, a soft pillow at one end and a little crescent moon above it: a round of rest.
+```
+
+Once cut (`pnpm -s art`), point `focusArt.familyTime` and `focusArt.unwind` in
+`packages/content/src/art.ts` at `icon.focus_family` and `icon.focus_rest`; until then they borrow
+`icon.family_four` and `icon.mood`.

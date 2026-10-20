@@ -237,11 +237,11 @@ export const life: LifeRules = {
     car: { pricePct: 55, ageRounds: 2, repairChancePct: 30, repairPct: 8 },
     watch: { pricePct: 70, ageRounds: 2, repairChancePct: 25, repairPct: 6 },
   },
-  // Every skill, money sense too, has the same three steps of three points. Study gives three a round
-  // and living it one; study alone masters a skill in three rounds, and years of investing alone
-  // make an investor who may be lent to in eighteen. A skill at its top is studied no more.
+  // Every skill, money sense too, has the same three levels, each dearer than the last: 3, 8 and 15
+  // points. Study gives three a round and living it one; study alone masters a skill in five rounds,
+  // so a life masters some of its skills, not all of them. A skill at its top is studied no more.
   skills: {
-    levelPoints: [3, 6, 9],
+    levelPoints: [3, 8, 15],
     studyPoints: 3,
     practicePoints: 1,
     investingPoints: 1,

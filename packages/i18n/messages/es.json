@@ -1519,7 +1519,6 @@
     "hint": "La mejor vida clasificatoria de cada jugador. Solo cuentan las vidas jugadas en el servidor.",
     "following": "Tus amigos",
     "nobody": "Aún no tienes amigos. Envía una solicitud con su código.",
-    "friendsUnreachable": "No se ha podido leer tu lista de amigos.",
     "friendCode": "Código de amigo",
     "follow": "Enviar solicitud",
     "followUnknown": "Ningún jugador tiene ese código.",

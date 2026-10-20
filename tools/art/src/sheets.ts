@@ -405,6 +405,8 @@ export const SHEETS: SheetSpec[] = [
   },
   { file: 'badges/rat-ranks-01', group: 'badges', kind: 'objects', cols: 3, rows: 2, width: 64, height: 64, ids: ['rank.sewer', 'rank.office', 'rank.stock', 'rank.wall_street', 'rank.tycoon', 'rank.king'] },
   { file: 'icons/icons-11', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.retired', 'icon.estates'] },
+  // v18: two uses of focus, the family and a rest.
+  { file: 'icons/icons-12', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.focus_family', 'icon.focus_rest'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   // A player's rat in layers, back to front: backdrop, body, face, outfit, eyewear, headwear. The bodies
   // of rat-body-02 have their faces left blank, so that the faces of rat-face-01 can be worn on them.

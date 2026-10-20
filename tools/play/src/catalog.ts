@@ -311,7 +311,7 @@ say(
 // ---------------------------------------------------------------------------------------------
 say(
   '## Inversiones',
-  `Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +${content.life.skills.investingPoints} punto, y cada nivel pide ${content.life.skills.levelPoints[0]} (a ${content.life.skills.levelPoints.join(', ')} puntos). Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.`,
+  `Finanzas dice qué se puede comprar por cuenta propia. Se mide como cualquier habilidad: cada ronda con dinero invertido da +${content.life.skills.investingPoints} punto, y los niveles llegan a ${content.life.skills.levelPoints.join(', ')} puntos. Un curso o un buen libro sube un nivel, hasta el 2; el 3 solo llega invirtiendo. Una carta puede dar algo de un nivel más alto.`,
   table(
     ['Inversión', 'Ticker', 'Clase', 'Finanzas', 'Renta', 'Qué es'],
     content.assets.map((asset) => [
@@ -347,7 +347,7 @@ say(
       ...STUDIES.map((action) => [img(focusArt[action]), text.focusActions[action], `+${content.life.skills.studyPoints} puntos de ${text.skills[STUDY_OF[action]]}; nada al nivel 3`]),
     ],
   ),
-  `Habilidades: todas, como Finanzas, van del nivel 0 al 3, a ${content.life.skills.levelPoints.join(', ')} puntos: ${content.life.skills.levelPoints[0]} por nivel. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,
+  `Habilidades: todas, como Finanzas, van del nivel 0 al 3, a ${content.life.skills.levelPoints.join(', ')} puntos, cada nivel más caro que el anterior. Se ganan ${content.life.skills.studyPoints} por ronda estudiando con foco, y ${content.life.skills.practicePoints} por ronda viviéndola. Gestión solo se aprende llevando un negocio.`,
   table(
     ['', 'Habilidad', 'Por nivel', 'Se practica'],
     [
