@@ -43,5 +43,8 @@ yarn-error.*
 # sprites copied from art/clean by scripts/sprites.ts (on install: postinstall, and eas-build-post-install on EAS)
 /assets/sprites/
 
+# the rules of the older versions, copied from apps/web/public/rules by scripts/rules.ts (same moments); src/rules/index.ts is committed
+/src/rules/v*.js
+
 # the parity check's raw shots (scripts/kit-shots.ts); the cropped ones are in docs/superpowers/reports
 /.kit-shots/

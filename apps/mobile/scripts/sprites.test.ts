@@ -32,6 +32,7 @@ test('sources.ts names every sprite with one static require, to a file art/clean
 test('the sprites are copied on every install (and on EAS after its install): a fresh checkout or a build bundles with no step of its own', () => {
   const pkg = JSON.parse(read('../package.json')) as { scripts: Record<string, string> };
   expect(pkg.scripts.sprites).toBe('tsx scripts/sprites.ts');
-  expect(pkg.scripts.postinstall).toBe('pnpm sprites');
-  expect(pkg.scripts['eas-build-post-install']).toBe('pnpm sprites');
+  // (The rules of the older versions are copied at the same moments: see rules.test.ts.)
+  expect(pkg.scripts.postinstall).toMatch(/^pnpm sprites\b/);
+  expect(pkg.scripts['eas-build-post-install']).toMatch(/^pnpm sprites\b/);
 });

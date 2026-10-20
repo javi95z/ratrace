@@ -163,7 +163,10 @@ describe('the wall between the phone\'s screens and the game', () => {
 
   it('wires the real session and the phone\'s store in one place', () => {
     const wires = mine.filter((path) => importsOf(path).some((i) => /^@\/session\/(local|memory|resilient)$/.test(i.from) || i.from === '@/kvStore')).map(rel);
-    expect(wires.sort()).toEqual(['game/context.tsx']);
+    // The one other: the development page's fixture (testing/olderLife.ts) writes a life straight into the phone's store
+    // to see it finished under older rules. Development only; the one route that reaches it is the development page.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'testing/olderLife.ts']);
+    expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
   });
 
   it('lets no screen reach the cloud, and only the game context may ever wire it', () => {

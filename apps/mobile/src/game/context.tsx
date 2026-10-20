@@ -19,6 +19,7 @@ import { kvLanguage, KvStore } from '../kvStore';
 import { ReducedMotionProvider } from '../ui/animations';
 import { SoundProvider } from '../ui/sound';
 import { localeOf, type LanguageKeep } from './locale';
+import { loadBundledRules } from './olderRules';
 import { WordsProvider } from './words';
 
 export { useT } from './words';
@@ -81,10 +82,10 @@ export function phoneDeps(): SessionDeps {
     newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
     now: () => Date.now(),
     onSaveError: (error: unknown) => console.warn('could not save the game:', error),
-    // A life begun under older rules is finished under them (never interrupt a game). The spec's bundled rules
-    // (§Calls: the app carries every shipped bundle) are not on the phone yet: until they are, such a life is
-    // 'unreachable', so it waits, kept, instead of being judged gone and deleted.
-    loadRules: async () => 'unreachable' as const,
+    // A life begun under older rules is finished under them (never interrupt a game): the app carries every bundle
+    // the web serves. A life whose rules it does not carry waits, kept, for an update that does, instead of being
+    // judged gone and deleted.
+    loadRules: loadBundledRules,
   };
 }
 

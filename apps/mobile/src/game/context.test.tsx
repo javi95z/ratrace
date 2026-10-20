@@ -113,7 +113,7 @@ test('sound and reduced motion follow the profile\'s settings', async () => {
   });
 });
 
-test('a life saved under older rules waits on the phone, kept, and is never deleted', async () => {
+test('a life saved under rules the app does not carry waits on the phone, kept, and is never deleted', async () => {
   const store = new MemoryStore();
   const older = { format: SAVE_FORMAT, gameId: 'older-life', engineVersion: '0.0.1', contentVersion: '0.0.1', lifeId: 'nurse', seed: 'older-seed', log: [], updatedAt: 1 };
   await store.saveGame(older as never);

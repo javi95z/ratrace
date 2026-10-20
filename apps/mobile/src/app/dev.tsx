@@ -1,10 +1,14 @@
-// Development page (until Task 13's kit page): sprites drawn pixel for pixel, the cues, and money in each language.
+// Development page (until Task 13's kit page): sprites drawn pixel for pixel, the cues, money in each language, and a life begun under older rules.
 import type { RatLook } from '@ratrace/core/game/avatar';
 import { formatFor } from '@ratrace/core/lib/format';
 import { LOCALES } from '@ratrace/i18n';
 import { Redirect } from 'expo-router';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useGame } from '../game/context';
+import { putOlderLife } from '../testing/olderLife';
+import { Button } from '../ui/kit';
 import { Screen } from '../ui/Page';
 import { RatAvatar } from '../ui/RatAvatar';
 import { CUES, useSound } from '../ui/sound';
@@ -35,6 +39,47 @@ function Cues() {
   );
 }
 
+/**
+ * A life begun under older rules (testing/olderLife.ts), put where the phone keeps its life and taken up by the game as
+ * if the app had just opened, then played a step at a time under the bundle the app carries: the way to see them run on
+ * the phone's own engine (Hermes) before the Play screen exists.
+ */
+function OlderLife() {
+  const boot = useGame((s) => s.boot);
+  const status = useGame((s) => s.status);
+  const lost = useGame((s) => s.lost);
+  const rules = useGame((s) => s.rules);
+  const round = useGame((s) => s.view?.round);
+  const stage = useGame((s) => s.stage);
+  const leaveNews = useGame((s) => s.leaveNews);
+  const pick = useGame((s) => s.pick);
+  const afterCard = useGame((s) => s.afterCard);
+  const play = useGame((s) => s.play);
+  const [failed, setFailed] = useState<string | null>(null);
+  const begin = () => {
+    setFailed(null);
+    void putOlderLife().then(boot).catch((error: unknown) => setFailed(String(error)));
+  };
+  // The news, the cards and their results, the finances: one tap for each, as the round asks for them.
+  const step = () => {
+    if (stage === 'news') leaveNews();
+    else if (stage === 'cards') void pick(0);
+    else if (stage === 'outcome') afterCard();
+    else if (stage === 'finance') void play();
+  };
+  return (
+    <Row label="a life begun under rules 0.37.0 / 1.38.0, finished under them from the rules the app carries">
+      <Button variant="secondary" onPress={begin}>
+        begin it
+      </Button>
+      <Button variant="secondary" disabled={status !== 'playing'} onPress={step}>
+        play on
+      </Button>
+      <Text style={{ color: COLORS.cream }}>{`${status}${lost ? ` (${lost})` : ''} · rules ${rules} · round ${round ?? '-'} · ${stage}${failed ? ` · ${failed}` : ''}`}</Text>
+    </Row>
+  );
+}
+
 export default function DevRoute() {
   if (!__DEV__) return <Redirect href="/" />;
   return (
@@ -45,6 +90,7 @@ export default function DevRoute() {
         ))}
       </Row>
       <Cues />
+      <OlderLife />
       <Row label="icon.cash at 1, 2 and 3 (edges must be hard)">
         <Sprite id="icon.cash" scale={1} />
         <Sprite id="icon.cash" scale={2} />

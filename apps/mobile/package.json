@@ -48,12 +48,13 @@
   },
   "scripts": {
     "sprites": "tsx scripts/sprites.ts",
-    "postinstall": "pnpm sprites",
-    "eas-build-post-install": "pnpm sprites",
-    "start": "pnpm sprites && expo start",
-    "android": "pnpm sprites && expo start --android",
-    "ios": "pnpm sprites && expo start --ios",
-    "web": "pnpm sprites && expo start --web",
+    "rules": "tsx scripts/rules.ts",
+    "postinstall": "pnpm sprites && pnpm rules",
+    "eas-build-post-install": "pnpm sprites && pnpm rules",
+    "start": "pnpm sprites && pnpm rules && expo start",
+    "android": "pnpm sprites && pnpm rules && expo start --android",
+    "ios": "pnpm sprites && pnpm rules && expo start --ios",
+    "web": "pnpm sprites && pnpm rules && expo start --web",
     "typecheck": "tsc --noEmit"
   },
   "private": true
