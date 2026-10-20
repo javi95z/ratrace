@@ -5,6 +5,7 @@ import { GOLD } from './frames';
 import { pressDown, usePress } from './kit';
 import { Sheet } from './overlay';
 import { Sprite } from './Sprite';
+import { spriteBox } from './sprites';
 import { ReadText } from './text';
 import { COLORS, TOUCH } from './theme';
 
@@ -19,12 +20,15 @@ export interface PickerOption<T> {
 
 /**
  * The face of a 64-pixel portrait, cut out of it at its own size, never shrunk: in the space of a
- * 32-pixel icon, or of a 44-pixel one for a line of a list.
+ * 32-pixel icon, or of a 44-pixel one for a line of a list. A `backdrop` (a city's sky) lies behind it, its middle at the
+ * middle of the box.
  */
-export function Face({ id, size = 'sm' }: { id: string; size?: 'sm' | 'md' }) {
+export function Face({ id, size = 'sm', backdrop }: { id: string; size?: 'sm' | 'md'; backdrop?: string }) {
   const box = size === 'md' ? 44 : 32;
+  const sky = backdrop ? spriteBox(backdrop, 1, 1, { w: 64, h: 64 }) : null;
   return (
     <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ width: box, height: box, flexShrink: 0, overflow: 'hidden' }}>
+      {backdrop && sky ? <Sprite id={backdrop} fallback={{ w: 64, h: 64 }} style={{ position: 'absolute', left: (box - sky.w) / 2, top: (box - sky.h) / 2 }} /> : null}
       <Sprite id={id} fallback={{ w: 64, h: 64 }} style={{ position: 'absolute', left: size === 'md' ? -10 : -16, top: size === 'md' ? -4 : -6 }} />
     </View>
   );

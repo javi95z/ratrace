@@ -437,6 +437,50 @@ test('Segmented sets a hint under the label and an icon above it', () => {
   expect(document.querySelector('[data-sprite="ic"]')).toBeTruthy();
 });
 
+test('Segmented in columns is a grid: rows of that many, equal widths, 8 between, and a short last row keeps the width of a column', () => {
+  const four = ['a', 'b', 'c', 'd'].map((value) => ({ value, label: value.toUpperCase() }));
+  const { rerender } = render(<Segmented label="Pick" options={four} value="a" onChange={() => {}} columns={2} />);
+  const group = screen.getByRole('radiogroup');
+  expect(group.style.flexDirection).toBe('column');
+  expect(group.style.gap).toBe('8px');
+  const rows = Array.from(group.children) as HTMLElement[];
+  expect(rows).toHaveLength(2);
+  for (const row of rows) {
+    expect(row.style.flexDirection).toBe('row');
+    expect(row.style.gap).toBe('8px');
+    expect(row.children).toHaveLength(2);
+    for (const cell of Array.from(row.children) as HTMLElement[]) {
+      expect(cell.style.flexGrow).toBe('1');
+      // the choice fills the cell, so that a row of them is as tall as the tallest, as the web's grid makes it
+      expect((cell.firstElementChild as HTMLElement).style.flexGrow).toBe('1');
+    }
+  }
+  // the choices keep their order, row by row, and their group
+  expect(screen.getAllByRole('radio').map((r) => r.textContent)).toEqual(['A', 'B', 'C', 'D']);
+
+  // three in two columns: the third stands in the first column of its row, and the second column is left empty
+  rerender(<Segmented label="Pick" options={four.slice(0, 3)} value="a" onChange={() => {}} columns={2} />);
+  const [, second] = Array.from(screen.getByRole('radiogroup').children) as HTMLElement[];
+  expect(second.children).toHaveLength(2);
+  expect(second.children[0].getAttribute('role')).toBe('radio');
+  expect(second.children[1].getAttribute('role')).toBeNull();
+  expect((second.children[1] as HTMLElement).style.flexGrow).toBe('1');
+
+  // the web's three: 4 for the loan rates, 2 for the lifestyle, 3 for the rarities
+  rerender(<Segmented label="Pick" options={[...four, ...four]} value="a" onChange={() => {}} columns={4} />);
+  expect(Array.from(screen.getByRole('radiogroup').children).map((r) => r.children.length)).toEqual([4, 4]);
+  rerender(<Segmented label="Pick" options={[...four, ...four]} value="a" onChange={() => {}} columns={3} />);
+  expect(Array.from(screen.getByRole('radiogroup').children).map((r) => r.children.length)).toEqual([3, 3, 3]);
+});
+
+test('a Segmented without columns is the one row of equal choices it was', () => {
+  render(<Segmented label="Pick" options={CHOICES} value="a" onChange={() => {}} />);
+  const group = screen.getByRole('radiogroup');
+  expect(group.style.flexDirection).toBe('row');
+  expect(group.children).toHaveLength(2);
+  for (const cell of Array.from(group.children) as HTMLElement[]) expect(cell.getAttribute('role')).toBe('radio');
+});
+
 test('Toggle reports on through its checked state, and a press flips it; the knob slides', async () => {
   const onChange = vi.fn();
   const tap = vi.fn();

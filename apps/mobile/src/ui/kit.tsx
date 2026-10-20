@@ -449,6 +449,8 @@ function Segment<T extends string | number>({ option, on, onChange, wide }: { op
           paddingVertical: 6,
           alignItems: 'center',
           justifyContent: 'center',
+          // Side by side the choices are as tall as the tallest, as the cells of the web's grid are.
+          ...(wide ? { flexGrow: 1 } : null),
         }}
       >
         {option.icon ? (
@@ -465,21 +467,45 @@ function Segment<T extends string | number>({ option, on, onChange, wide }: { op
   );
 }
 
-/** A row (or a column) of choices of which exactly one is on. `label` names the group for a screen reader. */
+/**
+ * A row (or a column) of choices of which exactly one is on. `label` names the group for a screen reader. With `columns`
+ * the choices are a grid of that many equal columns, as the web's `gridClassName` (`grid-cols-2`, `grid-cols-3` for the
+ * rarities, `grid-cols-4` for the loan rates; `@min-[460px]:grid-cols-5` is only for a container wider than the phone's
+ * 448): each row is as tall as its tallest choice, and a short last row leaves its columns empty, not wider.
+ */
 export function Segmented<T extends string | number>({
   label,
   options,
   value,
   onChange,
   orientation = 'horizontal',
+  columns,
 }: {
   label: string;
   options: Array<Choice<T>>;
   value: T;
   onChange(value: T): void;
   orientation?: 'horizontal' | 'vertical';
+  columns?: number;
 }) {
   const row = orientation === 'horizontal';
+  const segment = (option: Choice<T>) => <Segment key={String(option.value)} option={option} on={option.value === value} onChange={onChange} wide />;
+  if (columns !== undefined && columns > 0) {
+    const rows: Array<Array<Choice<T>>> = [];
+    for (let i = 0; i < options.length; i += columns) rows.push(options.slice(i, i + columns));
+    return (
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'column', gap: 8 }}>
+        {rows.map((cells, r) => (
+          <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
+            {cells.map(segment)}
+            {Array.from({ length: columns - cells.length }, (_, i) => (
+              <View key={`empty-${i}`} style={{ flex: 1, minWidth: 0 }} />
+            ))}
+          </View>
+        ))}
+      </View>
+    );
+  }
   return (
     <View
       accessibilityRole="radiogroup"
