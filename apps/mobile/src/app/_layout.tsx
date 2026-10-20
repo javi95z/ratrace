@@ -1,6 +1,7 @@
 import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { GameProvider } from '../game/context';
 import { useGameFonts } from '../ui/fonts';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
@@ -20,14 +21,17 @@ export default function RootLayout() {
     if (fonts) void SplashScreen.hideAsync().catch(() => undefined);
   }, [fonts]);
   if (!fonts) return null;
+  // One gesture root round everything, so a drag can be read anywhere (phase 2's card swipe).
   return (
-    <GameProvider>
-      <StatusBar style="light" />
-      <Page>
-        <ThemeProvider value={GROUND_THEME}>
-          <Stack screenOptions={SCREENS} />
-        </ThemeProvider>
-      </Page>
-    </GameProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GameProvider>
+        <StatusBar style="light" />
+        <Page>
+          <ThemeProvider value={GROUND_THEME}>
+            <Stack screenOptions={SCREENS} />
+          </ThemeProvider>
+        </Page>
+      </GameProvider>
+    </GestureHandlerRootView>
   );
 }
