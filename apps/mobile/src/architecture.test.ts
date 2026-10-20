@@ -164,11 +164,14 @@ describe('the wall between the phone\'s screens and the game', () => {
   it('wires the real session and the phone\'s store in one place', () => {
     const wires = mine.filter((path) => importsOf(path).some((i) => /^@\/session\/(local|memory|resilient)$/.test(i.from) || i.from === '@/kvStore')).map(rel);
     // The others: the basket (game/phoneBasket.ts) keeps the orders of the round in the phone's store, beside the life it
-    // belongs to; the render of the tests (testing/render.tsx) stands in for the context's services, as the web's does; and
-    // the development page's fixture (testing/olderLife.ts) writes a life straight into the phone's store to see it
-    // finished under older rules. Development only; the one route that reaches it is the development page.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/olderLife.ts', 'testing/render.tsx']);
+    // belongs to; the memory services (testing/memoryServices.ts) stand in for the context's services, as the web's do, for
+    // the tests' render and for the route that draws a scene; and the development page's fixture (testing/olderLife.ts)
+    // writes a life straight into the phone's store to see it finished under older rules. Development only; the one route
+    // that reaches each of those two is its own: the development page for the fixture, the scene page for the scenes (which
+    // reach the memory services through testing/scene.tsx, never the session itself).
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
+    expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);
   });
 
   it('lets no screen reach the cloud, and only the game context may ever wire it', () => {

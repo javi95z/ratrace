@@ -10,6 +10,22 @@ section goes to the report of the phase that added it (`reportFolder` in `kitCom
 Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4). Scene rows (one game
 state drawn by both clients) follow with the screens.
 
+## Scenes: one game state, drawn by both clients
+
+A scene is a named game state (`packages/core/src/testing/scenes.ts`: `SCENES`, `sceneStore(name)`): a life begun on the fixed seed and
+played with the content's `saver` bot, through the round store, to a round and a stage; the same save on both clients (the ids, seeds and
+clock of every screen's tests). The web draws it at `/<locale>/kit/scene?name=<name>`, the app at `/scene?name=<name>` (development only);
+a scene's first word names the screen it is drawn on (`play-finance-r6` on Play). `scene-shots.ts [web] [app] [compare] [--only=a,b]`
+writes `<name>-web.png`, `<name>-app.png` and `<name>-diff.png` here, and a line per scene in `phase-2-parity.json` (the share of the
+two shots unlike, the shape pixels, how many lines of text are found in one shot only, the worst text offset of the rest).
+
+A round in a scene's name is the player's: `r6` is the sixth round, `view.round` 5. A life saved at the cards can only be saved after a card
+is answered (a game opens a hand left half answered on its next card), so `play-cards-r1` has one card answered and shows the second.
+
+Task 5 only proves the plumbing: the five scenes (`home-new`, `home-continue`, `play-news-r1`, `play-cards-r1`, `play-finance-r6`) open on both
+clients, but the app still draws phase 1's stand-ins for the screens, so their numbers say nothing yet. Each screen task replaces the
+stand-in, adds its scenes, and puts its rows below.
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp

@@ -11,7 +11,13 @@ import type { Cue } from '../ui/sound';
 
 /** What a screen asks of the router: every move is a spy. */
 export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), canGoBack: vi.fn(() => true) };
-export const expoRouter = { useRouter: () => router };
+/** The query of the address the screen was opened with (`/scene?name=`): none, unless a test gives it some. A `Redirect` is a box that names where it goes. */
+export const params: Record<string, string> = {};
+export const expoRouter = {
+  useRouter: () => router,
+  useLocalSearchParams: () => params,
+  Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
+};
 
 /** The phone: its languages in its order of preference, and the time zone it is in. */
 export const device = { languages: ['en'] as string[], timeZone: 'UTC' };
@@ -59,6 +65,7 @@ export function resetFakes(): void {
   for (const spy of Object.values(router)) spy.mockReset();
   device.languages = ['en'];
   device.timeZone = 'UTC';
+  for (const key of Object.keys(params)) delete params[key];
   kv.clear();
   heard.length = 0;
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });

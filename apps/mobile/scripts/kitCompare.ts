@@ -352,7 +352,8 @@ export function blendedEdges(a: Image, b: Image, map: Uint8Array, reach = LOOSE)
 }
 
 export interface Result {
-  section: Section;
+  /** The kit's section, or the name of the scene (`scene-shots.ts` compares those too). */
+  section: string;
   rawPercent: number;
   beyondPercent: number;
   beyond: number;
@@ -371,8 +372,11 @@ export interface Result {
   crop: [number, number];
 }
 
-/** Compares a section's two shots and writes its picture: the web, the app and the difference side by side, cropped to what they show. */
-export async function compareShots(sharp: unknown, section: Section, webPng: Buffer, appPng: Buffer, boxes: readonly TextBox[], out: string): Promise<Result> {
+/**
+ * Compares a section's two shots and writes its picture: the web, the app and the difference side by side, cropped to what
+ * they show. The picture is `<section>.png` in `out`, or `file` where the caller names it (a scene's is `<name>-diff.png`).
+ */
+export async function compareShots(sharp: unknown, section: string, webPng: Buffer, appPng: Buffer, boxes: readonly TextBox[], out: string, file = `${section}.png`): Promise<Result> {
   const s = sharp as Sharp;
   const decode = async (png: Buffer): Promise<Image> => {
     const { data, info } = await s(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
@@ -413,7 +417,7 @@ export async function compareShots(sharp: unknown, section: Section, webPng: Buf
   }
   await s(side, { raw: { width: sideWidth, height, channels: 4 } })
     .png({ compressionLevel: 9, palette: true })
-    .toFile(join(out, `${section}.png`));
+    .toFile(join(out, file));
   return {
     section,
     rawPercent: (100 * d.raw) / d.total,
