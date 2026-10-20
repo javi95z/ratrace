@@ -46,6 +46,7 @@ vi.mock('../sprites/sources', () => ({
   ),
 }));
 
+const { Group } = await import('@shopify/react-native-skia');
 const { loadSpritesWith } = await import('./spriteImages');
 const { Sprite } = await import('./Sprite');
 const { RatAvatar, RatLayers } = await import('./RatAvatar');
@@ -73,6 +74,17 @@ test('a sprite is drawn pixel for pixel: nearest neighbour, no mipmaps, at its b
   expect(image.getAttribute('data-image')).toBe('src:icon.cash');
   expect(image.getAttribute('data-sampling')).toBe(JSON.stringify({ filter: 0, mipmap: 0 }));
   expect(image.getAttribute('data-size')).toBe('96x96');
+});
+
+test('what is given to a sprite is drawn over its picture, in its own canvas', async () => {
+  const { container } = await drawn(
+    <Sprite id="icon.cash">
+      <Group />
+    </Sprite>,
+  );
+  const canvas = all(container, 'Canvas')[0];
+  const kinds = Array.from(canvas.children).map((c) => c.getAttribute('data-skia'));
+  expect(kinds).toEqual(['Image', 'Group']);
 });
 
 test('a silhouette is the sprite as a mask over night-900', async () => {

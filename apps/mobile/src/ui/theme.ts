@@ -58,6 +58,8 @@ export const BODY = { size: 15, lineHeight: 1.45, color: 'cream' } as const;
 export const EXTRA = {
   /** The dimmed page behind a Sheet (night-900 at 80%). */
   backdrop: 'rgba(11,16,34,0.8)',
+  /** The band of light that crosses a rare card (the web's `bg-white/40`). */
+  glint: 'rgba(255,255,255,0.4)',
   /** The common badge's rim (RARITY_TONE.common). */
   bronze: '#c98a4b',
   /** The glow round a badge card, as a CSS box-shadow (rarityStyle.ts). */

@@ -4,11 +4,15 @@ import {
   Easing,
   cancelAnimation,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
+  withDelay,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { KEYFRAMES, countUpValue, frameFor, type KeyframeName } from './motion';
+import type { ViewStyle } from 'react-native';
+import { KEYFRAMES, countUpValue, frameFor, styleOf, type Frame, type KeyframeName } from './motion';
 
 /** The game's own "reduce motion" setting, handed down once; the OS asks for it on its own. */
 const GameReducedMotion = createContext(false);
@@ -61,15 +65,39 @@ export function useReducedMotion(setting?: boolean): boolean {
   return system || (setting ?? fromGame);
 }
 
+/** What an effect can be told, beyond which one it is. */
+export interface KeyframeOptions {
+  /** False holds it on the frame it shows before it starts; true (the default) plays it. */
+  play?: boolean;
+  /** The game's own "reduce motion", where the caller knows it better than the provider does. */
+  reduced?: boolean;
+  /** The web's `animation-delay`: the time before it begins, in milliseconds. */
+  delayMs?: number;
+  /** The web's `animation-iteration-count: 1` on an effect that loops: it plays through once and stops. */
+  once?: boolean;
+  /** How far a coin or a spark goes (`--dx`, `--dy`; a spark's `--sx`, `--sy`), in points. */
+  dx?: number;
+  dy?: number;
+  /** What the box looks like outside the run, where that is not an element left alone (the web's `opacity-0`). */
+  rest?: Partial<Frame>;
+}
+
 /**
  * Plays `name` as the web's CSS animation does: progress 0 to 1 over its duration, read through
  * `steps()` by `frameFor`. Under reduced motion it is at its end at once (a looping one stands in its
- * first frame). Returns an animated style to put on an `Animated.View`.
+ * first frame). `useFrame` is the frame it is at, as a shared value; `useKeyframes` is that as an animated style to
+ * put on an `Animated.View`.
+ *
+ * A delay runs on the same clock: progress starts below zero, which is "not started", and reaches 0 when the
+ * delay is out, so that one linear run of `delay + duration` is all the animation there is. A loop with a delay
+ * (the web waits once, then repeats without waiting) holds off, then starts its repeats from the first frame.
  */
-export function useKeyframes(name: KeyframeName, { play = true, reduced }: { play?: boolean; reduced?: boolean } = {}) {
+function useFrame(name: KeyframeName, { play = true, reduced, delayMs = 0, once = false, dx = 0, dy = 0, rest }: KeyframeOptions = {}) {
   const still = useReducedMotion(reduced);
-  const { ms, loop } = KEYFRAMES[name];
-  // -1: not started. 0 to 1: running. Looped ones never pass 1.
+  const { ms, loop: loops } = KEYFRAMES[name];
+  const loop = loops && !once;
+  const lead = still ? 0 : Math.max(0, delayMs);
+  // -1: not started. Between -1 and 0: waiting out a delay. 0 to 1: running. Looped ones never pass 1.
   const progress = useSharedValue(play && still ? (loop ? 0 : 1) : -1);
   useEffect(() => {
     cancelAnimation(progress);
@@ -78,27 +106,73 @@ export function useKeyframes(name: KeyframeName, { play = true, reduced }: { pla
     } else if (still) {
       progress.value = loop ? 0 : 1;
     } else {
-      progress.value = 0;
       const run = withTiming(1, { duration: ms, easing: Easing.linear });
-      progress.value = loop ? withRepeat(run, -1, false) : run;
+      if (lead === 0) {
+        progress.value = 0;
+        progress.value = loop ? withRepeat(run, -1, false) : run;
+      } else if (loop) {
+        progress.value = -1;
+        progress.value = withDelay(lead, withSequence(withTiming(0, { duration: 0 }), withRepeat(run, -1, false)));
+      } else {
+        progress.value = -lead / ms;
+        progress.value = withTiming(1, { duration: lead + ms, easing: Easing.linear });
+      }
     }
     return () => cancelAnimation(progress);
-  }, [play, still, loop, ms, progress]);
-  return useAnimatedStyle(() => {
+  }, [play, still, loop, ms, lead, progress]);
+  return useDerivedValue(() => {
     const p = progress.value;
-    const f = frameFor(name, p < 0 ? 'before' : !loop && p >= 1 ? 'after' : 'running', p);
-    return { opacity: f.opacity, transform: [{ translateY: f.translateY }, { scale: f.scale }] };
+    return frameFor(name, p < 0 ? 'before' : !loop && p >= 1 ? 'after' : 'running', p, { dx, dy }, rest);
   });
 }
 
+/** `useFrame` as a style, to put on an `Animated.View`. */
+export function useKeyframes(name: KeyframeName, opts: KeyframeOptions = {}) {
+  const frame = useFrame(name, opts);
+  return useAnimatedStyle(() => styleOf(name, frame.value) as ViewStyle);
+}
+
 /** Sheet, Toast: comes up 8 px while it fades in. */
-export const useRise = (opts?: { play?: boolean }) => useKeyframes('rise', opts);
+export const useRise = (opts?: KeyframeOptions) => useKeyframes('rise', opts);
 /** Loading text: on for half a second, off for half. */
-export const useBlink = (opts?: { play?: boolean }) => useKeyframes('blink', opts);
+export const useBlink = (opts?: KeyframeOptions) => useKeyframes('blink', opts);
 /** A brand mark bought: it jumps and lands. */
-export const usePop = (opts?: { play?: boolean }) => useKeyframes('pop', opts);
+export const usePop = (opts?: KeyframeOptions) => useKeyframes('pop', opts);
 /** A brand mark sold: it shrinks and comes back. */
-export const useSink = (opts?: { play?: boolean }) => useKeyframes('sink', opts);
+export const useSink = (opts?: KeyframeOptions) => useKeyframes('sink', opts);
+/** The news of a round: a newspaper thrown spinning onto the table, settling flat. */
+export const usePaper = (opts?: KeyframeOptions) => useKeyframes('paper', opts);
+/** A legendary card turning over into view. */
+export const useLegend = (opts?: KeyframeOptions) => useKeyframes('legend', opts);
+/**
+ * The rainbow of a legendary card, sliding across it for as long as it is on screen. It is no style (nothing of a view
+ * moves, a gradient does), so this is how far it has slid, in percent of the card's width, 0 to 200, as a shared
+ * value; `Holo` draws it.
+ */
+export function useHolo(opts: KeyframeOptions = {}) {
+  const frame = useFrame('holo', opts);
+  return useDerivedValue(() => frame.value.bgX);
+}
+/** A band of light that crosses a rare card now and then. */
+export const useGlint = (opts?: KeyframeOptions) => useKeyframes('glint', opts);
+/** A badge won: it spins in from nothing and settles. */
+export const useMedal = (opts?: KeyframeOptions) => useKeyframes('medal', opts);
+/** A coin flown from where money came in to the cash it lands in, in an arc: `dx` and `dy` are how far. */
+export const useFly = (opts?: KeyframeOptions) => useKeyframes('fly', opts);
+/** One piece of confetti: it falls the height of the sheet once, turning, and is gone. */
+export const useFall = (opts?: KeyframeOptions) => useKeyframes('fall', opts);
+/** A picture uncovered from the left in eight steps (a style for the box that clips it: its width is the part shown). */
+export const useReveal = (opts?: KeyframeOptions) => useKeyframes('reveal', opts);
+/** A lamp that pulses: something is wrong and still going on. */
+export const useAlarm = (opts?: KeyframeOptions) => useKeyframes('alarm', opts);
+/** The page of the calendar torn off as a round turns (it turns about its top left corner). */
+export const useTear = (opts?: KeyframeOptions) => useKeyframes('tear', opts);
+/** The new page of the calendar, shown and then put away. */
+export const usePageTurn = (opts?: KeyframeOptions) => useKeyframes('page', opts);
+/** A mark on the line of a life, lit as the rat goes by. */
+export const useLight = (opts?: KeyframeOptions) => useKeyframes('light', opts);
+/** A spark thrown out from a centre, and gone: `dx` and `dy` are where it goes. */
+export const useSpark = (opts?: KeyframeOptions) => useKeyframes('spark', opts);
 
 /**
  * A figure that runs from one value to another, once, fast at first and slowing to the last (ease-out

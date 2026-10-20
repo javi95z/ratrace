@@ -25,6 +25,8 @@ interface Props {
   /** Draws only the outline of the sprite, filled with night-900: something not owned yet. */
   silhouette?: boolean;
   style?: ViewStyle;
+  /** Skia nodes drawn over the picture in its own canvas, where they can blend with it (the rainbow of a legendary card). */
+  children?: ReactNode;
 }
 
 /**
@@ -32,7 +34,7 @@ interface Props {
  * smooth). Its picture is decoded once for the whole app and shared (spriteImages). A sprite that does not exist, or
  * does not load, shows the web's checkerboard at the fallback size and is logged once: the game is playable without art.
  */
-export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, silhouette = false, style }: Props): ReactNode {
+export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, silhouette = false, style, children }: Props): ReactNode {
   const art = useContext(ArtScale);
   const box = spriteBox(id, scale, art, fallback);
   const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
@@ -49,13 +51,13 @@ export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, silhouett
       style={[{ width: box.w, height: box.h, flexShrink: 0 }, style]}
     >
       {/* While it loads the box is already there, empty (no canvas yet), so nothing moves when it arrives. */}
-      {!known || failed ? <Checker w={box.w} h={box.h} /> : image ? <Drawn image={image} box={box} silhouette={silhouette} /> : null}
+      {!known || failed ? <Checker w={box.w} h={box.h} /> : image ? <Drawn image={image} box={box} silhouette={silhouette}>{children}</Drawn> : null}
     </View>
   );
 }
 
 /** The decoded sprite on a canvas of its box. */
-function Drawn({ image, box, silhouette }: { image: SkImage; box: Size; silhouette: boolean }) {
+function Drawn({ image, box, silhouette, children }: { image: SkImage; box: Size; silhouette: boolean; children?: ReactNode }) {
   return (
     <Canvas style={{ width: box.w, height: box.h }}>
       {silhouette ? (
@@ -67,6 +69,7 @@ function Drawn({ image, box, silhouette }: { image: SkImage; box: Size; silhouet
       ) : (
         <Image image={image} x={0} y={0} width={box.w} height={box.h} fit="fill" sampling={PIXELATED} />
       )}
+      {children}
     </Canvas>
   );
 }

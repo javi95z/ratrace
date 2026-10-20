@@ -24,6 +24,7 @@ test('measures match the design', () => {
 test('extra colours the web uses outside the tokens', () => {
   expect(EXTRA.backdrop).toBe('rgba(11,16,34,0.8)');
   expect(EXTRA.bronze).toBe('#c98a4b');
+  expect(EXTRA.glint).toBe('rgba(255,255,255,0.4)');
   expect(EXTRA.glow).toEqual({
     uncommon: '0 0 6px rgba(240,230,210,0.35)',
     rare: '0 0 12px rgba(233,177,60,0.6)',
