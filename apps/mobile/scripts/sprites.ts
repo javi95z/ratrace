@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
  * Puts the approved sprites where Metro can bundle them, and writes what the app reads, as the web's
  * scripts/sprites.ts does for the browser:
  *
- *   art/clean/<group>/<id>.png   →  assets/sprites/<group>/<id>.png   (not committed; copied before every start)
+ *   art/clean/<group>/<id>.png   →  assets/sprites/<group>/<id>.png   (not committed; copied on every install and before every start)
  *   art/clean/manifest.json      →  src/sprites/manifest.json         (committed; a test fails when it is stale)
  *                                →  src/sprites/sources.ts            (committed: one static require per id, as Metro asks)
  *

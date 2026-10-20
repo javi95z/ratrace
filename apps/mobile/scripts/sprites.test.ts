@@ -28,3 +28,10 @@ test('sources.ts names every sprite with one static require, to a file art/clean
     expect(existsSync(join(here, '../../../art/clean', file))).toBe(true);
   }
 });
+
+test('the sprites are copied on every install (and on EAS after its install): a fresh checkout or a build bundles with no step of its own', () => {
+  const pkg = JSON.parse(read('../package.json')) as { scripts: Record<string, string> };
+  expect(pkg.scripts.sprites).toBe('tsx scripts/sprites.ts');
+  expect(pkg.scripts.postinstall).toBe('pnpm sprites');
+  expect(pkg.scripts['eas-build-post-install']).toBe('pnpm sprites');
+});

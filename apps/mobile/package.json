@@ -48,6 +48,8 @@
   },
   "scripts": {
     "sprites": "tsx scripts/sprites.ts",
+    "postinstall": "pnpm sprites",
+    "eas-build-post-install": "pnpm sprites",
     "start": "pnpm sprites && expo start",
     "android": "pnpm sprites && expo start --android",
     "ios": "pnpm sprites && expo start --ios",
