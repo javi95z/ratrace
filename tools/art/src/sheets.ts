@@ -409,11 +409,11 @@ export const SHEETS: SheetSpec[] = [
   { file: 'icons/icons-12', group: 'icons', kind: 'objects', cols: 2, rows: 1, width: 32, height: 32, ids: ['icon.focus_family', 'icon.focus_rest'] },
   { file: 'badges/badges-08', group: 'badges', kind: 'objects', cols: 1, rows: 1, width: 64, height: 64, ids: ['badge.own_boss'] },
   // A player's rat in layers, back to front: backdrop, body, face, outfit, eyewear, headwear. The bodies
-  // of rat-body-02 have their faces left blank, so that the faces of rat-face-01 can be worn on them.
+  // of rat-body-02 have their faces left blank, so that the faces of rat-face-02 (v19, in profile) can be worn on them.
   ...(
     [
       ['rat-body-02', 'body', false, ['grey', 'brown', 'white', 'black', 'ginger', 'golden', 'slate', 'spotted']],
-      ['rat-face-01', 'face', true, ['calm', 'grin', 'smug', 'wink', 'shock', 'sleepy', 'fierce', 'tears']],
+      ['rat-face-02', 'face', true, ['calm', 'grin', 'smug', 'wink', 'shock', 'sleepy', 'fierce', 'tears']],
       ['rat-outfit-01', 'outfit', true, ['suit', 'tracksuit', 'tuxedo', 'hoodie', 'scrubs', 'hivis', 'chef', 'leather']],
       ['rat-outfit-02', 'outfit', true, ['lab', 'sweater', 'hawaiian', 'varsity', 'robe', 'kimono', 'fur', 'gold']],
       ['rat-hat-01', 'hat', true, ['cap', 'beanie', 'beret', 'hardhat', 'cowboy', 'headphones', 'bandana', 'chef']],
