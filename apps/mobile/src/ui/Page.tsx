@@ -41,23 +41,28 @@ const COLUMN: ViewStyle = { width: '100%', maxWidth: SHELL_WIDTH, alignSelf: 'ce
  * A page's column, scrolling (the web's `main`). The gutter is inside what scrolls, never round it: a scroll clips what
  * it holds, and the outer 2 pt edge of a frame against the gutter (its 4 pt drop) must still show. The scroll stands in
  * from the side insets (the web's body padding); its foot leaves room for a frame's drop and the home indicator.
- * `contentStyle` is the column's own spacing (a gap, the room on top). `fixed` is what stands over the page and does
- * not scroll with it, the web's `position: fixed` (a Toast): placed in the screen's whole box, not in the column.
+ * `contentStyle` is the column's own spacing (a gap, the room on top). `bar` is the screen's `BottomBar`, under the
+ * scroll and across the whole width; it clears the home indicator itself, so then the scroll's foot leaves room for a
+ * frame's drop only. `fixed` is what stands over the page and does not scroll with it, the web's `position: fixed` (a
+ * Toast): placed in the screen's whole box, not in the column.
  */
-export function Screen({ children, contentStyle, fixed }: { children: ReactNode; contentStyle?: ViewStyle; fixed?: ReactNode }) {
+export function Screen({ children, contentStyle, fixed, bar }: { children: ReactNode; contentStyle?: ViewStyle; fixed?: ReactNode; bar?: ReactNode }) {
   const inset = useSafeAreaInsets();
+  // A bar that is not shown this time (`false`, `null`) is no bar: the scroll then clears the home indicator itself.
+  const barred = Boolean(bar);
   const scroll = (
     <ScrollView
       style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
-      contentContainerStyle={[COLUMN, { paddingTop: 16, paddingBottom: 16 + inset.bottom }, contentStyle]}
+      contentContainerStyle={[COLUMN, { paddingTop: 16, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
     >
       {children}
     </ScrollView>
   );
-  if (fixed === undefined) return scroll;
+  if (fixed === undefined && !barred) return scroll;
   return (
     <View style={{ flex: 1 }}>
       {scroll}
+      {bar}
       {fixed}
     </View>
   );

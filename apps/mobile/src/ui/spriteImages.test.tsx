@@ -27,7 +27,7 @@ vi.mock('../sprites/sources', () => ({
   }),
 }));
 
-const { loadSpritesWith } = await import('./spriteImages');
+const { loadSpritesWith, SPRITE_BUDGET_BYTES, useSpriteImage } = await import('./spriteImages');
 const { Sprite } = await import('./Sprite');
 const { RatLayers } = await import('./RatAvatar');
 
@@ -36,9 +36,11 @@ afterEach(() => vi.restoreAllMocks());
 const all = (root: Element, kind: string) => Array.from(root.querySelectorAll(`[data-skia="${kind}"]`));
 /** Lets the loads that are under way settle. */
 const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+/** A decoded picture as Skia's is: it knows its size, and it can be told it is no longer needed. */
+const picture = (src: string, side = 8) => ({ src, width: () => side, height: () => side, dispose: vi.fn() });
 
 test('two hundred sprites of one id in a list: one read and one decode, shared by all', async () => {
-  const load = vi.fn(async (source: unknown) => ({ src: String(source) }) as never);
+  const load = vi.fn(async (source: unknown) => picture(String(source)) as never);
   loadSpritesWith(load);
   const { container } = render(<>{Array.from({ length: 200 }, (_, i) => <Sprite key={i} id="icon.cash" />)}</>);
   await settle();
@@ -72,11 +74,107 @@ test('a read that fails, or a file that does not decode, shows the checkerboard 
 });
 
 test('the rat\'s layers come from the same pictures: two rats of one look read each piece once', async () => {
-  const load = vi.fn(async (source: unknown) => ({ src: String(source) }) as never);
+  const load = vi.fn(async (source: unknown) => picture(String(source)) as never);
   loadSpritesWith(load);
   const look: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
   const { container } = render(<><RatLayers look={look} size={28} /><RatLayers look={look} size={92} /></>);
   await settle();
   expect(load).toHaveBeenCalledTimes(7);
   expect(all(container, 'Image')).toHaveLength(14);
+});
+
+/** A component that draws one sprite's picture: the cache counts it watched for as long as it is on screen. */
+function Watch({ id }: { id: string }) {
+  const { image } = useSpriteImage(id);
+  return <div data-image={(image as unknown as { src?: string } | null)?.src} />;
+}
+/** Puts a sprite on screen and lets its picture arrive; the view's `unmount` takes it off again. */
+async function show(id: string) {
+  const view = render(<Watch id={id} />);
+  await settle();
+  return view;
+}
+
+/** Four mebibytes decoded each (1024 × 1024 × 4), so the budget of 24 holds six. */
+const BIG = 1024;
+function bigPictures() {
+  const made: Array<ReturnType<typeof picture>> = [];
+  const load = vi.fn(async (source: unknown) => {
+    const one = picture(String(source), BIG);
+    made.push(one);
+    return one as never;
+  });
+  loadSpritesWith(load);
+  return {
+    load,
+    /** The pictures let go so far, by sprite (one read twice is let go twice if it is). */
+    disposed: () => made.filter((one) => one.dispose.mock.calls.length > 0).map((one) => one.src),
+    /** The picture of a sprite as last read. */
+    latest: (src: string) => made.findLast((one) => one.src === src)!,
+  };
+}
+
+test('the cache keeps decoded pictures up to 24 MiB, counted as width × height × 4', async () => {
+  expect(SPRITE_BUDGET_BYTES).toBe(24 * 1024 * 1024);
+  const { load, disposed } = bigPictures();
+  // Six of 4 MiB fill the budget exactly: nothing is forgotten, however long ago it was put down.
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) (await show(id)).unmount();
+  expect(disposed()).toEqual([]);
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) (await show(id)).unmount();
+  expect(load).toHaveBeenCalledTimes(6);
+});
+
+test('past the budget the picture drawn longest ago, with no one watching it, is forgotten and disposed; asked for again it is read once more', async () => {
+  const { load, disposed } = bigPictures();
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) (await show(id)).unmount();
+  // The seventh does not fit: the first goes.
+  (await show('g')).unmount();
+  expect(disposed()).toEqual(['src:a']);
+  expect(load).toHaveBeenCalledTimes(7);
+  // The ones that stayed are not read again.
+  (await show('c')).unmount();
+  expect(load).toHaveBeenCalledTimes(7);
+  // The forgotten one is: one read more, and now b (drawn longest ago, c was just drawn again) makes the room.
+  (await show('a')).unmount();
+  expect(load).toHaveBeenCalledTimes(8);
+  expect(disposed()).toEqual(['src:a', 'src:b']);
+});
+
+test('"longest ago" is when a picture was last asked for, not when it was read', async () => {
+  const { disposed } = bigPictures();
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f']) (await show(id)).unmount();
+  // a is drawn again, so b is now the one drawn longest ago.
+  (await show('a')).unmount();
+  (await show('g')).unmount();
+  expect(disposed()).toEqual(['src:b']);
+});
+
+test('a picture someone is watching is never forgotten, however old; the cache then holds more than its budget until it is put down', async () => {
+  const { load, latest, disposed } = bigPictures();
+  const kept = await show('a');
+  for (const id of ['b', 'c', 'd', 'e', 'f']) (await show(id)).unmount();
+  // Past the budget: a, the oldest, is on screen, so b goes instead.
+  (await show('g')).unmount();
+  expect(disposed()).toEqual(['src:b']);
+  expect(latest('src:a').dispose).not.toHaveBeenCalled();
+  // Everything on screen at once: nothing can go, and nothing does.
+  const open = [kept];
+  for (const id of ['c', 'd', 'e', 'f', 'g', 'h']) open.push(await show(id));
+  expect(disposed()).toEqual(['src:b']);
+  expect(load).toHaveBeenCalledTimes(8);
+  // Put down, the oldest are forgotten at once, until the cache is within its budget again.
+  open.forEach((view) => view.unmount());
+  expect(disposed()).toEqual(['src:a', 'src:b']);
+});
+
+test('a sprite that failed to load is never forgotten: it costs nothing and is told once, however much comes after it', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  loadSpritesWith(async (source) => {
+    if (String(source) === 'src:bad') throw new Error('no such file');
+    return picture(String(source), BIG) as never;
+  });
+  (await show('bad')).unmount();
+  for (const id of ['a', 'b', 'c', 'd', 'e', 'f', 'g']) (await show(id)).unmount();
+  (await show('bad')).unmount();
+  expect(warn.mock.calls).toEqual([['sprite did not load: bad']]);
 });

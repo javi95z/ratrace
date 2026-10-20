@@ -28,30 +28,68 @@ const FAILED: SpriteImage = { image: null, failed: true };
 interface Entry {
   state: SpriteImage;
   listeners: Set<() => void>;
+  /** What its picture takes decoded (width × height × 4), counted once it is in; none while loading or failed. */
+  bytes: number;
 }
+
+/** What the decoded pictures may take all together: past it, the ones drawn longest ago that nobody is looking at go. */
+export const SPRITE_BUDGET_BYTES = 24 * 1024 * 1024;
 
 /**
  * Every sprite's picture, read and decoded once for the whole app and shared by every place that draws it: a list of
- * two hundred coins is one read and one decode, not two hundred. Kept for as long as the app runs (the art is small:
- * a few kilobytes a sprite decoded, the largest, a 128 px rat layer, 64 KB).
+ * two hundred coins is one read and one decode, not two hundred. Kept up to the budget: all the art decoded would take
+ * about 60 MiB (a sprite is mostly 64 KB, the largest, the world map, 540 KB), and a screen draws a small part of it.
+ * The map is in the order the sprites were last asked for, the one drawn longest ago first.
  */
 const cache = new Map<string, Entry>();
+/** What the pictures in the cache take decoded, all together. */
+let held = 0;
 let load: LoadSprite = readAndDecode;
 
 /** Tests only: reads sprites with `next` from now on, everything read before forgotten. */
 export function loadSpritesWith(next: LoadSprite): void {
   load = next;
   cache.clear();
+  held = 0;
 }
 
-/** The entry of a sprite that has a file, its read begun the first time it is asked for. */
+/**
+ * Forgets pictures, the one drawn longest ago first, until the cache is within its budget. A picture someone is looking
+ * at (it has a listener) is never forgotten, nor a sprite that failed (it takes nothing, and must be told once): so the
+ * cache may hold more than its budget while the screen needs it, and is trimmed as soon as the screen lets go.
+ */
+function trim(): void {
+  for (const [id, entry] of cache) {
+    if (held <= SPRITE_BUDGET_BYTES) return;
+    if (entry.listeners.size > 0 || !entry.state.image) continue;
+    cache.delete(id);
+    held -= entry.bytes;
+    const { image } = entry.state;
+    // Whoever still holds this entry (drawn, not yet watching) sees its state change, draws again and asks anew: never a
+    // picture that was let go. (A new object, so that it differs from the loading one such a holder may have seen.)
+    entry.state = { image: null, failed: false };
+    image.dispose();
+  }
+}
+
+/** The entry of a sprite that has a file, its read begun the first time it is asked for. Asked for, it is the last one drawn. */
 function entryOf(id: string, source: ImageSourcePropType): Entry {
   const known = cache.get(id);
-  if (known) return known;
-  const entry: Entry = { state: LOADING, listeners: new Set() };
+  if (known) {
+    cache.delete(id);
+    cache.set(id, known);
+    return known;
+  }
+  const entry: Entry = { state: LOADING, listeners: new Set(), bytes: 0 };
   cache.set(id, entry);
   const settle = (state: SpriteImage) => {
     entry.state = state;
+    // Forgotten while it was being read (the cache was cleared): not counted, not kept.
+    if (state.image && cache.get(id) === entry) {
+      entry.bytes = state.image.width() * state.image.height() * 4;
+      held += entry.bytes;
+      trim();
+    }
     for (const listener of entry.listeners) listener();
   };
   const fail = () => {
@@ -74,7 +112,11 @@ export function useSpriteImage(id: string | null | undefined): SpriteImage {
     (listener: () => void) => {
       if (!entry) return nothing();
       entry.listeners.add(listener);
-      return () => entry.listeners.delete(listener);
+      return () => {
+        entry.listeners.delete(listener);
+        // Put down, it may be what kept the cache over its budget.
+        trim();
+      };
     },
     [entry],
   );

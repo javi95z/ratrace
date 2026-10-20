@@ -53,7 +53,7 @@ const { RatAvatar, RatLayers } = await import('./RatAvatar');
 afterEach(() => vi.restoreAllMocks());
 // Every picture decoded as soon as it is asked for: what each test looks at is what is drawn once it is in.
 beforeEach(async () => {
-  loadSpritesWith(async (source) => ({ src: String(source) }) as never);
+  loadSpritesWith(async (source) => ({ src: String(source), width: () => 8, height: () => 8, dispose: () => {} }) as never);
 });
 /** Renders, then lets the pictures asked for arrive. */
 async function drawn(ui: React.ReactElement) {

@@ -36,14 +36,15 @@ function placeOf(path: string, from: string): string {
 
 /**
  * Everything a file imports, however it is written: an import statement, a late `import()`, an import for its effects
- * alone, and Metro's `require()` (how the phone loads an asset, a font, or a module only when it is needed).
+ * alone, and Metro's `require()` (how the phone loads an asset, a font, or a module only when it is needed). `typeOnly`
+ * is an `import type`: it leaves nothing in the app.
  */
-function importsIn(path: string, source: string): Array<{ names: string; from: string }> {
-  const named = [...source.matchAll(/import\s+(?:type\s+)?([^;'"]*?)\s+from\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: m[1], from: m[2] }));
-  const late = [...source.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => ({ names: '*', from: m[1] }));
-  const bare = [...source.matchAll(/(?:^|[;\n])\s*import\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: '', from: m[1] }));
-  const required = [...source.matchAll(/(?:const\s+([^=]+?)\s*=\s*)?\brequire\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => ({ names: m[1] ?? '*', from: m[2] }));
-  return [...named, ...late, ...bare, ...required].map((one) => ({ names: one.names, from: placeOf(path, one.from) }));
+function importsIn(path: string, source: string): Array<{ names: string; from: string; typeOnly: boolean }> {
+  const named = [...source.matchAll(/import\s+(type\s+)?([^;'"]*?)\s+from\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: m[2], from: m[3], typeOnly: m[1] !== undefined }));
+  const late = [...source.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => ({ names: '*', from: m[1], typeOnly: false }));
+  const bare = [...source.matchAll(/(?:^|[;\n])\s*import\s+['"]([^'"]+)['"]/g)].map((m) => ({ names: '', from: m[1], typeOnly: false }));
+  const required = [...source.matchAll(/(?:const\s+([^=]+?)\s*=\s*)?\brequire\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => ({ names: m[1] ?? '*', from: m[2], typeOnly: false }));
+  return [...named, ...late, ...bare, ...required].map((one) => ({ ...one, from: placeOf(path, one.from) }));
 }
 const importsOf = (path: string) => importsIn(path, readFileSync(path, 'utf8'));
 
@@ -52,6 +53,24 @@ const mine = all.filter((path) => rootOf(path) === SRC);
 /** What draws the game: the routes, the kit and the screens. The session and the one file that wires it are behind the wall. */
 const screens = mine.filter((path) => /^(app|ui|game\/screens)\//.test(rel(path)));
 const MOVES = /\b(applyCard|applyCards|applyRound|createGame)\b/;
+
+/** A file by the place the rules name it, in whichever tree it lives. */
+const fileAt = (place: string) => all.find((path) => rel(path) === place) as string;
+/** What a screen may not take of the round store: anything but its types. The store is built where the game is wired, and read through `useGame`. */
+const takesStoreInternals = (path: string, source: string): string[] =>
+  importsIn(path, source).filter((i) => i.from === '@/game/store' && !i.typeOnly).map((i) => `${i.names} from the round store`);
+
+/** What a screen may not reach on the device: the phone's stores, a browser's, and the session's internals (its types are free). */
+const DEVICE = /^(expo-sqlite(\/.*)?|expo-secure-store|expo-file-system(\/.*)?|@react-native-async-storage\/.*|idb|fake-indexeddb|@\/kvStore)$/;
+const touchesDevice = (path: string, source: string): string[] =>
+  importsIn(path, source)
+    .filter(({ from }) => DEVICE.test(from) || /^@\/session\/(?!types$)/.test(from))
+    .map(({ from }) => `imports ${from}`);
+
+/** Every storage of the device, by name: the phone's SQLite and AsyncStorage, the browser's three. */
+const namesStorage = (source: string): boolean => /\b(expo-sqlite|AsyncStorage|localStorage|sessionStorage|indexedDB)\b/.test(source);
+/** The only two files that may name one: the phone's store, and the context that wires it into the game. */
+const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'game/context.tsx')];
 
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
@@ -65,6 +84,15 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(importsIn(screen, "import {\n  applyRound,\n} from '@ratrace/engine';")[0].names).toContain('applyRound');
   });
 
+  it('sees the core as the tree it came from', () => {
+    expect(placeOf(join(SRC, 'game/screens/Anything.tsx'), '@ratrace/core/session/local')).toBe('@/session/local');
+    expect(placeOf(join(CORE, 'game/store.ts'), '../session/memory')).toBe('@/session/memory');
+    expect(placeOf(join(SRC, 'game/context.tsx'), '../kvStore')).toBe('@/kvStore');
+    expect(rel(fileAt('game/present.ts'))).toBe('game/present.ts');
+    expect(rootOf(fileAt('game/present.ts'))).toBe(CORE);
+    expect(rootOf(fileAt('game/context.tsx'))).toBe(SRC);
+  });
+
   it('finds the screens', () => {
     const names = screens.map(rel);
     for (const screen of ['app/_layout.tsx', 'app/index.tsx', 'app/kit.tsx', 'ui/kit.tsx', 'ui/Page.tsx', 'game/screens/Placeholder.tsx']) expect(names).toContain(screen);
@@ -73,18 +101,58 @@ describe('the wall between the phone\'s screens and the game', () => {
   it('lets no screen change the game except through the session', () => {
     const broke = screens.flatMap((path) => importsOf(path).filter((i) => i.from === '@ratrace/engine' && MOVES.test(i.names)).map((i) => `${rel(path)}: ${i.names}`));
     expect(broke).toEqual([]);
-    const wiring = importsOf(join(SRC, 'game/context.tsx')).filter((i) => i.from === '@ratrace/engine' && MOVES.test(i.names));
-    expect(wiring).toEqual([]);
+  });
+
+  it('lets the round store reach the game only through the session too', () => {
+    for (const file of ['game/store.ts', 'game/present.ts', 'game/context.tsx']) {
+      expect(fileAt(file), file).toBeDefined();
+      const broke = importsOf(fileAt(file)).filter((i) => i.from === '@ratrace/engine' && MOVES.test(i.names));
+      expect(broke, file).toEqual([]);
+    }
+  });
+
+  it('lets no screen take anything of the round store but its types: the store is built where the game is wired, and read through useGame', () => {
+    const screen = join(SRC, 'game/screens/Anything.tsx');
+    expect(takesStoreInternals(screen, "import { createGameStore } from '@ratrace/core/game/store';")).toEqual(['{ createGameStore } from the round store']);
+    expect(takesStoreInternals(screen, "import { PENDING_AFTER_MS, type Stage } from '@ratrace/core/game/store';")).toEqual(['{ PENDING_AFTER_MS, type Stage } from the round store']);
+    expect(takesStoreInternals(screen, "const { createGameStore } = require('@ratrace/core/game/store');")).toEqual(['{ createGameStore } from the round store']);
+    expect(takesStoreInternals(screen, "const { createGameStore } = await import('@ratrace/core/game/store');")).toEqual(['* from the round store']);
+    expect(takesStoreInternals(screen, "import type { Stage } from '@ratrace/core/game/store';")).toEqual([]);
+    expect(takesStoreInternals(screen, "import { useGame } from '@/game/context';\nimport { orderLabel } from '@ratrace/core/game/present';")).toEqual([]);
+    expect(screens.flatMap((path) => takesStoreInternals(path, readFileSync(path, 'utf8')).map((one) => `${rel(path)}: ${one}`))).toEqual([]);
   });
 
   it('lets no screen touch the device: no store of the phone, no session internals', () => {
-    const DEVICE = /^(expo-sqlite(\/.*)?|expo-secure-store|expo-file-system(\/.*)?|@react-native-async-storage\/.*|@\/kvStore)$/;
-    const broke = screens.flatMap((path) =>
-      importsOf(path)
-        .filter(({ from }) => DEVICE.test(from) || /^@\/session\/(?!types$)/.test(from))
-        .map(({ from }) => `${rel(path)} imports ${from}`),
-    );
+    const screen = join(SRC, 'game/screens/Anything.tsx');
+    expect(touchesDevice(screen, "import 'expo-sqlite/kv-store';\nimport './Home';")).toEqual(['imports expo-sqlite/kv-store']);
+    expect(touchesDevice(screen, "import Storage from 'expo-sqlite';")).toEqual(['imports expo-sqlite']);
+    expect(touchesDevice(screen, "import AsyncStorage from '@react-native-async-storage/async-storage';")).toEqual(['imports @react-native-async-storage/async-storage']);
+    expect(touchesDevice(screen, "import { KvStore } from '../../kvStore';")).toEqual(['imports @/kvStore']);
+    expect(touchesDevice(screen, "const { LocalSessions } = await import('@ratrace/core/session/local');")).toEqual(['imports @/session/local']);
+    expect(touchesDevice(screen, "import { openDB } from 'idb';")).toEqual(['imports idb']);
+    expect(touchesDevice(screen, "import type { Profile } from '@ratrace/core/session/types';\nimport './Home';")).toEqual([]);
+    const broke = screens.flatMap((path) => touchesDevice(path, readFileSync(path, 'utf8')).map((one) => `${rel(path)} ${one}`));
     expect(broke).toEqual([]);
+  });
+
+  it('keeps every storage of the device in two files: the phone\'s store and the game context that wires it', () => {
+    expect(namesStorage("import Storage from 'expo-sqlite/kv-store';")).toBe(true);
+    expect(namesStorage("await AsyncStorage.getItem('x');")).toBe(true);
+    expect(namesStorage("const saved = localStorage.getItem('x');")).toBe(true);
+    expect(namesStorage("sessionStorage.clear();")).toBe(true);
+    expect(namesStorage("indexedDB.open('x');")).toBe(true);
+    expect(namesStorage("const storage = props.storage; // an IndexedDB on the web")).toBe(false);
+    expect(STORAGE_FILES.map((file) => relative(SRC, file))).toEqual(['kvStore.ts', 'game/context.tsx']);
+    expect(all.filter((path) => namesStorage(readFileSync(path, 'utf8'))).filter((path) => !STORAGE_FILES.includes(path)).map(rel)).toEqual([]);
+    // The two that may name it do (a rule that finds nothing in them would find nothing anywhere).
+    expect(namesStorage(readFileSync(STORAGE_FILES[0], 'utf8'))).toBe(true);
+  });
+
+  it('keeps the engine and the content out of the phone\'s store', () => {
+    const imports = importsOf(join(SRC, 'kvStore.ts')).map((i) => i.from);
+    expect(imports).toContain('expo-sqlite/kv-store');
+    expect(imports).not.toContain('@ratrace/engine');
+    expect(imports).not.toContain('@ratrace/content');
   });
 
   it('lets no screen judge a badge, an unlock or what a life adds to the profile', () => {
@@ -103,10 +171,20 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(screens.flatMap((path) => reaches(path).map((i) => `${rel(path)}: ${i.from}`))).toEqual([]);
     const wires = mine.filter((path) => reaches(path).length > 0).map(rel);
     expect(wires.filter((file) => file !== 'game/context.tsx')).toEqual([]);
+    // And the client library is named in no file of the phone or the core: only `@ratrace/online/connect` loads it.
+    const named = all.filter((path) => importsOf(path).some((i) => i.from === '@supabase/supabase-js') || /import\('@supabase\/supabase-js'\)/.test(readFileSync(path, 'utf8'))).map(rel);
+    expect(named).toEqual([]);
   });
 
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {
+    // The engine's quotes, previews and score breakdown give every figure. A screen that reads one of
+    // these tables is working a figure out itself. (Tax rates are shown, not used: they come from `effectiveTax`.)
     const TABLES = /\b(mortgageMaxLtvBp|purchaseTaxBp|propertyTaxBp|personalLoanSpreadBp|moveCostPct|wealthBreakpoints|escapeBase|escapePerRoundLeft|resaleStartPct|insurancePremiumBp|lifestyleMultiplierPct|rentalOnly|rentPct)\b/;
-    expect(screens.filter((path) => TABLES.test(readFileSync(path, 'utf8'))).map(rel)).toEqual([]);
+    // The presenters, the round store and the other pure helpers of the game turn engine figures into words and
+    // pictures; they are held to the same rule as the screens they serve.
+    const helpers = all.filter((path) => /^game\/[a-z]+\.ts$/.test(rel(path)));
+    expect(helpers.map(rel)).toEqual(expect.arrayContaining(['game/present.ts', 'game/store.ts', 'game/records.ts', 'game/guide.ts', 'game/share.ts']));
+    const broke = [...screens, ...helpers].filter((path) => TABLES.test(readFileSync(path, 'utf8'))).map(rel);
+    expect(broke).toEqual([]);
   });
 });

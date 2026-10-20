@@ -80,6 +80,48 @@ test('what is fixed over a Screen stands in the screen\'s whole box, outside wha
   expect(column.parentElement!.parentElement!.contains(getByText('toast'))).toBe(true);
 });
 
+test('a Screen with a bar: the bar is under the scroll, across the screen, and the scroll pads 16 only, since the bar already adds the inset', () => {
+  const { getByText } = wrap(
+    { ...none, bottom: 34, left: 5, right: 7 },
+    <Screen bar={<BottomBar><Text>bar</Text></BottomBar>}><Text>hi</Text></Screen>,
+  );
+  const column = up(getByText('hi'), (s) => s.maxWidth === '448px')!;
+  expect(column.style.paddingBottom).toBe('16px');
+  // The bar is a sibling after the scroll, in the screen's one box: it does not scroll away.
+  const scroll = column.parentElement!;
+  const box = scroll.parentElement!;
+  expect(scroll.contains(getByText('bar'))).toBe(false);
+  expect(box.contains(getByText('bar'))).toBe(true);
+  expect(box.lastElementChild!.contains(getByText('bar'))).toBe(true);
+  expect(box.style.flexGrow).toBe('1');
+  // The inset is the bar's, once: the home indicator is cleared by the bar, not by the scroll as well.
+  const bar = up(getByText('bar'), (s) => s.paddingBottom !== '')!;
+  expect(bar.style.paddingBottom).toBe('34px');
+  expect(bar.parentElement).toBe(box);
+  // Full width: the screen's box has no side padding for the bar to fit inside (the bar pads its own side insets).
+  expect(box.style.paddingLeft).toBe('');
+  expect(bar.style.paddingLeft).toBe('5px');
+  expect(bar.style.paddingRight).toBe('7px');
+});
+
+test('a Screen whose bar is not shown this time pads as one with none: the scroll clears the home indicator itself', () => {
+  const { getByText } = wrap({ ...none, bottom: 34 }, <Screen bar={false}><Text>hi</Text></Screen>);
+  const column = up(getByText('hi'), (s) => s.maxWidth === '448px')!;
+  expect(column.style.paddingBottom).toBe(`${16 + 34}px`);
+});
+
+test('a Screen with a bar and something fixed keeps both: the bar under the scroll, the fixed piece over the whole box', () => {
+  const { getByText } = wrap(
+    { ...none, bottom: 34 },
+    <Screen bar={<BottomBar><Text>bar</Text></BottomBar>} fixed={<Text>toast</Text>}><Text>hi</Text></Screen>,
+  );
+  const column = up(getByText('hi'), (s) => s.maxWidth === '448px')!;
+  const box = column.parentElement!.parentElement!;
+  expect(box.contains(getByText('bar'))).toBe(true);
+  expect(box.contains(getByText('toast'))).toBe(true);
+  expect(column.contains(getByText('toast'))).toBe(false);
+});
+
 test('a Screen takes the caller\'s own spacing of its content', () => {
   const { getByText } = wrap(none, <Screen contentStyle={{ gap: 16, paddingTop: 4 }}><Text>hi</Text></Screen>);
   const column = up(getByText('hi'), (s) => s.maxWidth === '448px')!;
