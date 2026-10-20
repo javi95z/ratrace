@@ -101,6 +101,15 @@ test('Tile presses with the tap sound, on night-600', () => {
   expect(tap).toHaveBeenCalledTimes(1);
 });
 
+test('a Bare in a Tile is centred, as the web\'s tile centres its picture', () => {
+  render(<Tile onPress={() => {}}><Bare><span>{'pic'}</span></Bare></Tile>);
+  const bare = screen.getByText('pic').parentElement as HTMLElement;
+  expect(bare.style.alignSelf).toBe('');
+  let tile: HTMLElement | null = bare.parentElement;
+  while (tile && tile.style.alignItems !== 'center') tile = tile.parentElement;
+  expect(tile).not.toBeNull();
+});
+
 test('Panel with a title renders the tab and pads 20 on top', () => {
   render(<Panel title="Wages"><span>{'body'}</span></Panel>);
   const panel = backed(screen.getByText('body'));
@@ -246,6 +255,14 @@ test('a Bar clamps: empty lights none, over the max lights all 16', () => {
   cleanup();
   render(<Bar value={99} max={16} label="P" />);
   expect(screen.getAllByTestId('lamp-lit')).toHaveLength(16);
+});
+
+test('a Bar door stands 2 into the web\'s 14 column: 12 wide, 14 tall', () => {
+  render(<Bar value={3} max={16} label="P" door />);
+  const door = screen.getByTestId('door');
+  expect(door.style.width).toBe('12px');
+  expect(door.style.height).toBe('14px');
+  expect(door.style.marginLeft).toBe('2px');
 });
 
 test('a Bar door is shut until the last lamp is lit', () => {
@@ -451,4 +468,38 @@ test('a disabled Toggle does not change or tap', () => {
   fireEvent.click(screen.getByRole('switch'));
   expect(onChange).not.toHaveBeenCalled();
   expect(tap).not.toHaveBeenCalled();
+});
+
+test('the web\'s leading-tight (1.25) is every small line: a Stat\'s label, a choice\'s hint, a Tag, a Toggle\'s hint', () => {
+  render(
+    <>
+      <Stat icon="coin" value="1" label="Cash" />
+      <Segmented label="Risk" value="a" onChange={() => {}} options={[{ value: 'a', label: 'A', hint: '2 %' }]} />
+      <Tag>{'Rent'}</Tag>
+      <Toggle on onChange={() => {}} label="Sound" hint="Clicks" />
+    </>,
+  );
+  expect(parseFloat(textOf('Cash').style.lineHeight)).toBeCloseTo(13.75, 5);
+  expect(parseFloat(textOf('2 %').style.lineHeight)).toBeCloseTo(13.75, 5);
+  expect(parseFloat(textOf('Rent').style.lineHeight)).toBeCloseTo(15, 5);
+  expect(parseFloat(textOf('Clicks').style.lineHeight)).toBeCloseTo(15, 5);
+});
+
+/** How many strips a Framed box draws outside its own box (anchored at a negative offset). */
+function outside(el: HTMLElement): number {
+  return Array.from(el.children).filter((c) => {
+    const st = (c as HTMLElement).style;
+    return st.position === 'absolute' && [st.top, st.left, st.bottom, st.right].some((v) => v.startsWith('-'));
+  }).length;
+}
+
+test('the switch and the Bar are the web\'s `frame sunk`, where `sunk` wins: a sunk edge, no outline round them', () => {
+  render(<Toggle on onChange={() => {}} label="Sound" />);
+  expect(outside(screen.getByTestId('switch'))).toBe(0);
+  cleanup();
+  render(<Bar value={1} max={2} label="x" />);
+  let box: HTMLElement | null = screen.getByRole('progressbar');
+  while (box && box.style.padding !== '3px' && box.style.paddingTop !== '3px') box = box.parentElement;
+  expect(box).not.toBeNull();
+  expect(outside(box!)).toBe(0);
 });

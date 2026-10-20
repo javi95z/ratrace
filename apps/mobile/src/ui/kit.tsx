@@ -4,7 +4,7 @@ import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
-import { PixelText, ReadText } from './text';
+import { PixelText, ReadText, TIGHT } from './text';
 import { useTap } from './tap';
 import { COLORS, TOUCH, type ColorToken } from './theme';
 
@@ -168,14 +168,15 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words
   const { bg, fg } = TONE[tone];
   return (
     <View style={{ alignSelf: 'flex-start', backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
-      <PixelText size={12} tone={fg} style={{ lineHeight: 15 }}>{String(children)}</PixelText>
+      <PixelText size={12} tone={fg} style={{ lineHeight: 12 * TIGHT }}>{String(children)}</PixelText>
     </View>
   );
 }
 
 /** Holds an icon or the picture of a thing straight on the surface it is on, with nothing behind it. */
-export function Bare({ children }: { children: ReactNode }) {
-  return <View style={{ flexShrink: 0, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' }}>{children}</View>;
+export function Bare({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+  // Placed as its parent places its children, as the web's inline-flex is in a flex box: centred in a Tile.
+  return <View style={[{ flexShrink: 0, alignItems: 'center', justifyContent: 'center' }, style]}>{children}</View>;
 }
 
 /** A dark well, sunk into the page. It is the backdrop of a portrait; icons and things go in a `Bare`. */
@@ -227,11 +228,6 @@ export function KeyFigure({ children, tone = 'gold' }: { children: Words; tone?:
   );
 }
 
-/** The web's `sunk`, laid over a framed box: a dark edge along its top and left, inside it. */
-function SunkEdge() {
-  return <Framed kind="sunk" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />;
-}
-
 /** The width of the row a Stat stands in, which is what the web's container queries ask. Null until measured. */
 const StatRowWidth = createContext<{ width: number | null } | null>(null);
 
@@ -281,10 +277,10 @@ export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: 
         </View>
       ) : null}
       <View style={{ flexShrink: 1, minWidth: 0 }}>
-        <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} style={{ letterSpacing: 0 }}>
+        <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} tracking={false}>
           {String(value)}
         </PixelText>
-        <ReadText size={11} tone="ink-200" numberOfLines={1} style={{ lineHeight: 14 }}>{String(label)}</ReadText>
+        <ReadText size={11} tone="ink-200" numberOfLines={1} style={{ lineHeight: 11 * TIGHT }}>{String(label)}</ReadText>
       </View>
     </>
   );
@@ -346,11 +342,11 @@ export function Bar({ value, max, label, tone = 'gold', door = false }: { value:
   const open = filled === LAMPS;
   const lamp = LAMP[tone];
   return (
+    // The web's `frame sunk`: both utilities set the box-shadow and `sunk` comes later, so only the sunk edge is drawn.
     <Framed
-      kind="frame"
+      kind="sunk"
       style={{ backgroundColor: COLORS['night-900'], padding: 3, flexDirection: 'row', alignItems: 'center', gap: 2 }}
     >
-      <SunkEdge />
       <View
         accessible
         accessibilityRole="progressbar"
@@ -375,7 +371,8 @@ export function Bar({ value, max, label, tone = 'gold', door = false }: { value:
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
           {...{ dataSet: { state: open ? 'open' : 'shut' } }}
-          style={{ width: 14, height: 14, marginLeft: 2, backgroundColor: COLORS[open ? 'gold-200' : 'teal-600'] }}
+          // The web's column of 14, the door 2 in from its left: 12 wide, 14 tall.
+          style={{ width: 12, height: 14, marginLeft: 2, backgroundColor: COLORS[open ? 'gold-200' : 'teal-600'] }}
         >
           {open ? null : (
             <>
@@ -460,7 +457,7 @@ function Segment<T extends string | number>({ option, on, onChange, wide }: { op
         ) : null}
         <PixelText size={14} tone={on ? 'ink-900' : 'ink-200'} style={{ textAlign: 'center' }}>{String(option.label)}</PixelText>
         {option.hint !== undefined ? (
-          <ReadText size={11} tone={on ? 'ink-500' : 'ink-200'} style={{ textAlign: 'center', lineHeight: 14 }}>{String(option.hint)}</ReadText>
+          <ReadText size={11} tone={on ? 'ink-500' : 'ink-200'} style={{ textAlign: 'center', lineHeight: 11 * TIGHT }}>{String(option.hint)}</ReadText>
         ) : null}
       </Framed>
     </Pressable>
@@ -527,14 +524,14 @@ export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { 
         ) : null}
         <View style={{ flex: 1, minWidth: 0 }}>
           <PixelText size={15}>{String(label)}</PixelText>
-          {hint !== undefined ? <ReadText size={12} tone="ink-200" style={{ lineHeight: 15 }}>{String(hint)}</ReadText> : null}
+          {hint !== undefined ? <ReadText size={12} tone="ink-200" style={{ lineHeight: 12 * TIGHT }}>{String(hint)}</ReadText> : null}
         </View>
+        {/* `frame sunk` on the web, where the later `sunk` wins: a sunk edge and no outline. */}
         <Framed
-          kind="frame"
+          kind="sunk"
           testID="switch"
           style={{ width: 40, height: 20, flexShrink: 0, backgroundColor: COLORS[on ? 'teal-600' : 'night-900'] }}
         >
-          <SunkEdge />
           <Knob on={on} />
         </Framed>
       </Framed>
