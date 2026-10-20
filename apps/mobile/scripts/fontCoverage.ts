@@ -1,9 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * What each of the game's fonts draws, and how tall its small letters stand, read from the TTF files
+ * What each of the game's fonts draws, how tall its small letters stand and where its lines stand, read from the TTF files
  * themselves and written to src/ui/fontCoverage.ts (committed; a test fails when it is stale).
  *
  *   pnpm --filter @ratrace/mobile exec tsx scripts/fontCoverage.ts
@@ -34,6 +34,9 @@ export function fontPath(family: FontFamily): string {
 export interface FontFacts {
   unitsPerEm: number;
   sxHeight: number;
+  /** hhea ascender and descender (the descender negative), in font units: what a line of the font stands on. */
+  ascender: number;
+  descender: number;
   /** Code points the font draws, as sorted [first, last] pairs, flattened. */
   ranges: number[];
 }
@@ -111,10 +114,13 @@ export function readFont(path: string): FontFacts {
   const head = tableOf(view, 'head');
   const os2 = tableOf(view, 'OS/2');
   const cmap = tableOf(view, 'cmap');
+  const hhea = tableOf(view, 'hhea');
   return {
     unitsPerEm: view.getUint16(head.offset + 18),
     // OS/2 version 2+ carries sxHeight at byte 86.
     sxHeight: view.getInt16(os2.offset + 86),
+    ascender: view.getInt16(hhea.offset + 4),
+    descender: view.getInt16(hhea.offset + 6),
     ranges: cmapRanges(view, cmap.offset),
   };
 }
@@ -130,6 +136,9 @@ export function buildCoverage(): string {
   ];
   const facts = families.map((f) => [f, readFont(fontPath(f))] as const);
   for (const [f, d] of facts) lines.push(`  ${f}: ${d.sxHeight / d.unitsPerEm},`);
+  lines.push('};', '', '/** Ascent and descent over the em, by family (hhea ascender and -descender / head unitsPerEm): where a line puts its baseline. */');
+  lines.push('export const METRICS: Record<string, { ascent: number; descent: number }> = {');
+  for (const [f, d] of facts) lines.push(`  ${f}: { ascent: ${d.ascender / d.unitsPerEm}, descent: ${-d.descender / d.unitsPerEm} },`);
   lines.push('};', '', '/** What each family draws: sorted [first, last] code point pairs, flattened. */', 'export const COVERAGE: Record<string, number[]> = {');
   // The weights of one family draw the same signs; the table keeps one list per family name the app uses.
   for (const [f, d] of facts) lines.push(`  ${f}: [${d.ranges.join(',')}],`);
@@ -137,7 +146,30 @@ export function buildCoverage(): string {
   return lines.join('\n');
 }
 
+/**
+ * Arial, the stand-in next/font names after Jersey and Chakra (and that iOS and macOS ship): which signs it draws decides
+ * whether the web shows a sign in it or in the system's fallback. Read from macOS's copy, so only written on a Mac.
+ */
+export const ARIAL_FILE = '/System/Library/Fonts/Supplemental/Arial.ttf';
+const arialOut = join(here, '../src/ui/arialCoverage.ts');
+
+/** The text of src/ui/arialCoverage.ts. */
+export function buildArialCoverage(): string {
+  const { ranges } = readFont(ARIAL_FILE);
+  return [
+    "// Written by apps/mobile/scripts/fontCoverage.ts from macOS's Arial. Do not edit by hand.",
+    '',
+    '/** What Arial draws: sorted [first, last] code point pairs, flattened. */',
+    `export const ARIAL_COVERAGE: number[] = [${ranges.join(',')}];`,
+    '',
+  ].join('\n');
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   writeFileSync(out, buildCoverage());
   console.log(`wrote ${out}`);
+  if (existsSync(ARIAL_FILE)) {
+    writeFileSync(arialOut, buildArialCoverage());
+    console.log(`wrote ${arialOut}`);
+  }
 }

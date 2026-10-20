@@ -1,5 +1,6 @@
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
-import { COVERAGE, X_HEIGHT } from './fontCoverage';
+import { ARIAL_COVERAGE } from './arialCoverage';
+import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
 
 /*
  * The web sets type in two stacks (apps/web/src/app/globals.css):
@@ -52,11 +53,56 @@ export interface Run {
   scale: number;
 }
 
-const CYRILLIC = /\p{Script=Cyrillic}/u;
-const SPACE = /\s/u;
 
-function drawn(family: string, point: number): boolean {
-  const ranges = COVERAGE[family];
+/**
+ * What the web's fonts are asked for: Google's subsets, each an @font-face with its own unicode-range (next/font
+ * declares every subset a family has, and loads the ones a page uses). A character outside them is never drawn by
+ * that font on the web, even where the font file has it: `→` and `▼` are in Chakra's file but in none of its subsets.
+ */
+const RANGES = {
+  latin: [0x0, 0xff, 0x131, 0x131, 0x152, 0x153, 0x2bb, 0x2bc, 0x2c6, 0x2c6, 0x2da, 0x2da, 0x2dc, 0x2dc, 0x304, 0x304, 0x308, 0x308, 0x329, 0x329, 0x2000, 0x206f, 0x20ac, 0x20ac, 0x2122, 0x2122, 0x2191, 0x2191, 0x2193, 0x2193, 0x2212, 0x2212, 0x2215, 0x2215, 0xfeff, 0xfeff, 0xfffd, 0xfffd],
+  latinExt: [0x100, 0x2ba, 0x2bd, 0x2c5, 0x2c7, 0x2cc, 0x2ce, 0x2d7, 0x2dd, 0x2ff, 0x304, 0x304, 0x308, 0x308, 0x329, 0x329, 0x1d00, 0x1dbf, 0x1e00, 0x1e9f, 0x1ef2, 0x1eff, 0x2020, 0x2020, 0x20a0, 0x20ab, 0x20ad, 0x20c4, 0x2113, 0x2113, 0x2c60, 0x2c7f, 0xa720, 0xa7ff],
+  vietnamese: [0x102, 0x103, 0x110, 0x111, 0x128, 0x129, 0x168, 0x169, 0x1a0, 0x1a1, 0x1af, 0x1b0, 0x300, 0x301, 0x303, 0x304, 0x308, 0x309, 0x323, 0x323, 0x329, 0x329, 0x1ea0, 0x1ef9, 0x20ab, 0x20ab],
+  thai: [0x2d7, 0x2d7, 0x303, 0x303, 0x331, 0x331, 0xe01, 0xe5b, 0x200c, 0x200d, 0x25cc, 0x25cc],
+  cyrillic: [0x301, 0x301, 0x400, 0x45f, 0x490, 0x491, 0x4b0, 0x4b1, 0x2116, 0x2116],
+  cyrillicExt: [0x460, 0x52f, 0x1c80, 0x1c8a, 0x20b4, 0x20b4, 0x2de0, 0x2dff, 0xa640, 0xa69f, 0xfe2e, 0xfe2f],
+};
+const SUBSETS: Record<string, number[][]> = {
+  [JERSEY]: [RANGES.latin, RANGES.latinExt],
+  ChakraPetch_400Regular: [RANGES.latin, RANGES.latinExt, RANGES.vietnamese, RANGES.thai],
+  ChakraPetch_600SemiBold: [RANGES.latin, RANGES.latinExt, RANGES.vietnamese, RANGES.thai],
+  [OSWALD]: [RANGES.latin, RANGES.latinExt, RANGES.vietnamese, RANGES.cyrillic, RANGES.cyrillicExt],
+  Exo2_400Regular: [RANGES.latin, RANGES.latinExt, RANGES.vietnamese, RANGES.cyrillic, RANGES.cyrillicExt],
+  Exo2_600SemiBold: [RANGES.latin, RANGES.latinExt, RANGES.vietnamese, RANGES.cyrillic, RANGES.cyrillicExt],
+};
+
+/**
+ * The stand-in next/font names after each font on every page but a Russian one: Arial, sized to the font's measure.
+ * On those pages it takes whatever Arial draws and the font itself does not.
+ */
+export const ARIAL = 'Arial';
+/**
+ * Where none of them draws a sign, the browser goes on to the system's fonts (Chrome said which: `CSS.getPlatformFontsForNode`):
+ * a dingbat (✕ ✓) from Zapf Dingbats, anything else (▸) from the system font, which iOS calls System. Both ship with iOS.
+ */
+export const SYSTEM = 'System';
+export const DINGBATS = 'Zapf Dingbats';
+const isDingbat = (point: number) => point >= 0x2700 && point <= 0x27bf;
+/** The stand-in's `size-adjust` after Chakra (the web's generated `Chakra Petch Fallback`). */
+const ARIAL_FOR_CHAKRA = 1.0251;
+/** Arial's small-letter height over the em (1062/2048), for the pixel text's `font-size-adjust`. */
+const ARIAL_X_HEIGHT = 1062 / 2048;
+/** The system font's small-letter height (SF, 1040/2048). */
+const SYSTEM_X_HEIGHT = 1040 / 2048;
+/** Line metrics of those that are not the game's: Arial (hhea 1854/−434 of 2048), SF (1980/−432), Zapf Dingbats (1667/−362). */
+const OTHER_METRICS: Record<string, { ascent: number; descent: number }> = {
+  [ARIAL]: { ascent: 1854 / 2048, descent: 434 / 2048 },
+  [SYSTEM]: { ascent: 1980 / 2048, descent: 432 / 2048 },
+  [DINGBATS]: { ascent: 1667 / 2048, descent: 362 / 2048 },
+};
+const metricsOf = (family: string) => METRICS[family] ?? OTHER_METRICS[family];
+
+function within(ranges: readonly number[], point: number): boolean {
   let lo = 0;
   let hi = ranges.length / 2 - 1;
   while (lo <= hi) {
@@ -68,33 +114,73 @@ function drawn(family: string, point: number): boolean {
   return false;
 }
 
-/** Cuts a text into runs by the font that draws each character, as the browser's letter-by-letter fallback would. */
-export function runsOf(text: string, role: Role, weight: Weight): Run[] {
-  const chars = Array.from(text);
-  const cyrillic = chars.map((c) => CYRILLIC.test(c));
-  const space = chars.map((c) => SPACE.test(c));
-  const base = role === 'pixel' ? JERSEY : chakra(weight);
-  const cyrFont = role === 'pixel' ? OSWALD : exo(weight);
-  const sign = chakra(weight);
-  const scaleOf = (family: string) => (role === 'pixel' ? PIXEL_X_HEIGHT / X_HEIGHT[family] : 1);
+/** Whether the web draws this character in this font: the font file has it, and one of its subsets asks for it. */
+function drawn(family: string, point: number): boolean {
+  return within(COVERAGE[family], point) && SUBSETS[family].some((r) => within(r, point));
+}
 
+/**
+ * The fonts the web tries, in its order, for a role on a page in a language (globals.css's stacks, with the stand-ins
+ * next/font puts after Jersey and Chakra; a Russian page names the fonts alone, so its Cyrillic reaches Oswald and Exo 2).
+ */
+function stackOf(role: Role, weight: Weight, language: string): string[] {
+  if (language === 'ru') return role === 'pixel' ? [JERSEY, OSWALD, chakra(weight), exo(weight)] : [chakra(weight), exo(weight)];
+  return role === 'pixel' ? [JERSEY, ARIAL] : [chakra(weight), ARIAL];
+}
+
+/**
+ * How much a run's font is scaled: pixel text to the common small-letter height, a stand-in to its `size-adjust`.
+ * Zapf Dingbats has no small letters to measure, and the browser scales it as it scales Jersey.
+ */
+function scaleOf(family: string, role: Role): number {
+  if (role === 'pixel') {
+    const x = family === ARIAL ? ARIAL_X_HEIGHT : family === SYSTEM ? SYSTEM_X_HEIGHT : family === DINGBATS ? X_HEIGHT[JERSEY] : X_HEIGHT[family];
+    return PIXEL_X_HEIGHT / x;
+  }
+  return family === ARIAL ? ARIAL_FOR_CHAKRA : 1;
+}
+
+/** Whether the web draws this character in this font: for Arial, its file has it; for the game's fonts, one of their subsets asks for it too. */
+const draws = (family: string, point: number) => (family === ARIAL ? within(ARIAL_COVERAGE, point) : drawn(family, point));
+
+/**
+ * Cuts a text into runs by the font that draws each character, as the browser's letter-by-letter fallback does on a
+ * page in `language`: the first font of the stack that draws it, and past them the system's.
+ */
+export function runsOf(text: string, role: Role, weight: Weight, language = 'en'): Run[] {
+  const stack = stackOf(role, weight, language);
   const runs: Run[] = [];
-  let before = false; // the last character that is not a space was Cyrillic
-  for (let i = 0; i < chars.length; i++) {
-    let family: string;
-    if (cyrillic[i]) family = cyrFont;
-    else if (space[i]) {
-      // A space between two Cyrillic characters is Oswald's / Exo's, so a Russian phrase is one run.
-      let next = i + 1;
-      while (next < chars.length && space[next]) next++;
-      family = before && next < chars.length && cyrillic[next] ? cyrFont : base;
-    } else if (role === 'pixel' && !drawn(JERSEY, chars[i].codePointAt(0)!) && drawn(sign, chars[i].codePointAt(0)!)) family = sign;
-    else family = base;
-    if (!space[i]) before = cyrillic[i];
-
+  for (const ch of Array.from(text)) {
+    const point = ch.codePointAt(0)!;
+    const family = stack.find((f) => draws(f, point)) ?? (isDingbat(point) ? DINGBATS : SYSTEM);
     const last = runs[runs.length - 1];
-    if (last && last.family === family) last.text += chars[i];
-    else runs.push({ text: chars[i], family, scale: scaleOf(family) });
+    if (last && last.family === family) last.text += ch;
+    else runs.push({ text: ch, family, scale: scaleOf(family, role) });
   }
   return runs;
+}
+
+/**
+ * How far to move a text's glyphs down so its baseline stands where the browser puts it, in points.
+ *
+ * The browser (Blink, the web's reference) sets a line from the first font's ascent and descent, each rounded to a
+ * whole pixel, and the room left over split above and below with the half above rounded down: the baseline is at
+ * floor((lineHeight − (round(a·f) + round(d·f))) / 2) + round(a·f), with Jersey at its adjusted size for pixel text
+ * and Chakra for reading text. iOS, given a line height, puts the baseline at lineHeight − descent (the largest
+ * descent of the fonts in the text), and React Native raises it by half the room left when the line is taller than
+ * the tallest font (RCTApplyBaselineOffset), in the line it is actually given (`drawnLine`). Unmoved, a pixel title on iOS stood up to two points above the web's,
+ * and a sentence about a point below. Android is not measured yet, so nothing is moved there.
+ */
+export function baselineShift(runs: readonly Run[], role: Role, weight: Weight, size: number, lineHeight: number, drawnLine: number, os: string): number {
+  if (os !== 'ios' || runs.length === 0) return 0;
+  const first = role === 'pixel' ? JERSEY : chakra(weight);
+  const f = size * (role === 'pixel' ? PIXEL_X_HEIGHT / X_HEIGHT[first] : 1);
+  const ascent = Math.round(METRICS[first].ascent * f);
+  const descent = Math.round(METRICS[first].descent * f);
+  const web = Math.floor((lineHeight - (ascent + descent)) / 2) + ascent;
+  const tallest = Math.max(...runs.map((r) => (metricsOf(r.family).ascent + metricsOf(r.family).descent) * size * r.scale));
+  const deepest = Math.max(...runs.map((r) => metricsOf(r.family).descent * size * r.scale));
+  // The phone draws the line it is given (on its pixel grid); the browser the one asked for.
+  const native = drawnLine - deepest - Math.max(0, (drawnLine - tallest) / 2);
+  return web - native;
 }

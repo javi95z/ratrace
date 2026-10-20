@@ -10,6 +10,16 @@ export const X_HEIGHT: Record<string, number> = {
   Exo2_600SemiBold: 0.491,
 };
 
+/** Ascent and descent over the em, by family (hhea ascender and -descender / head unitsPerEm): where a line puts its baseline. */
+export const METRICS: Record<string, { ascent: number; descent: number }> = {
+  Jersey15_400Regular: { ascent: 0.7777777777777778, descent: 0.2222222222222222 },
+  ChakraPetch_400Regular: { ascent: 0.992, descent: 0.308 },
+  ChakraPetch_600SemiBold: { ascent: 0.992, descent: 0.308 },
+  Oswald_500Medium: { ascent: 1.193, descent: 0.289 },
+  Exo2_400Regular: { ascent: 0.999, descent: 0.201 },
+  Exo2_600SemiBold: { ascent: 0.999, descent: 0.201 },
+};
+
 /** What each family draws: sorted [first, last] code point pairs, flattened. */
 export const COVERAGE: Record<string, number[]> = {
   Jersey15_400Regular: [32,126,160,163,165,165,167,171,174,176,180,180,182,184,186,187,191,263,266,275,278,283,286,291,294,295,298,299,302,307,310,311,313,318,321,328,330,333,336,347,350,353,356,357,362,382,536,539,567,567,710,711,728,733,768,772,774,776,778,780,786,786,806,808,7808,7813,7838,7838,7922,7923,8202,8202,8211,8212,8216,8218,8220,8222,8226,8226,8230,8230,8249,8250,8364,8364,8482,8482,8722,8722,9880,9880],

@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
-import { buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
-import { COVERAGE } from './fontCoverage';
-import { CHAKRA_X_HEIGHT, familyFor, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, pixelSize, runsOf } from './fonts';
+import { ARIAL_FILE, buildArialCoverage, buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
+import { COVERAGE, METRICS } from './fontCoverage';
+import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, pixelSize, runsOf } from './fonts';
 
 const JERSEY = 'Jersey15_400Regular';
 const OSWALD = 'Oswald_500Medium';
@@ -50,30 +50,53 @@ test('Latin text is one Jersey run, sized to the web\'s x-height', () => {
   expect(runs).toEqual([{ text: 'Rank 3 of 6, 12 345', family: JERSEY, scale: PIXEL_X_HEIGHT / JERSEY_X_HEIGHT }]);
 });
 
-test('Russian goes to Oswald, the figures stay Jersey, spaces between Cyrillic words join the Cyrillic run', () => {
-  const runs = runsOf('Ранг 3 из 6', 'pixel', 400);
+test('on a Russian page Russian goes to Oswald, the figures stay Jersey, and every space is Jersey\'s, as in the browser', () => {
+  const runs = runsOf('Ранг 3 из 6', 'pixel', 400, 'ru');
   expect(runs.map((r) => r.text).join('')).toBe('Ранг 3 из 6');
   expect(runs.filter((r) => r.family === OSWALD).map((r) => r.text)).toEqual(['Ранг', 'из']);
   expect(runs.filter((r) => r.family === JERSEY).map((r) => r.text.trim())).toEqual(['3', '6']);
   const oswald = runs.find((r) => r.family === OSWALD)!;
   expect(oswald.scale).toBeCloseTo(PIXEL_X_HEIGHT / OSWALD_X_HEIGHT, 10);
-  expect(runsOf('Большой куш', 'pixel', 400)).toEqual([{ text: 'Большой куш', family: OSWALD, scale: PIXEL_X_HEIGHT / OSWALD_X_HEIGHT }]);
+  // The browser takes a space from the first font that draws one, Jersey, whatever the letters round it.
+  expect(runsOf('Большой куш', 'pixel', 400, 'ru').map((r) => [r.text, r.family])).toEqual([
+    ['Большой', OSWALD],
+    [' ', JERSEY],
+    ['куш', OSWALD],
+  ]);
 });
 
-test('a sign Jersey does not draw but Chakra does goes to Chakra', () => {
-  expect(drawn('Jersey15_400Regular', '→')).toBe(false);
+test('a sign outside the web\'s subsets is drawn by the stand-in, Arial, as the browser does: never by Chakra', () => {
+  // Chakra's file has → and ▼, but none of its Google subsets asks for them: the web never draws them in Chakra.
   expect(drawn('ChakraPetch_400Regular', '→')).toBe(true);
   const runs = runsOf('Next → 4', 'pixel', 400);
   expect(runs.map((r) => [r.text, r.family])).toEqual([
     ['Next ', JERSEY],
-    ['→', 'ChakraPetch_400Regular'],
+    ['→', ARIAL],
     [' 4', JERSEY],
   ]);
-  expect(runs[1].scale).toBeCloseTo(PIXEL_X_HEIGHT / CHAKRA_X_HEIGHT, 10);
+  // The pixel text's font-size-adjust brings Arial too to the common small-letter height.
+  expect(runs[1].scale).toBeCloseTo(PIXEL_X_HEIGHT / (1062 / 2048), 10);
+  // In reading text the stand-in is at Chakra's size-adjust, 102.51 %.
+  expect(runsOf('City ▼', 'read', 400).map((r) => [r.text, r.family, r.scale])).toEqual([
+    ['City ', 'ChakraPetch_400Regular', 1],
+    ['▼', ARIAL, 1.0251],
+  ]);
+  // A Russian page names its fonts alone: what none of them draws is the device's.
+  expect(runsOf('Далее →', 'pixel', 400, 'ru').map((r) => r.family)).toEqual([OSWALD, JERSEY, SYSTEM]);
+  // Elsewhere Russian letters, too, reach the stand-in before Oswald.
+  expect(runsOf('Ранг', 'pixel', 400, 'en').map((r) => r.family)).toEqual([ARIAL]);
+  // Past Arial: a dingbat from Zapf Dingbats, scaled as Jersey is; any other sign from the system font.
+  expect(runsOf('✕', 'pixel', 400).map((r) => [r.family, r.scale])).toEqual([[DINGBATS, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT]]);
+  expect(runsOf('✓', 'read', 400).map((r) => r.family)).toEqual([DINGBATS]);
+  expect(runsOf('▸', 'pixel', 400).map((r) => r.family)).toEqual([SYSTEM]);
 });
 
-test('the reading role: Chakra, Exo 2 for Cyrillic, no size adjust', () => {
-  expect(runsOf('Ранг 3', 'read', 600)).toEqual([
+test.skipIf(!existsSync(ARIAL_FILE))('the committed Arial coverage is what macOS\'s Arial says (run scripts/fontCoverage.ts when it fails)', () => {
+  expect(readFileSync(new URL('./arialCoverage.ts', import.meta.url), 'utf8')).toBe(buildArialCoverage());
+});
+
+test('the reading role on a Russian page: Chakra, Exo 2 for Cyrillic, no size adjust', () => {
+  expect(runsOf('Ранг 3', 'read', 600, 'ru')).toEqual([
     { text: 'Ранг', family: 'Exo2_600SemiBold', scale: 1 },
     { text: ' 3', family: 'ChakraPetch_600SemiBold', scale: 1 },
   ]);
@@ -88,4 +111,22 @@ test('every Russian letter is drawn by Oswald and Exo 2', () => {
     expect(drawn('Exo2_600SemiBold', ch), ch).toBe(true);
     expect(drawn('Jersey15_400Regular', ch), ch).toBe(false);
   }
+});
+
+test('on iOS a line\'s glyphs are moved to the browser\'s baseline: whole-pixel ascent and descent, the half above rounded down', () => {
+  // A pixel title of 17: Jersey at 23.37 has ascent 18.17 → 18 and descent 5.19 → 5; the line of 18.7 leaves −4.3,
+  // whose upper half −2.15 rounds down to −3: the browser's baseline is at 15. iOS puts it at 18.7 − 5.19 = 13.51.
+  const pixel = runsOf('Go', 'pixel', 400);
+  const f = 17 * (PIXEL_X_HEIGHT / JERSEY_X_HEIGHT);
+  expect(baselineShift(pixel, 'pixel', 400, 17, 17 * 1.1, 17 * 1.1, 'ios')).toBeCloseTo(15 - (17 * 1.1 - (2 / 9) * f), 6);
+  // A sentence of 15: Chakra's 14.88 and 4.62 are 15 and 5; the line of 21.75 leaves 1.75, half 0.875 → 0: baseline 15.
+  // iOS: 21.75 − 4.62, raised by (21.75 − 19.5) / 2: 16.005.
+  expect(baselineShift(runsOf('Go', 'read', 400), 'read', 400, 15, 15 * 1.45, 15 * 1.45, 'ios')).toBeCloseTo(15 - 16.005, 6);
+  expect(baselineShift(pixel, 'pixel', 400, 17, 17 * 1.1, 17 * 1.1, 'android')).toBe(0);
+});
+
+test('the line metrics are the TTFs\' hhea ascender and descender', () => {
+  const jersey = readFont(fontPath('Jersey15_400Regular'));
+  expect(METRICS.Jersey15_400Regular).toEqual({ ascent: jersey.ascender / jersey.unitsPerEm, descent: -jersey.descender / jersey.unitsPerEm });
+  expect(METRICS.ChakraPetch_400Regular).toEqual({ ascent: 0.992, descent: 0.308 });
 });
