@@ -1,0 +1,22 @@
+// One static require per cue, as Metro asks (the files are rendered by scripts/sounds.ts; a test keeps this list whole).
+export const SOUND_SOURCES = {
+  tap: require('../../assets/sounds/tap.wav'),
+  card: require('../../assets/sounds/card.wav'),
+  pick: require('../../assets/sounds/pick.wav'),
+  coin: require('../../assets/sounds/coin.wav'),
+  refuse: require('../../assets/sounds/refuse.wav'),
+  round: require('../../assets/sounds/round.wav'),
+  good: require('../../assets/sounds/good.wav'),
+  bad: require('../../assets/sounds/bad.wav'),
+  promote: require('../../assets/sounds/promote.wav'),
+  badge: require('../../assets/sounds/badge.wav'),
+  badgeUncommon: require('../../assets/sounds/badgeUncommon.wav'),
+  badgeRare: require('../../assets/sounds/badgeRare.wav'),
+  badgeLegendary: require('../../assets/sounds/badgeLegendary.wav'),
+  million: require('../../assets/sounds/million.wav'),
+  escape: require('../../assets/sounds/escape.wav'),
+  bankrupt: require('../../assets/sounds/bankrupt.wav'),
+  crisis: require('../../assets/sounds/crisis.wav'),
+  calm: require('../../assets/sounds/calm.wav'),
+  end: require('../../assets/sounds/end.wav'),
+} as const;
