@@ -28,7 +28,7 @@ const client = vi.hoisted(() => {
       from: (table: string) => {
         const question: unknown[] = [table];
         const builder: Record<string, unknown> = {};
-        for (const word of ['select', 'eq', 'neq', 'lt', 'in', 'order', 'limit', 'update', 'upsert', 'delete', 'maybeSingle']) {
+        for (const word of ['select', 'eq', 'neq', 'lt', 'gte', 'in', 'order', 'limit', 'update', 'upsert', 'delete', 'maybeSingle']) {
           builder[word] = (...a: unknown[]) => (question.push([word, ...a]), builder);
         }
         builder.then = (resolve: (answer: unknown) => unknown, reject: (error: unknown) => unknown) => {
@@ -521,21 +521,25 @@ describe('names, friends and rankings, as the cloud is asked for them', () => {
     expect(await cloud.community.setMarketNotice('https://push.example/1', false)).toBe(false);
   });
 
-  it('says whether the player has had their attempt at a week, and its score once it is over', async () => {
+  it('says whether the player has had today\'s attempt at a week, by the UTC day, and their best score of the week', async () => {
     client.answers.getSession = signedIn;
-    client.answers.challenge_entries = { data: { week: '2026-W42' }, error: null };
-    client.answers.runs = { data: { score: 777 }, error: null };
+    client.answers.challenge_entries = { data: [{ week: '2026-W42' }], error: null };
+    client.answers.runs = { data: [{ score: 777 }], error: null };
     const cloud = await connectSupabase('u', 'k');
-    expect(await cloud.community.challengeEntry('2026-W42')).toEqual({ entered: true, score: 777 });
+    // Late on the 14th by the UTC clock, whatever the device's own day.
+    const at = Date.parse('2026-10-14T23:30:00Z');
+    expect(await cloud.community.challengeEntry('2026-W42', at)).toEqual({ entered: true, score: 777 });
     expect(client.asked).toEqual([
-      ['challenge_entries', ['select', 'week'], ['eq', 'week', '2026-W42'], ['maybeSingle']],
-      ['runs', ['select', 'score'], ['eq', 'user_id', 'u-1'], ['eq', 'mode', 'ranked'], ['eq', 'challenge', '2026-W42'], ['maybeSingle']],
+      ['challenge_entries', ['select', 'week'], ['eq', 'week', '2026-W42'], ['gte', 'created_at', '2026-10-14T00:00:00Z'], ['limit', 1]],
+      ['runs', ['select', 'score'], ['eq', 'user_id', 'u-1'], ['eq', 'mode', 'ranked'], ['eq', 'challenge', '2026-W42'], ['order', 'score', { ascending: false }], ['limit', 1]],
     ]);
-    client.answers.challenge_entries = { data: null, error: null };
-    client.answers.runs = { data: null, error: null };
-    expect(await cloud.community.challengeEntry('2026-W42')).toEqual({ entered: false, score: null });
+    // An attempt on another day of the week: a best score, and today's attempt still to have.
+    client.answers.challenge_entries = { data: [], error: null };
+    expect(await cloud.community.challengeEntry('2026-W42', at)).toEqual({ entered: false, score: 777 });
+    client.answers.runs = { data: [], error: null };
+    expect(await cloud.community.challengeEntry('2026-W42', at)).toEqual({ entered: false, score: null });
     client.answers.runs = { data: null, error: new Error('offline') };
-    expect(await cloud.community.challengeEntry('2026-W42')).toBeNull();
+    expect(await cloud.community.challengeEntry('2026-W42', at)).toBeNull();
   });
 
   it('asks a player to be friends by their code, answers a request, lists friends and requests, and ends a friendship, all through the server', async () => {

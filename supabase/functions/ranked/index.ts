@@ -63,10 +63,13 @@ export default {
           must(await db.from('challenge_seeds').upsert({ week, seed: fresh }, { onConflict: 'week', ignoreDuplicates: true }));
           return (must(await db.from('challenge_seeds').select('seed').eq('week', week).single()) as { seed: string }).seed;
         },
-        challengeEntered: async (user, week) => (must(await db.from('challenge_entries').select('week').eq('user_id', user).eq('week', week).maybeSingle()) as unknown) !== null,
-        enterChallenge: async (user, week, gameId) => {
+        // Read by the moment the entry was made, and written with the day the database gives it: so the server asks
+        // the same of a table keyed by the week, before its migration, as of one keyed by the day.
+        challengeEntered: async (user, week, day) =>
+          (must(await db.from('challenge_entries').select('week').eq('user_id', user).eq('week', week).gte('created_at', `${day}T00:00:00Z`).limit(1)) as unknown[]).length > 0,
+        enterChallenge: async (user, week, _day, gameId) => {
           const entered = await db.from('challenge_entries').insert({ user_id: user, week, game_id: gameId });
-          // The key is the player and the week: a second entry is refused by the database itself.
+          // The key is the player and the day: a second entry is refused by the database itself.
           if (entered.error?.code === '23505') return false;
           must(entered);
           return true;

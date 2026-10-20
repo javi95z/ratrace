@@ -39,7 +39,7 @@ describe('the weekly challenge page', () => {
   const ruleName: Record<string, string> = { indexOnly: 'Index funds only', noLoans: 'No loans', noMoving: 'No moving', noProperty: 'No property', startInDebt: 'Start in debt' };
   const saved = async (services: ReturnType<typeof memoryServices>) => (await services.store.loadGame()) as SavedGame | null;
 
-  /** A signed-in player and what the account says of this week's one ranked attempt. */
+  /** A signed-in player and what the account says of today's ranked attempt and the week's best. */
   function withAccount(entry: { entered: boolean; score: number | null } | null) {
     const services = memoryServices();
     const asked: unknown[] = [];
@@ -62,26 +62,33 @@ describe('the weekly challenge page', () => {
     expect(screen.getByRole('heading', { name: 'Weekly challenge' })).toBeTruthy();
     expect(screen.getByText(lifeName)).toBeTruthy();
     expect(screen.getByText(ruleName[week.rule])).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
     expect(screen.getByText('To play the attempt that counts, sign in. You can still practise.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Practise' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
     expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
   });
 
-  it('offers the one ranked attempt to a signed-in player who has not used it', async () => {
+  it('offers the day\'s ranked attempt to a signed-in player who has not had it today', async () => {
     const { services, asked } = withAccount({ entered: false, score: null });
     const user = userEvent.setup();
     renderGame(<WeeklyChallenge />, services);
-    await user.click(await screen.findByRole('button', { name: 'Play the challenge (one attempt)' }));
+    await user.click(await screen.findByRole('button', { name: "Play today's attempt" }));
     await waitFor(() => expect(asked).toEqual([{ lifeId: week.lifeId, ranked: true, challenge: week.week, replace: undefined }]));
   });
 
-  it('shows a completed attempt and leaves practice available', async () => {
+  it('offers today\'s attempt again to a player who played on another day, with their best of the week', async () => {
+    const { services } = withAccount({ entered: false, score: 640 });
+    renderGame(<WeeklyChallenge />, services);
+    expect(await screen.findByText('Your best this week: 640 points.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: "Play today's attempt" })).toBeTruthy();
+  });
+
+  it('shows today\'s attempt had, the best of the week, and leaves practice available', async () => {
     const { services } = withAccount({ entered: true, score: 777 });
     renderGame(<WeeklyChallenge />, services);
-    expect(await screen.findByText("You have played this week's challenge: 777 points.")).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Play the challenge (one attempt)' })).toBeNull();
+    expect(await screen.findByText("You have played today's attempt. Your best this week: 777 points.")).toBeTruthy();
+    expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
     expect(screen.getByRole('button', { name: 'Practise' })).toBeTruthy();
   });
 });
@@ -134,10 +141,10 @@ describe('the weekly challenge on the front door', () => {
     expect(await screen.findByText(/^(Ends today|\d days? left)$/)).toBeTruthy();
   });
 
-  it('says only that it is played, once it is', async () => {
+  it('says only that today\'s is played, once it is', async () => {
     const ranking: ChallengeRanking = { rows: [{ place: 3, userId: 'me', nickname: null, score: 300, finishedAt: 0, mine: true }] as unknown as ChallengeRanking['rows'], entrants: 41 };
     draw({ challengeEntry: async () => ({ entered: true, score: 300 }), challengeRanking: async () => ranking });
-    expect(await screen.findByText('Played')).toBeTruthy();
+    expect(await screen.findByText('Played today')).toBeTruthy();
   });
 
   it('says how long is left to a player with no account', async () => {

@@ -413,7 +413,7 @@ describe('the ranking of the weekly challenge', () => {
   if (!week) throw new Error('no challenge this week');
   const entry = (place: number, over: Partial<ChallengeRow> = {}): ChallengeRow => ({ place, userId: `user-${place}`, nickname: `Rata_${place}`, score: 2000 - place * 10, finishedAt: Date.UTC(2026, 9, 13), mine: false, ...over });
 
-  it('shows the week’s life and rule, every attempt best first, the best tenth marked, and how many took part', async () => {
+  it('shows the week’s life and rule, each player\'s best attempt best first, the best tenth marked, and how many players took part', async () => {
     const asked: string[] = [];
     const { community: everyone } = community({
       challengeRanking: async (asking) => {
@@ -426,7 +426,7 @@ describe('the ranking of the weekly challenge', () => {
     await user.click(await screen.findByRole('tab', { name: "This week's challenge" }));
     expect(asked).toEqual([week.week]);
     expect(screen.getByText(textFor('en').text.lives[week.lifeId].name)).toBeTruthy();
-    expect(screen.getByText('20 attempts · the best 2 are in the top 10%')).toBeTruthy();
+    expect(screen.getByText('20 players · the best 2 are in the top 10%')).toBeTruthy();
     const lines = within(screen.getByRole('list', { name: "This week's challenge" })).getAllByRole('listitem');
     expect(lines.map((line) => line.textContent)).toEqual([
       expect.stringContaining('Rata_1'),

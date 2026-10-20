@@ -3,7 +3,7 @@ import { applyCard, applyRound, createGame, ENGINE_VERSION, finalScore, livedSta
 import type { GameState, GameView, LoggedRound, Order, WorldState } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { GAMES } from '../../../supabase/functions/_shared/game/index.ts';
-import { ranked, weekOfServer } from '../../../supabase/functions/_shared/ranked.ts';
+import { dayOfServer, ranked, weekOfServer } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RankedDeps, RankedGameRow } from '../../../supabase/functions/_shared/ranked.ts';
 import type { RunRow } from '../../../supabase/functions/_shared/finish.ts';
 
@@ -47,10 +47,10 @@ function fakeDb() {
       if (!weekSeeds.has(week)) weekSeeds.set(week, fresh);
       return weekSeeds.get(week) as string;
     },
-    challengeEntered: async (who, week) => entries.has(`${who}/${week}`),
-    enterChallenge: async (who, week, gameId) => {
-      if (entries.has(`${who}/${week}`)) return false;
-      entries.set(`${who}/${week}`, gameId);
+    challengeEntered: async (who, week, day) => entries.has(`${who}/${week}/${day}`),
+    enterChallenge: async (who, week, day, gameId) => {
+      if (entries.has(`${who}/${week}/${day}`)) return false;
+      entries.set(`${who}/${week}/${day}`, gameId);
       return true;
     },
     savePicks: async (runId, week, chosen) => {
@@ -496,6 +496,7 @@ describe('looking at a ranked life, and giving it up', { timeout: 120_000 }, () 
 describe('the weekly challenge, as the server plays it', () => {
   // The fake server's clock is Tuesday 13 October 2026: the week of 12 October.
   const WEEK = '2026-W42';
+  const TODAY = '2026-10-13';
   const week = challengeOf(WEEK, lives);
   if (!week) throw new Error('no challenge for the week');
   const begin = (db: Db, over: Record<string, unknown> = {}, user = ME) => ask(db, { action: 'start', lifeId: week.lifeId, ...VERSIONS, challenge: WEEK, ...over }, user);
@@ -521,7 +522,7 @@ describe('the weekly challenge, as the server plays it', () => {
     expect(theirs.body.view).toEqual(mine.body.view);
     const life = lives.find((one) => one.id === week.lifeId)!;
     expect((mine.body.view as GameView).limits).toEqual(challengeStart(week, life).limits ?? {});
-    expect([...db.entries.keys()].sort()).toEqual([`${ME}/${WEEK}`, `${OTHER}/${WEEK}`]);
+    expect([...db.entries.keys()].sort()).toEqual([`${ME}/${WEEK}/${TODAY}`, `${OTHER}/${WEEK}/${TODAY}`]);
   });
 
   it('refuses a week that is not this one, something that is not a week, and another life than the week’s', async () => {
@@ -534,7 +535,7 @@ describe('the weekly challenge, as the server plays it', () => {
     expect(db.entries.size).toBe(0);
   });
 
-  it('gives each player one attempt a week, and a second ends nothing in progress', async () => {
+  it('gives each player one attempt a day, and a second the same day ends nothing in progress', async () => {
     const db = fakeDb();
     const first = await begin(db);
     expect(first.status).toBe(200);
@@ -545,11 +546,29 @@ describe('the weekly challenge, as the server plays it', () => {
     expect(db.games.get(living.body.gameId as string)?.status).toBe('playing');
   });
 
+  it('gives another attempt the next day, on the same seed of the week', async () => {
+    const db = fakeDb();
+    const first = await begin(db);
+    await ask(db, { action: 'abandon', gameId: first.body.gameId });
+    // The next day by the server's clock, a minute past midnight: still the same week.
+    db.deps.now = () => new Date('2026-10-14T00:01:00.000Z');
+    const second = await begin(db);
+    expect(second.status).toBe(200);
+    expect(db.seeds.get(second.body.gameId as string)).toBe(db.seeds.get(first.body.gameId as string));
+    expect([...db.entries.keys()].sort()).toEqual([`${ME}/${WEEK}/${TODAY}`, `${ME}/${WEEK}/2026-10-14`]);
+    expect(await begin(db)).toEqual({ status: 409, body: { error: 'challenge-played' } });
+  });
+
+  it('counts its days by UTC, as the database does', () => {
+    expect(dayOfServer(new Date('2026-10-13T23:59:59.999Z'))).toBe('2026-10-13');
+    expect(dayOfServer(new Date('2026-10-14T00:00:00.000Z'))).toBe('2026-10-14');
+  });
+
   it('gives up at once an attempt that loses the race to one already entered', async () => {
     const db = fakeDb();
     // Another device entered the week between the question and the entry.
     db.deps.challengeEntered = async () => false;
-    db.entries.set(`${ME}/${WEEK}`, 'elsewhere');
+    db.entries.set(`${ME}/${WEEK}/${TODAY}`, 'elsewhere');
     expect(await begin(db)).toEqual({ status: 409, body: { error: 'challenge-played' } });
     expect([...db.games.values()].map((game) => game.status)).toEqual(['abandoned']);
   });

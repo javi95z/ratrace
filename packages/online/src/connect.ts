@@ -306,16 +306,18 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
           return null;
         }
       },
-      async challengeEntry(week) {
+      async challengeEntry(week, at = Date.now()) {
         try {
           const mine = await me();
+          // An attempt counts once a day, by the UTC day the server counts in; the best of the week is the one ranked.
+          const today = `${new Date(at).toISOString().slice(0, 10)}T00:00:00Z`;
           const [entry, run] = await Promise.all([
-            client.from('challenge_entries').select('week').eq('week', week).maybeSingle(),
-            client.from('runs').select('score').eq('user_id', mine).eq('mode', 'ranked').eq('challenge', week).maybeSingle(),
+            client.from('challenge_entries').select('week').eq('week', week).gte('created_at', today).limit(1),
+            client.from('runs').select('score').eq('user_id', mine).eq('mode', 'ranked').eq('challenge', week).order('score', { ascending: false }).limit(1),
           ]);
           if (entry.error || run.error) return null;
-          const score = (run.data as { score: number } | null)?.score ?? null;
-          return { entered: entry.data !== null || score !== null, score };
+          const score = ((run.data ?? []) as Array<{ score: number }>)[0]?.score ?? null;
+          return { entered: (entry.data ?? []).length > 0, score };
         } catch {
           return null;
         }

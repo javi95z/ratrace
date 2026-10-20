@@ -47,10 +47,10 @@ export interface RankedDeps {
   createGame(row: { id: string; user_id: string; life_id: string; engine_version: string; content_version: string; challenge: string | null }, seed: string): Promise<void>;
   /** The seed of a week's challenge: the one already made for it, or a new one kept for it from now on. Every attempt of the week plays it. */
   challengeSeed(week: string, fresh: string): Promise<string>;
-  /** True if the player has had their attempt of a week, in progress, given up or finished. */
-  challengeEntered(userId: string, week: string): Promise<boolean>;
-  /** Enters the player's attempt of a week. False if they have had it already. */
-  enterChallenge(userId: string, week: string, gameId: string): Promise<boolean>;
+  /** True if the player has had their attempt of a week on a day ("2026-10-13", UTC), in progress, given up or finished. */
+  challengeEntered(userId: string, week: string, day: string): Promise<boolean>;
+  /** Enters the player's attempt of a week on a day. False if they have had that day's already. */
+  enterChallenge(userId: string, week: string, day: string, gameId: string): Promise<boolean>;
   /** Keeps what an attempt chose on each card, for the sums told to those who have finished the week. */
   savePicks(runId: string, week: string, picks: readonly CardPick[]): Promise<void>;
   loadGame(id: string): Promise<RankedGameRow | null>;
@@ -281,7 +281,7 @@ export async function ranked(games: Readonly<Record<string, GameModule>>, deps: 
  *
  * With `challenge`, the life is the attempt at this week's challenge: the life and the rule are the
  * week's, any life may be played whether unlocked or not, the seed is the week's own, and each
- * player has one attempt a week, counted the moment it begins.
+ * player has one attempt a day, counted the moment it begins. The ranking keeps each player's best.
  */
 async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDeps, userId: string, raw: Record<string, unknown>): Promise<Reply> {
   const { lifeId, engineVersion, contentVersion, replace, challenge } = raw;
@@ -310,7 +310,7 @@ async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDe
     begins = startOf(game, life.id, week);
     if (begins === null) return { status: 400, body: { error: 'unknown-life' } };
     // Asked before anything is given up for it: a second attempt ends nothing.
-    if (await deps.challengeEntered(userId, week)) return { status: 409, body: { error: 'challenge-played' } };
+    if (await deps.challengeEntered(userId, week, dayOfServer(deps.now()))) return { status: 409, body: { error: 'challenge-played' } };
   } else if (life.unlock !== 'default' && !(await deps.unlockedLives(userId)).includes(life.id)) {
     // Which lives a player may choose is the game's rule, kept here as the device keeps it.
     return { status: 403, body: { error: 'locked-life' } };
@@ -326,8 +326,8 @@ async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDe
   const id = deps.newId();
   const seed = week === null ? deps.newSeed() : await deps.challengeSeed(week, deps.newSeed());
   await deps.createGame({ id, user_id: userId, life_id: life.id, engine_version: engineVersion, content_version: contentVersion, challenge: week }, seed);
-  // The attempt is the week's from the moment it begins. One that loses the race to an attempt already entered is given up at once.
-  if (week !== null && !(await deps.enterChallenge(userId, week, id))) {
+  // The attempt is the day's from the moment it begins. One that loses the race to an attempt already entered is given up at once.
+  if (week !== null && !(await deps.enterChallenge(userId, week, dayOfServer(deps.now()), id))) {
     await deps.closeGame(id, 0, 'abandoned');
     return { status: 409, body: { error: 'challenge-played' } };
   }
@@ -336,6 +336,11 @@ async function start(games: Readonly<Record<string, GameModule>>, deps: RankedDe
     status: 200,
     body: { gameId: id, lifeId: life.id, step: 0, view: game.viewOf(played.state), record: { history: played.history, bankruptcies: played.bankruptcies, journal: played.journal } },
   };
+}
+
+/** The day a moment falls on, in UTC, as "2026-10-13": the day of an attempt, by the server's clock as by the database's. */
+export function dayOfServer(at: Date): string {
+  return at.toISOString().slice(0, 10);
 }
 
 /** The ISO week a moment falls in, in UTC, as "2026-W42": the server's own count, so that no client can choose its week. */

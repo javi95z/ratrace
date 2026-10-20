@@ -38,7 +38,7 @@ export function WeeklyChallengeCard() {
   const week = useThisWeek();
   const ruleText = useRuleText();
   const community = useCommunity();
-  // Whether the player has had their attempt: not asked where nobody is signed in, and said only once known.
+  // Whether the player has had today's attempt: not asked where nobody is signed in, and said only once known.
   const [entered, setEntered] = useState<boolean | null>(null);
   useEffect(() => {
     if (week === null || community === null) return;
@@ -73,8 +73,8 @@ export function WeeklyChallengeCard() {
 }
 
 /**
- * The week's challenge has a page of its own: the common life and rule, the one attempt that counts,
- * and practice as often as wanted.
+ * The week's challenge has a page of its own: the common life and rule, the attempt of the day that
+ * counts (the ranking keeps the week's best), and practice as often as wanted.
  */
 export function WeeklyChallenge() {
   const t = useT('challenge');
@@ -113,7 +113,7 @@ export function WeeklyChallenge() {
   if (week === null) return null;
   const rule = ruleText(week.rule);
   const lifeName = text.lives[week.lifeId]?.name ?? week.lifeId;
-  // An attempt is the server's to play: it needs someone signed in and a connection. One already had is not offered;
+  // An attempt is the server's to play: it needs someone signed in and a connection. One a day: today's, once had, is not offered;
   // where the account cannot say, it is, and the server, which keeps the count, decides.
   const canAttempt = ranking === 'yes' && entry?.entered !== true;
 
@@ -199,6 +199,10 @@ export function WeeklyChallenge() {
       {entry?.entered ? (
         <p role="status" className="frame bg-teal-800 px-3 py-2 text-[13px] text-cream">
           {entry.score !== null ? t('played', { score: fmt.number(entry.score) }) : t('entered')}
+        </p>
+      ) : ranking === 'yes' && entry?.score != null ? (
+        <p role="status" className="frame bg-night-700 px-3 py-2 text-[13px] text-cream">
+          {t('best', { score: fmt.number(entry.score) })}
         </p>
       ) : ranking !== 'yes' ? (
         <p className="frame bg-night-700 px-3 py-2 text-[13px] text-ink-200">{t('needsAccount')}</p>
@@ -344,9 +348,10 @@ export function ChallengeBoard({ community }: { community: Community }) {
 }
 
 /**
- * At the end of the week's attempt: where it stands in the week's ranking, and the choices the
- * player made that the fewest others made, with all of them in a sheet. Nothing until there is a
- * ranking to read; the choices only once the server has the attempt.
+ * At the end of an attempt of the week: where the player's best stands in the week's ranking, and
+ * the choices of that best attempt that the fewest others made, with all of them in a sheet. Nothing
+ * until there is a ranking to read; the choices only once the week is over, when the server tells
+ * how others chose.
  */
 export function ChallengeResult({ week }: { week: string }) {
   const t = useT('challenge');

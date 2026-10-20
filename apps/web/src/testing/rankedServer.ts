@@ -36,10 +36,10 @@ export function rankedServer(user = '11111111-1111-4111-8111-111111111111') {
       if (!weekSeeds.has(week)) weekSeeds.set(week, fresh);
       return weekSeeds.get(week) as string;
     },
-    challengeEntered: async (who, week) => entries.has(`${who}/${week}`),
-    enterChallenge: async (who, week, gameId) => {
-      if (entries.has(`${who}/${week}`)) return false;
-      entries.set(`${who}/${week}`, gameId);
+    challengeEntered: async (who, week, day) => entries.has(`${who}/${week}/${day}`),
+    enterChallenge: async (who, week, day, gameId) => {
+      if (entries.has(`${who}/${week}/${day}`)) return false;
+      entries.set(`${who}/${week}/${day}`, gameId);
       return true;
     },
     savePicks: async (runId, week, chosen) => {

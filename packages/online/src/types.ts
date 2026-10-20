@@ -122,7 +122,7 @@ export interface RankingQuery {
   lifeId: string | null;
 }
 
-/** One attempt in the ranking of a week's challenge. */
+/** A player's best attempt in the ranking of a week's challenge. */
 export interface ChallengeRow {
   place: number;
   userId: string;
@@ -197,8 +197,11 @@ export interface Community {
   answerFriend(userId: string, yes: boolean): Promise<'accepted' | 'declined' | 'gone' | 'full' | 'failed'>;
   /** Ends a friendship, for both, or takes back a request. False if it could not be. */
   unfriend(userId: string): Promise<boolean>;
-  /** Whether the player has had their attempt at a week's challenge, and its score once it is over. Null where it cannot be read. */
-  challengeEntry(week: string): Promise<{ entered: boolean; score: number | null } | null>;
+  /**
+   * Whether the player has had today's attempt at a week's challenge (one counts each UTC day, `at` saying when now is),
+   * and their best score of the week, once an attempt is over. Null where it cannot be read.
+   */
+  challengeEntry(week: string, at?: number): Promise<{ entered: boolean; score: number | null } | null>;
   challengeRanking(week: string): Promise<ChallengeRanking | null>;
   /** The player's choices in their attempt at a week, card by card, beside everyone's. Empty until the attempt is over. */
   challengeChoices(week: string): Promise<ChallengeChoice[] | null>;

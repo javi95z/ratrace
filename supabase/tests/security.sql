@@ -18,6 +18,10 @@ declare
   first_of_many uuid;
   ranked_b uuid := gen_random_uuid();
   challenge_b uuid := gen_random_uuid();
+  challenge_b2 uuid := gen_random_uuid();
+  challenge_b3 uuid := gen_random_uuid();
+  challenge_now uuid := gen_random_uuid();
+  this_week text := to_char((now() at time zone 'utc')::date, 'IYYY-"W"IW');
   code_a text;
   code_b text;
   yes1 boolean;
@@ -738,6 +742,37 @@ begin
     then passed := passed + 1; else failed := array_append(failed, 'B was not told their own choices beside everyone''s'); end if;
   select count(*) into n from public.challenge_entries;
   if n = 1 then passed := passed + 1; else failed := array_append(failed, format('B sees %s of their own challenge entries', n)); end if;
+  -- An attempt a day: B plays the week again on two other days, worse and then better, and a second entry on one day is refused.
+  reset role;
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, status, challenge) values
+    (challenge_b2, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', '1999-W01'), (challenge_b3, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', '1999-W01');
+  insert into public.challenge_entries (user_id, week, day, game_id) values (b, '1999-W01', '1999-01-05', challenge_b2), (b, '1999-W01', '1999-01-06', challenge_b3);
+  begin
+    insert into public.challenge_entries (user_id, week, day, game_id) values (b, '1999-W01', '1999-01-06', gen_random_uuid());
+    failed := array_append(failed, 'a player was entered twice on one day');
+  exception when unique_violation then passed := passed + 1;
+  end;
+  -- Finished later than any run before them: B holds as many ranked runs as a player keeps, and the oldest make room.
+  insert into public.runs (id, user_id, game_id, mode, life_id, engine_version, content_version, score, net_worth, status, finished_at, challenge) values
+    (challenge_b2, b, challenge_b2, 'ranked', 'nurse', '0.1.0', '1.0.0', 300, 0, 0, now() + interval '1 day', '1999-W01'),
+    (challenge_b3, b, challenge_b3, 'ranked', 'nurse', '0.1.0', '1.0.0', 700, 0, 0, now() + interval '2 days', '1999-W01');
+  insert into public.challenge_picks (run_id, week, seq, card_id, option) values (challenge_b2, '1999-W01', 0, 'tax_advisor', 0), (challenge_b3, '1999-W01', 0, 'tax_advisor', 2);
+  -- The ranking keeps a player's best attempt and counts players; the choices are those of that attempt, and counted once a player.
+  perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
+  set local role authenticated;
+  if (select array_agg(r.user_id::text || ':' || r.score || ':' || r.entrants) from public.challenge_ranking('1999-W01') r) = array[b::text || ':700:1']
+    then passed := passed + 1; else failed := array_append(failed, 'the week''s ranking does not keep each player''s best attempt alone'); end if;
+  if (select array_agg(c.card_id || ':' || c.option || ':' || c.same || '/' || c.answered order by c.seq) from public.challenge_choices('1999-W01') c) = array['tax_advisor:2:1/1']
+    then passed := passed + 1; else failed := array_append(failed, 'B was not told the choices of their best attempt alone'); end if;
+  -- While the week lasts, a player is told their choices and nothing of anyone's: the next day's attempt is not played knowing them.
+  reset role;
+  insert into public.games (id, user_id, mode, life_id, engine_version, content_version, status, challenge) values (challenge_now, b, 'ranked', 'nurse', '0.1.0', '1.0.0', 'finished', this_week);
+  insert into public.runs (id, user_id, game_id, mode, life_id, engine_version, content_version, score, net_worth, status, finished_at, challenge)
+    values (challenge_now, b, challenge_now, 'ranked', 'nurse', '0.1.0', '1.0.0', 400, 0, 0, now() + interval '3 days', this_week);
+  insert into public.challenge_picks (run_id, week, seq, card_id, option) values (challenge_now, this_week, 0, 'tax_advisor', 1);
+  set local role authenticated;
+  if (select array_agg(c.card_id || ':' || c.option || ':' || c.same || '/' || c.answered) from public.challenge_choices(this_week) c) = array['tax_advisor:1:0/0']
+    then passed := passed + 1; else failed := array_append(failed, 'a player was told what others chose before the week was over'); end if;
   reset role;
   perform set_config('request.jwt.claims', '{"role":"anon"}', true);
   set local role anon;
