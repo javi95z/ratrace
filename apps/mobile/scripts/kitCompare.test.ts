@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { differences, groundOf, inkOf, type Image } from './kitCompare';
+import { blendedEdges, differences, groundOf, inkOf, PHASE_2_SECTIONS, reportFolder, SECTIONS, type Image } from './kitCompare';
 
 const NIGHT = [0x14, 0x1b, 0x33];
 const GOLD = [0xf2, 0xc1, 0x4e];
@@ -72,4 +72,39 @@ test('a dot on the ground is ground; a night-700 fill, the dot\'s colour, is gro
   expect(g.reduce((n, v) => n + v, 0) / g.length).toBeLessThan(0.2);
   // Plain night-800 is ground everywhere.
   expect(groundOf(image(w, w, [])).every((v) => v === 1)).toBe(true);
+});
+
+test('a section\'s picture and numbers go to the report of the phase that added it: phase 1\'s files are not touched by a phase 2 shot', () => {
+  expect(reportFolder('buttons')).toBe('phase-1-parity');
+  expect(reportFolder('dots')).toBe('phase-1-parity');
+  expect(reportFolder('motion-2')).toBe('phase-2-parity');
+  expect([...PHASE_2_SECTIONS]).toEqual(['motion-2']);
+  for (const section of PHASE_2_SECTIONS) expect(SECTIONS).toContain(section);
+  // phase 1 is the 14 sections it shot
+  expect(SECTIONS.filter((s) => reportFolder(s) === 'phase-1-parity')).toHaveLength(14);
+});
+
+test('an edge one shot blends and the other draws hard is told from a colour that is simply not there', () => {
+  const MID = [0x80, 0x78, 0x42];
+  const RED = [0xff, 0x00, 0x00];
+  /** A 40 x 4 image: night, a gold run from 10 to 14, and `edge` in column 15 (a partly covered pixel, or a wrong colour). */
+  const strip = (edge: number[] | null): Image => {
+    const img = image(40, 4, [10, 11, 12, 13, 14]);
+    if (edge) for (let y = 0; y < 4; y++) img.data.set([...edge, 255], (y * 40 + 15) * 4);
+    return img;
+  };
+  // the web antialiases its edge at a fractional place, the app's is hard: the pixel between is half gold, half night
+  const blended = strip(MID);
+  const hard = strip(null);
+  const d = differences(blended, hard, 0, 4);
+  expect(d.loose).toBeGreaterThan(0);
+  const found = blendedEdges(blended, hard, d.map);
+  expect(found.of).toBeGreaterThan(0);
+  expect(found.explained).toBe(found.of);
+  // a colour that neither shot has anywhere near is no blend of two that are there
+  const odd = strip(RED);
+  const e = differences(odd, hard, 0, 4);
+  const not = blendedEdges(odd, hard, e.map);
+  expect(not.of).toBeGreaterThan(0);
+  expect(not.explained).toBe(0);
 });

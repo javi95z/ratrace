@@ -20,14 +20,22 @@ export function valueAtX(x: number, width: number, min: number, max: number, ste
   return min + Math.min(steps, Math.max(0, Math.round((share * (max - min)) / step))) * step;
 }
 
+/**
+ * How far a finger goes before the touch is a drag (sideways) or a scroll (up or down). The track sits in a sheet that
+ * scrolls, so a touch is the scroll's until it has gone sideways: a move up or down past `CANCEL` fails the pan.
+ */
+const ACTIVATE = 6;
+const CANCEL = 10;
+
 /** The last value a step can reach under `max`. */
 const topOf = (min: number, max: number, step: number) => min + Math.floor((max - min) / step + 1e-9) * step;
 
 /**
  * The amount slider (the web's `<input type="range" class="range">`, `.range` in globals.css): a pixel track, 8 high in
- * the middle of 44 so a thumb can find it, with a square gold handle. A touch puts the handle under the finger and
- * dragging follows it. It is an adjustable for a screen reader: `label` names it, `valueText` is what it reads out in
- * place of the bare number (a sum of money), and the reader's increment and decrement move one `step`.
+ * the middle of 44 so a thumb can find it, with a square gold handle. A tap puts the handle where it lands, once it is over
+ * (as a click does), and a sideways drag follows the finger; a touch that goes up or down is the sheet's scroll and changes
+ * nothing. It is an adjustable for a screen reader: `label` names it, `valueText` is what it reads out in place of the
+ * bare number (a sum of money), and the reader's increment and decrement move one `step`.
  */
 export function Slider({ value, min, max, step, onChange, label, valueText }: { value: number; min: number; max: number; step: number; onChange(value: number): void; label: string; valueText?: string }) {
   const width = useRef(0);
@@ -43,12 +51,29 @@ export function Slider({ value, min, max, step, onChange, label, valueText }: { 
     if (width.current === 0 || now.max <= now.min) return;
     set(valueAtX(x, width.current, now.min, now.max, now.step));
   };
+  // Where the touch began, and whether it has become a drag: a touch that never does and ends where it began is a tap.
+  const began = useRef<{ y: number } | null>(null);
+  const dragging = useRef(false);
   const pan = usePanGesture({
-    minDistance: 0,
+    activeOffsetX: [-ACTIVATE, ACTIVATE],
+    failOffsetY: [-CANCEL, CANCEL],
     runOnJS: true,
     enabled: max > min,
-    onBegin: (event) => place(event.x),
-    onUpdate: (event) => place(event.x),
+    onBegin: (event) => {
+      began.current = { y: event.y };
+      dragging.current = false;
+    },
+    onUpdate: (event) => {
+      dragging.current = true;
+      place(event.x);
+    },
+    onFinalize: (event) => {
+      const from = began.current;
+      began.current = null;
+      // A drag has set the value as it went. A touch that went up or down failed the pan: it was a scroll, not an amount.
+      if (from && !dragging.current && Math.abs(event.y - from.y) < CANCEL) place(event.x);
+      dragging.current = false;
+    },
   });
 
   const share = max > min ? Math.min(1, Math.max(0, (value - min) / (max - min))) : 0;

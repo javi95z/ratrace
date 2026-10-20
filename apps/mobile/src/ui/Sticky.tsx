@@ -1,6 +1,6 @@
 import { createContext, useContext, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { Screen } from './Page';
+import { SCREEN_TOP, Screen } from './Page';
 import { COLORS, GUTTER } from './theme';
 
 /** How far the page has scrolled, kept outside React so that a scroll does not draw every screen: only what asks about it. */
@@ -39,27 +39,51 @@ export function useScrolledPast(px: number): boolean {
   return useSyncExternalStore(offset.subscribe, () => offset.get() > px, () => false);
 }
 
-/** The sticky block: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
-const BLOCK: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER };
+/** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
+const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER };
+
+/**
+ * The second row, which closes the room under the first as the page scrolls up under it: it rides up by the part of the
+ * room the page has scrolled since the sticky block reached the top, until it has met the first row. Until then it is where
+ * it would be if the page were scrolling past the stuck header, which is what the web's two sticky rows do.
+ */
+function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => number; children: ReactNode }) {
+  const offset = useContext(Offset);
+  const closed = useSyncExternalStore(
+    offset.subscribe,
+    () => Math.min(room, Math.max(0, offset.get() - stuckAt())),
+    () => 0,
+  );
+  return <View style={{ transform: [{ translateY: -closed }] }}>{children}</View>;
+}
 
 /**
  * A `Screen` whose `header` stays at the top, under the top inset, while the column scrolls (the web's `sticky top-safe`):
- * the scroll's first child is the one that sticks (`stickyHeaderIndices`). `subHeader` is a second row under it that
- * stays with it (the Finance tabs under the Hud). React Native's sticky rows do not stack, the next one pushes the last
- * off, so both rows are one sticky child. `onScroll` hears the offset in points; a header that only needs to know whether
- * the page has gone past a point asks `useScrolledPast`. `fixed`, `bar` and `contentStyle` are the Screen's own.
+ * the scroll's sticky child is the header's block (`stickyHeaderIndices`). What is above it in the column is the `lead`,
+ * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPast(the lead's
+ * height)` says when it has. `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
+ * React Native's sticky rows do not stack, the next one pushes the last off, so both rows are one sticky child.
+ * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
+ * shows in it, and it closes as they stick, as two sticky rows meet. (It is part of the sticky child, so the 12 points under
+ * the second row take no touch while it is stuck, and show what scrolls under them.) `onScroll` hears the offset in points;
+ * a header that only needs to know whether the page has gone past a point asks `useScrolledPast`. `fixed`, `bar` and
+ * `contentStyle` are the Screen's own.
  */
 export function StickyScreen({
+  lead,
   header,
   subHeader,
+  subGap = 0,
   children,
   fixed,
   bar,
   contentStyle,
   onScroll,
 }: {
+  lead?: ReactNode;
   header: ReactNode;
   subHeader?: ReactNode;
+  subGap?: number;
   children?: ReactNode;
   fixed?: ReactNode;
   bar?: ReactNode;
@@ -69,10 +93,16 @@ export function StickyScreen({
   const offset = useRef<ScrollOffset | null>(null);
   offset.current ??= scrollOffset();
   const store = offset.current;
+  // Where the sticky row stands in the column while it is not stuck: under the column's top padding, or, with a lead, under
+  // the lead (as tall as it has said it is) and the gap between children.
+  const gap = typeof contentStyle?.gap === 'number' ? contentStyle.gap : 0;
+  const paddingTop = typeof contentStyle?.paddingTop === 'number' ? contentStyle.paddingTop : SCREEN_TOP;
+  const leadBottom = useRef(0);
+  const stuckAt = () => (lead ? leadBottom.current + gap : paddingTop);
   return (
     <Offset.Provider value={store}>
       <Screen
-        sticky={[0]}
+        sticky={[lead ? 1 : 0]}
         onScroll={(y) => {
           store.set(y);
           onScroll?.(y);
@@ -81,9 +111,25 @@ export function StickyScreen({
         bar={bar}
         contentStyle={contentStyle}
       >
-        <View style={BLOCK}>
-          {header}
-          {subHeader}
+        {lead ? (
+          <View
+            onLayout={(event) => {
+              leadBottom.current = event.nativeEvent.layout.y + event.nativeEvent.layout.height;
+            }}
+          >
+            {lead}
+          </View>
+        ) : null}
+        <View pointerEvents="box-none">
+          <View style={ROW}>{header}</View>
+          {subHeader ? (
+            <>
+              {subGap > 0 ? <View style={{ height: subGap }} /> : null}
+              <Closing room={subGap} stuckAt={stuckAt}>
+                <View style={ROW}>{subHeader}</View>
+              </Closing>
+            </>
+          ) : null}
         </View>
         {children}
       </Screen>

@@ -4,12 +4,12 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { compareShots, SCREEN, SECTIONS, type Section, type TextBox } from './kitCompare';
+import { compareShots, reportFolder, SCREEN, SECTIONS, type Section, type TextBox } from './kitCompare';
 
 /**
  * The kit beside the web's, shot for shot: every section of the kit page, on the web (Playwright, at the iPhone 16 Pro's
  * 402 × 874 pt at 3×, with its safe areas: 62 on top, 34 below) and in the app (Expo Go on the booted simulator), then
- * compared pixel by pixel into docs/superpowers/reports/phase-1-parity/.
+ * compared pixel by pixel into docs/superpowers/reports/phase-1-parity/ or phase-2-parity/, by the phase that added the section.
  *
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/kit-shots.ts [web] [app] [compare] [--only=section,section]
  *
@@ -19,7 +19,8 @@ import { compareShots, SCREEN, SECTIONS, type Section, type TextBox } from './ki
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '../../..');
 const web = join(root, 'apps/web');
-const out = join(root, 'docs/superpowers/reports/phase-1-parity');
+/** Where a section's picture and numbers go: the report of the phase that added it (phase 1's sections beside phase 1's, phase 2's beside phase 2's). */
+const outOf = (section: Section) => join(root, 'docs/superpowers/reports', reportFolder(section));
 const raw = join(root, 'apps/mobile/.kit-shots');
 const fromWeb = createRequire(join(web, 'package.json'));
 
@@ -159,7 +160,7 @@ async function main() {
   const steps = args.filter((a) => !a.startsWith('--'));
   const all = steps.length === 0;
   mkdirSync(raw, { recursive: true });
-  mkdirSync(out, { recursive: true });
+  for (const section of sections) mkdirSync(outOf(section), { recursive: true });
   if (all || steps.includes('web')) await shootWeb(sections);
   if (all || steps.includes('app')) await shootApp(sections);
   if (all || steps.includes('compare')) {
@@ -170,16 +171,19 @@ async function main() {
       const b = join(raw, `${section}-app.png`);
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${section}`);
       const boxes = JSON.parse(readFileSync(join(raw, `${section}-text.json`), 'utf8')) as TextBox[];
-      const result = await compareShots(sharp, section, readFileSync(a), readFileSync(b), boxes, out);
+      const result = await compareShots(sharp, section, readFileSync(a), readFileSync(b), boxes, outOf(section));
       // Half the screen unlike is not a difference to list: the app showed something else (a red box, a reload).
       if (result.rawPercent > 50) throw new Error(`${section}: the app's shot is not the kit (${result.rawPercent.toFixed(0)} % unlike); look at ${b}`);
       results.push(result);
     }
-    // A run of some sections keeps the numbers of the others: the file always has every section that has been shot.
-    const file = join(out, 'numbers.json');
-    const kept = (existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as typeof results) : []).filter((r) => !results.some((now) => now.section === r.section));
-    const all = [...kept, ...results].sort((a, b) => SECTIONS.indexOf(a.section as Section) - SECTIONS.indexOf(b.section as Section));
-    writeFileSync(file, `${JSON.stringify(all, null, 2)}\n`);
+    // A run of some sections keeps the numbers of the others in the same report: each file always has every section that has been shot.
+    for (const folder of new Set(results.map((r) => reportFolder(r.section as Section)))) {
+      const file = join(root, 'docs/superpowers/reports', folder, 'numbers.json');
+      const now = results.filter((r) => reportFolder(r.section as Section) === folder);
+      const kept = (existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as typeof results) : []).filter((r) => !now.some((n) => n.section === r.section));
+      const merged = [...kept, ...now].sort((x, y) => SECTIONS.indexOf(x.section as Section) - SECTIONS.indexOf(y.section as Section));
+      writeFileSync(file, `${JSON.stringify(merged, null, 2)}\n`);
+    }
     for (const r of results) {
       const worst = r.texts.reduce((m, t) => (t.unmeasured ? m : Math.max(m, t.apart)), 0);
       const unmeasured = r.texts.filter((t) => t.unmeasured).length;

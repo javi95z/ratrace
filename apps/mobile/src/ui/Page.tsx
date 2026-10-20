@@ -34,6 +34,9 @@ export function Page({ children }: { children: ReactNode }) {
   );
 }
 
+/** The room a Screen leaves above its first child. */
+export const SCREEN_TOP = 16;
+
 /** The web's `mx-auto w-full max-w-md px-3`: a column at most 448 wide, centred, the 12 gutter inside it. */
 const COLUMN: ViewStyle = { width: '100%', maxWidth: SHELL_WIDTH, alignSelf: 'center', paddingHorizontal: GUTTER };
 
@@ -72,7 +75,7 @@ export function Screen({
       onScroll={onScroll ? (event) => onScroll(event.nativeEvent.contentOffset.y) : undefined}
       scrollEventThrottle={onScroll ? 16 : undefined}
       style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
-      contentContainerStyle={[COLUMN, { paddingTop: 16, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
+      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
     >
       {children}
     </ScrollView>

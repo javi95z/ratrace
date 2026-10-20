@@ -4,6 +4,12 @@ import { join } from 'node:path';
 export const SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
 export type Section = (typeof SECTIONS)[number];
 
+/** The sections phase 2 added to the kit; the others are phase 1's. */
+export const PHASE_2_SECTIONS: readonly Section[] = ['motion-2'];
+
+/** The folder under `docs/superpowers/reports` that has a section's picture and its numbers: the report of the phase that added it. */
+export const reportFolder = (section: Section): 'phase-1-parity' | 'phase-2-parity' => (PHASE_2_SECTIONS.includes(section) ? 'phase-2-parity' : 'phase-1-parity');
+
 /** The screen of the comparison: an iPhone 16 Pro, in points, its density, and the safe areas left out (the status bar, the home indicator). */
 export const SCREEN = { width: 402, height: 874, scale: 3, top: 62, bottom: 34 } as const;
 
@@ -305,6 +311,46 @@ export function inkOf(a: Image, b: Image, boxes: readonly TextBox[], scale: numb
   return { checks, mask };
 }
 
+/**
+ * Of the pixels the map calls different even a point away (3), how many are an antialiased edge: a pixel of one shot whose colour
+ * is a blend, in some share, of two colours that stand within a point of it in the other shot. That is what Chrome draws at the
+ * fractional edge of a transformed box, where a layer of the phone has its edge on a whole device pixel.
+ */
+export function blendedEdges(a: Image, b: Image, map: Uint8Array, reach = LOOSE): { of: number; explained: number } {
+  let of = 0;
+  let explained = 0;
+  const colour = (img: Image, x: number, y: number) => {
+    const i = at(img, x, y);
+    return [img.data[i], img.data[i + 1], img.data[i + 2]];
+  };
+  const shares = Array.from({ length: 21 }, (_, k) => k / 20);
+  for (let y = 0; y < a.height; y++) {
+    for (let x = 0; x < a.width; x++) {
+      if (map[y * a.width + x] !== 3) continue;
+      of++;
+      // Each shot's pixel that has no colour like it within reach in the other is the one in question (the other way
+      // round it is matched, or the map would not call it different).
+      let found = true;
+      for (const [mine, other] of [[a, b], [b, a]] as const) {
+        const p = colour(mine, x, y);
+        const near = new Map<number, number[]>();
+        for (let yy = Math.max(0, y - reach); yy <= Math.min(other.height - 1, y + reach); yy++) {
+          for (let xx = Math.max(0, x - reach); xx <= Math.min(other.width - 1, x + reach); xx++) {
+            const c = colour(other, xx, yy);
+            near.set((c[0] << 16) | (c[1] << 8) | c[2], c);
+          }
+        }
+        const list = [...near.values()];
+        const within = (q: number[]) => Math.max(...[0, 1, 2].map((k) => Math.abs(p[k] - q[k]))) <= SHADE;
+        if (list.some(within)) continue;
+        found = found && list.some((c1) => list.some((c2) => shares.some((s) => within([0, 1, 2].map((k) => c1[k] * s + c2[k] * (1 - s))))));
+      }
+      if (found) explained++;
+    }
+  }
+  return { of, explained };
+}
+
 export interface Result {
   section: Section;
   rawPercent: number;
@@ -317,6 +363,8 @@ export interface Result {
   loosePlain: number;
   /** Pixels unmatched a point away that are not text: differences of shape, colour or place. */
   shape: number;
+  /** Of those, how many are an antialiased edge (see `blendedEdges`); the rest, if any, are real differences. */
+  shapeBlended?: number;
   /** Each line of text: where its ink stands in each shot. */
   texts: TextCheck[];
   places: ReturnType<typeof places>;
@@ -342,6 +390,7 @@ export async function compareShots(sharp: unknown, section: Section, webPng: Buf
     if (mask[i]) d.map[i] = 4;
     else shape++;
   }
+  const blends = blendedEdges(a, b, d.map);
   const [top, bottom] = contentRows(a, b, from, to, 8 * SCREEN.scale);
   const height = bottom - top;
   const w = a.width;
@@ -375,6 +424,7 @@ export async function compareShots(sharp: unknown, section: Section, webPng: Buf
     beyondPlain: d.beyondPlain,
     loosePlain: d.loosePlain,
     shape,
+    shapeBlended: blends.explained,
     texts: checks,
     places: places(d, w, SCREEN.scale),
     crop: [top / SCREEN.scale, bottom / SCREEN.scale],
