@@ -32,7 +32,7 @@ const BUTTON: Record<ButtonVariant, { bg: ColorToken; fg: ColorToken; tone: Fram
 };
 
 /** The web's `active:translate-y-[2px]`: the pressable, and the frame with it, sinks 2 pt while held. */
-const sink = (pressed: boolean): ViewStyle => ({ transform: [{ translateY: pressed ? 2 : 0 }] });
+export const sink = (pressed: boolean): ViewStyle => ({ transform: [{ translateY: pressed ? 2 : 0 }] });
 
 interface PressProps {
   onPress: () => void;
@@ -40,7 +40,7 @@ interface PressProps {
   children: ReactNode;
 }
 
-function usePress({ onPress, disabled }: Pick<PressProps, 'onPress' | 'disabled'>): () => void {
+export function usePress({ onPress, disabled }: Pick<PressProps, 'onPress' | 'disabled'>): () => void {
   const tap = useTap();
   return () => {
     if (disabled) return;
