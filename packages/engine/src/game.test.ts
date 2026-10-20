@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyRound, createGame, previewRound } from './game';
 import { PRICE_LEVEL_START } from './rates';
 import { cashflow, cashflowLines, finalScore, livedStatus, netWorth, realNetWorth, statusBreakdown } from './selectors';
+import { taxAnnual } from './flowTax';
 import { fixtureContent, fixtureStart } from './testing/fixture';
 import { passive, withPlayer as patched } from './testing/patch';
 import type { GameEvent, GameState, LedgerLine } from './types';
@@ -388,5 +389,18 @@ describe('selectors', () => {
     expect(status.items + status.home + status.job + status.city + status.lifestyle + status.bonus).toBe(status.total);
     expect(status.total).toBe(state.player.statusPoints);
     expect(status.lived).toBe(livedStatus(state));
+  });
+});
+
+describe('the yearly tax beside the cashflow', () => {
+  it('makes the flow what a round leaves in cash, tax and all', () => {
+    const state = withPlayer(createGame({ content, start: fixtureStart() }, 'c'), { deposit: 1_000_000 });
+    const flow = cashflow(content, state);
+    const tax = taxAnnual(content, state);
+    expect(tax).toBeGreaterThan(0);
+    const yearly = flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual - tax;
+    const round = previewRound(content, state, { orders: [] });
+    // Each figure is rounded down to a cent a year on its own.
+    expect(Math.abs(yearly * content.yearsPerRound - (round.cashAfter + round.reinvested - state.player.cash))).toBeLessThanOrEqual(4 * content.yearsPerRound);
   });
 });

@@ -4,7 +4,7 @@ import { Explain } from './Explain';
 import { ratOutfit } from '@ratrace/core/game/quips';
 import { Loop } from './Loop';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
-import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown } from '@ratrace/engine';
+import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import { characterName } from '@ratrace/core/game/characters';
@@ -82,6 +82,7 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
   } else if (figure === 'flow') {
     const lines = cashflowLines(content, shown);
     const whole = cashflow(content, shown);
+    const tax = taxAnnual(content, shown);
     rows = (
       <>
         <Row left={t('salary')} right={good(lines.salary)} />
@@ -92,7 +93,8 @@ function Details({ figure, shown }: { figure: Figure; shown: GameView }) {
         <Row left={t('living')} right={bad(lines.living)} />
         {lines.other > 0 ? <Row left={t('otherExpenses')} right={bad(lines.other)} /> : null}
         {lines.debt > 0 ? <Row left={t('debt')} right={bad(lines.debt)} /> : null}
-        <Row className={total} left={t('perYear')} right={fmt.signed(whole.salaryAnnual + whole.passiveAnnual - whole.expensesAnnual)} />
+        {tax > 0 ? <Row left={t('wayOut.tax')} right={bad(tax)} /> : null}
+        <Row className={total} left={t('perYear')} right={fmt.signed(whole.salaryAnnual + whole.passiveAnnual - whole.expensesAnnual - tax)} />
       </>
     );
   } else if (figure === 'ratRace') {
@@ -259,7 +261,7 @@ export function Hud({ compact = false, skyline = !compact, flush = false, onProf
   const years = content.yearsPerRound;
 
   const flow = cashflow(content, shown);
-  const yearly = flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual;
+  const yearly = flow.salaryAnnual + flow.passiveAnnual - flow.expensesAnnual - taxAnnual(content, shown);
   const escape = preview ? preview.escape : escapeProgress(content, shown);
   const escaped = p.escapedAtRound !== null;
   const { tier, rose } = useTierUp(p.statusPoints);

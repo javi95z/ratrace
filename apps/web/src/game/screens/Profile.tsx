@@ -1,7 +1,7 @@
 'use client';
 
 import { balanceArt, familyArt, homeLifeArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon } from '@ratrace/content';
-import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
+import { cashflow, homeOf, taxAnnual, netWorth, quoteItem, quoteLiving, quoteOwnedProperty } from '@ratrace/engine';
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -29,6 +29,7 @@ const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];
  */
 export function ProfileBody() {
   const t = useT('profile');
+  const hud = useT('hud');
   const { content, text, names, fmt } = useWords();
   const shown = useShown();
   const history = useGame((s) => s.history);
@@ -40,6 +41,7 @@ export function ProfileBody() {
   // One word each: the full names of the insurances do not fit on a line, and the sheet behind the row has them.
   const insured = INSURANCES.filter((kind) => life.insurance[kind]).map((kind) => t(`insuranceShort.${kind}`));
   const flow = cashflow(content, shown);
+  const tax = taxAnnual(content, shown);
   const [open, setOpen] = useState<string | null>(null);
   const [about, setAbout] = useState<About | null>(null);
   const [line, setLine] = useState<BalanceLine | null>(null);
@@ -96,6 +98,7 @@ export function ProfileBody() {
         <Row left={t('salary')} right={<span className="text-teal-300">{fmt.signed(flow.salaryAnnual)}</span>} />
         <Row left={t('passive')} right={<span className="text-teal-300">{fmt.signed(flow.passiveAnnual)}</span>} />
         <Row left={t('expenses')} right={<span className="text-wine-300">{fmt.signed(-flow.expensesAnnual)}</span>} />
+        {tax > 0 ? <Row left={hud('wayOut.tax')} right={<span className="text-wine-300">{fmt.signed(-tax)}</span>} /> : null}
       </Panel>
 
       <Panel title={t('balance')} label={t('balance')}>
