@@ -4,6 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { COLORS, SHELL_WIDTH } from './theme';
 
+/** The ground: dots.png (6 pt tile; @2x/@3x picked by the device) repeated, never stretched. */
+export const GROUND = { source: dots, resizeMode: 'repeat', tile: 6 } as const;
+
 /**
  * The web's body (globals.css): night-800 with a weave of single pixels (dots.png, one 6 pt tile in three
  * densities), the left and right safe insets padded, the column at most 448 wide and centred with a 12 gutter,
@@ -15,8 +18,8 @@ export function Page({ children }: { children: ReactNode }) {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS['night-900'] }}>
       <ImageBackground
-        source={dots}
-        resizeMode="repeat"
+        source={GROUND.source}
+        resizeMode={GROUND.resizeMode}
         style={{
           flex: 1,
           backgroundColor: COLORS['night-800'],
@@ -37,7 +40,9 @@ export function Page({ children }: { children: ReactNode }) {
   );
 }
 
-/** A bar on the bottom edge (the web's pb-safe): padded by the larger of 12 and the bottom inset, on night-900. */
+/**
+ * A bar on the bottom edge (the web's pb-safe), placed OUTSIDE Page (Page already pads the side insets for what it
+ * holds; this bar spans the screen, so it pads them itself): padded by the larger of 12 and the bottom inset, on night-900. */
 export function BottomBar({ children }: { children: ReactNode }) {
   const inset = useSafeAreaInsets();
   return (

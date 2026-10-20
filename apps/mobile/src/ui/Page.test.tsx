@@ -4,7 +4,9 @@ import { createContext, useContext } from 'react';
 import { expect, test, vi } from 'vitest';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BottomBar, Page } from './Page';
+import dots from '../../assets/ui/dots.png';
+import { TILE } from '../../scripts/dots';
+import { BottomBar, GROUND, Page } from './Page';
 import { COLORS } from './theme';
 
 // The library's web build needs a native module vitest cannot load: a stand-in with the same two pieces Page uses.
@@ -15,6 +17,19 @@ vi.mock('react-native-safe-area-context', () => {
       <Ctx.Provider value={initialMetrics.insets as never}>{children}</Ctx.Provider>
     ),
     useSafeAreaInsets: () => useContext(Ctx),
+  };
+});
+
+// Records what Page hands the background: react-native-web does not tile, so the props are what the app controls.
+const seen: Array<{ source: unknown; resizeMode: unknown }> = [];
+vi.mock('react-native', async (orig) => {
+  const rn = (await orig()) as typeof import('react-native');
+  return {
+    ...rn,
+    ImageBackground: (props: Record<string, unknown>) => {
+      seen.push({ source: props.source, resizeMode: props.resizeMode });
+      return <rn.ImageBackground {...(props as Record<string, unknown>)} />;
+    },
   };
 });
 
@@ -34,11 +49,18 @@ test('Page puts its children in a centred column at most 448 wide with a 12 gutt
   expect(el!.style.paddingRight).toBe('12px');
 });
 
-test('Page repeats the dots tile and paints the top inset night-900', () => {
+test('the ground is the dots tile, repeated, 6 pt', () => {
+  expect(GROUND.source).toBe(dots);
+  expect(GROUND.resizeMode).toBe('repeat');
+  expect(GROUND.tile).toBe(TILE);
+});
+
+test('Page paints the ground with exactly those props, and the top inset night-900', () => {
+  seen.length = 0;
   const { container } = wrap({ ...none, top: 47, left: 5, right: 7 }, <Page><Text>hi</Text></Page>);
-  const img = container.querySelector('[style*="repeat"]') ?? container.querySelector('img');
-  expect(container.innerHTML).toMatch(/dots/);
-  expect(img).not.toBeNull();
+  expect(seen).toHaveLength(1);
+  expect(seen[0].source).toBe(GROUND.source);
+  expect(seen[0].resizeMode).toBe(GROUND.resizeMode);
   const strips = Array.from(container.querySelectorAll('div')).filter(
     (d) => d.style.height === '47px' && d.style.position === 'absolute',
   );
