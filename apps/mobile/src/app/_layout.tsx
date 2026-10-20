@@ -1,10 +1,11 @@
 // The phone's JavaScript is given what the game's packages use before any of them load.
 import '../polyfills';
-import { SplashScreen, Stack } from 'expo-router';
+import { SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GameProvider } from '../game/context';
 import { useGameFonts } from '../ui/fonts';
+import { GROUND_THEME, SCREENS } from '../ui/navigation';
 import { Page } from '../ui/Page';
 
 // The splash stays until the game's typefaces are in: nothing is ever drawn in the system font first.
@@ -24,7 +25,9 @@ export default function RootLayout() {
     <GameProvider>
       <StatusBar style="light" />
       <Page>
-        <Stack screenOptions={{ headerShown: false, animation: 'none', contentStyle: { backgroundColor: 'transparent' } }} />
+        <ThemeProvider value={GROUND_THEME}>
+          <Stack screenOptions={SCREENS} />
+        </ThemeProvider>
       </Page>
     </GameProvider>
   );
