@@ -75,8 +75,9 @@ export default [
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
-    // The web app: the rules of hooks, and a wall between the screens and the two things only the session layer may touch.
-    files: ['apps/web/src/**/*.{ts,tsx}'],
+    // The web app and the phone's: the rules of hooks (the walls between the screens and the session are their
+    // architecture tests).
+    files: ['apps/web/src/**/*.{ts,tsx}', 'apps/mobile/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooks },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
