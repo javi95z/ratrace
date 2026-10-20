@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 /** The sections of the kit page, in their order: the same list as apps/mobile/src/app/kit.tsx and the web's kit/page.tsx. */
-export const SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots'] as const;
+export const SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 /** The screen of the comparison: an iPhone 16 Pro, in points, its density, and the safe areas left out (the status bar, the home indicator). */

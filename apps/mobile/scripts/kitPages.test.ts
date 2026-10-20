@@ -26,6 +26,18 @@ test('the two kits write the same words', () => {
   }
 });
 
+// The motion section is a file of its own on each side: the times each effect is held at, and the data of the charts, are the same numbers.
+const motionApp = readFileSync(new URL('../src/ui/kitMotion.tsx', import.meta.url), 'utf8');
+const motionWeb = readFileSync(new URL('../../web/src/app/[locale]/kit/motion.tsx', import.meta.url), 'utf8');
+const constant = (source: string, name: string) => (new RegExp(`const ${name} = (\\{[^}]*\\}|\\[[^\\]]*\\])`).exec(source)?.[1] ?? '').replace(/\s+/g, ' ');
+
+test('the motion section holds every effect at the same time, and draws the same prices and the same net worth, on both sides', () => {
+  for (const name of ['HELD', 'PRICE', 'HISTORY']) {
+    expect(constant(motionApp, name), name).not.toBe('');
+    expect(constant(motionApp, name), name).toBe(constant(motionWeb, name));
+  }
+});
+
 test('no test lives among the routes: expo-router bundles every file under src/app, and node: modules break the app', () => {
   expect(readdirSync(new URL('../src/app', import.meta.url)).filter((name) => /\.test\./.test(name))).toEqual([]);
 });

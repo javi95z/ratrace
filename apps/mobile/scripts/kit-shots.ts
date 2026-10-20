@@ -164,7 +164,7 @@ async function main() {
   if (all || steps.includes('app')) await shootApp(sections);
   if (all || steps.includes('compare')) {
     const sharp: unknown = fromWeb('sharp');
-    const results = [];
+    const results: Array<Awaited<ReturnType<typeof compareShots>>> = [];
     for (const section of sections) {
       const a = join(raw, `${section}-web.png`);
       const b = join(raw, `${section}-app.png`);
@@ -175,7 +175,11 @@ async function main() {
       if (result.rawPercent > 50) throw new Error(`${section}: the app's shot is not the kit (${result.rawPercent.toFixed(0)} % unlike); look at ${b}`);
       results.push(result);
     }
-    writeFileSync(join(out, 'numbers.json'), `${JSON.stringify(results, null, 2)}\n`);
+    // A run of some sections keeps the numbers of the others: the file always has every section that has been shot.
+    const file = join(out, 'numbers.json');
+    const kept = (existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as typeof results) : []).filter((r) => !results.some((now) => now.section === r.section));
+    const all = [...kept, ...results].sort((a, b) => SECTIONS.indexOf(a.section as Section) - SECTIONS.indexOf(b.section as Section));
+    writeFileSync(file, `${JSON.stringify(all, null, 2)}\n`);
     for (const r of results) {
       const worst = r.texts.reduce((m, t) => (t.unmeasured ? m : Math.max(m, t.apart)), 0);
       const unmeasured = r.texts.filter((t) => t.unmeasured).length;

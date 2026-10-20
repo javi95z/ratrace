@@ -44,14 +44,33 @@ const COLUMN: ViewStyle = { width: '100%', maxWidth: SHELL_WIDTH, alignSelf: 'ce
  * `contentStyle` is the column's own spacing (a gap, the room on top). `bar` is the screen's `BottomBar`, under the
  * scroll and across the whole width; it clears the home indicator itself, so then the scroll's foot leaves room for a
  * frame's drop only. `fixed` is what stands over the page and does not scroll with it, the web's `position: fixed` (a
- * Toast): placed in the screen's whole box, not in the column.
+ * Toast): placed in the screen's whole box, not in the column. `sticky` lists which of the children stick to the top
+ * of the scroll once they reach it (see `StickyScreen`, which uses it), and `onScroll` hears how far the page has
+ * scrolled, in points.
  */
-export function Screen({ children, contentStyle, fixed, bar }: { children: ReactNode; contentStyle?: ViewStyle; fixed?: ReactNode; bar?: ReactNode }) {
+export function Screen({
+  children,
+  contentStyle,
+  fixed,
+  bar,
+  sticky,
+  onScroll,
+}: {
+  children: ReactNode;
+  contentStyle?: ViewStyle;
+  fixed?: ReactNode;
+  bar?: ReactNode;
+  sticky?: number[];
+  onScroll?: (y: number) => void;
+}) {
   const inset = useSafeAreaInsets();
   // A bar that is not shown this time (`false`, `null`) is no bar: the scroll then clears the home indicator itself.
   const barred = Boolean(bar);
   const scroll = (
     <ScrollView
+      stickyHeaderIndices={sticky}
+      onScroll={onScroll ? (event) => onScroll(event.nativeEvent.contentOffset.y) : undefined}
+      scrollEventThrottle={onScroll ? 16 : undefined}
       style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
       contentContainerStyle={[COLUMN, { paddingTop: 16, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
     >

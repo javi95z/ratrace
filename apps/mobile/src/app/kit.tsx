@@ -11,8 +11,9 @@ import { Picker } from '../ui/Picker';
 import { RatAvatar } from '../ui/RatAvatar';
 import { Sprite } from '../ui/Sprite';
 import { Language, PixelText, ReadText } from '../ui/text';
+import { MotionTwo } from '../ui/kitMotion';
 
-const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots'] as const;
+const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
 type Section = (typeof KIT_SECTIONS)[number];
 
 const LOOK: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
@@ -199,6 +200,8 @@ function Body({ section }: { section: Section }): ReactNode {
       );
     case 'dots':
       return null;
+    case 'motion-2':
+      return <MotionTwo />;
   }
 }
 
