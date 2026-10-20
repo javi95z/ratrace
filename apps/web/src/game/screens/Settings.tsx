@@ -492,7 +492,7 @@ function EndLife({ shown, onLeave }: { shown: GameView; onLeave(): void }) {
   if (shown.finished || Object.hasOwn(shown.player.life.flags, 'in_room')) return null;
   return (
     <>
-      <button type="button" onClick={() => setAsking(true)} className="min-h-11 self-start text-[13px] text-wine-300 underline underline-offset-4">
+      <button type="button" onClick={() => setAsking(true)} className="pixel frame-raised frame-wine flex min-h-12 w-full items-center justify-center gap-2 bg-wine-700 px-4 text-[17px] text-cream">
         {t('endLife')}
       </button>
       <Sheet open={asking} onClose={() => setAsking(false)} title={t('endLifeTitle')} closeLabel={common('close')}>
