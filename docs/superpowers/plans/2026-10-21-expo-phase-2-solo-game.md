@@ -41,6 +41,11 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
 - **Commits:**
   - Stage by path, never `git add -A`.
   - Every commit ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- **Performance** (the user's requirement: the game must feel as quick as the web on a phone):
+  - Budgets, measured on a release build in the iOS simulator, each the median of five: cold start to Home ≤ 2 s; Home → Play ≤ 300 ms; a stage change (news → cards → outcome → finance → resolve) ≤ 200 ms; opening Finance and switching a tab ≤ 150 ms; a Sheet open ≤ 150 ms. The card swipe and every stepped animation run on the UI thread (Reanimated worklets), never driven by React state per frame.
+  - A list that can pass 30 rows (records, collection, shop shelf, market, ledger) renders with `FlatList` or a measured equivalent, never a mapped `ScrollView` of every row.
+  - A screen subscribes to the narrowest store slice it draws (`useGame(select)` with a stable selector, `useShallow` for objects), as the web does; no screen re-renders on every store change.
+  - Each screen task adds one render-count test for its main screen: one store change the screen does not draw causes no re-render of it.
 - **Off limits:** never run `online:deploy`, `online:live-check`, `online:test-db`, `supabase config push`, or anything that writes to the live Supabase project. Phase 2 is offline.
 
 ## Review Focus
@@ -345,7 +350,9 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
   - Play's "basket count and undo".
 - Scenes: `play-finance-r6` (portfolio), `finance-basket` (sheet), `finance-pension`, `finance-tabs-ru-360`.
 
-- [ ] Steps as in the shared method. **Commit** `feat(mobile): finance, its tabs, the basket and the portfolio`.
+- [ ] Steps as in the shared method.
+- [ ] **Performance checkpoint (mid-phase):** a release build (`npx expo prebuild --platform ios --clean`, then `npx expo run:ios --configuration Release`; `apps/mobile/ios/` git-ignored) on the simulator. Measure Home → Play, a stage change, opening Finance and a tab switch against the budgets in Global Constraints; write them in the parity report. Fix any over budget before Task 13.
+- [ ] **Commit** `feat(mobile): finance, its tabs, the basket and the portfolio`.
 
 ### Task 13: Finance — market, property, debt
 
@@ -494,7 +501,7 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
   - switch to Russian.
   Write down every fault. Fix each in its screen, with a test.
 - [ ] **Step 2:** `scene-shots.ts web app compare` over every scene. The report lists none over tolerance.
-- [ ] **Step 3:** Build the release app. Install it, launch it, and take the measures. Any step over 1 s goes to the report as a finding with its cause.
+- [ ] **Step 3:** Build the release app. Install it, launch it, and take every measure of the Global Constraints' performance budgets, plus the swipe's frame rate (the Perf Monitor). Any measure over its budget is fixed, with its cause in the report.
 - [ ] **Step 4:** The Android emulator. Not installed yet: the user's approval for the ≈6–8 GB download is asked in the phase's final message. If approved before this task, the same release build and whole life run on it too.
 - [ ] **Step 5:** Update the spec's "Phases" section (phase 2 done, and what phase 3 starts from) and the memory file `mobile-apps-plan.md`.
 - [ ] **Step 6: Commit** `docs(mobile): phase 2, a whole life by hand and every screen beside the web's`.
