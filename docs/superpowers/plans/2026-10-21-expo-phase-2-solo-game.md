@@ -205,23 +205,26 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
 - Commit when the tests pass, the whole repo is green and the task's scenes compare clean.
 - Each task's last step adds its scene rows to `docs/superpowers/reports/2026-10-21-phase-2-parity.md`.
 
-### Task 6: Home, Legal and the settings sheets
+### Task 6: Home, the week's challenge offline, Legal and the settings sheets
 
 **Files:**
-- Create: `apps/mobile/src/game/screens/{Home,Settings}.tsx`, `apps/mobile/src/app/legal.tsx` (static, from the web's `legal/page.tsx`), tests.
+- Create: `apps/mobile/src/game/screens/{Home,Settings,Challenge}.tsx`, `apps/mobile/src/app/legal.tsx` (static, from the web's `legal/page.tsx`), tests.
+- Modify: `apps/mobile/src/app/challenge.tsx`.
 - Modify: `apps/mobile/src/app/index.tsx`.
 - Delete: `Placeholder.tsx` and its test once no route uses it (Task 19). Until then, routes not yet ported keep it.
 
 **Interfaces:**
 - Consumes: Task 3's stand-ins.
 - Produces:
-  - `Home`: continue, new, the last life's look, collection, records, the lost and moved notices, the not-saving alert, the settings gear, the legal link. Nothing online: no rankings link, challenge card, rooms, friends, profile link, install offer or account offer.
+  - `Home`: continue, new, the week's challenge card, the last life's look, collection, records, the lost and moved notices, the not-saving alert, the settings gear, the legal link. Nothing online: no rankings link, rooms, friends, profile link, install offer or account offer.
+  - From `Challenge.tsx`, what the web shows a player with no account: `useThisWeek`, `useRuleText`, `WeeklyChallengeCard` (no attempt line), and the `Challenge` screen with practice only (`start(week.lifeId, { challenge: week.week })`, the practice hint; no attempt, no board, no rankings link). The week is read from `useClock()` (Task 5), so scenes are drawn on `SCENE_NOW`.
   - From `Settings.tsx`: `LanguagePick`, `LanguageMenu` (through `setLocale`), `Switches` (sound, reduced motion, guide), `Version`, `Standing`, `SettingsSheet`, `EndLife`, `HomePreferences`, `HomeSettingsPanel`, `HomeSettingsSheet`.
   - `sheetsGone()`: a promise that waits for open Sheets to close. On the phone it resolves after the Modal's `onDismiss`.
 - Web tests to port:
   - `Home.test.tsx`: new life for newcomers; settings behind the gear; Russian; collection and records links; continue first with who and where; the last life's look; the not-saving alert; lost-life explanations (damaged, newer, outdated, waiting); no warning without a life.
   - `Settings.test.tsx`: the kind of life shown (own); standing; the not-saving alert; switches change and persist; back to home and close.
-- Scenes: `home-new`, `home-continue`, `home-settings` (sheet open), `home-lost-newer`, `legal`.
+  - `Challenge.test.tsx`: its solo cases (the card's life, rule and days left; practice starts a life of the week's challenge unranked; nothing about attempts without an account).
+- Scenes: `home-new`, `home-continue`, `home-settings` (sheet open), `home-lost-newer`, `challenge-practice`, `legal`.
 
 - [ ] Steps as in the shared method. **Commit** `feat(mobile): home, its settings and the legal page`.
 
