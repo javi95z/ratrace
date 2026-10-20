@@ -1,10 +1,10 @@
-import { content, weekOf } from '@ratrace/content';
+import { content, lives, weekOf } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
-import { SAVE_FORMAT } from '../session/types';
+import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
 import { runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf } from './scenes';
 
@@ -98,7 +98,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -122,6 +122,38 @@ describe('the scenes of the front door beyond its first two, the challenge page 
   });
 });
 
+describe('the scenes of the page where a life is chosen', () => {
+  it('new-first is a device with nothing on it: the three lives to begin with, and the seventeen to unlock', async () => {
+    const store = await sceneStore('new-first');
+    expect(await saveOf(store)).toBeNull();
+    expect(await opened(store)).toMatchObject({ status: 'none', lost: null, view: null });
+    expect((await store.loadProfile()).unlocked).toEqual({});
+    expect(await store.listRuns()).toEqual([]);
+  });
+
+  it('new-unlocked is the same device with two lives the player has earned, which are locked lives of the game and are listed once each', async () => {
+    const store = await sceneStore('new-unlocked');
+    expect(await saveOf(store)).toBeNull();
+    const { unlocked } = await store.loadProfile();
+    expect(Object.keys(unlocked)).toEqual(['rider', 'heir']);
+    for (const id of Object.keys(unlocked)) expect(lives.find((life) => life.id === id)?.unlock, id).not.toBe('default');
+    // The rest of the profile is a new player's: nothing else is earned.
+    expect(await store.loadProfile()).toEqual({ ...newProfile(), unlocked });
+    // And the very same profile on every build of the scene.
+    expect((await (await sceneStore('new-unlocked')).loadProfile()).unlocked).toEqual(unlocked);
+  });
+
+  it('new-locked is the device of someone new, and the page shows the list of what is locked open; new-replace is a life in progress, with the question of ending it open', async () => {
+    expect(await saveOf(await sceneStore('new-locked'))).toBeNull();
+    expect(await (await sceneStore('new-locked')).loadProfile()).toEqual(newProfile());
+    expect(await saveOf(await sceneStore('new-replace'))).toEqual(await saveOf(await sceneStore('home-continue')));
+    expect(SCENES.find((scene) => scene.name === 'new-replace')?.sheet).toBe('replace');
+    expect(SCENES.find((scene) => scene.name === 'new-locked')?.sheet).toBeUndefined();
+    const state = await opened(await sceneStore('new-replace'));
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'news' });
+  });
+});
+
 describe('the list of scenes', () => {
   it('names each scene <screen> or <screen>-<state>, once, in a language the game speaks', () => {
     expect(new Set(SCENES.map((scene) => scene.name)).size).toBe(SCENES.length);
@@ -134,6 +166,10 @@ describe('the list of scenes', () => {
       'home-continue',
       'home-settings',
       'home-lost-newer',
+      'new-first',
+      'new-unlocked',
+      'new-locked',
+      'new-replace',
       'play-news-r1',
       'play-cards-r1',
       'play-finance-r6',
@@ -173,7 +209,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'play', 'challenge', 'legal']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'challenge', 'legal']));
   });
 });
 

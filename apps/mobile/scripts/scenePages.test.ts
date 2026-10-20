@@ -94,3 +94,24 @@ test('the front door\'s settings are open in the web\'s scene by the page, not b
   expect(web).toContain("document.querySelector<HTMLElement>('button[aria-label=\"Settings\"]')?.click()");
   expect(app).toContain("scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />");
 });
+
+test('the page where a life is chosen has open, in a scene, what the scene says: the web\'s page presses the button that opens it, the phone\'s screen is given it as its initial state', () => {
+  // The web: the list of the lives still locked is opened by the button that folds it (the only one with an `aria-expanded` on that page), and the
+  // question of ending a life by the button that starts one (in the bar that stands at the foot).
+  expect(web).toContain("'new-locked': 'main button[aria-expanded]'");
+  // Pressed once, not once for each run of an effect: a second press would shut the list the first opened.
+  expect(web).toContain('if (selector === undefined || pressed.current) return;');
+  expect(web).toContain("'new-replace': 'main div.fixed button'");
+  expect(web).toContain('<Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>');
+  const page = read('../../web/src/game/screens/NewLife.tsx');
+  expect([...page.matchAll(/aria-expanded=/g)]).toHaveLength(1);
+  expect(page).toMatch(/<div className="pb-safe fixed inset-x-0 bottom-0[^"]*">/);
+  expect(page.slice(page.indexOf('pb-safe fixed'), page.indexOf('<Sheet'))).toContain('<Button');
+  // The phone: the scene's sheet and its name say what the screen opens.
+  expect(app).toContain("scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined");
+  expect(app).toContain('new: (scene) => <NewLife opened={openedOf(scene)} />,');
+  // And both are scenes there are, and the one with a sheet names it.
+  const names = SCENES.map((scene) => scene.name);
+  expect(names).toEqual(expect.arrayContaining(['new-locked', 'new-replace']));
+  expect(SCENES.find((scene) => scene.name === 'new-replace')?.sheet).toBe('replace');
+});

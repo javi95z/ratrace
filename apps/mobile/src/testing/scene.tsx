@@ -8,6 +8,8 @@ import type { Services } from '../game/context';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Home } from '../game/screens/Home';
 import { Legal } from '../game/screens/Legal';
+import { NewLife } from '../game/screens/NewLife';
+import type { NewLifeOpened } from '../game/screens/NewLife';
 import { Placeholder } from '../game/screens/Placeholder';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { Screen } from '../ui/Page';
@@ -28,12 +30,18 @@ const nothing = (): void => {};
 export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>;
 
 /**
+ * What a scene of the page where a life is chosen has open at the start: its sheet, the question of ending the life in progress (`scene.sheet`), or
+ * the list of the lives still locked (`new-locked`, which the web's page opens by pressing the button that folds it).
+ */
+const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined);
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
  */
 export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
-  new: () => <Placeholder page="new" />,
+  new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: () => <Placeholder page="play" />,
   records: () => <Placeholder page="records" />,
   collection: () => <Placeholder page="collection" />,

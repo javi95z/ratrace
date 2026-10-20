@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, Row, Segmented, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
@@ -674,4 +674,21 @@ test('a Notice can be another surface, size, colour and alignment, and says what
   expect(textOf('Status').style.color).toBe(rgb(COLORS['ink-200']));
   // A notice with no role is not a live region of any kind.
   expect(document.querySelectorAll('[role="alert"], [role="status"]')).toHaveLength(2);
+});
+
+test('SrOnly is words for a screen reader only: in the tree, clipped to a point, out of the flow, and never taking a tap', () => {
+  render(
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      <SrOnly>{'Starts in Madrid with $5,000'}</SrOnly>
+      <View testID="next" />
+    </View>,
+  );
+  const words = screen.getByText('Starts in Madrid with $5,000');
+  expect(words).toBeTruthy();
+  let box: HTMLElement | null = words;
+  while (box && box.style.position !== 'absolute') box = box.parentElement;
+  expect(box).not.toBeNull();
+  expect([box!.style.width, box!.style.height, box!.style.overflowX, box!.style.overflowY]).toEqual(['1px', '1px', 'hidden', 'hidden']);
+  // Like every text of the kit, the words themselves take no tap.
+  expect((words.parentElement as HTMLElement).style.pointerEvents).toBe('none');
 });

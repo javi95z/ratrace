@@ -272,6 +272,18 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words
   );
 }
 
+/**
+ * Words only a screen reader reads (the web's `sr-only`): in the tree, so a button is named by them, but clipped to a point and out of the flow,
+ * so they take no room and no tap.
+ */
+export function SrOnly({ children }: { children: string }) {
+  return (
+    <View pointerEvents="none" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
+      <ReadText size={12}>{children}</ReadText>
+    </View>
+  );
+}
+
 /** Holds an icon or the picture of a thing straight on the surface it is on, with nothing behind it. */
 export function Bare({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   // Placed as its parent places its children, as the web's inline-flex is in a flex box: centred in a Tile.

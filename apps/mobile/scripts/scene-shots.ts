@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
 import { compareShots, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
-import { chooseScenes, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, webRules } from './sceneShots';
+import { chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
 import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
 
@@ -23,7 +23,8 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * Every scene is drawn on the same day (`SCENE_NOW`): the browser's clock is held at it, the app's services answer it. The web's pages are
  * given `webRules` (sceneShots.ts): a short page is as tall as the screen shows, not taller by the safe area (`VISIBLE_HEIGHT`), and what
  * it draws that the phone does not is hidden (`WEB_ONLY`: on the challenge page, the line that tells a guest to sign in).
- * A scene on a screen the app still draws as a stand-in (`STAND_INS`) is shot but not compared: its line is `unjudged`. A
+ * A scene on a screen the app still draws as a stand-in (`STAND_INS`) is shot but not compared: its line is `unjudged`. A scene in the phone's own
+ * words (`PHONE_WORDS`) is compared for its layout only: its text rows are reported and not judged, and its verdict says `phone words, ...`. A
  * compared scene whose app shot is more than half unlike the web's is the wrong page (a stand-in, a reload, a red box):
  * the run stops and exits 1, as the kit's does. When every scene compared is clean the run exits 0; a scene that differs
  * is listed and exits 1.
@@ -84,9 +85,9 @@ async function main() {
     writeFileSync(file, jsonOf(mergeLines(kept, lines)));
     for (const line of lines) {
       if (line.verdict === 'unjudged') console.log(`${line.scene.padEnd(18)} unjudged: ${line.why}`);
-      else console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(7)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt`);
+      else console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(28)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt`);
     }
-    const differ = lines.filter((line) => line.verdict === 'differs');
+    const differ = differing(lines);
     if (differ.length > 0) {
       console.error(`differs: ${differ.map((line) => line.scene).join(', ')}`);
       process.exitCode = 1;

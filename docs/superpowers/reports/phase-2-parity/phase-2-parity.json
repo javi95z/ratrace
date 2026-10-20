@@ -1,13 +1,17 @@
 [
-  {"scene":"home-new","locale":"en","verdict":"clean","rawPercent":3.65,"beyondPercent":0.372,"loose":6905,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
-  {"scene":"home-continue","locale":"en","verdict":"differs","rawPercent":2.98,"beyondPercent":0.399,"loose":7129,"shape":1,"shapeBlended":1,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
-  {"scene":"home-settings","locale":"en","verdict":"differs","rawPercent":4.04,"beyondPercent":1.993,"loose":6141,"shape":3,"shapeBlended":0,"textLines":29,"unmeasured":15,"oneSided":0,"worstPt":1},
-  {"scene":"home-lost-newer","locale":"en","verdict":"differs","rawPercent":4.22,"beyondPercent":0.758,"loose":12549,"shape":0,"shapeBlended":0,"textLines":17,"unmeasured":0,"oneSided":0,"worstPt":5.67},
+  {"scene":"home-new","locale":"en","verdict":"clean","rawPercent":3.59,"beyondPercent":0.368,"loose":6886,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
+  {"scene":"home-continue","locale":"en","verdict":"differs","rawPercent":2.9,"beyondPercent":0.445,"loose":7134,"shape":1,"shapeBlended":1,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
+  {"scene":"home-settings","locale":"en","verdict":"clean","rawPercent":2.55,"beyondPercent":0.405,"loose":5973,"shape":0,"shapeBlended":0,"textLines":29,"unmeasured":15,"oneSided":0,"worstPt":0.33},
+  {"scene":"home-lost-newer","locale":"en","verdict":"phone words, layout clean","rawPercent":4.16,"beyondPercent":0.754,"loose":12530,"shape":0,"shapeBlended":0,"textLines":17,"unmeasured":0,"oneSided":0,"worstPt":5.67},
+  {"scene":"new-first","locale":"en","verdict":"differs","rawPercent":3.28,"beyondPercent":0.592,"loose":8120,"shape":1107,"shapeBlended":517,"textLines":26,"unmeasured":5,"oneSided":0,"worstPt":2},
+  {"scene":"new-unlocked","locale":"en","verdict":"differs","rawPercent":3.22,"beyondPercent":0.657,"loose":8757,"shape":1107,"shapeBlended":517,"textLines":33,"unmeasured":5,"oneSided":0,"worstPt":2},
+  {"scene":"new-locked","locale":"en","verdict":"differs","rawPercent":6.55,"beyondPercent":2.924,"loose":16709,"shape":1636,"shapeBlended":1046,"textLines":66,"unmeasured":13,"oneSided":0,"worstPt":2},
+  {"scene":"new-replace","locale":"en","verdict":"differs","rawPercent":2,"beyondPercent":0.491,"loose":5509,"shape":1159,"shapeBlended":850,"textLines":32,"unmeasured":27,"oneSided":0,"worstPt":1},
   {"scene":"play-news-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-cards-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-finance-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-outcome-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-resolve-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
-  {"scene":"challenge-practice","locale":"en","verdict":"clean","rawPercent":4.56,"beyondPercent":0.904,"loose":11248,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
-  {"scene":"legal","locale":"en","verdict":"differs","rawPercent":14.16,"beyondPercent":10.584,"loose":246566,"shape":38813,"shapeBlended":200,"textLines":34,"unmeasured":0,"oneSided":17,"worstPt":281}
+  {"scene":"challenge-practice","locale":"en","verdict":"clean","rawPercent":4.29,"beyondPercent":0.757,"loose":11058,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
+  {"scene":"legal","locale":"en","verdict":"phone words, not comparable","rawPercent":14.42,"beyondPercent":10.864,"loose":248192,"shape":39721,"shapeBlended":215,"textLines":34,"unmeasured":0,"oneSided":17,"worstPt":281}
 ]

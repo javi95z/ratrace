@@ -5,7 +5,7 @@ import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
-import { SAVE_FORMAT } from '../session/types';
+import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { PlayerStore, SavedGame, Sessions } from '../session/types';
 
 /**
@@ -33,6 +33,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'home-continue', locale: 'en' },
   { name: 'home-settings', locale: 'en', sheet: 'settings' },
   { name: 'home-lost-newer', locale: 'en' },
+  { name: 'new-first', locale: 'en' },
+  { name: 'new-unlocked', locale: 'en' },
+  { name: 'new-locked', locale: 'en' },
+  { name: 'new-replace', locale: 'en', sheet: 'replace' },
   { name: 'play-news-r1', locale: 'en' },
   { name: 'play-cards-r1', locale: 'en' },
   { name: 'play-finance-r6', locale: 'en' },
@@ -89,6 +93,10 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'home-continue': { life: 'nurse', round: 3, stage: 'news' },
   'home-settings': { life: 'nurse', round: 3, stage: 'news' },
   'home-lost-newer': { life: 'nurse', round: 1, stage: 'news', newer: true },
+  'new-first': null,
+  'new-unlocked': null,
+  'new-locked': null,
+  'new-replace': { life: 'nurse', round: 3, stage: 'news' },
   'play-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-cards-r1': { life: 'engineer', round: 1, stage: 'cards' },
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
@@ -96,6 +104,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
   'challenge-practice': null,
   legal: null,
+};
+
+/**
+ * The lives a scene's player has unlocked, by the scene's name (a profile, not a life: a scene with none is a new player's).
+ * The page where a life is chosen draws the open lives from it.
+ */
+const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
+  'new-unlocked': ['rider', 'heir'],
 };
 
 /** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
@@ -130,6 +146,7 @@ async function toFinances(name: string, game: GameStore, bot: Bot): Promise<void
 export async function sceneStore(name: string): Promise<MemoryStore> {
   if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
   const store = memoryDevice();
+  await unlock(store, name);
   const reach = PLANS[name];
   if (reach === null) return store;
   const bot = bots.find((candidate) => candidate.id === PLAYER_ID) as Bot;
@@ -153,6 +170,14 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   }
   if (reach.newer) await asNewer(store);
   return store;
+}
+
+/** The lives a scene's player has unlocked, written to the profile as the game writes them: when, and in which life. */
+async function unlock(store: MemoryStore, name: string): Promise<void> {
+  const ids = UNLOCKED[name];
+  if (ids === undefined) return;
+  const unlocked = Object.fromEntries(ids.map((id, i) => [id, { at: 1_000 + i, gameId: `earned-${i + 1}` }]));
+  await store.saveProfile({ ...newProfile(), unlocked });
 }
 
 /** The life on a device, saved again as a newer version of the game would save it: in a format this one does not know how to read. */

@@ -36,10 +36,31 @@ function Settled({ sheet, children }: { sheet: string | undefined; children: Rea
   return children;
 }
 
+/**
+ * The page where a life is chosen has no initial state to take, and the web may not be changed to give it one, so a scene that has something open has the
+ * page press what opens it once the screen is drawn: in the page, as a person would, and not by the shot. A scene's name says which: the list of the lives
+ * still locked is opened by the button that folds it, and the question of ending the life in progress (`sheet: 'replace'`) by the button that starts one.
+ * The phone's registry gives the same two to its screen as an initial state (`opened`).
+ */
+const PRESSED: Readonly<Record<string, string>> = {
+  'new-locked': 'main button[aria-expanded]',
+  'new-replace': 'main div.fixed button',
+};
+function Pressed({ selector, children }: { selector: string | undefined; children: ReactNode }) {
+  // Once: the dev server runs an effect twice before the page is drawn again, and a second press would shut again what the first opened.
+  const pressed = useRef(false);
+  useEffect(() => {
+    if (selector === undefined || pressed.current) return;
+    pressed.current = true;
+    document.querySelector<HTMLElement>(selector)?.click();
+  }, [selector]);
+  return children;
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
-  new: () => <NewLife />,
+  new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: () => <Play />,
   records: () => <Records />,
   collection: () => <Collection />,

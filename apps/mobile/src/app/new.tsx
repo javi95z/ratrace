@@ -1,5 +1,5 @@
-import { Placeholder } from '../game/screens/Placeholder';
+import { NewLife } from '../game/screens/NewLife';
 
 export default function NewRoute() {
-  return <Placeholder page="new" />;
+  return <NewLife />;
 }

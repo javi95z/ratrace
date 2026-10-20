@@ -4,7 +4,9 @@ import { View } from 'react-native';
 import { Button } from './kit';
 import { afterEach, expect, test, vi } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
-import { JERSEY_X_HEIGHT, OSWALD_X_HEIGHT } from './fonts';
+import { X_HEIGHT } from './fontCoverage';
+import { adjustedRead, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT } from './fonts';
+import { COLORS } from './theme';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -165,8 +167,9 @@ test('on iOS a paragraph is held to its lines at the exact line height: each lin
   // 14 × 1.375 is 19.25 pt, 57.75 device px; a line is drawn at 58, so n lines are n × 0.25 px (n × 0.083 pt) taller than the web's.
   render(<ReadText size={14} lineHeight={14 * SNUG}>{'A paragraph of a few lines.'}</ReadText>);
   const alone = bottom();
+  // A line is a line: one that wraps to a single line is held to the exact line like any other, once the text has said how many it has.
   told(1);
-  expect(bottom()).toBeCloseTo(alone, 6);
+  expect(bottom() - alone).toBeCloseTo(19.25 - 58 / 3, 6);
   told(6);
   expect(bottom() - alone).toBeCloseTo(6 * (19.25 - 58 / 3), 6);
   // And again for another count: it is the lines drawn now that are given back.
@@ -206,4 +209,88 @@ test('a text that cannot wrap is not asked its lines, and neither is any text of
   platform.OS = 'android';
   render(<ReadText size={14} lineHeight={14 * SNUG}>{'Some lines'}</ReadText>);
   expect(outer().onTextLayout).toBeUndefined();
+});
+
+/** A theme colour as the browser writes it. */
+const rgb = (token: keyof typeof COLORS) => {
+  const n = parseInt(COLORS[token].slice(1), 16);
+  return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
+};
+
+test('words can run on in the same text in a colour of their own: the web\'s inline span, so one paragraph that wraps as a whole', () => {
+  const { container } = render(<ReadText size={12} tone="gold-500" after={[{ text: 'Reach the top', tone: 'ink-200' }]}>{'To unlock: '}</ReadText>);
+  const whole = container.firstElementChild as HTMLElement;
+  expect(whole.textContent).toBe('To unlock: Reach the top');
+  expect(whole.style.color).toBe(rgb('gold-500'));
+  const [lead, rest] = spans(container);
+  expect(lead.textContent).toBe('To unlock: ');
+  expect(rest.textContent).toBe('Reach the top');
+  expect(rest.style.color).toBe(rgb('ink-200'));
+  expect(rest.firstElementChild!.getAttribute('style')).toContain('ChakraPetch_400Regular');
+  // One text, one line height: the words that run on are not a text of their own.
+  expect(whole.style.lineHeight).not.toBe('');
+  expect(whole.querySelectorAll('[style*="line-height"]')).toHaveLength(0);
+});
+
+test('words that run on take the text\'s own colour, size and letter spacing unless they are told another, and nothing at all when there are none', () => {
+  const { container } = render(<PixelText size={11} tone="gold-500" style={{ letterSpacing: 1.65 }} after={[{ text: '●' }, { text: '' }]}>{'●●'}</PixelText>);
+  const [dots, more] = spans(container);
+  expect(spans(container)).toHaveLength(2);
+  expect(more.textContent).toBe('●');
+  expect(more.style.color).toBe('');
+  expect(parseFloat(more.style.fontSize)).toBeCloseTo(11, 5);
+  // The spacing is the outer text's: a nested text inherits it.
+  expect(parseFloat((container.firstElementChild as HTMLElement).style.letterSpacing)).toBeCloseTo(1.65, 5);
+  expect(dots.textContent).toBe('●●');
+});
+
+test('a reading face run on after a pixel text is set where the pixel text\'s font-size-adjust reaches it: larger, as the font it falls to has it', () => {
+  const { container } = render(<PixelText size={17} after={[{ text: ' · Lucía', read: 13 }]}>{'Nurse'}</PixelText>);
+  const [name, aside] = spans(container);
+  expect(name.textContent).toBe('Nurse');
+  expect(aside.textContent).toBe(' · Lucía');
+  const run = aside.firstElementChild as HTMLElement;
+  expect(run.style.fontFamily).toContain('ChakraPetch_400Regular');
+  expect(parseFloat(run.style.fontSize)).toBeCloseTo(adjustedRead(13), 3);
+});
+
+test('in Russian the Cyrillic of that reading face is Exo 2, adjusted to its own small letters, and its spaces are tightened by the pixel text\'s word spacing like the title\'s', () => {
+  const { container } = render(<Language.Provider value="ru"><PixelText size={17} after={[{ text: ' · Люсия', read: 13 }]}>{'Медсестра'}</PixelText></Language.Provider>);
+  const aside = spans(container)[1];
+  const runs = Array.from(aside.children) as HTMLElement[];
+  const name = runs.find((run) => run.textContent === 'Люсия')!;
+  expect(name.style.fontFamily).toContain('Exo2_400Regular');
+  expect(parseFloat(name.style.fontSize)).toBeCloseTo((13 * PIXEL_X_HEIGHT) / X_HEIGHT.Exo2_400Regular, 3);
+  const space = runs.find((run) => run.textContent === ' ')!;
+  expect(parseFloat(space.style.letterSpacing)).toBeCloseTo(17 * (0.03 + RU_WORD_SPACING), 5);
+});
+
+test('on iOS the baseline counts the fonts that run on: a text with a reading face after it sits where the line is really drawn', () => {
+  platform.OS = 'ios';
+  render(<PixelText size={17} lineHeight={17 * TIGHT}>{'Nurse'}</PixelText>);
+  const alone = outer().style.paddingTop;
+  outers.length = 0;
+  // (A reading face large enough to be the deepest in the line, so that it is the one the line is set from on iOS.)
+  render(<PixelText size={17} lineHeight={17 * TIGHT} after={[{ text: ' · Lucía', read: 40 }]}>{'Nurse'}</PixelText>);
+  expect(outer().style.paddingTop).not.toBe(alone);
+});
+
+test('a text cut to one line is one line, so its box is held to the exact line at once, with nothing asked of it', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'A line'}</ReadText>);
+  const open = bottom();
+  outers.length = 0;
+  render(<ReadText size={14} lineHeight={14 * SNUG} numberOfLines={1}>{'A line'}</ReadText>);
+  // 19.25 pt on a 3x screen is drawn at 58 device px (19.33): the box is given back the third of a pixel.
+  expect(bottom() - open).toBeCloseTo(19.25 - 58 / 3, 6);
+  expect(outer().onTextLayout).toBeUndefined();
+});
+
+test('a line that is on the grid already needs no holding, whether or not it is cut to one line', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={12} lineHeight={18}>{'One line'}</ReadText>);
+  const open = bottom();
+  outers.length = 0;
+  render(<ReadText size={12} lineHeight={18} numberOfLines={1}>{'One line'}</ReadText>);
+  expect(bottom()).toBeCloseTo(open, 6);
 });

@@ -7,8 +7,8 @@ away*, *text*, *shape*), the same tool (`kit-shots.ts`). Pictures and numbers li
 (`<section>.png`: the web, the app and the difference side by side; `numbers.json`); phase 1's stay in `phase-1-parity/`, untouched. A
 section goes to the report of the phase that added it (`reportFolder` in `kitCompare.ts`).
 
-Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4) and the scenes of the front
-door, the week's challenge and the legal notice (task 6, below). Scene rows (one game state drawn by both clients) follow with the screens.
+Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4), the scenes of the front
+door, the week's challenge and the legal notice (task 6, below) and the page where a life is chosen (task 7, below). Scene rows (one game state drawn by both clients) follow with the screens.
 
 ## Scenes: one game state, drawn by both clients
 
@@ -42,9 +42,17 @@ point; `differs`: read the numbers) and its numbers. As the kit's shots do, a co
 
 **Unjudged.** While the app draws phase 1's stand-ins for a screen (`STAND_INS` in `sceneShots.ts`, which a test holds equal to the stand-ins
 of the app's registry), its scenes are shot but not compared: their line is `"verdict":"unjudged"` with no numbers, and no diff picture is
-kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. Task 6 ported `home`, so its
-scenes are compared; the five `play-*` scenes of task 5 (`play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
+kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. Task 6 ported `home`, task 7
+`new`, so their scenes are compared; the five `play-*` scenes of task 5 (`play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
 `play-resolve-r6`) are still unjudged: they prove that both clients open each scene, and nothing more.
+
+**Phone words.** Where the web's words are false or impossible on a phone, the phone has words of its own (`phone.*`), and the two shots cannot agree on their
+text whatever the app does. The scenes that carry them are listed beside the stand-ins (`PHONE_WORDS` in `sceneShots.ts`: `home-lost-newer`, `legal`), and are
+compared for their layout and shape only: their text rows are in the line (`textLines`, `oneSided`, `worstPt`) and not judged, and the verdict says so.
+`home-lost-newer` is `phone words, layout clean` or `phone words, layout differs`, by its shape alone (a layout that differs still fails the run). `legal`
+(`PHONE_PAGES`) is a page of other words from top to bottom, whose every box stands where the length of its text puts it, so its shape says nothing of the
+layout either: `phone words, not comparable`, which never fails a run (its layout is judged once, by drawing the phone's page with the web's own words: Task 6,
+below). Before this, those two scenes made every full run of `scene-shots.ts` exit 1.
 
 ## Task 6: the front door, its settings, the week's challenge and the legal notice
 
@@ -105,6 +113,78 @@ After 7 and 8, `challenge-practice` is clean (shape 9476 → 0, text within 0.67
   (iOS only) and the line-hold (`onTextLayout`, iOS only by design) are unchecked there.
 - **The one exception to Ruling A:** `home-settings` is drawn on the web by the scene page pressing the web's own gear (`Settled`), because the web's `HomeSettingsSheet` is not exported and the web
   may not change (R3). The phone draws the sheet beside the front door.
+
+## Task 7: choosing a new life
+
+`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app compare --only=new-first,new-unlocked,new-locked,new-replace`. Four scenes: `new-first` (a device
+with nothing on it: the three lives to begin with, the dice, the folded list of the seventeen locked), `new-unlocked` (the same device with two lives earned, the delivery
+rider and the heir), `new-replace` (a life in progress, and the question of ending it open over the page) and, beyond the brief's three, `new-locked` (the folded list opened:
+without it nothing of the locked rows, with their silhouettes, hints and difficulty, would be compared). The web's page has nothing to take an initial state from and may
+not be changed, so for `new-locked` and `new-replace` its scene page presses, once the screen is drawn, the button that opens each (`Pressed` in the scene page, the one
+exception to Ruling A besides the settings' gear); the app's `NewLife` takes the same two as an initial state (`opened`). `CareerPreview` has no scene of this task
+(the cards that show it are Task 11's); it was shot once through a temporary scene (a nurse's life, the law ladder started at its second rung: the sheet, over a
+blank page), compared and taken out again.
+
+| scene | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|
+| new-first | differs (residuals below) | 3.28 | 0.592 | 8120 | 1107 | 26 (5 unmeasured) | 2.00 (the dice) |
+| new-unlocked | differs (the same) | 3.22 | 0.657 | 8757 | 1107 | 33 (5 unmeasured) | 2.00 (the dice) |
+| new-locked | differs (the same, and the hints' slant) | 6.55 | 2.924 | 16709 | 1636 | 66 (13 unmeasured) | 2.00 (the dice, the hints) |
+| new-replace | differs (the same) | 2.00 | 0.491 | 5509 | 1159 | 32 (27 under the sheet's backdrop) | 1.00 |
+| CareerPreview (temporary scene) | clean | 3.69 | 1.388 | 12353 | 0 | 28 | 0.67 |
+
+The three pages that were shot before Task 7's second round (`home-new`, `home-settings`, `challenge-practice`) were shot again after the kit change in #3 below:
+`home-new` clean (0 shape, 0.67 pt), `challenge-practice` clean (0, 0.67 pt), `home-settings` **clean** now (it was 3 shape pixels, 1.00 pt: it is 0, 0.33 pt),
+`home-continue` the same one pixel, `home-lost-newer` `phone words, layout clean` (0 shape pixels; its text row is the notice's other words, 5.67 pt), `legal`
+`phone words, not comparable`.
+
+### What differed in the first shots, and was fixed
+
+| # | difference | cause | fix | test |
+|---|---|---|---|---|
+| 1 | a locked life's portrait 7 pt higher than the web's, its lock with it (4383 shape pixels) | the kit's `Well` is `align-self: flex-start` (it hugs in a column); the web's inline-flex well is centred by the row (`items-center`) against four lines of text | the well is given `alignSelf: 'center'` where the web's row centres it | `NewLife.test` (every portrait's well) |
+| 2 | the web's list of the locked lives shut in the shot of `new-locked` | the dev server runs a scene page's effect twice before it draws again: the page pressed the button twice, and the second press shut what the first opened | the page presses once (a ref) | `scenePages.test` |
+| 3 | boxes of stacked one-line texts 1 to 2 device pixels taller than the web's: the chosen life's tile 0.67 pt, `home-settings` 3 shape pixels, the sheet's content | a line is drawn on the device's grid (16.5 pt as 16.67), and the kit held a text to its exact line only from two lines up: a one-line text kept its grid line's extra, and a column of them added it up | a text cut to one line is held to the exact line at once; one that can wrap, once it has said how many lines it has (one or more) | `text.test` (RED: two tests failed before) |
+| 4 | the pay of a rung of the career 1.33 pt higher than its title (`CareerPreview`) | the web aligns the 16 pt title and the 15 pt pay by their baselines (`items-baseline`); a native row reads the baseline of a box, and the kit moves glyphs inside their boxes, so the two did not meet | the row is top-aligned and the pay is dropped by the difference of the two baselines in the browser (`webBaseline`: 14 and 13, a point) | `fonts.test`, `CareerPreview.test` |
+| 5 | the character's name after a pixel title ("Nurse · Lucía") would have needed a reading face inside a pixel text, in a colour of its own, and the unlock line two colours in one paragraph | the kit's texts took one string | `after` on the kit's texts: words that run on in the same text, in a colour, or in the reading face at the size the pixel text's `font-size-adjust` gives it (`adjustedRuns`: Chakra Petch's 13 is 15.6; Exo 2's for Cyrillic by its own small letters); a nested text takes the title's letter and word spacing in Russian as the web's span does; the baseline counts the fonts that run on | `text.test`, `fonts.test` |
+
+### The residual, with its cause
+
+1. **The dice (`🎲 At random`): 2.00 pt, 641 of the 1107 shape pixels.** Measured on both (rows of device pixels): the emoji is the same size, 54 px high, and the text beside it the same row of pixels;
+   the web's emoji has its top 17 px above the text's top and its bottom 6 px under the text's baseline, 83 px from the text; the app's 11 above, 12 under and 79 from it: 6 to 7 px (2 to 2.33 pt) lower.
+   Chrome applies the `font-size-adjust` to the emoji font too (CDP: `Apple Color Emoji`; its advance is 22.0 pt in a 14 px text against 18.0 without the adjust). Tried: the emoji in its own family
+   (`Apple Color Emoji`), at the size the adjust gives it: the same size within 2 px, and the place no nearer (11 above, 12 under): iOS lays that bitmap lower on the baseline than macOS does, and a React
+   Native text has no baseline offset for a run on iOS. The same class as phase 1's ▸ (a platform's own drawing of a sign no font of the page has); on an iPhone, Safari would draw it as the app does.
+   Only two labels have an emoji (`newLife.random`, `player.byChance`).
+2. **▾ and ▴ of the folded list: 1.33 to 1.67 pt, about 30 shape pixels.** Phase 1's ▸ again: no font of the page draws it; Chrome on macOS takes it from `.SF NS`, where the adjust makes it
+   1.375 times larger (measured: 8.875 against 6.453 pt wide); the app takes iOS's, which draws it 4 pt wide against the web's 5.
+3. **The hints under the locked lives are not slanted (new-locked: 1.67 to 2.00 pt, the first ink of a line 2 pt to the left).** The web's Chakra Petch is loaded without an italic face and Chrome
+   draws `italic` by slanting the upright one; iOS does not slant a custom font that has none (React Native's `fontStyle: 'italic'` does nothing there), so the hint is upright. Not
+   reproduced: a slant of the whole box would lean every line about the box's middle, not each about its own baseline, and the font's own italic has other widths than the upright, so
+   a hint would wrap in other places than the web's. The hint is the last, dimmest line of a row that opens only on a tap.
+4. **Whole CSS pixels against device pixels, up to ⅔ pt (1 pt for the sheet's last button).** Chrome puts boxes, images and the baseline of a text on whole CSS pixels and the phone on device pixels (phase 1's
+   same residual): the chosen tile ends one device pixel lower; the cash figure stands 2 device pixels higher (251 shape pixels); the coin and the city icon after a text of a fractional width are 1 device
+   pixel apart (94); "EASY" is 1 device pixel narrower (91); the labels of the kit's buttons (`Start this life`, `Keep my life`, `End it and start this one`: 0.67 to 1.00 pt) stand 2 device pixels higher
+   (527 in `new-locked`, the page with its button under the list). The rest of the 1107 of `new-first` is antialiased edges (517 are `shapeBlended`).
+
+### The lists: why not a `FlatList`
+
+The page has at most twenty lives in all (the three to begin with and seventeen to unlock): each is a tile (open) or a row (locked), and the two never pass twenty together, under the 30 rows
+a list needs a `FlatList` for. The page also scrolls as one (`Screen`'s scroll), so a `FlatList` inside it would be nested (React Native: no windowing there) and a list-based page
+would be a new kit piece, and a list of virtualised rows in jsdom shows only its first `initialNumToRender` rows, so no test could read the whole list. The choice was measured instead,
+by `Profiler` and `onLayout` on a development build on the simulator (JS time to the first layout, from the page's first render; a development build is the slow one, and the release build's
+measure is Task 12's checkpoint):
+
+| what | time to layout |
+|---|---|
+| the page as a new player opens it (3 tiles, the folded list) | 80 to 120 ms |
+| the page of someone who has unlocked every life (20 tiles at once) | mount 67 to 82 ms, layout at 98 to 146 ms |
+| the locked list opened, 17 rows drawn at once | layout at 306 to 402 ms |
+| the locked list opened, 5 rows in the first frame and 6 in each of the next | layout at 146 to 192 ms; the next commits 20 and 42 ms; all 17 by about 350 ms |
+
+The twenty tiles are drawn with the page, as they are (100 to 145 ms is a development build's worst case: nothing is saved by windowing them, and they stay as one flat group so that a
+tile that moves in the grid is not drawn again). The locked rows, whose first frame cost most and which are drawn on a tap, are drawn a few to a frame (`LockedList`:
+`LOCKED_FIRST` 5, `LOCKED_STEP` 6). Chosen tiles and rows are `memo`: choosing another life draws the two tiles that change, and nothing else.
 
 ## The tolerance, and the exception this phase needs
 

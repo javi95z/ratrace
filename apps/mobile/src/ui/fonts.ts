@@ -40,6 +40,14 @@ export function adjustedRead(px: number): number {
   return (px * PIXEL_X_HEIGHT) / CHAKRA_X_HEIGHT;
 }
 
+/**
+ * A reading text drawn where a pixel text's `font-size-adjust` reaches it (see `adjustedRead`), cut into runs: each run takes the pixel
+ * stack's small-letter height, as the font it falls to has it (Chakra Petch's, Exo 2's for Cyrillic, Arial's or the system's past them).
+ */
+export function adjustedRuns(text: string, weight: Weight, language = 'en'): Run[] {
+  return runsOf(text, 'read', weight, language).map((run) => ({ ...run, scale: scaleOf(run.family, 'pixel') }));
+}
+
 /** The family a whole run in this language uses (Cyrillic ones for Russian). */
 export function familyFor(role: Role, weight: Weight, locale: string): string {
   if (role === 'pixel') return locale === 'ru' ? OSWALD : JERSEY;
@@ -189,6 +197,21 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
 }
 
 /**
+ * Where the browser puts the baseline of a line, in points below the line's top: the room left over by the line height is split above and below the first
+ * font's ascent and descent (each rounded to a whole pixel), the half above rounded down. The line is set from the first font of the stack, whichever font
+ * draws what is in it (the pixel stack's, with Jersey at its adjusted size). It is what two texts of different sizes that share a baseline (the web's
+ * `items-baseline`) stand apart by, which a row of the phone cannot be asked for: the kit moves a text's glyphs inside its box, and the baseline a native row
+ * reads is the box's.
+ */
+export function webBaseline(role: Role, weight: Weight, size: number, lineHeight: number, language = 'en'): number {
+  const first = stackOf(role, weight, language)[0];
+  const f = size * (role === 'pixel' ? PIXEL_X_HEIGHT / X_HEIGHT[first] : 1);
+  const ascent = Math.round(METRICS[first].ascent * f);
+  const descent = Math.round(METRICS[first].descent * f);
+  return Math.floor((lineHeight - (ascent + descent)) / 2) + ascent;
+}
+
+/**
  * How far to move a text's glyphs down so its baseline stands where the browser puts it, in points.
  *
  * The browser (Blink, the web's reference) sets a line from the first font's ascent and descent, each rounded to a
@@ -201,12 +224,7 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
  */
 export function baselineShift(runs: readonly Run[], role: Role, weight: Weight, size: number, lineHeight: number, drawnLine: number, os: string, language = 'en'): number {
   if (os !== 'ios' || runs.length === 0) return 0;
-  // The line is set from the first font of the stack, whichever font draws what is in it.
-  const first = stackOf(role, weight, language)[0];
-  const f = size * (role === 'pixel' ? PIXEL_X_HEIGHT / X_HEIGHT[first] : 1);
-  const ascent = Math.round(METRICS[first].ascent * f);
-  const descent = Math.round(METRICS[first].descent * f);
-  const web = Math.floor((lineHeight - (ascent + descent)) / 2) + ascent;
+  const web = webBaseline(role, weight, size, lineHeight, language);
   const tallest = Math.max(...runs.map((r) => (metricsOf(r.family).ascent + metricsOf(r.family).descent) * size * r.scale));
   const deepest = Math.max(...runs.map((r) => metricsOf(r.family).descent * size * r.scale));
   // The phone draws the line it is given (on its pixel grid); the browser the one asked for.

@@ -55,7 +55,21 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
  * results. The task that ports a screen takes its word out of this list.
  */
-export const STAND_INS: readonly string[] = ['new', 'play', 'records', 'collection'];
+export const STAND_INS: readonly string[] = ['play', 'records', 'collection'];
+
+/**
+ * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
+ * "reload the page"). The two shots cannot agree on their text, whatever the app does, so these are compared for their layout and shape only: the
+ * text rows are reported (they are in the line) and not judged, and the verdict says so.
+ */
+export const PHONE_WORDS: readonly string[] = ['home-lost-newer', 'legal'];
+
+/**
+ * Of those, the scenes whose whole page is other words (the legal notice: other sections, other paragraphs, other lengths), where every box
+ * stands where the length of its text puts it. Their shapes are not a layout to judge either, so they are reported and never fail a run; the
+ * layout of such a page is judged once, by drawing the phone's page with the web's own words (the parity report says how it was done for `legal`).
+ */
+export const PHONE_PAGES: readonly string[] = ['legal'];
 
 /** Whether a scene is compared: its screen is the real one on the app. */
 export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene));
@@ -66,7 +80,8 @@ export type Line =
   | {
       scene: string;
       locale: string;
-      verdict: 'clean' | 'differs';
+      /** A scene of the phone's own words (`PHONE_WORDS`) is judged by its layout alone, and says so. */
+      verdict: 'clean' | 'differs' | 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable';
       rawPercent: number;
       beyondPercent: number;
       loose: number;
@@ -85,10 +100,17 @@ const round = (value: number, places: number) => Math.round(value * 10 ** places
 /** A scene that is not compared, and why: no numbers. */
 export const unjudgedLine = (scene: Scene): Line => ({ scene: scene.name, locale: scene.locale, verdict: 'unjudged', why: `the app still draws a stand-in for ${screenOf(scene)}: its numbers say nothing` });
 
+/** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */
+function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' {
+  if (PHONE_PAGES.includes(scene.name)) return 'phone words, not comparable';
+  return result.shape === 0 ? 'phone words, layout clean' : 'phone words, layout differs';
+}
+
 /** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. */
 export function lineOf(scene: Scene, result: Result): Line {
-  const verdict = verdictOf(result);
-  if (verdict === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
+  const plain = verdictOf(result);
+  if (plain === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
+  const verdict = PHONE_WORDS.includes(scene.name) ? phoneVerdict(scene, result) : plain;
   const text = textSummary(result);
   return {
     scene: scene.name,
@@ -105,6 +127,9 @@ export function lineOf(scene: Scene, result: Result): Line {
     worstPt: round(text.worstPt, 2),
   };
 }
+
+/** The lines that fail a run: a scene that differs, or whose layout does. A clean one, one in the phone's own words, a page that cannot be compared and a stand-in do not. */
+export const differing = (lines: readonly Line[]): Line[] => lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs');
 
 /** The lines of the report after a run: those kept of scenes not shot this time, and the new ones, in the order the scenes are listed. */
 export function mergeLines(kept: readonly Line[], now: readonly Line[]): Line[] {

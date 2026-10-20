@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { ARIAL_FILE, buildArialCoverage, buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
-import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, CYRILLIC_ALONE, pixelSize, runsOf } from './fonts';
+import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, adjustedRuns, CYRILLIC_ALONE, pixelSize, runsOf, webBaseline } from './fonts';
 
 const JERSEY = 'Jersey15_400Regular';
 const OSWALD = 'Oswald_500Medium';
@@ -41,6 +41,19 @@ test('a reading text inside a pixel text is drawn at the size that brings its sm
   expect(adjustedRead(13) / 13).toBeGreaterThan(1.1);
   expect(adjustedRead(13) / 13).toBeLessThan(1.3);
   expect(adjustedRead(26)).toBeCloseTo(2 * adjustedRead(13), 10);
+});
+
+test('a reading text inside a pixel one is cut into runs that each take the pixel stack\'s height, as the font it falls to has it', () => {
+  const [latin] = adjustedRuns('Lucía', 400);
+  expect(latin.family).toBe('ChakraPetch_400Regular');
+  expect(13 * latin.scale).toBeCloseTo(adjustedRead(13), 10);
+  // Cyrillic is Exo 2 on a Russian page, with its own small letters to bring to the height.
+  const [cyrillic] = adjustedRuns('Люсия', 400, 'ru');
+  expect(cyrillic.family).toBe('Exo2_400Regular');
+  expect(cyrillic.scale).toBeCloseTo(PIXEL_X_HEIGHT / X_HEIGHT.Exo2_400Regular, 10);
+  expect(cyrillic.scale).not.toBeCloseTo(latin.scale, 3);
+  // The same letters, in the same fonts, as a reading text has: only the size differs.
+  expect(adjustedRuns('Ab · Люсия', 400, 'ru').map((run) => [run.text, run.family])).toEqual(runsOf('Ab · Люсия', 'read', 400, 'ru').map((run) => [run.text, run.family]));
 });
 
 test('pixelSize brings Jersey to the web\'s x-height share', () => {
@@ -154,4 +167,16 @@ test('the line metrics are the TTFs\' hhea ascender and descender', () => {
   const jersey = readFont(fontPath('Jersey15_400Regular'));
   expect(METRICS.Jersey15_400Regular).toEqual({ ascent: jersey.ascender / jersey.unitsPerEm, descent: -jersey.descender / jersey.unitsPerEm });
   expect(METRICS.ChakraPetch_400Regular).toEqual({ ascent: 0.992, descent: 0.308 });
+});
+
+test('where the browser puts the baseline of a line: the room left over split above and below, the half above rounded down', () => {
+  // Jersey at its adjusted size: a 16 pt title has an ascent of 17 and a descent of 5 in a line of 17.6, a 15 pt one 16 and 5 in 16.5.
+  expect(webBaseline('pixel', 400, 16, 16 * 1.1)).toBe(Math.floor((17.6 - 22) / 2) + 17);
+  expect(webBaseline('pixel', 400, 16, 16 * 1.1)).toBe(14);
+  expect(webBaseline('pixel', 400, 15, 15 * 1.1)).toBe(13);
+  // So two of them that share a baseline stand 1 pt apart at the top.
+  expect(webBaseline('pixel', 400, 16, 17.6) - webBaseline('pixel', 400, 15, 16.5)).toBe(1);
+  // A line taller than the font puts the baseline lower, by half the room (rounded down); a reading text is Chakra at its own size.
+  expect(webBaseline('pixel', 400, 16, 30)).toBe(webBaseline('pixel', 400, 16, 17.6) + Math.floor((30 - 22) / 2) - Math.floor((17.6 - 22) / 2));
+  expect(webBaseline('read', 400, 15, 21.75)).toBe(Math.floor((21.75 - (Math.round(0.992 * 15) + Math.round(0.308 * 15))) / 2) + Math.round(0.992 * 15));
 });
