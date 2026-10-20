@@ -47,16 +47,31 @@ interface Page {
   screenshot(options: { path: string }): Promise<unknown>;
 }
 
-/** In the page: every line of visible text, as client rects in CSS pixels. */
+/** In the page: every line of visible text, as client rects in CSS pixels, with the colour its glyphs are drawn in. */
 const TEXT_BOXES = () => {
-  const boxes: Array<{ x: number; y: number; w: number; h: number; text: string }> = [];
+  const boxes: Array<{ x: number; y: number; w: number; h: number; text: string; color: [number, number, number]; opacity: number; back?: [number, number, number]; covered: boolean }> = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     const text = node.textContent?.trim() ?? '';
-    if (!text || node.parentElement?.closest('script, style, nextjs-portal')) continue;
+    const el = node.parentElement;
+    if (!text || !el || el.closest('script, style, nextjs-portal')) continue;
+    const color = (getComputedStyle(el).color.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number) as [number, number, number];
+    let opacity = 1;
+    for (let up: Element | null = el; up; up = up.parentElement) opacity *= Number(getComputedStyle(up).opacity);
+    let back: [number, number, number] | undefined;
+    for (let up: Element | null = el; up && !back; up = up.parentElement) {
+      const bg = getComputedStyle(up).backgroundColor.match(/[\d.]+/g)?.map(Number);
+      if (bg && (bg.length === 3 || bg[3] > 0)) back = [bg[0], bg[1], bg[2]];
+    }
     const range = document.createRange();
     range.selectNodeContents(node);
-    for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height, text: text.slice(0, 40) });
+    for (const r of range.getClientRects()) {
+      if (r.width <= 0 || r.height <= 0) continue;
+      // Under a sheet's backdrop the topmost thing at the line's middle is not the line's own.
+      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const covered = top !== null && !el.contains(top) && !top.contains(el);
+      boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height, text: text.slice(0, 40), color, opacity, back, covered });
+    }
   }
   return boxes;
 };
@@ -162,8 +177,9 @@ async function main() {
     }
     writeFileSync(join(out, 'numbers.json'), `${JSON.stringify(results, null, 2)}\n`);
     for (const r of results) {
-      const worst = r.texts.reduce((m, t) => Math.max(m, t.apart), 0);
-      console.log(`${r.section.padEnd(11)} raw ${r.rawPercent.toFixed(2)} %  beyond ${r.beyondPercent.toFixed(3)} %  a point away ${r.loose} px, of which not text ${r.shape} px  text lines ${r.texts.length}, worst ${worst.toFixed(2)} pt`);
+      const worst = r.texts.reduce((m, t) => (t.unmeasured ? m : Math.max(m, t.apart)), 0);
+      const unmeasured = r.texts.filter((t) => t.unmeasured).length;
+      console.log(`${r.section.padEnd(11)} raw ${r.rawPercent.toFixed(2)} %  beyond ${r.beyondPercent.toFixed(3)} % (no dots rule ${r.beyondPlain} px)  a point away ${r.loose} px (no dots rule ${r.loosePlain}), not text ${r.shape} px  text lines ${r.texts.length} (unmeasured ${unmeasured}), worst ${worst.toFixed(2)} pt`);
     }
   }
 }

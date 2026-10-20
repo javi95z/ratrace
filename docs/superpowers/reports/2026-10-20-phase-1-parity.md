@@ -6,8 +6,8 @@ same words: the app's `apps/mobile/src/app/kit.tsx` (development only) and the w
 same screen and compared pixel by pixel.
 
 **Result: no difference beyond what the platforms cannot do.** No shape, colour or place differs by more than a point
-(the web's own pixel) or a shade; every line of text stands within a point of the web's, but for one sign that neither
-platform's game fonts draw (below). Thirteen differences were found and fixed in the app's components; the web was not
+(the web's own pixel) or a shade; every line of text stands within a point of the web's, the worst a point (the ▸ that neither
+platform's game fonts draw, below, and a KeyFigure). Thirteen differences were found and fixed in the app's components; the web was not
 changed.
 
 ## How it is shot and compared
@@ -35,12 +35,15 @@ pnpm --filter @ratrace/web exec tsx ../mobile/scripts/kit-shots.ts [web] [app] [
     night-800 and night-700, are 26 apart) from every pixel of the other shot within **one device pixel**.
   - *a point away*: the same, within **3 device pixels (1 pt)**. Chrome puts the edges of boxes on whole CSS pixels and
     the phone on device pixels, so the same box stands up to a point apart; a frame or a fill unmatched a point away
-    is a real difference. The ground's dots count as one surface with the ground between them (a box an edge's width
-    off uncovers or hides a dot; the dots themselves are compared in the `dots` section).
+    is a real difference. The ground's dots count as one surface with the ground between them, at the dots' own places
+    only (a box an edge's width off uncovers or hides a dot; the dots themselves are compared in the `dots` section);
+    the counts without that allowance are in the table too.
   - *text*: each line of text on the web page (the browser's client rects of every text node) is found in both shots
-    by its ink (pixels two shades off the line's background), and the two ink boxes are compared edge by edge.
-    The glyphs' own pixels are left to this check: two rasterisers (Skia in Chrome, CoreText on iOS) antialias the
-    same glyph at the same place differently, which the brief counts as equal.
+    by its ink: the pixels within 10 levels of the colour its glyphs are drawn in (the computed colour, seen through
+    the opacity of the boxes round it), in no other line's box. The two ink boxes are compared edge by edge; ink that
+    fills its whole window, or a line under something drawn over it (a sheet's backdrop), is reported unmeasured.
+    The glyphs' own pixels and a point round them are left to this check: two rasterisers (Skia in Chrome, CoreText
+    on iOS) antialias the same glyph at the same place differently, which the brief counts as equal.
   - *shape*: what is unmatched a point away and is not text. This must be zero.
 
 Pictures: `docs/superpowers/reports/phase-1-parity/<section>.png` — the web, the app and the difference side by side,
@@ -50,22 +53,22 @@ device pixel and a shade, blue where that is the edge of a glyph, magenta where 
 
 ## Final numbers
 
-| section | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
-|---|---|---|---|---|---|---|
-| buttons | 2.67 | 0.221 | 3184 | 0 | 14 | 0.67 |
-| surfaces | 3.02 | 0.206 | 3857 | 0 | 10 | 0.33 |
-| stats | 3.40 | 0.250 | 2171 | 0 | 15 | 1.33 (▸, below) |
-| bars | 2.31 | 0.041 | 704 | 30 (below) | 5 | 0.33 |
-| choices | 3.15 | 0.566 | 1860 | 0 | 10 | 0.67 |
-| lists | 2.90 | 0.178 | 3096 | 0 | 10 | 0.67 |
-| sheet-gold | 0.48 | 0.129 | 2615 | 0 | 5 | 0.33 |
-| sheet-wine | 0.42 | 0.110 | 2272 | 0 | 5 | 0.33 |
-| tabs | 2.58 | 0.151 | 2136 | 0 | 8 | 0.33 |
-| art | 2.32 | 0.010 | 181 | 51 (below) | 1 | 0.33 |
-| text-es | 3.09 | 0.324 | 6324 | 0 | 5 | 0.33 |
-| text-ru | 3.01 | 0.242 | 4311 | 0 | 5 | 0.33 |
-| type | 2.64 | 0.112 | 2025 | 0 | 17 | 0.33 |
-| dots | 2.48 | 0.007 | 155 | 0 | 1 | 0.33 |
+| section | raw % | beyond % | a point away (px) | same, no dots rule (px) | shape (px) | text lines measured | worst text (pt) |
+|---|---|---|---|---|---|---|---|
+| buttons | 2.67 | 0.221 | 3184 | 3193 | 0 | 14/14 | 0.67 |
+| surfaces | 3.02 | 0.206 | 3857 | 3983 | 0 | 10/10 | 0.33 |
+| stats | 3.40 | 0.250 | 2171 | 2271 | 0 | 15/15 | 1.00 (▸, below) |
+| bars | 2.31 | 0.041 | 704 | 704 | 30 (below) | 5/5 | 0.67 |
+| choices | 3.15 | 0.566 | 1860 | 2238 | 0 | 10/10 | 0.67 |
+| lists | 2.90 | 0.178 | 3096 | 3127 | 0 | 10/10 | 1.00 |
+| sheet-gold | 0.48 | 0.129 | 2615 | 2615 | 0 | 4/5 (the heading under the backdrop) | 0.33 |
+| sheet-wine | 0.42 | 0.110 | 2272 | 2272 | 0 | 4/5 (the same) | 0.33 |
+| tabs | 2.58 | 0.151 | 2136 | 2179 | 0 | 8/8 | 0.67 |
+| art | 2.31 | 0.009 | 177 | 177 | 47 (below) | 1/1 | 0.00 |
+| text-es | 3.09 | 0.324 | 6324 | 6335 | 0 | 5/5 | 0.33 |
+| text-ru | 3.01 | 0.242 | 4311 | 4328 | 0 | 5/5 | 0.33 |
+| type | 2.64 | 0.112 | 2025 | 2026 | 0 | 17/17 | 0.33 |
+| dots | 2.48 | 0.007 | 155 | 155 | 0 | 1/1 | 0.33 |
 
 "a point away" pixels are all glyph edges (blue in the pictures) but for the shape column. The raw 2–3 % is mostly
 the ground's dots: the browser draws each as an antialiased disc of radius 1 px, the app as `dots.png`, and their
@@ -105,11 +108,11 @@ routes).
 ## What is left, and why it is the platform
 
 - **Glyph edges.** The same font at the same size and place, antialiased by Skia (Chrome) and CoreText (iOS): the blue
-  pixels of every picture. Every line's ink stands within 0.33–0.67 pt of the web's.
+  pixels of every picture. Every measured line's ink stands within a point of the web's (most within ⅓–⅔ pt).
 - **Edges of boxes up to ⅔ pt apart.** Chrome puts box edges on whole CSS pixels (a toggle that ends at 222.39 is drawn
   to 222), the phone on device pixels (222.67); and a text's width is measured to a device pixel on iOS, so a row of
   buttons or tabs sized by their words drifts by fractions of a point. Never a point.
-- **▸ in a pressable Stat (stats, 1.33 pt).** No font of the stack nor Arial draws ▸; Chrome on macOS takes it from
+- **▸ in a pressable Stat (stats, 1 pt).** No font of the stack nor Arial draws ▸; Chrome on macOS takes it from
   macOS's system font (`.SF NS`), the app from iOS's, which draws it a device pixel smaller. A 10 px decoration; Safari
   on an iPhone very likely takes iOS's, as the app does (not checked).
 - **bars, 30 px.** The web paints a Bar's lamps as gradients on one strip whose cells are fractions of a pixel wide; the
@@ -134,3 +137,25 @@ routes).
   (`--font-pixel-cyrillic-alone`), will need the same exception when the language picker is ported.
 - **Text measured on the device.** Text widths are measured on device pixels; a long row of short labels can drift by a
   few thirds of a point from the web. Not seen beyond ⅔ pt in the kit.
+
+## Fix round 1 (review findings)
+
+- **The text check was blind on small fills.** It took a line's background as the commonest colour in its box, so on
+  a Tag or a panel's tab every ground pixel in the window counted as ink: `+120 $`, `-80 $`, `Rent` and `Savings`
+  "matched" with ink boxes the size of the window, and the mask then hid that window from the shape count. Ink is now
+  the glyphs' own colour (from the computed style, composited through any opacity: the disabled buttons and choice);
+  a window full of ink, or a line under the sheet's backdrop, is reported unmeasured; the mask is the ink pixels and a
+  point round them, never the window. Unit tests: a tag-like line is measured by its glyphs; a window full of ink is
+  unmeasured.
+- **What the corrected check found.** 109 of the 111 lines are measured (the two left out are the
+  sheet sections' headings, under the backdrop): the Tags (`+120 $` 0.33, `-80 $` 0.33, `Rent` 0), `Savings`
+  (0.33), the disabled `Off`s (≤ 0.67) and `High`/`9 %` (≤ 0.67), the TickerBadges (≤ 0.67) all stand within a point of
+  the web's; no shape difference appeared outside the two already listed (bars 30 px, art 47 px). No component needed a
+  change for it.
+- **The dots rule** merged any night-700 fill with the ground. It now holds only at the dots' own places (a disc in
+  each 6 pt tile); the counts with no allowance at all are in the table ("no dots rule").
+- **Words took taps.** The headroom that keeps glyphs from being clipped made a text's box reach past its line, over a
+  button above or below it. Every PixelText and ReadText is now `pointerEvents: 'none'` (they have no press of their
+  own; the pressable round them takes it), and a caller's own padding is added to, not replaced. Tests: a press on a
+  Button with a text just below it reaches the Button and the text is not a target; a caller's padding survives.
+- `tools/online/src/errors.test.ts`: a TODO that its `kit` exclusion leaves with the kit page (phase 5).
