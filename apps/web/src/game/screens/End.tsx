@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { netWorth, realNetWorth, scoreBreakdown } from '@ratrace/engine';
 import type { GameView } from '@ratrace/engine';
-import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useWords } from '@/game/context';
+import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useTrack, useWords } from '@/game/context';
 import { epilogue } from '@ratrace/core/game/epilogue';
 import { useCountUp } from '@/game/motion';
 import { obituary } from '@ratrace/core/game/quips';
@@ -396,6 +396,7 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
 /** After a life alone, for a player with an account and no game going: the same kind of life, against others, in one press. */
 function VersusOthers() {
   const t = useT('end');
+  const track = useTrack();
   const router = useRouter();
   const status = useRoom((s) => s.status);
   const busy = useRoom((s) => s.busy);
@@ -410,7 +411,10 @@ function VersusOthers() {
         disabled={busy}
         onClick={() => {
           // Seated or not, the rooms' page says how it went: the lobby, or why not.
-          void quick().then(() => router.push('/room'));
+          void quick().then((joined) => {
+            if (joined) track({ name: 'game_join', via: 'quick' });
+            router.push('/room');
+          });
         }}
       >
         <Sprite id="icon.multiplayer" />

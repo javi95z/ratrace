@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { toVercel } from './events';
 
 /** The install event is deliberately absent from lib.dom: Chromium exposes it before standardisation. */
 export interface BeforeInstallPromptEvent extends Event {
@@ -49,9 +50,11 @@ export function PwaProvider({ children }: { children: ReactNode }) {
       prompt.current = installEvent;
       setState('available');
     };
+    // Counted here alone: every install ends here, from the game's own button or the browser's menu.
     const installed = () => {
       prompt.current = null;
       setState('installed');
+      toVercel({ name: 'app_installed' });
     };
     window.addEventListener('beforeinstallprompt', offered);
     window.addEventListener('appinstalled', installed);

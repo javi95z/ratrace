@@ -7,7 +7,7 @@ import { badgeArt, lives, portraitArt, ratArt } from '@ratrace/content';
 import { indexed } from '@ratrace/engine';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
-import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useWords } from '@/game/context';
+import { GameScope, useCommunity, useGame, useProfile, useRoom, useSettings, useT, useTrack, useWords } from '@/game/context';
 import type { GameStore } from '@ratrace/core/game/store';
 import { Link } from '@/i18n/navigation';
 import { MAX_MEMBERS, memberName, MIN_MEMBERS, ROUND_SECONDS, SHOUT_EVERY_MS, SHOUT_FACES, SHOUT_PHRASES } from '@ratrace/core/game/room';
@@ -178,6 +178,7 @@ export function Room() {
 /** In no room: a quick game with whoever is looking for one, a game of one's own, or one joined with a code. A link with a code fills it in. */
 function Door() {
   const t = useT('room');
+  const track = useTrack();
   const busy = useRoom((s) => s.busy);
   const join = useRoom((s) => s.join);
   const quick = useRoom((s) => s.quick);
@@ -204,7 +205,7 @@ function Door() {
   const submit = (event: FormEvent) => {
     event.preventDefault();
     clearClosed();
-    void join(code);
+    void join(code).then((joined) => joined && track({ name: 'game_join', via: 'code' }));
   };
 
   // Come by an invitation, the page is the invitation: the game to join, and the one button that joins it.
@@ -222,7 +223,7 @@ function Door() {
             disabled={busy}
             onClick={() => {
               clearClosed();
-              void join(invited);
+              void join(invited).then((joined) => joined && track({ name: 'game_join', via: 'link' }));
             }}
           >
             {t('joinInvite')}
@@ -278,7 +279,7 @@ function Door() {
           onClick={() => {
             clearClosed();
             clearDropped();
-            void quick(pace);
+            void quick(pace).then((joined) => joined && track({ name: 'game_join', via: 'quick' }));
           }}
         >
           <Sprite id="icon.multiplayer" />
@@ -439,6 +440,7 @@ function RematchSheet({ room, open, onClose }: { room: RoomState; open: boolean;
  */
 function Rematch({ room }: { room: RoomState }) {
   const t = useT('room');
+  const track = useTrack();
   const busy = useRoom((s) => s.busy);
   const join = useRoom((s) => s.join);
   const quick = useRoom((s) => s.quick);
@@ -448,7 +450,7 @@ function Rematch({ room }: { room: RoomState }) {
     // Another of the same pace as the one just played.
     const slow = room.seconds >= HOUR;
     return (
-      <Button variant="primary" wide disabled={busy} onClick={() => void quick(slow ? 'slow' : 'live')}>
+      <Button variant="primary" wide disabled={busy} onClick={() => void quick(slow ? 'slow' : 'live').then((joined) => joined && track({ name: 'game_join', via: 'quick' }))}>
         <Sprite id="icon.multiplayer" />
         {t(slow ? 'quickAgainSlow' : 'quickAgain')}
       </Button>
@@ -510,6 +512,7 @@ function LeaveSheet({ room, open, onClose }: { room: RoomState; open: boolean; o
  */
 function Lobby({ room }: { room: RoomState }) {
   const t = useT('room');
+  const track = useTrack();
   const paceOf = usePaceOf();
   const { text } = useWords();
   const { locale } = useSettings();
@@ -535,6 +538,7 @@ function Lobby({ room }: { room: RoomState }) {
     if (url === null) return;
     try {
       await navigator.share({ title: t('title'), text: t('inviteText', { code: room.code }), url });
+      track({ name: 'share', what: 'invite' });
     } catch {
       // Sharing was turned down: the link and the code are on screen.
     }
@@ -544,6 +548,7 @@ function Lobby({ room }: { room: RoomState }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
+      track({ name: 'share', what: 'invite' });
     } catch {
       // The browser keeps the clipboard to itself: the link is on screen to be copied by hand.
     }

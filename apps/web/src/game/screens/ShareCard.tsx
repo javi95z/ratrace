@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSettings, useT } from '@/game/context';
+import { useSettings, useT, useTrack } from '@/game/context';
 import { SITE_URL } from '@/lib/site';
 import { CARD, PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import type { DrawOp } from '@ratrace/core/game/share';
@@ -145,6 +145,7 @@ const toBlob = (canvas: HTMLCanvasElement): Promise<Blob | null> => new Promise(
  */
 export function ShareCard({ ops, fileName, alt, load }: { ops: DrawOp[]; fileName: string; alt: string; load?: SpriteLoader }) {
   const t = useT('share');
+  const track = useTrack();
   const { locale } = useSettings();
   // The picture travels with a way into the game, in the language it was played in.
   const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });
@@ -193,7 +194,7 @@ export function ShareCard({ ops, fileName, alt, load }: { ops: DrawOp[]; fileNam
             {/* The picture is 1080px wide and shown smaller: a preview, not pixel art on the page. */}
             <img src={ready.url} alt={alt} width={CARD.w * CARD.scale} height={CARD.h * CARD.scale} className="frame mx-auto h-auto w-full max-w-[270px]" />
             {canSend ? (
-              <Button variant="primary" wide onClick={() => void navigator.share({ files: [ready.file], title: alt, text: invite }).catch(() => undefined)}>
+              <Button variant="primary" wide onClick={() => void navigator.share({ files: [ready.file], title: alt, text: invite }).then(() => track({ name: 'share', what: 'card' }), () => undefined)}>
                 {t('send')}
               </Button>
             ) : null}

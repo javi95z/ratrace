@@ -31,6 +31,8 @@ import { rulesKnow } from '@ratrace/core/game/rules';
 import { browserBasket } from './browserBasket';
 import type { BasketKeep } from '@ratrace/core/game/basket';
 import { cuesFor } from './sound';
+import { countingStarts, gameBegan, ignore, lifeEnded, toVercel } from '@/pwa/events';
+import type { Track } from '@/pwa/events';
 import { createRoomStore } from '@ratrace/core/game/room';
 import type { RoomActions, RoomStore, RoomStoreState } from '@ratrace/core/game/room';
 import { createGameStore } from '@ratrace/core/game/store';
@@ -66,6 +68,8 @@ export interface Services {
   introduceTabs?: boolean;
   /** What plays the sounds. Left out, a test hears nothing. */
   sound?: SoundBoard;
+  /** Where what is counted of how the game is played goes (`pwa/events.ts`). Left out, nothing is counted. */
+  track?: Track;
 }
 
 /** Long enough for the second tap of a double tap or a double click, short enough that nobody waits for it. */
@@ -88,6 +92,7 @@ interface Game {
   community: () => Community | null;
   sound: SoundBoard;
   introduceTabs: boolean;
+  track: Track;
   words: Words;
   locale: Locale;
   profile: Profile;
@@ -126,7 +131,7 @@ function browserServices(): Services {
   const versions = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
   // Lives of both kinds: the ones this device plays, and the ranked ones the server plays while someone is signed in.
   const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, versions, deps), versions);
-  return { sessions, store, saving, account, saves, community, rooms, sound: createSoundBoard(), introduceTabs: true, basket: browserBasket };
+  return { sessions, store, saving, account, saves, community, rooms, sound: createSoundBoard(), introduceTabs: true, basket: browserBasket, track: toVercel };
 }
 
 /** Anything a tap is meant for: it answers with a tick. */
@@ -143,10 +148,11 @@ interface Made {
   community: () => Community | null;
   sound: SoundBoard;
   introduceTabs: boolean;
+  track: Track;
 }
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, sound, introduceTabs, basket }: Services): Made {
-  const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS, ...(basket ? { basket } : {}) });
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, sound, introduceTabs, basket, track = ignore }: Services): Made {
+  const game = createGameStore({ sessions: countingStarts(sessions, track), content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS, ...(basket ? { basket } : {}) });
   const roomStore = createRoomStore({
     link: rooms ?? (() => null),
     store,
@@ -159,8 +165,32 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     page: typeof window === 'undefined' ? undefined : browserPage,
     onSaveError: (error) => console.warn('could not save the life in the room:', error),
   });
-  return { game, rooms: roomStore, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null), introduceTabs: introduceTabs === true };
+  return { game, rooms: roomStore, store, saving: saving ?? ALWAYS_SAVING, account: account ?? offlineAccount, saves: saves ?? NO_SAVES, community: community ?? NO_COMMUNITY, sound: sound ?? createSoundBoard(() => null), introduceTabs: introduceTabs === true, track };
 }
+
+/** Noted while a guest is away at Google keeping their account, so that the page they come back to can count it. */
+const KEEPING = 'ratrace:keeping-account';
+
+/** The note of a guest gone to keep their account. A browser that keeps nothing simply counts nothing. */
+const keeping = {
+  set: () => {
+    try {
+      window.sessionStorage.setItem(KEEPING, '1');
+    } catch {
+      // Nothing: the account is kept all the same, only not counted.
+    }
+  },
+  /** True once, if the note was there: it is taken away as it is read. */
+  take: (): boolean => {
+    try {
+      const was = window.sessionStorage.getItem(KEEPING) !== null;
+      window.sessionStorage.removeItem(KEEPING);
+      return was;
+    } catch {
+      return false;
+    }
+  },
+};
 
 /**
  * The real game of this page load. It lives outside the provider, because the provider sits under
@@ -205,7 +235,21 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     refresh();
     const stop = made.game.subscribe((state, before) => {
       if (state.view !== before.view || state.status !== before.status) refresh();
+      const ended = lifeEnded(state, before);
+      if (ended) made.track(ended);
     });
+    const stopRooms = made.rooms.subscribe((state, before) => {
+      const began = gameBegan(state.room, before.room);
+      if (began) made.track(began);
+    });
+    // Back from Google: a member now, the guest kept their account. Back as a guest with a notice, they did not.
+    const kept = () => {
+      const state = made.account.state();
+      if (state.kind === 'member' || (state.kind === 'guest' && state.notice !== null)) {
+        if (keeping.take() && state.kind === 'member') made.track({ name: 'account_kept' });
+      }
+    };
+    kept();
     // What the account brings from another device: a life is opened as the device now has it, the rest is read
     // again. The same life under a new id is opened too, with nothing to tell the player: nothing of it changed.
     const stopSaves = made.saves.onDeviceChanged((what) => {
@@ -218,6 +262,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     // unless a life is already open.
     let signedIn = made.account.state().kind !== 'offline';
     const stopAccount = made.account.subscribe(() => {
+      kept();
       const now = made.account.state().kind !== 'offline';
       const landed = now && !signedIn;
       const changed = now !== signedIn;
@@ -229,6 +274,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     return () => {
       mounted = false;
       stop();
+      stopRooms();
       stopSaves();
       stopAccount();
     };
@@ -290,6 +336,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       community: made.community,
       sound: made.sound,
       introduceTabs: made.introduceTabs,
+      track: made.track,
       words: { content, ...textFor(locale), fmt: formatFor(locale) },
       locale,
       profile,
@@ -433,7 +480,11 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
   const here = () => window.location.href.split('#')[0];
   return {
     state,
-    keepWithGoogle: () => account.keepWithGoogle(here()),
+    keepWithGoogle: async () => {
+      const going = await account.keepWithGoogle(here());
+      if (going) keeping.set();
+      return going;
+    },
     useExistingAccount: () => account.useExistingAccount(here()),
     dismissNotice: () => account.dismissNotice(),
     // What the account keeps goes from this device with it, so that the guest who comes next does not take it into an
@@ -509,6 +560,11 @@ export function useAccountSaves(): { status: CloudSaving; offer: AccountLife | n
 }
 
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
+/** Counts something the player did (`pwa/events.ts`): for the screens, at the moment it succeeded. */
+export function useTrack(): Track {
+  return useGameContext().track;
+}
+
 export function useSaving(): boolean {
   const { saving } = useGameContext();
   return !useSyncExternalStore(saving.subscribe, saving.degraded, () => false);
