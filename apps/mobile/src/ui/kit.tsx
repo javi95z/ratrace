@@ -136,14 +136,13 @@ export function TabTitle({ children }: { children: Words }) {
  */
 export function Panel({ children, title, label }: { children: ReactNode; title?: Words; label?: string }) {
   const has = title !== undefined && title !== '';
-  // As on the web: named only when given a label; named by its title where it has one, so the
+  // Never `accessible`: on iOS that would fold the panel into one element and hide its buttons.
+  // The name is only a label on the box; the screen reader reaches every child. As on the web: named only when given a label; named by its title where it has one, so the
   // title is said once, and by the label itself where it has none.
   const name = label === undefined ? undefined : has ? String(title) : label;
   return (
     <Framed
       kind="bevel"
-      accessible={name !== undefined}
-      accessibilityRole={name !== undefined ? 'summary' : undefined}
       accessibilityLabel={name}
       style={{
         backgroundColor: COLORS['night-700'],

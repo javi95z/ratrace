@@ -193,3 +193,15 @@ test('numbers are accepted as figure, title and tag text', () => {
   expect(screen.getByText('7')).toBeTruthy();
   expect(screen.getByText('3')).toBeTruthy();
 });
+
+test('a Button inside a labelled Panel stays reachable and the Panel is not accessible', () => {
+  const onPress = vi.fn();
+  const { container } = render(
+    <Panel title="Wages" label="the wages"><Button variant="primary" onPress={onPress}>{'Go'}</Button></Panel>,
+  );
+  const labelled = container.querySelector('[aria-label]')!;
+  expect(labelled.getAttribute('tabindex')).toBeNull();
+  expect(labelled.getAttribute('role')).toBeNull();
+  fireEvent.click(screen.getByRole('button'));
+  expect(onPress).toHaveBeenCalledTimes(1);
+});
