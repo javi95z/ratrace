@@ -12,20 +12,21 @@ import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions } from '@ratrace/core/session/types';
 import type { Locale } from '@ratrace/i18n';
 import { getCalendars, getLocales } from 'expo-localization';
-import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { kvLanguage, KvStore } from '../kvStore';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
 import { cuesFor } from './cues';
+import { sameProfile, sameRuns } from './keep';
 import { localeOf, type LanguageKeep } from './locale';
 import { loadBundledRules } from './olderRules';
 import { phoneBasket } from './phoneBasket';
 import { WordsProvider } from './words';
 
 export { useT } from './words';
-export { NO_ROOM, useAccountSaves, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './offline';
+export { NO_ROOM, useAccountSaves, useCanSignIn, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './offline';
 export type { Track } from './offline';
 export { useSound };
 export type { Cue } from '../ui/sound';
@@ -69,9 +70,15 @@ export interface Services {
 const TAP_GUARD_MS = 400;
 const ALWAYS_SAVING: Saving = { degraded: () => false, subscribe: () => () => {} };
 
+/**
+ * What a screen reads of the game is held in four contexts, so that a screen is drawn again only for what it reads: the game itself (the
+ * round store, the words, the date, the language: made once, and again only for a language), the settings the player has set, the profile
+ * and the finished lives (each put in place only when it has changed). One context for everything drew every screen again, twice, after every
+ * card: the profile and the lives were read and set again with each step, whether or not they had changed.
+ */
 interface Game {
   game: GameStore;
-  /** Reads the profile and the finished lives again. */
+  /** Reads the profile and the finished lives again, and holds what is read whether or not it changed. */
   reload(): void;
   store: PlayerStore;
   saving: Saving;
@@ -80,13 +87,15 @@ interface Game {
   words: Words;
   locale: Locale;
   setLocale(locale: Locale): void;
-  profile: Profile;
-  /** Finished lives, the latest first. Null until the device has answered. */
-  runs: FinishedRun[] | null;
   changeProfile(change: (profile: Profile) => Profile): void;
 }
 
 const GameContext = createContext<Game | null>(null);
+/** The two settings the player can set that screens read; held apart from the profile so that the rest of it moving is not a change of them. */
+const SettingsContext = createContext<{ reducedMotion: boolean; sound: boolean } | null>(null);
+const ProfileContext = createContext<Profile | null>(null);
+/** Finished lives, the latest first. Null until the device has answered. */
+const RunsContext = createContext<{ runs: FinishedRun[] | null } | null>(null);
 
 /** What the phone's lives need from the outside world: ids, seeds, the clock. */
 export function phoneDeps(): SessionDeps {
@@ -170,18 +179,25 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   const [profile, setProfile] = useState<Profile>(newProfile);
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
 
+  // Held when read again only if it changed: the device is read after every step and nearly always says what it said.
+  const holdProfile = useCallback((read: Profile) => setProfile((held) => (sameProfile(held, read) ? held : read)), []);
+  const holdRuns = useCallback((read: FinishedRun[]) => setRuns((held) => (sameRuns(held, read) ? held : read)), []);
+
   useEffect(() => {
     let mounted = true;
-    // What the player has earned changes with every step of a life, and the list of lives when one ends.
-    const refresh = () => {
-      void made.store.loadProfile().then((loaded) => mounted && setProfile(loaded));
-      void made.store.listRuns().then((loaded) => mounted && setRuns(loaded));
-      // Lives finished before ranks count towards the rank the first time they are seen.
-      void Promise.all([made.store.loadProfile(), made.store.listRuns()])
+    // What the player has earned changes with every step of a life: the profile is read again with each. The list of lives changes when one ends
+    // (or the life is let go), and when the game opens: only then is it read, and only then are lives finished before ranks counted towards the rank.
+    const refresh = (lives: boolean) => {
+      const profileRead = made.store.loadProfile();
+      void profileRead.then((loaded) => mounted && holdProfile(loaded));
+      if (!lives) return;
+      const runsRead = made.store.listRuns();
+      void runsRead.then((loaded) => mounted && holdRuns(loaded));
+      void Promise.all([profileRead, runsRead])
         .then(async ([held, finished]) => {
           if (finished.some((run) => !Object.hasOwn(held.rank.lives, run.runId))) {
             const next = await settleRank(made.store, finished);
-            if (mounted) setProfile(next);
+            if (mounted) holdProfile(next);
           }
         })
         .catch(() => undefined);
@@ -190,15 +206,18 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       booted.add(made.game);
       void made.game.getState().boot();
     }
-    refresh();
+    refresh(true);
     const stop = made.game.subscribe((state, before) => {
-      if (state.view !== before.view || state.status !== before.status) refresh();
+      // The game opening is not a life ending: the lives were read as the provider mounted, and are not read again for it (the profile is, for what opening a life tells it).
+      if (before.status === 'booting') refresh(false);
+      else if (state.status !== before.status || state.view?.finished !== before.view?.finished) refresh(true);
+      else if (state.view !== before.view) refresh(false);
     });
     return () => {
       mounted = false;
       stop();
     };
-  }, [made]);
+  }, [made, holdProfile, holdRuns]);
 
   const reload = useMemo(
     () => () => {
@@ -209,6 +228,22 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   // Made again only when the language changes: every screen that reads them is not drawn again with each step of the profile.
   const words = useMemo<Words>(() => ({ content, ...textFor(locale), fmt: formatFor(locale) }), [locale]);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      made.language.write(next);
+      setLocaleState(next);
+    },
+    [made],
+  );
+  const changeProfile = useCallback(
+    (change: (profile: Profile) => Profile) => {
+      // Shown at once, then merged into what the device holds: the profile is never written over whole,
+      // because it also holds every badge and the gallery.
+      setProfile((current) => change(current));
+      void updateProfile(made.store, change).then(holdProfile, () => undefined);
+    },
+    [made, holdProfile],
+  );
   const value = useMemo<Game>(
     () => ({
       game: made.game,
@@ -219,31 +254,30 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       now: made.now,
       words,
       locale,
-      setLocale: (next) => {
-        made.language.write(next);
-        setLocaleState(next);
-      },
-      profile,
-      runs,
-      changeProfile: (change) => {
-        // Shown at once, then merged into what the device holds: the profile is never written over whole,
-        // because it also holds every badge and the gallery.
-        setProfile((current) => change(current));
-        void updateProfile(made.store, change).then(setProfile, () => undefined);
-      },
+      setLocale,
+      changeProfile,
     }),
-    [made, words, locale, profile, runs, reload],
+    [made, words, locale, reload, setLocale, changeProfile],
   );
+  const { reducedMotion, sound } = profile.settings;
+  const settings = useMemo(() => ({ reducedMotion, sound }), [reducedMotion, sound]);
+  const finished = useMemo(() => ({ runs }), [runs]);
   return (
     <GameContext.Provider value={value}>
-      <WordsProvider locale={locale} timeZone={timeZone}>
-        <ReducedMotionProvider value={profile.settings.reducedMotion}>
-          <SoundProvider on={profile.settings.sound}>
-            <Cues game={made.game} />
-            {children}
-          </SoundProvider>
-        </ReducedMotionProvider>
-      </WordsProvider>
+      <SettingsContext.Provider value={settings}>
+        <ProfileContext.Provider value={profile}>
+          <RunsContext.Provider value={finished}>
+            <WordsProvider locale={locale} timeZone={timeZone}>
+              <ReducedMotionProvider value={reducedMotion}>
+                <SoundProvider on={sound}>
+                  <Cues game={made.game} />
+                  {children}
+                </SoundProvider>
+              </ReducedMotionProvider>
+            </WordsProvider>
+          </RunsContext.Provider>
+        </ProfileContext.Provider>
+      </SettingsContext.Provider>
     </GameContext.Provider>
   );
 }
@@ -251,6 +285,12 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
 function useGameContext(): Game {
   const value = useContext(GameContext);
   if (!value) throw new Error('this component must be inside a GameProvider');
+  return value;
+}
+
+/** What one of the other contexts holds; they are all made by the same provider as the first. */
+function held<T>(value: T | null): T {
+  if (value === null) throw new Error('this component must be inside a GameProvider');
   return value;
 }
 
@@ -282,11 +322,12 @@ export const useStill = (): boolean => useReducedMotion();
 
 /** The player's settings, and the language, which the phone keeps beside them. */
 export const useSettings = () => {
-  const { profile, changeProfile, locale, setLocale } = useGameContext();
+  const { changeProfile, locale, setLocale } = useGameContext();
+  const { reducedMotion, sound } = held(useContext(SettingsContext));
   return {
-    reducedMotion: profile.settings.reducedMotion,
+    reducedMotion,
     setReducedMotion: (reducedMotion: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, reducedMotion } })),
-    sound: profile.settings.sound,
+    sound,
     setSound: (sound: boolean) => changeProfile((current) => ({ ...current, settings: { ...current.settings, sound } })),
     locale,
     setLocale,
@@ -294,17 +335,18 @@ export const useSettings = () => {
 };
 
 /** What belongs to the player rather than to one life: badges, the gallery, the lives unlocked. */
-export const useProfile = (): Profile => useGameContext().profile;
+export const useProfile = (): Profile => held(useContext(ProfileContext));
 
 /** Finished lives, the latest first, or null while the device has not answered yet. */
-export const useRuns = (): FinishedRun[] | null => useGameContext().runs;
+export const useRuns = (): FinishedRun[] | null => held(useContext(RunsContext)).runs;
 
 /**
  * True while the player is guided through a first life: no life finished on this device, and the
  * guide not turned off. While the game is being made, always, so that it can be seen.
  */
 export function useGuided(): boolean {
-  const { profile, runs } = useGameContext();
+  const profile = useProfile();
+  const runs = useRuns();
   if (process.env.NODE_ENV === 'development') return true;
   return runs !== null && runs.length === 0 && !profile.guide.off;
 }
@@ -314,7 +356,8 @@ export const useIntroducesTabs = (): boolean => useGameContext().introduceTabs;
 
 /** The guided first life: the tips already read, and the two ways to be done with one. */
 export function useGuide() {
-  const { profile, changeProfile } = useGameContext();
+  const profile = useProfile();
+  const { changeProfile } = useGameContext();
   return {
     ...profile.guide,
     /** Marks one tip as read. */

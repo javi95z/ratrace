@@ -12,6 +12,13 @@ import type { AccountLife, CloudSaving, Community } from '@ratrace/online/types'
 /** Whether a new life can be a ranked one, played by the server. With no account, never. */
 export const useRanking = (): 'yes' | 'offline' | 'no' => 'no';
 
+/**
+ * Whether the phone has a way to sign in. The web has no such question (a browser always can: Google, in the settings), so no web screen
+ * asks it; a line there that tells a guest to sign in (`challenge.needsAccount`) is not drawn on the phone while this is false, which is
+ * until phase 3 brings accounts: a player is never told to do what the app cannot.
+ */
+export const useCanSignIn = (): boolean => false;
+
 /** The other players: the rankings, the player's name, whom they follow. With no account, there are none. */
 export const useCommunity = (): Community | null => null;
 

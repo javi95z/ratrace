@@ -21,6 +21,18 @@ export const SCENES_FILE = 'phase-2-parity.json';
  */
 export const VISIBLE_HEIGHT = 'main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }';
 
+/**
+ * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
+ * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
+ * the web's page: the line is the only `p` of that frame on the page of a guest.
+ */
+export const WEB_ONLY: Readonly<Record<string, string>> = {
+  'challenge-practice': 'main > p.frame.bg-night-700 { display: none !important; }',
+};
+
+/** Every rule the web's page is given for a scene's shot: the height of its pages, and what it draws that the phone does not. */
+export const webRules = (scene: Scene): string => [VISIBLE_HEIGHT, WEB_ONLY[scene.name]].filter((rule) => rule !== undefined).join(' ');
+
 /** The web's page for a scene, in the scene's language (the web's pages are all under their language). */
 export const sceneWebUrl = (scene: Scene, port: number): string => `http://localhost:${port}/${scene.locale}/kit/scene?name=${scene.name}`;
 

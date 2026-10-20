@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { chooseScenes, filesOf, VISIBLE_HEIGHT, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
+import { chooseScenes, filesOf, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 
@@ -100,4 +101,16 @@ test('a web page is as tall as what is visible of the screen, not taller by the 
   // The web's `min-h-dvh` page inside a body that is padded by the safe area at the top is taller than the screen by that area, so the
   // foot of a short page stands below the fold; the phone's page is as tall as the screen it scrolls in. Taken away in the shot, nothing else is.
   expect(VISIBLE_HEIGHT).toBe('main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }');
+});
+
+test('what the web draws of a scene that the phone does not is hidden in the web\'s shot, by a rule that finds that line and no other', () => {
+  const challenge = SCENES.find((scene) => scene.name === 'challenge-practice')!;
+  expect(webRules(challenge)).toBe(`${VISIBLE_HEIGHT} ${WEB_ONLY['challenge-practice']}`);
+  // A scene with nothing the phone leaves out is given the height rule alone.
+  expect(webRules(SCENES[0])).toBe(VISIBLE_HEIGHT);
+  // The rule's target is the one `p` of that frame the web draws a guest on the page: the line that tells to sign in (the other is the best of the week, shown to someone signed in).
+  const web = readFileSync(new URL('../../web/src/game/screens/Challenge.tsx', import.meta.url), 'utf8');
+  const page = web.slice(web.indexOf('export function WeeklyChallenge()'), web.indexOf('export function ChallengeBoard'));
+  expect(page).toContain('<p className="frame bg-night-700 px-3 py-2 text-[13px] text-ink-200">{t(\'needsAccount\')}</p>');
+  expect([...page.matchAll(/<p [^>]*className="frame bg-night-700[^"]*"/g)]).toHaveLength(2);
 });

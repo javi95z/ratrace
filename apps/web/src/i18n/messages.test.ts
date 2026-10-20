@@ -149,8 +149,8 @@ describe('interface text', () => {
   it('holds no sentence that nothing on screen uses', () => {
     // Every key must be asked for somewhere in the source: by its whole last name in quotes, or built from a
     // prefix the source spells out (`tabs.${id}`, `stages.${stage}`, a tip of the guide, a best of the end, a perk of an item, a level of money sense).
-    // The web asks for them, and so does the game's logic it is built on.
-    const roots = [fileURLToPath(new URL('..', import.meta.url)), fileURLToPath(new URL('../../../../packages/core/src', import.meta.url))];
+    // The web asks for them, and so does the game's logic it is built on, and so does the phone's app (apps/mobile/src).
+    const roots = [fileURLToPath(new URL('..', import.meta.url)), fileURLToPath(new URL('../../../../packages/core/src', import.meta.url)), fileURLToPath(new URL('../../../mobile/src', import.meta.url))];
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((name) => {
         const path = join(dir, name);
@@ -165,6 +165,26 @@ describe('interface text', () => {
       return !new RegExp(`['"\`.]${leaf}['"\`]`).test(source);
     });
     expect(unused).toEqual([]);
+  });
+
+  it('keeps the phone\'s own words for the phone: every sentence of `phone` is asked for by the app, none by the web', () => {
+    // Where the web's words tell a phone player something false or impossible (reload the page, this browser, another tab, cookies in a browser)
+    // the phone has words of its own, under `phone`; the app asks for them by name, and the web has no use for them.
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) return name === 'node_modules' ? [] : files(path);
+        return /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
+      });
+    const source = (root: string) => files(fileURLToPath(new URL(root, import.meta.url))).map((path) => readFileSync(path, 'utf8')).join('\n');
+    const [web, app] = [source('..'), source('../../../mobile/src')];
+    const phone = [...en.keys()].filter((key) => key.startsWith('phone.'));
+    expect(phone.length).toBeGreaterThan(0);
+    for (const key of phone) {
+      const leaf = key.split('.').at(-1) as string;
+      expect(new RegExp(`['"\`]${leaf}['"\`]`).test(app), `the app asks for ${key}`).toBe(true);
+    }
+    expect(web).not.toMatch(/useTranslations\('phone|getTranslations\(\{[^}]*'phone'|\bt\('phone\./);
   });
 
   it('is really translated: no language is a copy of the English', () => {

@@ -1,5 +1,5 @@
-import { createContext, useContext, type ReactNode } from 'react';
-import { PixelRatio, Platform, StyleSheet, Text, type TextStyle } from 'react-native';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
 import { baselineShift, runsOf, type Run, type Weight } from './fonts';
 import { BODY, COLORS, type ColorToken } from './theme';
 
@@ -8,6 +8,9 @@ export const Language = createContext<string>('en');
 
 /** Tailwind's `leading-tight`: a line 1.25 times its size (a Tag, a Stat's label, a hint). */
 export const TIGHT = 1.25;
+
+/** Tailwind's `leading-snug`: a line 1.375 times its size (a paragraph under a heading, a sheet's question). */
+export const SNUG = 1.375;
 
 /** What the web's `:lang(ru) .pixel { word-spacing: -0.16em }` takes from each space of a Russian title. */
 export const RU_WORD_SPACING = -0.16;
@@ -81,16 +84,28 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const words = role === 'pixel' && language === 'ru';
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
   const line = lineHeight ?? standard;
-  const drawn = Platform.OS === 'ios' ? onGrid(line, PixelRatio.get()) : line;
+  const ios = Platform.OS === 'ios';
+  const density = PixelRatio.get();
+  const drawn = ios ? onGrid(line, density) : line;
   const shift = baselineShift(runs, role, weight, size, line, drawn, Platform.OS, language);
+  // Each line is drawn on the device's grid, so n lines are n × (the grid's line − the exact one) taller than the web's, and that adds up across the
+  // paragraphs of a page. The box is held to n × the exact line: the lines of one paragraph are as far off as they are, and the next paragraph is not.
+  // Only a text that can wrap and whose line is off the grid is asked how many lines it has.
+  const [lines, setLines] = useState(1);
+  const off = ios ? line - Math.round(line * density) / density : 0;
+  const asks = numberOfLines !== 1 && Math.abs(off) > 1e-6;
+  const hold = asks && lines > 1 ? lines * off : 0;
+  const room = shift ? headroom(shift, size, flat) : null;
+  const held = hold === 0 ? null : { marginBottom: Number(room?.marginBottom ?? flat.marginBottom ?? flat.marginVertical ?? flat.margin ?? 0) + hold };
   return (
     <Text
       selectable={false}
       numberOfLines={numberOfLines}
+      onTextLayout={asks ? (event: TextLayoutEvent) => setLines(Math.max(1, event.nativeEvent.lines.length)) : undefined}
       // No letter spacing at all where there is none: on iOS a spacing of 0 is not nothing, it turns the font's kerning off.
       // Words are never pressed (a pressable holds them): with the headroom a text's box reaches past its line, over
       // whatever stands above or below it, and must not take a tap meant for a button there.
-      style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, shift ? headroom(shift, size, flat) : null]}
+      style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
       {runs.flatMap((run) => pieces(run, size, letterSpacing, words)).map((piece, i) => (
         <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>

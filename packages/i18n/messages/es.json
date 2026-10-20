@@ -2075,5 +2075,25 @@
     "deviceBody": "No usamos cookies de seguimiento. El juego guarda tu vida y tus ajustes en el navegador, porque sin eso no se puede jugar.",
     "rightsTitle": "Cuánto tiempo y tus derechos",
     "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google."
+  },
+  "phone": {
+    "lostNewer": "Tu vida guardada es de una versión más nueva del juego. Actualiza la aplicación para seguir con ella.",
+    "lostWaiting": "Tu vida empezó en una versión anterior del juego y esta versión de la aplicación no puede abrirla. Se conserva: actualiza la aplicación para seguir con ella.",
+    "notSaved": "Ahora mismo este teléfono no puede guardar. No cierres el juego o perderás lo que has jugado.",
+    "movedGone": "Esa vida se terminó en otro dispositivo.",
+    "legal": {
+      "title": "Privacidad y aviso legal",
+      "updated": "Actualizado el 21 de octubre de 2026.",
+      "noticeTitle": "Aviso legal",
+      "noticeBody": "The Rat Race es un juego gratuito de ficción. Las empresas, personas y noticias que salen son parodias, y nada de lo que dice es consejo financiero.",
+      "dataTitle": "Qué datos guardamos",
+      "dataBody": "Ninguno. El juego no tiene cuenta y no envía nada desde tu teléfono: no recibimos ningún dato tuyo. Lo que juegas (vidas, récords, colección y ajustes) se guarda solo en este teléfono, y el juego no necesita conexión.",
+      "deviceTitle": "En tu teléfono",
+      "deviceBody": "El juego guarda sus datos en el almacenamiento de la aplicación. Al borrar la aplicación se borran. No usa cookies ni rastreadores, y no muestra publicidad.",
+      "whoTitle": "Quién los trata",
+      "whoBody": "Nadie más que tú: el juego funciona en este teléfono y no habla con ningún servidor.",
+      "laterTitle": "Si esto cambia",
+      "laterBody": "Una versión futura del juego podría añadir una cuenta, clasificaciones o partidas con otros jugadores. Este aviso se actualizará antes de publicarla para decir qué guardan y para qué."
+    }
   }
 }

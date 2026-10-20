@@ -12,6 +12,13 @@ import { bannerSize, useRuleText, useThisWeek, WeeklyChallenge, WeeklyChallengeC
 
 afterEach(cleanup);
 
+// Whether the sheets are gone is the test's to say where it needs to (./back is the kit's; its own tests hold it to the Modals).
+const sheets = vi.hoisted(() => ({ gone: Promise.resolve() as Promise<void> }));
+vi.mock('../../ui/back', async (actual) => ({ ...(await actual<typeof import('../../ui/back')>()), sheetsGone: () => sheets.gone }));
+afterEach(() => {
+  sheets.gone = Promise.resolve();
+});
+
 const week = challengeOf(weekOf(Date.now()), lives);
 if (!week) throw new Error('no challenge this week');
 const lifeName = textFor('en').text.lives[week.lifeId].name;
@@ -28,9 +35,10 @@ describe('the weekly challenge page', () => {
     expect(screen.getByRole('heading', { name: 'Weekly challenge' })).toBeTruthy();
     expect(screen.getByText(lifeName)).toBeTruthy();
     expect(screen.getByText(ruleName[week.rule])).toBeTruthy();
-    // Nobody is signed in: there is no attempt that counts, and the page says how to get one.
+    // Nobody is signed in and there is no way to be: there is no attempt that counts, and the page does not tell of one (nor to sign in).
     expect(screen.queryByRole('button', { name: "Play today's attempt" })).toBeNull();
-    expect(screen.getByText('To play the attempt that counts, sign in. You can still practise.')).toBeTruthy();
+    expect(screen.queryByText(/sign in/)).toBeNull();
+    expect(document.body.textContent).not.toContain('To play the attempt that counts');
     fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
     expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
@@ -92,6 +100,35 @@ describe('the weekly challenge page', () => {
     fireEvent.click(within((await screen.findByRole('heading', { name: ask.confirmTitle })).closest('[aria-modal="true"]') as HTMLElement).getByRole('button', { name: ask.confirmYes }));
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
     expect(await saved(services)).toMatchObject({ lifeId: week.lifeId, challenge: week.week });
+  });
+
+  it('moves on to the life only once the question\'s sheet is gone, when the answer came from it; and at once when there was no sheet', async () => {
+    let gone: () => void = () => undefined;
+    const services = memoryServices();
+    await services.sessions.start('engineer');
+    const ask = messagesFor('en').newLife;
+    function Status() {
+      return <div data-testid="status">{useGame((s) => s.status)}</div>;
+    }
+    renderGame(<><WeeklyChallenge /><Status /></>, services);
+    await waitFor(() => expect(screen.getByTestId('status').textContent).toBe('playing'));
+    fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
+    sheets.gone = new Promise<void>((done) => (gone = done));
+    fireEvent.click(within((await screen.findByRole('heading', { name: ask.confirmTitle })).closest('[aria-modal="true"]') as HTMLElement).getByRole('button', { name: ask.confirmYes }));
+    // The life is begun, and the screen waits for the sheet to leave before it changes under it.
+    await waitFor(async () => expect((await saved(services))?.challenge).toBe(week.week));
+    await new Promise((done) => setTimeout(done, 30));
+    expect(router.replace).not.toHaveBeenCalled();
+    gone();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    cleanup();
+    router.replace.mockClear();
+
+    // With no life in progress there is no sheet: it goes on at once, whatever is said of sheets.
+    sheets.gone = new Promise<void>(() => undefined);
+    renderGame(<WeeklyChallenge />, memoryServices());
+    fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
   });
 
   it('says so when the practice could not be begun, and lets the player try again', async () => {

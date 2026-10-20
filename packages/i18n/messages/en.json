@@ -2075,5 +2075,25 @@
     "deviceBody": "We use no tracking cookies. The game keeps your life and settings in the browser, because without that it cannot be played.",
     "rightsTitle": "How long, and your rights",
     "rightsBody": "We keep it while you use the account. You can ask to see, correct, take or delete it by writing to the contact above, and complain to your data protection authority. If you are under 14, ask a parent before signing in with Google."
+  },
+  "phone": {
+    "lostNewer": "Your saved life was written by a newer version of the game. Update the app to carry on with it.",
+    "lostWaiting": "Your life began on an earlier version of the game, and this version of the app cannot open it. It is kept: update the app to carry on with it.",
+    "notSaved": "This phone is not saving right now. Keep the game open: closing it would lose what you have played.",
+    "movedGone": "That life was ended on another device.",
+    "legal": {
+      "title": "Privacy and legal notice",
+      "updated": "Updated 21 October 2026.",
+      "noticeTitle": "Legal notice",
+      "noticeBody": "The Rat Race is a free game of fiction. The companies, people and news in it are parodies, and nothing it says is financial advice.",
+      "dataTitle": "What we keep",
+      "dataBody": "Nothing. The game has no account and sends nothing from your phone: we receive no data about you. What you play (your lives, records, collection and settings) is saved on this phone only, and the game needs no connection.",
+      "deviceTitle": "On your phone",
+      "deviceBody": "The game keeps its saves in the storage of the app. Deleting the app deletes them. It uses no cookies and no trackers, and shows no ads.",
+      "whoTitle": "Who handles it",
+      "whoBody": "No one but you: the game runs on this phone and talks to no server.",
+      "laterTitle": "If this changes",
+      "laterBody": "A later version of the game may add an account, rankings or games with others. This notice will be updated to say what they keep, and why, before that version is released."
+    }
   }
 }

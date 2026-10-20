@@ -22,9 +22,9 @@ const BUTTON_SPACING = 15 * 0.03;
 export function Home() {
   const t = useT('home');
   const meta = useT('meta');
-  const common = useT('common');
   const settings = useT('settings');
   const legal = useT('legal');
+  const phone = useT('phone');
   const { content, text, names } = useWords();
   // Only what the door draws: the round and the city of the life, not the whole view that changes with every step of it.
   const status = useGame((s) => s.status);
@@ -138,10 +138,11 @@ export function Home() {
                 <PixelText size={15} tone="ink-200">{t('records')}</PixelText>
               </Raised>
             </View>
-            {lost ? <Notice role="status">{t(lost === 'outdated' ? 'lostOutdated' : lost === 'newer' ? 'lostNewer' : lost === 'waiting' ? 'lostWaiting' : 'lostDamaged')}</Notice> : null}
+            {/* The web's words for a life that is newer, or waiting, or gone from another tab, tell of a page and a connection: the phone's own say update the app. */}
+            {lost ? <Notice role="status">{lost === 'newer' ? phone('lostNewer') : lost === 'waiting' ? phone('lostWaiting') : t(lost === 'outdated' ? 'lostOutdated' : 'lostDamaged')}</Notice> : null}
             {moved && status === 'none' ? (
               <Notice role="status" bg="night-700">
-                {t('movedGone')}
+                {phone('movedGone')}
               </Notice>
             ) : null}
           </>
@@ -157,7 +158,7 @@ export function Home() {
       {/* What could not be kept is said where it is seen; where things are kept is said in the settings. */}
       {saving ? null : (
         <Notice role="alert" size={13} style={{ width: '100%' }}>
-          {common('notSaved')}
+          {phone('notSaved')}
         </Notice>
       )}
 

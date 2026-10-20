@@ -1,24 +1,31 @@
 // @vitest-environment jsdom
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { View } from 'react-native';
 import { Button } from './kit';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { JERSEY_X_HEIGHT, OSWALD_X_HEIGHT } from './fonts';
-import { headroom, Language, onGrid, PixelText, ReadText, RU_WORD_SPACING } from './text';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { headroom, Language, onGrid, PixelText, ReadText, RU_WORD_SPACING, SNUG, TIGHT } from './text';
 
 // Sprites are drawn with Skia on the phone only (the Button's module holds the kit's sprites).
 vi.mock('./Sprite', () => ({ Sprite: () => null }));
 
-// Records the style every Text is given: react-native-web drops what only a phone reads (includeFontPadding).
+// Records the style every Text is given: react-native-web drops what only a phone reads (includeFontPadding). The outer Text of a text (the one that is
+// not selectable) is recorded whole, with what the phone is told of its lines, and the platform is the test's to say.
 const textStyles = vi.hoisted(() => [] as unknown[]);
+const outers = vi.hoisted(() => [] as Array<{ style: Record<string, unknown>; onTextLayout?: (event: { nativeEvent: { lines: unknown[] } }) => void }>);
+const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   const Recorded = (props: Record<string, unknown>) => {
     textStyles.push(rn.StyleSheet.flatten(props.style as never));
+    if (props.selectable === false) outers.push({ style: rn.StyleSheet.flatten(props.style as never) as Record<string, unknown>, onTextLayout: props.onTextLayout as never });
     return <rn.Text {...(props as Record<string, unknown>)} />;
   };
-  return { ...rn, Text: Recorded };
+  return { ...rn, Text: Recorded, Platform: { ...rn.Platform, get OS() { return platform.OS; } }, PixelRatio: { get: () => 3 } };
 });
 
 const spans = (container: HTMLElement) => Array.from(container.firstElementChild!.children) as HTMLElement[];
@@ -133,4 +140,70 @@ test('no text is given Android\'s font padding: its lines are as tall as the web
   render(<><PixelText>{'Rank'}</PixelText><ReadText>{'Hello'}</ReadText></>);
   expect(textStyles.length).toBeGreaterThan(0);
   for (const style of textStyles) expect(style).toMatchObject({ includeFontPadding: false });
+});
+
+test('the two leadings of the web\'s small text are written once, here: tight is 1.25 and snug is 1.375, and no screen has a copy of either', () => {
+  expect([TIGHT, SNUG]).toEqual([1.25, 1.375]);
+  const dir = join(dirname(fileURLToPath(import.meta.url)), '../game/screens');
+  for (const name of readdirSync(dir).filter((file) => /\.tsx$/.test(file) && !/\.test\./.test(file))) {
+    expect(readFileSync(join(dir, name), 'utf8'), name).not.toMatch(/const (SNUG|TIGHT)\b/);
+  }
+});
+
+afterEach(() => {
+  platform.OS = 'web';
+  outers.length = 0;
+});
+
+/** The outer text now drawn, and how to tell it its lines. */
+const outer = () => outers[outers.length - 1];
+const told = (lines: number) => act(() => outer().onTextLayout!({ nativeEvent: { lines: Array.from({ length: lines }, () => ({})) } }));
+const bottom = () => Number(outer().style.marginBottom ?? 0);
+
+test('on iOS a paragraph is held to its lines at the exact line height: each line is on the device\'s grid, and the box is given back what that adds up to', () => {
+  platform.OS = 'ios';
+  // 14 × 1.375 is 19.25 pt, 57.75 device px; a line is drawn at 58, so n lines are n × 0.25 px (n × 0.083 pt) taller than the web's.
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'A paragraph of a few lines.'}</ReadText>);
+  const alone = bottom();
+  told(1);
+  expect(bottom()).toBeCloseTo(alone, 6);
+  told(6);
+  expect(bottom() - alone).toBeCloseTo(6 * (19.25 - 58 / 3), 6);
+  // And again for another count: it is the lines drawn now that are given back.
+  told(2);
+  expect(bottom() - alone).toBeCloseTo(2 * (19.25 - 58 / 3), 6);
+});
+
+test('a paragraph\'s own bottom margin is kept: what is given back is added to it', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={14} lineHeight={14 * SNUG} style={{ marginBottom: 10 }}>{'A paragraph of a few lines.'}</ReadText>);
+  const alone = bottom();
+  told(4);
+  expect(bottom() - alone).toBeCloseTo(4 * (19.25 - 58 / 3), 6);
+  expect(bottom()).toBeLessThan(alone + 0.1);
+});
+
+test('a pixel title that wraps is held the same way', () => {
+  platform.OS = 'ios';
+  render(<PixelText size={17} lineHeight={17 * TIGHT}>{'A long name of a life that wraps'}</PixelText>);
+  const alone = bottom();
+  told(3);
+  // 17 × 1.25 is 21.25 pt, 63.75 px, drawn at 64.
+  expect(bottom() - alone).toBeCloseTo(3 * (21.25 - 64 / 3), 6);
+});
+
+test('a line that is on the grid already is held to nothing, and its lines are not even counted', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={12} lineHeight={18}>{'Three lines of a text whose line is a whole number of pixels'}</ReadText>);
+  expect(outer().onTextLayout).toBeUndefined();
+});
+
+test('a text that cannot wrap is not asked its lines, and neither is any text off iOS, which lays its lines as it is told', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={14} lineHeight={14 * SNUG} numberOfLines={1}>{'One line'}</ReadText>);
+  expect(outer().onTextLayout).toBeUndefined();
+  outers.length = 0;
+  platform.OS = 'android';
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'Some lines'}</ReadText>);
+  expect(outer().onTextLayout).toBeUndefined();
 });

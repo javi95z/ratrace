@@ -4,6 +4,7 @@ import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Panel, Raised, Well } from '../../ui/kit';
@@ -11,14 +12,11 @@ import { Screen } from '../../ui/Page';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
-import { PixelText, ReadText } from '../../ui/text';
+import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useClock, useGame, useRanking, useWords } from '../context';
+import { useCanSignIn, useClock, useGame, useRanking, useWords } from '../context';
 import { useT } from '../words';
 import { BackLink } from './BackLink';
-
-/** Tailwind's `leading-snug`: a line 1.375 times its size. */
-const SNUG = 1.375;
 
 /**
  * This week's challenge, by the clock the game reads the date by (the phone's own, unless a scene holds it at one day). The server keeps its own,
@@ -106,6 +104,7 @@ export function WeeklyChallenge() {
   const week = useThisWeek();
   const ruleText = useRuleText();
   const ranking = useRanking();
+  const canSignIn = useCanSignIn();
   const router = useRouter();
   const start = useGame((s) => s.start);
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
@@ -118,13 +117,19 @@ export function WeeklyChallenge() {
   const rule = ruleText(week.rule);
   const lifeName = text.lives[week.lifeId]?.name ?? week.lifeId;
 
-  /** Start after any warning has been answered. */
-  const begin = async () => {
+  /**
+   * Start after any warning has been answered. An answer that came from the question's sheet waits for the sheet to be gone before the page
+   * changes under it (`sheetsGone`: a Modal still leaving on iOS holds the screen that is changing); one that came from the button has no sheet to wait for.
+   */
+  const begin = async (fromSheet = false) => {
     setAsking(false);
     setFailed(false);
     setStarting(true);
     try {
-      if (await start(week.lifeId, { challenge: week.week })) router.replace('/play');
+      if (await start(week.lifeId, { challenge: week.week })) {
+        if (fromSheet) await sheetsGone();
+        router.replace('/play');
+      }
     } catch (error) {
       console.error('the challenge could not be started:', error);
       setFailed(true);
@@ -177,8 +182,8 @@ export function WeeklyChallenge() {
 
       <ReadText size={13} tone="ink-200" lineHeight={13 * SNUG}>{t('about')}</ReadText>
 
-      {/* An attempt is the server's to play: it needs someone signed in. Nobody is, so only practice is offered. */}
-      {ranking !== 'yes' ? (
+      {/* An attempt is the server's to play: it needs someone signed in. The web tells a guest to sign in; the phone has no way to until phase 3, so it says nothing of it. */}
+      {ranking !== 'yes' && canSignIn ? (
         <Notice bg="night-700" tone="ink-200" size={13}>
           {t('needsAccount')}
         </Notice>
@@ -203,7 +208,7 @@ export function WeeklyChallenge() {
           <Button variant="primary" wide onPress={() => setAsking(false)}>
             {lifeT('confirmNo')}
           </Button>
-          <Button variant="danger" wide disabled={starting} onPress={() => void begin()}>
+          <Button variant="danger" wide disabled={starting} onPress={() => void begin(true)}>
             {lifeT('confirmYes')}
           </Button>
         </View>

@@ -6,7 +6,7 @@ import { ENGINE_VERSION } from '@ratrace/engine';
 import { cleanup, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, expect, test } from 'vitest';
-import { GameProvider, NO_ROOM, useAccountSaves, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './context';
+import { GameProvider, NO_ROOM, useAccountSaves, useCanSignIn, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './context';
 import { memoryServices } from '../testing/render';
 
 afterEach(cleanup);
@@ -17,6 +17,10 @@ const hook = <T,>(use: () => T) => renderHook(use, { wrapper: inGame }).result.c
 
 test('a life on the phone is never ranked: there is no account to rank it for', () => {
   expect(hook(useRanking)).toBe('no');
+});
+
+test('there is no way to sign in until the phone has accounts: nothing may tell a player to', () => {
+  expect(hook(useCanSignIn)).toBe(false);
 });
 
 test('there are no other players to ask', () => {

@@ -10,7 +10,8 @@ import type { Order } from '@ratrace/engine';
 import { device, heard, kv, memoryServices, renderGame } from '../testing/render';
 import { phoneBasket } from './phoneBasket';
 import { localeOf } from './locale';
-import { GameProvider, phoneDeps, phoneServices, useClock, useGame, useSettings, useSound, useStill, useT, useWords } from './context';
+import { GameProvider, phoneDeps, phoneServices, useClock, useGame, useGuide, useProfile, useRuns, useSettings, useSound, useStill, useT, useWords } from './context';
+import { settled } from '../testing/renders';
 
 afterEach(cleanup);
 
@@ -156,7 +157,8 @@ test('the words are made once for a language: a change of the profile hands ever
     return null;
   }
   render(<GameProvider services={memoryServices()}><Words /></GameProvider>);
-  await waitFor(() => expect(seen.length).toBeGreaterThan(1));
+  // Whatever the game does as it opens, once it has settled.
+  await settled();
   act(() => settings.setSound(!settings.sound));
   await waitFor(() => expect(settings.sound).toBe(false));
   expect(new Set(seen).size).toBe(1);
@@ -204,4 +206,185 @@ test('the date a screen reads is the services\' own clock, and the phone\'s wher
   render(<GameProvider services={{ ...memoryServices(), now: () => 1_792_670_400_000 }}><Clock /></GameProvider>);
   expect(clock()).toBe(1_792_670_400_000);
   expect(clock()).toBe(1_792_670_400_000);
+});
+
+/** The device as the context reads it, counted: the services' store is a window on the same memory the game's own session writes to. */
+function counting(store: MemoryStore) {
+  const calls = { profile: 0, runs: 0 };
+  const seen = new Proxy(store, {
+    get(target, name) {
+      if (name === 'loadProfile') return () => (calls.profile += 1, target.loadProfile());
+      if (name === 'listRuns') return () => (calls.runs += 1, target.listRuns());
+      const value = Reflect.get(target, name);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  return { calls, services: { ...memoryServices(store), store: seen } };
+}
+
+/** A screen that takes the round's actions and keeps the state the game is in, for a test to play it. */
+function player() {
+  const hold = { state: null as (RoundState & RoundActions) | null };
+  function Hand() {
+    useGame((s) => ((hold.state = s), s.status));
+    return null;
+  }
+  return { hold, Hand };
+}
+
+test('the device is read as little as the game needs: the profile when the game opens and with each step, the finished lives only when it opens and when a life ends or is let go', async () => {
+  const store = new MemoryStore();
+  await memoryServices(store).sessions.start('nurse');
+  const { calls, services } = counting(store);
+  const { hold, Hand } = player();
+  render(<GameProvider services={services}><Hand /></GameProvider>);
+  await settled();
+  // Opening: the lives are read once, and the check of the ranks uses what was read; the profile twice, as the provider mounts and as the life opens (which tells it what the life has earned).
+  expect(calls).toEqual({ profile: 2, runs: 1 });
+
+  // A step that changes the round on screen: the profile is read again (what was earned), the lives are not.
+  await settled(async () => {
+    hold.state!.leaveNews();
+    await hold.state!.pick(0);
+  });
+  expect(calls.runs).toBe(1);
+  expect(calls.profile).toBeGreaterThan(1);
+  const afterStep = calls.profile;
+
+  // A step that changes nothing of the round (the result left for the next card) reads nothing.
+  await settled(() => hold.state!.afterCard());
+  expect(calls).toEqual({ profile: afterStep, runs: 1 });
+
+  // The life let go: the status changes, and the lives are read again.
+  await settled(() => hold.state!.abandon());
+  expect(calls.runs).toBe(2);
+});
+
+test('a life lived to its end reads the finished lives again, once: the one that has just finished is among them', async () => {
+  const store = new MemoryStore();
+  await memoryServices(store).sessions.start('nurse');
+  const { calls, services } = counting(store);
+  const { hold, Hand } = player();
+  const read = renderGame(<Hand />, services);
+  await settled();
+  // Every round: the news, the cards, the finances with an empty basket, the ledger.
+  for (let guard = 0; guard < 400 && hold.state!.stage !== 'end'; guard++) {
+    const state = hold.state!;
+    if (state.stage === 'news') await settled(() => state.leaveNews(), 0);
+    else if (state.stage === 'cards') await settled(() => state.pick(0), 0);
+    else if (state.stage === 'outcome') await settled(() => state.afterCard(), 0);
+    else if (state.stage === 'finance') await settled(() => state.play(), 0);
+    else if (state.stage === 'resolve') await settled(() => state.next(), 0);
+  }
+  await settled();
+  expect(hold.state!.stage).toBe('end');
+  expect(hold.state!.view?.finished).toBe(true);
+  // Opening, and the end of the life: no round of it read the lives.
+  expect(calls.runs).toBe(2);
+  expect((await store.listRuns()).length).toBe(1);
+  read.unmount();
+}, 120_000);
+
+/** Counts how often each kind of screen is drawn: the game's own (what is played), the words, the date, the settings, the lives, the profile. */
+function drawings() {
+  const count = { game: 0, words: 0, clock: 0, text: 0, settings: 0, runs: 0, profile: 0, guide: 0 };
+  let settings = {} as ReturnType<typeof useSettings>;
+  function Game() {
+    useGame((s) => s.status);
+    count.game += 1;
+    return null;
+  }
+  function Words() {
+    useWords();
+    count.words += 1;
+    return null;
+  }
+  function Clock() {
+    useClock();
+    count.clock += 1;
+    return null;
+  }
+  function Text() {
+    useT('meta');
+    count.text += 1;
+    return null;
+  }
+  function Settings() {
+    settings = useSettings();
+    count.settings += 1;
+    return null;
+  }
+  function Runs() {
+    useRuns();
+    count.runs += 1;
+    return null;
+  }
+  function Profile() {
+    useProfile();
+    count.profile += 1;
+    return null;
+  }
+  function Guide() {
+    useGuide();
+    count.guide += 1;
+    return null;
+  }
+  return {
+    count,
+    settings: () => settings,
+    screens: (
+      <>
+        <Game />
+        <Words />
+        <Clock />
+        <Text />
+        <Settings />
+        <Runs />
+        <Profile />
+        <Guide />
+      </>
+    ),
+  };
+}
+
+test('a change of the profile draws again only what reads the profile: not what plays the game, the words or the date', async () => {
+  const seen = drawings();
+  renderGame(seen.screens, memoryServices());
+  await settled();
+  const before = { ...seen.count };
+  await settled(() => seen.settings().setSound(!seen.settings().sound));
+  expect(seen.count.settings).toBeGreaterThan(before.settings);
+  expect(seen.count.profile).toBeGreaterThan(before.profile);
+  expect(seen.count.guide).toBeGreaterThan(before.guide);
+  // The game, the words, the date, the text and the finished lives have nothing to do with it.
+  for (const unmoved of ['game', 'words', 'clock', 'text', 'runs'] as const) expect(seen.count[unmoved], unmoved).toBe(before[unmoved]);
+});
+
+test('a step of the game that earns nothing draws nothing again that the game itself does not draw: not the settings, the lives, the profile, the words', async () => {
+  const store = new MemoryStore();
+  await memoryServices(store).sessions.start('nurse');
+  const seen = drawings();
+  const { hold, Hand } = player();
+  renderGame(<>{seen.screens}<Hand /></>, memoryServices(store));
+  await settled();
+  const before = { ...seen.count };
+  await settled(async () => {
+    hold.state!.leaveNews();
+    await hold.state!.pick(0);
+  });
+  // The profile is read again after the step and says what it said: nothing that reads it is drawn again.
+  for (const unmoved of ['words', 'clock', 'text', 'settings', 'runs', 'guide'] as const) expect(seen.count[unmoved], unmoved).toBe(before[unmoved]);
+});
+
+test('a language chosen draws everything that has words again, and the settings and lives it does not touch only as often as they changed', async () => {
+  const seen = drawings();
+  renderGame(seen.screens, memoryServices());
+  await settled();
+  const before = { ...seen.count };
+  await settled(() => seen.settings().setLocale('es'));
+  expect(seen.count.words).toBeGreaterThan(before.words);
+  expect(seen.count.text).toBeGreaterThan(before.text);
+  // The lives and the profile are the same ones.
+  expect(seen.count.runs).toBe(before.runs);
+  expect(seen.count.profile).toBe(before.profile);
 });

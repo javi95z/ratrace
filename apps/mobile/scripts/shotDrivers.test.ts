@@ -105,5 +105,5 @@ test('a page is opened with the rules of the page added to what is always added,
 
 test('the scenes are shot on web pages as tall as the screen shows, by the one rule that says so', () => {
   const source = read('./scene-shots.ts');
-  expect(source).toMatch(/await openPage\(page, sceneWebUrl\(scene, PORT\), \(\) => document\.querySelector\('\[data-scene\]'\) !== null, VISIBLE_HEIGHT\)/);
+  expect(source).toMatch(/await openPage\(page, sceneWebUrl\(scene, PORT\), \(\) => document\.querySelector\('\[data-scene\]'\) !== null, webRules\(scene\)\)/);
 });

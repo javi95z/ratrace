@@ -4,10 +4,11 @@ import { MemoryStore } from '@ratrace/core/session/memory';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { messagesFor } from '@ratrace/i18n';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { Profiler } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { GameProvider, useGame } from '../context';
 import { memoryServices, renderGame, router } from '../../testing/render';
+import { Counted, settled } from '../../testing/renders';
+import type { Renders } from '../../testing/renders';
 import { speaking } from '../../testing/memoryServices';
 import { adjustedRead } from '../../ui/fonts';
 import { Home } from './Home';
@@ -173,7 +174,8 @@ describe('the front door', () => {
 
   it('says so plainly when the phone is not saving, instead of promising that it is', async () => {
     renderGame(<Home />, memoryServices(new MemoryStore(), { savingOff: true }));
-    expect((await screen.findByRole('alert')).textContent).toContain('This browser is not saving right now');
+    expect((await screen.findByRole('alert')).textContent).toBe(en.phone.notSaved);
+    expect(en.phone.notSaved).toContain('This phone is not saving right now');
     expect(screen.queryByText(/saved on this device/)).toBeNull();
     cleanup();
     renderGame(<Home />, memoryServices());
@@ -220,7 +222,7 @@ describe('a saved life that could not be opened', () => {
     const written = (await services.store.loadGame()) as object;
     await services.store.saveGame({ ...written, format: 2 } as never);
     renderGame(<Home />, services);
-    expect((await screen.findByRole('status')).textContent).toBe(en.home.lostNewer);
+    expect((await screen.findByRole('status')).textContent).toBe(en.phone.lostNewer);
     expect(await services.store.loadGame()).toEqual({ ...written, format: 2 });
   });
 
@@ -231,7 +233,7 @@ describe('a saved life that could not be opened', () => {
   it('is kept, and said to be waiting, when the rules it was played under cannot be had just now', async () => {
     const waiting = (store: MemoryStore) => new LocalSessions(store, content, lives, { newId: () => 'x', newSeed: () => 'y', now: () => 1, loadRules: async () => 'unreachable' });
     const notice = await lost((saved) => ({ ...saved, engineVersion: '0.0.1' }), waiting);
-    expect(notice.textContent).toBe(en.home.lostWaiting);
+    expect(notice.textContent).toBe(en.phone.lostWaiting);
   });
 
   it('is said nowhere when there is no saved life: no warning, nothing to explain', async () => {
@@ -260,7 +262,7 @@ describe('a saved life that could not be opened', () => {
     await screen.findByRole('link', { name: /Continue your life/ });
     await services.store.clearGame();
     await act(() => reopen());
-    expect((await screen.findByRole('status')).textContent).toBe(en.home.movedGone);
+    expect((await screen.findByRole('status')).textContent).toBe(en.phone.movedGone);
     expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
   });
 });
@@ -304,31 +306,37 @@ describe('the language from the corner', () => {
 });
 
 describe('what the front door is drawn again for', () => {
-  it('is not drawn again by a change of the game it does not show: the news left for the cards', async () => {
+  it('is not drawn again by a change of the game it does not show: the news left, a card answered, with the device read again after each step', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
-    let renders = 0;
-    let leaveNews: () => void = () => undefined;
+    const renders: Renders = { count: 0 };
+    let play: { leaveNews(): void; pick(option: number): Promise<void> } | null = null;
     function Hand() {
-      leaveNews = useGame((s) => s.leaveNews);
+      const leaveNews = useGame((s) => s.leaveNews);
+      const pick = useGame((s) => s.pick);
+      play = { leaveNews, pick };
       return null;
     }
     render(
       <GameProvider services={speaking(services, 'en')}>
-        <Profiler id="home" onRender={() => (renders += 1)}>
+        <Counted into={renders}>
           <Home />
-        </Profiler>
+        </Counted>
         <Hand />
       </GameProvider>,
     );
     await screen.findByRole('link', { name: /Continue your life/ });
     // Let everything the opening of the game does settle (the profile, the finished lives).
-    await act(async () => {
-      await new Promise((done) => setTimeout(done, 50));
+    await settled();
+    const before = renders.count;
+    // The news are left and a card answered: the round on screen and the view change, the profile and the lives are read again from the device.
+    await settled(async () => {
+      play!.leaveNews();
+      await play!.pick(0);
     });
-    const before = renders;
-    act(() => leaveNews());
-    act(() => leaveNews());
-    expect(renders).toBe(before);
+    expect(renders.count).toBe(before);
+    // And another step.
+    await settled(() => play!.leaveNews());
+    expect(renders.count).toBe(before);
   });
 });

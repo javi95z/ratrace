@@ -16,16 +16,13 @@ import { Bar, Button, Notice, Panel, pressDown, Raised, Toggle, usePress, Well }
 import { Sheet } from '../../ui/overlay';
 import { CYRILLIC_ALONE } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
-import { Language, PixelText, ReadText, TIGHT } from '../../ui/text';
+import { Language, PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
 import { useGame, useGuide, useSaving, useSettings, useWords } from '../context';
 import { useT } from '../words';
 
 /** The languages the game speaks, each under its own name. */
 const LANGUAGES: Record<Locale, string> = { en: 'English', es: 'Español', ru: 'Русский' };
-
-/** Tailwind's `leading-snug`: a line 1.375 times its size. */
-const SNUG = 1.375;
 
 /**
  * A language's name, set as a page in that language sets it: the game's pixel typeface draws no Cyrillic, so the name of
@@ -230,6 +227,7 @@ export function HomeSettingsPanel({ profile = null }: { profile?: ReactNode }) {
 export function Standing({ shown }: { shown: GameView }) {
   const t = useT('settings');
   const common = useT('common');
+  const phone = useT('phone');
   const { content, text, names, fmt } = useWords();
   const lifeId = useGame((s) => s.lifeId) ?? '';
   const ranked = useGame((s) => s.ranked);
@@ -273,7 +271,7 @@ export function Standing({ shown }: { shown: GameView }) {
       {/* Saving is said only when it fails: when it works, there is nothing to say. */}
       {saving ? null : (
         <Notice role="alert" size={13} style={{ marginTop: 8 }}>
-          {common('notSaved')}
+          {phone('notSaved')}
         </Notice>
       )}
     </Framed>
