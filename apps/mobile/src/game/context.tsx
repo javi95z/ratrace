@@ -5,7 +5,7 @@ import { rulesKnow } from '@ratrace/core/game/rules';
 import { createGameStore } from '@ratrace/core/game/store';
 import type { GameStore, RoundActions, RoundState } from '@ratrace/core/game/store';
 import { formatFor } from '@ratrace/core/lib/format';
-import { LocalSessions } from '@ratrace/core/session/local';
+import { LocalSessions, type SessionDeps } from '@ratrace/core/session/local';
 import { settleRank, updateProfile } from '@ratrace/core/session/profile';
 import { ResilientStore } from '@ratrace/core/session/resilient';
 import { newProfile } from '@ratrace/core/session/types';
@@ -73,6 +73,21 @@ interface Game {
 
 const GameContext = createContext<Game | null>(null);
 
+/** What the phone's lives need from the outside world: ids, seeds, the clock. */
+export function phoneDeps(): SessionDeps {
+  return {
+    newId: () => crypto.randomUUID(),
+    // Thirty-two bytes: every random stream of a game starts from 128 bits of it.
+    newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
+    now: () => Date.now(),
+    onSaveError: (error: unknown) => console.warn('could not save the game:', error),
+    // A life begun under older rules is finished under them (never interrupt a game). The spec's bundled rules
+    // (§Calls: the app carries every shipped bundle) are not on the phone yet: until they are, such a life is
+    // 'unreachable', so it waits, kept, instead of being judged gone and deleted.
+    loadRules: async () => 'unreachable' as const,
+  };
+}
+
 /** The services of the real game: the engine on this phone, saved on this phone. */
 function phoneServices(): Services {
   const listeners = new Set<() => void>();
@@ -87,14 +102,7 @@ function phoneServices(): Services {
       return () => listeners.delete(listener);
     },
   };
-  const deps = {
-    newId: () => crypto.randomUUID(),
-    // Thirty-two bytes: every random stream of a game starts from 128 bits of it.
-    newSeed: () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
-    now: () => Date.now(),
-    onSaveError: (error: unknown) => console.warn('could not save the game:', error),
-  };
-  return { sessions: new LocalSessions(store, content, lives, deps), store, saving, introduceTabs: true };
+  return { sessions: new LocalSessions(store, content, lives, phoneDeps()), store, saving, introduceTabs: true };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */

@@ -5,7 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { content, lives } from '@ratrace/content';
 import { LocalSessions } from '@ratrace/core/session/local';
 import { MemoryStore } from '@ratrace/core/session/memory';
-import { newProfile } from '@ratrace/core/session/types';
+import { newProfile, SAVE_FORMAT } from '@ratrace/core/session/types';
 import { localeOf } from './locale';
 
 const phone = vi.hoisted(() => ({ languages: ['en'] as string[], kept: new Map<string, string>(), sound: [] as boolean[], motion: [] as boolean[] }));
@@ -33,7 +33,7 @@ vi.mock('../ui/animations', () => ({
   },
 }));
 
-const { GameProvider, useGame, useSettings, useT, useWords } = await import('./context');
+const { GameProvider, phoneDeps, useGame, useSettings, useT, useWords } = await import('./context');
 
 afterEach(() => {
   cleanup();
@@ -111,4 +111,13 @@ test('sound and reduced motion follow the profile\'s settings', async () => {
     expect(phone.sound.at(-1)).toBe(false);
     expect(phone.motion.at(-1)).toBe(true);
   });
+});
+
+test('a life saved under older rules waits on the phone, kept, and is never deleted', async () => {
+  const store = new MemoryStore();
+  const older = { format: SAVE_FORMAT, gameId: 'older-life', engineVersion: '0.0.1', contentVersion: '0.0.1', lifeId: 'nurse', seed: 'older-seed', log: [], updatedAt: 1 };
+  await store.saveGame(older as never);
+  const sessions = new LocalSessions(store, content, lives, phoneDeps());
+  expect(await sessions.resume()).toEqual({ session: null, lost: 'waiting' });
+  expect(await store.loadGame()).toEqual(older);
 });
