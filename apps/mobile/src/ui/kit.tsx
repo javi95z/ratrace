@@ -1,5 +1,5 @@
-import { Children, Fragment, useState, type ReactNode } from 'react';
-import { Pressable, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Children, createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Animated, Easing, Pressable, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE, type FrameTone } from './frames';
@@ -232,30 +232,56 @@ function SunkEdge() {
   return <Framed kind="sunk" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />;
 }
 
-/** Narrower than this, a Stat gives up its icon so the number is never cut short (the web's `@max-[340px]`). */
-const STAT_ICON_MIN = 340;
+/** The width of the row a Stat stands in, which is what the web's container queries ask. Null until measured. */
+const StatRowWidth = createContext<{ width: number | null } | null>(null);
+
+/**
+ * The HUD's row of figures: three Stats of equal width. It measures itself and tells them how much
+ * room there is, as the web's `@container` does, so a narrow phone drops the icons and shrinks the numbers.
+ */
+export function StatRow({ children }: { children: ReactNode }) {
+  const [width, setWidth] = useState<number | null>(null);
+  return (
+    <StatRowWidth.Provider value={{ width }}>
+      <View testID="stat-row" onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', gap: 6 }}>
+        {children}
+      </View>
+    </StatRowWidth.Provider>
+  );
+}
+
+/** The web's rules for a figure by the width of its container (all inclusive at the top): icon gone to 340, 14 pt to 357, 15 pt to 371. */
+export function statLook(width: number | null): { icon: boolean; size: number } {
+  if (width === null) return { icon: true, size: 16 };
+  if (width <= 340) return { icon: false, size: 16 };
+  if (width <= 357) return { icon: true, size: 14 };
+  if (width <= 371) return { icon: true, size: 15 };
+  return { icon: true, size: 16 };
+}
 
 const STAT_TONE = { good: 'teal-300', bad: 'wine-300' } as const satisfies Record<string, ColorToken>;
 
 /**
- * One figure of the HUD: an icon, a number, and what the number is. A box narrower than 340 pt has
- * no room for the icon and drops it. The web asks its container; here the box measures itself.
- * With `onOpen` it is a raised button that opens what the figure means.
+ * One figure of the HUD: an icon, a number, and what the number is. Inside a container too narrow
+ * for three of them side by side, the icon steps aside. The container is the `StatRow` it stands in;
+ * alone, it measures itself. With `onOpen` it is a raised button that opens what the figure means.
  */
-export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string; value: Words; label: Words; tone?: 'good' | 'bad'; hint?: string; onOpen?: () => void }) {
+export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: string; value: Words; label: Words; tone?: 'good' | 'bad'; hint?: string; onOpen?: () => void; style?: ViewStyle }) {
+  const row = useContext(StatRowWidth);
   // Until the first measure the icon is shown, as on a roomy phone.
-  const [width, setWidth] = useState<number | null>(null);
-  const narrow = width !== null && width < STAT_ICON_MIN;
+  const [own, setOwn] = useState<number | null>(null);
+  const { icon: showIcon, size } = statLook(row ? row.width : own);
   const press = usePress({ onPress: onOpen ?? (() => {}), disabled: false });
+  const said = [`${String(value)}, ${String(label)}`, hint].filter(Boolean).join('. ');
   const body = (
     <>
-      {narrow ? null : (
+      {showIcon ? (
         <View style={{ width: 32, height: 32, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}>
           <Sprite id={icon} />
         </View>
-      )}
+      ) : null}
       <View style={{ flexShrink: 1, minWidth: 0 }}>
-        <PixelText size={16} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} style={{ letterSpacing: 0 }}>
+        <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} style={{ letterSpacing: 0 }}>
           {String(value)}
         </PixelText>
         <ReadText size={11} tone="ink-200" numberOfLines={1} style={{ lineHeight: 14 }}>{String(label)}</ReadText>
@@ -268,15 +294,19 @@ export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string;
     alignItems: 'center',
     gap: 6,
     padding: 4,
-    ...(narrow ? { paddingHorizontal: 8 } : null),
+    ...(showIcon ? null : { paddingHorizontal: 8 }),
   };
   return (
-    <View testID="stat" style={{ minWidth: 0 }} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
+    <View
+      testID="stat"
+      style={[{ minWidth: 0 }, row ? { flex: 1 } : null, style]}
+      onLayout={row ? undefined : (e: LayoutChangeEvent) => setOwn(e.nativeEvent.layout.width)}
+    >
       {onOpen ? (
         // One that opens something stands off the page like every other thing that can be pressed.
         <Pressable
           accessibilityRole="button"
-          accessibilityHint={hint}
+          accessibilityLabel={said}
           onPress={press}
           style={({ pressed }) => sink(pressed)}
         >
@@ -289,7 +319,10 @@ export function Stat({ icon, value, label, tone, hint, onOpen }: { icon: string;
           </Framed>
         </Pressable>
       ) : (
-        <Framed kind="bevel" accessibilityLabel={hint} style={box}>{body}</Framed>
+        // Nothing inside can be pressed, so it reads as one thing.
+        <View accessible accessibilityLabel={said}>
+          <Framed kind="bevel" style={box}>{body}</Framed>
+        </View>
       )}
     </View>
   );
@@ -502,15 +535,29 @@ export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { 
           style={{ width: 40, height: 20, flexShrink: 0, backgroundColor: COLORS[on ? 'teal-600' : 'night-900'] }}
         >
           <SunkEdge />
-          {/* The knob steps to its side at once. */}
-          <Framed
-            kind="lamp"
-            testID="knob"
-            tone={{ hi: 'white', lo: 'ink-200' }}
-            style={{ position: 'absolute', top: 0, left: on ? 20 : 0, width: 20, height: 20, backgroundColor: COLORS.cream }}
-          />
+          <Knob on={on} />
         </Framed>
       </Framed>
     </Pressable>
+  );
+}
+
+/** The switch's knob: it slides between its two sides in 150 ms, as the web's `transition-[left]`; on first draw it is simply there. */
+function Knob({ on }: { on: boolean }) {
+  const left = useRef(new Animated.Value(on ? 20 : 0)).current;
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    const run = Animated.timing(left, { toValue: on ? 20 : 0, duration: 150, easing: Easing.bezier(0.4, 0, 0.2, 1), useNativeDriver: false });
+    run.start();
+    return () => run.stop();
+  }, [on, left]);
+  return (
+    <Animated.View testID="knob" style={{ position: 'absolute', top: 0, left, width: 20, height: 20, backgroundColor: COLORS.cream }}>
+      <Framed kind="lamp" tone={{ hi: 'white', lo: 'ink-200' }} style={{ width: 20, height: 20, backgroundColor: COLORS.cream }} />
+    </Animated.View>
   );
 }

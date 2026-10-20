@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Bar, Button, KeyFigure, Panel, Row, Segmented, Stat, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, KeyFigure, Panel, Row, Segmented, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
 import { TapProvider } from './tap';
 
 // Sprites are drawn with Skia on the phone only: here each is a <div> that names its id.
@@ -269,13 +269,52 @@ test('a Stat shows its value and label, with its icon', () => {
   expect(document.querySelector('[data-sprite="coin"]')).toBeTruthy();
 });
 
-test('a Stat laid out at 300 hides its icon and at 360 shows it', () => {
+const trio = () => (
+  <StatRow>
+    <Stat icon="coin" value="1" label="Cash" />
+    <Stat icon="flow" value="2" label="Flow" />
+    <Stat icon="star" value="3" label="Status" />
+  </StatRow>
+);
+const icons = () => document.querySelectorAll('[data-sprite]').length;
+
+test.each([
+  [330, 0, '16px'],
+  [340, 0, '16px'],
+  [341, 3, '14px'],
+  [350, 3, '14px'],
+  [357, 3, '14px'],
+  [358, 3, '15px'],
+  [365, 3, '15px'],
+  [371, 3, '15px'],
+  [372, 3, '16px'],
+  [400, 3, '16px'],
+])('Stats in a row laid out at %i have %i icons and %s values', (width, count, size) => {
+  render(trio());
+  layOut(screen.getByTestId('stat-row'), width);
+  expect(icons()).toBe(count);
+  expect(textOf('1').style.fontSize).toBe(size);
+});
+
+test('Stats in a row share it equally', () => {
+  render(trio());
+  for (const stat of screen.getAllByTestId('stat')) expect(stat.style.flexGrow).toBe('1');
+});
+
+test('a Stat alone measures itself: icon at 360, none at 300', () => {
   render(<Stat icon="coin" value="1" label="Cash" />);
-  const box = screen.getByTestId('stat');
-  layOut(box, 300);
-  expect(document.querySelector('[data-sprite="coin"]')).toBeNull();
-  layOut(box, 360);
-  expect(document.querySelector('[data-sprite="coin"]')).toBeTruthy();
+  layOut(screen.getByTestId('stat'), 300);
+  expect(icons()).toBe(0);
+  layOut(screen.getByTestId('stat'), 360);
+  expect(icons()).toBe(1);
+});
+
+test('a Stat reads as one element, with its hint; the pressable one as a button with the same words', () => {
+  render(<Stat icon="coin" value="5" label="Cash" hint="Money in hand" />);
+  expect(screen.getAllByLabelText('5, Cash. Money in hand')).toHaveLength(1);
+  cleanup();
+  render(<Stat icon="coin" value="5" label="Cash" onOpen={() => {}} />);
+  expect(screen.getByRole('button').getAttribute('aria-label')).toBe('5, Cash');
 });
 
 test('a Stat tones its value', () => {
@@ -374,7 +413,7 @@ test('Segmented sets a hint under the label and an icon above it', () => {
   expect(document.querySelector('[data-sprite="ic"]')).toBeTruthy();
 });
 
-test('Toggle reports on through its checked state, and a press flips it', () => {
+test('Toggle reports on through its checked state, and a press flips it; the knob slides', async () => {
   const onChange = vi.fn();
   const tap = vi.fn();
   const { rerender } = render(
@@ -397,7 +436,7 @@ test('Toggle reports on through its checked state, and a press flips it', () => 
   );
   expect(screen.getByRole('switch').getAttribute('aria-checked')).toBe('true');
   expect(screen.getByTestId('switch').style.backgroundColor).toBe(rgb(COLORS['teal-600']));
-  expect(screen.getByTestId('knob').style.left).toBe('20px');
+  await waitFor(() => expect(screen.getByTestId('knob').style.left).toBe('20px'));
   expect(screen.getByTestId('knob').style.backgroundColor).toBe(rgb(COLORS.cream));
 });
 
