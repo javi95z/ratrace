@@ -42,3 +42,6 @@ yarn-error.*
 
 # sprites copied from art/clean by scripts/sprites.ts
 /assets/sprites/
+
+# the parity check's raw shots (scripts/kit-shots.ts); the cropped ones are in docs/superpowers/reports
+/.kit-shots/

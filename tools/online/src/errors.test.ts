@@ -89,7 +89,8 @@ describe('what a report never carries', () => {
 
   it('knows every page the game has', () => {
     const app = fileURLToPath(new URL('../../../apps/web/src/app/[locale]/', import.meta.url));
-    const pages = readdirSync(app, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => `/${entry.name}`);
+    // `kit` is the phone app's parity page, on the expo branch only and never deployed: not a page of the game.
+    const pages = readdirSync(app, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== 'kit').map((entry) => `/${entry.name}`);
     expect([...PAGES].sort()).toEqual(['/', ...pages].sort());
   });
 });
