@@ -1,0 +1,50 @@
+# Roadmap step 17h: a daily copy of the database, encrypted, kept outside Supabase. See docs/backups.md.
+# The repository is public: nothing of the copy is ever printed or kept as an artifact here.
+name: Backup
+
+on:
+  schedule:
+    - cron: '40 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      BACKUP_BUCKET: ${{ vars.BACKUP_BUCKET }}
+      BACKUP_ENDPOINT: ${{ vars.BACKUP_ENDPOINT }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      KEEP: 30
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Dump, encrypt, upload, prune
+        run: |
+          set -euo pipefail
+          mkdir dump
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f dump/roles.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f dump/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f dump/data.sql
+          # A dump that came out empty is a failure, not a copy.
+          test -s dump/schema.sql && test -s dump/data.sql
+          name="ratrace-$(date -u +%Y-%m-%dT%H%M).tar.gz.gpg"
+          tar -czf - dump | gpg --batch --yes --pinentry-mode loopback --passphrase-file <(printf %s "$BACKUP_PASSPHRASE") --symmetric --cipher-algo AES256 -o "$name"
+          rm -rf dump
+          echo "$name: $(du -h "$name" | cut -f1)"
+          aws s3 cp "$name" "s3://$BACKUP_BUCKET/$name" --endpoint-url "$BACKUP_ENDPOINT" --only-show-errors
+          aws s3 ls "s3://$BACKUP_BUCKET/" --endpoint-url "$BACKUP_ENDPOINT" | awk '{print $4}' | grep '^ratrace-' | sort | head -n -"$KEEP" \
+            | while read -r old; do aws s3 rm "s3://$BACKUP_BUCKET/$old" --endpoint-url "$BACKUP_ENDPOINT" --only-show-errors; done

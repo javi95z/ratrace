@@ -32,6 +32,7 @@ pnpm build          # web production build
 pnpm balance        # simulated lives; check balance changes with it
 pnpm -s art && pnpm --filter @ratrace/web exec tsx scripts/sprites.ts   # art/raw → sprites
 pnpm online:stats [days]   # usage numbers from the live project, read-only (days played: private.player_days)
+pnpm online:health         # is the live game up: site, guest, engine, a game with friends (hourly on GitHub, docs/backups.md)
 ```
 
 Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab.

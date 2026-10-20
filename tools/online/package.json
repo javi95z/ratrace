@@ -8,7 +8,8 @@
     "bundle": "tsx src/bundle.ts",
     "live-check": "tsx src/live-check.ts",
     "errors": "tsx src/errors.ts",
-    "stats": "tsx src/stats.ts"
+    "stats": "tsx src/stats.ts",
+    "health": "tsx src/health.ts"
   },
   "dependencies": {
     "@ratrace/content": "workspace:*",
