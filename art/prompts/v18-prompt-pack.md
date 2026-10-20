@@ -18,9 +18,11 @@ parking, shop, office, warehouse, block of flats, the city's own.
 Singapore and Zurich sell no whole block of flats: their fifth cell is left **empty** (plain
 background, nothing drawn).
 
-Drawn and cut on 2026-10-20. The Tokyo and New York sheets came on a navy ground, not the key
-magenta: their ground was flooded to magenta from the edges (the black outlines stop the flood)
-before cutting.
+Drawn and cut on 2026-10-20. The Tokyo sheet came on a navy ground, not the key magenta: its
+ground was flooded to magenta from the edges (the black outlines stop the flood) before cutting.
+New York was drawn again on magenta; its billboard's pink screen is key-coloured, so only the
+magenta joined to the edges was kept as key and the pinks inside had their blue taken just below
+the key's threshold.
 
 | Sheet | City | Its own kind | Sprite |
 | --- | --- | --- | --- |

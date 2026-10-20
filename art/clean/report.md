@@ -41,7 +41,8 @@ No sheets missing.
 | celeb.swiftly | 2 key-coloured pixels |
 | badge.celeb_swiftly | 3 key-coloured pixels |
 | home.student_house | 2 key-coloured pixels |
-| home.billboard | 4 key-coloured pixels |
+| home.new_york.warehouse | touches-edge |
+| home.billboard | 597 key-coloured pixels |
 | home.dubai.parking | touches-edge |
 | home.singapore.office | touches-edge |
 | home.bangkok.shop | touches-edge |
