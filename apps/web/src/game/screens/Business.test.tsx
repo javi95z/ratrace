@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { content, textFor } from '@ratrace/content';
 import { quoteBusinesses, viewOf } from '@ratrace/engine';
+import type { GameView } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
@@ -253,6 +254,25 @@ describe('the business tab', () => {
     // Without the manager, the player may run it again.
     await user.click(within(panel).getByRole('button', { name: /Manager · / }));
     expect(tend().disabled).toBe(false);
+  });
+
+  it('shows a business opened by a card this round as no longer the player\'s to run once a manager takes it', async () => {
+    // A round on, a card has just handed the founder a shop: it counts as run by them this round, whatever is ordered.
+    const { services, session } = await inFinance('founder');
+    await session.playRound({ orders: [] });
+    await toFinance(session);
+    const view = (): GameView => ({ ...session.view(), player: { ...session.view().player, businesses: session.view().player.businesses.map((one) => ({ ...one, tended: true })) } });
+    const opened: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: opened });
+    const user = userEvent.setup();
+    renderGame(<Play />, services);
+    await openTab(user);
+    const panel = screen.getByRole('region', { name: 'Your businesses' });
+    const tend = () => within(panel).getByRole('button', { name: /Run it yourself/ }) as HTMLButtonElement;
+    expect(tend().getAttribute('aria-pressed')).toBe('true');
+    await user.click(within(panel).getByRole('button', { name: /Manager · / }));
+    expect(tend().getAttribute('aria-pressed')).toBe('false');
+    expect(tend().disabled).toBe(true);
   });
 
   it('offers a trade of the player\'s own only to a trade that can be sold on its own', async () => {

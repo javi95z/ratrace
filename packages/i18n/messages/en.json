@@ -413,6 +413,7 @@
     "giftBusiness": "Your largest business to your children",
     "launder": "Washes what is hidden ({pct}% fee)",
     "jail": "{n, plural, one {Prison: # round} other {Prison: # rounds}}",
+    "bond": "Bound for {years} years: no changing jobs",
     "remote": "Work from home: +1 focus",
     "endLodger": "The lodger moves out",
     "partnerPay": "Partner earns {pct}% of the median",

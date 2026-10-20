@@ -5,7 +5,7 @@ import { RatAvatar } from '@/ui/RatAvatar';
 import { headlineArt } from '@ratrace/content';
 import type { Headline } from '@ratrace/engine';
 import { useGame, useT, useWords } from '@/game/context';
-import { ageAt, headlineText } from '@ratrace/core/game/present';
+import { ageAt, headlineText, paperOf } from '@ratrace/core/game/present';
 import { memberName } from '@ratrace/core/game/room';
 import { rivalNews } from '@ratrace/core/game/rivals';
 import { roomStory, useRoomPaper } from '@/game/roomStory';
@@ -124,9 +124,9 @@ export function Headlines() {
           <div aria-hidden className="h-px bg-ink-900" />
         </header>
         <ul>
-          {world.news.map((h, i) => {
+          {paperOf(words, view.timeline, view.round).map(({ headline: h, n }, i) => {
             // The same number picks the words and, when one of the famous says them, the portrait.
-            const art = headlineArt(h, view.round + i);
+            const art = headlineArt(h, n);
             const famous = art.startsWith('celeb.');
             return (
               // One story after another, each under a rule, as the columns of a page.
@@ -139,7 +139,7 @@ export function Headlines() {
                   <span data-topic className="pixel block text-[11px] uppercase leading-none tracking-[0.12em] text-ink-500">
                     {t(`topics.${h.topic}`)}
                   </span>
-                  <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{headlineText(words, h, view.round + i)}</span>
+                  <span className="mt-0.5 block text-[15px] font-semibold leading-tight">{headlineText(words, h, n)}</span>
                 </span>
               </li>
             );

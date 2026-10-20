@@ -180,6 +180,20 @@ describe('a tease', () => {
   });
 });
 
+describe('a contract that binds the player to their employer', () => {
+  it('closes the job hunt for the round it is signed and the next, then opens it again', () => {
+    const content = limited();
+    const state = game(content);
+    const p = state.player;
+    p.life.bondRounds = 2;
+    expect(focusLock(p, 'jobHunt', content)).toBe('bonded');
+    live(content, state, []);
+    expect(focusLock(p, 'jobHunt', content)).toBe('bonded');
+    live(content, state, []);
+    expect(focusLock(p, 'jobHunt', content)).toBeNull();
+  });
+});
+
 describe('time with the family, and a rest', () => {
   it('needs a family for the time with it, and nothing for a rest', () => {
     const content = limited();

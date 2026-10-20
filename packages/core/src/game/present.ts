@@ -51,16 +51,47 @@ export function headlineText({ text, names }: Words, h: Headline, n?: number): s
     case 'inflation':
       return way(text.headlines.inflation[h.trend], n ?? 0);
     case 'property':
-      return text.headlines.property[h.trend].replace('{city}', names.cities[h.cityId]);
+      return way(text.headlines.property[h.trend], n ?? 0).replace('{city}', names.cities[h.cityId]);
     case 'asset':
-      return text.headlines.asset[h.trend].replace('{asset}', names.assets[h.assetId]?.name ?? h.assetId);
+      return way(text.headlines.asset[h.trend], n ?? 0).replace('{asset}', names.assets[h.assetId]?.name ?? h.assetId);
     case 'taxes':
-      return text.headlines.taxes[h.trend].replace('{city}', names.cities[h.cityId]);
+      return way(text.headlines.taxes[h.trend], n ?? 0).replace('{city}', names.cities[h.cityId]);
     case 'noise':
       return text.headlines.noise[h.id] ?? '';
     case 'government':
       return text.headlines.government[h.id] ?? '';
   }
+}
+
+/**
+ * The paper of a round as it is printed: each headline with the number its words were chosen with,
+ * and never a sentence the life has already read. A story that would read as one printed before is
+ * said another way, or, for the filler that tells nothing, another filler is printed in its place.
+ * The earlier papers are worked out the same way, so a round's paper is always the same.
+ */
+export function paperOf(words: Words, timeline: ReadonlyArray<Pick<WorldState, 'news'>>, round: number): Array<{ headline: Headline; n: number }> {
+  /** Each sentence printed, and the last time it was: one never printed is taken first, else the one printed longest ago. */
+  const last = new Map<string, number>();
+  let printed: Array<{ headline: Headline; n: number }> = [];
+  let at = 0;
+  for (let r = 0; r <= round && r < timeline.length; r++) {
+    printed = (timeline[r].news ?? []).map((h, i) => {
+      const filler = h.topic === 'noise' ? words.text.headlines.noise.length : h.topic === 'government' ? words.text.headlines.government.length : 0;
+      let best: { headline: Headline; n: number; text: string; when: number } | null = null;
+      for (let k = 0; k < 12; k++) {
+        const headline: Headline = filler > 0 && k > 0 && (h.topic === 'noise' || h.topic === 'government') ? { ...h, id: (h.id + k) % filler } : h;
+        const n = r + i + (filler > 0 ? 0 : k);
+        const text = headlineText(words, headline, n);
+        const when = last.get(text) ?? -1;
+        if (best === null || when < best.when) best = { headline, n, text, when };
+        if (when === -1) break;
+      }
+      const chosen = best as { headline: Headline; n: number; text: string };
+      last.set(chosen.text, at++);
+      return { headline: chosen.headline, n: chosen.n };
+    });
+  }
+  return printed;
 }
 
 export type Tone = 'good' | 'bad' | 'plain';
@@ -183,6 +214,7 @@ export function effectTags(
   if (effects.amnesty) add('plain', t('amnesty', { pct: effects.amnesty.pct }));
   if (effects.launder) add('plain', t('launder', { pct: effects.launder.feePct }));
   if (effects.jail) add('bad', t('jail', { n: effects.jail.rounds }));
+  if (effects.bond) add('bad', t('bond', { years: effects.bond.rounds * content.yearsPerRound }));
   if (effects.workMode === 'remote') add('good', t('remote'));
   if (effects.endLodger) add('plain', t('endLodger'));
   if (effects.gift?.liquidPct) add('bad', t('giftSavings', { pct: effects.gift.liquidPct }));

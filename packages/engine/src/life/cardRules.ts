@@ -80,7 +80,7 @@ export function validateCards(c: Content): string[] {
         ? null
         : 'asks for skills that are unknown or at a level that is not 1, 2 or 3',
     flags: flagList, notFlags: flagList,
-    holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'),
+    holds: oneOf(HOLDINGS, 'holding'), ownsLadder: oneOf(ladders, 'ladder'), lacksLadder: oneOf(ladders, 'ladder'), notItems: listOf(items, 'item'), items: listOf(items, 'item'),
     insured: oneOf(INSURANCE_KINDS, 'insurance'), uninsured: oneOf(INSURANCE_KINDS, 'insurance'),
     regimes: listOf(REGIMES, 'regime'),
     retired: flag, evading: flag, inJail: flag, lodger: flag, remote: flag,
@@ -146,6 +146,7 @@ export function validateCards(c: Content): string[] {
     workMode: (value) => (value === 'office' || value === 'remote' || value === 'partTime' ? null : 'needs a way of working: office, remote or partTime'),
     launder: (value) => (isRecord(value) && isWhole(value.feePct) && within(value.feePct, 0, 100) ? null : 'needs a whole percentage from 0 to 100 for the fee of laundering'),
     jail: (value) => (isRecord(value) && isWhole(value.rounds) && within(value.rounds, 1, 3) ? null : 'needs from 1 to 3 rounds of prison'),
+    bond: (value) => (isRecord(value) && isWhole(value.rounds) && within(value.rounds, 1, 5) ? null : 'needs from 1 to 5 rounds bound to the employer'),
     gift: (value) => {
       if (!isRecord(value) || (value.liquidPct === undefined && value.business === undefined)) return 'gives nothing to the children';
       if (value.liquidPct !== undefined && !(isWhole(value.liquidPct) && within(value.liquidPct, 1, 100))) return 'gives a share of savings that is not a whole percentage from 1 to 100';

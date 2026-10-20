@@ -18,8 +18,9 @@ parking, shop, office, warehouse, block of flats, the city's own.
 Singapore and Zurich sell no whole block of flats: their fifth cell is left **empty** (plain
 background, nothing drawn).
 
-Once a sheet is saved as `art/raw/homes/rentals-<city>.png` and cut (`pnpm -s art`), add the city to
-`CITY_RENTALS_DRAWN` and its own kind to `LOCAL_RENTALS_DRAWN` in `packages/content/src/art.ts`.
+Drawn and cut on 2026-10-20. The Tokyo and New York sheets came on a navy ground, not the key
+magenta: their ground was flooded to magenta from the edges (the black outlines stop the flood)
+before cutting.
 
 | Sheet | City | Its own kind | Sprite |
 | --- | --- | --- | --- |
@@ -187,6 +188,4 @@ Landscape image, 2:1. Object sheet: 2 columns by 1 row, 2 icons, each a single b
 2. A striped hammock slung between two short posts, a soft pillow at one end and a little crescent moon above it: a round of rest.
 ```
 
-Once cut (`pnpm -s art`), point `focusArt.familyTime` and `focusArt.unwind` in
-`packages/content/src/art.ts` at `icon.focus_family` and `icon.focus_rest`; until then they borrow
-`icon.family_four` and `icon.mood`.
+Drawn and cut on 2026-10-20.

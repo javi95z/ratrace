@@ -247,6 +247,7 @@ export function applyEffects(p: PlayerState, effects: Effects | undefined, at: S
     if (life.jailRounds === 0) life.bonusStatus -= at.content.life.jail.statusLost;
     life.jailRounds = Math.max(life.jailRounds, effects.jail.rounds);
   }
+  if (effects.bond !== undefined) life.bondRounds = Math.max(life.bondRounds ?? 0, effects.bond.rounds);
   if (effects.gift !== undefined) giveToChildren(p, effects.gift, at);
   if (effects.moveCity !== undefined && effects.moveCity !== p.cityId) {
     life.movingTo = effects.moveCity;

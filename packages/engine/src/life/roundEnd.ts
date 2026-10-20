@@ -96,6 +96,7 @@ export function ageLife(
   if (life.huntRest > 0) life.huntRest -= 1;
   if (life.raiseRest > 0) life.raiseRest -= 1;
   if ((life.teaseRest ?? 0) > 0) life.teaseRest = (life.teaseRest ?? 0) - 1;
+  if ((life.bondRounds ?? 0) > 0) life.bondRounds = (life.bondRounds ?? 0) - 1;
   // A tease made this round: none in the next.
   if (tally.focusActions.includes('tease')) life.teaseRest = 1;
   // A round in prison is one less to serve; the last one served, the player walks out a rung lower.

@@ -54,6 +54,7 @@ export function focusLock(p: PlayerState, action: FocusAction, content: Content)
     if (careerOf(content, p.life.career.id).levels[p.life.career.level + 1] === undefined) return 'career-top';
     if (p.life.rungStudy >= content.life.focusLimits.studyPerRung) return 'studied-enough';
   }
+  if (action === 'jobHunt' && (p.life.bondRounds ?? 0) > 0) return 'bonded';
   if (action === 'jobHunt' && p.life.huntRest > 0) return 'hunt-resting';
   if (action === 'askRaise' && p.life.raiseRest > 0) return 'raise-resting';
   return null;

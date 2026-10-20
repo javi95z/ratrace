@@ -58,11 +58,11 @@ function headline(pen: Pen, h: Headline, n = 0): string {
     case 'inflation':
       return way(lines.inflation[h.trend], n);
     case 'property':
-      return lines.property[h.trend].replace('{city}', pen.names.cities[h.cityId]);
+      return way(lines.property[h.trend], n).replace('{city}', pen.names.cities[h.cityId]);
     case 'asset':
-      return lines.asset[h.trend].replace('{asset}', pen.names.assets[h.assetId]?.name ?? h.assetId);
+      return way(lines.asset[h.trend], n).replace('{asset}', pen.names.assets[h.assetId]?.name ?? h.assetId);
     case 'taxes':
-      return lines.taxes[h.trend].replace('{city}', pen.names.cities[h.cityId]);
+      return way(lines.taxes[h.trend], n).replace('{city}', pen.names.cities[h.cityId]);
     case 'noise':
       return lines.noise[h.id] ?? '';
     case 'government':

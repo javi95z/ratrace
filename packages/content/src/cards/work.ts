@@ -3,9 +3,17 @@ import { card, usd, yearly } from './build';
 import { TRAINING_BOND } from './extra';
 
 /** A private employer in tech or finance comes with a share plan, and without a public servant's job for life. */
-const NEW_EMPLOYER = { setFlags: ['share_plan'], clearFlags: ['layoff_proof'] };
+/**
+ * A life changes trade once at most, by a card: after one, no card offers another. Each is rarer than
+ * most cards, and the best-paid trades ask for the skill they need, or for a price.
+ */
+const CHANGED = 'changed_career';
+const SWITCH = { once: true, weight: 5 } as const;
+/** Starting again at the bottom of a better-paid trade: the first round is paid as a trainee. */
+const TRAINEE = { salaryBoostPct: -30 };
+const NEW_EMPLOYER = { setFlags: ['share_plan', CHANGED], clearFlags: ['layoff_proof'] };
 /** A new trade with no share plan and no job for life: what is left behind on the way into one. */
-const FRESH_START = { clearFlags: ['layoff_proof', 'share_plan'] };
+const FRESH_START = { setFlags: [CHANGED], clearFlags: ['layoff_proof', 'share_plan'] };
 const CAREERS = ['healthcare', 'tech', 'public', 'service', 'finance', 'medicine', 'law', 'education', 'influencer', 'hospitality', 'sales'];
 /** Every career but the one named: who a way into it is offered to. */
 const outside = (...ids: string[]) => CAREERS.filter((id) => !ids.includes(id));
@@ -60,40 +68,40 @@ export const careerCards: CardDef[] = [
     { outcomes: [{ weight: 50, effects: { status: 2 } }, { weight: 50, effects: { salaryModPct: -4 } }] },
     { effects: { salaryBoostPct: -10, careerSkill: 1 } },
   ]),
-  card('career_switch', 'career', { once: true, when: { careers: ['healthcare', 'public', 'service', 'tech'], maxRound: 12 } }, [
+  card('career_switch', 'career', { ...SWITCH, when: { careers: ['healthcare', 'public', 'service', 'tech'], maxRound: 12, notFlags: [CHANGED] } }, [
     {},
-    { effects: { focus: 2, careerSkill: -5, job: { career: 'finance', level: 0 }, ...NEW_EMPLOYER } },
+    { when: { minFinanceSkill: 2 }, effects: { focus: 2, careerSkill: -5, job: { career: 'finance', level: 0 }, ...TRAINEE, ...NEW_EMPLOYER } },
     {
       effects: { focus: 1, cash: usd(-4_000) },
-      outcomes: [{ weight: 60, effects: { job: { career: 'finance', level: 0 }, ...NEW_EMPLOYER } }, { weight: 40, effects: {} }],
+      outcomes: [{ weight: 60, effects: { job: { career: 'finance', level: 0 }, ...TRAINEE, ...NEW_EMPLOYER } }, { weight: 40, effects: {} }],
     },
   ]),
   // The two doors that open onto a street: the firm that takes clerks, and the market where anyone can sell or serve.
-  card('career_law_firm', 'career', { once: true, when: { careers: outside('law', 'medicine'), maxRound: 8 } }, [
+  card('career_law_firm', 'career', { ...SWITCH, when: { careers: outside('law', 'medicine'), maxRound: 8, notFlags: [CHANGED] } }, [
     {},
-    { effects: { focus: 2, careerSkill: -6, job: { career: 'law', level: 0 }, ...FRESH_START } },
+    { when: { minSkills: { negotiation: 2 } }, effects: { focus: 2, careerSkill: -6, job: { career: 'law', level: 0 }, ...TRAINEE, ...FRESH_START } },
     {
       effects: { focus: 1, cash: usd(-6_000) },
-      outcomes: [{ weight: 55, effects: { job: { career: 'law', level: 0 }, careerSkill: -3, ...FRESH_START } }, { weight: 45, effects: {} }],
+      outcomes: [{ weight: 55, effects: { job: { career: 'law', level: 0 }, careerSkill: -3, ...TRAINEE, ...FRESH_START } }, { weight: 45, effects: {} }],
     },
   ]),
-  card('career_market', 'career', { cooldown: 8, when: { careers: outside('sales', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+  card('career_market', 'career', { ...SWITCH, when: { careers: outside('sales', 'medicine', 'law', 'finance'), maxRound: 12, notFlags: [CHANGED] } }, [
     {},
     { effects: { focus: 1, careerSkill: -4, job: { career: 'sales', level: 0 }, ...FRESH_START } },
   ]),
   // A way into each of the other newer careers, each with a scene of its own.
-  card('career_bar', 'career', { cooldown: 8, when: { careers: outside('hospitality', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+  card('career_bar', 'career', { ...SWITCH, when: { careers: outside('hospitality', 'medicine', 'law', 'finance'), maxRound: 12, notFlags: [CHANGED] } }, [
     {},
     { effects: { focus: 1, careerSkill: -4, job: { career: 'hospitality', level: 0 }, ...FRESH_START } },
   ]),
-  card('career_teaching', 'career', { once: true, when: { careers: outside('education', 'medicine', 'law', 'finance'), maxRound: 12 } }, [
+  card('career_teaching', 'career', { ...SWITCH, when: { careers: outside('education', 'medicine', 'law', 'finance'), maxRound: 12, notFlags: [CHANGED] } }, [
     {},
-    { effects: { focus: 2, careerSkill: -4, job: { career: 'education', level: 0 }, setFlags: ['layoff_proof'], clearFlags: ['share_plan'] } },
+    { effects: { focus: 2, careerSkill: -4, job: { career: 'education', level: 0 }, setFlags: ['layoff_proof', CHANGED], clearFlags: ['share_plan'] } },
   ]),
   // An audience is for the young: the door closes at thirty-two.
-  card('career_creator', 'career', { cooldown: 6, when: { careers: ['service', 'hospitality', 'sales', 'tech', 'healthcare', 'public', 'education'], maxRound: 5 } }, [
+  card('career_creator', 'career', { ...SWITCH, when: { careers: ['service', 'hospitality', 'sales', 'tech', 'healthcare', 'public', 'education'], maxRound: 5, notFlags: [CHANGED] } }, [
     {},
-    { effects: { focus: 2, careerSkill: -6, job: { career: 'influencer', level: 0 }, ...FRESH_START } },
+    { when: { minSkills: { network: 2 } }, effects: { focus: 2, careerSkill: -6, job: { career: 'influencer', level: 0 }, ...TRAINEE, ...FRESH_START } },
   ]),
   // The better-paid job nobody without a car can get to.
   card('career_out_of_town', 'career', { cooldown: 6, when: { employed: true, ownsLadder: 'car', minRound: 1 } }, [
@@ -147,9 +155,9 @@ export const educationCards: CardDef[] = [
     { effects: { focus: 2, buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 6 } },
     { effects: { focus: 2, loan: usd(95_000), buyItem: { itemId: 'edu_mba', pricePct: 100 }, careerSkill: 5, salaryModPct: 6 } },
   ]),
-  card('edu_bootcamp', 'education', { once: true, when: { careers: ['healthcare', 'public', 'service', 'finance'], maxRound: 10 } }, [
+  card('edu_bootcamp', 'education', { ...SWITCH, when: { careers: ['healthcare', 'public', 'service', 'finance'], maxRound: 10, notFlags: [CHANGED] } }, [
     {},
-    { effects: { focus: 2, cash: usd(-7_000), careerSkill: -4, job: { career: 'tech', level: 0 }, ...NEW_EMPLOYER } },
+    { effects: { focus: 2, cash: usd(-7_000), careerSkill: -4, job: { career: 'tech', level: 0 }, ...TRAINEE, ...NEW_EMPLOYER } },
   ]),
   card('edu_language', 'education', { once: true, when: { notFlags: ['bilingual'] } }, [
     {},

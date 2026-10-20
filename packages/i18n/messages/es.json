@@ -413,6 +413,7 @@
     "giftBusiness": "Tu negocio más grande, para tus hijos",
     "launder": "Lava lo oculto (comisión del {pct} %)",
     "jail": "{n, plural, one {Prisión: # ronda} other {Prisión: # rondas}}",
+    "bond": "Permanencia: {years} años sin cambiar de trabajo",
     "remote": "Teletrabajo: +1 de foco",
     "endLodger": "El inquilino se va",
     "partnerPay": "Tu pareja cobra el {pct} % del sueldo medio",

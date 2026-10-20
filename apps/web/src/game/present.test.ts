@@ -7,7 +7,7 @@ import { formatFor } from '@ratrace/core/lib/format';
 import en from '@ratrace/i18n/messages/en.json';
 import es from '@ratrace/i18n/messages/es.json';
 import ru from '@ratrace/i18n/messages/ru.json';
-import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from '@ratrace/core/game/present';
+import { ageAt, chancePct, cityLight, debtLabel, effectTags, endingOf, onlyCosts, headlineText, loanPlan, orderLabel, paperOf, portraitAge, prizedBadge, priceHistory, roundNotes, worthBars } from '@ratrace/core/game/present';
 import type { Translate, Words } from '@ratrace/core/game/present';
 
 const words = (locale: 'en' | 'es' | 'ru'): Words => ({ content, ...textFor(locale), fmt: formatFor(locale) });
@@ -42,7 +42,7 @@ describe('headlineText', () => {
     const w = words('en');
     const amazon: Headline = { topic: 'asset', assetId: 'amazon', trend: 'up' };
     expect(headlineText(w, amazon, 2)).toBe('Jeff Bozos fills another giant warehouse, and Amazon climbs with it');
-    expect(headlineText(w, amazon, 3)).toBe('Analysts say buy Amazon');
+    expect(headlineText(w, amazon, 3)).toBe("Amazon's results promise surprises");
     expect(headlineText(words('es'), { topic: 'property', cityId: 'new_york', trend: 'down' }, 4)).toBe('Ronald Grump vende todo lo que tiene en Nueva York: «Un desastre total»');
     expect(headlineText(words('ru'), { topic: 'crypto', phase: 'winter' }, 0)).toBe('Сообщение за подписью Сатоси Накаморо: «Зима близко»');
     // News nobody famous has a line for reads as it always did.
@@ -438,5 +438,33 @@ describe('a card that sets up a business, or only costs', () => {
     expect(onlyCosts({ cash: -500_000, skills: { languages: 1 } })).toBe(false);
     expect(onlyCosts({ focus: 1 })).toBe(false);
     expect(onlyCosts(undefined)).toBe(false);
+  });
+});
+
+describe('the paper of a life', () => {
+  it('hardly ever prints a sentence the life has read before, never within five rounds, and prints each round\'s paper the same way every time', () => {
+    for (let seed = 0; seed < 25; seed++) {
+      const game = createGame({ content, start: lives[seed % 3].start }, `paper-${seed}`);
+      const rounds = game.timeline.length - 1;
+      const lastRound = new Map<string, number>();
+      let again = 0;
+      for (let round = 0; round < rounds; round++) {
+        const paper = paperOf(words('es'), game.timeline, round);
+        expect(paper.length).toBe(game.timeline[round].news?.length ?? 0);
+        // The same paper, asked again.
+        expect(paperOf(words('es'), game.timeline, round)).toEqual(paper);
+        for (const { headline, n } of paper) {
+          const said = headlineText(words('es'), headline, n);
+          const before = lastRound.get(said);
+          if (before !== undefined) {
+            again += 1;
+            expect(round - before, `seed ${seed}: "${said}"`).toBeGreaterThanOrEqual(5);
+          }
+          lastRound.set(said, round);
+        }
+      }
+      // In twenty rounds of five stories, a handful at most are a story the life read years before.
+      expect(again, `seed ${seed}`).toBeLessThanOrEqual(8);
+    }
   });
 });

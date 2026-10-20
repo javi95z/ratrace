@@ -7,6 +7,9 @@ import { usd } from './money';
  *
  * A round of work adds one point of career skill, and a round of study one more. So the top of a
  * five-level ladder takes 28 years of work alone, or 14 with study every round.
+ *
+ * The three best-paid ladders, finance, law and the influencer's, are steep at the top as they are
+ * in life: their first rungs come as fast as anyone's, and their top is for few.
  */
 export const careers: CareerDef[] = [
   {
@@ -71,10 +74,10 @@ export const careers: CareerDef[] = [
     remote: true,
     levels: [
       { salaryPct: 130, minSkill: 0, status: 5 },
-      { salaryPct: 160, minSkill: 4, status: 9 },
-      { salaryPct: 200, minSkill: 10, status: 15 },
-      { salaryPct: 260, minSkill: 18, status: 23 },
-      { salaryPct: 350, minSkill: 28, status: 30 },
+      { salaryPct: 160, minSkill: 6, status: 9 },
+      { salaryPct: 200, minSkill: 15, status: 15 },
+      { salaryPct: 260, minSkill: 28, status: 23 },
+      { salaryPct: 350, minSkill: 42, status: 30 },
     ],
   },
   {
@@ -102,10 +105,10 @@ export const careers: CareerDef[] = [
     remote: true,
     levels: [
       { salaryPct: 90, minSkill: 0, status: 4 },
-      { salaryPct: 115, minSkill: 6, status: 8 },
-      { salaryPct: 160, minSkill: 14, status: 15 },
-      { salaryPct: 240, minSkill: 24, status: 24 },
-      { salaryPct: 380, minSkill: 34, status: 32 },
+      { salaryPct: 115, minSkill: 8, status: 8 },
+      { salaryPct: 160, minSkill: 18, status: 15 },
+      { salaryPct: 240, minSkill: 32, status: 24 },
+      { salaryPct: 380, minSkill: 46, status: 32 },
     ],
   },
   {
@@ -133,9 +136,9 @@ export const careers: CareerDef[] = [
     fade: { fromRound: 6, pctPerRound: 12, maxPct: 70 },
     levels: [
       { salaryPct: 70, minSkill: 0, status: 6 },
-      { salaryPct: 130, minSkill: 3, status: 14 },
-      { salaryPct: 220, minSkill: 8, status: 24 },
-      { salaryPct: 250, minSkill: 14, status: 34 },
+      { salaryPct: 130, minSkill: 5, status: 14 },
+      { salaryPct: 220, minSkill: 14, status: 24 },
+      { salaryPct: 250, minSkill: 28, status: 34 },
     ],
   },
   {

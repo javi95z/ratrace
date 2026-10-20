@@ -109,7 +109,7 @@ function BusinessLine({ business, quote, onOpen }: { business: Owned; quote: Bus
       {standing ? (
         <div className="mt-2 flex gap-2">
           <QuickSwitch
-            on={business.tended}
+            on={business.tended && !business.manager}
             disabled={standing.tended || (!business.tended && (business.manager || quote.focusLeft < 1))}
             label={t('quickTend')}
             onChange={(on) => running.tend(on)}
@@ -345,7 +345,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
             {business.fullTime === true ? null : (
             <>
             <Toggle
-              on={business.tended}
+              on={business.tended && !business.manager}
               disabled={standing.tended || (!business.tended && (business.manager || quote.focusLeft < 1))}
               onChange={(on) => setOrder(isTending, on ? { type: 'tendBusiness', businessId: business.id } : null)}
               label={t('tend')}

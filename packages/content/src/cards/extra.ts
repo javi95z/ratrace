@@ -16,7 +16,7 @@ export const moreEducationCards: CardDef[] = [
   // Paid by the employer, with two years of staying on; or paid by the player, and free to go.
   card('edu_company_course', 'education', { cooldown: 6, when: { employed: true, minRound: 1 } }, [
     {},
-    { effects: { focus: 1, careerSkill: 4, setFlags: [TRAINING_BOND.flag] } },
+    { effects: { focus: 1, careerSkill: 4, setFlags: [TRAINING_BOND.flag], bond: { rounds: TRAINING_BOND.rounds } } },
     { effects: { focus: 1, cash: usd(-4_000), careerSkill: 4 } },
   ]),
 ];

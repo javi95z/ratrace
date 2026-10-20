@@ -4406,6 +4406,16 @@
       "width": 32,
       "height": 32
     },
+    "icon.focus_family": {
+      "file": "icons/icon.focus_family.png",
+      "width": 32,
+      "height": 32
+    },
+    "icon.focus_rest": {
+      "file": "icons/icon.focus_rest.png",
+      "width": 32,
+      "height": 32
+    },
     "badge.own_boss": {
       "file": "badges/badge.own_boss.png",
       "width": 64,
@@ -5070,6 +5080,296 @@
       "file": "cards/map.world.png",
       "width": 576,
       "height": 240
+    },
+    "home.madrid.parking": {
+      "file": "homes/home.madrid.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.madrid.shop": {
+      "file": "homes/home.madrid.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.madrid.office": {
+      "file": "homes/home.madrid.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.madrid.warehouse": {
+      "file": "homes/home.madrid.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.madrid.block": {
+      "file": "homes/home.madrid.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tourist_flat": {
+      "file": "homes/home.tourist_flat.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.london.parking": {
+      "file": "homes/home.london.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.london.shop": {
+      "file": "homes/home.london.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.london.office": {
+      "file": "homes/home.london.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.london.warehouse": {
+      "file": "homes/home.london.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.london.block": {
+      "file": "homes/home.london.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.student_house": {
+      "file": "homes/home.student_house.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.new_york.parking": {
+      "file": "homes/home.new_york.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.new_york.shop": {
+      "file": "homes/home.new_york.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.new_york.office": {
+      "file": "homes/home.new_york.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.new_york.warehouse": {
+      "file": "homes/home.new_york.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.new_york.block": {
+      "file": "homes/home.new_york.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.billboard": {
+      "file": "homes/home.billboard.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.dubai.parking": {
+      "file": "homes/home.dubai.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.dubai.shop": {
+      "file": "homes/home.dubai.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.dubai.office": {
+      "file": "homes/home.dubai.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.dubai.warehouse": {
+      "file": "homes/home.dubai.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.dubai.block": {
+      "file": "homes/home.dubai.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.yacht_berth": {
+      "file": "homes/home.yacht_berth.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.singapore.parking": {
+      "file": "homes/home.singapore.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.singapore.shop": {
+      "file": "homes/home.singapore.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.singapore.office": {
+      "file": "homes/home.singapore.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.singapore.warehouse": {
+      "file": "homes/home.singapore.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.hawker_stall": {
+      "file": "homes/home.hawker_stall.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.bangkok.parking": {
+      "file": "homes/home.bangkok.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.bangkok.shop": {
+      "file": "homes/home.bangkok.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.bangkok.office": {
+      "file": "homes/home.bangkok.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.bangkok.warehouse": {
+      "file": "homes/home.bangkok.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.bangkok.block": {
+      "file": "homes/home.bangkok.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.market_stall": {
+      "file": "homes/home.market_stall.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.parking": {
+      "file": "homes/home.tokyo.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.shop": {
+      "file": "homes/home.tokyo.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.office": {
+      "file": "homes/home.tokyo.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.warehouse": {
+      "file": "homes/home.tokyo.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.tokyo.block": {
+      "file": "homes/home.tokyo.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.capsule_hotel": {
+      "file": "homes/home.capsule_hotel.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.parking": {
+      "file": "homes/home.moscow.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.shop": {
+      "file": "homes/home.moscow.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.office": {
+      "file": "homes/home.moscow.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.warehouse": {
+      "file": "homes/home.moscow.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.moscow.block": {
+      "file": "homes/home.moscow.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.kiosk": {
+      "file": "homes/home.kiosk.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.parking": {
+      "file": "homes/home.mexico_city.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.shop": {
+      "file": "homes/home.mexico_city.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.office": {
+      "file": "homes/home.mexico_city.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.warehouse": {
+      "file": "homes/home.mexico_city.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.mexico_city.block": {
+      "file": "homes/home.mexico_city.block.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.rooftop": {
+      "file": "homes/home.rooftop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.parking": {
+      "file": "homes/home.zurich.parking.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.shop": {
+      "file": "homes/home.zurich.shop.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.office": {
+      "file": "homes/home.zurich.office.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.zurich.warehouse": {
+      "file": "homes/home.zurich.warehouse.png",
+      "width": 128,
+      "height": 128
+    },
+    "home.vault": {
+      "file": "homes/home.vault.png",
+      "width": 128,
+      "height": 128
     }
   }
 }

@@ -63,11 +63,11 @@ export interface ContentText {
     crypto: Record<CryptoPhase, string[]>;
     rates: Record<Trend, string[]>;
     inflation: Record<Trend, string[]>;
-    property: Record<'up' | 'down', string>;
+    property: Record<'up' | 'down', string[]>;
     /** With {asset}, the investment's name. */
-    asset: Record<'up' | 'down', string>;
+    asset: Record<'up' | 'down', string[]>;
     /** With {city}. */
-    taxes: Record<Trend, string>;
+    taxes: Record<Trend, string[]>;
     /** Some of the same news said by one of the famous, as `headlineVoice` picks them: {asset} and {city} as above. */
     celebs: CelebHeadlines;
     /** Filler that tells nothing of what is coming, as many as `world.noiseHeadlines`. */

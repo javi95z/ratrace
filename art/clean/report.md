@@ -1,13 +1,13 @@
 # Art report
 
-Sprites: 1014. Every group uses the 31 interface colours plus its own.
+Sprites: 1074. Every group uses the 31 interface colours plus its own.
 
 | Group | Sprites | Size | Colours |
 |---|---|---|---|
 | items | 85 | 64×64 | 64 |
 | cars | 9 | 96×48 | 64 |
-| homes | 138 | 128×128 | 64 |
-| icons | 184 | 32×32 | 64 |
+| homes | 196 | 128×128 | 64 |
+| icons | 186 | 32×32 | 64 |
 | badges | 86 | 64×64 | 64 |
 | portraits | 120 | 64×64 | 64 |
 | cards | 252 | 288×120 | 64 |
@@ -40,3 +40,20 @@ No sheets missing.
 | home.zurich.chalet | 1 key-coloured pixels |
 | celeb.swiftly | 2 key-coloured pixels |
 | badge.celeb_swiftly | 3 key-coloured pixels |
+| home.student_house | 2 key-coloured pixels |
+| home.billboard | 4 key-coloured pixels |
+| home.dubai.parking | touches-edge |
+| home.singapore.office | touches-edge |
+| home.bangkok.shop | touches-edge |
+| home.bangkok.office | touches-edge |
+| home.market_stall | 1 key-coloured pixels |
+| home.tokyo.shop | 2 key-coloured pixels |
+| home.tokyo.office | touches-edge |
+| home.moscow.parking | 2 key-coloured pixels |
+| home.moscow.shop | 1 key-coloured pixels |
+| home.moscow.office | 1 key-coloured pixels |
+| home.moscow.warehouse | 4 key-coloured pixels |
+| home.moscow.block | 2 key-coloured pixels |
+| home.kiosk | 1 key-coloured pixels |
+| home.mexico_city.shop | 1 key-coloured pixels |
+| home.rooftop | 1 key-coloured pixels |

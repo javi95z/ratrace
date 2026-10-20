@@ -673,6 +673,8 @@ export interface Condition {
   lacksLadder?: string;
   /** Owns none of these items. */
   notItems?: string[];
+  /** Owns every one of these items. */
+  items?: string[];
   /** Holds this insurance. */
   /** Someone without this cover. */
   uninsured?: InsuranceKind;
@@ -796,6 +798,8 @@ export interface Effects {
   workMode?: WorkMode;
   /** Prison, for this round and the rounds after it up to this many in all: no pay, no focus, status lost, and a rung on the way out. */
   jail?: { rounds: number };
+  /** Bound to the employer for this round and the rounds after it up to this many in all: no job hunt. Cards with job offers say so of themselves. */
+  bond?: { rounds: number };
   /**
    * Gives to the children in life: a percent of the cash and savings, the largest business, or both.
    * What is given, less the gift tax, is the family's and counts towards the score as the player's own.
@@ -1195,6 +1199,8 @@ export interface LifeState {
   statusNudge?: number;
   /** Rounds before the player may tease again: a tease is never two rounds running. Absent: none. */
   teaseRest?: number;
+  /** Rounds still bound to the employer, this one included: no job hunt. Absent: none. */
+  bondRounds?: number;
   /** The moves of the career under way or resting, by id: rounds put in so far, and the round from which it may be tried again. Absent until one is made. */
   moves?: Record<string, { progress: number; restUntil: number }>;
   /** City the player moves to when this round has resolved. */
@@ -1414,6 +1420,8 @@ export type RejectReason =
   | 'raise-resting'
   /** A tease was made last round: not two rounds running. */
   | 'tease-resting'
+  /** Bound to the employer by a contract: no job hunt until it runs out. */
+  | 'bonded'
   /** Time with the family needs a partner or a child. */
   | 'no-family'
   | 'bad-mode'
