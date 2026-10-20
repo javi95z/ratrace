@@ -121,3 +121,21 @@ test('a life saved under older rules waits on the phone, kept, and is never dele
   expect(await sessions.resume()).toEqual({ session: null, lost: 'waiting' });
   expect(await store.loadGame()).toEqual(older);
 });
+
+test('the words are made once for a language: a change of the profile hands every screen the same ones', async () => {
+  const seen: unknown[] = [];
+  let settings = {} as ReturnType<typeof useSettings>;
+  function Words() {
+    seen.push(useWords());
+    settings = useSettings();
+    return null;
+  }
+  render(<GameProvider services={services()}><Words /></GameProvider>);
+  await waitFor(() => expect(seen.length).toBeGreaterThan(1));
+  act(() => settings.setSound(!settings.sound));
+  await waitFor(() => expect(settings.sound).toBe(false));
+  expect(new Set(seen).size).toBe(1);
+  act(() => settings.setLocale('es'));
+  await waitFor(() => expect(settings.locale).toBe('es'));
+  expect(new Set(seen).size).toBe(2);
+});

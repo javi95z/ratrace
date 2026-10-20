@@ -175,6 +175,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     },
     [made],
   );
+  // Made again only when the language changes: every screen that reads them is not drawn again with each step of the profile.
+  const words = useMemo<Words>(() => ({ content, ...textFor(locale), fmt: formatFor(locale) }), [locale]);
   const value = useMemo<Game>(
     () => ({
       game: made.game,
@@ -182,7 +184,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       store: made.store,
       saving: made.saving,
       introduceTabs: made.introduceTabs,
-      words: { content, ...textFor(locale), fmt: formatFor(locale) },
+      words,
       locale,
       setLocale: (next) => {
         made.language.write(next);
@@ -197,7 +199,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
         void updateProfile(made.store, change).then(setProfile, () => undefined);
       },
     }),
-    [made, locale, profile, runs, reload],
+    [made, words, locale, profile, runs, reload],
   );
   return (
     <GameContext.Provider value={value}>
