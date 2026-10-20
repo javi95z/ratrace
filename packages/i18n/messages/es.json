@@ -217,7 +217,13 @@
     "weeklyNoticeHint": "El reto semanal, tus partidas multijugador y las vidas a medias. Como mucho un aviso al día, salvo en partida.",
     "weeklyNoticeBlocked": "Las notificaciones están bloqueadas para esta web: permítelas en los ajustes del navegador.",
     "marketNotice": "Avisarme si se mueve mi mercado",
-    "marketNoticeHint": "Cuando algo que tienes en una vida clasificatoria se ha movido un 5 % o más en tu última ronda. Como mucho un aviso al día."
+    "marketNoticeHint": "Cuando algo que tienes en una vida clasificatoria se ha movido un 5 % o más en tu última ronda. Como mucho un aviso al día.",
+    "endLife": "Terminar esta vida",
+    "endLifeTitle": "¿Terminar esta vida?",
+    "endLifeBody": "{life}, {age}. Termina aquí y no queda registrada.",
+    "endLifeChallenge": "Es tu intento del reto de esta semana: se pierde y no se repite.",
+    "endLifeRanked": "Es una vida clasificatoria: se da por perdida.",
+    "endLifeYes": "Terminarla"
   },
   "play": {
     "moved": "Esta vida siguió en otra pestaña o en otro dispositivo. Así está ahora.",

@@ -25,6 +25,12 @@ const sheets: Array<() => void> = [];
 let own = 0;
 let listening = false;
 let tidying: ReturnType<typeof setTimeout> | null = null;
+/** Who waits for every sheet to be gone, its entry out of the history too. */
+const waiting: Array<() => void> = [];
+
+function settle(): void {
+  if (sheets.length === 0 && own === 0 && tidying === null) for (const done of waiting.splice(0)) done();
+}
 
 const onGuard = (): boolean => (history.state as Record<string, unknown> | null)?.[MARK] === true;
 
@@ -40,6 +46,11 @@ function stepBack(): void {
 }
 
 function onPop(): void {
+  popped();
+  settle();
+}
+
+function popped(): void {
   if (own > 0) {
     own -= 1;
     if (sheets.length > 0) {
@@ -65,8 +76,20 @@ function onPop(): void {
 function tidy(): void {
   tidying = null;
   // Nothing to take out if a sheet has opened since, if the page has moved on, or if a step back is already on its way.
-  if (sheets.length > 0 || own > 0 || !onGuard()) return;
+  if (sheets.length > 0 || own > 0 || !onGuard()) return settle();
   stepBack();
+}
+
+/**
+ * Resolves once every sheet has closed and its entry is out of the history: for a page to move on
+ * after closing its sheets, without that step back arriving later and taking the player back.
+ */
+export function sheetsGone(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  return new Promise((done) => {
+    waiting.push(done);
+    settle();
+  });
 }
 
 /** Tells the Back button about a sheet that has opened. Returns what to call when it closes. */

@@ -13,6 +13,7 @@ import { maskEmail } from '@ratrace/core/lib/mask';
 import { GoogleMark } from '@/ui/GoogleMark';
 import { routing } from '@/i18n/routing';
 import { Bar, Button, Panel, Toggle, Well } from '@/ui/kit';
+import { sheetsGone } from '@/ui/back';
 import { Sheet } from '@/ui/overlay';
 import { KeyboardGuide } from '@/ui/keyboard';
 import { Sprite } from '@/ui/Sprite';
@@ -466,8 +467,58 @@ export function SettingsSheet({ open, onClose, shown }: { open: boolean; onClose
             {t('home')}
           </Link>
         </div>
+        <EndLife shown={shown} onLeave={onClose} />
         <Version />
       </div>
     </Sheet>
+  );
+}
+
+/**
+ * Ends the life alone on screen, after asking; the game then goes back to the front door by itself.
+ * Never a life in a game with friends: that has its own way out. The sheets close first, and the
+ * life ends once their entry is out of the history, or that step back would land on the life again.
+ */
+function EndLife({ shown, onLeave }: { shown: GameView; onLeave(): void }) {
+  const t = useT('settings');
+  const common = useT('common');
+  const { content, text } = useWords();
+  const lifeId = useGame((s) => s.lifeId) ?? '';
+  const ranked = useGame((s) => s.ranked);
+  const challenge = useGame((s) => s.challenge);
+  const abandon = useGame((s) => s.abandon);
+  const [asking, setAsking] = useState(false);
+  const [ending, setEnding] = useState(false);
+  if (shown.finished || Object.hasOwn(shown.player.life.flags, 'in_room')) return null;
+  return (
+    <>
+      <button type="button" onClick={() => setAsking(true)} className="min-h-11 self-start text-[13px] text-wine-300 underline underline-offset-4">
+        {t('endLife')}
+      </button>
+      <Sheet open={asking} onClose={() => setAsking(false)} title={t('endLifeTitle')} closeLabel={common('close')}>
+        <p className="text-[14px] leading-snug text-ink-200">{t('endLifeBody', { life: text.lives[lifeId]?.name ?? '', age: common('age', { age: ageAt(content, shown.round) }) })}</p>
+        {ranked ? <p className="mt-2 text-[13px] leading-snug text-wine-300">{t(challenge !== null ? 'endLifeChallenge' : 'endLifeRanked')}</p> : null}
+        <div className="mt-4 flex flex-col gap-2">
+          <Button wide onClick={() => setAsking(false)}>
+            {common('cancel')}
+          </Button>
+          <Button
+            variant="danger"
+            wide
+            disabled={ending}
+            onClick={() => {
+              setEnding(true);
+              setAsking(false);
+              onLeave();
+              void sheetsGone()
+                .then(abandon)
+                .catch(() => setEnding(false));
+            }}
+          >
+            {t('endLifeYes')}
+          </Button>
+        </div>
+      </Sheet>
+    </>
   );
 }
