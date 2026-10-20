@@ -23,8 +23,15 @@ const SPACE = /(\s+)/u;
  */
 export function headroom(shift: number, size: number, flat: TextStyle): TextStyle {
   const room = Math.ceil(size / 2) + Math.ceil(Math.abs(shift));
+  // A caller's own margins and paddings are kept: added to, never replaced.
   const margin = (side: 'Top' | 'Bottom') => Number(flat[`margin${side}`] ?? flat.marginVertical ?? flat.margin ?? 0);
-  return { paddingTop: room + shift, paddingBottom: room, marginTop: margin('Top') - room, marginBottom: margin('Bottom') - room - shift };
+  const padding = (side: 'Top' | 'Bottom') => Number(flat[`padding${side}`] ?? flat.paddingVertical ?? flat.padding ?? 0);
+  return {
+    paddingTop: padding('Top') + room + shift,
+    paddingBottom: padding('Bottom') + room,
+    marginTop: margin('Top') - room,
+    marginBottom: margin('Bottom') - room - shift,
+  };
 }
 
 /**
@@ -78,7 +85,9 @@ function Runs({ role, weight, size, tone, lineHeight, letterSpacing, children, s
       selectable={false}
       numberOfLines={numberOfLines}
       // No letter spacing at all where there is none: on iOS a spacing of 0 is not nothing, it turns the font's kerning off.
-      style={[{ color: COLORS[tone], fontSize: size }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn }, shift ? headroom(shift, size, flat) : null]}
+      // Words are never pressed (a pressable holds them): with the headroom a text's box reaches past its line, over
+      // whatever stands above or below it, and must not take a tap meant for a button there.
+      style={[{ color: COLORS[tone], fontSize: size }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, shift ? headroom(shift, size, flat) : null]}
     >
       {runs.flatMap((run) => pieces(run, size, letterSpacing, words)).map((piece, i) => (
         <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>

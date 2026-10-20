@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
-import { render } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { fireEvent, render } from '@testing-library/react';
+import { View } from 'react-native';
+import { Button } from './kit';
+import { expect, test, vi } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { JERSEY_X_HEIGHT, OSWALD_X_HEIGHT } from './fonts';
 import { headroom, Language, onGrid, PixelText, ReadText, RU_WORD_SPACING } from './text';
+
+// Sprites are drawn with Skia on the phone only (the Button's module holds the kit's sprites).
+vi.mock('./Sprite', () => ({ Sprite: () => null }));
 
 const spans = (container: HTMLElement) => Array.from(container.firstElementChild!.children) as HTMLElement[];
 
@@ -76,4 +81,27 @@ test('a text moved to the browser\'s baseline keeps its place in the layout, wit
     expect(pb).toBeGreaterThanOrEqual(14);
     expect(pt).toBeGreaterThanOrEqual(0);
   }
+});
+
+test('a text\'s headroom keeps a caller\'s own padding, and adds to it', () => {
+  const r = headroom(2, 16, { paddingTop: 4, paddingBottom: 6, marginTop: 1 });
+  const room = 8 + 2;
+  expect(r.paddingTop).toBe(4 + room + 2);
+  expect(r.paddingBottom).toBe(6 + room);
+  expect(r.marginTop).toBe(1 - room);
+  expect(Number(r.marginTop) + Number(r.paddingTop)).toBe(1 + 4 + 2);
+});
+
+test('words never take a tap: a text just below a Button lets the press through to it', () => {
+  const onPress = vi.fn();
+  const { container, getByText } = render(
+    <View>
+      <Button variant="primary" onPress={onPress}>{'Go'}</Button>
+      <ReadText>{'Below the button'}</ReadText>
+    </View>,
+  );
+  const words = getByText('Below the button').parentElement as HTMLElement;
+  expect(words.style.pointerEvents).toBe('none');
+  fireEvent.click(container.querySelector('[role="button"]')!);
+  expect(onPress).toHaveBeenCalledTimes(1);
 });
