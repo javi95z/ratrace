@@ -159,3 +159,13 @@ routes).
   own; the pressable round them takes it), and a caller's own padding is added to, not replaced. Tests: a press on a
   Button with a text just below it reaches the Button and the text is not a target; a caller's padding survives.
 - `tools/online/src/errors.test.ts`: a TODO that its `kit` exclusion leaves with the kit page (phase 5).
+
+## Re-shot after the final review's fixes
+
+The gutter moved from round each screen into what it scrolls (the kit page is now a `Screen`, the web's `main` with
+`px-3`), a Button that is not wide is placed by its parent, a text's line became a prop, and sprites are decoded once
+for the whole app. Every section was shot again in the app and compared with the same web shots: **every number in the
+table above is unchanged** (same raw, beyond, a-point-away, shape and text figures, section by section), so the result
+holds. One section broke on the way and was fixed before this: the Toast, absolutely placed, had moved into the
+scrolling column (tabs: 81 067 px of shape); it is now a Screen's `fixed`, over the page as the web's `position: fixed`
+is, and `tabs` is back to its numbers above.
