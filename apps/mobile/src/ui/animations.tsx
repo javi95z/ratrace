@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import {
   Easing,
@@ -18,22 +18,46 @@ export function ReducedMotionProvider({ value, children }: { value: boolean; chi
 }
 
 /**
+ * The OS's "reduce motion", kept at module level: read once when the module loads and held current
+ * by the change event, so a first render already knows it and nothing plays a frame before it stops.
+ */
+let osReduced = false;
+let watching = false;
+const watchers = new Set<() => void>();
+
+function setOsReduced(on: boolean) {
+  if (on === osReduced) return;
+  osReduced = on;
+  watchers.forEach((notify) => notify());
+}
+
+/** Reads the OS setting (again) and, the first time, starts following its changes. */
+export function refreshSystemMotion(): void {
+  if (!watching) {
+    watching = true;
+    AccessibilityInfo.addEventListener?.('reduceMotionChanged', setOsReduced);
+  }
+  try {
+    AccessibilityInfo.isReduceMotionEnabled?.()?.then(setOsReduced, () => {});
+  } catch {
+    // an OS that cannot say leaves motion on
+  }
+}
+refreshSystemMotion();
+
+function subscribeOs(notify: () => void): () => void {
+  watchers.add(notify);
+  return () => void watchers.delete(notify);
+}
+
+/**
  * True where motion is to be left out: the OS asks for it, the game's setting says so (the
  * `setting` given, else the one the `ReducedMotionProvider` holds). What only moves is then not
  * drawn, and what counts shows where it ends at once.
  */
 export function useReducedMotion(setting?: boolean): boolean {
   const fromGame = useContext(GameReducedMotion);
-  const [system, setSystem] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void AccessibilityInfo.isReduceMotionEnabled?.()?.then((on) => live && setSystem(on));
-    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (on) => setSystem(on));
-    return () => {
-      live = false;
-      sub?.remove?.();
-    };
-  }, []);
+  const system = useSyncExternalStore(subscribeOs, () => osReduced, () => false);
   return system || (setting ?? fromGame);
 }
 
@@ -46,7 +70,7 @@ export function useKeyframes(name: KeyframeName, { play = true, reduced }: { pla
   const still = useReducedMotion(reduced);
   const { ms, loop } = KEYFRAMES[name];
   // -1: not started. 0 to 1: running. Looped ones never pass 1.
-  const progress = useSharedValue(still ? (loop ? 0 : 1) : -1);
+  const progress = useSharedValue(play && still ? (loop ? 0 : 1) : -1);
   useEffect(() => {
     cancelAnimation(progress);
     if (!play) {
@@ -81,7 +105,7 @@ export const useSink = (opts?: { play?: boolean }) => useKeyframes('sink', opts)
  * cubic, not stepped): a score read out, cash coming in. It waits `delay` before it starts, and
  * stands at its end at once where motion is left out.
  */
-export function useCountUp(target: number, ms = 900, { from = 0, delay = 0 }: { from?: number; delay?: number } = {}): number {
+export function useCountUp(target: number, { from = 0, ms = 900, delay = 0 }: { from?: number; ms?: number; delay?: number } = {}): number {
   const still = useReducedMotion();
   const [shown, setShown] = useState(still ? target : from);
   useEffect(() => {
