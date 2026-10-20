@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ImageBackground, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { COLORS, SHELL_WIDTH } from './theme';
@@ -17,9 +17,7 @@ export function Page({ children }: { children: ReactNode }) {
   const inset = useSafeAreaInsets();
   return (
     <View style={{ flex: 1, backgroundColor: COLORS['night-900'] }}>
-      <ImageBackground
-        source={GROUND.source}
-        resizeMode={GROUND.resizeMode}
+      <View
         style={{
           flex: 1,
           backgroundColor: COLORS['night-800'],
@@ -28,10 +26,15 @@ export function Page({ children }: { children: ReactNode }) {
           paddingRight: inset.right,
         }}
       >
+        <Image
+          source={GROUND.source}
+          resizeMode={GROUND.resizeMode}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%' }}
+        />
         <View style={{ flex: 1, width: '100%', maxWidth: SHELL_WIDTH, alignSelf: 'center', paddingHorizontal: 12 }}>
           {children}
         </View>
-      </ImageBackground>
+      </View>
       <View
         pointerEvents="none"
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: inset.top, backgroundColor: COLORS['night-900'], zIndex: 60 }}

@@ -56,6 +56,21 @@ importers:
       '@expo-google-fonts/oswald':
         specifier: ^0.4.2
         version: 0.4.2
+      '@formatjs/intl-datetimeformat':
+        specifier: ^7.8.2
+        version: 7.8.2
+      '@formatjs/intl-getcanonicallocales':
+        specifier: ^3.2.12
+        version: 3.2.12
+      '@formatjs/intl-locale':
+        specifier: ^5.3.12
+        version: 5.3.12
+      '@formatjs/intl-numberformat':
+        specifier: ^9.4.3
+        version: 9.4.3
+      '@formatjs/intl-pluralrules':
+        specifier: ^6.3.16
+        version: 6.3.16
       '@ratrace/content':
         specifier: workspace:*
         version: link:../../packages/content
@@ -128,6 +143,12 @@ importers:
       react-native-worklets:
         specifier: 0.13.0
         version: 0.13.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(react-native@0.88.0(@babel/core@7.29.7)(@react-native/metro-config@0.88.0(@babel/core@7.29.7))(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
+      use-intl:
+        specifier: 4.14.9
+        version: 4.14.9(@types/react@19.3.0)(react@19.3.0)
+      zustand:
+        specifier: ^5.0.15
+        version: 5.0.15(@types/react@19.3.0)(react@19.3.0)
     devDependencies:
       '@testing-library/dom':
         specifier: ^10.4.1
@@ -1180,6 +1201,9 @@ packages:
     resolution: {integrity: sha512-EbxYllZ7/ozONVZd425cm4XnolfW+AmSFT5aP7Jdno6oc3WrYQcHz2CO20z/2rwWwYgztmV2PXvYH+BQ8YFjqg==}
     hasBin: true
 
+  '@formatjs/bigdecimal@0.2.7':
+    resolution: {integrity: sha512-B4+XY/e4u5v261r3a37Kq2ax91gPZSKGyVpx8X5dygAggLlUz+6MeBpmAhaBFGB8WQ4JB1qD+QtKHk9aJkEb9Q==}
+
   '@formatjs/fast-memoize@3.1.7':
     resolution: {integrity: sha512-zXfhLpvA6T7+efdt9JLbBwZ00tT7NsBMDVnDu8rpHeNNv8KfRZAMo2gkG0k9lK/Nzc//3kJ9pImsfuJxk3KhUA==}
 
@@ -1195,8 +1219,29 @@ packages:
   '@formatjs/icu-skeleton-parser@2.1.12':
     resolution: {integrity: sha512-ca7tZMLpfHX3sUD7hP6gE/qr6Iq89EDd3ZLeRhbsB7r0UD55DGJq+tmFLzrGrnx5StahUevQmQQVtbDRHsfDHA==}
 
+  '@formatjs/intl-datetimeformat@7.8.2':
+    resolution: {integrity: sha512-5iCy2mXr6cpEd4N87HLVbN2zRz71dRLMmI8hMY9IgAVaob5fsVocEah6T4w3pPUVYz/aDO2TFGXErPY3JAEUsQ==}
+
+  '@formatjs/intl-getcanonicallocales@3.2.12':
+    resolution: {integrity: sha512-THqQLTJUH2z2A7oE1guW8VzpGpsGFxwWZ+l8cI8Bk75xUU8DxtJoLfKl+5a6fYK26GeDWDWE0UbDhE5SwcLoFg==}
+
+  '@formatjs/intl-locale@5.3.12':
+    resolution: {integrity: sha512-bI5CrvuC6A5PMOIiHX+6ETTHXzUofHw1U/fkI59sQJ+BFbkglxIVVncFPxHf4IHmAqAs/Rlp2bdzTEcLaq2tQw==}
+
   '@formatjs/intl-localematcher@0.8.14':
     resolution: {integrity: sha512-8O7V38QmbB11+ryJ3KM/znrzXtiqgpXzqNoqDsndHZZ5/zDKTTL+cf5F0mzXkQEwhx8IlWnqYvEovf2S5EwLTw==}
+
+  '@formatjs/intl-localematcher@0.9.0':
+    resolution: {integrity: sha512-Z7TD3ssNry1Av1dVDoq/mzpxGyxqWwU0ClWEo+BB3k0JQTeQvUGmeK9WZGYvlqStS0UqkaKXk3dfjsb6NaHAxw==}
+
+  '@formatjs/intl-numberformat@9.4.3':
+    resolution: {integrity: sha512-absVu2I7FlWl+Buictw2PL8Fl385uab3bEA3TCCTu+0DBHHFE+RTbmPmj0nUVO82U1b2Qw3/OA2I7KKLI48EpQ==}
+
+  '@formatjs/intl-pluralrules@6.3.16':
+    resolution: {integrity: sha512-iOqCpBM2fo7bbbWqno+yN9WioepV01N2q3KawFZhRYADzijpzmIIA6cbFXrriCI1Mt2q5c7mceiKHoQkEFf0/Q==}
+
+  '@formatjs/intl-supportedvaluesof@2.3.11':
+    resolution: {integrity: sha512-oRzzAbJA08psr6AO0jgXAdx4HZ2vGNeja1fgaio2R2ne8DLtGPV+fa3gxI/t8J2dNPOndrwVAZVVfbH6GDFDwA==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -5756,6 +5801,8 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.3.2
 
+  '@formatjs/bigdecimal@0.2.7': {}
+
   '@formatjs/fast-memoize@3.1.7': {}
 
   '@formatjs/icu-messageformat-parser@3.5.18':
@@ -5770,7 +5817,37 @@ snapshots:
 
   '@formatjs/icu-skeleton-parser@2.1.12': {}
 
+  '@formatjs/intl-datetimeformat@7.8.2':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
+  '@formatjs/intl-getcanonicallocales@3.2.12': {}
+
+  '@formatjs/intl-locale@5.3.12':
+    dependencies:
+      '@formatjs/intl-getcanonicallocales': 3.2.12
+      '@formatjs/intl-supportedvaluesof': 2.3.11
+
   '@formatjs/intl-localematcher@0.8.14':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
+
+  '@formatjs/intl-localematcher@0.9.0':
+    dependencies:
+      '@formatjs/fast-memoize': 3.1.7
+
+  '@formatjs/intl-numberformat@9.4.3':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
+  '@formatjs/intl-pluralrules@6.3.16':
+    dependencies:
+      '@formatjs/bigdecimal': 0.2.7
+      '@formatjs/intl-localematcher': 0.9.0
+
+  '@formatjs/intl-supportedvaluesof@2.3.11':
     dependencies:
       '@formatjs/fast-memoize': 3.1.7
 

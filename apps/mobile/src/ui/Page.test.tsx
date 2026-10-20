@@ -20,15 +20,15 @@ vi.mock('react-native-safe-area-context', () => {
   };
 });
 
-// Records what Page hands the background: react-native-web does not tile, so the props are what the app controls.
-const seen: Array<{ source: unknown; resizeMode: unknown }> = [];
+// Records what Page hands the ground's image: react-native-web does not tile, so the props are what the app controls.
+const seen: Array<{ source: unknown; resizeMode: unknown; style: unknown }> = [];
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   return {
     ...rn,
-    ImageBackground: (props: Record<string, unknown>) => {
-      seen.push({ source: props.source, resizeMode: props.resizeMode });
-      return <rn.ImageBackground {...(props as Record<string, unknown>)} />;
+    Image: (props: Record<string, unknown>) => {
+      seen.push({ source: props.source, resizeMode: props.resizeMode, style: props.style });
+      return <rn.Image {...(props as Record<string, unknown>)} />;
     },
   };
 });
@@ -61,6 +61,8 @@ test('Page paints the ground with exactly those props, and the top inset night-9
   expect(seen).toHaveLength(1);
   expect(seen[0].source).toBe(GROUND.source);
   expect(seen[0].resizeMode).toBe(GROUND.resizeMode);
+  // An image laid over the whole screen behind the column (ImageBackground is deprecated in RN 0.88).
+  expect(seen[0].style).toMatchObject({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 });
   const strips = Array.from(container.querySelectorAll('div')).filter(
     (d) => d.style.height === '47px' && d.style.position === 'absolute',
   );
