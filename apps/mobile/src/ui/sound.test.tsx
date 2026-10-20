@@ -45,7 +45,6 @@ function mount(on: boolean) {
   );
   return { got, view };
 }
-const playsOf = (source: string) => audio.made.filter((p) => p.source === source).reduce((n, p) => n + p.play.mock.calls.length, 0);
 
 test("the cues are the web's, in the web's words", () => {
   expect([...CUES].sort()).toEqual(Object.keys(SCORE).sort());
@@ -59,32 +58,56 @@ test('soundSources.ts requires every cue file once', () => {
   expect(required.every((m) => m[1] === m[2])).toBe(true);
 });
 
-test('every cue is loaded up front, when sound is on, and the phone is told to respect its silent switch', () => {
+const made = (cue: string) => audio.made.filter((p) => p.source === `file:${cue}`);
+const flush = () => act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+test('only the tap is made at mount, and the phone is told to respect its silent switch', () => {
   mount(true);
-  for (const cue of CUES) expect(audio.made.filter((p) => p.source === `file:${cue}`).length).toBeGreaterThanOrEqual(2);
+  expect(audio.made.map((p) => p.source)).toEqual(['file:tap', 'file:tap']);
   expect(audio.mode).toEqual([{ playsInSilentMode: false, interruptionMode: 'mixWithOthers' }]);
 });
 
-test('a cue plays from its start, and one pressed again while it rings plays over it on another player', () => {
+test('the short cues that overlap have two players, every other cue one, made on its first play', () => {
+  const { got } = mount(true);
+  for (const cue of CUES) act(() => got.play(cue));
+  for (const cue of CUES) expect(made(cue), cue).toHaveLength(['tap', 'card', 'pick', 'coin', 'refuse'].includes(cue) ? 2 : 1);
+  act(() => got.play('end'));
+  act(() => got.play('end'));
+  expect(made('end')).toHaveLength(1);
+});
+
+test('a cue not played is never made', () => {
+  const { got } = mount(true);
+  act(() => got.play('coin'));
+  expect(made('card')).toHaveLength(0);
+  expect(made('end')).toHaveLength(0);
+});
+
+test('a cue pressed again while it rings plays over it on the other player; a player that has played goes back to its start before it plays', async () => {
   const { got } = mount(true);
   act(() => got.play('coin'));
   act(() => got.play('coin'));
-  const coins = audio.made.filter((p) => p.source === 'file:coin');
-  expect(coins[0]!.play).toHaveBeenCalledTimes(1);
-  expect(coins[1]!.play).toHaveBeenCalledTimes(1);
-  expect(coins[0]!.seekTo).toHaveBeenCalledWith(0);
+  const [first, second] = made('coin');
+  expect(first!.play).toHaveBeenCalledTimes(1);
+  expect(second!.play).toHaveBeenCalledTimes(1);
+  expect(first!.seekTo).not.toHaveBeenCalled();
+  const order: string[] = [];
+  first!.seekTo.mockImplementation(() => { order.push('seek'); return Promise.resolve(); });
+  first!.play.mockImplementation(() => { order.push('play'); });
   act(() => got.play('coin'));
-  expect(coins[0]!.play).toHaveBeenCalledTimes(2);
-  expect(playsOf('file:card')).toBe(0);
+  expect(order).toEqual(['seek']);
+  await flush();
+  expect(order).toEqual(['seek', 'play']);
+  expect(first!.seekTo).toHaveBeenCalledWith(0);
 });
 
 test("the kit's tap plays the tap cue", () => {
   const { got } = mount(true);
   act(() => got.tap());
-  expect(playsOf('file:tap')).toBe(1);
+  expect(made('tap').reduce((n, p) => n + p.play.mock.calls.length, 0)).toBe(1);
 });
 
-test('off: nothing is loaded, nothing plays, the tap is silent', () => {
+test('off: nothing is made, nothing plays, the tap is silent', () => {
   const { got } = mount(false);
   act(() => {
     got.play('end');
@@ -94,15 +117,19 @@ test('off: nothing is loaded, nothing plays, the tap is silent', () => {
   expect(audio.mode).toEqual([]);
 });
 
-test('turning sound off lets the players go; turning it on loads them', () => {
+test('turning sound off and on again rebuilds nothing, and off plays nothing; the players go when the provider does', () => {
   const { got, view } = mount(true);
+  act(() => got.play('end'));
   const loaded = [...audio.made];
-  view.rerender(<SoundProvider on={false}><Probe onReady={(play, tap) => Object.assign(got, { play, tap })} /></SoundProvider>);
+  const tree = (on: boolean) => <SoundProvider on={on}><Probe onReady={(play, tap) => Object.assign(got, { play, tap })} /></SoundProvider>;
+  view.rerender(tree(false));
+  act(() => got.play('end'));
+  expect(made('end')[0]!.play).toHaveBeenCalledTimes(1);
+  view.rerender(tree(true));
+  expect(audio.made).toEqual(loaded);
+  expect(loaded.every((p) => p.remove.mock.calls.length === 0)).toBe(true);
+  view.unmount();
   expect(loaded.every((p) => p.remove.mock.calls.length === 1)).toBe(true);
-  act(() => got.play('tap'));
-  expect(loaded.every((p) => p.play.mock.calls.length === 0)).toBe(true);
-  view.rerender(<SoundProvider on><Probe onReady={(play, tap) => Object.assign(got, { play, tap })} /></SoundProvider>);
-  expect(audio.made.length).toBe(loaded.length * 2);
 });
 
 test('without a provider, a cue is silence and nothing throws', () => {

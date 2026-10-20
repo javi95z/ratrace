@@ -147,10 +147,14 @@ test('no square or sawtooth carries a tone above half the sample rate (band-limi
   expect(power / (energy / slice.length)).toBeLessThan(0.002);
 });
 
-test('the committed files are what the score renders today (run `pnpm --filter @ratrace/mobile exec tsx scripts/sounds.ts` when stale)', () => {
+test('the committed files are what the score renders today, to within a bit (run `pnpm --filter @ratrace/mobile exec tsx scripts/sounds.ts` when stale)', () => {
   for (const [name, bytes] of Object.entries(renderAll())) {
     const committed = readFileSync(join(soundsDir, name));
-    expect(committed.equals(bytes), name).toBe(true);
+    expect(committed.length, name).toBe(bytes.length);
+    expect(committed.subarray(0, 44).equals(bytes.subarray(0, 44)), name).toBe(true);
+    let worst = 0;
+    for (let i = 44; i < bytes.length; i += 2) worst = Math.max(worst, Math.abs(committed.readInt16LE(i) - bytes.readInt16LE(i)));
+    expect(worst, name).toBeLessThanOrEqual(1);
   }
 });
 

@@ -7,8 +7,8 @@ import { TapProvider } from './tap';
 export const CUES = ['tap', 'card', 'pick', 'coin', 'refuse', 'round', 'good', 'bad', 'promote', 'badge', 'badgeUncommon', 'badgeRare', 'badgeLegendary', 'million', 'escape', 'bankrupt', 'crisis', 'calm', 'end'] as const;
 export type Cue = (typeof CUES)[number];
 
-/** Players per cue: a cue pressed again while it still rings plays on a second player, over the first, not instead of it. */
-const POOL = 2;
+/** The short cues that really overlap when a player is quick: these get a second player, so a cue pressed again plays over the first, not instead of it. */
+const OVERLAPS: readonly Cue[] = ['tap', 'card', 'pick', 'coin', 'refuse'];
 
 const noPlay = (): void => {};
 const SoundContext = createContext<(cue: Cue) => void>(noPlay);
@@ -20,44 +20,73 @@ export function useSound(): (cue: Cue) => void {
 
 interface Pool {
   players: AudioPlayer[];
+  /** Whether each player has played: one that has not is at its start already. */
+  played: boolean[];
   next: number;
 }
 
 /**
- * Loads every cue when sound is on (so that the first tap is instant), and plays them; supplies the kit's tap sound.
+ * Plays the cues; supplies the kit's tap sound. A cue's players are made when it is first played (an ExoPlayer each on Android),
+ * except the tap's, made as soon as sound is on so that the first press is instant. Turning sound off only stops playing: nothing is rebuilt.
  * The game's chiptune follows the phone's silent switch (`playsInSilentMode: false`) and mixes with the player's own music.
  */
 export function SoundProvider({ on, children }: { on: boolean; children: ReactNode }) {
-  const pools = useRef<Map<Cue, Pool> | null>(null);
+  const pools = useRef<Map<Cue, Pool>>(new Map());
+  const wanted = useRef(on);
+  wanted.current = on;
+
+  const pool = useCallback((cue: Cue): Pool | null => {
+    const known = pools.current.get(cue);
+    if (known) return known;
+    try {
+      const count = OVERLAPS.includes(cue) ? 2 : 1;
+      const made: Pool = { players: Array.from({ length: count }, () => createAudioPlayer(SOUND_SOURCES[cue])), played: Array(count).fill(false), next: 0 };
+      pools.current.set(cue, made);
+      return made;
+    } catch {
+      // A device that will not play is a silent game, never a broken one.
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!on) return;
-    const made = new Map<Cue, Pool>();
-    try {
-      void Promise.resolve(setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' })).catch(() => undefined);
-      for (const cue of CUES) made.set(cue, { players: Array.from({ length: POOL }, () => createAudioPlayer(SOUND_SOURCES[cue])), next: 0 });
-    } catch {
-      // A device that will not play is a silent game, never a broken one.
-    }
-    pools.current = made;
-    return () => {
-      pools.current = null;
-      for (const pool of made.values()) for (const player of pool.players) player.remove();
-    };
-  }, [on]);
+    void Promise.resolve(setAudioModeAsync({ playsInSilentMode: false, interruptionMode: 'mixWithOthers' })).catch(() => undefined);
+    pool('tap');
+  }, [on, pool]);
 
-  const play = useCallback((cue: Cue): void => {
-    const pool = pools.current?.get(cue);
-    if (!pool) return;
-    try {
-      const player = pool.players[pool.next]!;
-      pool.next = (pool.next + 1) % pool.players.length;
-      void Promise.resolve(player.seekTo(0)).catch(() => undefined);
-      player.play();
-    } catch {
-      // See above.
-    }
+  useEffect(() => {
+    const all = pools.current;
+    return () => {
+      for (const made of all.values()) for (const player of made.players) player.remove();
+      all.clear();
+    };
   }, []);
+
+  const play = useCallback(
+    (cue: Cue): void => {
+      if (!wanted.current) return;
+      const made = pool(cue);
+      if (!made) return;
+      try {
+        const i = made.next;
+        const player = made.players[i]!;
+        made.next = (i + 1) % made.players.length;
+        if (!made.played[i]) {
+          made.played[i] = true;
+          player.play();
+          return;
+        }
+        // Back to the start first, and only then play: a play that came before the seek would be taken back by it.
+        void Promise.resolve(player.seekTo(0))
+          .then(() => player.play())
+          .catch(() => undefined);
+      } catch {
+        // See above.
+      }
+    },
+    [pool],
+  );
 
   const tap = useMemo(() => () => play('tap'), [play]);
   return (
