@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { AccessibilityInfo, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Framed } from './Frame';
@@ -11,18 +11,27 @@ import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
 
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet): the backdrop closes it,
- * so does Android's Back (unless `back` is off), and it scrolls when it is taller than 88 % of the screen.
+ * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
+ * `back` is the web's history-back switch and has no effect on native: Back always closes an open sheet.
  * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine.
  */
-export function Sheet({ open, onClose, title, closeLabel, back = true, tone, children }: { open: boolean; onClose(): void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+export function Sheet({ open, onClose, title, closeLabel, tone, children }: { open: boolean; onClose(): void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+  // Mounted only while open, so every opening plays its rise from the first frame.
+  return open ? (
+    <SheetPanel onClose={onClose} title={title} closeLabel={closeLabel} tone={tone}>
+      {children}
+    </SheetPanel>
+  ) : null;
+}
+
+function SheetPanel({ onClose, title, closeLabel, tone, children }: { onClose(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const inset = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const rise = useRise();
   const close = usePress({ onPress: onClose });
-  if (!open) return null;
 
   return (
-    <Modal transparent animationType="none" visible statusBarTranslucent navigationBarTranslucent onRequestClose={back ? onClose : () => {}}>
+    <Modal transparent animationType="none" visible statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
       <View
         accessibilityViewIsModal
         aria-modal
@@ -121,7 +130,8 @@ export function Toast({ message, onDone, ms = 2600 }: { message: string | null; 
   });
   useEffect(() => {
     if (message === null) return;
-    AccessibilityInfo.announceForAccessibility?.(message);
+    // One announcement: iOS has no live region, Android's live region announces by itself.
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility?.(message);
     const timer = setTimeout(() => done.current(), ms);
     return () => clearTimeout(timer);
   }, [message, ms]);

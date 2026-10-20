@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { EXTRA, COLORS } from './theme';
 import { Sheet, Tabs, Toast } from './overlay';
 import { Picker } from './Picker';
+import { rea } from './testing/reanimated';
 import { TapProvider } from './tap';
 
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does.
@@ -12,6 +13,7 @@ vi.mock('react-native', async () => {
   const rn = await vi.importActual<Record<string, unknown>>('react-native-web');
   return {
     ...rn,
+    AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
     Modal: (props: { children: React.ReactNode } & Record<string, unknown>) => {
       modal.props = props;
       return <div data-modal>{props.children}</div>;
@@ -19,15 +21,14 @@ vi.mock('react-native', async () => {
   };
 });
 vi.mock('./Sprite', () => ({ Sprite: ({ id }: { id: string }) => <div data-sprite={id} /> }));
-// Reanimated needs the worklets runtime; the rise itself is pinned in animations.test.tsx.
-vi.mock('react-native-reanimated', async () => {
-  const { View } = await import('react-native');
-  return { default: { View } };
-});
-vi.mock('./animations', () => ({ useRise: () => ({}) }));
+// Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
+vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }) }));
 
-beforeEach(() => vi.useFakeTimers());
+beforeEach(() => {
+  vi.useFakeTimers();
+  rea.assigned.length = 0;
+});
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
@@ -102,10 +103,35 @@ test('Android Back (onRequestClose) closes the sheet and does nothing else', () 
   expect(other).not.toHaveBeenCalled();
 });
 
-test('with back off, Back does not close the sheet', () => {
+test('Back closes the sheet even with back off, which has no effect on native', () => {
   const onClose = sheet({ back: false });
   (modal.props!.onRequestClose as () => void)();
-  expect(onClose).not.toHaveBeenCalled();
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
+function Wrapper({ open }: { open: boolean }) {
+  return (
+    <Sheet open={open} onClose={() => {}} title="Title" closeLabel="Close">
+      <span>inside</span>
+    </Sheet>
+  );
+}
+const panelStyle = () => (screen.getByText('inside').closest('[style*="opacity"]') as HTMLElement).style;
+const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
+
+test('a sheet that stays mounted rises at every opening, from its first frame to its end after 280 ms', async () => {
+  const { rerender } = render(<Wrapper open={false} />);
+  await wait(1000);
+  for (let i = 0; i < 2; i++) {
+    rerender(<Wrapper open />);
+    expect(panelStyle().opacity).toBe('0');
+    expect(panelStyle().transform).toContain('translateY(8px)');
+    await wait(279);
+    expect(panelStyle().opacity).toBe('0');
+    await wait(2);
+    expect(panelStyle().opacity).toBe('1');
+    rerender(<Wrapper open={false} />);
+  }
 });
 
 test('a toast calls onDone after 2600 ms and not before', () => {

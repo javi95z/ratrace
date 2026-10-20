@@ -33,66 +33,9 @@ vi.mock('react-native', async () => {
   };
 });
 
-// Reanimated's own `mock` ships as TypeScript source that does not load here, and the real library needs the
-// worklets runtime: this models what the hooks use. A shared value is reactive (writing it re-reads every
-// animated style), an animation assigned to it is recorded and lands on its target when its duration has run
-// (on fake timers), and `cancelAnimation` is recorded and stops it. The frames themselves are pinned in motion.test.ts.
-const rea = vi.hoisted(() => ({
-  assigned: [] as { kind: 'timing' | 'repeat'; to: number; duration: number; reps?: number }[],
-  cancelled: 0,
-  listeners: new Set<() => void>(),
-}));
+import { rea } from './testing/reanimated';
 
-vi.mock('react-native-reanimated', async () => {
-  const { useRef, useReducer, useEffect } = await import('react');
-  const { View } = await import('react-native');
-  type Anim = { __anim: true; kind: 'timing' | 'repeat'; to: number; duration: number; reps?: number };
-  const emit = () => rea.listeners.forEach((l) => l());
-  return {
-    default: { View },
-    useSharedValue: <T,>(init: T) => {
-      const box = useRef<{ raw: unknown; timer?: ReturnType<typeof setTimeout>; sv: { value: unknown } } | null>(null);
-      if (!box.current) {
-        const b: { raw: unknown; timer?: ReturnType<typeof setTimeout>; sv: { value: unknown } } = { raw: init, sv: { value: init } };
-        Object.defineProperty(b.sv, 'value', {
-          get: () => b.raw,
-          set: (v) => {
-            clearTimeout(b.timer);
-            if (v && typeof v === 'object' && (v as Anim).__anim) {
-              const a = v as Anim;
-              rea.assigned.push({ kind: a.kind, to: a.to, duration: a.duration, reps: a.reps });
-              b.timer = setTimeout(() => {
-                b.raw = a.to;
-                emit();
-              }, a.duration);
-            } else {
-              b.raw = v;
-            }
-            emit();
-          },
-        });
-        (b.sv as { timer?: () => void }).timer = () => clearTimeout(b.timer);
-        box.current = b;
-      }
-      return box.current.sv as { value: T };
-    },
-    useAnimatedStyle: (fn: () => object) => {
-      const [, bump] = useReducer((n: number) => n + 1, 0);
-      useEffect(() => {
-        rea.listeners.add(bump);
-        return () => void rea.listeners.delete(bump);
-      }, []);
-      return fn();
-    },
-    withTiming: (to: number, cfg: { duration: number }): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration }),
-    withRepeat: (inner: Anim, reps: number): Anim => ({ ...inner, kind: 'repeat', reps }),
-    cancelAnimation: (sv: { timer?: () => void }) => {
-      rea.cancelled += 1;
-      sv.timer?.();
-    },
-    Easing: { linear: (t: number) => t },
-  };
-});
+vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
 
 beforeEach(async () => {
   // the module follows the OS from its load on: put the OS back to "motion on" and let it read that
