@@ -62,7 +62,8 @@ export function Button({ variant, wide = false, disabled = false, onPress, child
       style={({ pressed }) => ({
         ...pressDown(pressed && !disabled),
         opacity: disabled ? 0.45 : 1,
-        ...(wide ? { width: '100%' } : { alignSelf: 'flex-start' }),
+        // Not wide, it is placed by its parent, as the web's inline-flex in a flex box: stretched in a column, hugging in a row.
+        ...(wide ? { width: '100%' } : null),
       })}
     >
       <Framed

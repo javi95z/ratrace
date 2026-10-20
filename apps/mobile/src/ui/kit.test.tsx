@@ -87,6 +87,13 @@ test('a wide Button fills its width', () => {
   expect(cur).not.toBeNull();
 });
 
+test('a Button that is not wide is placed by its parent, as the web\'s inline-flex in a flex box: stretched in a column, hugging in a row', () => {
+  render(<Button variant="secondary" onPress={() => {}}>{'Go'}</Button>);
+  const pressable = screen.getByRole('button');
+  expect(pressable.style.alignSelf).toBe('');
+  expect(pressable.style.width).toBe('');
+});
+
 test('Tile presses with the tap sound, on night-600', () => {
   const onPress = vi.fn();
   const tap = vi.fn();
