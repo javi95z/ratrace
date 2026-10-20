@@ -1,0 +1,93 @@
+/*
+ * The web's hard pixel frames (the `frame`, `bevel`, `sunk`, `frame-raised`, `lamp`, `frame-double`
+ * and `tab` utilities of apps/web/src/app/globals.css), as the rectangles their box-shadows paint.
+ */
+import { EDGE, type ColorToken } from './theme';
+
+export type FrameKind = 'frame' | 'bevel' | 'sunk' | 'raised' | 'lamp' | 'double' | 'tab';
+
+/** The colours a frame is drawn in: its outline, its lit edge, its shaded edge, the ring of a double frame. */
+export type FrameTone = { frame?: ColorToken; hi?: ColorToken; lo?: ColorToken; ring?: ColorToken };
+
+export const GOLD: FrameTone = { frame: 'gold-900', hi: 'gold-200', lo: 'gold-700' };
+export const CREAM: FrameTone = { frame: 'ink-900', hi: 'white', lo: 'ink-200' };
+export const WINE: FrameTone = { hi: 'wine-500', lo: 'wine-900' };
+
+/** A rectangle in points, relative to the box's top left; negative values lie outside the box. */
+export type Strip = { x: number; y: number; w: number; h: number; color: ColorToken };
+
+const E = EDGE;
+
+/** The four outside strips, each only as long as its side: the corners stay empty. */
+const outline = (w: number, h: number, color: ColorToken): Strip[] => [
+  { x: 0, y: -E, w, h: E, color },
+  { x: 0, y: h, w, h: E, color },
+  { x: -E, y: 0, w: E, h, color },
+  { x: w, y: 0, w: E, h, color },
+];
+
+const top = (w: number, t: number, color: ColorToken): Strip => ({ x: 0, y: 0, w, h: t, color });
+const bottom = (w: number, h: number, t: number, color: ColorToken): Strip => ({ x: 0, y: h - t, w, h: t, color });
+const left = (h: number, t: number, color: ColorToken): Strip => ({ x: 0, y: 0, w: t, h, color });
+const right = (w: number, h: number, t: number, color: ColorToken): Strip => ({ x: w - t, y: 0, w: t, h, color });
+
+/** A ring between `inner` and `outer` points off the box, corners included. */
+const ring = (w: number, h: number, inner: number, outer: number, color: ColorToken): Strip[] => {
+  const t = outer - inner;
+  return [
+    { x: -outer, y: -outer, w: w + 2 * outer, h: t, color },
+    { x: -outer, y: h + inner, w: w + 2 * outer, h: t, color },
+    { x: -outer, y: -inner, w: t, h: h + 2 * inner, color },
+    { x: w + inner, y: -inner, w: t, h: h + 2 * inner, color },
+  ];
+};
+
+/**
+ * The strips of a frame round a w x h box, in the order they are drawn: a later strip lies over an
+ * earlier one (the reverse of the shadow list in CSS, where the first shadow is on top).
+ */
+export function stripsOf(kind: FrameKind, w: number, h: number, tone: FrameTone): Strip[] {
+  const frame = tone.frame ?? 'night-900';
+  const hi = tone.hi ?? 'night-500';
+  // First in CSS = on top, so listed here top-first and reversed at the end.
+  let css: Strip[];
+  switch (kind) {
+    case 'frame':
+      css = outline(w, h, frame);
+      break;
+    case 'bevel':
+      css = [
+        ...outline(w, h, frame),
+        top(w, E, hi),
+        left(h, E, hi),
+        bottom(w, h, E, tone.lo ?? 'night-900'),
+        right(w, h, E, tone.lo ?? 'night-900'),
+      ];
+      break;
+    case 'sunk':
+      css = [top(w, E, 'night-900'), left(h, E, 'night-900')];
+      break;
+    case 'raised':
+      css = [
+        ...outline(w, h, frame),
+        top(w, E, hi),
+        bottom(w, h, 3, tone.lo ?? 'night-800'),
+        { x: E, y: h, w: w - 2 * E, h: 4, color: frame },
+      ];
+      break;
+    case 'lamp':
+      css = [top(w, E, hi), bottom(w, h, E, tone.lo ?? 'night-900')];
+      break;
+    case 'double':
+      css = [
+        ...ring(w, h, 0, 2, 'night-900'),
+        ...ring(w, h, 2, 4, tone.ring ?? 'gold-700'),
+        ...ring(w, h, 4, 6, 'night-900'),
+      ];
+      break;
+    case 'tab':
+      css = [...outline(w, h, 'night-900'), top(w, E, 'gold-200'), bottom(w, h, E, 'gold-700')];
+      break;
+  }
+  return css.reverse();
+}
