@@ -12,6 +12,6 @@ test('no layer of the navigator paints over the ground: the theme\'s background 
   expect(GROUND_THEME.dark).toBe(true);
 });
 
-test('every screen is see-through, has no header, changes at once as a web page does, and holds the 12 gutter itself', () => {
-  expect(SCREENS).toEqual({ headerShown: false, animation: 'none', contentStyle: { backgroundColor: 'transparent', paddingHorizontal: 12 } });
+test('every screen is see-through, has no header, changes at once as a web page does, and has no gutter round it (the gutter is in what it scrolls)', () => {
+  expect(SCREENS).toEqual({ headerShown: false, animation: 'none', contentStyle: { backgroundColor: 'transparent' } });
 });

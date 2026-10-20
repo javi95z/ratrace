@@ -4,7 +4,8 @@ import { formatFor } from '@ratrace/core/lib/format';
 import { LOCALES } from '@ratrace/i18n';
 import { Redirect } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Screen } from '../ui/Page';
 import { RatAvatar } from '../ui/RatAvatar';
 import { CUES, useSound } from '../ui/sound';
 import { Sprite } from '../ui/Sprite';
@@ -37,7 +38,7 @@ function Cues() {
 export default function DevRoute() {
   if (!__DEV__) return <Redirect href="/" />;
   return (
-    <ScrollView contentContainerStyle={{ paddingVertical: 16 }}>
+    <Screen>
       <Row label="money(1234567) in each language (es must read 12.346 $)">
         {LOCALES.map((locale) => (
           <Text key={locale} style={{ color: COLORS.cream }}>{`${locale}: ${formatFor(locale).money(1234567)}`}</Text>
@@ -64,6 +65,6 @@ export default function DevRoute() {
         <RatAvatar look={look} size="md" />
         <RatAvatar look={look} size="lg" />
       </Row>
-    </ScrollView>
+    </Screen>
   );
 }

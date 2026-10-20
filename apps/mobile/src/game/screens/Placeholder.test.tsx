@@ -7,6 +7,14 @@ import { Home, PAGES, Placeholder } from './Placeholder';
 vi.mock('../../ui/Sprite', () => ({ Sprite: ({ id }: { id: string }) => <div data-sprite={id} /> }));
 const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn(), canGoBack: vi.fn(() => true) }));
 vi.mock('expo-router', () => ({ useRouter: () => router }));
+vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
+
+/** The box that scrolls a page's content: the 448 column, with the 12 gutter inside it. */
+function column(text: string): HTMLElement | null {
+  let el: HTMLElement | null = screen.getByText(text);
+  while (el && el.style.maxWidth !== '448px') el = el.parentElement;
+  return el;
+}
 
 afterEach(() => {
   cleanup();
@@ -40,4 +48,12 @@ test('with nothing to go back to, back opens home', () => {
   expect(screen.getByText('YOUR LIFE')).toBeTruthy();
   fireEvent.click(screen.getByText('Back'));
   expect(router.replace).toHaveBeenCalledWith('/');
+});
+
+test('home and a placeholder hold the 12 gutter inside what they scroll, so a panel\'s outer edge is never cut', () => {
+  render(<WordsProvider locale="en"><Home /></WordsProvider>);
+  expect(column('THE RAT RACE')?.style.paddingLeft).toBe('12px');
+  cleanup();
+  render(<WordsProvider locale="en"><Placeholder page="play" /></WordsProvider>);
+  expect(column('YOUR LIFE')?.style.paddingLeft).toBe('12px');
 });

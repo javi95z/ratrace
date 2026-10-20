@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { Button, Panel } from '../../ui/kit';
+import { Screen } from '../../ui/Page';
 import { useT } from '../words';
 
 /** The web's pages after the front door, by their path (apps/web/src/i18n/metadata.ts), each titled by `meta.titles.<page>`. */
@@ -15,7 +16,7 @@ export function Home() {
   const t = useT('meta');
   const router = useRouter();
   return (
-    <ScrollView contentContainerStyle={{ paddingVertical: 16 }}>
+    <Screen>
       <Panel title={t('title')}>
         <View style={{ gap: 8 }}>
           {PAGES.map((page) => (
@@ -30,7 +31,7 @@ export function Home() {
           ) : null}
         </View>
       </Panel>
-    </ScrollView>
+    </Screen>
   );
 }
 
@@ -40,12 +41,12 @@ export function Placeholder({ page }: { page: TitledPage }) {
   const common = useT('common');
   const router = useRouter();
   return (
-    <ScrollView contentContainerStyle={{ paddingVertical: 16 }}>
+    <Screen>
       <Panel title={t(`titles.${page}`)}>
         <Button variant="quiet" wide onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
           {common('back')}
         </Button>
       </Panel>
-    </ScrollView>
+    </Screen>
   );
 }

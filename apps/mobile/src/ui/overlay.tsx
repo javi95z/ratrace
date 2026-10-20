@@ -121,7 +121,10 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
   );
 }
 
-/** A short message that shows itself out, announced politely. */
+/**
+ * A short message that shows itself out, announced politely. Fixed to the screen, as the web's `fixed bottom-28`: a
+ * screen gives it as its Screen's `fixed`, never inside the column, where it would scroll with the page.
+ */
 export function Toast({ message, onDone, ms = 2600 }: { message: string | null; onDone(): void; ms?: number }) {
   const rise = useRise();
   const done = useRef(onDone);

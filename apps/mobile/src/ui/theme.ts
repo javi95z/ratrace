@@ -45,6 +45,9 @@ export const EDGE = 2;
 /** The phone shell is at most this wide (points), centred. */
 export const SHELL_WIDTH = 448;
 
+/** The web's `px-3`: the room between a page's column and the side of the screen, inside the column. */
+export const GUTTER = 12;
+
 /** The smallest a thing that can be pressed may be (points). */
 export const TOUCH = 44;
 

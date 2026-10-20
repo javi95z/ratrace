@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Bar, Bare, Button, KeyFigure, Panel, Row, Segmented, pressDown, Stat, Tag, TickerBadge, Tile, Toggle, Well } from '../ui/kit';
 import { Sheet, Tabs, Toast } from '../ui/overlay';
+import { Screen } from '../ui/Page';
 import { Picker } from '../ui/Picker';
 import { RatAvatar } from '../ui/RatAvatar';
 import { Sprite } from '../ui/Sprite';
@@ -153,7 +154,6 @@ function Body({ section }: { section: Section }): ReactNode {
               { value: 'tokyo', label: 'Tokyo', icon: 'icon.city_tokyo' },
             ]}
           />
-          <Toast message="Not enough cash" onDone={noop} ms={1_000_000_000} />
         </>
       );
     case 'art':
@@ -207,9 +207,10 @@ export default function KitRoute() {
   if (!__DEV__) return <Redirect href="/" />;
   const shown: Section = (KIT_SECTIONS as readonly string[]).includes(section ?? '') ? (section as Section) : 'buttons';
   return (
-    <View style={{ flex: 1, gap: 16, paddingTop: 16 }}>
+    // The Toast is fixed to the screen, as the web's is to the viewport: over the page, not in its column.
+    <Screen contentStyle={{ gap: 16 }} fixed={shown === 'tabs' ? <Toast message="Not enough cash" onDone={noop} ms={1_000_000_000} /> : undefined}>
       <PixelText size={19} tone="gold-500">{shown}</PixelText>
       <Body section={shown} />
-    </View>
+    </Screen>
   );
 }
