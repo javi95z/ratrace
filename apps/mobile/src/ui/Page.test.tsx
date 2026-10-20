@@ -39,14 +39,14 @@ function wrap(inset: { top: number; bottom: number; left: number; right: number 
 }
 const none = { top: 0, bottom: 0, left: 0, right: 0 };
 
-test('Page puts its children in a centred column at most 448 wide with a 12 gutter', () => {
+test('Page puts its children in a centred column at most 448 wide; the 12 gutter is the screens\' own, inside what clips', () => {
   const { getByText } = wrap(none, <Page><Text>hi</Text></Page>);
   let el = getByText('hi') as HTMLElement | null;
   while (el && el.style.maxWidth !== '448px') el = el.parentElement;
   expect(el).not.toBeNull();
   expect(el!.style.alignSelf).toBe('center');
-  expect(el!.style.paddingLeft).toBe('12px');
-  expect(el!.style.paddingRight).toBe('12px');
+  expect(el!.style.paddingLeft).toBe('');
+  expect(el!.style.paddingRight).toBe('');
 });
 
 test('the ground is the dots tile, repeated, 6 pt', () => {
@@ -63,6 +63,10 @@ test('Page paints the ground with exactly those props, and the top inset night-9
   expect(seen[0].resizeMode).toBe(GROUND.resizeMode);
   // An image laid over the whole screen behind the column (ImageBackground is deprecated in RN 0.88).
   expect(seen[0].style).toMatchObject({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 });
+  // In a box with no padding, so its 100 % is the whole screen: in the padded one it fell short of the foot by the top inset.
+  const ground = Array.from(container.querySelectorAll('div')).find((d) => d.style.backgroundColor === hexToRgb(COLORS['night-800']))!;
+  expect(ground.style.paddingTop).toBe('');
+  expect(Array.from(ground.querySelectorAll('div')).some((d) => d.style.paddingTop === '47px')).toBe(true);
   const strips = Array.from(container.querySelectorAll('div')).filter(
     (d) => d.style.height === '47px' && d.style.position === 'absolute',
   );

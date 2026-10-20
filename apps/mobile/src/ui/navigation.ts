@@ -10,5 +10,11 @@ export const GROUND_THEME = {
   colors: { ...DarkTheme.colors, background: 'transparent', card: 'transparent' },
 };
 
-/** Every screen of the stack: see-through, no header, and changed at once (the web has no page transition). */
-export const SCREENS = { headerShown: false, animation: 'none', contentStyle: { backgroundColor: 'transparent' } } as const;
+/** The web's `px-3`: the room between a page's column and the side of the screen. */
+export const GUTTER = 12;
+
+/**
+ * Every screen of the stack: see-through, no header, and changed at once (the web has no page transition). The gutter
+ * is inside the screen, which clips what it holds: the outer 2 pt edge of a frame against the gutter must still show.
+ */
+export const SCREENS = { headerShown: false, animation: 'none', contentStyle: { backgroundColor: 'transparent', paddingHorizontal: GUTTER } } as const;
