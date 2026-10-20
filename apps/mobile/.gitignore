@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# sprites copied from art/clean by scripts/sprites.ts
+/assets/sprites/
