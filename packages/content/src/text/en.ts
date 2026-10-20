@@ -372,7 +372,7 @@ export const en: ContentText = {
       'Survey: everyone is middle class, especially the rich',
       'Bank raises fees to celebrate record profits',
       // The famous, one each, in the order of CELEBS.
-      'Elon Mosk posts a picture of a dog; a coin with a dog on it doubles',
+      'Elon Mosk posts a picture of his dog; by lunchtime it has its own fan club',
       'Ronald Grump announces tariffs "on everything, believe me"',
       'Vladimir Poutine holds a meeting at a table forty metres long',
       'Warren Bufé buys a whole company over a cherry cola',

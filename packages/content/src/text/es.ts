@@ -372,7 +372,7 @@ export const es: ContentText = {
       'Encuesta: todo el mundo es de clase media, sobre todo los ricos',
       'El banco sube las comisiones para celebrar sus beneficios récord',
       // The famous, one each, in the order of CELEBS.
-      'Elon Mosk publica la foto de un perro y una moneda con un perro dibujado se duplica',
+      'Elon Mosk publica la foto de su perro y a mediodía ya tiene club de fans',
       'Ronald Grump anuncia aranceles «a todo, créanme»',
       'Vladimir Poutine celebra una reunión en una mesa de cuarenta metros',
       'Warren Bufé compra una empresa entera mientras se toma una cola de cereza',
