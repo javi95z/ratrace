@@ -1,13 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, expect, test } from 'vitest';
+import { router } from '../../testing/render';
 import { WordsProvider } from '../words';
 import { Home, PAGES, Placeholder } from './Placeholder';
-
-vi.mock('../../ui/Sprite', () => ({ Sprite: ({ id }: { id: string }) => <div data-sprite={id} /> }));
-const router = vi.hoisted(() => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn(), canGoBack: vi.fn(() => true) }));
-vi.mock('expo-router', () => ({ useRouter: () => router }));
-vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 
 /** The box that scrolls a page's content: the 448 column, with the 12 gutter inside it. */
 function column(text: string): HTMLElement | null {
@@ -16,10 +12,7 @@ function column(text: string): HTMLElement | null {
   return el;
 }
 
-afterEach(() => {
-  cleanup();
-  vi.clearAllMocks();
-});
+afterEach(cleanup);
 
 test('the routes are the web\'s pages', () => {
   expect(PAGES).toEqual(['new', 'play', 'challenge', 'collection', 'records', 'rankings', 'room', 'player', 'legal']);

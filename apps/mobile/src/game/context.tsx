@@ -16,18 +16,26 @@ import { createContext, useContext, useEffect, useMemo, useState, useSyncExterna
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { kvLanguage, KvStore } from '../kvStore';
-import { ReducedMotionProvider } from '../ui/animations';
-import { SoundProvider } from '../ui/sound';
+import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
+import { SoundProvider, useSound } from '../ui/sound';
+import { cuesFor } from './cues';
 import { localeOf, type LanguageKeep } from './locale';
 import { loadBundledRules } from './olderRules';
+import { phoneBasket } from './phoneBasket';
 import { WordsProvider } from './words';
 
 export { useT } from './words';
+export { NO_ROOM, useAccountSaves, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './offline';
+export type { Track } from './offline';
+export { useSound };
+export type { Cue } from '../ui/sound';
 
 /*
  * The phone's counterpart of the web's game/context.tsx: the one place that wires the session, the
- * device's store and the round store. Phase 1 has no cloud: nobody signs in, a ranked life is played
- * on the phone as the web plays one with no account, and there are no rooms, community or counting.
+ * device's store and the round store. The phone has no cloud yet: nobody signs in, so a life is played
+ * on the phone as the web plays one with no account, and what is online (the ranking, the other players,
+ * the rooms, the account's copy of the player's things, the counting) answers as it does there for a
+ * guest with no connection (`offline.ts`), from this same module.
  */
 
 /** Whether what is played is reaching the device. */
@@ -89,8 +97,8 @@ export function phoneDeps(): SessionDeps {
   };
 }
 
-/** The services of the real game: the engine on this phone, saved on this phone. */
-function phoneServices(): Services {
+/** The services of the real game: the engine on this phone, saved on this phone, with the orders of the round kept as they are put in. */
+export function phoneServices(): Services {
   const listeners = new Set<() => void>();
   const store = new ResilientStore(new KvStore(), (degraded, error) => {
     if (degraded) console.warn('this phone is not saving:', error);
@@ -103,7 +111,7 @@ function phoneServices(): Services {
       return () => listeners.delete(listener);
     },
   };
-  return { sessions: new LocalSessions(store, content, lives, phoneDeps()), store, saving, introduceTabs: true };
+  return { sessions: new LocalSessions(store, content, lives, phoneDeps()), store, saving, introduceTabs: true, basket: phoneBasket };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */
@@ -127,6 +135,22 @@ const booted = new WeakSet<GameStore>();
 
 /** The phone's languages, in its order of preference. */
 const phoneLanguages = (): string[] => getLocales().map((locale) => locale.languageCode ?? '');
+
+/**
+ * The sounds follow the round on screen: every change of it is heard as the web hears it (`cues.ts`). The tap of a press
+ * is not here: the kit ticks on each press itself.
+ */
+function Cues({ game }: { game: GameStore }) {
+  const play = useSound();
+  useEffect(
+    () =>
+      game.subscribe((state, before) => {
+        for (const cue of cuesFor(state, before)) play(cue);
+      }),
+    [game, play],
+  );
+  return null;
+}
 
 /**
  * Holds the game for every screen under it: the round store, the player's profile, and the words
@@ -206,7 +230,10 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
     <GameContext.Provider value={value}>
       <WordsProvider locale={locale} timeZone={timeZone}>
         <ReducedMotionProvider value={profile.settings.reducedMotion}>
-          <SoundProvider on={profile.settings.sound}>{children}</SoundProvider>
+          <SoundProvider on={profile.settings.sound}>
+            <Cues game={made.game} />
+            {children}
+          </SoundProvider>
         </ReducedMotionProvider>
       </WordsProvider>
     </GameContext.Provider>
@@ -235,6 +262,12 @@ export function useKnows(): (key: string) => boolean {
 
 /** The content with its text and names in the language in use, and how numbers are written. */
 export const useWords = (): Words => useGameContext().words;
+
+/**
+ * True where motion is to be left out: the OS asks for it, or the game's setting says so. What only moves is then not
+ * drawn at all, and what counts shows where it ends at once. (The web's `useStill`.)
+ */
+export const useStill = (): boolean => useReducedMotion();
 
 /** The player's settings, and the language, which the phone keeps beside them. */
 export const useSettings = () => {

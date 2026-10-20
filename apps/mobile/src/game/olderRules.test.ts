@@ -8,14 +8,8 @@ import type { SavedGame } from '@ratrace/core/session/types';
 import { expect, test, vi } from 'vitest';
 import { BUNDLED } from '../rules';
 import { OLDER, olderLife } from '../testing/olderLife';
+import { phoneDeps } from './context';
 import { loadBundledRules } from './olderRules';
-
-// What the phone's context reaches for when it is read: the device, and the providers of the kit.
-vi.mock('expo-localization', () => ({ getLocales: () => [], getCalendars: () => [] }));
-vi.mock('expo-sqlite/kv-store', () => ({ default: {} }));
-vi.mock('../ui/sound', () => ({ SoundProvider: ({ children }: { children: unknown }) => children }));
-vi.mock('../ui/animations', () => ({ ReducedMotionProvider: ({ children }: { children: unknown }) => children }));
-const { phoneDeps } = await import('./context');
 
 const loaded = async (versions: { engine: string; content: string }) => (await loadBundledRules(versions)) as OlderRules;
 

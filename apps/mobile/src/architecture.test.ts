@@ -69,8 +69,8 @@ const touchesDevice = (path: string, source: string): string[] =>
 
 /** Every storage of the device, by name: the phone's SQLite and AsyncStorage, the browser's three. */
 const namesStorage = (source: string): boolean => /\b(expo-sqlite|AsyncStorage|localStorage|sessionStorage|indexedDB)\b/.test(source);
-/** The only two files that may name one: the phone's store, and the context that wires it into the game. */
-const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'game/context.tsx')];
+/** The only files that may name one: the phone's store, the context that wires it into the game, and the stand-in for the phone's store in tests. */
+const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'game/context.tsx'), join(SRC, 'testing/setup.ts')];
 
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
@@ -135,14 +135,14 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(broke).toEqual([]);
   });
 
-  it('keeps every storage of the device in two files: the phone\'s store and the game context that wires it', () => {
+  it('keeps every storage of the device in three files: the phone\'s store, the game context that wires it, and the tests\' stand-in for the phone\'s store', () => {
     expect(namesStorage("import Storage from 'expo-sqlite/kv-store';")).toBe(true);
     expect(namesStorage("await AsyncStorage.getItem('x');")).toBe(true);
     expect(namesStorage("const saved = localStorage.getItem('x');")).toBe(true);
     expect(namesStorage("sessionStorage.clear();")).toBe(true);
     expect(namesStorage("indexedDB.open('x');")).toBe(true);
     expect(namesStorage("const storage = props.storage; // an IndexedDB on the web")).toBe(false);
-    expect(STORAGE_FILES.map((file) => relative(SRC, file))).toEqual(['kvStore.ts', 'game/context.tsx']);
+    expect(STORAGE_FILES.map((file) => relative(SRC, file))).toEqual(['kvStore.ts', 'game/context.tsx', 'testing/setup.ts']);
     expect(all.filter((path) => namesStorage(readFileSync(path, 'utf8'))).filter((path) => !STORAGE_FILES.includes(path)).map(rel)).toEqual([]);
     // The two that may name it do (a rule that finds nothing in them would find nothing anywhere).
     expect(namesStorage(readFileSync(STORAGE_FILES[0], 'utf8'))).toBe(true);
@@ -163,9 +163,11 @@ describe('the wall between the phone\'s screens and the game', () => {
 
   it('wires the real session and the phone\'s store in one place', () => {
     const wires = mine.filter((path) => importsOf(path).some((i) => /^@\/session\/(local|memory|resilient)$/.test(i.from) || i.from === '@/kvStore')).map(rel);
-    // The one other: the development page's fixture (testing/olderLife.ts) writes a life straight into the phone's store
-    // to see it finished under older rules. Development only; the one route that reaches it is the development page.
-    expect(wires.sort()).toEqual(['game/context.tsx', 'testing/olderLife.ts']);
+    // The others: the basket (game/phoneBasket.ts) keeps the orders of the round in the phone's store, beside the life it
+    // belongs to; the render of the tests (testing/render.tsx) stands in for the context's services, as the web's does; and
+    // the development page's fixture (testing/olderLife.ts) writes a life straight into the phone's store to see it
+    // finished under older rules. Development only; the one route that reaches it is the development page.
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/olderLife.ts', 'testing/render.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
   });
 

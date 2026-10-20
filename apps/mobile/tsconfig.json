@@ -2,6 +2,8 @@
   "extends": "./node_modules/expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "types": ["node"]
+    "types": ["node"],
+    // src/game/cues.test.ts runs the web's game/sound.ts, which names the web's sound board by the web's own alias.
+    "paths": { "@/ui/sound": ["../web/src/ui/sound"] }
   }
 }

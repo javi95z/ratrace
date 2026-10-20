@@ -1,6 +1,9 @@
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+/** The phone's tests that draw the game: they get the native modules' stand-ins (apps/mobile/src/testing/setup.ts). */
+const PHONE_GAME = 'apps/mobile/src/{game,app,testing}/**/*.test.{ts,tsx}';
 
 export default defineConfig({
   plugins: [react()],
@@ -18,11 +21,22 @@ export default defineConfig({
     testTimeout: 30_000,
     // next-intl's middleware imports `next/server` without the extension Node asks of an ES module: run through Vite, it resolves.
     server: { deps: { inline: ['next-intl'] } },
-    include: [
-      'packages/*/src/**/*.test.ts',
-      'tools/*/src/**/*.test.ts',
-      'apps/*/src/**/*.test.{ts,tsx}',
-      'apps/*/scripts/**/*.test.ts',
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'repo',
+          include: ['packages/*/src/**/*.test.ts', 'tools/*/src/**/*.test.ts', 'apps/*/src/**/*.test.{ts,tsx}', 'apps/*/scripts/**/*.test.ts'],
+          exclude: [...configDefaults.exclude, PHONE_GAME],
+        },
+      },
+      {
+        // The phone's game, its screens and its routes run on the phone's native modules, which a test cannot load (the router, the
+        // device's store, the sound, the safe area, the sprites' canvas): every one of these tests has stand-ins for them, made once.
+        // The kit's own tests (apps/mobile/src/ui) mock what they need themselves: some of them test the very modules faked here.
+        extends: true,
+        test: { name: 'phone', include: [PHONE_GAME], setupFiles: ['apps/mobile/src/testing/setup.ts'] },
+      },
     ],
   },
 });

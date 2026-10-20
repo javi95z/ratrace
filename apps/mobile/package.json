@@ -16,6 +16,7 @@
     "@ratrace/core": "workspace:*",
     "@ratrace/engine": "workspace:*",
     "@ratrace/i18n": "workspace:*",
+    "@ratrace/online": "workspace:*",
     "@shopify/react-native-skia": "2.14.0",
     "expo": "~58.0.16",
     "expo-audio": "~58.0.9",

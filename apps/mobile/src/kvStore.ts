@@ -3,11 +3,13 @@ import { readProfile } from '@ratrace/core/session/profile';
 import { readRuns } from '@ratrace/core/session/runs';
 import type { FinishedRun, PlayerStore, Profile, StoredGame } from '@ratrace/core/session/types';
 import type { LanguageKeep } from './game/locale';
+import type { BasketText } from './game/phoneBasket';
 
 const GAME = 'ratrace:game';
 const RUNS = 'ratrace:runs';
 const PROFILE = 'ratrace:profile';
 const LOCALE = 'ratrace:locale';
+const BASKET = 'ratrace:basket';
 
 const read = async (key: string): Promise<unknown> => {
   const text = await Storage.getItem(key);
@@ -54,5 +56,17 @@ export const kvLanguage: LanguageKeep = {
     } catch {
       // A phone that keeps nothing: the language is chosen again on the next start.
     }
+  },
+};
+
+/**
+ * The orders of the round being planned, as text, on the phone: the web's basket in its localStorage. Read and written at once
+ * (synchronously), because the round store keeps the basket as it changes, and reads it when a life is opened.
+ */
+export const kvBasket: BasketText = {
+  read: () => Storage.getItemSync(BASKET),
+  write: (text) => {
+    if (text === null) Storage.removeItemSync(BASKET);
+    else Storage.setItemSync(BASKET, text);
   },
 };
