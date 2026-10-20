@@ -7,6 +7,8 @@ interface FramedProps {
   kind: FrameKind;
   tone?: FrameTone;
   style?: ViewStyle | ViewStyle[];
+  accessibilityLabel?: string;
+  testID?: string;
   children?: ReactNode;
 }
 
@@ -15,9 +17,9 @@ interface FramedProps {
  * box's edges (so they are there on the first paint and follow every resize), and they take no
  * space: the children lie exactly where they would with no frame at all.
  */
-export function Framed({ kind, tone = {}, style, children }: FramedProps): ReactNode {
+export function Framed({ kind, tone = {}, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
   return (
-    <View style={style}>
+    <View style={style} accessibilityLabel={accessibilityLabel} testID={testID}>
       {anchorsOf(kind, tone).map(({ color, ...place }, i) => (
         <View
           key={i}
