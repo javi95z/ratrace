@@ -49,7 +49,10 @@ interface TextProps {
   children: string;
   size?: number;
   tone?: ColorToken;
-  style?: TextStyle;
+  /** The line, when not the text's own (a Tag's, a KeyFigure's): the line the baseline is placed in. */
+  lineHeight?: number;
+  /** Anything but the size and the line, which are `size` and `lineHeight`. */
+  style?: Omit<TextStyle, 'fontSize' | 'lineHeight'>;
   /** Cuts the text to this many lines, with an ellipsis (the web's `truncate` is 1). */
   numberOfLines?: number;
 }
@@ -64,10 +67,11 @@ function pieces(run: Run, size: number, letterSpacing: number, words: boolean): 
     .map((part) => (SPACE.test(part) ? { text: part, family: run.family, fontSize, letterSpacing: letterSpacing + RU_WORD_SPACING * size } : { text: part, family: run.family, fontSize }));
 }
 
-function Runs({ role, weight, size, tone, lineHeight, letterSpacing, children, style, numberOfLines }: TextProps & {
+function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, children, style, numberOfLines }: TextProps & {
   role: 'pixel' | 'read';
   weight: Weight;
-  lineHeight: number;
+  /** The line of this kind of text, where the caller names none. */
+  standard: number;
   letterSpacing: number;
   size: number;
   tone: ColorToken;
@@ -75,9 +79,8 @@ function Runs({ role, weight, size, tone, lineHeight, letterSpacing, children, s
   const language = useContext(Language);
   const runs = runsOf(children, role, weight, language);
   const words = role === 'pixel' && language === 'ru';
-  // A caller's own line height (a Tag's, a KeyFigure's) is the line the baseline is placed in.
-  const flat = StyleSheet.flatten(style) ?? {};
-  const line = flat.lineHeight ?? lineHeight;
+  const flat: TextStyle = StyleSheet.flatten(style) ?? {};
+  const line = lineHeight ?? standard;
   const drawn = Platform.OS === 'ios' ? onGrid(line, PixelRatio.get()) : line;
   const shift = baselineShift(runs, role, weight, size, line, drawn, Platform.OS);
   return (
@@ -87,10 +90,10 @@ function Runs({ role, weight, size, tone, lineHeight, letterSpacing, children, s
       // No letter spacing at all where there is none: on iOS a spacing of 0 is not nothing, it turns the font's kerning off.
       // Words are never pressed (a pressable holds them): with the headroom a text's box reaches past its line, over
       // whatever stands above or below it, and must not take a tap meant for a button there.
-      style={[{ color: COLORS[tone], fontSize: size }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, shift ? headroom(shift, size, flat) : null]}
+      style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, shift ? headroom(shift, size, flat) : null]}
     >
       {runs.flatMap((run) => pieces(run, size, letterSpacing, words)).map((piece, i) => (
-        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>
+        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>
           {piece.text}
         </Text>
       ))}
@@ -104,18 +107,18 @@ function Runs({ role, weight, size, tone, lineHeight, letterSpacing, children, s
  * `tracking-normal`), line height 1.1. On a Russian page,
  * as on the web, 0.16 em is taken off each word space.
  */
-export function PixelText({ size = BODY.size, tone = BODY.color, children, style, numberOfLines, tracking = true }: TextProps & { tracking?: boolean }) {
+export function PixelText({ size = BODY.size, tone = BODY.color, lineHeight, children, style, numberOfLines, tracking = true }: TextProps & { tracking?: boolean }) {
   return (
-    <Runs role="pixel" weight={400} size={size} tone={tone} lineHeight={size * 1.1} letterSpacing={tracking ? size * 0.03 : 0} style={style} numberOfLines={numberOfLines}>
+    <Runs role="pixel" weight={400} size={size} tone={tone} lineHeight={lineHeight} standard={size * 1.1} letterSpacing={tracking ? size * 0.03 : 0} style={style} numberOfLines={numberOfLines}>
       {children}
     </Runs>
   );
 }
 
 /** Sentences: Chakra Petch 400 or 600 (Exo 2 for Russian letters), 15 pt, line height 1.45, cream. */
-export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, children, style, numberOfLines }: TextProps & { weight?: Weight }) {
+export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, lineHeight, children, style, numberOfLines }: TextProps & { weight?: Weight }) {
   return (
-    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines}>
+    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={lineHeight} standard={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines}>
       {children}
     </Runs>
   );

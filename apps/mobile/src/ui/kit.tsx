@@ -168,7 +168,7 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words
   const { bg, fg } = TONE[tone];
   return (
     <View style={{ alignSelf: 'flex-start', backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
-      <PixelText size={12} tone={fg} style={{ lineHeight: 12 * TIGHT }}>{String(children)}</PixelText>
+      <PixelText size={12} tone={fg} lineHeight={12 * TIGHT}>{String(children)}</PixelText>
     </View>
   );
 }
@@ -222,7 +222,7 @@ const FIGURE_TONE = { gold: 'gold-500', teal: 'teal-300', wine: 'wine-300', crea
  */
 export function KeyFigure({ children, tone = 'gold' }: { children: Words; tone?: keyof typeof FIGURE_TONE }) {
   return (
-    <PixelText size={28} tone={FIGURE_TONE[tone]} style={{ lineHeight: 28, fontVariant: ['tabular-nums'] }}>
+    <PixelText size={28} tone={FIGURE_TONE[tone]} lineHeight={28} style={{ fontVariant: ['tabular-nums'] }}>
       {String(children)}
     </PixelText>
   );
@@ -280,7 +280,7 @@ export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: 
         <PixelText size={size} tone={tone ? STAT_TONE[tone] : 'cream'} numberOfLines={1} tracking={false}>
           {String(value)}
         </PixelText>
-        <ReadText size={11} tone="ink-200" numberOfLines={1} style={{ lineHeight: 11 * TIGHT }}>{String(label)}</ReadText>
+        <ReadText size={11} tone="ink-200" numberOfLines={1} lineHeight={11 * TIGHT}>{String(label)}</ReadText>
       </View>
     </>
   );
@@ -310,7 +310,7 @@ export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: 
             {body}
             {/* Out of the flow, so it takes no width from the number. */}
             <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: 'absolute', bottom: 2, right: 4 }}>
-              <PixelText size={10} tone="ink-300" style={{ lineHeight: 10 }}>▸</PixelText>
+              <PixelText size={10} tone="ink-300" lineHeight={10}>▸</PixelText>
             </View>
           </Framed>
         </Pressable>
@@ -457,7 +457,7 @@ function Segment<T extends string | number>({ option, on, onChange, wide }: { op
         ) : null}
         <PixelText size={14} tone={on ? 'ink-900' : 'ink-200'} style={{ textAlign: 'center' }}>{String(option.label)}</PixelText>
         {option.hint !== undefined ? (
-          <ReadText size={11} tone={on ? 'ink-500' : 'ink-200'} style={{ textAlign: 'center', lineHeight: 11 * TIGHT }}>{String(option.hint)}</ReadText>
+          <ReadText size={11} tone={on ? 'ink-500' : 'ink-200'} lineHeight={11 * TIGHT} style={{ textAlign: 'center' }}>{String(option.hint)}</ReadText>
         ) : null}
       </Framed>
     </Pressable>
@@ -524,7 +524,7 @@ export function Toggle({ on, onChange, label, hint, disabled = false, icon }: { 
         ) : null}
         <View style={{ flex: 1, minWidth: 0 }}>
           <PixelText size={15}>{String(label)}</PixelText>
-          {hint !== undefined ? <ReadText size={12} tone="ink-200" style={{ lineHeight: 12 * TIGHT }}>{String(hint)}</ReadText> : null}
+          {hint !== undefined ? <ReadText size={12} tone="ink-200" lineHeight={12 * TIGHT}>{String(hint)}</ReadText> : null}
         </View>
         {/* `frame sunk` on the web, where the later `sunk` wins: a sunk edge and no outline. */}
         <Framed

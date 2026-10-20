@@ -10,6 +10,17 @@ import { headroom, Language, onGrid, PixelText, ReadText, RU_WORD_SPACING } from
 // Sprites are drawn with Skia on the phone only (the Button's module holds the kit's sprites).
 vi.mock('./Sprite', () => ({ Sprite: () => null }));
 
+// Records the style every Text is given: react-native-web drops what only a phone reads (includeFontPadding).
+const textStyles = vi.hoisted(() => [] as unknown[]);
+vi.mock('react-native', async (orig) => {
+  const rn = (await orig()) as typeof import('react-native');
+  const Recorded = (props: Record<string, unknown>) => {
+    textStyles.push(rn.StyleSheet.flatten(props.style as never));
+    return <rn.Text {...(props as Record<string, unknown>)} />;
+  };
+  return { ...rn, Text: Recorded };
+});
+
 const spans = (container: HTMLElement) => Array.from(container.firstElementChild!.children) as HTMLElement[];
 
 test('on a Russian page PixelText lays Jersey and Oswald runs in one outer text, each at its own scaled size', () => {
@@ -104,4 +115,22 @@ test('words never take a tap: a text just below a Button lets the press through 
   expect(words.style.pointerEvents).toBe('none');
   fireEvent.click(container.querySelector('[role="button"]')!);
   expect(onPress).toHaveBeenCalledTimes(1);
+});
+
+test('a line height is a prop of its own, and the style takes neither a size nor a line height (they are the text\'s own)', () => {
+  const { container } = render(<PixelText size={12} lineHeight={15}>{'Tag'}</PixelText>);
+  expect(parseFloat((container.firstElementChild as HTMLElement).style.lineHeight)).toBeCloseTo(15, 0);
+  const read = render(<ReadText size={11} lineHeight={13.75}>{'Cash'}</ReadText>);
+  expect(parseFloat((read.container.firstElementChild as HTMLElement).style.lineHeight)).toBeCloseTo(13.75, 0);
+  // @ts-expect-error a size goes in `size`
+  void (<PixelText style={{ fontSize: 30 }}>{'x'}</PixelText>);
+  // @ts-expect-error a line height goes in `lineHeight`
+  void (<ReadText style={{ lineHeight: 30 }}>{'x'}</ReadText>);
+});
+
+test('no text is given Android\'s font padding: its lines are as tall as the web\'s', () => {
+  textStyles.length = 0;
+  render(<><PixelText>{'Rank'}</PixelText><ReadText>{'Hello'}</ReadText></>);
+  expect(textStyles.length).toBeGreaterThan(0);
+  for (const style of textStyles) expect(style).toMatchObject({ includeFontPadding: false });
 });
