@@ -10,7 +10,7 @@ import type { Cue } from '../ui/sound';
  */
 
 /** What a screen asks of the router: every move is a spy. */
-export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), canGoBack: vi.fn(() => true) };
+export const router = { push: vi.fn(), back: vi.fn(), replace: vi.fn(), dismissTo: vi.fn(), canGoBack: vi.fn(() => true) };
 /** The query of the address the screen was opened with (`/scene?name=`): none, unless a test gives it some. A `Redirect` is a box that names where it goes. */
 export const params: Record<string, string> = {};
 export const expoRouter = {

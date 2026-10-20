@@ -2,21 +2,25 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { EXTRA, COLORS } from './theme';
+import { sheetsGone } from './back';
 import { Sheet, Tabs, Toast } from './overlay';
 import { Picker } from './Picker';
 import { rea } from './testing/reanimated';
 import { TapProvider } from './tap';
 
-// The Modal is told how it is used (transparent, no animation of its own) and what Back does.
+// The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
+// it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
 const modal = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
+const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async () => {
-  const rn = await vi.importActual<Record<string, unknown>>('react-native-web');
+  const rn = await vi.importActual<Record<string, unknown> & { Platform: object }>('react-native-web');
   return {
     ...rn,
+    Platform: { ...rn.Platform, get OS() { return platform.OS; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
-    Modal: (props: { children: React.ReactNode } & Record<string, unknown>) => {
+    Modal: (props: { children: React.ReactNode; visible?: boolean } & Record<string, unknown>) => {
       modal.props = props;
-      return <div data-modal>{props.children}</div>;
+      return <div data-modal data-visible={String(props.visible !== false)}>{props.visible === false ? null : props.children}</div>;
     },
   };
 });
@@ -28,6 +32,7 @@ vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ t
 beforeEach(() => {
   vi.useFakeTimers();
   rea.assigned.length = 0;
+  platform.OS = 'web';
 });
 afterEach(() => {
   cleanup();
@@ -116,6 +121,7 @@ function Wrapper({ open }: { open: boolean }) {
     </Sheet>
   );
 }
+const modals = () => Array.from(document.querySelectorAll('[data-modal]')).map((el) => el.getAttribute('data-visible'));
 const panelStyle = () => (screen.getByText('inside').closest('[style*="opacity"]') as HTMLElement).style;
 const wait = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
 
@@ -218,4 +224,125 @@ test('a Picker shows what is chosen, opens its list in a sheet, and picking clos
 test('a Picker whose value is not in the list shows the first option', () => {
   render(<Picker label="Letter" value={null as unknown as string} options={OPTIONS} onChange={() => {}} closeLabel="Close" />);
   expect(screen.getByLabelText('Letter: Ex')).toBeTruthy();
+});
+
+/** The state of a promise, after the microtasks queued so far. */
+async function settledAfter(promise: Promise<void>): Promise<boolean> {
+  let done = false;
+  void promise.then(() => (done = true));
+  await act(async () => {});
+  return done;
+}
+
+test('a sheet that closes tells its Modal it is hidden, and stays until the Modal has dismissed (iOS says so with onDismiss)', async () => {
+  platform.OS = 'ios';
+  const { rerender } = render(<Wrapper open />);
+  expect(modals()).toEqual(['true']);
+  rerender(<Wrapper open={false} />);
+  expect(modal.props).toMatchObject({ visible: false });
+  expect(screen.queryByText('inside')).toBeNull();
+  // Still mounted, so that the dismissal can be heard.
+  expect(modals()).toEqual(['false']);
+  await wait(599);
+  expect(modals()).toEqual(['false']);
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(modals()).toEqual([]);
+});
+
+test('sheetsGone waits for a sheet that is open, and for its Modal to dismiss once it has closed', async () => {
+  platform.OS = 'ios';
+  expect(await settledAfter(sheetsGone())).toBe(true);
+  const { rerender } = render(<Wrapper open />);
+  const gone = sheetsGone();
+  expect(await settledAfter(gone)).toBe(false);
+  rerender(<Wrapper open={false} />);
+  // Closed by its parent, not gone: the Modal has not said it has dismissed.
+  expect(await settledAfter(gone)).toBe(false);
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(await settledAfter(gone)).toBe(true);
+});
+
+test('where the platform hides a Modal as it is told to and says nothing of it (Android), the sheet is gone as soon as it is hidden', async () => {
+  platform.OS = 'android';
+  const { rerender } = render(<Wrapper open />);
+  const gone = sheetsGone();
+  expect(await settledAfter(gone)).toBe(false);
+  rerender(<Wrapper open={false} />);
+  expect(await settledAfter(gone)).toBe(true);
+  expect(modals()).toEqual([]);
+});
+
+test('a Modal on iOS that was never shown says nothing when it is hidden: the sheet is let go after 600 ms, and nobody waits for ever', async () => {
+  platform.OS = 'ios';
+  const { rerender } = render(<Wrapper open />);
+  rerender(<Wrapper open={false} />);
+  const gone = sheetsGone();
+  await wait(599);
+  expect(await settledAfter(gone)).toBe(false);
+  await wait(2);
+  expect(await settledAfter(gone)).toBe(true);
+  expect(modals()).toEqual([]);
+});
+
+test('a sheet whose parent goes away with it counts for nothing from then on', async () => {
+  platform.OS = 'ios';
+  const { unmount } = render(<Wrapper open />);
+  const gone = sheetsGone();
+  expect(await settledAfter(gone)).toBe(false);
+  unmount();
+  expect(await settledAfter(gone)).toBe(true);
+});
+
+test('every sheet that is open is waited for, not only the last', async () => {
+  platform.OS = 'android';
+  const { rerender } = render(
+    <>
+      <Wrapper open />
+      <Sheet open onClose={() => {}} title="Other" closeLabel="Close">
+        <span>other</span>
+      </Sheet>
+    </>,
+  );
+  const gone = sheetsGone();
+  rerender(
+    <>
+      <Wrapper open={false} />
+      <Sheet open onClose={() => {}} title="Other" closeLabel="Close">
+        <span>other</span>
+      </Sheet>
+    </>,
+  );
+  expect(await settledAfter(gone)).toBe(false);
+  rerender(
+    <>
+      <Wrapper open={false} />
+      <Sheet open={false} onClose={() => {}} title="Other" closeLabel="Close">
+        <span>other</span>
+      </Sheet>
+    </>,
+  );
+  expect(await settledAfter(gone)).toBe(true);
+});
+
+test('a sheet that opens again while it is still leaving is one sheet, shown, and is waited for', async () => {
+  platform.OS = 'ios';
+  const { rerender } = render(<Wrapper open />);
+  rerender(<Wrapper open={false} />);
+  rerender(<Wrapper open />);
+  expect(modals()).toEqual(['true']);
+  expect(screen.getAllByText('inside')).toHaveLength(1);
+  // The Modal that was leaving is gone: its dismissal, heard late, closes nothing.
+  const gone = sheetsGone();
+  expect(await settledAfter(gone)).toBe(false);
+  rerender(<Wrapper open={false} />);
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(await settledAfter(gone)).toBe(true);
+});
+
+test('a dismissal the Modal reports while the sheet is open takes nothing from it', async () => {
+  platform.OS = 'ios';
+  render(<Wrapper open />);
+  expect(modal.props!.onDismiss).toBeUndefined();
+  expect(screen.getByText('inside')).toBeTruthy();
+  expect(await settledAfter(sheetsGone())).toBe(false);
 });

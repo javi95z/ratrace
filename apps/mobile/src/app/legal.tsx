@@ -1,5 +1,5 @@
-import { Placeholder } from '../game/screens/Placeholder';
+import { Legal } from '../game/screens/Legal';
 
 export default function LegalRoute() {
-  return <Placeholder page="legal" />;
+  return <Legal />;
 }

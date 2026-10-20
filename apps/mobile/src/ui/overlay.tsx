@@ -1,7 +1,8 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { sheetOpened } from './back';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
@@ -14,24 +15,67 @@ import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
  * so does Android's Back, and it scrolls when it is taller than 88 % of the screen.
  * `back` is the web's history-back switch and has no effect on native: Back always closes an open sheet.
  * It is modal: a screen reader stays inside it. `tone` lights its frame gold or wine.
+ *
+ * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
+ * can tell a screen that moves on after closing its sheets when they are gone. Every opening is a panel of its own,
+ * so its rise plays from its first frame.
  */
 export function Sheet({ open, onClose, title, closeLabel, tone, children }: { open: boolean; onClose(): void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
-  // Mounted only while open, so every opening plays its rise from the first frame.
-  return open ? (
-    <SheetPanel onClose={onClose} title={title} closeLabel={closeLabel} tone={tone}>
+  const [held, setHeld] = useState({ was: open, opening: open ? 1 : 0, mounted: open });
+  let now = held;
+  if (open !== held.was) {
+    now = { was: open, opening: held.opening + (open ? 1 : 0), mounted: open || held.mounted };
+    setHeld(now);
+  }
+  const opening = now.opening;
+  // Said by the panel that is leaving; one that was replaced by another opening has nothing left to say.
+  const leave = useCallback(() => setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current)), [opening]);
+  return now.mounted ? (
+    <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} title={title} closeLabel={closeLabel} tone={tone}>
       {children}
     </SheetPanel>
   ) : null;
 }
 
-function SheetPanel({ onClose, title, closeLabel, tone, children }: { onClose(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
+/** How long a Modal that says nothing of its dismissal is waited for on iOS: it was never shown, so there is nothing to wait for. */
+const DISMISS_MS = 600;
+
+function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone(): void; title: string; closeLabel: string; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const inset = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const rise = useRise();
   const close = usePress({ onPress: onClose });
 
+  // Counted from its opening to its dismissal (./back), and let go if its parent takes it away before.
+  const release = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const counted = sheetOpened();
+    release.current = counted;
+    return counted;
+  }, []);
+  const left = useRef(onGone);
+  useEffect(() => {
+    left.current = onGone;
+  });
+  const dismissed = useCallback(() => {
+    release.current?.();
+    left.current();
+  }, []);
+  // The Modal's own word is `onDismiss` on iOS, which hides it with a moment's work. Where a platform hides a Modal at once and
+  // says nothing (Android, the web), it is gone as soon as it is told it is hidden; and a Modal on iOS that was never shown
+  // cannot say it has dismissed, so it is let go after a while.
+  useEffect(() => {
+    if (open) return;
+    if (Platform.OS !== 'ios') {
+      dismissed();
+      return;
+    }
+    const timer = setTimeout(dismissed, DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [open, dismissed]);
+
   return (
-    <Modal transparent animationType="none" visible statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+    <Modal transparent animationType="none" visible={open} statusBarTranslucent navigationBarTranslucent onRequestClose={onClose} onDismiss={open ? undefined : dismissed}>
       <View
         accessibilityViewIsModal
         aria-modal

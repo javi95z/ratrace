@@ -3,7 +3,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Bar, Button, KeyFigure, Panel, Row, Segmented, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, Row, Segmented, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
 // Sprites are drawn with Skia on the phone only: here each is a <div> that names its id.
@@ -553,4 +554,124 @@ test('the switch and the Bar are the web\'s `frame sunk`, where `sunk` wins: a s
   while (box && box.style.padding !== '3px' && box.style.paddingTop !== '3px') box = box.parentElement;
   expect(box).not.toBeNull();
   expect(outside(box!)).toBe(0);
+});
+
+/** The colours of the strips a frame is drawn with, round the box that holds `el`'s text. */
+function stripsAround(el: HTMLElement): string[] {
+  const box = backed(el);
+  return Array.from(box.children)
+    .map((child) => (child as HTMLElement).style)
+    .filter((style) => style.position === 'absolute')
+    .map((style) => style.backgroundColor);
+}
+
+test('Raised is a pressed box that stands off the page: a link or a button of the web\'s `frame-raised`, with the tap sound', () => {
+  const onPress = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Raised onPress={onPress} bg="night-700" label="Collection" style={{ minHeight: 48 }}>
+        <span>{'inside'}</span>
+      </Raised>
+    </TapProvider>,
+  );
+  const link = screen.getByRole('button', { name: 'Collection' });
+  expect(link).toBeTruthy();
+  const box = backed(screen.getByText('inside'));
+  expect(box.style.backgroundColor).toBe(rgb(COLORS['night-700']));
+  expect(box.style.minHeight).toBe('48px');
+  // The raised frame's outline is night-900 and its lit edge night-500, unless a tone says otherwise.
+  expect(stripsAround(screen.getByText('inside'))).toContain(rgb(COLORS['night-500']));
+  fireEvent.click(screen.getByText('inside'));
+  expect(onPress).toHaveBeenCalledTimes(1);
+  expect(tap).toHaveBeenCalledTimes(1);
+});
+
+test('Raised is at least 44 high unless it is asked to be taller, is named by its role, and says what is on', () => {
+  render(
+    <>
+      <Raised onPress={() => {}} role="link"><span>{'a'}</span></Raised>
+      <Raised onPress={() => {}} role="radio" checked><span>{'b'}</span></Raised>
+      <Raised onPress={() => {}} role="menuitem" selected><span>{'c'}</span></Raised>
+    </>,
+  );
+  expect(backed(screen.getByText('a')).style.minHeight).toBe('44px');
+  expect(screen.getByRole('link')).toBeTruthy();
+  expect(screen.getByRole('radio').getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByRole('menuitem').getAttribute('aria-selected')).toBe('true');
+});
+
+test('Raised says whether what it opens is open', () => {
+  render(
+    <>
+      <Raised onPress={() => {}} expanded label="shut"><span>{'a'}</span></Raised>
+      <Raised onPress={() => {}} expanded={false} label="open"><span>{'b'}</span></Raised>
+    </>,
+  );
+  expect(screen.getByRole('button', { name: 'shut' }).getAttribute('aria-expanded')).toBe('true');
+  expect(screen.getByRole('button', { name: 'open' }).getAttribute('aria-expanded')).toBe('false');
+});
+
+test('Raised takes a frame tone and a place: gold is the one thing the screen wants, a disabled one is at 0.45 and does not press', () => {
+  const onPress = vi.fn();
+  const tap = vi.fn();
+  render(
+    <TapProvider value={tap}>
+      <Raised onPress={onPress} tone={GOLD} bg="gold-500" place={{ flex: 1 }} disabled>
+        <span>{'gold'}</span>
+      </Raised>
+    </TapProvider>,
+  );
+  expect(backed(screen.getByText('gold')).style.backgroundColor).toBe(rgb(COLORS['gold-500']));
+  expect(stripsAround(screen.getByText('gold'))).toContain(rgb(COLORS['gold-200']));
+  const pressable = screen.getByRole('button');
+  expect(pressable.style.flexGrow).toBe('1');
+  expect(pressable.style.opacity).toBe('0.45');
+  fireEvent.click(screen.getByText('gold'));
+  expect(onPress).not.toHaveBeenCalled();
+  expect(tap).not.toHaveBeenCalled();
+});
+
+test('a Panel can be lit in a tone (the web\'s `frame-gold`), and placed by its parent; it is night-700 whatever a screen would lay on it (the web\'s `bg-night-600` class loses to its own `bg-night-700`)', () => {
+  render(<Panel tone={GOLD} style={{ width: '100%' }}><span>{'body'}</span></Panel>);
+  const panel = backed(screen.getByText('body'));
+  expect(panel.style.backgroundColor).toBe(rgb(COLORS['night-700']));
+  expect(panel.style.width).toBe('100%');
+  expect(panel.style.paddingLeft).toBe('12px');
+  expect(stripsAround(screen.getByText('body'))).toContain(rgb(COLORS['gold-200']));
+});
+
+test('a Well takes the size its parent gives it (the web\'s `size-11`)', () => {
+  render(<Well style={{ width: 44, height: 44 }}><span>{'x'}</span></Well>);
+  const well = backed(screen.getByText('x'));
+  expect(well.style.backgroundColor).toBe(rgb(COLORS['ink-900']));
+  expect([well.style.width, well.style.height]).toEqual(['44px', '44px']);
+});
+
+test('a Notice is a few words in a frame of their own, wine by default: 12 across and 8 down, as the web\'s `frame bg-wine-900 px-3 py-2`', () => {
+  render(<Notice>{'Not saving'}</Notice>);
+  const box = backed(screen.getByText('Not saving'));
+  expect(box.style.backgroundColor).toBe(rgb(COLORS['wine-900']));
+  expect([box.style.paddingLeft, box.style.paddingTop]).toEqual(['12px', '8px']);
+  const text = textOf('Not saving');
+  expect(text.style.fontSize).toBe('14px');
+  expect(text.style.color).toBe(rgb(COLORS.cream));
+});
+
+test('a Notice can be another surface, size, colour and alignment, and says what it is to a screen reader', () => {
+  render(
+    <>
+      <Notice role="alert" size={13} center>{'Alert'}</Notice>
+      <Notice role="status" bg="night-700" tone="ink-200">{'Status'}</Notice>
+      <Notice>{'Plain'}</Notice>
+    </>,
+  );
+  expect(screen.getByRole('alert').textContent).toBe('Alert');
+  expect(screen.getByRole('status').textContent).toBe('Status');
+  expect(textOf('Alert').style.fontSize).toBe('13px');
+  expect(textOf('Alert').style.textAlign).toBe('center');
+  expect(backed(screen.getByText('Status')).style.backgroundColor).toBe(rgb(COLORS['night-700']));
+  expect(textOf('Status').style.color).toBe(rgb(COLORS['ink-200']));
+  // A notice with no role is not a live region of any kind.
+  expect(document.querySelectorAll('[role="alert"], [role="status"]')).toHaveLength(2);
 });

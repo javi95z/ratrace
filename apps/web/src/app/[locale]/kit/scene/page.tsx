@@ -16,19 +16,35 @@ import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GameProvider, useGame } from '@/game/context';
 import type { Services } from '@/game/context';
+import { WeeklyChallenge } from '@/game/screens/Challenge';
 import { Collection } from '@/game/screens/Collection';
 import { Home } from '@/game/screens/Home';
 import { NewLife } from '@/game/screens/NewLife';
 import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
+import { Legal } from './Legal';
+
+/**
+ * The web's front door keeps its settings behind a button of its own and takes no word of whether they are open (its sheet is not
+ * exported), so a scene that names them has the page press that button once the door is drawn: in the page, as a person would, and
+ * not by the shot, which cannot tap. The phone's registry draws the sheet beside the door instead.
+ */
+function Settled({ sheet, children }: { sheet: string | undefined; children: ReactNode }) {
+  useEffect(() => {
+    if (sheet === 'settings') document.querySelector<HTMLElement>('button[aria-label="Settings"]')?.click();
+  }, [sheet]);
+  return children;
+}
 
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
-  home: () => <Home />,
+  home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: () => <NewLife />,
   play: () => <Play />,
   records: () => <Records />,
   collection: () => <Collection />,
+  challenge: () => <WeeklyChallenge />,
+  legal: () => <Legal />,
 };
 
 /**

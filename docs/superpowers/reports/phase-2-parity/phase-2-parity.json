@@ -1,9 +1,13 @@
 [
-  {"scene":"home-new","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for home: its numbers say nothing"},
-  {"scene":"home-continue","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for home: its numbers say nothing"},
+  {"scene":"home-new","locale":"en","verdict":"clean","rawPercent":4.48,"beyondPercent":1.621,"loose":6945,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
+  {"scene":"home-continue","locale":"en","verdict":"differs","rawPercent":2.98,"beyondPercent":0.399,"loose":7129,"shape":1,"shapeBlended":1,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
+  {"scene":"home-settings","locale":"en","verdict":"differs","rawPercent":4.04,"beyondPercent":1.993,"loose":6141,"shape":3,"shapeBlended":0,"textLines":29,"unmeasured":15,"oneSided":0,"worstPt":1},
+  {"scene":"home-lost-newer","locale":"en","verdict":"clean","rawPercent":5,"beyondPercent":2.009,"loose":9724,"shape":0,"shapeBlended":0,"textLines":17,"unmeasured":0,"oneSided":0,"worstPt":0.67},
   {"scene":"play-news-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-cards-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-finance-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
   {"scene":"play-outcome-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
-  {"scene":"play-resolve-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"}
+  {"scene":"play-resolve-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
+  {"scene":"challenge-practice","locale":"en","verdict":"differs","rawPercent":5.84,"beyondPercent":1.989,"loose":22027,"shape":9476,"shapeBlended":1373,"textLines":17,"unmeasured":0,"oneSided":0,"worstPt":1},
+  {"scene":"legal","locale":"en","verdict":"differs","rawPercent":12.69,"beyondPercent":8.071,"loose":99219,"shape":0,"shapeBlended":0,"textLines":34,"unmeasured":0,"oneSided":0,"worstPt":5.67}
 ]

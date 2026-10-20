@@ -182,14 +182,15 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
 /**
  * Opens a page and waits for it to be still: its fonts and pictures in, every rise over (0.28 s), and the dev overlay's
  * badge gone. A sheet opened with no tap before it takes the keyboard's focus ring (`:focus-visible`), which a player's tap
- * never shows and the phone has no use for. `ready` is what the page shows once it is drawn, where it is drawn later.
+ * never shows and the phone has no use for. `ready` is what the page shows once it is drawn, where it is drawn later; `css`
+ * is any rule the page is given besides.
  */
-export async function openPage(page: Page, url: string, ready?: () => boolean): Promise<void> {
+export async function openPage(page: Page, url: string, ready?: () => boolean, css = ''): Promise<void> {
   await page.goto(url, { waitUntil: 'networkidle' });
   if (ready) await page.waitForFunction(ready);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForFunction(() => [...document.images].every((img) => img.complete));
-  await page.addStyleTag({ content: 'nextjs-portal { display: none !important; } :focus-visible { outline: none !important; }' });
+  await page.addStyleTag({ content: `nextjs-portal { display: none !important; } :focus-visible { outline: none !important; } ${css}` });
   await sleep(800);
 }
 

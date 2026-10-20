@@ -13,6 +13,14 @@ export const SCENES_FOLDER = 'phase-2-parity';
 /** The numbers of the scenes shot, in that folder: a line to each. */
 export const SCENES_FILE = 'phase-2-parity.json';
 
+/**
+ * The one rule the web's pages are given in a shot. The web's body is padded by the safe area at the top and its `main` is `min-h-dvh`, so a short
+ * page is taller than the screen by that area (62 pt on the iPhone 16 Pro): its foot, the settings and the small print, stands below the fold. The
+ * phone's page scrolls inside the screen under the safe area and is as tall as the part that shows. The shot takes that one difference away from the
+ * web, so what it measures is what is drawn, not where a short page ends.
+ */
+export const VISIBLE_HEIGHT = 'main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }';
+
 /** The web's page for a scene, in the scene's language (the web's pages are all under their language). */
 export const sceneWebUrl = (scene: Scene, port: number): string => `http://localhost:${port}/${scene.locale}/kit/scene?name=${scene.name}`;
 
@@ -35,7 +43,7 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
  * results. The task that ports a screen takes its word out of this list.
  */
-export const STAND_INS: readonly string[] = ['home', 'new', 'play', 'records', 'collection'];
+export const STAND_INS: readonly string[] = ['new', 'play', 'records', 'collection'];
 
 /** Whether a scene is compared: its screen is the real one on the app. */
 export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene));

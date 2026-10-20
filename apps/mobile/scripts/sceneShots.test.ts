@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { chooseScenes, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
+import { chooseScenes, filesOf, VISIBLE_HEIGHT, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 
@@ -73,11 +73,14 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
 });
 
 test('a scene whose screen the app still draws as a stand-in is unjudged: no numbers, and why', () => {
-  expect(STAND_INS).toEqual(['home', 'new', 'play', 'records', 'collection']);
-  for (const scene of SCENES) expect(isJudged(scene), scene.name).toBe(false);
+  expect(STAND_INS).toEqual(['new', 'play', 'records', 'collection']);
+  // The screens that are ported are compared; the scenes of the stand-ins are only shot.
+  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual(['home-new', 'home-continue', 'home-settings', 'home-lost-newer', 'challenge-practice', 'legal']);
+  expect(SCENES.filter((scene) => !isJudged(scene)).every((scene) => scene.name.startsWith('play-'))).toBe(true);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
-  expect(unjudgedLine(first)).toEqual({ scene: first.name, locale: first.locale, verdict: 'unjudged', why: 'the app still draws a stand-in for home: its numbers say nothing' });
-  expect(Object.keys(unjudgedLine(first))).toEqual(['scene', 'locale', 'verdict', 'why']);
+  const standIn = SCENES.find((scene) => scene.name === 'play-news-r1')!;
+  expect(unjudgedLine(standIn)).toEqual({ scene: standIn.name, locale: standIn.locale, verdict: 'unjudged', why: 'the app still draws a stand-in for play: its numbers say nothing' });
+  expect(Object.keys(unjudgedLine(standIn))).toEqual(['scene', 'locale', 'verdict', 'why']);
 });
 
 test('a run of some scenes keeps the lines of the others, and the file has every scene shot, in the list\'s order, a line to each', () => {
@@ -91,4 +94,10 @@ test('a run of some scenes keeps the lines of the others, and the file has every
   expect(JSON.parse(text)).toEqual(merged);
   expect(text.trim().split('\n')).toHaveLength(merged.length + 2);
   expect(text.endsWith('\n')).toBe(true);
+});
+
+test('a web page is as tall as what is visible of the screen, not taller by the safe area the body already clears (the one rule the web\'s shots are given)', () => {
+  // The web's `min-h-dvh` page inside a body that is padded by the safe area at the top is taller than the screen by that area, so the
+  // foot of a short page stands below the fold; the phone's page is as tall as the screen it scrolls in. Taken away in the shot, nothing else is.
+  expect(VISIBLE_HEIGHT).toBe('main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }');
 });

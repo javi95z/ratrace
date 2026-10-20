@@ -5,7 +5,8 @@ import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
-import type { PlayerStore, Sessions } from '../session/types';
+import { SAVE_FORMAT } from '../session/types';
+import type { PlayerStore, SavedGame, Sessions } from '../session/types';
 
 /**
  * Scenes: named game states, built the same way for every client, so the web and the phone can each be shot at the
@@ -30,14 +31,18 @@ export interface Scene {
 export const SCENES: readonly Scene[] = [
   { name: 'home-new', locale: 'en' },
   { name: 'home-continue', locale: 'en' },
+  { name: 'home-settings', locale: 'en', sheet: 'settings' },
+  { name: 'home-lost-newer', locale: 'en' },
   { name: 'play-news-r1', locale: 'en' },
   { name: 'play-cards-r1', locale: 'en' },
   { name: 'play-finance-r6', locale: 'en' },
   { name: 'play-outcome-r1', locale: 'en' },
   { name: 'play-resolve-r6', locale: 'en' },
+  { name: 'challenge-practice', locale: 'en' },
+  { name: 'legal', locale: 'en' },
 ];
 
-/** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`). Each client has a registry of them. */
+/** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
 export const screenOf = (scene: Scene): string => scene.name.split('-')[0];
 
 /**
@@ -74,17 +79,23 @@ type Reach = {
   life: string;
   round: number;
   stage: Extract<Stage, 'news' | 'cards' | 'finance'>;
+  /** The life is then saved as a newer version of the game would have saved it, which this one cannot open (and keeps). */
+  newer?: true;
 } & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
 
 /** What each scene's store holds: the life to begin and how far to play it, or null for a device with no life. */
 const PLANS: Readonly<Record<string, Reach | null>> = {
   'home-new': null,
   'home-continue': { life: 'nurse', round: 3, stage: 'news' },
+  'home-settings': { life: 'nurse', round: 3, stage: 'news' },
+  'home-lost-newer': { life: 'nurse', round: 1, stage: 'news', newer: true },
   'play-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-cards-r1': { life: 'engineer', round: 1, stage: 'cards' },
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
   'play-outcome-r1': { life: 'engineer', round: 1, stage: 'news', then: [{ action: 'leaveNews' }, { action: 'pick' }], ends: 'outcome' },
   'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  'challenge-practice': null,
+  legal: null,
 };
 
 /** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
@@ -140,7 +151,14 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
     await answerNext(name, game, bot);
     if (game.getState().view?.phase !== 'cards') throw new Error(`scene ${name}: the hand had no second card`);
   }
+  if (reach.newer) await asNewer(store);
   return store;
+}
+
+/** The life on a device, saved again as a newer version of the game would save it: in a format this one does not know how to read. */
+async function asNewer(store: MemoryStore): Promise<void> {
+  const saved = (await store.loadGame()) as SavedGame;
+  await store.saveGame({ ...saved, format: SAVE_FORMAT + 1 } as unknown as SavedGame);
 }
 
 /** The round store of a game, as a scene's script needs it: its state as it is now, each time asked. */

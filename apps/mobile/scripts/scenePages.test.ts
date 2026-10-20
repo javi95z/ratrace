@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'records', 'collection']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'records', 'collection', 'challenge', 'legal']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -77,4 +77,20 @@ test('the screens the shots do not compare are the ones the app still draws as p
   expect(standIns.length).toBeGreaterThan(0);
   const drawnAsOne = entriesOf(app, 'SCENE_SCREENS').filter((entry) => standIns.some((name) => new RegExp(`<${name}\\b`).test(entry.body)));
   expect(drawnAsOne.map((entry) => entry.screen)).toEqual([...STAND_INS]);
+});
+
+// The legal page is a server component, which the scene page (a client one) cannot draw: the scene has a copy of its body, held to it here.
+test('the web\'s legal scene draws the legal page\'s own sections and layout, line for line', () => {
+  const page = read('../../web/src/app/[locale]/legal/page.tsx');
+  const scene = read('../../web/src/app/[locale]/kit/scene/Legal.tsx');
+  const body = (source: string) => source.slice(source.indexOf('const sections = ['));
+  expect(body(page).length).toBeGreaterThan(900);
+  expect(body(scene)).toBe(body(page));
+  // The same two constants, from the same file.
+  for (const source of [page, scene]) expect(source).toContain("import { LEGAL_EMAIL, LEGAL_NAME } from '@/lib/site';");
+});
+
+test('the front door\'s settings are open in the web\'s scene by the page, not by the shot: a scene names the sheet, and the app draws the same sheet beside the door', () => {
+  expect(web).toContain("document.querySelector<HTMLElement>('button[aria-label=\"Settings\"]')?.click()");
+  expect(app).toContain("scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />");
 });

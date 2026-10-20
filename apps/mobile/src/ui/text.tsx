@@ -82,7 +82,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
   const line = lineHeight ?? standard;
   const drawn = Platform.OS === 'ios' ? onGrid(line, PixelRatio.get()) : line;
-  const shift = baselineShift(runs, role, weight, size, line, drawn, Platform.OS);
+  const shift = baselineShift(runs, role, weight, size, line, drawn, Platform.OS, language);
   return (
     <Text
       selectable={false}

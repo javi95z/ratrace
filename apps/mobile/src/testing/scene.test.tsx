@@ -123,6 +123,34 @@ test('the route shows the scene its address names', async () => {
   vi.stubGlobal('__DEV__', true);
   params.name = 'home-new';
   render(<SceneRoute />);
-  // The scene's screen, still phase 1's front door: its title.
-  expect(await screen.findByText('THE RAT RACE', {}, WAIT)).toBeTruthy();
+  // The scene's screen, the front door: the name of the game, and the way to a new life.
+  expect(await screen.findByRole('link', { name: 'New life' }, WAIT)).toBeTruthy();
+  expect(screen.getByText('The Rat Race')).toBeTruthy();
+});
+
+test('the front door of a scene that names its settings is drawn with the sheet open, without a tap', async () => {
+  render(<SceneView name="home-settings" />);
+  expect(await screen.findByRole('heading', { name: 'Settings' }, WAIT)).toBeTruthy();
+  // The page under the sheet is the front door of a life in progress.
+  expect(screen.getByRole('link', { name: /Continue your life/ })).toBeTruthy();
+  cleanup();
+  // A scene that names no sheet has none open.
+  render(<SceneView name="home-continue" />);
+  expect(await screen.findByRole('link', { name: /Continue your life/ }, WAIT)).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Settings' })).toBeNull();
+});
+
+test('a life a newer version of the game wrote is told on the front door of its scene, and the front door has no life to continue', async () => {
+  render(<SceneView name="home-lost-newer" />);
+  expect((await screen.findByRole('status', {}, WAIT)).textContent).toContain('newer version of the game');
+  expect(screen.queryByRole('link', { name: /Continue your life/ })).toBeNull();
+});
+
+test('the pages with a scene of their own are drawn on the day every scene is: the week\'s challenge ends on its Sunday, and the legal notice is the notice', async () => {
+  render(<SceneView name="challenge-practice" />);
+  expect(await screen.findByRole('heading', { name: 'Weekly challenge' }, WAIT)).toBeTruthy();
+  expect(document.body.textContent).toContain('Ends on 25 Oct 2026, at midnight UTC.');
+  cleanup();
+  render(<SceneView name="legal" />);
+  expect((await screen.findAllByRole('heading', {}, WAIT))[0].textContent).toBe('Privacy and legal notice');
 });

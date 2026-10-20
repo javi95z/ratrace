@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, refuseServerInUse } from './shotDrivers';
-import type { Browser, Context } from './shotDrivers';
+import { blocked, guardedContext, openPage, refuseServerInUse } from './shotDrivers';
+import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
@@ -85,4 +85,25 @@ test('every shot of a scene is taken on the day every scene is drawn on: the bro
   expect(load).toBeGreaterThan(set);
   expect(source).toContain('await page.evaluate(() => Date.now())');
   expect(source).toContain('SCENE_NOW');
+});
+
+test('a page is opened with the rules of the page added to what is always added, and with nothing more when none is asked', async () => {
+  const styles: string[] = [];
+  const page = {
+    goto: async () => undefined,
+    evaluate: async () => undefined,
+    waitForFunction: async () => undefined,
+    addStyleTag: async (options: { content: string }) => void styles.push(options.content),
+  } as unknown as Page;
+  await openPage(page, 'http://localhost:3021/', undefined);
+  await openPage(page, 'http://localhost:3021/', undefined, 'main { color: red; }');
+  expect(styles[0]).toContain('nextjs-portal { display: none !important; }');
+  expect(styles[0]).not.toContain('color: red');
+  expect(styles[1]).toContain('nextjs-portal { display: none !important; }');
+  expect(styles[1]).toContain('main { color: red; }');
+}, 10_000);
+
+test('the scenes are shot on web pages as tall as the screen shows, by the one rule that says so', () => {
+  const source = read('./scene-shots.ts');
+  expect(source).toMatch(/await openPage\(page, sceneWebUrl\(scene, PORT\), \(\) => document\.querySelector\('\[data-scene\]'\) !== null, VISIBLE_HEIGHT\)/);
 });

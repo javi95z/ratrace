@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
 import { compareShots, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
-import { chooseScenes, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine } from './sceneShots';
+import { chooseScenes, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, VISIBLE_HEIGHT } from './sceneShots';
 import type { Line } from './sceneShots';
 import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
 
@@ -20,7 +20,8 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * already answering there is refused), and its browser is kept from every host but this machine. The app is opened in Expo Go
  * from the Metro running on 8090 (`npx expo start --port 8090` in apps/mobile).
  *
- * Every scene is drawn on the same day (`SCENE_NOW`): the browser's clock is held at it, the app's services answer it.
+ * Every scene is drawn on the same day (`SCENE_NOW`): the browser's clock is held at it, the app's services answer it. The web's pages are
+ * given one rule (`VISIBLE_HEIGHT`, sceneShots.ts): a short page is as tall as the screen shows, not taller by the safe area.
  * A scene on a screen the app still draws as a stand-in (`STAND_INS`) is shot but not compared: its line is `unjudged`. A
  * compared scene whose app shot is more than half unlike the web's is the wrong page (a stand-in, a reload, a red box):
  * the run stops and exits 1, as the kit's does. When every scene compared is clean the run exits 0; a scene that differs
@@ -43,7 +44,7 @@ async function main() {
         // The day, before the page is loaded: the week's challenge and the days left of it are read from the browser's clock.
         await page.clock.setFixedTime(SCENE_NOW);
         // The page marks itself once the scene's store is built, its steps are taken and the game is drawn on it.
-        await openPage(page, sceneWebUrl(scene, PORT), () => document.querySelector('[data-scene]') !== null);
+        await openPage(page, sceneWebUrl(scene, PORT), () => document.querySelector('[data-scene]') !== null, VISIBLE_HEIGHT);
         const day = await page.evaluate(() => Date.now());
         if (day !== SCENE_NOW) throw new Error(`${scene.name}: the browser's clock is ${new Date(day).toISOString()}, not ${new Date(SCENE_NOW).toISOString()}`);
         await page.screenshot({ path: join(out, filesOf(scene.name).web) });

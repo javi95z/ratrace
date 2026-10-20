@@ -76,6 +76,18 @@ test('a sprite is drawn pixel for pixel: nearest neighbour, no mipmaps, at its b
   expect(image.getAttribute('data-size')).toBe('96x96');
 });
 
+test('a sprite forced to a size (the web\'s `!h-4 !w-4`) is drawn at that box, whatever its art is: nearest neighbour into it', async () => {
+  const { container } = await drawn(<Sprite id="icon.cash" size={{ w: 16, h: 16 }} />);
+  expect(all(container, 'Canvas')[0].getAttribute('data-size')).toBe('16x16');
+  expect(all(container, 'Image')[0].getAttribute('data-size')).toBe('16x16');
+  expect(all(container, 'Image')[0].getAttribute('data-sampling')).toBe(JSON.stringify({ filter: 0, mipmap: 0 }));
+  // A size is the whole box: no scale multiplies it, and a sprite that is not there is the checkerboard at that size.
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const missing = await drawn(<Sprite id="test.not_there_sized" scale={3} size={{ w: 20, h: 12.5 }} />);
+  expect(all(missing.container, 'Canvas')[0].getAttribute('data-size')).toBe('20x12.5');
+  warn.mockRestore();
+});
+
 test('what is given to a sprite is drawn over its picture, in its own canvas', async () => {
   const { container } = await drawn(
     <Sprite id="icon.cash">

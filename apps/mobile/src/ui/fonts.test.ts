@@ -2,8 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { ARIAL_FILE, buildArialCoverage, buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
-import { COVERAGE, METRICS } from './fontCoverage';
-import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, pixelSize, runsOf } from './fonts';
+import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
+import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, CYRILLIC_ALONE, pixelSize, runsOf } from './fonts';
 
 const JERSEY = 'Jersey15_400Regular';
 const OSWALD = 'Oswald_500Medium';
@@ -33,6 +33,14 @@ test('each font\'s x-height constant is its TTF\'s sxHeight over unitsPerEm, to 
   expect(JERSEY_X_HEIGHT).toBeCloseTo(of('Jersey15_400Regular'), 3);
   expect(OSWALD_X_HEIGHT).toBeCloseTo(of('Oswald_500Medium'), 3);
   expect(CHAKRA_X_HEIGHT).toBeCloseTo(of('ChakraPetch_400Regular'), 3);
+});
+
+test('a reading text inside a pixel text is drawn at the size that brings its small letters to the pixel stack\'s height (the `font-size-adjust` a `font-sans` span inherits)', () => {
+  expect(adjustedRead(13)).toBeCloseTo((13 * 0.56) / CHAKRA_X_HEIGHT, 10);
+  // Chakra Petch's small letters are shorter than Jersey's share of the em: it is drawn larger, about a fifth.
+  expect(adjustedRead(13) / 13).toBeGreaterThan(1.1);
+  expect(adjustedRead(13) / 13).toBeLessThan(1.3);
+  expect(adjustedRead(26)).toBeCloseTo(2 * adjustedRead(13), 10);
 });
 
 test('pixelSize brings Jersey to the web\'s x-height share', () => {
@@ -123,6 +131,23 @@ test('on iOS a line\'s glyphs are moved to the browser\'s baseline: whole-pixel 
   // iOS: 21.75 − 4.62, raised by (21.75 − 19.5) / 2: 16.005.
   expect(baselineShift(runsOf('Go', 'read', 400), 'read', 400, 15, 15 * 1.45, 15 * 1.45, 'ios')).toBeCloseTo(15 - 16.005, 6);
   expect(baselineShift(pixel, 'pixel', 400, 17, 17 * 1.1, 17 * 1.1, 'android')).toBe(0);
+});
+
+test('a name that asks for the Cyrillic pixel typeface by itself (the web\'s `--font-pixel-cyrillic-alone`) is drawn in Oswald whatever the page speaks, with Oswald first in its line', () => {
+  const runs = runsOf('Русский', 'pixel', 400, CYRILLIC_ALONE);
+  expect(runs).toEqual([{ text: 'Русский', family: OSWALD, scale: PIXEL_X_HEIGHT / OSWALD_X_HEIGHT }]);
+  // The same runs as a Russian page draws them: only the line's first font, which the baseline is set by, is not Jersey.
+  expect(runs).toEqual(runsOf('Русский', 'pixel', 400, 'ru'));
+  // On iOS: Oswald's whole-pixel ascent and descent at its adjusted size, not Jersey's.
+  const f = 15 * (PIXEL_X_HEIGHT / X_HEIGHT[OSWALD]);
+  const ascent = Math.round(METRICS[OSWALD].ascent * f);
+  const descent = Math.round(METRICS[OSWALD].descent * f);
+  const web = Math.floor((15 * 1.1 - (ascent + descent)) / 2) + ascent;
+  const native = 15 * 1.1 - METRICS[OSWALD].descent * 15 * runs[0].scale - Math.max(0, (15 * 1.1 - (METRICS[OSWALD].ascent + METRICS[OSWALD].descent) * 15 * runs[0].scale) / 2);
+  expect(baselineShift(runs, 'pixel', 400, 15, 15 * 1.1, 15 * 1.1, 'ios', CYRILLIC_ALONE)).toBeCloseTo(web - native, 6);
+  // On a Russian page, or by default, the line is Jersey's, as before.
+  expect(baselineShift(runs, 'pixel', 400, 15, 15 * 1.1, 15 * 1.1, 'ios', 'ru')).not.toBeCloseTo(web - native, 3);
+  expect(baselineShift(runs, 'pixel', 400, 15, 15 * 1.1, 15 * 1.1, 'ios')).toBeCloseTo(baselineShift(runs, 'pixel', 400, 15, 15 * 1.1, 15 * 1.1, 'ios', 'ru'), 6);
 });
 
 test('the line metrics are the TTFs\' hhea ascender and descender', () => {

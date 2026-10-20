@@ -7,8 +7,8 @@ away*, *text*, *shape*), the same tool (`kit-shots.ts`). Pictures and numbers li
 (`<section>.png`: the web, the app and the difference side by side; `numbers.json`); phase 1's stay in `phase-1-parity/`, untouched. A
 section goes to the report of the phase that added it (`reportFolder` in `kitCompare.ts`).
 
-Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4). Scene rows (one game
-state drawn by both clients) follow with the screens.
+Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4) and the scenes of the front
+door, the week's challenge and the legal notice (task 6, below). Scene rows (one game state drawn by both clients) follow with the screens.
 
 ## Scenes: one game state, drawn by both clients
 
@@ -42,9 +42,61 @@ point; `differs`: read the numbers) and its numbers. As the kit's shots do, a co
 
 **Unjudged.** While the app draws phase 1's stand-ins for a screen (`STAND_INS` in `sceneShots.ts`, which a test holds equal to the stand-ins
 of the app's registry), its scenes are shot but not compared: their line is `"verdict":"unjudged"` with no numbers, and no diff picture is
-kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. The seven scenes of task 5
-(`home-new`, `home-continue`, `play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`, `play-resolve-r6`) are all unjudged: they
-prove that both clients open each scene, and nothing more.
+kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. Task 6 ported `home`, so its
+scenes are compared; the five `play-*` scenes of task 5 (`play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
+`play-resolve-r6`) are still unjudged: they prove that both clients open each scene, and nothing more.
+
+## Task 6: the front door, its settings, the week's challenge and the legal notice
+
+Six scenes, each shot on both clients on `SCENE_NOW` and compared (`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app
+compare --only=home-new,home-continue,home-settings,home-lost-newer,challenge-practice,legal`): `home-new` (a device with no life),
+`home-continue` (a nurse, round 3), `home-settings` (the same, the settings sheet open), `home-lost-newer` (a life saved by a newer version of the
+game), `challenge-practice` (the week's challenge page) and `legal`.
+
+| scene | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|
+| home-new | clean | 4.48 | 1.621 | 6945 | 0 | 15 | 0.67 |
+| home-lost-newer | clean | 5.00 | 2.009 | 9724 | 0 | 17 | 0.67 |
+| home-continue | differs | 2.98 | 0.399 | 7129 | 1 | 15 | 0.67 |
+| home-settings | differs | 4.04 | 1.993 | 6141 | 3 | 29 (15 under the sheet's backdrop, unmeasured) | 1.00 |
+| challenge-practice | differs | 5.84 | 1.989 | 22027 | 9476 | 17 | 1.00 |
+| legal | differs | 12.69 | 8.071 | 99219 | 0 | 34 | 5.67 |
+
+### What differed in the first shots, and was fixed in the app
+
+| # | difference | cause | fix | test |
+|---|---|---|---|---|
+| 1 | the web's foot (the settings, the small print) stood 62 pt lower than the app's, below the fold | the web's body is padded by the safe area at the top and its `main` is `min-h-dvh`: a short page is taller than the screen by that area, on a phone with a notch; the phone's page scrolls inside the screen | **not changed in the app** (the foot of a short page is better where the screen shows it): the web's shots are given one rule, `main { min-height: calc(100dvh - env(safe-area-inset-top)) !important }` (`VISIBLE_HEIGHT`), which takes that one difference away; nothing else of the web is touched | `sceneShots.test`, `shotDrivers.test` |
+| 2 | "Continue your life" 1.9 pt wider than the web's | `letter-spacing: 0.03em` is set by `.pixel` on the *button*, where an em is the page's 15, and the 19-point title inside it inherits that length (0.45 pt), not 0.03 of its own size (0.57) | the title's letter spacing is 15 × 0.03 | `Home.test` |
+| 3 | the line under it ("Nurse · age 26 · Madrid") 17 % smaller, 13 pt narrower | it is Chakra Petch (`font-sans`) inside that pixel button, so it inherits `font-size-adjust: 0.56` and is drawn at the size that brings its small letters to Jersey's height: 13 × 0.56 / Chakra's x-height (15.6), with the button's 1.1 line | `adjustedRead(13)`, and the button's letter spacing | `fonts.test`, `Home.test` |
+| 4 | the gold panel of the challenge page lighter than the web's | the web writes `frame-gold bg-night-600`, but the Panel's own `bg-night-700` comes later in the stylesheet and wins (read from the shot: `#1f2a4d`) | night-700 | `kit.test` |
+| 5 | "Русский" 1.3 pt out, lower than the web's, in the language picker (now within the sheet's 1 pt) | the name asks for the Cyrillic pixel typeface by itself, so its line is set from Oswald's metrics, not Jersey's | `CYRILLIC_ALONE`: Oswald first, its ascent and descent for the baseline | `fonts.test`, `Settings.test` |
+| 6 | the banner's rows of art off by up to 1.5 device px | Chrome snaps the 157.5 pt image to CSS pixels and paints it 158 pt (474 device px) tall; the app drew 472.5 | the picture is drawn into the height rounded to a whole point (fitted to both shots: the rect Chrome drew is 1134 × 474 at (36, 402), the app's now the same) | `Challenge.test` |
+
+### The residual, with its cause
+
+1. **`legal`: 28 lines of 14 pt text, the foot 2.7 pt lower, no pixel of shape.** A line of 14 × 1.375 is 19.25 pt = 57.75 device px; iOS draws every line
+   at a whole 58 (the same with the exact 19.25 given: tried), so each line is 0.083 pt lower than Chrome's and 28 lines add up to 2.3 pt (the
+   first line is 0.33 pt out, the last 2.7). The 5 pt entries of the per-line check (four lines) are ink boxes the check could not bound to their own
+   line (the app's box is 20 pt tall for a 13 pt line, taking in a neighbour's descenders); the lines around them are 1.7 to 2.7 pt out, as the sum says.
+2. **`challenge-practice`: 9476 shape pixels in the notice, the button and the hint under the paragraph.** The same quantisation: the three-line
+   paragraph above them is 3 × 17.875 = 53.6 pt in the web and 54 on the phone, the notice's two lines 37.7 and 38, and Chrome snaps every box
+   edge to a whole CSS pixel where the phone lays on device pixels; the button's edges end up 4 device pixels (1.33 pt) apart, the notice's 1 to 3. The
+   text on them is within 1 pt (worst 1.00). 1373 of the 9476 are antialiased edges. The banner's rows are on the same rows of art as the web's (a nearest-neighbour
+   fit of the source picture to each shot: the rect is 1134 × 474 at (36, 402) in both; 0.8 % of the sampled pixels differ in the app's, 0.5 % in the web's own).
+3. **`home-continue`, 1 pixel; `home-settings`, 3 pixels.** Single pixels at the edge of a glyph that the text check's windows did not cover (the descender of the "y" of
+   "your" in the continue button's title at (209, 300) pt, and, under the sheet's dimming, a letter of the "Collection" label at (137, 486) pt). Nothing is out of place.
+4. **`home-settings`, text 1.00 pt apart.** The sheet's content stands about 0.7 pt higher on the phone (the title, 1.0; the foot, 0.3): the sum of its
+   lines' roundings up (13 × 1.45, 11 × 1.45 and the toggles' two-line hints), with the sheet anchored at the bottom.
+
+### What is not compared, and why
+
+- **The language menu** (the corner's dropdown) and **the sheets that open from a tap** (the "end this life?" question) are not scenes; their tests
+  cover them, and the menu was opened on the simulator and shown to hang under its square, right edge to right edge, as the web's does.
+- **The week's challenge card and the continue button's challenge label** are drawn from the same game state as the web's; a life of the week in
+  progress is not a scene (the label's 16 pt picture is the one thing drawn at a size that is not the art's: `Sprite size`).
+- **Android is not measured:** the menu's place (measured in the window, under a translucent status bar) and the language names' `accessibilityLanguage`
+  (iOS only) are unchecked there.
 
 ## The tolerance, and the exception this phase needs
 

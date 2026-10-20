@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
+import { SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
 import { runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf } from './scenes';
 
@@ -92,14 +93,55 @@ describe('the scenes of the front door and the play screen', () => {
   });
 });
 
+describe('the scenes of the front door beyond its first two, the challenge page and the legal page', () => {
+  it('home-settings is the front door of a life in progress with its settings open: the very store of home-continue, and the sheet the screen opens', async () => {
+    expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
+    expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
+    // Only a scene that names a sheet has one.
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings']);
+  });
+
+  it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
+    const store = await sceneStore('home-lost-newer');
+    const save = await saveOf(store);
+    expect(save).not.toBeNull();
+    expect((save as unknown as { format: number }).format).toBe(SAVE_FORMAT + 1);
+    expect(save?.lifeId).toBe('nurse');
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'none', lost: 'newer', view: null });
+    // A life a newer version wrote is that version's to go on with: opening the game does not throw it away.
+    expect(await saveOf(store)).toEqual(save);
+  });
+
+  it('the challenge page and the legal page are drawn on a device with no life, as the front door of someone new is', async () => {
+    for (const name of ['challenge-practice', 'legal']) {
+      const store = await sceneStore(name);
+      expect(await saveOf(store), name).toBeNull();
+      expect(await opened(store), name).toMatchObject({ status: 'none', lost: null, view: null });
+    }
+  });
+});
+
 describe('the list of scenes', () => {
-  it('names each scene <screen>-<state>, once, in a language the game speaks', () => {
+  it('names each scene <screen> or <screen>-<state>, once, in a language the game speaks', () => {
     expect(new Set(SCENES.map((scene) => scene.name)).size).toBe(SCENES.length);
     for (const scene of SCENES) {
-      expect(scene.name, scene.name).toMatch(/^[a-z]+(-[a-z0-9]+)+$/);
+      expect(scene.name, scene.name).toMatch(/^[a-z]+(-[a-z0-9]+)*$/);
       expect(['en', 'es', 'ru']).toContain(scene.locale);
     }
-    expect(SCENES.map((scene) => scene.name)).toEqual(['home-new', 'home-continue', 'play-news-r1', 'play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
+    expect(SCENES.map((scene) => scene.name)).toEqual([
+      'home-new',
+      'home-continue',
+      'home-settings',
+      'home-lost-newer',
+      'play-news-r1',
+      'play-cards-r1',
+      'play-finance-r6',
+      'play-outcome-r1',
+      'play-resolve-r6',
+      'challenge-practice',
+      'legal',
+    ]);
   });
 
   it('builds every scene it lists, and refuses a name it does not', async () => {
@@ -130,7 +172,8 @@ describe('the screen a scene is drawn on', () => {
   it('is the first word of its name', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'play']));
+    expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'play', 'challenge', 'legal']));
   });
 });
 

@@ -5,7 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GameProvider, useGame } from '../game/context';
 import type { Services } from '../game/context';
-import { Home, Placeholder } from '../game/screens/Placeholder';
+import { WeeklyChallenge } from '../game/screens/Challenge';
+import { Home } from '../game/screens/Home';
+import { Legal } from '../game/screens/Legal';
+import { Placeholder } from '../game/screens/Placeholder';
+import { HomeSettingsSheet } from '../game/screens/Settings';
 import { Screen } from '../ui/Page';
 import { ReadText } from '../ui/text';
 import { memoryServices, speaking } from './memoryServices';
@@ -17,6 +21,9 @@ import { memoryServices, speaking } from './memoryServices';
  * and sessions for it is here, behind the wall, and not in the route.
  */
 
+/** A sheet shown open for a scene is not closed by anything. */
+const nothing = (): void => {};
+
 /** What draws a scene's screen: the scene itself is given, so a sheet the scene names (`scene.sheet`) is the screen's to open. */
 export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>;
 
@@ -25,11 +32,13 @@ export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
  */
 export const SCENE_SCREENS: SceneScreens = {
-  home: () => <Home />,
+  home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: () => <Placeholder page="new" />,
   play: () => <Placeholder page="play" />,
   records: () => <Placeholder page="records" />,
   collection: () => <Placeholder page="collection" />,
+  challenge: () => <WeeklyChallenge />,
+  legal: () => <Legal />,
 };
 
 /**

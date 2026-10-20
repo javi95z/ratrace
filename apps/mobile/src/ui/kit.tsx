@@ -118,6 +118,66 @@ export function Tile({ onPress, disabled = false, children }: PressProps) {
   );
 }
 
+/**
+ * Anything pressed that stands off the page on a hard shadow: the web's `frame-raised` link or button, whatever is inside
+ * it (a line of a menu, a square with an icon, a card that leads to a page). `tone` lights its frame (gold for the one
+ * thing a screen most wants, cream for the choice made, wine for ending something), `bg` is its surface, `style` its own
+ * look (padding, size, how it lays out what it holds; it is at least 44 high) and `place` where its parent puts it (a
+ * share of a row, a width). `role` is what it is to a screen reader (`checked`, `selected` say what is on), `label` its
+ * name where its words do not say it.
+ */
+export function Raised({
+  onPress,
+  role = 'button',
+  label,
+  language,
+  checked,
+  selected,
+  expanded,
+  disabled = false,
+  tone = {},
+  bg = 'night-600',
+  style,
+  place,
+  testID,
+  children,
+}: PressProps & {
+  role?: 'button' | 'link' | 'radio' | 'menuitem';
+  label?: string;
+  /** The language its words are in, where a screen reader would otherwise read them in the phone's (iOS; the web's `lang`). */
+  language?: string;
+  checked?: boolean;
+  selected?: boolean;
+  /** Whether what it opens is open (the web's `aria-expanded`): a menu's button. */
+  expanded?: boolean;
+  tone?: FrameTone;
+  bg?: ColorToken;
+  style?: ViewStyle;
+  place?: ViewStyle;
+  testID?: string;
+}) {
+  const press = usePress({ onPress, disabled });
+  return (
+    <Pressable
+      accessibilityRole={role}
+      accessibilityLabel={label}
+      accessibilityLanguage={language}
+      accessibilityState={{ disabled, ...(checked === undefined ? null : { checked }), ...(selected === undefined ? null : { selected }), ...(expanded === undefined ? null : { expanded }) }}
+      {...(checked === undefined ? null : { 'aria-checked': checked })}
+      {...(selected === undefined ? null : { 'aria-selected': selected })}
+      {...(expanded === undefined ? null : { 'aria-expanded': expanded })}
+      disabled={disabled}
+      onPress={press}
+      testID={testID}
+      style={({ pressed }) => ({ ...pressDown(pressed && !disabled), opacity: disabled ? 0.45 : 1, ...place })}
+    >
+      <Framed kind="raised" tone={tone} style={{ backgroundColor: COLORS[bg], minHeight: TOUCH, ...style }}>
+        {children}
+      </Framed>
+    </Pressable>
+  );
+}
+
 /** The title of a panel: a gold tab that hangs over its top edge. */
 export function TabTitle({ children }: { children: Words }) {
   return (
@@ -134,9 +194,9 @@ export function TabTitle({ children }: { children: Words }) {
 
 /**
  * A navy panel with a lit pixel frame. With a title, the title hangs on a gold tab. `label` names
- * the panel for a screen reader.
+ * the panel for a screen reader. `tone` lights its frame in a colour (the web's `frame-gold`); `style` is where its parent places it.
  */
-export function Panel({ children, title, label }: { children: ReactNode; title?: Words; label?: string }) {
+export function Panel({ children, title, label, tone, style }: { children: ReactNode; title?: Words; label?: string; tone?: FrameTone; style?: ViewStyle }) {
   const has = title !== undefined && title !== '';
   // Never `accessible`: on iOS that would fold the panel into one element and hide its buttons.
   // The name is only a label on the box; the screen reader reaches every child. As on the web: named only when given a label; named by its title where it has one, so the
@@ -145,16 +205,54 @@ export function Panel({ children, title, label }: { children: ReactNode; title?:
   return (
     <Framed
       kind="bevel"
+      tone={tone}
       accessibilityLabel={name}
       style={{
         backgroundColor: COLORS['night-700'],
         padding: 12,
         ...(has ? { marginTop: 12, paddingTop: 20 } : null),
+        ...style,
       }}
     >
       {has ? <TabTitle>{title}</TabTitle> : null}
       {children}
     </Framed>
+  );
+}
+
+/**
+ * A few words in a frame of their own, for news or a warning (the web's `frame bg-wine-900 px-3 py-2 text-[14px]`): wine,
+ * unless it is told another surface. `role` makes it a live region for a screen reader (`alert` for what has gone wrong,
+ * `status` for what has happened); `center` centres the words.
+ */
+export function Notice({
+  children,
+  bg = 'wine-900',
+  tone = 'cream',
+  size = 14,
+  role,
+  center = false,
+  style,
+}: {
+  children: string;
+  bg?: ColorToken;
+  tone?: ColorToken;
+  size?: number;
+  role?: 'alert' | 'status';
+  center?: boolean;
+  style?: ViewStyle;
+}) {
+  const body = (
+    <Framed kind="frame" style={{ backgroundColor: COLORS[bg], paddingHorizontal: 12, paddingVertical: 8, ...style }}>
+      <ReadText size={size} tone={tone} style={center ? { textAlign: 'center' } : undefined}>{children}</ReadText>
+    </Framed>
+  );
+  return role ? (
+    <View accessible role={role}>
+      {body}
+    </View>
+  ) : (
+    body
   );
 }
 
@@ -180,12 +278,12 @@ export function Bare({ children, style }: { children: ReactNode; style?: ViewSty
   return <View style={[{ flexShrink: 0, alignItems: 'center', justifyContent: 'center' }, style]}>{children}</View>;
 }
 
-/** A dark well, sunk into the page. It is the backdrop of a portrait; icons and things go in a `Bare`. */
-export function Well({ children }: { children: ReactNode }) {
+/** A dark well, sunk into the page. It is the backdrop of a portrait; icons and things go in a `Bare`. `style` is its size (the web's `size-11`). */
+export function Well({ children, style }: { children: ReactNode; style?: ViewStyle }) {
   return (
     <Framed
       kind="sunk"
-      style={{ backgroundColor: COLORS['ink-900'], flexShrink: 0, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' }}
+      style={{ backgroundColor: COLORS['ink-900'], flexShrink: 0, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', ...style }}
     >
       {children}
     </Framed>

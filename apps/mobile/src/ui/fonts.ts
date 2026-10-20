@@ -31,6 +31,15 @@ export function pixelSize(px: number): number {
   return (px * PIXEL_X_HEIGHT) / JERSEY_X_HEIGHT;
 }
 
+/**
+ * The size Chakra Petch is drawn at where a pixel text's `font-size-adjust` reaches it: a `font-sans` span inside a `.pixel` box
+ * (the line under "Continue your life" on the front door) inherits the adjust, so its small letters stand at the pixel stack's
+ * height too and it is drawn that much larger than its size says. Its line height stays the size's own.
+ */
+export function adjustedRead(px: number): number {
+  return (px * PIXEL_X_HEIGHT) / CHAKRA_X_HEIGHT;
+}
+
 /** The family a whole run in this language uses (Cyrillic ones for Russian). */
 export function familyFor(role: Role, weight: Weight, locale: string): string {
   if (role === 'pixel') return locale === 'ru' ? OSWALD : JERSEY;
@@ -131,10 +140,18 @@ function drawn(family: string, point: number): boolean {
 }
 
 /**
+ * The pseudo-language of a text that asks for the Cyrillic pixel typeface by itself, first, on a page of any language (the web's
+ * `font-family: var(--font-pixel-cyrillic-alone), var(--font-pixel)`, which the name of the Russian language in the language picker is
+ * set in): Oswald, with Jersey after it.
+ */
+export const CYRILLIC_ALONE = 'ru-alone';
+
+/**
  * The fonts the web tries, in its order, for a role on a page in a language (globals.css's stacks, with the stand-ins
  * next/font puts after Jersey and Chakra; a Russian page names the fonts alone, so its Cyrillic reaches Oswald and Exo 2).
  */
 function stackOf(role: Role, weight: Weight, language: string): string[] {
+  if (language === CYRILLIC_ALONE) return [OSWALD, JERSEY];
   if (language === 'ru') return role === 'pixel' ? [JERSEY, OSWALD, chakra(weight), exo(weight)] : [chakra(weight), exo(weight)];
   return role === 'pixel' ? [JERSEY, ARIAL] : [chakra(weight), ARIAL];
 }
@@ -182,9 +199,10 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
  * the tallest font (RCTApplyBaselineOffset), in the line it is actually given (`drawnLine`). Unmoved, a pixel title on iOS stood up to two points above the web's,
  * and a sentence about a point below. Android is not measured yet, so nothing is moved there.
  */
-export function baselineShift(runs: readonly Run[], role: Role, weight: Weight, size: number, lineHeight: number, drawnLine: number, os: string): number {
+export function baselineShift(runs: readonly Run[], role: Role, weight: Weight, size: number, lineHeight: number, drawnLine: number, os: string, language = 'en'): number {
   if (os !== 'ios' || runs.length === 0) return 0;
-  const first = role === 'pixel' ? JERSEY : chakra(weight);
+  // The line is set from the first font of the stack, whichever font draws what is in it.
+  const first = stackOf(role, weight, language)[0];
   const f = size * (role === 'pixel' ? PIXEL_X_HEIGHT / X_HEIGHT[first] : 1);
   const ascent = Math.round(METRICS[first].ascent * f);
   const descent = Math.round(METRICS[first].descent * f);

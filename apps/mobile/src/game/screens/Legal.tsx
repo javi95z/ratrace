@@ -1,0 +1,45 @@
+import { View } from 'react-native';
+import { Screen } from '../../ui/Page';
+import { PixelText, ReadText } from '../../ui/text';
+import { LEGAL_EMAIL, LEGAL_NAME } from '../site';
+import { useT } from '../words';
+import { BackLink } from './BackLink';
+
+/** Privacy and the legal notice: plain words, reached only from the foot of the front page (the web's legal/page.tsx). */
+export function Legal() {
+  const t = useT('legal');
+  const sections = [
+    [t('noticeTitle'), t('noticeBody')],
+    [t('dataTitle'), t('dataBody')],
+    [t('whyTitle'), t('whyBody')],
+    [t('whoTitle'), t('whoBody')],
+    [t('deviceTitle'), t('deviceBody')],
+    [t('rightsTitle'), t('rightsBody')],
+  ] as const;
+  // Who answers for the game, if the build says: the owner and how to reach them, in one line.
+  const owner = [LEGAL_NAME ? t('owner', { name: LEGAL_NAME }) : null, LEGAL_EMAIL ? t('contact', { email: LEGAL_EMAIL }) : null].filter(Boolean).join(' ');
+
+  return (
+    <Screen contentStyle={{ gap: 16, paddingBottom: 40 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <BackLink />
+        <View accessibilityRole="header" style={{ flexShrink: 1 }}>
+          <PixelText size={22} tone="gold-500">{t('title')}</PixelText>
+        </View>
+      </View>
+      {sections.map(([title, body], at) => (
+        <View key={title}>
+          <View accessibilityRole="header">
+            <PixelText size={16}>{title}</PixelText>
+          </View>
+          <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG} style={{ marginTop: 4 }}>{body}</ReadText>
+          {at === 0 && owner !== '' ? <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG} style={{ marginTop: 4 }}>{owner}</ReadText> : null}
+        </View>
+      ))}
+      <ReadText size={12} tone="ink-300">{t('updated')}</ReadText>
+    </Screen>
+  );
+}
+
+/** Tailwind's `leading-snug`: a line 1.375 times its size. */
+const SNUG = 1.375;

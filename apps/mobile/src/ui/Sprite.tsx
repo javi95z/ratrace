@@ -22,6 +22,8 @@ interface Props {
   alt?: string;
   /** The size to reserve when the sprite is missing. */
   fallback?: Size;
+  /** The box the picture is drawn into, in points, where the web forces one (`!h-4 !w-4`, `!w-full`): nearest neighbour into it, whatever its art size and `scale`. */
+  size?: Size;
   /** Draws only the outline of the sprite, filled with night-900: something not owned yet. */
   silhouette?: boolean;
   style?: ViewStyle;
@@ -34,9 +36,9 @@ interface Props {
  * smooth). Its picture is decoded once for the whole app and shared (spriteImages). A sprite that does not exist, or
  * does not load, shows the web's checkerboard at the fallback size and is logged once: the game is playable without art.
  */
-export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, silhouette = false, style, children }: Props): ReactNode {
+export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, size, silhouette = false, style, children }: Props): ReactNode {
   const art = useContext(ArtScale);
-  const box = spriteBox(id, scale, art, fallback);
+  const box = size ?? spriteBox(id, scale, art, fallback);
   const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
   if (!known) reportMissing(id, 'missing');
   const { image, failed } = useSpriteImage(known ? id : null);
