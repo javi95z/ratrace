@@ -58,6 +58,11 @@ export interface Services {
   introduceTabs?: boolean;
   /** Where the language the player chose is kept. Left out, on the phone. */
   language?: LanguageKeep;
+  /**
+   * The clock a screen reads the date by, in milliseconds (`useClock`): the week's challenge and the days left of it.
+   * Left out, the phone's own. A scene (`testing/scene.tsx`) holds it at one day so its shot is the same on any day.
+   */
+  now?: () => number;
 }
 
 /** Long enough for the second tap of a double tap, short enough that nobody waits for it. */
@@ -71,6 +76,7 @@ interface Game {
   store: PlayerStore;
   saving: Saving;
   introduceTabs: boolean;
+  now: () => number;
   words: Words;
   locale: Locale;
   setLocale(locale: Locale): void;
@@ -121,11 +127,12 @@ interface Made {
   saving: Saving;
   introduceTabs: boolean;
   language: LanguageKeep;
+  now: () => number;
 }
 
-function make({ sessions, store, saving, tapGuardMs, basket, introduceTabs, language }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, basket, introduceTabs, language, now }: Services): Made {
   const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS, ...(basket ? { basket } : {}) });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, introduceTabs: introduceTabs === true, language: language ?? kvLanguage };
+  return { game, store, saving: saving ?? ALWAYS_SAVING, introduceTabs: introduceTabs === true, language: language ?? kvLanguage, now: now ?? Date.now };
 }
 
 /** The real game of this start of the app: made once, whatever is drawn again above it. */
@@ -209,6 +216,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       store: made.store,
       saving: made.saving,
       introduceTabs: made.introduceTabs,
+      now: made.now,
       words,
       locale,
       setLocale: (next) => {
@@ -259,6 +267,9 @@ export function useKnows(): (key: string) => boolean {
   const rules = useGame((s) => s.rules);
   return (key) => rulesKnow(rules, key);
 }
+
+/** The clock the date is read by, in milliseconds: the phone's own, unless the game was given another (a scene's, held at one day). */
+export const useClock = (): (() => number) => useGameContext().now;
 
 /** The content with its text and names in the language in use, and how numbers are written. */
 export const useWords = (): Words => useGameContext().words;

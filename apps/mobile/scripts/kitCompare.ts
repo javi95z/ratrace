@@ -373,6 +373,39 @@ export interface Result {
 }
 
 /**
+ * More than this share of the screen unlike is not a difference to list: the app showed something else (a red box, a
+ * reload, a screen not yet ported), and the numbers of such a comparison say nothing about the screen.
+ */
+export const WRONG_PAGE_PERCENT = 50;
+
+/** The reason a comparison must not be read as numbers, or null. `kind` is what was shot (`kit`, `scene`); `appShot` is where to look. The kit's shots and the scenes' share it. */
+export function wrongPage(result: Result, kind: string, appShot: string): string | null {
+  return result.rawPercent > WRONG_PAGE_PERCENT ? `${result.section}: the app's shot is not the ${kind} (${result.rawPercent.toFixed(0)} % unlike); look at ${appShot}` : null;
+}
+
+/** What the text of a comparison comes to: the lines found, those not measured, those found in one shot only (text the app does not draw, or draws elsewhere altogether), and how far apart the rest stand (pt). */
+export function textSummary(result: Result): { lines: number; unmeasured: number; oneSided: number; worstPt: number } {
+  const measured = result.texts.filter((text) => !text.unmeasured);
+  const both = measured.filter((text) => Number.isFinite(text.apart));
+  return {
+    lines: result.texts.length,
+    unmeasured: result.texts.length - measured.length,
+    oneSided: measured.length - both.length,
+    worstPt: both.reduce((worst, text) => Math.max(worst, text.apart), 0),
+  };
+}
+
+/** How far text may stand apart, in points: phase 1's tolerance (shapes have none). */
+export const TEXT_WITHIN_PT = 1;
+
+/** What a comparison says: `wrong page` (not to be read), `clean` (no shape differs, no text in one shot only, every line within a point) or `differs` (read the numbers). */
+export function verdictOf(result: Result): 'wrong page' | 'clean' | 'differs' {
+  if (result.rawPercent > WRONG_PAGE_PERCENT) return 'wrong page';
+  const text = textSummary(result);
+  return result.shape === 0 && text.oneSided === 0 && text.worstPt <= TEXT_WITHIN_PT ? 'clean' : 'differs';
+}
+
+/**
  * Compares a section's two shots and writes its picture: the web, the app and the difference side by side, cropped to what
  * they show. The picture is `<section>.png` in `out`, or `file` where the caller names it (a scene's is `<name>-diff.png`).
  */

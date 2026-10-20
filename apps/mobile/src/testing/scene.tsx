@@ -1,8 +1,9 @@
-import { SCENES, sceneStore } from '@ratrace/core/testing/scenes';
+import type { RoundActions, RoundState } from '@ratrace/core/game/store';
+import { runScene, SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GameProvider } from '../game/context';
+import { GameProvider, useGame } from '../game/context';
 import type { Services } from '../game/context';
 import { Home, Placeholder } from '../game/screens/Placeholder';
 import { Screen } from '../ui/Page';
@@ -16,11 +17,14 @@ import { memoryServices, speaking } from './memoryServices';
  * and sessions for it is here, behind the wall, and not in the route.
  */
 
+/** What draws a scene's screen: the scene itself is given, so a sheet the scene names (`scene.sheet`) is the screen's to open. */
+export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>;
+
 /**
- * The screen each scene is drawn on, by the first word of its name (`play-news-r1` is drawn on `play`). Each screen's
- * task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
+ * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
+ * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
  */
-export const SCENE_SCREENS: Readonly<Record<string, () => ReactNode>> = {
+export const SCENE_SCREENS: SceneScreens = {
   home: () => <Home />,
   new: () => <Placeholder page="new" />,
   play: () => <Placeholder page="play" />,
@@ -28,9 +32,12 @@ export const SCENE_SCREENS: Readonly<Record<string, () => ReactNode>> = {
   collection: () => <Placeholder page="collection" />,
 };
 
-/** What a scene is drawn with: its store behind the game's services, in the language it names, whatever the phone speaks. */
+/**
+ * What a scene is drawn with: its store behind the game's services, in the language it names whatever the phone speaks,
+ * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by.
+ */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
-  return speaking(memoryServices(store), scene.locale);
+  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW };
 }
 
 /** What a mistyped name gets: the scenes there are. */
@@ -46,13 +53,48 @@ function Unknown({ name }: { name: string | undefined }) {
 }
 
 /**
+ * Takes the steps a scene goes on with (`runScene`: the result of a card, the ledger of a round) once the game has opened on
+ * the scene's store, on that game. Needs no more of the game than a screen has: its actions and its state through `useGame`.
+ */
+function Script({ scene, done }: { scene: Scene; done: () => void }) {
+  // The round store's state as it stands, whenever the script asks (it reads the game between its steps): a selector is run
+  // on every change the store makes, as it is told of them, so what this one saw last is the latest.
+  const latest = useRef<(RoundState & RoundActions) | null>(null);
+  const status = useGame((state) => {
+    latest.current = state;
+    return state.status;
+  });
+  const started = useRef(false);
+  useEffect(() => {
+    if (status === 'booting' || started.current) return;
+    started.current = true;
+    runScene(scene.name, { getState: () => latest.current as RoundState & RoundActions }).then(done, (error: unknown) => console.error(error));
+  }, [status, scene, done]);
+  return null;
+}
+
+/**
+ * A scene's game, with its screen: the game opened on the scene's store, the scene's steps taken on it, and then the screen,
+ * which is first drawn at the stage the scene ends on, as the web's is.
+ */
+export function SceneGame({ scene, services, screens = SCENE_SCREENS }: { scene: Scene; services: Services; screens?: SceneScreens }) {
+  const [over, setOver] = useState(false);
+  const done = useCallback(() => setOver(true), []);
+  return (
+    <GameProvider services={services}>
+      <Script scene={scene} done={done} />
+      {over ? screens[screenOf(scene)]?.(scene) : null}
+    </GameProvider>
+  );
+}
+
+/**
  * The scene named, drawn as the app would draw it: its store built, the game opened on it as it opens the life on the
  * phone, and the scene's screen inside. Nothing at all until the store is built (it takes a moment).
  */
-export function SceneView({ name, screens = SCENE_SCREENS }: { name: string | undefined; screens?: Readonly<Record<string, () => ReactNode>> }) {
+export function SceneView({ name, screens = SCENE_SCREENS }: { name: string | undefined; screens?: SceneScreens }) {
   const scene = SCENES.find((candidate) => candidate.name === name);
-  const draw = scene === undefined ? undefined : screens[scene.name.split('-')[0]];
-  const drawable = draw !== undefined;
+  const drawable = scene !== undefined && screens[screenOf(scene)] !== undefined;
   const [built, setBuilt] = useState<{ scene: Scene; services: Services } | null>(null);
   useEffect(() => {
     if (scene === undefined || !drawable) return;
@@ -62,12 +104,8 @@ export function SceneView({ name, screens = SCENE_SCREENS }: { name: string | un
       current = false;
     };
   }, [scene, drawable]);
-  if (scene === undefined || draw === undefined) return <Unknown name={name} />;
+  if (scene === undefined || !drawable) return <Unknown name={name} />;
   if (built?.scene !== scene) return null;
   // One game for one scene: another name is another store, not the same game opened on another life.
-  return (
-    <GameProvider key={scene.name} services={built.services}>
-      {draw()}
-    </GameProvider>
-  );
+  return <SceneGame key={scene.name} scene={scene} services={built.services} screens={screens} />;
 }

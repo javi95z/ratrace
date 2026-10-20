@@ -1,5 +1,6 @@
-import { SCENES } from '@ratrace/core/testing/scenes';
+import { SCENES, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { textSummary, verdictOf } from './kitCompare';
 import type { Result } from './kitCompare';
 
 /*
@@ -29,40 +30,59 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
   return SCENES.filter((scene) => only.includes(scene.name));
 }
 
-/** What the report keeps of a scene: how much of the two shots differs, and how far apart the text stands. */
-export interface Line {
-  scene: string;
-  locale: string;
-  rawPercent: number;
-  beyondPercent: number;
-  loose: number;
-  shape: number;
-  shapeBlended: number;
-  textLines: number;
-  unmeasured: number;
-  /** Lines of text whose ink is found in one shot and not the other: text the app does not draw, or draws elsewhere altogether. */
-  oneSided: number;
-  /** The most any line's ink stands apart in the two shots, of those found in both. */
-  worstPt: number;
-}
+/**
+ * The screens the app still draws as phase 1's stand-ins (`SCENE_SCREENS` in apps/mobile/src/testing/scene.tsx; a test holds the two
+ * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
+ * results. The task that ports a screen takes its word out of this list.
+ */
+export const STAND_INS: readonly string[] = ['home', 'new', 'play', 'records', 'collection'];
+
+/** Whether a scene is compared: its screen is the real one on the app. */
+export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene));
+
+/** What the report keeps of a scene: its verdict, and for a scene that is judged how much of the two shots differs and how far apart the text stands. */
+export type Line =
+  | { scene: string; locale: string; verdict: 'unjudged'; why: string }
+  | {
+      scene: string;
+      locale: string;
+      verdict: 'clean' | 'differs';
+      rawPercent: number;
+      beyondPercent: number;
+      loose: number;
+      shape: number;
+      shapeBlended: number;
+      textLines: number;
+      unmeasured: number;
+      /** Lines of text found in one shot and not the other: text the app does not draw, or draws elsewhere altogether. */
+      oneSided: number;
+      /** The most any line's ink stands apart in the two shots, of those found in both. */
+      worstPt: number;
+    };
 
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places;
 
+/** A scene that is not compared, and why: no numbers. */
+export const unjudgedLine = (scene: Scene): Line => ({ scene: scene.name, locale: scene.locale, verdict: 'unjudged', why: `the app still draws a stand-in for ${screenOf(scene)}: its numbers say nothing` });
+
+/** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. */
 export function lineOf(scene: Scene, result: Result): Line {
-  const measured = result.texts.filter((text) => !text.unmeasured);
-  const both = measured.filter((text) => Number.isFinite(text.apart));
+  const verdict = verdictOf(result);
+  if (verdict === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
+  const text = textSummary(result);
   return {
     scene: scene.name,
     locale: scene.locale,
+    verdict,
     rawPercent: round(result.rawPercent, 2),
     beyondPercent: round(result.beyondPercent, 3),
     loose: result.loose,
     shape: result.shape,
     shapeBlended: result.shapeBlended ?? 0,
-    textLines: result.texts.length,
-    unmeasured: result.texts.length - measured.length,
-    oneSided: measured.length - both.length,
-    worstPt: round(both.reduce((worst, text) => Math.max(worst, text.apart), 0), 2),
+    textLines: text.lines,
+    unmeasured: text.unmeasured,
+    oneSided: text.oneSided,
+    worstPt: round(text.worstPt, 2),
   };
 }
 

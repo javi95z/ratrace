@@ -1,11 +1,11 @@
-import { content } from '@ratrace/content';
+import { content, weekOf } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
 import { describe, expect, it } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import type { SavedGame } from '../session/types';
-import { SCENES, sceneServices, sceneStore } from './scenes';
+import { runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf } from './scenes';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
 
@@ -99,7 +99,7 @@ describe('the list of scenes', () => {
       expect(scene.name, scene.name).toMatch(/^[a-z]+(-[a-z0-9]+)+$/);
       expect(['en', 'es', 'ru']).toContain(scene.locale);
     }
-    expect(SCENES.map((scene) => scene.name)).toEqual(['home-new', 'home-continue', 'play-news-r1', 'play-cards-r1', 'play-finance-r6']);
+    expect(SCENES.map((scene) => scene.name)).toEqual(['home-new', 'home-continue', 'play-news-r1', 'play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
   });
 
   it('builds every scene it lists, and refuses a name it does not', async () => {
@@ -123,5 +123,95 @@ describe('what a client draws a scene with', () => {
     await sceneServices(b).sessions.start('nurse');
     expect(((await a.loadGame()) as SavedGame).lifeId).toBe('engineer');
     expect(((await b.loadGame()) as SavedGame).lifeId).toBe('nurse');
+  });
+});
+
+describe('the screen a scene is drawn on', () => {
+  it('is the first word of its name', () => {
+    expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
+    expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'play']));
+  });
+});
+
+describe('the day a scene is drawn on', () => {
+  const DAY = 86_400_000;
+
+  it('is a fixed instant in the middle of a week: Thursday noon in UTC, three and a half days from either edge of its week', () => {
+    const at = new Date(SCENE_NOW);
+    expect([at.getUTCDay(), at.getUTCHours(), at.getUTCMinutes(), at.getUTCSeconds(), at.getUTCMilliseconds()]).toEqual([4, 12, 0, 0, 0]);
+    // The week, the challenge and the days left are the same for anyone drawing the scene within two days of noon, whatever their time zone.
+    for (const shift of [-3.5 * DAY, -DAY, DAY, 3.5 * DAY - 1]) expect(weekOf(SCENE_NOW + shift), String(shift)).toBe(weekOf(SCENE_NOW));
+    expect(weekOf(SCENE_NOW - 3.5 * DAY - 1)).not.toBe(weekOf(SCENE_NOW));
+    expect(weekOf(SCENE_NOW + 3.5 * DAY)).not.toBe(weekOf(SCENE_NOW));
+  });
+});
+
+/** Everything of the round on screen that a step could have left different: what a scene's script is judged by. */
+const onScreen = (state: Awaited<ReturnType<typeof opened>>) =>
+  stateHash({ stage: state.stage, view: state.view, cardEvents: state.cardEvents, offered: state.offered, resolved: state.resolved, earned: state.earned, history: state.history, story: state.story });
+
+describe('scenes that go on after the game is open: the result of a card, the ledger of a round', () => {
+  /** A game opened on a scene's store, and the scene's script run on it, as a client does once its game has opened. */
+  async function played(name: string) {
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore(name)), content });
+    await game.getState().boot();
+    await runScene(name, game);
+    return game.getState();
+  }
+
+  it('saves the life where the script starts: the very store of the scene it goes on from', async () => {
+    expect(await saveOf(await sceneStore('play-outcome-r1'))).toEqual(await saveOf(await sceneStore('play-news-r1')));
+    expect(await saveOf(await sceneStore('play-resolve-r6'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
+    expect(await opened(await sceneStore('play-outcome-r1'))).toMatchObject({ stage: 'news' });
+    expect(await opened(await sceneStore('play-resolve-r6'))).toMatchObject({ stage: 'finance' });
+  });
+
+  it('play-outcome-r1 is the result of the first card of the first round, answered with the saver\'s choice', async () => {
+    const state = await played('play-outcome-r1');
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'outcome', pending: false, busy: false });
+    expect(roundOf(state)).toBe(1);
+    expect(state.view?.answered).toBe(1);
+    expect(state.cardEvents.some((event) => event.kind === 'card')).toBe(true);
+    expect(state.offered?.cardId).toBe(state.view?.hand[0]);
+  });
+
+  it('play-resolve-r6 is the ledger of the sixth round, played with the saver\'s orders', async () => {
+    const state = await played('play-resolve-r6');
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'resolve', busy: false, orders: [] });
+    expect(state.resolved?.before.round).toBe(5);
+    expect(state.view?.round).toBe(6);
+    expect(state.history).toHaveLength(7);
+    expect(state.resolved?.events.length).toBeGreaterThan(0);
+  });
+
+  it('comes to the same result every time, on any store of the scene', async () => {
+    for (const name of ['play-outcome-r1', 'play-resolve-r6']) expect(onScreen(await played(name)), name).toBe(onScreen(await played(name)));
+    expect(onScreen(await played('play-outcome-r1'))).not.toBe(onScreen(await played('play-resolve-r6')));
+  });
+
+  it('does nothing for a scene with no script, and refuses one that is not a scene', async () => {
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore('play-news-r1')), content });
+    await game.getState().boot();
+    const before = onScreen(game.getState());
+    await runScene('play-news-r1', game);
+    await runScene('home-new', game);
+    expect(onScreen(game.getState())).toBe(before);
+    await expect(runScene('play-nowhere-r9', game)).rejects.toThrow('unknown scene: play-nowhere-r9');
+  });
+
+  it('names the scene when its script did not land where it says, or could not be taken', async () => {
+    // The script of the first card's result, on a game that is at the finances of the sixth round: it lands nowhere.
+    const finances = createGameStore({ sessions: fixedSessions(await sceneStore('play-finance-r6')), content });
+    await finances.getState().boot();
+    await expect(runScene('play-outcome-r1', finances)).rejects.toThrow('scene play-outcome-r1: expected the outcome, found the finance');
+    // The ledger's script, on a game at the news: the round cannot be planned before its cards are answered.
+    const news = createGameStore({ sessions: fixedSessions(await sceneStore('play-news-r1')), content });
+    await news.getState().boot();
+    await expect(runScene('play-resolve-r6', news)).rejects.toThrow(/^scene play-resolve-r6: /);
+    // And with no life open at all there is nothing to go on from.
+    const empty = createGameStore({ sessions: fixedSessions(memoryDevice()), content });
+    await empty.getState().boot();
+    await expect(runScene('play-outcome-r1', empty)).rejects.toThrow('scene play-outcome-r1: no life is open');
   });
 });

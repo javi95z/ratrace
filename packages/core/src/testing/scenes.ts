@@ -2,7 +2,7 @@ import { bots, content } from '@ratrace/content';
 import type { Bot, Locale } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import { createGameStore } from '../game/store';
-import type { GameStore, Stage } from '../game/store';
+import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import type { PlayerStore, Sessions } from '../session/types';
@@ -33,7 +33,31 @@ export const SCENES: readonly Scene[] = [
   { name: 'play-news-r1', locale: 'en' },
   { name: 'play-cards-r1', locale: 'en' },
   { name: 'play-finance-r6', locale: 'en' },
+  { name: 'play-outcome-r1', locale: 'en' },
+  { name: 'play-resolve-r6', locale: 'en' },
 ];
+
+/** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`). Each client has a registry of them. */
+export const screenOf = (scene: Scene): string => scene.name.split('-')[0];
+
+/**
+ * The day every scene is drawn on, in milliseconds: Thursday 22 October 2026, noon UTC, three and a half days from either edge of its
+ * week. Whatever a screen reads of the date (the week's challenge, the days left of it) is then the same in every shot,
+ * whenever it is taken and wherever the shooting machine is. The web's shot sets the browser's clock to it; the app's
+ * services answer it as their clock (`Services.now`).
+ */
+export const SCENE_NOW = Date.UTC(2026, 9, 22, 12, 0, 0);
+
+/** One thing done to the round on screen once the game is open: what the player does, by the round store's own name for it. */
+export type Step =
+  | { action: 'leaveNews' }
+  /** The card on screen is answered with this option, or the saver's choice. */
+  | { action: 'pick'; option?: number }
+  | { action: 'afterCard' }
+  /** The saver's orders for the round are put in the basket, one after another. */
+  | { action: 'orders' }
+  | { action: 'play' }
+  | { action: 'next' };
 
 /**
  * How far a scene's life is played. `round` is the player's: the first round is 1, as the HUD counts it. A life at
@@ -41,12 +65,16 @@ export const SCENES: readonly Scene[] = [
  * saved life can show of the cards: the card on screen is the second, and the first is answered (a game opens on its
  * next card, and the result of the last one is gone with the page). `finance` has the round's cards all answered
  * and the round not played.
+ *
+ * A save cannot show the result of a card or the ledger of a round: those are only on screen until the player goes on.
+ * A scene of those has `then`, the steps the player takes once the game is open on the save (`runScene`, run by every
+ * client on its own game), and `ends`, the stage they come to.
  */
-interface Reach {
+type Reach = {
   life: string;
   round: number;
   stage: Extract<Stage, 'news' | 'cards' | 'finance'>;
-}
+} & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
 
 /** What each scene's store holds: the life to begin and how far to play it, or null for a device with no life. */
 const PLANS: Readonly<Record<string, Reach | null>> = {
@@ -55,12 +83,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-cards-r1': { life: 'engineer', round: 1, stage: 'cards' },
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
+  'play-outcome-r1': { life: 'engineer', round: 1, stage: 'news', then: [{ action: 'leaveNews' }, { action: 'pick' }], ends: 'outcome' },
+  'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
 };
 
 /** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
 const PLAYER_ID = 'saver';
 
-function mustBe(name: string, game: GameStore, stage: Stage): void {
+function mustBe(name: string, game: SceneGame, stage: Stage): void {
   const at = game.getState().stage;
   if (at !== stage) throw new Error(`scene ${name}: expected the ${stage}, found the ${at}`);
 }
@@ -111,6 +141,51 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
     if (game.getState().view?.phase !== 'cards') throw new Error(`scene ${name}: the hand had no second card`);
   }
   return store;
+}
+
+/** The round store of a game, as a scene's script needs it: its state as it is now, each time asked. */
+export type SceneGame = { getState(): RoundState & RoundActions };
+
+/** Takes one step, as the player would, with the saver's choices where the step has none. */
+async function take(name: string, game: SceneGame, bot: Bot, step: Step): Promise<void> {
+  const state = game.getState();
+  if (state.view === null) throw new Error(`scene ${name}: no life is open`);
+  switch (step.action) {
+    case 'leaveNews':
+      return state.leaveNews();
+    case 'pick':
+      return await state.pick(step.option ?? bot.pick(content, state.view));
+    case 'afterCard':
+      return state.afterCard();
+    case 'orders':
+      for (const order of bot.orders(content, state.view)) game.getState().addOrder(order);
+      return;
+    case 'play':
+      return await state.play();
+    case 'next':
+      return state.next();
+  }
+}
+
+/**
+ * Takes the steps a scene goes on with once the game is open on its store, on the game of the client that draws it:
+ * the same steps, with the same choices, on every client. Nothing for a scene that is only a save. The stage they
+ * come to is checked, so a script that did not land where the scene says (the game was not at the scene's start) is
+ * told, with the scene's name.
+ */
+export async function runScene(name: string, game: SceneGame): Promise<void> {
+  if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
+  const reach = PLANS[name];
+  if (reach === null || reach.then === undefined) return;
+  const bot = bots.find((candidate) => candidate.id === PLAYER_ID) as Bot;
+  try {
+    for (const step of reach.then) await take(name, game, bot, step);
+  } catch (error) {
+    // The game refused a step (the engine's own words): whose script it was is what the one who reads it needs.
+    if (error instanceof Error && error.message.startsWith(`scene ${name}:`)) throw error;
+    throw new Error(`scene ${name}: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+  }
+  mustBe(name, game, reach.ends);
 }
 
 /**

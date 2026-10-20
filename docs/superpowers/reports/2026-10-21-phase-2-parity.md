@@ -14,17 +14,37 @@ state drawn by both clients) follow with the screens.
 
 A scene is a named game state (`packages/core/src/testing/scenes.ts`: `SCENES`, `sceneStore(name)`): a life begun on the fixed seed and
 played with the content's `saver` bot, through the round store, to a round and a stage; the same save on both clients (the ids, seeds and
-clock of every screen's tests). The web draws it at `/<locale>/kit/scene?name=<name>`, the app at `/scene?name=<name>` (development only);
-a scene's first word names the screen it is drawn on (`play-finance-r6` on Play). `scene-shots.ts [web] [app] [compare] [--only=a,b]`
-writes `<name>-web.png`, `<name>-app.png` and `<name>-diff.png` here, and a line per scene in `phase-2-parity.json` (the share of the
-two shots unlike, the shape pixels, how many lines of text are found in one shot only, the worst text offset of the rest).
+clock of every screen's tests, `session/fixed.ts`). The web draws it at `/<locale>/kit/scene?name=<name>`, the app at `/scene?name=<name>`
+(development only); a scene's first word (`screenOf`) names the screen it is drawn on (`play-finance-r6` on Play), and each client's registry
+hands that screen the scene, so a sheet the scene names (`scene.sheet`) is the screen's to open, never a tap.
 
-A round in a scene's name is the player's: `r6` is the sixth round, `view.round` 5. A life saved at the cards can only be saved after a card
-is answered (a game opens a hand left half answered on its next card), so `play-cards-r1` has one card answered and shows the second.
+- **A round in a name is the player's:** `r6` is the sixth round, `view.round` 5. A life saved at the cards can only be saved after a card is
+  answered (a game opens a hand left half answered on its next card), so `play-cards-r1` has one card answered and shows the second.
+- **Scenes a save cannot hold.** The result of a card and the ledger of a round are only on screen until the player goes on, so a scene may
+  have `then`, the steps the player takes once the game is open on the save (`runScene`: one core function, run on the booted round store by
+  both clients, with the saver's choices), and `ends`, the stage they come to. `play-outcome-r1` is the first card of the first round answered;
+  `play-resolve-r6` is the sixth round played. The screen is drawn after the steps, so it is first drawn at that stage on both clients, and the
+  web page marks itself (`data-scene`) only then.
+- **The day is fixed.** Every scene is drawn on `SCENE_NOW`, Thursday 22 October 2026, noon UTC, three and a half days from either edge of its
+  week. The web's shot holds the browser's clock at it (`page.clock.setFixedTime` before the page loads, and reads `Date.now()` back); the
+  app's scene services answer it as `Services.now`, which a screen reads through `useClock()` (the phone's own clock everywhere else). The
+  Home's weekly challenge and its "3 days left" are then the same in every shot, on any day.
+- **The browser is kept from the project.** The web's layout wraps every page in the real `GameProvider`, which opens the browser's database
+  and, with the project's address in its environment, asks the cloud who is playing. The shots never let it: the dev server is started by the
+  script with that address blank, one already answering on port 3021 is refused (not reused), and the browser is a context in which every
+  request and socket to any host but this machine is aborted and service workers are blocked (`guardedContext` in `shotDrivers.ts`, the kit's
+  shots too). The run says which hosts it kept the browser from (only `va.vercel-scripts.com`, the analytics script, so far).
 
-Task 5 only proves the plumbing: the five scenes (`home-new`, `home-continue`, `play-news-r1`, `play-cards-r1`, `play-finance-r6`) open on both
-clients, but the app still draws phase 1's stand-ins for the screens, so their numbers say nothing yet. Each screen task replaces the
-stand-in, adds its scenes, and puts its rows below.
+`scene-shots.ts [web] [app] [compare] [--only=a,b]` writes `<name>-web.png`, `<name>-app.png` and, for a scene that is compared, `<name>-diff.png`
+here, and a line per scene in `phase-2-parity.json`: its verdict (`clean`: no shape differs, no text in one shot only, every line within a
+point; `differs`: read the numbers) and its numbers. As the kit's shots do, a comparison with more than half the screen unlike stops the run
+(`wrongPage` in `kitCompare.ts`, shared): that is the app showing something else, and its numbers are not results.
+
+**Unjudged.** While the app draws phase 1's stand-ins for a screen (`STAND_INS` in `sceneShots.ts`, which a test holds equal to the stand-ins
+of the app's registry), its scenes are shot but not compared: their line is `"verdict":"unjudged"` with no numbers, and no diff picture is
+kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. The seven scenes of task 5
+(`home-new`, `home-continue`, `play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`, `play-resolve-r6`) are all unjudged: they
+prove that both clients open each scene, and nothing more.
 
 ## The tolerance, and the exception this phase needs
 

@@ -1,7 +1,9 @@
 [
-  {"scene":"home-new","locale":"en","rawPercent":66.99,"beyondPercent":59.686,"loose":1626050,"shape":1540619,"shapeBlended":8570,"textLines":14,"unmeasured":1,"oneSided":13,"worstPt":0},
-  {"scene":"home-continue","locale":"en","rawPercent":63.7,"beyondPercent":56.542,"loose":1517813,"shape":1425752,"shapeBlended":4013,"textLines":14,"unmeasured":0,"oneSided":13,"worstPt":23.33},
-  {"scene":"play-news-r1","locale":"en","rawPercent":75.39,"beyondPercent":65.23,"loose":1677437,"shape":1538964,"shapeBlended":5938,"textLines":44,"unmeasured":12,"oneSided":32,"worstPt":0},
-  {"scene":"play-cards-r1","locale":"en","rawPercent":69.77,"beyondPercent":60.125,"loose":1453714,"shape":1316121,"shapeBlended":4580,"textLines":43,"unmeasured":3,"oneSided":38,"worstPt":17.33},
-  {"scene":"play-finance-r6","locale":"en","rawPercent":76.42,"beyondPercent":59.408,"loose":1345107,"shape":1157293,"shapeBlended":4083,"textLines":54,"unmeasured":13,"oneSided":39,"worstPt":13.67}
+  {"scene":"home-new","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for home: its numbers say nothing"},
+  {"scene":"home-continue","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for home: its numbers say nothing"},
+  {"scene":"play-news-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
+  {"scene":"play-cards-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
+  {"scene":"play-finance-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
+  {"scene":"play-outcome-r1","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"},
+  {"scene":"play-resolve-r6","locale":"en","verdict":"unjudged","why":"the app still draws a stand-in for play: its numbers say nothing"}
 ]

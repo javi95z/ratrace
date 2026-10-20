@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { compareShots, reportFolder, SECTIONS, type Section, type TextBox } from './kitCompare';
+import { compareShots, reportFolder, SECTIONS, verdictOf, wrongPage, type Section, type TextBox } from './kitCompare';
 import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
 
 /**
@@ -55,8 +55,9 @@ async function main() {
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${section}`);
       const boxes = JSON.parse(readFileSync(join(raw, `${section}-text.json`), 'utf8')) as TextBox[];
       const result = await compareShots(sharp, section, readFileSync(a), readFileSync(b), boxes, outOf(section));
-      // Half the screen unlike is not a difference to list: the app showed something else (a red box, a reload).
-      if (result.rawPercent > 50) throw new Error(`${section}: the app's shot is not the kit (${result.rawPercent.toFixed(0)} % unlike); look at ${b}`);
+      // Half the screen unlike is not a difference to list: the app showed something else (a red box, a reload). The scenes' shots stop at the same place (kitCompare.ts).
+      const wrong = wrongPage(result, 'kit', b);
+      if (wrong !== null) throw new Error(wrong);
       results.push(result);
     }
     // A run of some sections keeps the numbers of the others in the same report: each file always has every section that has been shot.
@@ -70,7 +71,7 @@ async function main() {
     for (const r of results) {
       const worst = r.texts.reduce((m, t) => (t.unmeasured ? m : Math.max(m, t.apart)), 0);
       const unmeasured = r.texts.filter((t) => t.unmeasured).length;
-      console.log(`${r.section.padEnd(11)} raw ${r.rawPercent.toFixed(2)} %  beyond ${r.beyondPercent.toFixed(3)} % (no dots rule ${r.beyondPlain} px)  a point away ${r.loose} px (no dots rule ${r.loosePlain}), not text ${r.shape} px  text lines ${r.texts.length} (unmeasured ${unmeasured}), worst ${worst.toFixed(2)} pt`);
+      console.log(`${r.section.padEnd(11)} ${verdictOf(r).padEnd(7)} raw ${r.rawPercent.toFixed(2)} %  beyond ${r.beyondPercent.toFixed(3)} % (no dots rule ${r.beyondPlain} px)  a point away ${r.loose} px (no dots rule ${r.loosePlain}), not text ${r.shape} px  text lines ${r.texts.length} (unmeasured ${unmeasured}), worst ${worst.toFixed(2)} pt`);
     }
   }
 }

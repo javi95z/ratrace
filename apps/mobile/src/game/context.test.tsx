@@ -10,7 +10,7 @@ import type { Order } from '@ratrace/engine';
 import { device, heard, kv, memoryServices, renderGame } from '../testing/render';
 import { phoneBasket } from './phoneBasket';
 import { localeOf } from './locale';
-import { GameProvider, phoneDeps, phoneServices, useGame, useSettings, useSound, useStill, useT, useWords } from './context';
+import { GameProvider, phoneDeps, phoneServices, useClock, useGame, useSettings, useSound, useStill, useT, useWords } from './context';
 
 afterEach(cleanup);
 
@@ -190,4 +190,18 @@ test('the orders in the basket survive the app being closed in the middle of a r
   await waitFor(() => expect(second.state.status).toBe('playing'));
   expect(second.state).toMatchObject({ gameId: where.gameId, stage: 'finance', orders: [study] });
   expect(second.state.view?.round).toBe(where.round);
+});
+
+test('the date a screen reads is the services\' own clock, and the phone\'s where they have none', () => {
+  let clock = () => -1;
+  function Clock() {
+    clock = useClock();
+    return null;
+  }
+  render(<GameProvider services={memoryServices()}><Clock /></GameProvider>);
+  expect(Math.abs(clock() - Date.now())).toBeLessThan(1_000);
+  cleanup();
+  render(<GameProvider services={{ ...memoryServices(), now: () => 1_792_670_400_000 }}><Clock /></GameProvider>);
+  expect(clock()).toBe(1_792_670_400_000);
+  expect(clock()).toBe(1_792_670_400_000);
 });

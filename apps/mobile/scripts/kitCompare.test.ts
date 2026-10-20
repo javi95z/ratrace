@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { blendedEdges, differences, groundOf, inkOf, PHASE_2_SECTIONS, reportFolder, SECTIONS, type Image } from './kitCompare';
+import { blendedEdges, differences, groundOf, inkOf, PHASE_2_SECTIONS, reportFolder, SECTIONS, textSummary, verdictOf, wrongPage, type Image, type Result } from './kitCompare';
 
 const NIGHT = [0x14, 0x1b, 0x33];
 const GOLD = [0xf2, 0xc1, 0x4e];
@@ -107,4 +107,49 @@ test('an edge one shot blends and the other draws hard is told from a colour tha
   const not = blendedEdges(odd, hard, e.map);
   expect(not.of).toBeGreaterThan(0);
   expect(not.explained).toBe(0);
+});
+
+/** A result of a comparison with the numbers a verdict is made of; the rest is what it needs to be one. */
+const resultOf = (over: Partial<Result> = {}): Result => ({
+  section: 'buttons',
+  rawPercent: 2.67,
+  beyondPercent: 0.2,
+  beyond: 10,
+  loosePercent: 0.1,
+  loose: 5,
+  beyondPlain: 12,
+  loosePlain: 6,
+  shape: 0,
+  texts: [
+    { text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 0.67 },
+    { text: 'b', web: null, app: null, apart: 0, unmeasured: true },
+  ],
+  places: [],
+  crop: [62, 400],
+  ...over,
+});
+
+test('half the screen unlike is the app showing something else, not a difference to list: the same guard for the kit and the scenes', () => {
+  expect(wrongPage(resultOf({ rawPercent: 50 }), 'kit', '/x/app.png')).toBeNull();
+  const message = wrongPage(resultOf({ section: 'home-new', rawPercent: 66.99 }), 'scene', '/x/app.png');
+  expect(message).toBe('home-new: the app\'s shot is not the scene (67 % unlike); look at /x/app.png');
+  expect(wrongPage(resultOf({ section: 'tabs', rawPercent: 51 }), 'kit', '/y.png')).toBe('tabs: the app\'s shot is not the kit (51 % unlike); look at /y.png');
+});
+
+test('the text of a comparison is told in three numbers: the lines measured, those found in one shot only, and how far apart the rest stand', () => {
+  expect(textSummary(resultOf())).toEqual({ lines: 2, unmeasured: 1, oneSided: 0, worstPt: 0.67 });
+  const texts = [
+    { text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 1.5 },
+    { text: 'b', web: [0, 0, 1, 1], app: null, apart: Infinity },
+    { text: 'c', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 0.25 },
+  ] as Result['texts'];
+  expect(textSummary(resultOf({ texts }))).toEqual({ lines: 3, unmeasured: 0, oneSided: 1, worstPt: 1.5 });
+});
+
+test('a comparison is clean when no shape differs, no text is in one shot only, and every line stands within a point; the wrong page is told first', () => {
+  expect(verdictOf(resultOf())).toBe('clean');
+  expect(verdictOf(resultOf({ shape: 1 }))).toBe('differs');
+  expect(verdictOf(resultOf({ texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 1.01 }] }))).toBe('differs');
+  expect(verdictOf(resultOf({ texts: [{ text: 'a', web: [0, 0, 1, 1], app: null, apart: Infinity }] }))).toBe('differs');
+  expect(verdictOf(resultOf({ rawPercent: 76, shape: 0 }))).toBe('wrong page');
 });
