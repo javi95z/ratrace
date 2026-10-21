@@ -1,5 +1,5 @@
 import { content, lives, rarityOf, weekOf } from '@ratrace/content';
-import { previewCard, stateHash } from '@ratrace/engine';
+import { previewCard, quoteBusinesses, quoteItem, stateHash } from '@ratrace/engine';
 import { cardRarity } from '../game/present';
 import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
@@ -166,7 +166,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -400,9 +400,9 @@ describe('the scenes of the finances', () => {
     expect(roundOf(await opened(await sceneStore('finance-tabs-ru-360')))).toBe(6);
   });
 
-  it('finance-market, finance-buy-stock, finance-property, finance-lifestyle and finance-move are play-finance-r6\'s very store, each on the tab it names (finance-buy-stock with Apple\'s sheet open, finance-move with every city\'s); work-panel too', async () => {
+  it('finance-market, finance-buy-stock, finance-property, finance-lifestyle, finance-move, finance-shop, finance-item and finance-taxes are play-finance-r6\'s very store, each on the tab it names (finance-buy-stock with Apple\'s sheet open, finance-move with every city\'s, finance-item with a watch\'s); work-panel too', async () => {
     const first = await saveOf(await sceneStore('play-finance-r6'));
-    for (const name of ['finance-market', 'finance-buy-stock', 'finance-property', 'finance-lifestyle', 'finance-move', 'work-panel']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
+    for (const name of ['finance-market', 'finance-buy-stock', 'finance-property', 'finance-lifestyle', 'finance-move', 'work-panel', 'finance-shop', 'finance-item', 'finance-taxes']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
     const finances = Object.fromEntries(SCENES.filter((scene) => scene.name.startsWith('finance-')).map((scene) => [scene.name, [scene.tab, scene.sheet]]));
     expect(finances).toEqual({
       'finance-basket': [undefined, 'basket'],
@@ -414,9 +414,13 @@ describe('the scenes of the finances', () => {
       'finance-debt': ['debt', undefined],
       'finance-lifestyle': ['lifestyle', undefined],
       'finance-move': ['lifestyle', 'move'],
+      'finance-shop': ['shop', undefined],
+      'finance-item': ['shop', 'item-watch_omega'],
+      'finance-taxes': ['taxes', undefined],
+      'finance-business': ['business', undefined],
     });
     // Only a scene of the finances names a tab of them.
-    expect(SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.name)).toEqual(['finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move']);
+    expect(SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.name)).toEqual(['finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move', 'finance-shop', 'finance-item', 'finance-taxes', 'finance-business']);
     // Apple is on the engineer's market: a share, open with the Finance the engineer has by then.
     const state = await opened(await sceneStore('finance-buy-stock'));
     expect(content.assets.find((asset) => asset.id === 'apple')?.minFinanceSkill ?? 0).toBeLessThanOrEqual(state.view?.player.life.financeSkill ?? -1);
@@ -430,8 +434,33 @@ describe('the scenes of the finances', () => {
     expect(state.view?.player.debts.map((debt) => debt.kind)).toEqual(['personalLoan']);
   });
 
+  it('finance-item\'s watch is in the engineer\'s reach, every way the shop has of buying it open: new, on instalments, second hand and without an invoice', async () => {
+    const state = await opened(await sceneStore('finance-item'));
+    const view = state.view;
+    if (!view) throw new Error('finance-item is a life in progress');
+    const quote = quoteItem(content, view, 'watch_omega');
+    expect(quote).toMatchObject({ soldHere: true, forSale: true });
+    expect(quote.price).toBeLessThanOrEqual(view.player.cash);
+    expect(quote.finance?.lock).toBeNull();
+    expect(quote.used?.lock).toBeNull();
+    expect(quote.noInvoice?.lock).toBeNull();
+    expect(view.player.life.items).toEqual([]);
+  });
+
+  it('finance-business is the founder\'s first round: a life the scene\'s player has unlocked, with the shop she begins with, and kinds to open', async () => {
+    expect(SCENES.find((scene) => scene.name === 'finance-business')).toEqual({ name: 'finance-business', locale: 'en', tab: 'business' });
+    const store = await sceneStore('finance-business');
+    expect(Object.keys((await store.loadProfile()).unlocked)).toEqual(['founder']);
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'founder', stage: 'finance' });
+    expect(roundOf(state)).toBe(1);
+    expect(state.view?.player.businesses.map((business) => business.typeId)).toEqual(['shop']);
+    if (!state.view) throw new Error('finance-business is a life in progress');
+    expect(quoteBusinesses(content, state.view).kinds.filter((kind) => kind.lock === null).length).toBeGreaterThan(0);
+  });
+
   it('are drawn for a player who has read the guide: the finances themselves, under the Hud (play-finance-r6 keeps the first tip over the tabs)', () => {
-    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move']) expect(GUIDE_READ.has(name), name).toBe(true);
+    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move', 'finance-shop', 'finance-item', 'finance-taxes', 'finance-business']) expect(GUIDE_READ.has(name), name).toBe(true);
     expect(GUIDE_READ.has('play-finance-r6')).toBe(false);
   });
 });
@@ -488,6 +517,10 @@ describe('the list of scenes', () => {
       'finance-move',
       'play-cards-city',
       'work-panel',
+      'finance-shop',
+      'finance-item',
+      'finance-taxes',
+      'finance-business',
     ]);
   });
 

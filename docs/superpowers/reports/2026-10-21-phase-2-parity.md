@@ -494,7 +494,8 @@ left `STAND_IN_SCENES` (the app draws the finances now):
 | finance-tabs-ru-360 | the same in Russian on a phone 360 wide: the row of tabs, which scrolls sideways | no sheet |
 
 - **The tabs not on the phone yet are not shown** (Task 13 the market, property and debt; 14 the way of life; 15 the shop, taxes and businesses): until Task 15 the row
-  has the portfolio's tab alone, where the web's has all eight. `finance-tabs-ru-360` is for the batch pass after Task 15, when every tab is drawn.
+  has the portfolio's tab alone, where the web's has all eight. `finance-tabs-ru-360` is for the batch pass after Task 15, when every tab is drawn. (Since Task 15,
+  all eight are drawn.)
 - **Between the Hud and the tabs**, as on the web's page: the place of a crisis's strip (8, empty with no crisis) and the guide's tip (12 under it, 12 over the tabs).
   The phone's tabs are the second sticky row of the screen (`StickyScreen`'s `subHeader`, `subGap` 12), and what is between them is the screen's `between`: it scrolls
   up under the Hud's figures as the web's does, and the tabs follow it until they meet the figures. (Since the fix round, on the UI thread: the page's offset
@@ -551,6 +552,38 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
   limits of focus (a mastered skill on one line, overtime's toll), the note under health cover, the panel's sheets (career, Finance, a skill, focus, retiring),
   the pieces of a thing looked at closely (`ItemCost`, `ItemUses`, `StatusNote`, for the shop of Task 15 and the profile of Task 17), and the Russian way of
   life on a narrow phone (every choice wraps, a share of its row, nothing cut).
+
+## Task 15: the shop, the taxes and the businesses (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it. With them all
+eight tabs of the web's finances are on the phone.
+
+| scene | what it is | how its tab and sheet are open |
+|---|---|---|
+| finance-shop | play-finance-r6's store, the shop: what is in reach of the engineer's cash in London (53 things of 57), shelf by shelf, two to a row | the tab: given / pressed (`main [data-tab="shop"]`) |
+| finance-item | the same, the sheet of the Omega Speedmaster: its status and what it is good for, what it would resell for, and every way to buy it (new, on instalments with the loan's terms, second hand, without an invoice) | then its tile, the one that draws its picture (`[data-finance-item]:has(img[src*="/item.watch_omega."])`): given (`item-watch_omega`) / pressed |
+| finance-taxes | the same, the taxes: the round's tax and what prices took from the cash, what is not declared (pay under the table, crypto) and what it risks, the cash after the round, the escape test | the tab: given / pressed |
+| finance-business | the founder's first round (unlocked for the scene's player): her online shop on its line with its two switches, all of it summed, and the kinds she could open | the tab: given / pressed |
+
+- **The shelf is the web's grid**: two to a row (`grid-cols-2 gap-2`: 4 each side of a tile in a row 8 wider than the panel), each tile as tall as the other in
+  its row. **The web's container query** (`@min-[400px]`, of the shelf's own width) lays the picture beside the words from 400: the shelf measures itself
+  (`onLayout`) and tells its tiles once, when the answer changes. A phone's panel is under 400 (402 − 24 − 24 = 354), so the shots show the picture above
+  the words, as the web's do. (Task 15's brief said 3 columns, or 5 from 460: that was the shop of an older web; today's web, the reference, is two to a row.)
+- **The shelves are put on screen two a frame** (`SHELVES_FIRST`, `SHELVES_STEP`): the whole shop is some sixty tiles, each a canvas. A `FlatList` would not
+  help there: the shop is a tab inside Play's one scrolling page, and a list inside a scroll of its own direction cannot tell what is on screen, so it draws
+  every row anyway (and React Native warns). Every tile is memoised (primitive props, one stable `onOpen`): asking for everything draws only the tiles that
+  come on the shelf, and an order draws only the tiles whose figures it changes (`FinanceShop.test`).
+- **An order is given once from a sheet** (`useOnce`): buying, on instalments, second hand, without an invoice, selling or cancelling a thing, opening a
+  business, putting money in, selling it. A second tap before the sheet has gone gives nothing; a refused one can be tried again (the sheet stays open).
+- **The adviser's word** is one paragraph, as the web's: who speaks in the pixel face (gold capitals, `tracking-wider`), what they say in italics after it,
+  wrapping under it. The kit's run-on words gained a pixel span and a spacing of their own (`Aside.pixel`, `Aside.tracking`) for it, and for a business's
+  stars (`tracking-widest`), dimmed after the gold ones, before what its customers say (the web's `mr-1.5` is a space opened to 6).
+- **A business's small switches** are the web's `min-h-9` (36), their touch the 44 a thumb needs (`reach`, 4 above and 4 below, taking no room); on, they
+  are lit gold on teal, and said as `selected` (the web's `aria-pressed`, as the cards' choices).
+- **Not compared** (no scene shows them; the tests hold them): a thing owned (gold edge, "Yours", "Yours · used"), what it cost and what is owed on it, the
+  second-hand sheet's refusals, the residency of Bangkok, the taxes of a place that taxes nothing (one line, one button), a business's sheet (this round,
+  what is taken out, who runs it, more money in, the sale, living from it), a business opened this round, and Russian on a narrow phone (a tile's name
+  clamped to two lines as the web's `line-clamp-2`, nothing else cut; a business's name cut to its line as the web's `truncate`, the rest wrapping).
 
 ## The tolerance, and the exception this phase needs
 

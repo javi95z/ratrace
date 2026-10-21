@@ -130,13 +130,15 @@ function PlayScene({ scene }: { scene: Scene }) {
  * The finances have no initial state either (their tab and their sheets are their own), so a scene of them has the page press what a player would, once
  * the screen is drawn, as for the Hud: the tab it names (each of the web's tabs is marked with its id, `data-tab`), then what opens the sheet it names.
  * The pension plan's line is the first item of the finances that opens a sheet (`data-finance-item` with a popup: the plans' lines come after it); a
- * share's sheet is opened by its row of the market, the one item of the market that draws its mark. The basket is Play's, exported by Finance: the page
+ * share's sheet is opened by its row of the market, the one item of the market that draws its mark; a thing's sheet by its tile on the shop's shelf, the
+ * one that draws its picture (`item-<id>`). The basket is Play's, exported by Finance: the page
  * draws it beside Play, as the phone's registry does. The phone's Finance is given the tab and the sheet as its initial state (`FinanceOpened`).
  */
 const FINANCE_SHEETS: Readonly<Record<string, string>> = {
   pension: 'main [data-finance-item][aria-haspopup="dialog"]',
   'buy-apple': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/logo.apple."])',
   move: 'main [role="tabpanel"] button:has(img[src*="/icon.move."])',
+  'item-watch_omega': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/item.watch_omega."])',
 };
 
 /** What the page presses for a scene of the finances, in turn: the tab it names, then what opens its sheet. */

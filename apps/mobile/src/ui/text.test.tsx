@@ -357,3 +357,38 @@ test('words that run on take the text\'s italic, and may be italic where it is n
   expect((italic.firstElementChild as HTMLElement).style.fontFamily).toContain('Slant');
   expect((upright.firstElementChild as HTMLElement).style.fontFamily).not.toContain('Slant');
 });
+
+test('a reading paragraph can open with words in the pixel face (the web\'s `pixel` span in a paragraph: who speaks, then what they say), at its size and its own spacing', () => {
+  const { container } = render(
+    <ReadText size={12} lineHeight={12 * SNUG} after={[{ text: 'YOUR ADVISER: ', tone: 'gold-200', pixel: true, tracking: 12 * 0.05 }, { text: 'All in order.', tone: 'ink-200', italic: true }]}>
+      {''}
+    </ReadText>,
+  );
+  const whole = container.firstElementChild as HTMLElement;
+  expect(whole.textContent).toBe('YOUR ADVISER: All in order.');
+  // One paragraph: one text, one line height, the reading face's.
+  expect(whole.style.lineHeight).not.toBe('');
+  const [who, said] = spans(container);
+  expect(who.style.color).toBe(rgb('gold-200'));
+  expect((who.firstElementChild as HTMLElement).style.fontFamily).toContain('Jersey');
+  // The span's own spacing, set on it; what follows takes the paragraph's again (none: a spacing of 0 would turn iOS's kerning off).
+  expect(parseFloat(who.style.letterSpacing)).toBeCloseTo(0.6, 5);
+  expect(said.style.letterSpacing).toBe('');
+  expect(whole.style.letterSpacing).toBe('');
+  expect((said.firstElementChild as HTMLElement).style.fontFamily).toContain('Slant');
+});
+
+test('a pixel span takes the pixel face\'s 0.03 em where it has no spacing of its own, and on a Russian page its narrower word spaces', () => {
+  const { container } = render(
+    <Language.Provider value="ru">
+      <ReadText size={12} after={[{ text: 'ТВОЙ КОНСУЛЬТАНТ: ', pixel: true }, { text: 'Всё чисто.' }]}>{''}</ReadText>
+    </Language.Provider>,
+  );
+  const [who, said] = spans(container);
+  expect(parseFloat(who.style.letterSpacing)).toBeCloseTo(12 * 0.03, 5);
+  expect((who.firstElementChild as HTMLElement).style.fontFamily).toContain('Oswald');
+  const space = (Array.from(who.children) as HTMLElement[]).find((run) => run.textContent === ' ')!;
+  expect(parseFloat(space.style.letterSpacing)).toBeCloseTo(12 * (0.03 + RU_WORD_SPACING), 5);
+  // The reading words after it keep their own spaces.
+  expect((Array.from(said.children) as HTMLElement[]).every((run) => run.style.letterSpacing === '')).toBe(true);
+});

@@ -587,12 +587,11 @@ describe("this round's orders", () => {
 });
 
 describe('the finances, laid out', () => {
-  it('stand on one panel a tab: the portfolio is the first, the one open, and the tabs not on the phone yet are not shown at all', async () => {
+  it('stand on one panel a tab: all eight of the web\'s, in its order, the portfolio the first and the one open', async () => {
     const { services } = await inFinance('heir');
     renderGame(<Play />, services);
     const tabs = await screen.findAllByRole('tab');
-    // The shop, taxes and businesses (Task 15) are not on the phone yet.
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle']);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Portfolio', 'Market', 'Property', 'Business', 'Debt', 'Lifestyle', 'Shop', 'Taxes']);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('tablist', { name: 'Your finances' })).toBeTruthy();
     expect(screen.getByRole('tabpanel', { name: 'Portfolio' })).toBeTruthy();

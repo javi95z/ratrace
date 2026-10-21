@@ -29,7 +29,7 @@ export interface Scene {
    */
   readonly sheet?: string;
   /**
-   * The tab of the finances on screen, by its id, where it is not the first (the portfolio): `market`, `property`, `debt`, `lifestyle`. A client opens it as it
+   * The tab of the finances on screen, by its id, where it is not the first (the portfolio): `market`, `property`, `debt`, `lifestyle`, `shop`, `taxes`, `business`. A client opens it as it
    * opens a sheet: given to the screen as its initial state, or pressed by the page once the screen is drawn, before the sheet.
    */
   readonly tab?: string;
@@ -86,6 +86,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'finance-move', locale: 'en', tab: 'lifestyle', sheet: 'move' },
   { name: 'play-cards-city', locale: 'en', sheet: 'city' },
   { name: 'work-panel', locale: 'en' },
+  { name: 'finance-shop', locale: 'en', tab: 'shop' },
+  { name: 'finance-item', locale: 'en', tab: 'shop', sheet: 'item-watch_omega' },
+  { name: 'finance-taxes', locale: 'en', tab: 'taxes' },
+  { name: 'finance-business', locale: 'en', tab: 'business' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -200,6 +204,15 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-cards-city': { life: 'engineer', round: 4, stage: 'cards' },
   // The work panel of the profile, for the engineer of play-finance-r6: her job and the next rung, the round's focus, her skills.
   'work-panel': { life: 'engineer', round: 6, stage: 'finance' },
+  // The finances of play-finance-r6's sixth round, at the shop: what is in reach of the engineer's cash in London, shelf by shelf.
+  'finance-shop': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, the sheet of a watch open (the Omega Speedmaster): its status, what it would resell for, and every way to buy it: new, on instalments,
+  // second hand and without an invoice.
+  'finance-item': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, at the taxes: the round's tax, what is not declared and what it risks, the cash after the round and the escape test.
+  'finance-taxes': { life: 'engineer', round: 6, stage: 'finance' },
+  // The founder's first round, at the businesses: the online shop she begins with (its line and its two switches, all of them summed) and what she could open.
+  'finance-business': { life: 'founder', round: 1, stage: 'finance' },
 };
 
 /**
@@ -208,6 +221,8 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
  */
 const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
   'new-unlocked': ['rider', 'heir'],
+  // The founder is a life to unlock: the player of the scene has.
+  'finance-business': ['founder'],
 };
 
 /**
@@ -226,6 +241,10 @@ export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-ne
   'finance-lifestyle',
   'finance-move',
   'play-cards-city',
+  'finance-shop',
+  'finance-item',
+  'finance-taxes',
+  'finance-business',
 ]);
 
 /**

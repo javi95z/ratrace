@@ -243,12 +243,18 @@ test('a scene of the finances is Play at its finances on both sides, on the tab 
   expect(market).toContain('<AssetMark asset={asset} />');
   // Every sheet a scene of the finances names is one of these, and every tab one of the web's.
   const sheets = SCENES.filter((scene) => scene.name.startsWith('finance-') && scene.sheet !== undefined).map((scene) => scene.sheet);
-  expect(sheets).toEqual(['basket', 'pension', 'buy-apple', 'move']);
+  expect(sheets).toEqual(['basket', 'pension', 'buy-apple', 'move', 'item-watch_omega']);
   // The sheet of every city: the way of life's one button that draws the sign of a move.
   expect(web).toContain(`move: 'main [role="tabpanel"] button:has(img[src*="/icon.move."])'`);
   const lifestyle = finance.slice(finance.indexOf('function Lifestyle()'), finance.indexOf('// Shop'));
   expect([...lifestyle.matchAll(/<Sprite id="icon\.move"/g)]).toHaveLength(1);
   expect(lifestyle).toContain('<Button wide onClick={() => setMoving(true)}>');
+  // A thing's sheet: its tile on the shop's shelf, the one that draws its picture, which opens its sheet; the phone's shop opens it from `item-<id>`.
+  expect(web).toContain(`'item-watch_omega': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/item.watch_omega."])'`);
+  const shop = finance.slice(finance.indexOf('function Shop('), finance.indexOf('// Taxes'));
+  expect(shop).toContain('data-finance-item onClick={() => setOpen(item)}');
+  expect(shop).toContain('<Sprite id={itemArt(item.id)} fallback={{ w: 64, h: 64 }} />');
+  expect(read('../src/game/screens/Finance.tsx')).toContain("opened.sheet?.startsWith('item-') ? opened.sheet.slice('item-'.length) : null");
   const tabs = SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.tab as string);
   for (const tab of tabs) expect(finance, tab).toContain(`{tab === '${tab}' ? `);
 });

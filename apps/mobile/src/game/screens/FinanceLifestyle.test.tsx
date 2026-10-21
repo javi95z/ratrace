@@ -281,7 +281,7 @@ describe('moving to another city', () => {
 });
 
 describe('what belongs to a city', () => {
-  // (Its shelf in the shop, and the line in a thing's sheet that says it stays behind, come with the shop: Task 15.)
+  // (Its shelf in the shop, and the line in a thing's sheet that says it stays behind, are the shop's: FinanceShop.test.)
   it('is named before a move that would end it, and only for the cities that would', async () => {
     const { services, session } = await inFinance('nurse');
     await session.playRound({ orders: [{ type: 'buyItem', itemId: 'member_season_seat' }] });

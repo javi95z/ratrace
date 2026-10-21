@@ -1,19 +1,19 @@
-import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, lifestyleArt, propertyArt, rentTierIcon, saleSignArt, START_AGE } from '@ratrace/content';
+import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, itemArt, lifestyleArt, propertyArt, rentTierIcon, saleSignArt, START_AGE, USED_ART } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
 import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
 import { rulesSell } from '@ratrace/core/game/rules';
-import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, mortgageSwitch, previewRound, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
-import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, LifestyleTier, Order, PlayerState, RentTier, WorkMode, WorldState } from '@ratrace/engine';
+import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, mortgageSwitch, previewRound, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
+import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, PlayerState, RentTier, UsedQuote, WorkMode, WorldState } from '@ratrace/engine';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
 import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { adjustedRead } from '../../ui/fonts';
-import { Bare, Button, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, usePress } from '../../ui/kit';
+import { Bar, Bare, Button, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
@@ -23,12 +23,17 @@ import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, GUTTER, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
+import { BusinessTab, useOnce } from './Business';
 import { CareerMoves } from './CareerMoves';
+import { EvasionPanel } from './Evasion';
 import { Explain } from './Explain';
 import { splitMastered, useFocusNote, type FocusNote } from './focusNote';
 import { Payouts, portfolioQuote, PortfolioGlance } from './Glance';
 import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
+import { ItemCost } from './ItemCost';
+import { ItemUses } from './ItemUses';
+import { realStatus, StatusNote } from './StatusNote';
 import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetFocus } from './Work';
 
 /*
@@ -42,9 +47,10 @@ import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetF
  * the panel (`FinanceShell`), so a change of tab draws the two of them again and nothing else.
  *
  * Task 12 brought the portfolio, Task 13 the market, property and debt, Task 14 the way of life (and the cities: the sheet of every city, and the
- * one a card offers to move to, `CityPreview`); the other tabs come with their tasks, each a line of `TAB_BODIES`.
- * The lists a tab draws are short (22 assets in all, the homes and lets a city sells, a life's homes and debts): drawn whole, each row memoised
- * where a list can be long (the market's, the homes'), so an order draws again only the rows it changes.
+ * one a card offers to move to, `CityPreview`), Task 15 the shop, the taxes and the businesses (Business.tsx, Evasion.tsx): each a line of `TAB_BODIES`.
+ * The lists a tab draws are short (22 assets in all, the homes and lets a city sells, a life's homes, debts and businesses): drawn whole, each row
+ * memoised where a list can be long (the market's, the homes'), so an order draws again only the rows it changes. The shop's sixty-odd things are
+ * the one long list: its shelves are drawn a few a frame and its tiles are memoised (`Shop`, and why not a FlatList there).
  */
 
 type TabId = 'portfolio' | 'market' | 'property' | 'business' | 'debt' | 'lifestyle' | 'shop' | 'taxes';
@@ -62,7 +68,7 @@ function useRound() {
 /**
  * What the finances have open from the start, where a scene says so (the phone's initial state, as the Hud's `open` and NewLife's `opened`; the web's
  * scene page presses what opens it): a tab, by its id, and a sheet of that tab (`pension`: the portfolio's pension plan; `buy-<asset>`: the market's
- * sheet that buys that asset; `move`: the way of life's sheet of every city).
+ * sheet that buys that asset; `move`: the way of life's sheet of every city; `item-<id>`: the shop's sheet of that thing).
  */
 export const FinanceOpened = createContext<{ tab?: string; sheet?: string }>({});
 
@@ -1828,6 +1834,396 @@ const CityPanel = memo(function CityPanel({ cityId, movingTo, moveOrdered, onMov
 const MOVE_SIGN = { marginVertical: -4 } as const;
 
 // ------------------------------------------------------------------------------------------------
+// Shop
+
+type ShopView = 'affordable' | 'all';
+
+/** The picture of a thing where it is missing (the web's fallback), and the box it stands in on a tile: as tall as a watch, as wide as the thing needs (`h-16 min-w-16`). */
+const THING = { w: 64, h: 64 } as const;
+const THING_BOX = { height: 64, minWidth: 64 } as const;
+
+/**
+ * The same thing second hand, set off by a rule under the new one: what it costs, what it gives at
+ * its age, and the repairs that may come. Paid in cash only.
+ */
+function SecondHand({ used, onBought }: { used: UsedQuote; onBought(): void }) {
+  const t = useT('finance.shop');
+  const { content, text, fmt } = useWords();
+  return (
+    <View role="region" aria-label={t('usedTitle')} style={{ gap: 8, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 12 }}>
+      {/* The web's `pixel flex items-center gap-2 text-[14px] uppercase tracking-[0.1em] text-gold-200`. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Sprite id={USED_ART} />
+        <PixelText size={14} tone="gold-200" style={{ flexShrink: 1, textTransform: 'uppercase', letterSpacing: 14 * 0.1 }}>{t('usedTitle')}</PixelText>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
+        {/* What it adds, as for a new one: a better one of its kind owned counts first. */}
+        {used.statusReal > 0 ? <Tag tone="good">{t('status', { n: used.statusReal })}</Tag> : null}
+        <Tag>{t('usedAge', { years: used.ageRounds * content.yearsPerRound })}</Tag>
+      </View>
+      {used.statusReal < used.status ? (
+        <ReadText size={13} lineHeight={13 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>{t(used.statusReal <= 0 ? 'statusNone' : 'statusLess', { n: used.statusReal, of: used.status })}</ReadText>
+      ) : null}
+      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>
+        {`${t('usedRisk', { pct: used.repairChancePct, amount: fmt.money(used.repairCost) })} ${t('usedWarranty')}`}
+      </ReadText>
+      <Button variant="secondary" wide disabled={used.lock !== null} onPress={onBought}>
+        {t('buyUsed', { amount: fmt.money(used.price) })}
+      </Button>
+      {used.lock !== null ? (
+        <ReadText size={13} tone="wine-300" style={{ textAlign: 'center' }}>{text.reasons[used.lock]}</ReadText>
+      ) : (
+        <ReadText size={13} tone="ink-300" style={{ textAlign: 'center' }}>{t('resale', { amount: fmt.money(used.resale) })}</ReadText>
+      )}
+    </View>
+  );
+}
+
+/**
+ * The same thing without an invoice, set off by a rule: cheaper, in cash, and a question asked when
+ * it is sold or the tax office inspects.
+ */
+function NoInvoice({ offer, onBought }: { offer: NonNullable<ItemQuote['noInvoice']>; onBought(): void }) {
+  const t = useT('finance.shop');
+  const { content, text, fmt } = useWords();
+  return (
+    <View role="region" aria-label={t('noInvoiceTitle')} style={{ gap: 8, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 12 }}>
+      <PixelText size={14} tone="gold-200" style={{ textTransform: 'uppercase', letterSpacing: 14 * 0.1 }}>{t('noInvoiceTitle')}</PixelText>
+      <ReadText size={13} lineHeight={13 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>
+        {t('noInvoiceRisk', { pct: offer.discountPct, suspicion: content.evasion.noInvoiceSaleSuspicion, goods: content.evasion.auditGoodsPct })}
+      </ReadText>
+      <Button variant="secondary" wide disabled={offer.lock !== null} onPress={onBought}>
+        {t('buyNoInvoice', { amount: fmt.money(offer.price) })}
+      </Button>
+      {offer.lock !== null ? <ReadText size={13} tone="wine-300" style={{ textAlign: 'center' }}>{text.reasons[offer.lock]}</ReadText> : null}
+    </View>
+  );
+}
+
+/**
+ * A thing looked at closely: what it does to status, what it is good for, what it costs to keep and what it would sell for, and every way the shop
+ * has of buying it (new, on instalments, second hand, without an invoice), or of selling it or taking the order back. An order taken closes the
+ * sheet, and is given once: a second tap before the sheet has gone (a double tap) gives nothing. One refused leaves it open, the refusal said.
+ */
+function ItemSheet({ itemId, onClose }: { itemId: string; onClose(): void }) {
+  const t = useT('finance.shop');
+  const common = useT('common');
+  const { content, text, names, fmt } = useWords();
+  const { shown, p } = useRound();
+  const inBasket = useGame((s) => s.orders.some((order) => order.type === 'buyItem' && order.itemId === itemId));
+  const addOrder = useGame((s) => s.addOrder);
+  const setOrder = useGame((s) => s.setOrder);
+  const once = useOnce();
+  const quote = useMemo(() => quoteItem(content, shown, itemId), [content, shown, itemId]);
+  const item = content.items.find((x) => x.id === itemId);
+  if (!item) return null;
+  const plan = quote.finance;
+  const held = p.life.items.find((owned) => owned.itemId === item.id);
+  const years = content.yearsPerRound;
+  const done = (give: () => boolean) => {
+    if (once(give)) onClose();
+  };
+  const note = (words: string, size: 13 | 14 = 13) => <ReadText size={size} tone="ink-300" style={{ textAlign: 'center' }}>{words}</ReadText>;
+
+  return (
+    <Sheet open onClose={onClose} title={names.items[item.id]} closeLabel={common('close')}>
+      <View style={{ gap: 12 }}>
+        <View style={{ alignItems: 'center' }}>
+          <Bare style={{ padding: 8 }}>
+            <Sprite id={itemArt(item.id)} scale={2} fallback={THING} />
+          </Bare>
+        </View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
+          <Tag tone={realStatus(quote) > 0 ? 'good' : undefined}>{t('status', { n: realStatus(quote) })}</Tag>
+          {quote.status < quote.statusNew ? <Tag>{t('statusWas', { n: quote.statusNew })}</Tag> : null}
+          {quote.upkeepAnnual > 0 ? <Tag tone="bad">{t('upkeep', { amount: fmt.money(quote.upkeepAnnual) })}</Tag> : null}
+          {item.kind === 'experience' ? <Tag>{t('lasts', { years: item.boostRounds * years })}</Tag> : null}
+        </View>
+        <StatusNote quote={quote} owned={held !== undefined} />
+        <ItemUses item={item} />
+        {quote.ages ? note(t(quote.status < quote.statusNew ? 'aged' : 'ages')) : null}
+        {quote.local ? note(t('local', { city: names.cities[p.cityId] })) : null}
+        {item.kind === 'durable' && !held && quote.forSale ? note(t('resale', { amount: fmt.money(quote.resale) })) : null}
+        <ItemCost quote={quote} />
+
+        {inBasket ? (
+          <Button variant="secondary" wide onPress={() => done(() => setOrder((order) => order.type === 'buyItem' && order.itemId === item.id, null))}>
+            {common('cancel')}
+          </Button>
+        ) : held ? (
+          quote.sellable ? (
+            <Button variant="danger" wide onPress={() => done(() => addOrder({ type: 'sellItem', itemId: item.id }))}>
+              {item.kind === 'membership' ? t('cancel') : t('sell', { amount: fmt.money(held.value) })}
+            </Button>
+          ) : held.roundsLeft !== null ? (
+            note(t('spent', { years: held.roundsLeft * years }), 14)
+          ) : (
+            // What only life can give, a degree for one, is not the player's to sell.
+            note(t('cardOnly'), 14)
+          )
+        ) : quote.forSale ? (
+          <>
+            <Button variant="primary" wide onPress={() => done(() => addOrder({ type: 'buyItem', itemId: item.id }))}>
+              {t('buy', { amount: fmt.money(quote.price) })}
+            </Button>
+            {plan ? (
+              <View style={{ gap: 6 }}>
+                <Button variant="secondary" wide disabled={plan.lock !== null} onPress={() => done(() => addOrder({ type: 'buyItem', itemId: item.id, financed: true }))}>
+                  {t('finance', { amount: fmt.money(plan.down) })}
+                </Button>
+                {plan.lock !== null ? (
+                  <ReadText size={13} tone="wine-300" style={{ textAlign: 'center' }}>{text.reasons[plan.lock]}</ReadText>
+                ) : (
+                  note(`${t('financeTerms', { loan: fmt.money(plan.loan), rate: fmt.rate(plan.rateBp), years: plan.termRounds * years, annual: fmt.money(plan.annual) })} ${t('financeKept')}`)
+                )}
+              </View>
+            ) : null}
+            {quote.used ? <SecondHand used={quote.used} onBought={() => done(() => addOrder({ type: 'buyItem', itemId: item.id, used: true }))} /> : null}
+            {quote.noInvoice ? <NoInvoice offer={quote.noInvoice} onBought={() => done(() => addOrder({ type: 'buyItem', itemId: item.id, noInvoice: true }))} /> : null}
+          </>
+        ) : (
+          note(t('cardOnly'), 14)
+        )}
+      </View>
+    </Sheet>
+  );
+}
+
+/** A thing on a shelf, and how the shop quotes it this round. */
+type ShelfItem = { item: ItemDef; quote: ItemQuote; owned: boolean };
+
+/** A thing is in reach if any way the shop offers it can actually be used today. */
+const inReach = ({ quote, owned }: ShelfItem, cash: number) =>
+  owned || quote.price <= cash || quote.finance?.lock === null || quote.used?.lock === null || quote.noInvoice?.lock === null;
+
+/**
+ * The shelves drawn in the frame the shop is opened, and each frame after it, in the order the kinds of things are listed: the whole shop at once is
+ * some sixty tiles, each a picture on a canvas, and the tab would stop for all of them. A shelf once drawn stays (asking for everything or for what
+ * is in reach only adds or takes away tiles of the shelves drawn).
+ *
+ * Why not a list that draws only what is on screen (`FlatList`): the shop is the panel of a tab in Play's one scrolling page (`StickyScreen`, under
+ * the Hud and the row of tabs), and a list inside a scroll of the same direction is given the whole height of its rows by it: it cannot tell what is
+ * on screen, so it draws every row all the same (in batches, and React Native warns against it). The page itself would have to be the list, for the
+ * one tab. Drawn a few shelves a frame, each tile memoised, the shop costs what a FlatList would here, without it.
+ */
+const SHELVES_FIRST = 2;
+const SHELVES_STEP = 2;
+
+/** From how wide a shelf (its own width, the web's `@container`) a tile lays its picture beside its words: `@min-[400px]`. */
+const SHELF_ROW = 400;
+
+function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopView): void }) {
+  const t = useT('finance.shop');
+  const { content, text } = useWords();
+  const { shown, p } = useRound();
+  // Where a scene says so, a thing's sheet is open from the start (`item-<id>`).
+  const opened = useContext(FinanceOpened);
+  const [open, setOpen] = useState<string | null>(() => (opened.sheet?.startsWith('item-') ? opened.sheet.slice('item-'.length) : null));
+  // The same for every tile and every drawing, so a tile is drawn again only when what it shows changes (`ShelfTile` is memoised).
+  const onOpen = useCallback((itemId: string) => setOpen(itemId), []);
+  const ladders = useMemo(() => [...new Set(content.items.map((item) => item.ladder))], [content]);
+  // Every thing the city sells, quoted once for the round as it stands. The shelf of a city holds what that city sells: what is sold only elsewhere is not shown at all.
+  const shelves = useMemo(
+    () =>
+      ladders.map((ladder) => ({
+        ladder,
+        items: content.items
+          .filter((item) => item.ladder === ladder)
+          .map((item) => ({ item, quote: quoteItem(content, shown, item.id), owned: shown.player.life.items.some((owned) => owned.itemId === item.id) }))
+          .filter((entry) => entry.quote.soldHere),
+      })),
+    [content, ladders, shown],
+  );
+  // In reach, a shelf with nothing on it is left out; with nothing at all, one line says so.
+  const visible = useMemo(
+    () => shelves.map(({ ladder, items }) => ({ ladder, items: view === 'all' ? items : items.filter((entry) => inReach(entry, p.cash)) })).filter(({ items }) => items.length > 0),
+    [shelves, view, p.cash],
+  );
+  const [revealed, setRevealed] = useState(SHELVES_FIRST);
+  useEffect(() => {
+    if (revealed >= ladders.length) return;
+    const frame = requestAnimationFrame(() => setRevealed((now) => now + SHELVES_STEP));
+    return () => cancelAnimationFrame(frame);
+  }, [revealed, ladders.length]);
+
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={{ gap: 6 }}>
+        <Segmented<ShopView> label={t('viewLabel')} options={(['affordable', 'all'] as const).map((value) => ({ value, label: t(value) }))} value={view} onChange={onViewChange} />
+        <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>{t(view === 'affordable' ? 'affordableHint' : 'allHint')}</ReadText>
+      </View>
+      {visible.length === 0 ? <ReadText size={13} tone="ink-300" style={{ paddingVertical: 12, textAlign: 'center' }}>{t('noneAffordable')}</ReadText> : null}
+      {visible.map(({ ladder, items }) => (ladders.indexOf(ladder) < revealed ? <Shelf key={ladder} title={text.ladders[ladder]} items={items} onOpen={onOpen} /> : null))}
+      {open ? <ItemSheet itemId={open} onClose={() => setOpen(null)} /> : null}
+    </View>
+  );
+}
+
+/**
+ * A shelf: the things of a kind, always two a row, so a car is drawn whole whatever the width (the web's `grid-cols-2 gap-2`: 4 on each side of
+ * each tile, the row made 8 wider than the panel, so the gap between two is 8 and the outer edges are the panel's). It measures its own width, as
+ * the web's `@container` does, and tells its tiles when there is room for the picture beside the words (once, when that changes).
+ */
+function Shelf({ title, items, onOpen }: { title: string; items: readonly ShelfItem[]; onOpen(itemId: string): void }) {
+  const [wide, setWide] = useState(false);
+  const laid = useCallback((event: LayoutChangeEvent) => setWide(event.nativeEvent.layout.width >= SHELF_ROW), []);
+  return (
+    <Panel title={title}>
+      <View onLayout={laid}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}>
+          {items.map(({ item, quote, owned }) => (
+            <ShelfTile key={item.id} itemId={item.id} owned={owned} ownedUsed={quote.ownedUsed} price={quote.price} status={realStatus(quote)} focus={item.perks?.focus ?? 0} wide={wide} onOpen={onOpen} />
+          ))}
+        </View>
+      </View>
+    </Panel>
+  );
+}
+
+/**
+ * A thing on the shelf: the tile of the game, its picture and its words. In a narrow shelf the picture sits above the words, centred; with room,
+ * beside them (the web's `@min-[400px]:flex-row`). What is already owned wears a gold edge, so the shelf shows at a glance what is left to want.
+ * Half its row, as tall as the other half. Drawn again only when what it shows changes.
+ */
+const ShelfTile = memo(function ShelfTile({ itemId, owned, ownedUsed, price, status, focus, wide, onOpen }: { itemId: string; owned: boolean; ownedUsed: boolean; price: number; status: number; focus: number; wide: boolean; onOpen(itemId: string): void }) {
+  const t = useT('finance.shop');
+  const { names, fmt } = useWords();
+  return (
+    <View style={{ width: '50%', paddingHorizontal: 4 }}>
+      <Raised
+        tone={owned ? GOLD : {}}
+        place={{ flexGrow: 1, minWidth: 0 }}
+        style={{ flexGrow: 1, flexDirection: wide ? 'row' : 'column', alignItems: 'center', gap: wide ? 8 : 4, padding: 6 }}
+        onPress={() => onOpen(itemId)}
+      >
+        {/* As tall as a watch, as wide as the thing needs: a car is twice as wide as it is tall. */}
+        <Bare style={THING_BOX}>
+          <Sprite id={itemArt(itemId)} fallback={THING} />
+        </Bare>
+        <View style={{ minWidth: 0, flex: 1, alignSelf: wide ? undefined : 'stretch', alignItems: wide ? 'flex-start' : 'center', gap: 2 }}>
+          <ReadText size={13} lineHeight={13 * TIGHT} numberOfLines={2} style={{ textAlign: wide ? 'left' : 'center' }}>{names.items[itemId]}</ReadText>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: wide ? 'flex-start' : 'center', columnGap: 8, rowGap: 2 }}>
+            <PixelText size={15} lineHeight={15} tone={owned ? 'teal-300' : 'gold-500'}>{owned ? t(ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(price)}</PixelText>
+            {/* What it does to the player's status all told, not its own status: a lesser thing beside a better one adds little or none. (Each tag in a
+                box of its own, centred in the line as the web's inline tag is.) */}
+            <View>
+              <Tag tone={status > 0 ? 'good' : undefined}>{t('status', { n: status })}</Tag>
+            </View>
+            {/* A long trip is a rest too: the focus it gives says so beside the status. */}
+            {focus ? (
+              <View>
+                <Tag tone="good">{t('focusTag', { n: focus })}</Tag>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Raised>
+    </View>
+  );
+});
+
+/** The shop's view, kept by the panel while the finances are open (the web's Finance keeps it), so a look at another tab leaves it as it was. */
+const ShopViewKept = createContext<{ view: ShopView; setView(view: ShopView): void }>({ view: 'affordable', setView: () => {} });
+function ShopTab() {
+  const { view, setView } = useContext(ShopViewKept);
+  return <Shop view={view} onViewChange={setView} />;
+}
+
+// ------------------------------------------------------------------------------------------------
+// Taxes: the round as it will resolve
+
+/**
+ * The tax residency a city offers, for whoever lives there: what it costs and what it saves, and the
+ * switch. Nothing is shown in a city that offers none.
+ */
+function Residency() {
+  const knows = useKnows();
+  const t = useT('finance.taxes');
+  const { content, names, fmt } = useWords();
+  const { view, p, world } = useRound();
+  const orders = useGame((s) => s.orders);
+  const setOrder = useGame((s) => s.setOrder);
+  const city = content.cities.find((x) => x.id === p.cityId);
+  const offer = city?.residency;
+  const held = view.player.life.residency;
+  // What it comes to this round, in the engine's figures: the round as planned with it and without it, the fee and the tax both (worked out once
+  // for the orders as they stand, and only where a residency is offered).
+  const yearly = useMemo(() => {
+    if (!offer) return 0;
+    const others = orders.filter((order) => order.type !== 'setResidency');
+    const cashWith = previewRound(content, view, { orders: held ? others : [...others, { type: 'setResidency', on: true }] }).cashAfter;
+    const cashWithout = previewRound(content, view, { orders: held ? [...others, { type: 'setResidency', on: false }] : others }).cashAfter;
+    return Math.round((cashWith - cashWithout) / content.yearsPerRound);
+  }, [content, view, orders, held, offer]);
+  if (!city || !offer || !knows('setResidency')) return null;
+  const title = t('residencyTitle', { city: names.cities[p.cityId] });
+  return (
+    <Panel title={title} label={title}>
+      <Toggle
+        on={p.life.residency}
+        onChange={(on) => setOrder((order) => order.type === 'setResidency', on === view.player.life.residency ? null : { type: 'setResidency', on })}
+        label={t('residency')}
+        hint={t('residencyHint', { fee: fmt.money(indexed(offer.feeAnnual, world)), rate: fmt.rate(offer.dividendBp), usual: fmt.rate(effectiveTax(city, world).dividendBp) })}
+      />
+      <ReadText size={13} lineHeight={13 * SNUG} tone={yearly > 0 ? 'teal-300' : 'ink-300'} style={{ marginTop: 8 }}>
+        {yearly > 0 ? t('residencySaves', { amount: fmt.money(yearly) }) : t('residencyCosts', { amount: fmt.money(-yearly) })}
+      </ReadText>
+      <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ marginTop: 4 }}>{t('residencyWhy')}</ReadText>
+    </Panel>
+  );
+}
+
+function Taxes() {
+  const t = useT('finance.taxes');
+  const { content, fmt } = useWords();
+  const { preview, p, shown } = useRound();
+  // These are the round's figures, the two years of it; the HUD's Flow is the same money a year.
+  const years = content.yearsPerRound;
+  const { tax, escape } = preview;
+  // The tax nobody votes for: what the rise in prices of the last two years took from cash left idle. Only told, never charged.
+  const before = shown.round > 0 ? shown.timeline[shown.round - 1] : null;
+  const now = shown.timeline[shown.round];
+  const eatenPct = before ? Math.max(0, 1 - before.priceLevel / now.priceLevel) : 0;
+  const eaten = Math.round(p.cash * eatenPct);
+
+  return (
+    <View style={{ gap: 12 }}>
+      <Panel title={t('tax', { years })}>
+        <Row left={t('incomeTax')} right={fmt.signed(-tax.income)} />
+        <Row left={t('investmentTax')} right={fmt.signed(-tax.investment)} />
+        <Row left={t('propertyTax')} right={fmt.signed(-tax.property)} />
+        {preview.purchaseTaxPaid > 0 ? <Row left={t('purchaseTax')} right={fmt.signed(-preview.purchaseTaxPaid)} /> : null}
+        {eaten > 0 ? (
+          // The web's `mt-1 border-t-2 border-night-900 pt-2 text-ink-300` on the line: its words in ink too.
+          <Row
+            style={{ marginTop: 4, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 }}
+            left={<ReadText numberOfLines={1} tone="ink-300" style={{ flexShrink: 1 }}>{t('inflationTax')}</ReadText>}
+            sub={t('inflationHint', { cash: fmt.money(p.cash), pct: (eatenPct * 100).toFixed(1), years })}
+            right={<Figure tone="ink-300">{fmt.signed(-eaten)}</Figure>}
+          />
+        ) : null}
+      </Panel>
+      <Residency />
+      <EvasionPanel shown={shown} preview={preview} />
+      <Panel>
+        <Row left={t('cashNow')} right={fmt.money(p.cash)} />
+        <Row left={<PixelText size={17} numberOfLines={1} style={{ flexShrink: 1 }}>{t('cashAfter')}</PixelText>} right={<Figure size={19} tone={preview.cashAfter < 0 ? 'wine-300' : 'gold-500'}>{fmt.money(preview.cashAfter)}</Figure>} />
+        {preview.cashAfter < 0 ? <ReadText size={13} tone="wine-300" style={{ marginTop: 4 }}>{t('shortfall')}</ReadText> : null}
+        <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('exact')}</ReadText>
+      </Panel>
+      <Panel title={t('escapeTitle')}>
+        <View style={{ marginBottom: 6, flexDirection: 'row', justifyContent: 'space-between' }}>
+          <PixelText size={14}>{fmt.money(escape.passiveAfterTax)}</PixelText>
+          <PixelText size={14} tone="ink-300">{fmt.money(escape.outgoings)}</PixelText>
+        </View>
+        <Bar value={escape.passiveAfterTax} max={escape.outgoings} label={t('escapeTitle')} />
+        <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('escapeHint')}</ReadText>
+      </Panel>
+    </View>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
 // The basket
 
 /** What was just taken out of the basket, and the way to put it back. */
@@ -1934,18 +2330,18 @@ export function Basket({ onClose }: { onClose(): void }) {
 // The shell
 
 /**
- * What each tab draws. A tab whose body a later task brings is null, and is not shown: a player never meets an empty tab. Task 15 the shop, taxes
- * and businesses (the shop's view, the web's `shopView`, is then kept by the panel). Showing one is its line here.
+ * What each tab draws: all eight of the web's, each a line here (a tab with no body would be null, and not shown: a player never meets an empty
+ * tab). The shop's view, the web's `shopView`, is kept by the panel (`ShopViewKept`).
  */
 const TAB_BODIES: Readonly<Record<TabId, ComponentType | null>> = {
   portfolio: Portfolio,
   market: Market,
   property: PropertyTab,
-  business: null,
+  business: BusinessTab,
   debt: DebtTab,
   lifestyle: Lifestyle,
-  shop: null,
-  taxes: null,
+  shop: ShopTab,
+  taxes: Taxes,
 };
 
 /**
@@ -2003,12 +2399,14 @@ export function FinanceTabs() {
 export function Finance() {
   const t = useT('finance');
   const { tab, setTab } = useFinanceTab();
-  // The next finance phase opens on the portfolio again, as the web's, whose Finance is made anew each round.
+  // The next finance phase opens on the portfolio again, as the web's, whose Finance is made anew each round; and its shop on what is in reach.
   useEffect(() => () => setTab('portfolio'), [setTab]);
+  const [shopView, setShopView] = useState<ShopView>('affordable');
+  const shop = useMemo(() => ({ view: shopView, setView: setShopView }), [shopView]);
   const Body = TAB_BODIES[tab];
   return (
     <View role="tabpanel" aria-label={t(`tabs.${tab}`)} style={{ paddingTop: 4 }}>
-      {Body ? <Body /> : null}
+      <ShopViewKept.Provider value={shop}>{Body ? <Body /> : null}</ShopViewKept.Provider>
     </View>
   );
 }

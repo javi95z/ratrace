@@ -65,6 +65,13 @@ export interface Aside {
    * reaches them (the web's `font-sans text-[13px]` span): larger than the size says. Left out, they are set as the text's own are.
    */
   read?: number;
+  /**
+   * In a reading text, set in the pixel face (the web's `pixel` span in a paragraph: a speaker's name before what they say), at the text's size,
+   * with the pixel face's letter spacing (0.03 em) unless `tracking` says another, and on a Russian page its narrower word spaces.
+   */
+  pixel?: boolean;
+  /** Their own letter spacing in points (the web's `tracking-*` on the span), where it is not the text's. */
+  tracking?: number;
 }
 
 interface TextProps {
@@ -80,7 +87,7 @@ interface TextProps {
   numberOfLines?: number;
 }
 
-/** What runs on in a reading text: its own face and size, in a colour. */
+/** What runs on in a reading text: its own face and size, in a colour (or in the pixel face, as a `pixel` span in it). */
 type ReadAside = Omit<Aside, 'read'>;
 
 /**
@@ -124,7 +131,10 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
     .filter((aside) => aside.text !== '')
     .map((aside) => {
       const slanted = aside.italic ?? italic;
-      return { ...aside, size: aside.read ?? size, runs: aside.read === undefined ? runsOf(aside.text, role, weight, language, slanted) : adjustedRuns(aside.text, 400, language, slanted) };
+      const runs = aside.pixel === true ? runsOf(aside.text, 'pixel', 400, language, slanted) : aside.read === undefined ? runsOf(aside.text, role, weight, language, slanted) : adjustedRuns(aside.text, 400, language, slanted);
+      // A span of its own spacing sets it on itself (its pieces after it take the text's again); a pixel span its face's, and a Russian page's word spaces.
+      const spacing = aside.tracking ?? (aside.pixel === true ? size * 0.03 : null);
+      return { ...aside, size: aside.read ?? size, runs, spacing, words: aside.pixel === true ? language === 'ru' : words };
     });
   const lineRuns = ran.length === 0 ? runs : [...runs, ...ran.flatMap((aside) => aside.runs.map((run) => ({ ...run, scale: (run.scale * aside.size) / size })))];
   const shift = baselineShift(lineRuns, role, weight, size, line, drawn, Platform.OS, language);
@@ -163,8 +173,8 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       ))}
       {/* A nested text takes the letter spacing and the word spacing of the one it is in, as the web's span does: the title's, in the size of the title. */}
       {ran.map((aside, a) => (
-        <Text key={`aside-${a}`} style={[{ fontSize: aside.size, includeFontPadding: false }, aside.tone ? { color: COLORS[aside.tone] } : null]}>
-          {aside.runs.flatMap((run) => pieces(run, aside.size, size, letterSpacing, words)).map((piece, i) => (
+        <Text key={`aside-${a}`} style={[{ fontSize: aside.size, includeFontPadding: false }, aside.tone ? { color: COLORS[aside.tone] } : null, aside.spacing === null ? null : { letterSpacing: aside.spacing }]}>
+          {aside.runs.flatMap((run) => pieces(run, aside.size, size, aside.spacing ?? letterSpacing, aside.words)).map((piece, i) => (
             <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
               {piece.text}
             </Text>

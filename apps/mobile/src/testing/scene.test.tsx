@@ -470,3 +470,38 @@ test('the scene of the work panel is the profile\'s panel on a page of its own, 
   expect(within(panel).getByRole('progressbar')).toBeTruthy();
   expect(screen.queryByRole('tablist')).toBeNull();
 });
+
+test('the scenes of the shop are drawn by Finance on its tab, given as its initial state: the shelves in reach, and a watch\'s sheet open over them', async () => {
+  render(<SceneView name="finance-shop" />);
+  const shop = await screen.findByRole('tabpanel', { name: 'Shop' }, WAIT);
+  expect(screen.getByRole('tab', { name: 'Shop' }).getAttribute('aria-selected')).toBe('true');
+  expect(within(shop).getByRole('radio', { name: 'In reach' }).getAttribute('aria-checked')).toBe('true');
+  expect(await within(shop).findByRole('button', { name: /Omega Speedmaster/ }, WAIT)).toBeTruthy();
+  expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+  cleanup();
+
+  render(<SceneView name="finance-item" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Omega Speedmaster' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getByRole('button', { name: /^Buy for / })).toBeTruthy();
+  expect(within(sheet).getByRole('button', { name: /^On instalments/ })).toBeTruthy();
+  expect(within(sheet).getByRole('region', { name: 'Second hand' })).toBeTruthy();
+  expect(within(sheet).getByRole('region', { name: 'Without an invoice' })).toBeTruthy();
+  expect(screen.getByRole('tabpanel', { name: 'Shop' })).toBeTruthy();
+});
+
+test('the scene of the taxes is the tab of the round as it will resolve, what is not declared among it', async () => {
+  render(<SceneView name="finance-taxes" />);
+  const taxes = await screen.findByRole('tabpanel', { name: 'Taxes' }, WAIT);
+  expect(within(taxes).getByLabelText('What you do not declare')).toBeTruthy();
+  expect(within(taxes).getByRole('progressbar', { name: 'Escape test' })).toBeTruthy();
+});
+
+test('the scene of the businesses is the founder\'s first round at the tab: her shop on its line, its two switches, and what she could open', async () => {
+  render(<SceneView name="finance-business" />);
+  const tab = await screen.findByRole('tabpanel', { name: 'Business' }, WAIT);
+  const mine = within(tab).getByLabelText('Your businesses');
+  expect(within(mine).getByRole('button', { name: /Online shop/ })).toBeTruthy();
+  expect(within(mine).getByRole('button', { name: /Run it yourself/ })).toBeTruthy();
+  expect(within(within(tab).getByLabelText('Open a business')).getAllByRole('listitem').length).toBeGreaterThan(0);
+  expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+});

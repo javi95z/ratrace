@@ -125,6 +125,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'finance-move',
   'play-cards-city',
   'work-panel',
+  // Task 15: the shop, a thing's sheet, the taxes and the businesses.
+  'finance-shop',
+  'finance-item',
+  'finance-taxes',
+  'finance-business',
 ]);
 
 /**
