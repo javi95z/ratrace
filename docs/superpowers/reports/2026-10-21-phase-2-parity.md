@@ -282,7 +282,7 @@ scenes out). The `hud-*` scenes still compare the HUD alone.
 | play-news-r6 | the sixth round's news (London, a clipping of the markets on the paper's own cream) | accepted | 4.21 | 1.133 | 13517 | 1518 | 41 (4 unmeasured) | 1.00 (▸) |
 | play-guide-r1 | the first round for someone new: the guide's note over the paper | accepted | 6.16 | 3.778 | 20603 | 3504 | 42 (5 unmeasured) | 1.33 |
 | play-fault | a game that cannot go on: the way out | clean | 3.09 | 0.405 | 6203 | 0 | 6 | 1.00 |
-| play-pageturn | the second round's news (the people the player grew up with in the paper, one of the famous whole in a clipping), the calendar turning from 22 to 24 held 445 ms into its run | accepted | 3.93 | 1.341 | 16650 | 3918 | 47 (10 unmeasured) | 4.33 (a line under the calendar) |
+| play-pageturn | the second round's news (the people the player grew up with in the paper, one of the famous whole in a clipping), the calendar turning from 22 to 24 held 445 ms into its run | accepted | 3.93 | 1.341 | 16650 | 4309 | 51 (8 unmeasured) | 1.00 (▸) |
 
 **How the scenes are made.**
 - **The guide.** A page under development shows the guide's tips to everyone, even with the guide off (the web's `developing`, kept on the phone), so the scenes of
@@ -291,7 +291,8 @@ scenes out). The `hud-*` scenes still compare the HUD alone.
 - **A fault.** The fault is a state of the round store, not of a save, and the web's `Fault` is not exported: a scene names a game that cannot go on (`play-fault`), and
   both clients give its game a basket of orders that cannot be read back (`sceneBasket`, through `sceneServices(store, name)` on the web and `servicesOf` on the
   phone): the round cannot be judged, and the game opens on its fault, as it does when a page's engine will not preview a round. The game says so in the log; the
-  app's scene route lets that one line pass unseen (`LogBox.ignoreLogs`), or development's banner would be in the shot.
+  app's scene route keeps that one line from the log while that scene is drawn, and only then (`useQuietFault` in `testing/scene.tsx`), or development's banner would
+  be in the shot.
 - **The calendar.** It turns only while Play is on screen as a round goes by, and a scene's screen is first drawn after its steps; so both registries draw the calendar
   beside Play for the scene that names it (`turnOf`), held at the same moment of its run (`PAGE_TURN_HELD_MS`, 445 ms: the middle of a step of the torn page's, well
   inside one of the new page's): the phone's `PageTurn` takes `held` (it draws each page as the motion table's frame at that time, as the kit's motion page does),
@@ -323,19 +324,28 @@ the markets' clipping has no block colour (`bg-teal-500` is no colour of the gam
    two device pixels lower, and the second line of a two-line headline under it 1.33 pt (the web puts each line's baseline on a whole CSS pixel, 18 apart there, the
    phone 18.67). About 2000 of its 3504 shape pixels are the clippings' pictures moved by those two device pixels.
 3. **The turned page (`play-pageturn`).** The torn page is turned 3.6° about its top left corner: its edges, the rings and the red band are antialiased on one side and
-   hard on the other (the exception this phase asks for, below), about 2500 shape pixels. The line of the paper under the calendar ("Survey: everyone is middle class…",
-   4.33 pt) is measured through the calendar drawn over it: the calendar takes no touch (`pointer-events: none`), so the web's text check does not find the line
-   covered (`elementFromPoint` passes through it) and measures its ink with the calendar's.
+   hard on the other (the exception this phase asks for, below). First shot at 3918 shape pixels and 4.33 pt: the lines of the paper the calendar covers in part
+   ("Survey: everyone is middle class…") were measured through it, the calendar taking no touch (`pointer-events: none`, so the web's `elementFromPoint` passes
+   through it), with the calendar's ink in their window. Fix round 1 of the review: in this scene's shot the calendar takes the pointer (`CALENDAR_COVERS`, a
+   `WEB_ONLY` rule), and the text check measures a line the decoration covers in part only where it shows, either side, two points short of it (`TEXT_BOXES`,
+   sampled at the line's top, middle and foot, as the page is turned; a line of the decoration itself is judged at its middle). The worst line is now the HUD's ▸,
+   1 pt; the shape is 4309: the torn page's antialiased edge all along, where before about 400 pixels of it next to the paper's lines were hidden in those lines'
+   text mask (the masthead's 1440 as in the other paper scenes).
 
-Records: `ACCEPTED` in `scripts/sceneShots.ts` (`play-news-r1` 1446 / 1 pt, `play-news-r6` 1518 / 1 pt, `play-guide-r1` 3504 / 4 device pixels, `play-pageturn` 3918 /
-13 device pixels). `play-fault` is clean.
+Records: `ACCEPTED` in `scripts/sceneShots.ts` (`play-news-r1` 1446 / 1 pt, `play-news-r6` 1518 / 1 pt, `play-guide-r1` 3504 / 4 device pixels, `play-pageturn` 4309 /
+1 pt). `play-fault` is clean.
 
 **The sprites' wait.** Two full runs of every scene, on a machine shared with other work (load average 40 to 170), each failed one to three scenes of other
 tasks (`home-lost-newer`, `new-unlocked`, `new-locked`, `challenge-practice`) for a sprite not drawn yet when the app was shot (a gear, a lock, a city's icon,
 the practice's icon); each was as recorded when shot again alone. A screen is now given 9 s, not 6, before its shot (`SPRITES_MS` in `shotDrivers.ts`). A third run,
 at a load average of 150 to 250, still left out a lock (`new-unlocked`, 5247 shape pixels) and the HUD's coin (`hud-crisis-details`, 5103): the app's shot now
-waits for the screen to be still as well (`stillShot`: shot again every 1.5 s until two shots in a row are the same, at most four more), so a sprite that
-comes late is in it. Nothing is judged more loosely: the shot kept is the screen standing still. The full run after it exits 0, with every scene as recorded
+waits for the screen to be still as well (`stillShot`: shot again every 1.5 s until shots in a row are the same, at most a few more; since fix round 1, three alike), so a sprite that
+comes late is in it. Still was not enough (fix round 1 of the review, three full runs at a load average of 15 to 35: a portrait, a lock, a coin's icon and a
+list's disc missing in one scene or another, two shots 1.5 s apart alike while the pictures were still being read): the app's scene route now says when its
+scene is ready to be shot, its screen drawn and no picture of it still being read (`useSpritesLoading`), to a server of the driver's on this machine
+(`readyServer`, `GET /ready?name=`, the route opened with `&ready=<port>`), and the shot waits for that word before it waits for stillness; a scene that
+never says so in 60 s fails the run. Nothing is judged more loosely: the shot kept is the screen standing still, and a compared scene whose screen never stood still fails
+the run (its line in `phase-2-parity.json` says `"moving":true`, the run names it at the end; the app's step keeps the list in `.kit-shots/scenes-moving.json`). The full run after it exits 0, with every scene as recorded
 (`new-unlocked` 738, `hud-crisis-details` clean, the play scenes' numbers the same to the pixel as in the run before).
 
 ### What is not compared, and why

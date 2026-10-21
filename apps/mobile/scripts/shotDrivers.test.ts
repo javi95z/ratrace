@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, openPage, readyServer, refuseServerInUse, routeTold, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -116,23 +116,81 @@ test('a screen is given nine seconds for its sprites to load before it is shot, 
 test('the app is shot once its screen is still: a sprite that came late is in the shot, and a screen that keeps moving is shot at the last try', async () => {
   const waited: number[] = [];
   const wait = async (ms: number) => void waited.push(ms);
-  // A lock not drawn yet in the first shot, drawn in the second: the third, the same as the second, is the one kept.
-  const late = [Buffer.from('no lock'), Buffer.from('lock'), Buffer.from('lock')];
+  // A lock not drawn yet in the first shot, drawn in the second: kept once it has stayed for three shots alike.
+  expect(STILL_ALIKE).toBe(3);
+  const late = [Buffer.from('no lock'), Buffer.from('lock'), Buffer.from('lock'), Buffer.from('lock')];
   let taken = 0;
-  expect(await stillShot(() => late[taken++], wait)).toEqual({ png: Buffer.from('lock'), still: true });
-  expect(taken).toBe(3);
-  expect(waited).toEqual([STILL_MS, STILL_MS]);
-  // Still from the first: two shots, no more.
+  expect(await stillShot(() => late[taken++], { wait })).toEqual({ png: Buffer.from('lock'), still: true });
+  expect(taken).toBe(4);
+  expect(waited).toEqual([STILL_MS, STILL_MS, STILL_MS]);
+  // Two alike, then a change (a picture painted late), then alike again: the count starts over.
+  const painted = ['a', 'a', 'b', 'b', 'b'].map((shot) => Buffer.from(shot));
   taken = 0;
-  expect(await stillShot(() => (taken++, Buffer.from('home')), wait)).toEqual({ png: Buffer.from('home'), still: true });
-  expect(taken).toBe(2);
+  expect(await stillShot(() => painted[taken++], { wait })).toEqual({ png: Buffer.from('b'), still: true });
+  expect(taken).toBe(5);
+  // Still from the first: three shots, no more.
+  taken = 0;
+  expect(await stillShot(() => (taken++, Buffer.from('home')), { wait })).toEqual({ png: Buffer.from('home'), still: true });
+  expect(taken).toBe(3);
   // Never still (a loop): the first and STILL_SHOTS more, and the last is kept.
   taken = 0;
-  expect(await stillShot(() => Buffer.from(`frame ${taken++}`), wait)).toEqual({ png: Buffer.from(`frame ${STILL_SHOTS}`), still: false });
+  expect(await stillShot(() => Buffer.from(`frame ${taken++}`), { wait })).toEqual({ png: Buffer.from(`frame ${STILL_SHOTS}`), still: false });
   expect(taken).toBe(STILL_SHOTS + 1);
   // The app's shots are taken so, after the sprites' wait.
   const source = read('./shotDrivers.ts');
   expect(source.indexOf('await sleep(SPRITES_MS);')).toBeLessThan(source.indexOf('await stillShot('));
+  // A screen that never stood still is not only told as it is shot: shootApp gives its route back, for the run's result, and names it again at the end.
+  expect(source).toContain('if (!still) moving.push(route);');
+  expect(source).toContain('return moving;');
+  expect(source).toContain('never still:');
+});
+
+test('the app\'s scene says when it is ready to be shot, and when it is not again, to a server of the driver\'s on this machine: the shot waits for that scene\'s word', async () => {
+  const told = await readyServer(0);
+  try {
+    const say = (name: string, ready: boolean, n: number) => fetch(`http://127.0.0.1:${told.port}/ready?name=${encodeURIComponent(name)}&ready=${ready ? 1 : 0}&n=${n}`);
+    // Word of another scene is not this one's.
+    await say('home-new', true, 1);
+    expect(await told.wait('hud-jailed', 300)).toBe(false);
+    expect(told.ready('hud-jailed')).toBe(false);
+    setTimeout(() => void say('hud-jailed', true, 2), 50);
+    expect(await told.wait('hud-jailed', 5_000)).toBe(true);
+    expect(told.ready('hud-jailed')).toBe(true);
+    // A picture asked for later (a part drawn once the page is laid out): not ready again, until it is in.
+    await say('hud-jailed', false, 3);
+    expect(told.ready('hud-jailed')).toBe(false);
+    // Word that arrives late, after newer word, is not taken.
+    await say('hud-jailed', true, 2);
+    expect(told.ready('hud-jailed')).toBe(false);
+    await say('hud-jailed', true, 4);
+    expect(told.ready('hud-jailed')).toBe(true);
+    // Anything else asked of it is refused.
+    expect((await fetch(`http://127.0.0.1:${told.port}/other`)).status).toBe(404);
+  } finally {
+    await told.close();
+  }
+  // The route a scene is opened on tells it where to say so; a route opened for nothing else (the kit's) is opened as it is.
+  expect(routeTold('scene?name=hud-jailed', 8093)).toBe('scene?name=hud-jailed&ready=8093');
+  const source = read('./shotDrivers.ts');
+  expect(source).toContain('!(await told.wait(name, READY_MS))');
+  expect(source.indexOf('!(await told.wait(name, READY_MS))')).toBeLessThan(source.indexOf('await stillShot('));
+  // Each shot of the still ones is taken with the scene ready; the scenes' shots name their scene, the kit's do not.
+  expect(source).toContain('ready: () => told === null || name === undefined || told.ready(name)');
+  expect(read('./scene-shots.ts')).toContain('name: scene.name');
+});
+
+test('shots alike are still only while the scene says it is ready: a screen that waits on a picture being read is not still, however long it stays the same', async () => {
+  const wait = async () => {};
+  const states = [false, false, true, true, true];
+  let taken = 0;
+  let readyNow = false;
+  const shoot = () => {
+    readyNow = states[taken];
+    taken++;
+    return Buffer.from('same');
+  };
+  expect(await stillShot(shoot, { wait, ready: () => readyNow })).toEqual({ png: Buffer.from('same'), still: true });
+  expect(taken).toBe(5);
 });
 
 // A page of jsdom's, with the two calls only a browser that lays out can answer stood in for.
@@ -151,6 +209,50 @@ test('the lines of text a shot measures are those drawn: words only a screen rea
     const boxes = TEXT_BOXES();
     expect(boxes.map((box) => box.text)).toEqual(['Haruto']);
     expect(boxes[0]).toMatchObject({ x: 10, y: 20, w: 30, h: 12, color: [1, 2, 3] });
+  } finally {
+    Object.assign(globalThis, saved);
+  }
+});
+
+test('a line partly under decoration that takes the pointer in a shot (the calendar of a turning round) is measured where it shows, either side; under a backdrop it is covered whole', async () => {
+  const library: string = 'jsdom';
+  const { JSDOM } = (await import(library)) as { JSDOM: new (html: string) => { window: Window & typeof globalThis } };
+  const dom = new JSDOM('<body><p style="color:rgb(26, 28, 44)">Survey: everyone is middle class</p><div data-motion-only><div id="calendar"></div></div><div id="backdrop"></div></body>');
+  const { window } = dom;
+  const doc = window.document;
+  const line = doc.querySelector('p')!;
+  window.Range.prototype.getClientRects = () => [{ left: 0, top: 20, width: 100, height: 10 }] as unknown as DOMRectList;
+  const globals = { document: doc, NodeFilter: window.NodeFilter, getComputedStyle: window.getComputedStyle.bind(window) };
+  const saved = Object.fromEntries(Object.keys(globals).map((key) => [key, (globalThis as Record<string, unknown>)[key]]));
+  Object.assign(globalThis, globals);
+  try {
+    // The calendar over the middle of the line, from 40 to 60: each part that shows, stopping two points short of it.
+    doc.elementFromPoint = (x: number) => (x >= 40 && x < 60 ? doc.getElementById('calendar') : line);
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([
+      { x: 0, w: 38, covered: false },
+      { x: 62, w: 38, covered: false },
+    ]);
+    // Over its end only: what shows is measured, from its start.
+    doc.elementFromPoint = (x: number) => (x >= 90 ? doc.getElementById('calendar') : line);
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([{ x: 0, w: 88, covered: false }]);
+    // Turned: at the line's top it reaches further (from 35) than at its middle (40); the part stops short of where it reaches first.
+    doc.elementFromPoint = (x: number, y: number) => (x >= (y < 22 ? 35 : 40) ? doc.getElementById('calendar') : line);
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([{ x: 0, w: 33, covered: false }]);
+    // All of it under the calendar: covered, and not measured.
+    doc.elementFromPoint = () => doc.getElementById('calendar');
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([{ x: 0, w: 100, covered: true }]);
+    // A sheet's backdrop over the whole of it: covered, and not measured, as before.
+    doc.elementFromPoint = () => doc.getElementById('backdrop');
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([{ x: 0, w: 100, covered: true }]);
+    // Nothing over it: the line whole.
+    doc.elementFromPoint = () => line;
+    expect(TEXT_BOXES().map(({ x, w, covered }) => ({ x, w, covered }))).toEqual([{ x: 0, w: 100, covered: false }]);
+    // The calendar's own lines are judged at their middle, whatever of the calendar is round them (its other page, behind the torn one).
+    doc.getElementById('calendar')!.innerHTML = '<span style="color:rgb(26, 28, 44)">22</span>';
+    line.remove();
+    const age = doc.querySelector('span')!;
+    doc.elementFromPoint = (x: number) => (x < 20 ? doc.getElementById('calendar') : age);
+    expect(TEXT_BOXES().map(({ text, x, w, covered }) => ({ text, x, w, covered }))).toEqual([{ text: '22', x: 0, w: 100, covered: false }]);
   } finally {
     Object.assign(globalThis, saved);
   }

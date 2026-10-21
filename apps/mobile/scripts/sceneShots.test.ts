@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, chooseScenes, differing, filesOf, HUD_ONLY, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, CALENDAR_COVERS, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 test('the web page of a scene is in the scene\'s language, and the app\'s route names the scene', () => {
   expect(sceneWebUrl({ name: 'home-new', locale: 'en' }, 3021)).toBe('http://localhost:3021/en/kit/scene?name=home-new');
@@ -159,6 +160,37 @@ test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the 
   expect(phone.indexOf('<Hud compact=')).toBeLessThan(phone.indexOf('<main id="round-stage"'));
   // No scene but the Hud's is given the rule.
   expect(SCENES.filter((scene) => webRules(scene).includes(HUD_ONLY)).every((scene) => scene.name.startsWith('hud-'))).toBe(true);
+});
+
+test('the calendar of a turning round covers, in the web\'s text check, what it covers on the screen: in that scene\'s shot its pages take the pointer', () => {
+  const turning = SCENES.find((scene) => scene.name === 'play-pageturn')!;
+  expect(webRules(turning)).toBe(`${VISIBLE_HEIGHT} ${CALENDAR_COVERS}`);
+  expect(CALENDAR_COVERS).toBe('[data-motion-only] > * { pointer-events: auto !important; }');
+  // The check asks what is on top along a line (`elementFromPoint`), which passes through anything that takes no pointer, as the calendar takes none
+  // (a tap goes through it). The rule gives the pointer to the calendar itself, the child of the layer over the whole screen, and not to that layer:
+  // the lines round the calendar are not covered by it, and a line partly under it is measured where it shows (shotDrivers.test).
+  const drivers = read('./shotDrivers.ts');
+  expect(drivers).toContain('const at = document.elementFromPoint(x, y);');
+  expect(drivers).toContain("at.closest('[data-motion-only]') !== null");
+  const turn = read('../../web/src/game/screens/PageTurn.tsx');
+  expect(turn).toContain('<div aria-hidden data-motion-only className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">');
+  expect(turn).toContain('<div className="relative h-44 w-36 animate-page">');
+  expect(SCENES.filter((scene) => webRules(scene).includes(CALENDAR_COVERS)).map((scene) => scene.name)).toEqual(['play-pageturn']);
+});
+
+test('a scene whose app shot never stood still fails the run, and its line says so', () => {
+  const still = lineOf(first, result(first.name, { shape: 0, texts: [] }));
+  expect(still).not.toHaveProperty('moving');
+  const moving = lineOf(first, result(first.name, { shape: 0, texts: [] }), true);
+  expect(moving).toMatchObject({ scene: first.name, verdict: 'clean', moving: true });
+  expect(differing([still, moving]).map((line) => line.scene)).toEqual([first.name]);
+  expect(differing([still])).toEqual([]);
+  // Kept beside the raw shots from the app's step to the comparison; a run of some scenes keeps what it knew of the others.
+  expect(MOVING_FILE).toBe('scenes-moving.json');
+  expect(movingAfter(['a', 'b'], ['b', 'c', 'd'], ['c'])).toEqual(['a', 'c']);
+  const run = read('./scene-shots.ts');
+  expect(run).toContain('const moving = await shootApp(');
+  expect(run).toContain('lines.push(lineOf(scene, result, movingNow.includes(scene.name)));');
 });
 
 describe('a scene whose words are the phone\'s own', () => {

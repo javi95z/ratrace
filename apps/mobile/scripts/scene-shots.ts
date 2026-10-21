@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { SCENE_NOW } from '@ratrace/core/testing/scenes';
 import { compareShots, wrongPage } from './kitCompare';
 import type { TextBox } from './kitCompare';
-import { chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, webRules } from './sceneShots';
+import { chooseScenes, differing, filesOf, isJudged, jsonOf, lineOf, mergeLines, MOVING_FILE, movingAfter, sceneAppRoute, sceneWebUrl, SCENES_FILE, SCENES_FOLDER, unjudgedLine, webRules } from './sceneShots';
 import type { Line } from './sceneShots';
 import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage } from './shotDrivers';
 
@@ -29,7 +29,7 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * the run stops and exits 1, as the kit's does. A scene that differs and whose residual is explained in the parity report is `accepted` (`ACCEPTED` in
  * sceneShots.ts: the most shape pixels, text stood apart and lines in one shot only), and fails on any growth; the page of other words (`PAGE_BASELINE`)
  * on its drift from where it stood. When every scene is clean, accepted, in the phone's words within its bound or unjudged the run exits 0; a scene that
- * differs beyond that is listed and exits 1.
+ * differs beyond that is listed and exits 1, as does a compared scene whose app shot never stood still (`stillShot`; its line says `moving`).
  */
 const out = join(root, 'docs/superpowers/reports', SCENES_FOLDER);
 
@@ -59,11 +59,21 @@ async function main() {
     });
   }
 
+  // Which scenes' app shots never stood still, as the last app step left them: the comparison fails those.
+  const movingFile = join(raw, MOVING_FILE);
+  const movingKept = () => (existsSync(movingFile) ? (JSON.parse(readFileSync(movingFile, 'utf8')) as string[]) : []);
+
   // Expo Go is closed and opened once first: left running, it would show the bundle of the Metro it saw last.
-  if (all || steps.includes('app')) await shootApp(scenes.map((scene) => ({ route: sceneAppRoute(scene), png: join(out, filesOf(scene.name).app) })), { fresh: true });
+  if (all || steps.includes('app')) {
+    // Each scene says when it is ready to be shot (drawn, every picture of it read): the shot waits for that word.
+    const moving = await shootApp(scenes.map((scene) => ({ route: sceneAppRoute(scene), png: join(out, filesOf(scene.name).app), name: scene.name })), { fresh: true });
+    const names = scenes.filter((scene) => moving.includes(sceneAppRoute(scene))).map((scene) => scene.name);
+    writeFileSync(movingFile, JSON.stringify(movingAfter(movingKept(), scenes.map((scene) => scene.name), names)));
+  }
 
   if (all || steps.includes('compare')) {
     const sharp: unknown = fromWeb('sharp');
+    const movingNow = movingKept();
     const lines: Line[] = [];
     for (const scene of scenes) {
       const files = filesOf(scene.name);
@@ -79,7 +89,7 @@ async function main() {
       // Half the screen unlike is not a difference to list: the app showed something else.
       const wrong = wrongPage(result, 'scene', b);
       if (wrong !== null) throw new Error(wrong);
-      lines.push(lineOf(scene, result));
+      lines.push(lineOf(scene, result, movingNow.includes(scene.name)));
     }
     // A run of some scenes keeps the lines of the others.
     const file = join(out, SCENES_FILE);
@@ -87,8 +97,10 @@ async function main() {
     writeFileSync(file, jsonOf(mergeLines(kept, lines)));
     for (const line of lines) {
       if (line.verdict === 'unjudged') console.log(`${line.scene.padEnd(18)} unjudged: ${line.why}`);
-      else console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(28)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt`);
+      else console.log(`${line.scene.padEnd(18)} ${line.verdict.padEnd(28)} raw ${line.rawPercent} %  beyond ${line.beyondPercent} %  a point away ${line.loose} px, not text ${line.shape} px  text lines ${line.textLines} (unmeasured ${line.unmeasured}, in one shot only ${line.oneSided}), worst ${line.worstPt} pt${line.moving ? '  NEVER STILL in the app' : ''}`);
     }
+    const restless = lines.filter((line) => line.verdict !== 'unjudged' && line.moving === true);
+    if (restless.length > 0) console.error(`never still in the app (one moment of something moving was compared): ${restless.map((line) => line.scene).join(', ')}`);
     const differ = differing(lines);
     if (differ.length > 0) {
       console.error(`differs: ${differ.map((line) => line.scene).join(', ')}`);

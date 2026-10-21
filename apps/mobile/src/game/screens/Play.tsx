@@ -1,10 +1,9 @@
 import { ageAt } from '@ratrace/core/game/present';
 import { roundWarnings } from '@ratrace/core/game/roundWarnings';
 import type { Stage } from '@ratrace/core/game/store';
-import { previewCard } from '@ratrace/engine';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, BackHandler, Platform, View } from 'react-native';
+import { AccessibilityInfo, BackHandler, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useBlink } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
@@ -22,12 +21,13 @@ import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
+import { BasketStandIn, CardsStandIn, EndStandIn, StageStandIn } from './PlayStandIns';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
  * shortcut and skip links), and what is only online (a room's bar, its wait and its order; a ranked life's notices, which a life on the
- * phone never has). Stages that later tasks bring are drawn in the meantime as a stand-in (`StandIn`), with the stage machine, the bar of
- * the next thing to do and the guide round them as they will stay.
+ * phone never has). Stages that later tasks bring are drawn in the meantime as stand-ins (`PlayStandIns.tsx`, one file for all of them), with the
+ * stage machine, the bar of the next thing to do and the guide round them as they will stay.
  */
 
 /**
@@ -196,58 +196,6 @@ function StageBody({ stage }: { stage: Stage }) {
 }
 
 /**
- * TEMPORARY, for development: what stands where a stage of the round will be until its task ports it, plainly not the game (a dashed box,
- * the stage's name after a sign of works). The round goes on through the bar of the next thing to do, as it will.
- */
-function StandIn({ name, children }: { name?: string; children?: ReactNode }) {
-  return (
-    <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: COLORS['ink-500'], padding: 12, gap: 12 }}>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        <ReadText size={13} tone="ink-300">{'🚧'}</ReadText>
-        {name ? <ReadText size={13} tone="ink-300" style={{ flexShrink: 1 }}>{name}</ReadText> : null}
-      </View>
-      {children}
-    </View>
-  );
-}
-
-/** A stage a later task brings, as its stand-in: its name, as the stage is called for someone who cannot see it. */
-function StageStandIn({ stage }: { stage: 'outcome' | 'finance' | 'resolve' }) {
-  const play = useT('play');
-  return <StandIn name={play(`stages.${stage}`)} />;
-}
-
-/**
- * TEMPORARY, for development (Task 11 brings the cards): the card on screen as a line, and its choices as buttons, so that a life can be
- * played on in the meantime. What it reads is what the web's cards read: the hand, the card's words, the choices that can be taken.
- */
-function CardsStandIn() {
-  const t = useT('cards');
-  const { content, text } = useWords();
-  const view = useGame((s) => s.view);
-  const busy = useGame((s) => s.busy);
-  const pick = useGame((s) => s.pick);
-  const waiting = view !== null && view.phase === 'cards';
-  const def = waiting ? content.cards.find((card) => card.id === view.hand[view.answered]) : undefined;
-  const previews = useMemo(() => (view && def ? previewCard(content, view, def.id) : []), [content, view, def]);
-  if (!view || !def) return null;
-  const written = text.cards[def.id];
-  const shown = previews.flatMap((preview, index) => (preview.available ? [index] : []));
-  return (
-    <StandIn name={`${t('progress', { n: view.answered + 1, total: view.hand.length })} · ${def.category === 'world' ? t('world') : text.categories[def.category]}`}>
-      <PixelText size={19}>{written.title}</PixelText>
-      <View role="group" aria-label={t('choices', { title: written.title })} style={{ gap: 10 }}>
-        {shown.map((i) => (
-          <Button key={`${def.id}-${i}`} variant="secondary" wide disabled={busy} onPress={() => void pick(i)}>
-            {written.options[i].label}
-          </Button>
-        ))}
-      </View>
-    </StandIn>
-  );
-}
-
-/**
  * The two ways on from a screen the round cannot go on from: a new life, which takes the place of this screen, and home, the front door, wherever it
  * stands in the stack (the web's two links of its `Fault`).
  */
@@ -305,35 +253,10 @@ function Waiting({ children }: { children: string }) {
   );
 }
 
-/** TEMPORARY, for development (Task 18 brings the end of a life): what stands for it, and the two ways on from a life that is over. */
-function EndStandIn() {
-  return (
-    <Middle>
-      <StandIn />
-      <WaysOut />
-    </Middle>
-  );
-}
-
 /** Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page: only the figures stay stuck. */
 function CrisisStrip() {
   const crisis = useGame((s) => (s.view ? (s.view.timeline[s.view.round]?.crisis ?? null) : null));
   return <CrisisBar crisis={crisis} compact />;
-}
-
-/**
- * TEMPORARY, for development (Task 12 brings the basket): what the finances' button of orders opens until then, so it is never a button
- * that does nothing.
- */
-function BasketStandIn({ open, onClose }: { open: boolean; onClose(): void }) {
-  const finance = useT('finance');
-  const common = useT('common');
-  const orders = useGame((s) => s.orders.length);
-  return (
-    <Sheet open={open} onClose={onClose} title={finance('basketTitle')} closeLabel={common('close')}>
-      <StandIn name={finance('basket', { count: orders })} />
-    </Sheet>
-  );
 }
 
 /**
@@ -399,13 +322,14 @@ export function Play() {
 
   // What the stage is called, for someone who cannot see it change.
   const stageName = stage === 'news' ? news('title') : stage === 'cards' ? cards('progress', { n: Math.min(answered + 1, hand), total: hand }) : play(`stages.${stage}`);
-  // A new stage starts at its top, and a screen reader says where the player now is (the web gives the stage the focus).
+  // A new stage starts at its top, and a screen reader says where the player now is, VoiceOver and TalkBack alike (the web gives the stage the focus,
+  // which every screen reader reads).
   const playing = status === 'playing' && round !== null;
   const shownStage = useRef<string | null>(null);
   useEffect(() => {
     if (!playing) return;
     scroller.current?.reveal(0, 0, false);
-    if (shownStage.current !== null && shownStage.current !== stage && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility?.(stageName);
+    if (shownStage.current !== null && shownStage.current !== stage) AccessibilityInfo.announceForAccessibility(stageName);
     shownStage.current = stage;
     // Said once a stage, in the words it has when it opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -418,7 +342,15 @@ export function Play() {
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
-  if (stage === 'end') return <EndStandIn />;
+  if (stage === 'end') {
+    // Task 18: End.
+    return (
+      <Middle>
+        <EndStandIn />
+        <WaysOut />
+      </Middle>
+    );
+  }
 
   // The life was played on somewhere else (on a phone, only another device could): the store has already opened it as it now stands, and the player is told why the screen changed.
   const notice = <Toast message={moved ? phone('moved') : null} onDone={clearMoved} ms={6_000} />;

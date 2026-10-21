@@ -1,5 +1,6 @@
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -125,10 +126,41 @@ export const TEXT_BOXES = () => {
     range.selectNodeContents(node);
     for (const r of range.getClientRects()) {
       if (r.width <= 0 || r.height <= 0) continue;
+      const middle = r.top + r.height / 2;
       // Under a sheet's backdrop the topmost thing at the line's middle is not the line's own.
-      const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      const top = document.elementFromPoint(r.left + r.width / 2, middle);
       const covered = top !== null && !el.contains(top) && !top.contains(el);
-      boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height, text: text.slice(0, 40), color, opacity, back, covered });
+      // Decoration over the page that a shot lets take the pointer (the calendar of a turning round: `CALENDAR_COVERS` in sceneShots.ts) may cover
+      // part of a line: walked a point at a time along it (at its top, its middle and its foot, as the decoration may be turned), each part that shows
+      // either side of it is measured as a line of its own, and the part under it is not (it would be measured with the decoration's ink). A part
+      // stops two points short of the decoration: the window a line's ink is looked for in reaches a point past its box, and the decoration's edge
+      // is drawn soft by one client and hard by the other. All of it under the decoration, the line is covered. The decoration's own lines, and
+      // anything else over a line, are judged at the line's middle, as above.
+      const own = el.closest('[data-motion-only]') !== null;
+      const end = r.left + r.width;
+      const clear = 2;
+      let from: number | null = r.left;
+      let parted = false;
+      let shown = false;
+      for (let x = r.left + 0.5; x < end && !own; x += 1) {
+        let under = false;
+        for (const y of [r.top + 0.5, middle, r.top + r.height - 0.5]) {
+          const at = document.elementFromPoint(x, y);
+          if (at !== null && at.closest('[data-motion-only]') !== null && !el.contains(at) && !at.contains(el)) under = true;
+        }
+        if (under && from !== null) {
+          const to = x - 0.5 - clear;
+          if (to > from) {
+            boxes.push({ x: from, y: r.top, w: to - from, h: r.height, text: text.slice(0, 40), color, opacity, back, covered: false });
+            shown = true;
+          }
+          from = null;
+          parted = true;
+        } else if (!under && from === null) from = x - 0.5 + clear;
+      }
+      if (!parted) boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height, text: text.slice(0, 40), color, opacity, back, covered });
+      else if (from !== null && end > from) boxes.push({ x: from, y: r.top, w: end - from, h: r.height, text: text.slice(0, 40), color, opacity, back, covered: false });
+      else if (!shown) boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height, text: text.slice(0, 40), color, opacity, back, covered: true });
     }
   }
   return boxes;
@@ -211,58 +243,141 @@ export async function openPage(page: Page, url: string, ready?: () => boolean, c
  * How long a screen is given, once opened, for its sprites to load (Skia reads each as it is asked) before it is shot: 4 s was not always enough (once in a full run of the
  * scenes the front door's gear, a 5000-pixel sprite, was not there yet, and the scene failed for it); 6 s was, until the machine was shared with other work (in two full
  * runs at a load average of 40 to 170, a gear, a lock, a city's icon and the practice's icon were missing, each there when its scene was shot again alone). 9 s, and then
- * the shot waits for the screen to be still (`stillShot`): at a load average of 150 to 250, 9 s alone once left out a lock and a coin.
+ * the shot waits for the screen to be still (`stillShot`): at a load average of 150 to 250, 9 s alone once left out a lock and a coin. Still was not
+ * enough either (at 15 to 35: a portrait, a lock, a coin's icon, a list's disc, two shots alike while the pictures were still being read), so a scene
+ * now also says when it is ready (`readyServer`), and its shot waits for that first.
  */
 export const SPRITES_MS = 9000;
 
 /** How far apart two shots of the app's screen are taken to tell whether it is still. */
 export const STILL_MS = 1500;
-/** How many shots after the first are taken at most, waiting for two the same: a screen that keeps moving (a loop) is shot as it is at the last. */
-export const STILL_SHOTS = 4;
+/**
+ * How many shots in a row must be alike for a screen to be still: three, 1.5 s apart, so it stood still for 3 s (two, 1.5 s, once kept a screen whose
+ * picture was read but not yet painted, at a load average of 70).
+ */
+export const STILL_ALIKE = 3;
+/** How many shots after the first are taken at most, waiting for them to be alike: a screen that keeps moving (a loop) is shot as it is at the last, and the run says so. */
+export const STILL_SHOTS = 6;
 
 /**
- * Shoots a screen until two shots in a row are the same, and keeps the last: a sprite that came late (on a busy machine its read from Metro waits
- * its turn, and 9 s were once not enough for a lock and a coin) is in the shot, as it would be had the screen been given longer. Nothing is judged
- * more loosely for it: the shot kept is the screen as it stands still.
+ * Shoots a screen until `STILL_ALIKE` shots in a row are the same, and keeps the last: a picture that came late is in the shot, as it would be had the
+ * screen been given longer. Nothing is judged more loosely for it: the shot kept is the screen as it stands still.
  */
-export async function stillShot(shoot: () => Buffer, wait: (ms: number) => Promise<unknown> = sleep): Promise<{ png: Buffer; still: boolean }> {
+export async function stillShot(
+  shoot: () => Buffer,
+  { wait = sleep, ready = () => true }: { wait?: (ms: number) => Promise<unknown>; ready?: () => boolean } = {},
+): Promise<{ png: Buffer; still: boolean }> {
+  // A shot taken while the scene says it is not ready counts for nothing: the count of shots alike starts again after it.
   let last = shoot();
+  let alike = ready() ? 1 : 0;
   for (let i = 0; i < STILL_SHOTS; i++) {
     await wait(STILL_MS);
     const next = shoot();
-    if (next.equals(last)) return { png: next, still: true };
+    alike = !ready() ? 0 : next.equals(last) && alike > 0 ? alike + 1 : 1;
     last = next;
+    if (alike >= STILL_ALIKE) return { png: last, still: true };
   }
   return { png: last, still: false };
 }
 
+/** Where the driver hears a scene of the app say it is ready to be shot (`readyServer`): a port of this machine, which the simulator shares. */
+export const READY_PORT = 8093;
+/** How long a scene is given to say it is ready: its store built, its steps taken, its screen drawn and every picture of it read. */
+export const READY_MS = 60_000;
+
+/** A route as it is opened for a shot that waits on its scene's word: told where to say it. */
+export const routeTold = (route: string, port: number): string => `${route}&ready=${port}`;
+
 /**
- * Shoots the app: each route opened in Expo Go on the booted simulator, then its screen taken. The status bar is the
- * same in every shot (it is masked in the comparison anyway). `fresh` first closes Expo Go and opens the first route
- * once to let it load the bundle: an Expo Go left running keeps the bundle of the Metro it saw last, stale when the code
- * changed since, and shows it until it is opened again.
+ * A server of the driver's, on this machine only, that the app's scene route tells whether its scene is ready to be shot
+ * (`GET /ready?name=<scene>&ready=<1|0>&n=<count>`: drawn, and no picture of it still being read; numbered, so word that arrives late is not
+ * taken for the latest). Until it is, shots alike are a screen waiting (on a busy machine a picture read from Metro could take longer than
+ * the 9 s, and shots 1.5 s apart were alike without it), not one standing still. A run shoots each scene once, so what a scene said is its own
+ * (the first route, opened twice after a fresh start, says it again only if it is drawn again). `wait` gives whether it said it was ready
+ * within `ms`; `ready` whether that is its latest word.
  */
-export async function shootApp(shots: ReadonlyArray<{ route: string; png: string }>, options: { fresh?: boolean } = {}): Promise<void> {
-  execFileSync('xcrun', ['simctl', 'status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
-  const open = (route: string) => execFileSync('xcrun', ['simctl', 'openurl', 'booted', `${METRO}/--/${route}`]);
-  if (options.fresh && shots.length > 0) {
-    try {
-      execFileSync('xcrun', ['simctl', 'terminate', 'booted', 'host.exp.Exponent'], { stdio: 'ignore' });
-    } catch {
-      // It was not running.
+export async function readyServer(port: number): Promise<{ port: number; wait(name: string, ms: number): Promise<boolean>; ready(name: string): boolean; close(): Promise<void> }> {
+  const said = new Map<string, { ready: boolean; n: number }>();
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    const name = url.searchParams.get('name');
+    const n = Number(url.searchParams.get('n'));
+    if (url.pathname !== '/ready' || name === null || !Number.isInteger(n)) {
+      response.writeHead(404).end();
+      return;
     }
-    open(shots[0].route);
-    await sleep(10_000);
+    const known = said.get(name);
+    if (known === undefined || n > known.n) said.set(name, { ready: url.searchParams.get('ready') === '1', n });
+    response.writeHead(200).end('ok');
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => resolve());
+  });
+  const address = server.address();
+  const ready = (name: string) => said.get(name)?.ready === true;
+  return {
+    port: typeof address === 'object' && address !== null ? address.port : port,
+    wait: async (name, ms) => {
+      const end = Date.now() + ms;
+      while (!ready(name)) {
+        if (Date.now() >= end) return false;
+        await sleep(100);
+      }
+      return true;
+    },
+    ready,
+    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+  };
+}
+
+/**
+ * Shoots the app: each route opened in Expo Go on the booted simulator, then its screen taken once it is still (`stillShot`). A shot that names
+ * its scene (`name`) first waits for the scene to say it is ready (`readyServer`); one that does not (the kit's sections) is shot as before.
+ * The status bar is the same in every shot (it is masked in the comparison anyway). `fresh` first closes Expo Go and opens the first route
+ * once to let it load the bundle: an Expo Go left running keeps the bundle of the Metro it saw last, stale when the code
+ * changed since, and shows it until it is opened again. Gives back the routes whose screen never stood still, or whose scene never said it was ready.
+ */
+export async function shootApp(shots: ReadonlyArray<{ route: string; png: string; name?: string }>, options: { fresh?: boolean } = {}): Promise<string[]> {
+  execFileSync('xcrun', ['simctl', 'status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
+  const told = shots.some((shot) => shot.name !== undefined) ? await readyServer(READY_PORT) : null;
+  const open = (route: string) => execFileSync('xcrun', ['simctl', 'openurl', 'booted', `${METRO}/--/${told ? routeTold(route, told.port) : route}`]);
+  // The routes whose screen never stood still: given back for the run's result, and named again at the end.
+  const moving: string[] = [];
+  try {
+    if (options.fresh && shots.length > 0) {
+      try {
+        execFileSync('xcrun', ['simctl', 'terminate', 'booted', 'host.exp.Exponent'], { stdio: 'ignore' });
+      } catch {
+        // It was not running.
+      }
+      open(shots[0].route);
+      await sleep(10_000);
+    }
+    for (const { route, png, name } of shots) {
+      open(route);
+      // Long enough for the screen's sprites to load (Skia reads them as they are asked), and for its scene to say it is ready.
+      await sleep(SPRITES_MS);
+      if (told && name !== undefined && !(await told.wait(name, READY_MS))) {
+        console.log(`app ${route} (never said it was ready in ${READY_MS / 1000} s)`);
+        moving.push(route);
+        execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
+        continue;
+      }
+      // Each shot is written where the last is kept: the one left there is the screen as it stood still, its scene ready all the while.
+      const { still } = await stillShot(
+        () => {
+          execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
+          return readFileSync(png);
+        },
+        { ready: () => told === null || name === undefined || told.ready(name) },
+      );
+      console.log(`app ${route}${still ? '' : ` (still moving after ${STILL_SHOTS + 1} shots: the last is kept)`}`);
+      if (!still) moving.push(route);
+    }
+  } finally {
+    await told?.close();
   }
-  for (const { route, png } of shots) {
-    open(route);
-    // Long enough for the screen's sprites to load (Skia reads them as they are asked).
-    await sleep(SPRITES_MS);
-    // Each shot is written where the last is kept: the one left there is the screen as it stood still.
-    const { still } = await stillShot(() => {
-      execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
-      return readFileSync(png);
-    });
-    console.log(`app ${route}${still ? '' : ` (still moving after ${STILL_SHOTS + 1} shots: the last is kept)`}`);
-  }
+  if (moving.length > 0) console.error(`never still: ${moving.join(', ')}`);
+  return moving;
 }

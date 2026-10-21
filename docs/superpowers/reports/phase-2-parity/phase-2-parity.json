@@ -15,7 +15,7 @@
   {"scene":"play-news-r6","locale":"en","verdict":"accepted","rawPercent":4.21,"beyondPercent":1.133,"loose":13517,"shape":1518,"shapeBlended":1518,"textLines":41,"unmeasured":4,"oneSided":0,"worstPt":1},
   {"scene":"play-guide-r1","locale":"en","verdict":"accepted","rawPercent":6.16,"beyondPercent":3.778,"loose":20603,"shape":3504,"shapeBlended":2030,"textLines":42,"unmeasured":5,"oneSided":0,"worstPt":1.33},
   {"scene":"play-fault","locale":"en","verdict":"clean","rawPercent":3.09,"beyondPercent":0.405,"loose":6203,"shape":0,"shapeBlended":0,"textLines":6,"unmeasured":0,"oneSided":0,"worstPt":1},
-  {"scene":"play-pageturn","locale":"en","verdict":"accepted","rawPercent":3.93,"beyondPercent":1.341,"loose":16650,"shape":3918,"shapeBlended":3905,"textLines":47,"unmeasured":10,"oneSided":0,"worstPt":4.33},
+  {"scene":"play-pageturn","locale":"en","verdict":"accepted","rawPercent":3.93,"beyondPercent":1.341,"loose":16650,"shape":4309,"shapeBlended":4290,"textLines":51,"unmeasured":8,"oneSided":0,"worstPt":1},
   {"scene":"hud-news-r1","locale":"en","verdict":"clean","rawPercent":2.87,"beyondPercent":0.189,"loose":2390,"shape":0,"shapeBlended":0,"textLines":20,"unmeasured":0,"oneSided":0,"worstPt":1},
   {"scene":"hud-cash","locale":"en","verdict":"clean","rawPercent":1.26,"beyondPercent":0.179,"loose":2734,"shape":0,"shapeBlended":0,"textLines":30,"unmeasured":20,"oneSided":0,"worstPt":0.33},
   {"scene":"hud-flow","locale":"en","verdict":"clean","rawPercent":1.28,"beyondPercent":0.243,"loose":4271,"shape":0,"shapeBlended":0,"textLines":32,"unmeasured":19,"oneSided":0,"worstPt":0.67},

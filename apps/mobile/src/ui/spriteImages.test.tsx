@@ -27,7 +27,7 @@ vi.mock('../sprites/sources', () => ({
   }),
 }));
 
-const { loadSpritesWith, SPRITE_BUDGET_BYTES, useSpriteImage } = await import('./spriteImages');
+const { loadSpritesWith, SPRITE_BUDGET_BYTES, spritesLoading, useSpriteImage, useSpritesLoading } = await import('./spriteImages');
 const { Sprite } = await import('./Sprite');
 const { RatLayers } = await import('./RatAvatar');
 
@@ -177,4 +177,46 @@ test('a sprite that failed to load is never forgotten: it costs nothing and is t
   for (const id of ['a', 'b', 'c', 'd', 'e', 'f', 'g']) (await show(id)).unmount();
   (await show('bad')).unmount();
   expect(warn.mock.calls).toEqual([['sprite did not load: bad']]);
+});
+
+test('says how many sprites are being read, so a page can tell when every picture is in (the scenes are shot only then)', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const reads = new Map<string, { done(ok: boolean): void }>();
+  loadSpritesWith(
+    (source) =>
+      new Promise((resolve) => {
+        reads.set(String(source), { done: (ok) => resolve(ok ? (picture(String(source)) as never) : null) });
+      }),
+  );
+  let seen = -1;
+  function Watch() {
+    seen = useSpritesLoading();
+    return null;
+  }
+  render(
+    <>
+      <Watch />
+      <Sprite id="icon.cash" />
+      <Sprite id="icon.cash" />
+      <Sprite id="icon.crypto" />
+    </>,
+  );
+  await settle();
+  // Two reads under way (one id is read once, however many draw it), and the page told so.
+  expect(spritesLoading()).toBe(2);
+  expect(seen).toBe(2);
+  reads.get('src:icon.cash')!.done(true);
+  await settle();
+  expect(seen).toBe(1);
+  // A read that ends in nothing is over too: the checkerboard is all there will be.
+  reads.get('src:icon.crypto')!.done(false);
+  await settle();
+  expect(spritesLoading()).toBe(0);
+  expect(seen).toBe(0);
+  // Read with something else from now on: whatever was under way is forgotten.
+  render(<Sprite id="icon.bond" />);
+  await settle();
+  expect(spritesLoading()).toBe(1);
+  loadSpritesWith(async () => null);
+  expect(spritesLoading()).toBe(0);
 });

@@ -46,11 +46,26 @@ const cache = new Map<string, Entry>();
 let held = 0;
 let load: LoadSprite = readAndDecode;
 
+/** The reads under way, and who wants to know how many there are (`useSpritesLoading`). */
+const reading = new Set<Entry>();
+const readers = new Set<() => void>();
+/**
+ * Tells those who watch the reads under way, once the code that started or ended one is done: a read begins while a sprite is being drawn, and no
+ * one may be told to draw again in the middle of another's drawing.
+ */
+function toldOfReads(): void {
+  queueMicrotask(() => {
+    for (const reader of readers) reader();
+  });
+}
+
 /** Tests only: reads sprites with `next` from now on, everything read before forgotten. */
 export function loadSpritesWith(next: LoadSprite): void {
   load = next;
   cache.clear();
   held = 0;
+  reading.clear();
+  toldOfReads();
 }
 
 /**
@@ -82,8 +97,11 @@ function entryOf(id: string, source: ImageSourcePropType): Entry {
   }
   const entry: Entry = { state: LOADING, listeners: new Set(), bytes: 0 };
   cache.set(id, entry);
+  reading.add(entry);
+  toldOfReads();
   const settle = (state: SpriteImage) => {
     entry.state = state;
+    if (reading.delete(entry)) toldOfReads();
     // Forgotten while it was being read (the cache was cleared): not counted, not kept.
     if (state.image && cache.get(id) === entry) {
       entry.bytes = state.image.width() * state.image.height() * 4;
@@ -121,4 +139,19 @@ export function useSpriteImage(id: string | null | undefined): SpriteImage {
     [entry],
   );
   return useSyncExternalStore(subscribe, () => (entry ? entry.state : NONE), () => NONE);
+}
+
+/** How many sprites are being read and decoded right now: none once every picture asked for is in, or has failed. */
+export const spritesLoading = (): number => reading.size;
+
+const watchReads = (listener: () => void) => {
+  readers.add(listener);
+  return () => {
+    readers.delete(listener);
+  };
+};
+
+/** `spritesLoading`, drawn again whenever it changes: a page can tell when every picture it asked for is in (the scenes' route, for its shots). */
+export function useSpritesLoading(): number {
+  return useSyncExternalStore(watchReads, spritesLoading, () => 0);
 }

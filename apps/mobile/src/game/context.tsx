@@ -67,7 +67,7 @@ export interface Services {
 }
 
 /** Long enough for the second tap of a double tap, short enough that nobody waits for it. */
-const TAP_GUARD_MS = 400;
+export const TAP_GUARD_MS = 400;
 const ALWAYS_SAVING: Saving = { degraded: () => false, subscribe: () => () => {} };
 
 /**

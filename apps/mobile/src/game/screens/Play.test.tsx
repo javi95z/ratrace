@@ -6,12 +6,13 @@ import type { GameSession, PlayerStore, SavedGame } from '@ratrace/core/session/
 import type { Order } from '@ratrace/engine';
 import { messagesFor } from '@ratrace/i18n';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { AccessibilityInfo, Platform } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { KvStore } from '../../kvStore';
 import { memoryServices, pressBack, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
-import { GameProvider, useGame } from '../context';
+import { GameProvider, TAP_GUARD_MS, useGame } from '../context';
 import type { Services } from '../context';
 import { phoneBasket } from '../phoneBasket';
 import { Home } from './Home';
@@ -282,7 +283,7 @@ describe('a tap too many', () => {
     const clock = heldClock();
     try {
       // The guard the app plays with.
-      const services = memoryServices(undefined, { tapGuardMs: 400 });
+      const services = memoryServices(undefined, { tapGuardMs: TAP_GUARD_MS });
       await services.sessions.start('nurse');
       renderGame(<Play />, services);
       const begin = await screen.findByRole('button', { name: 'See what life brings' });
@@ -296,7 +297,7 @@ describe('a tap too many', () => {
       expect(stage().getAttribute('aria-label')).toMatch(/^Card 1 of/);
       expect((await saved(services.store)).state.answered).toBe(0);
       // A deliberate tap, a moment later, is taken.
-      clock.later(400);
+      clock.later(TAP_GUARD_MS);
       fireEvent.click(choices()[0]);
       await stageIs('What happened');
     } finally {
@@ -307,12 +308,12 @@ describe('a tap too many', () => {
   it('plays a round once for a double tap on its button, and does not skip the ledger with the tap after', async () => {
     const clock = heldClock();
     try {
-      const services = memoryServices(undefined, { tapGuardMs: 400 });
+      const services = memoryServices(undefined, { tapGuardMs: TAP_GUARD_MS });
       const session = await services.sessions.start('nurse');
       while (session.view().phase === 'cards') await session.answerCard(0);
       renderGame(<Play />, services);
       await stageIs('Your finances');
-      clock.later(450);
+      clock.later(TAP_GUARD_MS + 50);
       const play = button('Play the round');
       fireEvent.click(play);
       fireEvent.click(play);
@@ -326,11 +327,32 @@ describe('a tap too many', () => {
       expect(save.state.round).toBe(1);
       expect(save.log.filter((entry) => entry.orders !== null)).toHaveLength(1);
       // A moment later it is.
-      clock.later(400);
+      clock.later(TAP_GUARD_MS);
       fireEvent.click(button('Next round'));
       expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     } finally {
       clock.restore();
+    }
+  });
+});
+
+describe('a screen reader', () => {
+  it.each(['ios', 'android'] as const)('is told on %s which stage has opened, as the web hands the stage the focus for every screen reader', async (os) => {
+    const was = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+    const said = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    try {
+      const services = memoryServices();
+      await services.sessions.start('nurse');
+      renderGame(<Play />, services);
+      fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
+      await stageIs(/^Card 1 of/);
+      expect(said).toHaveBeenCalledWith(expect.stringMatching(/^Card 1 of \d/));
+      // Not on opening the screen: the screen itself is what is new, and says so.
+      expect(said).toHaveBeenCalledTimes(1);
+    } finally {
+      said.mockRestore();
+      Object.defineProperty(Platform, 'OS', { value: was, configurable: true });
     }
   });
 });

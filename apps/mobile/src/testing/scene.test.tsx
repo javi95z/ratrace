@@ -1,16 +1,20 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import type { SavedGame } from '@ratrace/core/session/types';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { useClock, useGame, useT } from '../game/context';
 import SceneRoute from '../app/scene';
 import { params } from './fakes';
 import { memoryServices } from './memoryServices';
-import { SCENE_SCREENS, SceneView, servicesOf } from './scene';
+import { settled } from './renders';
+import { FAULT_LINE, SCENE_SCREENS, SceneView, servicesOf } from './scene';
 
 /** A scene's store is built and its steps are taken on a machine that may be busy: waited for as long as a test is allowed, not the second a screen's test gives. */
 const WAIT = { timeout: 15_000 };
@@ -192,13 +196,31 @@ test('a scene of the play screen is drawn by Play itself: the news with no tip f
   expect((await screen.findByRole('note', { name: 'Guide' }, WAIT)).textContent).toContain('Every round opens with the paper');
 });
 
-test('the scene of a fault is the play screen\'s way out, and the one line its game writes to the log is the one the scene route lets pass unseen', async () => {
+test('the scene of a fault is the play screen\'s way out; the one line its game writes to the log is kept from the log while that scene is drawn, and only then', async () => {
   const told = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-  render(<SceneView name="play-fault" />);
-  expect((await screen.findByRole('alert', {}, WAIT)).textContent).toContain('Something went wrong');
-  expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
-  expect(told.mock.calls.map((call) => call[0])).toContain('the round could not be previewed:');
-  told.mockRestore();
+  try {
+    render(<SceneView name="play-fault" />);
+    expect((await screen.findByRole('alert', {}, WAIT)).textContent).toContain('Something went wrong');
+    expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+    // The game says it, in these words (core's scenes.test hears it), and the log was not told: in development it would be drawn over the shot.
+    // (Read by path: the app's route brings in a `URL` of its own, which does not resolve against a file's address.)
+    expect(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../../../../packages/core/src/game/store.ts'), 'utf8')).toContain(`console.error('${FAULT_LINE}', error);`);
+    expect(told.mock.calls.map((call) => call[0])).not.toContain(FAULT_LINE);
+    // Any other line still is.
+    console.error('something else');
+    expect(told).toHaveBeenLastCalledWith('something else');
+    cleanup();
+    // The scene gone, the same line from anywhere else is an error the log shows, as it always is.
+    console.error(FAULT_LINE, new Error('elsewhere'));
+    expect(told).toHaveBeenLastCalledWith(FAULT_LINE, new Error('elsewhere'));
+    // And a scene of a game that goes on keeps nothing from the log.
+    render(<SceneView name="play-news-r1" />);
+    await screen.findByRole('heading', { name: 'News' }, WAIT);
+    console.error(FAULT_LINE, 'here');
+    expect(told).toHaveBeenLastCalledWith(FAULT_LINE, 'here');
+  } finally {
+    told.mockRestore();
+  }
 });
 
 test('the scene of the calendar is the news of the second round with its page turning over it, held at one moment of its run', async () => {
@@ -211,4 +233,31 @@ test('the scene of the calendar is the news of the second round with its page tu
   const torn = calendar.querySelector('[data-page="torn"]') as HTMLElement;
   expect(Number(torn.style.opacity)).toBeGreaterThan(0);
   expect(Number(torn.style.opacity)).toBeLessThan(1);
+});
+
+test('a scene opened for a shot says when it is ready, to the driver on this machine: once drawn and every picture of it read; opened for nothing else, it says nothing', async () => {
+  const said = vi.fn<(url: string) => Promise<Response>>(async () => new Response('ok'));
+  vi.stubGlobal('fetch', said);
+  render(<SceneView name="play-news-r6" readyPort={8093} />);
+  await screen.findByRole('heading', { name: 'News' }, WAIT);
+  // Not ready while it is built, then ready, in that order.
+  await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/^http:\/\/127\.0\.0\.1:8093\/ready\?name=play-news-r6&ready=1&n=\d+$/)));
+  const words = said.mock.calls.map(([url]) => /ready=(\d)&n=(\d+)$/.exec(url)!.slice(1).map(Number));
+  expect(words[0][0]).toBe(0);
+  // Numbered in the order said, one count for the app (a scene drawn again speaks after).
+  expect(words.map(([, n]) => n - words[0][1])).toEqual(words.map((_, i) => i));
+  cleanup();
+  said.mockClear();
+  render(<SceneView name="play-news-r1" />);
+  await screen.findByRole('heading', { name: 'News' }, WAIT);
+  await settled();
+  expect(said).not.toHaveBeenCalled();
+  cleanup();
+  // The route takes the port from its address (`&ready=`), as the driver opens it.
+  vi.stubGlobal('__DEV__', true);
+  params.name = 'play-news-r6';
+  params.ready = '8093';
+  render(<SceneRoute />);
+  await screen.findByRole('heading', { name: 'News' }, WAIT);
+  await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready\?name=play-news-r6&ready=1&n=\d+$/)));
 });

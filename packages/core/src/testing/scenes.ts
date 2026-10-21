@@ -171,7 +171,7 @@ export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-ne
  * round cannot be judged and the game opens on its fault, as it does when the engine of a page will not preview a round. The life itself
  * is sound; what fails is the place the basket is kept, which each client gives its game for the scene (`sceneBasket`).
  */
-const FAULTS: ReadonlySet<string> = new Set(['play-fault']);
+export const FAULTS: ReadonlySet<string> = new Set(['play-fault']);
 
 /** Where a scene's game keeps the orders of its round, where that is not the game's own memory: nowhere it can read them back from, for a fault. */
 export function sceneBasket(name: string): BasketKeep | undefined {

@@ -30,12 +30,22 @@ export const VISIBLE_HEIGHT = 'main { min-height: calc(100dvh - env(safe-area-in
 export const HUD_ONLY = '#round-stage, #round-actions { display: none !important; }';
 
 /**
+ * The calendar of a turning round (`play-pageturn`) takes no pointer, so a tap goes through it; and the web's text check, which asks what is on top
+ * along each line (`elementFromPoint` in `TEXT_BOXES`), went through it too, and measured a line of the paper under it with the calendar's ink
+ * (4.33 pt). In that scene's shot the calendar itself, the child of the layer over the whole screen and not that layer, takes the pointer: a line
+ * it covers in part is measured where it shows either side of it, and the lines round it are not covered by it.
+ */
+export const CALENDAR_COVERS = '[data-motion-only] > * { pointer-events: auto !important; }';
+
+/**
  * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
  * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
  * the web's page: the line is the only `p` of that frame on the page of a guest. And on the scenes of the Hud, everything of Play but the Hud (`HUD_ONLY`).
+ * And one rule that hides nothing, for the text check alone: the calendar covers what it covers (`CALENDAR_COVERS`).
  */
 export const WEB_ONLY: Readonly<Record<string, string>> = {
   'challenge-practice': 'main > p.frame.bg-night-700 { display: none !important; }',
+  'play-pageturn': CALENDAR_COVERS,
   ...Object.fromEntries(SCENES.filter((scene) => screenOf(scene) === 'hud').map((scene) => [scene.name, HUD_ONLY])),
 };
 
@@ -162,11 +172,11 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Task 9: play, round by round, from the news',
   },
   'play-pageturn': {
-    shape: 3918,
-    // Thirteen device pixels.
-    worstPt: 13 / 3,
+    shape: 4309,
+    // Three device pixels: the ▸ of the HUD's figures, as in every scene of the HUD.
+    worstPt: 1,
     oneSided: 0,
-    reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), the masthead as in play-news-r1, and a line of the paper under the calendar measured through it (the calendar takes no touch, so the web\'s check does not see the line covered).',
+    reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), all along them now that the lines of the paper it covers are measured only where they show (CALENDAR_COVERS), and the masthead as in play-news-r1.',
     report: 'Task 9: play, round by round, from the news',
   },
   'new-replace': {
@@ -221,6 +231,8 @@ export type Line =
       oneSided: number;
       /** The most any line's ink stands apart in the two shots, of those found in both. */
       worstPt: number;
+      /** The app's screen never stood still while it was shot (`stillShot`): what was compared is one moment of something moving, and the run fails for it. */
+      moving?: true;
     };
 
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places;
@@ -249,8 +261,8 @@ function withinRecord(scene: Scene, result: Result): boolean {
   return record !== undefined && result.shape <= record.shape && text.worstPt <= record.worstPt && text.oneSided <= record.oneSided;
 }
 
-/** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. */
-export function lineOf(scene: Scene, result: Result): Line {
+/** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. `moving`: the app's shot never stood still. */
+export function lineOf(scene: Scene, result: Result, moving = false): Line {
   const plain = verdictOf(result);
   if (plain === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
   const verdict = PHONE_WORDS.includes(scene.name) ? phoneVerdict(scene, result) : plain === 'differs' && withinRecord(scene, result) ? 'accepted' : plain;
@@ -268,14 +280,22 @@ export function lineOf(scene: Scene, result: Result): Line {
     unmeasured: text.unmeasured,
     oneSided: text.oneSided,
     worstPt: round(text.worstPt, 2),
+    ...(moving ? { moving: true as const } : {}),
   };
 }
 
 /**
- * The lines that fail a run: a scene that differs (beyond what is accepted of it), or whose layout does, or a page of other words that has drifted from its baseline.
- * A clean one, one accepted, one in the phone's own words, a page that cannot be compared and a stand-in do not.
+ * The lines that fail a run: a scene that differs (beyond what is accepted of it), or whose layout does, or a page of other words that has drifted from its baseline,
+ * or whose app shot never stood still, whatever it came to. A clean one, one accepted, one in the phone's own words, a page that cannot be compared and a stand-in do not.
  */
-export const differing = (lines: readonly Line[]): Line[] => lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs' || line.verdict === 'phone words, drifted');
+export const differing = (lines: readonly Line[]): Line[] =>
+  lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs' || line.verdict === 'phone words, drifted' || (line.verdict !== 'unjudged' && line.moving === true));
+
+/** The scenes whose app shot never stood still, kept beside the raw shots from the app's step to the comparison (which may be run apart). */
+export const MOVING_FILE = 'scenes-moving.json';
+
+/** The scenes left moving after an app step: those of the scenes not shot this time as they were, and of those shot now the ones that never stood still. */
+export const movingAfter = (kept: readonly string[], shot: readonly string[], moving: readonly string[]): string[] => [...kept.filter((name) => !shot.includes(name)), ...moving];
 
 /** The lines of the report after a run: those kept of scenes not shot this time, and the new ones, in the order the scenes are listed. */
 export function mergeLines(kept: readonly Line[], now: readonly Line[]): Line[] {
