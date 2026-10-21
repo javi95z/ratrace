@@ -73,8 +73,24 @@ function Part({ label, value }: { label: string; value: string }) {
 }
 
 /** How the life ended. Nothing to show until there is a life. `extra` comes first: in a room, the room's order. */
+/** A life that is over is let go once its last screen is left, a moment later: a screen drawn again at once keeps it. */
+let leaving: ReturnType<typeof setTimeout> | null = null;
+
 export function End({ extra }: { extra?: ReactNode } = {}) {
   const view = useGame((s) => s.view);
+  const gameId = useGame((s) => s.gameId);
+  const closeFinished = useGame((s) => s.closeFinished);
+  useEffect(() => {
+    if (leaving !== null) clearTimeout(leaving);
+    leaving = null;
+    return () => {
+      if (gameId === null) return;
+      leaving = setTimeout(() => {
+        leaving = null;
+        void closeFinished(gameId);
+      });
+    };
+  }, [gameId, closeFinished]);
   return view ? <Ended view={view} extra={extra} /> : null;
 }
 

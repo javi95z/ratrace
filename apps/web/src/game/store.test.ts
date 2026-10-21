@@ -330,6 +330,26 @@ describe('a whole life', () => {
     expect(again.get().history).toEqual(get().history);
     await again.get().start('nurse');
     expect(again.get()).toMatchObject({ status: 'playing', stage: 'news', lifeId: 'nurse' });
+
+    // Leaving the end screen of the old life lets go of nothing: another has taken its place.
+    await again.get().closeFinished(get().gameId ?? '');
+    expect(again.get()).toMatchObject({ status: 'playing', lifeId: 'nurse' });
+  });
+
+  it('lets a finished life go once its end screen is left, and keeps it among the finished lives', async () => {
+    const { store, get } = setup();
+    await get().start('civil_servant');
+    for (let round = 0; round < 20; round++) {
+      await answerHand(get, 0);
+      get().toFinance();
+      await get().play();
+      get().next();
+    }
+    expect(get().view?.finished).toBe(true);
+    await get().closeFinished(get().gameId ?? '');
+    expect(get()).toMatchObject({ status: 'none', view: null });
+    expect(await store.loadGame()).toBeNull();
+    expect(await store.listRuns()).toHaveLength(1);
   });
 });
 

@@ -105,6 +105,12 @@ export interface RoundActions {
    */
   reopen(): Promise<void>;
   abandon(): Promise<void>;
+  /**
+   * Lets go of a life that is over, once its last screen is left: it is already among the finished
+   * lives. Nothing happens if another life has taken its place, or if it was lived in a game with
+   * friends, which keeps its own.
+   */
+  closeFinished(gameId: string): Promise<void>;
   /** From the news to the cards, or straight to the finances when there are none. */
   leaveNews(): void;
   /** Answers the card on screen. The game settles it at once and its result is shown. */
@@ -410,6 +416,12 @@ export function createGameStore({ sessions, content, now = () => 0, guardMs = 0,
         await sessions.abandon();
         session = null;
         set({ ...blank });
+      },
+
+      async closeFinished(gameId) {
+        const { view, gameId: current } = get();
+        if (current !== gameId || !view?.finished || Object.hasOwn(view.player.life.flags, 'in_room')) return;
+        await get().abandon();
       },
 
       leaveNews() {
