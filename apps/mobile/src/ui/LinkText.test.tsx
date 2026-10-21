@@ -60,12 +60,15 @@ test('a link that wraps is underlined on every line it wraps to, each at its own
   expect(lines[0]).toEqual({ top: under, left: 0, width: '131px', height: '1px', color: rgb(COLORS['teal-300']) });
   expect(lines[1].top).toBeCloseTo(under + 17.4, 5);
   expect(lines[1]).toMatchObject({ left: 0, width: '92px', height: '1px', color: rgb(COLORS['teal-300']) });
-  // Laid out again the same way, it is not drawn again; laid out on one line again, one line across the words again.
+  // Its words were not drawn again for the lines under them: only the lines changed.
+  expect(outers).toHaveLength(1);
+  // Laid out again the same way, it is not drawn again; laid out on one line again, one line across the words again, and the words not drawn again.
   const drawn = outers.length;
   act(() => outers[outers.length - 1]({ nativeEvent: { lines: [laid(0, 0, 131, '✓ Станет фиксированной '), laid(0, 17.4, 92, 'в этом раунде')] } }));
   expect(outers).toHaveLength(drawn);
   act(() => outers[outers.length - 1]({ nativeEvent: { lines: [laid(0, 0, 220, '✓ Станет фиксированной в этом раунде')] } }));
   expect(underlines(container)).toEqual([{ top: under, left: 0, width: '', height: '1px', color: rgb(COLORS['teal-300']) }]);
+  expect(outers).toHaveLength(drawn);
 });
 
 test('words that change are one line again until they are laid out: the lines of the words before are not kept for them', () => {

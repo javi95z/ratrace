@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
@@ -793,3 +793,42 @@ test('where neither side has the room, what is missing is said (`short`), or tak
   // The frame is 44; the layout takes the line and the 13 it lacked, under it; above and below it reaches no further than the room.
   expect(grown.style).toEqual({ paddingTop: 4, paddingBottom: 23, marginTop: -4, marginBottom: -10 });
 });
+
+test('something done once is done once for two presses that land before the screen is drawn again; refused, it may be tried again; mounted again, it is armed again', () => {
+  const tried: string[] = [];
+  let answer = false;
+  function Once({ name }: { name: string }) {
+    const once = useOnce();
+    return <Button variant="primary" onPress={() => void once(() => (tried.push(name), answer))}>{name}</Button>;
+  }
+  const { rerender, unmount } = render(<Once key="a" name="Buy" />);
+  // Refused: each press tries again.
+  fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+  expect(tried).toEqual(['Buy', 'Buy']);
+  // Taken: a second press, before or after the screen is drawn again, does nothing.
+  answer = true;
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+  expect(tried).toEqual(['Buy', 'Buy', 'Buy']);
+  // A new opening (mounted again) is armed again.
+  rerender(<Once key="b" name="Buy" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Buy' }));
+  expect(tried).toEqual(['Buy', 'Buy', 'Buy', 'Buy']);
+  unmount();
+});
+
+test('a figure of a line is set in the pixel face, on the right, in its colour, at the line\'s size unless told another', () => {
+  render(<Row left="Profit" right={<Figure tone="wine-300">{'−$1,000'}</Figure>} />);
+  const figure = screen.getByText('−$1,000').closest('[dir="auto"]') as HTMLElement;
+  expect(figure.style.textAlign).toBe('right');
+  expect(figure.style.color).toBe(rgbOf(COLORS['wine-300']));
+  cleanup();
+  render(<Figure tone="gold-500" size={19}>{'$5'}</Figure>);
+  expect(parseFloat((screen.getByText('$5').closest('[dir="auto"]') as HTMLElement).style.fontSize)).toBeCloseTo(19, 5);
+});
+
+const rgbOf = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;

@@ -7,8 +7,10 @@ import type { GameSession, SavedGame } from '@ratrace/core/session/types';
 import { quoteItem, viewOf } from '@ratrace/engine';
 import type { GameView, ItemQuote } from '@ratrace/engine';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { Dimensions } from 'react-native';
+import { createElement } from 'react';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame, spriteRenders } from '../../testing/render';
 import { settled } from '../../testing/renders';
 import { useGame } from '../context';
@@ -18,11 +20,27 @@ import { Play } from './Play';
 /*
  * The shop of the finances (the web's Finance.test.tsx: the catalogue, a thing owned, what a thing is good for, buying on instalments, the
  * second-hand shop, what is sold without an invoice, and the shelf half of what belongs to a city), on the phone; and what the phone adds:
- * each tile is drawn again only when what it shows changes, an order is given once for a double tap, and in Russian on a narrow phone the
+ * each tile is drawn again only when what it shows changes, an order is given once for a double tap, and in Russian the
  * tiles wrap their words.
  */
 
-afterEach(cleanup);
+// Each panel of the kit counted as it is drawn, by its title: a shelf is a panel titled with its kind of things.
+const panels = vi.hoisted(() => new Map<string, number>());
+vi.mock('../../ui/kit', async (original) => {
+  const kit = (await original()) as typeof import('../../ui/kit');
+  return {
+    ...kit,
+    Panel: (props: Parameters<typeof kit.Panel>[0]) => {
+      if (props.title !== undefined) panels.set(String(props.title), (panels.get(String(props.title)) ?? 0) + 1);
+      return createElement(kit.Panel, props);
+    },
+  };
+});
+
+afterEach(() => {
+  cleanup();
+  panels.clear();
+});
 
 const fmt = formatFor('en');
 const ru = messagesFor('ru');
@@ -123,6 +141,44 @@ describe('the shop catalogue', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Shop' }));
     expect(within(shopPanel()).getByRole('radio', { name: 'All' }).getAttribute('aria-checked')).toBe('true');
     await waitFor(() => expect(tiles()).toHaveLength(all.length), DRAWN);
+
+    // The round played, and the next one's cards answered: its finances open on the portfolio, and their shop on what is in reach.
+    await act(async () => {
+      await probe.state!.play();
+    });
+    act(() => probe.state!.next());
+    act(() => probe.state!.leaveNews());
+    while (probe.state!.stage === 'cards') {
+      await act(async () => {
+        await probe.state!.pick(0);
+      });
+      act(() => probe.state!.afterCard());
+    }
+    await waitFor(() => expect(probe.state!.stage).toBe('finance'));
+    expect(probe.state!.view?.round).toBe(1);
+    expect((await screen.findByRole('tab', { name: 'Portfolio' })).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('tab', { name: 'Shop' }));
+    expect(within(shopPanel()).getByRole('radio', { name: 'In reach' }).getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('draws the first shelves with something on them in the frame the tab opens, even where the first kinds of things have nothing in reach', async () => {
+    const { services, session } = await inFinance('nurse');
+    // The same life with no cash at all: nothing of the first kinds (cars, watches) is in reach, and what costs nothing is.
+    const broke = (): GameView => ({ ...session.view(), player: { ...session.view().player, cash: 0 } });
+    const life: GameSession = { gameId: session.gameId, lifeId: session.lifeId, view: broke, history: () => session.history(), bankruptcies: () => 0, story: () => [], badges: () => [], answerCard: (option) => session.answerCard(option), playRound: (choices) => session.playRound(choices) };
+    services.sessions.resume = async () => ({ lost: null, session: life });
+    const reach = shelfOf(broke()).inReach;
+    const kinds = [...new Set(content.items.map((item) => item.ladder))];
+    expect(reach.length).toBeGreaterThan(0);
+    expect(reach.some(({ item }) => kinds.indexOf(item.ladder) < 2)).toBe(false);
+    played(services);
+    await screen.findByRole('tab', { name: 'Shop' });
+    await settled();
+    // The tab pressed: before any frame has gone by, the shelves with something on them are there.
+    fireEvent.click(screen.getByRole('tab', { name: 'Shop' }));
+    expect(tiles().length).toBeGreaterThan(0);
+    expect(within(shopPanel()).queryByText('Nothing in the shop is in reach yet.')).toBeNull();
+    await waitFor(() => expect(tiles()).toHaveLength(reach.length), DRAWN);
   });
 });
 
@@ -153,9 +209,11 @@ describe('a tile of the shop', () => {
     const { services } = await inFinance('nurse');
     await openShop(services);
     const seat = button(/SEAT Ibiza/);
-    // The tile's frame lays out what it holds: a column, centred, under 400 (a phone's panel is narrower than that).
+    // The tile's frame lays out what it holds: a column, centred, under 400 (a phone's panel is narrower than that). Until the shelf is laid out, it
+    // is as wide as the screen makes it: the column (at most 448, 12 in on each side) less the panel's 12 on each side.
     const frameOf = (tile: HTMLElement) => tile.firstElementChild as HTMLElement;
-    expect(getComputedStyle(frameOf(seat)).flexDirection).toBe('column');
+    const seeded = Math.min(Dimensions.get('window').width, 448) - 24 - 24;
+    expect(getComputedStyle(frameOf(seat)).flexDirection).toBe(seeded >= 400 ? 'row' : 'column');
     // Two to a row: each tile half its shelf.
     const cell = seat.parentElement as HTMLElement;
     expect(getComputedStyle(cell).width).toBe('50%');
@@ -510,6 +568,14 @@ describe('a thing\'s sheet, open from the start', () => {
 });
 
 describe('the shop, drawn again', () => {
+  it('draws each shelf once as the shop puts them on screen, a few a frame: a shelf already there is not drawn again for the next ones', async () => {
+    const { services } = await inFinance('nurse');
+    const { inReach } = await openShop(services, 'affordable');
+    const titles = [...new Set(inReach.map(({ item }) => item.ladder))].map((ladder) => text.ladders[ladder]);
+    expect(titles.length).toBeGreaterThan(2);
+    for (const title of titles) expect(panels.get(title), title).toBe(1);
+  });
+
   /** How many times each thing's picture has been drawn so far: a tile is drawn again when its picture is. */
   const pictures = (ids: readonly string[]) => new Map(ids.map((id) => [id, spriteRenders.get(itemArt(id)) ?? 0]));
 
@@ -552,7 +618,7 @@ describe('the shop, drawn again', () => {
   });
 });
 
-describe('the shop in Russian, on a narrow phone', () => {
+describe('the shop in Russian, its structure (what wraps and what is cut; widths are the batch pass\'s)', () => {
   /** How a text is cut: to one line (`truncate`), to a few (`line-clamp`), or not at all. */
   function cutOf(text: HTMLElement): 'line' | 'lines' | null {
     if (!/r-textOverflow-|r-WebkitLineClamp/.test(text.className)) return null;

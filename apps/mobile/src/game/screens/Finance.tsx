@@ -6,24 +6,24 @@ import { rulesSell } from '@ratrace/core/game/rules';
 import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, indexed, mortgageSwitch, previewRound, quoteItem, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
 import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, ItemDef, ItemQuote, LifestyleTier, Order, PlayerState, RentTier, UsedQuote, WorkMode, WorldState } from '@ratrace/engine';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
-import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
 import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { adjustedRead } from '../../ui/fonts';
-import { Bar, Bare, Button, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, usePress } from '../../ui/kit';
+import { Bar, Bare, Button, Figure, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
-import { COLORS, GUTTER, TOUCH, type ColorToken } from '../../ui/theme';
+import { COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
-import { BusinessTab, useOnce } from './Business';
+import { BusinessTab } from './Business';
 import { CareerMoves } from './CareerMoves';
 import { EvasionPanel } from './Evasion';
 import { Explain } from './Explain';
@@ -71,11 +71,6 @@ function useRound() {
  * sheet that buys that asset; `move`: the way of life's sheet of every city; `item-<id>`: the shop's sheet of that thing).
  */
 export const FinanceOpened = createContext<{ tab?: string; sheet?: string }>({});
-
-/** A figure on the right of a line, in a colour of its own (the web's `<span className="text-…">` in a Row's `right`). */
-function Figure({ tone, size, children }: { tone: ColorToken; size?: number; children: string }) {
-  return <PixelText size={size} tone={tone} style={{ textAlign: 'right' }}>{children}</PixelText>;
-}
 
 /** A heading in a sheet (the web's `h3 pixel text-[14px] uppercase tracking-wider text-ink-200`). */
 function SheetHeading({ children, below = 0 }: { children: string; below?: number }) {
@@ -1998,8 +1993,9 @@ const inReach = ({ quote, owned }: ShelfItem, cash: number) =>
 
 /**
  * The shelves drawn in the frame the shop is opened, and each frame after it, in the order the kinds of things are listed: the whole shop at once is
- * some sixty tiles, each a picture on a canvas, and the tab would stop for all of them. A shelf once drawn stays (asking for everything or for what
- * is in reach only adds or takes away tiles of the shelves drawn).
+ * some sixty tiles, each a picture on a canvas, and the tab would stop for all of them. They are counted in shelves on screen (a kind with nothing in
+ * reach takes no frame of its own), and drawn by kind: a shelf once drawn stays, whatever view is asked for (asking for everything or for what is in
+ * reach only adds or takes away tiles of the shelves drawn, and shelves further on).
  *
  * Why not a list that draws only what is on screen (`FlatList`): the shop is the panel of a tab in Play's one scrolling page (`StickyScreen`, under
  * the Hud and the row of tabs), and a list inside a scroll of the same direction is given the whole height of its rows by it: it cannot tell what is
@@ -2011,6 +2007,11 @@ const SHELVES_STEP = 2;
 
 /** From how wide a shelf (its own width, the web's `@container`) a tile lays its picture beside its words: `@min-[400px]`. */
 const SHELF_ROW = 400;
+/**
+ * How wide a shelf will be on a screen this wide, before it is laid out: the column (at most the shell's 448, its gutter of 12 each side inside it) less
+ * the panel's 12 each side. A tablet's shelf is 400, a phone's narrower: the first frame has the tiles as they will stay, and the measure confirms it.
+ */
+const shelfOn = (screen: number) => Math.min(screen, SHELL_WIDTH) - 2 * GUTTER - 2 * 12;
 
 function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopView): void }) {
   const t = useT('finance.shop');
@@ -2039,12 +2040,22 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
     () => shelves.map(({ ladder, items }) => ({ ladder, items: view === 'all' ? items : items.filter((entry) => inReach(entry, p.cash)) })).filter(({ items }) => items.length > 0),
     [shelves, view, p.cash],
   );
-  const [revealed, setRevealed] = useState(SHELVES_FIRST);
+  // How far down the kinds the shelves are drawn (an index of `ladders`, every shelf before it drawn): past the next few kinds with something on them.
+  const onShelf = useMemo(() => new Set(visible.map(({ ladder }) => ladder)), [visible]);
+  const past = useCallback(
+    (from: number, more: number) => {
+      let seen = 0;
+      for (let at = from; at < ladders.length; at++) if (onShelf.has(ladders[at]) && ++seen === more) return at + 1;
+      return ladders.length;
+    },
+    [ladders, onShelf],
+  );
+  const [upTo, setUpTo] = useState(() => past(0, SHELVES_FIRST));
   useEffect(() => {
-    if (revealed >= ladders.length) return;
-    const frame = requestAnimationFrame(() => setRevealed((now) => now + SHELVES_STEP));
+    if (upTo >= ladders.length) return;
+    const frame = requestAnimationFrame(() => setUpTo((now) => past(now, SHELVES_STEP)));
     return () => cancelAnimationFrame(frame);
-  }, [revealed, ladders.length]);
+  }, [upTo, ladders.length, past]);
 
   return (
     <View style={{ gap: 12 }}>
@@ -2053,7 +2064,7 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
         <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ textAlign: 'center' }}>{t(view === 'affordable' ? 'affordableHint' : 'allHint')}</ReadText>
       </View>
       {visible.length === 0 ? <ReadText size={13} tone="ink-300" style={{ paddingVertical: 12, textAlign: 'center' }}>{t('noneAffordable')}</ReadText> : null}
-      {visible.map(({ ladder, items }) => (ladders.indexOf(ladder) < revealed ? <Shelf key={ladder} title={text.ladders[ladder]} items={items} onOpen={onOpen} /> : null))}
+      {visible.map(({ ladder, items }) => (ladders.indexOf(ladder) < upTo ? <Shelf key={ladder} title={text.ladders[ladder]} items={items} onOpen={onOpen} /> : null))}
       {open ? <ItemSheet itemId={open} onClose={() => setOpen(null)} /> : null}
     </View>
   );
@@ -2062,10 +2073,13 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
 /**
  * A shelf: the things of a kind, always two a row, so a car is drawn whole whatever the width (the web's `grid-cols-2 gap-2`: 4 on each side of
  * each tile, the row made 8 wider than the panel, so the gap between two is 8 and the outer edges are the panel's). It measures its own width, as
- * the web's `@container` does, and tells its tiles when there is room for the picture beside the words (once, when that changes).
+ * the web's `@container` does, and tells its tiles when there is room for the picture beside the words (once, when that changes; until it is laid
+ * out, as wide as the screen makes it). Memoised: its things are worked out once for the round as it stands, so the shop putting more shelves on
+ * screen draws only the new ones.
  */
-function Shelf({ title, items, onOpen }: { title: string; items: readonly ShelfItem[]; onOpen(itemId: string): void }) {
-  const [wide, setWide] = useState(false);
+const Shelf = memo(function Shelf({ title, items, onOpen }: { title: string; items: readonly ShelfItem[]; onOpen(itemId: string): void }) {
+  const { width: screen } = useWindowDimensions();
+  const [wide, setWide] = useState(() => shelfOn(screen) >= SHELF_ROW);
   const laid = useCallback((event: LayoutChangeEvent) => setWide(event.nativeEvent.layout.width >= SHELF_ROW), []);
   return (
     <Panel title={title}>
@@ -2078,7 +2092,7 @@ function Shelf({ title, items, onOpen }: { title: string; items: readonly ShelfI
       </View>
     </Panel>
   );
-}
+});
 
 /**
  * A thing on the shelf: the tile of the game, its picture and its words. In a narrow shelf the picture sits above the words, centred; with room,
@@ -2146,16 +2160,17 @@ function Residency() {
   const city = content.cities.find((x) => x.id === p.cityId);
   const offer = city?.residency;
   const held = view.player.life.residency;
+  const offered = city !== undefined && offer !== undefined && knows('setResidency');
   // What it comes to this round, in the engine's figures: the round as planned with it and without it, the fee and the tax both (worked out once
-  // for the orders as they stand, and only where a residency is offered).
+  // for the orders as they stand, and only where the panel is drawn: a residency offered, and rules that know it).
   const yearly = useMemo(() => {
-    if (!offer) return 0;
+    if (!offered || !offer) return 0;
     const others = orders.filter((order) => order.type !== 'setResidency');
     const cashWith = previewRound(content, view, { orders: held ? others : [...others, { type: 'setResidency', on: true }] }).cashAfter;
     const cashWithout = previewRound(content, view, { orders: held ? [...others, { type: 'setResidency', on: false }] : others }).cashAfter;
     return Math.round((cashWith - cashWithout) / content.yearsPerRound);
-  }, [content, view, orders, held, offer]);
-  if (!city || !offer || !knows('setResidency')) return null;
+  }, [content, view, orders, held, offer, offered]);
+  if (!offered || !city || !offer) return null;
   const title = t('residencyTitle', { city: names.cities[p.cityId] });
   return (
     <Panel title={title} label={title}>

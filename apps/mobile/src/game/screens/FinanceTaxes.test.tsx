@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { content } from '@ratrace/content';
+import { content, textFor } from '@ratrace/content';
+import { messagesFor } from '@ratrace/i18n';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { formatFor } from '@ratrace/core/lib/format';
 import type { GameSession, SavedGame } from '@ratrace/core/session/types';
@@ -219,5 +220,44 @@ describe('the tax residency of Bangkok', () => {
     await settled();
     expect(probe.state!.orders).toEqual([]);
     await waitFor(() => expect(within(residency()).getByRole('switch', { name: /^Take the tax residency/ }).getAttribute('aria-checked')).toBe('false'));
+  });
+});
+
+describe('the taxes in Russian, their structure (what wraps and what is cut; widths are the batch pass\'s)', () => {
+  const ru = messagesFor('ru');
+  /** Whether a text is cut to a line or a few (`numberOfLines`). */
+  const cut = (text: HTMLElement) => /r-textOverflow-|r-WebkitLineClamp/.test(text.className);
+  /** The words of a panel under its title (the title is the kit's tab, cut to its line as the web's is). */
+  const bodyOf = (panel: HTMLElement) => [...panel.querySelectorAll<HTMLElement>('[dir="auto"]')].filter((words) => words.closest('[role="heading"]') === null);
+
+  it('lays the shares of pay under the table in one row, each a share of it and never cut, and the residency\'s words wrapping', async () => {
+    const { services } = await inFinance('rider');
+    renderGame(
+      <>
+        <Play />
+        <Probe />
+      </>,
+      services,
+      'ru',
+    );
+    fireEvent.click(await screen.findByRole('tab', { name: ru.finance.tabs.taxes }));
+    const tab = screen.getByRole('tabpanel');
+    // Pay under the table: every share a radio of one row (the web's equal row), each allowed to be narrower than its words, none cut.
+    const black = within(tab).getByRole('radiogroup', { name: ru.finance.evasion.black });
+    const shares = within(black).getAllByRole('radio');
+    expect(shares).toHaveLength(content.evasion.blackPcts.length);
+    expect(getComputedStyle(black).flexDirection).toBe('row');
+    for (const share of shares) {
+      expect(share.parentElement).toBe(black);
+      expect(share.style.minWidth, share.textContent ?? '').toBe('0px');
+      for (const words of share.querySelectorAll<HTMLElement>('[dir="auto"]')) expect(cut(words), words.textContent ?? '').toBe(false);
+    }
+    // The residency of Bangkok: its switch's words and the two lines under it wrap; nothing in its panel is cut.
+    const residency = screen.getByLabelText(ru.finance.taxes.residencyTitle.replace('{city}', textFor('ru').names.cities.bangkok));
+    expect(within(residency).getByRole('switch')).toBeTruthy();
+    for (const words of bodyOf(residency)) expect(cut(words), words.textContent ?? '').toBe(false);
+    // What is not declared, and what it risks: nothing cut there either.
+    const hidden = screen.getByLabelText(ru.finance.evasion.title);
+    for (const words of bodyOf(hidden)) expect(cut(words), words.textContent ?? '').toBe(false);
   });
 });

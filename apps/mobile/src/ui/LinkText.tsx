@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { webBaseline } from './fonts';
 import { ReadText, type TextLine } from './text';
@@ -31,14 +31,22 @@ export function LinkText({ size, offset, tone = 'sky-300', children }: { size: n
     [children],
   );
   const lines = held !== null && held.words === children ? held.lines : null;
+  // The words themselves, made once for what they are: the lines under them change with their layout (a wrap, back to one line), the words do not,
+  // and are not drawn again for it. (How many lines there are is only known from the layout, so the lines are state: what changes is drawn, once.)
+  const words = useMemo(
+    () => (
+      <ReadText size={size} tone={tone} onLines={laid}>
+        {children}
+      </ReadText>
+    ),
+    [size, tone, laid, children],
+  );
   // The first line's underline stands where the web puts it under a line of this size; each line after it as far below it as the phone set that line.
   const under = webBaseline('read', 400, size, size * BODY.lineHeight) + offset;
   const strip = { position: 'absolute', height: 1, backgroundColor: COLORS[tone], pointerEvents: 'none' } as const;
   return (
     <View>
-      <ReadText size={size} tone={tone} onLines={laid}>
-        {children}
-      </ReadText>
+      {words}
       {lines === null ? (
         <View testID="underline" aria-hidden style={{ ...strip, left: 0, right: 0, top: under }} />
       ) : (

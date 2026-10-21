@@ -54,7 +54,7 @@ describe('the tabs of a first life', () => {
   });
 });
 
-describe('the tabs on a narrow phone, in Russian', () => {
+describe('the tabs in Russian, their structure (a row that scrolls, titles never cut; widths are the batch pass\'s)', () => {
   it('scroll sideways rather than squeeze: a row that runs off the screen, every title whole on one line', async () => {
     const tabs = await firstFinances('engineer', 'ru');
     const strip = screen.getByRole('tablist', { name: ru.finance.tabsLabel });

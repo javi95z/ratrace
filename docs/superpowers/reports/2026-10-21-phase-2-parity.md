@@ -567,14 +567,17 @@ eight tabs of the web's finances are on the phone.
 
 - **The shelf is the web's grid**: two to a row (`grid-cols-2 gap-2`: 4 each side of a tile in a row 8 wider than the panel), each tile as tall as the other in
   its row. **The web's container query** (`@min-[400px]`, of the shelf's own width) lays the picture beside the words from 400: the shelf measures itself
-  (`onLayout`) and tells its tiles once, when the answer changes. A phone's panel is under 400 (402 − 24 − 24 = 354), so the shots show the picture above
-  the words, as the web's do. (Task 15's brief said 3 columns, or 5 from 460: that was the shop of an older web; today's web, the reference, is two to a row.)
-- **The shelves are put on screen two a frame** (`SHELVES_FIRST`, `SHELVES_STEP`): the whole shop is some sixty tiles, each a canvas. A `FlatList` would not
-  help there: the shop is a tab inside Play's one scrolling page, and a list inside a scroll of its own direction cannot tell what is on screen, so it draws
-  every row anyway (and React Native warns). Every tile is memoised (primitive props, one stable `onOpen`): asking for everything draws only the tiles that
-  come on the shelf, and an order draws only the tiles whose figures it changes (`FinanceShop.test`).
-- **An order is given once from a sheet** (`useOnce`): buying, on instalments, second hand, without an invoice, selling or cancelling a thing, opening a
-  business, putting money in, selling it. A second tap before the sheet has gone gives nothing; a refused one can be tried again (the sheet stays open).
+  (`onLayout`) and tells its tiles once, when the answer changes; before that it is as wide as the screen makes it (the column, at most 448, less 48), so
+  a tablet's first frame is already a row. A phone's panel is under 400 (402 − 24 − 24 = 354), so the shots show the picture above the words, as the web's
+  do. (Task 15's brief said 3 columns, or 5 from 460: that was the shop of an older web; today's web, the reference, is two to a row.)
+- **The shelves are put on screen two a frame** (`SHELVES_FIRST`, `SHELVES_STEP`, counted in shelves with something on them, so kinds with nothing in reach
+  take no frame): the whole shop is some sixty tiles, each a canvas. A `FlatList` would not help there: the shop is a tab inside Play's one scrolling page,
+  and a list inside a scroll of its own direction cannot tell what is on screen, so it draws every row anyway (and React Native warns). Every shelf and every
+  tile is memoised (primitive props, one stable `onOpen`): each frame draws only the new shelves, asking for everything draws only the tiles that come on the
+  shelf, and an order draws only the tiles whose figures it changes (`FinanceShop.test`).
+- **An order is given once** (the kit's `useOnce`): every amount sheet (`AmountSheet`: saving, selling, a pension, a loan, opening a business, putting money
+  in) gives its amount once each time it is opened, and a thing's sheet (buying it in any way, selling or cancelling it) and a business's sale give their
+  order once. A second tap before the sheet has gone gives nothing; a refused one can be tried again (the sheet stays open).
 - **The adviser's word** is one paragraph, as the web's: who speaks in the pixel face (gold capitals, `tracking-wider`), what they say in italics after it,
   wrapping under it. The kit's run-on words gained a pixel span and a spacing of their own (`Aside.pixel`, `Aside.tracking`) for it, and for a business's
   stars (`tracking-widest`), dimmed after the gold ones, before what its customers say (the web's `mr-1.5` is a space opened to 6).

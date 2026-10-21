@@ -365,6 +365,28 @@ export function Row({ left, right, sub, size = BODY.size, style }: { left: React
   );
 }
 
+/**
+ * A figure on the right of a `Row` in a colour of its own (the web's `<span className="text-…">` in a Row's `right`, which the Row sets in the pixel
+ * face), at the Row's size unless `size` says another.
+ */
+export function Figure({ tone, size, children }: { tone: ColorToken; size?: number; children: string }) {
+  return <PixelText size={size} tone={tone} style={{ textAlign: 'right' }}>{children}</PixelText>;
+}
+
+/**
+ * Something done once from what is on screen (an order given from a sheet): done, a second press before the screen has gone (a double tap whose two
+ * presses both land before React draws again) does nothing. Not done (an order the round refuses), it can be tried again. Armed afresh each time the
+ * piece that holds it is mounted (a sheet opened again).
+ */
+export function useOnce(): (act: () => boolean) => boolean {
+  const done = useRef(false);
+  return (act) => {
+    if (done.current) return false;
+    done.current = act();
+    return done.current;
+  };
+}
+
 const FIGURE_TONE = { gold: 'gold-500', teal: 'teal-300', wine: 'wine-300', cream: 'cream' } as const satisfies Record<string, ColorToken>;
 
 /**

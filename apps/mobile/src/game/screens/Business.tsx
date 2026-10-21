@@ -2,11 +2,11 @@ import { businessArt, businessStageArt, HANDOVER_ART } from '@ratrace/content';
 import { reviewStars } from '@ratrace/core/game/quips';
 import { quoteBusinesses } from '@ratrace/engine';
 import type { BusinessesQuote, GameView, Order } from '@ratrace/engine';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bare, Button, KeyFigure, Panel, reach, Row, Segmented, Tag, Toggle, usePress } from '../../ui/kit';
+import { Bare, Button, Figure, KeyFigure, Panel, reach, Row, Segmented, Tag, Toggle, useOnce, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
@@ -204,6 +204,7 @@ export function BusinessTab() {
   const { content, text, fmt } = useWords();
   const shown = useShown();
   const view = useGame((s) => s.view);
+  const addOrder = useGame((s) => s.addOrder);
   const [open, setOpen] = useState<string | null>(null);
   const [starting, setStarting] = useState<Kind | null>(null);
   const onOpen = useCallback((id: string) => setOpen(id), []);
@@ -299,39 +300,20 @@ export function BusinessTab() {
         </View>
       </Panel>
 
-      {starting ? <StartSheet kind={starting} cash={shown.player.cash} onClose={() => setStarting(null)} /> : null}
+      {starting ? (
+        <AmountSheet
+          title={t('startTitle', { name: text.businessTypes[starting.typeId].name })}
+          max={shown.player.cash}
+          start={starting.minCapital}
+          onClose={() => setStarting(null)}
+          onConfirm={(capital) => addOrder({ type: 'startBusiness', typeId: starting.typeId, capital })}
+        >
+          <ReadText size={14} lineHeight={14 * SNUG} tone="ink-200" style={{ marginBottom: 8 }}>{t('startHint', { min: fmt.money(starting.minCapital), scale: fmt.compact(starting.scale) })}</ReadText>
+        </AmountSheet>
+      ) : null}
       {opened ? <BusinessSheet business={opened} view={view} quote={quote} onClose={() => setOpen(null)} /> : null}
     </View>
   );
-}
-
-/**
- * Opening one: the web's `AmountSheet`, from the least it takes, with what it asks for over the amount. A sheet of its own, so that it gives its order
- * once: a second tap before the sheet has gone (a double tap) opens nothing more.
- */
-function StartSheet({ kind, cash, onClose }: { kind: Kind; cash: number; onClose(): void }) {
-  const t = useT('finance.business');
-  const { text, fmt } = useWords();
-  const addOrder = useGame((s) => s.addOrder);
-  const once = useOnce();
-  return (
-    <AmountSheet title={t('startTitle', { name: text.businessTypes[kind.typeId].name })} max={cash} start={kind.minCapital} onClose={onClose} onConfirm={(capital) => once(() => addOrder({ type: 'startBusiness', typeId: kind.typeId, capital }))}>
-      <ReadText size={14} lineHeight={14 * SNUG} tone="ink-200" style={{ marginBottom: 8 }}>{t('startHint', { min: fmt.money(kind.minCapital), scale: fmt.compact(kind.scale) })}</ReadText>
-    </AmountSheet>
-  );
-}
-
-/**
- * An order a sheet gives once: taken, a second tap before the sheet has gone (a double tap) gives nothing. Refused, it can be tried again (the
- * refusal is said, and the sheet stays open).
- */
-export function useOnce(): (give: () => boolean) => boolean {
-  const given = useRef(false);
-  return (give) => {
-    if (given.current) return false;
-    given.current = give();
-    return given.current;
-  };
 }
 
 /** What the customers write about it online. It is said, not counted: the stars follow how it is run. */
@@ -417,7 +399,7 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
 
   // One sheet at a time: putting money in takes the place of the business, and gives it back when done.
   if (investing) {
-    return <InvestSheet businessId={business.id} name={name} cash={shown.player.cash} onClose={() => setInvesting(false)} onInvest={addOrder} />;
+    return <AmountSheet title={t('investTitle', { name })} max={shown.player.cash} onClose={() => setInvesting(false)} onConfirm={(amount) => addOrder({ type: 'investBusiness', businessId: business.id, amount })} />;
   }
 
   return (
@@ -500,16 +482,4 @@ function BusinessSheet({ business, view, quote, onClose }: { business: Owned; vi
       </View>
     </Sheet>
   );
-}
-
-/** Putting more money in: the web's `AmountSheet`, in the business's place, giving its order once (a double tap puts in nothing more). */
-function InvestSheet({ businessId, name, cash, onClose, onInvest }: { businessId: string; name: string; cash: number; onClose(): void; onInvest(order: Order): boolean }) {
-  const t = useT('finance.business');
-  const once = useOnce();
-  return <AmountSheet title={t('investTitle', { name })} max={cash} onClose={onClose} onConfirm={(amount) => once(() => onInvest({ type: 'investBusiness', businessId, amount }))} />;
-}
-
-/** A figure on the right of a line, in a colour of its own (the web's `<span className="text-…">` in a Row's `right`). */
-function Figure({ tone, children }: { tone: ColorToken; children: string }) {
-  return <PixelText tone={tone} style={{ textAlign: 'right' }}>{children}</PixelText>;
 }

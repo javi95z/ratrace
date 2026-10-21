@@ -18,8 +18,8 @@ import { Play } from './Play';
 
 /*
  * The way of life in the finances (the web's Finance.test.tsx: the Lifestyle tab, the city move, what belongs to a city, the note under health cover,
- * the limits of focus), on the phone; and what the phone adds: each control of the tab is drawn again only for itself, and in Russian on a narrow
- * phone the choices wrap, never cut short.
+ * the limits of focus), on the phone; and what the phone adds: each control of the tab is drawn again only for itself, and in Russian the choices
+ * are laid out to wrap, never cut short.
  */
 
 // Each switch and each row of choices of the kit, counted as it is drawn, by its name: the tab's controls are drawn again only for themselves.
@@ -487,7 +487,7 @@ describe('the lifestyle tab, drawn again', () => {
   });
 });
 
-describe('the lifestyle tab in Russian, on a narrow phone', () => {
+describe('the lifestyle tab in Russian, its structure (what wraps and what is cut; widths are the batch pass\'s)', () => {
   /** Whether a text is cut to a line or a few with an ellipsis (`numberOfLines`), by the element that holds it or any up to `top`. */
   function cutShort(words: HTMLElement, top: HTMLElement): boolean {
     for (let at: HTMLElement | null = words; at && at !== top.parentElement; at = at.parentElement) if (/r-textOverflow-|r-WebkitLineClamp/.test(at.className)) return true;

@@ -518,6 +518,29 @@ describe('investing every round', () => {
   });
 });
 
+describe('a sheet of an amount', () => {
+  it('gives its amount once for a double tap on its button, and once again when it is opened again', async () => {
+    const { services } = await inFinance('heir');
+    played(services);
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
+    slide(100_000);
+    const confirm = within(sheetTitled('Move cash to savings')).getByRole('button', { name: 'Confirm $1,000' });
+    // Both presses before the screen is drawn again: $1,000 saved, not $2,000 (two savings would be one order of the sum).
+    act(() => {
+      fireEvent.click(confirm);
+      fireEvent.click(confirm);
+    });
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Move cash to savings' })).toBeNull());
+    expect(probe.state!.orders).toEqual([{ type: 'depositIn', amount: 100_000 }]);
+    // Opened again, it gives its amount again: one more $1,000, added to the order.
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    slide(100_000);
+    fireEvent.click(within(sheetTitled('Move cash to savings')).getByRole('button', { name: 'Confirm $1,000' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Move cash to savings' })).toBeNull());
+    expect(probe.state!.orders).toEqual([{ type: 'depositIn', amount: 200_000 }]);
+  });
+});
+
 describe("this round's orders", () => {
   it('list an order the player gives, which can be taken back, and put back again', async () => {
     const { services } = await inFinance('heir');
@@ -912,7 +935,7 @@ function cutShort(text: HTMLElement, top: HTMLElement): boolean {
   return false;
 }
 
-describe('the market and the debts in Russian, on a narrow phone', () => {
+describe('the market and the debts in Russian, their structure (what wraps and what is cut; widths are the batch pass\'s)', () => {
   it('wrap the long choices of the sheet that buys, each a share of its row and never cut short', async () => {
     const { services } = await seasoned('civil_servant');
     renderGame(<Play />, services, 'ru');

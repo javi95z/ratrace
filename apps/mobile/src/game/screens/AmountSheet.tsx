@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
-import { Button, usePress } from '../../ui/kit';
+import { Button, useOnce, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
 import { PixelText, ReadText } from '../../ui/text';
@@ -50,7 +50,8 @@ function Share({ pct, onPress }: { pct: number; onPress(): void }) {
  * Picks an amount of money: a slider, chips for a quarter, a half and all of it, and one button. There is no field for an exact amount, as
  * on the web. The amount is read aloud through the slider's own value and its live region (the web's `<output aria-live>`; on iOS, a chip's
  * amount is said as it is pressed), and how much there is through the slider's hint.
- * It is mounted only while it is open, so it always starts from `start`. The keyboard's help and shortcut are the web's, for a keyboard.
+ * It is mounted only while it is open, so it always starts from `start`, and gives its amount once each time it is opened. The keyboard's help and
+ * shortcut are the web's, for a keyboard.
  */
 export function AmountSheet({ title, max, onClose, onConfirm, children, start = 0, footer, preview }: Props) {
   const t = useT('finance.amount');
@@ -59,8 +60,10 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
   const [amount, setAmount] = useState(Math.min(start, Math.max(0, max)));
   const step = sliderStep(max);
   const setSafeAmount = (next: number) => setAmount(Math.max(0, Math.min(max, Number.isFinite(next) ? next : 0)));
+  // One amount for one opening: a double tap on the button, both presses landing before the sheet has gone, gives it once (a refused one may be tried again).
+  const once = useOnce();
   const submit = () => {
-    if (amount > 0 && onConfirm(amount)) onClose();
+    if (amount > 0 && once(() => onConfirm(amount))) onClose();
   };
   const money = fmt.money(amount);
   // A chip sets the amount in one go: on iOS, which has no live region, it is said (the slider says its own value as it moves).

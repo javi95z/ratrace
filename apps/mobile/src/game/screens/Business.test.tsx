@@ -18,7 +18,7 @@ import { Play } from './Play';
 /*
  * The businesses of the finances (the web's Business.test.tsx, all of it), on the phone: there the orders of the round are in the basket's sheet,
  * not beside the finances. And what the phone adds: a business is opened and sold once for a double tap, its line is drawn again only for what it
- * shows, its small switches take a thumb's 44, and in Russian on a narrow phone its line wraps.
+ * shows, its small switches take a thumb's 44, and in Russian its line is laid out to wrap.
  */
 
 // The slider's gesture is the phone's (its native side cannot be loaded here): a stand-in that keeps what the sheet hands it, for a test to move.
@@ -402,7 +402,7 @@ describe('a business\'s line, on the phone', () => {
   });
 });
 
-describe('the businesses in Russian, on a narrow phone', () => {
+describe('the businesses in Russian, their structure (what wraps and what is cut; widths are the batch pass\'s)', () => {
   it('wrap a business\'s line and the kinds to open: only the name of an owned one is cut to its line, as the web cuts it', async () => {
     const { services } = await inFinance('founder');
     await openTab(services, 'ru');
