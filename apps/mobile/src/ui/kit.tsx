@@ -1,5 +1,5 @@
-import { Children, createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, Pressable, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Children, createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { Animated, Easing, Pressable, View, type HostInstance, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE, type FrameTone } from './frames';
@@ -140,8 +140,11 @@ export function Raised({
   style,
   place,
   testID,
+  ref,
   children,
 }: PressProps & {
+  /** The pressable itself, for what asks something of the thing on screen (the screen reader's focus). */
+  ref?: Ref<HostInstance>;
   role?: 'button' | 'link' | 'radio' | 'menuitem';
   label?: string;
   /** The language its words are in, where a screen reader would otherwise read them in the phone's (iOS; the web's `lang`). */
@@ -159,6 +162,7 @@ export function Raised({
   const press = usePress({ onPress, disabled });
   return (
     <Pressable
+      ref={ref}
       accessibilityRole={role}
       accessibilityLabel={label}
       accessibilityLanguage={language}
@@ -278,7 +282,7 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words
  */
 export function SrOnly({ children }: { children: string }) {
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}>
+    <View style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', pointerEvents: 'none' }}>
       <ReadText size={12}>{children}</ReadText>
     </View>
   );

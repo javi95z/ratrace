@@ -51,7 +51,7 @@ text whatever the app does. The scenes that carry them are listed beside the sta
 compared for their layout and shape only: their text rows are in the line (`textLines`, `oneSided`, `worstPt`) and not judged, and the verdict says so.
 `home-lost-newer` is `phone words, layout clean` or `phone words, layout differs`, by its shape alone (a layout that differs still fails the run). `legal`
 (`PHONE_PAGES`) is a page of other words from top to bottom, whose every box stands where the length of its text puts it, so its shape says nothing of the
-layout either: `phone words, not comparable`, which never fails a run (its layout is judged once, by drawing the phone's page with the web's own words: Task 6,
+layout either: `phone words, not comparable`, which fails a run only if its shape drifts from its recorded baseline (`PAGE_BASELINE`, below; its layout is judged once, by drawing the phone's page with the web's own words: Task 6,
 below). Before this, those two scenes made every full run of `scene-shots.ts` exit 1.
 
 ## Task 6: the front door, its settings, the week's challenge and the legal notice
@@ -127,10 +127,10 @@ blank page), compared and taken out again.
 
 | scene | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
 |---|---|---|---|---|---|---|---|
-| new-first | differs (residuals below) | 3.28 | 0.592 | 8120 | 1107 | 26 (5 unmeasured) | 2.00 (the dice) |
-| new-unlocked | differs (the same) | 3.22 | 0.657 | 8757 | 1107 | 33 (5 unmeasured) | 2.00 (the dice) |
-| new-locked | differs (the same, and the hints' slant) | 6.55 | 2.924 | 16709 | 1636 | 66 (13 unmeasured) | 2.00 (the dice, the hints) |
-| new-replace | differs (the same) | 2.00 | 0.491 | 5509 | 1159 | 32 (27 under the sheet's backdrop) | 1.00 |
+| new-first | accepted (residuals below) | 3.28 | 0.592 | 8120 | 1107 | 26 (5 unmeasured) | 2.00 (the dice) |
+| new-unlocked | accepted (the same) | 3.22 | 0.657 | 8757 | 1107 | 33 (5 unmeasured) | 2.00 (the dice) |
+| new-locked | accepted (the same) | 5.98 | 2.290 | 13085 | 1636 | 66 (13 unmeasured) | 2.00 (the dice, the arrow) |
+| new-replace | accepted (the same) | 2.00 | 0.491 | 5509 | 1159 | 32 (27 under the sheet's backdrop) | 1.00 |
 | CareerPreview (temporary scene) | clean | 3.69 | 1.388 | 12353 | 0 | 28 | 0.67 |
 
 The three pages that were shot before Task 7's second round (`home-new`, `home-settings`, `challenge-practice`) were shot again after the kit change in #3 below:
@@ -144,7 +144,7 @@ The three pages that were shot before Task 7's second round (`home-new`, `home-s
 |---|---|---|---|---|
 | 1 | a locked life's portrait 7 pt higher than the web's, its lock with it (4383 shape pixels) | the kit's `Well` is `align-self: flex-start` (it hugs in a column); the web's inline-flex well is centred by the row (`items-center`) against four lines of text | the well is given `alignSelf: 'center'` where the web's row centres it | `NewLife.test` (every portrait's well) |
 | 2 | the web's list of the locked lives shut in the shot of `new-locked` | the dev server runs a scene page's effect twice before it draws again: the page pressed the button twice, and the second press shut what the first opened | the page presses once (a ref) | `scenePages.test` |
-| 3 | boxes of stacked one-line texts 1 to 2 device pixels taller than the web's: the chosen life's tile 0.67 pt, `home-settings` 3 shape pixels, the sheet's content | a line is drawn on the device's grid (16.5 pt as 16.67), and the kit held a text to its exact line only from two lines up: a one-line text kept its grid line's extra, and a column of them added it up | a text cut to one line is held to the exact line at once; one that can wrap, once it has said how many lines it has (one or more) | `text.test` (RED: two tests failed before) |
+| 3 | boxes of stacked one-line texts 1 to 2 device pixels taller than the web's: the chosen life's tile 0.67 pt, `home-settings` 3 shape pixels, the sheet's content | a line is drawn on the device's grid (16.5 pt as 16.67), and the kit held a text to its exact line only from two lines up: a one-line text kept its grid line's extra, and a column of them added it up | a text starts as one line and is held as one in its first frame (what nearly every text is, and a text cut to one line always is: never drawn again for it); one that wraps is corrected once, after its layout | `text.test` (RED: two tests failed before) |
 | 4 | the pay of a rung of the career 1.33 pt higher than its title (`CareerPreview`) | the web aligns the 16 pt title and the 15 pt pay by their baselines (`items-baseline`); a native row reads the baseline of a box, and the kit moves glyphs inside their boxes, so the two did not meet | the row is top-aligned and the pay is dropped by the difference of the two baselines in the browser (`webBaseline`: 14 and 13, a point) | `fonts.test`, `CareerPreview.test` |
 | 5 | the character's name after a pixel title ("Nurse · Lucía") would have needed a reading face inside a pixel text, in a colour of its own, and the unlock line two colours in one paragraph | the kit's texts took one string | `after` on the kit's texts: words that run on in the same text, in a colour, or in the reading face at the size the pixel text's `font-size-adjust` gives it (`adjustedRuns`: Chakra Petch's 13 is 15.6; Exo 2's for Cyrillic by its own small letters); a nested text takes the title's letter and word spacing in Russian as the web's span does; the baseline counts the fonts that run on | `text.test`, `fonts.test` |
 
@@ -158,14 +158,25 @@ The three pages that were shot before Task 7's second round (`home-new`, `home-s
    Only two labels have an emoji (`newLife.random`, `player.byChance`).
 2. **▾ and ▴ of the folded list: 1.33 to 1.67 pt, about 30 shape pixels.** Phase 1's ▸ again: no font of the page draws it; Chrome on macOS takes it from `.SF NS`, where the adjust makes it
    1.375 times larger (measured: 8.875 against 6.453 pt wide); the app takes iOS's, which draws it 4 pt wide against the web's 5.
-3. **The hints under the locked lives are not slanted (new-locked: 1.67 to 2.00 pt, the first ink of a line 2 pt to the left).** The web's Chakra Petch is loaded without an italic face and Chrome
-   draws `italic` by slanting the upright one; iOS does not slant a custom font that has none (React Native's `fontStyle: 'italic'` does nothing there), so the hint is upright. Not
-   reproduced: a slant of the whole box would lean every line about the box's middle, not each about its own baseline, and the font's own italic has other widths than the upright, so
-   a hint would wrap in other places than the web's. The hint is the last, dimmest line of a row that opens only on a tap.
+3. **The hints under the locked lives were upright, and are slanted now (new-locked: 1.67 to 2.00 pt before, within 0.67 pt after).** The web's Chakra Petch and Exo 2 have no italic face (next/font loads the upright ones) and
+   Chrome slants the upright face as it draws it, every glyph sheared by a quarter of its height above the baseline, the advances unchanged; iOS does not slant a font that has no italic (React Native's
+   `fontStyle: 'italic'` does nothing there) and a real italic has other widths, so a hint would wrap elsewhere. So the slant is made once, as a face of its own (`scripts/slant_fonts.py`: fontTools, the four faces
+   Chakra Petch and Exo 2 in 400 and 600, `assets/fonts/*_Slant.ttf` with their OFL texts), and an italic text is set in it (`ReadText italic`); no `fontStyle` is set for it, so Android does not slant it twice.
+   The five screens whose web uses `italic` (End, Evasion, Business, Finance, Resolve) are the same one prop. `slantFonts.test.ts` reads the files and checks every point of an outline, every advance, the
+   names and the license, and makes them again where fontTools is the version that made them.
 4. **Whole CSS pixels against device pixels, up to ⅔ pt (1 pt for the sheet's last button).** Chrome puts boxes, images and the baseline of a text on whole CSS pixels and the phone on device pixels (phase 1's
    same residual): the chosen tile ends one device pixel lower; the cash figure stands 2 device pixels higher (251 shape pixels); the coin and the city icon after a text of a fractional width are 1 device
    pixel apart (94); "EASY" is 1 device pixel narrower (91); the labels of the kit's buttons (`Start this life`, `Keep my life`, `End it and start this one`: 0.67 to 1.00 pt) stand 2 device pixels higher
    (527 in `new-locked`, the page with its button under the list). The rest of the 1107 of `new-first` is antialiased edges (517 are `shapeBlended`).
+
+### What a run accepts
+
+A scene that differs and whose residual is explained above is `accepted` while it stays within a record (`ACCEPTED` in `scripts/sceneShots.ts`: per scene, the most shape pixels, the most any line of text stands apart
+and the most lines in one shot only, its reason, and the heading of this report that explains it): `home-continue` (1 pixel, 0.67 pt), `new-first` and `new-unlocked` (1107, 2.00 pt), `new-locked` (1636, 2.00 pt),
+`new-replace` (1159, 1.00 pt). Any growth (a pixel, a hundredth of a point, a line of text in one shot only) is `differs` and fails the run; a scene that is clean stays clean. The page of other words (`legal`,
+`PAGE_BASELINE`) is held to where it stood, 39721 shape pixels, within 10 % either way: past that it is `phone words, drifted` and fails the run. A full run (`scene-shots.ts` with nothing named) now exits 0: every
+scene is clean, accepted, in the phone's words within its bound, or unjudged. A change of the screens or of the phone's words that moves a number is meant to be seen here and the record moved by whoever moved it.
+(The sprites of a screen are given six seconds to load before it is shot, not four: once in a full run the front door's gear was not there yet.)
 
 ### The lists: why not a `FlatList`
 

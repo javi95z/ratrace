@@ -689,6 +689,17 @@ test('SrOnly is words for a screen reader only: in the tree, clipped to a point,
   while (box && box.style.position !== 'absolute') box = box.parentElement;
   expect(box).not.toBeNull();
   expect([box!.style.width, box!.style.height, box!.style.overflowX, box!.style.overflowY]).toEqual(['1px', '1px', 'hidden', 'hidden']);
-  // Like every text of the kit, the words themselves take no tap.
+  // Nothing in the box takes a tap: not the box (a style, as every text of the kit has it), and not the words.
+  expect(box!.style.pointerEvents).toBe('none');
   expect((words.parentElement as HTMLElement).style.pointerEvents).toBe('none');
+});
+
+test('a Raised hands its pressable to whoever asks for it, to move the screen reader\'s focus to it', () => {
+  const seen: Array<unknown> = [];
+  render(
+    <Raised role="radio" checked label="A life" ref={(node) => void seen.push(node)} onPress={() => {}}>
+      {'x'}
+    </Raised>,
+  );
+  expect(seen.some((node) => node === screen.getByRole('radio', { name: 'A life' }))).toBe(true);
 });

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, refuseServerInUse } from './shotDrivers';
+import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -106,4 +106,9 @@ test('a page is opened with the rules of the page added to what is always added,
 test('the scenes are shot on web pages as tall as the screen shows, by the one rule that says so', () => {
   const source = read('./scene-shots.ts');
   expect(source).toMatch(/await openPage\(page, sceneWebUrl\(scene, PORT\), \(\) => document\.querySelector\('\[data-scene\]'\) !== null, webRules\(scene\)\)/);
+});
+
+test('a screen is given six seconds for its sprites to load before it is shot, and the shot waits for no less (4 s once left the front door\'s gear out of a full run)', () => {
+  expect(SPRITES_MS).toBe(6000);
+  expect(read('./shotDrivers.ts')).toContain('await sleep(SPRITES_MS);');
 });

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { chooseScenes, differing, filesOf, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, chooseScenes, differing, filesOf, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 
@@ -157,22 +157,100 @@ describe('a scene whose words are the phone\'s own', () => {
     expect(() => lineOf(legal, otherWords({ rawPercent: 70 }))).toThrow('legal: a wrong page is not a result to keep');
   });
 
-  it('makes a run fail only for a scene that differs, or whose layout does: not for a clean one, other words, a stand-in or a page that cannot be compared', () => {
+  it('makes a run fail only for a scene that differs, or whose layout does, or a page of other words that has drifted: not for a clean one, other words, a stand-in or a page that cannot be compared', () => {
     const lines = [
       lineOf(named('home-new'), result('a', { shape: 0, texts: [] })),
-      lineOf(named('home-continue'), result('b', { shape: 1, texts: [] })),
+      lineOf(named('home-new'), result('b', { shape: 1, texts: [] })),
       lineOf(lost, otherWords()),
-      lineOf(named('legal'), otherWords({ shape: 99 })),
+      lineOf(named('legal'), otherWords({ shape: PAGE_BASELINE.legal.shape })),
       unjudgedLine(named('play-news-r1')),
       lineOf(named('challenge-practice'), result('c', { shape: 0, texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 3 }] })),
     ];
-    expect(differing(lines).map((line) => line.scene)).toEqual(['home-continue', 'challenge-practice']);
+    expect(differing(lines).map((line) => line.scene)).toEqual(['home-new', 'challenge-practice']);
     expect(differing([lineOf(lost, otherWords({ shape: 5 }))]).map((line) => line.scene)).toEqual(['home-lost-newer']);
     expect(differing([])).toEqual([]);
   });
 
   it('is written to the report with its verdict', () => {
-    const text = jsonOf([lineOf(lost, otherWords()), lineOf(legal, otherWords({ shape: 5 }))]);
+    const text = jsonOf([lineOf(lost, otherWords()), lineOf(legal, otherWords({ shape: PAGE_BASELINE.legal.shape }))]);
     expect(JSON.parse(text).map((line: { verdict: string }) => line.verdict)).toEqual(['phone words, layout clean', 'phone words, not comparable']);
+  });
+});
+
+describe('what is accepted of a scene, and no more', () => {
+  const named = (name: string) => SCENES.find((scene) => scene.name === name)!;
+  const report = readFileSync(new URL('../../../docs/superpowers/reports/2026-10-21-phase-2-parity.md', import.meta.url), 'utf8');
+  /** A scene's numbers as the record has them, and then some. */
+  const measured = (name: string, more: { shape?: number; worstPt?: number; oneSided?: number } = {}): Result => {
+    const record = ACCEPTED[name];
+    const texts: Result['texts'] = [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: record.worstPt + (more.worstPt ?? 0) }];
+    for (let i = 0; i < record.oneSided + (more.oneSided ?? 0); i++) texts.push({ text: `only ${i}`, web: [0, 0, 1, 1], app: null, apart: Infinity });
+    return result(name, { shape: record.shape + (more.shape ?? 0), texts });
+  };
+
+  it('is a record for each scene whose residual is explained: the most it may differ by, what it is, and where the parity report says so', () => {
+    expect(Object.keys(ACCEPTED).sort()).toEqual(['home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked']);
+    for (const [name, record] of Object.entries(ACCEPTED)) {
+      expect(SCENES.map((scene) => scene.name), name).toContain(name);
+      expect(isJudged(named(name)), name).toBe(true);
+      expect(PHONE_WORDS, name).not.toContain(name);
+      expect(record.reason.length, name).toBeGreaterThan(30);
+      // The heading it names is in the report, which is where its measured cause is written.
+      expect(report, name).toContain(`\n## ${record.report}\n`);
+      expect(record.shape).toBeGreaterThanOrEqual(0);
+      expect(record.worstPt).toBeGreaterThan(0);
+    }
+  });
+
+  it('passes a scene that differs as the record says it does, and as no more: the same shape and text, or less, is accepted', () => {
+    for (const name of Object.keys(ACCEPTED)) {
+      const line = lineOf(named(name), measured(name));
+      expect(line.verdict, name).toBe('accepted');
+      expect(differing([line]), name).toEqual([]);
+      // Fewer shape pixels, or a nearer text, is no harm.
+      expect(['accepted', 'clean'], name).toContain(lineOf(named(name), measured(name, { shape: -1 })).verdict);
+      expect(lineOf(named(name), measured(name, { worstPt: -0.01 })).verdict, name).toBe('accepted');
+    }
+  });
+
+  it('fails a scene on any growth: one more shape pixel, a hundredth of a point more, a line of text in one shot only', () => {
+    for (const name of Object.keys(ACCEPTED)) {
+      for (const more of [{ shape: 1 }, { worstPt: 0.01 }, { oneSided: 1 }]) {
+        const line = lineOf(named(name), measured(name, more));
+        expect([name, JSON.stringify(more), line.verdict]).toEqual([name, JSON.stringify(more), 'differs']);
+        expect(differing([line]).map((one) => one.scene)).toEqual([name]);
+      }
+    }
+  });
+
+  it('is nothing for a scene that has no record: it differs, or it is clean', () => {
+    expect(lineOf(named('home-new'), result('x', { shape: 1, texts: [] })).verdict).toBe('differs');
+    expect(lineOf(named('home-new'), result('x', { shape: 0, texts: [] })).verdict).toBe('clean');
+    // And a scene that is clean stays clean though it has a record: the record is what it may differ by, not what it does.
+    expect(lineOf(named('home-continue'), result('x', { shape: 0, texts: [] })).verdict).toBe('clean');
+  });
+
+  it('holds the page of other words to where it stands: its shape is recorded, and a page that moves off it fails the run', () => {
+    expect(PHONE_PAGES.slice().sort()).toEqual(Object.keys(PAGE_BASELINE).sort());
+    const legal = named('legal');
+    const base = PAGE_BASELINE.legal;
+    expect(report).toContain(`\n## ${base.report}\n`);
+    expect(base.reason.length).toBeGreaterThan(30);
+    const at = (shape: number) => lineOf(legal, result('legal', { shape, texts: [] }));
+    expect(at(base.shape).verdict).toBe('phone words, not comparable');
+    expect(at(Math.floor(base.shape * (1 + base.drift))).verdict).toBe('phone words, not comparable');
+    expect(at(Math.ceil(base.shape * (1 - base.drift))).verdict).toBe('phone words, not comparable');
+    for (const shape of [Math.ceil(base.shape * (1 + base.drift)) + 1, Math.floor(base.shape * (1 - base.drift)) - 1, 0]) {
+      const line = at(shape);
+      expect(line.verdict, String(shape)).toBe('phone words, drifted');
+      expect(differing([line]).map((one) => one.scene)).toEqual(['legal']);
+    }
+  });
+
+  it('keeps a full run of the scenes there are as they are, to pass: every scene is clean, accepted, in the phone\'s words within their bounds, or not shot yet', () => {
+    // The verdicts a run can end in, and which of them fail it.
+    const lines = SCENES.map((scene) => (isJudged(scene) ? lineOf(scene, scene.name in ACCEPTED ? measured(scene.name) : PHONE_WORDS.includes(scene.name) ? result(scene.name, { shape: PAGE_BASELINE[scene.name]?.shape ?? 0, texts: [] }) : result(scene.name, { shape: 0, texts: [] })) : unjudgedLine(scene)));
+    expect(differing(lines)).toEqual([]);
+    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, not comparable', 'unjudged']));
   });
 });

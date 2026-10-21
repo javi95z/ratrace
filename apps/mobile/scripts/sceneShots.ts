@@ -71,6 +71,83 @@ export const PHONE_WORDS: readonly string[] = ['home-lost-newer', 'legal'];
  */
 export const PHONE_PAGES: readonly string[] = ['legal'];
 
+/**
+ * What a scene's two shots are accepted to differ by, for a scene that does and whose residual is explained in the parity report (with its measured cause): a run
+ * passes when the scene's numbers stay within the record, and fails on any growth (a pixel more, a hundredth of a point more, a line of text in one shot only). The
+ * numbers are those of the last shoot; a residual that grows, or a new one, is a difference to look at, and one that is mended is a record to tighten.
+ */
+export interface Accepted {
+  /** The most shape pixels (what differs and is not text) accepted. */
+  shape: number;
+  /** The most any line of text may stand apart, in points. */
+  worstPt: number;
+  /** The most lines of text found in one shot only. */
+  oneSided: number;
+  /** What the residual is. */
+  reason: string;
+  /** The heading (`## ...`) of the parity report that explains it, with its cause. */
+  report: string;
+}
+
+export const ACCEPTED: Readonly<Record<string, Accepted>> = {
+  'home-continue': {
+    shape: 1,
+    worstPt: 0.67,
+    oneSided: 0,
+    reason: 'One pixel at the edge of a glyph the text check\'s windows did not cover (the descender of the "y" of "your" in the continue button\'s title); nothing is out of place.',
+    report: 'Task 6: the front door, its settings, the week\'s challenge and the legal notice',
+  },
+  'new-first': {
+    shape: 1107,
+    worstPt: 2,
+    oneSided: 0,
+    reason: 'The dice emoji (Apple Color Emoji sits 2 pt lower on iOS than on macOS Chrome), the arrow of the folded list (macOS\'s system sign against iOS\'s), and whole CSS pixels against device pixels.',
+    report: 'Task 7: choosing a new life',
+  },
+  'new-unlocked': {
+    shape: 1107,
+    worstPt: 2,
+    oneSided: 0,
+    reason: 'The same as new-first: the dice emoji, the arrow of the folded list, and whole CSS pixels against device pixels.',
+    report: 'Task 7: choosing a new life',
+  },
+  'new-locked': {
+    shape: 1636,
+    worstPt: 2,
+    oneSided: 0,
+    reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels), over the rows of the locked lives.',
+    report: 'Task 7: choosing a new life',
+  },
+  'new-replace': {
+    shape: 1159,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The dice emoji under the backdrop, the labels of the sheet\'s two buttons 2 device pixels higher, and whole CSS pixels against device pixels.',
+    report: 'Task 7: choosing a new life',
+  },
+};
+
+/**
+ * A page of the phone's own words from top to bottom (`PHONE_PAGES`) has no shape that says anything of its layout, but it does not move: where it stood when its
+ * words were last written is the baseline, and a shape that is more than `drift` (a share of it) away from it, either way, fails the run. A change of the words is
+ * a new baseline, written here by whoever changes them (the parity report says how the layout was judged).
+ */
+export interface PageBaseline {
+  shape: number;
+  drift: number;
+  reason: string;
+  report: string;
+}
+
+export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
+  legal: {
+    shape: 39721,
+    drift: 0.1,
+    reason: 'The phone\'s notice has other sections and other lengths than the web\'s, so every box under the first heading stands where its own text puts it: the shape is that of the text.',
+    report: 'Task 6: the front door, its settings, the week\'s challenge and the legal notice',
+  },
+};
+
 /** Whether a scene is compared: its screen is the real one on the app. */
 export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene));
 
@@ -81,7 +158,7 @@ export type Line =
       scene: string;
       locale: string;
       /** A scene of the phone's own words (`PHONE_WORDS`) is judged by its layout alone, and says so. */
-      verdict: 'clean' | 'differs' | 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable';
+      verdict: 'clean' | 'differs' | 'accepted' | 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted';
       rawPercent: number;
       beyondPercent: number;
       loose: number;
@@ -101,16 +178,26 @@ const round = (value: number, places: number) => Math.round(value * 10 ** places
 export const unjudgedLine = (scene: Scene): Line => ({ scene: scene.name, locale: scene.locale, verdict: 'unjudged', why: `the app still draws a stand-in for ${screenOf(scene)}: its numbers say nothing` });
 
 /** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */
-function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' {
-  if (PHONE_PAGES.includes(scene.name)) return 'phone words, not comparable';
+function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
+  if (PHONE_PAGES.includes(scene.name)) {
+    const base = PAGE_BASELINE[scene.name];
+    return base === undefined || Math.abs(result.shape - base.shape) <= base.shape * base.drift ? 'phone words, not comparable' : 'phone words, drifted';
+  }
   return result.shape === 0 ? 'phone words, layout clean' : 'phone words, layout differs';
+}
+
+/** Whether a scene that differs differs by no more than its record says. */
+function withinRecord(scene: Scene, result: Result): boolean {
+  const record = ACCEPTED[scene.name];
+  const text = textSummary(result);
+  return record !== undefined && result.shape <= record.shape && text.worstPt <= record.worstPt && text.oneSided <= record.oneSided;
 }
 
 /** A compared scene's line. A shot of the wrong page is stopped before this (`wrongPage`); if one gets here it is not kept. */
 export function lineOf(scene: Scene, result: Result): Line {
   const plain = verdictOf(result);
   if (plain === 'wrong page') throw new Error(`${scene.name}: a wrong page is not a result to keep`);
-  const verdict = PHONE_WORDS.includes(scene.name) ? phoneVerdict(scene, result) : plain;
+  const verdict = PHONE_WORDS.includes(scene.name) ? phoneVerdict(scene, result) : plain === 'differs' && withinRecord(scene, result) ? 'accepted' : plain;
   const text = textSummary(result);
   return {
     scene: scene.name,
@@ -128,8 +215,11 @@ export function lineOf(scene: Scene, result: Result): Line {
   };
 }
 
-/** The lines that fail a run: a scene that differs, or whose layout does. A clean one, one in the phone's own words, a page that cannot be compared and a stand-in do not. */
-export const differing = (lines: readonly Line[]): Line[] => lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs');
+/**
+ * The lines that fail a run: a scene that differs (beyond what is accepted of it), or whose layout does, or a page of other words that has drifted from its baseline.
+ * A clean one, one accepted, one in the phone's own words, a page that cannot be compared and a stand-in do not.
+ */
+export const differing = (lines: readonly Line[]): Line[] => lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs' || line.verdict === 'phone words, drifted');
 
 /** The lines of the report after a run: those kept of scenes not shot this time, and the new ones, in the order the scenes are listed. */
 export function mergeLines(kept: readonly Line[], now: readonly Line[]): Line[] {

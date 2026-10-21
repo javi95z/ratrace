@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { ARIAL_FILE, buildArialCoverage, buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
-import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, familyFor, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, adjustedRuns, CYRILLIC_ALONE, pixelSize, runsOf, webBaseline } from './fonts';
+import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, faceOf, familyFor, SLANT, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, adjustedRuns, CYRILLIC_ALONE, pixelSize, runsOf, webBaseline } from './fonts';
 
 const JERSEY = 'Jersey15_400Regular';
 const OSWALD = 'Oswald_500Medium';
@@ -179,4 +179,39 @@ test('where the browser puts the baseline of a line: the room left over split ab
   // A line taller than the font puts the baseline lower, by half the room (rounded down); a reading text is Chakra at its own size.
   expect(webBaseline('pixel', 400, 16, 30)).toBe(webBaseline('pixel', 400, 16, 17.6) + Math.floor((30 - 22) / 2) - Math.floor((17.6 - 22) / 2));
   expect(webBaseline('read', 400, 15, 21.75)).toBe(Math.floor((21.75 - (Math.round(0.992 * 15) + Math.round(0.308 * 15))) / 2) + Math.round(0.992 * 15));
+});
+
+test('an italic reading text is set in the slanted faces of its fonts, which the web gets by slanting the upright ones: Chakra Petch and Exo 2, in both weights', () => {
+  expect(Object.keys(SLANT).sort()).toEqual(['ChakraPetch_400Regular', 'ChakraPetch_600SemiBold', 'Exo2_400Regular', 'Exo2_600SemiBold']);
+  const [latin] = runsOf('Lucía', 'read', 400, 'en', true);
+  expect([latin.family, faceOf(latin)]).toEqual(['ChakraPetch_400Regular', 'ChakraPetch_400Regular_Slant']);
+  expect(faceOf(runsOf('Lucía', 'read', 600, 'en', true)[0])).toBe('ChakraPetch_600SemiBold_Slant');
+  const cyrillic = runsOf('Люсия', 'read', 400, 'ru', true)[0];
+  expect([cyrillic.family, faceOf(cyrillic)]).toEqual(['Exo2_400Regular', 'Exo2_400Regular_Slant']);
+  expect(faceOf(runsOf('Люсия', 'read', 600, 'ru', true)[0])).toBe('Exo2_600SemiBold_Slant');
+  // The platform's italic is never asked for on top of it: a face that is slanted already is not slanted again (Android would).
+  expect(latin.italic).toBeUndefined();
+  expect(cyrillic.italic).toBeUndefined();
+});
+
+test('an italic text is cut into runs as it is not italic, by the same fonts and at the same scales: only the face differs, so it breaks where the web\'s does', () => {
+  for (const [text, language] of [['Lucía · Software 123', 'en'], ['Люсия · Нет', 'ru']] as const) {
+    const upright = runsOf(text, 'read', 400, language);
+    const slanted = runsOf(text, 'read', 400, language, true);
+    expect(slanted.map((run) => [run.text, run.family, run.scale])).toEqual(upright.map((run) => [run.text, run.family, run.scale]));
+  }
+  // And one in a pixel text's reading face is the same: the adjusted scale, the slanted face.
+  const [run] = adjustedRuns('Lucía', 400, 'en', true);
+  expect(run.scale).toBeCloseTo(PIXEL_X_HEIGHT / CHAKRA_X_HEIGHT, 10);
+  expect(faceOf(run)).toBe('ChakraPetch_400Regular_Slant');
+});
+
+test('what has no slanted face of its own is asked for the platform\'s italic, and what is not italic is asked for nothing', () => {
+  // Arial and the system's font (the signs no font of the stack draws) have real italics on iOS; Android slants them once.
+  const signs = runsOf('★ Lucía', 'read', 400, 'en', true);
+  const star = signs.find((run) => run.text.includes('★'))!;
+  expect([faceOf(star), star.italic]).toEqual([star.family, true]);
+  for (const run of runsOf('★ Lucía Люсия', 'read', 400, 'ru')) expect([run.face, run.italic]).toEqual([undefined, undefined]);
+  // A pixel text has no slanted face (the web's pixel fonts are never italic).
+  for (const run of runsOf('Nurse', 'pixel', 400)) expect(faceOf(run)).toBe(run.family);
 });

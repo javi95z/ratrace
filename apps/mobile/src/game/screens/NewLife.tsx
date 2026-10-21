@@ -3,18 +3,20 @@ import type { LifeDef } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import { unlockProgress } from '@ratrace/core/game/unlockProgress';
 import { useRouter } from 'expo-router';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, View } from 'react-native';
+import type { HostInstance, LayoutChangeEvent } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Raised, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { BottomBar, Screen } from '../../ui/Page';
+import type { ScreenScroller } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useGame, useProfile, useRuns, useT, useWords } from '../context';
+import { useGame, useProfile, useRuns, useStill, useT, useWords } from '../context';
 import { anotherLife, lifeRows } from '../lives';
 import { BackLink } from './BackLink';
 import { Difficulty, LifeBrief, LifeSummary } from './LifeSummary';
@@ -31,12 +33,14 @@ export type NewLifeOpened = 'replace' | 'locked';
  * One life in the grid. Drawn again only when it is chosen or let go, not for another life being chosen: a tile has a portrait, a city
  * and a good deal of frame, and twenty of them are on the page of someone who has unlocked every life.
  */
-const LifeTile = memo(function LifeTile({ id, on, onChoose }: { id: string; on: boolean; onChoose(id: string): void }) {
+const LifeTile = memo(function LifeTile({ id, on, onChoose, onLayout, onNode }: { id: string; on: boolean; onChoose(id: string): void; onLayout(id: string, event: LayoutChangeEvent): void; onNode(id: string, node: HostInstance | null): void }) {
+  const node = useCallback((view: HostInstance | null) => onNode(id, view), [id, onNode]);
   return (
     // Half the row, or all of it for the life chosen; 4 on each side and the grid made 8 wider than its page, so that the gap between two is 8 and the outer
     // edges are the page's.
-    <View style={{ width: on ? '100%' : '50%', paddingHorizontal: 4 }}>
+    <View style={{ width: on ? '100%' : '50%', paddingHorizontal: 4 }} onLayout={(event) => onLayout(id, event)}>
       <Raised
+        ref={node}
         role="radio"
         checked={on}
         tone={on ? GOLD : {}}
@@ -79,7 +83,7 @@ const LockedLife = memo(function LockedLife({ id, finished }: { id: string; fini
         {progress ? (
           <ReadText size={12} lineHeight={12 * SNUG} tone="teal-300">{t('progressFinished', { n: progress.have, total: progress.need })}</ReadText>
         ) : null}
-        <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" style={{ fontStyle: 'italic' }}>{t(`hints.${id}`)}</ReadText>
+        <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300" italic>{t(`hints.${id}`)}</ReadText>
       </View>
       <Difficulty lifeId={id} />
     </Framed>
@@ -103,9 +107,11 @@ function LockedList({ ids, finished }: { ids: readonly string[]; finished: numbe
     return () => cancelAnimationFrame(frame);
   }, [shown, ids.length]);
   return (
-    <View style={{ marginTop: 8, gap: 8 }}>
+    <View role="list" style={{ marginTop: 8, gap: 8 }}>
       {ids.slice(0, shown).map((id) => (
-        <LockedLife key={id} id={id} finished={finished} />
+        <View key={id} role="listitem">
+          <LockedLife id={id} finished={finished} />
+        </View>
       ))}
     </View>
   );
@@ -142,6 +148,14 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const [showLocked, setShowLocked] = useState(opened === 'locked');
   /** A life being begun: a second press while it is is no second life, whatever the screen has drawn by then. */
   const busy = useRef(false);
+  const still = useStill();
+  // Where each tile stands, to bring the one the dice picks into view; and the pressable of each, to move the screen reader to it.
+  const scroller = useRef<ScreenScroller>(null);
+  const group = useRef(0);
+  const frames = useRef(new Map<string, { y: number; height: number }>());
+  const nodes = useRef(new Map<string, HostInstance>());
+  /** The life the dice picked, until its tile has been laid out where it now stands (it opens across a row, and the tiles after it move). */
+  const revealing = useRef<string | null>(null);
   // Which lives are open is the profile's to say. Nothing is judged here.
   const { unlocked } = useProfile();
   const runs = useRuns();
@@ -151,6 +165,40 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   // Two to a row, the chosen life across one: in the order of the web's dense grid, all in one place so that a life that moves is moved and not made again.
   const order = useMemo(() => lifeRows(available.map((life) => life.id), chosen).flat(), [available, chosen]);
   const finished = runs?.length ?? null;
+  const openIds = useMemo(() => available.map((life) => life.id), [available]);
+
+  /** Brings a tile into view if it is not, and says to the screen reader which life is chosen: the web scrolls the chosen tile into view and focuses it. */
+  const show = useCallback(
+    (id: string) => {
+      const frame = frames.current.get(id);
+      if (frame) scroller.current?.reveal(group.current + frame.y, frame.height, !still);
+      const node = nodes.current.get(id);
+      if (node && typeof AccessibilityInfo.sendAccessibilityEvent === 'function') AccessibilityInfo.sendAccessibilityEvent(node, 'focus');
+    },
+    [still],
+  );
+  const tileLaidOut = useCallback(
+    (id: string, event: LayoutChangeEvent) => {
+      const { y, height } = event.nativeEvent.layout;
+      frames.current.set(id, { y, height });
+      if (revealing.current === id) {
+        revealing.current = null;
+        show(id);
+      }
+    },
+    [show],
+  );
+  const tileNode = useCallback((id: string, node: HostInstance | null) => {
+    if (node) nodes.current.set(id, node);
+    else nodes.current.delete(id);
+  }, []);
+  /** The dice: another of the open lives, which is picked here and not in the state's update (a pick is not pure), and brought into view once it has moved. */
+  const roll = () => {
+    const next = anotherLife(openIds, chosen);
+    if (next === chosen) return;
+    revealing.current = next;
+    setChosen(next);
+  };
 
   /**
    * Starts the chosen life. The answer of the question's sheet waits for the sheet to be gone before the page changes under it (`sheetsGone`: a Modal
@@ -179,6 +227,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
 
   return (
     <Screen
+      scroller={scroller}
       contentStyle={{ gap: 12 }}
       bar={
         <BottomBar>
@@ -210,7 +259,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
             bg="night-700"
             place={{ marginLeft: 'auto' }}
             style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
-            onPress={() => setChosen((now) => anotherLife(available.map((life) => life.id), now))}
+            onPress={roll}
           >
             <PixelText size={14} tone="ink-200">{t('random')}</PixelText>
           </Raised>
@@ -218,9 +267,14 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
       </View>
 
       {/* The lives that can be lived, two to a row; the one chosen opens across the row with what it is. */}
-      <View accessibilityRole="radiogroup" accessibilityLabel={t('title')} style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={t('title')}
+        onLayout={(event) => void (group.current = event.nativeEvent.layout.y)}
+        style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4, rowGap: 8 }}
+      >
         {order.map((id) => (
-          <LifeTile key={id} id={id} on={id === chosen} onChoose={setChosen} />
+          <LifeTile key={id} id={id} on={id === chosen} onChoose={setChosen} onLayout={tileLaidOut} onNode={tileNode} />
         ))}
       </View>
 

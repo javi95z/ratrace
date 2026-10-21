@@ -26,8 +26,10 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * A scene on a screen the app still draws as a stand-in (`STAND_INS`) is shot but not compared: its line is `unjudged`. A scene in the phone's own
  * words (`PHONE_WORDS`) is compared for its layout only: its text rows are reported and not judged, and its verdict says `phone words, ...`. A
  * compared scene whose app shot is more than half unlike the web's is the wrong page (a stand-in, a reload, a red box):
- * the run stops and exits 1, as the kit's does. When every scene compared is clean the run exits 0; a scene that differs
- * is listed and exits 1.
+ * the run stops and exits 1, as the kit's does. A scene that differs and whose residual is explained in the parity report is `accepted` (`ACCEPTED` in
+ * sceneShots.ts: the most shape pixels, text stood apart and lines in one shot only), and fails on any growth; the page of other words (`PAGE_BASELINE`)
+ * on its drift from where it stood. When every scene is clean, accepted, in the phone's words within its bound or unjudged the run exits 0; a scene that
+ * differs beyond that is listed and exits 1.
  */
 const out = join(root, 'docs/superpowers/reports', SCENES_FOLDER);
 

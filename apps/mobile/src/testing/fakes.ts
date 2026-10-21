@@ -57,9 +57,14 @@ export const soundSources = { SOUND_SOURCES: new Proxy({}, { get: (_target, cue)
 export const insets = { top: 0, bottom: 0, left: 0, right: 0 };
 export const safeArea = { useSafeAreaInsets: () => insets };
 
+/** How many times each sprite has been drawn, by id: what a test that something was not drawn again counts. */
+export const spriteRenders = new Map<string, number>();
 /** Sprites are drawn with Skia on the phone only: here each is a box that names its id, and says if it is only the shape of the picture. */
 export const spriteModule = {
-  Sprite: ({ id, silhouette }: { id: string; silhouette?: boolean }) => createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null) }),
+  Sprite: ({ id, silhouette }: { id: string; silhouette?: boolean }) => {
+    spriteRenders.set(id, (spriteRenders.get(id) ?? 0) + 1);
+    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null) });
+  },
 };
 
 /** Puts every stand-in back as it was found, for the next test. */
@@ -70,5 +75,6 @@ export function resetFakes(): void {
   for (const key of Object.keys(params)) delete params[key];
   kv.clear();
   heard.length = 0;
+  spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });
 }

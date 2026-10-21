@@ -165,16 +165,46 @@ const bottom = () => Number(outer().style.marginBottom ?? 0);
 test('on iOS a paragraph is held to its lines at the exact line height: each line is on the device\'s grid, and the box is given back what that adds up to', () => {
   platform.OS = 'ios';
   // 14 × 1.375 is 19.25 pt, 57.75 device px; a line is drawn at 58, so n lines are n × 0.25 px (n × 0.083 pt) taller than the web's.
+  const off = 19.25 - 58 / 3;
   render(<ReadText size={14} lineHeight={14 * SNUG}>{'A paragraph of a few lines.'}</ReadText>);
-  const alone = bottom();
-  // A line is a line: one that wraps to a single line is held to the exact line like any other, once the text has said how many it has.
+  // In its first frame it is one line, held as one: that is what nearly every text is, and it is right before anything is asked.
+  const one = bottom();
+  // One line is told: nothing changes (and the text is not drawn again for it, below).
   told(1);
-  expect(bottom() - alone).toBeCloseTo(19.25 - 58 / 3, 6);
+  expect(bottom()).toBeCloseTo(one, 6);
   told(6);
-  expect(bottom() - alone).toBeCloseTo(6 * (19.25 - 58 / 3), 6);
+  expect(bottom() - one).toBeCloseTo(5 * off, 6);
   // And again for another count: it is the lines drawn now that are given back.
   told(2);
-  expect(bottom() - alone).toBeCloseTo(2 * (19.25 - 58 / 3), 6);
+  expect(bottom() - one).toBeCloseTo(off, 6);
+});
+
+test('a text is held to its exact line in its first frame, as one line, and a text cut to one line is held the same: before any line count is reported', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'A line, or a few'}</ReadText>);
+  const wrapping = bottom();
+  outers.length = 0;
+  render(<ReadText size={14} lineHeight={14 * SNUG} numberOfLines={1}>{'A line, or a few'}</ReadText>);
+  expect(bottom()).toBeCloseTo(wrapping, 6);
+  // 19.25 pt is drawn at 58 device px (19.33): the third of a pixel is given back at once.
+  outers.length = 0;
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'A line, or a few'}</ReadText>);
+  const first = bottom();
+  told(3);
+  expect(bottom() - first).toBeCloseTo(2 * (19.25 - 58 / 3), 6);
+});
+
+test('a text that is one line is not drawn again when it reports its layout: nothing is changed by it, and nothing is drawn twice', () => {
+  platform.OS = 'ios';
+  render(<ReadText size={14} lineHeight={14 * SNUG}>{'One line'}</ReadText>);
+  const drawn = outers.length;
+  told(1);
+  expect(outers.length).toBe(drawn);
+  // One that turns out to wrap is drawn once more, to be corrected.
+  told(3);
+  expect(outers.length).toBe(drawn + 1);
+  told(3);
+  expect(outers.length).toBe(drawn + 1);
 });
 
 test('a paragraph\'s own bottom margin is kept: what is given back is added to it', () => {
@@ -182,7 +212,7 @@ test('a paragraph\'s own bottom margin is kept: what is given back is added to i
   render(<ReadText size={14} lineHeight={14 * SNUG} style={{ marginBottom: 10 }}>{'A paragraph of a few lines.'}</ReadText>);
   const alone = bottom();
   told(4);
-  expect(bottom() - alone).toBeCloseTo(4 * (19.25 - 58 / 3), 6);
+  expect(bottom() - alone).toBeCloseTo(3 * (19.25 - 58 / 3), 6);
   expect(bottom()).toBeLessThan(alone + 0.1);
 });
 
@@ -192,7 +222,7 @@ test('a pixel title that wraps is held the same way', () => {
   const alone = bottom();
   told(3);
   // 17 × 1.25 is 21.25 pt, 63.75 px, drawn at 64.
-  expect(bottom() - alone).toBeCloseTo(3 * (21.25 - 64 / 3), 6);
+  expect(bottom() - alone).toBeCloseTo(2 * (21.25 - 64 / 3), 6);
 });
 
 test('a line that is on the grid already is held to nothing, and its lines are not even counted', () => {
@@ -275,14 +305,9 @@ test('on iOS the baseline counts the fonts that run on: a text with a reading fa
   expect(outer().style.paddingTop).not.toBe(alone);
 });
 
-test('a text cut to one line is one line, so its box is held to the exact line at once, with nothing asked of it', () => {
+test('a text cut to one line is one line: nothing is asked of it, and it is held to the exact line like a text that is one (above)', () => {
   platform.OS = 'ios';
-  render(<ReadText size={14} lineHeight={14 * SNUG}>{'A line'}</ReadText>);
-  const open = bottom();
-  outers.length = 0;
   render(<ReadText size={14} lineHeight={14 * SNUG} numberOfLines={1}>{'A line'}</ReadText>);
-  // 19.25 pt on a 3x screen is drawn at 58 device px (19.33): the box is given back the third of a pixel.
-  expect(bottom() - open).toBeCloseTo(19.25 - 58 / 3, 6);
   expect(outer().onTextLayout).toBeUndefined();
 });
 
@@ -293,4 +318,42 @@ test('a line that is on the grid already needs no holding, whether or not it is 
   outers.length = 0;
   render(<ReadText size={12} lineHeight={18} numberOfLines={1}>{'One line'}</ReadText>);
   expect(bottom()).toBeCloseTo(open, 6);
+});
+
+test('an italic reading text is set in the slanted faces, on every platform, and never asked for the platform\'s italic on top of them (Android would slant it twice)', () => {
+  for (const os of ['web', 'ios', 'android']) {
+    platform.OS = os;
+    const { container, unmount } = render(<ReadText italic>{'Someone who knows every shortcut'}</ReadText>);
+    const run = spans(container)[0];
+    expect(run.style.fontFamily, os).toContain('ChakraPetch_400Regular_Slant');
+    expect(run.style.fontStyle, os).toBe('');
+    expect((container.firstElementChild as HTMLElement).style.fontStyle, os).toBe('');
+    unmount();
+  }
+  platform.OS = 'web';
+  const russian = render(<Language.Provider value="ru"><ReadText italic weight={600}>{'Люсия'}</ReadText></Language.Provider>);
+  expect(spans(russian.container)[0].style.fontFamily).toContain('Exo2_600SemiBold_Slant');
+});
+
+test('a text that is not italic is upright, and what has no slanted face is asked for the platform\'s italic once', () => {
+  const upright = render(<ReadText>{'Someone who knows every shortcut'}</ReadText>);
+  expect(spans(upright.container)[0].style.fontFamily).toContain('ChakraPetch_400Regular');
+  expect(spans(upright.container)[0].style.fontFamily).not.toContain('Slant');
+  upright.unmount();
+  // A sign no font of the stack has is Arial's or the system's, which have real italics.
+  const signs = render(<ReadText italic>{'Go ✓ on'}</ReadText>);
+  const sign = spans(signs.container).find((run) => run.textContent?.includes('✓'))!;
+  expect(sign.style.fontFamily).not.toContain('Slant');
+  expect(sign.style.fontStyle).toBe('italic');
+  expect(spans(signs.container)[0].style.fontStyle).toBe('');
+});
+
+test('words that run on take the text\'s italic, and may be italic where it is not (an italic quip after a pixel title)', () => {
+  const inherits = render(<ReadText italic after={[{ text: ' and more' }]}>{'Some words'}</ReadText>);
+  expect(Array.from(spans(inherits.container)[1].children).every((run) => (run as HTMLElement).style.fontFamily.includes('Slant'))).toBe(true);
+  inherits.unmount();
+  const own = render(<PixelText size={12} after={[{ text: 'Why not', read: 12, italic: true }, { text: ' and not', read: 12 }]}>{'Advisor: '}</PixelText>);
+  const [, italic, upright] = spans(own.container);
+  expect((italic.firstElementChild as HTMLElement).style.fontFamily).toContain('Slant');
+  expect((upright.firstElementChild as HTMLElement).style.fontFamily).not.toContain('Slant');
 });

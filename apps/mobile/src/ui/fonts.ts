@@ -44,8 +44,8 @@ export function adjustedRead(px: number): number {
  * A reading text drawn where a pixel text's `font-size-adjust` reaches it (see `adjustedRead`), cut into runs: each run takes the pixel
  * stack's small-letter height, as the font it falls to has it (Chakra Petch's, Exo 2's for Cyrillic, Arial's or the system's past them).
  */
-export function adjustedRuns(text: string, weight: Weight, language = 'en'): Run[] {
-  return runsOf(text, 'read', weight, language).map((run) => ({ ...run, scale: scaleOf(run.family, 'pixel') }));
+export function adjustedRuns(text: string, weight: Weight, language = 'en', italic = false): Run[] {
+  return runsOf(text, 'read', weight, language, italic).map((run) => ({ ...run, scale: scaleOf(run.family, 'pixel') }));
 }
 
 /** The family a whole run in this language uses (Cyrillic ones for Russian). */
@@ -76,10 +76,31 @@ export function useGameFonts(): boolean {
 
 export interface Run {
   text: string;
+  /** The font that draws it, as the tables here know it (coverage, metrics, small-letter height). */
   family: string;
   /** Multiply the size by this to bring the run to the pixel stack's common small-letter height. */
   scale: number;
+  /** The family to set it in where that is not `family`: the slanted face of an italic run (`SLANT`). */
+  face?: string;
+  /** True where the run is italic and has no slanted face of its own (Arial, the system's font): the platform's own italic is asked for. */
+  italic?: boolean;
 }
+
+/** The family a run is set in: its slanted face where it has one, else its font. */
+export const faceOf = (run: Run): string => run.face ?? run.family;
+
+/**
+ * The slanted face of each reading font (assets/fonts, made from the fonts by scripts/slant_fonts.py), by the font it is made from. The web has no italic
+ * face of these (next/font loads the upright ones) and Chrome slants the upright face as it draws it, every glyph sheared by a quarter of its height above the
+ * baseline and the advances unchanged; iOS does not, and a real italic has other widths. An italic run is set in its slanted face, with no `fontStyle` (which
+ * Android would slant a second time); one with no such face (Arial, the system's font) is asked for the platform's italic.
+ */
+export const SLANT: Readonly<Record<string, string>> = {
+  ChakraPetch_400Regular: 'ChakraPetch_400Regular_Slant',
+  ChakraPetch_600SemiBold: 'ChakraPetch_600SemiBold_Slant',
+  Exo2_400Regular: 'Exo2_400Regular_Slant',
+  Exo2_600SemiBold: 'Exo2_600SemiBold_Slant',
+};
 
 
 /**
@@ -181,9 +202,9 @@ const draws = (family: string, point: number) => (family === ARIAL ? within(ARIA
 
 /**
  * Cuts a text into runs by the font that draws each character, as the browser's letter-by-letter fallback does on a
- * page in `language`: the first font of the stack that draws it, and past them the system's.
+ * page in `language`: the first font of the stack that draws it, and past them the system's. An `italic` text is set in the slanted faces (`SLANT`).
  */
-export function runsOf(text: string, role: Role, weight: Weight, language = 'en'): Run[] {
+export function runsOf(text: string, role: Role, weight: Weight, language = 'en', italic = false): Run[] {
   const stack = stackOf(role, weight, language);
   const runs: Run[] = [];
   for (const ch of Array.from(text)) {
@@ -191,7 +212,7 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
     const family = stack.find((f) => draws(f, point)) ?? (isDingbat(point) ? DINGBATS : SYSTEM);
     const last = runs[runs.length - 1];
     if (last && last.family === family) last.text += ch;
-    else runs.push({ text: ch, family, scale: scaleOf(family, role) });
+    else runs.push({ text: ch, family, scale: scaleOf(family, role), ...(italic ? (SLANT[family] ? { face: SLANT[family] } : { italic: true }) : null) });
   }
   return runs;
 }

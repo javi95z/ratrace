@@ -51,7 +51,8 @@ export function CareerPreview({ careerId, startLevel, shown, onClose }: { career
           {quote.ladder.map((rung) => {
             const start = rung.level === startLevel;
             return (
-              <View key={rung.level} role="listitem">
+              // The rung the card starts the player on is the step they are on, as the web's `aria-current="step"` says.
+              <View key={rung.level} role="listitem" accessibilityState={{ selected: start }} aria-selected={start}>
                 <Framed kind={start ? 'bevel' : 'frame'} tone={start ? GOLD : {}} style={{ backgroundColor: COLORS[start ? 'night-600' : 'night-700'], paddingHorizontal: 10, paddingVertical: 8 }}>
                   {/* The web aligns the two by their baselines; the pay, 15 against the title's 16, stands a point lower at the top. */}
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>

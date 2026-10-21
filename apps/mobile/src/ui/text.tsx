@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { PixelRatio, Platform, StyleSheet, Text, type TextLayoutEvent, type TextStyle } from 'react-native';
-import { adjustedRuns, baselineShift, runsOf, type Run, type Weight } from './fonts';
+import { adjustedRuns, baselineShift, faceOf, runsOf, type Run, type Weight } from './fonts';
 import { BODY, COLORS, type ColorToken } from './theme';
 
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
@@ -55,6 +55,8 @@ export interface Aside {
   text: string;
   /** Their colour, where it is not the text's own. */
   tone?: ColorToken;
+  /** Italic, where the text they run on from is not (they are the text's own otherwise, as the web's span takes its parent's). */
+  italic?: boolean;
   /**
    * In a pixel text, the size of the reading face (Chakra Petch; Exo 2 for Cyrillic) they are set in, where the pixel text's `font-size-adjust`
    * reaches them (the web's `font-sans text-[13px]` span): larger than the size says. Left out, they are set as the text's own are.
@@ -82,17 +84,20 @@ type ReadAside = Omit<Aside, 'read'>;
  * A run as nested texts: on a Russian page each space of a title apart, with the web's word spacing added to it. `size` is the size the run is set at;
  * `title` the size of the text it is in, whose em the word spacing is (a span inherits the length, not the em).
  */
-function pieces(run: Run, size: number, title: number, letterSpacing: number, words: boolean): Array<{ text: string; family: string; fontSize: number; letterSpacing?: number }> {
+function pieces(run: Run, size: number, title: number, letterSpacing: number, words: boolean): Array<{ text: string; family: string; fontSize: number; letterSpacing?: number; italic?: boolean }> {
   const fontSize = size * run.scale;
-  if (!words) return [{ text: run.text, family: run.family, fontSize }];
+  const family = faceOf(run);
+  const italic = run.italic === true ? { italic: true } : null;
+  if (!words) return [{ text: run.text, family, fontSize, ...italic }];
   return run.text
     .split(SPACE)
     .filter((part) => part !== '')
-    .map((part) => (SPACE.test(part) ? { text: part, family: run.family, fontSize, letterSpacing: letterSpacing + RU_WORD_SPACING * title } : { text: part, family: run.family, fontSize }));
+    .map((part) => (SPACE.test(part) ? { text: part, family, fontSize, letterSpacing: letterSpacing + RU_WORD_SPACING * title, ...italic } : { text: part, family, fontSize, ...italic }));
 }
 
-function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, children, style, numberOfLines, after }: TextProps & {
+function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, children, style, numberOfLines, after, italic = false }: TextProps & {
   after?: readonly Aside[];
+  italic?: boolean;
   role: 'pixel' | 'read';
   weight: Weight;
   /** The line of this kind of text, where the caller names none. */
@@ -102,7 +107,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   tone: ColorToken;
 }): ReactNode {
   const language = useContext(Language);
-  const runs = runsOf(children, role, weight, language);
+  const runs = runsOf(children, role, weight, language, italic);
   const words = role === 'pixel' && language === 'ru';
   const flat: TextStyle = StyleSheet.flatten(style) ?? {};
   const line = lineHeight ?? standard;
@@ -112,17 +117,21 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
   // What runs on is in the same line: its fonts are among those the line is set from, each at its own size.
   const ran = (after ?? [])
     .filter((aside) => aside.text !== '')
-    .map((aside) => ({ ...aside, size: aside.read ?? size, runs: aside.read === undefined ? runsOf(aside.text, role, weight, language) : adjustedRuns(aside.text, 400, language) }));
+    .map((aside) => {
+      const slanted = aside.italic ?? italic;
+      return { ...aside, size: aside.read ?? size, runs: aside.read === undefined ? runsOf(aside.text, role, weight, language, slanted) : adjustedRuns(aside.text, 400, language, slanted) };
+    });
   const lineRuns = ran.length === 0 ? runs : [...runs, ...ran.flatMap((aside) => aside.runs.map((run) => ({ ...run, scale: (run.scale * aside.size) / size })))];
   const shift = baselineShift(lineRuns, role, weight, size, line, drawn, Platform.OS, language);
   // Each line is drawn on the device's grid, so n lines are n × (the grid's line − the exact one) taller than the web's, and that adds up across the
   // paragraphs of a page. The box is held to n × the exact line: the lines of one paragraph are as far off as they are, and the next paragraph is not.
-  // Only a text that can wrap and whose line is off the grid is asked how many lines it has.
-  const [lines, setLines] = useState<number | null>(null);
+  // Only a text that can wrap and whose line is off the grid is asked how many lines it has. A text starts as one line, which is what nearly every one is (and a
+  // text cut to one line always is): it is right in the first frame, and `setLines(1)` after the layout changes nothing, so it is never drawn again for it.
+  // Only one that wraps is corrected, once, after its layout.
+  const [lines, setLines] = useState(1);
   const off = ios ? line - Math.round(line * density) / density : 0;
   const asks = numberOfLines !== 1 && Math.abs(off) > 1e-6;
-  // A text cut to one line is one line, and needs no asking; one that can wrap is held once it has said how many it has.
-  const hold = numberOfLines === 1 ? off : asks && lines !== null ? lines * off : 0;
+  const hold = (numberOfLines === 1 || asks) && Math.abs(off) > 1e-6 ? lines * off : 0;
   const room = shift ? headroom(shift, size, flat) : null;
   const held = hold === 0 ? null : { marginBottom: Number(room?.marginBottom ?? flat.marginBottom ?? flat.marginVertical ?? flat.margin ?? 0) + hold };
   return (
@@ -136,7 +145,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       style={[{ color: COLORS[tone], fontSize: size, includeFontPadding: false }, letterSpacing ? { letterSpacing } : null, style, { lineHeight: drawn, pointerEvents: 'none' }, room, held]}
     >
       {runs.flatMap((run) => pieces(run, size, size, letterSpacing, words)).map((piece, i) => (
-        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>
+        <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
           {piece.text}
         </Text>
       ))}
@@ -144,7 +153,7 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
       {ran.map((aside, a) => (
         <Text key={`aside-${a}`} style={[{ fontSize: aside.size, includeFontPadding: false }, aside.tone ? { color: COLORS[aside.tone] } : null]}>
           {aside.runs.flatMap((run) => pieces(run, aside.size, size, letterSpacing, words)).map((piece, i) => (
-            <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }) }}>
+            <Text key={i} style={{ fontFamily: piece.family, fontSize: piece.fontSize, includeFontPadding: false, ...(piece.letterSpacing === undefined ? null : { letterSpacing: piece.letterSpacing }), ...(piece.italic ? { fontStyle: 'italic' as const } : null) }}>
               {piece.text}
             </Text>
           ))}
@@ -169,9 +178,9 @@ export function PixelText({ size = BODY.size, tone = BODY.color, lineHeight, chi
 }
 
 /** Sentences: Chakra Petch 400 or 600 (Exo 2 for Russian letters), 15 pt, line height 1.45, cream. */
-export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, lineHeight, children, style, numberOfLines, after }: TextProps & { weight?: Weight; after?: readonly ReadAside[] }) {
+export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, lineHeight, children, style, numberOfLines, after, italic = false }: TextProps & { weight?: Weight; after?: readonly ReadAside[]; italic?: boolean }) {
   return (
-    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={lineHeight} standard={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines} after={after}>
+    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={lineHeight} standard={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines} after={after} italic={italic}>
       {children}
     </Runs>
   );

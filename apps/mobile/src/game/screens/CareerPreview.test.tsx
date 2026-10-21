@@ -98,4 +98,14 @@ describe('a career a card offers', () => {
     // Aligned at the top: a native row cannot be asked for the baselines of the kit's texts, which are moved inside their boxes.
     expect(pay.parentElement?.style.alignItems).toBe('flex-start');
   });
+
+  it('says which rung the card starts the player on to a screen reader, as the web\'s aria-current does', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    renderGame(<CareerPreview careerId="tech" startLevel={1} shown={session.view()} onClose={() => {}} />, services);
+    const sheet = await sheetOf('Technology');
+    const rungs = within(sheet).getAllByRole('listitem');
+    expect(rungs.map((rung) => rung.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false', 'false', 'false']);
+    expect(rungs[1].textContent).toContain('You start here');
+  });
 });

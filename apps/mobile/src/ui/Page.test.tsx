@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
-import { cleanup, render } from '@testing-library/react';
-import { createContext, useContext } from 'react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import { createContext, createRef, useContext } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { TILE } from '../../scripts/dots';
-import { BottomBar, PAGE_GROUND, Page, Screen } from './Page';
+import { BottomBar, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
+import type { ScreenScroller } from './Page';
 import { COLORS } from './theme';
 
 // The library's web build needs a native module vitest cannot load: a stand-in with the same two pieces Page uses.
@@ -179,3 +180,61 @@ function hexToRgb(h: string) {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   return `rgb(${r}, ${g}, ${b})`;
 }
+
+test('what a screen asks of the page it stands in: nothing when the box is in view, the least that brings it in otherwise, with room to spare', () => {
+  // A page 600 tall, scrolled 100: it shows 100 to 700.
+  expect(scrollToShow(100, 600, 200, 100, 12)).toBeNull();
+  // Below it: the box's foot at the page's foot, and the room.
+  expect(scrollToShow(100, 600, 900, 100, 12)).toBe(900 + 100 + 12 - 600);
+  // Above it: the box's top at the page's top, and the room.
+  expect(scrollToShow(100, 600, 40, 100, 12)).toBe(28);
+  expect(scrollToShow(100, 600, 5, 100, 12)).toBe(0);
+  // Cut off by the foot, or by the top: it is brought in.
+  expect(scrollToShow(0, 600, 560, 100, 0)).toBe(60);
+  expect(scrollToShow(100, 600, 90, 50, 0)).toBe(90);
+  // A box taller than the page shows its top, and does not jump about for its foot.
+  expect(scrollToShow(0, 600, 1000, 800, 12)).toBe(988);
+  // Until the page has said how tall it is there is nothing to judge by.
+  expect(scrollToShow(0, 0, 900, 100, 12)).toBeNull();
+});
+
+/** The scroll of a Screen: it is told its height and how far it is scrolled as the phone tells it, and what it is asked to scroll to is recorded. */
+function scrolled(viewport: number, offset = 0) {
+  const scroller = createRef<ScreenScroller>();
+  const view = wrap(none, <Screen scroller={scroller}><Text>page</Text></Screen>);
+  const node = Array.from(view.container.querySelectorAll<HTMLElement>('*')).find((el) => typeof (el as unknown as { __reactLayoutHandler?: unknown }).__reactLayoutHandler === 'function')!;
+  expect(node).toBeTruthy();
+  const to = vi.fn();
+  (node as unknown as { scrollTo: unknown }).scrollTo = to;
+  act(() => (node as unknown as { __reactLayoutHandler: (e: unknown) => void }).__reactLayoutHandler({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: viewport } } }));
+  if (offset > 0) {
+    Object.defineProperty(node, 'scrollTop', { configurable: true, value: offset });
+    fireEvent.scroll(node);
+  }
+  return { scroller, to };
+}
+
+test('a Screen that has a scroller scrolls to show what it is asked to, if it is not in view: the web\'s scrollIntoView, nearest', () => {
+  const { scroller, to } = scrolled(600);
+  act(() => scroller.current!.reveal(300, 100));
+  expect(to).not.toHaveBeenCalled();
+  act(() => scroller.current!.reveal(900, 100));
+  expect(to).toHaveBeenCalledWith({ y: 900 + 100 + 12 - 600, animated: true });
+  // Where motion is left out, it jumps.
+  act(() => scroller.current!.reveal(1500, 100, false));
+  expect(to).toHaveBeenLastCalledWith({ y: 1500 + 100 + 12 - 600, animated: false });
+});
+
+test('a Screen follows how far it is scrolled, for the scroller: what is below is brought in from there, what is above is brought down', () => {
+  const { scroller, to } = scrolled(600, 700);
+  act(() => scroller.current!.reveal(800, 100));
+  expect(to).not.toHaveBeenCalled();
+  act(() => scroller.current!.reveal(100, 100));
+  expect(to).toHaveBeenCalledWith({ y: 88, animated: true });
+});
+
+test('a Screen with no scroller and no onScroll asks nothing of the scroll: its callers are as they were', () => {
+  const view = wrap(none, <Screen><Text>page</Text></Screen>);
+  const handlers = Array.from(view.container.querySelectorAll<HTMLElement>('*')).filter((el) => typeof (el as unknown as { __reactLayoutHandler?: unknown }).__reactLayoutHandler === 'function');
+  expect(handlers).toHaveLength(0);
+});

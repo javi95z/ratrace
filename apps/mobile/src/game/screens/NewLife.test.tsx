@@ -4,12 +4,15 @@ import { messagesFor } from '@ratrace/i18n';
 import { newProfile } from '@ratrace/core/session/types';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider, useGame } from '../context';
-import { memoryServices, renderGame, router } from '../../testing/render';
+import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
+import { AccessibilityInfo } from 'react-native';
+import { StrictMode } from 'react';
+import { act } from '@testing-library/react';
 import { LOCKED_FIRST, LOCKED_STEP, NewLife } from './NewLife';
 
 afterEach(cleanup);
@@ -101,7 +104,16 @@ describe('choosing a life', () => {
     expect(screen.getAllByText(/To unlock/)).toHaveLength(LOCKED_FIRST);
   });
 
-  it('draws all the open lives at once: twenty tiles at most are drawn when the page is, which took 100 to 145 ms on the simulator in a development build', async () => {
+  it('says the locked lives are a list, and each a list item', async () => {
+    renderGame(<NewLife />, memoryServices());
+    fireEvent.click(await screen.findByRole('button', { name: '17 lives to unlock' }));
+    const list = screen.getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(LOCKED_FIRST);
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(17));
+    expect(within(within(list).getAllByRole('listitem')[0]).getByText('Delivery rider')).toBeTruthy();
+  });
+
+  it('has a tile for every life the player has unlocked, twenty at most, and says nothing of the locked when none is left', async () => {
     const services = memoryServices();
     const all = lives.filter((life) => life.unlock !== 'default').map((life) => life.id);
     await services.store.saveProfile({ ...newProfile(), unlocked: Object.fromEntries(all.map((id, at) => [id, { at, gameId: `g${at}` }])) });
@@ -410,20 +422,127 @@ describe('what the page is drawn again for', () => {
     expect(renders.count).toBe(before);
   });
 
-  it('does not draw the lives that were not chosen again when another is: only the one that was and the one that is', async () => {
+  it('draws again only the two tiles that change when another life is chosen, the one let go and the one chosen: the others are memoised', async () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
     renderGame(<NewLife />, services);
     await screen.findByRole('radio', { name: /^Delivery rider/ });
-    const drawn: string[] = [];
-    // Each life's brief or summary is a text of its own: a life drawn again has its name drawn again, and the sprite stand-in names which.
+    await settled();
+    // A tile's portrait is drawn each time the tile is: the sprite stand-in counts them.
+    const drawn = (id: string) => spriteRenders.get(`portrait.${id}.22`) ?? 0;
+    const before = ['nurse', 'engineer', 'civil_servant', 'rider'].map(drawn);
+    expect(before.every((count) => count > 0)).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: /^Software engineer/ }));
+    await settled();
+    const after = ['nurse', 'engineer', 'civil_servant', 'rider'].map(drawn);
+    // The nurse is let go and the engineer chosen: each is drawn once more. The civil servant and the rider are not drawn again, though the grid moved them.
+    expect(after.map((count, i) => count - before[i])).toEqual([1, 1, 0, 0]);
+  });
+
+  it('keeps the tiles it has when another life is chosen: none is made again, a life that moves in the grid is the same life, moved', async () => {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), unlocked: { rider: { at: 5, gameId: 'g' } } });
+    renderGame(<NewLife />, services);
+    await screen.findByRole('radio', { name: /^Delivery rider/ });
     const portraits = () => Array.from(document.querySelectorAll('[data-sprite^="portrait."]'));
     const before = portraits();
     expect(before).toHaveLength(4);
     fireEvent.click(screen.getByRole('radio', { name: /^Software engineer/ }));
-    // The same elements are on the page: none of the four was made again (a life that moved in the grid is the same life, moved).
     const after = portraits();
-    for (const sprite of before) drawn.push(after.includes(sprite) ? 'kept' : 'made again');
-    expect(drawn).toEqual(['kept', 'kept', 'kept', 'kept']);
+    expect(before.map((sprite) => after.includes(sprite))).toEqual([true, true, true, true]);
   });
 });
+
+describe('the dice shows the life it picked', () => {
+  type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void; scrollTo?: unknown };
+  /** What the phone tells a view once it has laid it out: react-native-web keeps the handler on the node, and calling it is what its observer does after it measures. */
+  const layOut = (node: Element, layout: { x?: number; y: number; width?: number; height: number }) =>
+    act(() => (node as Laid).__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, width: 100, ...layout } } }));
+  /** The page's scroll: the one box that scrolls and has been given a layout handler (the screen follows its height when it has a scroller). */
+  const scrollBox = () => Array.from(document.querySelectorAll<Laid>('*')).find((node) => typeof node.__reactLayoutHandler === 'function' && typeof node.scrollTo === 'function')!;
+  const tileOf = (name: RegExp) => screen.getByRole('radio', { name }).parentElement as HTMLElement;
+  const dice = () => screen.getByRole('button', { name: /At random/ });
+  const focus = vi.fn();
+  const scrollTo = vi.fn();
+
+  /** Four open lives, a page 600 tall that the group of tiles stands 100 down, and what the screen reader and the scroll are asked. */
+  async function laidOut(options: { reducedMotion?: boolean } = {}) {
+    const services = memoryServices();
+    await services.store.saveProfile({ ...newProfile(), settings: { sound: true, reducedMotion: options.reducedMotion === true }, unlocked: { rider: { at: 5, gameId: 'g' } } });
+    const rendered = renderGame(<StrictMode><NewLife /></StrictMode>, services);
+    await screen.findByRole('radio', { name: /^Delivery rider/ });
+    await settled();
+    scrollBox().scrollTo = scrollTo;
+    layOut(scrollBox(), { y: 0, height: 600 });
+    layOut(screen.getByRole('radiogroup'), { y: 100, height: 400 });
+    return rendered;
+  }
+  const original = (AccessibilityInfo as unknown as { sendAccessibilityEvent?: unknown }).sendAccessibilityEvent;
+  beforeEach(() => {
+    focus.mockClear();
+    scrollTo.mockClear();
+    (AccessibilityInfo as unknown as { sendAccessibilityEvent: unknown }).sendAccessibilityEvent = focus;
+  });
+  afterEach(() => {
+    (AccessibilityInfo as unknown as { sendAccessibilityEvent: unknown }).sendAccessibilityEvent = original;
+    vi.restoreAllMocks();
+  });
+
+  it('scrolls to the life it picked once that tile has moved to where it stands, and puts the screen reader on it', async () => {
+    await laidOut();
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    fireEvent.click(dice());
+    const rider = screen.getByRole('radio', { name: /^Delivery rider/ });
+    expect(rider.getAttribute('aria-checked')).toBe('true');
+    // The tile opens across a row and the others move: it is not known where it stands until the page says so.
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(focus).not.toHaveBeenCalled();
+    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
+    // Its foot at the foot of the page, and the 12 of room: 100 for the group, 800 down it, 100 tall.
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenCalledWith({ y: 100 + 800 + 100 + 12 - 600, animated: true });
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(focus).toHaveBeenCalledWith(rider, 'focus');
+  });
+
+  it('does not scroll to a life that is in view, but still puts the screen reader on it', async () => {
+    await laidOut();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    fireEvent.click(dice());
+    expect(screen.getByRole('radio', { name: /^Software engineer/ }).getAttribute('aria-checked')).toBe('true');
+    layOut(tileOf(/^Software engineer/), { y: 80, height: 100 });
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(focus).toHaveBeenCalledWith(screen.getByRole('radio', { name: /^Software engineer/ }), 'focus');
+  });
+
+  it('jumps where the player has asked for no motion', async () => {
+    await laidOut({ reducedMotion: true });
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    fireEvent.click(dice());
+    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
+    expect(scrollTo).toHaveBeenCalledWith({ y: 412, animated: false });
+  });
+
+  it('does it once for each roll, and for no other change of the tile: a life chosen by a tap stays where it is, and a tile laid out again does not scroll the page', async () => {
+    await laidOut();
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    fireEvent.click(dice());
+    layOut(tileOf(/^Delivery rider/), { y: 800, height: 100 });
+    layOut(tileOf(/^Delivery rider/), { y: 805, height: 100 });
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(focus).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('radio', { name: /^Civil servant/ }));
+    layOut(tileOf(/^Civil servant/), { y: 900, height: 100 });
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(focus).toHaveBeenCalledTimes(1);
+  });
+
+  it('picks its life outside the update of the state: one random number for one press, even where the page is drawn twice to find impure work', async () => {
+    await laidOut();
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+    random.mockClear();
+    fireEvent.click(dice());
+    expect(random).toHaveBeenCalledTimes(1);
+  });
+});
+

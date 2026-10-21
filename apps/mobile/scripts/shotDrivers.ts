@@ -200,6 +200,12 @@ export async function openPage(page: Page, url: string, ready?: () => boolean, c
  * once to let it load the bundle: an Expo Go left running keeps the bundle of the Metro it saw last, stale when the code
  * changed since, and shows it until it is opened again.
  */
+/**
+ * How long a screen is given, once opened, for its sprites to load (Skia reads each as it is asked) before it is shot: 4 s was not always enough (once in a full run of the
+ * scenes the front door's gear, a 5000-pixel sprite, was not there yet, and the scene failed for it); 6 s has been.
+ */
+export const SPRITES_MS = 6000;
+
 export async function shootApp(shots: ReadonlyArray<{ route: string; png: string }>, options: { fresh?: boolean } = {}): Promise<void> {
   execFileSync('xcrun', ['simctl', 'status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
   const open = (route: string) => execFileSync('xcrun', ['simctl', 'openurl', 'booted', `${METRO}/--/${route}`]);
@@ -215,7 +221,7 @@ export async function shootApp(shots: ReadonlyArray<{ route: string; png: string
   for (const { route, png } of shots) {
     open(route);
     // Long enough for the screen's sprites to load (Skia reads them as they are asked).
-    await sleep(4000);
+    await sleep(SPRITES_MS);
     execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
     console.log(`app ${route}`);
   }
