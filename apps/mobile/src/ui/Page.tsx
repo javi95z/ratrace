@@ -49,12 +49,12 @@ type Insets = { top: number; bottom: number; left: number; right: number };
 const scrollOf = (inset: Insets): ViewStyle => ({ flex: 1, marginLeft: inset.left, marginRight: inset.right });
 
 /**
- * The column a page's scroll holds (`Screen`'s, a `ListScreen`'s): the 448 column with its gutter, `top` over its first child (`SCREEN_TOP`), and at
- * its foot room for a frame's drop and, with no bar under it to clear it, the home indicator.
+ * The column a page's scroll holds (`Screen`'s, a `ListScreen`'s): the 448 column with its gutter, `SCREEN_TOP` over its first child, and at its foot
+ * room for a frame's drop and, with no bar under it to clear it, the home indicator.
  */
-const columnOf = (inset: Insets, { top = SCREEN_TOP, barred = false }: { top?: number; barred?: boolean } = {}): ViewStyle[] => [
+const columnOf = (inset: Insets, { barred = false }: { barred?: boolean } = {}): ViewStyle[] => [
   COLUMN,
-  { paddingTop: top, paddingBottom: barred ? 16 : 16 + inset.bottom },
+  { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom },
 ];
 
 /** What a screen can ask of the page it stands in, through `Screen`'s `scroller`. */
@@ -189,9 +189,9 @@ export const LIST_WINDOW = { initialNumToRender: 8, maxToRenderPerBatch: 6, wind
 /**
  * A `Screen` whose rows are a list that draws only the rows near the screen (React Native's `FlatList`, `LIST_WINDOW`), for a page whose list can pass
  * thirty rows: the records of every life lived, the collection's things and badges. A list inside a `Screen` would be one scroll inside another, which
- * windows nothing, so the list is the page's scroll: `head` is what stands above its rows (the web's page down to the list: the title, the bests),
- * drawn as the list's header, and scrolls away with them as the web's page does. `above` is what stands over the list and does not scroll, in the
- * same column (the collection's title and tabs, which are not its panel's). The column is `Screen`'s (`columnOf`), unless `contentStyle` says otherwise.
+ * windows nothing, so the list is the page's scroll: `head` is what stands above its rows (the web's page down to the list: the title, the tabs, the
+ * bests), drawn as the list's header, and scrolls away with them as the web's page does. The column is `Screen`'s (`columnOf`), unless `contentStyle`
+ * says otherwise.
  *
  * A row is drawn from its datum alone: `item` draws it and `keyOf` names it, and both may be made anew with each drawing of the page, but a row is
  * drawn again only when its datum (or `extraData`) changes. Whatever a row shows must be in its datum: a row that is `memo` with plain props is not
@@ -201,7 +201,6 @@ export const LIST_WINDOW = { initialNumToRender: 8, maxToRenderPerBatch: 6, wind
  */
 export function ListScreen<T>({
   head,
-  above,
   data,
   item,
   keyOf,
@@ -212,7 +211,6 @@ export function ListScreen<T>({
   onWidth,
 }: {
   head: ReactElement;
-  above?: ReactNode;
   data: readonly T[];
   item: (row: T) => ReactElement;
   keyOf: (row: T) => string;
@@ -234,7 +232,7 @@ export function ListScreen<T>({
     (event: { nativeEvent: { layout: { width: number } } }) => latest.current.onWidth?.(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER),
     [],
   );
-  const list = (
+  return (
     <FlatList
       {...LIST_WINDOW}
       strictMode
@@ -247,17 +245,8 @@ export function ListScreen<T>({
       aria-label={label}
       onLayout={measured ? onLayout : undefined}
       style={scrollOf(inset)}
-      contentContainerStyle={[...columnOf(inset, { top: above === undefined ? SCREEN_TOP : 0 }), contentStyle]}
+      contentContainerStyle={[...columnOf(inset), contentStyle]}
     />
-  );
-  if (above === undefined) return list;
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ marginLeft: inset.left, marginRight: inset.right }}>
-        <View style={[COLUMN, { paddingTop: SCREEN_TOP }]}>{above}</View>
-      </View>
-      {list}
-    </View>
   );
 }
 

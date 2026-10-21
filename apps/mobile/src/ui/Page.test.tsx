@@ -341,19 +341,6 @@ test('a ListScreen hands its list one renderer for as long as it is drawn, which
   expect(listed.at(-1)?.renderItem).toBe(renderItem);
 });
 
-test('what stands above a ListScreen\'s list stays where it is, in the same column, outside the list: the list starts under it', () => {
-  const { getByText } = wrap({ ...none, left: 5, right: 7 }, <ListScreen above={<Text>tabs</Text>} head={<Text>head</Text>} data={['a']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} role="tabpanel" label="Things" />);
-  const over = up(getByText('tabs'), (s) => s.maxWidth === '448px')!;
-  expect([over.style.paddingTop, over.style.paddingLeft, over.style.paddingRight]).toEqual(['16px', '12px', '12px']);
-  expect((over.parentElement as HTMLElement).style.marginLeft).toBe('5px');
-  const column = up(getByText('head'), (s) => s.maxWidth === '448px')!;
-  expect(column).not.toBe(over);
-  expect(column.style.paddingTop).toBe('0px');
-  const panel = column.parentElement!;
-  expect(panel.getAttribute('role')).toBe('tabpanel');
-  expect(panel.contains(getByText('tabs'))).toBe(false);
-});
-
 test('a ListScreen takes the caller\'s own spacing, names its list for a screen reader, and tells the width inside its gutter (what the web\'s container queries measure) as it is laid out', () => {
   const widths: number[] = [];
   const { getByText, container } = wrap(

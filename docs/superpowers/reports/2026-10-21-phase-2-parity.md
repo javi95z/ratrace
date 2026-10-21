@@ -40,12 +40,13 @@ here, and a line per scene in `phase-2-parity.json`: its verdict (`clean`: no sh
 point; `differs`: read the numbers) and its numbers. As the kit's shots do, a comparison with more than half the screen unlike stops the run
 (`wrongPage` in `kitCompare.ts`, shared): that is the app showing something else, and its numbers are not results.
 
-**Unjudged.** While the app draws phase 1's stand-ins for a screen (`STAND_INS` in `sceneShots.ts`, which a test holds equal to the stand-ins
+**Unjudged.** (Retired in Task 19: `STAND_INS` and `STAND_IN_SCENES` are gone with the last stand-ins, and a scene is now unjudged only while it waits in
+`PENDING_SHOTS` for a batch pass. As it was until then:) While the app draws phase 1's stand-ins for a screen (`STAND_INS` in `sceneShots.ts`, which a test holds equal to the stand-ins
 of the app's registry), its scenes are shot but not compared: their line is `"verdict":"unjudged"` with no numbers, and no diff picture is
 kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. Task 6 ported `home`, task 7
 `new`, so their scenes are compared; the five `play-*` scenes of task 5 (`play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
 `play-resolve-r6`) were unjudged: they proved that both clients open each scene, and nothing more. Task 9 ported `play`: `play-news-r1` is compared, and the four
-whose stage a later task brings are unjudged by name (`STAND_IN_SCENES`), until that task takes them out.
+whose stage a later task brings are unjudged by name (`STAND_IN_SCENES`), until that task takes them out. (Both lists, emptied by Tasks 16 and 19, are retired.)
 
 **Phone words.** Where the web's words are false or impossible on a phone, the phone has words of its own (`phone.*`), and the two shots cannot agree on their
 text whatever the app does. The scenes that carry them are listed beside the stand-ins (`PHONE_WORDS` in `sceneShots.ts`: `home-lost-newer`, `legal`), and are
@@ -271,10 +272,10 @@ it turns, and no sprite decoded or drawn again (`Loop.test`: one repeating timin
 ## Task 9: play, round by round, from the news
 
 `pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app compare --only=play-news-r1,play-news-r6,play-guide-r1,play-fault,play-pageturn`.
-Play is the real screen on both sides now (`play` is out of `STAND_INS`): the web's page draws the web's `Play`, the app's registry the phone's. Its stages that later
+Play is the real screen on both sides now (`play` is out of `STAND_INS`, a list retired in Task 19): the web's page draws the web's `Play`, the app's registry the phone's. Its stages that later
 tasks bring (the cards and a card's result, Task 11; the finances, Task 12; the ledger, Task 16) are a dashed stand-in line on the phone, so the four scenes of them stay
-unjudged by name (`STAND_IN_SCENES` in `sceneShots.ts`: `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`, `play-resolve-r6`; the task that ports a stage takes its
-scenes out). The `hud-*` scenes still compare the HUD alone.
+unjudged by name (`STAND_IN_SCENES` in `sceneShots.ts`, retired in Task 19 once Task 16 had emptied it: `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
+`play-resolve-r6`; the task that ports a stage took its scenes out). The `hud-*` scenes still compare the HUD alone.
 
 | scene | what | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
 |---|---|---|---|---|---|---|---|---|
@@ -484,7 +485,7 @@ unjudged until a batch pass shoots, compares and takes them out of it:
 ## Task 12: the finances, their tabs, the basket and the portfolio (shots pending)
 
 Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it; `play-finance-r6`
-left `STAND_IN_SCENES` (the app draws the finances now):
+left `STAND_IN_SCENES` (the app draws the finances now; the list itself is retired since Task 19):
 
 | scene | what it is | how its sheet is open |
 |---|---|---|
@@ -710,7 +711,7 @@ alarm lamp, lit lamp, page and confetti: none.
 ## Task 16: the ledger of a round and the moments of a life (shots pending)
 
 Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it; `play-resolve-r6`
-left `STAND_IN_SCENES` (the app draws the ledger now; the record is empty). Each is a real life played to its round by a bot, never a save written by hand:
+left `STAND_IN_SCENES` (the app draws the ledger now; the record is empty, and the list itself is retired since Task 19). Each is a real life played to its round by a bot, never a save written by hand:
 
 | scene | what it is | held still by |
 |---|---|---|
@@ -754,9 +755,10 @@ ends one after another by a bot through the round store (`LIVED` in packages/cor
   `grey` (theme.ts: the CSS matrix at its full amount, `GREYSCALE`, on the colours as written, sRGB), the frame's strips by `Framed`'s `grey`, and the rim
   and the lock through the same matrix as a Skia colour filter (`Sprite`'s `grey`, `Medal`'s). Whether the browser applies its filter functions to sRGB
   values (as Chrome is understood to) or to linear light, the shot says: a difference there is a grey a few steps off on every locked card.
-- **The collection's title, its words and its tabs stand over the panel and do not scroll** (fix round 1): the panel is the list, and a tab strip is not its
-  panel's (`ListScreen`'s `above`). The web's page scrolls them away with the badges; the shots, taken at the top, draw the same. The records' page above
-  its lines (the title, the bests) scrolls with them, as the web's does: the list is the web's section of past lives, named as it is.
+- **The page of the collection is one list**, its head (the title, its words, the tabs, the tab's count and rarities) the list's header, scrolling away with
+  the badges as the web's page does. The web's panel of the tab (`role="tabpanel"`) is not named: no prop of a `FlatList` puts a role on the box of its
+  rows alone, and iOS and Android say nothing of a tab panel. The tabs are a tab list of their own. The records' list is the web's section of past lives,
+  named as it is, its header the page above its lines.
 - **A past life's line says it opens the whole of the life** (the web's `aria-haspopup="dialog"`, which the browser says in its own words): a hint in the
   phone's own words, `phone.opensLife`.
 - **The columns** are the web's container queries on its `main` (`@min-[460px]`, `@min-[560px]`), read from the width of the phone's column inside its gutter
@@ -769,7 +771,7 @@ ends one after another by a bot through the round store (`LIVED` in packages/cor
 The records' past lives grow with every life finished, and the collection has 67 things and 63 badges, each tile with its pictures (a thing's sprite, a badge's
 rim and badge: 126 canvases on the badges' tab alone): both pass thirty rows, so both are lists that draw only what is near the screen. A `FlatList` inside a
 `Screen` would be one scroll inside another, which windows nothing, so the page itself is the list: `ListScreen` (ui/Page.tsx), `Screen`'s column with the
-page's head as the list's header (the records' title and bests, the collection's count and rarities), which scrolls away with the rows as the web's page does; the collection's tabs stand over the list (`above`). Not `numColumns`: the web groups the
+page's head (the title, the tabs, the bests) as the list's header, which scrolls away with the rows as the web's page does. Not `numColumns`: the web groups the
 things by the shop's shelves and the badges by their groups, each under a heading as wide as the page, which a grid of cells cannot hold, so a line of the list
 is a heading or a row of `columns` tiles (`linesOf`), each tile in its share of the row and a short last row leaving its places empty, as the web's grid does.
 The list draws about a screen of rows at first, six more a batch, and only two screens either side of what is seen (`LIST_WINDOW`: 8, 6, and a

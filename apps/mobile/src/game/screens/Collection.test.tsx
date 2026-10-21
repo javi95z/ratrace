@@ -23,6 +23,16 @@ const tileOf = (text: HTMLElement) => text.closest('[role="listitem"]') as HTMLE
 const pictures = (tile: HTMLElement) => [...tile.querySelectorAll('[data-sprite]')].map((sprite) => sprite.getAttribute('data-sprite') ?? '');
 /** What the phone tells a view once it has laid it out: react-native-web keeps the handler on the node, and calling it is what its observer does after it measures. */
 type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
+/**
+ * The page: one list, whose rows are the tab's tiles and whose header is the title, the tabs and the tab's head. It is the first box laid out (the
+ * list's own scroll). The web's panel of the tab is not named on the phone: no prop of a list puts a role on the box of its rows alone.
+ */
+const pageOf = (): Laid => Array.from(document.querySelectorAll<Laid>('*')).find((node) => typeof node.__reactLayoutHandler === 'function')!;
+/** The page once the tab named is the one open. */
+async function opened(tab: string): Promise<Laid> {
+  await waitFor(() => expect(screen.getByRole('tab', { name: tab }).getAttribute('aria-selected')).toBe('true'));
+  return pageOf();
+}
 
 describe('the collection', () => {
   it('shows every thing in the game, as a silhouette until it has been owned', async () => {
@@ -30,12 +40,14 @@ describe('the collection', () => {
     await services.store.saveProfile({ ...newProfile(), gallery: ['watch_casio', 'car_seat_ibiza'] });
     renderGame(<Collection />, services);
 
-    // The badges come first; the things are the second tab. The tabs stand over the panel, outside it.
+    // The badges come first; the things are the second tab.
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Badges', 'Things']);
-    expect(screen.getByRole('tabpanel', { name: 'Badges' }).contains(screen.getByRole('tablist'))).toBe(false);
     fireEvent.click(screen.getByRole('tab', { name: 'Things' }));
     expect(await screen.findByText(`2 of ${content.items.length} owned`)).toBeTruthy();
-    const things = screen.getByRole('tabpanel', { name: 'Things' });
+    const things = await opened('Things');
+    // The head scrolls with the page, as the web's does: the title and the tabs are the list's header.
+    expect(things.contains(screen.getByRole('tablist'))).toBe(true);
+    expect(things.contains(screen.getByRole('heading', { name: 'Collection' }))).toBe(true);
     expect(within(things).getAllByRole('listitem')).toHaveLength(content.items.length);
     // Owned: drawn. Its name is the text beside it, said once, so the picture needs none of its own.
     const casio = tileOf(within(things).getByText('Casio F-91W'));
@@ -64,8 +76,8 @@ describe('the collection', () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), gallery: ['watch_casio'] });
     renderGame(<Collection tab="items" />, services);
-    const things = await screen.findByRole('tabpanel', { name: 'Things' });
-    const casio = tileOf(within(things).getByText('Casio F-91W'));
+    const things = await opened('Things');
+    const casio = tileOf(await within(things).findByText('Casio F-91W'));
     const row = casio.parentElement as HTMLElement;
     expect(row.style.flexDirection).toBe('row');
     expect(row.style.gap).toBe('8px');
@@ -84,7 +96,7 @@ describe('the collection', () => {
 
     expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     expect(await screen.findByText(`2 of ${badges.length} earned`)).toBeTruthy();
-    const panel = screen.getByRole('tabpanel', { name: 'Badges' });
+    const panel = pageOf();
     expect(within(panel).getAllByRole('listitem')).toHaveLength(badges.length);
     for (const group of ['Wealth', 'Escape', 'Investing', 'Status', 'Life', 'Misfortune']) expect(within(panel).getByRole('heading', { name: group })).toBeTruthy();
 
@@ -109,7 +121,8 @@ describe('the collection', () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { millionaire: { at: 1, gameId: 'g' } } });
     renderGame(<Collection />, services);
-    const panel = await screen.findByRole('tabpanel', { name: 'Badges' });
+    const panel = await opened('Badges');
+    await screen.findByText(`1 of ${badges.length} earned`);
     const waiting = tileOf(within(panel).getByText('Ten million'));
     expect([...waiting.querySelectorAll('[data-sprite]')].map((sprite) => sprite.getAttribute('data-grey'))).toEqual(['true', 'true']);
     // The card: its ground night-700 and its frame night-900, greyed.
@@ -134,7 +147,7 @@ describe('the collection', () => {
     renderGame(<Collection />, services);
     expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     await screen.findByText(`2 of ${badges.length} earned`);
-    const panel = screen.getByRole('tabpanel', { name: 'Badges' });
+    const panel = pageOf();
     const of = (rarity: string) => badges.filter((badge) => rarityOf(badge.id) === rarity);
     const rare = within(panel).getByRole('radio', { name: /^Rare/ });
     expect(rare.textContent).toBe(`Rare1/${of('rare').length}`);
@@ -152,7 +165,7 @@ describe('the collection', () => {
     renderGame(<Collection />, services);
     expect((await screen.findByRole('tab', { name: 'Badges' })).getAttribute('aria-selected')).toBe('true');
     await screen.findByText(`1 of ${badges.length} earned`);
-    const panel = screen.getByRole('tabpanel', { name: 'Badges' });
+    const panel = pageOf();
     expect(panel.textContent).not.toMatch(/in 100 lives/);
     expect(panel.textContent).not.toMatch(/% of players|players have/i);
     // A judged badge, not yet won: its name is not told, only the group it belongs to.
@@ -177,7 +190,7 @@ describe('the collection', () => {
 
   it('shows all the rarities again when the badges are shown again: the choice of one is the badges\' tab\'s own', async () => {
     renderGame(<Collection />, memoryServices());
-    const panel = await screen.findByRole('tabpanel', { name: 'Badges' });
+    const panel = await opened('Badges');
     fireEvent.click(within(panel).getByRole('radio', { name: /^Legendary/ }));
     // The tab already open, pressed again, is as it was.
     fireEvent.click(screen.getByRole('tab', { name: 'Badges' }));
@@ -185,7 +198,7 @@ describe('the collection', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Things' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Badges' }));
     expect(screen.getByRole('radio', { name: /^All/ }).getAttribute('aria-checked')).toBe('true');
-    expect(within(screen.getByRole('tabpanel', { name: 'Badges' })).getAllByRole('listitem')).toHaveLength(badges.length);
+    expect(within(pageOf()).getAllByRole('listitem')).toHaveLength(badges.length);
   });
 
   it('speaks Spanish', async () => {
@@ -211,7 +224,7 @@ describe('the columns, as the web\'s container queries lay them out', () => {
 
   it('are read from the width of the page\'s column inside its gutter, as it is laid out: a phone\'s column is never 460 wide, so three rarities to a row', async () => {
     renderGame(<Collection />, memoryServices());
-    const panel = await screen.findByRole('tabpanel', { name: 'Badges' });
+    const panel = await opened('Badges');
     const rows = () => Array.from(within(panel).getByRole('radiogroup', { name: 'Rarity' }).children).map((row) => row.children.length);
     // All and the four rarities: three to a row, the last row's other place empty.
     expect(rows()).toEqual([3, 3]);
@@ -229,7 +242,7 @@ describe('the columns, as the web\'s container queries lay them out', () => {
       </Counted>,
       memoryServices(),
     );
-    const panel = (await screen.findByRole('tabpanel', { name: 'Badges' })) as Laid;
+    const panel = await opened('Badges');
     await settled();
     const before = renders.count;
     act(() => panel.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 900 } } }));
@@ -270,7 +283,7 @@ describe('what the collection is drawn again for', () => {
     const services = memoryServices();
     await services.store.saveProfile({ ...newProfile(), badges: { ten_million: { at: 1, gameId: 'g' }, millionaire: { at: 1, gameId: 'g' } } });
     renderGame(<Collection />, services);
-    const panel = await screen.findByRole('tabpanel', { name: 'Badges' });
+    const panel = await opened('Badges');
     await within(panel).findByText('Ten million');
     // A rare badge earned, and a common one: each medal drawn once.
     expect(spriteRenders.get('badge.ten_million')).toBe(1);

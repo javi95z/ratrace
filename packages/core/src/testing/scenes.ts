@@ -349,10 +349,16 @@ export async function livesLived(name: string): Promise<LivedDevice | null> {
  */
 const livedOnce = new Map<readonly Lived[], Promise<LivedDevice | null>>();
 
-/** Puts on a scene's device the lives its player lived before it (`LIVED`), as `livesLived` leaves them: its finished lives and the profile. */
+/**
+ * Puts on a scene's device the lives its player lived before it (`LIVED`), as `livesLived` leaves them: its finished lives and the profile. The
+ * profile is the whole of the player's, so the device must hold nothing yet: anything a scene adds to it (the lives it unlocks, a setting) comes after.
+ */
 async function liveThrough(store: MemoryStore, name: string): Promise<void> {
   const lived = LIVED[name];
   if (lived === undefined) return;
+  if ((await store.listRuns()).length > 0 || JSON.stringify(await store.loadProfile()) !== JSON.stringify(newProfile())) {
+    throw new Error(`scene ${name}: its lives are put on a device that already holds something`);
+  }
   let once = livedOnce.get(lived);
   if (once === undefined) {
     once = livesLived(name);
@@ -481,8 +487,9 @@ async function toFinances(name: string, game: GameStore, bot: Bot): Promise<void
 export async function sceneStore(name: string): Promise<MemoryStore> {
   if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
   const store = memoryDevice();
-  await unlock(store, name);
+  // The lives first, on the empty device (they leave a whole profile); then what the scene unlocks, added to it.
   await liveThrough(store, name);
+  await unlock(store, name);
   if (STILL.has(name)) {
     const profile = await store.loadProfile();
     await store.saveProfile({ ...profile, settings: { ...profile.settings, reducedMotion: true } });
@@ -533,8 +540,16 @@ async function toTheEnd(name: string, game: GameStore, bot: Bot): Promise<void> 
 async function unlock(store: MemoryStore, name: string): Promise<void> {
   const ids = UNLOCKED[name];
   if (ids === undefined) return;
-  const unlocked = Object.fromEntries(ids.map((id, i) => [id, { at: 1_000 + i, gameId: `earned-${i + 1}` }]));
-  await store.saveProfile({ ...newProfile(), unlocked });
+  await store.saveProfile(withUnlocked(await store.loadProfile(), ids));
+}
+
+/**
+ * A profile with these lives unlocked as the game writes them (when, and in which life), added to what it holds: a scene's lives (`LIVED`) may
+ * have unlocked some already, and what a real life earned is kept as it was.
+ */
+export function withUnlocked(profile: Profile, ids: readonly string[]): Profile {
+  const made = Object.fromEntries(ids.map((id, i) => [id, { at: 1_000 + i, gameId: `earned-${i + 1}` }]));
+  return { ...profile, unlocked: { ...made, ...profile.unlocked } };
 }
 
 /** The life on a device, saved again as a newer version of the game would save it: in a format this one does not know how to read. */

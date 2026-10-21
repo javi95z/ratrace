@@ -148,9 +148,9 @@ function Count({ children }: { children: string }) {
 
 /**
  * The gallery of everything ever owned and every badge ever earned, across all lives: the badges first (what a player has done comes before what
- * they have bought), the things on the second tab. The tab's panel is a list that draws only the rows near the screen (67 things, 63 badges, each
- * with its pictures), its count and its rarities at its head; the title, the words under it and the tabs stand over it, outside the panel, and
- * stay where they are as it scrolls. `tab` is the tab open from the start (a scene's initial state; the player opens the other by a tap).
+ * they have bought), the things on the second tab. The page is one list that draws only the rows near the screen (67 things, 63 badges, each
+ * with its pictures): its head (the title, the words under it, the tabs, the tab's count and rarities) is the list's header and scrolls away with
+ * the rows, as the web's page does. `tab` is the tab open from the start (a scene's initial state; the player opens the other by a tap).
  */
 export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   const t = useT('collection');
@@ -184,7 +184,7 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   }, [only, text, earned, columns.badges]);
   const count = (list: typeof badges) => list.filter((badge) => Object.hasOwn(earned, badge.id)).length;
 
-  const above = (
+  const head = (
     <View>
       <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackLink />
@@ -197,11 +197,6 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
       <View style={{ marginHorizontal: -12 }}>
         <Tabs<Tab> label={t('title')} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]} value={tab} onChange={choose} />
       </View>
-    </View>
-  );
-
-  const head = (
-    <View>
       {/* The head of the tab's panel (the web's `pt-2`, then `gap-4`): its count, and for the badges one rarity at a time, each saying how many of it are won. */}
       <View style={{ paddingTop: 8, gap: 16 }}>
         {tab === 'items' ? (
@@ -228,15 +223,15 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
     </View>
   );
 
+  // The web's panel of the tab (`role="tabpanel"`) holds the count and the rows, under the tabs. Here they are the rows of the page's list, whose header
+  // holds the tabs as well, and no prop of a FlatList puts a role on the box of its rows alone: the panel is not named (iOS and Android say nothing of a
+  // tab panel either). The tabs are a tab list of their own (`Tabs`), each saying which is selected.
   return (
     <ListScreen
-      above={above}
       head={head}
       data={tab === 'items' ? things : shownBadges}
       keyOf={keyOf}
       item={lineOf}
-      role="tabpanel"
-      label={tab === 'items' ? t('items') : t('badges')}
       onWidth={(width) => setBreakpoint(breakpointOf(width))}
       contentStyle={{ paddingBottom: 40 }}
     />

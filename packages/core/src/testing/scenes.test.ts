@@ -9,7 +9,7 @@ import type { MemoryStore } from '../session/fixed';
 import { replay } from '../session/save';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
-import { GUIDE_READ, livesLived, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
+import { GUIDE_READ, livesLived, withUnlocked, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
 import { FIRSTS, TIPS } from '../game/guide';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
@@ -874,6 +874,19 @@ describe('the records and the collection: three real lives, each played to its e
     await a.removeRun('id-3');
     expect((await b.listRuns()).map((run) => run.runId)).toEqual(['id-3', 'id-2', 'id-1']);
     expect(await livesLived('records-empty')).toBeNull();
+  });
+
+  it('keeps what the lives unlocked when a scene unlocks more: the scene\'s lives are added to the profile, never written over it', async () => {
+    const lived = (await livesLived('records-three'))!;
+    const earned = Object.keys(lived.profile.unlocked);
+    expect(earned.length).toBeGreaterThan(0);
+    const both = withUnlocked(lived.profile, ['heir', earned[0]]);
+    // Everything else the lives left is as it was; the life they unlocked keeps when and where it was earned.
+    expect({ ...both, unlocked: lived.profile.unlocked }).toEqual(lived.profile);
+    expect(both.unlocked[earned[0]]).toEqual(lived.profile.unlocked[earned[0]]);
+    expect(Object.keys(both.unlocked).sort()).toEqual([...new Set([...earned, 'heir'])].sort());
+    // On a new player's profile it is the unlocks alone, as new-unlocked has them.
+    expect(withUnlocked(newProfile(), ['rider', 'heir'])).toEqual({ ...newProfile(), unlocked: { rider: { at: 1_000, gameId: 'earned-1' }, heir: { at: 1_001, gameId: 'earned-2' } } });
   });
 
   it('opens on no life in progress, as the game does once a life\'s last screen is left', async () => {
