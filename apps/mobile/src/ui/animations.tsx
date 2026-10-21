@@ -80,6 +80,11 @@ export interface KeyframeOptions {
   dy?: number;
   /** What the box looks like outside the run, where that is not an element left alone (the web's `opacity-0`). */
   rest?: Partial<Frame>;
+  /**
+   * Plays it again from its first frame whenever this changes, on the same box (the web remounts the element, `key`, which would draw what is
+   * inside it anew: a mark's picture, its canvas): a holding's mark answering each new order.
+   */
+  replay?: number;
 }
 
 /**
@@ -92,7 +97,7 @@ export interface KeyframeOptions {
  * delay is out, so that one linear run of `delay + duration` is all the animation there is. A loop with a delay
  * (the web waits once, then repeats without waiting) holds off, then starts its repeats from the first frame.
  */
-function useFrame(name: KeyframeName, { play = true, reduced, delayMs = 0, once = false, dx = 0, dy = 0, rest }: KeyframeOptions = {}) {
+function useFrame(name: KeyframeName, { play = true, reduced, delayMs = 0, once = false, dx = 0, dy = 0, rest, replay = 0 }: KeyframeOptions = {}) {
   const still = useReducedMotion(reduced);
   const { ms, loop: loops } = KEYFRAMES[name];
   const loop = loops && !once;
@@ -119,7 +124,7 @@ function useFrame(name: KeyframeName, { play = true, reduced, delayMs = 0, once 
       }
     }
     return () => cancelAnimation(progress);
-  }, [play, still, loop, ms, lead, progress]);
+  }, [play, still, loop, ms, lead, progress, replay]);
   return useDerivedValue(() => {
     const p = progress.value;
     return frameFor(name, p < 0 ? 'before' : !loop && p >= 1 ? 'after' : 'running', p, { dx, dy }, rest);

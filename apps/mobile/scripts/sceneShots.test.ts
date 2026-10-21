@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -145,17 +145,19 @@ test('a run of some scenes keeps the lines of the others, and the file has every
   expect(text.endsWith('\n')).toBe(true);
 });
 
-test('a web page is as tall as what is visible of the screen, not taller by the safe area the body already clears (the one rule the web\'s shots are given)', () => {
-  // The web's `min-h-dvh` page inside a body that is padded by the safe area at the top is taller than the screen by that area, so the
-  // foot of a short page stands below the fold; the phone's page is as tall as the screen it scrolls in. Taken away in the shot, nothing else is.
-  expect(VISIBLE_HEIGHT).toBe('main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }');
+test('a web page is as tall as what is visible of the screen by its own rule, not taller by the safe area the body already clears: the shots add no rule of height', () => {
+  // The web's pages are `min-h-safe` (100dvh less the top safe area the body is padded by) since d67284b, held by the web's own viewport test: the
+  // foot of a short page stands where the phone's does. The shots' own rule that did the same is gone; a scene with nothing to hide is given nothing.
+  expect(read('../../web/src/app/globals.css')).toMatch(/@utility min-h-safe \{\s*min-height: calc\(100dvh - env\(safe-area-inset-top\)\);/);
+  expect(read('../../web/src/ui/viewport.test.ts')).toContain("it('is never the whole screen'");
+  expect(webRules(SCENES[0])).toBe('');
 });
 
 test('what the web draws of a scene that the phone does not is hidden in the web\'s shot, by a rule that finds that line and no other', () => {
   const challenge = SCENES.find((scene) => scene.name === 'challenge-practice')!;
-  expect(webRules(challenge)).toBe(`${VISIBLE_HEIGHT} ${WEB_ONLY['challenge-practice']}`);
-  // A scene with nothing the phone leaves out is given the height rule alone.
-  expect(webRules(SCENES[0])).toBe(VISIBLE_HEIGHT);
+  expect(webRules(challenge)).toBe(WEB_ONLY['challenge-practice']);
+  // A scene with nothing the phone leaves out is given no rule.
+  expect(webRules(SCENES[0])).toBe('');
   // The rule's target is the one `p` of that frame the web draws a guest on the page: the line that tells to sign in (the other is the best of the week, shown to someone signed in).
   const web = readFileSync(new URL('../../web/src/game/screens/Challenge.tsx', import.meta.url), 'utf8');
   const page = web.slice(web.indexOf('export function WeeklyChallenge()'), web.indexOf('export function ChallengeBoard'));
@@ -167,7 +169,7 @@ test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the 
   // And the two whose sheet a screen not ported yet opens, drawn over the Hud alone: an amount moved to savings, a legendary badge.
   const huds = SCENES.filter((scene) => scene.name.startsWith('hud-') || ['amount-savings', 'celebrate-legendary'].includes(scene.name));
   expect(huds.length).toBeGreaterThan(0);
-  for (const scene of huds) expect(webRules(scene), scene.name).toBe(`${VISIBLE_HEIGHT} ${HUD_ONLY}`);
+  for (const scene of huds) expect(webRules(scene), scene.name).toBe(HUD_ONLY);
   expect(HUD_ONLY).toBe('#round-stage, #round-actions { display: none !important; }');
   // The two are what the phone's Play stacks under its Hud, and nothing of the Hud is inside either.
   const play = readFileSync(new URL('../../web/src/game/screens/Play.tsx', import.meta.url), 'utf8');
@@ -181,7 +183,7 @@ test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the 
 
 test('the calendar of a turning round covers, in the web\'s text check, what it covers on the screen: in that scene\'s shot its pages take the pointer', () => {
   const turning = SCENES.find((scene) => scene.name === 'play-pageturn')!;
-  expect(webRules(turning)).toBe(`${VISIBLE_HEIGHT} ${CALENDAR_COVERS}`);
+  expect(webRules(turning)).toBe(CALENDAR_COVERS);
   expect(CALENDAR_COVERS).toBe('[data-motion-only] > * { pointer-events: auto !important; }');
   // The check asks what is on top along a line (`elementFromPoint`), which passes through anything that takes no pointer, as the calendar takes none
   // (a tap goes through it). The rule gives the pointer to the calendar itself, the child of the layer over the whole screen, and not to that layer:
@@ -352,7 +354,7 @@ describe('what is accepted of a scene, and no more', () => {
 
 test('the small cards of a step that earned badges are the web\'s result of a card with all but them taken out, over the Hud: the bar of the next step, the guide, the title, the card itself', () => {
   const earned = SCENES.find((scene) => scene.name === 'celebrate-earned')!;
-  expect(webRules(earned)).toBe(`${VISIBLE_HEIGHT} ${CELEBRATIONS_ONLY}`);
+  expect(webRules(earned)).toBe(CELEBRATIONS_ONLY);
   expect(CELEBRATIONS_ONLY).toBe('#round-actions, #round-stage > :not(:has(> [role="status"])), #round-stage > * > :not([role="status"]) { display: none !important; }');
   // The cards are the result's own children, beside its title and the card answered; nothing else of the stage holds one.
   const cards = readFileSync(new URL('../../web/src/game/screens/Cards.tsx', import.meta.url), 'utf8');

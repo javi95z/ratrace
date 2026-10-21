@@ -74,7 +74,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-type Opts = { play?: boolean; reduced?: boolean; delayMs?: number; once?: boolean; dx?: number; dy?: number; rest?: { opacity?: number } };
+type Opts = { play?: boolean; reduced?: boolean; delayMs?: number; once?: boolean; dx?: number; dy?: number; rest?: { opacity?: number }; replay?: number };
 
 function Probe({ hook, opts }: { hook: (o: Opts) => object; opts?: Opts }) {
   return <Animated.View testID="probe" style={hook(opts ?? {})} />;
@@ -105,6 +105,18 @@ test('play going false again returns to the first frame', async () => {
   expect(look(container).opacity).toBe('1');
   rerender(<Probe hook={useRise} opts={{ play: false }} />);
   expect(look(container).opacity).toBe('0');
+});
+
+test('a new replay plays the effect again from its first frame, on the same box: a mark bought twice jumps twice, its picture never drawn anew', async () => {
+  const { container, rerender } = render(<Probe hook={usePop} opts={{ play: true, replay: 1 }} />);
+  const box = container.firstElementChild;
+  expect(rea.assigned).toHaveLength(1);
+  await wait(1_000);
+  rerender(<Probe hook={usePop} opts={{ play: true, replay: 1 }} />);
+  expect(rea.assigned).toHaveLength(1);
+  rerender(<Probe hook={usePop} opts={{ play: true, replay: 2 }} />);
+  expect(rea.assigned).toHaveLength(2);
+  expect(container.firstElementChild).toBe(box);
 });
 
 test('a pop and a sink rest as themselves before and after they run', async () => {

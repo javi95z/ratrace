@@ -1,7 +1,6 @@
 import { assetKind, homeName } from '@ratrace/content';
 import { quotePortfolio } from '@ratrace/engine';
-import type { WealthKind } from '@ratrace/engine';
-import { useMemo } from 'react';
+import type { Content, GameView, PortfolioQuote, WealthKind } from '@ratrace/engine';
 import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';
@@ -27,6 +26,20 @@ const COLOUR: Record<WealthKind, ColorToken> = {
 };
 
 /**
+ * The engine's quote of everything owned, once for each round as it is shown: the glance, what is paid and the holdings all read the one. Kept by
+ * the player as the round's orders leave them (the store's own object, the same for every part that shows it, where each part's `shown` is its own),
+ * for the same world.
+ */
+const quotes = new WeakMap<GameView['player'], { content: Content; timeline: GameView['timeline']; round: number; quote: PortfolioQuote }>();
+export function portfolioQuote(content: Content, shown: GameView): PortfolioQuote {
+  const kept = quotes.get(shown.player);
+  if (kept !== undefined && kept.content === content && kept.timeline === shown.timeline && kept.round === shown.round) return kept.quote;
+  const quote = quotePortfolio(content, shown);
+  quotes.set(shown.player, { content, timeline: shown.timeline, round: shown.round, quote });
+  return quote;
+}
+
+/**
  * Where the two words of the line over the bar stand, so their baselines meet (the web's `items-baseline`): what it is (13) and the total
  * (the key figure, 28 on a line of 28).
  */
@@ -46,8 +59,8 @@ export function PortfolioGlance() {
   const { content, text, names, fmt } = useWords();
   const { locale } = useSettings();
   const shown = useShown();
-  // Worked out once for the round as it stands, not again for every drawing.
-  const quote = useMemo(() => quotePortfolio(content, shown), [content, shown]);
+  // Worked out once for the round as it stands, not again for every drawing, nor for each part that reads it.
+  const quote = portfolioQuote(content, shown);
   const top = quote.largest;
   const property = top?.kind === 'property' ? shown.player.properties.find((x) => x.id === top.id) : undefined;
   const business = top?.kind === 'business' ? shown.player.businesses.find((x) => x.id === top.id) : undefined;
@@ -122,7 +135,7 @@ export function Payouts() {
   const view = useGame((s) => s.view);
   const preview = useGame((s) => s.preview);
   const setOrder = useGame((s) => s.setOrder);
-  const quote = useMemo(() => quotePortfolio(content, shown), [content, shown]);
+  const quote = portfolioQuote(content, shown);
   if (!view || (quote.dividendsTotal === 0 && quote.interest === 0 && !quote.reinvest)) return null;
   // On, and the round has cash for it; or on, and it has not.
   const short = quote.reinvest && quote.dividendsTotal > 0 && preview !== null && preview.reinvested === 0;

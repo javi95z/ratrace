@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { act, render } from '@testing-library/react';
 import { useImperativeHandle, useInsertionEffect, useLayoutEffect, useState, type ReactNode, type Ref } from 'react';
@@ -54,15 +55,18 @@ afterEach(() => {
 /** Lets every microtask and timer under way run. */
 const settle = () => act(async () => { for (let i = 0; i < 3; i++) await new Promise((r) => setTimeout(r, 5)); });
 
-/** The app: its sources, its entry (`index.ts`) and its scripts, everything of it but what is installed or built. */
+/**
+ * The app: its sources, its entry (`index.ts`) and its scripts, everything of it but what is installed or built, and no folder whose name starts
+ * with a dot (a tool's own: `.expo`, `.kit-shots`, and an agent's `.claude`, which may hold whole copies of the app in worktrees of its own).
+ */
 const APP = join(import.meta.dirname, '..', '..');
-const NOT_THE_APP = new Set(['node_modules', '.expo', 'ios', 'android', '.kit-shots', 'dist']);
+const NOT_THE_APP = new Set(['node_modules', 'ios', 'android', 'dist']);
 
 /** Every file of code under `dir` that is not a test: TypeScript, and JavaScript of any kind. */
 function codeUnder(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
-    if (statSync(path).isDirectory()) return NOT_THE_APP.has(name) ? [] : codeUnder(path);
+    if (statSync(path).isDirectory()) return name.startsWith('.') || NOT_THE_APP.has(name) ? [] : codeUnder(path);
     return /\.(tsx?|jsx?|mjs|cjs)$/.test(name) && !/\.test\.(tsx?|jsx?|mjs|cjs)$/.test(name) ? [path] : [];
   });
 }
@@ -112,7 +116,17 @@ test('every canvas the app draws is the kit\'s: Skia\'s own is named in ui/Canva
   expect(takesSkiaCanvas("export { Group } from '@shopify/react-native-skia';")).toBe(false);
   expect(takesSkiaCanvas("const { Skia } = require('@shopify/react-native-skia');")).toBe(false);
   expect(takesSkiaCanvas("import { Canvas } from './Canvas';")).toBe(false);
-  // Read: the app's sources, its entry and its scripts.
+  // Read: the app's sources, its entry and its scripts; never a folder of a tool's (a dot-folder: a worktree's copy of the app), nor what is installed.
+  const scratch = mkdtempSync(join(tmpdir(), 'one-canvas-'));
+  try {
+    for (const [folder, file] of [['src', 'drawn.tsx'], ['.claude/worktrees/copy/src', 'copied.tsx'], ['node_modules/x', 'x.js']]) {
+      mkdirSync(join(scratch, folder), { recursive: true });
+      writeFileSync(join(scratch, folder, file), "import { Canvas } from '@shopify/react-native-skia';\n");
+    }
+    expect(codeUnder(scratch).map((path) => relative(scratch, path))).toEqual([join('src', 'drawn.tsx')]);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
   const files = codeUnder(APP).map((path) => relative(APP, path));
   expect(files).toEqual(expect.arrayContaining(['index.ts', 'src/ui/Canvas.tsx', 'src/ui/Sprite.tsx', 'scripts/scene-shots.ts']));
   expect(files.some((path) => path.startsWith('node_modules'))).toBe(false);

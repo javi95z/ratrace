@@ -182,6 +182,36 @@ describe('the play screen', () => {
     expect(button('See what life brings')).toBeTruthy();
   });
 
+  it('says it over a sheet that is open, in the sheet\'s own window, as the web\'s notice stands over its sheets', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    let hands: { leaveNews(): void; pick(option: number): Promise<void> } | null = null;
+    function Hands() {
+      const leaveNews = useGame((s) => s.leaveNews);
+      const pick = useGame((s) => s.pick);
+      hands = { leaveNews, pick };
+      return null;
+    }
+    render(
+      <GameProvider services={speaking(services, 'en')}>
+        <Play />
+        <Hands />
+      </GameProvider>,
+    );
+    await screen.findByRole('button', { name: 'See what life brings' });
+    const other = (await memoryServices(services.store).sessions.resume()).session as GameSession;
+    await playRounds(other, 1);
+    await settled(() => hands!.leaveNews());
+    // The cash's sheet open over the page; the step the game takes under it finds the life moved on.
+    fireEvent.click(screen.getByRole('button', { name: /Cash/ }));
+    const sheet = screen.getByRole('heading', { name: 'Cash' }).closest('[aria-modal="true"]') as HTMLElement;
+    await settled(() => hands!.pick(0));
+    const notice = await screen.findByRole('alert');
+    expect(notice.textContent).toBe(en.phone.moved);
+    expect(sheet.contains(notice)).toBe(true);
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+  });
+
   it('offers a way out when the game itself fails, instead of a button that does nothing', async () => {
     const services = memoryServices();
     const real = await services.sessions.start('nurse');

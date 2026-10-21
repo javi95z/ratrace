@@ -12,15 +12,22 @@ export const rea = ({
   assigned: [] as { kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[] }[],
   cancelled: 0,
   listeners: new Set<() => void>(),
+  /**
+   * True (the default): an animated style is drawn again by React each time a shared value changes, the fake's way of showing it. False: it is
+   * worked out once, as it is drawn, and kept in `styles` for a test to work out again, as the UI thread does with no word to React: a test of
+   * what React draws again (a scroll that must draw nothing) sets it false before it draws.
+   */
+  restyle: true,
+  styles: [] as Array<() => Record<string, unknown>>,
 });
 
 export async function reanimatedFake() {
   const { useRef, useReducer, useEffect } = await import('react');
-  const { View } = await import('react-native');
+  const { View, ScrollView } = await import('react-native');
   type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[] };
   const emit = () => rea.listeners.forEach((l) => l());
   return {
-    default: { View },
+    default: { View, ScrollView },
     useSharedValue: <T,>(init: T) => {
       const box = useRef<{ raw: unknown; timer?: ReturnType<typeof setTimeout>; sv: { value: unknown } } | null>(null);
       if (!box.current) {
@@ -49,11 +56,41 @@ export async function reanimatedFake() {
     },
     useAnimatedStyle: (fn: () => object) => {
       const [, bump] = useReducer((n: number) => n + 1, 0);
+      const live = useRef(rea.restyle).current;
+      const kept = useRef(false);
+      if (!live && !kept.current) {
+        kept.current = true;
+        rea.styles.push(fn as () => Record<string, unknown>);
+      }
       useEffect(() => {
+        if (!live) return;
         rea.listeners.add(bump);
         return () => void rea.listeners.delete(bump);
-      }, []);
+      }, [live]);
       return fn();
+    },
+    // A scroll handler is the worklet given the scroll's native event (its `contentOffset`), as the phone runs it on the UI thread.
+    useAnimatedScrollHandler: (handler: ((event: unknown) => void) | { onScroll?: (event: unknown) => void }) => (event: { nativeEvent: unknown }) => {
+      const onScroll = typeof handler === 'function' ? handler : handler.onScroll;
+      onScroll?.(event.nativeEvent);
+    },
+    // A reaction works out its value again whenever a shared value changes, and is told when it is not what it was (and once at first, from null).
+    useAnimatedReaction: <T,>(prepare: () => T, react: (now: T, before: T | null) => void) => {
+      const latest = useRef({ prepare, react });
+      latest.current = { prepare, react };
+      const last = useRef<{ value: T } | null>(null);
+      useEffect(() => {
+        const run = () => {
+          const now = latest.current.prepare();
+          const before = last.current;
+          if (before !== null && Object.is(before.value, now)) return;
+          last.current = { value: now };
+          latest.current.react(now, before === null ? null : before.value);
+        };
+        run();
+        rea.listeners.add(run);
+        return () => void rea.listeners.delete(run);
+      }, []);
     },
     // read through a getter, so that it is the value of the moment it is read, as the library's is
     useDerivedValue: <T,>(fn: () => T) => ({

@@ -1,4 +1,4 @@
-import { Children, createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
+import { Children, createContext, Fragment, memo, useContext, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { Animated, Easing, Pressable, View, type HostInstance, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
 import { Framed } from './Frame';
@@ -567,8 +567,9 @@ const BADGE = {
 /**
  * An asset by its look: its brand mark on its own where it has one, its ticker on the colour of
  * its class where it has not. The name is always written beside it, so the mark is decoration.
+ * Drawn again only when one of the three changes: a line that holds it (a holding, a plan) is drawn again for its figures.
  */
-export function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: keyof typeof BADGE; logo?: string }) {
+export const TickerBadge = memo(function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: keyof typeof BADGE; logo?: string }) {
   const frame: ViewStyle = { width: 56, height: 36, flexShrink: 0, alignItems: 'center', justifyContent: 'center' };
   if (logo) {
     return (
@@ -583,7 +584,7 @@ export function TickerBadge({ ticker, kind, logo }: { ticker: string; kind: keyo
       <PixelText size={14} tone={look.fg} numberOfLines={1}>{ticker}</PixelText>
     </Framed>
   );
-}
+});
 
 interface Choice<T> {
   value: T;

@@ -1,5 +1,5 @@
 import { Fill, FilterMode, Group, Image, MipmapMode, Path, Skia, type SkImage } from '@shopify/react-native-skia';
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, memo, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { Canvas } from './Canvas';
@@ -43,7 +43,7 @@ interface Props {
  * smooth). Its picture is decoded once for the whole app and shared (spriteImages). A sprite that does not exist, or
  * does not load, shows the web's checkerboard at the fallback size and is logged once: the game is playable without art.
  */
-export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, silhouette = false, style, children }: Props): ReactNode {
+function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, silhouette = false, style, children }: Props): ReactNode {
   const art = useContext(ArtScale);
   const box = size ?? spriteBox(id, scale, art, fallback);
   const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
@@ -64,6 +64,28 @@ export function Sprite({ id, scale = 1, alt = '', fallback = FALLBACK, size, pla
     </View>
   );
 }
+
+/** Two boxes alike (a size, a place, a fallback): the same numbers, as callers write a new one each time they draw. */
+const sameBox = (a: Partial<Size & { x: number; y: number }> | undefined, b: Partial<Size & { x: number; y: number }> | undefined): boolean =>
+  a === b || (a !== undefined && b !== undefined && a.w === b.w && a.h === b.h && a.x === b.x && a.y === b.y);
+
+/**
+ * A sprite is drawn again only when what it draws changes: a line that holds it drawn again for its words leaves its canvas alone (each drawing of a
+ * canvas is a new recording handed to Skia). Its boxes are compared by their numbers; its style and what it draws over the picture by identity.
+ */
+export const Sprite = memo(
+  SpriteBox,
+  (a, b) =>
+    a.id === b.id &&
+    a.scale === b.scale &&
+    a.alt === b.alt &&
+    a.silhouette === b.silhouette &&
+    a.style === b.style &&
+    a.children === b.children &&
+    sameBox(a.size, b.size) &&
+    sameBox(a.place, b.place) &&
+    sameBox(a.fallback, b.fallback),
+);
 
 /** The decoded sprite on a canvas of its box. */
 function Drawn({ image, box, place, silhouette, children }: { image: SkImage; box: Size; place: Size & { x: number; y: number }; silhouette: boolean; children?: ReactNode }) {

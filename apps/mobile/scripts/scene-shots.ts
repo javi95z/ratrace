@@ -21,8 +21,8 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
  * from the Metro running on 8090 (`npx expo start --port 8090` in apps/mobile).
  *
  * Every scene is drawn on the same day (`SCENE_NOW`): the browser's clock is held at it, the app's services answer it. The web's pages are
- * given `webRules` (sceneShots.ts): a short page is as tall as the screen shows, not taller by the safe area (`VISIBLE_HEIGHT`), and what
- * it draws that the phone does not is hidden (`WEB_ONLY`: on the challenge page, the line that tells a guest to sign in).
+ * given `webRules` (sceneShots.ts): what it draws that the phone does not is hidden (`WEB_ONLY`: on the challenge page, the line that tells a
+ * guest to sign in). (A short page is as tall as the screen shows by the web's own `min-h-safe`.)
  * A scene on a screen the app still draws as a stand-in (`STAND_INS`, `STAND_IN_SCENES`), or of a screen ported and not shot yet (`PENDING_SHOTS`: the
  * batch passes shoot those), is shot but not compared: its line is `unjudged`. A scene in the phone's own
  * words (`PHONE_WORDS`) is compared for its layout only: its text rows are reported and not judged, and its verdict says `phone words, ...`. A

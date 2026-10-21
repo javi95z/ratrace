@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,8 @@ import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
  * over their 50). On the phone a sheet is a window of its own (a Modal), which nothing of the screen is drawn over: while one is open the toasts
  * are drawn in it, by the sheet on top; with none open, each where its screen put it (its `fixed`).
  */
-type Shown = { readonly id: number; readonly message: string };
+/** A toast being shown; `drawn` once it has been drawn somewhere (the screen or a sheet): drawn again elsewhere, it is carried over, not said anew. */
+type Shown = { readonly id: number; readonly message: string; drawn: boolean };
 const top = {
   toasts: [] as readonly Shown[],
   sheets: [] as readonly number[],
@@ -149,7 +150,7 @@ function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }
             </ScrollView>
           </Framed>
         </Animated.View>
-        {onTop ? toasts.map((toast) => <ToastBox key={toast.id} message={toast.message} />) : null}
+        {onTop ? toasts.map((toast) => <ToastBox key={toast.id} shown={toast} />) : null}
       </View>
     </Modal>
   );
@@ -208,6 +209,8 @@ export function Toast({ message, onDone, ms = 2600 }: { message: string | null; 
   const done = useRef(onDone);
   const [id] = useState(() => nextId++);
   const overSheet = useSheetOpen();
+  // The toast as it is shown, the one object wherever it is drawn: the screen's place and a sheet's.
+  const shown = useMemo<Shown | null>(() => (message === null ? null : { id, message, drawn: false }), [id, message]);
   useEffect(() => {
     done.current = onDone;
   });
@@ -220,30 +223,37 @@ export function Toast({ message, onDone, ms = 2600 }: { message: string | null; 
   }, [message, ms]);
   // Shown, for a sheet that opens over it to draw it.
   useEffect(() => {
-    if (message === null) return;
-    const shown: Shown = { id, message };
+    if (shown === null) return;
     changeTop(() => void (top.toasts = [...top.toasts, shown]));
     return () => changeTop(() => void (top.toasts = top.toasts.filter((one) => one !== shown)));
-  }, [message, id]);
+  }, [shown]);
 
-  if (message === null || overSheet) return null;
-  return <ToastBox message={message} />;
+  if (shown === null || overSheet) return null;
+  return <ToastBox shown={shown} />;
 }
 
-/** The toast itself, rising into its place 112 over the foot of the screen, taking no press. */
-function ToastBox({ message }: { message: string }) {
-  const rise = useRise();
+/**
+ * The toast itself, rising into its place 112 over the foot of the screen, taking no press, and said by a screen reader (Android's live region;
+ * iOS is told once by `Toast`). Where it is carried over (a sheet opened over it, or closed under it) it stands as it was: no second rise, and
+ * not said again.
+ */
+function ToastBox({ shown }: { shown: Shown }) {
+  const [carried] = useState(() => shown.drawn);
+  useEffect(() => {
+    shown.drawn = true;
+  }, [shown]);
+  const rise = useRise({ reduced: carried || undefined });
   return (
     <View
       accessibilityRole="alert"
-      accessibilityLiveRegion="polite"
-      aria-live="polite"
+      accessibilityLiveRegion={carried ? 'none' : 'polite'}
+      aria-live={carried ? 'off' : 'polite'}
       pointerEvents="none"
       style={{ position: 'absolute', left: 0, right: 0, bottom: 112, zIndex: 60, alignItems: 'center', paddingHorizontal: 16 }}
     >
       <Animated.View style={rise}>
         <Framed kind="frame" style={{ backgroundColor: COLORS['wine-700'], paddingHorizontal: 12, paddingVertical: 8 }}>
-          <ReadText size={14} style={{ textAlign: 'center' }}>{message}</ReadText>
+          <ReadText size={14} style={{ textAlign: 'center' }}>{shown.message}</ReadText>
         </Framed>
       </Animated.View>
     </View>

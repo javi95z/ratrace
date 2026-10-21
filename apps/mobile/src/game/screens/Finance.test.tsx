@@ -28,6 +28,19 @@ vi.mock('../../ui/Slider', () => ({
   },
 }));
 
+// The engine's quote of everything owned, counted as it is asked: the screen asks it once for each round as it stands.
+const quoted = vi.hoisted(() => ({ count: 0 }));
+vi.mock('@ratrace/engine', async (original) => {
+  const engine = (await original()) as typeof import('@ratrace/engine');
+  return {
+    ...engine,
+    quotePortfolio: (...args: Parameters<typeof engine.quotePortfolio>) => {
+      quoted.count += 1;
+      return engine.quotePortfolio(...args);
+    },
+  };
+});
+
 beforeEach(() => {
   sliders.length = 0;
 });
@@ -526,6 +539,22 @@ describe('the finances, laid out', () => {
   });
 });
 
+describe('a holding\'s mark, answering an order', () => {
+  it('keeps its picture where it is (its canvas is not made again): the box round it plays the jump, each order anew', async () => {
+    const { services, session } = await inFinance('crypto_kid');
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'apple', amount: 50_000 }] });
+    await toFinance(session);
+    played(services);
+    const holdings = await screen.findByLabelText('Your investments');
+    const logo = holdings.querySelector('[data-sprite="logo.apple"]');
+    expect(logo).not.toBeNull();
+    await settled(() => void probe.state!.addOrder({ type: 'buy', assetId: 'apple', amount: 10_000 }));
+    const after = screen.getByLabelText('Your investments').querySelector('[data-sprite="logo.apple"]');
+    expect(after).toBe(logo);
+    expect(after!.closest('[data-mark]')?.getAttribute('data-mark')).toBe('buy');
+  });
+});
+
 /** A colour of the palette as the page writes it. */
 function rgb(hex: string): string {
   return `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
@@ -567,9 +596,36 @@ describe('what is drawn again', () => {
     await settled(() => void probe.state!.addOrder({ type: 'sell', assetId: 'bitcoin', amount: 999_999_999_999 }));
     expect(screen.getByRole('alert')).toBeTruthy();
     await settled(() => probe.state!.clearRefusal());
-    await settled(() => probe.state!.clearAlsoRemoved());
     expect(spriteRenders.get(logo)).toBe(drawn);
     expect(hud()).toBe(before);
+  });
+
+  it('draws a holding again only for an order of its own: a purchase of another, or cash put in savings, leaves its line and its mark as they are, and no mark\'s picture is drawn again', async () => {
+    // Two holdings drawn with their brands' marks: the crypto kid's coin, and a share of Apple bought a round before.
+    const { services, session } = await inFinance('crypto_kid');
+    await session.playRound({ orders: [{ type: 'buy', assetId: 'apple', amount: 50_000 }] });
+    await toFinance(session);
+    played(services);
+    await screen.findByLabelText('Your investments');
+    await settled();
+    const drawn = () => ({ coin: spriteRenders.get('logo.bitcoin'), apple: spriteRenders.get('logo.apple') });
+    const before = drawn();
+    expect(before.coin).toBeGreaterThan(0);
+    expect(before.apple).toBeGreaterThan(0);
+    // Cash to savings: the cash and the glance change, neither holding; and what everything owned comes to is worked out once, for all who show it.
+    quoted.count = 0;
+    await settled(() => void probe.state!.addOrder({ type: 'depositIn', amount: 10_000 }));
+    expect(probe.state!.orders).toHaveLength(1);
+    expect(drawn()).toEqual(before);
+    expect(quoted.count).toBe(1);
+    // More Apple: its line changes and its mark jumps; the coin's line does not, and neither mark's picture is drawn again (the jump is its box's).
+    const worth = () => within(screen.getByLabelText('Your investments')).getByRole('button', { name: /Apple/ }).textContent;
+    const was = worth();
+    await settled(() => void probe.state!.addOrder({ type: 'buy', assetId: 'apple', amount: 10_000 }));
+    expect(probe.state!.orders).toHaveLength(2);
+    expect(worth()).not.toBe(was);
+    expect(screen.getByLabelText('Your investments').querySelector('[data-mark="buy"] [data-sprite="logo.apple"]')).not.toBeNull();
+    expect(drawn()).toEqual(before);
   });
 });
 

@@ -1,6 +1,7 @@
 import { useImperativeHandle, useRef } from 'react';
 import type { ReactNode, Ref } from 'react';
 import { Image, ScrollView, View, type ScrollViewInstance, type ViewStyle } from 'react-native';
+import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
 import { COLORS, GUTTER, SHELL_WIDTH } from './theme';
@@ -73,7 +74,8 @@ export function scrollToShow(offset: number, viewport: number, y: number, height
  * frame's drop only. `fixed` is what stands over the page and does not scroll with it, the web's `position: fixed` (a
  * Toast): placed in the screen's whole box, not in the column. `sticky` lists which of the children stick to the top
  * of the scroll once they reach it (see `StickyScreen`, which uses it), and `onScroll` hears how far the page has
- * scrolled, in points.
+ * scrolled, in points. `scrollY` is how far, written on the UI thread as the page scrolls (a Reanimated scroll handler), for what moves with
+ * the scroll to be moved there too, with no word to React (`StickyScreen`): a page given one tells nothing to `onScroll`, and its scroller reads it.
  */
 export function Screen({
   children,
@@ -83,6 +85,7 @@ export function Screen({
   sticky,
   onScroll,
   scroller,
+  scrollY,
 }: {
   children: ReactNode;
   contentStyle?: ViewStyle;
@@ -91,6 +94,7 @@ export function Screen({
   sticky?: number[];
   onScroll?: (y: number) => void;
   scroller?: Ref<ScreenScroller>;
+  scrollY?: SharedValue<number>;
 }) {
   const inset = useSafeAreaInsets();
   const scrolling = useRef<ScrollViewInstance>(null);
@@ -100,16 +104,37 @@ export function Screen({
     scroller,
     () => ({
       reveal(y, height, animated = true) {
-        const to = scrollToShow(where.current.offset, where.current.viewport, y, height, GUTTER);
+        const offset = scrollY === undefined ? where.current.offset : scrollY.value;
+        const to = scrollToShow(offset, where.current.viewport, y, height, GUTTER);
         if (to !== null) scrolling.current?.scrollTo({ y: to, animated });
       },
     }),
-    [],
+    [scrollY],
+  );
+  // On the UI thread, as the page scrolls: nothing of it goes through React.
+  const onScrollUi = useAnimatedScrollHandler(
+    (event) => {
+      'worklet';
+      if (scrollY !== undefined) scrollY.value = event.contentOffset.y;
+    },
+    [scrollY],
   );
   // A bar that is not shown this time (`false`, `null`) is no bar: the scroll then clears the home indicator itself.
   const barred = Boolean(bar);
   const follows = onScroll !== undefined || scroller !== undefined;
-  const scroll = (
+  const scroll = scrollY !== undefined ? (
+    <Animated.ScrollView
+      ref={scrolling as never}
+      stickyHeaderIndices={sticky}
+      onScroll={onScrollUi}
+      onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
+      scrollEventThrottle={16}
+      style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
+      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
+    >
+      {children}
+    </Animated.ScrollView>
+  ) : (
     <ScrollView
       ref={scrolling}
       stickyHeaderIndices={sticky}

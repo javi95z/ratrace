@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, render } from '@testing-library/react';
-import { createContext, createRef, useContext, type ReactNode } from 'react';
+import { createContext, createRef, Profiler, useContext, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -43,6 +43,12 @@ vi.mock('react-native', async (orig) => {
   };
 });
 
+// The UI thread is the fake's: a shared value is reactive, and an animated style is worked out once and kept (`rea.styles`) for the test to work
+// out again, as the phone does on its UI thread with no word to React. A function of React's side called from a worklet runs at once.
+vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
+vi.mock('react-native-worklets', () => ({ scheduleOnRN: (fn: (...args: unknown[]) => unknown, ...args: unknown[]) => fn(...args) }));
+const { rea } = await import('./testing/reanimated');
+
 const { Screen } = await import('./Page');
 const { StickyScreen, useScrolledPast, useScrolledPastLead } = await import('./Sticky');
 
@@ -56,6 +62,11 @@ beforeEach(() => {
   scrolls.length = 0;
   layouts.length = 0;
   laidOut.length = 0;
+  rea.restyle = false;
+  rea.styles.length = 0;
+});
+afterEach(() => {
+  rea.restyle = true;
 });
 /** The lead stands `y` down the column and is `height` tall. */
 const lay = (y: number, height: number) => act(() => layouts[layouts.length - 1]({ nativeEvent: { layout: { x: 0, y, width: 390, height } } }));
@@ -204,11 +215,13 @@ test('with no lead, nothing scrolls away: the header is never told it has', () =
   expect(getByText('here')).toBeTruthy();
 });
 
-/** How far the second row has moved up, in points. */
-const rise = (tabs: HTMLElement) => {
-  const t = (tabs.parentElement!.parentElement as HTMLElement).style.transform;
-  const m = /translateY\((-?[\d.]+)px\)/.exec(t);
-  return m ? Math.abs(Number(m[1])) : 0;
+/**
+ * How far the second row has moved up, in points, as the UI thread works it out from the page's offset now: its animated style (the last screen
+ * drawn has the last one), worked out again.
+ */
+const rise = () => {
+  const style = rea.styles[rea.styles.length - 1]() as { transform: Array<{ translateY: number }> };
+  return Math.abs(style.transform[0].translateY);
 };
 
 test('the room between the rows (the 12 the web leaves under the Hud) is there at scroll 0 and closes as the page scrolls up under the stuck header', () => {
@@ -225,21 +238,21 @@ test('the room between the rows (the 12 the web leaves under the Hud) is there a
   expect(gap.classList.contains(touchClass('none'))).toBe(true);
   // the lead stands 16 down (the column's top) and is 100 tall: the sticky row begins at 116
   lay(16, 100);
-  expect(rise(tabs)).toBe(0);
+  expect(rise()).toBe(0);
   scroll(60);
-  expect(rise(tabs)).toBe(0);
+  expect(rise()).toBe(0);
   // stuck at 116; the tabs go on scrolling under it, and close the gap over the next 12
   scroll(116);
-  expect(rise(tabs)).toBe(0);
+  expect(rise()).toBe(0);
   scroll(122);
-  expect(rise(tabs)).toBe(6);
+  expect(rise()).toBe(6);
   scroll(128);
-  expect(rise(tabs)).toBe(12);
+  expect(rise()).toBe(12);
   // and no more once they have met it
   scroll(400);
-  expect(rise(tabs)).toBe(12);
+  expect(rise()).toBe(12);
   scroll(30);
-  expect(rise(tabs)).toBe(0);
+  expect(rise()).toBe(0);
   expect(container).toBeTruthy();
 });
 
@@ -251,12 +264,12 @@ test('the sticky row\'s place is counted from the column\'s own top and gap: no 
     </StickyScreen>,
   );
   scroll(16);
-  expect(rise(a.getByText('the tabs'))).toBe(0);
+  expect(rise()).toBe(0);
   scroll(22);
-  expect(rise(a.getByText('the tabs'))).toBe(6);
+  expect(rise()).toBe(6);
   a.unmount();
   // the caller's own top and gap
-  const b = wrap(
+  wrap(
     <StickyScreen lead={<Text>lead</Text>} header={<Text>h</Text>} subHeader={<Text>the tabs</Text>} subGap={12} contentStyle={{ paddingTop: 4, gap: 10 }}>
       <Text>page</Text>
     </StickyScreen>,
@@ -264,19 +277,19 @@ test('the sticky row\'s place is counted from the column\'s own top and gap: no 
   lay(4, 50);
   // 4 + 50 + 10
   scroll(64);
-  expect(rise(b.getByText('the tabs'))).toBe(0);
+  expect(rise()).toBe(0);
   scroll(70);
-  expect(rise(b.getByText('the tabs'))).toBe(6);
+  expect(rise()).toBe(6);
 });
 
 test('without a room between the rows nothing moves', () => {
-  const { getByText } = wrap(
+  wrap(
     <StickyScreen header={<Text>h</Text>} subHeader={<Text>the tabs</Text>}>
       <Text>page</Text>
     </StickyScreen>,
   );
   scroll(300);
-  expect(rise(getByText('the tabs'))).toBe(0);
+  expect(rise()).toBe(0);
 });
 
 test('what is fixed over it and the bar under it are the screen\'s, as for any Screen', () => {
@@ -289,15 +302,14 @@ test('what is fixed over it and the bar under it are the screen\'s, as for any S
   expect(getByText('bar')).toBeTruthy();
 });
 
-test('the scroll offset is told to the caller, and the header can ask whether the page has gone past a point without hearing every scroll', () => {
+test('the header can ask whether the page has gone past a point without hearing every scroll', () => {
   let drawn = 0;
   function Away() {
     drawn += 1;
     return <Text>{useScrolledPast(100) ? 'away' : 'here'}</Text>;
   }
-  const onScroll = vi.fn();
   const { getByText } = wrap(
-    <StickyScreen header={<Away />} onScroll={onScroll}>
+    <StickyScreen header={<Away />}>
       <Text>page</Text>
     </StickyScreen>,
   );
@@ -314,7 +326,6 @@ test('the scroll offset is told to the caller, and the header can ask whether th
   expect(getByText('away')).toBeTruthy();
   scroll(0);
   expect(getByText('here')).toBeTruthy();
-  expect(onScroll.mock.calls.map((c) => c[0])).toEqual([40, 99, 101, 400, 250, 0]);
 });
 
 test('outside a StickyScreen nothing has scrolled', () => {
@@ -356,18 +367,18 @@ test('what stands between the rows (the strip of a crisis, a tip of the guide) i
   act(() => lead.onLayout({ nativeEvent: { layout: { x: 0, y: 16, width: 390, height: 100 } } }));
   act(() => row.onLayout({ nativeEvent: { layout: { x: 0, y: 150, width: 390, height: 60 } } }));
   scroll(116);
-  expect(rise(tabs)).toBe(0);
+  expect(rise()).toBe(0);
   scroll(196);
-  expect(rise(tabs)).toBe(80);
+  expect(rise()).toBe(80);
   scroll(266);
-  expect(rise(tabs)).toBe(150);
+  expect(rise()).toBe(150);
   scroll(900);
-  expect(rise(tabs)).toBe(150);
+  expect(rise()).toBe(150);
   // The tip goes up with the tabs, at the page's pace: one block.
-  expect(tip.closest('[style*="translateY"]')).toBe(tabs.parentElement!.parentElement);
+  expect(tip.parentElement).toBe(tabs.parentElement!.parentElement);
   // A tip read and gone: the room is what is left.
   act(() => row.onLayout({ nativeEvent: { layout: { x: 0, y: 12, width: 390, height: 60 } } }));
-  expect(rise(tabs)).toBe(12);
+  expect(rise()).toBe(12);
 });
 
 test('what sticks takes no touch where it draws nothing: the room left under the tabs once they have met the figures lets the page under it be pressed', () => {
@@ -397,3 +408,35 @@ function hasBackground(style: unknown): boolean {
   const flat = (Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style) as { backgroundColor?: string } | undefined;
   return Boolean(flat?.backgroundColor);
 }
+
+test('a scroll is followed on the UI thread: React draws nothing of the screen again for it, the rows closing included, and hears only of a point passed', () => {
+  let commits = 0;
+  let asked = 0;
+  function Away() {
+    asked += 1;
+    return <Text>{useScrolledPastLead() ? 'away' : 'here'}</Text>;
+  }
+  const { getByText } = wrap(
+    <Profiler id="sticky" onRender={() => void (commits += 1)}>
+      <StickyScreen lead={<Text>the portrait</Text>} header={<Away />} subHeader={<Text>the tabs</Text>} subGap={12} between={<Text>the tip</Text>}>
+        <Text>page</Text>
+      </StickyScreen>
+    </Profiler>,
+  );
+  const lead = laidOut.find((one) => !hasBackground(one.style))!;
+  const row = laidOut.find((one) => hasBackground(one.style))!;
+  act(() => lead.onLayout({ nativeEvent: { layout: { x: 0, y: 16, width: 390, height: 100 } } }));
+  act(() => row.onLayout({ nativeEvent: { layout: { x: 0, y: 200, width: 390, height: 60 } } }));
+  const before = { commits, asked };
+  // A fling through the whole room (116 to 316), a frame at a time, short of the lead's foot first: nothing drawn again, the rows moved all the same.
+  for (let y = 0; y <= 116; y += 4) scroll(y);
+  expect({ commits, asked }).toEqual(before);
+  expect(getByText('here')).toBeTruthy();
+  // Past the lead's foot (116): the one point asked about, and the one drawing it takes (the header's word, nothing else).
+  for (let y = 117; y <= 340; y += 3) scroll(y);
+  expect(getByText('away')).toBeTruthy();
+  expect(asked).toBe(before.asked + 1);
+  expect(commits).toBe(before.commits + 1);
+  // And the rows have closed all the same, on the UI thread: the tabs have met the figures.
+  expect(rise()).toBe(200);
+});

@@ -14,14 +14,6 @@ export const SCENES_FOLDER = 'phase-2-parity';
 export const SCENES_FILE = 'phase-2-parity.json';
 
 /**
- * The one rule the web's pages are given in a shot. The web's body is padded by the safe area at the top and its `main` is `min-h-dvh`, so a short
- * page is taller than the screen by that area (62 pt on the iPhone 16 Pro): its foot, the settings and the small print, stands below the fold. The
- * phone's page scrolls inside the screen under the safe area and is as tall as the part that shows. The shot takes that one difference away from the
- * web, so what it measures is what is drawn, not where a short page ends.
- */
-export const VISIBLE_HEIGHT = 'main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }';
-
-/**
  * A scene of the Hud (`hud-*`) is drawn by the web's Play, which is the Hud's only page, and by the phone's Hud alone (Play is Task 9's): what
  * Play draws besides the Hud, the stage of the round (`main#round-stage`: the guide, the news, the finances) and the bar of its next step
  * (`#round-actions`), is taken out of the web's shot (`display: none`: nothing of it is drawn, and none of its text is measured, as hidden
@@ -65,8 +57,12 @@ export const WEB_ONLY: Readonly<Record<string, string>> = {
   'celebrate-earned': CELEBRATIONS_ONLY,
 };
 
-/** Every rule the web's page is given for a scene's shot: the height of its pages, and what it draws that the phone does not. */
-export const webRules = (scene: Scene): string => [VISIBLE_HEIGHT, WEB_ONLY[scene.name]].filter((rule) => rule !== undefined).join(' ');
+/**
+ * Every rule the web's page is given for a scene's shot: what it draws that the phone does not, and nothing else. (Its pages are as tall as the screen
+ * under the notch by their own rule since the web's d67284b, `min-h-safe`, which the web's viewport.test holds: the shots' own height rule of Task 6,
+ * `VISIBLE_HEIGHT`, which did the same, is gone.)
+ */
+export const webRules = (scene: Scene): string => WEB_ONLY[scene.name] ?? '';
 
 /** The web's page for a scene, in the scene's language (the web's pages are all under their language). */
 export const sceneWebUrl = (scene: Scene, port: number): string => `http://localhost:${port}/${scene.locale}/kit/scene?name=${scene.name}`;

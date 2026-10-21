@@ -1,9 +1,9 @@
 import { assetLogo, cityIcon } from '@ratrace/content';
 import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
 import { ageAt, orderLabel } from '@ratrace/core/game/present';
-import { applyBp, depositRateBp, quoteMargin, quotePlans, quotePortfolio } from '@ratrace/engine';
+import { applyBp, depositRateBp, quoteMargin, quotePlans } from '@ratrace/engine';
 import type { AssetDef, GameView, Order } from '@ratrace/engine';
-import { createContext, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
@@ -18,7 +18,7 @@ import { COLORS, GUTTER, TOUCH } from '../../ui/theme';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
 import { Explain } from './Explain';
-import { Payouts, PortfolioGlance } from './Glance';
+import { Payouts, portfolioQuote, PortfolioGlance } from './Glance';
 import { useShown } from './Hud';
 import { BuySheet } from './PlayStandIns';
 
@@ -72,9 +72,12 @@ function Portfolio() {
   const [move, setMove] = useState<Move | null>(opened.sheet === 'pension' ? { kind: 'pension' } : null);
   const [buying, setBuying] = useState<AssetDef | null>(null);
   const openPension = usePress({ onPress: () => setMove({ kind: 'pension' }) });
-  // Worked out once for the round as it stands, not again for each drawing.
+  // The same two for every holding and every drawing, so a holding is drawn again only when what it shows changes (`Holding` is memoised).
+  const buy = useCallback((asset: AssetDef) => setBuying(asset), []);
+  const sell = useCallback((asset: AssetDef) => setMove({ kind: 'sell', asset }), []);
+  // Worked out once for the round as it stands, not again for each drawing (the quote is the glance's, made once a round: `portfolioQuote`).
   const held = useMemo(() => content.assets.filter((asset) => Object.hasOwn(p.positions, asset.id)), [content, p.positions]);
-  const dividends = useMemo(() => new Map(quotePortfolio(content, shown).dividends.map((paid) => [paid.assetId, paid.amount])), [content, shown]);
+  const dividends = useMemo(() => new Map(portfolioQuote(content, shown).dividends.map((paid) => [paid.assetId, paid.amount])), [content, shown]);
   // What can be sold this round: what is held once the orders so far have run, without what a plan buys after them.
   // A plan buys when the round is played, after every order: the order cannot sell what it has not bought yet.
   const planned = (assetId: string): number => {
@@ -132,8 +135,8 @@ function Portfolio() {
             pays={dividends.get(asset.id) ?? null}
             planned={planned(asset.id)}
             sellable={sellable(asset.id)}
-            onBuy={() => setBuying(asset)}
-            onSell={() => setMove({ kind: 'sell', asset })}
+            onBuy={buy}
+            onSell={sell}
           />
         ))}
       </Panel>
@@ -145,11 +148,15 @@ function Portfolio() {
   );
 }
 
-/** A holding: its mark, its name and what it has made or lost, what it pays, what is owed on it, what a plan adds to it, its worth; and its sale. */
-function Holding({ asset, value, gain, pays, planned, sellable, onBuy, onSell }: { asset: AssetDef; value: number; gain: number; pays: number | null; planned: number; sellable: number; onBuy(): void; onSell(): void }) {
+/**
+ * A holding: its mark, its name and what it has made or lost, what it pays, what is owed on it, what a plan adds to it, its worth; and its sale.
+ * Drawn again only when one of its figures changes (an order of another holding, or of the cash, leaves it as it is): what is owed on it follows
+ * the round itself (`MarginLine`), and its mark the orders of its own asset (`AssetMark`).
+ */
+const Holding = memo(function Holding({ asset, value, gain, pays, planned, sellable, onBuy, onSell }: { asset: AssetDef; value: number; gain: number; pays: number | null; planned: number; sellable: number; onBuy(asset: AssetDef): void; onSell(asset: AssetDef): void }) {
   const t = useT('finance.portfolio');
   const { names, fmt } = useWords();
-  const buy = usePress({ onPress: onBuy });
+  const buy = usePress({ onPress: () => onBuy(asset) });
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
       {/* The holding opens the same sheet as the market: to buy more of it, once or every round. */}
@@ -165,12 +172,12 @@ function Holding({ asset, value, gain, pays, planned, sellable, onBuy, onSell }:
         </View>
         <PixelText style={{ textAlign: 'right' }}>{fmt.money(value)}</PixelText>
       </Pressable>
-      <Button variant="secondary" onPress={onSell} disabled={sellable <= 0}>
+      <Button variant="secondary" onPress={() => onSell(asset)} disabled={sellable <= 0}>
         {t('sell')}
       </Button>
     </View>
   );
-}
+});
 
 /**
  * The pension plan, opened: what it is and what it holds, and the money put into it this round or,
@@ -236,7 +243,8 @@ const lastTradeOf = (orders: readonly Order[], assetId: string): 'buy' | 'sell' 
 /**
  * An asset by its mark, answering the orders of the round: bought, it jumps and throws gold sparks;
  * sold, it shrinks and comes back. Each new order plays it again; what was ordered before the list
- * was opened plays nothing.
+ * was opened plays nothing. The web plays it again by making the mark anew (`key`); here the box round it
+ * plays it again (`replay`) and the mark, a picture on a canvas, stays as it is: only the sparks are made anew.
  */
 function AssetMark({ asset }: { asset: AssetDef }) {
   const { names } = useWords();
@@ -244,34 +252,29 @@ function AssetMark({ asset }: { asset: AssetDef }) {
   const lastTrade = useGame((s) => lastTradeOf(s.orders, asset.id));
   const [before] = useState(count);
   const last = count > before ? lastTrade : null;
-  return (
-    <Answering key={count} last={last}>
-      <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
-      {last === 'buy' ? <Sparks colours={['gold-500', 'gold-200', 'cream']} count={8} reach={26} /> : null}
-    </Answering>
-  );
-}
-
-/** The mark's box, playing its jump (bought) or its shrink (sold) once from the moment it is drawn: each new order is a new box. */
-function Answering({ last, children }: { last: 'buy' | 'sell' | null; children: ReactNode }) {
-  const pop = usePop({ play: last === 'buy' });
-  const sink = useSink({ play: last === 'sell' });
+  const pop = usePop({ play: last === 'buy', replay: count });
+  const sink = useSink({ play: last === 'sell', replay: count });
   return (
     <Animated.View {...{ dataSet: last ? { mark: last } : undefined }} style={[{ flexDirection: 'row', flexShrink: 0 }, last === 'buy' ? pop : last === 'sell' ? sink : null]}>
-      {children}
+      <TickerBadge ticker={names.assets[asset.id].ticker} kind={asset.class} logo={assetLogo[asset.id]} />
+      {last === 'buy' ? <Sparks key={count} colours={['gold-500', 'gold-200', 'cream']} count={8} reach={26} /> : null}
     </Animated.View>
   );
 }
 
 /** How much of a purchase may be borrowed from the broker: none, a quarter more, half as much again, or as much again. */
 type Gear = 1 | 1.25 | 1.5 | 2;
-/** The gears the market's sheet offers (Task 13 draws that sheet). */
+/**
+ * The gears the market's sheet offers (Task 13 draws that sheet).
+ * TODO(Task 13): exported only because nothing here uses it yet (lint forbids what is unused); un-export it once `BuySheet` does, as the web has it.
+ */
 export const GEARS: readonly Gear[] = [1, 1.25, 1.5, 2];
 
 /**
  * How close a broker's loan is to the forced sale: a bar of the loan against what the holding is
  * worth, full when the broker sells, wine as it nears; and what the holding is worth, and how far
  * it may fall before the sale. The debt tab draws it beside a margin loan (Task 13).
+ * TODO(Task 13): exported only for its test while nothing draws it (lint forbids what is unused); un-export it once `DebtTab` does, as the web has it.
  */
 export function MarginGauge({ assetId }: { assetId: string }) {
   const t = useT('finance.plans');

@@ -205,6 +205,57 @@ test('a toast said while a sheet is open is drawn over the sheet, in its window,
   expect(back.closest('[data-screen]')).not.toBeNull();
 });
 
+test('a toast already shown when a sheet opens is carried over into it as it stands: said once (no second live region, no second rise), and so back', () => {
+  function Screen({ open }: { open: boolean }) {
+    return (
+      <>
+        <Toast message="Not possible: not enough cash" onDone={() => {}} />
+        <Sheet open={open} onClose={() => {}} title="Pension plan" closeLabel="Close">
+          <span>in</span>
+        </Sheet>
+      </>
+    );
+  }
+  const { rerender } = render(<Screen open={false} />);
+  const first = screen.getByRole('alert');
+  // Shown on the screen first: it rises, and the screen reader is told (Android's live region; iOS is told once by the toast itself).
+  expect(first.getAttribute('aria-live')).toBe('polite');
+  const rises = rea.assigned.length;
+  rerender(<Screen open />);
+  const carried = screen.getByRole('alert');
+  expect(carried.closest('[data-modal]')).not.toBeNull();
+  expect(carried.getAttribute('aria-live')).not.toBe('polite');
+  // The sheet rises; the toast in it does not.
+  expect(rea.assigned.length).toBe(rises + 1);
+  // And back on the screen when the sheet goes: still said once, and no rise.
+  rerender(<Screen open={false} />);
+  const back = screen.getByRole('alert');
+  expect(back.closest('[data-modal]')).toBeNull();
+  expect(back.getAttribute('aria-live')).not.toBe('polite');
+  expect(rea.assigned.length).toBe(rises + 1);
+});
+
+test('a toast said while a sheet is open is drawn in it first, and said there', () => {
+  function Screen({ message }: { message: string | null }) {
+    return (
+      <>
+        <Toast message={message} onDone={() => {}} />
+        <Sheet open onClose={() => {}} title="Pension plan" closeLabel="Close">
+          <span>in</span>
+        </Sheet>
+      </>
+    );
+  }
+  const { rerender } = render(<Screen message={null} />);
+  // (The sheet's own rise is among them.)
+  const rises = rea.assigned.length;
+  rerender(<Screen message="Not possible: not enough cash" />);
+  const toast = screen.getByRole('alert');
+  expect(toast.closest('[data-modal]')).not.toBeNull();
+  expect(toast.getAttribute('aria-live')).toBe('polite');
+  expect(rea.assigned.length).toBe(rises + 1);
+});
+
 test('a toast over a sheet still finishes on time, once', () => {
   const onDone = vi.fn();
   render(

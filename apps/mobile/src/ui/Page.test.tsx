@@ -4,6 +4,7 @@ import { createContext, createRef, useContext } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import dots from '../../assets/ui/dots.png';
 import { TILE } from '../../scripts/dots';
 import { BottomBar, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
@@ -20,6 +21,9 @@ vi.mock('react-native-safe-area-context', () => {
     useSafeAreaInsets: () => useContext(Ctx),
   };
 });
+
+// Reanimated needs the worklets runtime: the shared reactive fake stands in for it (a Screen that follows its scroll on the UI thread takes its scroll view and handler).
+vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
 
 // Records what Page hands the ground's image: react-native-web does not tile, so the props are what the app controls.
 const seen: Array<{ source: unknown; resizeMode: unknown; style: unknown }> = [];
@@ -237,4 +241,31 @@ test('a Screen with no scroller and no onScroll asks nothing of the scroll: its 
   const view = wrap(none, <Screen><Text>page</Text></Screen>);
   const handlers = Array.from(view.container.querySelectorAll<HTMLElement>('*')).filter((el) => typeof (el as unknown as { __reactLayoutHandler?: unknown }).__reactLayoutHandler === 'function');
   expect(handlers).toHaveLength(0);
+});
+
+test('a Screen given a scroll offset to follow writes it as the page scrolls (on the UI thread on the phone), and its scroller reads it there', () => {
+  const scroller = createRef<ScreenScroller>();
+  const seenY: number[] = [];
+  let offset: SharedValue<number> | null = null;
+  function Followed() {
+    const scrollY = useSharedValue(0);
+    offset = scrollY;
+    return (
+      <Screen scroller={scroller} scrollY={scrollY} onScroll={(y) => seenY.push(y)}>
+        <Text>page</Text>
+      </Screen>
+    );
+  }
+  const view = wrap(none, <Followed />);
+  const node = Array.from(view.container.querySelectorAll<HTMLElement>('*')).find((el) => typeof (el as unknown as { __reactLayoutHandler?: unknown }).__reactLayoutHandler === 'function')!;
+  const to = vi.fn();
+  (node as unknown as { scrollTo: unknown }).scrollTo = to;
+  act(() => (node as unknown as { __reactLayoutHandler: (e: unknown) => void }).__reactLayoutHandler({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 600 } } }));
+  Object.defineProperty(node, 'scrollTop', { configurable: true, value: 700 });
+  act(() => void fireEvent.scroll(node));
+  expect(offset!.value).toBe(700);
+  // React's side hears nothing of it: the offset is the UI thread's.
+  expect(seenY).toEqual([]);
+  act(() => scroller.current!.reveal(100, 100));
+  expect(to).toHaveBeenCalledWith({ y: 88, animated: true });
 });
