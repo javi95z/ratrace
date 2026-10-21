@@ -1,6 +1,7 @@
 // The timing probe's route: in a build made with EXPO_PUBLIC_PERF=1 only (anywhere else it goes home, and the life it puts is not in the build:
 // ui/perf.test.ts). A scene's life (packages/core/src/testing/scenes.ts) put where the phone keeps its life in progress, taken up by the game and
 // opened on Play, for what only a long life reaches: `theratrace:///perf?life=moment-escape`, the finances of the round that ends a fifteen-round life.
+// And a scene's finished lives, many times over, opened on the records: `theratrace:///perf?runs=records-three&copies=20`, sixty lives to fling.
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useGame } from '../game/context';
@@ -12,21 +13,31 @@ type Lives = typeof import('../testing/perfLife');
 const lives: Lives | null = process.env.EXPO_PUBLIC_PERF === '1' ? (require('../testing/perfLife') as Lives) : null;
 
 export default function PerfRoute() {
-  const { life } = useLocalSearchParams<{ life?: string }>();
-  if (lives === null || life === undefined) return <Redirect href="/" />;
-  return <PutAndPlay put={lives.putSceneLife} life={life} />;
+  const { life, runs, copies } = useLocalSearchParams<{ life?: string; runs?: string; copies?: string }>();
+  if (lives === null) return <Redirect href="/" />;
+  if (life !== undefined) return <PutAndOpen put={() => lives.putSceneLife(life)} what={life} to="/play" />;
+  if (runs !== undefined) return <PutAndOpen put={() => lives.putSceneRuns(runs, Number(copies ?? 1))} what={`${runs} × ${copies ?? 1}`} to="/records" />;
+  return <Redirect href="/" />;
 }
 
-function PutAndPlay({ put, life }: { put(name: string): Promise<void>; life: string }) {
+function PutAndOpen({ put, what, to }: { put(): Promise<void>; what: string; to: '/play' | '/records' }) {
   const boot = useGame((s) => s.boot);
   const router = useRouter();
-  const [said, setSaid] = useState(`putting ${life} on the phone`);
+  const [said, setSaid] = useState(`putting ${what} on the phone`);
   useEffect(() => {
-    void put(life)
+    void put()
       .then(boot)
-      .then(() => router.replace('/play'))
+      // Over the home screen alone, as a player opens it: a route opened again does not leave another screen of the game under this one.
+      .then(() => {
+        if (router.canDismiss()) {
+          router.dismissAll();
+          router.push(to);
+        } else router.replace(to);
+      })
       .catch((error: unknown) => setSaid(String(error)));
-  }, [put, life, boot, router]);
+    // Once, as the route opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <Screen>
       <ReadText>{said}</ReadText>

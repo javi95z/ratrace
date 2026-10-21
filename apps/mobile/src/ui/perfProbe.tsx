@@ -10,10 +10,12 @@ import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
  * - **From**: the last touch let go anywhere (the root's and each sheet's `onTouchEnd`), or what the phone started itself (`start`: a swipe let go,
  *   told from the UI thread). Times are the JS thread's `performance.now()`, read when the JS thread hears of it.
  * - **Drawn**: a `Drawn` mounted with what it marks (a screen, a stage, a tab, a sheet) and its name changed with it: its commit (a layout effect),
- *   then a hop to the UI thread queued after the commit's mounting, one frame there (`requestAnimationFrame` of the UI runtime), and back. What
- *   is told is the time from the touch to that, so the mounting of the native views and one frame are in it.
+ *   then a hop to the UI thread queued after the commit's mounting, one frame there (`requestAnimationFrame` of the UI runtime), and back: the
+ *   time from the touch to that (`drawnMs`) has the mounting of the native views and one frame in it. Then `settledMs`: until the UI thread draws
+ *   two frames in a row at its pace again (the pictures drawn into their canvases, whatever the mounting set going), and its longest frame between.
  * - **Frames**: every frame of the UI thread (Reanimated's frame callback, on the display link) and of the JS thread (`requestAnimationFrame`),
- *   summed a second at a time: how many, the longest, and how many were missed at 60 a second.
+ *   summed a second at a time: how many, the longest, and how many were missed at 60 a second; and each slow frame of the UI thread as it
+ *   comes, with the touches' starts and ends, so a frame missed during a drag is told from one missed as its answer is drawn.
  * - **Counting**: the JS thread's work for each step of a counting figure (`useCountUp`): from its value set to its drawing committed.
  */
 
@@ -34,19 +36,49 @@ let from: { at: number; what: string } | null = null;
 
 export function touched(): void {
   from = { at: performance.now(), what: 'touch' };
+  tell({ kind: 'touch', phase: 'end' });
+}
+
+export function touchStarted(): void {
+  tell({ kind: 'touch', phase: 'start' });
+}
+
+/** A frame of the UI thread that took longer than a smooth one, told as it is heard (the wall clock places it among the touches). */
+function slowFrame(ms: number): void {
+  tell({ kind: 'slow', ms: +ms.toFixed(1) });
 }
 
 export function start(what: string): void {
   from = { at: performance.now(), what };
 }
 
-/** Calls `done` on the JS thread after the UI thread has drawn a frame past everything queued to it so far (the mounting of the last commit). */
-function afterAFrame(done: () => void): void {
+/** A frame of the UI thread that came this soon after the one before is one of a thread that is drawing at its pace again. */
+const SMOOTH_MS = 25;
+
+/**
+ * After the UI thread has drawn a frame past everything queued to it so far (the mounting of the last commit), `drawn` is called on the JS thread;
+ * then, once the UI thread draws two frames in a row again at its pace (what it does after the mounting, the pictures drawn into their canvases,
+ * is over), `settled`, with how long the longest frame in between took.
+ */
+function afterFrames(drawn: () => void, settled: (longest: number) => void): void {
   scheduleOnUI(() => {
     'worklet';
-    requestAnimationFrame(() => {
-      scheduleOnRN(done);
-    });
+    let last = -1;
+    let longest = 0;
+    const next = (at: number) => {
+      if (last < 0) scheduleOnRN(drawn);
+      else {
+        const took = at - last;
+        if (took <= SMOOTH_MS) {
+          scheduleOnRN(settled, longest);
+          return;
+        }
+        longest = Math.max(longest, took);
+      }
+      last = at;
+      requestAnimationFrame(next);
+    };
+    requestAnimationFrame(next);
   });
 }
 
@@ -54,10 +86,17 @@ export function Drawn({ name }: { name: string }): null {
   useLayoutEffect(() => {
     const since = from;
     const committed = performance.now();
-    afterAFrame(() => {
-      const drawn = performance.now();
-      tell({ kind: 'drawn', name, what: since?.what ?? null, commitMs: since ? committed - since.at : null, drawnMs: since ? drawn - since.at : null });
-    });
+    let drawnAt = 0;
+    afterFrames(
+      () => {
+        drawnAt = performance.now();
+      },
+      (longest) => {
+        const settledAt = performance.now();
+        const ms = (at: number) => (since ? +(at - since.at).toFixed(1) : null);
+        tell({ kind: 'drawn', name, what: since?.what ?? null, commitMs: ms(committed), drawnMs: ms(drawnAt), settledMs: ms(settledAt), longestFrameMs: +longest.toFixed(1) });
+      },
+    );
   }, [name]);
   return null;
 }
@@ -88,6 +127,7 @@ export function Frames(): null {
     }
     count.value += 1;
     if (dt > worst.value) worst.value = dt;
+    if (dt > SMOOTH_MS) scheduleOnRN(slowFrame, dt);
     missed.value += Math.max(0, Math.round(dt / (1000 / 60)) - 1);
     const span = frame.timestamp - since.value;
     if (span >= 1000) {
@@ -143,4 +183,20 @@ export function useCounted(shown: number): void {
       steps.length = 0;
     }, 1000);
   }, [shown]);
+}
+
+/** The device's store, each of its calls timed and told (what a step of the game waits for on the phone's storage). */
+export function timedStore<T extends object>(store: T): T {
+  return new Proxy(store, {
+    get(target, key, receiver) {
+      const value = Reflect.get(target, key, receiver) as unknown;
+      if (typeof value !== 'function') return value;
+      return (...args: unknown[]) => {
+        const began = performance.now();
+        const done = (value as (...a: unknown[]) => unknown).apply(target, args);
+        if (done instanceof Promise) void done.then(() => tell({ kind: 'store', op: String(key), ms: +(performance.now() - began).toFixed(1) }), () => undefined);
+        return done;
+      };
+    },
+  });
 }

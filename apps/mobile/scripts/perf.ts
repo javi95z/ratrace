@@ -20,7 +20,7 @@ export const PERF_PORT = 8095;
 export const BUNDLE_ID = 'com.hackio.theratrace';
 
 export interface Told {
-  kind: 'drawn' | 'frames' | 'launch' | 'count';
+  kind: 'drawn' | 'frames' | 'launch' | 'count' | 'touch' | 'slow';
   name?: string;
   wall: number;
   drawnMs?: number | null;
@@ -39,7 +39,10 @@ export function median(values: readonly number[]): number {
 
 /** One line of what the app told, as it is printed. */
 export function lineOf(told: Told): string {
-  if (told.kind === 'drawn') return `drawn  ${String(told.name).padEnd(28)} ${told.drawnMs == null ? '(no touch before it)' : `${told.drawnMs.toFixed(0)} ms (commit ${told.commitMs?.toFixed(0)} ms) from ${told.what}`}`;
+  if (told.kind === 'drawn') {
+    const settled = typeof told.settledMs === 'number' ? `, settled ${told.settledMs.toFixed(0)} ms (longest frame ${String(told.longestFrameMs)} ms)` : '';
+    return `drawn  ${String(told.name).padEnd(28)} ${told.drawnMs == null ? '(no touch before it)' : `${told.drawnMs.toFixed(0)} ms (commit ${told.commitMs?.toFixed(0)} ms)${settled} from ${told.what}`}`;
+  }
   if (told.kind === 'frames') {
     const { ui, js } = told as unknown as { ui: { frames: number; worstMs: number; missed: number }; js: { frames: number; worstMs: number; missed: number } };
     return `frames ui ${ui.frames} (worst ${ui.worstMs} ms, missed ${ui.missed})  js ${js.frames} (worst ${js.worstMs} ms, missed ${js.missed})`;

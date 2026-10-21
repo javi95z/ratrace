@@ -1,5 +1,5 @@
 import { sceneStore } from '@ratrace/core/testing/scenes';
-import type { StoredGame } from '@ratrace/core/session/types';
+import type { FinishedRun, StoredGame } from '@ratrace/core/session/types';
 import { KvStore } from '../kvStore';
 
 /*
@@ -14,4 +14,17 @@ export async function putSceneLife(name: string): Promise<void> {
   const game = (await played.loadGame()) as StoredGame | null;
   if (game === null || game === undefined) throw new Error(`scene ${name} has no life to put on the phone`);
   await new KvStore().saveGame(game);
+}
+
+/**
+ * A scene's finished lives put where the phone keeps them, each `copies` times (each copy a life of its own: its id, and a day further back), for a
+ * list of many lives to be flung: the records of a phone that has played `copies` times as much as the scene.
+ */
+export async function putSceneRuns(name: string, copies: number): Promise<void> {
+  const runs: FinishedRun[] = await (await sceneStore(name)).listRuns();
+  if (runs.length === 0) throw new Error(`scene ${name} has no finished life to put on the phone`);
+  const store = new KvStore();
+  for (let copy = 0; copy < copies; copy++) {
+    for (const run of runs) await store.addRun({ ...run, runId: `${run.runId}-${copy}`, finishedAt: run.finishedAt - copy * 86_400_000 });
+  }
 }

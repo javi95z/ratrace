@@ -16,6 +16,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, u
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { kvLanguage, KvStore } from '../kvStore';
+import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
 import { cuesFor } from './cues';
@@ -117,7 +118,7 @@ export function phoneDeps(): SessionDeps {
 /** The services of the real game: the engine on this phone, saved on this phone, with the orders of the round kept as they are put in. */
 export function phoneServices(): Services {
   const listeners = new Set<() => void>();
-  const store = new ResilientStore(new KvStore(), (degraded, error) => {
+  const store = new ResilientStore(perfStore(new KvStore()), (degraded, error) => {
     if (degraded) console.warn('this phone is not saving:', error);
     for (const listener of listeners) listener();
   });

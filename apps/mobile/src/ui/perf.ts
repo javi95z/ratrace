@@ -22,6 +22,8 @@ const probe: Probe | null = process.env.EXPO_PUBLIC_PERF === '1' ? (require('./p
 
 /** A touch let go anywhere on the screen or a sheet (`onTouchEnd`): what the player waits from. */
 export const perfTouched: (() => void) | undefined = probe ? probe.touched : undefined;
+/** A touch begun (`onTouchStart`): told, to place the frames of a drag. */
+export const perfTouchStarted: (() => void) | undefined = probe ? probe.touchStarted : undefined;
 /** Something started by the phone, not by a touch (a swipe let go, told from the UI thread): what the player waits from. */
 export const perfStart: (what: string) => void = probe ? probe.start : nothing;
 /** Drawn on the screen once mounted, and again each time `name` changes: told when it is on screen (its commit, and a frame of the UI thread after it). */
@@ -31,3 +33,5 @@ export const PerfFrames: ComponentType = probe ? probe.Frames : none;
 /** A step of a counting figure (`useCountUp`): when its value was set, and its cost on the JS thread once it is drawn. */
 export const perfCountSet: () => void = probe ? probe.countSet : nothing;
 export const usePerfCounted: (shown: number) => void = probe ? probe.useCounted : nothing;
+/** The device's store, its calls timed (the probe's build only; any other gives the store itself). */
+export const perfStore: <T extends object>(store: T) => T = probe ? probe.timedStore : (store) => store;
