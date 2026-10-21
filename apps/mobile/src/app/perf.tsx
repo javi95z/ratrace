@@ -1,6 +1,7 @@
 // The timing probe's route: in a build made with EXPO_PUBLIC_PERF=1 only (anywhere else it goes home, and the life it puts is not in the build:
 // ui/perf.test.ts). A scene's life (packages/core/src/testing/scenes.ts) put where the phone keeps its life in progress, taken up by the game and
 // opened on Play, for what only a long life reaches: `theratrace:///perf?life=moment-escape`, the finances of the round that ends a fifteen-round life.
+// With `&last=1`, the same life played on to the finances of its last round, where the round played ends it (resolve, then the end).
 // And a scene's finished lives, many times over, opened on the records: `theratrace:///perf?runs=records-three&copies=20`, sixty lives to fling.
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -13,9 +14,9 @@ type Lives = typeof import('../testing/perfLife');
 const lives: Lives | null = process.env.EXPO_PUBLIC_PERF === '1' ? (require('../testing/perfLife') as Lives) : null;
 
 export default function PerfRoute() {
-  const { life, runs, copies } = useLocalSearchParams<{ life?: string; runs?: string; copies?: string }>();
+  const { life, last, runs, copies } = useLocalSearchParams<{ life?: string; last?: string; runs?: string; copies?: string }>();
   if (lives === null) return <Redirect href="/" />;
-  if (life !== undefined) return <PutAndOpen put={() => lives.putSceneLife(life)} what={life} to="/play" />;
+  if (life !== undefined) return <PutAndOpen put={() => lives.putSceneLife(life, last === '1')} what={life} to="/play" />;
   if (runs !== undefined) return <PutAndOpen put={() => lives.putSceneRuns(runs, Number(copies ?? 1))} what={`${runs} × ${copies ?? 1}`} to="/records" />;
   return <Redirect href="/" />;
 }

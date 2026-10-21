@@ -1,3 +1,5 @@
+import { bots, content } from '@ratrace/content';
+import { fixedSessions } from '@ratrace/core/session/fixed';
 import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { FinishedRun, StoredGame } from '@ratrace/core/session/types';
 import { KvStore } from '../kvStore';
@@ -9,8 +11,23 @@ import { KvStore } from '../kvStore';
  * life that ends is `moment-escape`'s, the engineer of the first fixed seed at the finances of her fifteenth round, which the saver leaves the rat
  * race with. Only the life is put: the profile, its settings and what it has unlocked stay the phone's own.
  */
-export async function putSceneLife(name: string): Promise<void> {
+export async function putSceneLife(name: string, toLastRound = false): Promise<void> {
   const played = await sceneStore(name);
+  // Played on by the saver to the finances of the life's last round, where playing the round ends the life (`&last=1`).
+  if (toLastRound) {
+    const { session } = await fixedSessions(played).resume();
+    if (session === null) throw new Error(`scene ${name} has no life to play on`);
+    const saver = bots.find((bot) => bot.id === 'saver');
+    if (saver === undefined) throw new Error('no saver among the bots');
+    const atFinances = async () => {
+      while (session.view().phase === 'cards') await session.answerCard(saver.pick(content, session.view()));
+    };
+    await atFinances();
+    while (session.view().round < content.rounds - 1) {
+      await session.playRound({ orders: saver.orders(content, session.view()) });
+      await atFinances();
+    }
+  }
   const game = (await played.loadGame()) as StoredGame | null;
   if (game === null || game === undefined) throw new Error(`scene ${name} has no life to put on the phone`);
   await new KvStore().saveGame(game);
