@@ -443,7 +443,8 @@ test('the scenes of the way of life are drawn by Finance on its tab, given as it
   render(<SceneView name="finance-lifestyle" />);
   const tab = await screen.findByRole('tabpanel', { name: 'Lifestyle' }, WAIT);
   expect(screen.getByRole('tab', { name: 'Lifestyle' }).getAttribute('aria-selected')).toBe('true');
-  expect(within(tab).getByRole('radiogroup', { name: 'How you live' })).toBeTruthy();
+  // The panels under the first screen come once the first are on it (ui/drawnFirst.ts).
+  expect(await within(tab).findByRole('radiogroup', { name: 'How you live' }, WAIT)).toBeTruthy();
   expect(within(tab).getByRole('button', { name: 'Move to another city' })).toBeTruthy();
   // For a player who has read the guide: the tab itself, and nothing open over it.
   expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();

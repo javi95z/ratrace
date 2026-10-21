@@ -139,8 +139,8 @@ describe('the end of a life, as it is drawn', () => {
     const { services } = await aWholeLife();
     renderGame(<Play />, services);
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
-    // The nurse never moved: the map is Madrid alone.
-    expect(screen.getByRole('img', { name: 'A map of the world with your route: Madrid' })).toBeTruthy();
+    // The nurse never moved: the map is Madrid alone (under the first screen, once the first is on it: ui/drawnFirst.ts).
+    expect(await screen.findByRole('img', { name: 'A map of the world with your route: Madrid' })).toBeTruthy();
     const figures = screen.getByLabelText('Your life in figures');
     for (const label of ['Net worth', 'At its richest', 'Out of the rat race at', 'Badges']) expect(within(figures).getByText(label), label).toBeTruthy();
     // The net worth after inflation is in words the messages have.

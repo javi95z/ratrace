@@ -13,6 +13,7 @@ import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { adjustedRead } from '../../ui/fonts';
+import { useDrawnFirst, whenShown } from '../../ui/drawnFirst';
 import { Bar, Bare, Button, Figure, LineTag, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
@@ -1593,6 +1594,9 @@ function alike<P extends object>(a: P, b: P): boolean {
  * and where the player lives, the insurances, and the city. Every control is a memoised piece given what it shows, and orders through the round
  * store's one `setOrder`: pressing one draws again that one, and leaves every other as it is (the engine's quotes of the round are worked out once
  * for it, here).
+ *
+ * The tab is several screens tall: it draws the panels of work and study first (what a phone shows with the tab), and the rest once those are on
+ * screen (`useDrawnFirst`): all of it at once kept the tab from the screen for some thirty pictures and nine hundred views (measured, the parity report).
  */
 function Lifestyle() {
   const knows = useKnows();
@@ -1611,6 +1615,8 @@ function Lifestyle() {
   const opened = useContext(FinanceOpened);
   const [moving, setMoving] = useState(opened.sheet === 'move');
   const move = useCallback(() => setMoving(true), []);
+  // The panels under the first screen, once the first are on it.
+  const rest = useDrawnFirst();
   const living = useMemo(() => quoteLiving(content, shown), [content, shown]);
   // What each use of focus is worth to this player, counting what they own.
   const work = useMemo(() => quoteWork(content, shown), [content, shown]);
@@ -1688,8 +1694,10 @@ function Lifestyle() {
         </View>
       </Panel>
 
-      {/* What focus is for besides work and study: the family, and a rest. */}
-      <LifeUses left={left} title={t('time')} />
+      {rest ? (
+        <>
+          {/* What focus is for besides work and study: the family, and a rest. */}
+          <LifeUses left={left} title={t('time')} />
 
       {/* With friends, a round's focus can go on teasing one of them: here too, beside the rest of the focus. */}
       <TeaseUse left={left} title={t('rivals')} />
@@ -1725,7 +1733,10 @@ function Lifestyle() {
         </View>
       </Panel>
 
-      <CityPanel cityId={p.cityId} movingTo={p.life.movingTo} moveOrdered={moveOrdered} onMove={move} />
+          <CityPanel cityId={p.cityId} movingTo={p.life.movingTo} moveOrdered={moveOrdered} onMove={move} />
+          <PerfDrawn name="tab: lifestyle, every panel" />
+        </>
+      ) : null}
       {moving ? <MoveSheet onClose={() => setMoving(false)} /> : null}
     </View>
   );
@@ -2011,15 +2022,15 @@ const inReach = ({ quote, owned }: ShelfItem, cash: number) =>
   owned || quote.price <= cash || quote.finance?.lock === null || quote.used?.lock === null || quote.noInvoice?.lock === null;
 
 /**
- * The shelves drawn in the frame the shop is opened, and each frame after it, in the order the kinds of things are listed: the whole shop at once is
- * some sixty tiles, each a picture on a canvas, and the tab would stop for all of them. They are counted in shelves on screen (a kind with nothing in
+ * The shelves drawn in the frame the shop is opened, and a few more each time the last are on the screen, in the order the kinds of things are
+ * listed: the whole shop at once is some sixty tiles, each a picture on a canvas, and the tab would stop for all of them. They are counted in shelves on screen (a kind with nothing in
  * reach takes no frame of its own), and drawn by kind: a shelf once drawn stays, whatever view is asked for (asking for everything or for what is in
  * reach only adds or takes away tiles of the shelves drawn, and shelves further on).
  *
  * Why not a list that draws only what is on screen (`FlatList`): the shop is the panel of a tab in Play's one scrolling page (`StickyScreen`, under
  * the Hud and the row of tabs), and a list inside a scroll of the same direction is given the whole height of its rows by it: it cannot tell what is
  * on screen, so it draws every row all the same (in batches, and React Native warns against it). The page itself would have to be the list, for the
- * one tab. Drawn a few shelves a frame, each tile memoised, the shop costs what a FlatList would here, without it.
+ * one tab. Drawn a few shelves at a time, each tile memoised, the shop costs what a FlatList would here, without it.
  */
 const SHELVES_FIRST = 2;
 const SHELVES_STEP = 2;
@@ -2070,10 +2081,11 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
     [ladders, onShelf],
   );
   const [upTo, setUpTo] = useState(() => past(0, SHELVES_FIRST));
+  // The next shelves once the last are on the screen and the phone draws at its pace again (not the next frame: each frame of shelves would then
+  // follow the one before without a frame between, and the tab's first screen would wait for the last shelf; measured, the parity report).
   useEffect(() => {
     if (upTo >= ladders.length) return;
-    const frame = requestAnimationFrame(() => setUpTo((now) => past(now, SHELVES_STEP)));
-    return () => cancelAnimationFrame(frame);
+    return whenShown(() => setUpTo((now) => past(now, SHELVES_STEP)));
   }, [upTo, ladders.length, past]);
 
   return (

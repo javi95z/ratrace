@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { createContext, memo, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useCountUp } from '../../ui/animations';
+import { useDrawnFirst } from '../../ui/drawnFirst';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '../../ui/kit';
@@ -116,6 +117,8 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   const words = useWords();
   const { content, text, names, fmt } = words;
   const router = useRouter();
+  // The panels under the first screen come once the first are on it.
+  const rest = useDrawnFirst();
   const history = useGame((s) => s.history);
   const story = useGame((s) => s.story);
   const bankruptcies = useGame((s) => s.bankruptcies);
@@ -297,38 +300,45 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
         </Panel>
       ) : null}
 
-      {/* The life in a few figures, and the line of its wealth from the first day to the last. */}
-      <Panel title={t('figures')} label={t('figures')}>
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Figure label={t('netWorth')} value={fmt.compact(netWorth(p))} sub={t('realShort', { amount: fmt.compact(realNetWorth(view)) })} />
-            <Figure label={t('peak')} value={fmt.compact(peak.worth)} sub={t('peakAge', { age: ageAt(content, peak.round) })} />
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(ageAt(content, p.escapedAtRound))} />
-            <Figure label={t('badgesCount')} value={String(earned.length)} sub={fresh > 0 ? t('badgesNew', { n: fresh }) : undefined} />
-          </View>
-        </View>
-        <View style={{ marginTop: 12 }}>
-          <WorthGraph history={history} label={t('graph')} />
-        </View>
-        <ReadText size={12} tone="ink-300" style={{ marginTop: 8, textAlign: 'center' }}>{t('graph')}</ReadText>
-      </Panel>
+      {/* The panels under the first screen, once the first are on it (ui/drawnFirst.ts): the figures, the map, the rivals, the line of the life and
+          its badges are some thirty pictures and charts, and all of the page at once kept the end from the screen for them (measured, the parity
+          report's performance part). */}
+      {rest ? (
+        <>
+          {/* The life in a few figures, and the line of its wealth from the first day to the last. */}
+          <Panel title={t('figures')} label={t('figures')}>
+            <View style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Figure label={t('netWorth')} value={fmt.compact(netWorth(p))} sub={t('realShort', { amount: fmt.compact(realNetWorth(view)) })} />
+                <Figure label={t('peak')} value={fmt.compact(peak.worth)} sub={t('peakAge', { age: ageAt(content, peak.round) })} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Figure label={t('escapeAge')} value={p.escapedAtRound === null ? '—' : String(ageAt(content, p.escapedAtRound))} />
+                <Figure label={t('badgesCount')} value={String(earned.length)} sub={fresh > 0 ? t('badgesNew', { n: fresh }) : undefined} />
+              </View>
+            </View>
+            <View style={{ marginTop: 12 }}>
+              <WorthGraph history={history} label={t('graph')} />
+            </View>
+            <ReadText size={12} tone="ink-300" style={{ marginTop: 8, textAlign: 'center' }}>{t('graph')}</ReadText>
+          </Panel>
 
-      {/* Where the life went: the world at night, and the way across it. */}
-      <Panel title={t('map')} label={t('map')}>
-        <LifeMap route={route} label={t('mapLabel', { cities: route.map((city) => names.cities[city]).join(', ') })} />
-      </Panel>
-      <RivalsBoard history={history} />
+          {/* Where the life went: the world at night, and the way across it. */}
+          <Panel title={t('map')} label={t('map')}>
+            <LifeMap route={route} label={t('mapLabel', { cities: route.map((city) => names.cities[city]).join(', ') })} />
+          </Panel>
+          <RivalsBoard history={history} />
 
-      <LifeLine view={view} story={story} />
+          <LifeLine view={view} story={story} />
 
-      <Panel title={t('badges')} label={t('badges')}>
-        {earned.length === 0 ? <ReadText size={14} tone="ink-300">{t('noBadges')}</ReadText> : <EarnedBadges earned={earned} gameId={gameId} />}
-        <Raised role="link" bg="night-600" place={{ marginTop: 12 }} style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/collection')}>
-          <PixelText size={15} tone="ink-200" style={{ textAlign: 'center' }}>{t('collection')}</PixelText>
-        </Raised>
-      </Panel>
+          <Panel title={t('badges')} label={t('badges')}>
+            {earned.length === 0 ? <ReadText size={14} tone="ink-300">{t('noBadges')}</ReadText> : <EarnedBadges earned={earned} gameId={gameId} />}
+            <Raised role="link" bg="night-600" place={{ marginTop: 12 }} style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }} onPress={() => router.push('/collection')}>
+              <PixelText size={15} tone="ink-200" style={{ textAlign: 'center' }}>{t('collection')}</PixelText>
+            </Raised>
+          </Panel>
+        </>
+      ) : null}
 
       <View style={{ gap: 12, paddingTop: 8 }}>
         <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} opened={opened.share === true} />

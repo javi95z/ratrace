@@ -308,7 +308,8 @@ describe('what a thing is good for', () => {
     expect(await uses(new RegExp(names.items.travel_safari), names.items.travel_safari)).toEqual(['+1 focus in the round after']);
     expect(await uses(new RegExp(names.items.travel_weekend), names.items.travel_weekend)).toBeNull();
     expect(await uses(new RegExp(names.items.art_photo), names.items.art_photo)).toBeNull();
-  });
+    // Seven sheets opened and closed in turn: some ten seconds alone, three times that on a machine running the whole repo's tests at once.
+  }, 60_000);
 
   it('shows in the focus of the round: a laptop owned makes study worth more', async () => {
     const { services, session } = await inFinance('nurse');

@@ -116,6 +116,8 @@ const stateOf = async (services: ReturnType<typeof memoryServices>) => ((await s
 async function onLifestyle(services: ReturnType<typeof memoryServices>, locale: 'en' | 'ru' = 'en') {
   renderGame(<Play />, services, locale);
   fireEvent.click(await screen.findByRole('tab', { name: (locale === 'en' ? messagesFor('en') : ru).finance.tabs.lifestyle }));
+  // The panels under the first screen come once the first are on it (ui/drawnFirst.ts): the way of living is one of them.
+  await screen.findByRole('radiogroup', { name: (locale === 'en' ? messagesFor('en') : ru).finance.lifestyle.tier }, { timeout: 15_000 });
   return screen.getByRole('tabpanel', { name: (locale === 'en' ? messagesFor('en') : ru).finance.tabs.lifestyle });
 }
 
