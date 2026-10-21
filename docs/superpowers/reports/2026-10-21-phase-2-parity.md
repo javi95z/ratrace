@@ -600,9 +600,11 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
 | balance-r6 | the same round as profile-r6: the net worth's line opened over the profile, with the graph of the start and five rounds (`Bars`, crisp) | the web's page presses the portrait, then the balance line whose words start with "Net worth"; the phone's profile is given the line (`ProfileOpened`) |
 | rivals-r6 | the same round: the rivals' board alone in a page's column (the web's `main mx-auto max-w-md px-3 pt-4`, the phone's `Screen`), as it is far down a sheet that scrolls in the profile | no sheet |
 
-- **The work panel is a stand-in until the lanes are merged** (`WorkPanelStub.tsx`: the job's title, its trade and its pay, the head of the web's panel):
-  Task 14 ports the web's `WorkPanel` in another lane. `profile-r6` (and the profile under the other two sheets) differs from the web there until the merge;
-  the batch pass shoots it after the merge, with the real panel.
+- **The work panel is Task 14's `WorkPanel`** since the lanes were merged (until then a stub, `WorkPanelStub.tsx`, drew the head of the web's panel only,
+  and is gone): `profile-r6` and the profile under the other two sheets are shot with the real panel in the batch pass.
+- **A thing's pieces are Task 14's** (`ItemCost`, `ItemUses`, `StatusNote`, `HealthCoverNote`): Task 17 ported them too, in its own lane; the merge kept
+  Task 14's, which the shop and the profile both draw. What is owed and its figure stand on one baseline by the kit's `alignItems: 'baseline'` there, not
+  by `webBaseline` as this task's own copy placed them: the batch pass checks that line with the others below.
 - **The net worth after inflation is in the phone's own words** (fix round of Task 17): the web's Balance.tsx asks for a key that left the messages in 3c18114
   (`end.realNetWorth`), so the web shows the key itself. The phone never shows a key: it says "Net worth, after inflation" (`phone.realNetWorth`, in en, es and
   ru). `balance-r6` is in `PHONE_WORDS`: the two shots cannot agree on that line's words, so the batch pass judges the scene by its layout only.
@@ -747,9 +749,8 @@ ends one after another by a bot through the round store (`LIVED` in packages/cor
 | collection-badges | the badges of the three lives (15 of 63), all rarities | none: the page opens on the badges |
 | collection-items | the things the three owned (36 of 67, nearly all the nurse's) | the web's page presses the things' tab (`main [data-tab="items"]`); the phone's Collection is given it (`tab`) |
 
-- **The graph of a life (RunDetail) is a stub in this lane**: Task 17 ports `WorthGraph` in lane B, in parallel. `WorthGraphStub.tsx` keeps the graph's place
-  (the web's width, ten points a bar and four between, and the height of the bars and their two lines of figures) and its name for a screen reader, and draws
-  nothing. At the merge RunDetail takes Task 17's graph and the stub is deleted; until then `records-detail` would differ there, and is not shot.
+- **The graph of a life (RunDetail) is Task 17's `WorthGraph`** since the lanes were merged: until then a stub (`WorthGraphStub.tsx`) kept the graph's
+  place and drew nothing, and is gone. `records-detail` is shot with the real graph in the batch pass.
 - **A badge not yet earned is the web's `grayscale` card**: its pictures, its frame, its ground and its words are greyed by the filter. The phone has no
   filter of a whole view on iOS (React Native's `filter` is Android's but for brightness and opacity), so it draws each in grey itself: the colours through
   `grey` (theme.ts: the CSS matrix at its full amount, `GREYSCALE`, on the colours as written, sRGB), the frame's strips by `Framed`'s `grey`, and the rim

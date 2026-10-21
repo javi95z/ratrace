@@ -288,7 +288,7 @@ describe('a scene whose words are the phone\'s own', () => {
   const otherWords = (over: Partial<Result> = {}) =>
     result('x', { shape: 0, texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 5.67 }, { text: 'Reload the page', web: [0, 0, 1, 1], app: null, apart: Infinity }], ...over });
 
-  it('are listed beside the stand-ins: the notice of a newer life, the legal page, which is a different text all through, and the net worth\'s sheet, where the web shows a key', () => {
+  it('are listed: the notice of a newer life, the legal page, which is a different text all through, and the net worth\'s sheet, where the web shows a key', () => {
     expect(PHONE_WORDS).toEqual(['home-lost-newer', 'legal', 'balance-r6']);
     for (const name of PHONE_WORDS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
     // Of those, a page whose every paragraph is other words has no line to compare to a line.
@@ -330,7 +330,7 @@ describe('a scene whose words are the phone\'s own', () => {
     expect(() => lineOf(legal, otherWords({ rawPercent: 70 }))).toThrow('legal: a wrong page is not a result to keep');
   });
 
-  it('makes a run fail only for a scene that differs, or whose layout does, or a page of other words that has drifted: not for a clean one, other words, a stand-in or a page that cannot be compared', () => {
+  it('makes a run fail only for a scene that differs, or whose layout does, or a page of other words that has drifted: not for a clean one, other words, one not shot yet or a page that cannot be compared', () => {
     const lines = [
       lineOf(named('home-new'), result('a', { shape: 0, texts: [] })),
       lineOf(named('home-new'), result('b', { shape: 1, texts: [] })),

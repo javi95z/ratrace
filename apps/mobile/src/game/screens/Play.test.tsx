@@ -644,9 +644,8 @@ describe('the profile', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Open your profile' }));
     const profile = screen.getByRole('heading', { name: 'Your life' }).closest('[aria-modal="true"]') as HTMLElement;
-    // A panel's title is set in capitals, as the web's stylesheet sets it. (The web's test also reads 'Finance' and 'Focus this round': they are the
-    // work panel's, Task 14's, which this one stands in for until the lanes are merged.)
-    for (const label of ['WORK', 'INCOME STATEMENT, PER YEAR', 'BALANCE SHEET', 'Net worth']) {
+    // A panel's title is set in capitals, as the web's stylesheet sets it.
+    for (const label of ['WORK', 'Finance', 'Focus this round', 'INCOME STATEMENT, PER YEAR', 'BALANCE SHEET', 'Net worth']) {
       expect(within(profile).getByText(label), label).toBeTruthy();
     }
     expect(within(profile).getByRole('link', { name: /Leave to the home screen/ })).toBeTruthy();

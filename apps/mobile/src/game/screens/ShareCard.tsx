@@ -172,7 +172,7 @@ function Drawing({ children }: { children: string }) {
 /**
  * The picture of a life, and the way to take it away: the phone's share sheet, handed it as a file. The picture is drawn when the sheet opens
  * (`opened`: open from the start, for a scene), and let go of when it closes. Where the phone has no share sheet, or the picture cannot be drawn or
- * made a file, the sheet says so in the web's words for a picture that cannot be had.
+ * made a file, the sheet says so in the phone's own words (`phone.shareFailed`): the web's for a picture that cannot be had speak of a browser.
  */
 export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened = false }: { ops: DrawOp[]; fileName: string; alt: string; load?: SpriteLoader; faces?: FaceLoader; opened?: boolean }) {
   const t = useT('share');

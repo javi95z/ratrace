@@ -268,9 +268,12 @@ describe('the card waiting', () => {
     fireEvent.click(second);
     await waitFor(() => expect(second.getAttribute('aria-selected')).toBe('true'));
     expect(first.getAttribute('aria-selected')).not.toBe('true');
-    // The taken one goes down 2 and the others step back to half, once their 150 ms have run; every choice waits for the answer.
-    await waitFor(() => expect(settling(first).style.opacity).toBe('0.5'));
-    expect(settling(second).style.transform).toBe('translateY(2px)');
+    // The taken one goes down 2 and the others step back to half, once their 150 ms have run; every choice waits for the answer. Each eases on a
+    // timer of its own, which lands a moment apart from the other's: both are waited for, never one read once the other has landed.
+    await waitFor(() => {
+      expect(settling(first).style.opacity).toBe('0.5');
+      expect(settling(second).style.transform).toBe('translateY(2px)');
+    });
     expect(settling(second).style.opacity).toBe('1');
     expect(first.getAttribute('aria-disabled')).toBe('true');
     await act(async () => answer.release());

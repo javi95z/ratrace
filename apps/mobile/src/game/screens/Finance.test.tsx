@@ -286,12 +286,13 @@ describe('what the investments pay', () => {
     fireEvent.click(within(orders).getByRole('button', { name: 'Close' }));
 
     fireEvent.click(button('Play the round'));
-    // The ledger is Task 16's: the round is played, and what it did is in the life.
+    await screen.findByRole('heading', { name: 'Two years later' });
     await waitFor(async () => expect((await stateOf(services)).round).toBe(state.round + 1));
     const after = await stateOf(services);
     expect(after.player.reinvest).toBe(true);
     // Each holding cost what it cost, and what it paid on top.
     for (const paid of quote.dividends) expect(after.player.positions[paid.assetId].basis).toBe(state.player.positions[paid.assetId].basis + paid.amount);
+    expect(screen.getByText('Dividends reinvested')).toBeTruthy();
   });
 
   it('says so when the round leaves no cash to put back', async () => {
@@ -462,7 +463,7 @@ describe('investing every round', () => {
 
     const before = await stateOf(services);
     fireEvent.click(button('Play the round'));
-    // The ledger is Task 16's: the round is played, and what it did is in the life.
+    await screen.findByRole('heading', { name: 'Two years later' });
     await waitFor(async () => expect((await stateOf(services)).round).toBe(before.round + 1));
     const state = await stateOf(services);
     expect(state.player.plans).toEqual([{ assetId: 'sp500', amount: 100_000, invested: 100_000, rounds: 1 }]);

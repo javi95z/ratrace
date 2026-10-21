@@ -80,7 +80,7 @@ async function main() {
       const [a, b, text] = [join(out, files.web), join(out, files.app), join(raw, `${scene.name}-text.json`)];
       if (!existsSync(a) || !existsSync(b)) throw new Error(`missing shots for ${scene.name}`);
       if (!isJudged(scene)) {
-        // The app draws a stand-in: nothing to compare, and nothing that could be read as a result.
+        // Not shot yet by a batch pass (`PENDING_SHOTS`): nothing to compare, and nothing that could be read as a result.
         lines.push(unjudgedLine(scene));
         continue;
       }

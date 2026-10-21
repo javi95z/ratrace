@@ -91,7 +91,7 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 /**
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
  * call, 2026-10-21): two batch passes, after Task 15 and in Task 20, shoot every one of these, compare them and fix what differs, and take each out
- * of this list as it is judged. Until then a scene here is unjudged, as a stand-in's is: no numbers, and nothing that could fail a run or pass for a
+ * of this list as it is judged. Until then a scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a
  * result.
  */
 export const PENDING_SHOTS: ReadonlySet<string> = new Set([
@@ -355,7 +355,7 @@ export function lineOf(scene: Scene, result: Result, moving = false): Line {
 
 /**
  * The lines that fail a run: a scene that differs (beyond what is accepted of it), or whose layout does, or a page of other words that has drifted from its baseline,
- * or whose app shot never stood still, whatever it came to. A clean one, one accepted, one in the phone's own words, a page that cannot be compared and a stand-in do not.
+ * or whose app shot never stood still, whatever it came to. A clean one, one accepted, one in the phone's own words, a page that cannot be compared and one not shot yet do not.
  */
 export const differing = (lines: readonly Line[]): Line[] =>
   lines.filter((line) => line.verdict === 'differs' || line.verdict === 'phone words, layout differs' || line.verdict === 'phone words, drifted' || (line.verdict !== 'unjudged' && line.moving === true));

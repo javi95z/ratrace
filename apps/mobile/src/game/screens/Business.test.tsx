@@ -168,10 +168,12 @@ describe('the business tab', () => {
     await sheetGone('Your own practice');
 
     fireEvent.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
     await waitFor(async () => expect((await stateOf(services)).round).toBe(before.round + 1));
     const after = await stateOf(services);
     expect(after.player.businesses).toMatchObject([{ typeId: 'services', basis: kind.minCapital, payoutPct: 50, manager: false, tended: false }]);
-    // (The ledger of the round that says "Business profit taken out" is the year's ledger of Task 16.)
+    // The year's ledger says what the business gave the player.
+    expect(screen.getByText('Business profit taken out')).toBeTruthy();
   });
 
   it('runs one: what the round makes of it, what is taken out, who runs it, more money in, and a sale', async () => {
@@ -276,12 +278,18 @@ describe('the business tab', () => {
     expect(ordersOf()).toEqual(['Change how Online shop is run']);
   });
 
-  it('counts in the portfolio at a glance', async () => {
+  it('counts in the portfolio at a glance and in the balance sheet of the profile', async () => {
     const { services } = await inFinance('founder');
+    const state = await stateOf(services);
     renderGame(<Play />, services);
     const glance = await screen.findByLabelText('At a glance');
     expect(within(glance).getByText('Businesses')).toBeTruthy();
-    // (Its line in the balance sheet of the profile, which the web's wide screen shows beside the game, is the profile's: Task 17.)
+    // The balance sheet is the profile's, which the portrait opens on a phone (the web's wide screen keeps it beside the game).
+    fireEvent.click(button('Open your profile'));
+    fireEvent.click(within(within(sheetTitled('Your life')).getByLabelText('Balance sheet')).getByRole('button', { name: /^Businesses/ }));
+    const sheet = sheetTitled('Businesses');
+    expect(within(sheet).getByText('Online shop')).toBeTruthy();
+    expect(within(sheet).getByText(fmt.money(state.player.businesses[0].capital))).toBeTruthy();
   });
 
   it('shows every business at a glance, all of them summed, and runs each from the list without opening it', async () => {

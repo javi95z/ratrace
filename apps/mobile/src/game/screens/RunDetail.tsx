@@ -5,7 +5,7 @@ import { Tag } from '../../ui/kit';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useT, useWords } from '../context';
-import { WorthGraph } from './WorthGraphStub';
+import { WorthGraph } from './WorthGraph';
 
 /** The whole of a finished life: its kind, where it was lived, how it ended, its score, its net worth and its graph. */
 export function RunDetail({ run, tags = true }: { run: FinishedRun; tags?: boolean }) {

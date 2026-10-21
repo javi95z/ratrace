@@ -7,8 +7,9 @@
 /**
  * Where the game lives, on the web: the way into it that goes with a picture of a life (`share.invite`). Set `EXPO_PUBLIC_SITE_URL` where it is served from
  * anywhere else; the last word is the address the web is published at today, as the web's own (Vercel's name for its production address is the web's alone).
+ * The variable is trimmed, as the legal notice's are, and an empty one is no address: the published one stands (`new URL('')` would throw as the app starts).
  */
-export const SITE_URL = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://ratrace-plum.vercel.app');
+export const SITE_URL = new URL(process.env.EXPO_PUBLIC_SITE_URL?.trim() || 'https://ratrace-plum.vercel.app');
 
 /** Who answers for the game, named in the legal notice. */
 export const LEGAL_NAME = process.env.EXPO_PUBLIC_LEGAL_NAME?.trim() ?? '';

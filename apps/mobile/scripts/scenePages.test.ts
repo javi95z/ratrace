@@ -18,7 +18,7 @@ const entriesOf = (source: string, registry: string): Array<{ screen: string; bo
 };
 const screensOf = (source: string, registry: string): string[] => entriesOf(source, registry).map((entry) => entry.screen);
 
-test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
+test('the app and the web draw a scene on the same screens, in the same order', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
   expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);

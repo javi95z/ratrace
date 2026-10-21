@@ -25,8 +25,7 @@ import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
 import { RivalsBoard, webLine } from './Rivals';
 import { realStatus, StatusNote } from './StatusNote';
-// A stand-in until the lanes are merged: Task 14's `WorkPanel` (./Work) takes its place (see WorkPanelStub.tsx).
-import { WorkPanel } from './WorkPanelStub';
+import { WorkPanel } from './Work';
 
 /*
  * The web's Profile.tsx, on the phone. What the phone leaves out: the desk's side column (the profile is always the sheet the portrait opens, as on a

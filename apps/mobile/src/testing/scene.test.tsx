@@ -68,13 +68,14 @@ test('a life half played is opened where the scene left it', async () => {
 test('a scene that goes on once the game is open is drawn after it has: the screen is first drawn at the stage the scene ends on', async () => {
   render(<SceneView name="play-outcome-r1" screens={probes} />);
   expect(await screen.findByText(/playing engineer outcome round 1 \|/, {}, WAIT)).toBeTruthy();
-  expect(mounted).toEqual(['outcome']);
+  // The probe says where it was first drawn from its mount's effect, which React runs after the page shows its text: waited for, not read at once.
+  await waitFor(() => expect(mounted).toEqual(['outcome']), WAIT);
   cleanup();
   mounted.length = 0;
   render(<SceneView name="play-resolve-r6" screens={probes} />);
   // The sixth round is played: the life is at its seventh.
   expect(await screen.findByText(/playing engineer resolve round 7 \|/, {}, WAIT)).toBeTruthy();
-  expect(mounted).toEqual(['resolve']);
+  await waitFor(() => expect(mounted).toEqual(['resolve']), WAIT);
 });
 
 test('a script that cannot be taken is told, and no screen is drawn on a game that is not where the scene says', async () => {

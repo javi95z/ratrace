@@ -385,6 +385,7 @@ describe('buying on instalments', () => {
     fireEvent.click(within(basket).getByRole('button', { name: 'Close' }));
     await sheetGone("This round's orders");
     fireEvent.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
     await waitFor(async () => expect((await stateOf(services)).round).toBe(before.round + 1));
     const after = await stateOf(services);
     expect(after.player.life.items.map((owned) => owned.itemId)).toContain('car_seat_ibiza');
@@ -490,13 +491,18 @@ describe('the second-hand shop', () => {
     expect(within(sheetTitled('iPhone')).queryByRole('region', { name: 'Second hand' })).toBeNull();
   });
 
-  it('marks what was bought second hand on the shelf', async () => {
+  it('marks what was bought second hand, on the shelf and among what the player owns', async () => {
     const { services, session } = await inFinance('heir');
     await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_omega', used: true }] });
     await toFinance(session);
     await openShop(services);
     expect(within(within(shopPanel()).getByRole('button', { name: /Omega Speedmaster/ })).getByText('Yours · used')).toBeTruthy();
-    // (Among what the player owns, beside the game, is the web's wide screen; on the phone it is the profile's, Task 17.)
+    // Among what the player owns, in the profile the portrait opens (the web's wide screen keeps it beside the game): the thing is named by its name alone.
+    fireEvent.click(button('Open your profile'));
+    fireEvent.click(within(sheetTitled('Your life')).getByRole('button', { name: 'Omega Speedmaster' }));
+    const sheet = sheetTitled('Omega Speedmaster');
+    expect(within(sheet).getByText('Second hand')).toBeTruthy();
+    expect(within(sheet).getByText(`You bought it used: each round, a ${content.life.used.watch?.repairChancePct}% chance of a repair.`)).toBeTruthy();
   });
 });
 
