@@ -193,7 +193,6 @@ export function StickyScreen({
     (sides, before) => {
       if (sides !== before) scheduleOnRN(mirror, scrollY.value);
     },
-    [mirror],
   );
 
   return (

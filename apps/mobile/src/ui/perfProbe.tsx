@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
@@ -143,7 +144,7 @@ export function Frames(): null {
     const timing = (performance as { rnStartupTiming?: Record<string, unknown> }).rnStartupTiming;
     tell({ kind: 'launch', startup: timing ? { ...timing } : null, now: performance.now() });
     let last = performance.now();
-    let handle = 0;
+    let handle: number | null = null;
     const loop = () => {
       const now = performance.now();
       const dt = now - last;
@@ -153,8 +154,23 @@ export function Frames(): null {
       js.missed += missedIn(dt);
       handle = requestAnimationFrame(loop);
     };
-    handle = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(handle);
+    // Only while the app is in front: in the background React Native's frames come as fast as the thread can run them, a core kept busy for
+    // nothing (seen: 98 000 "frames" a second from the probe's build behind Expo Go).
+    const run = (state: AppStateStatus) => {
+      if (state === 'active' && handle === null) {
+        last = performance.now();
+        handle = requestAnimationFrame(loop);
+      } else if (state !== 'active' && handle !== null) {
+        cancelAnimationFrame(handle);
+        handle = null;
+      }
+    };
+    run((AppState.currentState as AppStateStatus | null) ?? 'active');
+    const watch = AppState.addEventListener('change', run);
+    return () => {
+      watch.remove();
+      if (handle !== null) cancelAnimationFrame(handle);
+    };
   }, []);
   return null;
 }
