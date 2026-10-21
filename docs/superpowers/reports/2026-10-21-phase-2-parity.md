@@ -706,3 +706,24 @@ alarm lamp, lit lamp, page and confetti: none.
   hook was run live on the simulator and looked right, and the slider and the sticky rows were driven by touch), but no running animation is
   compared with the web's.
 - **Android is not measured.** The flat turn avoids the depth problem there too, but nothing was run.
+
+## Task 16: the ledger of a round and the moments of a life (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it; `play-resolve-r6`
+left `STAND_IN_SCENES` (the app draws the ledger now; the record is empty). Each is a real life played to its round by a bot, never a save written by hand:
+
+| scene | what it is | held still by |
+|---|---|---|
+| play-resolve-r6 | the ledger of the engineer's sixth round, played with the saver's orders: every line risen, the cash and the net worth where they end; someone new, so the guide's tip of the ledger stands over it | motion left out (`STILL`): the wheel of its title turns for ever, its lines rise one by one, its figures count and its coins fly |
+| moment-escape | the engineer of the first fixed seed, played by the saver, leaves the rat race with the fifteenth round: the moment's sheet (gold) over that ledger | motion left out: no confetti falls, the picture stands uncovered |
+| moment-bankrupt | the nurse of screen-seed-4, played by the chaser (who lives as grandly as the money lasts, `Reach.player`), goes bankrupt with her fourth round: the sheet (wine) over that ledger | motion left out |
+| moment-crisis | the engineer of screen-seed-10 (hud-crisis's world) at the news of the fifth round, which the crash opens with: its sheet (wine) over the news and the crisis's bar | motion left out: the bar's lamp pulses for ever |
+
+- **The moments are Play's own** on both sides (a sheet Play mounts, with nothing taken in yet): the registries draw them as `PlayScene` (`moment`), so the web's
+  page presses nothing and the phone is given nothing.
+- **Where the ledger's coins land is the ledger's own cash** ("Cash now", the web's `data-coin-to` inside Resolve), not the HUD's: the web's Resolve flies them
+  inside its own area. The phone's flight is drawn in the screen's layer of coins, measured at take-off: a page scrolled while they fly leaves them where they took
+  off from (the web's are in the page and scroll with it). No scene shows them.
+- **Not compared** (no scene shows them; `Resolve.test`, `Moments.test` and `Play.test` hold them): the lines rising one by one (80 ms apart, 280 each), the
+  figures counting, the change of net worth landing with a jump or a sink and sparks, the confetti falling and the picture uncovered, a milestone's picture, the
+  notes of a round (gold, teal, wine, navy; confetti round a promotion), a crisis that ended, the bank's and the family's lines, the badges a round earned.

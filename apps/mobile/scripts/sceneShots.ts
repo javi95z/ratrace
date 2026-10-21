@@ -89,13 +89,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 export const STAND_INS: readonly string[] = ['records', 'collection'];
 
 /**
- * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the ledger in Task 16), which the app
- * draws as a line that says so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports the part takes its scenes
- * out of this list (into `PENDING_SHOTS`, until a batch pass shoots them): the finances did in Task 12.
+ * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring, which the app draws as a line that says
+ * so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports the part takes its scenes out of this list (into
+ * `PENDING_SHOTS`, until a batch pass shoots them): the finances did in Task 12, the ledger (`play-resolve-r6`) in Task 16. None is left.
  */
-export const STAND_IN_SCENES: Readonly<Record<string, string>> = {
-  'play-resolve-r6': 'the ledger of play',
-};
+export const STAND_IN_SCENES: Readonly<Record<string, string>> = {};
 
 /**
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
@@ -140,6 +138,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'end-bankrupt',
   'end-share',
   'end-ru',
+  // Task 16: the ledger of a round, every line risen, and the moments of a life over it (or over the news, for a crisis).
+  'play-resolve-r6',
+  'moment-escape',
+  'moment-bankrupt',
+  'moment-crisis',
 ]);
 
 /**

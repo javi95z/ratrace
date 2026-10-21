@@ -113,12 +113,58 @@ describe('the play screen', () => {
     fireEvent.click(button('Play the round'));
 
     await stageIs('Two years later');
+    expect(await screen.findByRole('heading', { name: 'Two years later' })).toBeTruthy();
+    expect(screen.getByText('Age 22 to 24')).toBeTruthy();
+    const ledger = screen.getByRole('table', { name: 'What came in and went out' });
+    expect(within(ledger).getByText('Salary')).toBeTruthy();
+    expect(within(ledger).getByText('Living costs')).toBeTruthy();
+    // Where the net worth was and how it changed, said so it cannot be read as before and after.
+    expect(screen.getByText(/^Was \$[\d,]+$/)).toBeTruthy();
     expect((await saved(services.store)).state.round).toBe(1);
     fireEvent.click(button('Next round'));
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
     expect(screen.getAllByText('Age 24').length).toBeGreaterThan(0);
+    // How last round's headlines turned out is not told: working that out is the player's.
+    expect(screen.queryByRole('heading', { name: "Last round's headlines" })).toBeNull();
+    expect(screen.queryByText(/seven in ten/)).toBeNull();
     expect(router.dismissTo).not.toHaveBeenCalled();
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('announces a life unlocked by a step that earned no badge', async () => {
+    const services = memoryServices();
+    const real = await services.sessions.start('nurse');
+    services.sessions.resume = async () => ({ lost: null, session: realSession(real, { answerCard: async (option: number) => ({ ...(await real.answerCard(option)), earned: [], unlocked: ['heir'] }) }) });
+    renderGame(<Play />, services);
+    fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    fireEvent.click(choices()[0]);
+    await screen.findByRole('heading', { name: 'What happened' });
+    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
+    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
+    expect(news.some((text) => text.includes('Badge earned'))).toBe(false);
+  });
+
+  it('celebrates a badge on the ledger of the round that earned it, and the life a round unlocked', async () => {
+    const services = memoryServices();
+    const real = await services.sessions.start('nurse');
+    // A round that earns a badge and unlocks a life, whatever is played.
+    services.sessions.resume = async () => ({
+      lost: null,
+      session: realSession(real, { badges: () => ['millionaire'], playRound: async (choices) => ({ ...(await real.playRound(choices)), earned: ['millionaire'], unlocked: ['heir'] }) }),
+    });
+    renderGame(<Play />, services);
+    fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    await answerHand();
+    await stageIs('Your finances');
+    fireEvent.click(button('Play the round'));
+    await screen.findByRole('heading', { name: 'Two years later' });
+    const news = screen.getAllByRole('status').map((note) => note.textContent ?? '');
+    expect(news.some((text) => text.includes('Badge earned') && text.includes('Millionaire') && text.includes('Be worth a million'))).toBe(true);
+    expect(news.some((text) => text.includes('New life unlocked') && text.includes('Heir'))).toBe(true);
+    // Gone with the ledger: the next round opens without them.
+    fireEvent.click(button('Next round'));
+    await screen.findByRole('button', { name: 'See what life brings' });
+    expect(screen.queryByText('Badge earned')).toBeNull();
   });
 
   it('counts the orders of the round and lets one be taken back', async () => {

@@ -198,7 +198,8 @@ function RivalsScene() {
 
 /**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
- * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
+ * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list. A moment of a life (`moment-*`) is
+ * Play's own sheet, open over its stage as the game opens it (no initial state: nothing has taken it in yet): Play draws it.
  */
 export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
@@ -217,6 +218,7 @@ export const SCENE_SCREENS: SceneScreens = {
   balance: (scene) => <ProfileScene scene={scene} opened={{ line: scene.sheet as BalanceLine | undefined }} />,
   rivals: () => <RivalsScene />,
   end: (scene) => <EndOpened value={{ share: scene.sheet === 'share' }}><Play /></EndOpened>,
+  moment: (scene) => <PlayScene scene={scene} />,
 };
 
 /**

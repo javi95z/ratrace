@@ -553,3 +553,37 @@ test('the scenes of the end of a life are its end screen, Play\'s last stage, wi
   render(<SceneView name="end-ru" />);
   expect(await screen.findByRole('heading', { name: 'Конец' }, WAIT)).toBeTruthy();
 });
+
+test('the scene of the ledger is drawn by the ledger itself, every line risen and every figure where it ends: no loop turns, and nothing is left to fly', async () => {
+  rea.assigned.length = 0;
+  render(<SceneView name="play-resolve-r6" />);
+  const ledger = await screen.findByRole('table', { name: 'What came in and went out' }, WAIT);
+  const rows = within(ledger).getAllByRole('row');
+  expect(rows.length).toBeGreaterThan(2);
+  for (const row of rows) expect((row.parentElement as HTMLElement).style.opacity).toBe('1');
+  // The cash stands where it ends: the figure is what a screen reader is told.
+  const counted = document.querySelector<HTMLElement>('[data-coin-to]') as HTMLElement;
+  const [said, shown] = [...counted.children].map((part) => part.textContent);
+  expect(shown).toBe(said);
+  expect(rea.assigned.filter((one) => one.kind === 'repeat')).toEqual([]);
+  expect(document.querySelectorAll('[data-testid="coin-layer"] > div')).toHaveLength(0);
+  expect(screen.queryByText('🚧')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Next round' })).toBeTruthy();
+});
+
+test('the scenes of the moments of a life are their sheets over Play, open without a tap: the escape and the bankruptcy over the ledger, the crash over the news', async () => {
+  const moments = [
+    { name: 'moment-escape', title: 'Out of the rat race!', under: 'Two years later' },
+    { name: 'moment-bankrupt', title: 'Bankrupt', under: 'Two years later' },
+    { name: 'moment-crisis', title: 'The Great Crash', under: 'News' },
+  ];
+  for (const moment of moments) {
+    render(<SceneView name={moment.name} />);
+    const sheet = (await screen.findByRole('heading', { name: moment.title }, WAIT)).closest('[aria-modal="true"]');
+    expect(sheet, moment.name).not.toBeNull();
+    expect(screen.getByRole('heading', { name: moment.under }), moment.name).toBeTruthy();
+    // Drawn with motion left out: no confetti falls over the good news, the picture stands uncovered.
+    expect(sheet?.querySelector('[data-confetti]'), moment.name).toBeNull();
+    cleanup();
+  }
+});

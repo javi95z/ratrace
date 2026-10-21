@@ -98,6 +98,9 @@ export const SCENES: readonly Scene[] = [
   { name: 'end-bankrupt', locale: 'en' },
   { name: 'end-share', locale: 'en', sheet: 'share' },
   { name: 'end-ru', locale: 'ru' },
+  { name: 'moment-escape', locale: 'en' },
+  { name: 'moment-bankrupt', locale: 'en' },
+  { name: 'moment-crisis', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -245,6 +248,12 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'end-share': { life: 'engineer', round: 1, stage: 'end' },
   // end-escaped's life in Russian.
   'end-ru': { life: 'engineer', round: 1, stage: 'end' },
+  // The engineer of the first fixed seed, played by the saver, leaves the rat race with the fifteenth round: its ledger, and the moment over it.
+  'moment-escape': { life: 'engineer', round: 15, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  // The nurse of screen-seed-4, played by the chaser, who lives as grandly as the money lasts: bankrupt with her fourth round.
+  'moment-bankrupt': { life: 'nurse', round: 4, stage: 'finance', seed: 'screen-seed-4', player: 'chaser', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  // The engineer of screen-seed-10 (hud-crisis's world): the crash opens with the fifth round, at its news.
+  'moment-crisis': { life: 'engineer', round: 5, stage: 'news', seed: 'screen-seed-10' },
 };
 
 /**
@@ -267,6 +276,9 @@ const STILL: ReadonlySet<string> = new Set([
   // The end of a life: its score counts up, its story rises a paragraph at a time, the portrait walks its line and lights each mark, and a rare badge's
   // confetti falls for ever. Left out, everything stands where it ends, as a shot can see it.
   'end-escaped', 'end-bankrupt', 'end-share', 'end-ru',
+  // The ledger (play-resolve-r6) and the moments over it or over the news: the wheel of its title turns for ever, its lines rise one by one, its
+  // figures count and its coins fly; a crisis's lamp pulses. Left out, the lines stand risen and the figures where they end, as a shot can see them.
+  'play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis',
 ]);
 
 /**

@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -302,4 +302,12 @@ test('the end of a life is Play at its last stage on both sides, with the pictur
   expect(read('../../web/src/game/screens/Play.tsx')).toContain("if (stage === 'end') return <End extra={room?.end} />;");
   // The one scene of the end with a sheet names the share card's.
   expect(SCENES.filter((scene) => scene.name.startsWith('end-') && scene.sheet !== undefined).map((scene) => scene.sheet)).toEqual(['share']);
+});
+
+test('a moment of a life is drawn by Play on both sides: its sheet is Play\'s own, open over its stage as the game opens it', () => {
+  expect(web).toContain('moment: (scene) => <PlayScene scene={scene} />,');
+  expect(app).toContain('moment: (scene) => <PlayScene scene={scene} />,');
+  // Each side's Play mounts the moments with its page.
+  expect(read('../../web/src/game/screens/Play.tsx')).toContain('<Moments />');
+  expect(read('../src/game/screens/Play.tsx')).toContain('<Moments />');
 });

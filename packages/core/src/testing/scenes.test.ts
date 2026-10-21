@@ -1,5 +1,6 @@
 import { content, lives, rarityOf, weekOf } from '@ratrace/content';
 import { previewCard, quoteBusinesses, quoteItem, stateHash } from '@ratrace/engine';
+import { momentsOf } from '../game/moments';
 import { cardRarity } from '../game/present';
 import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
@@ -529,6 +530,9 @@ describe('the list of scenes', () => {
       'end-bankrupt',
       'end-share',
       'end-ru',
+      'moment-escape',
+      'moment-bankrupt',
+      'moment-crisis',
     ]);
   });
 
@@ -561,7 +565,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']));
   });
 });
 
@@ -729,5 +733,62 @@ describe('the scenes of the end of a life', () => {
 
   it('are drawn with motion left out: the score stands counted, the story risen, the portrait at the end of its line, a rare badge\'s confetti still', async () => {
     for (const name of ['end-escaped', 'end-bankrupt', 'end-share', 'end-ru']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
+  });
+});
+
+describe('the moments of a life: real lives, played to the round a moment stops them in', () => {
+  /** A game opened on a scene's store, and the scene's script run on it, as a client does once its game has opened. */
+  async function played(name: string) {
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore(name)), content });
+    await game.getState().boot();
+    await runScene(name, game);
+    return game.getState();
+  }
+
+  it('moment-escape is the ledger of the round the engineer of the first fixed seed leaves the rat race in, the fifteenth, played by the saver', async () => {
+    const save = (await saveOf(await sceneStore('moment-escape'))) as SavedGame;
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-1', lifeId: 'engineer' });
+    const state = await played('moment-escape');
+    expect(state).toMatchObject({ status: 'playing', stage: 'resolve', busy: false });
+    expect(state.resolved?.before.round).toBe(14);
+    expect(state.resolved?.events.some((event) => event.kind === 'escaped')).toBe(true);
+    // Out for the first time this round: no round before it left the rat race.
+    expect(state.resolved?.before.player.escapedAtRound).toBeNull();
+    expect(momentsOf(state)[0]).toMatchObject({ kind: 'escape' });
+  });
+
+  it('moment-bankrupt is the ledger of the round the nurse of screen-seed-4 goes bankrupt in, her fourth, played by the chaser, who lives beyond her pay', async () => {
+    const save = (await saveOf(await sceneStore('moment-bankrupt'))) as SavedGame;
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-4', lifeId: 'nurse' });
+    const state = await played('moment-bankrupt');
+    expect(state).toMatchObject({ status: 'playing', stage: 'resolve', busy: false });
+    expect(state.resolved?.before.round).toBe(3);
+    const broke = state.resolved?.events.find((event) => event.kind === 'bankrupt');
+    expect(broke).toBeDefined();
+    expect(momentsOf(state)[0]).toMatchObject({ kind: 'bankrupt' });
+    // Saved at the finances of that round, with its cards answered as the chaser answers them.
+    const saved = await opened(await sceneStore('moment-bankrupt'));
+    expect(saved).toMatchObject({ stage: 'finance' });
+    expect(roundOf(saved)).toBe(4);
+  });
+
+  it('moment-crisis is the news of the round a crisis opens with: the crash of screen-seed-10 (hud-crisis\'s world), in the engineer\'s fifth round, its first year', async () => {
+    const store = await sceneStore('moment-crisis');
+    expect(await saveOf(store)).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-10', lifeId: 'engineer' });
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', stage: 'news' });
+    expect(roundOf(state)).toBe(5);
+    expect(state.view?.timeline[state.view.round].crisis).toEqual({ id: 'crash', year: 1, of: 3 });
+    expect(momentsOf(state)).toEqual([{ key: '4:crisis', kind: 'crisis', crisisId: 'crash', rounds: 3 }]);
+  });
+
+  it('come to the same ledger every time, on any store of the scene', async () => {
+    for (const name of ['moment-escape', 'moment-bankrupt']) expect(onScreen(await played(name)), name).toBe(onScreen(await played(name)));
+  });
+
+  it('are drawn with motion left out, with the ledger they stand over: its wheel turns for ever, its lines rise and its figures count, and a crisis\'s lamp pulses', async () => {
+    for (const name of ['play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
+    // The ledger's save is the finances' all the same: only the profile says to move less.
+    expect(await saveOf(await sceneStore('play-resolve-r6'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
   });
 });

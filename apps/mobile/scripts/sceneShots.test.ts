@@ -112,20 +112,89 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
 });
 
 test('a scene of a ported screen at a part of it still to be ported (a stage of Play a later task brings) is unjudged as well, and says which part', () => {
-  expect(Object.keys(STAND_IN_SCENES)).toEqual(['play-resolve-r6']);
-  for (const name of Object.keys(STAND_IN_SCENES)) expect(SCENES.map((scene) => scene.name), name).toContain(name);
+  // The ledger, the last of them, is ported (Task 16): none is left.
+  expect(Object.keys(STAND_IN_SCENES)).toEqual([]);
   const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
-  expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for the ledger of play: its numbers say nothing' });
+  expect(isJudged(ledger)).toBe(false);
+  expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
 });
 
 test('a scene of a screen ported but not shot yet (from Task 11 on, the batch passes shoot them) is unjudged until it is shot, and says so', () => {
-  expect([...PENDING_SHOTS]).toEqual(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-outcome-r1', 'play-finance-r6', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move', 'play-cards-city', 'work-panel', 'finance-shop', 'finance-item', 'finance-taxes', 'finance-business', 'profile-r6', 'profile-owned', 'balance-r6', 'rivals-r6', 'end-escaped', 'end-bankrupt', 'end-share', 'end-ru']);
+  expect([...PENDING_SHOTS]).toEqual([
+    'play-cards-r1',
+    'play-cards-legendary',
+    'play-cards-three',
+    'play-cards-ru-360',
+    'play-outcome-r1',
+    'play-finance-r6',
+    'finance-basket',
+    'finance-pension',
+    'finance-tabs-ru-360',
+    'finance-market',
+    'finance-buy-stock',
+    'finance-property',
+    'finance-debt',
+    'finance-lifestyle',
+    'finance-move',
+    'play-cards-city',
+    'work-panel',
+    'finance-shop',
+    'finance-item',
+    'finance-taxes',
+    'finance-business',
+    'profile-r6',
+    'profile-owned',
+    'balance-r6',
+    'rivals-r6',
+    'end-escaped',
+    'end-bankrupt',
+    'end-share',
+    'end-ru',
+    'play-resolve-r6',
+    'moment-escape',
+    'moment-bankrupt',
+    'moment-crisis',
+  ]);
   for (const name of PENDING_SHOTS) {
     expect(SCENES.map((scene) => scene.name), name).toContain(name);
     // A scene is pending or a stand-in's, never both.
     expect(Object.hasOwn(STAND_IN_SCENES, name), name).toBe(false);
   }
-  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move', 'play-cards-city', 'work-panel', 'finance-shop', 'finance-item', 'finance-taxes', 'finance-business', 'profile-r6', 'profile-owned', 'balance-r6', 'rivals-r6', 'end-escaped', 'end-bankrupt', 'end-share', 'end-ru']);
+  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual([
+    'play-cards-r1',
+    'play-cards-legendary',
+    'play-cards-three',
+    'play-cards-ru-360',
+    'play-finance-r6',
+    'play-outcome-r1',
+    'play-resolve-r6',
+    'finance-basket',
+    'finance-pension',
+    'finance-tabs-ru-360',
+    'finance-market',
+    'finance-buy-stock',
+    'finance-property',
+    'finance-debt',
+    'finance-lifestyle',
+    'finance-move',
+    'play-cards-city',
+    'work-panel',
+    'finance-shop',
+    'finance-item',
+    'finance-taxes',
+    'finance-business',
+    'profile-r6',
+    'profile-owned',
+    'balance-r6',
+    'rivals-r6',
+    'end-escaped',
+    'end-bankrupt',
+    'end-share',
+    'end-ru',
+    'moment-escape',
+    'moment-bankrupt',
+    'moment-crisis',
+  ]);
   const ru = SCENES.find((scene) => scene.name === 'play-cards-ru-360')!;
   expect(unjudgedLine(ru)).toEqual({ scene: 'play-cards-ru-360', locale: 'ru', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
   // Not judged, so it fails nothing, and its numbers are never read as a result.

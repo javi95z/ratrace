@@ -22,17 +22,17 @@ import { Basket, Finance, FinanceShell, FinanceTabs, FinanceToasts } from './Fin
 import { CoinFlights, CoinTargets } from './FlyingCoins';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
+import { Moments } from './Moments';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
 import { End } from './End';
-import { StageStandIn } from './PlayStandIns';
 import { ProfileSheet } from './Profile';
+import { Resolve } from './Resolve';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
  * shortcut and skip links), and what is only online (a room's bar, its wait and its order; a ranked life's notices, which a life on the
- * phone never has). Stages that later tasks bring are drawn in the meantime as stand-ins (`PlayStandIns.tsx`, one file for all of them), with the
- * stage machine, the bar of the next thing to do and the guide round them as they will stay.
+ * phone never has). Every stage is drawn by its own screen, with the stage machine, the bar of the next thing to do and the guide round them.
  */
 
 /**
@@ -184,7 +184,7 @@ function StageView({ stage }: { stage: Stage }) {
   );
 }
 
-/** What each stage of the round shows. Those a later task brings stand in as a line that says so, and keep the round going. */
+/** What each stage of the round shows. */
 function StageBody({ stage }: { stage: Stage }) {
   switch (stage) {
     case 'news':
@@ -196,8 +196,7 @@ function StageBody({ stage }: { stage: Stage }) {
     case 'finance':
       return <Finance />;
     case 'resolve':
-      // Task 16: Resolve.
-      return <StageStandIn stage={stage} />;
+      return <Resolve />;
     default:
       return null;
   }
@@ -382,6 +381,9 @@ export function Play() {
   const financeLeadIn = useMemo(() => <FinanceLeadIn />, []);
   // Made once for as long as it is open or shut: a step of the round draws Play again, and not the profile, which draws what it shows itself.
   const profileSheet = useMemo(() => <ProfileSheet open={profileOpen} onClose={closeProfile} />, [profileOpen, closeProfile]);
+  // The moments that stop the game (a crisis opening, the rat race left, a bankruptcy): a sheet of their own, over everything, made once, as the
+  // web's are mounted once with the page; each reads the round itself.
+  const moments = useMemo(() => <Moments />, []);
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
@@ -420,6 +422,7 @@ export function Play() {
               {notice}
               {finances ? <FinanceToasts /> : null}
               {pageTurn}
+              {moments}
             </>
           }
         >

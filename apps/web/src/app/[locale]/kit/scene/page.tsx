@@ -279,7 +279,10 @@ function EndScene({ scene }: { scene: Scene }) {
   );
 }
 
-/** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
+/**
+ * The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same.
+ * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
+ */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
@@ -297,6 +300,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   balance: (scene) => <ProfileScene scene={scene} line={scene.sheet} />,
   rivals: () => <RivalsScene />,
   end: (scene) => <EndScene scene={scene} />,
+  moment: (scene) => <PlayScene scene={scene} />,
 };
 
 /**
