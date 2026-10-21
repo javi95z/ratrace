@@ -591,8 +591,8 @@ describe('the finances, laid out', () => {
     const { services } = await inFinance('heir');
     renderGame(<Play />, services);
     const tabs = await screen.findAllByRole('tab');
-    // The way of life (Task 14), the shop, taxes and businesses (Task 15) are not on the phone yet.
-    expect(tabs.map((tab) => tab.textContent)).toEqual(['Portfolio', 'Market', 'Property', 'Debt']);
+    // The shop, taxes and businesses (Task 15) are not on the phone yet.
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Portfolio', 'Market', 'Property', 'Debt', 'Lifestyle']);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('tablist', { name: 'Your finances' })).toBeTruthy();
     expect(screen.getByRole('tabpanel', { name: 'Portfolio' })).toBeTruthy();

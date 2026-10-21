@@ -1,16 +1,17 @@
-import { assetKind, assetLogo, cityIcon, debtArt, homeName, propertyArt, saleSignArt, START_AGE } from '@ratrace/content';
+import { assetKind, assetLogo, cityIcon, crestArt, debtArt, homeName, insuranceArt, lifestyleArt, propertyArt, rentTierIcon, saleSignArt, START_AGE } from '@ratrace/content';
 import type { AssetKind } from '@ratrace/content';
 import { TAB_FROM_ROUND } from '@ratrace/core/game/guide';
-import { ageAt, debtLabel, headlineText, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
+import { ageAt, debtLabel, headlineText, jobFocusName, loanPlan, orderLabel, priceHistory } from '@ratrace/core/game/present';
 import { rulesSell } from '@ratrace/core/game/rules';
-import { applyBp, assetYieldBp, debtRateBp, depositRateBp, homeOf, mortgageSwitch, previewRound, quoteLoan, quoteMargin, quoteOwnedProperty, quotePlans, quoteProperty } from '@ratrace/engine';
-import type { AssetDef, Debt, GameView, Order } from '@ratrace/engine';
+import { applyBp, assetYieldBp, debtRateBp, depositRateBp, effectiveTax, focusLeft, homeOf, mortgageSwitch, previewRound, quoteLiving, quoteLoan, quoteMargin, quoteMove, quoteOwnedProperty, quotePlans, quoteProperty, quoteSkills, quoteWork, workModeOf } from '@ratrace/engine';
+import type { AssetDef, CityDef, Debt, FocusAction, GameView, InsuranceKind, LifestyleTier, Order, PlayerState, RentTier, WorkMode, WorldState } from '@ratrace/engine';
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
 import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
+import { GOLD } from '../../ui/frames';
 import { adjustedRead } from '../../ui/fonts';
 import { Bare, Button, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
@@ -22,9 +23,13 @@ import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, GUTTER, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
+import { CareerMoves } from './CareerMoves';
 import { Explain } from './Explain';
+import { splitMastered, useFocusNote, type FocusNote } from './focusNote';
 import { Payouts, portfolioQuote, PortfolioGlance } from './Glance';
+import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
+import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetFocus } from './Work';
 
 /*
  * The finance phase, as the web's Finance.tsx lays it on a phone: eight tabs over one basket of orders. What the phone leaves out: the keyboard
@@ -36,7 +41,8 @@ import { useShown } from './Hud';
  * the stage (`Finance`), and the toasts are drawn over the screen (`FinanceToasts`, in its `fixed`). The tab on screen is shared by the row and
  * the panel (`FinanceShell`), so a change of tab draws the two of them again and nothing else.
  *
- * Task 12 brought the portfolio, Task 13 the market, property and debt; the other tabs come with their tasks, each a line of `TAB_BODIES`.
+ * Task 12 brought the portfolio, Task 13 the market, property and debt, Task 14 the way of life (and the cities: the sheet of every city, and the
+ * one a card offers to move to, `CityPreview`); the other tabs come with their tasks, each a line of `TAB_BODIES`.
  * The lists a tab draws are short (22 assets in all, the homes and lets a city sells, a life's homes and debts): drawn whole, each row memoised
  * where a list can be long (the market's, the homes'), so an order draws again only the rows it changes.
  */
@@ -56,7 +62,7 @@ function useRound() {
 /**
  * What the finances have open from the start, where a scene says so (the phone's initial state, as the Hud's `open` and NewLife's `opened`; the web's
  * scene page presses what opens it): a tab, by its id, and a sheet of that tab (`pension`: the portfolio's pension plan; `buy-<asset>`: the market's
- * sheet that buys that asset).
+ * sheet that buys that asset; `move`: the way of life's sheet of every city).
  */
 export const FinanceOpened = createContext<{ tab?: string; sheet?: string }>({});
 
@@ -1305,6 +1311,523 @@ function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// Cities
+
+/** A crest as its art draws it where it is missing (the web's fallback), and drawn into a square of 36 on a row of the cities (`size-9`, `!h-full !w-full`). */
+const CREST = { w: 64, h: 64 } as const;
+const CREST_ROW = { w: 36, h: 36 } as const;
+
+/** A city a card offers to move to, beside the one the player lives in: the same comparison as in the finances, nothing to order. */
+export function CityPreview({ cityId, view, onClose }: { cityId: string; view: GameView; onClose(): void }) {
+  const common = useT('common');
+  const { content, names } = useWords();
+  const city = content.cities.find((x) => x.id === cityId);
+  // The year there, worked out once for the life as it stands.
+  const quote = useMemo(() => (city ? quoteMove(content, view, city.id) : null), [content, view, city]);
+  if (!city || !quote) return null;
+  return (
+    <Sheet open onClose={onClose} title={names.cities[city.id]} closeLabel={common('close')}>
+      <CityDetail city={city} quote={quote} p={view.player} world={view.timeline[view.round]} onBack={onClose} onMoved={onClose} asked />
+    </Sheet>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
+// Lifestyle
+
+/** Small capitals over a list (the web's `text-[11px] uppercase tracking-wider text-ink-300`). */
+function SmallCaps({ children }: { children: string }) {
+  return <ReadText size={11} tone="ink-300" style={{ textTransform: 'uppercase', letterSpacing: 11 * 0.05 }}>{children}</ReadText>;
+}
+
+/**
+ * One line of a year in a city: what it is here, and what it would be there, the better of the two in green (the web's `flex items-baseline
+ * justify-between gap-2 py-1`; `strong`, the line that sums the year up, set off by a rule and in the pixel face).
+ */
+function Versus({ label, here, there, more = 'better', strong = false }: { label: string; here: number; there?: number; more?: 'better' | 'worse'; strong?: boolean }) {
+  const { fmt } = useWords();
+  const gain = there === undefined ? 0 : more === 'better' ? there - here : here - there;
+  const tone: ColorToken = gain > 0 ? 'teal-300' : gain < 0 ? 'wine-300' : 'cream';
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingVertical: 4 }, strong ? { borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 6 } : null]}>
+      {strong ? (
+        <PixelText numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>{label}</PixelText>
+      ) : (
+        <ReadText size={14} numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>{label}</ReadText>
+      )}
+      <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'baseline' }}>
+        {there === undefined ? (
+          <PixelText size={15} style={{ textAlign: 'right' }}>{fmt.money(here)}</PixelText>
+        ) : (
+          <>
+            <PixelText size={15} tone="ink-300">{fmt.compact(here)}</PixelText>
+            <View aria-hidden style={{ marginHorizontal: 4 }}>
+              <PixelText size={15} tone="ink-300">{'→'}</PixelText>
+            </View>
+            <PixelText size={15} tone={tone}>{fmt.compact(there)}</PixelText>
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Every city, and for each the player's own year there beside the year they have: pay, tax, costs
+ * and what is left, as the move would leave them. All of it is the engine's quote, worked out once for the round as it stands; each city's row is
+ * drawn again only when what it shows changes.
+ */
+function MoveSheet({ onClose }: { onClose(): void }) {
+  const t = useT('finance.lifestyle');
+  const common = useT('common');
+  const { content, names } = useWords();
+  const { shown, p, world } = useRound();
+  // One city at a time in full; the list is short, a row a city.
+  const [chosen, setChosen] = useState<string | null>(null);
+  const choose = useCallback((cityId: string) => setChosen(cityId), []);
+  const quotes = useMemo(() => content.cities.map((city) => ({ city, quote: quoteMove(content, shown, city.id) })), [content, shown]);
+  // Where the year leaves the most first, the city lived in at the top.
+  const listed = useMemo(() => {
+    const here = quotes.find((entry) => entry.city.id === p.cityId);
+    const others = quotes.filter((entry) => entry.city.id !== p.cityId).sort((a, b) => b.quote.there.leftAnnual - a.quote.there.leftAnnual);
+    return [...(here ? [here] : []), ...others];
+  }, [quotes, p.cityId]);
+  const open = chosen ? quotes.find((entry) => entry.city.id === chosen) : undefined;
+
+  return (
+    <Sheet open onClose={onClose} title={open ? names.cities[open.city.id] : t('moveTitle')} closeLabel={common('close')}>
+      {open ? (
+        <CityDetail city={open.city} quote={open.quote} p={p} world={world} onBack={() => setChosen(null)} onMoved={onClose} />
+      ) : (
+        <View style={{ gap: 8 }}>
+          <Explain>{t('moveAbout', { level: content.life.skills.languagesKeepRungFrom })}</Explain>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <SmallCaps>{t('left')}</SmallCaps>
+          </View>
+          <View role="list" style={{ gap: 6 }}>
+            {listed.map(({ city, quote }) => {
+              const home = city.id === p.cityId;
+              const gain = quote.there.leftAnnual - quote.here.leftAnnual;
+              return (
+                <CityRow
+                  key={city.id}
+                  cityId={city.id}
+                  home={home}
+                  left={home ? quote.here.leftAnnual : quote.there.leftAnnual}
+                  tone={home ? 'cream' : gain > 0 ? 'teal-300' : gain < 0 ? 'wine-300' : 'cream'}
+                  onOpen={choose}
+                />
+              );
+            })}
+          </View>
+        </View>
+      )}
+    </Sheet>
+  );
+}
+
+/**
+ * A city on the list, to be pressed to open it (the web's `frame-raised flex min-h-12 w-full items-center gap-2 bg-night-600 px-2 py-1.5`, gold for
+ * the city lived in): its crest, its name, and what the year leaves there. Drawn again only when one of these changes.
+ */
+const CityRow = memo(function CityRow({ cityId, home, left, tone, onOpen }: { cityId: string; home: boolean; left: number; tone: ColorToken; onOpen(cityId: string): void }) {
+  const t = useT('finance.lifestyle');
+  const { names, fmt } = useWords();
+  return (
+    <View role="listitem">
+      <Raised tone={home ? GOLD : undefined} style={{ minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 6 }} onPress={() => onOpen(cityId)}>
+        <Bare style={{ width: 36, height: 36 }}>
+          <Sprite id={crestArt(cityId)} fallback={CREST} size={CREST_ROW} />
+        </Bare>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <PixelText size={16} numberOfLines={1}>{names.cities[cityId]}</PixelText>
+          {home ? <Tag tone="good">{t('here')}</Tag> : null}
+        </View>
+        <PixelText size={16} tone={tone} style={{ flexShrink: 0, textAlign: 'right' }}>{fmt.compact(left)}</PixelText>
+      </Raised>
+    </View>
+  );
+});
+
+/**
+ * A city beside the one the player lives in: what it is, what the year would leave there beside here, and the figures behind that folded away
+ * until asked for; then what a move costs, and the move itself. In the finances it is where a move is ordered; shown from a card that offers a
+ * move (`asked`), it only compares: the card says what the move costs.
+ */
+function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: { city: CityDef; quote: ReturnType<typeof quoteMove>; p: PlayerState; world: WorldState; onBack(): void; onMoved(): void; asked?: boolean }) {
+  const t = useT('finance.lifestyle');
+  const { content, text, names, fmt } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  const [numbers, setNumbers] = useState(false);
+  const job = p.life.career;
+  const years = content.yearsPerRound;
+  const here = city.id === p.cityId;
+  const tax = effectiveTax(city, world);
+  const { here: now, there } = quote;
+  /** A line of what the move brings (the web's `li` of `text-[13px] leading-snug`). */
+  const said = (words: string, tone: ColorToken = 'cream') => (
+    <View role="listitem">
+      <ReadText size={13} lineHeight={13 * SNUG} tone={tone}>{words}</ReadText>
+    </View>
+  );
+
+  return (
+    <View role="region" aria-label={names.cities[city.id]} style={{ gap: 8 }}>
+      {asked ? null : (
+        // The web's `self-start`: as wide as its words.
+        <View style={{ alignSelf: 'flex-start' }}>
+          <Button variant="quiet" size={14} onPress={onBack}>
+            {t('allCities')}
+          </Button>
+        </View>
+      )}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <Sprite id={crestArt(city.id)} fallback={CREST} />
+        <View style={{ flexShrink: 1, minWidth: 0 }}>
+          {here ? <Tag tone="good">{t('here')}</Tag> : null}
+          <ReadText size={13} lineHeight={13 * SNUG} tone="ink-300">{text.cities[city.id].tagline}</ReadText>
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+        <Tag tone="good">{t('cityStatus', { n: city.prestige })}</Tag>
+      </View>
+
+      {here ? null : (
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+          <SmallCaps>{t('yearHere')}</SmallCaps>
+          <View aria-hidden>
+            <SmallCaps>{'→'}</SmallCaps>
+          </View>
+          <SmallCaps>{t('yearThere')}</SmallCaps>
+        </View>
+      )}
+      <Versus strong label={t('left')} here={now.leftAnnual} there={here ? undefined : there.leftAnnual} />
+      {/* The web's quiet button (`text-[14px]`, as wide as the sheet), which says whether what it folds is open. */}
+      <Raised expanded={numbers} bg="night-700" style={{ paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }} onPress={() => setNumbers((open) => !open)}>
+        <PixelText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{t(numbers ? 'hideNumbers' : 'showNumbers')}</PixelText>
+      </Raised>
+      {numbers ? (
+        <View>
+          <Versus label={t('yourPay')} here={now.payAnnual} there={here ? undefined : there.payAnnual} />
+          {now.partnerAnnual > 0 || there.partnerAnnual > 0 ? <Versus label={t('partnerPay')} here={now.partnerAnnual} there={here ? undefined : there.partnerAnnual} /> : null}
+          <Versus label={t('incomeTax')} here={now.taxAnnual} there={here ? undefined : there.taxAnnual} more="worse" />
+          <Versus label={t('costs')} here={now.costAnnual} there={here ? undefined : there.costAnnual} more="worse" />
+          <ReadText size={12} tone="ink-300" style={{ marginTop: 4 }}>
+            {t('taxRates', { income: tax.incomeRatesBp.map((rate) => fmt.rate(rate)).join(' · '), gains: fmt.rate(tax.capitalGainsBp) })}
+          </ReadText>
+        </View>
+      ) : null}
+
+      {here || asked ? null : (
+        <>
+          <View role="list" style={{ marginVertical: 4, gap: 4 }}>
+            {/* How far it is, beside what it costs: the further, the dearer. */}
+            {said(city.distanceKm?.[p.cityId] ? t('moveCostFar', { amount: fmt.money(quote.cost), km: fmt.number(city.distanceKm[p.cityId]) }) : t('moveCost', { amount: fmt.money(quote.cost) }))}
+            {/* Going home: what is waiting there, said before the move is ordered. */}
+            {quote.home ? said(t(quote.home.helped ? 'homeHelped' : 'homeBack'), 'teal-300') : null}
+            {job && quote.rungsLost > 0 && there.level !== null ? said(t('moveRung', { title: text.careers[job.id].levels[there.level] }), 'wine-300') : null}
+            {quote.partnerIdleRounds > 0 ? said(t('movePartner', { years: quote.partnerIdleRounds * years }), 'wine-300') : null}
+            {/* Said before the move is ordered: what belongs to this city does not come along. */}
+            {quote.lapses.length > 0 ? said(t('moveLapses', { items: quote.lapses.map((id) => names.items[id]).join(', ') }), 'wine-300') : null}
+          </View>
+          <Button
+            variant="secondary"
+            wide
+            onPress={() => {
+              if (setOrder((order) => order.type === 'moveCity', { type: 'moveCity', cityId: city.id })) onMoved();
+            }}
+          >
+            {t('moveHere')}
+          </Button>
+        </>
+      )}
+    </View>
+  );
+}
+
+const INSURANCES: readonly InsuranceKind[] = ['health', 'home', 'life'];
+
+/** Status points with their sign: +3, −3, 0. */
+const points = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
+
+/**
+ * Props alike, for a memoised control: each the same value, a list compared value by value (its words and figures are made anew each time the tab
+ * is drawn, and are the same while the round leaves them so).
+ */
+function alike<P extends object>(a: P, b: P): boolean {
+  const x = a as Record<string, unknown>;
+  const y = b as Record<string, unknown>;
+  const keys = Object.keys(x);
+  return (
+    keys.length === Object.keys(y).length &&
+    keys.every((key) => {
+      const one = x[key];
+      const other = y[key];
+      return Object.is(one, other) || (Array.isArray(one) && Array.isArray(other) && one.length === other.length && one.every((value, i) => Object.is(value, other[i])));
+    })
+  );
+}
+
+/**
+ * The way of life, in panels as the web's tab lays it: how the job is done, the round's focus at work and in study, the life's own uses of it, how
+ * and where the player lives, the insurances, and the city. Every control is a memoised piece given what it shows, and orders through the round
+ * store's one `setOrder`: pressing one draws again that one, and leaves every other as it is (the engine's quotes of the round are worked out once
+ * for it, here).
+ */
+function Lifestyle() {
+  const knows = useKnows();
+  const t = useT('finance.lifestyle');
+  const wording = useT('work');
+  const common = useT('common');
+  const words = useWords();
+  const { content, text, fmt } = words;
+  const { view, shown, p } = useRound();
+  const ordered = useFocusOrdered();
+  const backOrdered = useGame((s) => s.orders.some((order) => order.type === 'backToWork'));
+  const moveOrdered = useGame((s) => s.orders.some((order) => order.type === 'moveCity'));
+  const setOrder = useGame((s) => s.setOrder);
+  const focus = useSetFocus();
+  // Where a scene says so, the sheet of every city is open from the start.
+  const opened = useContext(FinanceOpened);
+  const [moving, setMoving] = useState(opened.sheet === 'move');
+  const move = useCallback(() => setMoving(true), []);
+  const living = useMemo(() => quoteLiving(content, shown), [content, shown]);
+  // What each use of focus is worth to this player, counting what they own.
+  const work = useMemo(() => quoteWork(content, shown), [content, shown]);
+  const skills = useMemo(() => quoteSkills(content, shown), [content, shown]);
+  const career = p.life.career ? content.careers.find((c) => c.id === p.life.career?.id) : undefined;
+  const has = (action: FocusAction) => ordered.includes(action);
+  const left = focusLeft(p);
+  const note = useFocusNote();
+  const jobUses = career
+    ? ([
+        ['overtime', t('overtime'), t('overtimeHint', { pct: career.overtimePct })],
+        ['studyCareer', t('study'), t('studyHint', { n: work.studySkill })],
+        ['jobHunt', t('hunt'), t('huntHint', { pct: work.jobHuntChancePct })],
+        ['askRaise', t('raise'), t('raiseHint', { chance: work.raise.chancePct, pct: work.raise.pct })],
+      ] as const)
+        .filter(([action]) => knows(`focus:${action}`))
+        .map(([action, label, gives]) => ({ action, label: jobFocusName(words, career.id, action, label), note: note(work, action, gives) }))
+    : [];
+  const learn = splitMastered([
+    { action: skills.finance.study, label: text.focusActions[skills.finance.study], note: note(work, skills.finance.study, t('learnHint', { n: skills.finance.studyPoints, skill: wording('finance'), level: skills.finance.level })) },
+    ...skills.skills.flatMap((skill) =>
+      skill.study === null ? [] : [{ action: skill.study, label: text.focusActions[skill.study], note: note(work, skill.study, t('learnHint', { n: skill.studyPoints, skill: text.skills[skill.skill], level: skill.level })) }],
+    ),
+  ]);
+  const perYear = (cents: number) => common('perYear', { amount: fmt.compact(cents) });
+  const switchOf = (use: { action: FocusAction; label: string; note: FocusNote }) => {
+    const on = has(use.action);
+    return <FocusSwitch key={use.action} action={use.action} on={on} disabled={!on && (left < 1 || use.note.locked)} label={use.label} hint={use.note.hint} onFocus={focus} />;
+  };
+
+  return (
+    <View style={{ gap: 12 }}>
+      {/* How the job is done, apart from the focus: half the day anywhere, and from home where the job allows it, a few rungs up. */}
+      {career && knows('setWorkMode') ? (
+        <WorkModes
+          current={work.workMode.current}
+          remote={work.workMode.remote}
+          before={workModeOf(view.player, content)}
+          hint={
+            work.workMode.current === 'office'
+              ? t('officeHint')
+              : work.workMode.current === 'remote'
+                ? t('remoteHint', { focus: work.workMode.rules.remote.focus, hunt: work.workMode.rules.remote.huntOffPct })
+                : t('partTimeHint', { focus: work.workMode.rules.partTime.focus, pay: work.workMode.rules.partTime.payPct })
+          }
+        />
+      ) : null}
+
+      <Panel title={t('work')}>
+        {career ? (
+          <View style={{ gap: 8 }}>
+            <ReadText size={13} tone="ink-300">{t('focusLeft', { left, total: work.focus.total })}</ReadText>
+            {jobUses.map(switchOf)}
+            <CareerMoves work={work} left={left} />
+          </View>
+        ) : work.backToWork && knows('backToWork') ? (
+          // Left for a business: the way back, a rung lower.
+          <View style={{ gap: 6 }}>
+            <Button variant={backOrdered ? 'primary' : 'secondary'} onPress={() => setOrder((order) => order.type === 'backToWork', backOrdered ? null : { type: 'backToWork' })}>
+              {t('back', { job: text.careers[work.backToWork.careerId].levels[work.backToWork.level] })}
+            </Button>
+            <ReadText size={12} lineHeight={12 * SNUG} tone="ink-300">{t('backHint')}</ReadText>
+          </View>
+        ) : (
+          <ReadText size={14} tone="ink-300">{t('noJob')}</ReadText>
+        )}
+      </Panel>
+
+      {/* Skills of one's own: each a point of focus, and no job needed. What is mastered is only named, on one line. */}
+      <Panel title={t('learn')} label={t('learn')}>
+        <View style={{ gap: 8 }}>
+          {learn.open.length > 0 ? <ReadText size={13} tone="ink-300">{t('learnAbout')}</ReadText> : null}
+          {learn.open.map(switchOf)}
+          <MasteredLine names={learn.mastered.map((use) => use.label)} />
+        </View>
+      </Panel>
+
+      {/* What focus is for besides work and study: the family, and a rest. */}
+      <LifeUses left={left} title={t('time')} />
+
+      {/* With friends, a round's focus can go on teasing one of them: here too, beside the rest of the focus. */}
+      <TeaseUse left={left} title={t('rivals')} />
+
+      <Tiers
+        value={p.lifestyleTier}
+        before={view.player.lifestyleTier}
+        min={p.life.minLifestyleTier}
+        hints={living.tiers.map(perYear)}
+        status={`${t('tierStatus')} ${text.lifestyleTiers.map((name, tier) => `${name} ${points(living.lifestyleStatus[tier])}`).join(' · ')}${living.worse.frugal ? ` · ${t('frugalLate', { age: ageAt(content, living.worse.frugal.fromRound), n: -living.worse.frugal.status })}` : ''}`}
+      />
+
+      <Rents
+        value={p.life.rentTier}
+        before={view.player.life.rentTier}
+        hints={living.rentTiers ? ([0, 1] as const).map((tier) => perYear(living.rentTiers?.[tier] ?? 0)) : null}
+        status={`${t('tierStatus')} ${text.rentTiers.map((name, tier) => `${name} ${points(living.rentStatus[tier])}`).join(' · ')}${living.worse.room ? ` · ${t('roomLate', { age: ageAt(content, living.worse.room.fromRound), n: -living.worse.room.status })}` : ''}`}
+      />
+
+      <Panel title={t('insurance')}>
+        <View style={{ gap: 8 }}>
+          {INSURANCES.map((kind) => (
+            <InsuranceSwitch
+              key={kind}
+              kind={kind}
+              on={p.life.insurance[kind]}
+              before={view.player.life.insurance[kind]}
+              disabled={kind === 'health' && living.health.refused && !p.life.insurance.health}
+              hint={common('perYear', { amount: fmt.money(living.insurance[kind]) })}
+            />
+          ))}
+          <HealthCoverNote living={living} />
+        </View>
+      </Panel>
+
+      <CityPanel cityId={p.cityId} movingTo={p.life.movingTo} moveOrdered={moveOrdered} onMove={move} />
+      {moving ? <MoveSheet onClose={() => setMoving(false)} /> : null}
+    </View>
+  );
+}
+
+/** How the job is done (the web's panel of a Segmented and its hint, `-mt-1` under it): drawn again only when one of these changes. */
+const WorkModes = memo(function WorkModes({ current, remote, before, hint }: { current: WorkMode; remote: boolean; before: WorkMode; hint: string }) {
+  const t = useT('finance.lifestyle');
+  const setOrder = useGame((s) => s.setOrder);
+  return (
+    <Panel title={t('mode')}>
+      <View style={{ gap: 8 }}>
+        <Segmented<WorkMode>
+          label={t('mode')}
+          value={current}
+          onChange={(mode) => setOrder((order) => order.type === 'setWorkMode', mode === before ? null : { type: 'setWorkMode', mode })}
+          options={(['office', 'remote', 'partTime'] as const).filter((mode) => mode !== 'remote' || remote).map((mode) => ({ value: mode, label: t(mode) }))}
+        />
+        <ReadText size={12} tone="ink-300" style={{ marginTop: -4 }}>{hint}</ReadText>
+      </View>
+    </Panel>
+  );
+});
+
+/** How the player lives, two to a row (the web's `grid-cols-2`), what each costs a year, and what each does to status. Drawn again only when one of these changes. */
+const Tiers = memo(function Tiers({ value, before, min, hints, status }: { value: LifestyleTier; before: LifestyleTier; min: number; hints: readonly string[]; status: string }) {
+  const t = useT('finance.lifestyle');
+  const { text } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  return (
+    <Panel title={t('tier')}>
+      <Segmented<LifestyleTier>
+        label={t('tier')}
+        columns={2}
+        value={value}
+        onChange={(tier) => setOrder((order) => order.type === 'setLifestyle', tier === before ? null : { type: 'setLifestyle', tier })}
+        options={([0, 1, 2, 3] as const).map((tier) => ({ value: tier, label: text.lifestyleTiers[tier], icon: lifestyleArt[tier], hint: hints[tier], disabled: tier < min }))}
+      />
+      <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{status}</ReadText>
+      {min > 0 ? <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{t('tierFloor')}</ReadText> : null}
+    </Panel>
+  );
+}, alike);
+
+/** Where the player lives, a room or a flat, for someone who rents (`hints` null for an owner, who pays none). Drawn again only when one of these changes. */
+const Rents = memo(function Rents({ value, before, hints, status }: { value: RentTier; before: RentTier; hints: readonly string[] | null; status: string }) {
+  const t = useT('finance.lifestyle');
+  const { text } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  return (
+    <Panel title={t('home')}>
+      {hints ? (
+        <>
+          <Segmented<RentTier>
+            label={t('home')}
+            value={value}
+            onChange={(tier) => setOrder((order) => order.type === 'setRentTier', tier === before ? null : { type: 'setRentTier', tier })}
+            options={([0, 1] as const).map((tier) => ({ value: tier, label: text.rentTiers[tier], icon: rentTierIcon[tier], hint: hints[tier] }))}
+          />
+          <ReadText size={12} tone="ink-300" style={{ marginTop: 8 }}>{status}</ReadText>
+        </>
+      ) : (
+        <ReadText size={14} tone="ink-300">{t('ownerNote')}</ReadText>
+      )}
+    </Panel>
+  );
+}, alike);
+
+/** A cover, as a switch: ordered on or off against what the life had (the same as it had is no order). Drawn again only when what it shows changes. */
+const InsuranceSwitch = memo(function InsuranceSwitch({ kind, on, before, disabled, hint }: { kind: InsuranceKind; on: boolean; before: boolean; disabled: boolean; hint: string }) {
+  const { text } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  return (
+    <Toggle
+      on={on}
+      onChange={(next) => setOrder((order) => order.type === 'setInsurance' && order.insurance === kind, next === before ? null : { type: 'setInsurance', insurance: kind, on: next })}
+      disabled={disabled}
+      label={text.insurance[kind]}
+      icon={insuranceArt[kind]}
+      hint={hint}
+    />
+  );
+});
+
+/** The city the player lives in, and the way to another, or the move ordered and the way to stay (the web's last panel). Drawn again only when one of these changes. */
+const CityPanel = memo(function CityPanel({ cityId, movingTo, moveOrdered, onMove }: { cityId: string; movingTo: string | null; moveOrdered: boolean; onMove(): void }) {
+  const t = useT('finance.lifestyle');
+  const { text, names } = useWords();
+  const setOrder = useGame((s) => s.setOrder);
+  return (
+    <Panel title={t('city')}>
+      <View style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Bare style={{ width: 36, height: 36 }}>
+          <Sprite id={cityIcon(cityId)} />
+        </Bare>
+        <View style={{ flexShrink: 1, minWidth: 0 }}>
+          <PixelText size={18}>{names.cities[cityId]}</PixelText>
+          <ReadText size={13} lineHeight={13 * SNUG} tone="ink-200">{text.cities[cityId].tagline}</ReadText>
+        </View>
+      </View>
+      {movingTo ? (
+        <>
+          <ReadText size={14} tone="gold-500" style={{ marginBottom: 8 }}>{t('moving', { city: names.cities[movingTo] })}</ReadText>
+          {moveOrdered ? (
+            <Button variant="secondary" wide onPress={() => setOrder((order) => order.type === 'moveCity', null)}>
+              {t('stay')}
+            </Button>
+          ) : null}
+        </>
+      ) : (
+        <Button variant="secondary" wide onPress={onMove}>
+          {/* The web's `-my-1`: the sign takes 4 less above and below than it is tall. */}
+          <Sprite id="icon.move" style={MOVE_SIGN} />
+          {t('move')}
+        </Button>
+      )}
+    </Panel>
+  );
+});
+const MOVE_SIGN = { marginVertical: -4 } as const;
+
+// ------------------------------------------------------------------------------------------------
 // The basket
 
 /** What was just taken out of the basket, and the way to put it back. */
@@ -1411,8 +1934,8 @@ export function Basket({ onClose }: { onClose(): void }) {
 // The shell
 
 /**
- * What each tab draws. A tab whose body a later task brings is null, and is not shown: a player never meets an empty tab. Task 14 the way of
- * life; Task 15 the shop, taxes and businesses (the shop's view, the web's `shopView`, is then kept by the panel). Showing one is its line here.
+ * What each tab draws. A tab whose body a later task brings is null, and is not shown: a player never meets an empty tab. Task 15 the shop, taxes
+ * and businesses (the shop's view, the web's `shopView`, is then kept by the panel). Showing one is its line here.
  */
 const TAB_BODIES: Readonly<Record<TabId, ComponentType | null>> = {
   portfolio: Portfolio,
@@ -1420,7 +1943,7 @@ const TAB_BODIES: Readonly<Record<TabId, ComponentType | null>> = {
   property: PropertyTab,
   business: null,
   debt: DebtTab,
-  lifestyle: null,
+  lifestyle: Lifestyle,
   shop: null,
   taxes: null,
 };

@@ -23,7 +23,7 @@ import { CareerPreview } from './CareerPreview';
 import { Celebrations } from './Celebrations';
 import { FlyingCoins, useCoinTarget } from './FlyingCoins';
 import { JailSheet } from './Jail';
-import { CityPreview } from './PlayStandIns';
+import { CityPreview } from './Finance';
 
 /*
  * The web's Cards.tsx on a phone: the card waiting (`CardStage`), swiped or answered with a tap, and what came of it (`Outcome`). What the

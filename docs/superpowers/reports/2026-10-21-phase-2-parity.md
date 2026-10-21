@@ -526,6 +526,32 @@ tab (`main [data-tab="…"]`) and then what opens the sheet, in turn, each once 
   a home's own sheet, a sale told in full, a home being sold, the lodger, a parking space bought to let, the mortgage switch and its sheet, the Russian
   sheet that buys and debt rows on a narrow phone (their words wrap, nothing cut but the debt's name, which the web cuts too).
 
+## Task 14: the way of life, the move between cities, the work panel (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it.
+
+| scene | what it is | how its tab and sheet are open |
+|---|---|---|
+| finance-lifestyle | play-finance-r6's store, the way of life: how the engineer works (three ways, her trade works from home), the round's focus at work and in study, a rest, how and where she lives, her cover, her city | the tab: given / pressed (`main [data-tab="lifestyle"]`) |
+| finance-move | the same, the sheet of every city open: the one she lives in at the top in gold, the others by what the year leaves there | then the way of life's one button with the sign of a move (`button:has(img[src*="/icon.move."])`): given (`move`) / pressed |
+| play-cards-city | the engineer's fourth round, its second card the relocation to London: the city's sheet (`CityPreview`) open over the card, its year beside hers, nothing to order | drawn beside Play on both sides, for the city the card on screen offers (`CardCity`) |
+| work-panel | play-finance-r6's store, the profile's work panel on a page of its own (the profile is Task 17): her job and its workplace, the next rung, the round's focus, her skills | the page: the phone's `Screen`, the web's `main mx-auto min-h-safe w-full max-w-md px-3 pb-4 pt-4` |
+
+- **The tab's controls are memoised pieces**, each given what it shows and ordering through the store's one `setOrder`: a switch of focus (`FocusSwitch`), the
+  ways of working, of living and of renting, a cover, the city. Pressing one draws again that one, and what its order changes (a way of living changes the
+  rents: the row of homes is drawn again with it); `FinanceLifestyle.test` counts it.
+- **The sheet of every city** works out every city's year once for the round as it stands, and its rows are memoised: an order that leaves a city's year as it
+  is draws no row again.
+- **A workplace as wide as the panel** (the web's image `!w-full !h-auto` in a `frame sunk`): drawn into the width it is laid out at, as tall as its art makes
+  it (`bannerSize`, as the challenge's banner), so it is drawn once the width is known.
+- **`frame-wine` alone draws no frame** (ItemCost's note of what is owed): it only names the colours a `frame`, `bevel` or `frame-raised` would use; the
+  note is the wine surface alone on both sides.
+- **The rungs and levels of the panel's sheets** say which is the player's as the career a card offers does (`selected`, the web's `aria-current`).
+- **Not compared** (no scene shows them; the tests hold them): a city opened from the list and its figures unfolded, the move ordered and taken back, the
+  limits of focus (a mastered skill on one line, overtime's toll), the note under health cover, the panel's sheets (career, Finance, a skill, focus, retiring),
+  the pieces of a thing looked at closely (`ItemCost`, `ItemUses`, `StatusNote`, for the shop of Task 15 and the profile of Task 17), and the Russian way of
+  life on a narrow phone (every choice wraps, a share of its row, nothing cut).
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp

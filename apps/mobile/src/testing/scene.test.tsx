@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { content } from '@ratrace/content';
 import { SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { MemoryStore } from '@ratrace/core/session/memory';
@@ -434,4 +435,38 @@ test('the scene of a stock to buy is the market with Apple\'s sheet open, its pr
   expect(within(sheet).getByText('Price since the start')).toBeTruthy();
   expect(within(sheet).getByRole('img', { name: 'Price history' })).toBeTruthy();
   expect(screen.getByRole('tabpanel', { name: 'Market' })).toBeTruthy();
+});
+
+test('the scenes of the way of life are drawn by Finance on its tab, given as its initial state: the tab itself, and the sheet of every city open over it', async () => {
+  render(<SceneView name="finance-lifestyle" />);
+  const tab = await screen.findByRole('tabpanel', { name: 'Lifestyle' }, WAIT);
+  expect(screen.getByRole('tab', { name: 'Lifestyle' }).getAttribute('aria-selected')).toBe('true');
+  expect(within(tab).getByRole('radiogroup', { name: 'How you live' })).toBeTruthy();
+  expect(within(tab).getByRole('button', { name: 'Move to another city' })).toBeTruthy();
+  // For a player who has read the guide: the tab itself, and nothing open over it.
+  expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+  expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+  cleanup();
+
+  render(<SceneView name="finance-move" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Move to another city' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getAllByRole('listitem')).toHaveLength(content.cities.length);
+  expect(screen.getByRole('tabpanel', { name: 'Lifestyle' })).toBeTruthy();
+});
+
+test('the scene of a city a card offers is its sheet open beside the cards, as the card\'s link opens it: London beside the engineer\'s city, nothing to order', async () => {
+  render(<SceneView name="play-cards-city" />);
+  const sheet = (await screen.findByRole('heading', { name: 'London' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getByRole('region', { name: 'London' }).textContent).toContain('Left over a year');
+  expect(within(sheet).queryByRole('button', { name: 'Move here' })).toBeNull();
+  // Over the card that offers it, whose link says so.
+  expect(screen.getByRole('button', { name: 'See London beside your city' })).toBeTruthy();
+});
+
+test('the scene of the work panel is the profile\'s panel on a page of its own, for the life as it stands', async () => {
+  render(<SceneView name="work-panel" />);
+  const panel = await screen.findByLabelText('Work', {}, WAIT);
+  expect(within(panel).getByRole('region', { name: 'Skills' })).toBeTruthy();
+  expect(within(panel).getByRole('progressbar')).toBeTruthy();
+  expect(screen.queryByRole('tablist')).toBeNull();
 });

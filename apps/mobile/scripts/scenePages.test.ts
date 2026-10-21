@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -48,8 +48,16 @@ test('a scene for a narrower phone is drawn in a box that wide, in the middle of
 });
 
 test('a scene of the play screen is Play itself on both sides, with the calendar of a round just turned drawn beside it where the scene has one: held by the web\'s shot, and by the phone\'s prop', () => {
-  expect(web).toContain('play: (scene) => <PlayScene scene={scene} />,');
-  expect(app).toContain('play: (scene) => <PlayScene scene={scene} />,');
+  // A city a card offers (`play-cards-city`): its sheet, the one the card's link opens, drawn beside Play on both sides.
+  const play = "play: (scene) => (scene.sheet === 'city' ? <><PlayScene scene={scene} /><CardCity /></> : <PlayScene scene={scene} />),";
+  expect(web).toContain(play);
+  expect(app).toContain(play);
+  const city = 'const city = card?.options.find((option) => option.effects?.moveCity !== undefined)?.effects?.moveCity;\n  return city ? <CityPreview cityId={city} view={view} onClose={nothing} /> : null;';
+  expect(web).toContain(city);
+  expect(app).toContain(city);
+  // The sheet the card's link opens is the one the web's Finance exports, as the phone's does.
+  expect(read('../../web/src/game/screens/Cards.tsx')).toContain("{seeing === 'city' && city ? <CityPreview cityId={city} view={view} onClose={() => setSeeing(null)} /> : null}");
+  expect(read('../src/game/screens/Cards.tsx')).toContain("{seeing === 'city' && city ? <CityPreview cityId={city} view={view} onClose={() => setSeeing(null)} /> : null}");
   expect(web).toContain('{turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} /> : null}');
   expect(app).toContain('{turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} held={PAGE_TURN_HELD_MS} /> : null}');
   // The web's calendar is held by a rule of the scene's page, in it before the calendar is drawn: its two animations paused that far into their run.
@@ -235,7 +243,22 @@ test('a scene of the finances is Play at its finances on both sides, on the tab 
   expect(market).toContain('<AssetMark asset={asset} />');
   // Every sheet a scene of the finances names is one of these, and every tab one of the web's.
   const sheets = SCENES.filter((scene) => scene.name.startsWith('finance-') && scene.sheet !== undefined).map((scene) => scene.sheet);
-  expect(sheets).toEqual(['basket', 'pension', 'buy-apple']);
+  expect(sheets).toEqual(['basket', 'pension', 'buy-apple', 'move']);
+  // The sheet of every city: the way of life's one button that draws the sign of a move.
+  expect(web).toContain(`move: 'main [role="tabpanel"] button:has(img[src*="/icon.move."])'`);
+  const lifestyle = finance.slice(finance.indexOf('function Lifestyle()'), finance.indexOf('// Shop'));
+  expect([...lifestyle.matchAll(/<Sprite id="icon\.move"/g)]).toHaveLength(1);
+  expect(lifestyle).toContain('<Button wide onClick={() => setMoving(true)}>');
   const tabs = SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.tab as string);
   for (const tab of tabs) expect(finance, tab).toContain(`{tab === '${tab}' ? `);
+});
+
+test('the work panel of the profile is drawn on a page of its own on both sides, given the life as it stands', () => {
+  expect(web).toContain('work: () => <WorkScene />,');
+  expect(app).toContain('work: () => <WorkScene />,');
+  expect(web).toContain('<WorkPanel shown={shown} />');
+  expect(app).toContain('return <WorkPanel shown={useShown()} />;');
+  // In the column of the game's pages, 16 above and below as the phone's page leaves.
+  expect(web).toContain('<main className="mx-auto min-h-safe w-full max-w-md px-3 pb-4 pt-4">');
+  expect(app).toContain('return <Screen>{playing ? <ShownWork /> : null}</Screen>;');
 });

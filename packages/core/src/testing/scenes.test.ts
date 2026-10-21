@@ -140,6 +140,17 @@ describe('the scenes of the cards', () => {
     expect(ru.state.view?.timeline[ru.state.view.round].crisis ?? null).toBeNull();
   });
 
+  it('play-cards-city is the relocation to London, the second card of the engineer\'s fourth round, the city\'s sheet open beside it', async () => {
+    expect(SCENES.find((scene) => scene.name === 'play-cards-city')).toEqual({ name: 'play-cards-city', locale: 'en', sheet: 'city' });
+    const city = await waiting('play-cards-city');
+    expect(city).toMatchObject({ cardId: 'career_relocation', shown: 2 });
+    expect(roundOf(city.state)).toBe(4);
+    // The choice that moves her names the city a client opens the sheet of; she lives elsewhere.
+    expect(city.def.options.map((option) => option.effects?.moveCity).filter(Boolean)).toEqual(['london']);
+    expect(city.state.view?.player.cityId).not.toBe('london');
+    expect(GUIDE_READ.has('play-cards-city')).toBe(true);
+  });
+
   it('are drawn for a player who has read the guide, but the first: the card and its choices are the whole stage (play-cards-r1 keeps the tip under them)', async () => {
     for (const name of ['play-cards-legendary', 'play-cards-three', 'play-cards-ru-360']) expect(GUIDE_READ.has(name), name).toBe(true);
     expect(GUIDE_READ.has('play-cards-r1')).toBe(false);
@@ -155,7 +166,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -389,9 +400,9 @@ describe('the scenes of the finances', () => {
     expect(roundOf(await opened(await sceneStore('finance-tabs-ru-360')))).toBe(6);
   });
 
-  it('finance-market, finance-buy-stock and finance-property are play-finance-r6\'s very store, each on the tab it names; finance-buy-stock with Apple\'s sheet open', async () => {
+  it('finance-market, finance-buy-stock, finance-property, finance-lifestyle and finance-move are play-finance-r6\'s very store, each on the tab it names (finance-buy-stock with Apple\'s sheet open, finance-move with every city\'s); work-panel too', async () => {
     const first = await saveOf(await sceneStore('play-finance-r6'));
-    for (const name of ['finance-market', 'finance-buy-stock', 'finance-property']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
+    for (const name of ['finance-market', 'finance-buy-stock', 'finance-property', 'finance-lifestyle', 'finance-move', 'work-panel']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
     const finances = Object.fromEntries(SCENES.filter((scene) => scene.name.startsWith('finance-')).map((scene) => [scene.name, [scene.tab, scene.sheet]]));
     expect(finances).toEqual({
       'finance-basket': [undefined, 'basket'],
@@ -401,9 +412,11 @@ describe('the scenes of the finances', () => {
       'finance-buy-stock': ['market', 'buy-apple'],
       'finance-property': ['property', undefined],
       'finance-debt': ['debt', undefined],
+      'finance-lifestyle': ['lifestyle', undefined],
+      'finance-move': ['lifestyle', 'move'],
     });
     // Only a scene of the finances names a tab of them.
-    expect(SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.name)).toEqual(['finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt']);
+    expect(SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.name)).toEqual(['finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move']);
     // Apple is on the engineer's market: a share, open with the Finance the engineer has by then.
     const state = await opened(await sceneStore('finance-buy-stock'));
     expect(content.assets.find((asset) => asset.id === 'apple')?.minFinanceSkill ?? 0).toBeLessThanOrEqual(state.view?.player.life.financeSkill ?? -1);
@@ -418,7 +431,7 @@ describe('the scenes of the finances', () => {
   });
 
   it('are drawn for a player who has read the guide: the finances themselves, under the Hud (play-finance-r6 keeps the first tip over the tabs)', () => {
-    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt']) expect(GUIDE_READ.has(name), name).toBe(true);
+    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt', 'finance-lifestyle', 'finance-move']) expect(GUIDE_READ.has(name), name).toBe(true);
     expect(GUIDE_READ.has('play-finance-r6')).toBe(false);
   });
 });
@@ -471,6 +484,10 @@ describe('the list of scenes', () => {
       'celebrate-earned',
       'challenge-practice',
       'legal',
+      'finance-lifestyle',
+      'finance-move',
+      'play-cards-city',
+      'work-panel',
     ]);
   });
 
@@ -503,7 +520,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work']));
   });
 });
 

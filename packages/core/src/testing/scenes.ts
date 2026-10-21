@@ -29,7 +29,7 @@ export interface Scene {
    */
   readonly sheet?: string;
   /**
-   * The tab of the finances on screen, by its id, where it is not the first (the portfolio): `market`, `property`, `debt`. A client opens it as it
+   * The tab of the finances on screen, by its id, where it is not the first (the portfolio): `market`, `property`, `debt`, `lifestyle`. A client opens it as it
    * opens a sheet: given to the screen as its initial state, or pressed by the page once the screen is drawn, before the sheet.
    */
   readonly tab?: string;
@@ -82,6 +82,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'celebrate-earned', locale: 'en' },
   { name: 'challenge-practice', locale: 'en' },
   { name: 'legal', locale: 'en' },
+  { name: 'finance-lifestyle', locale: 'en', tab: 'lifestyle' },
+  { name: 'finance-move', locale: 'en', tab: 'lifestyle', sheet: 'move' },
+  { name: 'play-cards-city', locale: 'en', sheet: 'city' },
+  { name: 'work-panel', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -187,6 +191,15 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'celebrate-earned': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-74', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   'challenge-practice': null,
   legal: null,
+  // The finances of play-finance-r6's sixth round, at the way of life: how the engineer works, the round's focus, how and where she lives, her
+  // cover and her city.
+  'finance-lifestyle': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, the sheet of every city open: each city's year beside hers, the one she lives in at the top.
+  'finance-move': { life: 'engineer', round: 6, stage: 'finance' },
+  // The engineer's fourth round, its second card the relocation to London (a rung up, the move paid): the city beside hers, opened from the card.
+  'play-cards-city': { life: 'engineer', round: 4, stage: 'cards' },
+  // The work panel of the profile, for the engineer of play-finance-r6: her job and the next rung, the round's focus, her skills.
+  'work-panel': { life: 'engineer', round: 6, stage: 'finance' },
 };
 
 /**
@@ -209,7 +222,11 @@ const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisi
  * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
  * Every other scene is someone new, who is shown the tips as they come.
  */
-export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt']);
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt',
+  'finance-lifestyle',
+  'finance-move',
+  'play-cards-city',
+]);
 
 /**
  * The scenes of a game that cannot go on (the play screen's way out, `Fault`): the orders kept for the round cannot be read back, so the

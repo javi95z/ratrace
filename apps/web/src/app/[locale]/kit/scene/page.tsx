@@ -12,6 +12,7 @@
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { content } from '@ratrace/content';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GameProvider, useGame, useT } from '@/game/context';
@@ -19,13 +20,14 @@ import type { Services } from '@/game/context';
 import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
 import { Collection } from '@/game/screens/Collection';
-import { Basket } from '@/game/screens/Finance';
+import { Basket, CityPreview } from '@/game/screens/Finance';
 import { Home } from '@/game/screens/Home';
 import { useShown } from '@/game/screens/Hud';
 import { NewLife } from '@/game/screens/NewLife';
 import { PageTurn } from '@/game/screens/PageTurn';
 import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
+import { WorkPanel } from '@/game/screens/Work';
 import { Legal } from './Legal';
 
 /**
@@ -134,6 +136,7 @@ function PlayScene({ scene }: { scene: Scene }) {
 const FINANCE_SHEETS: Readonly<Record<string, string>> = {
   pension: 'main [data-finance-item][aria-haspopup="dialog"]',
   'buy-apple': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/logo.apple."])',
+  move: 'main [role="tabpanel"] button:has(img[src*="/icon.move."])',
 };
 
 /** What the page presses for a scene of the finances, in turn: the tab it names, then what opens its sheet. */
@@ -192,11 +195,37 @@ function SavingsScene() {
  */
 const TAKEN_IN = '[data-legendary] button';
 
+/**
+ * The city the card on screen offers to move to, its sheet open beside Play (`play-cards-city`): the sheet the card's link opens (`CityPreview`,
+ * which the web's Finance exports, as Cards opens it), for the life as the card has it, drawn beside Play as the basket is. The phone's registry
+ * draws the same.
+ */
+function CardCity() {
+  const view = useGame((s) => s.view);
+  if (!view || view.phase !== 'cards') return null;
+  const card = content.cards.find((def) => def.id === view.hand[view.answered]);
+  const city = card?.options.find((option) => option.effects?.moveCity !== undefined)?.effects?.moveCity;
+  return city ? <CityPreview cityId={city} view={view} onClose={nothing} /> : null;
+}
+
+/**
+ * The work panel of the profile (`work-panel`) on a page of its own, in the column the game's pages stand in (`mx-auto w-full max-w-md px-3`, 16 above
+ * and below it as the phone's page has): given the life as it stands, as the profile gives it. The phone's registry draws the same.
+ */
+function WorkScene() {
+  const shown = useShown();
+  return (
+    <main className="mx-auto min-h-safe w-full max-w-md px-3 pb-4 pt-4">
+      <WorkPanel shown={shown} />
+    </main>
+  );
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
-  play: (scene) => <PlayScene scene={scene} />,
+  play: (scene) => (scene.sheet === 'city' ? <><PlayScene scene={scene} /><CardCity /></> : <PlayScene scene={scene} />),
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <PressedInTurn selectors={financePresses(scene)}><PlayScene scene={scene} /></PressedInTurn>),
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   amount: () => <SavingsScene />,
@@ -205,6 +234,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   collection: () => <Collection />,
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
+  work: () => <WorkScene />,
 };
 
 /**

@@ -120,6 +120,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'finance-buy-stock',
   'finance-property',
   'finance-debt',
+  // Task 14: the way of life, the sheet of every city, the city a card offers, and the work panel of the profile.
+  'finance-lifestyle',
+  'finance-move',
+  'play-cards-city',
+  'work-panel',
 ]);
 
 /**

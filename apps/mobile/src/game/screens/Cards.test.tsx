@@ -203,8 +203,10 @@ describe('the card waiting', () => {
     const moving = await dealt('nurse', 'career_relocation');
     await onTheCards(moving);
     fireEvent.click(screen.getByRole('button', { name: 'See London beside your city' }));
-    // Until the finances bring the city's whole comparison (Task 14), its sheet, named for it.
-    expect(await screen.findByRole('heading', { name: 'London' })).toBeTruthy();
+    // The city's sheet, named for it: its year beside the one lived, as the finances compare it (`CityPreview`), and nothing to order.
+    const city = (await screen.findByRole('heading', { name: 'London' })).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(city).getByRole('region', { name: 'London' }).textContent).toContain('Left over a year');
+    expect(within(city).queryByRole('button', { name: 'Move here' })).toBeNull();
     cleanup();
     const accused = await dealt('nurse', 'crime_wrongly_accused');
     await onTheCards(accused);

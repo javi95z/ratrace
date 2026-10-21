@@ -1,4 +1,4 @@
-import { BADGE_RARITY, rarityOf } from '@ratrace/content';
+import { BADGE_RARITY, content, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
@@ -11,7 +11,7 @@ import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
 import { Celebrations } from '../game/screens/Celebrations';
 import { WeeklyChallenge } from '../game/screens/Challenge';
-import { Basket, FinanceOpened } from '../game/screens/Finance';
+import { Basket, CityPreview, FinanceOpened } from '../game/screens/Finance';
 import { Home } from '../game/screens/Home';
 import { useShown } from '../game/screens/Hud';
 import { Legal } from '../game/screens/Legal';
@@ -21,6 +21,7 @@ import { PageTurn } from '../game/screens/PageTurn';
 import { Placeholder } from '../game/screens/Placeholder';
 import { Play } from '../game/screens/Play';
 import { HomeSettingsSheet } from '../game/screens/Settings';
+import { WorkPanel } from '../game/screens/Work';
 import { KEYFRAMES } from '../ui/motion';
 import { Screen } from '../ui/Page';
 import { useSpritesLoading } from '../ui/spriteImages';
@@ -141,13 +142,37 @@ const HUD_OPEN: readonly HudSceneOpen[] = ['cash', 'flow', 'status', 'ratRace', 
 const hudOpenOf = (scene: Scene): HudSceneOpen | undefined => HUD_OPEN.find((open) => open === scene.sheet);
 
 /**
+ * The city the card on screen offers to move to, its sheet open beside the play screen (`play-cards-city`): the sheet the card's link opens
+ * (`CityPreview`), for the life as the card has it, drawn beside the screen as a scene's sheet is. The web's page draws the same.
+ */
+function CardCity() {
+  const view = useGame((s) => s.view);
+  if (!view || view.phase !== 'cards') return null;
+  const card = content.cards.find((def) => def.id === view.hand[view.answered]);
+  const city = card?.options.find((option) => option.effects?.moveCity !== undefined)?.effects?.moveCity;
+  return city ? <CityPreview cityId={city} view={view} onClose={nothing} /> : null;
+}
+
+/**
+ * The work panel of the profile (`work-panel`) on a page of its own, as the profile holds it: given the life as it stands. The profile itself comes
+ * with Task 17; the web's page draws the same panel on the same page.
+ */
+function WorkScene() {
+  const playing = useGame((s) => s.view !== null);
+  return <Screen>{playing ? <ShownWork /> : null}</Screen>;
+}
+function ShownWork() {
+  return <WorkPanel shown={useShown()} />;
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
  */
 export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
-  play: (scene) => <PlayScene scene={scene} />,
+  play: (scene) => (scene.sheet === 'city' ? <><PlayScene scene={scene} /><CardCity /></> : <PlayScene scene={scene} />),
   finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
@@ -156,6 +181,7 @@ export const SCENE_SCREENS: SceneScreens = {
   collection: () => <Placeholder page="collection" />,
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
+  work: () => <WorkScene />,
 };
 
 /**
