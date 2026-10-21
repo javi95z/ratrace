@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import { expect, test } from 'vitest';
 import { STAND_INS } from './sceneShots';
@@ -125,11 +125,11 @@ test('the app\'s route is for development only, and everything it wires is behin
   expect([...route.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['expo-router', '../testing/scene']);
 });
 
-test('the screens the shots do not compare are the ones the app still draws as phase 1\'s stand-ins: a screen\'s task takes its word out of both', () => {
-  const standIns = (/import \{([^}]*)\} from '\.\.\/game\/screens\/Placeholder'/.exec(app)?.[1] ?? '').split(',').map((name) => name.trim()).filter(Boolean);
-  expect(standIns.length).toBeGreaterThan(0);
-  const drawnAsOne = entriesOf(app, 'SCENE_SCREENS').filter((entry) => standIns.some((name) => new RegExp(`<${name}\\b`).test(entry.body)));
-  expect(drawnAsOne.map((entry) => entry.screen)).toEqual([...STAND_INS]);
+test('the screens the shots do not compare are the ones the app still draws as phase 1\'s stand-ins: none is left, and nothing draws one', () => {
+  // The records and the collection were the last (Task 19): phase 1's stand-in is gone, and so is every screen drawn as one.
+  expect(STAND_INS).toEqual([]);
+  expect(app).not.toMatch(/Placeholder/);
+  expect(existsSync(new URL('../src/game/screens/Placeholder.tsx', import.meta.url))).toBe(false);
 });
 
 // The legal page is a server component, which the scene page (a client one) cannot draw: the scene has a copy of its body, held to it here.
@@ -310,4 +310,24 @@ test('a moment of a life is drawn by Play on both sides: its sheet is Play\'s ow
   // Each side's Play mounts the moments with its page.
   expect(read('../../web/src/game/screens/Play.tsx')).toContain('<Moments />');
   expect(read('../src/game/screens/Play.tsx')).toContain('<Moments />');
+});
+
+test('the records and the collection are drawn by their own screens on both sides: a life\'s sheet open by the web\'s page pressing the first life once the lives are read, given to the phone\'s Records; the things\' tab pressed by the web\'s page, given to the phone\'s Collection', () => {
+  expect(web).toContain("records: (scene) => <PressedWhenDrawn selector={scene.sheet === undefined ? undefined : FIRST_LIFE}><Records /></PressedWhenDrawn>,");
+  expect(web).toContain("collection: (scene) => <Pressed selector={COLLECTION_TABS[scene.name]}><Collection /></Pressed>,");
+  expect(app).toContain('records: (scene) => <Records opened={scene.sheet} />,');
+  expect(app).toContain('collection: (scene) => <Collection tab={collectionTabOf(scene)} />,');
+  // The web's first life is the first button of its page that opens a sheet: nothing before the past lives does (the bests are lines, the way back a link).
+  expect(web).toContain(`const FIRST_LIFE = 'main button[aria-haspopup="dialog"]';`);
+  const records = read('../../web/src/game/screens/Records.tsx');
+  expect([...records.matchAll(/aria-haspopup="dialog"/g)]).toHaveLength(1);
+  expect(records.indexOf('aria-haspopup="dialog"')).toBeGreaterThan(records.indexOf("aria-label={t('history')}"));
+  // Its games with others (online) are drawn for a guest as nothing: no button of theirs comes first.
+  expect(read('../../web/src/game/screens/RoomHistory.tsx')).toContain('if (!listed && (!asked || runs.length === 0)) return null;');
+  // The web's tab of the things is the tab strip's own, marked by its id.
+  expect(web).toContain(`'collection-items': 'main [data-tab="items"]',`);
+  expect(read('../../web/src/ui/overlay.tsx')).toContain('data-tab={tab.id}');
+  expect(read('../../web/src/game/screens/Collection.tsx')).toContain("tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]}");
+  // The one scene that names a sheet names the latest life, by its id.
+  expect(SCENES.filter((scene) => scene.name.startsWith('records-') && scene.sheet !== undefined).map((scene) => [scene.name, scene.sheet])).toEqual([['records-detail', 'id-3']]);
 });

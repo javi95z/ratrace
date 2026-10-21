@@ -280,6 +280,43 @@ function EndScene({ scene }: { scene: Scene }) {
 }
 
 /**
+ * The records have no initial state either, and their lives are read from the device a moment after the page is drawn: a scene that names a
+ * life's sheet (`sheet`: its id) has the page press the first life of the list (the latest, which the scene names) as soon as it is drawn, once.
+ * Each past life is a button that opens a sheet; nothing before them on the page does (the bests are lines, the way back a link). The phone's
+ * Records is given the life (`opened`).
+ */
+const FIRST_LIFE = 'main button[aria-haspopup="dialog"]';
+function PressedWhenDrawn({ selector, children }: { selector: string | undefined; children: ReactNode }) {
+  // Once: the dev server runs an effect twice before the page is drawn again, and the sheet is opened by the first press.
+  const pressed = useRef(false);
+  useEffect(() => {
+    if (selector === undefined || pressed.current) return;
+    // Pressed if it is there, and said whether it is: there is nothing more to watch for once it has been.
+    const press = () => {
+      const found = document.querySelector<HTMLElement>(selector);
+      if (found === null) return false;
+      if (!pressed.current) {
+        pressed.current = true;
+        found.click();
+      }
+      return true;
+    };
+    if (press()) return;
+    const watch = new MutationObserver(() => {
+      if (press()) watch.disconnect();
+    });
+    watch.observe(document.body, { childList: true, subtree: true });
+    return () => watch.disconnect();
+  }, [selector]);
+  return children;
+}
+
+/** The collection opens on its badges: a scene of its things has the page press their tab, once the screen is drawn. The phone's Collection is given the tab (`tab`). */
+const COLLECTION_TABS: Readonly<Record<string, string>> = {
+  'collection-items': 'main [data-tab="items"]',
+};
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same.
  * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
  */
@@ -291,8 +328,8 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   amount: () => <SavingsScene />,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <Pressed selector={TAKEN_IN}><Play /></Pressed> : <Play />),
-  records: () => <Records />,
-  collection: () => <Collection />,
+  records: (scene) => <PressedWhenDrawn selector={scene.sheet === undefined ? undefined : FIRST_LIFE}><Records /></PressedWhenDrawn>,
+  collection: (scene) => <Pressed selector={COLLECTION_TABS[scene.name]}><Collection /></Pressed>,
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
   work: () => <WorkScene />,

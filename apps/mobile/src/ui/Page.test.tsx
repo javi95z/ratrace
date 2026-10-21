@@ -7,7 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import dots from '../../assets/ui/dots.png';
 import { TILE } from '../../scripts/dots';
-import { BottomBar, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
+import { BottomBar, ListScreen, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
 import type { ScreenScroller } from './Page';
 import { COLORS } from './theme';
 
@@ -268,4 +268,50 @@ test('a Screen given a scroll offset to follow writes it as the page scrolls (on
   expect(seenY).toEqual([]);
   act(() => scroller.current!.reveal(100, 100));
   expect(to).toHaveBeenCalledWith({ y: 88, animated: true });
+});
+
+/** What the phone tells a view once it has laid it out: react-native-web keeps the handler on the node, and calling it is what its observer does after it measures. */
+type Laid = HTMLElement & { __reactLayoutHandler?: (event: unknown) => void };
+const laidOut = (root: HTMLElement) => Array.from(root.querySelectorAll<Laid>('*')).filter((el) => typeof el.__reactLayoutHandler === 'function');
+
+test('a ListScreen is a Screen whose rows are a list that draws only those near the screen (a FlatList): the same column, the gutter inside what scrolls, its head first', () => {
+  const rows = Array.from({ length: 40 }, (_, i) => `row ${i}`);
+  const { getByText, queryByText } = wrap({ ...none, bottom: 34, left: 5, right: 7 }, <ListScreen head={<Text>head</Text>} data={rows} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} />);
+  const column = up(getByText('head'), (s) => s.maxWidth === '448px')!;
+  expect(column).not.toBeNull();
+  expect(column.style.alignSelf).toBe('center');
+  expect(column.style.width).toBe('100%');
+  expect(column.style.paddingLeft).toBe('12px');
+  expect(column.style.paddingRight).toBe('12px');
+  expect(column.style.paddingTop).toBe('16px');
+  expect(column.style.paddingBottom).toBe(`${16 + 34}px`);
+  // The rows are in the same column, after the head.
+  expect(column.contains(getByText('row 0'))).toBe(true);
+  expect(getByText('head').compareDocumentPosition(getByText('row 0')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  // The scroll stands in from the side insets only.
+  const scroll = column.parentElement!;
+  expect(scroll.style.marginLeft).toBe('5px');
+  expect(scroll.style.marginRight).toBe('7px');
+  // Only the first window of rows is drawn at once (jsdom lays nothing out, so it never draws the next): the list is a virtual one.
+  expect(queryByText('row 9')).not.toBeNull();
+  expect(queryByText('row 39')).toBeNull();
+});
+
+test('a ListScreen takes the caller\'s own spacing, names its list for a screen reader, and tells the width inside its gutter (what the web\'s container queries measure) as it is laid out', () => {
+  const widths: number[] = [];
+  const { getByText, container } = wrap(
+    none,
+    <ListScreen head={<Text>head</Text>} data={['a']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} contentStyle={{ paddingBottom: 40 }} role="list" label="Past lives" onWidth={(width) => widths.push(width)} />,
+  );
+  const column = up(getByText('head'), (s) => s.maxWidth === '448px')!;
+  expect(column.style.paddingBottom).toBe('40px');
+  const scroll = column.parentElement!;
+  expect(scroll.getAttribute('role')).toBe('list');
+  expect(scroll.getAttribute('aria-label')).toBe('Past lives');
+  // The scroll is the first box laid out; the column inside it is at most 448 wide, the gutter 12 on each side.
+  const [node] = laidOut(container);
+  expect(node).toBe(scroll);
+  act(() => node.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 800 } } }));
+  act(() => node.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 700, height: 800 } } }));
+  expect(widths).toEqual([378, 424]);
 });

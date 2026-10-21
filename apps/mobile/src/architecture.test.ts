@@ -115,7 +115,7 @@ describe('the wall between the phone\'s screens and the game', () => {
 
   it('finds the screens', () => {
     const names = screens.map(rel);
-    for (const screen of ['app/_layout.tsx', 'app/index.tsx', 'app/kit.tsx', 'ui/kit.tsx', 'ui/Page.tsx', 'game/screens/Placeholder.tsx']) expect(names).toContain(screen);
+    for (const screen of ['app/_layout.tsx', 'app/index.tsx', 'app/kit.tsx', 'ui/kit.tsx', 'ui/Page.tsx', 'game/screens/Records.tsx']) expect(names).toContain(screen);
   });
 
   it('lets no screen change the game except through the session', () => {

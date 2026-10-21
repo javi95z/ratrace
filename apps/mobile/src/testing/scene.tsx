@@ -11,6 +11,7 @@ import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
 import { Celebrations } from '../game/screens/Celebrations';
 import { EndOpened } from '../game/screens/End';
+import { Collection } from '../game/screens/Collection';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Basket, CityPreview, FinanceOpened } from '../game/screens/Finance';
 import { Home } from '../game/screens/Home';
@@ -19,8 +20,8 @@ import { Legal } from '../game/screens/Legal';
 import { NewLife } from '../game/screens/NewLife';
 import type { NewLifeOpened } from '../game/screens/NewLife';
 import { PageTurn } from '../game/screens/PageTurn';
-import { Placeholder } from '../game/screens/Placeholder';
 import { Play } from '../game/screens/Play';
+import { Records } from '../game/screens/Records';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { WorkPanel } from '../game/screens/Work';
 import type { BalanceLine } from '../game/screens/Balance';
@@ -197,6 +198,12 @@ function RivalsScene() {
 }
 
 /**
+ * The tab of the collection a scene has open at the start: the things (`collection-items`), or the badges, which the page opens on. The records
+ * are given the life whose sheet a scene has open by its id (`scene.sheet`), and open it once they have read the device's lives.
+ */
+const collectionTabOf = (scene: Scene): 'items' | 'badges' => (scene.name === 'collection-items' ? 'items' : 'badges');
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list. A moment of a life (`moment-*`) is
  * Play's own sheet, open over its stage as the game opens it (no initial state: nothing has taken it in yet): Play draws it.
@@ -209,8 +216,8 @@ export const SCENE_SCREENS: SceneScreens = {
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
-  records: () => <Placeholder page="records" />,
-  collection: () => <Placeholder page="collection" />,
+  records: (scene) => <Records opened={scene.sheet} />,
+  collection: (scene) => <Collection tab={collectionTabOf(scene)} />,
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
   work: () => <WorkScene />,

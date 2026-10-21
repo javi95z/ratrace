@@ -8,9 +8,10 @@ import type { RatLook } from '@ratrace/core/game/avatar';
 vi.mock('@shopify/react-native-skia', () => {
   const node =
     (kind: string) =>
-    ({ children, image, blendMode, color, layer, sampling, width, height, x, y }: Record<string, unknown> & { children?: ReactNode }) => (
+    ({ children, image, blendMode, color, layer, sampling, width, height, x, y, matrix }: Record<string, unknown> & { children?: ReactNode }) => (
       <div
         data-skia={kind}
+        data-matrix={matrix ? JSON.stringify(matrix) : undefined}
         data-image={(image as { src?: string } | null | undefined)?.src}
         data-blend={blendMode as string | undefined}
         data-color={color as string | undefined}
@@ -32,6 +33,7 @@ vi.mock('@shopify/react-native-skia', () => {
     Group: node('Group'),
     Fill: node('Fill'),
     Path: node('Path'),
+    ColorMatrix: node('ColorMatrix'),
     Skia: { PathBuilder: { Make: () => ({ addRect: () => {}, detach: () => ({}) }) }, XYWHRect: (x: number, y: number, w: number, h: number) => ({ x, y, w, h }) },
     FilterMode: { Nearest: 0, Linear: 1 },
     MipmapMode: { None: 0 },
@@ -121,6 +123,19 @@ test('a silhouette is the sprite as a mask over night-900', async () => {
   expect(fill.getAttribute('data-blend')).toBe('srcIn');
   expect(fill.getAttribute('data-color')).toBe('#0b1022');
   expect(all(group, 'Image')).toHaveLength(1);
+});
+
+test('a greyed sprite (under the web\'s `grayscale` filter) is drawn through the filter\'s own matrix; a greyed silhouette is the grey of night-900', async () => {
+  const { GREYSCALE } = await import('./theme');
+  const { container } = await drawn(<Sprite id="icon.cash" grey />);
+  const [image] = all(container, 'Image');
+  const [matrix] = all(image, 'ColorMatrix');
+  expect(matrix.getAttribute('data-matrix')).toBe(JSON.stringify(GREYSCALE));
+  // Not greyed: no filter at all.
+  const plain = await drawn(<Sprite id="icon.cash" />);
+  expect(all(plain.container, 'ColorMatrix')).toHaveLength(0);
+  const shadow = await drawn(<Sprite id="icon.cash" silhouette grey />);
+  expect(all(shadow.container, 'Fill')[0].getAttribute('data-color')).toBe('#101010');
 });
 
 test('a sprite that does not exist: the checkerboard at the fallback size, logged once, no crash', async () => {

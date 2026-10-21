@@ -727,3 +727,44 @@ left `STAND_IN_SCENES` (the app draws the ledger now; the record is empty). Each
 - **Not compared** (no scene shows them; `Resolve.test`, `Moments.test` and `Play.test` hold them): the lines rising one by one (80 ms apart, 280 each), the
   figures counting, the change of net worth landing with a jump or a sink and sparks, the confetti falling and the picture uncovered, a milestone's picture, the
   notes of a round (gold, teal, wine, navy; confetti round a promotion), a crisis that ended, the bank's and the family's lines, the badges a round earned.
+
+## Task 19: the records of past lives and the collection (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it. The
+records and the collection left `STAND_INS`, the last two: none is left, and phase 1's `Placeholder` is gone (the online routes, `rankings`, `room` and
+`player`, go home: no solo screen leads to them). The lives are real, never written by hand: three, each of the lives to begin with, played to their
+ends one after another by a bot through the round store (`LIVED` in packages/core/src/testing/scenes.ts), a day apart, the latest the day before
+`SCENE_NOW`, and let go as the game lets a life go once its last screen is left:
+
+| scene | what it is | how its sheet or tab is open |
+|---|---|---|
+| records-empty | a device on which no life has been finished: the title and the line that says so | none |
+| records-three | the nurse of screen-seed-4 played by the chaser (bankrupt once, 221, the most status: 80), the civil servant of screen-seed-3 played by the landlord ($2,840,073, the greatest net worth), the engineer of the first fixed seed played by the saver (out at 50, 496, the best score); the bests, "3 lives lived · 1 escape · 1 bankruptcy", and the three lines, the latest first (21, 20 and 19 Oct 2026) | none |
+| records-detail | the same, with the engineer's sheet: Tokyo · London, out at 50 · 7 badges, score 496, $2.73M | the web's page presses the first past life once the lives are read (`PressedWhenDrawn`, `main button[aria-haspopup="dialog"]`); the phone's Records is given its id (`opened`, the scene's `sheet`: `id-3`) |
+| collection-badges | the badges of the three lives (15 of 63), all rarities | none: the page opens on the badges |
+| collection-items | the things the three owned (36 of 67, nearly all the nurse's) | the web's page presses the things' tab (`main [data-tab="items"]`); the phone's Collection is given it (`tab`) |
+
+- **The graph of a life (RunDetail) is a stub in this lane**: Task 17 ports `WorthGraph` in lane B, in parallel. `WorthGraphStub.tsx` keeps the graph's place
+  (the web's width, ten points a bar and four between, and the height of the bars and their two lines of figures) and its name for a screen reader, and draws
+  nothing. At the merge RunDetail takes Task 17's graph and the stub is deleted; until then `records-detail` would differ there, and is not shot.
+- **A badge not yet earned is the web's `grayscale` card**: its pictures, its frame, its ground and its words are greyed by the filter. The phone has no
+  filter of a whole view on iOS (React Native's `filter` is Android's but for brightness and opacity), so it draws each in grey itself: the colours through
+  `grey` (theme.ts: the CSS matrix at its full amount, `GREYSCALE`, on the colours as written, sRGB), the frame's strips by `Framed`'s `grey`, and the rim
+  and the lock through the same matrix as a Skia colour filter (`Sprite`'s `grey`, `Medal`'s). Whether the browser applies its filter functions to sRGB
+  values (as Chrome is understood to) or to linear light, the shot says: a difference there is a grey a few steps off on every locked card.
+- **The columns** are the web's container queries on its `main` (`@min-[460px]`, `@min-[560px]`), read from the width of the phone's column inside its gutter
+  as it is laid out (`ListScreen`'s `onWidth`, `columnsAt`): a phone's column is at most 448, 424 inside, so three rarities to a row, two things, one badge.
+- **Not compared** (no scene shows them; `Records.test` and `Collection.test` hold them): a life the server played (the ranked tag), a practice of a challenge,
+  the loading line, a short last row of things, a secret badge's hint in Spanish or Russian, the rarities chosen one at a time.
+
+### The lists: a `FlatList`, the page and all
+
+The records' past lives grow with every life finished, and the collection has 67 things and 63 badges, each tile with its pictures (a thing's sprite, a badge's
+rim and badge: 126 canvases on the badges' tab alone): both pass thirty rows, so both are lists that draw only what is near the screen. A `FlatList` inside a
+`Screen` would be one scroll inside another, which windows nothing, so the page itself is the list: `ListScreen` (ui/Page.tsx), `Screen`'s column with the
+page's head (the title, the tabs, the bests) as the list's header, which scrolls away with the rows as the web's page does. Not `numColumns`: the web groups the
+things by the shop's shelves and the badges by their groups, each under a heading as wide as the page, which a grid of cells cannot hold, so a line of the list
+is a heading or a row of `columns` tiles (`linesOf`), each tile in its share of the row and a short last row leaving its places empty, as the web's grid does.
+The tiles and the lines of past lives are `memo` with plain props: another rarity chosen leaves the badges that stay as they are (`Collection.test`), and a
+sheet opened draws no line again (`Records.test`). In jsdom a virtual list lays nothing out and would draw its first ten rows only, so the screens' tests are
+given a `FlatList` that draws every row (`everyRow`, testing/fakes.ts); the kit's own test of `ListScreen` holds that the real one windows.

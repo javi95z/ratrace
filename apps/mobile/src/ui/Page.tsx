@@ -1,6 +1,6 @@
 import { useImperativeHandle, useRef } from 'react';
-import type { ReactNode, Ref } from 'react';
-import { Image, ScrollView, View, type ScrollViewInstance, type ViewStyle } from 'react-native';
+import type { ReactElement, ReactNode, Ref } from 'react';
+import { FlatList, Image, ScrollView, View, type Role, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
@@ -161,6 +161,51 @@ export function Screen({
       {bar}
       {fixed}
     </View>
+  );
+}
+
+/**
+ * A `Screen` whose rows are a list that draws only the rows near the screen (React Native's `FlatList`), for a page whose list can pass thirty
+ * rows: the records of every life lived, the collection's things and badges. A list inside a `Screen` would be one scroll inside another, which
+ * windows nothing, so the whole page is the list: `head` is what stands above its rows (the web's page down to the list: the title, the tabs, the
+ * bests), drawn as the list's header, and scrolls away with them as the web's page does. The column is `Screen`'s: at most 448 wide, the 12 gutter
+ * inside what scrolls, 16 on top, and at the foot room for a frame's drop and the home indicator, unless `contentStyle` says otherwise.
+ * `item` draws a row and `keyOf` names it: a row kept across a change of `data` is the same row, so one that is `memo` with plain props is not
+ * drawn again for it. `role` and `label` name the list for a screen reader. `onWidth` hears the width of the column inside its gutter (what the
+ * web's container queries measure), once it is laid out and each time it changes.
+ */
+export function ListScreen<T>({
+  head,
+  data,
+  item,
+  keyOf,
+  contentStyle,
+  role,
+  label,
+  onWidth,
+}: {
+  head: ReactElement;
+  data: readonly T[];
+  item: (row: T) => ReactElement;
+  keyOf: (row: T) => string;
+  contentStyle?: ViewStyle;
+  role?: Role;
+  label?: string;
+  onWidth?: (width: number) => void;
+}) {
+  const inset = useSafeAreaInsets();
+  return (
+    <FlatList
+      data={data}
+      renderItem={({ item: row }) => item(row)}
+      keyExtractor={keyOf}
+      ListHeaderComponent={head}
+      role={role}
+      aria-label={label}
+      onLayout={onWidth ? (event) => onWidth(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER) : undefined}
+      style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
+      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: 16 + inset.bottom }, contentStyle]}
+    />
   );
 }
 

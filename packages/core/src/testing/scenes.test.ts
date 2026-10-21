@@ -1,4 +1,4 @@
-import { content, lives, rarityOf, weekOf } from '@ratrace/content';
+import { badges, content, lives, rarityOf, weekOf } from '@ratrace/content';
 import { previewCard, quoteBusinesses, quoteItem, stateHash } from '@ratrace/engine';
 import { momentsOf } from '../game/moments';
 import { cardRarity } from '../game/present';
@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
+import { replay } from '../session/save';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
 import { GUIDE_READ, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
@@ -167,7 +168,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -533,6 +534,11 @@ describe('the list of scenes', () => {
       'moment-escape',
       'moment-bankrupt',
       'moment-crisis',
+      'records-empty',
+      'records-three',
+      'records-detail',
+      'collection-items',
+      'collection-badges',
     ]);
   });
 
@@ -565,7 +571,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'records', 'collection']));
   });
 });
 
@@ -790,5 +796,73 @@ describe('the moments of a life: real lives, played to the round a moment stops 
     for (const name of ['play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
     // The ledger's save is the finances' all the same: only the profile says to move less.
     expect(await saveOf(await sceneStore('play-resolve-r6'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
+  });
+});
+
+describe('the records and the collection: three real lives, each played to its end by a bot', () => {
+  const DAY = 86_400_000;
+
+  it('records-empty is a device on which no life has been finished: nothing in progress, nothing earned', async () => {
+    const store = await sceneStore('records-empty');
+    expect(await store.listRuns()).toEqual([]);
+    expect(await saveOf(store)).toBeNull();
+    expect(await store.loadProfile()).toEqual(newProfile());
+  });
+
+  it('records-three is a device that has lived three lives to the end, a day apart, the latest the day before the scene\'s: a nurse gone bankrupt, a civil servant, an engineer who left the rat race', async () => {
+    const store = await sceneStore('records-three');
+    const runs = await store.listRuns();
+    // The latest first, as the device lists them; each a run of its own, on a day of the scene's week, none of them a life left in progress.
+    expect(runs.map((run) => [run.runId, run.lifeId, run.seed])).toEqual([
+      ['id-3', 'engineer', 'screen-seed-1'],
+      ['id-2', 'civil_servant', 'screen-seed-3'],
+      ['id-1', 'nurse', 'screen-seed-4'],
+    ]);
+    expect(runs.map((run) => new Date(run.finishedAt).toISOString().slice(0, 10))).toEqual(['2026-10-21', '2026-10-20', '2026-10-19']);
+    for (const [i, run] of runs.entries()) expect(run.finishedAt - (SCENE_NOW - (i + 1) * DAY), run.runId).toBeLessThan(1_000);
+    expect(await saveOf(store)).toBeNull();
+    // Played whole, never written by hand: each run's log, played again from its seed, is the life it says it was.
+    for (const run of runs) {
+      const life = lives.find((one) => one.id === run.lifeId)!;
+      const again = replay(content, life.start, run.seed, run.log);
+      expect(again.state.finished, run.runId).toBe(true);
+      expect(again.history, run.runId).toEqual(run.history);
+      expect(again.bankruptcies, run.runId).toBe(run.bankruptcies);
+    }
+    // Each holds a best: the engineer the best score and the youngest escape, the civil servant (the landlord) the greatest net worth, the nurse (the chaser) the most status.
+    const [engineer, servant, nurse] = runs;
+    expect(engineer).toMatchObject({ escapedAtRound: 14, bankruptcies: 0 });
+    expect(nurse.bankruptcies).toBeGreaterThan(0);
+    expect(engineer.score).toBe(Math.max(...runs.map((run) => run.score)));
+    expect(servant.netWorth).toBe(Math.max(...runs.map((run) => run.netWorth)));
+    expect(nurse.status).toBe(Math.max(...runs.map((run) => run.status)));
+    // What they earned and owned is the player's: the badges of all three, and the things the nurse bought.
+    const profile = await store.loadProfile();
+    for (const run of runs) for (const badge of run.badges) expect(Object.hasOwn(profile.badges, badge), badge).toBe(true);
+    expect(profile.gallery.length).toBeGreaterThan(10);
+    expect(profile.gallery.length).toBeLessThan(content.items.length);
+    expect(Object.keys(profile.badges).length).toBeLessThan(badges.length);
+  });
+
+  it('records-detail is the same device, with the sheet of the latest life open: the scene names it by its id, the first line of the list', async () => {
+    const scene = SCENES.find((one) => one.name === 'records-detail')!;
+    const store = await sceneStore('records-detail');
+    const [latest] = await store.listRuns();
+    expect(scene.sheet).toBe(latest.runId);
+    expect(await store.listRuns()).toEqual(await (await sceneStore('records-three')).listRuns());
+  });
+
+  it('collection-items and collection-badges are the same device: what three lives owned and earned, the things\' tab and the badges\'', async () => {
+    const three = await sceneStore('records-three');
+    for (const name of ['collection-items', 'collection-badges']) {
+      const store = await sceneStore(name);
+      expect(await store.loadProfile(), name).toEqual(await three.loadProfile());
+      expect(await store.listRuns(), name).toEqual(await three.listRuns());
+      expect(await saveOf(store), name).toBeNull();
+    }
+  });
+
+  it('opens on no life in progress, as the game does once a life\'s last screen is left', async () => {
+    expect(await opened(await sceneStore('records-three'))).toMatchObject({ status: 'none', view: null });
   });
 });

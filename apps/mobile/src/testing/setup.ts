@@ -29,6 +29,11 @@ vi.mock('react-native-gesture-handler', async () => (await import('./fakes')).ge
 vi.mock('@shopify/react-native-skia', async () => (await import('../ui/testing/skia')).skiaFake());
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
 vi.mock('react-native-reanimated', async () => (await import('../ui/testing/reanimated')).reanimatedFake());
+// A list that draws only the rows near the screen has none laid out in jsdom: it draws them all (`everyRow`).
+vi.mock('react-native', async (original) => {
+  const native = await original<typeof import('react-native')>();
+  return { ...native, FlatList: (await import('./fakes')).everyRow(native.FlatList as never) };
+});
 
 // Android's Back: react-native-web has none (it says so on every listener); the fake keeps who listens, for `pressBack`. Loaded only now, after
 // the media queries are in place: react-native-web reads them as it loads, and with none it takes the phone to be asking for reduced motion.

@@ -6,7 +6,7 @@ import { FIRSTS, TIPS } from '../game/guide';
 import { ageAt } from '../game/present';
 import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
-import { fixedSessions, fixedSessionsOn, memoryDevice } from '../session/fixed';
+import { fixedSessions, fixedSessionsOn, fixedSessionsWith, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { PlayerStore, SavedGame, Sessions } from '../session/types';
@@ -101,6 +101,11 @@ export const SCENES: readonly Scene[] = [
   { name: 'moment-escape', locale: 'en' },
   { name: 'moment-bankrupt', locale: 'en' },
   { name: 'moment-crisis', locale: 'en' },
+  { name: 'records-empty', locale: 'en' },
+  { name: 'records-three', locale: 'en' },
+  { name: 'records-detail', locale: 'en', sheet: 'id-3' },
+  { name: 'collection-items', locale: 'en' },
+  { name: 'collection-badges', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -254,6 +259,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'moment-bankrupt': { life: 'nurse', round: 4, stage: 'finance', seed: 'screen-seed-4', player: 'chaser', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
   // The engineer of screen-seed-10 (hud-crisis's world): the crash opens with the fifth round, at its news.
   'moment-crisis': { life: 'engineer', round: 5, stage: 'news', seed: 'screen-seed-10' },
+  // A device on which no life has been finished yet.
+  'records-empty': null,
+  // The device of a player who has lived three lives to the end (`LIVED`), and has none in progress: the records, the sheet of the latest life
+  // (named by its id, `sheet`), and the collection of what the three earned and owned, its things and its badges.
+  'records-three': null,
+  'records-detail': null,
+  'collection-items': null,
+  'collection-badges': null,
 };
 
 /**
@@ -265,6 +278,61 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
   // The founder is a life to unlock: the player of the scene has.
   'finance-business': ['founder'],
 };
+
+/** A life lived to its end before a scene: the life, the seed it is begun on, and the bot that plays it. */
+type Lived = { life: string; seed: string; player: string };
+
+/**
+ * Three lives, each of the lives to begin with, played to their ends one after another, each holding a best: the nurse of screen-seed-4 played by
+ * the chaser (moment-bankrupt's), who buys the grandest things the money allows and goes bankrupt in her fourth round, the most status; the civil
+ * servant of screen-seed-3 played by the landlord, who buys homes to let, the greatest net worth; the engineer of the first fixed seed played by the
+ * saver (moment-escape's), out of the rat race at fifty, the best score.
+ */
+const THREE_LIVES: readonly Lived[] = [
+  { life: 'nurse', seed: 'screen-seed-4', player: 'chaser' },
+  { life: 'civil_servant', seed: 'screen-seed-3', player: 'landlord' },
+  { life: 'engineer', seed: 'screen-seed-1', player: 'saver' },
+];
+
+/** The lives a scene's player has lived to the end before it, by the scene's name, in the order they were lived. */
+const LIVED: Readonly<Record<string, readonly Lived[]>> = {
+  'records-three': THREE_LIVES,
+  'records-detail': THREE_LIVES,
+  'collection-items': THREE_LIVES,
+  'collection-badges': THREE_LIVES,
+};
+
+const DAY = 86_400_000;
+
+/**
+ * Lives the lives a scene's player has finished before it (`LIVED`), one after another on the device, each played to its end by its bot through
+ * the round store, as a player would, and let go as the game lets a life go once its last screen is left: the device then holds them as finished
+ * lives, and the profile what they earned and owned, with no life in progress. Each is begun on its own seed, a day after the one before, the
+ * last the day before the scene's (`SCENE_NOW`): a page that tells the day a life ended tells one of the scene's week, as the game would.
+ */
+async function liveThrough(store: MemoryStore, name: string): Promise<void> {
+  const lived = LIVED[name];
+  if (lived === undefined) return;
+  let seed = '';
+  let clock = 0;
+  const game = createGameStore({ sessions: fixedSessionsWith(store, { newSeed: () => seed, now: () => (clock += 1) }), content });
+  for (const [i, one] of lived.entries()) {
+    seed = one.seed;
+    clock = SCENE_NOW - (lived.length - i) * DAY;
+    const bot = playerOf(one);
+    await game.getState().start(one.life);
+    for (let round = 0; !game.getState().view?.finished; round++) {
+      if (round >= content.rounds) throw new Error(`scene ${name}: the ${one.life}'s life did not end`);
+      await toFinances(name, game, bot);
+      for (const order of bot.orders(content, game.getState().view as GameView)) game.getState().addOrder(order);
+      await game.getState().play();
+      mustBe(name, game, 'resolve');
+      game.getState().next();
+    }
+    mustBe(name, game, 'end');
+    await game.getState().closeFinished(game.getState().gameId as string);
+  }
+}
 
 /**
  * The scenes drawn with motion left out, as the player can set it (the setting is in the profile, where both clients read it): something on
@@ -343,8 +411,8 @@ export function turnOf(scene: Scene): { from: number; to: number } | undefined {
 /** The bot that plays every scene's life up to the scene, unless the scene names another (`Reach.player`): it studies, works, pays the card and saves, and never gambles. */
 const PLAYER_ID = 'saver';
 
-/** The bot that plays a scene's life. */
-const playerOf = (reach: Reach): Bot => bots.find((candidate) => candidate.id === (reach.player ?? PLAYER_ID)) as Bot;
+/** The bot that plays a scene's life (a life lived before it too). */
+const playerOf = (plan: { player?: string }): Bot => bots.find((candidate) => candidate.id === (plan.player ?? PLAYER_ID)) as Bot;
 
 function mustBe(name: string, game: SceneGame, stage: Stage): void {
   const at = game.getState().stage;
@@ -382,6 +450,7 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
   const store = memoryDevice();
   await unlock(store, name);
+  await liveThrough(store, name);
   if (STILL.has(name)) {
     const profile = await store.loadProfile();
     await store.saveProfile({ ...profile, settings: { ...profile.settings, reducedMotion: true } });

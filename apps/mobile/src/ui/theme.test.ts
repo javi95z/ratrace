@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { COLORS, EDGE, SHELL_WIDTH, TOUCH, BODY, EXTRA } from './theme';
+import { COLORS, EDGE, SHELL_WIDTH, TOUCH, BODY, EXTRA, GREYSCALE, grey } from './theme';
 
 const css = readFileSync(new URL('../../../web/src/app/globals.css', import.meta.url), 'utf8');
 const theme = css.slice(css.indexOf('@theme {'), css.indexOf('\n}', css.indexOf('@theme {')));
@@ -35,4 +35,17 @@ test('extra colours the web uses outside the tokens', () => {
     rare: '0 0 12px rgba(233,177,60,0.6)',
     legendary: '0 0 20px rgba(94,224,200,0.7)',
   });
+});
+
+test('grey is a colour as the web\'s `grayscale` filter draws it (CSS grayscale(1), in sRGB): each channel the luminance of the three', () => {
+  // The filter's matrix at its full amount (Filter Effects 1, grayscale()): three rows alike, alpha kept, nothing added.
+  expect(GREYSCALE).toEqual([0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0, 0, 0, 1, 0]);
+  expect(grey('#ffffff')).toBe('#ffffff');
+  expect(grey('#000000')).toBe('#000000');
+  // night-700 #1f2a4d: 0.2126 × 31 + 0.7152 × 42 + 0.0722 × 77 = 42.19, a grey of 42 (#2a).
+  expect(grey(COLORS['night-700'])).toBe('#2a2a2a');
+  // night-900 #0b1022: 16.24; gold-500 #f2c14e: 195.11; the bronze of a common badge #c98a4b: 146.85.
+  expect(grey(COLORS['night-900'])).toBe('#101010');
+  expect(grey(COLORS['gold-500'])).toBe('#c3c3c3');
+  expect(grey(EXTRA.bronze)).toBe('#939393');
 });

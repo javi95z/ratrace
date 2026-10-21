@@ -1,0 +1,223 @@
+import { BADGE_RARITY, badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
+import type { BadgeRarity } from '@ratrace/content';
+import { memo, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
+import { Framed } from '../../ui/Frame';
+import { GOLD } from '../../ui/frames';
+import { Bare, Segmented, SrOnly } from '../../ui/kit';
+import { Tabs } from '../../ui/overlay';
+import { ListScreen } from '../../ui/Page';
+import { Sprite } from '../../ui/Sprite';
+import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
+import { COLORS, grey } from '../../ui/theme';
+import { useProfile, useT, useWords } from '../context';
+import { BackLink } from './BackLink';
+import { Medal } from './Medal';
+import { RARITY_TONE } from './rarityStyle';
+import { Heading } from './Records';
+
+type Tab = 'items' | 'badges';
+
+/**
+ * How many to a row, by the width of the page's column inside its gutter: the web's container queries on its `main` (`@container`), which measure
+ * the same width. Three rarities to a row, five from 460 (`grid-cols-3 @min-[460px]:grid-cols-5`); two things, four from 560; one badge, two
+ * from 560. A phone's column is at most 448, 424 inside its gutter: never as wide as these, so a phone always has the first of each.
+ */
+export function columnsAt(width: number): { rarities: number; things: number; badges: number } {
+  return { rarities: width >= 460 ? 5 : 3, things: width >= 560 ? 4 : 2, badges: width >= 560 ? 2 : 1 };
+}
+
+/** A line of the list: a group's heading, or a row of its things or badges, the first of a group under its heading with nothing between. */
+type Line = { kind: 'heading'; key: string; title: string } | { kind: 'things' | 'badges'; key: string; ids: readonly string[]; columns: number; first: boolean };
+
+/** The lines of groups of ids: each group's heading, then its ids in rows of `columns`. */
+function linesOf(kind: 'things' | 'badges', groups: ReadonlyArray<{ id: string; title: string; ids: readonly string[] }>, columns: number): Line[] {
+  return groups.flatMap((group) => {
+    const rows: Line[] = [];
+    for (let at = 0; at < group.ids.length; at += columns) {
+      const ids = group.ids.slice(at, at + columns);
+      rows.push({ kind, key: `${kind}-${ids.join('+')}`, ids, columns, first: at === 0 });
+    }
+    return [{ kind: 'heading', key: `${kind}-group-${group.id}`, title: group.title } as Line, ...rows];
+  });
+}
+
+/** What a missing picture keeps room for. */
+const FALLBACK = { w: 64, h: 64 };
+
+/**
+ * A thing of the game, as the shop groups it: in colour with its name once owned in any life, a shadow until then. Drawn again only when it is
+ * owned (or no longer), whatever else of the list changes.
+ */
+const Thing = memo(function Thing({ itemId, owned }: { itemId: string; owned: boolean }) {
+  const t = useT('collection');
+  const { names } = useWords();
+  return (
+    <View role="listitem" style={{ flex: 1, minWidth: 0 }}>
+      <Framed kind={owned ? 'bevel' : 'frame'} tone={owned ? GOLD : undefined} style={{ flex: 1, backgroundColor: COLORS[owned ? 'night-600' : 'night-700'], alignItems: 'center', gap: 4, padding: 8 }}>
+        {/* The name stands under the picture, so the picture itself says nothing more. What has never been owned is a shape and no name: finding out is the game. */}
+        <Bare style={{ width: '100%', paddingVertical: 6 }}>
+          <Sprite id={itemArt(itemId)} silhouette={!owned} fallback={FALLBACK} />
+        </Bare>
+        {owned ? (
+          <ReadText size={13} lineHeight={13 * TIGHT} style={{ textAlign: 'center' }}>{names.items[itemId] ?? itemId}</ReadText>
+        ) : (
+          <SrOnly>{t('notOwned')}</SrOnly>
+        )}
+      </Framed>
+    </View>
+  );
+});
+
+/** The group each badge belongs to, by its id. */
+const GROUP_OF: ReadonlyMap<string, (typeof badges)[number]['group']> = new Map(badges.map((badge) => [badge.id, badge.group]));
+
+/**
+ * A badge in the rim of its rarity, with how it is earned once it has been. One not earned yet is the lock in the same rim, and the whole card is
+ * drawn as the web draws it, through its `grayscale` filter: its pictures, its frame, its ground and its words in grey. Drawn again only when it is
+ * earned, whatever else of the list changes (another rarity chosen leaves the badges that stay as they are).
+ */
+const BadgeLine = memo(function BadgeLine({ badgeId, got }: { badgeId: string; got: boolean }) {
+  const labels = useT('badges');
+  const { text } = useWords();
+  // A badge whose rarity is a judgement is a secret until won: no name, only the group it belongs to.
+  const secret = !got && BADGE_RARITY[badgeId]?.judged === true;
+  const rarity = rarityOf(badgeId);
+  const group = GROUP_OF.get(badgeId);
+  const ink = (colour: string) => (got ? colour : grey(colour));
+  return (
+    <View role="listitem" style={{ flex: 1, minWidth: 0 }} {...{ dataSet: { rarity, ...(secret ? { secret: 'true' } : null) } }}>
+      <Framed kind={got ? 'bevel' : 'frame'} tone={got ? GOLD : undefined} grey={!got} style={{ flex: 1, backgroundColor: ink(COLORS[got ? 'night-600' : 'night-700']), flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8 }}>
+        <Medal badgeId={badgeId} locked={!got} grey={!got} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <PixelText size={16} style={{ color: got ? COLORS.cream : grey(COLORS['ink-200']) }}>{secret ? labels('hiddenName') : (text.badges[badgeId]?.name ?? badgeId)}</PixelText>
+          {/* The web's silver names no colour of its palette (rarityStyle.ts): it keeps the card's own, cream. */}
+          <PixelText size={11} style={{ letterSpacing: 11 * 0.1, textTransform: 'uppercase', color: ink(RARITY_TONE[rarity] ?? COLORS.cream) }}>{labels(`rarity.${rarity}`)}</PixelText>
+          {/* How a badge is earned is told once it has been: until then its name is the only clue. */}
+          {got ? <ReadText size={13} tone="ink-200" lineHeight={13 * SNUG}>{text.badges[badgeId]?.how ?? ''}</ReadText> : null}
+          {got ? null : (
+            <ReadText size={12} style={{ marginTop: 2, color: grey(COLORS['ink-300']) }}>
+              {secret && group !== undefined ? labels('hiddenHint', { group: text.badgeGroups[group] }) : labels('notYet')}
+            </ReadText>
+          )}
+        </View>
+      </Framed>
+    </View>
+  );
+});
+
+/** The count at the head of a tab (the web's `pixel text-center text-[15px] text-gold-500`). */
+function Count({ children }: { children: string }) {
+  return (
+    <PixelText size={15} tone="gold-500" style={{ textAlign: 'center' }}>{children}</PixelText>
+  );
+}
+
+/**
+ * The gallery of everything ever owned and every badge ever earned, across all lives: the badges first (what a player has done comes before what
+ * they have bought), the things on the second tab. The page is one list that draws only the rows near the screen (67 things, 63 badges, each
+ * with its pictures): its head (the title, the tabs, the count, the rarities) scrolls away with it as the web's page does, and the list is the
+ * tab's panel. `tab` is the tab open from the start (a scene's initial state; the player opens the other by a tap).
+ */
+export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
+  const t = useT('collection');
+  const labels = useT('badges');
+  const { content, text } = useWords();
+  const { gallery, badges: earned } = useProfile();
+  const [tab, setTab] = useState<Tab>(first);
+  // One rarity at a time, or all: the badges' tab's own, so it is all of them again whenever the tab is shown again.
+  const [only, setOnly] = useState<BadgeRarity | 'all'>('all');
+  const [width, setWidth] = useState(0);
+  const columns = columnsAt(width);
+  // The web's badges' tab is drawn anew each time it is shown, its choice of rarity with it; pressing the tab already open changes nothing.
+  const choose = (next: Tab) => {
+    if (next === tab) return;
+    setTab(next);
+    setOnly('all');
+  };
+
+  const owned = useMemo(() => new Set(gallery), [gallery]);
+  const things = useMemo(() => {
+    const ladders = [...new Set(content.items.map((item) => item.ladder))];
+    return linesOf('things', ladders.map((ladder) => ({ id: ladder, title: text.ladders[ladder] ?? ladder, ids: content.items.filter((item) => item.ladder === ladder).map((item) => item.id) })), columns.things);
+  }, [content, text, columns.things]);
+  const shownBadges = useMemo(() => {
+    const shown = badges.filter((badge) => only === 'all' || rarityOf(badge.id) === only);
+    const groups = [...new Set(shown.map((badge) => badge.group))];
+    return linesOf('badges', groups.map((group) => ({ id: group, title: text.badgeGroups[group], ids: shown.filter((badge) => badge.group === group).map((badge) => badge.id) })), columns.badges);
+  }, [only, text, columns.badges]);
+  const count = (list: typeof badges) => list.filter((badge) => Object.hasOwn(earned, badge.id)).length;
+
+  const head = (
+    <View>
+      <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <BackLink />
+        <View accessibilityRole="header" style={{ flexShrink: 1 }}>
+          <PixelText size={24} tone="gold-500">{t('title')}</PixelText>
+        </View>
+      </View>
+      <ReadText size={13} tone="ink-300" style={{ marginBottom: 8 }}>{t('intro')}</ReadText>
+      {/* The tabs run to the edges of the screen, their own gutter inside them (the web's `-mx-3`). */}
+      <View style={{ marginHorizontal: -12 }}>
+        <Tabs<Tab> label={t('title')} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]} value={tab} onChange={choose} />
+      </View>
+      {/* The head of the tab's panel (the web's `pt-2`, then `gap-4`): its count, and for the badges one rarity at a time, each saying how many of it are won. */}
+      <View style={{ paddingTop: 8, gap: 16 }}>
+        {tab === 'items' ? (
+          <Count>{t('itemsCount', { n: gallery.filter((id) => content.items.some((item) => item.id === id)).length, total: content.items.length })}</Count>
+        ) : (
+          <>
+            <Count>{t('badgesCount', { n: count(badges), total: badges.length })}</Count>
+            <Segmented<BadgeRarity | 'all'>
+              label={t('rarity')}
+              value={only}
+              onChange={setOnly}
+              columns={columns.rarities}
+              options={[
+                { value: 'all', label: t('rarityAll') },
+                ...RARITIES.map((rarity) => {
+                  const of = badges.filter((badge) => rarityOf(badge.id) === rarity);
+                  return { value: rarity, label: labels(`rarity.${rarity}`), hint: `${count(of)}/${of.length}` };
+                }),
+              ]}
+            />
+          </>
+        )}
+      </View>
+    </View>
+  );
+
+  const line = (row: Line): ReactNode => {
+    // A group: 16 over its heading (the web's `gap-4` between groups), 8 under it, and 8 between its rows (`gap-2`).
+    if (row.kind === 'heading') {
+      return (
+        <View style={{ paddingTop: 16 }}>
+          <Heading>{row.title}</Heading>
+        </View>
+      );
+    }
+    return (
+      <View style={{ paddingTop: row.first ? 0 : 8, flexDirection: 'row', gap: 8 }}>
+        {row.ids.map((id) => (row.kind === 'things' ? <Thing key={id} itemId={id} owned={owned.has(id)} /> : <BadgeLine key={id} badgeId={id} got={Object.hasOwn(earned, id)} />))}
+        {/* A short last row leaves its other places empty, as the web's grid does: its tiles are no wider. */}
+        {Array.from({ length: row.columns - row.ids.length }, (_, i) => (
+          <View key={`empty-${i}`} style={{ flex: 1, minWidth: 0 }} />
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <ListScreen
+      head={head}
+      data={tab === 'items' ? things : shownBadges}
+      keyOf={(row) => row.key}
+      item={(row) => <>{line(row)}</>}
+      role="tabpanel"
+      label={tab === 'items' ? t('items') : t('badges')}
+      onWidth={setWidth}
+      contentStyle={{ paddingBottom: 40 }}
+    />
+  );
+}

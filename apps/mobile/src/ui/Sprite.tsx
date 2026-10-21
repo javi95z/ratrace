@@ -1,11 +1,11 @@
-import { Fill, FilterMode, Group, Image, MipmapMode, Path, Skia, type SkImage } from '@shopify/react-native-skia';
+import { ColorMatrix, Fill, FilterMode, Group, Image, MipmapMode, Path, Skia, type SkImage } from '@shopify/react-native-skia';
 import { createContext, memo, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { Canvas } from './Canvas';
 import { sourceOf, useSpriteImage } from './spriteImages';
 import { CHECKER, checkerCells, FALLBACK, reportMissing, spriteBox, spriteOf, type Size, type SpriteScale } from './sprites';
-import { COLORS } from './theme';
+import { COLORS, GREYSCALE, grey as greyOf } from './theme';
 
 /** Pixel art is never smoothed: each art pixel becomes a block of whole device pixels. */
 export const PIXELATED = { filter: FilterMode.Nearest, mipmap: MipmapMode.None };
@@ -33,6 +33,8 @@ interface Props {
   place?: Size & { x: number; y: number };
   /** Draws only the outline of the sprite, filled with night-900: something not owned yet. */
   silhouette?: boolean;
+  /** Draws it through the web's `grayscale` filter (`GREYSCALE`): a picture on a card the web greys whole, a badge not yet earned. */
+  grey?: boolean;
   style?: ViewStyle;
   /** Skia nodes drawn over the picture in its own canvas, where they can blend with it (the rainbow of a legendary card). */
   children?: ReactNode;
@@ -43,7 +45,7 @@ interface Props {
  * smooth). Its picture is decoded once for the whole app and shared (spriteImages). A sprite that does not exist, or
  * does not load, shows the web's checkerboard at the fallback size and is logged once: the game is playable without art.
  */
-function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, silhouette = false, style, children }: Props): ReactNode {
+function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, silhouette = false, grey = false, style, children }: Props): ReactNode {
   const art = useContext(ArtScale);
   const box = size ?? spriteBox(id, scale, art, fallback);
   const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
@@ -60,7 +62,7 @@ function SpriteBox({ id, scale = 1, alt = '', fallback = FALLBACK, size, place, 
       style={[{ width: box.w, height: box.h, flexShrink: 0 }, style]}
     >
       {/* While it loads the box is already there, empty (no canvas yet), so nothing moves when it arrives. */}
-      {!known || failed ? <Checker w={box.w} h={box.h} /> : image ? <Drawn image={image} box={box} place={place ?? { x: 0, y: 0, ...box }} silhouette={silhouette}>{children}</Drawn> : null}
+      {!known || failed ? <Checker w={box.w} h={box.h} /> : image ? <Drawn image={image} box={box} place={place ?? { x: 0, y: 0, ...box }} silhouette={silhouette} grey={grey}>{children}</Drawn> : null}
     </View>
   );
 }
@@ -80,6 +82,7 @@ export const Sprite = memo(
     a.scale === b.scale &&
     a.alt === b.alt &&
     a.silhouette === b.silhouette &&
+    a.grey === b.grey &&
     a.style === b.style &&
     a.children === b.children &&
     sameBox(a.size, b.size) &&
@@ -88,17 +91,19 @@ export const Sprite = memo(
 );
 
 /** The decoded sprite on a canvas of its box. */
-function Drawn({ image, box, place, silhouette, children }: { image: SkImage; box: Size; place: Size & { x: number; y: number }; silhouette: boolean; children?: ReactNode }) {
+function Drawn({ image, box, place, silhouette, grey, children }: { image: SkImage; box: Size; place: Size & { x: number; y: number }; silhouette: boolean; grey: boolean; children?: ReactNode }) {
   return (
     <Canvas style={{ width: box.w, height: box.h }}>
       {silhouette ? (
         // The sprite is the mask, the colour is the palette's.
         <Group layer>
           <Image image={image} x={place.x} y={place.y} width={place.w} height={place.h} fit="fill" sampling={PIXELATED} />
-          <Fill color={COLORS['night-900']} blendMode="srcIn" />
+          <Fill color={grey ? greyOf(COLORS['night-900']) : COLORS['night-900']} blendMode="srcIn" />
         </Group>
       ) : (
-        <Image image={image} x={place.x} y={place.y} width={place.w} height={place.h} fit="fill" sampling={PIXELATED} />
+        <Image image={image} x={place.x} y={place.y} width={place.w} height={place.h} fit="fill" sampling={PIXELATED}>
+          {grey ? <ColorMatrix matrix={GREYSCALE as number[]} /> : null}
+        </Image>
       )}
       {children}
     </Canvas>

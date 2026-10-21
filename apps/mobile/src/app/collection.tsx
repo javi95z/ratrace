@@ -1,5 +1,5 @@
-import { Placeholder } from '../game/screens/Placeholder';
+import { Collection } from '../game/screens/Collection';
 
 export default function CollectionRoute() {
-  return <Placeholder page="collection" />;
+  return <Collection />;
 }

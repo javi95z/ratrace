@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { anchorsOf, type FrameKind, type FrameTone } from './frames';
-import { COLORS } from './theme';
+import { COLORS, grey as greyOf } from './theme';
 
 interface FramedProps {
   kind: FrameKind;
   tone?: FrameTone;
+  /** Its strips in the grey of their colours: the frame of a box the web draws through its `grayscale` filter (the box's own colours are its caller's to grey). */
+  grey?: boolean;
   style?: ViewStyle | ViewStyle[];
   accessibilityLabel?: string;
   testID?: string;
@@ -17,14 +19,14 @@ interface FramedProps {
  * box's edges (so they are there on the first paint and follow every resize), and they take no
  * space: the children lie exactly where they would with no frame at all.
  */
-export function Framed({ kind, tone = {}, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
+export function Framed({ kind, tone = {}, grey = false, style, accessibilityLabel, testID, children }: FramedProps): ReactNode {
   return (
     <View style={style} accessibilityLabel={accessibilityLabel} testID={testID}>
       {anchorsOf(kind, tone).map(({ color, ...place }, i) => (
         <View
           key={i}
           pointerEvents="none"
-          style={{ position: 'absolute', ...place, backgroundColor: COLORS[color] }}
+          style={{ position: 'absolute', ...place, backgroundColor: grey ? greyOf(COLORS[color]) : COLORS[color] }}
         />
       ))}
       {children}

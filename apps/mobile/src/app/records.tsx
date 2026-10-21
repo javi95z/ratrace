@@ -1,5 +1,5 @@
-import { Placeholder } from '../game/screens/Placeholder';
+import { Records } from '../game/screens/Records';
 
 export default function RecordsRoute() {
-  return <Placeholder page="records" />;
+  return <Records />;
 }

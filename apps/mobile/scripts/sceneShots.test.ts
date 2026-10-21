@@ -75,8 +75,9 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
 });
 
 test('a scene whose screen the app still draws as a stand-in is unjudged: no numbers, and why', () => {
-  expect(STAND_INS).toEqual(['records', 'collection']);
-  // The screens that are ported are compared; the scenes of the stand-ins are only shot.
+  // The records and the collection, the last two, are ported (Task 19): none is left.
+  expect(STAND_INS).toEqual([]);
+  // The screens that are ported are compared once they are shot; the scenes of a stand-in were only shot.
   expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual([
     'home-new',
     'home-continue',
@@ -106,6 +107,7 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
     'legal',
   ]);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
+  // As a scene of the records was, before they were ported: the line says which stand-in it was.
   const standIn = { name: 'records-best', locale: 'en' } as const;
   expect(unjudgedLine(standIn)).toEqual({ scene: 'records-best', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for records: its numbers say nothing' });
   expect(Object.keys(unjudgedLine(standIn))).toEqual(['scene', 'locale', 'verdict', 'why']);
@@ -154,6 +156,11 @@ test('a scene of a screen ported but not shot yet (from Task 11 on, the batch pa
     'moment-escape',
     'moment-bankrupt',
     'moment-crisis',
+    'records-empty',
+    'records-three',
+    'records-detail',
+    'collection-items',
+    'collection-badges',
   ]);
   for (const name of PENDING_SHOTS) {
     expect(SCENES.map((scene) => scene.name), name).toContain(name);
@@ -194,6 +201,11 @@ test('a scene of a screen ported but not shot yet (from Task 11 on, the batch pa
     'moment-escape',
     'moment-bankrupt',
     'moment-crisis',
+    'records-empty',
+    'records-three',
+    'records-detail',
+    'collection-items',
+    'collection-badges',
   ]);
   const ru = SCENES.find((scene) => scene.name === 'play-cards-ru-360')!;
   expect(unjudgedLine(ru)).toEqual({ scene: 'play-cards-ru-360', locale: 'ru', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });

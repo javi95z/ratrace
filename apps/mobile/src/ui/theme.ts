@@ -73,3 +73,19 @@ export const EXTRA = {
     legendary: '0 0 20px rgba(94,224,200,0.7)',
   },
 } as const;
+
+/**
+ * The web's `grayscale` filter at its full amount (Filter Effects 1, `grayscale()`), as the 4 × 5 colour matrix Skia takes: each of red, green and
+ * blue becomes the luminance of the three, alpha is kept, nothing is added. The web draws a badge not yet earned through it, its frame, its words
+ * and its pictures (the collection's `grayscale` card); the phone draws the same card's pictures through this matrix (`Sprite`'s `grey`) and its
+ * colours as `grey` gives them. Applied to the colours as they are written (sRGB), as the browser applies its filter functions.
+ */
+export const GREYSCALE: readonly number[] = [0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0, 0, 0, 1, 0];
+
+/** A colour of the palette (`#rrggbb`) as the web's `grayscale` filter draws it: the grey of its luminance, to the nearest whole step. */
+export function grey(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+  const step = Math.round(GREYSCALE[0] * r + GREYSCALE[1] * g + GREYSCALE[2] * b);
+  const two = Math.min(255, Math.max(0, step)).toString(16).padStart(2, '0');
+  return `#${two}${two}${two}`;
+}

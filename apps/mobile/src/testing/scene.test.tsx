@@ -587,3 +587,37 @@ test('the scenes of the moments of a life are their sheets over Play, open witho
     cleanup();
   }
 });
+
+test('the scenes of the records are the records themselves: none yet, three lives lived (the latest first), and the sheet of the latest open without a tap', async () => {
+  render(<SceneView name="records-empty" />);
+  expect(await screen.findByText('No life finished yet. Your first one will appear here.', {}, WAIT)).toBeTruthy();
+  cleanup();
+  render(<SceneView name="records-three" />);
+  expect(await screen.findByRole('heading', { name: 'Past lives' }, WAIT)).toBeTruthy();
+  const bests = screen.getByRole('region', { name: 'Personal bests' });
+  const lives = screen.getAllByRole('listitem').filter((item) => !bests.contains(item));
+  expect(lives.map((life) => within(life).getAllByText(/^(Software engineer|Civil servant|Nurse)$/)[0].textContent)).toEqual(['Software engineer', 'Civil servant', 'Nurse']);
+  // Each ended on a day of the scene's week, the latest the day before it.
+  expect(lives.map((life) => life.textContent?.match(/\d+ Oct 2026/)?.[0])).toEqual(['21 Oct 2026', '20 Oct 2026', '19 Oct 2026']);
+  expect(screen.getByText('3 lives lived')).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Software engineer' })).toBeNull();
+  cleanup();
+  render(<SceneView name="records-detail" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Software engineer' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(sheet).not.toBeNull();
+  expect(sheet.textContent).toContain('Out at 50');
+  expect(sheet.textContent).toContain('Tokyo · London');
+});
+
+test('the scenes of the collection are the collection itself, open on its badges or on its things without a tap: what three lives earned and owned', async () => {
+  render(<SceneView name="collection-badges" />);
+  const badgesTab = await screen.findByRole('tab', { name: 'Badges' }, WAIT);
+  expect(badgesTab.getAttribute('aria-selected')).toBe('true');
+  expect(await screen.findByText(/^\d+ of \d+ earned$/, {}, WAIT)).toBeTruthy();
+  expect(screen.getByText(/^\d+ of \d+ earned$/).textContent).not.toMatch(/^0 of/);
+  cleanup();
+  render(<SceneView name="collection-items" />);
+  expect((await screen.findByRole('tab', { name: 'Things' }, WAIT)).getAttribute('aria-selected')).toBe('true');
+  const owned = await screen.findByText(/^\d+ of \d+ owned$/, {}, WAIT);
+  expect(owned.textContent).not.toMatch(/^0 of/);
+});

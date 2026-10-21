@@ -30,3 +30,9 @@ export const fixedSessions = (store: MemoryStore): LocalSessions => new LocalSes
  * does not (a crisis). Ids and clock are `fixedDeps`'.
  */
 export const fixedSessionsOn = (store: MemoryStore, seed: string): LocalSessions => new LocalSessions(store, content, lives, { ...fixedDeps(), newSeed: () => seed });
+
+/**
+ * The same, with the seed each life is begun on and the clock it is lived by given by the caller: for a scene of lives lived to the end one after
+ * another, each on its own seed and on a day of its own (the records). Ids are `fixedDeps`' (`id-1`, `id-2`…, one a life).
+ */
+export const fixedSessionsWith = (store: MemoryStore, deps: Pick<SessionDeps, 'newSeed' | 'now'>): LocalSessions => new LocalSessions(store, content, lives, { ...fixedDeps(), ...deps });

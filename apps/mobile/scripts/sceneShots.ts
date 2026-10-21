@@ -84,9 +84,9 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 /**
  * The screens the app still draws as phase 1's stand-ins (`SCENE_SCREENS` in apps/mobile/src/testing/scene.tsx; a test holds the two
  * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
- * results. The task that ports a screen takes its word out of this list.
+ * results. The task that ports a screen takes its word out of this list: the records and the collection, the last two, did in Task 19. None is left.
  */
-export const STAND_INS: readonly string[] = ['records', 'collection'];
+export const STAND_INS: readonly string[] = [];
 
 /**
  * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring, which the app draws as a line that says
@@ -143,6 +143,12 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'moment-escape',
   'moment-bankrupt',
   'moment-crisis',
+  // Task 19: the records of past lives (none, three lives lived, the latest's sheet) and the collection (its things, its badges).
+  'records-empty',
+  'records-three',
+  'records-detail',
+  'collection-items',
+  'collection-badges',
 ]);
 
 /**

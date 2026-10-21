@@ -1,4 +1,4 @@
-import { createContext, createElement, useEffect, type ReactNode } from 'react';
+import { createContext, createElement, useEffect, type ComponentType, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 import { painted } from '../ui/testing/skia';
@@ -92,14 +92,14 @@ export const safeArea = { useSafeAreaInsets: () => insets };
 /** How many times each sprite has been drawn, by id: what a test that something was not drawn again counts. */
 export const spriteRenders = new Map<string, number>();
 /**
- * Sprites are drawn with Skia on the phone only: here each is a box that names its id, says if it is only the shape of the picture, and the box
- * it is drawn into where it is given one (`size`, as `w x h`); what is drawn over the picture in its canvas (the rainbow of a legendary card) is
- * drawn inside it. The stage's scale of the art (`ArtScale`) is the phone's: one point an art pixel.
+ * Sprites are drawn with Skia on the phone only: here each is a box that names its id, says if it is only the shape of the picture or drawn in
+ * grey, and the box it is drawn into where it is given one (`size`, as `w x h`); what is drawn over the picture in its canvas (the rainbow of a
+ * legendary card) is drawn inside it. The stage's scale of the art (`ArtScale`) is the phone's: one point an art pixel.
  */
 export const spriteModule = {
-  Sprite: ({ id, silhouette, size, children }: { id: string; silhouette?: boolean; size?: { w: number; h: number }; children?: ReactNode }) => {
+  Sprite: ({ id, silhouette, grey, size, children }: { id: string; silhouette?: boolean; grey?: boolean; size?: { w: number; h: number }; children?: ReactNode }) => {
     spriteRenders.set(id, (spriteRenders.get(id) ?? 0) + 1);
-    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) }, children);
+    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(grey ? { 'data-grey': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) }, children);
   },
   ArtScale: createContext(1),
 };
@@ -152,6 +152,18 @@ export const expoSharing = {
   isAvailableAsync: () => Promise.resolve(shareSheet.available),
   shareAsync: (url: string, options?: Record<string, unknown>) => Promise.resolve(void shareSheet.handed.push({ url, options })),
 };
+
+/**
+ * A list that draws only the rows near the screen (React Native's `FlatList`, the kit's `ListScreen`) windows them by the layout the phone measures;
+ * jsdom lays nothing out, so it would draw its first ten and never another. Here it draws every row at once, as the phone has once each has been
+ * scrolled to: what a test reads of a list is the whole of it. (The kit's own test of `ListScreen`, which has none of these stand-ins, holds that
+ * the real one windows.)
+ */
+export function everyRow<P extends { data?: ArrayLike<unknown> | null; initialNumToRender?: number | null }>(List: ComponentType<P>): ComponentType<P> {
+  return function EveryRow(props: P) {
+    return createElement(List, { ...props, initialNumToRender: Math.max(10, props.initialNumToRender ?? 0, props.data?.length ?? 0) });
+  };
+}
 
 /** Puts every stand-in back as it was found, for the next test. */
 export function resetFakes(): void {
