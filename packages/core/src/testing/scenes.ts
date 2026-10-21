@@ -3,7 +3,7 @@ import type { Bot, Locale } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
 import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
-import { fixedSessions, memoryDevice } from '../session/fixed';
+import { fixedSessions, fixedSessionsOn, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { PlayerStore, SavedGame, Sessions } from '../session/types';
@@ -25,6 +25,11 @@ export interface Scene {
    * never by a tap: the shots are taken from a link, which cannot tap.
    */
   readonly sheet?: string;
+  /**
+   * The width of the phone the scene is drawn for, where it is not the shots' 402 (a Russian player on a phone 360 wide). The simulator's
+   * width cannot be changed, so both clients draw the screen in a box this wide, centred on the shots' screen: the same on either side.
+   */
+  readonly width?: number;
 }
 
 /** Every scene the shots take, in the order they are listed. Each screen's task adds its own. */
@@ -42,6 +47,14 @@ export const SCENES: readonly Scene[] = [
   { name: 'play-finance-r6', locale: 'en' },
   { name: 'play-outcome-r1', locale: 'en' },
   { name: 'play-resolve-r6', locale: 'en' },
+  { name: 'hud-news-r1', locale: 'en' },
+  { name: 'hud-cash', locale: 'en', sheet: 'cash' },
+  { name: 'hud-flow', locale: 'en', sheet: 'flow' },
+  { name: 'hud-race', locale: 'en', sheet: 'ratRace' },
+  { name: 'hud-status-ru', locale: 'ru', sheet: 'status', width: 360 },
+  { name: 'hud-jailed', locale: 'en', sheet: 'jail' },
+  { name: 'hud-crisis', locale: 'en' },
+  { name: 'hud-crisis-details', locale: 'en', sheet: 'crisis' },
   { name: 'challenge-practice', locale: 'en' },
   { name: 'legal', locale: 'en' },
 ];
@@ -85,6 +98,13 @@ type Reach = {
   stage: Extract<Stage, 'news' | 'cards' | 'finance'>;
   /** The life is then saved as a newer version of the game would have saved it, which this one cannot open (and keeps). */
   newer?: true;
+  /** The seed the life is begun on, where the first fixed one's world lacks what the scene needs (`screen-seed-10` has a crisis from the fifth round). */
+  seed?: string;
+  /**
+   * The option taken on a card, by its id, where the scene needs another answer than the saver's (the saver answers every other card as it
+   * would): on `screen-seed-15` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
+   */
+  picks?: Readonly<Record<string, number>>;
 } & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
 
 /** What each scene's store holds: the life to begin and how far to play it, or null for a device with no life. */
@@ -102,6 +122,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
   'play-outcome-r1': { life: 'engineer', round: 1, stage: 'news', then: [{ action: 'leaveNews' }, { action: 'pick' }], ends: 'outcome' },
   'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  'hud-news-r1': { life: 'engineer', round: 1, stage: 'news' },
+  'hud-cash': { life: 'engineer', round: 1, stage: 'news' },
+  'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
+  'hud-race': { life: 'engineer', round: 1, stage: 'news' },
+  'hud-status-ru': { life: 'engineer', round: 1, stage: 'news' },
+  'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-15', picks: { crime_wrongly_accused: 0 } },
+  'hud-crisis': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
+  'hud-crisis-details': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'challenge-practice': null,
   legal: null,
 };
@@ -114,12 +142,24 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
   'new-unlocked': ['rider', 'heir'],
 };
 
+/**
+ * The scenes drawn with motion left out, as the player can set it (the setting is in the profile, where both clients read it): something on
+ * them plays for ever (the rat's wheel, the lamp of a crisis's year), and a shot would catch it at any moment of its run.
+ */
+const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisis-details']);
+
 /** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
 const PLAYER_ID = 'saver';
 
 function mustBe(name: string, game: SceneGame, stage: Stage): void {
   const at = game.getState().stage;
   if (at !== stage) throw new Error(`scene ${name}: expected the ${stage}, found the ${at}`);
+}
+
+/** The saver, taking the scene's own option on the cards the scene names (`Reach.picks`), and its own choice on every other. */
+function answering(bot: Bot, picks: Reach['picks']): Bot {
+  if (picks === undefined) return bot;
+  return { ...bot, pick: (rules, view) => picks[view.hand[view.answered]] ?? bot.pick(rules, view) };
 }
 
 /** Answers the card on screen with the bot's choice, which the bot makes from the view alone, as any player would. */
@@ -147,10 +187,14 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
   const store = memoryDevice();
   await unlock(store, name);
+  if (STILL.has(name)) {
+    const profile = await store.loadProfile();
+    await store.saveProfile({ ...profile, settings: { ...profile.settings, reducedMotion: true } });
+  }
   const reach = PLANS[name];
   if (reach === null) return store;
-  const bot = bots.find((candidate) => candidate.id === PLAYER_ID) as Bot;
-  const game = createGameStore({ sessions: fixedSessions(store), content });
+  const bot = answering(bots.find((candidate) => candidate.id === PLAYER_ID) as Bot, reach.picks);
+  const game = createGameStore({ sessions: reach.seed === undefined ? fixedSessions(store) : fixedSessionsOn(store, reach.seed), content });
   await game.getState().start(reach.life);
   // The rounds before the scene's, played whole: the cards answered, the saver's orders put in the basket, the round played.
   for (let round = 1; round < reach.round; round++) {
@@ -171,6 +215,7 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   if (reach.newer) await asNewer(store);
   return store;
 }
+
 
 /** The lives a scene's player has unlocked, written to the profile as the game writes them: when, and in which life. */
 async function unlock(store: MemoryStore, name: string): Promise<void> {

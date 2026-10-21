@@ -3,6 +3,7 @@ import { runScene, SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import { GameProvider, useGame } from '../game/context';
 import type { Services } from '../game/context';
 import { WeeklyChallenge } from '../game/screens/Challenge';
@@ -14,6 +15,8 @@ import { Placeholder } from '../game/screens/Placeholder';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { Screen } from '../ui/Page';
 import { ReadText } from '../ui/text';
+import { HudScene } from './hudScene';
+import type { HudSceneOpen } from './hudScene';
 import { memoryServices, speaking } from './memoryServices';
 
 /*
@@ -35,6 +38,10 @@ export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>
  */
 const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined);
 
+/** What a scene of the Hud has open at the start: the sheet it names (a figure's, the prison's, the crisis's), given to the Hud as its initial state. */
+const HUD_OPEN: readonly HudSceneOpen[] = ['cash', 'flow', 'status', 'ratRace', 'jail', 'settings', 'news', 'crisis'];
+const hudOpenOf = (scene: Scene): HudSceneOpen | undefined => HUD_OPEN.find((open) => open === scene.sheet);
+
 /**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
@@ -43,6 +50,7 @@ export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: () => <Placeholder page="play" />,
+  hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   records: () => <Placeholder page="records" />,
   collection: () => <Placeholder page="collection" />,
   challenge: () => <WeeklyChallenge />,
@@ -91,6 +99,15 @@ function Script({ scene, done }: { scene: Scene; done: () => void }) {
 }
 
 /**
+ * A scene's screen on the phone it is drawn for: the shots' own (the whole screen), or a narrower one (`scene.width`), as a box that wide
+ * in the middle of the screen. The simulator's width cannot be changed; the web's page draws the same box.
+ */
+function OfWidth({ width, children }: { width: number | undefined; children: ReactNode }) {
+  if (width === undefined) return children;
+  return <View style={{ flex: 1, width, alignSelf: 'center' }}>{children}</View>;
+}
+
+/**
  * A scene's game, with its screen: the game opened on the scene's store, the scene's steps taken on it, and then the screen,
  * which is first drawn at the stage the scene ends on, as the web's is.
  */
@@ -100,7 +117,7 @@ export function SceneGame({ scene, services, screens = SCENE_SCREENS }: { scene:
   return (
     <GameProvider services={services}>
       <Script scene={scene} done={done} />
-      {over ? screens[screenOf(scene)]?.(scene) : null}
+      {over ? <OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth> : null}
     </GameProvider>
   );
 }

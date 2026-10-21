@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, chooseScenes, differing, filesOf, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, chooseScenes, differing, filesOf, HUD_ONLY, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 
@@ -76,7 +76,26 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
 test('a scene whose screen the app still draws as a stand-in is unjudged: no numbers, and why', () => {
   expect(STAND_INS).toEqual(['play', 'records', 'collection']);
   // The screens that are ported are compared; the scenes of the stand-ins are only shot.
-  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual(['home-new', 'home-continue', 'home-settings', 'home-lost-newer', 'new-first', 'new-unlocked', 'new-locked', 'new-replace', 'challenge-practice', 'legal']);
+  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual([
+    'home-new',
+    'home-continue',
+    'home-settings',
+    'home-lost-newer',
+    'new-first',
+    'new-unlocked',
+    'new-locked',
+    'new-replace',
+    'hud-news-r1',
+    'hud-cash',
+    'hud-flow',
+    'hud-race',
+    'hud-status-ru',
+    'hud-jailed',
+    'hud-crisis',
+    'hud-crisis-details',
+    'challenge-practice',
+    'legal',
+  ]);
   expect(SCENES.filter((scene) => !isJudged(scene)).every((scene) => scene.name.startsWith('play-'))).toBe(true);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
   const standIn = SCENES.find((scene) => scene.name === 'play-news-r1')!;
@@ -113,6 +132,21 @@ test('what the web draws of a scene that the phone does not is hidden in the web
   const page = web.slice(web.indexOf('export function WeeklyChallenge()'), web.indexOf('export function ChallengeBoard'));
   expect(page).toContain('<p className="frame bg-night-700 px-3 py-2 text-[13px] text-ink-200">{t(\'needsAccount\')}</p>');
   expect([...page.matchAll(/<p [^>]*className="frame bg-night-700[^"]*"/g)]).toHaveLength(2);
+});
+
+test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the stage of the round and the bar of its next step', () => {
+  const huds = SCENES.filter((scene) => scene.name.startsWith('hud-'));
+  expect(huds.length).toBeGreaterThan(0);
+  for (const scene of huds) expect(webRules(scene), scene.name).toBe(`${VISIBLE_HEIGHT} ${HUD_ONLY}`);
+  expect(HUD_ONLY).toBe('#round-stage, #round-actions { display: none !important; }');
+  // The two are what the phone's Play stacks under its Hud, and nothing of the Hud is inside either.
+  const play = readFileSync(new URL('../../web/src/game/screens/Play.tsx', import.meta.url), 'utf8');
+  const phone = play.slice(play.lastIndexOf('<Hud compact='));
+  expect(phone).toContain('<main id="round-stage"');
+  expect(phone).toContain('<div id="round-actions"');
+  expect(phone.indexOf('<Hud compact=')).toBeLessThan(phone.indexOf('<main id="round-stage"'));
+  // No scene but the Hud's is given the rule.
+  expect(SCENES.filter((scene) => webRules(scene).includes(HUD_ONLY)).every((scene) => scene.name.startsWith('hud-'))).toBe(true);
 });
 
 describe('a scene whose words are the phone\'s own', () => {

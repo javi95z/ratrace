@@ -154,3 +154,30 @@ test('the pages with a scene of their own are drawn on the day every scene is: t
   render(<SceneView name="legal" />);
   expect((await screen.findAllByRole('heading', {}, WAIT))[0].textContent).toBe('Privacy and legal notice');
 });
+
+test('a scene of the Hud is drawn as Play will draw it, with the sheet it names open without a tap, and none where it names none', async () => {
+  render(<SceneView name="hud-cash" />);
+  expect(await screen.findByRole('heading', { name: 'Cash' }, WAIT)).toBeTruthy();
+  // Under it, the Hud of the engineer's first round.
+  expect(screen.getByText('Age 22')).toBeTruthy();
+  cleanup();
+  render(<SceneView name="hud-jailed" />);
+  expect(await screen.findByRole('heading', { name: 'Prison' }, WAIT)).toBeTruthy();
+  expect(screen.getByText('1 round left to serve')).toBeTruthy();
+  cleanup();
+  render(<SceneView name="hud-news-r1" />);
+  expect(await screen.findByText('Age 22', {}, WAIT)).toBeTruthy();
+  expect(screen.queryByRole('heading')).toBeNull();
+});
+
+test('a scene for a narrower phone is drawn in a box that wide, in the middle of the screen', async () => {
+  render(<SceneView name="hud-status-ru" />);
+  await screen.findByRole('heading', { name: 'Статус' }, WAIT);
+  const box = [...document.querySelectorAll<HTMLElement>('div')].find((el) => el.style.width === '360px');
+  expect(box?.style.alignSelf).toBe('center');
+  expect(box?.textContent).toContain('22');
+  cleanup();
+  render(<SceneView name="hud-news-r1" />);
+  await screen.findByText('Age 22', {}, WAIT);
+  expect([...document.querySelectorAll<HTMLElement>('div')].some((el) => el.style.width === '360px')).toBe(false);
+});

@@ -1,23 +1,36 @@
-import { createContext, useContext, useRef, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { SCREEN_TOP, Screen } from './Page';
 import { COLORS, GUTTER } from './theme';
 
-/** How far the page has scrolled, kept outside React so that a scroll does not draw every screen: only what asks about it. */
+/**
+ * How far the page has scrolled, kept outside React so that a scroll does not draw every screen: only what asks about it. With it, where the
+ * `lead` ends (the bottom of the lead in the column, in points; null while there is no lead, or it has not been laid out).
+ */
 interface ScrollOffset {
   get(): number;
   set(y: number): void;
+  lead(): number | null;
+  setLead(bottom: number | null): void;
   subscribe(notify: () => void): () => void;
 }
 
 function scrollOffset(): ScrollOffset {
   let y = 0;
+  let leadBottom: number | null = null;
   const watchers = new Set<() => void>();
+  const notify = () => watchers.forEach((watcher) => watcher());
   return {
     get: () => y,
     set(next) {
       y = next;
-      watchers.forEach((notify) => notify());
+      notify();
+    },
+    lead: () => leadBottom,
+    setLead(bottom) {
+      if (bottom === leadBottom) return;
+      leadBottom = bottom;
+      notify();
     },
     subscribe(notify) {
       watchers.add(notify);
@@ -37,6 +50,23 @@ const Offset = createContext<ScrollOffset>(scrollOffset());
 export function useScrolledPast(px: number): boolean {
   const offset = useContext(Offset);
   return useSyncExternalStore(offset.subscribe, () => offset.get() > px, () => false);
+}
+
+/**
+ * Whether the page of the `StickyScreen` this stands in has scrolled past its `lead`: the lead's last point has gone off the top of the page.
+ * For a header that cannot measure the lead above it (the Hud's figures, whose "away" strip says whose life it is once the portrait has
+ * gone): the screen knows where its lead ends, and follows it when it grows or shrinks. Never, with no lead.
+ */
+export function useScrolledPastLead(): boolean {
+  const offset = useContext(Offset);
+  return useSyncExternalStore(
+    offset.subscribe,
+    () => {
+      const bottom = offset.lead();
+      return bottom !== null && offset.get() > bottom;
+    },
+    () => false,
+  );
 }
 
 /** One sticky row: night-800 across the page's width, out over the gutter so that a frame's outline passing under it is hidden. */
@@ -60,8 +90,8 @@ function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => num
 /**
  * A `Screen` whose `header` stays at the top, under the top inset, while the column scrolls (the web's `sticky top-safe`):
  * the scroll's sticky child is the header's block (`stickyHeaderIndices`). What is above it in the column is the `lead`,
- * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPast(the lead's
- * height)` says when it has. `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
+ * which scrolls away (the Hud's portrait and settings row, above the figures that stay); `useScrolledPastLead()` says when it
+ * has (and `useScrolledPast(px)` when the page has gone past any other point). `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
  * React Native's sticky rows do not stack, the next one pushes the last off, so both rows are one sticky child.
  * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
  * shows in it, and it closes as they stick, as two sticky rows meet. (It is part of the sticky child, so the 12 points under
@@ -97,8 +127,12 @@ export function StickyScreen({
   // the lead (as tall as it has said it is) and the gap between children.
   const gap = typeof contentStyle?.gap === 'number' ? contentStyle.gap : 0;
   const paddingTop = typeof contentStyle?.paddingTop === 'number' ? contentStyle.paddingTop : SCREEN_TOP;
-  const leadBottom = useRef(0);
-  const stuckAt = () => (lead ? leadBottom.current + gap : paddingTop);
+  const stuckAt = () => (lead ? (store.lead() ?? 0) + gap : paddingTop);
+  // A lead taken away leaves nothing to have scrolled past.
+  const hasLead = Boolean(lead);
+  useEffect(() => {
+    if (!hasLead) store.setLead(null);
+  }, [hasLead, store]);
   return (
     <Offset.Provider value={store}>
       <Screen
@@ -112,13 +146,7 @@ export function StickyScreen({
         contentStyle={contentStyle}
       >
         {lead ? (
-          <View
-            onLayout={(event) => {
-              leadBottom.current = event.nativeEvent.layout.y + event.nativeEvent.layout.height;
-            }}
-          >
-            {lead}
-          </View>
+          <View onLayout={(event) => store.setLead(event.nativeEvent.layout.y + event.nativeEvent.layout.height)}>{lead}</View>
         ) : null}
         <View pointerEvents="box-none">
           <View style={ROW}>{header}</View>

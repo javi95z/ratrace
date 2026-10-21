@@ -22,12 +22,21 @@ export const SCENES_FILE = 'phase-2-parity.json';
 export const VISIBLE_HEIGHT = 'main { min-height: calc(100dvh - env(safe-area-inset-top)) !important; }';
 
 /**
+ * A scene of the Hud (`hud-*`) is drawn by the web's Play, which is the Hud's only page, and by the phone's Hud alone (Play is Task 9's): what
+ * Play draws besides the Hud, the stage of the round (`main#round-stage`: the guide, the news, the finances) and the bar of its next step
+ * (`#round-actions`), is taken out of the web's shot (`display: none`: nothing of it is drawn, and none of its text is measured, as hidden
+ * text would be), so that the Hud is compared over the page's ground on both sides. Nothing of the Hud is under either, and nothing of it moves.
+ */
+export const HUD_ONLY = '#round-stage, #round-actions { display: none !important; }';
+
+/**
  * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
  * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
- * the web's page: the line is the only `p` of that frame on the page of a guest.
+ * the web's page: the line is the only `p` of that frame on the page of a guest. And on the scenes of the Hud, everything of Play but the Hud (`HUD_ONLY`).
  */
 export const WEB_ONLY: Readonly<Record<string, string>> = {
   'challenge-practice': 'main > p.frame.bg-night-700 { display: none !important; }',
+  ...Object.fromEntries(SCENES.filter((scene) => screenOf(scene) === 'hud').map((scene) => [scene.name, HUD_ONLY])),
 };
 
 /** Every rule the web's page is given for a scene's shot: the height of its pages, and what it draws that the phone does not. */
@@ -98,21 +107,21 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Task 6: the front door, its settings, the week\'s challenge and the legal notice',
   },
   'new-first': {
-    shape: 1107,
+    shape: 738,
     worstPt: 2,
     oneSided: 0,
     reason: 'The dice emoji (Apple Color Emoji sits 2 pt lower on iOS than on macOS Chrome), the arrow of the folded list (macOS\'s system sign against iOS\'s), and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
   },
   'new-unlocked': {
-    shape: 1107,
+    shape: 738,
     worstPt: 2,
     oneSided: 0,
     reason: 'The same as new-first: the dice emoji, the arrow of the folded list, and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
   },
   'new-locked': {
-    shape: 1636,
+    shape: 1267,
     worstPt: 2,
     oneSided: 0,
     reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels), over the rows of the locked lives.',

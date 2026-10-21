@@ -166,6 +166,22 @@ test('Row shows left, sub and right', () => {
   expect(screen.getByText('-200')).toBeTruthy();
 });
 
+test('a Row is set in the size of what it stands in (the web\'s inherited `text-[14px]` of a sheet), and a row that sums up those above it has a rule over it', () => {
+  render(<Row size={14} left="Net worth" right="$2,000" style={{ marginTop: 4, borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 8 }} />);
+  expect(textOf('Net worth').style.fontSize).toBe('14px');
+  expect(textOf('$2,000').style.fontSize).toBe('14px');
+  const row = textOf('Net worth').parentElement!.parentElement!.parentElement!;
+  expect(row.style.borderTopWidth).toBe('2px');
+  expect(row.style.paddingTop).toBe('8px');
+  // the row's own room below stays the web's `py-1.5`
+  expect(row.style.paddingBottom).toBe('6px');
+  // and a Row told nothing is in the page's 15
+  cleanup();
+  render(<Row left="Rent" right="-200" />);
+  expect(textOf('Rent').style.fontSize).toBe('15px');
+  expect(textOf('-200').style.fontSize).toBe('15px');
+});
+
 test('KeyFigure is 28 pt in its tone', () => {
   const tones = { gold: 'gold-500', teal: 'teal-300', wine: 'wine-300', cream: 'cream' } as const;
   for (const [tone, token] of Object.entries(tones) as Array<[keyof typeof tones, keyof typeof COLORS]>) {

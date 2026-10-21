@@ -58,6 +58,8 @@ export const BODY = { size: 15, lineHeight: 1.45, color: 'cream' } as const;
 export const EXTRA = {
   /** The dimmed page behind a Sheet (night-900 at 80%). */
   backdrop: 'rgba(11,16,34,0.8)',
+  /** The strip a city's name is written on, over its banner (the web's `bg-night-900/85`). */
+  label: 'rgba(11,16,34,0.85)',
   /** The band of light that crosses a rare card (the web's `bg-white/40`). */
   glint: 'rgba(255,255,255,0.4)',
   /** The common badge's rim (RARITY_TONE.common). */

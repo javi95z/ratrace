@@ -6,7 +6,7 @@ import { CREAM, GOLD, WINE, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
 import { PixelText, ReadText, TIGHT } from './text';
 import { useTap } from './tap';
-import { COLORS, TOUCH, type ColorToken } from './theme';
+import { BODY, COLORS, TOUCH, type ColorToken } from './theme';
 
 /** Text a piece can carry: a number is a string to be set. */
 type Words = string | number;
@@ -306,13 +306,16 @@ export function Well({ children, style }: { children: ReactNode; style?: ViewSty
   );
 }
 
-/** A line of a list: something on the left, something on the right. */
-export function Row({ left, right, sub }: { left: ReactNode; right?: ReactNode; sub?: ReactNode }) {
+/**
+ * A line of a list: something on the left, something on the right. `size` is the size of the text it stands in (the web's Row takes its
+ * parent's: a sheet of figures is `text-[14px]`); `style` is the web's `className` on it (the rule over a line that sums up the lines above).
+ */
+export function Row({ left, right, sub, size = BODY.size, style }: { left: ReactNode; right?: ReactNode; sub?: ReactNode; size?: number; style?: ViewStyle }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 }}>
+    <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 }, style]}>
       <View style={{ flexShrink: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {setIn(left, (s) => <ReadText numberOfLines={1} style={{ flexShrink: 1 }}>{s}</ReadText>)}
+          {setIn(left, (s) => <ReadText size={size} numberOfLines={1} style={{ flexShrink: 1 }}>{s}</ReadText>)}
         </View>
         {sub ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -322,7 +325,7 @@ export function Row({ left, right, sub }: { left: ReactNode; right?: ReactNode; 
       </View>
       {right !== undefined ? (
         <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {setIn(right, (s) => <PixelText style={{ textAlign: 'right' }}>{s}</PixelText>)}
+          {setIn(right, (s) => <PixelText size={size} style={{ textAlign: 'right' }}>{s}</PixelText>)}
         </View>
       ) : null}
     </View>

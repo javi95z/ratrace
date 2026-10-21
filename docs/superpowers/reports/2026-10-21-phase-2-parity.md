@@ -8,7 +8,7 @@ away*, *text*, *shape*), the same tool (`kit-shots.ts`). Pictures and numbers li
 section goes to the report of the phase that added it (`reportFolder` in `kitCompare.ts`).
 
 Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4), the scenes of the front
-door, the week's challenge and the legal notice (task 6, below) and the page where a life is chosen (task 7, below). Scene rows (one game state drawn by both clients) follow with the screens.
+door, the week's challenge and the legal notice (task 6, below), the page where a life is chosen (task 7, below) and the HUD with what hangs from it (task 8, below). Scene rows (one game state drawn by both clients) follow with the screens.
 
 ## Scenes: one game state, drawn by both clients
 
@@ -173,7 +173,7 @@ The three pages that were shot before Task 7's second round (`home-new`, `home-s
 
 A scene that differs and whose residual is explained above is `accepted` while it stays within a record (`ACCEPTED` in `scripts/sceneShots.ts`: per scene, the most shape pixels, the most any line of text stands apart
 and the most lines in one shot only, its reason, and the heading of this report that explains it): `home-continue` (1 pixel, 0.67 pt), `new-first` and `new-unlocked` (1107, 2.00 pt), `new-locked` (1636, 2.00 pt),
-`new-replace` (1159, 1.00 pt). Any growth (a pixel, a hundredth of a point, a line of text in one shot only) is `differs` and fails the run; a scene that is clean stays clean. The page of other words (`legal`,
+`new-replace` (1159, 1.00 pt). (Tightened in Task 8 to 738, 738 and 1267: the text check no longer measures the page's screen-reader heading, whose box had kept 369 pixels of real ink out of the mask; see Task 8, #6.) Any growth (a pixel, a hundredth of a point, a line of text in one shot only) is `differs` and fails the run; a scene that is clean stays clean. The page of other words (`legal`,
 `PAGE_BASELINE`) is held to where it stood, 39721 shape pixels, within 10 % either way: past that it is `phone words, drifted` and fails the run. A full run (`scene-shots.ts` with nothing named) now exits 0: every
 scene is clean, accepted, in the phone's words within its bound, or unjudged. A change of the screens or of the phone's words that moves a number is meant to be seen here and the record moved by whoever moved it.
 (The sprites of a screen are given six seconds to load before it is shot, not four: once in a full run the front door's gear was not there yet.)
@@ -196,6 +196,76 @@ measure is Task 12's checkpoint):
 The twenty tiles are drawn with the page, as they are (100 to 145 ms is a development build's worst case: nothing is saved by windowing them, and they stay as one flat group so that a
 tile that moves in the grid is not drawn again). The locked rows, whose first frame cost most and which are drawn on a tap, are drawn a few to a frame (`LockedList`:
 `LOCKED_FIRST` 5, `LOCKED_STEP` 6). Chosen tiles and rows are `memo`: choosing another life draws the two tiles that change, and nothing else.
+
+## Task 8: the HUD and what hangs from it
+
+`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app compare --only=hud-news-r1,hud-cash,hud-flow,hud-race,hud-status-ru,hud-jailed,hud-crisis,hud-crisis-details`.
+The HUD is drawn on a screen of its own in the scenes, `hud`, until Play is ported (Task 9): the web's page draws the web's `Play` (the HUD's only page), and its shot
+takes out everything of Play but the HUD (`HUD_ONLY` in `sceneShots.ts`, one more `WEB_ONLY` rule: `#round-stage, #round-actions { display: none }`: the stage of the
+round and the bar of its next step); the app draws the HUD as Play will mount it (`testing/hudScene.tsx`: a `StickyScreen` with the HUD's `lead` and `header`, and the
+crisis's strip under them in the compact stages), over the page's ground. So the HUD is compared alone, on the same ground, on both sides.
+
+| scene | what | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|---|
+| hud-news-r1 | the engineer's first round at the news (play-news-r1's store): skyline, portrait, figures, way out | clean | 2.87 | 0.189 | 2390 | 0 | 20 | 1.00 (the Stats' ▸, phase 1's sign) |
+| hud-cash | the same, the cash sheet open | clean | 1.26 | 0.179 | 2734 | 0 | 30 (20 under the backdrop) | 0.33 |
+| hud-flow | the sixth round's finances (play-finance-r6's store: the compact HUD), the flow sheet open, its dividends, interest and tax | clean | 1.28 | 0.243 | 4271 | 0 | 32 (19 under) | 0.67 |
+| hud-race | the first round, the way out's sheet open: the wheel (motion left out), the bar with its door, the lines | clean | 2.23 | 0.416 | 7333 | 0 | 36 (20 under) | 0.33 |
+| hud-status-ru | in Russian on a phone 360 wide, the status sheet open with the score today | clean | 2.22 | 0.434 | 5284 | 0 | 44 (20 under) | 0.67 |
+| hud-jailed | a nurse in prison (the compact HUD with its tag), the prison's sheet open | clean | 3.38 | 0.617 | 9418 | 0 | 33 (21 under) | 0.67 |
+| hud-crisis | the engineer of `screen-seed-10` at the sixth round's finances, the second year of the Great Crash: the crisis's strip | clean | 3.10 | 0.180 | 2714 | 0 | 21 | 1.00 (▸) |
+| hud-crisis-details | the same, the whole of the crisis open from its strip (beyond the brief: its list of years is framed rows) | clean | 2.62 | 0.843 | 7915 | 0 | 33 (21 under) | 0.67 |
+
+**How the scenes are made.**
+- **Sheets.** The web's `Hud` takes no initial state and may not be changed, so its scene page presses the HUD's own button for the sheet the scene names
+  (`HUD_SHEETS` in the page: the cash marked `data-hud-cash`, the second and third figures of its grid, the way out, the prison's tag, the crisis's strip), as it does for
+  the page where a life is chosen (the same exception to Ruling A, R3's precedent); the phone's `Hud` takes the sheet as `open`, and `CrisisBar` as `open`.
+- **A phone 360 wide** (the Review Focus's Russian player). The shots' width is the iPhone 16 Pro's and the simulator's cannot be changed, so a scene can name a
+  `width` (`Scene.width`, core) and both clients draw its screen in a box that wide in the middle of the screen (`OfWidth` in both registries). The column inside is
+  then 336 and the Stats drop their icons, as the web's container query does under 340. A sheet stands over the whole screen on both sides (402).
+- **Motion left out.** The wheel of the way out and the lamp of a crisis's year play for ever, so a shot would catch them anywhere in their run; `hud-race`,
+  `hud-crisis` and `hud-crisis-details` are drawn with the player's own "reduce motion" on (`STILL` in core's scenes: the setting is in the profile, which both clients
+  read: the web's `html[data-motion='reduced']`, the phone's `ReducedMotionProvider`).
+- **A crisis and a prison, from the game itself.** No world on the first fixed seed has a crisis, and the saver never breaks the law. A scene may now begin its life on
+  another seed of the same family (`seed`, through `fixedSessionsOn` in `session/fixed.ts`; ids and clock unchanged) and take its own option on a card the saver would
+  answer otherwise (`picks`). `screen-seed-10` is the first whose world has a crisis in reach (the Great Crash, rounds 5 to 7); on `screen-seed-15` the nurse is wrongly
+  accused in her eighth round, goes to court (option 0) and loses: one round inside (found by playing the saver on the fixed seeds 1 to 15). Both are states the
+  game made, not a save written over: writing `jailRounds` into a save leaves its salary out of step with the life, and the game rebuilds the save from its log.
+- **play-news-r1** (the brief's "HUD at top") stays a scene of Play, unjudged until Task 9; `hud-news-r1` is its store with the HUD alone, and is compared.
+
+### What differed in the first shots, and was fixed
+
+| # | difference | cause | fix | test |
+|---|---|---|---|---|
+| 1 | the banner's stretched sky one device row off at its top (`hud-news-r1`'s 28 shape pixels, at the banner's top edge) | the sky is the skyline at `background-size: cover`, 77.42 pt tall from −5.71 pt; the browser draws a background where it falls, at a fraction of a device pixel, and a box of the phone is laid out on whole device pixels (−5.67), so the picture's rows changed one device row later (measured: the boundary of rows 4 and 5 at device row 234 on the web, 235 on the app) | the kit's `Sprite` takes a `place` inside its box: the sky is a canvas the banner's size with the picture drawn in it at −5.71 | `Sprite.test`, `CityBanner.test` (`skyCover`) |
+| 2 | the way out's sheet 4 pt taller above its lines (79311 shape pixels: everything above the list moved) | the web's list of the way out is `mt-3` and its first line (the passive income, when nothing else comes in) `mt-1`: block margins collapse, to 12; the phone's add, to 16 | the first line has no room of its own on top when it is the first | shot, `Hud.test` (the sheet's lines) |
+| 3 | the compact HUD of someone in prison 1.75 pt shorter (the figures, the bar and the portrait's row higher, 6478 shape pixels) | the web's tag is an `inline-flex` button in a line of the column's own 15 × 1.45 text: the line is the tag with its `mt-1` and, under it, the room the reading strut leaves below its baseline (6.75) where the tag leaves 5 | the tag's room above and below is worked out from the browser's baselines (`tagRoom`) | shot, `Jail.test` |
+| 4 | the prison's list: a small bullet glyph by the line, against the web's disc 5 pt across, 4 in from the list's edge | `list-disc` is drawn by the browser as a filled circle, not a character of the font | the disc is a Skia circle of the measured size and place (no `borderRadius`: the kit keeps none) | shot |
+| 5 | lines of text measured that are not drawn (37.67 pt "apart" under the cash sheet, 27.33 in Russian) | the shot first hid Play's stage with `visibility: hidden`, which keeps the boxes of its text: the check measured them, and kept the ink of the lines over them out of their own masks | `HUD_ONLY` takes them out with `display: none` | `sceneShots.test` |
+| 6 | 28 shape pixels round the name of the compact HUD (`hud-crisis`) | the web's page has a heading for a screen reader only (`sr-only`, Play's `<h1>`), whose text the check took for a line: its box, where its words would stand, lay over the name's and kept the name's ink out of its mask | the text check leaves out text clipped to nothing (`clip-path: inset(50%)`, `clip: rect(0 0 0 0)`, `TEXT_BOXES` in `shotDrivers.ts`); the page where a life is chosen had the same heading over its pictures: `new-first` and `new-unlocked` 1107 → 738 shape pixels, `new-locked` 1636 → 1267, and their records were tightened | `shotDrivers.test` (RED before the fix) |
+
+### The residual
+
+None beyond phase 1's: the Stats' ▸ (no font of the page has it; macOS's against iOS's) stands 1.00 pt apart, inside the tolerance, as in the kit's own section.
+The sky's 40 % picture and the skyline's three-step edges (the web's mask, `edgeBands`) are exact at 402; at 360 the edges are drawn in five clipped bands whose seams
+fall at fractions of a point, under the sheet's backdrop in `hud-status-ru` (0 shape pixels there).
+
+### What is not compared, and why
+
+- **The "away" strip** shows only once the page has scrolled past the portrait's row, and a scene is shot at the top: `Hud.test` scrolls the page and finds whose
+  life and which round it is. On the phone it is told by the `StickyScreen` (`useScrolledPastLead`: past the bottom of the lead, wherever it ends, followed as it grows), in place of the web's
+  `IntersectionObserver`; the web shows it 62 pt of scroll later, when the row has also gone under the status bar, which the phone's page never scrolls under.
+- **The paper's sheet** is a stand-in until Task 9 ports `News` (`Headlines`, its gauges and its paper): the crisis's bar and the round's headlines as lines.
+- **The tier-up moment** (the frame jumps, sparks fly and a band of light crosses it once) is the kit's `usePop`, `Sparks` and `Glint`, each held and compared in the kit's
+  motion section; the HUD only plays them on a better frame, never on its first draw.
+- **The backdrops of better frames** (teal, stage lights, gold rays) are drawn by `Hud.test` for each tier; `hud-crisis` shows the teal of a bronze frame (status 30)
+  behind the small portrait, compared. The gold rays are a Skia path (Chrome's conic gradient at its hard stops against Skia's antialiased edges: not shot, no scene reaches 100).
+
+### The wheel: one timing per loop, not a timer per frame
+
+The web's `Loop` steps a frame index in React state every `ms` (90 to 230 ms for the wheel), which draws the component again for every frame. The phone draws the four
+frames once, one over the other, and one Reanimated timing per mounted loop (`0` to `n` over `n × ms`, repeated) says which shows, on the UI thread: no React render while
+it turns, and no sprite decoded or drawn again (`Loop.test`: one repeating timing of `n × ms`; the frame for each moment of the run is the web timer's).
 
 ## The tolerance, and the exception this phase needs
 

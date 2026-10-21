@@ -8,7 +8,7 @@ import type { RatLook } from '@ratrace/core/game/avatar';
 vi.mock('@shopify/react-native-skia', () => {
   const node =
     (kind: string) =>
-    ({ children, image, blendMode, color, layer, sampling, width, height }: Record<string, unknown> & { children?: ReactNode }) => (
+    ({ children, image, blendMode, color, layer, sampling, width, height, x, y }: Record<string, unknown> & { children?: ReactNode }) => (
       <div
         data-skia={kind}
         data-image={(image as { src?: string } | null | undefined)?.src}
@@ -17,6 +17,7 @@ vi.mock('@shopify/react-native-skia', () => {
         data-layer={layer ? 'yes' : undefined}
         data-sampling={sampling ? JSON.stringify(sampling) : undefined}
         data-size={width !== undefined ? `${String(width)}x${String(height)}` : undefined}
+        data-at={x !== undefined ? `${String(x)},${String(y)}` : undefined}
       >
         {children}
       </div>
@@ -86,6 +87,19 @@ test('a sprite forced to a size (the web\'s `!h-4 !w-4`) is drawn at that box, w
   const missing = await drawn(<Sprite id="test.not_there_sized" scale={3} size={{ w: 20, h: 12.5 }} />);
   expect(all(missing.container, 'Canvas')[0].getAttribute('data-size')).toBe('20x12.5');
   warn.mockRestore();
+});
+
+test('a picture larger than its box (the web\'s `background-size: cover`) is drawn where it is placed, at a fraction of a point if that is where it falls, and cut by the box', async () => {
+  const { container } = await drawn(<Sprite id="icon.cash" size={{ w: 366, h: 66 }} place={{ x: 0, y: -5.71, w: 366, h: 77.42 }} />);
+  // The box is the banner's: the canvas cuts what hangs over it.
+  expect(all(container, 'Canvas')[0].getAttribute('data-size')).toBe('366x66');
+  const [image] = all(container, 'Image');
+  expect(image.getAttribute('data-at')).toBe('0,-5.71');
+  expect(image.getAttribute('data-size')).toBe('366x77.42');
+  expect(image.getAttribute('data-sampling')).toBe(JSON.stringify({ filter: 0, mipmap: 0 }));
+  // Unplaced, it fills its box from its corner.
+  const plain = await drawn(<Sprite id="icon.cash" size={{ w: 16, h: 16 }} />);
+  expect(all(plain.container, 'Image')[0].getAttribute('data-at')).toBe('0,0');
 });
 
 test('what is given to a sprite is drawn over its picture, in its own canvas', async () => {

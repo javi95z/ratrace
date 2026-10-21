@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS } from './shotDrivers';
+import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -111,4 +111,25 @@ test('the scenes are shot on web pages as tall as the screen shows, by the one r
 test('a screen is given six seconds for its sprites to load before it is shot, and the shot waits for no less (4 s once left the front door\'s gear out of a full run)', () => {
   expect(SPRITES_MS).toBe(6000);
   expect(read('./shotDrivers.ts')).toContain('await sleep(SPRITES_MS);');
+});
+
+// A page of jsdom's, with the two calls only a browser that lays out can answer stood in for.
+test('the lines of text a shot measures are those drawn: words only a screen reader reads (a page\'s `sr-only` heading) are left out', async () => {
+  // jsdom is the tests' own page (it has no types in this app): named by a string, it is taken as it comes.
+  const library: string = 'jsdom';
+  const { JSDOM } = (await import(library)) as { JSDOM: new (html: string) => { window: Window & typeof globalThis } };
+  const dom = new JSDOM('<body><h1 style="position:absolute;clip-path:inset(50%)">Software engineer, age 32</h1><h2 style="clip:rect(0px, 0px, 0px, 0px)">Old way</h2><p style="color:rgb(1, 2, 3)">Haruto</p></body>');
+  const { window } = dom;
+  window.Range.prototype.getClientRects = () => [{ left: 10, top: 20, width: 30, height: 12 }] as unknown as DOMRectList;
+  window.document.elementFromPoint = () => null;
+  const globals = { document: window.document, NodeFilter: window.NodeFilter, getComputedStyle: window.getComputedStyle.bind(window) };
+  const saved = Object.fromEntries(Object.keys(globals).map((key) => [key, (globalThis as Record<string, unknown>)[key]]));
+  Object.assign(globalThis, globals);
+  try {
+    const boxes = TEXT_BOXES();
+    expect(boxes.map((box) => box.text)).toEqual(['Haruto']);
+    expect(boxes[0]).toMatchObject({ x: 10, y: 20, w: 30, h: 12, color: [1, 2, 3] });
+  } finally {
+    Object.assign(globalThis, saved);
+  }
 });

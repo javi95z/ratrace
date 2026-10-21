@@ -57,11 +57,37 @@ function Pressed({ selector, children }: { selector: string | undefined; childre
   return children;
 }
 
+/**
+ * The web's Hud has no initial state either: a scene of it that names a sheet has the page press the figure (or the tag) that opens it, once the
+ * screen is drawn, as for the page where a life is chosen. Each is the Hud's own button, inside its `header`: the cash (marked as where coins
+ * land), the second and third figures of its grid, the way out (the one block button of the header), the tag of someone in prison, the strip of a
+ * crisis that hangs under it. The phone's
+ * Hud is given the sheet as its initial state (`open`).
+ */
+const HUD_SHEETS: Readonly<Record<string, string>> = {
+  cash: 'header [data-hud-cash] button',
+  flow: 'header .grid-cols-3 > button:nth-child(2)',
+  status: 'header .grid-cols-3 > button:nth-child(3)',
+  ratRace: 'header button.block.min-h-11',
+  jail: 'header button.mt-1.inline-flex',
+  crisis: 'header button.frame-wine',
+};
+
+/**
+ * A scene's screen on the phone it is drawn for: the shots' own (the whole page), or a narrower one (`scene.width`), as a box that wide in the
+ * middle of the page. The phone's simulator cannot be made narrower, so its scene draws the same box.
+ */
+function OfWidth({ width, children }: { width: number | undefined; children: ReactNode }) {
+  if (width === undefined) return children;
+  return <div style={{ width, marginInline: 'auto' }}>{children}</div>;
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: () => <Play />,
+  hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   records: () => <Records />,
   collection: () => <Collection />,
   challenge: () => <WeeklyChallenge />,
@@ -97,7 +123,7 @@ function SceneGame({ scene, services }: { scene: Scene; services: Services }) {
     <div data-scene={over ? scene.name : undefined} className="contents">
       <GameProvider services={services}>
         <Script scene={scene} done={done} />
-        {over ? SCREENS[screenOf(scene)](scene) : null}
+        {over ? <OfWidth width={scene.width}>{SCREENS[screenOf(scene)](scene)}</OfWidth> : null}
       </GameProvider>
     </div>
   );

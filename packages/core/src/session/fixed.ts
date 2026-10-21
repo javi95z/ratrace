@@ -24,3 +24,9 @@ export const memoryDevice = (): MemoryStore => new MemoryStore();
 
 /** The game on a device, with the ids, seeds and clock of `fixedDeps`. */
 export const fixedSessions = (store: MemoryStore): LocalSessions => new LocalSessions(store, content, lives, fixedDeps());
+
+/**
+ * The same, with every life begun on one seed of the same family (`screen-seed-<n>`): for a scene whose world must hold what the first seed's
+ * does not (a crisis). Ids and clock are `fixedDeps`'.
+ */
+export const fixedSessionsOn = (store: MemoryStore, seed: string): LocalSessions => new LocalSessions(store, content, lives, { ...fixedDeps(), newSeed: () => seed });

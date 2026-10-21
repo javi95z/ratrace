@@ -98,7 +98,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -154,6 +154,59 @@ describe('the scenes of the page where a life is chosen', () => {
   });
 });
 
+describe('the scenes of the HUD', () => {
+  it('hud-news-r1, hud-cash, hud-race and hud-status-ru are the news of the engineer\'s first round, play-news-r1\'s very store, each with what it opens', async () => {
+    const first = await saveOf(await sceneStore('play-news-r1'));
+    for (const name of ['hud-news-r1', 'hud-cash', 'hud-race', 'hud-status-ru']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
+    const sheets = Object.fromEntries(SCENES.filter((scene) => scene.name.startsWith('hud-')).map((scene) => [scene.name, scene.sheet]));
+    expect(sheets).toEqual({ 'hud-news-r1': undefined, 'hud-cash': 'cash', 'hud-flow': 'flow', 'hud-race': 'ratRace', 'hud-status-ru': 'status', 'hud-jailed': 'jail', 'hud-crisis': undefined, 'hud-crisis-details': 'crisis' });
+  });
+
+  it('hud-status-ru is drawn in Russian, on a phone 360 wide: every other scene on the shots\' own 402', () => {
+    const ru = SCENES.find((scene) => scene.name === 'hud-status-ru');
+    expect(ru).toMatchObject({ locale: 'ru', width: 360 });
+    expect(SCENES.filter((scene) => scene.width !== undefined).map((scene) => scene.name)).toEqual(['hud-status-ru']);
+  });
+
+  it('hud-flow is the finances of the sixth round (the compact HUD), play-finance-r6\'s very store', async () => {
+    expect(await saveOf(await sceneStore('hud-flow'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
+  });
+
+  it('hud-jailed is a life in prison: the nurse of screen-seed-15, wrongly accused in her eighth round, who went to court and lost, at the finances of that round', async () => {
+    const store = await sceneStore('hud-jailed');
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'finance' });
+    expect(roundOf(state)).toBe(8);
+    // In for the rest of the round: a sentence of one round is served at its end.
+    expect(state.view?.player.life.jailRounds).toBe(1);
+    const save = (await saveOf(store)) as SavedGame;
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-15' });
+    // The accusation was the third card of the round, answered with its first option (to court); every other card as the saver answers it.
+    expect(state.view?.hand[2]).toBe('crime_wrongly_accused');
+    expect(save.log[7].picks[2]).toBe(0);
+  });
+
+  it('hud-crisis is a life whose world has a crisis, at its second year, at the finances (where the strip of the crisis hangs under the HUD)', async () => {
+    const store = await sceneStore('hud-crisis');
+    const save = (await saveOf(store)) as SavedGame;
+    // The first of the fixed seeds whose world has a crisis early in a life (the tenth); the life is still the first the device begins, with its id.
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-10', lifeId: 'engineer' });
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', stage: 'finance' });
+    expect(roundOf(state)).toBe(6);
+    expect(state.view?.timeline[state.view.round].crisis).toEqual({ id: 'crash', year: 2, of: 3 });
+  });
+
+  it('hud-crisis-details is the same life, with the whole of the crisis open from its strip', async () => {
+    expect(await saveOf(await sceneStore('hud-crisis-details'))).toEqual(await saveOf(await sceneStore('hud-crisis')));
+  });
+
+  it('hud-race and hud-crisis are drawn with motion left out, as a player can set it: a shot catches no loop half way (the wheel, the lamp of a crisis)', async () => {
+    for (const name of ['hud-race', 'hud-crisis', 'hud-crisis-details']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
+    for (const name of ['hud-news-r1', 'hud-cash', 'play-news-r1']) expect(await (await sceneStore(name)).loadProfile(), name).toEqual(newProfile());
+  });
+});
+
 describe('the list of scenes', () => {
   it('names each scene <screen> or <screen>-<state>, once, in a language the game speaks', () => {
     expect(new Set(SCENES.map((scene) => scene.name)).size).toBe(SCENES.length);
@@ -175,6 +228,14 @@ describe('the list of scenes', () => {
       'play-finance-r6',
       'play-outcome-r1',
       'play-resolve-r6',
+      'hud-news-r1',
+      'hud-cash',
+      'hud-flow',
+      'hud-race',
+      'hud-status-ru',
+      'hud-jailed',
+      'hud-crisis',
+      'hud-crisis-details',
       'challenge-practice',
       'legal',
     ]);
@@ -209,7 +270,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'challenge', 'legal']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'hud', 'challenge', 'legal']));
   });
 });
 

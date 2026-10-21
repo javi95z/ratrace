@@ -92,7 +92,12 @@ export function refuseServerInUse(up: boolean, port: number): void {
   if (up) throw new Error(`port ${port} is already answering: stop it, the shots start a server of their own (with no project in its environment)`);
 }
 
-/** In the page: every line of visible text, as client rects in CSS pixels, with the colour its glyphs are drawn in. */
+/**
+ * In the page: every line of visible text, as client rects in CSS pixels, with the colour its glyphs are drawn in. Text a screen reader
+ * alone reads (the `sr-only` of a heading: clipped to nothing, `clip-path: inset(50%)`, or `clip: rect(0 0 0 0)` before it) draws nothing,
+ * and is left out: its box would still be reported where its words would stand, over the lines that are drawn there, and keep their ink
+ * from being measured.
+ */
 export const TEXT_BOXES = () => {
   const boxes: Array<{ x: number; y: number; w: number; h: number; text: string; color: [number, number, number]; opacity: number; back?: [number, number, number]; covered: boolean }> = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -100,6 +105,13 @@ export const TEXT_BOXES = () => {
     const text = node.textContent?.trim() ?? '';
     const el = node.parentElement;
     if (!text || !el || el.closest('script, style, nextjs-portal')) continue;
+    // (No helper function: this one is sent to the page as its source, where the bundler's helpers for named functions do not exist.)
+    let unseen = false;
+    for (let up: Element | null = el; up && !unseen; up = up.parentElement) {
+      const style = getComputedStyle(up);
+      unseen = style.clipPath === 'inset(50%)' || style.clip === 'rect(0px, 0px, 0px, 0px)';
+    }
+    if (unseen) continue;
     const color = (getComputedStyle(el).color.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number) as [number, number, number];
     let opacity = 1;
     for (let up: Element | null = el; up; up = up.parentElement) opacity *= Number(getComputedStyle(up).opacity);

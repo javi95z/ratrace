@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'records', 'collection', 'challenge', 'legal']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'hud', 'records', 'collection', 'challenge', 'legal']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -38,6 +38,34 @@ test('a registry\'s screen is given the scene, on both sides, so that a scene\'s
   expect(web).toContain(`SCREENS: ${type} = {`);
   expect(app).toContain('screens[screenOf(scene)]?.(scene)');
   expect(web).toContain('SCREENS[screenOf(scene)](scene)');
+});
+
+test('a scene for a narrower phone is drawn in a box that wide, in the middle of the screen, on both sides (the simulator cannot be made narrower)', () => {
+  expect(app).toContain('{over ? <OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth> : null}');
+  expect(app).toContain("return <View style={{ flex: 1, width, alignSelf: 'center' }}>{children}</View>;");
+  expect(web).toContain('{over ? <OfWidth width={scene.width}>{SCREENS[screenOf(scene)](scene)}</OfWidth> : null}');
+  expect(web).toContain("return <div style={{ width, marginInline: 'auto' }}>{children}</div>;");
+});
+
+test('the Hud has open, in a scene, the sheet the scene names: the web\'s page presses the Hud\'s own button for it, the phone\'s Hud is given it as its initial state', () => {
+  expect(web).toContain("hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,");
+  expect(app).toContain('hud: (scene) => <HudScene open={hudOpenOf(scene)} />,');
+  // Every sheet a scene of the Hud names is one the web's page can press and the phone's Hud can open.
+  const sheets = SCENES.filter((scene) => scene.name.startsWith('hud-') && scene.sheet !== undefined).map((scene) => scene.sheet as string);
+  expect(sheets.length).toBeGreaterThan(0);
+  for (const sheet of sheets) {
+    expect(web, sheet).toMatch(new RegExp(`\\b${sheet}: 'header `));
+    expect(app, sheet).toMatch(new RegExp(`'${sheet}'`));
+  }
+  // The buttons pressed are the web Hud's own: the cash marked as where coins land, the figures of its grid, the one block button, the prison's tag.
+  const hud = read('../../web/src/game/screens/Hud.tsx');
+  expect(hud).toContain('<div data-hud-cash className="contents">');
+  expect(hud).toContain('<div className="grid grid-cols-3 gap-1.5">');
+  expect([...hud.matchAll(/className="block min-h-11/g)]).toHaveLength(1);
+  expect([...hud.matchAll(/className="mt-1 inline-flex"/g)]).toHaveLength(1);
+  // The strip of a crisis, under the figures of the compact Hud, is the crisis's own bar.
+  expect(hud).toContain('<CrisisBar crisis={shown.timeline[shown.round]?.crisis ?? null} compact />');
+  expect(read('../../web/src/game/screens/Crisis.tsx')).toContain('frame-raised frame-wine flex w-full');
 });
 
 test('a scene that goes on once the game is open is drawn after its steps, on both sides: the core\'s one function, a screen first drawn at the stage the scene ends on', () => {
