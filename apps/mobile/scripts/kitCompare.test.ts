@@ -51,6 +51,42 @@ test('a line on its own small fill (a Tag) is measured by its glyphs, not by the
   expect(moved.checks[0].apart).toBe(2);
 });
 
+test('ink in another line\'s box is that line\'s where the two share a colour, and this one\'s where they do not (a descender over the line under it)', () => {
+  const CREAM = [0xf4, 0xf1, 0xe4];
+  // 20 × 20 at 1×: a gold line in rows 2–9 whose descender goes on to row 11, over a line whose box starts at row 9 (cream glyphs in rows 12–16).
+  const w = 20;
+  const data = new Uint8Array(w * w * 4);
+  for (let y = 0; y < w; y++) {
+    for (let x = 0; x < w; x++) {
+      const gold = x >= 4 && x < 8 && y >= 2 && y < 12;
+      const cream = x >= 4 && x < 14 && y >= 12 && y < 17;
+      data.set([...(gold ? GOLD : cream ? CREAM : NIGHT), 255], (y * w + x) * 4);
+    }
+  }
+  const img = { width: w, height: w, data };
+  const name = { x: 3, y: 1, w: 6, h: 9, text: 'name', color: GOLD as [number, number, number], opacity: 1 };
+  const under = { x: 3, y: 9, w: 12, h: 9, text: 'under', color: CREAM as [number, number, number], opacity: 1 };
+  const { checks, mask } = inkOf(img, img, [name, under], 1, 0, 20);
+  // The descender (rows 9–11, in the other's box) is the gold line's ink, and masked as a glyph's.
+  expect(checks[0].web).toEqual([4, 2, 8, 12]);
+  expect(mask[11 * w + 5]).toBe(1);
+  // Two lines of one colour: the other's box is the other's.
+  const twin = { ...under, color: GOLD as [number, number, number] };
+  expect(inkOf(img, img, [name, twin], 1, 0, 20).checks[0].web).toEqual([4, 2, 8, 9]);
+  // A grey line beside a cream one: the cream glyphs' edges, a blend of cream and the ground, may be grey, so the other's box is the other's.
+  const GREY = [0x8b, 0x93, 0xa7] as [number, number, number];
+  const blended = new Uint8Array(data);
+  for (let x = 4; x < 8; x++) for (const y of [9, 10, 11]) blended.set([...GREY, 255], (y * w + x) * 4);
+  const greyName = { ...name, color: GREY };
+  expect(inkOf({ width: w, height: w, data: blended }, { width: w, height: w, data: blended }, [greyName, under], 1, 0, 20).checks[0].web).toBeNull();
+  // Two rects of one line (its words, and the ellipsis that cuts them short) are one line's: neither keeps the other's ink from it.
+  expect(inkOf(img, img, [name, { ...name, x: 3, w: 2 }], 1, 0, 20).checks[0].web).toEqual([4, 2, 8, 12]);
+  // The next line of the same words (a paragraph that wraps) is a line of its own: its box is its own.
+  expect(inkOf(img, img, [name, { ...name, y: 9 }], 1, 0, 20).checks[0].web).toEqual([4, 2, 8, 9]);
+  // A line of the same colour that something is drawn over (the page under a fixed bar) claims nothing of what is drawn over it.
+  expect(inkOf(img, img, [name, { ...twin, covered: true }], 1, 0, 20).checks[0].web).toEqual([4, 2, 8, 12]);
+});
+
 test('ink that fills its whole window is reported unmeasured, not as text in place', () => {
   const w = 10;
   const data = new Uint8Array(w * w * 4);

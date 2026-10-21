@@ -214,6 +214,44 @@ test('the lines of text a shot measures are those drawn: words only a screen rea
   }
 });
 
+test('a line in a box greyed by a filter (a badge not earned yet) is looked for in the grey its colour is drawn in, not in the colour computed', async () => {
+  const library: string = 'jsdom';
+  const { JSDOM } = (await import(library)) as { JSDOM: new (html: string) => { window: Window & typeof globalThis } };
+  const dom = new JSDOM('<body><div style="filter:grayscale(1)"><p style="color:rgb(242, 193, 78);background-color:rgb(31, 42, 77)">Millionaire by 35</p></div></body>');
+  const { window } = dom;
+  const doc = window.document;
+  window.Range.prototype.getClientRects = () => [{ left: 10, top: 20, width: 100, height: 12 }] as unknown as DOMRectList;
+  doc.elementFromPoint = () => doc.querySelector('p');
+  const globals = { document: doc, NodeFilter: window.NodeFilter, getComputedStyle: window.getComputedStyle.bind(window) };
+  const saved = Object.fromEntries(Object.keys(globals).map((key) => [key, (globalThis as Record<string, unknown>)[key]]));
+  Object.assign(globalThis, globals);
+  try {
+    // Gold through the full matrix: 0.2126 × 242 + 0.7152 × 193 + 0.0722 × 78 = 195.1; the navy behind it 42.2.
+    expect(TEXT_BOXES().map(({ color, back }) => ({ color, back }))).toEqual([{ color: [195, 195, 195], back: [42, 42, 42] }]);
+  } finally {
+    Object.assign(globalThis, saved);
+  }
+});
+
+test('a line cut short by a box that clips it (`truncate`: an ellipsis) is measured where it is drawn, not where its words would run on to', async () => {
+  const library: string = 'jsdom';
+  const { JSDOM } = (await import(library)) as { JSDOM: new (html: string) => { window: Window & typeof globalThis } };
+  const dom = new JSDOM('<body><div style="overflow:hidden"><p style="color:rgb(1, 2, 3)">Your $127,830 in cash buys 6.3% less than</p></div></body>');
+  const { window } = dom;
+  const doc = window.document;
+  window.Range.prototype.getClientRects = () => [{ left: 10, top: 20, width: 300, height: 12 }] as unknown as DOMRectList;
+  doc.querySelector('div')!.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 100, width: 200, height: 100 }) as DOMRect;
+  doc.elementFromPoint = () => doc.querySelector('p');
+  const globals = { document: doc, NodeFilter: window.NodeFilter, getComputedStyle: window.getComputedStyle.bind(window) };
+  const saved = Object.fromEntries(Object.keys(globals).map((key) => [key, (globalThis as Record<string, unknown>)[key]]));
+  Object.assign(globalThis, globals);
+  try {
+    expect(TEXT_BOXES().map(({ x, y, w, h }) => ({ x, y, w, h }))).toEqual([{ x: 10, y: 20, w: 190, h: 12 }]);
+  } finally {
+    Object.assign(globalThis, saved);
+  }
+});
+
 test('a line partly under decoration that takes the pointer in a shot (the calendar of a turning round) is measured where it shows, either side; under a backdrop it is covered whole', async () => {
   const library: string = 'jsdom';
   const { JSDOM } = (await import(library)) as { JSDOM: new (html: string) => { window: Window & typeof globalThis } };

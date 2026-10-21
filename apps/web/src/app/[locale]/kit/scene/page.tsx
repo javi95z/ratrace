@@ -149,6 +149,11 @@ const financePresses = (scene: Scene): string[] => [...(scene.tab === undefined 
  * Presses each of `selectors` in turn, once the screen is drawn: each as soon as it is there (a tab pressed draws its panel a frame or two later, and
  * the row in it is pressed then), and each once. Once for all, as `Pressed`: the dev server runs an effect twice, and a second press of a tab already
  * open is nothing, but of a row it would open its sheet again. A press is a selector, or a function that finds its thing (`null` while it is not there).
+ *
+ * A sheet opened gives the focus to what is in it (the slider of an amount, its panel), and the browser scrolls the page to show what took the focus,
+ * though the sheet is fixed over it (measured: 228 down under the pension's sheet). The phone's scene opens the sheet as the screen's initial state, at
+ * the top of its page, and moves no focus: so once everything is pressed the page is put back at its top (a few frames on, after the focus has moved),
+ * and both shots show the same page under the backdrop.
  */
 function PressedInTurn({ selectors, children }: { selectors: ReadonlyArray<string | (() => HTMLElement | null)>; children: ReactNode }) {
   const pressed = useRef(false);
@@ -157,6 +162,10 @@ function PressedInTurn({ selectors, children }: { selectors: ReadonlyArray<strin
     pressed.current = true;
     let at = 0;
     let frames = 0;
+    const settle = (left: number) => {
+      if (left > 0) requestAnimationFrame(() => settle(left - 1));
+      else window.scrollTo(0, 0);
+    };
     const next = () => {
       const press = selectors[at];
       const target = typeof press === 'string' ? document.querySelector<HTMLElement>(press) : press();
@@ -167,6 +176,7 @@ function PressedInTurn({ selectors, children }: { selectors: ReadonlyArray<strin
       frames += 1;
       // Five seconds of frames at most (a dev server draws slowly): a selector that never matches leaves the scene as it is, for the shot to show.
       if (at < selectors.length && frames < 300) requestAnimationFrame(next);
+      else settle(5);
     };
     next();
   }, [selectors]);

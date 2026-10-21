@@ -217,6 +217,14 @@ export interface TextBox {
   covered?: boolean;
 }
 
+/** The dark grounds and fills text stands on (night-900 to night-600): a glyph's edge on them is a blend of its colour with one of these. */
+const DARK_GROUNDS: ReadonlyArray<readonly [number, number, number]> = [
+  [0x0b, 0x10, 0x22],
+  [0x14, 0x1b, 0x33],
+  [0x1f, 0x2a, 0x4d],
+  [0x26, 0x35, 0x66],
+];
+
 /** How near a pixel must be to the glyphs' colour to be their ink: a glyph's inside is drawn in it exactly; ink-900 and night-900, the closest two text and frame colours, are 15 apart. */
 export const INK = 10;
 
@@ -240,9 +248,23 @@ export interface TextCheck {
 export function inkOf(a: Image, b: Image, boxes: readonly TextBox[], scale: number, from: number, to: number): { checks: TextCheck[]; mask: Uint8Array } {
   const mask = new Uint8Array(a.width * a.height);
   const checks: TextCheck[] = [];
-  // Each line's own box, in device pixels: a pixel in another line's box is that line's ink, not this one's.
+  // Each line's own box, in device pixels: a pixel in another line's box is that line's ink, not this one's, wherever this one's colour could be
+  // that line's (its colour, or an edge of its glyphs: a blend of it with the dark grounds and fills the game's text stands on, or its own
+  // background). Where it could not, a pixel is told by its colour: the descenders of a gold name that reach into the box of the cream line under
+  // it (the two boxes overlap) are the name's, and would otherwise be nobody's ink, their edges counted as shape.
   const own = boxes.map((o) => [Math.floor(o.x * scale), Math.floor(o.y * scale), Math.ceil((o.x + o.w) * scale), Math.ceil((o.y + o.h) * scale)]);
-  const inOther = (k: number, x: number, y: number) => own.some((r, n) => n !== k && x >= r[0] && x < r[2] && y >= r[1] && y < r[3]);
+  const shares = Array.from({ length: 21 }, (_, i) => i / 20);
+  const couldBe = (k: number, n: number) =>
+    [...DARK_GROUNDS, ...(boxes[n].back ? [boxes[n].back] : [])].some((ground) =>
+      shares.some((share) => Math.max(...[0, 1, 2].map((c) => Math.abs(boxes[k].color[c] - (ground[c] + share * (boxes[n].color[c] - ground[c]))))) <= INK),
+    );
+  // A line something is drawn over (`covered`: the page under the fixed bar of the next step, or under a sheet's backdrop) is not drawn in its colour
+  // where it is covered, so its box claims nothing: the bar's own figure over a button of the page under it is the figure's.
+  // And the rects of one line (its words and the ellipsis that cuts them short: the same words, the same colour, on the same line) are one line's. (The
+  // lines of a paragraph that wraps are rects of one text too, but each is a line of its own, kept from the ink of the next.)
+  const sameLine = (k: number, n: number) => boxes[n].text === boxes[k].text && boxes[n].color.every((c, i) => c === boxes[k].color[i]) && Math.abs(boxes[n].y - boxes[k].y) < 1 && Math.abs(boxes[n].h - boxes[k].h) < 1;
+  const ambiguous = boxes.map((_, k) => boxes.map((other, n) => n !== k && other.covered !== true && !sameLine(k, n) && couldBe(k, n)));
+  const inOther = (k: number, x: number, y: number) => own.some((r, n) => ambiguous[k][n] && x >= r[0] && x < r[2] && y >= r[1] && y < r[3]);
   for (const [k, box] of boxes.entries()) {
     if (box.covered) {
       checks.push({ text: box.text, web: null, app: null, apart: 0, unmeasured: true });

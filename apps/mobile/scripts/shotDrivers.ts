@@ -114,7 +114,7 @@ export const TEXT_BOXES = () => {
       unseen = style.clipPath === 'inset(50%)' || style.clip === 'rect(0px, 0px, 0px, 0px)';
     }
     if (unseen) continue;
-    const color = (getComputedStyle(el).color.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number) as [number, number, number];
+    let color = (getComputedStyle(el).color.match(/[\d.]+/g) ?? ['0', '0', '0']).slice(0, 3).map(Number) as [number, number, number];
     let opacity = 1;
     for (let up: Element | null = el; up; up = up.parentElement) opacity *= Number(getComputedStyle(up).opacity);
     let back: [number, number, number] | undefined;
@@ -122,9 +122,56 @@ export const TEXT_BOXES = () => {
       const bg = getComputedStyle(up).backgroundColor.match(/[\d.]+/g)?.map(Number);
       if (bg && (bg.length === 3 || bg[3] > 0)) back = [bg[0], bg[1], bg[2]];
     }
+    // A box greyed by a filter round it (`grayscale`: a badge not earned yet) draws its words in the grey of their colour, not in the colour
+    // computed: the filter's matrix (Filter Effects, at its amount) on the colour, and on the fill behind it.
+    let grey = 0;
+    for (let up: Element | null = el; up; up = up.parentElement) {
+      const found = /grayscale\(([\d.]+)(%?)\)/.exec(getComputedStyle(up).filter ?? '');
+      if (found) grey = Math.max(grey, Math.min(1, Number(found[1]) / (found[2] === '%' ? 100 : 1)));
+    }
+    if (grey > 0) {
+      const g = 1 - grey;
+      const rows = [
+        [0.2126 + 0.7874 * g, 0.7152 - 0.7152 * g, 0.0722 - 0.0722 * g],
+        [0.2126 - 0.2126 * g, 0.7152 + 0.2848 * g, 0.0722 - 0.0722 * g],
+        [0.2126 - 0.2126 * g, 0.7152 - 0.7152 * g, 0.0722 + 0.9278 * g],
+      ];
+      const was = color;
+      color = [0, 1, 2].map((r) => Math.round(rows[r][0] * was[0] + rows[r][1] * was[1] + rows[r][2] * was[2])) as [number, number, number];
+      if (back) {
+        const under = back;
+        back = [0, 1, 2].map((r) => Math.round(rows[r][0] * under[0] + rows[r][1] * under[1] + rows[r][2] * under[2])) as [number, number, number];
+      }
+    }
+    // What of the line a box round it clips (a name cut short with an ellipsis, `truncate`; a row of tabs that scrolls sideways): the text's own
+    // rects run on past it, over whatever stands beyond, where nothing of the line is drawn.
+    let clipLeft = -Infinity;
+    let clipRight = Infinity;
+    let clipTop = -Infinity;
+    let clipBottom = Infinity;
+    for (let up: Element | null = el; up && up !== document.body; up = up.parentElement) {
+      const style = getComputedStyle(up);
+      const box = up.getBoundingClientRect();
+      // (Read through the shorthand too, where a page that lays nothing out gives only what was written.)
+      // (No helper function here either: see above.)
+      const both = (style.overflow || 'visible').split(' ');
+      const overX = (style.overflowX !== '' && style.overflowX !== 'visible') || both[0] !== 'visible';
+      const overY = (style.overflowY !== '' && style.overflowY !== 'visible') || both[both.length - 1] !== 'visible';
+      if (overX) {
+        clipLeft = Math.max(clipLeft, box.left);
+        clipRight = Math.min(clipRight, box.right);
+      }
+      if (overY) {
+        clipTop = Math.max(clipTop, box.top);
+        clipBottom = Math.min(clipBottom, box.bottom);
+      }
+    }
     const range = document.createRange();
     range.selectNodeContents(node);
-    for (const r of range.getClientRects()) {
+    for (const whole of range.getClientRects()) {
+      const shownLeft = Math.max(whole.left, clipLeft);
+      const shownTop = Math.max(whole.top, clipTop);
+      const r = { left: shownLeft, top: shownTop, width: Math.min(whole.left + whole.width, clipRight) - shownLeft, height: Math.min(whole.top + whole.height, clipBottom) - shownTop };
       if (r.width <= 0 || r.height <= 0) continue;
       const middle = r.top + r.height / 2;
       // Under a sheet's backdrop the topmost thing at the line's middle is not the line's own.
