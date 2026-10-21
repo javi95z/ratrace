@@ -445,6 +445,29 @@ comes back only when the canvas is drawn again from JS. If so, an icon can go bl
 - **The amount sheet's other uses** (what it is for above the amount, what the amount comes to, a way out under the button): Finance's other sheets, Task 12;
   `AmountSheet.test` holds their order.
 
+## Task 11: cards to swipe or press, and what came of them (shots pending)
+
+Not shot in its task (the user's call: two batch passes shoot every scene registered since). The scenes are in `PENDING_SHOTS` (scripts/sceneShots.ts),
+unjudged until a batch pass shoots, compares and takes them out of it:
+
+| scene | what it is | held still by |
+|---|---|---|
+| play-cards-r1 | the engineer's first round, its second card: the office lottery, three choices (pressed, no swipe), the guide's tip under them | nothing moves after 0.28 s |
+| play-cards-legendary | the engineer's third round, its second card: the appointment, legendary, two choices (the swipe's two sides said) | `SHINE_HELD_MS` |
+| play-cards-three | screen-seed-3, first round, second card: asking for a raise, three choices shown, a fourth (negotiation 2) not shown | nothing moves after 0.28 s |
+| play-cards-ru-360 | Russian, 360 wide: screen-seed-10's second round, the AI boom, three long choices, the third tagged for the trade | nothing moves after 0.28 s |
+| play-outcome-r1 | the engineer's first card answered (a language course, −$600): the card again, the choice, what changed | nothing moves after 0.28 s |
+
+- **The shine of a rare card** loops for as long as the card is on screen (the rainbow every 4 s, the band of light every 3.6 s), and a legendary card's sparks
+  fly until 1.13 s: a shot would catch any moment of them. Both scene pages hold them where the kit's motion pages do (rainbow 2050 ms, light 665 ms, compared
+  clean there) and the sparks at their end (gone): the web by a rule of its page (`HOLD_SHINE`, its card's `article` only), the phone by the card's own
+  `HeldShine`.
+- **A scene takes no touch now, and says it is ready only while its game is where its steps left it** (the stage, the round, the card on screen, a choice being
+  taken): Task 9 once shot `play-cards-r1` gone on to a card's result. If anything moves a scene's game again, the run fails on that scene by name instead of
+  comparing another picture.
+- **Not compared** (no scene shows them; `Cards.test` holds them): the swipe itself (a finger), the choice taken while its answer comes (a moment), the links to
+  a career, a city and prison, a rare card that is not legendary, a cover that paid, the credit card's line under a result, coins flying from a result that paid.
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp

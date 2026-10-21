@@ -10,7 +10,7 @@
 // is not this page's: the shots keep the browser from the project (apps/mobile/scripts/shotDrivers.ts). The date is the shot's to
 // set (the browser's clock is held at SCENE_NOW): a screen here reads it as it always does.
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, turnOf } from '@ratrace/core/testing/scenes';
+import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -96,13 +96,26 @@ const nothing = (): void => {};
 const HOLD_TURN = `.animate-page, .animate-tear { animation-play-state: paused !important; animation-delay: -${PAGE_TURN_HELD_MS}ms !important; }`;
 
 /**
+ * The shine of a rare card held still `SHINE_HELD_MS` into its runs, as the kit's motion page holds it: its rainbow and its band of light paused
+ * there, and a legendary card's sparks at the end of their flight (gone). Only the card's own (`article`): the Hud's light, on a status that
+ * rose, is not touched. In the page with Play, from before a card is drawn. The phone's scene gives its card the same moments (`HeldShine`).
+ */
+const HOLD_SHINE = [
+  `article .animate-holo { animation-play-state: paused !important; animation-delay: -${SHINE_HELD_MS.holo}ms !important; }`,
+  `article .animate-glint { animation-play-state: paused !important; animation-delay: -${SHINE_HELD_MS.glint}ms !important; }`,
+  `article .animate-spark { animation-play-state: paused !important; animation-delay: -${SHINE_HELD_MS.spark}ms !important; }`,
+].join(' ');
+
+/**
  * The play screen of a scene, and over it the calendar of a round just turned where the scene has one (`turnOf`), held at one moment of its run:
- * drawn beside the screen, as the screen draws it when the round goes by under it. The phone's scene gives its calendar the same moment.
+ * drawn beside the screen, as the screen draws it when the round goes by under it. The phone's scene gives its calendar the same moment. A rare
+ * card's shine is held still too (`HOLD_SHINE`).
  */
 function PlayScene({ scene }: { scene: Scene }) {
   const turn = turnOf(scene);
   return (
     <>
+      <style>{HOLD_SHINE}</style>
       <Play />
       {turn ? <style>{HOLD_TURN}</style> : null}
       {turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} /> : null}

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -112,11 +112,24 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
 });
 
 test('a scene of a ported screen at a part of it still to be ported (a stage of Play a later task brings) is unjudged as well, and says which part', () => {
-  expect(Object.keys(STAND_IN_SCENES)).toEqual(['play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
+  expect(Object.keys(STAND_IN_SCENES)).toEqual(['play-finance-r6', 'play-resolve-r6']);
   for (const name of Object.keys(STAND_IN_SCENES)) expect(SCENES.map((scene) => scene.name), name).toContain(name);
-  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual(['play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
-  const cards = SCENES.find((scene) => scene.name === 'play-cards-r1')!;
-  expect(unjudgedLine(cards)).toEqual({ scene: 'play-cards-r1', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for the cards of play: its numbers say nothing' });
+  const finances = SCENES.find((scene) => scene.name === 'play-finance-r6')!;
+  expect(unjudgedLine(finances)).toEqual({ scene: 'play-finance-r6', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for the finances of play: its numbers say nothing' });
+});
+
+test('a scene of a screen ported but not shot yet (from Task 11 on, the batch passes shoot them) is unjudged until it is shot, and says so', () => {
+  expect([...PENDING_SHOTS]).toEqual(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-outcome-r1']);
+  for (const name of PENDING_SHOTS) {
+    expect(SCENES.map((scene) => scene.name), name).toContain(name);
+    // A scene is pending or a stand-in's, never both.
+    expect(Object.hasOwn(STAND_IN_SCENES, name), name).toBe(false);
+  }
+  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
+  const ru = SCENES.find((scene) => scene.name === 'play-cards-ru-360')!;
+  expect(unjudgedLine(ru)).toEqual({ scene: 'play-cards-ru-360', locale: 'ru', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
+  // Not judged, so it fails nothing, and its numbers are never read as a result.
+  expect(differing([unjudgedLine(ru)])).toEqual([]);
 });
 
 test('a run of some scenes keeps the lines of the others, and the file has every scene shot, in the list\'s order, a line to each', () => {

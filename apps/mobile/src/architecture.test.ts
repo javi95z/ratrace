@@ -77,6 +77,20 @@ const SENDS = /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bs
 /** The rules the app plays older lives under (`src/rules/v*.js`, the engine and content of a shipped version): code the app runs too. */
 const RULES = join(SRC, 'rules');
 const bundles = readdirSync(RULES).filter((name) => name.endsWith('.js')).map((name) => join(RULES, name));
+const REPO = fileURLToPath(new URL('../../..', import.meta.url));
+/** The packages the app carries besides the core: the rules (engine), what they run on (content), the interface's words (i18n). */
+const CARRIED = ['engine', 'content', 'i18n'].map((name) => join(REPO, 'packages', name, 'src'));
+
+/** Every file of code under `dir` that is not a test: TypeScript, and JavaScript of any kind (a bundle, or a stray `.js` beside the `.ts`). */
+function codeUnder(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) return codeUnder(path);
+    return /\.(tsx?|jsx?|mjs|cjs)$/.test(name) && !/\.test\.(tsx?|jsx?|mjs|cjs)$/.test(name) ? [path] : [];
+  });
+}
+/** All the code the app runs or bundles: its own (the rules' bundles among it), the core's, and the packages it carries. */
+const shipped = [SRC, CORE, ...CARRIED].flatMap(codeUnder);
 
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
@@ -199,9 +213,14 @@ describe('the wall between the phone\'s screens and the game', () => {
     // A word that only names one is not one.
     expect(SENDS.test('// what is fetched from the device: the profile')).toBe(false);
     expect(SENDS.test('const prefetched = rules.prefetch;')).toBe(false);
+    // Read: everything of the app's own, any JavaScript in it (the rules' bundles, or a file that is not TypeScript), the core, and the engine, content
+    // and words it carries.
     expect(bundles.length).toBeGreaterThan(0);
-    const sending = [...all, ...bundles].filter((path) => SENDS.test(readFileSync(path, 'utf8'))).map((path) => relative(SRC, path).startsWith('..') ? rel(path) : relative(SRC, path));
-    expect(sending).toEqual(['testing/scene.tsx']);
+    expect(shipped).toEqual(expect.arrayContaining([...all, ...bundles]));
+    for (const dir of CARRIED) expect(shipped.some((path) => path.startsWith(dir)), relative(REPO, dir)).toBe(true);
+    expect(shipped.some((path) => path.endsWith('.json'))).toBe(false);
+    const sending = shipped.filter((path) => SENDS.test(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
+    expect(sending).toEqual(['apps/mobile/src/testing/scene.tsx']);
     // That one: one request, to this machine only, with the address of the scene's own route; the route that draws a scene is for development only
     // (scripts/scenePages.test.ts) and says nothing unless it is opened for a shot.
     const scene = readFileSync(join(SRC, 'testing/scene.tsx'), 'utf8');

@@ -6,11 +6,13 @@ import { SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/s
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import type { SavedGame } from '@ratrace/core/session/types';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { formatFor } from '@ratrace/core/lib/format';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useEffect, useRef } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { useClock, useGame, useT } from '../game/context';
 import SceneRoute from '../app/scene';
+import { rea } from '../ui/testing/reanimated';
 import { params } from './fakes';
 import { memoryServices } from './memoryServices';
 import { settled } from './renders';
@@ -297,4 +299,71 @@ test('the scene of the badges a step earned is their small cards under the Hud, 
   expect(cards[1].textContent).toContain('Viral by mistake');
   expect(screen.queryByText('Legendary badge')).toBeNull();
   expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
+});
+
+test('the scenes of the cards are drawn by the card stage itself, each at its card, nothing taken', async () => {
+  const cards = [
+    { name: 'play-cards-r1', choices: /^Your choices: The office Christmas lottery$/, count: 3, swipe: false, tip: true },
+    { name: 'play-cards-legendary', choices: /^Your choices: The appointment$/, count: 2, swipe: true, tip: false },
+    { name: 'play-cards-three', choices: /^Your choices: Ask for a raise$/, count: 3, swipe: false, tip: false },
+  ];
+  for (const card of cards) {
+    render(<SceneView name={card.name} />);
+    const group = await screen.findByRole('group', { name: card.choices }, WAIT);
+    const choices = within(group).getAllByRole('button');
+    expect(choices, card.name).toHaveLength(card.count);
+    for (const choice of choices) expect(choice.getAttribute('aria-selected'), card.name).not.toBe('true');
+    expect(screen.queryByText('Swipe the card, or tap a choice') !== null, card.name).toBe(card.swipe);
+    // The first card scene keeps the tip of the guide under the choices; the others are for a player who has read it.
+    expect(screen.queryByRole('note', { name: 'Guide' }) !== null, card.name).toBe(card.tip);
+    cleanup();
+  }
+});
+
+test('the Russian card is drawn on a phone 360 wide: its three long choices, the one the trade opens tagged', async () => {
+  render(<SceneView name="play-cards-ru-360" />);
+  const group = await screen.findByRole('group', { name: 'Твои варианты: Бум ИИ' }, WAIT);
+  const choices = within(group).getAllByRole('button');
+  expect(choices).toHaveLength(3);
+  expect(choices[2].textContent).toContain('Благодаря профессии');
+  const box = [...document.querySelectorAll<HTMLElement>('div')].find((el) => el.style.width === '360px');
+  expect(box?.contains(group)).toBe(true);
+});
+
+test('a scene of a legendary card holds its shine still where the web\'s page holds it: no rainbow or light runs, and its sparks are gone', async () => {
+  rea.assigned.length = 0;
+  render(<SceneView name="play-cards-legendary" />);
+  await screen.findByRole('group', { name: /^Your choices: The appointment$/ }, WAIT);
+  const card = screen.getByRole('article');
+  // The rainbow drawn in the picture, and the band of light over it, each at one moment of its run: no loop runs anywhere on the page.
+  expect(card.querySelector('[data-sprite] [data-skia="Group"]')).not.toBeNull();
+  expect(rea.assigned.filter((one) => one.kind === 'repeat')).toEqual([]);
+  const sparks = [...card.querySelectorAll<HTMLElement>('[aria-hidden="true"] > div')];
+  expect(sparks).toHaveLength(16);
+  for (const spark of sparks) expect(spark.style.opacity).toBe('0');
+});
+
+test('the scene of a card\'s result is drawn by the result itself: the card answered, the choice made and what it changed', async () => {
+  render(<SceneView name="play-outcome-r1" />);
+  expect(await screen.findByRole('heading', { name: 'What happened' }, WAIT)).toBeTruthy();
+  const card = screen.getByRole('article');
+  expect(within(card).getByText('You chose: Sign up')).toBeTruthy();
+  expect(card.querySelector('[data-sprite="card.language"], [data-sprite^="card."]')).not.toBeNull();
+  expect(within(screen.getByRole('region', { name: 'What changes' })).getByText(formatFor('en').briefSigned(-60_000))).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Next card' })).toBeTruthy();
+});
+
+test('a scene\'s screen takes no touch, and a scene whose game moves on all the same stops saying it is ready: it is never shot as a picture it is not', async () => {
+  const said = vi.fn<(url: string) => Promise<Response>>(async () => new Response('ok'));
+  vi.stubGlobal('fetch', said);
+  render(<SceneView name="play-cards-r1" readyPort={8093} />);
+  const group = await screen.findByRole('group', { name: /^Your choices/ }, WAIT);
+  // No touch reaches the screen: the box it is drawn in takes none, and holds all of it.
+  let box: HTMLElement | null = group;
+  while (box && box.style.pointerEvents !== 'none') box = box.parentElement;
+  expect(box?.contains(screen.getByRole('main'))).toBe(true);
+  await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready=1&n=\d+$/)));
+  // A choice taken all the same (here by the test, as a tap the box let through would): the scene is no longer the picture it was, and says so.
+  fireEvent.click(within(group).getAllByRole('button')[0]);
+  await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready=0&n=\d+$/)));
 });

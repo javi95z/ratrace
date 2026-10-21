@@ -1,12 +1,13 @@
 import { content, lives, rarityOf, weekOf } from '@ratrace/content';
-import { stateHash } from '@ratrace/engine';
+import { previewCard, stateHash } from '@ratrace/engine';
+import { cardRarity } from '../game/present';
 import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
-import { GUIDE_READ, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, turnOf } from './scenes';
+import { GUIDE_READ, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
 import { FIRSTS, TIPS } from '../game/guide';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
@@ -91,6 +92,61 @@ describe('the scenes of the front door and the play screen', () => {
     expect(save?.log.slice(0, 5).map((entry) => entry.orders !== null && entry.orders.length > 0)).toEqual([true, true, true, true, true]);
     expect(save?.log[5]?.orders ?? null).toBeNull();
     expect(save?.log[5]?.picks).toHaveLength(state.view?.hand.length ?? -1);
+  });
+});
+
+describe('the scenes of the cards', () => {
+  /** A scene's game as a client has it once the scene's steps are taken: the card waiting, and the choices it shows (those that can be taken). */
+  async function waiting(name: string) {
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore(name)), content });
+    await game.getState().boot();
+    await runScene(name, game);
+    const state = game.getState();
+    const view = state.view as NonNullable<typeof state.view>;
+    const cardId = view.hand[view.answered];
+    const previews = previewCard(content, view, cardId);
+    return { state, cardId, def: content.cards.find((card) => card.id === cardId)!, shown: previews.filter((preview) => preview.available).length, hidden: previews.filter((preview) => !preview.available).length };
+  }
+
+  it('play-cards-r1 is the second card of the engineer\'s first round, the office lottery: three choices, pressed, never swiped', async () => {
+    const r1 = await waiting('play-cards-r1');
+    expect(r1).toMatchObject({ cardId: 'luck_lottery', shown: 3, hidden: 0 });
+    expect(r1.state).toMatchObject({ stage: 'cards', busy: false, picked: null });
+  });
+
+  it('play-cards-legendary is a legendary card with two choices, to be swiped: the appointment, the second card of the engineer\'s third round', async () => {
+    const legendary = await waiting('play-cards-legendary');
+    expect(legendary).toMatchObject({ cardId: 'red_appointment', shown: 2 });
+    expect(cardRarity(legendary.def)).toBe('legendary');
+    expect(roundOf(legendary.state)).toBe(3);
+    // The life of the first fixed seed, played by the saver: the first two rounds whole, then one card of the third.
+    expect(await saveOf(await sceneStore('play-cards-legendary'))).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-1', lifeId: 'engineer' });
+  });
+
+  it('play-cards-three is a card with three choices shown and a fourth the player cannot take, not shown: asking for a raise, on screen-seed-3', async () => {
+    const three = await waiting('play-cards-three');
+    expect(three).toMatchObject({ cardId: 'career_raise', shown: 3, hidden: 1 });
+    expect(roundOf(three.state)).toBe(1);
+    expect(await saveOf(await sceneStore('play-cards-three'))).toMatchObject({ seed: 'screen-seed-3' });
+  });
+
+  it('play-cards-ru-360 is, in Russian on a phone 360 wide, a card of long choices, one with the tag of the trade that opens it: the AI boom of screen-seed-10\'s second round', async () => {
+    expect(SCENES.find((scene) => scene.name === 'play-cards-ru-360')).toEqual({ name: 'play-cards-ru-360', locale: 'ru', width: 360 });
+    const ru = await waiting('play-cards-ru-360');
+    expect(ru).toMatchObject({ cardId: 'world_ai_boom', shown: 3 });
+    expect(ru.def.options[2].when?.careers).toBeDefined();
+    expect(roundOf(ru.state)).toBe(2);
+    // The world of screen-seed-10 has its crisis later: this round has none, so nothing of one is under the Hud.
+    expect(ru.state.view?.timeline[ru.state.view.round].crisis ?? null).toBeNull();
+  });
+
+  it('are drawn for a player who has read the guide, but the first: the card and its choices are the whole stage (play-cards-r1 keeps the tip under them)', async () => {
+    for (const name of ['play-cards-legendary', 'play-cards-three', 'play-cards-ru-360']) expect(GUIDE_READ.has(name), name).toBe(true);
+    expect(GUIDE_READ.has('play-cards-r1')).toBe(false);
+  });
+
+  it('hold the shine of a rare card where the kit\'s pages of motion hold it, and its sparks at their end, so a shot sees one moment of it', () => {
+    expect(SHINE_HELD_MS).toEqual({ holo: 2050, glint: 665, spark: 600 });
   });
 });
 
@@ -216,10 +272,10 @@ describe('the scenes of the HUD', () => {
     expect(sheets).toEqual({ 'hud-news-r1': undefined, 'hud-cash': 'cash', 'hud-flow': 'flow', 'hud-race': 'ratRace', 'hud-status-ru': 'status', 'hud-jailed': 'jail', 'hud-crisis': undefined, 'hud-crisis-details': 'crisis' });
   });
 
-  it('hud-status-ru is drawn in Russian, on a phone 360 wide: every other scene on the shots\' own 402', () => {
+  it('hud-status-ru and play-cards-ru-360 are drawn in Russian, on a phone 360 wide: every other scene on the shots\' own 402', () => {
     const ru = SCENES.find((scene) => scene.name === 'hud-status-ru');
     expect(ru).toMatchObject({ locale: 'ru', width: 360 });
-    expect(SCENES.filter((scene) => scene.width !== undefined).map((scene) => scene.name)).toEqual(['hud-status-ru']);
+    expect(SCENES.filter((scene) => scene.width !== undefined).map((scene) => scene.name)).toEqual(['play-cards-ru-360', 'hud-status-ru']);
   });
 
   it('hud-flow is the finances of the sixth round (the compact HUD), play-finance-r6\'s very store', async () => {
@@ -320,6 +376,9 @@ describe('the list of scenes', () => {
       'new-replace',
       'play-news-r1',
       'play-cards-r1',
+      'play-cards-legendary',
+      'play-cards-three',
+      'play-cards-ru-360',
       'play-finance-r6',
       'play-outcome-r1',
       'play-resolve-r6',

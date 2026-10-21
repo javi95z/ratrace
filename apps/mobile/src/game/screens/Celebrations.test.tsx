@@ -23,6 +23,20 @@ vi.mock('../context', async (original) => {
   };
 });
 
+// What the cards hand their boxes is kept, for what a test cannot read off the page (react-native-web draws nothing for `accessible`).
+const statuses = vi.hoisted(() => [] as Array<Record<string, unknown>>);
+vi.mock('react-native', async (original) => {
+  const rn = await original<typeof import('react-native')>();
+  return {
+    ...rn,
+    View: (props: Record<string, unknown>) => {
+      if (props.role === 'status') statuses.push(props);
+      return <rn.View {...props} />;
+    },
+  };
+});
+
+const { AccessibilityInfo, Platform } = await import('react-native');
 const { Celebrations } = await import('./Celebrations');
 const { Medal } = await import('./Medal');
 const { RARITY_GLOW, RARITY_TONE } = await import('./rarityStyle');
@@ -146,6 +160,60 @@ describe('lives unlocked', () => {
     const both = screen.getByRole('status');
     expect(within(both).getByText('2 new lives unlocked')).toBeTruthy();
     expect(both.querySelectorAll('[data-sprite^="portrait."]')).toHaveLength(2);
+  });
+});
+
+describe('a screen reader', () => {
+  /** What was announced, and how: queued after what is being said (the stage that opened), where the phone can queue. */
+  function listening() {
+    const queued = vi.fn();
+    const said = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    Object.assign(AccessibilityInfo, { announceForAccessibilityWithOptions: queued });
+    return {
+      queued,
+      said,
+      restore: () => {
+        said.mockRestore();
+        delete (AccessibilityInfo as { announceForAccessibilityWithOptions?: unknown }).announceForAccessibilityWithOptions;
+      },
+    };
+  }
+
+  it('reads each card as one thing, and on iOS, where a live region says nothing, is told what the step earned once it is on screen, after the stage it rose in', async () => {
+    const was = Platform.OS;
+    const ears = listening();
+    statuses.length = 0;
+    try {
+      Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
+      const id = idOf('common');
+      shown.earned = [id];
+      shown.unlocked = ['rider'];
+      renderGame(<Celebrations />, memoryServices());
+      // Each card is one element to VoiceOver, the lives as the badge, and a polite live region to TalkBack.
+      expect(statuses.length).toBeGreaterThanOrEqual(2);
+      for (const status of statuses) expect(status).toMatchObject({ accessible: true, accessibilityLiveRegion: 'polite' });
+      // Not at once: what the stage says as it opens comes first, and these wait behind it.
+      expect(ears.queued).not.toHaveBeenCalled();
+      await waitFor(() => expect(ears.queued).toHaveBeenCalledTimes(2));
+      const [badge, lives] = ears.queued.mock.calls;
+      expect(badge[0]).toContain(badgeName(id));
+      expect(badge[0]).toContain('Badge earned');
+      expect(badge[1]).toEqual({ queue: true });
+      expect(lives[0]).toContain('New life unlocked');
+      expect(lives[0]).toContain(textFor('en').text.lives.rider.name);
+      expect(lives[1]).toEqual({ queue: true });
+      cleanup();
+      // TalkBack hears the live regions: nothing is said over them.
+      ears.queued.mockClear();
+      Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
+      renderGame(<Celebrations />, memoryServices());
+      await act(async () => new Promise((done) => setTimeout(done, 20)));
+      expect(ears.queued).not.toHaveBeenCalled();
+      expect(ears.said).not.toHaveBeenCalled();
+    } finally {
+      ears.restore();
+      Object.defineProperty(Platform, 'OS', { value: was, configurable: true });
+    }
   });
 });
 

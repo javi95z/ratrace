@@ -214,6 +214,36 @@ describe('coins that fly', () => {
     expect(coins()).toHaveLength(0);
   });
 
+  it('draw nothing at all when what flew them goes while their places are being measured: no flight is added to be taken away', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const services = speaking(memoryServices(), 'en');
+    const layerDrawn: Renders = { count: 0 };
+    const page = (flying: boolean) => (
+      <GameProvider services={services}>
+        <CoinTargets>
+          <Spot name="paid" id="paid-1" />
+          <Spot name="cash" id="cash" />
+          {flying ? <FlyingCoins from="paid" to="cash" startMs={10} /> : null}
+          <Counted into={layerDrawn}>
+            <CoinFlights />
+          </Counted>
+        </CoinTargets>
+      </GameProvider>
+    );
+    const { rerender } = render(page(true));
+    // The game's settings are read: the flight waits for nothing else.
+    await act(async () => undefined);
+    // The flight takes off: its places are asked where they stand, and the phone answers a moment later.
+    await act(async () => vi.advanceTimersByTime(10));
+    // Gone before the answer.
+    rerender(page(false));
+    const before = layerDrawn.count;
+    await act(async () => vi.advanceTimersByTime(50));
+    expect(coins()).toHaveLength(0);
+    expect(layerDrawn.count).toBe(before);
+    expect(heard).toEqual([]);
+  });
+
   it('draw nothing of the page again: a flight is the layer\'s, and nothing that names a place is told of it', async () => {
     const page: Renders = { count: 0 };
     renderGame(

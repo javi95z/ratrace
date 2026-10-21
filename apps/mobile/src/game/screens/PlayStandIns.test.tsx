@@ -1,38 +1,37 @@
 // @vitest-environment jsdom
-import { cleanup, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
 import { useGame } from '../context';
-import { CardsStandIn } from './PlayStandIns';
+import { CityPreview } from './PlayStandIns';
 
 afterEach(cleanup);
 
-/** Says where the game stands, so a test knows it has opened. */
-function Status() {
-  return <span>{`game ${useGame((s) => s.status)}`}</span>;
+/** The city's sheet, for the life on the device, once the game is open on it. */
+function London({ onClose }: { onClose(): void }) {
+  const view = useGame((s) => s.view);
+  return view ? <CityPreview cityId="london" view={view} onClose={onClose} /> : null;
 }
 
 /*
  * The stand-ins of Play's parts that later tasks bring are all in one file, so each task deletes its own. What they must do meanwhile: keep a life
- * playable, and never leave a stage with nothing on it and nothing to press.
+ * playable, and never leave a button that does nothing.
  */
-describe('the cards, until Task 11 brings them', () => {
-  it('shows the card waiting and its choices, so a life can be played on', async () => {
+describe('the city a card offers, until Task 14 brings its comparison', () => {
+  it('opens a sheet named for the city, which closes', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
-    renderGame(<CardsStandIn />, services);
-    expect(await screen.findByText(/^Card 1 of \d/)).toBeTruthy();
-    expect(within(screen.getByRole('group', { name: /^Your choices/ })).getAllByRole('button').length).toBeGreaterThan(0);
+    const onClose = vi.fn();
+    renderGame(<London onClose={onClose} />, services);
+    expect(await screen.findByRole('heading', { name: 'London' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
-  it('says the game is opening, not an empty stage, while no card is waiting', async () => {
+  it('is nothing for a city the game does not know', async () => {
     const services = memoryServices();
-    const session = await services.sessions.start('nurse');
-    while (session.view().phase === 'cards') await session.answerCard(0);
-    renderGame(<><CardsStandIn /><Status /></>, services);
-    // The game is open, at the finances: no card is waiting.
-    await screen.findByText('game playing');
-    expect(screen.getByText('Loading…')).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+    await services.sessions.start('nurse');
+    renderGame(<CityPreview cityId="atlantis" view={(await services.sessions.resume()).session!.view()} onClose={() => {}} />, services);
+    await waitFor(() => expect(screen.queryByRole('heading')).toBeNull());
   });
 });

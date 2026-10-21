@@ -1,6 +1,6 @@
 import { BADGE_RARITY, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, turnOf } from '@ratrace/core/testing/scenes';
+import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { GameProvider, useGame, useT } from '../game/context';
 import type { Services } from '../game/context';
 import { AmountSheet } from '../game/screens/AmountSheet';
+import { HeldShine } from '../game/screens/Cards';
 import { Celebrations } from '../game/screens/Celebrations';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Home } from '../game/screens/Home';
@@ -19,6 +20,7 @@ import { PageTurn } from '../game/screens/PageTurn';
 import { Placeholder } from '../game/screens/Placeholder';
 import { Play } from '../game/screens/Play';
 import { HomeSettingsSheet } from '../game/screens/Settings';
+import { KEYFRAMES } from '../ui/motion';
 import { Screen } from '../ui/Page';
 import { useSpritesLoading } from '../ui/spriteImages';
 import { ReadText } from '../ui/text';
@@ -59,15 +61,21 @@ function useQuietFault(name: string | undefined) {
   }, [fault]);
 }
 
+/** The core's moments of a rare card's shine (`SHINE_HELD_MS`) as shares of the runs the kit plays them over: where the card holds them. */
+const HELD_SHINE = { holo: SHINE_HELD_MS.holo / KEYFRAMES.holo.ms, glint: SHINE_HELD_MS.glint / KEYFRAMES.glint.ms, spark: SHINE_HELD_MS.spark / KEYFRAMES.spark.ms };
+
 /**
  * The play screen of a scene, and over it the calendar of a round just turned where the scene has one (`turnOf`), held at one moment of its run:
- * drawn beside the screen, as the screen draws it when the round goes by under it. The web's page draws the same, held by a rule of its own.
+ * drawn beside the screen, as the screen draws it when the round goes by under it. The web's page draws the same, held by a rule of its own. A rare
+ * card's shine is held still too, where the web's page holds it (`HOLD_SHINE` there).
  */
 function PlayScene({ scene }: { scene: Scene }) {
   const turn = turnOf(scene);
   return (
     <>
-      <Play />
+      <HeldShine value={HELD_SHINE}>
+        <Play />
+      </HeldShine>
       {turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} held={PAGE_TURN_HELD_MS} /> : null}
     </>
   );
@@ -103,7 +111,8 @@ function Savings() {
 /**
  * The stage a sheet of a scene belongs to, mounted and drawn nowhere in the page: what the web's shot leaves of its stage (`HUD_ONLY` hides it,
  * and a sheet it opens is drawn over the page all the same). A legendary badge (`celebrate-legendary`) is shown by the result of the card that
- * earned it, which comes with Task 11: until then its `Celebrations` stands here, its sheet over the Hud and its small card in a box of no size.
+ * earned it (`Outcome`, which draws `Celebrations`): its scene compares the sheet over the Hud alone, so its `Celebrations` stands here, its sheet
+ * over the Hud and its small card in a box of no size. The result itself is compared in `play-outcome-r1`.
  */
 function HiddenStage({ children }: { children: ReactNode }) {
   return <View style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>{children}</View>;
@@ -169,10 +178,17 @@ function Unknown({ name }: { name: string | undefined }) {
 }
 
 /**
- * Takes the steps a scene goes on with (`runScene`: the result of a card, the ledger of a round) once the game has opened on
- * the scene's store, on that game. Needs no more of the game than a screen has: its actions and its state through `useGame`.
+ * Where a scene's game stands, as far as a step would change it: the stage, the round, the card on screen, a choice being taken. A scene is a
+ * picture of one such place: once its own steps are taken, nothing may move its game from there (`Ready`).
  */
-function Script({ scene, done }: { scene: Scene; done: () => void }) {
+export const whereOf = (state: RoundState & RoundActions): string =>
+  `${state.stage} ${state.view?.round ?? '-'} ${state.view?.answered ?? '-'} ${state.picked ?? '-'} ${state.busy ? 'busy' : 'still'}`;
+
+/**
+ * Takes the steps a scene goes on with (`runScene`: the result of a card, the ledger of a round) once the game has opened on
+ * the scene's store, on that game, and says where they left it. Needs no more of the game than a screen has: its actions and its state through `useGame`.
+ */
+function Script({ scene, done }: { scene: Scene; done: (where: string) => void }) {
   // The round store's state as it stands, whenever the script asks (it reads the game between its steps): a selector is run
   // on every change the store makes, as it is told of them, so what this one saw last is the latest.
   const latest = useRef<(RoundState & RoundActions) | null>(null);
@@ -184,7 +200,8 @@ function Script({ scene, done }: { scene: Scene; done: () => void }) {
   useEffect(() => {
     if (status === 'booting' || started.current) return;
     started.current = true;
-    runScene(scene.name, { getState: () => latest.current as RoundState & RoundActions }).then(done, (error: unknown) => console.error(error));
+    const now = () => latest.current as RoundState & RoundActions;
+    runScene(scene.name, { getState: now }).then(() => done(whereOf(now())), (error: unknown) => console.error(error));
   }, [status, scene, done]);
   return null;
 }
@@ -198,18 +215,31 @@ function OfWidth({ width, children }: { width: number | undefined; children: Rea
   return <View style={{ flex: 1, width, alignSelf: 'center' }}>{children}</View>;
 }
 
+/**
+ * A scene's screen takes no touch: it is a picture to be shot, and nothing pressed on it (a stray tap on the simulator, another session at work on
+ * it) may move its game on. (Task 9 saw `play-cards-r1` gone on to a card's result once in a full run, its choices pressed with no tap of the
+ * driver's: the cause was not found in the app, and a touch from outside could not be ruled out.) A sheet is a window of its own (a Modal), which
+ * this does not reach; nothing of a sheet moves a scene's game.
+ */
+function Untouched({ children }: { children: ReactNode }) {
+  return <View style={{ flex: 1, pointerEvents: 'none' }}>{children}</View>;
+}
+
 /** The number of the last word a scene said to the driver: one count for the app, from the time it started, so a scene drawn again speaks after. */
 let word = Date.now();
 
 /**
  * Tells the driver of the shots, on this machine (`readyPort`: the route is opened with `&ready=<port>` by scripts/shotDrivers.ts), whether the
- * scene is ready to be shot: its screen drawn (`ready`) and no picture of it still being read. Said each time that changes, numbered, so word that
- * arrives late is not taken for the latest: a part drawn once the page is laid out may ask for a picture after the scene first said it was ready.
- * A scene opened for anything else says nothing. While it is not ready, shots alike are a screen waiting, not one standing still.
+ * scene is ready to be shot: its screen drawn, its game where its steps left it (`at`, from `whereOf`), and no picture of it still being read.
+ * Said each time that changes, numbered, so word that arrives late is not taken for the latest: a part drawn once the page is laid out may ask for a
+ * picture after the scene first said it was ready. A game that moves on from its place (whatever moved it) is no longer the scene, and it says so:
+ * the run then fails on it, naming it, instead of shooting another picture under its name. A scene opened for anything else says nothing. While it
+ * is not ready, shots alike are a screen waiting, not one standing still.
  */
-function Ready({ name, ready, port }: { name: string; ready: boolean; port: number | undefined }) {
+function Ready({ name, at, port }: { name: string; at: string | null; port: number | undefined }) {
   const reading = useSpritesLoading();
-  const done = ready && reading === 0;
+  const where = useGame(whereOf);
+  const done = at !== null && where === at && reading === 0;
   useEffect(() => {
     if (port === undefined) return;
     word += 1;
@@ -223,13 +253,18 @@ function Ready({ name, ready, port }: { name: string; ready: boolean; port: numb
  * which is first drawn at the stage the scene ends on, as the web's is.
  */
 export function SceneGame({ scene, services, screens = SCENE_SCREENS, readyPort }: { scene: Scene; services: Services; screens?: SceneScreens; readyPort?: number }) {
-  const [over, setOver] = useState(false);
-  const done = useCallback(() => setOver(true), []);
+  // Where the scene's steps left its game, once they are taken.
+  const [over, setOver] = useState<string | null>(null);
+  const done = useCallback((where: string) => setOver(where), []);
   return (
     <GameProvider services={services}>
       <Script scene={scene} done={done} />
-      {over ? <OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth> : null}
-      <Ready name={scene.name} ready={over} port={readyPort} />
+      {over !== null ? (
+        <Untouched>
+          <OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth>
+        </Untouched>
+      ) : null}
+      <Ready name={scene.name} at={over} port={readyPort} />
     </GameProvider>
   );
 }

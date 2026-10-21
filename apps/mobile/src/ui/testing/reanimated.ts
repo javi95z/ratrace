@@ -2,8 +2,14 @@
 // worklets runtime: this models what the hooks use. A shared value is reactive (writing it re-reads every
 // animated style), an animation assigned to it is recorded and lands on its target when its duration has run
 // (on fake timers), and `cancelAnimation` is recorded and stops it. The frames themselves are pinned in motion.test.ts.
+
+/** What a spring is told: how stiff and how damped it is, and the speed it starts at. */
+export type SpringConfig = { stiffness?: number; damping?: number; mass?: number; velocity?: number };
+/** How long a spring takes to land here, where nothing is integrated. */
+export const SPRING_MS = 300;
+
 export const rea = ({
-  assigned: [] as { kind: 'timing' | 'repeat'; to: number; duration: number; reps?: number; delay?: number }[],
+  assigned: [] as { kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig }[],
   cancelled: 0,
   listeners: new Set<() => void>(),
 });
@@ -11,7 +17,7 @@ export const rea = ({
 export async function reanimatedFake() {
   const { useRef, useReducer, useEffect } = await import('react');
   const { View } = await import('react-native');
-  type Anim = { __anim: true; kind: 'timing' | 'repeat'; to: number; duration: number; reps?: number; delay?: number };
+  type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig };
   const emit = () => rea.listeners.forEach((l) => l());
   return {
     default: { View },
@@ -25,7 +31,7 @@ export async function reanimatedFake() {
             clearTimeout(b.timer);
             if (v && typeof v === 'object' && (v as Anim).__anim) {
               const a = v as Anim;
-              rea.assigned.push({ kind: a.kind, to: a.to, duration: a.duration, reps: a.reps, delay: a.delay });
+              rea.assigned.push({ kind: a.kind, to: a.to, duration: a.duration, reps: a.reps, delay: a.delay, ...(a.spring ? { spring: a.spring } : null) });
               b.timer = setTimeout(() => {
                 b.raw = a.to;
                 emit();
@@ -57,6 +63,8 @@ export async function reanimatedFake() {
     }),
     withTiming: (to: number, cfg: { duration: number }): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration }),
     withRepeat: (inner: Anim, reps: number): Anim => ({ ...inner, kind: 'repeat', reps }),
+    // a spring has no duration of its own: here it lands after a nominal one, with what it was told kept to be read
+    withSpring: (to: number, spring: SpringConfig = {}): Anim => ({ __anim: true, kind: 'spring', to, duration: SPRING_MS, spring }),
     // a delay waits before the animation it holds; a sequence is recorded as its last piece (the pieces before it only put the value back)
     withDelay: (delay: number, inner: Anim): Anim => ({ ...inner, delay }),
     withSequence: (...pieces: Anim[]): Anim => pieces[pieces.length - 1],

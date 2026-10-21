@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { createElement, useState } from 'react';
 import type { ReactNode } from 'react';
+import { AccessibilityInfo, Platform } from 'react-native';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
 
@@ -139,6 +140,35 @@ describe('an amount on a slider', () => {
     expect(within(here).getByText('There is nothing to move.')).toBeTruthy();
     expect(within(here).queryByRole('slider')).toBeNull();
     expect(within(here).queryByRole('button', { name: /Confirm/ })).toBeNull();
+  });
+
+  it('says the amount as it changes: a live region for TalkBack, and on iOS, where there is none, the amount a chip set, said aloud', () => {
+    const was = Platform.OS;
+    const said = vi.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    try {
+      Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
+      renderGame(<Example confirmed={() => {}} start={1_000} />, memoryServices());
+      const here = sheet();
+      // The amount is a polite live region (the web's `<output aria-live>`).
+      expect(within(here).getByText('$10').closest('[aria-live="polite"]')).not.toBeNull();
+      fireEvent.click(within(here).getByRole('button', { name: '50%' }));
+      expect(said).toHaveBeenLastCalledWith('$50');
+      fireEvent.click(within(here).getByRole('button', { name: '100%' }));
+      expect(said).toHaveBeenLastCalledWith('$100');
+      // A drag of the slider is the slider's to say: its value is read as it moves.
+      said.mockClear();
+      slide(2_000);
+      expect(said).not.toHaveBeenCalled();
+      cleanup();
+      // TalkBack hears the live region; nothing is said over it.
+      Object.defineProperty(Platform, 'OS', { value: 'android', configurable: true });
+      renderGame(<Example confirmed={() => {}} start={1_000} />, memoryServices());
+      fireEvent.click(within(sheet()).getByRole('button', { name: '50%' }));
+      expect(said).not.toHaveBeenCalled();
+    } finally {
+      said.mockRestore();
+      Object.defineProperty(Platform, 'OS', { value: was, configurable: true });
+    }
   });
 
   it('speaks the game\'s language', () => {

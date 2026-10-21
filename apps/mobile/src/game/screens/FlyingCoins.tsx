@@ -78,13 +78,17 @@ function coinStore() {
     setLayer(place: CoinPlace | null): void {
       layer = place;
     },
-    /** Measures the flight's places where they stand now, and puts its coins in the layer: its number, or null where nothing flies. */
-    async fly(from: string, to: string): Promise<number | null> {
+    /**
+     * Measures the flight's places where they stand now, and puts its coins in the layer: its number, or null where nothing flies. The phone
+     * answers where a place stands a moment later: a flight `cancelled` by then (what flew it has gone) is never put in the layer at all.
+     */
+    async fly(from: string, to: string, cancelled: () => boolean = () => false): Promise<number | null> {
       const goal = [...(places.get(to) ?? [])][0];
       const sources = [...(places.get(from) ?? [])];
       const over = layer;
       if (over === null || goal === undefined || sources.length === 0) return null;
       const [origin, target, ...boxes] = await Promise.all([over, goal, ...sources].map(measured));
+      if (cancelled()) return null;
       const coins = coinsFor(boxes, target, origin);
       if (coins.length === 0) return null;
       last += 1;
@@ -112,6 +116,10 @@ const Coins = createContext<CoinStore | null>(null);
  * The page coins fly over (the web's `[data-coin-from]` and `[data-coin-to]`, and the HUD's `[data-hud-cash]`): the places money comes in and is
  * kept put themselves on its list by name (`useCoinTarget`), and a flight (`FlyingCoins`) measures them where they stand when it begins. The coins
  * are drawn in its layer (`CoinFlights`), over the page. Play is one: the HUD's cash is `cash`, a card's result and the ledger name their lines.
+ *
+ * A name is the whole page's, not the part's that gives it: a flight from `from` leaves from every place of that name on the page, whoever put it
+ * there. So each part that flies coins gives its sources a name of its own (a card's result `card`, the ledger another), never one another part
+ * uses: two stages that shared a name would fly each other's coins, were both ever on the page together.
  */
 export function CoinTargets({ children }: { children: ReactNode }) {
   const [store] = useState(coinStore);
@@ -178,9 +186,9 @@ export function FlyingCoins({ from, to, startMs }: { from: string; to: string; s
     let gone = false;
     let flight: number | null = null;
     const take = setTimeout(() => {
-      void store.fly(from, to).then((id) => {
+      void store.fly(from, to, () => gone).then((id) => {
         if (id === null) return;
-        // Measured after the page it flew over had gone: it lands at once.
+        // Gone between the flight being put in the layer and this word of it (the store checks before it adds one): it lands at once.
         if (gone) return store.land(id);
         flight = id;
         sound('coin');

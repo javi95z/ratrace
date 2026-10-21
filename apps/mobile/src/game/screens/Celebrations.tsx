@@ -1,7 +1,7 @@
 import { portraitArt, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Platform, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
 import { useMedal, useRise } from '../../ui/animations';
@@ -55,6 +55,21 @@ function Legendary({ badgeId, onDone }: { badgeId: string; onDone(): void }) {
   );
 }
 
+/**
+ * What a card that rises with a step says to a screen reader, as it comes up. TalkBack hears the card's own live region. VoiceOver has no live
+ * regions: on iOS it is announced, once, a moment after the card is on screen, and queued, so that what the stage itself says as it opens
+ * (Play: "What happened") is said first and this after it.
+ */
+function useAnnounced(said: string) {
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    const later = setTimeout(() => AccessibilityInfo.announceForAccessibilityWithOptions?.(said, { queue: true }), 0);
+    return () => clearTimeout(later);
+    // Once, as the card comes up, in the words it came up with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
 /** A badge earned, as a card that rises with the step's result. */
 function Earned({ badgeId }: { badgeId: string }) {
   const t = useT('badges');
@@ -63,6 +78,7 @@ function Earned({ badgeId }: { badgeId: string }) {
   const rarity = rarityOf(badgeId);
   const tone = RARITY_TONE[rarity];
   const name = text.badges[badgeId]?.name ?? badgeId;
+  useAnnounced([t('earned'), name, t(`rarity.${rarity}`), text.badges[badgeId]?.how ?? ''].filter(Boolean).join('. '));
   return (
     <View accessible role="status" accessibilityLiveRegion="polite">
       <Animated.View style={rise}>
@@ -86,14 +102,17 @@ function Unlocked({ lives }: { lives: readonly string[] }) {
   const t = useT('badges');
   const { text } = useWords();
   const rise = useRise();
+  const title = t(lives.length === 1 ? 'unlocked' : 'unlockedMany', { count: lives.length });
+  useAnnounced([title, ...lives.map((id) => `${text.lives[id]?.name ?? id}: ${text.lives[id]?.perk ?? ''}`)].join('. '));
   return (
-    <View role="status" accessibilityLiveRegion="polite">
+    // Nothing inside can be pressed, so it reads as one thing, as the badge's card does.
+    <View accessible role="status" accessibilityLiveRegion="polite">
       <Animated.View style={rise}>
         <Framed kind="frame" tone={GOLD} style={{ backgroundColor: COLORS['gold-500'], padding: 8, gap: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Sprite id="icon.star" />
             <PixelText size={12} tone="ink-900" style={{ flexShrink: 1, letterSpacing: 12 * 0.05, textTransform: 'uppercase' }}>
-              {t(lives.length === 1 ? 'unlocked' : 'unlockedMany', { count: lives.length })}
+              {title}
             </PixelText>
           </View>
           <View style={{ gap: 8 }}>

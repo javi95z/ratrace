@@ -16,13 +16,14 @@ import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
+import { CardStage, Outcome } from './Cards';
 import { CrisisBar } from './Crisis';
 import { CoinFlights, CoinTargets } from './FlyingCoins';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
-import { BasketStandIn, CardsStandIn, EndStandIn, StageStandIn } from './PlayStandIns';
+import { BasketStandIn, EndStandIn, StageStandIn } from './PlayStandIns';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
@@ -184,12 +185,12 @@ function StageBody({ stage }: { stage: Stage }) {
     case 'news':
       return <NewsPanel />;
     case 'cards':
-      // Task 11: CardStage.
-      return <CardsStandIn />;
+      return <CardStage />;
     case 'outcome':
+      return <Outcome />;
     case 'finance':
     case 'resolve':
-      // Task 11: Outcome. Task 12: Finance. Task 16: Resolve.
+      // Task 12: Finance. Task 16: Resolve.
       return <StageStandIn stage={stage} />;
     default:
       return null;

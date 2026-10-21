@@ -47,6 +47,9 @@ export const SCENES: readonly Scene[] = [
   { name: 'new-replace', locale: 'en', sheet: 'replace' },
   { name: 'play-news-r1', locale: 'en' },
   { name: 'play-cards-r1', locale: 'en' },
+  { name: 'play-cards-legendary', locale: 'en' },
+  { name: 'play-cards-three', locale: 'en' },
+  { name: 'play-cards-ru-360', locale: 'ru', width: 360 },
   { name: 'play-finance-r6', locale: 'en' },
   { name: 'play-outcome-r1', locale: 'en' },
   { name: 'play-resolve-r6', locale: 'en' },
@@ -129,6 +132,13 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'new-replace': { life: 'nurse', round: 3, stage: 'news' },
   'play-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-cards-r1': { life: 'engineer', round: 1, stage: 'cards' },
+  // The second card of the engineer's third round is the appointment: a legendary card with two choices, to be swiped.
+  'play-cards-legendary': { life: 'engineer', round: 3, stage: 'cards' },
+  // On screen-seed-3 the second card of the first round is asking for a raise: three choices the engineer can take, and a fourth, which needs
+  // negotiation, not shown.
+  'play-cards-three': { life: 'engineer', round: 1, stage: 'cards', seed: 'screen-seed-3' },
+  // On screen-seed-10 the second round opens with the AI boom: three choices with long names in Russian, the third there thanks to the engineer's trade.
+  'play-cards-ru-360': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-10', then: [{ action: 'leaveNews' }], ends: 'cards' },
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
   'play-outcome-r1': { life: 'engineer', round: 1, stage: 'news', then: [{ action: 'leaveNews' }, { action: 'pick' }], ends: 'outcome' },
   'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
@@ -173,7 +183,7 @@ const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisi
  * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
  * Every other scene is someone new, who is shown the tips as they come.
  */
-export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn']);
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360']);
 
 /**
  * The scenes of a game that cannot go on (the play screen's way out, `Fault`): the orders kept for the round cannot be read back, so the
@@ -199,6 +209,14 @@ export function sceneBasket(name: string): BasketKeep | undefined {
  * animations there (`HOLD_TURN`), the phone's scene gives it to the calendar (`held`).
  */
 export const PAGE_TURN_HELD_MS = 445;
+
+/**
+ * How far into its run the shine of a rare card is held in a scene of the play screen, in milliseconds: the rainbow of a legendary card and the band of
+ * light of any rare one where the kit's pages of motion hold them (the middle of a step of each, so no engine draws them a step off), and the sparks
+ * of a legendary card at the end of their flight (gone: they are only movement). The web's scene page holds its stylesheet's animations there
+ * (`HOLD_SHINE`), the phone's scene gives the card the same moments (`HeldShine`). Without it a shot would catch them anywhere in their runs.
+ */
+export const SHINE_HELD_MS = { holo: 2050, glint: 665, spark: 600 } as const;
 
 /**
  * The calendar a scene draws over its screen, turning from the age of the round before to the age of the scene's own: a round has just been

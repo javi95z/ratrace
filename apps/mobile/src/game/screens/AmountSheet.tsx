@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { Button, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
@@ -48,7 +48,8 @@ function Share({ pct, onPress }: { pct: number; onPress(): void }) {
 
 /**
  * Picks an amount of money: a slider, chips for a quarter, a half and all of it, and one button. There is no field for an exact amount, as
- * on the web. The amount is read aloud through the slider's own value (the web's `<output aria-live>`), and how much there is through its hint.
+ * on the web. The amount is read aloud through the slider's own value and its live region (the web's `<output aria-live>`; on iOS, a chip's
+ * amount is said as it is pressed), and how much there is through the slider's hint.
  * It is mounted only while it is open, so it always starts from `start`. The keyboard's help and shortcut are the web's, for a keyboard.
  */
 export function AmountSheet({ title, max, onClose, onConfirm, children, start = 0, footer, preview }: Props) {
@@ -62,6 +63,11 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
     if (amount > 0 && onConfirm(amount)) onClose();
   };
   const money = fmt.money(amount);
+  // A chip sets the amount in one go: on iOS, which has no live region, it is said (the slider says its own value as it moves).
+  const choose = (next: number) => {
+    setAmount(next);
+    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(fmt.money(next));
+  };
   const available = t('available', { amount: fmt.money(max) });
 
   return (
@@ -71,11 +77,14 @@ export function AmountSheet({ title, max, onClose, onConfirm, children, start = 
         <ReadText tone="ink-300" style={{ paddingVertical: 16, textAlign: 'center' }}>{t('nothing')}</ReadText>
       ) : (
         <View style={{ gap: 12 }}>
-          <PixelText size={30} tone="gold-500" style={{ textAlign: 'center' }}>{money}</PixelText>
+          {/* The web's `<output aria-live="polite">`: TalkBack hears it change. VoiceOver has no live regions: a chip's amount is said as it is pressed. */}
+          <View accessibilityLiveRegion="polite">
+            <PixelText size={30} tone="gold-500" style={{ textAlign: 'center' }}>{money}</PixelText>
+          </View>
           <Slider value={Math.min(amount, max)} min={0} max={max} step={step} onChange={setSafeAmount} label={t('amount')} valueText={money} hint={available} />
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {[25, 50, 100].map((pct) => (
-              <Share key={pct} pct={pct} onPress={() => setAmount(Math.floor((max * pct) / 100))} />
+              <Share key={pct} pct={pct} onPress={() => choose(Math.floor((max * pct) / 100))} />
             ))}
           </View>
           {preview && amount > 0 ? preview(amount) : null}

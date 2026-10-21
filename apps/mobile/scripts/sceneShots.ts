@@ -46,7 +46,8 @@ export const CELEBRATIONS_ONLY = '#round-actions, #round-stage > :not(:has(> [ro
 
 /**
  * The screens of the scenes drawn over the Hud alone (`HUD_ONLY`): the Hud's own, and two whose sheet is opened by a part of Play still to be ported
- * (the sheet that moves cash to savings, Finance's, Task 12; a legendary badge, a card's result's, Task 11), which both sides draw beside the Hud.
+ * (the sheet that moves cash to savings, Finance's, Task 12; a legendary badge, a card's result's: its scene compares the sheet, the result has
+ * scenes of its own), which both sides draw beside the Hud.
  */
 export const SHEETS_OVER_THE_HUD: readonly string[] = ['hud', 'amount', 'celebrate'];
 
@@ -92,16 +93,22 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 export const STAND_INS: readonly string[] = ['records', 'collection'];
 
 /**
- * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the cards and a card's result in
- * Task 11, the finances in Task 12, the ledger in Task 16), which the app draws as a line that says so. Not compared, as a stand-in's scenes are not,
- * and for the same reason; the task that ports the part takes its scenes out of this list.
+ * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the finances in Task 12, the ledger
+ * in Task 16), which the app draws as a line that says so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports
+ * the part takes its scenes out of this list (into `PENDING_SHOTS`, until a batch pass shoots them).
  */
 export const STAND_IN_SCENES: Readonly<Record<string, string>> = {
-  'play-cards-r1': 'the cards of play',
   'play-finance-r6': 'the finances of play',
-  'play-outcome-r1': 'a card\'s result on play',
   'play-resolve-r6': 'the ledger of play',
 };
+
+/**
+ * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
+ * call, 2026-10-21): two batch passes, after Task 15 and in Task 20, shoot every one of these, compare them and fix what differs, and take each out
+ * of this list as it is judged. Until then a scene here is unjudged, as a stand-in's is: no numbers, and nothing that could fail a run or pass for a
+ * result.
+ */
+export const PENDING_SHOTS: ReadonlySet<string> = new Set(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-outcome-r1']);
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
@@ -233,7 +240,7 @@ export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
 };
 
 /** Whether a scene is compared: its screen, and the part of it the scene shows, are the real ones on the app. */
-export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene)) && !Object.hasOwn(STAND_IN_SCENES, scene.name);
+export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene)) && !Object.hasOwn(STAND_IN_SCENES, scene.name) && !PENDING_SHOTS.has(scene.name);
 
 /** What the report keeps of a scene: its verdict, and for a scene that is judged how much of the two shots differs and how far apart the text stands. */
 export type Line =
@@ -265,7 +272,9 @@ export const unjudgedLine = (scene: Scene): Line => ({
   scene: scene.name,
   locale: scene.locale,
   verdict: 'unjudged',
-  why: `the app still draws a stand-in for ${Object.hasOwn(STAND_IN_SCENES, scene.name) ? STAND_IN_SCENES[scene.name] : screenOf(scene)}: its numbers say nothing`,
+  why: PENDING_SHOTS.has(scene.name)
+    ? 'ported and not shot yet: a batch pass shoots it and judges it'
+    : `the app still draws a stand-in for ${Object.hasOwn(STAND_IN_SCENES, scene.name) ? STAND_IN_SCENES[scene.name] : screenOf(scene)}: its numbers say nothing`,
 });
 
 /** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */

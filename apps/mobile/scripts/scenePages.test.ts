@@ -41,7 +41,7 @@ test('a registry\'s screen is given the scene, on both sides, so that a scene\'s
 });
 
 test('a scene for a narrower phone is drawn in a box that wide, in the middle of the screen, on both sides (the simulator cannot be made narrower)', () => {
-  expect(app).toContain('{over ? <OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth> : null}');
+  expect(app).toContain('<OfWidth width={scene.width}>{screens[screenOf(scene)]?.(scene)}</OfWidth>');
   expect(app).toContain("return <View style={{ flex: 1, width, alignSelf: 'center' }}>{children}</View>;");
   expect(web).toContain('{over ? <OfWidth width={scene.width}>{SCREENS[screenOf(scene)](scene)}</OfWidth> : null}');
   expect(web).toContain("return <div style={{ width, marginInline: 'auto' }}>{children}</div>;");
@@ -88,7 +88,7 @@ test('the Hud has open, in a scene, the sheet the scene names: the web\'s page p
 test('a scene that goes on once the game is open is drawn after its steps, on both sides: the core\'s one function, a screen first drawn at the stage the scene ends on', () => {
   for (const [where, source] of Object.entries({ app, web })) {
     expect(source, where).toContain('runScene(scene.name, { getState:');
-    expect(source, where).toMatch(/\{over \? /);
+    expect(source, where).toMatch(/\{over( !== null)? \? /);
   }
 });
 
@@ -186,4 +186,27 @@ test('the small cards of a step are drawn with its legendary sheet taken in: the
   // The phone: its initial state, and the cards where the web's result of a card has them: 12 under the Hud's figures, 12 apart.
   expect(app).toContain('<Celebrations seen={LEGENDARY} />');
   expect(app).toContain('<View style={{ paddingTop: 4, gap: 12 }}>');
+});
+
+test('a scene of the play screen holds the shine of a rare card still, at the core\'s moments, on both sides: the web\'s page by a rule of its stylesheet, the phone\'s by the card\'s own context', () => {
+  // The web: the three animations of its card, paused that far into their runs, in the page with Play (the sparks at their end: gone).
+  expect(web).toContain('const HOLD_SHINE = [');
+  for (const [kind, held] of [['holo', 'holo'], ['glint', 'glint'], ['spark', 'spark']]) {
+    expect(web).toContain(`\`article .animate-${kind} { animation-play-state: paused !important; animation-delay: -\${SHINE_HELD_MS.${held}}ms !important; }\``);
+  }
+  expect(web).toContain('<style>{HOLD_SHINE}</style>');
+  // They are the web card's own, in its article (the sparks are the kit's, thrown from it).
+  const cards = read('../../web/src/game/screens/Cards.tsx');
+  expect(cards).toContain('<motion.article');
+  expect(cards).toMatch(/className="pointer-events-none absolute inset-0 animate-holo /);
+  expect(cards).toMatch(/className="pointer-events-none absolute inset-y-0 left-0 w-1\/5 animate-glint /);
+  expect(read('../../web/src/ui/Sparks.tsx')).toContain('className={`absolute animate-spark ');
+  // The phone: the same moments, as shares of the runs the kit plays them over, given to Play's card.
+  expect(app).toContain('const HELD_SHINE = { holo: SHINE_HELD_MS.holo / KEYFRAMES.holo.ms, glint: SHINE_HELD_MS.glint / KEYFRAMES.glint.ms, spark: SHINE_HELD_MS.spark / KEYFRAMES.spark.ms };');
+  expect(app).toContain('<HeldShine value={HELD_SHINE}>');
+});
+
+test('a scene\'s screen on the phone takes no touch: a picture to be shot, which nothing pressed may move on', () => {
+  expect(app).toContain("return <View style={{ flex: 1, pointerEvents: 'none' }}>{children}</View>;");
+  expect(app).toMatch(/<Untouched>\s*<OfWidth width=\{scene\.width\}>/);
 });

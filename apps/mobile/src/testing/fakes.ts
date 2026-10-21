@@ -1,4 +1,4 @@
-import { createElement, useEffect, type ReactNode } from 'react';
+import { createContext, createElement, useEffect, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 
@@ -92,13 +92,15 @@ export const safeArea = { useSafeAreaInsets: () => insets };
 export const spriteRenders = new Map<string, number>();
 /**
  * Sprites are drawn with Skia on the phone only: here each is a box that names its id, says if it is only the shape of the picture, and the box
- * it is drawn into where it is given one (`size`, as `w x h`).
+ * it is drawn into where it is given one (`size`, as `w x h`); what is drawn over the picture in its canvas (the rainbow of a legendary card) is
+ * drawn inside it. The stage's scale of the art (`ArtScale`) is the phone's: one point an art pixel.
  */
 export const spriteModule = {
-  Sprite: ({ id, silhouette, size }: { id: string; silhouette?: boolean; size?: { w: number; h: number } }) => {
+  Sprite: ({ id, silhouette, size, children }: { id: string; silhouette?: boolean; size?: { w: number; h: number }; children?: ReactNode }) => {
     spriteRenders.set(id, (spriteRenders.get(id) ?? 0) + 1);
-    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) });
+    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) }, children);
   },
+  ArtScale: createContext(1),
 };
 
 /** Puts every stand-in back as it was found, for the next test. */
