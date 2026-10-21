@@ -1,7 +1,8 @@
-import { Canvas, Group, Image, type SkImage } from '@shopify/react-native-skia';
+import { Group, Image, type SkImage } from '@shopify/react-native-skia';
 import type { RatLayer, RatLook } from '@ratrace/core/game/avatar';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
+import { Canvas } from './Canvas';
 import { AVATAR_BOX, RAT_GROUND, piecesOf } from './rat';
 import { PIXELATED } from './Sprite';
 import { useSpriteImage } from './spriteImages';

@@ -1,7 +1,8 @@
-import { Canvas, Fill, FilterMode, Group, Image, MipmapMode, Path, Skia, type SkImage } from '@shopify/react-native-skia';
+import { Fill, FilterMode, Group, Image, MipmapMode, Path, Skia, type SkImage } from '@shopify/react-native-skia';
 import { createContext, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
+import { Canvas } from './Canvas';
 import { sourceOf, useSpriteImage } from './spriteImages';
 import { CHECKER, checkerCells, FALLBACK, reportMissing, spriteBox, spriteOf, type Size, type SpriteScale } from './sprites';
 import { COLORS } from './theme';

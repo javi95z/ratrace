@@ -13,6 +13,8 @@ export default defineConfig({
       { find: /^@\//, replacement: fileURLToPath(new URL('./apps/web/src', import.meta.url)) + '/' },
       // The phone app's components are tested on react-native-web, in jsdom.
       { find: /^react-native$/, replacement: 'react-native-web' },
+      // And a worklet the kit schedules on the phone's UI runtime runs on the test's own thread (the library needs the phone).
+      { find: /^react-native-worklets$/, replacement: fileURLToPath(new URL('./apps/mobile/src/ui/testing/worklets.ts', import.meta.url)) },
     ],
   },
   test: {

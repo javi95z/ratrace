@@ -1,4 +1,4 @@
-import { Canvas, Path } from '@shopify/react-native-skia';
+import { Path } from '@shopify/react-native-skia';
 import { headlineArt } from '@ratrace/content';
 import { ageAt, headlineText, paperOf } from '@ratrace/core/game/present';
 import { rivalNews } from '@ratrace/core/game/rivals';
@@ -6,6 +6,7 @@ import type { Headline } from '@ratrace/engine';
 import { useMemo, useState, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { Canvas } from '../../ui/Canvas';
 import { usePaper } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';

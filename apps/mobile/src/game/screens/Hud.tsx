@@ -1,4 +1,4 @@
-import { Canvas, Fill, Path } from '@shopify/react-native-skia';
+import { Fill, Path } from '@shopify/react-native-skia';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
 import { ageAt, cityLight, portraitAge } from '@ratrace/core/game/present';
@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useShallow } from 'zustand/react/shallow';
+import { Canvas } from '../../ui/Canvas';
 import { usePop } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';

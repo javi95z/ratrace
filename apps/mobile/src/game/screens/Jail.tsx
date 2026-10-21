@@ -1,6 +1,7 @@
-import { Canvas, Circle } from '@shopify/react-native-skia';
+import { Circle } from '@shopify/react-native-skia';
 import { cardArt } from '@ratrace/content';
 import { View } from 'react-native';
+import { Canvas } from '../../ui/Canvas';
 import { Framed } from '../../ui/Frame';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';

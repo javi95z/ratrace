@@ -1,6 +1,7 @@
-import { Canvas, Circle, DashPathEffect, Group, Line, Path, Rect, vec } from '@shopify/react-native-skia';
+import { Circle, DashPathEffect, Group, Line, Path, Rect, vec } from '@shopify/react-native-skia';
 import { useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
+import { Canvas } from './Canvas';
 import { COLORS, type ColorToken } from './theme';
 
 /** The bars are the web's `crispEdges`: each edge on a pixel, no blur between. (The price line is smooth on the web, and is smooth here.) */
