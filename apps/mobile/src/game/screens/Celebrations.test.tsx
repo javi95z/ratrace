@@ -224,14 +224,13 @@ describe('a medal', () => {
     const { container } = render(<Medal badgeId={id} />);
     const medal = container.querySelector('[data-rarity="uncommon"]') as HTMLElement;
     expect([medal.style.width, medal.style.height]).toEqual(['96px', '96px']);
-    expect(medal.querySelector(`[data-sprite="${RIM_ART.uncommon}"]`)).toBeTruthy();
-    const badge = medal.querySelector(`[data-sprite="badge.${id}"]`)?.parentElement as HTMLElement;
-    expect([badge.style.width, badge.style.height]).toEqual(['64px', '64px']);
+    // The rim under the badge, on one canvas: the rim the medal's box, the badge its middle.
+    const drawn = (root: Element) => [...root.querySelectorAll('[data-sprite]')].map((el) => `${el.getAttribute('data-sprite')} ${el.getAttribute('data-size')}`);
+    expect(drawn(medal)).toEqual([`${RIM_ART.uncommon} 96x96`, `badge.${id} 64x64`]);
     cleanup();
     const small = render(<Medal badgeId={id} size="sm" locked />).container.querySelector('[data-rarity="uncommon"]') as HTMLElement;
     expect([small.style.width, small.style.height]).toEqual(['64px', '64px']);
-    expect(small.querySelector('[data-sprite="badge.locked"]')?.parentElement?.style.width).toBe('42px');
-    expect(small.querySelector(`[data-sprite="badge.${id}"]`)).toBeNull();
+    expect(drawn(small)).toEqual([`${RIM_ART.uncommon} 64x64`, 'badge.locked 42x42']);
   });
 });
 

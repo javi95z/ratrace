@@ -25,7 +25,16 @@ vi.mock('react-native', async () => {
     },
   };
 });
-vi.mock('./Sprite', () => ({ Sprite: ({ id }: { id: string }) => <div data-sprite={id} /> }));
+vi.mock('./Sprite', () => ({
+  Sprite: ({ id }: { id: string }) => <div data-sprite={id} />,
+  SpriteLayers: ({ layers }: { layers: Array<{ id: string }> }) => (
+    <div>
+      {layers.map((layer) => (
+        <div key={layer.id} data-sprite={layer.id} />
+      ))}
+    </div>
+  ),
+}));
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
 vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 20, left: 0, right: 0 }) }));

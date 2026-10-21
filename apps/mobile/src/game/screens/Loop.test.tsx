@@ -11,14 +11,15 @@ beforeEach(() => {
 afterEach(cleanup);
 
 const sprites = (root: Element) => [...root.querySelectorAll('[data-sprite]')].map((el) => el.getAttribute('data-sprite'));
-/** The frames of a loop, each with whether it is the one shown. */
-const shown = (root: Element) => [...root.querySelectorAll<HTMLElement>('[data-frame-of]')].map((el) => el.style.opacity);
+/** Where a loop's strip of frames stands under its box of one frame. */
+const strip = (root: Element) => root.querySelector<HTMLElement>('[data-loop-strip]')?.style.transform;
 
 describe('a loop of frames', () => {
-  it('draws its four frames once, one over the other, and shows the first', () => {
+  it('draws its four frames once, side by side on one strip, and shows the first: the strip at its start, under a box of one frame', () => {
     const { container } = render(<Loop name="coin" />);
     expect(sprites(container)).toEqual(['anim.coin.0', 'anim.coin.1', 'anim.coin.2', 'anim.coin.3']);
-    expect(shown(container)).toEqual(['1', '0', '0', '0']);
+    expect(container.querySelectorAll('[data-strip]')).toHaveLength(1);
+    expect(strip(container)).toMatch(/^translateX\(-?0(px)?\)$/);
   });
 
   it('turns on the phone\'s animation thread, not by drawing the page again: one run of a frame\'s time each, over and over', () => {

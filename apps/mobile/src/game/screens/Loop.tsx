@@ -1,9 +1,9 @@
 import { loopArt, wheelArt } from '@ratrace/content';
 import type { Loop as LoopName, RatOutfit } from '@ratrace/content';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
-import { Sprite } from '../../ui/Sprite';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { Sprite, SpriteStrip } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
 import type { Size } from '../../ui/sprites';
 import { useStill } from '../context';
@@ -25,8 +25,8 @@ export function loopFrame(at: number, n: number): number {
  * nothing a screen reader needs. With motion reduced it stands still on its first frame.
  *
  * The web steps a frame index in React state with a timer, which draws the page again for each frame. Here every frame is drawn once,
- * one over the other, and one timing on the phone's animation thread (Reanimated, a run of `ms` per frame, repeated) says which of them
- * shows: nothing of React runs while it turns, and a sprite is never decoded or drawn again for a frame. `size` is the box every frame
+ * side by side on one canvas (`SpriteStrip`), and one timing on the phone's animation thread (Reanimated, a run of `ms` per frame, repeated)
+ * moves the strip under a box of one frame: nothing of React runs while it turns, and a sprite is never decoded or drawn again for a frame. `size` is the box every frame
  * is drawn into where the web forces one (`!h-full !w-full` in a `size-6`: a flying coin), whatever the art's own size.
  */
 export function Loop({ name, outfit, ms = 150, scale = 1, size, style }: { name: LoopName; outfit?: RatOutfit; ms?: number; scale?: 1 | 2 | 3; size?: Size; style?: ViewStyle }) {
@@ -46,23 +46,13 @@ function Turning({ frames, ms, scale, size, style }: { frames: string[]; ms: num
     return () => cancelAnimation(at);
   }, [at, n, ms]);
   const box = size ?? spriteBox(frames[0], scale, 1, FALLBACK);
+  // The frames side by side on one canvas, moved under a box of one frame by whole frames (whole points: no picture is resampled).
+  const strip = useAnimatedStyle(() => ({ transform: [{ translateX: -loopFrame(at.value, n) * box.w }] }));
   return (
-    <View style={[{ width: box.w, height: box.h }, style]}>
-      {frames.map((id, index) => (
-        <Frame key={id} at={at} index={index} n={n}>
-          <Sprite id={id} scale={scale} size={size} fallback={FALLBACK} />
-        </Frame>
-      ))}
+    <View style={[{ width: box.w, height: box.h, overflow: 'hidden' }, style]}>
+      <Animated.View {...{ dataSet: { loopStrip: String(n) } }} style={[{ position: 'absolute', top: 0, left: 0 }, strip]}>
+        <SpriteStrip ids={frames} frame={box} />
+      </Animated.View>
     </View>
-  );
-}
-
-/** One frame of a loop, shown while the run is at it. */
-function Frame({ at, index, n, children }: { at: SharedValue<number>; index: number; n: number; children: ReactNode }) {
-  const shown = useAnimatedStyle(() => ({ opacity: loopFrame(at.value, n) === index ? 1 : 0 }));
-  return (
-    <Animated.View {...{ dataSet: { frameOf: String(index) } }} style={[{ position: 'absolute', top: 0, left: 0 }, shown]}>
-      {children}
-    </Animated.View>
   );
 }

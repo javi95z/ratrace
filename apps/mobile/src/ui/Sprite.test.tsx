@@ -33,6 +33,7 @@ vi.mock('@shopify/react-native-skia', () => {
     Group: node('Group'),
     Fill: node('Fill'),
     Path: node('Path'),
+    Rect: node('Rect'),
     ColorMatrix: node('ColorMatrix'),
     Skia: { PathBuilder: { Make: () => ({ addRect: () => {}, detach: () => ({}) }) }, XYWHRect: (x: number, y: number, w: number, h: number) => ({ x, y, w, h }) },
     FilterMode: { Nearest: 0, Linear: 1 },
@@ -51,7 +52,7 @@ vi.mock('../sprites/sources', () => ({
 
 const { Group } = await import('@shopify/react-native-skia');
 const { loadSpritesWith } = await import('./spriteImages');
-const { Sprite } = await import('./Sprite');
+const { Sprite, SpriteStrip } = await import('./Sprite');
 const { RatAvatar, RatLayers } = await import('./RatAvatar');
 
 afterEach(() => vi.restoreAllMocks());
@@ -197,4 +198,21 @@ test('RatAvatar: the box at 32 / 44 / 96 with the whole rat inside its 2 pt bord
     expect(all(root, 'Canvas')[0].getAttribute('data-size')).toBe(`${box - 4}x${box - 4}`);
     unmount();
   }
+});
+
+test('a loop\'s frames are one canvas, side by side: each drawn pixel for pixel into a box of one frame, the checkerboard for one that is missing', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const { container } = await drawn(<SpriteStrip ids={['anim.coin.0', 'anim.coin.1', 'no.such.frame', 'anim.coin.3']} frame={{ w: 24, h: 24 }} />);
+  expect(all(container, 'Canvas').map((canvas) => canvas.getAttribute('data-size'))).toEqual(['96x24']);
+  const images = all(container, 'Image');
+  expect(images.map((image) => [image.getAttribute('data-image'), image.getAttribute('data-at'), image.getAttribute('data-size')])).toEqual([
+    ['src:anim.coin.0', '0,0', '24x24'],
+    ['src:anim.coin.1', '24,0', '24x24'],
+    ['src:anim.coin.3', '72,0', '24x24'],
+  ]);
+  for (const image of images) expect(image.getAttribute('data-sampling')).toBe(JSON.stringify({ filter: 0, mipmap: 0 }));
+  // The missing frame: the checkerboard's ground in its own box, and its cells.
+  expect(all(container, 'Rect').map((rect) => rect.getAttribute('data-size'))).toEqual(['24x24']);
+  expect(all(container, 'Path')).toHaveLength(1);
+  expect(warn).toHaveBeenCalledWith('sprite missing: no.such.frame');
 });

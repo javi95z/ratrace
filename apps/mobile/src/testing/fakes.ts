@@ -101,6 +101,19 @@ export const spriteModule = {
     spriteRenders.set(id, (spriteRenders.get(id) ?? 0) + 1);
     return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(grey ? { 'data-grey': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) }, children);
   },
+  /** Pictures laid on one canvas: here a box of each, named by its id, in order, with its box and its grey as a `Sprite`'s says them. */
+  SpriteLayers: ({ layers }: { layers: ReadonlyArray<{ id: string; w: number; h: number; grey?: boolean }> }) =>
+    createElement(
+      'div',
+      { 'data-layers': 'true' },
+      ...layers.map((layer, i) => {
+        spriteRenders.set(layer.id, (spriteRenders.get(layer.id) ?? 0) + 1);
+        return createElement('div', { key: `${i}:${layer.id}`, 'data-sprite': layer.id, 'data-size': `${layer.w}x${layer.h}`, ...(layer.grey ? { 'data-grey': 'true' } : null) });
+      }),
+    ),
+  /** A loop's frames on one canvas: here a box of each frame's, named by its id, in order. */
+  SpriteStrip: ({ ids, frame }: { ids: readonly string[]; frame: { w: number; h: number } }) =>
+    createElement('div', { 'data-strip': 'true' }, ...ids.map((id) => createElement('div', { key: id, 'data-sprite': id, 'data-size': `${frame.w}x${frame.h}` }))),
   ArtScale: createContext(1),
 };
 

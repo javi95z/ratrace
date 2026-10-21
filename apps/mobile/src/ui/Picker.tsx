@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { Framed } from './Frame';
 import { GOLD } from './frames';
 import { pressDown, usePress } from './kit';
 import { Sheet } from './overlay';
-import { Sprite } from './Sprite';
+import { Sprite, SpriteLayers } from './Sprite';
 import { spriteBox } from './sprites';
 import { ReadText } from './text';
 import { COLORS, TOUCH } from './theme';
@@ -25,14 +25,20 @@ export interface PickerOption<T> {
  */
 export function Face({ id, size = 'sm', backdrop }: { id: string; size?: 'sm' | 'md'; backdrop?: string }) {
   const box = size === 'md' ? 44 : 32;
-  const sky = backdrop ? spriteBox(backdrop, 1, 1, { w: 64, h: 64 }) : null;
-  return (
-    <View aria-hidden importantForAccessibility="no-hide-descendants" style={{ width: box, height: box, flexShrink: 0, overflow: 'hidden' }}>
-      {backdrop && sky ? <Sprite id={backdrop} fallback={{ w: 64, h: 64 }} style={{ position: 'absolute', left: (box - sky.w) / 2, top: (box - sky.h) / 2 }} /> : null}
-      <Sprite id={id} fallback={{ w: 64, h: 64 }} style={{ position: 'absolute', left: size === 'md' ? -10 : -16, top: size === 'md' ? -4 : -6 }} />
-    </View>
-  );
+  // The sky and the face on one canvas of the box, which cuts both (SpriteLayers): one picture to make and draw for a line of a list, not two.
+  const layers = useMemo(() => {
+    const face = spriteBox(id, 1, 1, PORTRAIT);
+    const sky = backdrop ? spriteBox(backdrop, 1, 1, PORTRAIT) : null;
+    return [
+      ...(backdrop && sky ? [{ id: backdrop, x: (box - sky.w) / 2, y: (box - sky.h) / 2, ...sky }] : []),
+      { id, x: size === 'md' ? -10 : -16, y: size === 'md' ? -4 : -6, ...face },
+    ];
+  }, [id, backdrop, box, size]);
+  return <SpriteLayers size={{ w: box, h: box }} layers={layers} />;
 }
+
+/** A portrait's box where its art is missing. */
+const PORTRAIT = { w: 64, h: 64 };
 
 /** What stands beside an option: its face, or its icon. */
 const mark = (option: { icon?: string; face?: string }): ReactNode => (option.face ? <Face id={option.face} /> : option.icon ? <Sprite id={option.icon} /> : null);
