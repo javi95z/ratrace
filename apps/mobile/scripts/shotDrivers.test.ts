@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, openPage, refuseServerInUse, SPRITES_MS, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -108,9 +108,31 @@ test('the scenes are shot on web pages as tall as the screen shows, by the one r
   expect(source).toMatch(/await openPage\(page, sceneWebUrl\(scene, PORT\), \(\) => document\.querySelector\('\[data-scene\]'\) !== null, webRules\(scene\)\)/);
 });
 
-test('a screen is given six seconds for its sprites to load before it is shot, and the shot waits for no less (4 s once left the front door\'s gear out of a full run)', () => {
-  expect(SPRITES_MS).toBe(6000);
+test('a screen is given nine seconds for its sprites to load before it is shot, and the shot waits for no less (4 s once left the front door\'s gear out of a full run, 6 s four icons on a busy machine)', () => {
+  expect(SPRITES_MS).toBe(9000);
   expect(read('./shotDrivers.ts')).toContain('await sleep(SPRITES_MS);');
+});
+
+test('the app is shot once its screen is still: a sprite that came late is in the shot, and a screen that keeps moving is shot at the last try', async () => {
+  const waited: number[] = [];
+  const wait = async (ms: number) => void waited.push(ms);
+  // A lock not drawn yet in the first shot, drawn in the second: the third, the same as the second, is the one kept.
+  const late = [Buffer.from('no lock'), Buffer.from('lock'), Buffer.from('lock')];
+  let taken = 0;
+  expect(await stillShot(() => late[taken++], wait)).toEqual({ png: Buffer.from('lock'), still: true });
+  expect(taken).toBe(3);
+  expect(waited).toEqual([STILL_MS, STILL_MS]);
+  // Still from the first: two shots, no more.
+  taken = 0;
+  expect(await stillShot(() => (taken++, Buffer.from('home')), wait)).toEqual({ png: Buffer.from('home'), still: true });
+  expect(taken).toBe(2);
+  // Never still (a loop): the first and STILL_SHOTS more, and the last is kept.
+  taken = 0;
+  expect(await stillShot(() => Buffer.from(`frame ${taken++}`), wait)).toEqual({ png: Buffer.from(`frame ${STILL_SHOTS}`), still: false });
+  expect(taken).toBe(STILL_SHOTS + 1);
+  // The app's shots are taken so, after the sprites' wait.
+  const source = read('./shotDrivers.ts');
+  expect(source.indexOf('await sleep(SPRITES_MS);')).toBeLessThan(source.indexOf('await stillShot('));
 });
 
 // A page of jsdom's, with the two calls only a browser that lays out can answer stood in for.

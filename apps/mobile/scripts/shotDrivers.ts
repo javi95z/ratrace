@@ -1,4 +1,5 @@
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -207,17 +208,40 @@ export async function openPage(page: Page, url: string, ready?: () => boolean, c
 }
 
 /**
+ * How long a screen is given, once opened, for its sprites to load (Skia reads each as it is asked) before it is shot: 4 s was not always enough (once in a full run of the
+ * scenes the front door's gear, a 5000-pixel sprite, was not there yet, and the scene failed for it); 6 s was, until the machine was shared with other work (in two full
+ * runs at a load average of 40 to 170, a gear, a lock, a city's icon and the practice's icon were missing, each there when its scene was shot again alone). 9 s, and then
+ * the shot waits for the screen to be still (`stillShot`): at a load average of 150 to 250, 9 s alone once left out a lock and a coin.
+ */
+export const SPRITES_MS = 9000;
+
+/** How far apart two shots of the app's screen are taken to tell whether it is still. */
+export const STILL_MS = 1500;
+/** How many shots after the first are taken at most, waiting for two the same: a screen that keeps moving (a loop) is shot as it is at the last. */
+export const STILL_SHOTS = 4;
+
+/**
+ * Shoots a screen until two shots in a row are the same, and keeps the last: a sprite that came late (on a busy machine its read from Metro waits
+ * its turn, and 9 s were once not enough for a lock and a coin) is in the shot, as it would be had the screen been given longer. Nothing is judged
+ * more loosely for it: the shot kept is the screen as it stands still.
+ */
+export async function stillShot(shoot: () => Buffer, wait: (ms: number) => Promise<unknown> = sleep): Promise<{ png: Buffer; still: boolean }> {
+  let last = shoot();
+  for (let i = 0; i < STILL_SHOTS; i++) {
+    await wait(STILL_MS);
+    const next = shoot();
+    if (next.equals(last)) return { png: next, still: true };
+    last = next;
+  }
+  return { png: last, still: false };
+}
+
+/**
  * Shoots the app: each route opened in Expo Go on the booted simulator, then its screen taken. The status bar is the
  * same in every shot (it is masked in the comparison anyway). `fresh` first closes Expo Go and opens the first route
  * once to let it load the bundle: an Expo Go left running keeps the bundle of the Metro it saw last, stale when the code
  * changed since, and shows it until it is opened again.
  */
-/**
- * How long a screen is given, once opened, for its sprites to load (Skia reads each as it is asked) before it is shot: 4 s was not always enough (once in a full run of the
- * scenes the front door's gear, a 5000-pixel sprite, was not there yet, and the scene failed for it); 6 s has been.
- */
-export const SPRITES_MS = 6000;
-
 export async function shootApp(shots: ReadonlyArray<{ route: string; png: string }>, options: { fresh?: boolean } = {}): Promise<void> {
   execFileSync('xcrun', ['simctl', 'status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
   const open = (route: string) => execFileSync('xcrun', ['simctl', 'openurl', 'booted', `${METRO}/--/${route}`]);
@@ -234,7 +258,11 @@ export async function shootApp(shots: ReadonlyArray<{ route: string; png: string
     open(route);
     // Long enough for the screen's sprites to load (Skia reads them as they are asked).
     await sleep(SPRITES_MS);
-    execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
-    console.log(`app ${route}`);
+    // Each shot is written where the last is kept: the one left there is the screen as it stood still.
+    const { still } = await stillShot(() => {
+      execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
+      return readFileSync(png);
+    });
+    console.log(`app ${route}${still ? '' : ` (still moving after ${STILL_SHOTS + 1} shots: the last is kept)`}`);
   }
 }
