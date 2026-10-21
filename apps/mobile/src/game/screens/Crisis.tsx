@@ -62,6 +62,9 @@ export function CrisisDetails({ crisis }: { crisis: Crisis }) {
   );
 }
 
+/** How tall the strip of a crisis is under the Hud (its 6 of padding round a 12-point and a 16-point pixel line of 1.1), in points. */
+export const CRISIS_STRIP = { compact: 6 + 12 * 1.1 + 16 * 1.1 + 6 };
+
 /**
  * The bar of a crisis: its name, how far through it the world is, and what this round of it
  * brings. A tap opens the whole of it. Nothing is drawn in ordinary times. `open` has it open from the start (a scene's sheet).
@@ -75,13 +78,13 @@ export function CrisisBar({ crisis, compact = false, open: openAtFirst = false }
   if (!crisis) return null;
   const written = text.crises[crisis.id];
   // The web's bar is as tall as its two lines (42.8 points as the strip): it is not made taller, the touch reaches past it instead.
-  const tall = compact ? 6 + 12 * 1.1 + 16 * 1.1 + 6 : 0;
-  const reach = Math.max(0, Math.ceil((TOUCH - tall) / 2));
+  const reach = compact ? Math.max(0, Math.ceil((TOUCH - CRISIS_STRIP.compact) / 2)) : 0;
   return (
     <>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('open', { crisis: written.name, year: crisis.year, of: crisis.of })}
+        testID={compact ? 'crisis-strip' : 'crisis-bar'}
         hitSlop={compact ? { top: reach, bottom: reach } : undefined}
         onPress={press}
       >

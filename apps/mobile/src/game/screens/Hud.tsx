@@ -336,9 +336,18 @@ function tagRoom(language: string): { top: number; bottom: number } {
   const strut = 15 * 1.45;
   const above = webBaseline('read', 400, 15, strut, language);
   const tag = 2 + webBaseline('pixel', 400, 12, 12 * 1.25, language);
-  const height = 2 + 12 * 1.25 + 2;
-  return { top: 4 + Math.max(0, above - (4 + tag)), bottom: Math.max(0, strut - above - (height - tag)) };
+  return { top: 4 + Math.max(0, above - (4 + tag)), bottom: Math.max(0, strut - above - (JAIL_TAG.height - tag)) };
 }
+
+/** The tag of someone in prison as the kit draws it (`Tag`: a 12-point line of 1.25 in 2 of padding above and below), in points. */
+export const JAIL_TAG = { height: 2 + 12 * 1.25 + 2 };
+
+/**
+ * How far a touch on the tag reaches past it, so that a thumb has its 44 points: the tag is 19 high, at the foot of its column, so the touch
+ * reaches down only through the line's own room under it (a touch is not taken past the column) and up the rest of the way, over the lines
+ * above it, which are not pressed.
+ */
+const tagReach = (room: { bottom: number }) => ({ top: Math.ceil(TOUCH - JAIL_TAG.height - room.bottom), bottom: room.bottom });
 
 /** What the lead of the Hud draws of the life: little of it, so that the portrait's row is not drawn again for every coin. */
 interface Lead {
@@ -369,10 +378,20 @@ function leadOf(s: RoundState & RoundActions): Lead | null {
   };
 }
 
-/** The settings of the life, over the Hud: they need the whole of the game, which the portrait's row does not draw. */
+/** What the settings read of the game while they are shut: nothing. */
+const SHUT = { view: null, preview: null } as const;
+
+/**
+ * The settings of the life, over the Hud: they need the whole of the game, which the portrait's row does not draw, so they read it only while
+ * they are open (shut, the game moving on draws nothing here). The game as it was last read is kept for the sheet while it leaves.
+ */
 function HudSettings({ open, onClose }: { open: boolean; onClose(): void }) {
-  const shown = useShown();
-  return <SettingsSheet open={open} onClose={onClose} shown={shown} />;
+  const now = useGame(useShallow((s) => (open ? { view: s.view, preview: s.preview } : SHUT)));
+  const read = useMemo(() => (now.view ? (now.preview ? { ...now.view, player: now.preview.player } : now.view) : null), [now.view, now.preview]);
+  const [kept, keep] = useState<GameView | null>(read);
+  if (read !== null && read !== kept) keep(read);
+  const shown = read ?? kept;
+  return shown ? <SettingsSheet open={open} onClose={onClose} shown={shown} /> : null;
 }
 
 /** The portrait, hung: a moment of celebration (it jumps and lands, sparks fly, a band of light crosses it) each time its frame gets better. */
@@ -484,7 +503,13 @@ function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyl
           ) : null}
           {/* Prison says so where the player always looks. */}
           {life.jailRounds > 0 ? (
-            <Pressable accessibilityRole="button" onPress={prison} style={{ marginTop: room.top, marginBottom: room.bottom, alignSelf: 'flex-start' }}>
+            <Pressable
+              accessibilityRole="button"
+              testID="jail-tag"
+              hitSlop={tagReach(room)}
+              onPress={prison}
+              style={{ marginTop: room.top, marginBottom: room.bottom, alignSelf: 'flex-start' }}
+            >
               <Tag tone="bad">{`${t('inJail')} ›`}</Tag>
             </Pressable>
           ) : null}

@@ -216,7 +216,6 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   return store;
 }
 
-
 /** The lives a scene's player has unlocked, written to the profile as the game writes them: when, and in which life. */
 async function unlock(store: MemoryStore, name: string): Promise<void> {
   const ids = UNLOCKED[name];
