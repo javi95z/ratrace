@@ -242,3 +242,8 @@ test('a touch that lands on the value it already has says nothing', () => {
   touch.update({ x: 150 });
   expect(onChange).not.toHaveBeenCalled();
 });
+
+test('it says how much there is to choose from where a screen reader asks what it is for', () => {
+  render(<Slider label="Amount" value={500} min={0} max={1000} step={100} onChange={() => {}} hint="Up to $10" />);
+  expect(last(adjustables).accessibilityHint).toBe('Up to $10');
+});

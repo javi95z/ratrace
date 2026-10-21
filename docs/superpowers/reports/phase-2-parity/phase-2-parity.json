@@ -24,6 +24,9 @@
   {"scene":"hud-jailed","locale":"en","verdict":"clean","rawPercent":3.38,"beyondPercent":0.617,"loose":9418,"shape":0,"shapeBlended":0,"textLines":33,"unmeasured":21,"oneSided":0,"worstPt":0.67},
   {"scene":"hud-crisis","locale":"en","verdict":"clean","rawPercent":3.1,"beyondPercent":0.18,"loose":2714,"shape":0,"shapeBlended":0,"textLines":21,"unmeasured":0,"oneSided":0,"worstPt":1},
   {"scene":"hud-crisis-details","locale":"en","verdict":"clean","rawPercent":2.62,"beyondPercent":0.843,"loose":7915,"shape":0,"shapeBlended":0,"textLines":33,"unmeasured":21,"oneSided":0,"worstPt":0.67},
+  {"scene":"amount-savings","locale":"en","verdict":"clean","rawPercent":1.57,"beyondPercent":0.153,"loose":2119,"shape":0,"shapeBlended":0,"textLines":30,"unmeasured":19,"oneSided":0,"worstPt":0.67},
+  {"scene":"celebrate-legendary","locale":"en","verdict":"clean","rawPercent":1.21,"beyondPercent":0.261,"loose":4274,"shape":0,"shapeBlended":0,"textLines":24,"unmeasured":19,"oneSided":0,"worstPt":0.67},
+  {"scene":"celebrate-earned","locale":"en","verdict":"accepted","rawPercent":3.44,"beyondPercent":0.762,"loose":7638,"shape":44,"shapeBlended":44,"textLines":27,"unmeasured":0,"oneSided":0,"worstPt":1},
   {"scene":"challenge-practice","locale":"en","verdict":"clean","rawPercent":4.29,"beyondPercent":0.757,"loose":11058,"shape":0,"shapeBlended":0,"textLines":15,"unmeasured":0,"oneSided":0,"worstPt":0.67},
   {"scene":"legal","locale":"en","verdict":"phone words, not comparable","rawPercent":14.42,"beyondPercent":10.864,"loose":248192,"shape":39721,"shapeBlended":215,"textLines":34,"unmeasured":0,"oneSided":17,"worstPt":281}
 ]

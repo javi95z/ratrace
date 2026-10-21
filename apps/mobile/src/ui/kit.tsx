@@ -379,8 +379,27 @@ const STAT_TONE = { good: 'teal-300', bad: 'wine-300' } as const satisfies Recor
  * One figure of the HUD: an icon, a number, and what the number is. Inside a container too narrow
  * for three of them side by side, the icon steps aside. The container is the `StatRow` it stands in;
  * alone, it measures itself. With `onOpen` it is a raised button that opens what the figure means.
+ * `ref` is its box, for what asks where it stands on the screen (the cash, where coins land).
  */
-export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: string; value: Words; label: Words; tone?: 'good' | 'bad'; hint?: string; onOpen?: () => void; style?: ViewStyle }) {
+export function Stat({
+  icon,
+  value,
+  label,
+  tone,
+  hint,
+  onOpen,
+  style,
+  ref,
+}: {
+  icon: string;
+  value: Words;
+  label: Words;
+  tone?: 'good' | 'bad';
+  hint?: string;
+  onOpen?: () => void;
+  style?: ViewStyle;
+  ref?: Ref<HostInstance>;
+}) {
   const row = useContext(StatRowWidth);
   // Until the first measure the icon is shown, as on a roomy phone.
   const [own, setOwn] = useState<number | null>(null);
@@ -412,6 +431,7 @@ export function Stat({ icon, value, label, tone, hint, onOpen, style }: { icon: 
   };
   return (
     <View
+      ref={ref}
       testID="stat"
       style={[{ minWidth: 0 }, row ? { flex: 1 } : null, style]}
       onLayout={row ? undefined : (e: LayoutChangeEvent) => setOwn(e.nativeEvent.layout.width)}

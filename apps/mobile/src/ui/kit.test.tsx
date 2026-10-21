@@ -719,3 +719,15 @@ test('a Raised hands its pressable to whoever asks for it, to move the screen re
   );
   expect(seen.some((node) => node === screen.getByRole('radio', { name: 'A life' }))).toBe(true);
 });
+
+test('a Stat hands its box to whoever asks for it, to measure where it stands (the cash the coins fly to), and its box only', () => {
+  const seen: Array<unknown> = [];
+  render(
+    <StatRow>
+      <Stat icon="icon.cash" value="$9,000" label="Cash" ref={(node) => void seen.push(node)} onOpen={() => {}} />
+    </StatRow>,
+  );
+  const box = screen.getByTestId('stat');
+  expect(seen.filter((node) => node !== null)).toEqual([box]);
+  expect(box.contains(screen.getByRole('button', { name: /Cash/ }))).toBe(true);
+});

@@ -1,4 +1,4 @@
-import { content, lives, weekOf } from '@ratrace/content';
+import { content, lives, rarityOf, weekOf } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
 import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
@@ -99,7 +99,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -262,6 +262,46 @@ describe('the scenes of the HUD', () => {
   });
 });
 
+describe('the scenes of an amount and of a badge', () => {
+  it('amount-savings is the finances of the engineer\'s sixth round (play-finance-r6\'s very store), with the sheet that moves cash to savings open', async () => {
+    expect(await saveOf(await sceneStore('amount-savings'))).toEqual(await saveOf(await sceneStore('play-finance-r6')));
+    expect(SCENES.find((scene) => scene.name === 'amount-savings')).toEqual({ name: 'amount-savings', locale: 'en', sheet: 'save' });
+    const state = await opened(await sceneStore('amount-savings'));
+    // There is cash to move: the sheet has an amount to choose.
+    expect(state.view?.player.cash).toBeGreaterThan(0);
+  });
+
+  it('celebrate-legendary is a legendary badge earned in a real life: the engineer of screen-seed-74 meets MrFeast, the first card of the second round, and takes his challenge', async () => {
+    const store = await sceneStore('celebrate-legendary');
+    const save = (await saveOf(store)) as SavedGame;
+    expect(save).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-74', lifeId: 'engineer' });
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', stage: 'news' });
+    expect(roundOf(state)).toBe(2);
+    expect(state.view?.hand[0]).toBe('celeb_mrfeast');
+    // Nothing legendary is earned before it.
+    expect((await store.loadProfile()).badges.celeb_mrfeast).toBeUndefined();
+    // The game opened on it, the paper read and the card answered (to play along): the badge of meeting him is the step's to show, legendary.
+    const game = createGameStore({ sessions: fixedSessions(store), content });
+    await game.getState().boot();
+    await runScene('celebrate-legendary', game);
+    expect(game.getState().stage).toBe('outcome');
+    expect(game.getState().earned).toContain('celeb_mrfeast');
+    expect(rarityOf('celeb_mrfeast')).toBe('legendary');
+    expect(game.getState().earned.filter((id) => rarityOf(id) === 'legendary')).toEqual(['celeb_mrfeast']);
+    // He paid out (the three in a hundred): the first hundred thousand comes with it, a common badge beside the legendary one.
+    expect(game.getState().earned).toEqual(['first_100k', 'celeb_mrfeast']);
+    // Drawn with motion left out, as a player can set it: the medal stands where its turn ends, and no spark is caught in flight.
+    expect((await (await sceneStore('celebrate-legendary')).loadProfile()).settings.reducedMotion).toBe(true);
+  });
+
+  it('celebrate-earned is the same step, its legendary sheet taken in: the very store, still', async () => {
+    expect(await saveOf(await sceneStore('celebrate-earned'))).toEqual(await saveOf(await sceneStore('celebrate-legendary')));
+    expect(await (await sceneStore('celebrate-earned')).loadProfile()).toEqual(await (await sceneStore('celebrate-legendary')).loadProfile());
+    expect(SCENES.find((scene) => scene.name === 'celebrate-earned')).toEqual({ name: 'celebrate-earned', locale: 'en' });
+  });
+});
+
 describe('the list of scenes', () => {
   it('names each scene <screen> or <screen>-<state>, once, in a language the game speaks', () => {
     expect(new Set(SCENES.map((scene) => scene.name)).size).toBe(SCENES.length);
@@ -295,6 +335,9 @@ describe('the list of scenes', () => {
       'hud-jailed',
       'hud-crisis',
       'hud-crisis-details',
+      'amount-savings',
+      'celebrate-legendary',
+      'celebrate-earned',
       'challenge-practice',
       'legal',
     ]);
@@ -329,7 +372,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'hud', 'challenge', 'legal']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'hud', 'amount', 'celebrate', 'challenge', 'legal']));
   });
 });
 

@@ -22,6 +22,7 @@ vi.mock('expo-audio', async () => (await import('./fakes')).expoAudio);
 vi.mock('../ui/soundSources', async () => (await import('./fakes')).soundSources);
 vi.mock('react-native-safe-area-context', async () => (await import('./fakes')).safeArea);
 vi.mock('../ui/Sprite', async () => (await import('./fakes')).spriteModule);
+vi.mock('react-native-gesture-handler', async () => (await import('./fakes')).gestureHandler);
 // What a screen draws with Skia itself (a portrait's backdrop of rays, the kit's charts): pieces that say what they were asked to draw.
 vi.mock('@shopify/react-native-skia', async () => (await import('../ui/testing/skia')).skiaFake());
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.

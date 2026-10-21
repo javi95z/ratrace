@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'hud', 'records', 'collection', 'challenge', 'legal']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -159,4 +159,31 @@ test('the page where a life is chosen has open, in a scene, what the scene says:
   const names = SCENES.map((scene) => scene.name);
   expect(names).toEqual(expect.arrayContaining(['new-locked', 'new-replace']));
   expect(SCENES.find((scene) => scene.name === 'new-replace')?.sheet).toBe('replace');
+});
+
+test('a sheet that a screen not ported yet opens is drawn beside the Hud on both sides, the page under it the Hud alone: an amount moved to savings, a legendary badge', () => {
+  // The web: Play itself, all of it but the Hud hidden by the shot (HUD_ONLY in sceneShots.ts), the sheet of savings beside it (Finance's own, not exported, opens the
+  // web's AmountSheet with these words and the cash shown), and the legendary badge in its own place, the stage of a card's result, whose sheet is drawn over the page.
+  expect(web).toContain('amount: () => <SavingsScene />,');
+  expect(web).toContain("celebrate: (scene) => (scene.name === 'celebrate-earned' ? <Pressed selector={TAKEN_IN}><Play /></Pressed> : <Play />),");
+  expect(web).toContain("<AmountSheet title={amount('save')} max={cash} onClose={nothing} onConfirm={refused} />");
+  const finance = read('../../web/src/game/screens/Finance.tsx');
+  expect(finance).toContain("if (move.kind === 'save') return <AmountSheet title={amount('save')} max={p.cash} onClose={close} onConfirm={(a) => addOrder({ type: 'depositIn', amount: a })} />;");
+  expect(read('../../web/src/game/screens/Cards.tsx')).toMatch(/<h2 className="pixel text-center text-\[20px\] text-gold-500">\{t\('results'\)\}<\/h2>\n\s+<Celebrations \/>/);
+  // The phone: the Hud as Play mounts it, and the same sheet beside it; the badge's stage mounted where it draws nothing in the page.
+  expect(app).toContain('amount: () => <><HudScene /><SavingsSheet /></>,');
+  expect(app).toContain("<AmountSheet title={amount('save')} max={cash} onClose={nothing} onConfirm={refused} />");
+  expect(app).toContain("celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),");
+});
+
+test('the small cards of a step are drawn with its legendary sheet taken in: the web\'s page presses its own button to move on, the phone\'s Celebrations is told it was seen', () => {
+  // The web: the one button of the legendary sheet, which it marks with the badge (`data-legendary`), pressed once in the page, not by the shot.
+  expect(web).toContain("const TAKEN_IN = '[data-legendary] button';");
+  const celebrations = read('../../web/src/game/screens/Celebrations.tsx');
+  expect(celebrations).toContain('<div data-legendary={grand} className="relative flex flex-col items-center gap-3 text-center">');
+  const sheet = celebrations.slice(celebrations.indexOf('<div data-legendary'), celebrations.indexOf('</Sheet>'));
+  expect([...sheet.matchAll(/<Button /g)]).toHaveLength(1);
+  // The phone: its initial state, and the cards where the web's result of a card has them: 12 under the Hud's figures, 12 apart.
+  expect(app).toContain('<Celebrations seen={LEGENDARY} />');
+  expect(app).toContain('<View style={{ paddingTop: 4, gap: 12 }}>');
 });

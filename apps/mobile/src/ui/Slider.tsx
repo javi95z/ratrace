@@ -35,9 +35,10 @@ const topOf = (min: number, max: number, step: number) => min + Math.floor((max 
  * the middle of 44 so a thumb can find it, with a square gold handle. A tap puts the handle where it lands, once it is over
  * (as a click does), and a sideways drag follows the finger; a touch that goes up or down is the sheet's scroll and changes
  * nothing. It is an adjustable for a screen reader: `label` names it, `valueText` is what it reads out in place of the
- * bare number (a sum of money), and the reader's increment and decrement move one `step`.
+ * bare number (a sum of money), `hint` what it is for (the web's `aria-describedby`: how much there is), and the reader's
+ * increment and decrement move one `step`.
  */
-export function Slider({ value, min, max, step, onChange, label, valueText }: { value: number; min: number; max: number; step: number; onChange(value: number): void; label: string; valueText?: string }) {
+export function Slider({ value, min, max, step, onChange, label, valueText, hint }: { value: number; min: number; max: number; step: number; onChange(value: number): void; label: string; valueText?: string; hint?: string }) {
   const width = useRef(0);
   // What the pan's callbacks read is the latest render's, not the one they were made in.
   const latest = useRef({ value, min, max, step, onChange });
@@ -83,6 +84,7 @@ export function Slider({ value, min, max, step, onChange, label, valueText }: { 
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={label}
+        accessibilityHint={hint}
         accessibilityValue={{ min, max, now: value, text: valueText }}
         aria-valuemin={min}
         aria-valuemax={max}

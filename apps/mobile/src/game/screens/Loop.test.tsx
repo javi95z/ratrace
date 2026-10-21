@@ -39,6 +39,20 @@ describe('a loop of frames', () => {
     expect(sprites(plain.container)[0]).toBe('anim.wheel.0');
   });
 
+  it('draws every frame into the box it is given, where the web forces one (a flying coin\'s 24 square, for art twice that)', () => {
+    const { container } = render(<Loop name="coin" ms={90} size={{ w: 24, h: 24 }} />);
+    const box = container.firstElementChild as HTMLElement;
+    expect([box.style.width, box.style.height]).toEqual(['24px', '24px']);
+    expect([...container.querySelectorAll('[data-sprite]')].map((el) => el.getAttribute('data-size'))).toEqual(['24x24', '24x24', '24x24', '24x24']);
+    cleanup();
+    const still = render(
+      <ReducedMotionProvider value>
+        <Loop name="coin" size={{ w: 24, h: 24 }} />
+      </ReducedMotionProvider>,
+    );
+    expect(still.container.querySelector('[data-sprite="anim.coin.0"]')?.getAttribute('data-size')).toBe('24x24');
+  });
+
   it('stands still on its first frame where motion is left out: one frame, and nothing running', () => {
     const { container } = render(
       <ReducedMotionProvider value>

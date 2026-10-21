@@ -1,4 +1,4 @@
-import { createElement, useEffect } from 'react';
+import { createElement, useEffect, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 
@@ -90,11 +90,14 @@ export const safeArea = { useSafeAreaInsets: () => insets };
 
 /** How many times each sprite has been drawn, by id: what a test that something was not drawn again counts. */
 export const spriteRenders = new Map<string, number>();
-/** Sprites are drawn with Skia on the phone only: here each is a box that names its id, and says if it is only the shape of the picture. */
+/**
+ * Sprites are drawn with Skia on the phone only: here each is a box that names its id, says if it is only the shape of the picture, and the box
+ * it is drawn into where it is given one (`size`, as `w x h`).
+ */
 export const spriteModule = {
-  Sprite: ({ id, silhouette }: { id: string; silhouette?: boolean }) => {
+  Sprite: ({ id, silhouette, size }: { id: string; silhouette?: boolean; size?: { w: number; h: number } }) => {
     spriteRenders.set(id, (spriteRenders.get(id) ?? 0) + 1);
-    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null) });
+    return createElement('div', { 'data-sprite': id, ...(silhouette ? { 'data-silhouette': 'true' } : null), ...(size ? { 'data-size': `${size.w}x${size.h}` } : null) });
   },
 };
 
@@ -110,3 +113,13 @@ export function resetFakes(): void {
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });
 }
+
+/**
+ * The gesture handler, whose native side cannot be loaded here: a gesture is its configuration, handed back as it was given (a test that drives
+ * one takes its callbacks from it), and a detector draws what it holds. The slider's own test drives its pan with a stand-in of its own.
+ */
+export const gestureHandler = {
+  usePanGesture: <T,>(config: T): T => config,
+  GestureDetector: ({ children }: { children: ReactNode }) => children,
+  GestureHandlerRootView: ({ children }: { children: ReactNode }) => children,
+};

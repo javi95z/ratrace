@@ -38,15 +38,30 @@ export const HUD_ONLY = '#round-stage, #round-actions { display: none !important
 export const CALENDAR_COVERS = '[data-motion-only] > * { pointer-events: auto !important; }';
 
 /**
+ * The small cards of what a step earned (`celebrate-earned`) are the result of a card's own children, beside its title and the card answered (Cards.tsx,
+ * Task 11): in that scene's shot everything of the stage but them is taken out, and the bar of the next step, so the page is the Hud and the cards under
+ * it, 12 below its figures (the stage's `pt-3`) and 12 apart (the result's `gap-3`), as the phone draws them beside its Hud.
+ */
+export const CELEBRATIONS_ONLY = '#round-actions, #round-stage > :not(:has(> [role="status"])), #round-stage > * > :not([role="status"]) { display: none !important; }';
+
+/**
+ * The screens of the scenes drawn over the Hud alone (`HUD_ONLY`): the Hud's own, and two whose sheet is opened by a part of Play still to be ported
+ * (the sheet that moves cash to savings, Finance's, Task 12; a legendary badge, a card's result's, Task 11), which both sides draw beside the Hud.
+ */
+export const SHEETS_OVER_THE_HUD: readonly string[] = ['hud', 'amount', 'celebrate'];
+
+/**
  * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
  * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
- * the web's page: the line is the only `p` of that frame on the page of a guest. And on the scenes of the Hud, everything of Play but the Hud (`HUD_ONLY`).
+ * the web's page: the line is the only `p` of that frame on the page of a guest. And on the scenes of the Hud, and of a sheet drawn over it, everything of Play
+ * but the Hud (`HUD_ONLY`); of the badges a step earned, everything of Play but the Hud and the cards (`CELEBRATIONS_ONLY`).
  * And one rule that hides nothing, for the text check alone: the calendar covers what it covers (`CALENDAR_COVERS`).
  */
 export const WEB_ONLY: Readonly<Record<string, string>> = {
   'challenge-practice': 'main > p.frame.bg-night-700 { display: none !important; }',
   'play-pageturn': CALENDAR_COVERS,
-  ...Object.fromEntries(SCENES.filter((scene) => screenOf(scene) === 'hud').map((scene) => [scene.name, HUD_ONLY])),
+  ...Object.fromEntries(SCENES.filter((scene) => SHEETS_OVER_THE_HUD.includes(screenOf(scene))).map((scene) => [scene.name, HUD_ONLY])),
+  'celebrate-earned': CELEBRATIONS_ONLY,
 };
 
 /** Every rule the web's page is given for a scene's shot: the height of its pages, and what it draws that the phone does not. */
@@ -178,6 +193,14 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     oneSided: 0,
     reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), all along them now that the lines of the paper it covers are measured only where they show (CALENDAR_COVERS), and the masthead as in play-news-r1.',
     report: 'Task 9: play, round by round, from the news',
+  },
+  'celebrate-earned': {
+    shape: 44,
+    // Two device pixels.
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The lines of the badges\' cards each stand where the phone lays them on its device pixels (within 2/3 pt of the web\'s): the 12 pt gold "BADGE EARNED" two device pixels lower, its bottom row of glyphs one row past the text check\'s window (21 px a card), and two pixels of the "y" of the legendary card\'s name.',
+    report: 'Task 10: amounts on a slider, celebrations, flying coins and medals',
   },
   'new-replace': {
     shape: 1159,

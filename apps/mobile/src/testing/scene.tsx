@@ -1,13 +1,17 @@
+import { BADGE_RARITY, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { GameProvider, useGame } from '../game/context';
+import { GameProvider, useGame, useT } from '../game/context';
 import type { Services } from '../game/context';
+import { AmountSheet } from '../game/screens/AmountSheet';
+import { Celebrations } from '../game/screens/Celebrations';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Home } from '../game/screens/Home';
+import { useShown } from '../game/screens/Hud';
 import { Legal } from '../game/screens/Legal';
 import { NewLife } from '../game/screens/NewLife';
 import type { NewLifeOpened } from '../game/screens/NewLife';
@@ -78,6 +82,49 @@ export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>
  */
 const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === 'replace' ? 'replace' : scene.name === 'new-locked' ? 'locked' : undefined);
 
+/** A sheet that asks nothing of the game is never taken: a scene's sheet stays open whatever is pressed in it. */
+const refused = (): boolean => false;
+
+/**
+ * The sheet that moves cash to savings, as Finance's portfolio opens it (`amount-savings`): all the cash there is, the most it can move. Finance
+ * comes with Task 12; until then the sheet is drawn beside the Hud of the finances, and so is the web's (its Finance keeps the sheet to itself),
+ * over a page that is the Hud alone on both sides (`HUD_ONLY` in scripts/sceneShots.ts).
+ */
+function SavingsSheet() {
+  const playing = useGame((s) => s.status === 'playing' && s.view !== null);
+  return playing ? <Savings /> : null;
+}
+function Savings() {
+  const amount = useT('finance.amount');
+  const cash = useShown().player.cash;
+  return <AmountSheet title={amount('save')} max={cash} onClose={nothing} onConfirm={refused} />;
+}
+
+/**
+ * The stage a sheet of a scene belongs to, mounted and drawn nowhere in the page: what the web's shot leaves of its stage (`HUD_ONLY` hides it,
+ * and a sheet it opens is drawn over the page all the same). A legendary badge (`celebrate-legendary`) is shown by the result of the card that
+ * earned it, which comes with Task 11: until then its `Celebrations` stands here, its sheet over the Hud and its small card in a box of no size.
+ */
+function HiddenStage({ children }: { children: ReactNode }) {
+  return <View style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>{children}</View>;
+}
+
+/** The legendary badges a scene shows as taken in already: every one there is. */
+const LEGENDARY: readonly string[] = Object.keys(BADGE_RARITY).filter((id) => rarityOf(id) === 'legendary');
+
+/**
+ * The small cards of what a step earned (`celebrate-earned`), its legendary sheet taken in, where the result of a card has them: 12 under the Hud's
+ * figures (Play's `paddingTop: 4` and the page's gap of 8, the web's `pt-3`) and 12 apart (the result's `gap-3`). The web's shot takes everything
+ * else of the stage out (`CELEBRATIONS_ONLY`); its page presses the sheet's button, which the phone's Celebrations is given as its initial state.
+ */
+function EarnedStage() {
+  return (
+    <View style={{ paddingTop: 4, gap: 12 }}>
+      <Celebrations seen={LEGENDARY} />
+    </View>
+  );
+}
+
 /** What a scene of the Hud has open at the start: the sheet it names (a figure's, the prison's, the crisis's), given to the Hud as its initial state. */
 const HUD_OPEN: readonly HudSceneOpen[] = ['cash', 'flow', 'status', 'ratRace', 'jail', 'settings', 'news', 'crisis'];
 const hudOpenOf = (scene: Scene): HudSceneOpen | undefined => HUD_OPEN.find((open) => open === scene.sheet);
@@ -91,6 +138,8 @@ export const SCENE_SCREENS: SceneScreens = {
   new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: (scene) => <PlayScene scene={scene} />,
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
+  amount: () => <><HudScene /><SavingsSheet /></>,
+  celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
   records: () => <Placeholder page="records" />,
   collection: () => <Placeholder page="collection" />,
   challenge: () => <WeeklyChallenge />,

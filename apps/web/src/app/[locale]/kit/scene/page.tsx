@@ -14,11 +14,13 @@ import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenO
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GameProvider, useGame } from '@/game/context';
+import { GameProvider, useGame, useT } from '@/game/context';
 import type { Services } from '@/game/context';
+import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
 import { Collection } from '@/game/screens/Collection';
 import { Home } from '@/game/screens/Home';
+import { useShown } from '@/game/screens/Hud';
 import { NewLife } from '@/game/screens/NewLife';
 import { PageTurn } from '@/game/screens/PageTurn';
 import { Play } from '@/game/screens/Play';
@@ -108,12 +110,40 @@ function PlayScene({ scene }: { scene: Scene }) {
   );
 }
 
+/** A sheet that asks nothing of the game is never taken: a scene's sheet stays open whatever is pressed in it. */
+const refused = (): boolean => false;
+
+/**
+ * The sheet that moves cash to savings over the finances (`amount-savings`): Finance's portfolio keeps the sheet it opens to itself, with no
+ * initial state to take, so the page draws the same AmountSheet with the same words and the cash shown beside Play, as the phone's registry
+ * does (its Finance comes with Task 12). The shot shows Play's Hud alone under it (`HUD_ONLY`, apps/mobile/scripts/sceneShots.ts).
+ * (A legendary badge needs nothing of the kind: the result of the card that earned it, Play's own stage, opens its sheet, `celebrate`.)
+ */
+function SavingsScene() {
+  const amount = useT('finance.amount');
+  const cash = useShown().player.cash;
+  return (
+    <>
+      <Play />
+      <AmountSheet title={amount('save')} max={cash} onClose={nothing} onConfirm={refused} />
+    </>
+  );
+}
+
+/**
+ * The legendary sheet of a step that earned badges has no initial state either: a scene of the step after it (`celebrate-earned`) has the page press
+ * its one button (the sheet is marked with the badge, `data-legendary`), once, as a person would. The phone's Celebrations is told it was seen.
+ */
+const TAKEN_IN = '[data-legendary] button';
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: (scene) => <PlayScene scene={scene} />,
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
+  amount: () => <SavingsScene />,
+  celebrate: (scene) => (scene.name === 'celebrate-earned' ? <Pressed selector={TAKEN_IN}><Play /></Pressed> : <Play />),
   records: () => <Records />,
   collection: () => <Collection />,
   challenge: () => <WeeklyChallenge />,

@@ -8,7 +8,7 @@ away*, *text*, *shape*), the same tool (`kit-shots.ts`). Pictures and numbers li
 section goes to the report of the phase that added it (`reportFolder` in `kitCompare.ts`).
 
 Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4), the scenes of the front
-door, the week's challenge and the legal notice (task 6, below), the page where a life is chosen (task 7, below), the HUD with what hangs from it (task 8, below) and the play screen at the news, its guide, its fault and its calendar (task 9, below). Scene rows (one game state drawn by both clients) follow with the screens.
+door, the week's challenge and the legal notice (task 6, below), the page where a life is chosen (task 7, below), the HUD with what hangs from it (task 8, below), the play screen at the news, its guide, its fault and its calendar (task 9, below) and an amount on a slider, a legendary badge and the cards of badges earned (task 10, below). Scene rows (one game state drawn by both clients) follow with the screens.
 
 ## Scenes: one game state, drawn by both clients
 
@@ -355,6 +355,95 @@ the run (its line in `phase-2-parity.json` says `"moving":true`, the run names i
 - **The moved toast, the warning before a costly round, Waiting** (the blinking "Loading…" while the game opens) are tested (`Play.test`), not shot: none is a state a
   scene's screen is first drawn in.
 - **A Russian player on a 360 pt phone**: the HUD at 360 is `hud-status-ru`; the news stage at 360 is not shot (no scene names it; the paper and the gauges wrap their words).
+
+## Task 10: amounts on a slider, celebrations, flying coins and medals
+
+`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app compare --only=amount-savings,celebrate-legendary,celebrate-earned`. Three scenes
+(the brief's two, and `celebrate-earned`, beyond the brief, for the small cards of what a step earned, which the legendary sheet covers). The screens they
+belong to come later (Finance, Task 12; a card's result, Task 11), so each is drawn over the Hud, on both sides:
+
+| scene | what | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|---|
+| amount-savings | the sheet that moves cash to savings (Finance's portfolio), opened on $0, all $127,830 of the sixth round's cash to move, over the compact Hud | clean | 1.57 | 0.153 | 2119 | 0 | 30 (19 unmeasured: the dimmed page) | 0.67 |
+| celebrate-legendary | a legendary badge earned in a real life: its sheet (the gem's rim, "LEGENDARY BADGE", Continue) over the Hud of the card that earned it, motion left out | clean | 1.21 | 0.261 | 4274 | 0 | 24 (19 unmeasured) | 0.67 |
+| celebrate-earned | the same step, the sheet taken in: the small cards of the two badges it earned (bronze and gem rims, 42 pt badges from 64 pt art) under the Hud | accepted | 3.44 | 0.762 | 7638 | 44 | 27 | 1.00 (▸) |
+
+**How the scenes are made.**
+- **A legendary badge, from a real life.** No doctored save: the engineer of `screen-seed-74` (found by playing the fixed seeds with the saver: the first
+  whose early hands deal one of the famous, as the first card of a round) opens his second round with MrFeast's challenge, a legendary card. The scene is the
+  save at that round's news and two steps on the client's game (`then`: the paper read, the challenge taken, option 1); he wins the three-in-a-hundred fortune,
+  so the step earns `first_100k` (common) and `celeb_mrfeast` (legendary). Both celebrate scenes are drawn with motion left out (`STILL`): the medal's turn and
+  the sparks run 1.2 s, longer than the web's shot waits, and the fortune would fly coins on the web; still, the medal stands square on where its turn ends.
+- **The sheet of savings.** Finance keeps its sheets to itself on the web (no initial state), so both registries draw the same `AmountSheet` (the words of
+  `finance.amount.save`, the cash shown as the most) beside Play's Hud (the web's `Play` at the sixth round's finances, `play-finance-r6`'s store, the phone's
+  `HudScene`), and the web's shot shows the Hud alone under it (`HUD_ONLY`, now given to the screens `hud`, `amount`, `celebrate`: `SHEETS_OVER_THE_HUD`).
+- **The legendary sheet.** The web's Play at the card's result draws it itself (Celebrations in the result, its sheet a portal over the page), with the stage hidden
+  (`HUD_ONLY`); the phone has no result of a card yet, so its registry mounts `Celebrations` in a box of no size beside the `HudScene` (`HiddenStage`): the
+  sheet is drawn over the page, the small cards nowhere, as the web's hidden stage.
+- **The small cards.** The web's page presses the sheet's one button (`[data-legendary] button`, once, in the page, as for the Hud's sheets), and its shot takes
+  everything of the stage out but the cards (`CELEBRATIONS_ONLY`: the bar of the next step, the guide, the result's title and the card answered). The phone's
+  `Celebrations` takes the legendary badges as seen (`seen`, a phone-only initial state, as the Hud's `open`) and its registry puts the cards where the result has
+  them: 12 under the Hud's figures, 12 apart.
+
+### What differed in the first shots, and was fixed
+
+| # | difference | cause | fix | test |
+|---|---|---|---|---|
+| 1 | `celebrate-earned`: the cards 8 pt higher than the web's (142851 shape pixels) | the web's Hud keeps the compact crisis strip's box (`<div className="mt-2 px-3">`) when there is no crisis: an empty box with its 8 of margin, so every stage of the compact Hud (cards, a card's result, the finances) starts 8 lower than with no box at all. The phone's Play (and `HudScene`) drew nothing there | with no crisis, the strip's place is an empty view, which the page's gap of 8 stands on either side of (the strip itself is not boxed: its touch reaches a point past it) | `Play.test` "keeps, where the HUD is compact, the place of a crisis's strip…" (RED before) |
+
+Measured before writing, so not differences:
+- **No glow round a badge's card.** The web's card is `frame frame-gold … shadow-[0_0_12px_…]` (the rarity's glow, `RARITY_GLOW`). Both are box-shadows of the utilities
+  layer, and `.frame` is written after the `shadow-[…]` utilities in the compiled stylesheet (Tailwind 4.3.3, compiled from `globals.css`: `.shadow-[0_0_20px_…]` at line
+  1784, `.frame` at 1812), so the frame's four strips are what is drawn and no glow at all; the web's shot of `celebrate-earned` shows none round the legendary card. The
+  phone draws the gold frame and no glow (`RARITY_GLOW` kept as the web's word for it). The web's test only checks the class.
+- **The silver rarity's colour.** `text-ink-100` is no colour of the game's palette (`--color-*: initial` leaves the 31): the word keeps its line's colour (`RARITY_TONE`
+  is null for it).
+- **The amount's keyboard help** (`keyboard-hint`) is `display: none` unless the page is driven by a keyboard: not drawn, and no gap for it.
+- **The chips** (25 %, 50 %, 100 %) are plain `frame-raised` buttons with no `active:` class: they do not sink when pressed (the kit's `Raised` does), so the sheet draws
+  them with a frame of its own.
+
+### The residual, with its cause
+
+1. **`celebrate-earned`, 44 shape pixels.** The four lines of each card (12, 18 and 11 pt pixel lines, a 13 pt reading line) stand where the phone lays each on its device
+   pixels: within 2/3 pt of the web's (measured: "BADGE EARNED" two device pixels lower, the name one higher, the rarity and the line under it two lower). The bottom row
+   of the 12 pt gold line's glyphs falls one row past the text check's window (21 pixels in each card, at 312.33 and 404.33 pt) and two pixels of the "y" of the legendary
+   card's name: text, counted as shape. Task 7's class (whole CSS pixels against device pixels). The rims and the badges, drawn 64 into 64 and 64 into 42 (nearest
+   neighbour), are the same to the pixel. Record: `ACCEPTED` (`celebrate-earned` 44 / 1 pt).
+
+### On the simulator (not shots)
+
+- **The slider in a sheet** (Task 4's carried question: could a native scroll cancelling the pan under 10 pt be read as a tap?). On the iPhone 16 Pro simulator, in
+  `amount-savings`: a tap on the track set $64,000 where it landed; a sideways drag from the middle followed the finger to $100,000; a vertical swipe from the track,
+  in the sheet as it is (it does not scroll), changed nothing. Then with the sheet made taller than the screen for the check (a 900 pt footer, not committed), so that
+  it scrolls: three swipes from the track (up in 40 ms steps; down in a 0.15 s flick; up a point at a time over the first 9 points, then on) each scrolled the sheet
+  and left the amount as it was. Whether the pan failed at its own 10 pt or the scroll cancelled it first, the slider did not read it as a tap: the amount was never
+  moved by a scroll. The slider is not changed (Android, where the scroll's slop differs, is still to be checked when its emulator is installed).
+- **Coins that fly** (Ruling C). A flight from two lines of a page to the Hud's cash, mounted for the check in Play's news stage (not committed): the coins left the
+  middle of each line, three each, one after another, arced to the middle of the cash and were drawn over the Hud's figures (the layer is the screen's `fixed`, drawn
+  after the page that scrolls and its sticky header): `phase-2-parity/flying-coins-device.png` (two frames 0.3 s apart). The places were measured with `measureInWindow`
+  when the flight began, the layer's own place taken off.
+
+### Full runs: a picture decoded and not painted
+
+Seven full runs of every scene in this task's session (loads 4 to 28). The three scenes above were the same in every one. In every run one to three scenes of the
+earlier tasks failed for one sprite missing from the app's shot (the Tokyo icon of `new-unlocked`, the banner of `challenge-practice`, the paper square's icon of
+`hud-crisis-details`, the records' trophy of `home-lost-newer` twice, the banner's sky, then the cash icon, then the portrait of `hud-news-r1`, the portrait of
+`hud-crisis`, a clipping's icon of `play-pageturn`, the banner of `hud-status-ru`); each was as recorded when shot again alone, so no record was changed. The scene
+had said it was ready (no picture being read) and stood still for 3 s: the picture was decoded and not painted. Not the sprite cache's trimming (a temporary log: no
+trim in the first nine scenes, where it happens too). Every missing one is a sprite the scene before had drawn too, so its picture is in the cache and its canvas is
+drawn with it in the screen's first commit, while the route is still being put on screen. A likely cause, read in react-native-skia 2.14's iOS view
+(`apple/SkiaUIView.mm`): a canvas's view removed from its superview loses its drawing view (`removeFromSuperview`: `_impl = nullptr`) and, added again, gets a new one
+with the picture properties the registry holds, which it cleared when it first applied them (`RNSkJsiViewApi.h`: `setSkiaView`, `info->props.clear()`); the picture
+comes back only when the canvas is drawn again from JS. If so, an icon can go blank in the game too after a screen changes; it needs its own task (the kit's `Sprite`).
+
+### What is not compared, and why
+
+- **A flight of coins** is a moment, and its own components fly only on a card's result and the ledger (Tasks 11 and 16, which register their lines): pinned by
+  `FlyingCoins.test` (the places, the arc's ends, the delays, once, gone after 12 × 90 + 700 + 200 ms, nothing where motion is left out, nothing redrawn but the layer)
+  and the simulator check above.
+- **Lives unlocked** (the gold card): no step of the fixed seeds within the scenes unlocks one; `Celebrations.test` holds its words, faces and grouping.
+- **The amount sheet's other uses** (what it is for above the amount, what the amount comes to, a way out under the button): Finance's other sheets, Task 12;
+  `AmountSheet.test` holds their order.
 
 ## The tolerance, and the exception this phase needs
 

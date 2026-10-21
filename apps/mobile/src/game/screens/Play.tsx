@@ -17,6 +17,7 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { CrisisBar } from './Crisis';
+import { CoinFlights, CoinTargets } from './FlyingCoins';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { NewsPanel } from './News';
@@ -256,7 +257,9 @@ function Waiting({ children }: { children: string }) {
 /** Away from the news, where the bar of a crisis is whole, a strip says it is on. It scrolls away with the page: only the figures stay stuck. */
 function CrisisStrip() {
   const crisis = useGame((s) => (s.view ? (s.view.timeline[s.view.round]?.crisis ?? null) : null));
-  return <CrisisBar crisis={crisis} compact />;
+  // Its place is there with no crisis too: the web's Hud keeps the strip's `mt-2` box, empty, so the stage stands 8 lower than it would without it.
+  // (The strip itself is not put in a box: its touch reaches a point past it, into the page's gap.)
+  return crisis ? <CrisisBar crisis={crisis} compact /> : <View />;
 }
 
 /**
@@ -358,35 +361,39 @@ export function Play() {
   const heading = play('heading', { life: text.lives[lifeId ?? '']?.name ?? '', age: ageAt(content, round) });
 
   return (
-    <StickyScreen
-      scroller={scroller}
-      contentStyle={{ paddingTop: 0, gap: 8 }}
-      lead={lead}
-      header={header}
-      bar={
-        hasActions ? (
-          // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
-          <BottomBar>
-            <Actions stage={stage} onBasket={() => setBasketOpen(true)} />
-          </BottomBar>
-        ) : null
-      }
-      fixed={
-        <>
-          {notice}
-          {pageTurn}
-        </>
-      }
-    >
-      <View accessibilityRole="header" style={{ position: 'absolute' }}>
-        <SrOnly>{heading}</SrOnly>
-      </View>
-      {compact ? <CrisisStrip /> : null}
-      {/* The web's `main pt-3` under the figures, 8 of it the page's gap. */}
-      <View role="main" aria-label={stageName} style={{ paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
-        <StageView stage={stage} />
-      </View>
-      <BasketStandIn open={basketOpen && stage === 'finance'} onClose={() => setBasketOpen(false)} />
-    </StickyScreen>
+    // The page coins fly over: the HUD's cash is where they land, and they are drawn in the screen's own layer, over all of it (FlyingCoins.tsx).
+    <CoinTargets>
+      <StickyScreen
+        scroller={scroller}
+        contentStyle={{ paddingTop: 0, gap: 8 }}
+        lead={lead}
+        header={header}
+        bar={
+          hasActions ? (
+            // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
+            <BottomBar>
+              <Actions stage={stage} onBasket={() => setBasketOpen(true)} />
+            </BottomBar>
+          ) : null
+        }
+        fixed={
+          <>
+            <CoinFlights />
+            {notice}
+            {pageTurn}
+          </>
+        }
+      >
+        <View accessibilityRole="header" style={{ position: 'absolute' }}>
+          <SrOnly>{heading}</SrOnly>
+        </View>
+        {compact ? <CrisisStrip /> : null}
+        {/* The web's `main pt-3` under the figures, 8 of it the page's gap. */}
+        <View role="main" aria-label={stageName} style={{ paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
+          <StageView stage={stage} />
+        </View>
+        <BasketStandIn open={basketOpen && stage === 'finance'} onClose={() => setBasketOpen(false)} />
+      </StickyScreen>
+    </CoinTargets>
   );
 }

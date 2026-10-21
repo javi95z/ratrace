@@ -261,3 +261,40 @@ test('a scene opened for a shot says when it is ready, to the driver on this mac
   await screen.findByRole('heading', { name: 'News' }, WAIT);
   await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready\?name=play-news-r6&ready=1&n=\d+$/)));
 });
+
+test('the scene of an amount is the sheet that moves cash to savings, open over the Hud of the finances (Finance comes with Task 12): all the cash there is to move', async () => {
+  render(<SceneView name="amount-savings" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Move cash to savings' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  // The figures of the Hud under it, at the finances: its cash is the most that can be moved.
+  const cash = screen.getByRole('button', { name: /Cash/ });
+  expect(sheet.contains(cash)).toBe(false);
+  expect(sheet.textContent).toMatch(/Up to \$[\d,]+/);
+  expect(screen.getByRole('slider', { name: 'Amount' })).toBeTruthy();
+  // Nothing of the stage is drawn under it: the web's shot shows the Hud alone (sceneShots.ts).
+  expect(screen.queryByRole('main')).toBeNull();
+});
+
+test('the scene of a legendary badge is its sheet over the Hud of the card that earned it: the stage it belongs to is mounted (as the web\'s, hidden) and draws nothing in the page', async () => {
+  render(<SceneView name="celebrate-legendary" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Viral by mistake' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(sheet.textContent).toContain('Legendary badge');
+  expect(sheet.querySelector('[data-sprite="rim.gem"]')).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
+  // The small cards of the step (the legendary one, and the first hundred thousand its fortune brought) are in the stage, which is in the page and takes no room.
+  const cards = screen.getAllByRole('status');
+  expect(cards.map((card) => card.querySelector('[data-rarity]')?.getAttribute('data-rarity'))).toEqual(['common', 'legendary']);
+  for (const card of cards) {
+    let box: HTMLElement | null = card;
+    while (box && box.style.overflowX !== 'hidden') box = box.parentElement;
+    expect([box?.style.width, box?.style.height, box?.style.position]).toEqual(['0px', '0px', 'absolute']);
+  }
+});
+
+test('the scene of the badges a step earned is their small cards under the Hud, with the legendary one\'s sheet already taken in', async () => {
+  render(<SceneView name="celebrate-earned" />);
+  const cards = await screen.findAllByRole('status', {}, WAIT);
+  expect(cards.map((card) => card.querySelector('[data-rarity]')?.getAttribute('data-rarity'))).toEqual(['common', 'legendary']);
+  expect(cards[1].textContent).toContain('Viral by mistake');
+  expect(screen.queryByText('Legendary badge')).toBeNull();
+  expect(screen.getByRole('button', { name: /Cash/ })).toBeTruthy();
+});

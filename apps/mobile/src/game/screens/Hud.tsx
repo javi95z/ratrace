@@ -24,6 +24,7 @@ import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useSettings, useT, useWords } from '../context';
 import { CityBanner } from './CityBanner';
 import { Explain } from './Explain';
+import { useCoinTarget } from './FlyingCoins';
 import { JailSheet } from './Jail';
 import { Loop } from './Loop';
 import { Headlines } from './News';
@@ -548,6 +549,8 @@ function HudFigures({ open }: { open?: HudOpen }) {
   const [pixelTop, readTop] = AWAY(locale);
   const [labelTop, figuresTop] = WAY_OUT(locale);
   const wayOut = usePress({ onPress: () => show('ratRace') });
+  // The web marks its cash `[data-hud-cash]`: here it is put on the list of the page coins fly over (Play's), by name.
+  const cashTarget = useCoinTarget('cash');
 
   return (
     <>
@@ -567,7 +570,8 @@ function HudFigures({ open }: { open?: HudOpen }) {
           </View>
         ) : null}
         <StatRow>
-          <Stat icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => show('cash')} />
+          {/* Where money that comes in lands: coins fly here from a card that paid. */}
+          <Stat ref={cashTarget} icon="icon.cash" value={fmt.compact(p.cash)} label={t('cash')} onOpen={() => show('cash')} />
           <Stat icon="icon.cashflow" value={fmt.compact(yearly).replace(/^(?=[^−])/, '+')} label={t('flow')} tone={yearly >= 0 ? 'good' : 'bad'} hint={t('flowHint')} onOpen={() => show('flow')} />
           <Stat icon="icon.status" value={fmt.number(p.statusPoints)} label={t('status')} onOpen={() => show('status')} />
         </StatRow>

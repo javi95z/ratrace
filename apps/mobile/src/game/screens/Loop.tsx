@@ -5,6 +5,7 @@ import { View, type ViewStyle } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming, type SharedValue } from 'react-native-reanimated';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
+import type { Size } from '../../ui/sprites';
 import { useStill } from '../context';
 
 /** The size a loop's frame is drawn at when its art is missing (the web's). */
@@ -25,17 +26,18 @@ export function loopFrame(at: number, n: number): number {
  *
  * The web steps a frame index in React state with a timer, which draws the page again for each frame. Here every frame is drawn once,
  * one over the other, and one timing on the phone's animation thread (Reanimated, a run of `ms` per frame, repeated) says which of them
- * shows: nothing of React runs while it turns, and a sprite is never decoded or drawn again for a frame.
+ * shows: nothing of React runs while it turns, and a sprite is never decoded or drawn again for a frame. `size` is the box every frame
+ * is drawn into where the web forces one (`!h-full !w-full` in a `size-6`: a flying coin), whatever the art's own size.
  */
-export function Loop({ name, outfit, ms = 150, scale = 1, style }: { name: LoopName; outfit?: RatOutfit; ms?: number; scale?: 1 | 2 | 3; style?: ViewStyle }) {
+export function Loop({ name, outfit, ms = 150, scale = 1, size, style }: { name: LoopName; outfit?: RatOutfit; ms?: number; scale?: 1 | 2 | 3; size?: Size; style?: ViewStyle }) {
   const still = useStill();
   // The rat in the wheel dresses as the life is lived.
   const frames = name === 'wheel' && outfit ? wheelArt(outfit) : loopArt(name);
-  if (still) return <Sprite id={frames[0]} scale={scale} fallback={FALLBACK} style={style} />;
-  return <Turning frames={frames} ms={ms} scale={scale} style={style} />;
+  if (still) return <Sprite id={frames[0]} scale={scale} size={size} fallback={FALLBACK} style={style} />;
+  return <Turning frames={frames} ms={ms} scale={scale} size={size} style={style} />;
 }
 
-function Turning({ frames, ms, scale, style }: { frames: string[]; ms: number; scale: 1 | 2 | 3; style?: ViewStyle }) {
+function Turning({ frames, ms, scale, size, style }: { frames: string[]; ms: number; scale: 1 | 2 | 3; size?: Size; style?: ViewStyle }) {
   const at = useSharedValue(0);
   const n = frames.length;
   useEffect(() => {
@@ -43,12 +45,12 @@ function Turning({ frames, ms, scale, style }: { frames: string[]; ms: number; s
     at.value = withRepeat(withTiming(n, { duration: ms * n, easing: Easing.linear }), -1, false);
     return () => cancelAnimation(at);
   }, [at, n, ms]);
-  const box = spriteBox(frames[0], scale, 1, FALLBACK);
+  const box = size ?? spriteBox(frames[0], scale, 1, FALLBACK);
   return (
     <View style={[{ width: box.w, height: box.h }, style]}>
       {frames.map((id, index) => (
         <Frame key={id} at={at} index={index} n={n}>
-          <Sprite id={id} scale={scale} fallback={FALLBACK} />
+          <Sprite id={id} scale={scale} size={size} fallback={FALLBACK} />
         </Frame>
       ))}
     </View>

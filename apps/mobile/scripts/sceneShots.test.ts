@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, CALENDAR_COVERS, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -99,6 +99,9 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
     'hud-jailed',
     'hud-crisis',
     'hud-crisis-details',
+    'amount-savings',
+    'celebrate-legendary',
+    'celebrate-earned',
     'challenge-practice',
     'legal',
   ]);
@@ -148,7 +151,8 @@ test('what the web draws of a scene that the phone does not is hidden in the web
 });
 
 test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the stage of the round and the bar of its next step', () => {
-  const huds = SCENES.filter((scene) => scene.name.startsWith('hud-'));
+  // And the two whose sheet a screen not ported yet opens, drawn over the Hud alone: an amount moved to savings, a legendary badge.
+  const huds = SCENES.filter((scene) => scene.name.startsWith('hud-') || ['amount-savings', 'celebrate-legendary'].includes(scene.name));
   expect(huds.length).toBeGreaterThan(0);
   for (const scene of huds) expect(webRules(scene), scene.name).toBe(`${VISIBLE_HEIGHT} ${HUD_ONLY}`);
   expect(HUD_ONLY).toBe('#round-stage, #round-actions { display: none !important; }');
@@ -158,8 +162,8 @@ test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the 
   expect(phone).toContain('<main id="round-stage"');
   expect(phone).toContain('<div id="round-actions"');
   expect(phone.indexOf('<Hud compact=')).toBeLessThan(phone.indexOf('<main id="round-stage"'));
-  // No scene but the Hud's is given the rule.
-  expect(SCENES.filter((scene) => webRules(scene).includes(HUD_ONLY)).every((scene) => scene.name.startsWith('hud-'))).toBe(true);
+  // No scene but those is given the rule.
+  expect(SCENES.filter((scene) => webRules(scene).includes(HUD_ONLY)).map((scene) => scene.name)).toEqual(huds.map((scene) => scene.name));
 });
 
 test('the calendar of a turning round covers, in the web\'s text check, what it covers on the screen: in that scene\'s shot its pages take the pointer', () => {
@@ -267,7 +271,7 @@ describe('what is accepted of a scene, and no more', () => {
   };
 
   it('is a record for each scene whose residual is explained: the most it may differ by, what it is, and where the parity report says so', () => {
-    expect(Object.keys(ACCEPTED).sort()).toEqual(['home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked', 'play-guide-r1', 'play-news-r1', 'play-news-r6', 'play-pageturn']);
+    expect(Object.keys(ACCEPTED).sort()).toEqual(['celebrate-earned', 'home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked', 'play-guide-r1', 'play-news-r1', 'play-news-r6', 'play-pageturn']);
     for (const [name, record] of Object.entries(ACCEPTED)) {
       expect(SCENES.map((scene) => scene.name), name).toContain(name);
       expect(isJudged(named(name)), name).toBe(true);
@@ -331,4 +335,18 @@ describe('what is accepted of a scene, and no more', () => {
     expect(differing(lines)).toEqual([]);
     expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, not comparable', 'unjudged']));
   });
+});
+
+test('the small cards of a step that earned badges are the web\'s result of a card with all but them taken out, over the Hud: the bar of the next step, the guide, the title, the card itself', () => {
+  const earned = SCENES.find((scene) => scene.name === 'celebrate-earned')!;
+  expect(webRules(earned)).toBe(`${VISIBLE_HEIGHT} ${CELEBRATIONS_ONLY}`);
+  expect(CELEBRATIONS_ONLY).toBe('#round-actions, #round-stage > :not(:has(> [role="status"])), #round-stage > * > :not([role="status"]) { display: none !important; }');
+  // The cards are the result's own children, beside its title and the card answered; nothing else of the stage holds one.
+  const cards = readFileSync(new URL('../../web/src/game/screens/Cards.tsx', import.meta.url), 'utf8');
+  const outcome = cards.slice(cards.indexOf('export function Outcome()'));
+  expect(outcome).toContain('<div ref={area} className="relative flex flex-col gap-3 px-3">');
+  expect(outcome.indexOf('<Celebrations />')).toBeGreaterThan(outcome.indexOf('<div ref={area}'));
+  const celebrations = readFileSync(new URL('../../web/src/game/screens/Celebrations.tsx', import.meta.url), 'utf8');
+  expect([...celebrations.matchAll(/role="status"/g)]).toHaveLength(2);
+  expect(SCENES.filter((scene) => webRules(scene).includes(CELEBRATIONS_ONLY)).map((scene) => scene.name)).toEqual(['celebrate-earned']);
 });

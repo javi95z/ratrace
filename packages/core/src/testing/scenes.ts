@@ -62,6 +62,9 @@ export const SCENES: readonly Scene[] = [
   { name: 'hud-jailed', locale: 'en', sheet: 'jail' },
   { name: 'hud-crisis', locale: 'en' },
   { name: 'hud-crisis-details', locale: 'en', sheet: 'crisis' },
+  { name: 'amount-savings', locale: 'en', sheet: 'save' },
+  { name: 'celebrate-legendary', locale: 'en' },
+  { name: 'celebrate-earned', locale: 'en' },
   { name: 'challenge-practice', locale: 'en' },
   { name: 'legal', locale: 'en' },
 ];
@@ -141,6 +144,11 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'hud-jailed': { life: 'nurse', round: 8, stage: 'finance', seed: 'screen-seed-15', picks: { crime_wrongly_accused: 0 } },
   'hud-crisis': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
   'hud-crisis-details': { life: 'engineer', round: 6, stage: 'finance', seed: 'screen-seed-10' },
+  'amount-savings': { life: 'engineer', round: 6, stage: 'finance' },
+  // On screen-seed-74 the engineer's second round opens with MrFeast's challenge (a legendary card, once a life): taken, the badge of meeting him is legendary.
+  'celebrate-legendary': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-74', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
+  // The same step, its legendary sheet taken in: the small cards of what it earned, in the result of the card.
+  'celebrate-earned': { life: 'engineer', round: 2, stage: 'news', seed: 'screen-seed-74', then: [{ action: 'leaveNews' }, { action: 'pick', option: 1 }], ends: 'outcome' },
   'challenge-practice': null,
   legal: null,
 };
@@ -155,9 +163,10 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
 
 /**
  * The scenes drawn with motion left out, as the player can set it (the setting is in the profile, where both clients read it): something on
- * them plays for ever (the rat's wheel, the lamp of a crisis's year), and a shot would catch it at any moment of its run.
+ * them plays for ever (the rat's wheel, the lamp of a crisis's year), and a shot would catch it at any moment of its run; or plays for longer
+ * than the web's shot waits (a legendary badge's medal turning in and its sparks, a second and more), which it would catch half way.
  */
-const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisis-details']);
+const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisis-details', 'celebrate-legendary', 'celebrate-earned']);
 
 /**
  * The scenes of a player who has read every tip of the guide and every note of a first time: the stage is drawn as it is, with nothing of the

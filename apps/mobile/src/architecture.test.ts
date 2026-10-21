@@ -72,6 +72,12 @@ const namesStorage = (source: string): boolean => /\b(expo-sqlite|AsyncStorage|l
 /** The only files that may name one: the phone's store, the context that wires it into the game, and the stand-in for the phone's store in tests. */
 const STORAGE_FILES = [join(SRC, 'kvStore.ts'), join(SRC, 'game/context.tsx'), join(SRC, 'testing/setup.ts')];
 
+/** What reaches out of the phone: a request, a socket, a stream of events, a beacon. */
+const SENDS = /\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|\bsendBeacon\b/;
+/** The rules the app plays older lives under (`src/rules/v*.js`, the engine and content of a shipped version): code the app runs too. */
+const RULES = join(SRC, 'rules');
+const bundles = readdirSync(RULES).filter((name) => name.endsWith('.js')).map((name) => join(RULES, name));
+
 describe('the wall between the phone\'s screens and the game', () => {
   it('sees an import however it is written', () => {
     const screen = join(SRC, 'game/screens/Anything.tsx');
@@ -182,6 +188,26 @@ describe('the wall between the phone\'s screens and the game', () => {
     // And the client library is named in no file of the phone or the core: only `@ratrace/online/connect` loads it.
     const named = all.filter((path) => importsOf(path).some((i) => i.from === '@supabase/supabase-js') || /import\('@supabase\/supabase-js'\)/.test(readFileSync(path, 'utf8'))).map(rel);
     expect(named).toEqual([]);
+  });
+
+  it('sends nothing from the phone, as its legal notice says (`phone.legal`): the one request in the app is a development scene telling the shots\' driver, on this machine, that it is ready', () => {
+    expect(SENDS.test("const res = await fetch('https://example.com');")).toBe(true);
+    expect(SENDS.test('const socket = new WebSocket(url);')).toBe(true);
+    expect(SENDS.test('const request = new XMLHttpRequest();')).toBe(true);
+    expect(SENDS.test('navigator.sendBeacon(url, body);')).toBe(true);
+    expect(SENDS.test('new EventSource(url);')).toBe(true);
+    // A word that only names one is not one.
+    expect(SENDS.test('// what is fetched from the device: the profile')).toBe(false);
+    expect(SENDS.test('const prefetched = rules.prefetch;')).toBe(false);
+    expect(bundles.length).toBeGreaterThan(0);
+    const sending = [...all, ...bundles].filter((path) => SENDS.test(readFileSync(path, 'utf8'))).map((path) => relative(SRC, path).startsWith('..') ? rel(path) : relative(SRC, path));
+    expect(sending).toEqual(['testing/scene.tsx']);
+    // That one: one request, to this machine only, with the address of the scene's own route; the route that draws a scene is for development only
+    // (scripts/scenePages.test.ts) and says nothing unless it is opened for a shot.
+    const scene = readFileSync(join(SRC, 'testing/scene.tsx'), 'utf8');
+    expect([...scene.matchAll(/\bfetch\s*\(/g)]).toHaveLength(1);
+    expect(scene).toContain('fetch(`http://127.0.0.1:${port}/ready?name=');
+    expect(scene).toContain('if (port === undefined) return;');
   });
 
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {
