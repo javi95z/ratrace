@@ -46,7 +46,8 @@ export const SHEETS_OVER_THE_HUD: readonly string[] = ['hud', 'amount', 'celebra
 /**
  * What the web draws of a scene that the phone does not, hidden in the web's shot so that what is left can be compared: on the challenge page the
  * line that tells a guest to sign in (`challenge.needsAccount`), which the phone does not draw while it has no way to sign in. Each is a rule for
- * the web's page: the line is the only `p` of that frame on the page of a guest. And on the scenes of the Hud, and of a sheet drawn over it, everything of Play
+ * the web's page: the line is the only `p` of that frame on the page of a guest. The link of the picture's sheet that saves its file, which the phone's
+ * share sheet does itself (`end-share`). And on the scenes of the Hud, and of a sheet drawn over it, everything of Play
  * but the Hud (`HUD_ONLY`); of the badges a step earned, everything of Play but the Hud and the cards (`CELEBRATIONS_ONLY`).
  * And one rule that hides nothing, for the text check alone: the calendar covers what it covers (`CALENDAR_COVERS`).
  */
@@ -55,6 +56,8 @@ export const WEB_ONLY: Readonly<Record<string, string>> = {
   'play-pageturn': CALENDAR_COVERS,
   ...Object.fromEntries(SCENES.filter((scene) => SHEETS_OVER_THE_HUD.includes(screenOf(scene))).map((scene) => [scene.name, HUD_ONLY])),
   'celebrate-earned': CELEBRATIONS_ONLY,
+  // The picture's sheet keeps the web's second way, a link that saves the file (`a[download]`): the phone's share sheet saves it itself (Task 18).
+  'end-share': '[role="dialog"] a[download] { display: none !important; }',
 };
 
 /**
@@ -90,61 +93,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 
 /**
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
- * call, 2026-10-21): two batch passes, after Task 15 and in Task 20, shoot every one of these, compare them and fix what differs, and take each out
- * of this list as it is judged. Until then a scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a
- * result.
+ * call, 2026-10-21): the batch passes shoot every one of these, compare them and fix what differs, and take each out of this list as it is judged.
+ * A scene here is unjudged, as a stand-in's was: no numbers, and nothing that could fail a run or pass for a result. Batch pass 1 shot and judged the
+ * thirty-nine of Tasks 11 to 19 and the merge: none is waiting.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set([
-  // Task 11: the cards and what came of them.
-  'play-cards-r1',
-  'play-cards-legendary',
-  'play-cards-three',
-  'play-cards-ru-360',
-  'play-outcome-r1',
-  // Task 12: the finances (their portfolio, the basket, the pension, the row of tabs in Russian on a narrow phone).
-  'play-finance-r6',
-  'finance-basket',
-  'finance-pension',
-  'finance-tabs-ru-360',
-  // Task 13: the market, the sheet that buys a share (with its chart), the property tab and the debt tab.
-  'finance-market',
-  'finance-buy-stock',
-  'finance-property',
-  'finance-debt',
-  // Task 14: the way of life, the sheet of every city, the city a card offers, and the work panel of the profile.
-  'finance-lifestyle',
-  'finance-move',
-  'play-cards-city',
-  'work-panel',
-  // Task 15: the shop, a thing's sheet, the taxes and the businesses.
-  'finance-shop',
-  'finance-item',
-  'finance-taxes',
-  'finance-business',
-  // Task 17: the player's profile (over Play, as the portrait opens it), a thing owned, the net worth's line with its graph, and the rivals' board.
-  'profile-r6',
-  'profile-owned',
-  'balance-r6',
-  'rivals-r6',
-  // Task 18: the end of a life (out of the rat race, bankrupt, its picture to share open, in Russian).
-  'end-escaped',
-  'end-bankrupt',
-  'end-share',
-  'end-ru',
-  // Task 16: the ledger of a round, every line risen, and the moments of a life over it (or over the news, for a crisis).
-  'play-resolve-r6',
-  'moment-escape',
-  'moment-bankrupt',
-  'moment-crisis',
-  // Task 19: the records of past lives (none, three lives lived, the latest's sheet) and the collection (its things, its badges).
-  'records-empty',
-  'records-three',
-  'records-detail',
-  'collection-items',
-  'collection-badges',
-  // The merge of the lanes: a thing bought on instalments, its sheet over the profile with what is still owed on it (ItemCost's owed line).
-  'profile-financed',
-]);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
@@ -206,28 +159,28 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Task 7: choosing a new life',
   },
   'new-locked': {
-    shape: 1267,
+    shape: 738,
     worstPt: 2,
     oneSided: 0,
-    reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels), over the rows of the locked lives.',
+    reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels); the rows of the locked lives are clean since the frames\' far strips are laid from the near edge (batch pass 1).',
     report: 'Task 7: choosing a new life',
   },
   'play-news-r1': {
-    shape: 1446,
-    worstPt: 1,
+    shape: 1443,
+    worstPt: 0.67,
     oneSided: 0,
     reason: 'The paper\'s masthead, centred, stands a device pixel left of the web\'s (a sub-pixel centring), and is not measured as text: the paper\'s rules of the same ink lie within its window, so its glyphs\' edges count as shape.',
     report: 'Task 9: play, round by round, from the news',
   },
   'play-news-r6': {
-    shape: 1518,
-    worstPt: 1,
+    shape: 1443,
+    worstPt: 0.67,
     oneSided: 0,
-    reason: 'The masthead as in play-news-r1, and the label of the bar\'s button two device pixels higher than the web\'s (whole CSS pixels against device pixels, as the kit\'s buttons of Task 7).',
+    reason: 'The masthead as in play-news-r1 (the bar\'s label, two device pixels higher before, stands within the point since batch pass 1).',
     report: 'Task 9: play, round by round, from the news',
   },
   'play-guide-r1': {
-    shape: 3504,
+    shape: 3453,
     // Four device pixels.
     worstPt: 4 / 3,
     oneSided: 0,
@@ -235,27 +188,89 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Task 9: play, round by round, from the news',
   },
   'play-pageturn': {
-    shape: 4309,
-    // Three device pixels: the ▸ of the HUD's figures, as in every scene of the HUD.
-    worstPt: 1,
+    shape: 3897,
+    worstPt: 0.67,
     oneSided: 0,
     reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), all along them now that the lines of the paper it covers are measured only where they show (CALENDAR_COVERS), and the masthead as in play-news-r1.',
     report: 'Task 9: play, round by round, from the news',
   },
-  'celebrate-earned': {
-    shape: 44,
-    // Two device pixels.
-    worstPt: 1,
-    oneSided: 0,
-    reason: 'The lines of the badges\' cards each stand where the phone lays them on its device pixels (within 2/3 pt of the web\'s): the 12 pt gold "BADGE EARNED" two device pixels lower, its bottom row of glyphs one row past the text check\'s window (21 px a card), and two pixels of the "y" of the legendary card\'s name.',
-    report: 'Task 10: amounts on a slider, celebrations, flying coins and medals',
-  },
   'new-replace': {
-    shape: 1159,
+    shape: 310,
     worstPt: 1,
     oneSided: 0,
-    reason: 'The dice emoji under the backdrop, the labels of the sheet\'s two buttons 2 device pixels higher, and whole CSS pixels against device pixels.',
+    reason: 'The dice emoji under the backdrop (a covered line, not measured as text: its edges count as shape), and whole CSS pixels against device pixels.',
     report: 'Task 7: choosing a new life',
+  },
+  'play-cards-legendary': {
+    shape: 1,
+    worstPt: 0.67,
+    oneSided: 0,
+    reason: 'One pixel of the edge of the band of light over the card\'s picture, held at the same moment on both sides: the motion section\'s own residual (motion-2: one pixel of the glint band\'s edge).',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'finance-tabs-ru-360': {
+    shape: 0,
+    worstPt: 3,
+    oneSided: 0,
+    reason: 'The savings\' label and its rate cut short beside their buttons: Chrome\'s `text-overflow: ellipsis` keeps the space before its three dots ("4,2% …"), iOS\'s tail truncation draws its own ellipsis glyph after the last letter ("4,2%…"), 2.7 to 3 pt apart at the line\'s end only.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'finance-buy-stock': {
+    shape: 149,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The price line, antialiased on both sides (phase 2\'s exception: the web\'s svg path and Skia\'s, the same points), its edge pixels in other shares of its teal.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'finance-taxes': {
+    shape: 31,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The tops of the letters of a line the bar of the next step covers (covered at its middle, so not measured as text) peek over the bar\'s edge a device pixel apart.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'finance-business': {
+    shape: 35,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The tops of the letters of a line under the bar of the next step, as in finance-taxes.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'profile-r6': {
+    shape: 30,
+    worstPt: 0.67,
+    oneSided: 0,
+    reason: 'The career bar\'s lit lamps bleed a device-pixel sliver of their light into the first dark lamp on the web (phase 1\'s class: a Bar\'s lamp bleeding a sliver).',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'balance-r6': {
+    shape: 1469,
+    worstPt: 2.33,
+    oneSided: 0,
+    reason: 'The phone\'s words for the net worth after inflation ("Net worth, after inflation", `phone.realNetWorth`) are longer than the key the web shows (`end.realNetWorth`): their glyphs past the web\'s line box are in no window of the text check. Nothing else of the sheet differs.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'end-bankrupt': {
+    shape: 5,
+    // One device pixel.
+    worstPt: 1 / 3,
+    oneSided: 0,
+    reason: 'Five pixels of a gold edge on the last row of the screen compared (839.67 pt), where the web\'s is antialiased at a fractional place and the phone\'s on a device pixel.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'end-share': {
+    shape: 5084,
+    worstPt: 0.67,
+    oneSided: 0,
+    reason: 'The picture to share is a picture, its words no text to the comparison: drawn from the same layout by Skia on the phone and by the canvas on the web, its glyphs\' edges differ (Skia sets them without kerning) and the 1080-wide card is smoothed into its 270 points by each its own way.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
+  },
+  'end-ru': {
+    shape: 168,
+    worstPt: 0.67,
+    oneSided: 0,
+    reason: 'The confetti either side of the prized badge, centred in a panel whose Russian lines make it a fraction taller: centred on another device pixel, their pieces at the panel\'s foot are cut a pixel apart.',
+    report: 'Batch pass 1: every scene shot, compared and judged',
   },
 };
 
@@ -290,7 +305,7 @@ export type Line =
       scene: string;
       locale: string;
       /** A scene of the phone's own words (`PHONE_WORDS`) is judged by its layout alone, and says so. */
-      verdict: 'clean' | 'differs' | 'accepted' | 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted';
+      verdict: 'clean' | 'differs' | 'accepted' | 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted';
       rawPercent: number;
       beyondPercent: number;
       loose: number;
@@ -316,13 +331,19 @@ export const unjudgedLine = (scene: Scene): Line => ({
   why: 'ported and not shot yet: a batch pass shoots it and judges it',
 });
 
-/** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */
-function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
+/**
+ * What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. A shape the
+ * phone's words make themselves (longer than the web's, past the web's line, where no window of the text check reaches) is a residual like any
+ * other: accepted by its record (`ACCEPTED`, its shape alone: the text of such a scene says nothing), and failing on any growth.
+ */
+function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout accepted' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {
   if (PHONE_PAGES.includes(scene.name)) {
     const base = PAGE_BASELINE[scene.name];
     return base === undefined || Math.abs(result.shape - base.shape) <= base.shape * base.drift ? 'phone words, not comparable' : 'phone words, drifted';
   }
-  return result.shape === 0 ? 'phone words, layout clean' : 'phone words, layout differs';
+  if (result.shape === 0) return 'phone words, layout clean';
+  const record = ACCEPTED[scene.name];
+  return record !== undefined && result.shape <= record.shape ? 'phone words, layout accepted' : 'phone words, layout differs';
 }
 
 /** Whether a scene that differs differs by no more than its record says. */

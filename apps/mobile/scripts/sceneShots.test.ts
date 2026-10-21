@@ -74,132 +74,21 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
   expect(() => lineOf(first, result(first.name, { rawPercent: 70 }))).toThrow('home-new: a wrong page is not a result to keep');
 });
 
-test('every screen is the real one on the app (phase 1\'s stand-ins are retired): a scene is compared once it has been shot', () => {
-  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual([
-    'home-new',
-    'home-continue',
-    'home-settings',
-    'home-lost-newer',
-    'new-first',
-    'new-unlocked',
-    'new-locked',
-    'new-replace',
-    'play-news-r1',
-    'play-news-r6',
-    'play-guide-r1',
-    'play-fault',
-    'play-pageturn',
-    'hud-news-r1',
-    'hud-cash',
-    'hud-flow',
-    'hud-race',
-    'hud-status-ru',
-    'hud-jailed',
-    'hud-crisis',
-    'hud-crisis-details',
-    'amount-savings',
-    'celebrate-legendary',
-    'celebrate-earned',
-    'challenge-practice',
-    'legal',
-  ]);
+test('every screen is the real one on the app (phase 1\'s stand-ins are retired): every scene is compared, now that batch pass 1 has shot them all', () => {
+  expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual(SCENES.map((scene) => scene.name));
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
-  // The ledger was the last stage of Play drawn as a stand-in (Task 16), the records and the collection the last screens (Task 19): each is waiting
-  // for its shot now, and says only that.
-  const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
-  expect(isJudged(ledger)).toBe(false);
-  expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
-  expect(Object.keys(unjudgedLine(ledger))).toEqual(['scene', 'locale', 'verdict', 'why']);
+  // The ledger was the last stage of Play drawn as a stand-in (Task 16), the records and the collection the last screens (Task 19): all shot now.
+  expect(isJudged(SCENES.find((scene) => scene.name === 'play-resolve-r6')!)).toBe(true);
 });
 
-test('a scene of a screen ported but not shot yet (from Task 11 on, the batch passes shoot them) is unjudged until it is shot, and says so', () => {
-  expect([...PENDING_SHOTS]).toEqual([
-    'play-cards-r1',
-    'play-cards-legendary',
-    'play-cards-three',
-    'play-cards-ru-360',
-    'play-outcome-r1',
-    'play-finance-r6',
-    'finance-basket',
-    'finance-pension',
-    'finance-tabs-ru-360',
-    'finance-market',
-    'finance-buy-stock',
-    'finance-property',
-    'finance-debt',
-    'finance-lifestyle',
-    'finance-move',
-    'play-cards-city',
-    'work-panel',
-    'finance-shop',
-    'finance-item',
-    'finance-taxes',
-    'finance-business',
-    'profile-r6',
-    'profile-owned',
-    'balance-r6',
-    'rivals-r6',
-    'end-escaped',
-    'end-bankrupt',
-    'end-share',
-    'end-ru',
-    'play-resolve-r6',
-    'moment-escape',
-    'moment-bankrupt',
-    'moment-crisis',
-    'records-empty',
-    'records-three',
-    'records-detail',
-    'collection-items',
-    'collection-badges',
-    'profile-financed',
-  ]);
-  for (const name of PENDING_SHOTS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
-  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual([
-    'play-cards-r1',
-    'play-cards-legendary',
-    'play-cards-three',
-    'play-cards-ru-360',
-    'play-finance-r6',
-    'play-outcome-r1',
-    'play-resolve-r6',
-    'finance-basket',
-    'finance-pension',
-    'finance-tabs-ru-360',
-    'finance-market',
-    'finance-buy-stock',
-    'finance-property',
-    'finance-debt',
-    'finance-lifestyle',
-    'finance-move',
-    'play-cards-city',
-    'work-panel',
-    'finance-shop',
-    'finance-item',
-    'finance-taxes',
-    'finance-business',
-    'profile-r6',
-    'profile-owned',
-    'balance-r6',
-    'rivals-r6',
-    'end-escaped',
-    'end-bankrupt',
-    'end-share',
-    'end-ru',
-    'moment-escape',
-    'moment-bankrupt',
-    'moment-crisis',
-    'records-empty',
-    'records-three',
-    'records-detail',
-    'collection-items',
-    'collection-badges',
-    'profile-financed',
-  ]);
-  const ru = SCENES.find((scene) => scene.name === 'play-cards-ru-360')!;
-  expect(unjudgedLine(ru)).toEqual({ scene: 'play-cards-ru-360', locale: 'ru', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
+test('a scene of a screen ported but not shot yet is unjudged until a batch pass shoots it, and says so: after batch pass 1 none is waiting', () => {
+  expect([...PENDING_SHOTS]).toEqual([]);
+  // What such a scene says, should a later task register one before the next batch pass: that, and no numbers.
+  const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
+  expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
+  expect(Object.keys(unjudgedLine(ledger))).toEqual(['scene', 'locale', 'verdict', 'why']);
   // Not judged, so it fails nothing, and its numbers are never read as a result.
-  expect(differing([unjudgedLine(ru)])).toEqual([]);
+  expect(differing([unjudgedLine(ledger)])).toEqual([]);
 });
 
 test('a run of some scenes keeps the lines of the others, and the file has every scene shot, in the list\'s order, a line to each', () => {
@@ -233,6 +122,14 @@ test('what the web draws of a scene that the phone does not is hidden in the web
   const page = web.slice(web.indexOf('export function WeeklyChallenge()'), web.indexOf('export function ChallengeBoard'));
   expect(page).toContain('<p className="frame bg-night-700 px-3 py-2 text-[13px] text-ink-200">{t(\'needsAccount\')}</p>');
   expect([...page.matchAll(/<p [^>]*className="frame bg-night-700[^"]*"/g)]).toHaveLength(2);
+});
+
+test('the picture\'s sheet is compared without the web\'s link that saves its file, which the phone\'s share sheet does itself: the one link of the sheet that downloads', () => {
+  const share = SCENES.find((scene) => scene.name === 'end-share')!;
+  expect(webRules(share)).toBe('[role="dialog"] a[download] { display: none !important; }');
+  const web = readFileSync(new URL('../../web/src/game/screens/ShareCard.tsx', import.meta.url), 'utf8');
+  expect([...web.matchAll(/download=\{/g)]).toHaveLength(1);
+  expect(web).toContain("{t('save')}");
 });
 
 test('a scene of the Hud is the web\'s Play with all but its Hud taken out: the stage of the round and the bar of its next step', () => {
@@ -297,8 +194,7 @@ describe('a scene whose words are the phone\'s own', () => {
     expect(PHONE_PAGES).toEqual(['legal']);
     for (const name of PHONE_PAGES) expect(PHONE_WORDS).toContain(name);
     // They are drawn by the real screens, so they are judged, and by their layout only: at once, or once a batch pass has shot them.
-    expect(PHONE_WORDS.every((name) => isJudged(named(name)) || PENDING_SHOTS.has(name))).toBe(true);
-    expect(PHONE_WORDS.filter((name) => !isJudged(named(name)))).toEqual(['balance-r6']);
+    expect(PHONE_WORDS.every((name) => isJudged(named(name)))).toBe(true);
     // The net worth's sheet: the web asks for a key the messages do not have, and shows the key; the phone says it in its own words.
     const web = readFileSync(new URL('../../web/src/game/screens/Balance.tsx', import.meta.url), 'utf8');
     expect(web).toContain("<Row left={end('realNetWorth')}");
@@ -364,11 +260,32 @@ describe('what is accepted of a scene, and no more', () => {
   };
 
   it('is a record for each scene whose residual is explained: the most it may differ by, what it is, and where the parity report says so', () => {
-    expect(Object.keys(ACCEPTED).sort()).toEqual(['celebrate-earned', 'home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked', 'play-guide-r1', 'play-news-r1', 'play-news-r6', 'play-pageturn']);
+    expect(Object.keys(ACCEPTED).sort()).toEqual([
+      'balance-r6',
+      'end-bankrupt',
+      'end-ru',
+      'end-share',
+      'finance-business',
+      'finance-buy-stock',
+      'finance-tabs-ru-360',
+      'finance-taxes',
+      'home-continue',
+      'new-first',
+      'new-locked',
+      'new-replace',
+      'new-unlocked',
+      'play-cards-legendary',
+      'play-guide-r1',
+      'play-news-r1',
+      'play-news-r6',
+      'play-pageturn',
+      'profile-r6',
+    ]);
     for (const [name, record] of Object.entries(ACCEPTED)) {
       expect(SCENES.map((scene) => scene.name), name).toContain(name);
       expect(isJudged(named(name)), name).toBe(true);
-      expect(PHONE_WORDS, name).not.toContain(name);
+      // A page of other words throughout has a baseline, not a record; a scene with a line of the phone's own words may have one (its shape only).
+      expect(PHONE_PAGES, name).not.toContain(name);
       expect(record.reason.length, name).toBeGreaterThan(30);
       // The heading it names is in the report, which is where its measured cause is written.
       expect(report, name).toContain(`\n## ${record.report}\n`);
@@ -377,8 +294,11 @@ describe('what is accepted of a scene, and no more', () => {
     }
   });
 
+  /** The records of scenes in the web's words (a scene of the phone's own words is held by its shape alone: below). */
+  const worded = () => Object.keys(ACCEPTED).filter((name) => !PHONE_WORDS.includes(name));
+
   it('passes a scene that differs as the record says it does, and as no more: the same shape and text, or less, is accepted', () => {
-    for (const name of Object.keys(ACCEPTED)) {
+    for (const name of worded()) {
       const line = lineOf(named(name), measured(name));
       expect(line.verdict, name).toBe('accepted');
       expect(differing([line]), name).toEqual([]);
@@ -389,13 +309,24 @@ describe('what is accepted of a scene, and no more', () => {
   });
 
   it('fails a scene on any growth: one more shape pixel, a hundredth of a point more, a line of text in one shot only', () => {
-    for (const name of Object.keys(ACCEPTED)) {
+    for (const name of worded()) {
       for (const more of [{ shape: 1 }, { worstPt: 0.01 }, { oneSided: 1 }]) {
         const line = lineOf(named(name), measured(name, more));
         expect([name, JSON.stringify(more), line.verdict]).toEqual([name, JSON.stringify(more), 'differs']);
         expect(differing([line]).map((one) => one.scene)).toEqual([name]);
       }
     }
+  });
+
+  it('holds a scene of the phone\'s own words to its record by its shape alone: its text says nothing, and a shape pixel more fails it', () => {
+    const balance = named('balance-r6');
+    const record = ACCEPTED['balance-r6'];
+    expect(lineOf(balance, result('balance-r6', { shape: record.shape, texts: [] })).verdict).toBe('phone words, layout accepted');
+    expect(differing([lineOf(balance, result('balance-r6', { shape: record.shape, texts: [] }))])).toEqual([]);
+    expect(lineOf(balance, result('balance-r6', { shape: 0, texts: [] })).verdict).toBe('phone words, layout clean');
+    const grown = lineOf(balance, result('balance-r6', { shape: record.shape + 1, texts: [] }));
+    expect(grown.verdict).toBe('phone words, layout differs');
+    expect(differing([grown]).map((one) => one.scene)).toEqual(['balance-r6']);
   });
 
   it('is nothing for a scene that has no record: it differs, or it is clean', () => {
@@ -426,7 +357,7 @@ describe('what is accepted of a scene, and no more', () => {
     // The verdicts a run can end in, and which of them fail it.
     const lines = SCENES.map((scene) => (isJudged(scene) ? lineOf(scene, scene.name in ACCEPTED ? measured(scene.name) : PHONE_WORDS.includes(scene.name) ? result(scene.name, { shape: PAGE_BASELINE[scene.name]?.shape ?? 0, texts: [] }) : result(scene.name, { shape: 0, texts: [] })) : unjudgedLine(scene)));
     expect(differing(lines)).toEqual([]);
-    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, not comparable', 'unjudged']));
+    expect(new Set(lines.map((line) => line.verdict))).toEqual(new Set(['clean', 'accepted', 'phone words, layout clean', 'phone words, layout accepted', 'phone words, not comparable']));
   });
 });
 

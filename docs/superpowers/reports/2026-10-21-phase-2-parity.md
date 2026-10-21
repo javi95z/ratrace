@@ -785,3 +785,127 @@ it), the list's renderer stays the same function and is memoised (`strictMode`),
 the lines of past lives are `memo` with plain props: another rarity chosen leaves the badges that stay as they are (`Collection.test`), and a sheet
 opened draws no line again (`Records.test`). The page keeps only the breakpoint its width reaches, not the width. In jsdom a virtual list lays nothing out and would draw its first ten rows only, so the screens' tests are
 given a `FlatList` that draws every row (`everyRow`, testing/fakes.ts); the kit's own test of `ListScreen` holds that the real one windows.
+
+## Batch pass 1: every scene shot, compared and judged
+
+The first batch pass (after the merge of the lanes, a33cbb5) shot every scene on both clients, the thirty-nine of Tasks 11 to 19 and the merge for the first
+time and the twenty-six judged before again (their records were measured with the old `VISIBLE_HEIGHT` rule, gone since the web's d67284b, and under the
+`Untouched` wrapper the scene route has drawn since Task 11). `PENDING_SHOTS` is empty. Simulator: iPhone 16 Pro, iOS 18.0, Expo Go 58.0.5, Metro on 8090;
+the web by its own `next dev` on 3021 in Playwright's Chrome. Load average during the runs 4 to 25 (11 cores).
+
+**First full run (before any fix):** the twenty-six judged scenes came back with their records' numbers (re-confirmed: nothing moved under the wrapper or
+without `VISIBLE_HEIGHT`); of the thirty-nine new ones six were clean and thirty-three differed (the largest: `end-share` 734 692 shape pixels, `finance-pension`
+199 975, `finance-buy-stock` 167 762, `work-panel` 131 743, `finance-shop` 126 673, `profile-r6` 104 171; worst text 129.67 pt).
+
+**Last full run:** 44 clean, 18 accepted (each with its record, `ACCEPTED` in `sceneShots.ts`), `home-lost-newer` phone words with a clean layout, `balance-r6`
+phone words with an accepted layout, `legal` not comparable (within its baseline). The run exits 0.
+
+| scene | verdict | raw % | beyond % | a point away (px) | shape (px) | of which blended edges | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|---|
+| home-new | clean | 3.62 | 0.419 | 6897 | 0 | 0 | 15 (0 unmeasured) | 0.67 |
+| home-continue | accepted | 2.93 | 0.496 | 7145 | 1 | 1 | 15 (0 unmeasured) | 0.67 |
+| home-settings | clean | 2.31 | 0.405 | 5973 | 0 | 0 | 29 (15 unmeasured) | 0.33 |
+| home-lost-newer | phone words, layout clean | 4.11 | 0.804 | 12541 | 0 | 0 | 17 (0 unmeasured) | 5.67 |
+| new-first | accepted | 3.28 | 0.588 | 8072 | 738 | 148 | 25 (1 unmeasured) | 2 |
+| new-unlocked | accepted | 3.22 | 0.653 | 8709 | 738 | 148 | 32 (1 unmeasured) | 2 |
+| new-locked | accepted | 5.9 | 2.287 | 13056 | 738 | 148 | 65 (9 unmeasured) | 2 |
+| new-replace | accepted | 2 | 0.491 | 5509 | 310 | 1 | 31 (26 unmeasured) | 1 |
+| play-news-r1 | accepted | 3.78 | 1.027 | 14127 | 1443 | 1443 | 42 (4 unmeasured) | 0.67 |
+| play-cards-r1 | clean | 4.87 | 1.171 | 9740 | 0 | 0 | 42 (0 unmeasured) | 0.67 |
+| play-cards-legendary | accepted | 5.42 | 0.981 | 9198 | 1 | 0 | 35 (0 unmeasured) | 0.67 |
+| play-cards-three | clean | 5.24 | 0.52 | 8752 | 0 | 0 | 40 (0 unmeasured) | 0.33 |
+| play-cards-ru-360 | clean | 5.2 | 1.134 | 9375 | 0 | 0 | 37 (0 unmeasured) | 0.67 |
+| play-finance-r6 | clean | 4.49 | 1.203 | 16450 | 0 | 0 | 53 (9 unmeasured) | 1 |
+| play-outcome-r1 | clean | 3.66 | 1.089 | 9926 | 0 | 0 | 31 (0 unmeasured) | 0.67 |
+| play-resolve-r6 | clean | 4.52 | 1.072 | 13298 | 0 | 0 | 41 (8 unmeasured) | 0.67 |
+| play-news-r6 | accepted | 4.21 | 1.131 | 13520 | 1443 | 1443 | 41 (4 unmeasured) | 0.67 |
+| play-guide-r1 | accepted | 6.16 | 3.776 | 20606 | 3453 | 1979 | 42 (5 unmeasured) | 1.33 |
+| play-fault | clean | 3.02 | 0.405 | 6203 | 0 | 0 | 6 (0 unmeasured) | 1 |
+| play-pageturn | accepted | 3.93 | 1.338 | 16653 | 3897 | 3878 | 51 (8 unmeasured) | 0.67 |
+| finance-basket | clean | 1.59 | 0.142 | 2535 | 0 | 0 | 56 (49 unmeasured) | 0.33 |
+| finance-pension | clean | 2.51 | 0.431 | 5661 | 0 | 0 | 69 (53 unmeasured) | 0.67 |
+| finance-tabs-ru-360 | accepted | 4.37 | 1.489 | 13962 | 0 | 0 | 53 (4 unmeasured) | 3 |
+| finance-market | clean | 3.85 | 1.304 | 13915 | 0 | 0 | 61 (8 unmeasured) | 1 |
+| finance-buy-stock | accepted | 2.91 | 0.959 | 4716 | 149 | 149 | 83 (61 unmeasured) | 1 |
+| finance-property | clean | 6.21 | 0.91 | 11014 | 0 | 0 | 40 (2 unmeasured) | 1 |
+| finance-debt | clean | 3.63 | 0.903 | 10032 | 0 | 0 | 36 (0 unmeasured) | 1 |
+| hud-news-r1 | clean | 2.87 | 0.187 | 2393 | 0 | 0 | 20 (0 unmeasured) | 0.67 |
+| hud-cash | clean | 1.26 | 0.179 | 2734 | 0 | 0 | 30 (20 unmeasured) | 0.33 |
+| hud-flow | clean | 1.28 | 0.243 | 4271 | 0 | 0 | 32 (19 unmeasured) | 0.67 |
+| hud-race | clean | 2.23 | 0.416 | 7333 | 0 | 0 | 36 (20 unmeasured) | 0.33 |
+| hud-status-ru | clean | 2.22 | 0.434 | 5284 | 0 | 0 | 44 (20 unmeasured) | 0.67 |
+| hud-jailed | clean | 3.38 | 0.617 | 9418 | 0 | 0 | 33 (21 unmeasured) | 0.67 |
+| hud-crisis | clean | 3.1 | 0.178 | 2717 | 0 | 0 | 21 (0 unmeasured) | 0.33 |
+| hud-crisis-details | clean | 2.66 | 0.843 | 7915 | 0 | 0 | 33 (21 unmeasured) | 0.67 |
+| amount-savings | clean | 1.57 | 0.153 | 2119 | 0 | 0 | 30 (19 unmeasured) | 0.67 |
+| celebrate-legendary | clean | 1.21 | 0.261 | 4274 | 0 | 0 | 24 (19 unmeasured) | 0.67 |
+| celebrate-earned | clean | 3.44 | 0.759 | 7641 | 0 | 0 | 27 (0 unmeasured) | 0.67 |
+| challenge-practice | clean | 4.21 | 0.757 | 11058 | 0 | 0 | 15 (0 unmeasured) | 0.67 |
+| legal | phone words, not comparable | 14.42 | 10.864 | 248192 | 39721 | 215 | 34 (0 unmeasured) | 281 |
+| finance-lifestyle | clean | 4.38 | 0.844 | 10660 | 0 | 0 | 47 (4 unmeasured) | 1 |
+| finance-move | clean | 1.88 | 0.447 | 8509 | 0 | 0 | 72 (47 unmeasured) | 0.67 |
+| play-cards-city | clean | 2.76 | 0.301 | 3137 | 0 | 0 | 50 (37 unmeasured) | 1 |
+| work-panel | clean | 2.46 | 0.549 | 6575 | 0 | 0 | 33 (0 unmeasured) | 0.67 |
+| finance-shop | clean | 3.88 | 1.021 | 12145 | 0 | 0 | 50 (6 unmeasured) | 1 |
+| finance-item | clean | 3.05 | 0.836 | 12431 | 0 | 0 | 71 (50 unmeasured) | 0.67 |
+| finance-taxes | accepted | 4.09 | 1.045 | 12390 | 31 | 31 | 48 (4 unmeasured) | 1 |
+| finance-business | accepted | 4.84 | 1.906 | 16719 | 35 | 1 | 58 (7 unmeasured) | 1 |
+| profile-r6 | accepted | 2.14 | 1.142 | 7267 | 30 | 0 | 77 (42 unmeasured) | 0.67 |
+| profile-owned | clean | 1.53 | 0.38 | 3903 | 0 | 0 | 85 (77 unmeasured) | 0.67 |
+| balance-r6 | phone words, layout accepted | 2.02 | 0.695 | 8586 | 1469 | 0 | 90 (77 unmeasured) | 2.33 |
+| rivals-r6 | clean | 2.77 | 0.281 | 4571 | 0 | 0 | 20 (0 unmeasured) | 0.33 |
+| end-escaped | clean | 3.09 | 0.598 | 11156 | 0 | 0 | 24 (0 unmeasured) | 0.33 |
+| end-bankrupt | accepted | 3.15 | 0.624 | 11821 | 5 | 5 | 25 (1 unmeasured) | 0.33 |
+| end-share | accepted | 1.22 | 0.544 | 6841 | 5084 | 4266 | 28 (25 unmeasured) | 0.67 |
+| end-ru | accepted | 4.27 | 2.184 | 12258 | 168 | 54 | 25 (0 unmeasured) | 0.67 |
+| moment-escape | clean | 4.75 | 0.898 | 10354 | 0 | 0 | 52 (40 unmeasured) | 0.67 |
+| moment-bankrupt | clean | 2.44 | 0.591 | 9284 | 0 | 0 | 54 (39 unmeasured) | 0.67 |
+| moment-crisis | clean | 2.94 | 0.996 | 10154 | 0 | 0 | 56 (42 unmeasured) | 1 |
+| records-empty | clean | 2.61 | 0.118 | 2312 | 0 | 0 | 3 (0 unmeasured) | 0.33 |
+| records-three | clean | 3.48 | 0.743 | 7633 | 0 | 0 | 28 (0 unmeasured) | 0.67 |
+| records-detail | clean | 2.29 | 0.313 | 2894 | 0 | 0 | 42 (28 unmeasured) | 0.67 |
+| collection-items | clean | 4.05 | 0.352 | 5552 | 0 | 0 | 14 (0 unmeasured) | 0.67 |
+| collection-badges | clean | 5.15 | 0.618 | 9827 | 0 | 0 | 29 (0 unmeasured) | 0.67 |
+| profile-financed | clean | 2.47 | 1.242 | 11286 | 0 | 0 | 95 (77 unmeasured) | 1 |
+
+### What differed, and was fixed in the app
+
+| # | difference (scenes) | measured cause | fix | test |
+|---|---|---|---|---|
+| 1 | the basket's button narrower and its words smaller than the web's, the savings' Save and Withdraw too (every scene of the finances; 12 836 shape pixels each, the bar's label 19.67 pt off) | the web writes `px-3 text-[14px]` (`px-2 text-[13px]` beside the savings, `text-[14px]` on a city's "All cities" and "See the figures") on its `Button`, whose own `px-4 text-[17px]` come later in the stylesheet and win: `getComputedStyle` gives 17 px and 16 px of side on all of them | every Button is 17 and 16 in; the kit's `size` and `padX` are gone, and the city's "See the figures" is 17 | `kit.test` |
+| 2 | the page under a sheet the web's page opens by a press stood 228 pt lower (`finance-pension`, `finance-buy-stock`, `finance-move`: 199 975, 167 762, 84 020) | the sheet gives the focus to its slider or panel, and Chrome scrolls the page to what took it, though the sheet is fixed (`window.scrollY` 228) | the web's scene page puts the page back at its top a few frames after its presses (`PressedInTurn`, kit page only): the phone's scene opens the sheet at the top of its page | `sceneShots.test` (the run) |
+| 3 | a cheer's confetti larger than the web's (`play-resolve-r6`) | the web's `absolute -inset-1` picture is held to its 40-point box by the page's `img { max-width: 100% }`: measured 40 × 48 | the loop is drawn into 40 × 48 (`CHEER`) | `Resolve.test` (the run) |
+| 4 | the rung's status 5 pt under the web's under the pay (`work-panel`), every line under it with it; the tile of a thing 2.75 pt short (`finance-shop`), the city lived in 2 pt short (`finance-move`) | a tag the web sets inline in a line of reading text (15, a line of 1.45) stands in that line, 21.75 tall, its words on the line's baseline, 1 down (measured on the web's pages); the phone drew the bare 19-point tag; and the pay and its ▸ were a native row on their texts' baselines, taller than the browser's line | the kit's `LineTag` (the line from `webBaseline`s; a pixel cell's line where the web's is one, the owned home's status in the profile); the pay and the focus figure with their ▸ placed on the browser's line (`Figured`) | `kit.test`, `Work.test` (the run) |
+| 5 | a city's sheet 10 pt taller (`play-cards-city`), the price chart's caption 5.5 pt high (`finance-buy-stock`), a past life's sheet 2.33 pt short (`records-detail`) | rows the web lays `items-baseline` were native rows on their texts' baselines: the kit moves a text's glyphs inside its box (`baselineShift`), so the baselines a native row reads are not where the glyphs stand, and the row grows | Versus, the price caption, the score and worth of a past life, a level's head and the down payment's row placed from the browser's baselines (`webLine`) | the run |
+| 6 | the ▸ of a figure that opens 1 pt narrower and the figure before it 1.33 pt right (`work-panel`, `profile-r6`, under the backdrop of `profile-owned`: 350 px); the business's ✓ wider (6.33 pt) | Chrome draws both in the system font (`.SFNS`, `CSS.getPlatformFontsForNode`), and scales a system font past the stack as it scales Jersey (the pixel ▸ is 7.223 wide at 11 px, the reading one 5.266: 1.372, Jersey's 1.3745, not SF's 1.103); the phone used SF's own small letters, and drew the ✓ from Zapf Dingbats | a system-font run in pixel text is scaled as Jersey (an emoji keeps its own scale: the dice, measured); the ✓ is the system font's | `fonts.test` |
+| 7 | a frame's bottom strip a device pixel under its box's fill (`end-ru`: 990 of 1140 px), the light edge of an owned thing's tile a device pixel short of its corner (`collection-items`) | Yoga rounds a child's place relative to its parent but the parent's size from its edges on the screen: at a fractional place a strip set `bottom: -2, height: 2` stood 550.33 where the fill ended at 550.00 | a strip anchored to the far edge (bottom, right) is laid from the near edge with its colour as the border there (`placeOf`, Frame.tsx): its far edge is rounded where the parent's is | `Frame.test` |
+| 8 | (development) Reanimated's warning on every screen that scrolls: "Dependencies should only be used on the web" | the page's scroll handler was given a list of dependencies | none given | the Metro log |
+
+### What the comparison was taught (tooling)
+
+- **A line's ink in another line's box** is the other line's only where its colour could be that line's (the colour, or a blend of it with the dark grounds,
+  or its background): the gold descenders of a name over the box of the cream line under it are the name's (`play-cards-ru-360`'s 15 pixels; `end-escaped`'s 59).
+- **A line something is drawn over** (the page under the fixed bar of the next step) claims no ink: the bar's own "$265,571" over a "Withdraw" under it.
+- **Two rects of one line** (its words and the ellipsis that cuts them short) are one line's; the next line of a paragraph is still a line of its own.
+- **A line clipped by its box** (`truncate`, a row of tabs that scrolls) is measured where it is drawn, not where its words would run on to (`TEXT_BOXES`).
+- **A line under a `grayscale` filter** is looked for in the grey its colour is drawn in (`collection-badges`: 1197 → 0).
+- **The web's link that saves the picture's file** is hidden in `end-share`'s web shot (`WEB_ONLY`): the phone's share sheet saves the file itself (Task 18).
+- **A scene of the phone's own words** may have a record of its shape alone (`phone words, layout accepted`): `balance-r6`.
+
+### The residuals accepted, with their causes
+
+| scene | shape (px) | worst text (pt) | measured cause |
+|---|---|---|---|
+| play-cards-legendary | 1 | 0.67 | one pixel of the edge of the band of light over the card's picture, held at the same moment on both sides: motion-2's own residual |
+| finance-tabs-ru-360 | 0 | 3 | the savings' label and rate cut short: Chrome's ellipsis keeps the space before its dots ("4,2% …"), iOS's tail truncation draws its own glyph after the last letter ("4,2%…") |
+| finance-buy-stock | 149 | 1 | the price line's antialiased edge (phase 2's exception), the same points on both sides |
+| finance-taxes, finance-business | 31, 35 | 1 | the tops of the letters of a line under the bar of the next step peek over its edge a device pixel apart (the line is covered at its middle, so not measured as text) |
+| profile-r6 | 30 | 0.67 | the career bar's lit lamps bleed a device-pixel sliver into the first dark one on the web (phase 1's class) |
+| balance-r6 | 1469 | (phone words) | the phone's "Net worth, after inflation" is longer than the key the web shows; its glyphs past the web's line box are in no window of the text check |
+| end-bankrupt | 5 | 0.33 | five pixels of a gold edge on the last row compared (839.67 pt), antialiased at a fractional place on the web |
+| end-share | 5084 | 0.67 | the picture to share is a picture: Skia's glyphs (no kerning) against the canvas's, each smoothing the 1080-wide card into 270 points its own way |
+| end-ru | 168 | 0.67 | the prized badge's confetti centred in a panel a fraction taller in Russian: on another device pixel, their pieces at the foot cut a pixel apart |
+
+The records of Tasks 6 to 10 were tightened to what this pass measured (`new-locked` 1267 → 738, `new-replace` 1159 → 310, `play-news-r1` 1446 → 1443,
+`play-news-r6` 1518 → 1443, `play-guide-r1` 3504 → 3453, `play-pageturn` 4309 → 3897, worst text 1 → 0.67 on four of them); `celebrate-earned` is clean (its 44
+pixels were glyph edges the text check did not cover) and has no record any more.
