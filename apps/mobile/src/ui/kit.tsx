@@ -78,9 +78,10 @@ export function reach(height: number, room: { above: number; below: number }, { 
 
 /**
  * A pixel button. Never smaller than 44 pt, so a thumb can hit it. `size` and `padX` are the web's `text-[Npx]` and `px-N` where a screen sets
- * one smaller than the 17 and 16 every button has (a button in a line of figures: `px-2 text-[13px]`).
+ * one smaller than the 17 and 16 every button has (a button in a line of figures: `px-2 text-[13px]`). `cell` is a button in a cell of a grid of
+ * them (the web's `grid grid-cols-2 gap-2`, placed in a row): an equal share of the row, and as tall as the tallest in it, as the grid stretches it.
  */
-export function Button({ variant, wide = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; size?: number; padX?: number }) {
+export function Button({ variant, wide = false, cell = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   return (
@@ -94,6 +95,7 @@ export function Button({ variant, wide = false, disabled = false, size = 17, pad
         opacity: disabled ? 0.45 : 1,
         // Not wide, it is placed by its parent, as the web's inline-flex in a flex box: stretched in a column, hugging in a row.
         ...(wide ? { width: '100%' } : null),
+        ...(cell ? { flex: 1, minWidth: 0 } : null),
       })}
     >
       <Framed
@@ -108,6 +110,7 @@ export function Button({ variant, wide = false, disabled = false, size = 17, pad
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
+          ...(cell ? { flexGrow: 1 } : null),
         }}
       >
         {setIn(children, (s) => (

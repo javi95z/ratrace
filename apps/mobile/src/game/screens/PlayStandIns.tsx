@@ -1,4 +1,4 @@
-import type { AssetDef, GameView } from '@ratrace/engine';
+import type { GameView } from '@ratrace/engine';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Sheet } from '../../ui/overlay';
@@ -10,7 +10,6 @@ import { useT, useWords } from '../context';
  * TEMPORARY, for development: what stands in Play where a part of it will be until the task that ports it. Plainly not the game (a dashed box, a
  * sign of works, the part's name in the game's words), and the round goes on through Play's bar as it will. All in this one file, so that each
  * task deletes its own stand-in here and draws its screen in Play where the stand-in was:
- * - the sheet that buys an asset (`BuySheet`, from the web's Finance.tsx), which a holding of the portfolio opens: Task 13;
  * - the city a card offers to move to (`CityPreview`, which the web's Finance.tsx exports and Cards.tsx opens): Task 14;
  * - the ledger (`StageStandIn` 'resolve'): Task 16;
  * - the end of a life (`EndStandIn`): Task 18.
@@ -55,20 +54,4 @@ export function CityPreview({ cityId, onClose }: { cityId: string; view: GameVie
 /** Task 18 brings the end of a life: until then its box, which Play draws above the two ways on from a life that is over. */
 export function EndStandIn() {
   return <StandIn />;
-}
-
-/**
- * Task 13 brings the sheet that buys an asset, once or every round (the web's `BuySheet`, from Finance.tsx), which a holding of the portfolio opens to buy more
- * of it: until then that sheet, named as the web names it, with the sign of works in it, so that the holding is never a button that does nothing.
- */
-export function BuySheet({ asset, onClose }: { asset: AssetDef; onClose(): void }) {
-  const amount = useT('finance.amount');
-  const common = useT('common');
-  const { names } = useWords();
-  const title = amount('buy', { name: names.assets[asset.id]?.name ?? asset.id });
-  return (
-    <Sheet open onClose={onClose} title={title} closeLabel={common('close')}>
-      <StandIn name={title} />
-    </Sheet>
-  );
 }

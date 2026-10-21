@@ -125,14 +125,46 @@ function PlayScene({ scene }: { scene: Scene }) {
 }
 
 /**
- * The finances have no initial state either (their sheets are their own), so a scene of them that names a sheet has the page press what opens it, once
- * the screen is drawn, as for the Hud: the pension plan's line, the first item of the finances that opens a sheet (`data-finance-item` with a popup:
- * the plans' lines come after it). The basket is Play's, exported by Finance: the page draws it beside Play, as the phone's registry does. The phone's
- * Finance is given the pension as its initial state (`FinanceOpened`).
+ * The finances have no initial state either (their tab and their sheets are their own), so a scene of them has the page press what a player would, once
+ * the screen is drawn, as for the Hud: the tab it names (each of the web's tabs is marked with its id, `data-tab`), then what opens the sheet it names.
+ * The pension plan's line is the first item of the finances that opens a sheet (`data-finance-item` with a popup: the plans' lines come after it); a
+ * share's sheet is opened by its row of the market, the one item of the market that draws its mark. The basket is Play's, exported by Finance: the page
+ * draws it beside Play, as the phone's registry does. The phone's Finance is given the tab and the sheet as its initial state (`FinanceOpened`).
  */
 const FINANCE_SHEETS: Readonly<Record<string, string>> = {
   pension: 'main [data-finance-item][aria-haspopup="dialog"]',
+  'buy-apple': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/logo.apple."])',
 };
+
+/** What the page presses for a scene of the finances, in turn: the tab it names, then what opens its sheet. */
+const financePresses = (scene: Scene): string[] => [...(scene.tab === undefined ? [] : [`main [data-tab="${scene.tab}"]`]), ...(scene.sheet === undefined || FINANCE_SHEETS[scene.sheet] === undefined ? [] : [FINANCE_SHEETS[scene.sheet]])];
+
+/**
+ * Presses each of `selectors` in turn, once the screen is drawn: each as soon as it is there (a tab pressed draws its panel a frame or two later, and
+ * the row in it is pressed then), and each once. Once for all, as `Pressed`: the dev server runs an effect twice, and a second press of a tab already
+ * open is nothing, but of a row it would open its sheet again.
+ */
+function PressedInTurn({ selectors, children }: { selectors: readonly string[]; children: ReactNode }) {
+  const pressed = useRef(false);
+  useEffect(() => {
+    if (selectors.length === 0 || pressed.current) return;
+    pressed.current = true;
+    let at = 0;
+    let frames = 0;
+    const next = () => {
+      const target = document.querySelector<HTMLElement>(selectors[at]);
+      if (target) {
+        target.click();
+        at += 1;
+      }
+      frames += 1;
+      // Five seconds of frames at most (a dev server draws slowly): a selector that never matches leaves the scene as it is, for the shot to show.
+      if (at < selectors.length && frames < 300) requestAnimationFrame(next);
+    };
+    next();
+  }, [selectors]);
+  return children;
+}
 
 /** A sheet that asks nothing of the game is never taken: a scene's sheet stays open whatever is pressed in it. */
 const refused = (): boolean => false;
@@ -165,7 +197,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: (scene) => <PlayScene scene={scene} />,
-  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <Pressed selector={FINANCE_SHEETS[scene.sheet ?? '']}><PlayScene scene={scene} /></Pressed>),
+  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <PressedInTurn selectors={financePresses(scene)}><PlayScene scene={scene} /></PressedInTurn>),
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   amount: () => <SavingsScene />,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <Pressed selector={TAKEN_IN}><Play /></Pressed> : <Play />),

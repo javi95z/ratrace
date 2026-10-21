@@ -29,6 +29,11 @@ export interface Scene {
    */
   readonly sheet?: string;
   /**
+   * The tab of the finances on screen, by its id, where it is not the first (the portfolio): `market`, `property`, `debt`. A client opens it as it
+   * opens a sheet: given to the screen as its initial state, or pressed by the page once the screen is drawn, before the sheet.
+   */
+  readonly tab?: string;
+  /**
    * The width of the phone the scene is drawn for, where it is not the shots' 402 (a Russian player on a phone 360 wide). The simulator's
    * width cannot be changed, so both clients draw the screen in a box this wide, centred on the shots' screen: the same on either side.
    */
@@ -60,6 +65,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'finance-basket', locale: 'en', sheet: 'basket' },
   { name: 'finance-pension', locale: 'en', sheet: 'pension' },
   { name: 'finance-tabs-ru-360', locale: 'ru', width: 360 },
+  { name: 'finance-market', locale: 'en', tab: 'market' },
+  { name: 'finance-buy-stock', locale: 'en', tab: 'market', sheet: 'buy-apple' },
+  { name: 'finance-property', locale: 'en', tab: 'property' },
+  { name: 'finance-debt', locale: 'en', tab: 'debt' },
   { name: 'hud-news-r1', locale: 'en' },
   { name: 'hud-cash', locale: 'en', sheet: 'cash' },
   { name: 'hud-flow', locale: 'en', sheet: 'flow' },
@@ -155,6 +164,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'finance-pension': { life: 'engineer', round: 6, stage: 'finance' },
   // The same, in Russian on a phone 360 wide: the row of the tabs, every tab of a life five rounds in, wider than the phone.
   'finance-tabs-ru-360': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, at the market: what the engineer's Finance opens, by kind, and what each did this round.
+  'finance-market': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, the sheet that buys a share open (Apple): once or every round, what it is, and its price since the start of the life.
+  'finance-buy-stock': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, at the property tab: nothing owned yet, the homes of London and what is only for letting there.
+  'finance-property': { life: 'engineer', round: 6, stage: 'finance' },
+  // The engineer's first round, at the debt tab: the loan the life begins with, its way to be repaid, and a personal loan on offer.
+  'finance-debt': { life: 'engineer', round: 1, stage: 'finance' },
   'hud-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'hud-cash': { life: 'engineer', round: 1, stage: 'news' },
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
@@ -192,7 +209,7 @@ const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisi
  * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
  * Every other scene is someone new, who is shown the tips as they come.
  */
-export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360']);
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360', 'finance-market', 'finance-buy-stock', 'finance-property', 'finance-debt']);
 
 /**
  * The scenes of a game that cannot go on (the play screen's way out, `Fault`): the orders kept for the round cannot be read back, so the

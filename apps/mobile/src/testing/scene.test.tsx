@@ -403,3 +403,35 @@ test('the Russian tabs are drawn on a phone 360 wide, in their row under the Hud
   expect(box?.contains(strip)).toBe(true);
   expect(within(strip).getByRole('tab', { name: 'Портфель' }).getAttribute('aria-selected')).toBe('true');
 });
+
+test('the scenes of the market, property and debts are drawn by Finance on the tab each names, given as its initial state, without a tap', async () => {
+  render(<SceneView name="finance-market" />);
+  const market = await screen.findByRole('tabpanel', { name: 'Market' }, WAIT);
+  expect(screen.getByRole('tab', { name: 'Market' }).getAttribute('aria-selected')).toBe('true');
+  expect(within(market).getByText('Apple')).toBeTruthy();
+  // For a player who has read the guide: the market itself, and nothing open over it.
+  expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+  expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+  cleanup();
+
+  render(<SceneView name="finance-property" />);
+  const property = await screen.findByRole('tabpanel', { name: 'Property' }, WAIT);
+  expect(within(property).getByText('You own no property.')).toBeTruthy();
+  expect(within(property).getByLabelText('Homes in London')).toBeTruthy();
+  cleanup();
+
+  render(<SceneView name="finance-debt" />);
+  const debt = await screen.findByRole('tabpanel', { name: 'Debt' }, WAIT);
+  expect(within(debt).getByText('Personal loan')).toBeTruthy();
+  expect(within(debt).getByRole('button', { name: 'Repay' })).toBeTruthy();
+  expect(within(debt).getByRole('button', { name: 'Take a personal loan' })).toBeTruthy();
+});
+
+test('the scene of a stock to buy is the market with Apple\'s sheet open, its price since the start of the life drawn in it', async () => {
+  render(<SceneView name="finance-buy-stock" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Buy Apple' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getByRole('radio', { name: /^Once/ }).getAttribute('aria-checked')).toBe('true');
+  expect(within(sheet).getByText('Price since the start')).toBeTruthy();
+  expect(within(sheet).getByRole('img', { name: 'Price history' })).toBeTruthy();
+  expect(screen.getByRole('tabpanel', { name: 'Market' })).toBeTruthy();
+});

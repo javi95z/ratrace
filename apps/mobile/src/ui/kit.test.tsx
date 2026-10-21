@@ -105,6 +105,27 @@ test('a Button that is not wide is placed by its parent, as the web\'s inline-fl
   expect(pressable.style.width).toBe('');
 });
 
+test('a Button in a cell of a grid of buttons (the web\'s `grid grid-cols-2 gap-2`) takes an equal share of its row, and its frame fills the cell\'s height', () => {
+  render(
+    <View style={{ flexDirection: 'row', gap: 8 }}>
+      <Button variant="secondary" cell onPress={() => {}}>{'Rent it out'}</Button>
+      <Button variant="danger" cell onPress={() => {}}>{'Sell for $40k'}</Button>
+    </View>,
+  );
+  for (const pressable of screen.getAllByRole('button')) {
+    // An equal share whatever its words (a basis of nothing, growing and shrinking alike), stretched to the row's height as its parent stretches it.
+    expect(pressable.style.flexGrow).toBe('1');
+    expect(pressable.style.flexBasis).toBe('0%');
+    expect(pressable.style.minWidth).toBe('0px');
+    expect((pressable.firstElementChild as HTMLElement).style.flexGrow).toBe('1');
+  }
+  // Not in a cell, it is as it was.
+  cleanup();
+  render(<Button variant="secondary" onPress={() => {}}>{'Go'}</Button>);
+  expect(screen.getByRole('button').style.flexGrow).toBe('');
+  expect((screen.getByRole('button').firstElementChild as HTMLElement).style.flexGrow).toBe('');
+});
+
 test('Tile presses with the tap sound, on night-600', () => {
   const onPress = vi.fn();
   const tap = vi.fn();

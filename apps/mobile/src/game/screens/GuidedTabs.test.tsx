@@ -35,8 +35,8 @@ describe('the tabs of a first life', () => {
     // The engineer begins with a student loan.
     const tabs = await firstFinances('engineer');
     expect(offeredTabs(true, 0, true)).toEqual(['portfolio', 'market', 'debt', 'lifestyle', 'shop']);
-    // Every tab drawn is one offered, in the web's order (the debt tab itself is drawn from Task 13 on, and then it is among them).
-    // TODO(Task 13): the debt tab is drawn there; put back the web's own assertion here: `expect(tabs.map((tab) => tab.textContent)).toContain('Debt');`
+    expect(tabs.map((tab) => tab.textContent)).toContain('Debt');
+    // Every tab drawn is one offered, in the web's order.
     const offered = offeredTabs(true, 0, true).map((id) => en.finance.tabs[id]);
     const titles = tabs.map((tab) => tab.textContent ?? '');
     expect(titles.length).toBeGreaterThan(0);

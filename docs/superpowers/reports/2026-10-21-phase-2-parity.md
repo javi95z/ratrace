@@ -505,6 +505,27 @@ left `STAND_IN_SCENES` (the app draws the finances now):
 - **Not compared** (no scene shows them; `Finance.test` holds them): a holding and its mark answering an order (jump and sparks, shrink), a broker's loan on a holding,
   a plan and its sheet, the dividends' switch, the basket's put-back line and a move a card decided, the toasts.
 
+## Task 13: the market, property and debts (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it. A scene names
+the tab of the finances it is drawn on (`Scene.tab`, new): the phone's Finance is given it as its initial state (`FinanceOpened`), the web's page presses the
+tab (`main [data-tab="…"]`) and then what opens the sheet, in turn, each once it is there (`PressedInTurn`).
+
+| scene | what it is | how its tab and sheet are open |
+|---|---|---|
+| finance-market | play-finance-r6's store (the engineer's sixth round, Finance 2), the market: funds, bonds, stocks, crypto and gold, what each did this round and what it pays | the tab: given / pressed |
+| finance-buy-stock | the same, Apple's sheet open: once or every round, the blurb, the price since the start of the life (the kit's `LineChart`), no broker's loan yet (Finance 3) | then Apple's row (`[data-finance-item]:has(img[src*="/logo.apple."])`): given (`buy-apple`) / pressed |
+| finance-property | the same, the property tab: nothing owned, the homes of London and what is only for letting there, two tiles a row | the tab |
+| finance-debt | the engineer's first round, the debt tab: the loan the life begins with, its rate and term, the way to repay it, a personal loan on offer | the tab |
+
+- **Rows as tall as the row's tallest**: the web's grids (the shelves of property, the two buttons under a home) stretch a cell to its row. The tiles are half the
+  row each in a wrapping row, their frames filling it (as NewLife's lives); the two buttons are the kit's `Button cell` (new: an equal share of the row, its
+  frame as tall as the row). A batch pass checks both against a name that wraps.
+- **The market's second line**: an asset that pays nothing and has no plan has the web's line of a lone space, which takes no height; the phone draws no line.
+- **Not compared** (no scene shows them; `Finance.test` holds them): a broker's loan in the sheet and its gauge in the debt tab, a plan set from the market,
+  a home's own sheet, a sale told in full, a home being sold, the lodger, a parking space bought to let, the mortgage switch and its sheet, the Russian
+  sheet that buys and debt rows on a narrow phone (their words wrap, nothing cut but the debt's name, which the web cuts too).
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp

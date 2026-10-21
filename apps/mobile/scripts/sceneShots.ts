@@ -115,6 +115,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'finance-basket',
   'finance-pension',
   'finance-tabs-ru-360',
+  // Task 13: the market, the sheet that buys a share (with its chart), the property tab and the debt tab.
+  'finance-market',
+  'finance-buy-stock',
+  'finance-property',
+  'finance-debt',
 ]);
 
 /**

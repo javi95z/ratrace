@@ -211,20 +211,31 @@ test('a scene\'s screen on the phone takes no touch: a picture to be shot, which
   expect(app).toMatch(/<Untouched>\s*<OfWidth width=\{scene\.width\}>/);
 });
 
-test('a scene of the finances is Play at its finances on both sides, with the sheet it names open: the basket drawn beside it on both, the pension pressed by the web\'s page and given to the phone\'s Finance as its initial state', () => {
+test('a scene of the finances is Play at its finances on both sides, on the tab and with the sheet it names: the basket drawn beside it on both, the rest pressed by the web\'s page and given to the phone\'s Finance as its initial state', () => {
   // The basket: the web's Finance exports it, as the phone's does, and both draw it beside Play.
-  expect(web).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <Pressed selector={FINANCE_SHEETS[scene.sheet ?? '']}><PlayScene scene={scene} /></Pressed>),");
-  expect(app).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),");
+  expect(web).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <PressedInTurn selectors={financePresses(scene)}><PlayScene scene={scene} /></PressedInTurn>),");
+  expect(app).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),");
   const finance = read('../../web/src/game/screens/Finance.tsx');
   expect(finance).toContain('export function Basket({ onClose }: { onClose(): void }) {');
-  // The pension: the web's page presses the first item of the finances that opens a sheet, which is the pension plan's line (the plans' lines come after it).
+  // The web's page presses the tab first (each of the web's tabs is marked with its id), then what opens the sheet, each once it is there and once only.
+  expect(web).toContain('const financePresses = (scene: Scene): string[] => [...(scene.tab === undefined ? [] : [`main [data-tab="${scene.tab}"]`]), ...(scene.sheet === undefined || FINANCE_SHEETS[scene.sheet] === undefined ? [] : [FINANCE_SHEETS[scene.sheet]])];');
+  expect(web).toContain('if (selectors.length === 0 || pressed.current) return;');
+  expect(read('../../web/src/ui/overlay.tsx')).toContain('data-tab={tab.id}');
+  // The pension: the first item of the finances that opens a sheet, which is the pension plan's line (the plans' lines come after it).
   expect(web).toContain(`pension: 'main [data-finance-item][aria-haspopup="dialog"]'`);
   const portfolio = finance.slice(finance.indexOf('function Portfolio()'), finance.indexOf('function PensionSheet('));
   const opening = [...portfolio.matchAll(/data-finance-item aria-haspopup="dialog" onClick=\{(.*?)\} className/g)].map((m) => m[1]);
   expect(opening[0]).toBe("() => setMove({ kind: 'pension' })");
   // Nothing before the portfolio's own panels opens a sheet: the glance draws none.
   expect(read('../../web/src/game/screens/Glance.tsx')).not.toContain('aria-haspopup');
-  // Every sheet a scene of the finances names is one of the two.
+  // Apple's sheet: the market's row of Apple, the one item of the market that draws Apple's mark, which opens the sheet that buys it.
+  expect(web).toContain(`'buy-apple': 'main [role="tabpanel"] [data-finance-item]:has(img[src*="/logo.apple."])'`);
+  const market = finance.slice(finance.indexOf('function Market()'), finance.indexOf('function BuySheet('));
+  expect(market).toContain('onClick={() => setBuying(asset)}');
+  expect(market).toContain('<AssetMark asset={asset} />');
+  // Every sheet a scene of the finances names is one of these, and every tab one of the web's.
   const sheets = SCENES.filter((scene) => scene.name.startsWith('finance-') && scene.sheet !== undefined).map((scene) => scene.sheet);
-  expect(sheets).toEqual(['basket', 'pension']);
+  expect(sheets).toEqual(['basket', 'pension', 'buy-apple']);
+  const tabs = SCENES.filter((scene) => scene.tab !== undefined).map((scene) => scene.tab as string);
+  for (const tab of tabs) expect(finance, tab).toContain(`{tab === '${tab}' ? `);
 });

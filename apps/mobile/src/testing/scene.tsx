@@ -148,7 +148,7 @@ export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: (scene) => <PlayScene scene={scene} />,
-  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
+  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ tab: scene.tab, sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),
