@@ -197,6 +197,8 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
 - [ ] **Step 5:** Both clients open each of the five scenes. `scene-shots.ts web app` writes ten PNGs. The comparison is not judged yet: the screens are still placeholders.
 - [ ] **Step 6: Commit** `test(mobile): scenes, one game state drawn by the web and by the app`.
 
+> **Change of method (2026-10-21, the user's call, to go faster):** from Task 11 on, a screen task registers its scenes but does not shoot them; no simulator or Metro is run per task. Two batch parity passes take every unshot scene, compare them and fix the differences: one after Task 15 (with the release-build performance checkpoint moved there from Task 12), and one in Task 20. Tests, render counts, typecheck and lint stay per task.
+
 **The screen tasks (6–19) share one method.**
 - Port the web file or files named, piece by piece, with the same names.
 - Port the web test's solo behaviours listed in the task as mobile tests (`renderGame`). Watch each fail before the screen exists.
@@ -354,7 +356,7 @@ Parity is proven the way phase 1 proved it, on named game states called *scenes*
 - Scenes: `play-finance-r6` (portfolio), `finance-basket` (sheet), `finance-pension`, `finance-tabs-ru-360`.
 
 - [ ] Steps as in the shared method.
-- [ ] **Performance checkpoint (mid-phase):** a release build (`npx expo prebuild --platform ios --clean`, then `npx expo run:ios --configuration Release`; `apps/mobile/ios/` git-ignored) on the simulator. Measure Home → Play, a stage change, opening Finance and a tab switch against the budgets in Global Constraints; write them in the parity report. Fix any over budget before Task 13.
+- [ ] **Performance checkpoint (mid-phase, moved to the batch pass after Task 15):** a release build (`npx expo prebuild --platform ios --clean`, then `npx expo run:ios --configuration Release`; `apps/mobile/ios/` git-ignored) on the simulator. Measure Home → Play, a stage change, opening Finance and a tab switch against the budgets in Global Constraints; write them in the parity report. Fix any over budget before Task 13.
 - [ ] **Commit** `feat(mobile): finance, its tabs, the basket and the portfolio`.
 
 ### Task 13: Finance — market, property, debt
