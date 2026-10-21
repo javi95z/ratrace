@@ -528,6 +528,15 @@ test('the scenes of the profile are its sheet open over Play, as the portrait op
   expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
 });
 
+test('the scene of a thing bought on instalments is its sheet over the profile, with what is still owed on it beside its figure', async () => {
+  render(<SceneView name="profile-financed" />);
+  const car = (await screen.findByRole('heading', { name: 'SEAT Ibiza' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  const owed = within(car).getByRole('note');
+  expect(within(owed).getByText('Still owed on the loan')).toBeTruthy();
+  expect(owed.textContent).toMatch(/\$[\d,]+/);
+  expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
+});
+
 test('the scene of the rivals is their board alone on a page, where the engineer stands among them', async () => {
   render(<SceneView name="rivals-r6" />);
   const board = await screen.findByLabelText('Your rivals', {}, WAIT);

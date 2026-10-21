@@ -142,6 +142,8 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'records-detail',
   'collection-items',
   'collection-badges',
+  // The merge of the lanes: a thing bought on instalments, its sheet over the profile with what is still owed on it (ItemCost's owed line).
+  'profile-financed',
 ]);
 
 /**

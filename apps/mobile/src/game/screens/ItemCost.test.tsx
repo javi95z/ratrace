@@ -6,8 +6,9 @@ import type { ItemDef, ItemQuote } from '@ratrace/engine';
 import { cleanup, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { memoryServices, renderGame } from '../../testing/render';
+import { webBaseline } from '../../ui/fonts';
 import { COLORS } from '../../ui/theme';
-import { ItemCost } from './ItemCost';
+import { ItemCost, owedLine } from './ItemCost';
 import { ItemUses } from './ItemUses';
 import { StatusNote } from './StatusNote';
 
@@ -65,6 +66,30 @@ describe('what a thing owned cost', () => {
     const gone = await quoted('tech_laptop', { paid: null, owed: 150_000 });
     renderGame(<ItemCost quote={gone.quote} />, gone.services);
     expect(says('You bought it on instalments and no longer have it. The debt stays.')).toBe(true);
+  });
+
+  it('stands what is owed and its figure on one baseline as the browser does, each let down from the top of a row that does not read baselines', async () => {
+    for (const language of ['en', 'es', 'ru'] as const) {
+      // The browser's baselines of the words (14 on a line of 1.45) and of the pixel figure (14 on a line of 1.1), below each line's top.
+      const words = webBaseline('read', 400, 14, 14 * 1.45, language);
+      const figure = webBaseline('pixel', 400, 14, 14 * 1.1, language);
+      const line = owedLine(language);
+      expect(line.words + words, language).toBe(line.figure + figure);
+      expect(Math.min(line.words, line.figure), language).toBe(0);
+    }
+    // In English the words' baseline is the lower one: the figure is let down to it.
+    expect(owedLine('en').words).toBe(0);
+    expect(owedLine('en').figure).toBeGreaterThan(0);
+
+    const { services, quote } = await quoted('tech_laptop', { paid: 200_000, resale: 100_000, sellable: true, owed: 150_000 });
+    renderGame(<ItemCost quote={quote} />, services);
+    const boxOf = (words: string) => ([...document.body.querySelectorAll<HTMLElement>('[dir="auto"]')].find((text) => text.textContent === words) as HTMLElement).parentElement as HTMLElement;
+    const [label, owed] = [boxOf('Still owed on the loan'), boxOf(fmt.money(150_000))];
+    expect(label.parentElement).toBe(owed.parentElement);
+    // Aligned at the top: a native row's `baseline` reads each text's box, and the kit moves the glyphs inside it.
+    expect(label.parentElement?.style.alignItems).toBe('flex-start');
+    expect(label.style.marginTop).toBe(`${owedLine('en').words}px`);
+    expect(owed.style.marginTop).toBe(`${owedLine('en').figure}px`);
   });
 });
 

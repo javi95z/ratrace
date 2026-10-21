@@ -106,6 +106,7 @@ export const SCENES: readonly Scene[] = [
   { name: 'records-detail', locale: 'en', sheet: 'id-3' },
   { name: 'collection-items', locale: 'en' },
   { name: 'collection-badges', locale: 'en' },
+  { name: 'profile-financed', locale: 'en', sheet: 'car_seat_ibiza' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -129,8 +130,8 @@ export type Step =
   | { action: 'orders' }
   | { action: 'play' }
   | { action: 'next' }
-  /** These things are bought, an order each, put in the basket one after another (the saver buys none). */
-  | { action: 'buy'; items: readonly string[] };
+  /** These things are bought, an order each, put in the basket one after another (the saver buys none); `financed`, each on instalments. */
+  | { action: 'buy'; items: readonly string[]; financed?: boolean };
 
 /**
  * How far a scene's life is played. `round` is the player's: the first round is 1, as the HUD counts it. A life at
@@ -267,6 +268,9 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'records-detail': null,
   'collection-items': null,
   'collection-badges': null,
+  // profile-owned's round, with a car bought on instalments in the fifth (a share down, a loan for the rest): the profile, and the car's own sheet
+  // over it, with what is still owed on it (ItemCost's wine note, its words and figure on one baseline).
+  'profile-financed': { life: 'engineer', round: 5, stage: 'finance', then: [{ action: 'buy', items: ['car_seat_ibiza'], financed: true }, { action: 'play' }, { action: 'next' }], ends: 'news' },
 };
 
 /**
@@ -580,7 +584,7 @@ async function take(name: string, game: SceneGame, bot: Bot, step: Step): Promis
     case 'next':
       return state.next();
     case 'buy':
-      for (const itemId of step.items) game.getState().addOrder({ type: 'buyItem', itemId });
+      for (const itemId of step.items) game.getState().addOrder({ type: 'buyItem', itemId, ...(step.financed === true ? { financed: true } : null) });
       return;
   }
 }

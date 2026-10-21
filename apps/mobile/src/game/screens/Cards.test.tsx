@@ -288,9 +288,12 @@ describe('the card waiting', () => {
     rea.assigned.length = 0;
     fireEvent.click(choices()[1]);
     await waitFor(() => expect(probe.state?.picked).toBe(1));
-    // The web's `transition-[transform,opacity]`: 150 ms on cubic-bezier(0.4, 0, 0.2, 1), for the taken one down and the other back.
-    const eased = rea.assigned.filter((one) => one.kind === 'timing' && one.duration === 150);
-    expect(eased).toEqual(expect.arrayContaining([expect.objectContaining({ to: 2, curve: [0.4, 0, 0.2, 1] }), expect.objectContaining({ to: 0.5, curve: [0.4, 0, 0.2, 1] })]));
+    // The web's `transition-[transform,opacity]`: 150 ms on cubic-bezier(0.4, 0, 0.2, 1), for the taken one down and the other back. Each choice
+    // sets its ease in an effect React runs after the pick is drawn: waited for, not read at once.
+    await waitFor(() => {
+      const eased = rea.assigned.filter((one) => one.kind === 'timing' && one.duration === 150);
+      expect(eased).toEqual(expect.arrayContaining([expect.objectContaining({ to: 2, curve: [0.4, 0, 0.2, 1] }), expect.objectContaining({ to: 0.5, curve: [0.4, 0, 0.2, 1] })]));
+    });
     await act(async () => answer.release());
     await waitFor(() => expect(probe.state?.stage).toBe('outcome'));
     cleanup();

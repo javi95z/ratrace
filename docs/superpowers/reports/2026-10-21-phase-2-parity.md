@@ -599,12 +599,15 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
 | profile-owned | the same round, with a watch, the gym and a phone bought in the fifth (the scene's script: a `buy` step, the round played, the next one opened): the watch's own sheet over the profile | the web's page presses the portrait, then the watch's square (`[role="dialog"] button[title="Casio F-91W"]`); the phone's profile is given it (`ProfileOpened`) |
 | balance-r6 | the same round as profile-r6: the net worth's line opened over the profile, with the graph of the start and five rounds (`Bars`, crisp) | the web's page presses the portrait, then the balance line whose words start with "Net worth"; the phone's profile is given the line (`ProfileOpened`) |
 | rivals-r6 | the same round: the rivals' board alone in a page's column (the web's `main mx-auto max-w-md px-3 pt-4`, the phone's `Screen`), as it is far down a sheet that scrolls in the profile | no sheet |
+| profile-financed | (added at the merge of the lanes) profile-owned's round, with a SEAT Ibiza bought on instalments in the fifth (the `buy` step, `financed`): the car's own sheet over the profile, with what is still owed on it (`ItemCost`'s wine note, its words and figure on one baseline) | the web's page presses the portrait, then the car's square (`[role="dialog"] button[title="SEAT Ibiza"]`); the phone's profile is given it (`ProfileOpened`) |
 
 - **The work panel is Task 14's `WorkPanel`** since the lanes were merged (until then a stub, `WorkPanelStub.tsx`, drew the head of the web's panel only,
   and is gone): `profile-r6` and the profile under the other two sheets are shot with the real panel in the batch pass.
 - **A thing's pieces are Task 14's** (`ItemCost`, `ItemUses`, `StatusNote`, `HealthCoverNote`): Task 17 ported them too, in its own lane; the merge kept
-  Task 14's, which the shop and the profile both draw. What is owed and its figure stand on one baseline by the kit's `alignItems: 'baseline'` there, not
-  by `webBaseline` as this task's own copy placed them: the batch pass checks that line with the others below.
+  Task 14's, which the shop and the profile both draw, with this task's placement of what is owed and its figure brought into Task 14's `ItemCost`: a row
+  aligned at the top, each text let down to the browser's baseline (`owedLine`, from `webBaseline`). A native row's `baseline` reads the texts' boxes, and
+  on iOS the kit moves the pixel figure's glyphs about two points further than the words', so it would stand that much below them. `profile-financed`
+  shows the line.
 - **The net worth after inflation is in the phone's own words** (fix round of Task 17): the web's Balance.tsx asks for a key that left the messages in 3c18114
   (`end.realNetWorth`), so the web shows the key itself. The phone never shows a key: it says "Net worth, after inflation" (`phone.realNetWorth`, in en, es and
   ru). `balance-r6` is in `PHONE_WORDS`: the two shots cannot agree on that line's words, so the batch pass judges the scene by its layout only.
@@ -613,7 +616,7 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
 - **Not compared** (no scene shows them; `Profile.test` and `Balance.test` hold them): the sheets of the lifestyle, the home (rented and owned) and the
   insurances, and their choices pressed in the finances; a thing sold or cancelled from its sheet; the other lines of the balance sheet (cash, savings, the
   pension, investments by kind, property, businesses, things, debts); a family at home (its picture as wide as the panel); the way out of the life and its
-  word when the phone is not saving; a thing's uses (`ItemUses`, the gym's) and what is owed on it (`ItemCost`'s note).
+  word when the phone is not saving; a thing's uses (`ItemUses`, the gym's). What is owed on a thing (`ItemCost`'s note) is shot in `profile-financed`.
 
 ## Task 18: the end of a life and its share card (shots pending)
 

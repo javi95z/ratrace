@@ -152,6 +152,7 @@ test('a scene of a screen ported but not shot yet (from Task 11 on, the batch pa
     'records-detail',
     'collection-items',
     'collection-badges',
+    'profile-financed',
   ]);
   for (const name of PENDING_SHOTS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
   expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual([
@@ -193,6 +194,7 @@ test('a scene of a screen ported but not shot yet (from Task 11 on, the batch pa
     'records-detail',
     'collection-items',
     'collection-badges',
+    'profile-financed',
   ]);
   const ru = SCENES.find((scene) => scene.name === 'play-cards-ru-360')!;
   expect(unjudgedLine(ru)).toEqual({ scene: 'play-cards-ru-360', locale: 'ru', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });

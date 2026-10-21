@@ -11,6 +11,7 @@ import { useGame } from '../context';
 import { spriteBox } from '../../ui/sprites';
 import { bannerSize } from './Challenge';
 import { useShown } from './Hud';
+import { Play } from './Play';
 import { WorkPanel } from './Work';
 
 /*
@@ -280,13 +281,16 @@ describe('the work panel of the profile', () => {
 });
 
 describe('focus from the work panel', () => {
-  // (The web's Finance.test.tsx: the panel stands beside the finances on a wide screen; on the phone it is the profile's, opened over them.)
+  // (The web's Finance.test.tsx: the panel stands beside the finances on a wide screen; on the phone it is the profile's, which the portrait opens over
+  // them: the real one, in Play.)
   it('is spent from the sheet of focus as from the Lifestyle tab, while the finances are open', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');
     while (session.view().phase === 'cards') await session.answerCard(0);
-    renderGame(<Profiled />, services);
-    const work = await screen.findByLabelText('Work');
+    renderGame(<Play />, services);
+    await screen.findByRole('tablist');
+    fireEvent.click(screen.getByRole('button', { name: 'Open your profile' }));
+    const work = within(sheetTitled('Your life')).getByLabelText('Work');
     fireEvent.click(within(work).getByRole('button', { name: /^Focus this round/ }));
     const sheet = sheetTitled('Focus');
     expect(has(sheet, 'Tap to choose. It takes effect when the round is played.')).toBe(true);

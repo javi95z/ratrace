@@ -168,7 +168,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail', 'profile-financed']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -539,6 +539,7 @@ describe('the list of scenes', () => {
       'records-detail',
       'collection-items',
       'collection-badges',
+      'profile-financed',
     ]);
   });
 
@@ -691,6 +692,19 @@ describe('the scenes of the profile', () => {
     expect(state.view?.player.life.items.map((owned) => owned.itemId)).toEqual(['watch_casio', 'member_gym', 'tech_phone']);
     // Each the same every time.
     expect(onScreenOf(await opened('profile-owned'))).toBe(onScreenOf(state));
+  });
+
+  it('profile-financed is the same news with a car bought on instalments in the fifth round: owned, and a loan still owed on it', async () => {
+    expect(SCENES.find((scene) => scene.name === 'profile-financed')).toEqual({ name: 'profile-financed', locale: 'en', sheet: 'car_seat_ibiza' });
+    const state = await opened('profile-financed');
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news', refusal: null, orders: [] });
+    expect(roundOf(state)).toBe(6);
+    expect(state.view?.player.life.items.map((owned) => owned.itemId)).toEqual(['car_seat_ibiza']);
+    // What the car's sheet shows on its wine note: a loan for what the share down did not pay.
+    const car = quoteItem(content, state.view!, 'car_seat_ibiza');
+    expect(car.owed).toBeGreaterThan(0);
+    expect(car.paid).not.toBeNull();
+    expect(onScreenOf(await opened('profile-financed'))).toBe(onScreenOf(state));
   });
 });
 

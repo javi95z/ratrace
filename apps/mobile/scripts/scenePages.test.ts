@@ -280,7 +280,7 @@ test('the profile is open, in a scene, as the portrait opens it: the web\'s page
   expect(profile).toContain("onClick={() => setLine('netWorth')}");
   // A thing a scene opens is one the scene's life owns; a line, one the balance sheet has.
   const sheets = SCENES.filter((scene) => scene.name.startsWith('profile-') || scene.name.startsWith('balance-')).map((scene) => scene.sheet);
-  expect(sheets).toEqual([undefined, 'watch_casio', 'netWorth']);
+  expect(sheets).toEqual([undefined, 'watch_casio', 'netWorth', 'car_seat_ibiza']);
   // The rivals' board is drawn alone in a page's column on both sides.
   expect(web).toContain('<main className="mx-auto flex w-full max-w-md flex-col px-3 pt-4">');
   expect(app).toContain('rivals: () => <RivalsScene />,');

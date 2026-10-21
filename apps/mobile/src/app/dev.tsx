@@ -1,4 +1,5 @@
-// Development page (until Task 13's kit page): sprites drawn pixel for pixel, the cues, money in each language, and a life begun under older rules.
+// Development page, beside the kit's (/kit) and the scenes' (/scene): sprites drawn pixel for pixel, the cues, money in each language, and a life begun
+// under older rules.
 import type { RatLook } from '@ratrace/core/game/avatar';
 import { formatFor } from '@ratrace/core/lib/format';
 import { LOCALES } from '@ratrace/i18n';
