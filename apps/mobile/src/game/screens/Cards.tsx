@@ -12,6 +12,7 @@ import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
 import { Panel, reach, Tag, usePress } from '../../ui/kit';
+import { perfStart } from '../../ui/perf';
 import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
@@ -389,6 +390,7 @@ export function CardStage() {
     latest.current = { shown, swipeable, pick };
   });
   const release = useCallback((side: 1 | -1) => {
+    perfStart('swipe');
     const now = latest.current;
     if (!now.swipeable) return;
     void now.pick(side > 0 ? now.shown[1] : now.shown[0]);

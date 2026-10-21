@@ -7,6 +7,7 @@ import { Framed } from './Frame';
 import { CREAM, GOLD, WINE } from './frames';
 import { useRise } from './animations';
 import { pressDown, usePress } from './kit';
+import { PerfDrawn, perfTouched } from './perf';
 import { PixelText, ReadText } from './text';
 import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
 
@@ -125,8 +126,11 @@ function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }
       <View
         accessibilityViewIsModal
         aria-modal
+        onTouchEnd={perfTouched}
         style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingTop: inset.top, paddingLeft: inset.left, paddingRight: inset.right }}
       >
+        {/* A sheet's window is its own: its touches are the timing probe's too, and it says when it is drawn (EXPO_PUBLIC_PERF=1 builds only). */}
+        <PerfDrawn name={`sheet: ${title}`} />
         <Pressable
           testID="sheet-backdrop"
           accessible={false}

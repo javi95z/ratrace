@@ -15,6 +15,7 @@ import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
+import { PerfDrawn } from '../../ui/perf';
 import { Rising } from '../../ui/Rising';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
@@ -177,6 +178,7 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
   return (
     // The web's `main mx-auto w-full max-w-md px-3 pb-8 pt-6`, its two columns one on a phone: everything in it 16 apart (the columns' `gap-4`).
     <Screen contentStyle={{ gap: 16, paddingTop: 24, paddingBottom: 32 }}>
+      <PerfDrawn name="stage: end" />
       {extra ? <View>{extra}</View> : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ marginVertical: 6, marginLeft: 6, flexShrink: 0 }}>

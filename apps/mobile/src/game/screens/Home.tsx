@@ -14,6 +14,7 @@ import { useGame, useRuns, useSaving, useWords } from '../context';
 import { useT } from '../words';
 import { useThisWeek, WeeklyChallengeCard } from './Challenge';
 import { HomePreferences, HomeSettingsPanel, LanguageMenu } from './Settings';
+import { PerfDrawn } from '../../ui/perf';
 
 /** The letter spacing of a pixel button set in the page's 15: 0.03 of it. */
 const BUTTON_SPACING = 15 * 0.03;
@@ -52,6 +53,7 @@ export function Home() {
 
   return (
     <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
+      <PerfDrawn name={status === 'booting' ? 'home: booting' : 'home'} />
       <View style={{ position: 'absolute', top: 16, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
         <LanguageMenu />
         <HomePreferences />

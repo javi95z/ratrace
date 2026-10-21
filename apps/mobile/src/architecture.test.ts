@@ -189,8 +189,11 @@ describe('the wall between the phone\'s screens and the game', () => {
     // writes a life straight into the phone's store to see it finished under older rules. Development only; the one route
     // that reaches each of those two is its own: the development page for the fixture, the scene page for the scenes (which
     // reach the memory services through testing/scene.tsx, never the session itself).
-    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts']);
+    // And the timing probe's long life (testing/perfLife.ts), put on the phone by the probe's own route, in a build made with EXPO_PUBLIC_PERF=1 only
+    // (ui/perf.test.ts holds that a build without the flag has none of it).
+    expect(wires.sort()).toEqual(['game/context.tsx', 'game/phoneBasket.ts', 'testing/memoryServices.ts', 'testing/olderLife.ts', 'testing/perfLife.ts']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/olderLife')).map(rel)).toEqual(['app/dev.tsx']);
+    expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/perfLife')).map(rel)).toEqual(['app/perf.tsx']);
     expect(mine.filter((path) => importsOf(path).some((i) => i.from === '@/testing/scene')).map(rel)).toEqual(['app/scene.tsx']);
   });
 
@@ -204,7 +207,7 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(named).toEqual([]);
   });
 
-  it('sends nothing from the phone, as its legal notice says (`phone.legal`): the one request in the app is a development scene telling the shots\' driver, on this machine, that it is ready', () => {
+  it('sends nothing from the phone, as its legal notice says (`phone.legal`): the one request in the app is a development scene telling the shots\' driver, on this machine, that it is ready (and the timing probe\'s, in its own build only)', () => {
     expect(SENDS.test("const res = await fetch('https://example.com');")).toBe(true);
     expect(SENDS.test('const socket = new WebSocket(url);')).toBe(true);
     expect(SENDS.test('const request = new XMLHttpRequest();')).toBe(true);
@@ -220,7 +223,13 @@ describe('the wall between the phone\'s screens and the game', () => {
     for (const dir of CARRIED) expect(shipped.some((path) => path.startsWith(dir)), relative(REPO, dir)).toBe(true);
     expect(shipped.some((path) => path.endsWith('.json'))).toBe(false);
     const sending = shipped.filter((path) => SENDS.test(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
-    expect(sending).toEqual(['apps/mobile/src/testing/scene.tsx']);
+    expect(sending.sort()).toEqual(['apps/mobile/src/testing/scene.tsx', 'apps/mobile/src/ui/perfProbe.tsx']);
+    // The timing probe's, in a build made with EXPO_PUBLIC_PERF=1 only (ui/perf.test.ts: any other build has none of it): its lines to the collector on
+    // this machine, one request.
+    const probe = readFileSync(join(SRC, 'ui/perfProbe.tsx'), 'utf8');
+    expect([...probe.matchAll(/\bfetch\s*\(/g)]).toHaveLength(1);
+    expect(probe).toContain("export const COLLECTOR = 'http://127.0.0.1:8095/perf';");
+    expect(probe).toContain('void fetch(COLLECTOR,');
     // That one: one request, to this machine only, with the address of the scene's own route; the route that draws a scene is for development only
     // (scripts/scenePages.test.ts) and says nothing unless it is opened for a shot.
     const scene = readFileSync(join(SRC, 'testing/scene.tsx'), 'utf8');

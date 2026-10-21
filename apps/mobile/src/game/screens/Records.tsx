@@ -8,6 +8,7 @@ import { useBlink } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { Tag, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
+import { PerfDrawn } from '../../ui/perf';
 import { ListScreen } from '../../ui/Page';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
@@ -165,6 +166,7 @@ export function Records({ opened }: { opened?: string } = {}) {
 
   return (
     <>
+      <PerfDrawn name="records" />
       <ListScreen
         head={head}
         data={lines}

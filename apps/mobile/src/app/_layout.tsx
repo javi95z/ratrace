@@ -6,6 +6,7 @@ import { GameProvider } from '../game/context';
 import { useGameFonts } from '../ui/fonts';
 import { GROUND_THEME, SCREENS } from '../ui/navigation';
 import { Page } from '../ui/Page';
+import { PerfFrames, perfTouched } from '../ui/perf';
 
 // The splash stays until the game's typefaces are in, so nothing is drawn in the system font first; if they fail to
 // load, it lifts all the same (useGameFonts tells why), and the game goes on in the system font.
@@ -23,7 +24,9 @@ export default function RootLayout() {
   if (!fonts) return null;
   // One gesture root round everything, so a drag can be read anywhere (phase 2's card swipe).
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }} onTouchEnd={perfTouched}>
+      {/* The timing probe's frames (a build made with EXPO_PUBLIC_PERF=1 only: nothing in any other, ui/perf.ts). */}
+      <PerfFrames />
       <GameProvider>
         <StatusBar style="light" />
         <Page>

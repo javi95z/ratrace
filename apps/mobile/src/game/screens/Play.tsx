@@ -11,6 +11,7 @@ import { GOLD } from '../../ui/frames';
 import { webBaseline } from '../../ui/fonts';
 import { Button, Raised, SrOnly } from '../../ui/kit';
 import { Sheet, Toast } from '../../ui/overlay';
+import { PerfDrawn } from '../../ui/perf';
 import { BottomBar, type ScreenScroller } from '../../ui/Page';
 import { StickyScreen } from '../../ui/Sticky';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
@@ -430,6 +431,7 @@ export function Play() {
           <View accessibilityRole="header" style={{ position: 'absolute' }}>
             <SrOnly>{heading}</SrOnly>
           </View>
+          <PerfDrawn name={`stage: ${stage}`} />
           {compact && !finances ? <CrisisStrip /> : null}
           {/* The web's `main pt-3` under the figures, 8 of it the page's gap. In the finances that room is over their tabs, which the panel stands right under. */}
           <View role="main" aria-label={stageName} style={finances ? { marginTop: -8 } : { paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>

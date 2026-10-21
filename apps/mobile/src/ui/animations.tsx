@@ -13,6 +13,7 @@ import {
 } from 'react-native-reanimated';
 import type { ViewStyle } from 'react-native';
 import { KEYFRAMES, countUpValue, frameFor, styleOf, type Frame, type KeyframeName } from './motion';
+import { perfCountSet, usePerfCounted } from './perf';
 
 /** The game's own "reduce motion" setting, handed down once; the OS asks for it on its own. */
 const GameReducedMotion = createContext(false);
@@ -198,6 +199,7 @@ export function useCountUp(target: number, { from = 0, ms = 900, delay = 0 }: { 
       const start = Date.now();
       const step = () => {
         const done = Math.min(1, (Date.now() - start) / ms);
+        perfCountSet();
         setShown(countUpValue(from, target, done));
         if (done < 1) frame = requestAnimationFrame(step);
       };
@@ -208,5 +210,7 @@ export function useCountUp(target: number, { from = 0, ms = 900, delay = 0 }: { 
       cancelAnimationFrame(frame);
     };
   }, [target, from, ms, delay, still]);
+  // The timing probe's measure of a step's cost on the JS thread (EXPO_PUBLIC_PERF=1 builds only; a no-op in any other).
+  usePerfCounted(shown);
   return shown;
 }

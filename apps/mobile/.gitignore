@@ -48,3 +48,6 @@ yarn-error.*
 
 # the parity check's raw shots (scripts/kit-shots.ts); the cropped ones are in docs/superpowers/reports
 /.kit-shots/
+
+# the timing probe's collector keeps what the app told it here (scripts/perf.ts)
+/.perf/

@@ -16,6 +16,7 @@ import { adjustedRead } from '../../ui/fonts';
 import { Bar, Bare, Button, Figure, LineTag, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
+import { PerfDrawn } from '../../ui/perf';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
@@ -2083,6 +2084,7 @@ function Shop({ view, onViewChange }: { view: ShopView; onViewChange(view: ShopV
       </View>
       {visible.length === 0 ? <ReadText size={13} tone="ink-300" style={{ paddingVertical: 12, textAlign: 'center' }}>{t('noneAffordable')}</ReadText> : null}
       {visible.map(({ ladder, items }) => (ladders.indexOf(ladder) < upTo ? <Shelf key={ladder} title={text.ladders[ladder]} items={items} onOpen={onOpen} /> : null))}
+      {upTo >= ladders.length ? <PerfDrawn name="tab: shop, every shelf" /> : null}
       {open ? <ItemSheet itemId={open} onClose={() => setOpen(null)} /> : null}
     </View>
   );
@@ -2433,6 +2435,7 @@ export function Finance() {
   const Body = TAB_BODIES[tab];
   return (
     <View role="tabpanel" aria-label={t(`tabs.${tab}`)} style={{ paddingTop: 4 }}>
+      <PerfDrawn name={`tab: ${tab}`} />
       <ShopViewKept.Provider value={shop}>{Body ? <Body /> : null}</ShopViewKept.Provider>
     </View>
   );

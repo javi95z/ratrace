@@ -20,8 +20,15 @@ test('the routes are the web\'s pages after the front door, and the phone\'s own
     .filter((file) => file.endsWith('.tsx') && !file.startsWith('_'))
     .map((file) => file.replace(/\.tsx$/, ''))
     .sort();
-  // The web's pages (apps/web/src/i18n/metadata.ts), the front door (`index`), and the kit, the parts and the scenes, for development only.
-  expect(routes).toEqual(['challenge', 'collection', 'dev', 'index', 'kit', 'legal', 'new', 'play', 'player', 'rankings', 'records', 'room', 'scene']);
+  // The web's pages (apps/web/src/i18n/metadata.ts), the front door (`index`), and the kit, the parts and the scenes, for development only; and the
+  // timing probe's, which puts a long life on the phone in a build made with EXPO_PUBLIC_PERF=1 and goes home in any other.
+  expect(routes).toEqual(['challenge', 'collection', 'dev', 'index', 'kit', 'legal', 'new', 'perf', 'play', 'player', 'rankings', 'records', 'room', 'scene']);
+});
+
+test('the timing probe\'s route goes home in a build without the flag, and puts nothing on the phone', async () => {
+  const { default: PerfRoute } = await import('../app/perf');
+  const { container } = renderGame(<PerfRoute />, memoryServices());
+  expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/');
 });
 
 test('the records and the collection are their own screens', async () => {

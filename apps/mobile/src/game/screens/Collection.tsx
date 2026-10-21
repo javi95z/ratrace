@@ -7,6 +7,7 @@ import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Bare, Segmented, SrOnly } from '../../ui/kit';
 import { Tabs } from '../../ui/overlay';
+import { PerfDrawn } from '../../ui/perf';
 import { ListScreen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -227,13 +228,16 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   // holds the tabs as well, and no prop of a FlatList puts a role on the box of its rows alone: the panel is not named (iOS and Android say nothing of a
   // tab panel either). The tabs are a tab list of their own (`Tabs`), each saying which is selected.
   return (
-    <ListScreen
-      head={head}
-      data={tab === 'items' ? things : shownBadges}
-      keyOf={keyOf}
-      item={lineOf}
-      onWidth={(width) => setBreakpoint(breakpointOf(width))}
-      contentStyle={{ paddingBottom: 40 }}
-    />
+    <>
+      <PerfDrawn name={`collection: ${tab}`} />
+      <ListScreen
+        head={head}
+        data={tab === 'items' ? things : shownBadges}
+        keyOf={keyOf}
+        item={lineOf}
+        onWidth={(width) => setBreakpoint(breakpointOf(width))}
+        contentStyle={{ paddingBottom: 40 }}
+      />
+    </>
   );
 }
