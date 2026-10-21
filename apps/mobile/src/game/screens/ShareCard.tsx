@@ -1,7 +1,7 @@
 import { CARD } from '@ratrace/core/game/share';
 import type { DrawOp } from '@ratrace/core/game/share';
 import { FilterMode, ImageFormat, MipmapMode, Skia, Image as Picture, type SkFont, type SkImage, type SkTypeface } from '@shopify/react-native-skia';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useBlink } from '../../ui/animations';
@@ -14,13 +14,15 @@ import { readSprite } from '../../ui/spriteImages';
 import { PixelText, ReadText } from '../../ui/text';
 import { typefaceOf } from '../../ui/typefaces';
 import { usePictureShare, useSettings, useT, useTrack } from '../context';
+import { SITE_URL } from '../site';
 
 /*
  * The web's ShareCard.tsx, on the phone. The card is drawn as the web's canvas draws it: core's list of things to draw (`shareCard`), four times the
  * grid, its pictures with no smoothing, its type in the game's typefaces at the sizes the page shows them. On a surface of Skia's of its own, then a PNG,
- * which the phone's share sheet is handed as a file (written to the cache: `usePictureShare`). What the phone leaves out: the file to save (the web's
- * link), which the share sheet offers itself; and the line inviting into the game that the web sends with the picture, which a phone's share sheet does
- * not take beside a file. Nothing of it is drawn until the player asks for the picture.
+ * which the phone's share sheet is handed as a file (written to the cache: `usePictureShare`), with the web's line inviting into the game (its words and
+ * its address, `SITE_URL`) where the sheet takes words beside a file: on iOS, not on Android. What the phone leaves out: the file to save (the web's link),
+ * which the share sheet offers itself. Where the picture cannot be had, it says so in the phone's own words (the web's speak of a browser). Nothing of it
+ * is drawn until the player asks for the picture.
  */
 
 /** Fetches a sprite's picture, or null if it does not exist or does not arrive. Whoever asked lets go of it. In the app, the app's files; a test hands in its own. */
@@ -175,10 +177,15 @@ function Drawing({ children }: { children: string }) {
 export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened = false }: { ops: DrawOp[]; fileName: string; alt: string; load?: SpriteLoader; faces?: FaceLoader; opened?: boolean }) {
   const t = useT('share');
   const common = useT('common');
+  const phone = useT('phone');
   const track = useTrack();
   const share = usePictureShare();
   const { locale } = useSettings();
+  // The picture travels with a way into the game, in the language it was played in.
+  const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });
   const [open, setOpen] = useState(opened);
+  // A picture being handed over: a second press of Share meanwhile is no second share.
+  const sending = useRef(false);
   const [picture, setPicture] = useState<{ image: SkImage; png: Uint8Array } | 'failed' | null>(null);
 
   useEffect(() => {
@@ -220,14 +227,27 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
       <Sheet open={open} onClose={() => setOpen(false)} title={t('title')} closeLabel={common('close')}>
         {picture === 'failed' ? (
           <View accessible role="alert" style={{ paddingVertical: 16 }}>
-            <ReadText tone="ink-200" style={{ textAlign: 'center' }}>{t('failed')}</ReadText>
+            <ReadText tone="ink-200" style={{ textAlign: 'center' }}>{phone('shareFailed')}</ReadText>
           </View>
         ) : null}
         {picture === null ? <Drawing>{t('drawing')}</Drawing> : null}
         {ready ? (
           <View style={{ gap: 12 }}>
             <Preview image={ready.image} alt={alt} />
-            <Button variant="primary" wide onPress={() => void share.send(ready.png, fileName, alt).then(() => track({ name: 'share', what: 'card' }), () => undefined)}>
+            <Button
+              variant="primary"
+              wide
+              onPress={() => {
+                if (sending.current) return;
+                sending.current = true;
+                void share
+                  .send(ready.png, fileName, alt, invite)
+                  .then((shared) => shared && track({ name: 'share', what: 'card' }), () => undefined)
+                  .finally(() => {
+                    sending.current = false;
+                  });
+              }}
+            >
               {t('send')}
             </Button>
           </View>

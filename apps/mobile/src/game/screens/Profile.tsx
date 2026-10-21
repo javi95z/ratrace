@@ -200,16 +200,21 @@ export function ProfileBody() {
   // The line of the balance sheet whose sheet is drawn: open, or leaving (kept until its sheet has gone, so that its Modal can dismiss).
   const [line, setLine] = useState<BalanceLine | null>(opened.line ?? null);
   const [lineOpen, setLineOpen] = useState(opened.line !== undefined);
+  // One of the things owned, opened from the list of them in the balance sheet: the list gives way to it, and it opens once the list has gone (on iOS a
+  // sheet presented while another is still dismissing can fail, or leave that one half gone). A line opened or closed meanwhile lets it go: it never
+  // opens later, over something else. The same for every drawing (`Thing` is memoised).
+  const next = useRef<string | null>(null);
   const openLine = useCallback((which: BalanceLine) => {
+    next.current = null;
     setLine(which);
     setLineOpen(true);
   }, []);
-  const closeLine = useCallback(() => setLineOpen(false), []);
+  const closeLine = useCallback(() => {
+    next.current = null;
+    setLineOpen(false);
+  }, []);
   // Looked up afresh on every draw: a thing sold or lapsed while its sheet is open closes it.
   const thing = life.items.find((owned) => owned.itemId === open);
-  // One of the things owned, opened from the list of them in the balance sheet: the list gives way to it, and it opens once the list has gone (on iOS a
-  // sheet presented while another is still dismissing can fail, or leave that one half gone). The same for every drawing (`Thing` is memoised).
-  const next = useRef<string | null>(null);
   const openThing = useCallback((itemId: string) => {
     next.current = itemId;
     setLineOpen(false);

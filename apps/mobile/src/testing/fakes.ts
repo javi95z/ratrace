@@ -106,15 +106,38 @@ export const spriteModule = {
 
 /** The phone's files, as the game writes them (the picture of a life, in the cache): by their address, what was written there last. */
 export const files = new Map<string, Uint8Array | string>();
-/** The phone's file system, as the share card reaches it: a file in the cache, made (in place of one of that name, when told) and written. */
+/** The folders of the phone's files that exist, by their address (ending in `/`): the cache is always there. */
+export const folders = new Set<string>(['file:///cache/']);
+/**
+ * The phone's file system, as the share card reaches it: a folder of the cache (made, emptied by deleting it), and a file in it, made (in place of one
+ * of that name, when told) and written.
+ */
 export const expoFileSystem = {
   Paths: { cache: { uri: 'file:///cache/' } },
+  Directory: class {
+    readonly uri: string;
+    constructor(parent: { uri: string }, name: string) {
+      this.uri = `${parent.uri}${name}/`;
+    }
+    get exists(): boolean {
+      return folders.has(this.uri);
+    }
+    create(options: { intermediates?: boolean; idempotent?: boolean } = {}): void {
+      if (folders.has(this.uri) && options.idempotent !== true) throw new Error(`a folder is already at ${this.uri}`);
+      folders.add(this.uri);
+    }
+    delete(): void {
+      if (!folders.delete(this.uri)) throw new Error(`no folder at ${this.uri}`);
+      for (const uri of [...files.keys()]) if (uri.startsWith(this.uri)) files.delete(uri);
+    }
+  },
   File: class {
     readonly uri: string;
     constructor(directory: { uri: string }, name: string) {
       this.uri = `${directory.uri}${name}`;
     }
     create(options: { overwrite?: boolean } = {}): void {
+      if (!folders.has(this.uri.slice(0, this.uri.lastIndexOf('/') + 1))) throw new Error(`no folder for ${this.uri}`);
       if (files.has(this.uri) && options.overwrite !== true) throw new Error(`a file is already at ${this.uri}`);
       files.set(this.uri, new Uint8Array());
     }
@@ -142,6 +165,8 @@ export function resetFakes(): void {
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });
   files.clear();
+  folders.clear();
+  folders.add('file:///cache/');
   shareSheet.available = true;
   shareSheet.handed.length = 0;
   painted.reset();

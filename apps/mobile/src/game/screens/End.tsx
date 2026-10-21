@@ -9,13 +9,13 @@ import type { Best } from '@ratrace/core/game/records';
 import { shareCard } from '@ratrace/core/game/share';
 import { useRouter } from 'expo-router';
 import { createContext, memo, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Pressable, View, type ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useCountUp, useRise } from '../../ui/animations';
+import { Pressable, View } from 'react-native';
+import { useCountUp } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Panel, pressDown, Raised, SrOnly, Tag, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
+import { Rising } from '../../ui/Rising';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
@@ -48,12 +48,6 @@ export const EndOpened = createContext<{ share?: boolean }>({});
 /** The web's `leading-relaxed` (a paragraph of the life, told) and `tracking-wider` (a pixel title set in capitals). */
 const RELAXED = 1.625;
 const WIDER = 0.05;
-
-/** The web's `animate-rise`, on what it holds, `delayMs` after the screen opens (the web's `animation-delay`). */
-function Rising({ delayMs = 0, style, children }: { delayMs?: number; style?: ViewStyle; children: ReactNode }) {
-  const rise = useRise({ delayMs });
-  return <Animated.View style={[style, rise]}>{children}</Animated.View>;
-}
 
 /** One figure of a life, set in a tile: what it is, and a line under it. */
 function Figure({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -402,7 +396,7 @@ const EarnedBadge = memo(function EarnedBadge({ id, name, fresh, onOpen }: { id:
 
 /**
  * A life the one just finished opened: who it is, and a way to begin it at once, on this very screen (the round store opens it, and Play draws it). If it
- * cannot begin from here, the page where a life is chosen, where that is asked, takes over.
+ * cannot begin from here, the page where a life is chosen, where that is asked, takes this screen's place.
  */
 function UnlockedLife({ lifeId }: { lifeId: string }) {
   const t = useT('end');
@@ -415,10 +409,11 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
   const tryIt = async () => {
     setStarting(true);
     try {
-      if (!(await start(lifeId, { ranked: ranking === 'yes' }))) router.push('/new');
+      // In place of this screen, as another life is begun from it: never a second Play on the stack.
+      if (!(await start(lifeId, { ranked: ranking === 'yes' }))) router.replace('/new');
     } catch (error) {
       console.error('the life could not be started:', error);
-      router.push('/new');
+      router.replace('/new');
     } finally {
       setStarting(false);
     }

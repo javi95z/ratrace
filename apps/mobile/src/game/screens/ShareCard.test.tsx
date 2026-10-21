@@ -3,7 +3,8 @@ import { CARD, PIXEL_X_HEIGHT, shareCard } from '@ratrace/core/game/share';
 import type { DrawOp } from '@ratrace/core/game/share';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { files, memoryServices, renderGame, shareSheet } from '../../testing/render';
+import { Platform, Share } from 'react-native';
+import { files, folders, memoryServices, renderGame, shareSheet } from '../../testing/render';
 import { JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, pixelSize } from '../../ui/fonts';
 import { painted, type FaceDouble, type Painted } from '../../ui/testing/skia';
 import { drawCard, ShareCard } from './ShareCard';
@@ -153,33 +154,98 @@ describe('drawing the share card', () => {
 describe('the share sheet', () => {
   const show = () => renderGame(<ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => picture() as never} faces={faces} />, memoryServices());
   const open = () => fireEvent.click(screen.getByRole('button', { name: 'Share this life' }));
-
-  it('draws the picture only once it is opened, and hands it to the phone\'s share sheet as a file', async () => {
-    show();
-    expect(screen.queryByRole('dialog')).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull();
-    // Nothing is drawn until the player asks for the picture.
-    expect(painted.asked).toEqual([]);
+  /** The phone's own words for a picture that cannot be had: none of the web's, which speak of a browser. */
+  const FAILED = 'This phone could not make the picture to share.';
+  /** The sheet, once its picture is drawn. */
+  const drawn = async () => {
     open();
     const sheet = screen.getByRole('heading', { name: 'A picture of this life' }).closest('[aria-modal="true"]') as HTMLElement;
     expect(await within(sheet).findByRole('img', { name: 'Nurse: score 364' })).toBeTruthy();
-    expect(painted.asked).toEqual([[CARD.w * 4, CARD.h * 4]]);
-    // The phone has no file to save to: its share sheet keeps the picture where the player says.
-    expect(within(sheet).queryByRole('link', { name: 'Save the picture' })).toBeNull();
+    return sheet;
+  };
+  /** Runs `test` on a phone of this platform. */
+  async function on(os: 'ios' | 'android', test: () => Promise<void>) {
+    const was = Platform.OS;
+    Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+    try {
+      await test();
+    } finally {
+      Object.defineProperty(Platform, 'OS', { value: was, configurable: true });
+    }
+  }
+  /** The words that go with the picture where they can: a way into the game, in the language it was played in (the web's `share.invite`). */
+  const INVITE = /^Can you do better\? Play The Rat Race: https?:\/\/[^ ]+\/en$/;
+
+  it('draws the picture only once it is opened, and on Android hands it to the share sheet as a file, alone', async () => {
+    await on('android', async () => {
+      const told = vi.spyOn(Share, 'share');
+      show();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull();
+      // Nothing is drawn until the player asks for the picture.
+      expect(painted.asked).toEqual([]);
+      const sheet = await drawn();
+      expect(painted.asked).toEqual([[CARD.w * 4, CARD.h * 4]]);
+      // The phone has no file to save to: its share sheet keeps the picture where the player says.
+      expect(within(sheet).queryByRole('link', { name: 'Save the picture' })).toBeNull();
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+      await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
+      // Android's share sheet takes a file or words, not both (React Native's `Share` sends words only there): the file it is.
+      expect(shareSheet.handed[0]).toEqual({ url: 'file:///cache/share/rat-race-nurse-364.png', options: { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Nurse: score 364' } });
+      expect(files.get('file:///cache/share/rat-race-nurse-364.png')).toEqual(Uint8Array.of(137, 80, 78, 71));
+      expect(told).not.toHaveBeenCalled();
+      // Shared again, the file of that name is written again, not refused.
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+      await waitFor(() => expect(shareSheet.handed).toHaveLength(2));
+      told.mockRestore();
+    });
+  });
+
+  it('on iOS hands the share sheet the picture and the words that bring someone into the game, as the web does', async () => {
+    await on('ios', async () => {
+      const told = vi.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction, activityType: undefined });
+      show();
+      const sheet = await drawn();
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+      await waitFor(() => expect(told).toHaveBeenCalledTimes(1));
+      const [content] = told.mock.calls[0] as unknown as [{ url: string; message: string }];
+      expect(content.url).toBe('file:///cache/share/rat-race-nurse-364.png');
+      expect(content.message).toMatch(INVITE);
+      expect(files.get('file:///cache/share/rat-race-nurse-364.png')).toEqual(Uint8Array.of(137, 80, 78, 71));
+      expect(shareSheet.handed).toEqual([]);
+      told.mockRestore();
+    });
+  });
+
+  it('keeps one picture in the cache at a time: those shared before are cleared as a new one is written', async () => {
+    folders.add('file:///cache/share/');
+    files.set('file:///cache/share/rat-race-heir-120.png', Uint8Array.of(1));
+    show();
+    const sheet = await drawn();
     fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
     await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
-    expect(shareSheet.handed[0]).toEqual({ url: 'file:///cache/rat-race-nurse-364.png', options: { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Nurse: score 364' } });
-    expect(files.get('file:///cache/rat-race-nurse-364.png')).toEqual(Uint8Array.of(137, 80, 78, 71));
-    // Shared again, the file of that name is written again, not refused.
-    fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+    expect([...files.keys()]).toEqual(['file:///cache/share/rat-race-nurse-364.png']);
+  });
+
+  it('takes no second press of Share while the picture is being handed over', async () => {
+    show();
+    const sheet = await drawn();
+    const send = within(sheet).getByRole('button', { name: 'Share' });
+    fireEvent.click(send);
+    fireEvent.click(send);
+    await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
+    await new Promise((done) => setTimeout(done, 20));
+    expect(shareSheet.handed).toHaveLength(1);
+    // Once it has been handed over, it can be shared again.
+    fireEvent.click(send);
     await waitFor(() => expect(shareSheet.handed).toHaveLength(2));
   });
 
-  it('says so where the phone has no share sheet, in the web\'s words for a picture there is no way to take, and draws nothing', async () => {
+  it('says so where the phone has no share sheet, in the phone\'s own words, and draws nothing', async () => {
     shareSheet.available = false;
     show();
     open();
-    expect((await screen.findByRole('alert')).textContent).toBe('This browser could not draw the picture.');
+    expect((await screen.findByRole('alert')).textContent).toBe(FAILED);
     expect(screen.queryByText('Drawing…')).toBeNull();
     expect(painted.asked).toEqual([]);
     expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
@@ -191,7 +257,7 @@ describe('the share sheet', () => {
     };
     show();
     open();
-    expect((await screen.findByRole('alert')).textContent).toBe('This browser could not draw the picture.');
+    expect((await screen.findByRole('alert')).textContent).toBe(FAILED);
     expect(screen.queryByText('Drawing…')).toBeNull();
   });
 
@@ -205,6 +271,6 @@ describe('the share sheet', () => {
 
     painted.surfaces = false;
     open();
-    expect((await screen.findByRole('alert')).textContent).toBe('This browser could not draw the picture.');
+    expect((await screen.findByRole('alert')).textContent).toBe(FAILED);
   });
 });

@@ -1,12 +1,11 @@
 import { progressOf, promoted } from '@ratrace/content';
 import type { RankId } from '@ratrace/content';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Sprite } from '../../ui/Sprite';
+import { Rising } from '../../ui/Rising';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useProfile, useSound, useT } from '../context';
@@ -23,12 +22,6 @@ export const rankArt = (rank: RankId): string => `rank.${rank}`;
 export function useRankName(): (rank: RankId) => string {
   const t = useT('rank');
   return (rank) => t(`names.${rank}`);
-}
-
-/** The web's `animate-rise`, on what it holds. */
-function Rising({ children }: { children: ReactNode }) {
-  const rise = useRise();
-  return <Animated.View style={rise}>{children}</Animated.View>;
 }
 
 /**

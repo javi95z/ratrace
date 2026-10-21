@@ -4,9 +4,9 @@ import type { Ending } from '@ratrace/content';
 import { prizedBadge } from '@ratrace/core/game/present';
 import { sceneStore } from '@ratrace/core/testing/scenes';
 import type { GameSession, SavedGame } from '@ratrace/core/session/types';
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { useState } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heard, memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
@@ -83,6 +83,20 @@ describe('the end of a life, as it is left', () => {
     expect(await services.store.loadGame()).not.toBeNull();
   });
 
+  it('takes the player to the page where a life is chosen, in place of the end, when the life it opened cannot begin from here', async () => {
+    const { services, gameId } = await aWholeLife();
+    // A life the game does not know, opened by this one: beginning it is refused.
+    await services.store.saveProfile({ ...(await services.store.loadProfile()), unlocked: { nobody: { at: 1, gameId } } });
+    const said = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderGame(<Play />, services);
+    const card = await screen.findByLabelText('A new life is open');
+    await settled(() => void fireEvent.click(within(card).getByRole('button', { name: 'Try it now' })));
+    expect(router.replace).toHaveBeenCalledWith('/new');
+    // In place of this screen, as "Live another life" goes: never a second Play on the stack.
+    expect(router.push).not.toHaveBeenCalled();
+    said.mockRestore();
+  });
+
   it('lets go of nothing once another life has taken its place', async () => {
     const { services } = await aWholeLife();
     let start: ((lifeId: string) => Promise<boolean>) | null = null;
@@ -144,10 +158,10 @@ describe('the end of a life, as it is drawn', () => {
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     const [run] = await store.listRuns();
     const prized = prizedBadge(run.badges);
-    if (prized) {
-      const name = text.badges[prized.id].name;
-      expect(screen.getByText(rarityOf(prized.id) === 'legendary' ? `A legendary badge: ${name}!` : `A rare badge: ${name}!`)).toBeTruthy();
-    }
+    // The scene's life did win one (a rare badge, the first of its kind): the cheer is there to be found, not skipped for want of one.
+    expect(prized).toBeDefined();
+    const name = text.badges[prized!.id].name;
+    expect(screen.getByText(rarityOf(prized!.id) === 'legendary' ? `A legendary badge: ${name}!` : `A rare badge: ${name}!`)).toBeTruthy();
     const gained = (await store.loadProfile()).rank.lives[run.runId];
     expect(gained).toBeGreaterThan(0);
     expect(await screen.findByText(new RegExp(`^\\+${gained} points · `))).toBeTruthy();

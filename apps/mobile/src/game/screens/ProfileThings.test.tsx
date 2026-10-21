@@ -62,4 +62,26 @@ describe('a thing opened from the list of things, in the profile', () => {
     expect(sheetTitled('Your life')).toBeTruthy();
     expect(leaving()).toHaveLength(0);
   });
+
+  it('opens nothing later for a thing pressed before another line was opened in the list\'s place', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+    renderGame(<Play />, services);
+    fireEvent.click(await screen.findByRole('button', { name: 'Open your profile' }));
+    const balance = () => within(sheetTitled('Your life')).getByLabelText('Balance sheet');
+    fireEvent.click(within(balance()).getByRole('button', { name: /^Things/ }));
+    const things = within(sheetTitled('Things')).getAllByRole('button').filter((b) => b.getAttribute('aria-label') !== 'Close');
+    fireEvent.click(things[0]);
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Things' })).toBeNull());
+    // While the list leaves, another line is opened in its place: the thing pressed in the list is let go.
+    fireEvent.click(within(balance()).getByRole('button', { name: /^Cash/ }));
+    fireEvent.click(within(sheetTitled('Cash')).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Cash' })).toBeNull());
+    for (const one of leaving()) act(() => modals.byId.get(one.getAttribute('data-modal') as string)?.onDismiss?.());
+    expect(leaving()).toHaveLength(0);
+    expect(screen.queryByRole('heading', { name: 'Casio F-91W' })).toBeNull();
+    expect(sheetTitled('Your life')).toBeTruthy();
+  });
 });

@@ -631,9 +631,11 @@ confetti still.
   neighbour, every line cut into the runs of the typefaces that draw it as the kit's texts are (`runsOf`), the pixel ones at the page's height of small
   letters (`PIXEL_X_HEIGHT`, from the fonts' own tables; the web's canvas measures the `x` and the `х`). Skia draws text with the glyphs' advances, without
   the kerning a browser's canvas applies: a line of the card may be a pixel or two narrower than the web's. The batch pass compares a card drawn on each.
-- **The share sheet has no file to save** (the web's second way): the phone's share sheet offers saving itself. The web's line inviting into the game,
-  sent beside the picture, is not sent: a phone's share sheet takes a file or words, not both. Where the phone has no share sheet, the sheet says so in
-  the web's words for a picture that cannot be had (`share.failed`, which says "browser").
+- **The share sheet has no file to save** (the web's second way): the phone's share sheet offers saving itself. The picture is written to the cache's
+  `share/` folder, emptied first, so one picture is kept at a time. The web's line inviting into the game (`share.invite`, with the web game's address,
+  `SITE_URL`, which the phone holds in `game/site.ts`, held to the web's by a test) goes with the picture on iOS (React Native's `Share`, a file and words);
+  on Android the picture goes alone (expo-sharing): React Native's `Share` sends words only there, and the file is what is shared. Where the picture cannot
+  be had (no share sheet, no surface, no PNG), the sheet says so in the phone's own words (`phone.shareFailed`): the web's speak of a browser.
 - **The obituary's title** is a pixel span in a reading line on the web: the kit's reading text now takes a pixel span among the words that run on
   (`Aside.pixel`, its tracking in em).
 - **Not compared** (no scene shows them; `End.test`, `Play.test`, `ShareCard.test`, `LifeMap.test` hold them): a badge's sheet, a personal best, the
