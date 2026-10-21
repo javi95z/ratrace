@@ -32,14 +32,22 @@ const laid = (x: number, y: number, width: number, text: string) => ({ x, y, wid
 /** A colour of the palette as the page writes it. */
 const rgb = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
 
-test('a link of one line is underlined across its words, `offset` under the baseline the web gives its line, before and after it is laid out', () => {
+test('a link of one line is underlined across its words, `offset` under the baseline the web gives its line, and is not drawn again once laid out on one line', () => {
   const { container } = render(<LinkText size={12} offset={2}>{'Switch to variable'}</LinkText>);
   const under = webBaseline('read', 400, 12, 12 * 1.45) + 2;
-  // Before the layout: one line, the width of the words.
-  expect(underlines(container)).toEqual([{ top: under, left: 0, width: '', height: '1px', color: rgb(COLORS['sky-300']) }]);
+  // Before the layout: one line, across the words (the box the words are in).
+  const one = [{ top: under, left: 0, width: '', height: '1px', color: rgb(COLORS['sky-300']) }];
+  expect(underlines(container)).toEqual(one);
+  const strip = container.querySelector<HTMLElement>('[data-testid="underline"]');
+  expect(strip?.style.right).toBe('0px');
+  // The outer text is recorded each time it is drawn: once so far.
   expect(outers).toHaveLength(1);
+  // Laid out on one line, which it was taken for: nothing changes, and nothing is drawn again (a text is drawn again only when it wraps).
   act(() => outers[0]({ nativeEvent: { lines: [laid(0, 0, 104, 'Switch to variable')] } }));
-  expect(underlines(container)).toEqual([{ top: under, left: 0, width: '104px', height: '1px', color: rgb(COLORS['sky-300']) }]);
+  expect(outers).toHaveLength(1);
+  expect(underlines(container)).toEqual(one);
+  expect(container.querySelector<HTMLElement>('[data-testid="underline"]')).toBe(strip);
+  expect(strip?.style.right).toBe('0px');
 });
 
 test('a link that wraps is underlined on every line it wraps to, each at its own line\'s baseline offset and as wide as its words', () => {
@@ -52,9 +60,23 @@ test('a link that wraps is underlined on every line it wraps to, each at its own
   expect(lines[0]).toEqual({ top: under, left: 0, width: '131px', height: '1px', color: rgb(COLORS['teal-300']) });
   expect(lines[1].top).toBeCloseTo(under + 17.4, 5);
   expect(lines[1]).toMatchObject({ left: 0, width: '92px', height: '1px', color: rgb(COLORS['teal-300']) });
-  // Laid out again the same way, it draws nothing new; laid out on one line again, one line again.
+  // Laid out again the same way, it is not drawn again; laid out on one line again, one line across the words again.
+  const drawn = outers.length;
+  act(() => outers[outers.length - 1]({ nativeEvent: { lines: [laid(0, 0, 131, '✓ Станет фиксированной '), laid(0, 17.4, 92, 'в этом раунде')] } }));
+  expect(outers).toHaveLength(drawn);
   act(() => outers[outers.length - 1]({ nativeEvent: { lines: [laid(0, 0, 220, '✓ Станет фиксированной в этом раунде')] } }));
-  expect(underlines(container)).toEqual([{ top: under, left: 0, width: '220px', height: '1px', color: rgb(COLORS['teal-300']) }]);
+  expect(underlines(container)).toEqual([{ top: under, left: 0, width: '', height: '1px', color: rgb(COLORS['teal-300']) }]);
+});
+
+test('words that change are one line again until they are laid out: the lines of the words before are not kept for them', () => {
+  const { container, rerender } = render(<LinkText size={12} offset={2}>{'Switch to variable at the next round'}</LinkText>);
+  act(() => outers[outers.length - 1]({ nativeEvent: { lines: [laid(0, 0, 131, 'Switch to variable at '), laid(0, 17.4, 70, 'the next round')] } }));
+  expect(underlines(container)).toHaveLength(2);
+  // The switch ordered: the link says so in other words, which have not been laid out yet.
+  rerender(<LinkText size={12} offset={2}>{'✓ Variable this round'}</LinkText>);
+  const lines = underlines(container);
+  expect(lines).toHaveLength(1);
+  expect(lines[0]).toMatchObject({ left: 0, width: '' });
 });
 
 test('the lines take no touch and say nothing to a screen reader: the link is its words', () => {

@@ -6,12 +6,13 @@ import type { GameSession, SavedGame } from '@ratrace/core/session/types';
 import { createGame, quoteLiving, quoteMove, viewOf } from '@ratrace/engine';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { createElement } from 'react';
+import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { memoryServices, renderGame, spriteRenders } from '../../testing/render';
-import { settled } from '../../testing/renders';
+import { Counted, settled } from '../../testing/renders';
 import { useGame } from '../context';
-import { FinanceOpened } from './Finance';
+import { Finance, FinanceOpened, FinanceShell } from './Finance';
 import { HealthCoverNote } from './HealthCover';
 import { Play } from './Play';
 
@@ -244,6 +245,26 @@ describe('moving to another city', () => {
     expect(texts(orders, /^Move to /)).toHaveLength(1);
     fireEvent.click(within(orders).getByRole('button', { name: /^Remove: Move to / }));
     expect(texts(sheetTitled("This round's orders"), /^Nothing yet/)).toHaveLength(1);
+    fireEvent.click(within(sheetTitled("This round's orders")).getByRole('button', { name: 'Close' }));
+    await settled();
+
+    // Ordered again, it is taken back from the tab: the tab says where the player moves, and staying after all leaves no order.
+    fireEvent.click(button('Move to another city'));
+    fireEvent.click(within(within(moveSheet()).getAllByRole('listitem')[1]).getByRole('button'));
+    const city = screen.getByRole('region', { name: /./ }).getAttribute('aria-label') ?? '';
+    expect(Object.values(names.cities)).toContain(city);
+    fireEvent.click(within(screen.getByRole('region', { name: city })).getByRole('button', { name: 'Move here' }));
+    await settled();
+    expect(screen.queryByRole('heading', { name: 'Move to another city' })).toBeNull();
+    const tab = screen.getByRole('tabpanel', { name: 'Lifestyle' });
+    expect(textOf(tab, `You move to ${city} when this round is played.`)).toBeTruthy();
+    expect(within(tab).queryByRole('button', { name: 'Move to another city' })).toBeNull();
+    expect(button('1 order')).toBeTruthy();
+    fireEvent.click(within(tab).getByRole('button', { name: 'Stay after all' }));
+    await settled();
+    expect(texts(tab, /^You move to /)).toEqual([]);
+    expect(within(tab).getByRole('button', { name: 'Move to another city' })).toBeTruthy();
+    expect(button('No orders')).toBeTruthy();
   });
 
   it('is open from the start where a scene says so (the phone\'s initial state): the sheet of every city, not a tap', async () => {
@@ -395,6 +416,45 @@ describe('the lifestyle tab, drawn again', () => {
     fireEvent.click(within(sheetTitled("This round's orders")).getByRole('button', { name: 'Close' }));
     await settled();
     expect(since(before)).toEqual([]);
+  });
+
+  it('does not draw the tab itself again for an order the round refuses, and draws it again for one it takes', async () => {
+    const { services } = await inFinance('nurse');
+    // The tab's panel alone, counted: its row of tabs and the toasts are Play's, and a refusal is the toast's to say.
+    const renders = { count: 0 };
+    function AtFinance({ children }: { children: ReactNode }) {
+      return useGame((s) => s.stage === 'finance' && s.view !== null && s.preview !== null) ? children : null;
+    }
+    renderGame(
+      <FinanceOpened value={{ tab: 'lifestyle' }}>
+        <FinanceShell>
+          <AtFinance>
+            <Counted into={renders}>
+              <Finance />
+            </Counted>
+          </AtFinance>
+        </FinanceShell>
+        <Probe />
+      </FinanceOpened>,
+      services,
+    );
+    await screen.findByRole('tabpanel', { name: 'Lifestyle' });
+    await settled();
+    const before = renders.count;
+    expect(before).toBeGreaterThan(0);
+
+    // An order refused (more of a fund than is held): the round as it stands is the same, and the tab is not drawn again.
+    await settled(() => void probe.state!.addOrder({ type: 'sell', assetId: 'sp500', amount: 100_000 }));
+    expect(probe.state!.refusal).not.toBeNull();
+    expect(probe.state!.orders).toEqual([]);
+    expect(renders.count).toBe(before);
+    await settled(() => probe.state!.clearRefusal());
+    expect(renders.count).toBe(before);
+
+    // A course ordered: the tab shows it, so it is drawn again.
+    await settled(() => void probe.state!.setOrder((order) => order.type === 'focus' && order.action === 'studyFinance', { type: 'focus', action: 'studyFinance' }));
+    expect(probe.state!.orders).toHaveLength(1);
+    expect(renders.count).toBeGreaterThan(before);
   });
 
   it('works out the year in every city once for the round as it stands, and draws no city\'s row again for an order that leaves its figures as they are', async () => {

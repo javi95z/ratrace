@@ -14,7 +14,7 @@ import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
-import { useGame, useKnows, useRoom, useT, useWords } from '../context';
+import { useGame, useKnows, useT, useWords } from '../context';
 import { CareerMoves } from './CareerMoves';
 import { bannerSize } from './Challenge';
 import { Explain } from './Explain';
@@ -646,17 +646,9 @@ function FocusUses({ work, skills }: { work: WorkQuote; skills: SkillsQuote }) {
 }
 
 /**
- * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it is aimed at. Nothing here in a life alone,
- * which is every life on the phone: the web's own conditions stand (the rules know it, the life is in a room, there are rivals in it), and the
- * room answers that there is none (`useRoom`, a slice of no room), so nothing is drawn. The switch and its rivals are the room's, and come with
- * rooms; `left` (the focus there is to spend) and `title` (a panel of its own) are what the web draws them with.
+ * In a game with friends, the round's focus can also go on teasing a rival: one switch, and who it is aimed at. Nothing in a life alone, which is
+ * every life on the phone: the web draws it only where the rules know it, the life is in a room and the room has rivals in it, and the phone has no
+ * rooms (its room is always none, `useRoom` a slice of no room), so there is nothing to draw. The switch and its rivals come with rooms; `left` (the
+ * focus there is to spend) and `title` (a panel of its own) are what the web draws them with.
  */
-export const TeaseUse: (props: { left: number; title?: string }) => ReactNode = function TeaseUse() {
-  const members = useRoom((s) => s.room?.members);
-  const known = useKnows()('focus:tease');
-  const inRoom = useGame((s) => s.view !== null && Object.hasOwn(s.view.player.life.flags, 'in_room'));
-  const rivals = (members ?? []).filter((member) => !member.me && !member.left);
-  if (!known || !inRoom || rivals.length === 0) return null;
-  // Out of the phone's reach until it has rooms (no room has members): the room's switch, aimed at one of `rivals`.
-  return null;
-};
+export const TeaseUse: (props: { left: number; title?: string }) => ReactNode = () => null;
