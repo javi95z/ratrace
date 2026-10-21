@@ -3,7 +3,8 @@ import { formatFor } from '@ratrace/core/lib/format';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useGame } from '../context';
 import { memoryServices, renderGame, router } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
@@ -11,6 +12,24 @@ import type { Renders } from '../../testing/renders';
 import { Records } from './Records';
 
 afterEach(cleanup);
+
+// react-native-web drops a pressable's hint (iOS and Android say it): the hints the screen gives are kept here, with the list that draws every row.
+const hints = vi.hoisted(() => [] as string[]);
+vi.mock('react-native', async (original) => {
+  const native = await original<typeof import('react-native')>();
+  const { everyRow } = await import('../../testing/fakes');
+  return {
+    ...native,
+    FlatList: everyRow(native.FlatList as never),
+    Pressable: (props: { accessibilityHint?: string }) => {
+      if (props.accessibilityHint !== undefined) hints.push(props.accessibilityHint);
+      return createElement(native.Pressable, props as never);
+    },
+  };
+});
+afterEach(() => {
+  hints.length = 0;
+});
 
 const run = (runId: string, over: Partial<FinishedRun> = {}): FinishedRun => ({
   format: 1, runId, engineVersion: 'e', contentVersion: 'c', lifeId: 'nurse', seed: 's', log: [], finishedAt: Date.UTC(2026, 9, 13, 12), score: 300, netWorth: 50_000_000, status: 20,
@@ -21,11 +40,15 @@ const run = (runId: string, over: Partial<FinishedRun> = {}): FinishedRun => ({
 const bestsOf = async () => screen.findByRole('region', { name: 'Personal bests' });
 /** A best's line: the row of the list of bests that holds its label. */
 const bestRow = (bests: HTMLElement, label: string) => within(bests).getByText(label).closest('[role="listitem"]') as HTMLElement;
-/** The lines of the past lives: the page's rows, each a line of the list after the bests (the history is the page's own list, under its heading). */
-const livesOf = async () => {
+/** The list of the past lives, named as the web's section is: the page's own list, under its heading. */
+const historyOf = async () => {
   await screen.findByRole('heading', { name: 'Past lives' });
-  const bests = screen.getByRole('region', { name: 'Personal bests' });
-  return screen.getAllByRole('listitem').filter((item) => !bests.contains(item));
+  return screen.getByRole('list', { name: 'Past lives' });
+};
+/** The lines of the past lives: the lines of that list itself (the bests above them are a list of their own, in its header). */
+const livesOf = async () => {
+  const history = await historyOf();
+  return within(history).getAllByRole('listitem').filter((item) => item.parentElement?.closest('[role="list"]') === history);
 };
 /** A sheet, by its title. */
 const sheetOf = (title: string) => screen.getByRole('heading', { name: title }).closest('[aria-modal="true"]') as HTMLElement;
@@ -83,6 +106,8 @@ describe('the records', () => {
 
     const lives = await livesOf();
     expect(lives).toHaveLength(2);
+    // Each line says that it opens the whole of its life (the web's `aria-haspopup="dialog"`, in the phone's own words).
+    expect(hints).toContain('Shows the whole of this life');
     expect(lives[0].textContent).toContain('Civil servant');
     expect(lives[0].textContent).toContain('402');
     expect(lives[0].textContent).toContain('13 Oct 2026');
@@ -135,6 +160,20 @@ describe('the records', () => {
     renderGame(<Records />, services);
     fireEvent.click(within((await livesOf())[0]).getByRole('button'));
     expect(within(sheetOf('Nurse')).getByText('Practice 2026-W42')).toBeTruthy();
+  });
+
+  it('names the list of past lives as the web names its section, and has none while no life is finished', async () => {
+    renderGame(<Records />, memoryServices());
+    await screen.findByText('No life finished yet. Your first one will appear here.');
+    expect(screen.queryByRole('list', { name: 'Past lives' })).toBeNull();
+    cleanup();
+    const services = memoryServices();
+    await services.store.addRun(run('a'));
+    renderGame(<Records />, services);
+    const history = await historyOf();
+    // The page above the lines is the list's header; its lines are the lives, each a button that opens its sheet.
+    expect((await livesOf()).map((life) => within(life).getAllByRole('button').length)).toEqual([1]);
+    expect(history.contains(screen.getByRole('region', { name: 'Personal bests' }))).toBe(true);
   });
 
   it('has no multiplayer section: games with others are online, and the phone plays none', async () => {

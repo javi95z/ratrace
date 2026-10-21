@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, CALENDAR_COVERS, CELEBRATIONS_ONLY, chooseScenes, differing, filesOf, HUD_ONLY, MOVING_FILE, movingAfter, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PENDING_SHOTS, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -74,10 +74,7 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
   expect(() => lineOf(first, result(first.name, { rawPercent: 70 }))).toThrow('home-new: a wrong page is not a result to keep');
 });
 
-test('a scene whose screen the app still draws as a stand-in is unjudged: no numbers, and why', () => {
-  // The records and the collection, the last two, are ported (Task 19): none is left.
-  expect(STAND_INS).toEqual([]);
-  // The screens that are ported are compared once they are shot; the scenes of a stand-in were only shot.
+test('every screen is the real one on the app (phase 1\'s stand-ins are retired): a scene is compared once it has been shot', () => {
   expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual([
     'home-new',
     'home-continue',
@@ -107,18 +104,12 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
     'legal',
   ]);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
-  // As a scene of the records was, before they were ported: the line says which stand-in it was.
-  const standIn = { name: 'records-best', locale: 'en' } as const;
-  expect(unjudgedLine(standIn)).toEqual({ scene: 'records-best', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for records: its numbers say nothing' });
-  expect(Object.keys(unjudgedLine(standIn))).toEqual(['scene', 'locale', 'verdict', 'why']);
-});
-
-test('a scene of a ported screen at a part of it still to be ported (a stage of Play a later task brings) is unjudged as well, and says which part', () => {
-  // The ledger, the last of them, is ported (Task 16): none is left.
-  expect(Object.keys(STAND_IN_SCENES)).toEqual([]);
+  // The ledger was the last stage of Play drawn as a stand-in (Task 16), the records and the collection the last screens (Task 19): each is waiting
+  // for its shot now, and says only that.
   const ledger = SCENES.find((scene) => scene.name === 'play-resolve-r6')!;
   expect(isJudged(ledger)).toBe(false);
   expect(unjudgedLine(ledger)).toEqual({ scene: 'play-resolve-r6', locale: 'en', verdict: 'unjudged', why: 'ported and not shot yet: a batch pass shoots it and judges it' });
+  expect(Object.keys(unjudgedLine(ledger))).toEqual(['scene', 'locale', 'verdict', 'why']);
 });
 
 test('a scene of a screen ported but not shot yet (from Task 11 on, the batch passes shoot them) is unjudged until it is shot, and says so', () => {
@@ -162,11 +153,7 @@ test('a scene of a screen ported but not shot yet (from Task 11 on, the batch pa
     'collection-items',
     'collection-badges',
   ]);
-  for (const name of PENDING_SHOTS) {
-    expect(SCENES.map((scene) => scene.name), name).toContain(name);
-    // A scene is pending or a stand-in's, never both.
-    expect(Object.hasOwn(STAND_IN_SCENES, name), name).toBe(false);
-  }
+  for (const name of PENDING_SHOTS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
   expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual([
     'play-cards-r1',
     'play-cards-legendary',

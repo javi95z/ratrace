@@ -7,7 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import dots from '../../assets/ui/dots.png';
 import { TILE } from '../../scripts/dots';
-import { BottomBar, ListScreen, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
+import { BottomBar, LIST_WINDOW, ListScreen, PAGE_GROUND, Page, Screen, scrollToShow } from './Page';
 import type { ScreenScroller } from './Page';
 import { COLORS } from './theme';
 
@@ -25,8 +25,10 @@ vi.mock('react-native-safe-area-context', () => {
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it (a Screen that follows its scroll on the UI thread takes its scroll view and handler).
 vi.mock('react-native-reanimated', async () => (await import('./testing/reanimated')).reanimatedFake());
 
-// Records what Page hands the ground's image: react-native-web does not tile, so the props are what the app controls.
+// Records what Page hands the ground's image: react-native-web does not tile, so the props are what the app controls. And what a ListScreen
+// hands its list, which is the real one here (this test has none of the phone tests' stand-ins: it windows its rows).
 const seen: Array<{ source: unknown; resizeMode: unknown; style: unknown }> = [];
+const listed: Array<Record<string, unknown>> = [];
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   return {
@@ -34,6 +36,11 @@ vi.mock('react-native', async (orig) => {
     Image: (props: Record<string, unknown>) => {
       seen.push({ source: props.source, resizeMode: props.resizeMode, style: props.style });
       return <rn.Image {...(props as Record<string, unknown>)} />;
+    },
+    FlatList: (props: Record<string, unknown>) => {
+      listed.push(props);
+      const List = rn.FlatList as unknown as (shown: Record<string, unknown>) => React.ReactElement;
+      return <List {...props} />;
     },
   };
 });
@@ -292,9 +299,59 @@ test('a ListScreen is a Screen whose rows are a list that draws only those near 
   const scroll = column.parentElement!;
   expect(scroll.style.marginLeft).toBe('5px');
   expect(scroll.style.marginRight).toBe('7px');
-  // Only the first window of rows is drawn at once (jsdom lays nothing out, so it never draws the next): the list is a virtual one.
-  expect(queryByText('row 9')).not.toBeNull();
+  // Only the first rows are drawn at once, about a screen of them (jsdom lays nothing out, so it never draws the next): the list is a virtual one.
+  expect(queryByText('row 7')).not.toBeNull();
+  expect(queryByText('row 8')).toBeNull();
   expect(queryByText('row 39')).toBeNull();
+});
+
+test('a ListScreen draws little of its list at a time: about a screen at first, a few rows a batch, and only two screens either side of what is seen', () => {
+  expect(LIST_WINDOW).toEqual({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5 });
+  listed.length = 0;
+  wrap(none, <ListScreen head={<Text>head</Text>} data={['a', 'b']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} />);
+  expect(listed.at(-1)).toMatchObject({ initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5, strictMode: true });
+});
+
+test('a ListScreen hands its list one renderer for as long as it is drawn, which draws a row with the latest `item`: a page drawn again for its head draws no row again', () => {
+  listed.length = 0;
+  const drawn: string[] = [];
+  const page = (head: string, rows: readonly string[], mark: string) => (
+    <ListScreen
+      head={<Text>{head}</Text>}
+      data={rows}
+      keyOf={(row) => `${row}`}
+      item={(row) => {
+        drawn.push(`${mark}:${row}`);
+        return <Text>{`${mark}:${row}`}</Text>;
+      }}
+    />
+  );
+  const rows = ['a', 'b'];
+  const view = wrap(none, page('first', rows, 'one'));
+  expect(drawn).toEqual(['one:a', 'one:b']);
+  const [renderItem, keyExtractor] = [listed[0].renderItem, listed[0].keyExtractor];
+  // Drawn again with a new head, new closures and the same rows: the same renderer, the same names.
+  view.rerender(<SafeAreaProvider initialMetrics={{ frame, insets: none }}>{page('second', rows, 'two')}</SafeAreaProvider>);
+  expect(view.getByText('second')).toBeTruthy();
+  expect(listed.at(-1)?.renderItem).toBe(renderItem);
+  expect(listed.at(-1)?.keyExtractor).toBe(keyExtractor);
+  // New rows are drawn by the latest `item`.
+  view.rerender(<SafeAreaProvider initialMetrics={{ frame, insets: none }}>{page('third', ['a', 'b', 'c'], 'three')}</SafeAreaProvider>);
+  expect(view.getByText('three:c')).toBeTruthy();
+  expect(listed.at(-1)?.renderItem).toBe(renderItem);
+});
+
+test('what stands above a ListScreen\'s list stays where it is, in the same column, outside the list: the list starts under it', () => {
+  const { getByText } = wrap({ ...none, left: 5, right: 7 }, <ListScreen above={<Text>tabs</Text>} head={<Text>head</Text>} data={['a']} keyOf={(row) => row} item={(row) => <Text>{row}</Text>} role="tabpanel" label="Things" />);
+  const over = up(getByText('tabs'), (s) => s.maxWidth === '448px')!;
+  expect([over.style.paddingTop, over.style.paddingLeft, over.style.paddingRight]).toEqual(['16px', '12px', '12px']);
+  expect((over.parentElement as HTMLElement).style.marginLeft).toBe('5px');
+  const column = up(getByText('head'), (s) => s.maxWidth === '448px')!;
+  expect(column).not.toBe(over);
+  expect(column.style.paddingTop).toBe('0px');
+  const panel = column.parentElement!;
+  expect(panel.getAttribute('role')).toBe('tabpanel');
+  expect(panel.contains(getByText('tabs'))).toBe(false);
 });
 
 test('a ListScreen takes the caller\'s own spacing, names its list for a screen reader, and tells the width inside its gutter (what the web\'s container queries measure) as it is laid out', () => {

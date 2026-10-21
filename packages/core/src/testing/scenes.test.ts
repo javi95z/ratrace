@@ -9,7 +9,7 @@ import type { MemoryStore } from '../session/fixed';
 import { replay } from '../session/save';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
-import { GUIDE_READ, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
+import { GUIDE_READ, livesLived, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from './scenes';
 import { FIRSTS, TIPS } from '../game/guide';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
@@ -860,6 +860,20 @@ describe('the records and the collection: three real lives, each played to its e
       expect(await store.listRuns(), name).toEqual(await three.listRuns());
       expect(await saveOf(store), name).toBeNull();
     }
+  });
+
+  it('plays the three lives the same every time: played twice, apart from the copy every scene of them is given, they leave the same runs and profile', async () => {
+    const [first, second] = [await livesLived('records-three'), await livesLived('records-three')];
+    expect(first).not.toBeNull();
+    expect(second).toEqual(first);
+    expect(second?.runs.map((run) => run.runId)).toEqual(['id-3', 'id-2', 'id-1']);
+    // And a scene's device holds exactly that, its own copy: what one scene's store is given, no other's shares.
+    const [a, b] = [await sceneStore('records-three'), await sceneStore('collection-badges')];
+    expect(await a.listRuns()).toEqual(first?.runs);
+    expect(await a.loadProfile()).toEqual(first?.profile);
+    await a.removeRun('id-3');
+    expect((await b.listRuns()).map((run) => run.runId)).toEqual(['id-3', 'id-2', 'id-1']);
+    expect(await livesLived('records-empty')).toBeNull();
   });
 
   it('opens on no life in progress, as the game does once a life\'s last screen is left', async () => {

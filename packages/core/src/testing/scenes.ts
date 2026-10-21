@@ -9,7 +9,7 @@ import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
 import { fixedSessions, fixedSessionsOn, fixedSessionsWith, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import { newProfile, SAVE_FORMAT } from '../session/types';
-import type { PlayerStore, SavedGame, Sessions } from '../session/types';
+import type { FinishedRun, PlayerStore, Profile, SavedGame, Sessions } from '../session/types';
 
 /**
  * Scenes: named game states, built the same way for every client, so the web and the phone can each be shot at the
@@ -304,15 +304,23 @@ const LIVED: Readonly<Record<string, readonly Lived[]>> = {
 
 const DAY = 86_400_000;
 
+/** What the lives a scene's player lived before it leave on a device: its finished lives, the latest first, and the profile. */
+export interface LivedDevice {
+  runs: FinishedRun[];
+  profile: Profile;
+}
+
 /**
- * Lives the lives a scene's player has finished before it (`LIVED`), one after another on the device, each played to its end by its bot through
- * the round store, as a player would, and let go as the game lets a life go once its last screen is left: the device then holds them as finished
- * lives, and the profile what they earned and owned, with no life in progress. Each is begun on its own seed, a day after the one before, the
- * last the day before the scene's (`SCENE_NOW`): a page that tells the day a life ended tells one of the scene's week, as the game would.
+ * Plays the lives a scene's player has finished before it (`LIVED`), every time it is asked, on a device of their own: one after another, each played
+ * to its end by its bot through the round store, as a player would, and let go as the game lets a life go once its last screen is left. Each is
+ * begun on its own seed, a day after the one before, the last the day before the scene's (`SCENE_NOW`): a page that tells the day a life ended
+ * tells one of the scene's week, as the game would. Gives what they leave on the device (null for a scene with none). The scenes take it once
+ * (`livedOnce`); a test plays it twice, to hold that it is the same every time.
  */
-async function liveThrough(store: MemoryStore, name: string): Promise<void> {
+export async function livesLived(name: string): Promise<LivedDevice | null> {
   const lived = LIVED[name];
-  if (lived === undefined) return;
+  if (lived === undefined) return null;
+  const store = memoryDevice();
   let seed = '';
   let clock = 0;
   const game = createGameStore({ sessions: fixedSessionsWith(store, { newSeed: () => seed, now: () => (clock += 1) }), content });
@@ -332,6 +340,30 @@ async function liveThrough(store: MemoryStore, name: string): Promise<void> {
     mustBe(name, game, 'end');
     await game.getState().closeFinished(game.getState().gameId as string);
   }
+  return { runs: await store.listRuns(), profile: await store.loadProfile() };
+}
+
+/**
+ * The lives of each list of `LIVED`, played once in a process: three whole lives take a while, and four scenes share them, each built many times
+ * by the tests. What they leave is the same every time (`livesLived` is held to it), so a scene's device is given a copy of it.
+ */
+const livedOnce = new Map<readonly Lived[], Promise<LivedDevice | null>>();
+
+/** Puts on a scene's device the lives its player lived before it (`LIVED`), as `livesLived` leaves them: its finished lives and the profile. */
+async function liveThrough(store: MemoryStore, name: string): Promise<void> {
+  const lived = LIVED[name];
+  if (lived === undefined) return;
+  let once = livedOnce.get(lived);
+  if (once === undefined) {
+    once = livesLived(name);
+    livedOnce.set(lived, once);
+    // A play that failed is not kept: the next scene that asks tells the failure again.
+    once.catch(() => livedOnce.delete(lived));
+  }
+  const left = await once;
+  if (left === null) return;
+  for (const run of left.runs) await store.addRun(run);
+  await store.saveProfile(left.profile);
 }
 
 /**

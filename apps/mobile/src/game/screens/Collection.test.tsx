@@ -9,7 +9,7 @@ import { useGame } from '../context';
 import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
-import { Collection, columnsAt } from './Collection';
+import { breakpointOf, Collection, columnsAt } from './Collection';
 
 afterEach(cleanup);
 
@@ -30,8 +30,9 @@ describe('the collection', () => {
     await services.store.saveProfile({ ...newProfile(), gallery: ['watch_casio', 'car_seat_ibiza'] });
     renderGame(<Collection />, services);
 
-    // The badges come first; the things are the second tab.
+    // The badges come first; the things are the second tab. The tabs stand over the panel, outside it.
     expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Badges', 'Things']);
+    expect(screen.getByRole('tabpanel', { name: 'Badges' }).contains(screen.getByRole('tablist'))).toBe(false);
     fireEvent.click(screen.getByRole('tab', { name: 'Things' }));
     expect(await screen.findByText(`2 of ${content.items.length} owned`)).toBeTruthy();
     const things = screen.getByRole('tabpanel', { name: 'Things' });
@@ -203,6 +204,9 @@ describe('the columns, as the web\'s container queries lay them out', () => {
     expect(columnsAt(424)).toEqual({ rarities: 3, things: 2, badges: 1 });
     expect(columnsAt(460)).toEqual({ rarities: 5, things: 2, badges: 1 });
     expect(columnsAt(560)).toEqual({ rarities: 5, things: 4, badges: 2 });
+    // All a page keeps of its width is the last of these it reaches, which says the same columns.
+    expect([0, 378, 424, 459, 460, 559, 560, 900].map(breakpointOf)).toEqual([0, 0, 0, 0, 460, 460, 560, 560]);
+    for (const width of [378, 459, 460, 559, 560, 900]) expect(columnsAt(breakpointOf(width)), String(width)).toEqual(columnsAt(width));
   });
 
   it('are read from the width of the page\'s column inside its gutter, as it is laid out: a phone\'s column is never 460 wide, so three rarities to a row', async () => {
@@ -215,6 +219,22 @@ describe('the columns, as the web\'s container queries lay them out', () => {
     const page = panel as Laid;
     act(() => page.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 440, height: 900 } } }));
     expect(rows()).toEqual([3, 3]);
+  });
+
+  it('are not a reason to draw the page again when it is laid out at a width that crosses no breakpoint', async () => {
+    const renders: Renders = { count: 0 };
+    renderGame(
+      <Counted into={renders}>
+        <Collection />
+      </Counted>,
+      memoryServices(),
+    );
+    const panel = (await screen.findByRole('tabpanel', { name: 'Badges' })) as Laid;
+    await settled();
+    const before = renders.count;
+    act(() => panel.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 900 } } }));
+    act(() => panel.__reactLayoutHandler!({ nativeEvent: { layout: { x: 0, y: 0, width: 360, height: 900 } } }));
+    expect(renders.count).toBe(before);
   });
 });
 

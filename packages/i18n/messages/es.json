@@ -2097,6 +2097,7 @@
       "laterBody": "Una versión futura del juego podría añadir una cuenta, clasificaciones o partidas con otros jugadores. Este aviso se actualizará antes de publicarla para decir qué guardan y para qué."
     },
     "realNetWorth": "Patrimonio, descontando la inflación",
-    "shareFailed": "Este teléfono no ha podido crear la imagen para compartir."
+    "shareFailed": "Este teléfono no ha podido crear la imagen para compartir.",
+    "opensLife": "Muestra esta vida entera"
   }
 }

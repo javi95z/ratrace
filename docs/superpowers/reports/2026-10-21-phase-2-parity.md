@@ -731,8 +731,10 @@ left `STAND_IN_SCENES` (the app draws the ledger now; the record is empty). Each
 ## Task 19: the records of past lives and the collection (shots pending)
 
 Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it. The
-records and the collection left `STAND_INS`, the last two: none is left, and phase 1's `Placeholder` is gone (the online routes, `rankings`, `room` and
-`player`, go home: no solo screen leads to them). The lives are real, never written by hand: three, each of the lives to begin with, played to their
+records and the collection were the last two of `STAND_INS`: with them ported no stand-in is left, and `STAND_INS` and `STAND_IN_SCENES` are retired
+(a scene is unjudged only while it waits for its shot). Phase 1's `Placeholder` is gone: the online routes, `rankings`, `room` and `player`, go home
+(no solo screen leads to them, and the phone plays offline). `challenge` is not one of them: the week's challenge is a solo screen, ported in Task 6
+(`WeeklyChallenge`: its practice is a life of one's own), and its route draws it. The lives are real, never written by hand: three, each of the lives to begin with, played to their
 ends one after another by a bot through the round store (`LIVED` in packages/core/src/testing/scenes.ts), a day apart, the latest the day before
 `SCENE_NOW`, and let go as the game lets a life go once its last screen is left:
 
@@ -752,6 +754,11 @@ ends one after another by a bot through the round store (`LIVED` in packages/cor
   `grey` (theme.ts: the CSS matrix at its full amount, `GREYSCALE`, on the colours as written, sRGB), the frame's strips by `Framed`'s `grey`, and the rim
   and the lock through the same matrix as a Skia colour filter (`Sprite`'s `grey`, `Medal`'s). Whether the browser applies its filter functions to sRGB
   values (as Chrome is understood to) or to linear light, the shot says: a difference there is a grey a few steps off on every locked card.
+- **The collection's title, its words and its tabs stand over the panel and do not scroll** (fix round 1): the panel is the list, and a tab strip is not its
+  panel's (`ListScreen`'s `above`). The web's page scrolls them away with the badges; the shots, taken at the top, draw the same. The records' page above
+  its lines (the title, the bests) scrolls with them, as the web's does: the list is the web's section of past lives, named as it is.
+- **A past life's line says it opens the whole of the life** (the web's `aria-haspopup="dialog"`, which the browser says in its own words): a hint in the
+  phone's own words, `phone.opensLife`.
 - **The columns** are the web's container queries on its `main` (`@min-[460px]`, `@min-[560px]`), read from the width of the phone's column inside its gutter
   as it is laid out (`ListScreen`'s `onWidth`, `columnsAt`): a phone's column is at most 448, 424 inside, so three rarities to a row, two things, one badge.
 - **Not compared** (no scene shows them; `Records.test` and `Collection.test` hold them): a life the server played (the ranked tag), a practice of a challenge,
@@ -762,9 +769,13 @@ ends one after another by a bot through the round store (`LIVED` in packages/cor
 The records' past lives grow with every life finished, and the collection has 67 things and 63 badges, each tile with its pictures (a thing's sprite, a badge's
 rim and badge: 126 canvases on the badges' tab alone): both pass thirty rows, so both are lists that draw only what is near the screen. A `FlatList` inside a
 `Screen` would be one scroll inside another, which windows nothing, so the page itself is the list: `ListScreen` (ui/Page.tsx), `Screen`'s column with the
-page's head (the title, the tabs, the bests) as the list's header, which scrolls away with the rows as the web's page does. Not `numColumns`: the web groups the
+page's head as the list's header (the records' title and bests, the collection's count and rarities), which scrolls away with the rows as the web's page does; the collection's tabs stand over the list (`above`). Not `numColumns`: the web groups the
 things by the shop's shelves and the badges by their groups, each under a heading as wide as the page, which a grid of cells cannot hold, so a line of the list
 is a heading or a row of `columns` tiles (`linesOf`), each tile in its share of the row and a short last row leaving its places empty, as the web's grid does.
-The tiles and the lines of past lives are `memo` with plain props: another rarity chosen leaves the badges that stay as they are (`Collection.test`), and a
-sheet opened draws no line again (`Records.test`). In jsdom a virtual list lays nothing out and would draw its first ten rows only, so the screens' tests are
+The list draws about a screen of rows at first, six more a batch, and only two screens either side of what is seen (`LIST_WINDOW`: 8, 6, and a
+window of 5 where React Native's is 21, which would mount every badge within a few idle batches). No `getItemLayout`: the lines are a heading or a row
+of tiles, and a tile's height follows its words. A row is drawn from its datum alone (a thing owned, a badge earned, a life's name, day and score are in
+it), the list's renderer stays the same function and is memoised (`strictMode`), so a page drawn again for its head draws no row again; the tiles and
+the lines of past lives are `memo` with plain props: another rarity chosen leaves the badges that stay as they are (`Collection.test`), and a sheet
+opened draws no line again (`Records.test`). The page keeps only the breakpoint its width reaches, not the width. In jsdom a virtual list lays nothing out and would draw its first ten rows only, so the screens' tests are
 given a `FlatList` that draws every row (`everyRow`, testing/fakes.ts); the kit's own test of `ListScreen` holds that the real one windows.

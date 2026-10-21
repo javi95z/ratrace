@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import { expect, test } from 'vitest';
-import { STAND_INS } from './sceneShots';
 
 // The scenes of the app and the web's are compared shot for shot: the same scenes, each drawn on the screen its name starts with.
 // (Here, not beside the route: every file under src/app is a route to expo-router, a test too.)
@@ -125,9 +124,7 @@ test('the app\'s route is for development only, and everything it wires is behin
   expect([...route.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['expo-router', '../testing/scene']);
 });
 
-test('the screens the shots do not compare are the ones the app still draws as phase 1\'s stand-ins: none is left, and nothing draws one', () => {
-  // The records and the collection were the last (Task 19): phase 1's stand-in is gone, and so is every screen drawn as one.
-  expect(STAND_INS).toEqual([]);
+test('phase 1\'s stand-in is gone: every screen of a scene is the real one on both sides (the records and the collection were the last, Task 19)', () => {
   expect(app).not.toMatch(/Placeholder/);
   expect(existsSync(new URL('../src/game/screens/Placeholder.tsx', import.meta.url))).toBe(false);
 });

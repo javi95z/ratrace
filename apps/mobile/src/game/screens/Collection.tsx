@@ -1,7 +1,7 @@
 import { BADGE_RARITY, badges, itemArt, RARITIES, rarityOf } from '@ratrace/content';
 import type { BadgeRarity } from '@ratrace/content';
 import { memo, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
@@ -15,7 +15,7 @@ import { useProfile, useT, useWords } from '../context';
 import { BackLink } from './BackLink';
 import { Medal } from './Medal';
 import { RARITY_TONE } from './rarityStyle';
-import { Heading } from './Records';
+import { Heading } from './Heading';
 
 type Tab = 'items' | 'badges';
 
@@ -28,19 +28,51 @@ export function columnsAt(width: number): { rarities: number; things: number; ba
   return { rarities: width >= 460 ? 5 : 3, things: width >= 560 ? 4 : 2, badges: width >= 560 ? 2 : 1 };
 }
 
-/** A line of the list: a group's heading, or a row of its things or badges, the first of a group under its heading with nothing between. */
-type Line = { kind: 'heading'; key: string; title: string } | { kind: 'things' | 'badges'; key: string; ids: readonly string[]; columns: number; first: boolean };
+/** The width from which the columns change last (`columnsAt`): all a page keeps of its width, so a width that crosses none draws nothing again. */
+export const breakpointOf = (width: number): number => (width >= 560 ? 560 : width >= 460 ? 460 : 0);
 
-/** The lines of groups of ids: each group's heading, then its ids in rows of `columns`. */
-function linesOf(kind: 'things' | 'badges', groups: ReadonlyArray<{ id: string; title: string; ids: readonly string[] }>, columns: number): Line[] {
+/** A tile of a row: a thing (owned or not) or a badge (earned or not). */
+type Tile = { id: string; on: boolean };
+
+/**
+ * A line of the list, all that it shows: a group's heading, or a row of its things or badges, each owned or earned or not, the first of a group under
+ * its heading with nothing between.
+ */
+type Line = { kind: 'heading'; key: string; title: string } | { kind: 'things' | 'badges'; key: string; tiles: readonly Tile[]; columns: number; first: boolean };
+
+/** The lines of groups of ids: each group's heading, then its ids in rows of `columns`, each said to be owned or earned (`on`) or not. */
+function linesOf(kind: 'things' | 'badges', groups: ReadonlyArray<{ id: string; title: string; ids: readonly string[] }>, columns: number, on: (id: string) => boolean): Line[] {
   return groups.flatMap((group) => {
     const rows: Line[] = [];
     for (let at = 0; at < group.ids.length; at += columns) {
       const ids = group.ids.slice(at, at + columns);
-      rows.push({ kind, key: `${kind}-${ids.join('+')}`, ids, columns, first: at === 0 });
+      rows.push({ kind, key: `${kind}-${ids.join('+')}`, tiles: ids.map((id) => ({ id, on: on(id) })), columns, first: at === 0 });
     }
     return [{ kind: 'heading', key: `${kind}-group-${group.id}`, title: group.title } as Line, ...rows];
   });
+}
+
+/** A line's name in the list. */
+const keyOf = (line: Line): string => line.key;
+
+/** A line drawn from itself alone: a group's heading (16 over it, the web's `gap-4` between groups; 8 under it), or a row of tiles, 8 apart (`gap-2`). */
+function lineOf(line: Line): ReactElement {
+  if (line.kind === 'heading') {
+    return (
+      <View style={{ paddingTop: 16 }}>
+        <Heading>{line.title}</Heading>
+      </View>
+    );
+  }
+  return (
+    <View style={{ paddingTop: line.first ? 0 : 8, flexDirection: 'row', gap: 8 }}>
+      {line.tiles.map(({ id, on }) => (line.kind === 'things' ? <Thing key={id} itemId={id} owned={on} /> : <BadgeLine key={id} badgeId={id} got={on} />))}
+      {/* A short last row leaves its other places empty, as the web's grid does: its tiles are no wider. */}
+      {Array.from({ length: line.columns - line.tiles.length }, (_, i) => (
+        <View key={`empty-${i}`} style={{ flex: 1, minWidth: 0 }} />
+      ))}
+    </View>
+  );
 }
 
 /** What a missing picture keeps room for. */
@@ -116,9 +148,9 @@ function Count({ children }: { children: string }) {
 
 /**
  * The gallery of everything ever owned and every badge ever earned, across all lives: the badges first (what a player has done comes before what
- * they have bought), the things on the second tab. The page is one list that draws only the rows near the screen (67 things, 63 badges, each
- * with its pictures): its head (the title, the tabs, the count, the rarities) scrolls away with it as the web's page does, and the list is the
- * tab's panel. `tab` is the tab open from the start (a scene's initial state; the player opens the other by a tap).
+ * they have bought), the things on the second tab. The tab's panel is a list that draws only the rows near the screen (67 things, 63 badges, each
+ * with its pictures), its count and its rarities at its head; the title, the words under it and the tabs stand over it, outside the panel, and
+ * stay where they are as it scrolls. `tab` is the tab open from the start (a scene's initial state; the player opens the other by a tap).
  */
 export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   const t = useT('collection');
@@ -128,8 +160,8 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
   const [tab, setTab] = useState<Tab>(first);
   // One rarity at a time, or all: the badges' tab's own, so it is all of them again whenever the tab is shown again.
   const [only, setOnly] = useState<BadgeRarity | 'all'>('all');
-  const [width, setWidth] = useState(0);
-  const columns = columnsAt(width);
+  const [breakpoint, setBreakpoint] = useState(0);
+  const columns = columnsAt(breakpoint);
   // The web's badges' tab is drawn anew each time it is shown, its choice of rarity with it; pressing the tab already open changes nothing.
   const choose = (next: Tab) => {
     if (next === tab) return;
@@ -137,19 +169,22 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
     setOnly('all');
   };
 
-  const owned = useMemo(() => new Set(gallery), [gallery]);
+  // Every line made again only when what it shows changes: a group's name, a thing owned, a badge earned, the rarity chosen, the columns.
   const things = useMemo(() => {
+    const owned = new Set(gallery);
     const ladders = [...new Set(content.items.map((item) => item.ladder))];
-    return linesOf('things', ladders.map((ladder) => ({ id: ladder, title: text.ladders[ladder] ?? ladder, ids: content.items.filter((item) => item.ladder === ladder).map((item) => item.id) })), columns.things);
-  }, [content, text, columns.things]);
+    const groups = ladders.map((ladder) => ({ id: ladder, title: text.ladders[ladder] ?? ladder, ids: content.items.filter((item) => item.ladder === ladder).map((item) => item.id) }));
+    return linesOf('things', groups, columns.things, (id) => owned.has(id));
+  }, [content, text, gallery, columns.things]);
   const shownBadges = useMemo(() => {
     const shown = badges.filter((badge) => only === 'all' || rarityOf(badge.id) === only);
     const groups = [...new Set(shown.map((badge) => badge.group))];
-    return linesOf('badges', groups.map((group) => ({ id: group, title: text.badgeGroups[group], ids: shown.filter((badge) => badge.group === group).map((badge) => badge.id) })), columns.badges);
-  }, [only, text, columns.badges]);
+    const lines = groups.map((group) => ({ id: group, title: text.badgeGroups[group], ids: shown.filter((badge) => badge.group === group).map((badge) => badge.id) }));
+    return linesOf('badges', lines, columns.badges, (id) => Object.hasOwn(earned, id));
+  }, [only, text, earned, columns.badges]);
   const count = (list: typeof badges) => list.filter((badge) => Object.hasOwn(earned, badge.id)).length;
 
-  const head = (
+  const above = (
     <View>
       <View style={{ marginBottom: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <BackLink />
@@ -162,6 +197,11 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
       <View style={{ marginHorizontal: -12 }}>
         <Tabs<Tab> label={t('title')} tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]} value={tab} onChange={choose} />
       </View>
+    </View>
+  );
+
+  const head = (
+    <View>
       {/* The head of the tab's panel (the web's `pt-2`, then `gap-4`): its count, and for the badges one rarity at a time, each saying how many of it are won. */}
       <View style={{ paddingTop: 8, gap: 16 }}>
         {tab === 'items' ? (
@@ -188,35 +228,16 @@ export function Collection({ tab: first = 'badges' }: { tab?: Tab } = {}) {
     </View>
   );
 
-  const line = (row: Line): ReactNode => {
-    // A group: 16 over its heading (the web's `gap-4` between groups), 8 under it, and 8 between its rows (`gap-2`).
-    if (row.kind === 'heading') {
-      return (
-        <View style={{ paddingTop: 16 }}>
-          <Heading>{row.title}</Heading>
-        </View>
-      );
-    }
-    return (
-      <View style={{ paddingTop: row.first ? 0 : 8, flexDirection: 'row', gap: 8 }}>
-        {row.ids.map((id) => (row.kind === 'things' ? <Thing key={id} itemId={id} owned={owned.has(id)} /> : <BadgeLine key={id} badgeId={id} got={Object.hasOwn(earned, id)} />))}
-        {/* A short last row leaves its other places empty, as the web's grid does: its tiles are no wider. */}
-        {Array.from({ length: row.columns - row.ids.length }, (_, i) => (
-          <View key={`empty-${i}`} style={{ flex: 1, minWidth: 0 }} />
-        ))}
-      </View>
-    );
-  };
-
   return (
     <ListScreen
+      above={above}
       head={head}
       data={tab === 'items' ? things : shownBadges}
-      keyOf={(row) => row.key}
-      item={(row) => <>{line(row)}</>}
+      keyOf={keyOf}
+      item={lineOf}
       role="tabpanel"
       label={tab === 'items' ? t('items') : t('badges')}
-      onWidth={setWidth}
+      onWidth={(width) => setBreakpoint(breakpointOf(width))}
       contentStyle={{ paddingBottom: 40 }}
     />
   );

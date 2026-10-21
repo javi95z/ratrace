@@ -82,8 +82,12 @@ export const EXTRA = {
  */
 export const GREYSCALE: readonly number[] = [0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0, 0, 0, 1, 0];
 
-/** A colour of the palette (`#rrggbb`) as the web's `grayscale` filter draws it: the grey of its luminance, to the nearest whole step. */
+/**
+ * A colour of the palette (`#rrggbb`) as the web's `grayscale` filter draws it: the grey of its luminance, to the nearest whole step. Anything else
+ * (a colour with alpha, a name, a token's name) is refused: it has no grey to give.
+ */
 export function grey(hex: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`grey: not a #rrggbb colour: ${hex}`);
   const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
   const step = Math.round(GREYSCALE[0] * r + GREYSCALE[1] * g + GREYSCALE[2] * b);
   const two = Math.min(255, Math.max(0, step)).toString(16).padStart(2, '0');

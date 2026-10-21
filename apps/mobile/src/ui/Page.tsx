@@ -1,4 +1,4 @@
-import { useImperativeHandle, useRef } from 'react';
+import { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ReactElement, ReactNode, Ref } from 'react';
 import { FlatList, Image, ScrollView, View, type Role, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-native-reanimated';
@@ -41,6 +41,21 @@ export const SCREEN_TOP = 16;
 
 /** The web's `mx-auto w-full max-w-md px-3`: a column at most 448 wide, centred, the 12 gutter inside it. */
 const COLUMN: ViewStyle = { width: '100%', maxWidth: SHELL_WIDTH, alignSelf: 'center', paddingHorizontal: GUTTER };
+
+/** The edges of the screen a phone draws under: its safe area. */
+type Insets = { top: number; bottom: number; left: number; right: number };
+
+/** What scrolls on a page (a `Screen`'s, a `ListScreen`'s): the whole height, standing in from the side insets only (the web's body padding). */
+const scrollOf = (inset: Insets): ViewStyle => ({ flex: 1, marginLeft: inset.left, marginRight: inset.right });
+
+/**
+ * The column a page's scroll holds (`Screen`'s, a `ListScreen`'s): the 448 column with its gutter, `top` over its first child (`SCREEN_TOP`), and at
+ * its foot room for a frame's drop and, with no bar under it to clear it, the home indicator.
+ */
+const columnOf = (inset: Insets, { top = SCREEN_TOP, barred = false }: { top?: number; barred?: boolean } = {}): ViewStyle[] => [
+  COLUMN,
+  { paddingTop: top, paddingBottom: barred ? 16 : 16 + inset.bottom },
+];
 
 /** What a screen can ask of the page it stands in, through `Screen`'s `scroller`. */
 export interface ScreenScroller {
@@ -129,8 +144,8 @@ export function Screen({
       onScroll={onScrollUi}
       onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
       scrollEventThrottle={16}
-      style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
-      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
+      style={scrollOf(inset)}
+      contentContainerStyle={[...columnOf(inset, { barred }), contentStyle]}
     >
       {children}
     </Animated.ScrollView>
@@ -148,8 +163,8 @@ export function Screen({
       }
       onLayout={scroller ? (event) => void (where.current.viewport = event.nativeEvent.layout.height) : undefined}
       scrollEventThrottle={follows ? 16 : undefined}
-      style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
-      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom }, contentStyle]}
+      style={scrollOf(inset)}
+      contentContainerStyle={[...columnOf(inset, { barred }), contentStyle]}
     >
       {children}
     </ScrollView>
@@ -165,47 +180,84 @@ export function Screen({
 }
 
 /**
- * A `Screen` whose rows are a list that draws only the rows near the screen (React Native's `FlatList`), for a page whose list can pass thirty
- * rows: the records of every life lived, the collection's things and badges. A list inside a `Screen` would be one scroll inside another, which
- * windows nothing, so the whole page is the list: `head` is what stands above its rows (the web's page down to the list: the title, the tabs, the
- * bests), drawn as the list's header, and scrolls away with them as the web's page does. The column is `Screen`'s: at most 448 wide, the 12 gutter
- * inside what scrolls, 16 on top, and at the foot room for a frame's drop and the home indicator, unless `contentStyle` says otherwise.
- * `item` draws a row and `keyOf` names it: a row kept across a change of `data` is the same row, so one that is `memo` with plain props is not
- * drawn again for it. `role` and `label` name the list for a screen reader. `onWidth` hears the width of the column inside its gutter (what the
- * web's container queries measure), once it is laid out and each time it changes.
+ * How much of a `ListScreen`'s list is drawn: about a screen of rows at first (`initialNumToRender`; a line of the records is 62 points, a badge's
+ * 120), a few more a batch as the page is scrolled (`maxToRenderPerBatch`), and only the rows within two screens above and below what is seen
+ * (`windowSize` 5, of React Native's 21): a long list never mounts all its rows, and the badges' tab never draws its 126 pictures at once.
+ */
+export const LIST_WINDOW = { initialNumToRender: 8, maxToRenderPerBatch: 6, windowSize: 5 } as const;
+
+/**
+ * A `Screen` whose rows are a list that draws only the rows near the screen (React Native's `FlatList`, `LIST_WINDOW`), for a page whose list can pass
+ * thirty rows: the records of every life lived, the collection's things and badges. A list inside a `Screen` would be one scroll inside another, which
+ * windows nothing, so the list is the page's scroll: `head` is what stands above its rows (the web's page down to the list: the title, the bests),
+ * drawn as the list's header, and scrolls away with them as the web's page does. `above` is what stands over the list and does not scroll, in the
+ * same column (the collection's title and tabs, which are not its panel's). The column is `Screen`'s (`columnOf`), unless `contentStyle` says otherwise.
+ *
+ * A row is drawn from its datum alone: `item` draws it and `keyOf` names it, and both may be made anew with each drawing of the page, but a row is
+ * drawn again only when its datum (or `extraData`) changes. Whatever a row shows must be in its datum: a row that is `memo` with plain props is not
+ * drawn again for a datum made anew that says the same. (The list's renderer is the same function for as long as the page is drawn, and the list
+ * memoises it, `strictMode`.) `role` and `label` name the list for a screen reader. `onWidth` hears the width of the column inside its gutter (what
+ * the web's container queries measure), once it is laid out and each time it changes.
  */
 export function ListScreen<T>({
   head,
+  above,
   data,
   item,
   keyOf,
+  extraData,
   contentStyle,
   role,
   label,
   onWidth,
 }: {
   head: ReactElement;
+  above?: ReactNode;
   data: readonly T[];
   item: (row: T) => ReactElement;
   keyOf: (row: T) => string;
+  extraData?: unknown;
   contentStyle?: ViewStyle;
   role?: Role;
   label?: string;
   onWidth?: (width: number) => void;
 }) {
   const inset = useSafeAreaInsets();
-  return (
+  // The latest `item` and `keyOf`, read by a renderer that stays the same: a page drawn again for its head draws none of its rows again. Kept as the
+  // page is drawn, before its list is: rows the same drawing brings are drawn by this drawing's `item`.
+  const latest = useRef({ item, keyOf, onWidth });
+  latest.current = { item, keyOf, onWidth };
+  const renderItem = useCallback(({ item: row }: { item: T }) => latest.current.item(row), []);
+  const keyExtractor = useCallback((row: T) => latest.current.keyOf(row), []);
+  const measured = onWidth !== undefined;
+  const onLayout = useCallback(
+    (event: { nativeEvent: { layout: { width: number } } }) => latest.current.onWidth?.(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER),
+    [],
+  );
+  const list = (
     <FlatList
+      {...LIST_WINDOW}
+      strictMode
       data={data}
-      renderItem={({ item: row }) => item(row)}
-      keyExtractor={keyOf}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      extraData={extraData}
       ListHeaderComponent={head}
       role={role}
       aria-label={label}
-      onLayout={onWidth ? (event) => onWidth(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER) : undefined}
-      style={{ flex: 1, marginLeft: inset.left, marginRight: inset.right }}
-      contentContainerStyle={[COLUMN, { paddingTop: SCREEN_TOP, paddingBottom: 16 + inset.bottom }, contentStyle]}
+      onLayout={measured ? onLayout : undefined}
+      style={scrollOf(inset)}
+      contentContainerStyle={[...columnOf(inset, { top: above === undefined ? SCREEN_TOP : 0 }), contentStyle]}
     />
+  );
+  if (above === undefined) return list;
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ marginLeft: inset.left, marginRight: inset.right }}>
+        <View style={[COLUMN, { paddingTop: SCREEN_TOP }]}>{above}</View>
+      </View>
+      {list}
+    </View>
   );
 }
 

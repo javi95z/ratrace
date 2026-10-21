@@ -13,17 +13,9 @@ import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useRuns, useT, useWords } from '../context';
 import { BackLink } from './BackLink';
+import { Heading } from './Heading';
 import { LifeFace } from './LifeFace';
 import { RunDetail } from './RunDetail';
-
-/** A heading of a section of the page (the web's `pixel mb-2 text-[15px] uppercase tracking-[0.1em] text-gold-500`): the records' and the collection's. */
-export function Heading({ children }: { children: string }) {
-  return (
-    <View accessibilityRole="header" style={{ marginBottom: 8 }}>
-      <PixelText size={15} tone="gold-500" style={{ letterSpacing: 15 * 0.1, textTransform: 'uppercase' }}>{children}</PixelText>
-    </View>
-  );
-}
 
 /** A personal best: what it is, the life that holds it (or none yet), and its figure (the web's `bevel … bg-night-700 px-3 py-2`). */
 function Best({ label, holder, figure }: { label: string; holder: string; figure: string }) {
@@ -40,16 +32,29 @@ function Best({ label, holder, figure }: { label: string; holder: string; figure
   );
 }
 
+/** A past life as its line shows it: what it is, its name, whether the server played it, the day it ended and its score, and whether it is the first. */
+interface Line {
+  runId: string;
+  lifeId: string;
+  name: string;
+  tag: 'multiplayer' | 'ranked' | null;
+  day: string;
+  score: string;
+  first: boolean;
+}
+
 /**
  * A past life, a line of the list: the face the life is chosen by, its name (and whether the server played it), the day it ended and its score.
- * The rest of it is a tap away, in a sheet. Drawn again only when one of these changes: opening a sheet, or a life added, draws no other line again.
+ * The rest of it is a tap away, in a sheet, which its hint says (the web's `aria-haspopup="dialog"`). Drawn again only when one of these changes:
+ * opening a sheet, or a life added, draws no other line again.
  */
-const PastLife = memo(function PastLife({ runId, lifeId, name, tag, day, score, onOpen }: { runId: string; lifeId: string; name: string; tag: 'multiplayer' | 'ranked' | null; day: string; score: string; onOpen(runId: string): void }) {
+const PastLife = memo(function PastLife({ runId, lifeId, name, tag, day, score, onOpen }: Omit<Line, 'first'> & { onOpen(runId: string): void }) {
   const t = useT('records');
+  const phone = useT('phone');
   const press = usePress({ onPress: () => onOpen(runId) });
   return (
     <View role="listitem">
-      <Pressable accessibilityRole="button" onPress={press}>
+      <Pressable accessibilityRole="button" accessibilityHint={phone('opensLife')} onPress={press}>
         <Framed kind="bevel" style={{ backgroundColor: COLORS['night-700'], minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 8, paddingVertical: 6 }}>
           {/* A line each, the face as the life is chosen: the rest of it a tap away. */}
           <LifeFace lifeId={lifeId} size="md" />
@@ -81,9 +86,13 @@ function Loading() {
   );
 }
 
+/** A line's name in the list. */
+const keyOf = (line: Line): string => line.runId;
+
 /**
  * Personal bests, and every life lived to the end with its graph. (The web's games with others, `RoomHistory`, are online: the phone plays none,
- * so it has none to tell.) The lives are one list that draws only the lines near the screen: a player who has lived many has a long one.
+ * so it has none to tell.) The lives are one list that draws only the lines near the screen: a player who has lived many has a long one. The list is
+ * the web's section of past lives, named as it is; the page above its lines (the title, the bests, their heading) is its header.
  * `opened` is a life whose sheet is open from the start, by its id, once the lives are read (a scene's initial state; the player opens one by a tap).
  */
 export function Records({ opened }: { opened?: string } = {}) {
@@ -97,6 +106,20 @@ export function Records({ opened }: { opened?: string } = {}) {
   const alone = useMemo(() => (runs ?? []).filter((run) => !run.room), [runs]);
   const [openId, setOpenId] = useState<string | null>(opened ?? null);
   const open = runs?.find((run) => run.runId === openId) ?? null;
+  // Each line as it is drawn, made again only when the lives or the language change: a line's datum is all it shows.
+  const lines = useMemo<Line[]>(
+    () =>
+      alone.map((run, i) => ({
+        runId: run.runId,
+        lifeId: run.lifeId,
+        name: lifeName(run),
+        tag: run.room ? 'multiplayer' : run.ranked ? 'ranked' : null,
+        day: fmt.day(run.finishedAt),
+        score: fmt.number(run.score),
+        first: i === 0,
+      })),
+    [alone, lifeName, fmt],
+  );
 
   const best = (label: string, run: FinishedRun | null, figure: (run: FinishedRun) => string) => (
     <Best label={label} holder={run ? lifeName(run) : t('none')} figure={run ? figure(run) : '—'} />
@@ -144,21 +167,15 @@ export function Records({ opened }: { opened?: string } = {}) {
     <>
       <ListScreen
         head={head}
-        data={alone}
-        keyOf={(run) => run.runId}
-        item={(run) => (
-          <View style={run === alone[0] ? null : { paddingTop: BETWEEN }}>
-            <PastLife
-              runId={run.runId}
-              lifeId={run.lifeId}
-              name={lifeName(run)}
-              tag={run.room ? 'multiplayer' : run.ranked ? 'ranked' : null}
-              day={fmt.day(run.finishedAt)}
-              score={fmt.number(run.score)}
-              onOpen={setOpenId}
-            />
+        data={lines}
+        keyOf={keyOf}
+        item={({ first, ...line }) => (
+          <View style={first ? null : { paddingTop: BETWEEN }}>
+            <PastLife {...line} onOpen={setOpenId} />
           </View>
         )}
+        role={lines.length > 0 ? 'list' : undefined}
+        label={lines.length > 0 ? t('history') : undefined}
         contentStyle={{ paddingBottom: 40 }}
       />
       <Sheet open={open !== null} onClose={() => setOpenId(null)} title={open ? lifeName(open) : ''} closeLabel={common('close')}>

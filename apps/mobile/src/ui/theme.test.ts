@@ -48,4 +48,7 @@ test('grey is a colour as the web\'s `grayscale` filter draws it (CSS grayscale(
   expect(grey(COLORS['night-900'])).toBe('#101010');
   expect(grey(COLORS['gold-500'])).toBe('#c3c3c3');
   expect(grey(EXTRA.bronze)).toBe('#939393');
+  // Upper case is the same colour; anything that is not #rrggbb has no grey to give, and says so.
+  expect(grey('#F2C14E')).toBe('#c3c3c3');
+  for (const bad of ['gold-500', '#fff', EXTRA.backdrop, '#0b102280', '']) expect(() => grey(bad), bad).toThrow(`grey: not a #rrggbb colour: ${bad}`);
 });

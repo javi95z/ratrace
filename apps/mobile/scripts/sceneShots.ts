@@ -81,19 +81,12 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
   return SCENES.filter((scene) => only.includes(scene.name));
 }
 
-/**
- * The screens the app still draws as phase 1's stand-ins (`SCENE_SCREENS` in apps/mobile/src/testing/scene.tsx; a test holds the two
- * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
- * results. The task that ports a screen takes its word out of this list: the records and the collection, the last two, did in Task 19. None is left.
+/*
+ * Phase 1's stand-ins are gone: every screen a scene is drawn on is the real one on the app. Until Task 19 a screen the app still drew as a
+ * stand-in (`STAND_INS`: the records and the collection were the last) and a stage of Play a later task brought (`STAND_IN_SCENES`: the ledger
+ * was the last, in Task 16) were not compared, their numbers saying nothing; both lists were emptied and are retired. A scene is now unjudged only
+ * while it waits for a batch pass to shoot it (`PENDING_SHOTS`).
  */
-export const STAND_INS: readonly string[] = [];
-
-/**
- * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring, which the app draws as a line that says
- * so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports the part takes its scenes out of this list (into
- * `PENDING_SHOTS`, until a batch pass shoots them): the finances did in Task 12, the ledger (`play-resolve-r6`) in Task 16. None is left.
- */
-export const STAND_IN_SCENES: Readonly<Record<string, string>> = {};
 
 /**
  * The scenes of a screen that is ported and not shot yet. From Task 11 on, a screen's task registers its scenes and does not shoot them (the user's
@@ -285,8 +278,8 @@ export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
   },
 };
 
-/** Whether a scene is compared: its screen, and the part of it the scene shows, are the real ones on the app. */
-export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene)) && !Object.hasOwn(STAND_IN_SCENES, scene.name) && !PENDING_SHOTS.has(scene.name);
+/** Whether a scene is compared: every screen is the real one on the app, so every scene is, once a batch pass has shot it. */
+export const isJudged = (scene: Scene): boolean => !PENDING_SHOTS.has(scene.name);
 
 /** What the report keeps of a scene: its verdict, and for a scene that is judged how much of the two shots differs and how far apart the text stands. */
 export type Line =
@@ -313,14 +306,12 @@ export type Line =
 
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places;
 
-/** A scene that is not compared, and why: no numbers. */
+/** A scene that is not compared, and why: no numbers. The only one is a scene still to be shot. */
 export const unjudgedLine = (scene: Scene): Line => ({
   scene: scene.name,
   locale: scene.locale,
   verdict: 'unjudged',
-  why: PENDING_SHOTS.has(scene.name)
-    ? 'ported and not shot yet: a batch pass shoots it and judges it'
-    : `the app still draws a stand-in for ${Object.hasOwn(STAND_IN_SCENES, scene.name) ? STAND_IN_SCENES[scene.name] : screenOf(scene)}: its numbers say nothing`,
+  why: 'ported and not shot yet: a batch pass shoots it and judges it',
 });
 
 /** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */
