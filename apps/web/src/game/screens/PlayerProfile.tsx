@@ -59,9 +59,9 @@ export function PlayerProfile() {
   );
   if (userId === null || community === null) {
     // Until the account has tried to sign in, nobody being signed in is no reason to ask for it.
-    if (!settled && state.kind === 'offline') return <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">{header}</main>;
+    if (!settled && state.kind === 'offline') return <main className="mx-auto flex min-h-safe w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">{header}</main>;
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
+      <main className="mx-auto flex min-h-safe w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
         {header}
         <p className="frame bg-night-700 p-3 text-[14px] text-ink-200">{t('signIn')}</p>
       </main>
@@ -115,7 +115,7 @@ export function PlayerProfile() {
   ];
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
+    <main className="mx-auto flex min-h-safe w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
       {header}
 
       {/* The player as the others see them: their rat on their colour, their name, and the code to be followed by. */}

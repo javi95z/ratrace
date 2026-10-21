@@ -65,7 +65,7 @@ export function Home() {
   };
 
   return (
-    <main className={`relative mx-auto flex min-h-dvh w-full max-w-md flex-col items-center px-3 pb-8 ${returning ? 'gap-4 pt-6' : 'gap-5 pt-10'}`}>
+    <main className={`relative mx-auto flex min-h-safe w-full max-w-md flex-col items-center px-3 pb-8 ${returning ? 'gap-4 pt-6' : 'gap-5 pt-10'}`}>
       <div className="absolute right-3 top-4 flex gap-2">
         <LanguageMenu />
         <HomePreferences />

@@ -548,6 +548,16 @@ body::before {
   padding-top: env(safe-area-inset-top);
 }
 
+/* The height of the screen under the safe area at the top, which the body is padded by: a page as tall as the whole
+   screen would run that far past the fold, and scroll for nothing. */
+@utility min-h-safe {
+  min-height: calc(100dvh - env(safe-area-inset-top));
+}
+
+@utility max-h-safe {
+  max-height: calc(100dvh - env(safe-area-inset-top));
+}
+
 /* The safe area at the bottom of a phone, for bars that sit on the edge. */
 @utility pb-safe {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));

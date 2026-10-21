@@ -182,7 +182,7 @@ function StageBody({ stage, desk }: { stage: Stage; desk: boolean }) {
 function Fault() {
   const t = useT('play');
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-4 px-4">
+    <main className="mx-auto flex min-h-safe w-full max-w-sm flex-col justify-center gap-4 px-4">
       <div role="alert" className="frame bg-wine-900 p-4">
         <h1 className="pixel text-[20px]">{t('faultTitle')}</h1>
         <p className="mt-2 text-[14px] leading-snug">{t('faultBody')}</p>
@@ -198,7 +198,7 @@ function Fault() {
 }
 
 const Waiting = ({ children }: { children: ReactNode }) => (
-  <main className="flex min-h-dvh items-center justify-center">
+  <main className="flex min-h-safe items-center justify-center">
     <p className="pixel animate-blink text-ink-300">{children}</p>
   </main>
 );
@@ -322,9 +322,9 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   if (desk) {
     // The side columns give way first on a narrow desktop, so the round in the middle never drops below a phone's width.
     return (
-      <div className="mx-auto grid min-h-dvh w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
+      <div className="mx-auto grid min-h-safe w-full max-w-[1480px] grid-cols-[minmax(280px,372px)_minmax(360px,1fr)_minmax(260px,340px)] gap-4 px-4">
         {skipLinks}
-        <aside id="player-profile" tabIndex={-1} aria-label={profile('title')} className="no-scrollbar top-safe sticky flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden px-1 pb-5 pt-2">
+        <aside id="player-profile" tabIndex={-1} aria-label={profile('title')} className="no-scrollbar top-safe sticky flex max-h-safe flex-col gap-3 overflow-y-auto overflow-x-hidden px-1 pb-5 pt-2">
           {heading}
           {/* No negative margin to line it up: a column that scrolls down would then scroll sideways too. */}
           <Hud skyline={false} flush />
@@ -332,7 +332,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           <Leave />
         </aside>
 
-        <div className="@container flex min-h-dvh min-w-0 flex-col">
+        <div className="@container flex min-h-safe min-w-0 flex-col">
           {/* Art is drawn at twice its size only where the column has room for a card that wide. */}
           {room ? <div className="mx-auto w-full max-w-[680px] px-3 pt-3">{room.bar}</div> : null}
           <main id="round-stage" ref={stageRef} tabIndex={-1} aria-label={stageName} className={`mx-auto w-full max-w-[680px] pt-5 outline-none @min-[640px]:[--art:2] ${stage === 'finance' ? 'flex-1 pb-6' : 'pb-4'}`}>
@@ -347,7 +347,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
           ) : null}
         </div>
 
-        <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar top-safe sticky flex max-h-dvh flex-col gap-3 overflow-y-auto overflow-x-hidden px-1 py-5">
+        <aside id="round-news" tabIndex={-1} aria-label={news('title')} className="no-scrollbar top-safe sticky flex max-h-safe flex-col gap-3 overflow-y-auto overflow-x-hidden px-1 py-5">
           <Headlines />
           {stage === 'finance' ? (
             <div id="round-orders" tabIndex={-1}><Panel title={finance('basketTitle')}><BasketList /></Panel></div>
@@ -361,7 +361,7 @@ export function Play({ room }: { room?: RoomSlots } = {}) {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col">
+    <div className="mx-auto flex min-h-safe w-full max-w-md flex-col">
       {skipLinks}
       {heading}
       {/* The skyline opens and closes a round. In between, the room goes to the cards and the finances. */}

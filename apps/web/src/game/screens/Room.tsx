@@ -77,7 +77,7 @@ function useSecondsLeft(): number | null {
 function Page({ title, children }: { title: string; children: ReactNode }) {
   const common = useT('common');
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
+    <main className="mx-auto flex min-h-safe w-full max-w-md flex-col gap-4 px-3 pb-10 pt-4">
       <div className="flex items-center gap-2">
         <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 shrink-0 items-center justify-center bg-night-700 text-[18px] text-ink-200">
           ←

@@ -15,7 +15,7 @@ export default function LocaleError({ error, reset }: { error: Error & { digest?
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center gap-4 px-4">
+    <main className="mx-auto flex min-h-safe w-full max-w-sm flex-col justify-center gap-4 px-4">
       <div role="alert" className="frame bg-wine-900 p-4">
         <h1 className="pixel text-[20px]">{t('faultTitle')}</h1>
         <p className="mt-2 text-[14px] leading-snug">{t('faultBody')}</p>

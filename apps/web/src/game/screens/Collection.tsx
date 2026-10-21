@@ -120,7 +120,7 @@ export function Collection() {
   const ids = useId();
 
   return (
-    <main className="@container mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-3 pb-10 pt-4">
+    <main className="@container mx-auto flex min-h-safe w-full max-w-2xl flex-col px-3 pb-10 pt-4">
       <div className="mb-1 flex items-center gap-2">
         <Link href="/" aria-label={common('back')} className="pixel frame-raised flex size-11 items-center justify-center bg-night-700 text-[18px] text-ink-200">
           ←
