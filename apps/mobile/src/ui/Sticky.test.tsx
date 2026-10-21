@@ -2,7 +2,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { createContext, createRef, useContext, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BottomBar, type ScreenScroller } from './Page';
 import { COLORS } from './theme';
@@ -23,6 +23,8 @@ const scrolls = vi.hoisted(() => [] as Array<Record<string, unknown>>);
 // onLayout is the phone's to send: the test sends the lead's.
 type Layout = (event: { nativeEvent: { layout: { x: number; y: number; width: number; height: number } } }) => void;
 const layouts = vi.hoisted(() => [] as Layout[]);
+/** The onLayout of each View that has one, with its style: the rows' own are found by their look. */
+const laidOut = vi.hoisted(() => [] as Array<{ onLayout: Layout; style: unknown }>);
 vi.mock('react-native', async (orig) => {
   const rn = (await orig()) as typeof import('react-native');
   return {
@@ -32,7 +34,10 @@ vi.mock('react-native', async (orig) => {
       return <rn.ScrollView {...(props as Record<string, unknown>)} />;
     },
     View: (props: Record<string, unknown>) => {
-      if (typeof props.onLayout === 'function') layouts.push(props.onLayout as Layout);
+      if (typeof props.onLayout === 'function') {
+        layouts.push(props.onLayout as Layout);
+        laidOut.push({ onLayout: props.onLayout as Layout, style: props.style });
+      }
       return <rn.View {...(props as Record<string, unknown>)} />;
     },
   };
@@ -50,6 +55,7 @@ const scroll = (y: number) => act(() => last().onScroll!({ nativeEvent: { conten
 beforeEach(() => {
   scrolls.length = 0;
   layouts.length = 0;
+  laidOut.length = 0;
 });
 /** The lead stands `y` down the column and is `height` tall. */
 const lay = (y: number, height: number) => act(() => layouts[layouts.length - 1]({ nativeEvent: { layout: { x: 0, y, width: 390, height } } }));
@@ -212,11 +218,11 @@ test('the room between the rows (the 12 the web leaves under the Hud) is there a
     </StickyScreen>,
   );
   const tabs = getByText('the tabs');
-  // the room is a gap between the rows, empty, and the page ground shows in it
-  const figures = getByText('the figures').parentElement!;
-  const gap = figures.nextElementSibling as HTMLElement;
+  // the room is a gap between the rows, empty, and the page ground shows in it; it takes no touch
+  const gap = tabs.parentElement!.previousElementSibling as HTMLElement;
   expect(gap.style.height).toBe('12px');
   expect(gap.style.backgroundColor).toBe('');
+  expect(gap.classList.contains(touchClass('none'))).toBe(true);
   // the lead stands 16 down (the column's top) and is 100 tall: the sticky row begins at 116
   lay(16, 100);
   expect(rise(tabs)).toBe(0);
@@ -326,3 +332,68 @@ test('a StickyScreen hands its Screen the scroller a screen asks its page to scr
   // The page follows its scroll for it, as for the header.
   expect(last().scrollEventThrottle).toBe(16);
 });
+
+test('what stands between the rows (the strip of a crisis, a tip of the guide) is there at scroll 0, and scrolls away under the stuck header as the page does: the second row follows it until it meets the first', () => {
+  const { getByText } = wrap(
+    <StickyScreen lead={<Text>the portrait</Text>} header={<Text>the figures</Text>} subHeader={<Text>the tabs</Text>} subGap={12} between={<Text>the tip</Text>}>
+      <Text>page</Text>
+    </StickyScreen>,
+  );
+  const figures = getByText('the figures');
+  const tip = getByText('the tip');
+  const tabs = getByText('the tabs');
+  // In order, all of it in what sticks: the figures, what is between, the gap, the tabs.
+  expect(figures.compareDocumentPosition(tip) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tip.compareDocumentPosition(tabs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect((tabs.parentElement!.previousElementSibling as HTMLElement).style.height).toBe('12px');
+  expect(last().stickyHeaderIndices).toEqual([1]);
+  // The figures are drawn over what scrolls up under them.
+  expect(Number(figures.parentElement!.style.zIndex)).toBeGreaterThan(0);
+  // The lead stands 16 down and is 100 tall: the sticky row begins at 116. The tabs stand 150 under the figures' foot (the tip, then the gap):
+  // that is the room that closes.
+  const lead = laidOut.find((one) => !hasBackground(one.style))!;
+  const row = laidOut.find((one) => hasBackground(one.style))!;
+  act(() => lead.onLayout({ nativeEvent: { layout: { x: 0, y: 16, width: 390, height: 100 } } }));
+  act(() => row.onLayout({ nativeEvent: { layout: { x: 0, y: 150, width: 390, height: 60 } } }));
+  scroll(116);
+  expect(rise(tabs)).toBe(0);
+  scroll(196);
+  expect(rise(tabs)).toBe(80);
+  scroll(266);
+  expect(rise(tabs)).toBe(150);
+  scroll(900);
+  expect(rise(tabs)).toBe(150);
+  // The tip goes up with the tabs, at the page's pace: one block.
+  expect(tip.closest('[style*="translateY"]')).toBe(tabs.parentElement!.parentElement);
+  // A tip read and gone: the room is what is left.
+  act(() => row.onLayout({ nativeEvent: { layout: { x: 0, y: 12, width: 390, height: 60 } } }));
+  expect(rise(tabs)).toBe(12);
+});
+
+test('what sticks takes no touch where it draws nothing: the room left under the tabs once they have met the figures lets the page under it be pressed', () => {
+  const { getByText } = wrap(
+    <StickyScreen header={<Text>the figures</Text>} subHeader={<Text>the tabs</Text>} subGap={12} between={<Text>the tip</Text>}>
+      <Text>page</Text>
+    </StickyScreen>,
+  );
+  const sticky = getByText('the figures').parentElement!.parentElement as HTMLElement;
+  // As a style too: React Native's sticky header takes its child's style as its own, and with it this.
+  expect(sticky.classList.contains(touchClass('box-none'))).toBe(true);
+  const closing = getByText('the tabs').parentElement!.parentElement as HTMLElement;
+  expect(closing.classList.contains(touchClass('box-none'))).toBe(true);
+});
+
+/** The class react-native-web gives a View that takes a press in that way (`box-none`: not itself, its children; `none`: neither), read from one drawn here. */
+function touchClass(kind: 'box-none' | 'none'): string {
+  const { container, unmount } = render(<View pointerEvents={kind} />);
+  const found = [...(container.firstElementChild as HTMLElement).classList].find((name) => name.startsWith('r-pointerEvents-'));
+  unmount();
+  if (found === undefined) throw new Error(`react-native-web gave no class for ${kind}`);
+  return found;
+}
+
+/** Whether a View's style paints a background (a sticky row does; the lead's box does not). */
+function hasBackground(style: unknown): boolean {
+  const flat = (Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style) as { backgroundColor?: string } | undefined;
+  return Boolean(flat?.backgroundColor);
+}

@@ -8,9 +8,14 @@ interface ViewApi {
 }
 const viewApi = (): ViewApi | undefined => (globalThis as { SkiaViewApi?: ViewApi }).SkiaViewApi;
 
-/** On the UI thread: asks each canvas to draw again. */
-function drawAgain(api: ViewApi, ids: number[]): void {
+/**
+ * On the UI thread: asks each canvas to draw again. What a worklet is given is copied to the UI runtime: should Skia's views ever come through
+ * without their way to ask (a copy that loses a host object's methods), nothing is asked, rather than an error thrown on the UI thread, which a
+ * release build would not survive.
+ */
+function drawAgain(api: ViewApi | undefined, ids: number[]): void {
   'worklet';
+  if (api?.requestRedraw === undefined) return;
   for (const id of ids) api.requestRedraw(id);
 }
 
@@ -22,7 +27,7 @@ function askAgain(canvas: RefObject<CanvasRef | null>): void {
   const api = viewApi();
   if (api === undefined) return;
   handed.add(canvas);
-  // A timer: Skia hands the drawing over a microtask after its commit (below), so this runs after it.
+  // A timer: Skia hands the drawing over twice, in its commit and a microtask after it (below), so this runs after both.
   asking ??= setTimeout(() => {
     asking = null;
     const ids = [...handed].flatMap((one) => (one.current ? [one.current.getNativeId()] : []));
@@ -31,7 +36,11 @@ function askAgain(canvas: RefObject<CanvasRef | null>): void {
   }, 0);
 }
 
-/** Drawn last inside the canvas, by Skia: told each time Skia commits the canvas's drawing, which it hands to the view a moment later. */
+/**
+ * Drawn last inside the canvas, by Skia: told each time Skia commits the canvas's drawing. Skia hands that drawing to the view twice, each time
+ * asking the view from the JS thread to draw it: in its commit (`resetAfterCommit`, before this is told), and again a microtask later, once the
+ * update its `render` awaits has resolved.
+ */
 function Handed({ canvas }: { canvas: RefObject<CanvasRef | null> }): null {
   useLayoutEffect(() => askAgain(canvas));
   return null;
@@ -40,12 +49,13 @@ function Handed({ canvas }: { canvas: RefObject<CanvasRef | null> }): null {
 /**
  * Every canvas the app draws on: Skia's, asked once more to draw each drawing it is handed, from the UI thread.
  *
- * On iOS, react-native-skia (2.14) hands a canvas its drawing from the JS thread and asks it there to draw, while the canvas
- * draws on the main thread; asked while it is still drawing, the canvas lets the request go (`RNSkView::requestRedraw` keeps
- * one flag for "asked", and clears it once the drawing under way is done). That drawing was the one before, so the new one
- * is never drawn: an icon left blank or a picture left as it was, until something else redraws the canvas. Seen on a busy
- * phone as a screen opens: its canvases are handed their pictures while they draw for the first time. The UI thread is the
- * main thread: asked from there, the canvas is asked once any drawing under way is over, and it draws its last drawing.
+ * On iOS, react-native-skia (2.14) hands a canvas its drawing from the JS thread, twice a commit (in the commit, and a microtask
+ * after it), and asks it there to draw, while the canvas draws on the main thread; asked while it is still drawing, the canvas
+ * lets the request go (`RNSkView::requestRedraw` keeps one flag for "asked", and clears it once the drawing under way is done).
+ * That drawing was the one before, so the new one is never drawn: an icon left blank or a picture left as it was, until something
+ * else redraws the canvas. Seen on a busy phone as a screen opens: its canvases are handed their pictures while they draw for the
+ * first time. The UI thread is the main thread: asked from there, after both hand-overs, the canvas is asked once any drawing
+ * under way is over, and it draws its last drawing.
  */
 export function Canvas({ children, ...props }: Omit<CanvasProps, 'ref'>): ReactNode {
   const canvas = useRef<CanvasRef>(null);

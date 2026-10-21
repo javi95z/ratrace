@@ -52,6 +52,16 @@ test('Button is at least 44 high with 16 x 8 padding', () => {
   expect(box.style.paddingTop).toBe('8px');
 });
 
+test('a Button set smaller, as the web sets one in a line of figures (`px-2 text-[13px]`): its words that size, its sides that far in, still 44 high', () => {
+  render(<Button variant="secondary" size={13} padX={8} onPress={() => {}}>{'Save'}</Button>);
+  const box = backed(screen.getByText('Save'));
+  expect(box.style.minHeight).toBe('44px');
+  expect(box.style.paddingLeft).toBe('8px');
+  expect(box.style.paddingRight).toBe('8px');
+  expect(box.style.paddingTop).toBe('8px');
+  expect(textOf('Save').style.fontSize).toBe('13px');
+});
+
 test('Button press calls onPress and the tap sound', () => {
   const onPress = vi.fn();
   const tap = vi.fn();

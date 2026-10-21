@@ -264,7 +264,7 @@ test('a scene opened for a shot says when it is ready, to the driver on this mac
   await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready\?name=play-news-r6&ready=1&n=\d+$/)));
 });
 
-test('the scene of an amount is the sheet that moves cash to savings, open over the Hud of the finances (Finance comes with Task 12): all the cash there is to move', async () => {
+test('the scene of an amount is the sheet that moves cash to savings, open over the Hud of the finances (as recorded before the phone had Finance): all the cash there is to move', async () => {
   render(<SceneView name="amount-savings" />);
   const sheet = (await screen.findByRole('heading', { name: 'Move cash to savings' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
   // The figures of the Hud under it, at the finances: its cash is the most that can be moved.
@@ -366,4 +366,40 @@ test('a scene\'s screen takes no touch, and a scene whose game moves on all the 
   // A choice taken all the same (here by the test, as a tap the box let through would): the scene is no longer the picture it was, and says so.
   fireEvent.click(within(group).getAllByRole('button')[0]);
   await waitFor(() => expect(said).toHaveBeenLastCalledWith(expect.stringMatching(/ready=0&n=\d+$/)));
+});
+
+test('the finances of a scene are drawn by Finance itself in Play: the portfolio under its tab, and for someone new the guide\'s first tip over the tabs', async () => {
+  render(<SceneView name="play-finance-r6" />);
+  expect(await screen.findByRole('tab', { name: 'Portfolio' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('tabpanel', { name: 'Portfolio' })).toBeTruthy();
+  expect(screen.getByLabelText('At a glance')).toBeTruthy();
+  const tip = screen.getByRole('note', { name: 'Guide' });
+  expect(tip.compareDocumentPosition(screen.getByRole('tablist')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByText('🚧')).toBeNull();
+});
+
+test('the scene of the basket is its sheet open over the finances, beside Play as the web\'s page draws it, listing the saver\'s orders of the round', async () => {
+  render(<SceneView name="finance-basket" />);
+  const sheet = (await screen.findByRole('heading', { name: "This round's orders" }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getAllByRole('listitem')).toHaveLength(2);
+  expect(within(sheet).getByText(/^Save /)).toBeTruthy();
+  expect(screen.getByRole('button', { name: '2 orders' })).toBeTruthy();
+  // For a player who has read the guide: nothing of it under the sheet.
+  expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+});
+
+test('the scene of the pension is its sheet open over the finances, given to Finance as its initial state, without a tap', async () => {
+  render(<SceneView name="finance-pension" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Pension plan' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(sheet).getByText(/^Money set aside for retirement/)).toBeTruthy();
+  expect(within(sheet).getByRole('button', { name: /^Confirm/ })).toBeTruthy();
+  expect(screen.getByRole('tabpanel', { name: 'Portfolio' })).toBeTruthy();
+});
+
+test('the Russian tabs are drawn on a phone 360 wide, in their row under the Hud', async () => {
+  render(<SceneView name="finance-tabs-ru-360" />);
+  const strip = await screen.findByRole('tablist', { name: 'Твои финансы' }, WAIT);
+  const box = [...document.querySelectorAll<HTMLElement>('div')].find((el) => el.style.width === '360px');
+  expect(box?.contains(strip)).toBe(true);
+  expect(within(strip).getByRole('tab', { name: 'Портфель' }).getAttribute('aria-selected')).toBe('true');
 });

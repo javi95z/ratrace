@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -209,4 +209,22 @@ test('a scene of the play screen holds the shine of a rare card still, at the co
 test('a scene\'s screen on the phone takes no touch: a picture to be shot, which nothing pressed may move on', () => {
   expect(app).toContain("return <View style={{ flex: 1, pointerEvents: 'none' }}>{children}</View>;");
   expect(app).toMatch(/<Untouched>\s*<OfWidth width=\{scene\.width\}>/);
+});
+
+test('a scene of the finances is Play at its finances on both sides, with the sheet it names open: the basket drawn beside it on both, the pension pressed by the web\'s page and given to the phone\'s Finance as its initial state', () => {
+  // The basket: the web's Finance exports it, as the phone's does, and both draw it beside Play.
+  expect(web).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <Pressed selector={FINANCE_SHEETS[scene.sheet ?? '']}><PlayScene scene={scene} /></Pressed>),");
+  expect(app).toContain("finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),");
+  const finance = read('../../web/src/game/screens/Finance.tsx');
+  expect(finance).toContain('export function Basket({ onClose }: { onClose(): void }) {');
+  // The pension: the web's page presses the first item of the finances that opens a sheet, which is the pension plan's line (the plans' lines come after it).
+  expect(web).toContain(`pension: 'main [data-finance-item][aria-haspopup="dialog"]'`);
+  const portfolio = finance.slice(finance.indexOf('function Portfolio()'), finance.indexOf('function PensionSheet('));
+  const opening = [...portfolio.matchAll(/data-finance-item aria-haspopup="dialog" onClick=\{(.*?)\} className/g)].map((m) => m[1]);
+  expect(opening[0]).toBe("() => setMove({ kind: 'pension' })");
+  // Nothing before the portfolio's own panels opens a sheet: the glance draws none.
+  expect(read('../../web/src/game/screens/Glance.tsx')).not.toContain('aria-haspopup');
+  // Every sheet a scene of the finances names is one of the two.
+  const sheets = SCENES.filter((scene) => scene.name.startsWith('finance-') && scene.sheet !== undefined).map((scene) => scene.sheet);
+  expect(sheets).toEqual(['basket', 'pension']);
 });

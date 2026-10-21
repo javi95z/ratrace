@@ -49,8 +49,11 @@ export function usePress({ onPress, disabled }: Pick<PressProps, 'onPress' | 'di
   };
 }
 
-/** A pixel button. Never smaller than 44 pt, so a thumb can hit it. */
-export function Button({ variant, wide = false, disabled = false, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean }) {
+/**
+ * A pixel button. Never smaller than 44 pt, so a thumb can hit it. `size` and `padX` are the web's `text-[Npx]` and `px-N` where a screen sets
+ * one smaller than the 17 and 16 every button has (a button in a line of figures: `px-2 text-[13px]`).
+ */
+export function Button({ variant, wide = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; size?: number; padX?: number }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   return (
@@ -72,7 +75,7 @@ export function Button({ variant, wide = false, disabled = false, onPress, child
         style={{
           backgroundColor: COLORS[bg],
           minHeight: TOUCH,
-          paddingHorizontal: 16,
+          paddingHorizontal: padX,
           paddingVertical: 8,
           flexDirection: 'row',
           alignItems: 'center',
@@ -81,7 +84,7 @@ export function Button({ variant, wide = false, disabled = false, onPress, child
         }}
       >
         {setIn(children, (s) => (
-          <PixelText size={17} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
+          <PixelText size={size} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
         ))}
       </Framed>
     </Pressable>

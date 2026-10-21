@@ -11,6 +11,7 @@ import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
 import { Celebrations } from '../game/screens/Celebrations';
 import { WeeklyChallenge } from '../game/screens/Challenge';
+import { Basket, FinanceOpened } from '../game/screens/Finance';
 import { Home } from '../game/screens/Home';
 import { useShown } from '../game/screens/Hud';
 import { Legal } from '../game/screens/Legal';
@@ -94,9 +95,10 @@ const openedOf = (scene: Scene): NewLifeOpened | undefined => (scene.sheet === '
 const refused = (): boolean => false;
 
 /**
- * The sheet that moves cash to savings, as Finance's portfolio opens it (`amount-savings`): all the cash there is, the most it can move. Finance
- * comes with Task 12; until then the sheet is drawn beside the Hud of the finances, and so is the web's (its Finance keeps the sheet to itself),
- * over a page that is the Hud alone on both sides (`HUD_ONLY` in scripts/sceneShots.ts).
+ * The sheet that moves cash to savings, as Finance's portfolio opens it (`amount-savings`): all the cash there is, the most it can move. Drawn beside
+ * the Hud of the finances, as the web's is (its Finance keeps the sheet to itself), over a page that is the Hud alone on both sides (`HUD_ONLY` in
+ * scripts/sceneShots.ts): the scene was recorded so in Task 10, before the phone had Finance, and compares the sheet. The finances themselves have
+ * scenes of their own (`finance-*`).
  */
 function SavingsSheet() {
   const playing = useGame((s) => s.status === 'playing' && s.view !== null);
@@ -146,6 +148,7 @@ export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
   play: (scene) => <PlayScene scene={scene} />,
+  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <FinanceOpened value={{ sheet: scene.sheet }}><PlayScene scene={scene} /></FinanceOpened>),
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   amount: () => <><HudScene /><SavingsSheet /></>,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <HudScene><EarnedStage /></HudScene> : <><HudScene /><HiddenStage><Celebrations /></HiddenStage></>),

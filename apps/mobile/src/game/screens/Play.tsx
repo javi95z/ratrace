@@ -18,12 +18,13 @@ import { COLORS } from '../../ui/theme';
 import { useGame, useSettings, useStill, useT, useWords } from '../context';
 import { CardStage, Outcome } from './Cards';
 import { CrisisBar } from './Crisis';
+import { Basket, Finance, FinanceShell, FinanceTabs, FinanceToasts } from './Finance';
 import { CoinFlights, CoinTargets } from './FlyingCoins';
 import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
-import { BasketStandIn, EndStandIn, StageStandIn } from './PlayStandIns';
+import { EndStandIn, StageStandIn } from './PlayStandIns';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
@@ -134,7 +135,7 @@ function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
             </View>
           ) : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button variant="quiet" onPress={onBasket}>
+            <Button variant="quiet" size={14} padX={12} onPress={onBasket}>
               {finance('basket', { count: orders })}
             </Button>
             <View style={{ flex: 1 }}>
@@ -158,9 +159,11 @@ function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
 /**
  * What the stage of the round shows, under the tip of the guide when one is due.
  * A card is the exception: its choices are the stage, so the tip follows them and never pushes them off a small screen.
+ * The finances are the other: their tip stands over their tabs, which stick under the Hud, so it is drawn with them (`FinanceLeadIn`).
  */
 function StageView({ stage }: { stage: Stage }) {
   const body = <StageBody stage={stage} />;
+  if (stage === 'finance') return body;
   if (stage !== 'cards') {
     return (
       <>
@@ -189,8 +192,9 @@ function StageBody({ stage }: { stage: Stage }) {
     case 'outcome':
       return <Outcome />;
     case 'finance':
+      return <Finance />;
     case 'resolve':
-      // Task 12: Finance. Task 16: Resolve.
+      // Task 16: Resolve.
       return <StageStandIn stage={stage} />;
     default:
       return null;
@@ -261,6 +265,25 @@ function CrisisStrip() {
   // Its place is there with no crisis too: the web's Hud keeps the strip's `mt-2` box, empty, so the stage stands 8 lower than it would without it.
   // (The strip itself is not put in a box: its touch reaches a point past it, into the page's gap.)
   return crisis ? <CrisisBar crisis={crisis} compact /> : <View />;
+}
+
+/**
+ * What stands between the Hud's figures and the finances' tabs, as the web's page has it: the strip of a crisis 8 under the figures (its place kept
+ * with none, the web's empty `mt-2`), and the tip of the guide when one is due, 12 under that (the stage's `pt-3`). It scrolls up under the figures
+ * as the page does, and the tabs follow it until they meet them (`StickyScreen`'s `between`). The tabs stand 12 under it (`subGap`: with a tip,
+ * the tip's own `mb-3`; with none, the stage's `pt-3`), so the tip is given its 12 above it in place of the one below it, and with no tip the
+ * two cancel out to nothing.
+ */
+function FinanceLeadIn() {
+  return (
+    <>
+      <View style={{ height: 8 }} />
+      <CrisisStrip />
+      <View style={{ marginTop: 12, marginBottom: -12 }}>
+        <Guide />
+      </View>
+    </>
+  );
 }
 
 /**
@@ -343,6 +366,12 @@ export function Play() {
   const compact = stage !== 'news' && stage !== 'resolve';
   const lead = useMemo(() => <Hud part="lead" compact={compact} />, [compact]);
   const header = useMemo(() => <Hud part="header" compact={compact} />, [compact]);
+  // The stage is made once a stage, as the Hud's parts are: what Play itself draws again (the basket opened, the calendar turning) does not draw it again.
+  const stageView = useMemo(() => <StageView stage={stage} />, [stage]);
+  // In the finances, their tabs stick under the figures, and what stands between the two (the strip of a crisis, the guide's tip) scrolls up under them.
+  const finances = stage === 'finance';
+  const financeTabs = useMemo(() => <FinanceTabs />, []);
+  const financeLeadIn = useMemo(() => <FinanceLeadIn />, []);
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
@@ -363,38 +392,45 @@ export function Play() {
 
   return (
     // The page coins fly over: the HUD's cash is where they land, and they are drawn in the screen's own layer, over all of it (FlyingCoins.tsx).
-    <CoinTargets>
-      <StickyScreen
-        scroller={scroller}
-        contentStyle={{ paddingTop: 0, gap: 8 }}
-        lead={lead}
-        header={header}
-        bar={
-          hasActions ? (
-            // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
-            <BottomBar>
-              <Actions stage={stage} onBasket={() => setBasketOpen(true)} />
-            </BottomBar>
-          ) : null
-        }
-        fixed={
-          <>
-            <CoinFlights />
-            {notice}
-            {pageTurn}
-          </>
-        }
-      >
-        <View accessibilityRole="header" style={{ position: 'absolute' }}>
-          <SrOnly>{heading}</SrOnly>
-        </View>
-        {compact ? <CrisisStrip /> : null}
-        {/* The web's `main pt-3` under the figures, 8 of it the page's gap. */}
-        <View role="main" aria-label={stageName} style={{ paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
-          <StageView stage={stage} />
-        </View>
-        <BasketStandIn open={basketOpen && stage === 'finance'} onClose={() => setBasketOpen(false)} />
-      </StickyScreen>
-    </CoinTargets>
+    // The finances' tab is kept round all of it: their row of tabs and their panel are two places of this screen.
+    <FinanceShell>
+      <CoinTargets>
+        <StickyScreen
+          scroller={scroller}
+          contentStyle={{ paddingTop: 0, gap: 8 }}
+          lead={lead}
+          header={header}
+          subHeader={finances ? financeTabs : undefined}
+          subGap={12}
+          between={finances ? financeLeadIn : undefined}
+          bar={
+            hasActions ? (
+              // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
+              <BottomBar>
+                <Actions stage={stage} onBasket={() => setBasketOpen(true)} />
+              </BottomBar>
+            ) : null
+          }
+          fixed={
+            <>
+              <CoinFlights />
+              {notice}
+              {finances ? <FinanceToasts /> : null}
+              {pageTurn}
+            </>
+          }
+        >
+          <View accessibilityRole="header" style={{ position: 'absolute' }}>
+            <SrOnly>{heading}</SrOnly>
+          </View>
+          {compact && !finances ? <CrisisStrip /> : null}
+          {/* The web's `main pt-3` under the figures, 8 of it the page's gap. In the finances that room is over their tabs, which the panel stands right under. */}
+          <View role="main" aria-label={stageName} style={finances ? { marginTop: -8 } : { paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
+            {stageView}
+          </View>
+          {basketOpen && finances ? <Basket onClose={() => setBasketOpen(false)} /> : null}
+        </StickyScreen>
+      </CoinTargets>
+    </FinanceShell>
   );
 }

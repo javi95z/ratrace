@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { View } from 'react-native';
 import { EXTRA, COLORS } from './theme';
 import { sheetsGone } from './back';
 import { Sheet, Tabs, Toast } from './overlay';
@@ -160,6 +161,63 @@ test('a toast with no message draws nothing and never finishes', () => {
 test('a toast is announced politely', () => {
   render(<Toast message="Saved" onDone={() => {}} />);
   expect(screen.getByRole('alert').getAttribute('aria-live')).toBe('polite');
+});
+
+/** The class react-native-web gives a View that takes no press at all (`pointerEvents="none"`), read from one drawn here. */
+function noTouch(): string {
+  const { container, unmount } = render(<View pointerEvents="none" />);
+  const found = [...(container.firstElementChild as HTMLElement).classList].find((name) => name.startsWith('r-pointerEvents-'));
+  unmount();
+  if (found === undefined) throw new Error('react-native-web gave no class for none');
+  return found;
+}
+
+test('a toast said while a sheet is open is drawn over the sheet, in its window, as the web\'s (z 60 over the sheet\'s 50); with none open, where the screen put it', () => {
+  // The screen's own layer (its `fixed`), and a sheet over it: a Modal, a window of its own, which nothing of the screen is drawn over.
+  function Screen({ open, message }: { open: boolean; message: string | null }) {
+    return (
+      <>
+        <div data-screen>
+          <Toast message={message} onDone={() => {}} />
+        </div>
+        <Sheet open={open} onClose={() => {}} title="Pension plan" closeLabel="Close">
+          <button>inside</button>
+        </Sheet>
+      </>
+    );
+  }
+  const inModal = (el: Element) => el.closest('[data-modal]') !== null;
+  const { rerender } = render(<Screen open message={null} />);
+  rerender(<Screen open message="Not possible: not enough cash" />);
+  const toast = screen.getByRole('alert');
+  expect(toast.textContent).toBe('Not possible: not enough cash');
+  expect(inModal(toast)).toBe(true);
+  // Drawn after the panel, so over it, and taking no touch from it.
+  const panel = screen.getByRole('heading', { name: 'Pension plan' });
+  expect(panel.compareDocumentPosition(toast) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(toast.classList.contains(noTouch())).toBe(true);
+  // Once is all: the screen's own place draws nothing meanwhile.
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  // With the sheet gone, it is where the screen put it.
+  rerender(<Screen open={false} message="Not possible: not enough cash" />);
+  const back = screen.getByRole('alert');
+  expect(inModal(back)).toBe(false);
+  expect(back.closest('[data-screen]')).not.toBeNull();
+});
+
+test('a toast over a sheet still finishes on time, once', () => {
+  const onDone = vi.fn();
+  render(
+    <>
+      <Toast message="Saved" onDone={onDone} />
+      <Sheet open onClose={() => {}} title="T" closeLabel="Close">
+        <span>in</span>
+      </Sheet>
+    </>,
+  );
+  expect(screen.getAllByText('Saved')).toHaveLength(1);
+  act(() => void vi.advanceTimersByTime(2600));
+  expect(onDone).toHaveBeenCalledTimes(1);
 });
 
 const TABS = [

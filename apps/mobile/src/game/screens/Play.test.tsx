@@ -120,6 +120,32 @@ describe('the play screen', () => {
     expect(router.replace).not.toHaveBeenCalled();
   });
 
+  it('counts the orders of the round and lets one be taken back', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('nurse');
+    while (session.view().phase === 'cards') await session.answerCard(0);
+    renderGame(<Play />, services);
+
+    // An order of the portfolio's (the web's test turns on a course in the Lifestyle tab, which is Task 14's): half the cash to savings.
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
+    const save = screen.getByRole('heading', { name: 'Move cash to savings' }).closest('[aria-modal="true"]') as HTMLElement;
+    fireEvent.click(within(save).getByRole('button', { name: '50%' }));
+    fireEvent.click(within(save).getByRole('button', { name: /^Confirm/ }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Move cash to savings' })).toBeNull());
+    fireEvent.click(button('1 order'));
+    const basket = screen.getByRole('heading', { name: "This round's orders" }).closest('[aria-modal="true"]') as HTMLElement;
+    fireEvent.click(within(basket).getByRole('button', { name: /^Remove: Save / }));
+    expect(within(basket).getByText(/Nothing yet/)).toBeTruthy();
+    // Taken back, it can be put back until the basket changes again: once, and then the offer is gone.
+    fireEvent.click(within(basket).getByRole('button', { name: 'Undo' }));
+    expect(within(basket).getByText(/^Save /)).toBeTruthy();
+    fireEvent.click(within(basket).getByRole('button', { name: /^Remove: Save / }));
+    // Android's Back closes it, as the web's Escape does.
+    expect(pressBack()).toBe('sheet');
+    await waitFor(() => expect(screen.queryByRole('heading', { name: "This round's orders" })).toBeNull());
+    expect(button('No orders')).toBeTruthy();
+  });
+
   it('carries on in the middle of a hand, on the card that was waiting', async () => {
     const services = memoryServices();
     const session = await services.sessions.start('nurse');

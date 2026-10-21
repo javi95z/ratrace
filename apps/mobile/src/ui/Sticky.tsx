@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode, type Ref } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode, type Ref } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { SCREEN_TOP, Screen, type ScreenScroller } from './Page';
 import { COLORS, GUTTER } from './theme';
@@ -73,9 +73,10 @@ export function useScrolledPastLead(): boolean {
 const ROW: ViewStyle = { backgroundColor: COLORS['night-800'], marginHorizontal: -GUTTER, paddingHorizontal: GUTTER };
 
 /**
- * The second row, which closes the room under the first as the page scrolls up under it: it rides up by the part of the
- * room the page has scrolled since the sticky block reached the top, until it has met the first row. Until then it is where
- * it would be if the page were scrolling past the stuck header, which is what the web's two sticky rows do.
+ * The second row, and what stands above it under the first (`between`, the gap), which close the room under the first as the page scrolls up
+ * under it: they ride up by the part of the room the page has scrolled since the sticky block reached the top, until the second row has met
+ * the first. Until then they are where they would be if the page were scrolling past the stuck header, which is what the web's two sticky rows
+ * do, with what is between them scrolling with the page under the first. It takes no touch where it draws nothing.
  */
 function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => number; children: ReactNode }) {
   const offset = useContext(Offset);
@@ -84,7 +85,11 @@ function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => num
     () => Math.min(room, Math.max(0, offset.get() - stuckAt())),
     () => 0,
   );
-  return <View style={{ transform: [{ translateY: -closed }] }}>{children}</View>;
+  return (
+    <View pointerEvents="box-none" style={{ transform: [{ translateY: -closed }], pointerEvents: 'box-none' }}>
+      {children}
+    </View>
+  );
 }
 
 /**
@@ -94,8 +99,12 @@ function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => num
  * has (and `useScrolledPast(px)` when the page has gone past any other point). `subHeader` is a second row under the header that stays with it (the Finance tabs under the Hud).
  * React Native's sticky rows do not stack, the next one pushes the last off, so both rows are one sticky child.
  * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
- * shows in it, and it closes as they stick, as two sticky rows meet. (It is part of the sticky child, so the 12 points under
- * the second row take no touch while it is stuck, and show what scrolls under them.) `onScroll` hears the offset in points;
+ * shows in it, and it closes as they stick, as two sticky rows meet. `between` is what the web's page has between the two rows besides
+ * that room (the strip of a crisis under the Hud, a tip of the guide over the Finance tabs): it stands under the header, over the gap, and
+ * scrolls up under the header with the page, the second row following it until the rows meet; the room that closes is then all there is
+ * between them, measured (where the second row stands). The header is drawn over what passes under it. What sticks is a block as tall as
+ * the rows and the room together: where it draws nothing (the room left under the second row once it has closed) it takes no touch, and
+ * the page under it is pressed. `onScroll` hears the offset in points;
  * a header that only needs to know whether the page has gone past a point asks `useScrolledPast`. `fixed`, `bar`,
  * `contentStyle` and `scroller` (how a screen asks its page to scroll: Play takes a new stage back to the top) are the Screen's own.
  */
@@ -104,6 +113,7 @@ export function StickyScreen({
   header,
   subHeader,
   subGap = 0,
+  between,
   children,
   fixed,
   bar,
@@ -115,6 +125,7 @@ export function StickyScreen({
   header: ReactNode;
   subHeader?: ReactNode;
   subGap?: number;
+  between?: ReactNode;
   children?: ReactNode;
   fixed?: ReactNode;
   bar?: ReactNode;
@@ -135,6 +146,14 @@ export function StickyScreen({
   useEffect(() => {
     if (!hasLead) store.setLead(null);
   }, [hasLead, store]);
+  // Where the second row stands under the first, once laid out: all of that closes. With nothing between them, the gap alone; and what was
+  // between them once is measured anew when something is again.
+  const [measured, setMeasured] = useState<number | null>(null);
+  const hasBetween = Boolean(between);
+  useEffect(() => {
+    if (!hasBetween) setMeasured(null);
+  }, [hasBetween]);
+  const room = hasBetween ? (measured ?? subGap) : subGap;
   return (
     <Offset.Provider value={store}>
       <Screen
@@ -151,15 +170,17 @@ export function StickyScreen({
         {lead ? (
           <View onLayout={(event) => store.setLead(event.nativeEvent.layout.y + event.nativeEvent.layout.height)}>{lead}</View>
         ) : null}
-        <View pointerEvents="box-none">
-          <View style={ROW}>{header}</View>
+        {/* `pointerEvents` as a style too: React Native's sticky header takes its child's style as its own, and must let a press through. */}
+        <View pointerEvents="box-none" style={{ pointerEvents: 'box-none' }}>
+          <View style={[ROW, { zIndex: 1 }]}>{header}</View>
           {subHeader ? (
-            <>
-              {subGap > 0 ? <View style={{ height: subGap }} /> : null}
-              <Closing room={subGap} stuckAt={stuckAt}>
-                <View style={ROW}>{subHeader}</View>
-              </Closing>
-            </>
+            <Closing room={room} stuckAt={stuckAt}>
+              {between}
+              {subGap > 0 ? <View pointerEvents="none" style={{ height: subGap, pointerEvents: 'none' }} /> : null}
+              <View style={ROW} onLayout={hasBetween ? (event) => setMeasured(event.nativeEvent.layout.y) : undefined}>
+                {subHeader}
+              </View>
+            </Closing>
           ) : null}
         </View>
         {children}

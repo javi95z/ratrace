@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { AccessibilityInfo, Modal, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,29 @@ import { useRise } from './animations';
 import { pressDown, usePress } from './kit';
 import { PixelText, ReadText } from './text';
 import { COLORS, EXTRA, SHELL_WIDTH, TOUCH } from './theme';
+
+/*
+ * What is drawn over everything: the toasts being shown, and the sheets open, kept outside React. The web's toast stands over its sheets (z 60
+ * over their 50). On the phone a sheet is a window of its own (a Modal), which nothing of the screen is drawn over: while one is open the toasts
+ * are drawn in it, by the sheet on top; with none open, each where its screen put it (its `fixed`).
+ */
+type Shown = { readonly id: number; readonly message: string };
+const top = {
+  toasts: [] as readonly Shown[],
+  sheets: [] as readonly number[],
+  listeners: new Set<() => void>(),
+};
+let nextId = 1;
+const subscribeTop = (listener: () => void) => {
+  top.listeners.add(listener);
+  return () => void top.listeners.delete(listener);
+};
+function changeTop(change: () => void): void {
+  change();
+  top.listeners.forEach((listener) => listener());
+}
+/** Whether a sheet is open, which the toasts are then drawn in. */
+const useSheetOpen = (): boolean => useSyncExternalStore(subscribeTop, () => top.sheets.length > 0, () => false);
 
 /**
  * A panel that comes up from the bottom over a dimmed page (the web's Sheet): the backdrop closes it,
@@ -45,6 +68,16 @@ function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }
   const { height } = useWindowDimensions();
   const rise = useRise();
   const close = usePress({ onPress: onClose });
+
+  // On top while it is open, the last opened over the others: the toasts are drawn in it.
+  const [me] = useState(() => nextId++);
+  useEffect(() => {
+    if (!open) return;
+    changeTop(() => void (top.sheets = [...top.sheets, me]));
+    return () => changeTop(() => void (top.sheets = top.sheets.filter((one) => one !== me)));
+  }, [open, me]);
+  const onTop = useSyncExternalStore(subscribeTop, () => top.sheets[top.sheets.length - 1] === me, () => false);
+  const toasts = useSyncExternalStore(subscribeTop, () => top.toasts, () => top.toasts);
 
   // Counted from its opening to its dismissal (./back), and let go if its parent takes it away before.
   const release = useRef<(() => void) | null>(null);
@@ -116,6 +149,7 @@ function SheetPanel({ open, onClose, onGone, title, closeLabel, tone, children }
             </ScrollView>
           </Framed>
         </Animated.View>
+        {onTop ? toasts.map((toast) => <ToastBox key={toast.id} message={toast.message} />) : null}
       </View>
     </Modal>
   );
@@ -167,11 +201,13 @@ export function Tabs<T extends string>({ label, tabs, value, onChange }: { label
 
 /**
  * A short message that shows itself out, announced politely. Fixed to the screen, as the web's `fixed bottom-28`: a
- * screen gives it as its Screen's `fixed`, never inside the column, where it would scroll with the page.
+ * screen gives it as its Screen's `fixed`, never inside the column, where it would scroll with the page. While a sheet is open it is drawn
+ * over the sheet, in its window, as the web's stands over its sheets (a refusal said of what was asked for in the sheet).
  */
 export function Toast({ message, onDone, ms = 2600 }: { message: string | null; onDone(): void; ms?: number }) {
-  const rise = useRise();
   const done = useRef(onDone);
+  const [id] = useState(() => nextId++);
+  const overSheet = useSheetOpen();
   useEffect(() => {
     done.current = onDone;
   });
@@ -182,8 +218,21 @@ export function Toast({ message, onDone, ms = 2600 }: { message: string | null; 
     const timer = setTimeout(() => done.current(), ms);
     return () => clearTimeout(timer);
   }, [message, ms]);
+  // Shown, for a sheet that opens over it to draw it.
+  useEffect(() => {
+    if (message === null) return;
+    const shown: Shown = { id, message };
+    changeTop(() => void (top.toasts = [...top.toasts, shown]));
+    return () => changeTop(() => void (top.toasts = top.toasts.filter((one) => one !== shown)));
+  }, [message, id]);
 
-  if (message === null) return null;
+  if (message === null || overSheet) return null;
+  return <ToastBox message={message} />;
+}
+
+/** The toast itself, rising into its place 112 over the foot of the screen, taking no press. */
+function ToastBox({ message }: { message: string }) {
+  const rise = useRise();
   return (
     <View
       accessibilityRole="alert"

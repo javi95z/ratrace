@@ -45,9 +45,9 @@ export const CALENDAR_COVERS = '[data-motion-only] > * { pointer-events: auto !i
 export const CELEBRATIONS_ONLY = '#round-actions, #round-stage > :not(:has(> [role="status"])), #round-stage > * > :not([role="status"]) { display: none !important; }';
 
 /**
- * The screens of the scenes drawn over the Hud alone (`HUD_ONLY`): the Hud's own, and two whose sheet is opened by a part of Play still to be ported
- * (the sheet that moves cash to savings, Finance's, Task 12; a legendary badge, a card's result's: its scene compares the sheet, the result has
- * scenes of its own), which both sides draw beside the Hud.
+ * The screens of the scenes drawn over the Hud alone (`HUD_ONLY`): the Hud's own, and two whose sheet is a part of Play's stage, compared over the Hud
+ * alone (the sheet that moves cash to savings, Finance's, as recorded in Task 10 before Finance was on the phone; a legendary badge, a card's result's:
+ * its scene compares the sheet, the result and the finances have scenes of their own), which both sides draw beside the Hud.
  */
 export const SHEETS_OVER_THE_HUD: readonly string[] = ['hud', 'amount', 'celebrate'];
 
@@ -93,12 +93,11 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
 export const STAND_INS: readonly string[] = ['records', 'collection'];
 
 /**
- * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the finances in Task 12, the ledger
- * in Task 16), which the app draws as a line that says so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports
- * the part takes its scenes out of this list (into `PENDING_SHOTS`, until a batch pass shoots them).
+ * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the ledger in Task 16), which the app
+ * draws as a line that says so. Not compared, as a stand-in's scenes are not, and for the same reason; the task that ports the part takes its scenes
+ * out of this list (into `PENDING_SHOTS`, until a batch pass shoots them): the finances did in Task 12.
  */
 export const STAND_IN_SCENES: Readonly<Record<string, string>> = {
-  'play-finance-r6': 'the finances of play',
   'play-resolve-r6': 'the ledger of play',
 };
 
@@ -108,7 +107,19 @@ export const STAND_IN_SCENES: Readonly<Record<string, string>> = {
  * of this list as it is judged. Until then a scene here is unjudged, as a stand-in's is: no numbers, and nothing that could fail a run or pass for a
  * result.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set(['play-cards-r1', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'play-outcome-r1']);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set([
+  // Task 11: the cards and what came of them.
+  'play-cards-r1',
+  'play-cards-legendary',
+  'play-cards-three',
+  'play-cards-ru-360',
+  'play-outcome-r1',
+  // Task 12: the finances (their portfolio, the basket, the pension, the row of tabs in Russian on a narrow phone).
+  'play-finance-r6',
+  'finance-basket',
+  'finance-pension',
+  'finance-tabs-ru-360',
+]);
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:

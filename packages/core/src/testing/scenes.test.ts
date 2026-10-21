@@ -155,7 +155,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -272,10 +272,10 @@ describe('the scenes of the HUD', () => {
     expect(sheets).toEqual({ 'hud-news-r1': undefined, 'hud-cash': 'cash', 'hud-flow': 'flow', 'hud-race': 'ratRace', 'hud-status-ru': 'status', 'hud-jailed': 'jail', 'hud-crisis': undefined, 'hud-crisis-details': 'crisis' });
   });
 
-  it('hud-status-ru and play-cards-ru-360 are drawn in Russian, on a phone 360 wide: every other scene on the shots\' own 402', () => {
+  it('hud-status-ru, play-cards-ru-360 and finance-tabs-ru-360 are drawn in Russian, on a phone 360 wide: every other scene on the shots\' own 402', () => {
     const ru = SCENES.find((scene) => scene.name === 'hud-status-ru');
     expect(ru).toMatchObject({ locale: 'ru', width: 360 });
-    expect(SCENES.filter((scene) => scene.width !== undefined).map((scene) => scene.name)).toEqual(['play-cards-ru-360', 'hud-status-ru']);
+    expect(SCENES.filter((scene) => scene.width !== undefined).map((scene) => scene.name)).toEqual(['play-cards-ru-360', 'finance-tabs-ru-360', 'hud-status-ru']);
   });
 
   it('hud-flow is the finances of the sixth round (the compact HUD), play-finance-r6\'s very store', async () => {
@@ -358,6 +358,43 @@ describe('the scenes of an amount and of a badge', () => {
   });
 });
 
+describe('the scenes of the finances', () => {
+  it('play-finance-r6, finance-basket, finance-pension and finance-tabs-ru-360 are the finances of the engineer\'s sixth round: the very store', async () => {
+    const first = await saveOf(await sceneStore('play-finance-r6'));
+    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360']) expect(await saveOf(await sceneStore(name)), name).toEqual(first);
+  });
+
+  it('finance-basket has the saver\'s orders of the round in the basket, put there once the game is open, and its sheet open', async () => {
+    expect(SCENES.find((scene) => scene.name === 'finance-basket')).toEqual({ name: 'finance-basket', locale: 'en', sheet: 'basket' });
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore('finance-basket')), content });
+    await game.getState().boot();
+    expect(game.getState().orders).toEqual([]);
+    await runScene('finance-basket', game);
+    const state = game.getState();
+    expect(state).toMatchObject({ stage: 'finance', refusal: null });
+    expect(roundOf(state)).toBe(6);
+    // A focus of the round and the cash moved to savings: more than one line, and the cash they leave.
+    expect(state.orders.map((order) => order.type)).toEqual(['focus', 'depositIn']);
+    expect(state.preview?.player.cash).toBeLessThan(state.view?.player.cash ?? 0);
+  });
+
+  it('finance-pension has the pension plan\'s sheet open, with room in it this round', async () => {
+    expect(SCENES.find((scene) => scene.name === 'finance-pension')).toEqual({ name: 'finance-pension', locale: 'en', sheet: 'pension' });
+    const state = await opened(await sceneStore('finance-pension'));
+    expect(state.preview?.pensionRoom).toBeGreaterThan(0);
+  });
+
+  it('finance-tabs-ru-360 is the row of the tabs in Russian on a phone 360 wide, every tab of a life five rounds in', async () => {
+    expect(SCENES.find((scene) => scene.name === 'finance-tabs-ru-360')).toEqual({ name: 'finance-tabs-ru-360', locale: 'ru', width: 360 });
+    expect(roundOf(await opened(await sceneStore('finance-tabs-ru-360')))).toBe(6);
+  });
+
+  it('are drawn for a player who has read the guide: the finances themselves, under the Hud (play-finance-r6 keeps the first tip over the tabs)', () => {
+    for (const name of ['finance-basket', 'finance-pension', 'finance-tabs-ru-360']) expect(GUIDE_READ.has(name), name).toBe(true);
+    expect(GUIDE_READ.has('play-finance-r6')).toBe(false);
+  });
+});
+
 describe('the list of scenes', () => {
   it('names each scene <screen> or <screen>-<state>, once, in a language the game speaks', () => {
     expect(new Set(SCENES.map((scene) => scene.name)).size).toBe(SCENES.length);
@@ -386,6 +423,9 @@ describe('the list of scenes', () => {
       'play-guide-r1',
       'play-fault',
       'play-pageturn',
+      'finance-basket',
+      'finance-pension',
+      'finance-tabs-ru-360',
       'hud-news-r1',
       'hud-cash',
       'hud-flow',
@@ -431,7 +471,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'hud', 'amount', 'celebrate', 'challenge', 'legal']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal']));
   });
 });
 

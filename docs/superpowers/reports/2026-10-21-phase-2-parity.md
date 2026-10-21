@@ -431,10 +431,18 @@ earlier tasks failed for one sprite missing from the app's shot (the Tokyo icon 
 `hud-crisis`, a clipping's icon of `play-pageturn`, the banner of `hud-status-ru`); each was as recorded when shot again alone, so no record was changed. The scene
 had said it was ready (no picture being read) and stood still for 3 s: the picture was decoded and not painted. Not the sprite cache's trimming (a temporary log: no
 trim in the first nine scenes, where it happens too). Every missing one is a sprite the scene before had drawn too, so its picture is in the cache and its canvas is
-drawn with it in the screen's first commit, while the route is still being put on screen. A likely cause, read in react-native-skia 2.14's iOS view
-(`apple/SkiaUIView.mm`): a canvas's view removed from its superview loses its drawing view (`removeFromSuperview`: `_impl = nullptr`) and, added again, gets a new one
-with the picture properties the registry holds, which it cleared when it first applied them (`RNSkJsiViewApi.h`: `setSkiaView`, `info->props.clear()`); the picture
-comes back only when the canvas is drawn again from JS. If so, an icon can go blank in the game too after a screen changes; it needs its own task (the kit's `Sprite`).
+drawn with it in the screen's first commit, while the route is still being put on screen.
+
+**The cause, found after this task (commit `d83dbc5`):** react-native-skia 2.14 on iOS drops a redraw request that arrives while the canvas is drawing. A canvas is
+handed its drawing from the JS thread (twice a commit of Skia's reconciler: in the commit, `resetAfterCommit`, and a microtask later, once `root.render`'s update has
+resolved), each time asking the view there to draw; the view draws on the main thread, and `RNSkView::requestRedraw` keeps one flag for "asked", cleared once the
+drawing under way is done. Asked while it is still drawing (on a busy phone, a screen's canvases are handed their pictures while they draw for the first time), the
+request is let go, and the new drawing is never drawn: a blank icon, or a picture left as it was, until something redraws the canvas. (The view taken out of its
+superview and put back, `removeFromSuperview`, first suspected here, does exist in Skia's code but was not what happened: the blank canvases held their drawing, and a bare
+redraw painted it.) **The fix, in the kit (`ui/Canvas.tsx`):** every canvas of the app is the kit's `Canvas` (a test holds that Skia's own is taken nowhere else in the
+app), which asks each canvas handed a drawing to draw it once more, from the UI thread (the main thread on iOS), after both of Skia's hand-overs: there the ask waits
+for any drawing under way and is never lost. On the simulator: 24/24 drawings lost before, 0/24 after; two full scene runs exit 0 after it. The full account is the
+commit's message and `ui/Canvas.tsx`'s own notes.
 
 ### What is not compared, and why
 
@@ -467,6 +475,28 @@ unjudged until a batch pass shoots, compares and takes them out of it:
   comparing another picture.
 - **Not compared** (no scene shows them; `Cards.test` holds them): the swipe itself (a finger), the choice taken while its answer comes (a moment), the links to
   a career, a city and prison, a rare card that is not legendary, a cover that paid, the credit card's line under a result, coins flying from a result that paid.
+
+## Task 12: the finances, their tabs, the basket and the portfolio (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it; `play-finance-r6`
+left `STAND_IN_SCENES` (the app draws the finances now):
+
+| scene | what it is | how its sheet is open |
+|---|---|---|
+| play-finance-r6 | the engineer's sixth round, the portfolio: at a glance (cash and savings), cash, savings and the pension, no investments yet, what savings pay; someone new, so the guide's first tip of the finances stands over the tabs | no sheet |
+| finance-basket | the same, the saver's orders in the basket (a focus, all the cash to savings), for a player who has read the guide | the web's page and the phone's registry draw Finance's `Basket` beside Play |
+| finance-pension | the same, the pension plan's sheet: nothing in it, room this round, no way out yet | the web's page presses the pension's line (`main [data-finance-item][aria-haspopup="dialog"]`); the phone's Finance is given it (`FinanceOpened`) |
+| finance-tabs-ru-360 | the same in Russian on a phone 360 wide: the row of tabs, which scrolls sideways | no sheet |
+
+- **The tabs not on the phone yet are not shown** (Task 13 the market, property and debt; 14 the way of life; 15 the shop, taxes and businesses): until Task 15 the row
+  has the portfolio's tab alone, where the web's has all eight. `finance-tabs-ru-360` is for the batch pass after Task 15, when every tab is drawn.
+- **Between the Hud and the tabs**, as on the web's page: the place of a crisis's strip (8, empty with no crisis) and the guide's tip (12 under it, 12 over the tabs).
+  The phone's tabs are the second sticky row of the screen (`StickyScreen`'s `subHeader`, `subGap` 12), and what is between them is the screen's `between`: it scrolls
+  up under the Hud's figures as the web's does, and the tabs follow it until they meet the figures.
+- **A toast over a sheet**: the web's toast stands over its sheets (z 60 over 50). A sheet on the phone is a window of its own, so a toast said while one is open is now
+  drawn in it, by the sheet on top (a refusal of what was asked for in the sheet is seen at once, as on the web).
+- **Not compared** (no scene shows them; `Finance.test` holds them): a holding and its mark answering an order (jump and sparks, shrink), a broker's loan on a holding,
+  a plan and its sheet, the dividends' switch, the basket's put-back line and a move a card decided, the toasts.
 
 ## The tolerance, and the exception this phase needs
 

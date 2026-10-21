@@ -19,6 +19,7 @@ import type { Services } from '@/game/context';
 import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
 import { Collection } from '@/game/screens/Collection';
+import { Basket } from '@/game/screens/Finance';
 import { Home } from '@/game/screens/Home';
 import { useShown } from '@/game/screens/Hud';
 import { NewLife } from '@/game/screens/NewLife';
@@ -123,13 +124,23 @@ function PlayScene({ scene }: { scene: Scene }) {
   );
 }
 
+/**
+ * The finances have no initial state either (their sheets are their own), so a scene of them that names a sheet has the page press what opens it, once
+ * the screen is drawn, as for the Hud: the pension plan's line, the first item of the finances that opens a sheet (`data-finance-item` with a popup:
+ * the plans' lines come after it). The basket is Play's, exported by Finance: the page draws it beside Play, as the phone's registry does. The phone's
+ * Finance is given the pension as its initial state (`FinanceOpened`).
+ */
+const FINANCE_SHEETS: Readonly<Record<string, string>> = {
+  pension: 'main [data-finance-item][aria-haspopup="dialog"]',
+};
+
 /** A sheet that asks nothing of the game is never taken: a scene's sheet stays open whatever is pressed in it. */
 const refused = (): boolean => false;
 
 /**
  * The sheet that moves cash to savings over the finances (`amount-savings`): Finance's portfolio keeps the sheet it opens to itself, with no
  * initial state to take, so the page draws the same AmountSheet with the same words and the cash shown beside Play, as the phone's registry
- * does (its Finance comes with Task 12). The shot shows Play's Hud alone under it (`HUD_ONLY`, apps/mobile/scripts/sceneShots.ts).
+ * does (as recorded in Task 10, before the phone had Finance). The shot shows Play's Hud alone under it (`HUD_ONLY`, apps/mobile/scripts/sceneShots.ts).
  * (A legendary badge needs nothing of the kind: the result of the card that earned it, Play's own stage, opens its sheet, `celebrate`.)
  */
 function SavingsScene() {
@@ -154,6 +165,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
   play: (scene) => <PlayScene scene={scene} />,
+  finance: (scene) => (scene.sheet === 'basket' ? <><PlayScene scene={scene} /><Basket onClose={nothing} /></> : <Pressed selector={FINANCE_SHEETS[scene.sheet ?? '']}><PlayScene scene={scene} /></Pressed>),
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   amount: () => <SavingsScene />,
   celebrate: (scene) => (scene.name === 'celebrate-earned' ? <Pressed selector={TAKEN_IN}><Play /></Pressed> : <Play />),

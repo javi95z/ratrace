@@ -57,6 +57,9 @@ export const SCENES: readonly Scene[] = [
   { name: 'play-guide-r1', locale: 'en' },
   { name: 'play-fault', locale: 'en' },
   { name: 'play-pageturn', locale: 'en' },
+  { name: 'finance-basket', locale: 'en', sheet: 'basket' },
+  { name: 'finance-pension', locale: 'en', sheet: 'pension' },
+  { name: 'finance-tabs-ru-360', locale: 'ru', width: 360 },
   { name: 'hud-news-r1', locale: 'en' },
   { name: 'hud-cash', locale: 'en', sheet: 'cash' },
   { name: 'hud-flow', locale: 'en', sheet: 'flow' },
@@ -146,6 +149,12 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-guide-r1': { life: 'engineer', round: 1, stage: 'news' },
   'play-fault': { life: 'engineer', round: 1, stage: 'finance' },
   'play-pageturn': { life: 'engineer', round: 2, stage: 'news' },
+  // The finances of play-finance-r6's sixth round: the saver's orders in the basket (a focus, the cash to savings), its sheet open.
+  'finance-basket': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }], ends: 'finance' },
+  // The same, the pension plan's sheet open: nothing in it yet, and room for this round.
+  'finance-pension': { life: 'engineer', round: 6, stage: 'finance' },
+  // The same, in Russian on a phone 360 wide: the row of the tabs, every tab of a life five rounds in, wider than the phone.
+  'finance-tabs-ru-360': { life: 'engineer', round: 6, stage: 'finance' },
   'hud-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'hud-cash': { life: 'engineer', round: 1, stage: 'news' },
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
@@ -183,7 +192,7 @@ const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisi
  * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
  * Every other scene is someone new, who is shown the tips as they come.
  */
-export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360']);
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn', 'play-cards-legendary', 'play-cards-three', 'play-cards-ru-360', 'finance-basket', 'finance-pension', 'finance-tabs-ru-360']);
 
 /**
  * The scenes of a game that cannot go on (the play screen's way out, `Fault`): the orders kept for the round cannot be read back, so the
