@@ -1,7 +1,7 @@
 import { Canvas, Fill, Path } from '@shopify/react-native-skia';
 import { FRAME_STATUS, frameArt, portraitArt, ratArt } from '@ratrace/content';
 import { characterName } from '@ratrace/core/game/characters';
-import { ageAt, cityLight, headlineText, paperOf, portraitAge } from '@ratrace/core/game/present';
+import { ageAt, cityLight, portraitAge } from '@ratrace/core/game/present';
 import { ratOutfit } from '@ratrace/core/game/quips';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { cashflow, cashflowLines, escapeMultiplier, escapeProgress, netWorth, scoreBreakdown, statusBreakdown, taxAnnual } from '@ratrace/engine';
@@ -23,10 +23,10 @@ import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH, type ColorToken } from '../../ui/theme';
 import { useGame, useSettings, useT, useWords } from '../context';
 import { CityBanner } from './CityBanner';
-import { CrisisBar } from './Crisis';
 import { Explain } from './Explain';
 import { JailSheet } from './Jail';
 import { Loop } from './Loop';
+import { Headlines } from './News';
 import { SettingsSheet } from './Settings';
 
 /**
@@ -307,27 +307,6 @@ function ScoreNow({ shown }: { shown: GameView }) {
 }
 
 /**
- * The paper of the round, to read again once the round is under way. A stand-in until the news are ported (Task 9 brings the web's
- * `Headlines`, its gauges and its paper): the crisis, and the round's headlines as plain lines.
- */
-function Headlines() {
-  const words = useWords();
-  const view = useGame((s) => s.view);
-  if (!view) return null;
-  const world = view.timeline[view.round];
-  return (
-    <View style={{ gap: 12 }}>
-      <CrisisBar crisis={world.crisis} />
-      {paperOf(words, view.timeline, view.round).map(({ headline, n }, i) => (
-        <ReadText key={i} size={15} weight={600} lineHeight={15 * 1.25}>
-          {headlineText(words, headline, n)}
-        </ReadText>
-      ))}
-    </View>
-  );
-}
-
-/**
  * The room round the tag of someone in prison. On the web it is a button in a line of the column's own text (15 × 1.45, Chakra Petch), so the
  * line is as tall as the tag with its `mt-1`, and the room the reading line's strut leaves under its baseline where that is more than the tag
  * leaves: both are worked out from the browser's baselines (the tag's 12-point pixel line of 1.25 in its 2 of padding).
@@ -521,7 +500,7 @@ function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyl
       <JailSheet open={jail && life.jailRounds > 0} onClose={() => setJail(false)} left={life.jailRounds} />
       <HudSettings open={settings} onClose={() => setSettings(false)} />
       <Sheet open={paper} onClose={() => setPaper(false)} title={t('newsTitle')} closeLabel={common('close')}>
-        <Headlines />
+        {paper ? <Headlines /> : null}
       </Sheet>
     </View>
   );

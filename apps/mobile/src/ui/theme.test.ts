@@ -25,6 +25,9 @@ test('extra colours the web uses outside the tokens', () => {
   expect(EXTRA.backdrop).toBe('rgba(11,16,34,0.8)');
   expect(EXTRA.bronze).toBe('#c98a4b');
   expect(EXTRA.glint).toBe('rgba(255,255,255,0.4)');
+  // `shadow-[…,4px_4px_0_rgb(0_0_0/0.45)]`: the paper of the news, thrown on the table
+  expect(EXTRA.paperShadow).toBe('rgba(0,0,0,0.45)');
+  expect(readFileSync(new URL('../../../web/src/game/screens/News.tsx', import.meta.url), 'utf8')).toContain('4px_4px_0_rgb(0_0_0/0.45)');
   // `bg-night-900/85`: the strip under a city's name on its banner
   expect(EXTRA.label).toBe('rgba(11,16,34,0.85)');
   expect(EXTRA.glow).toEqual({

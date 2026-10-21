@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode, type Ref } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { SCREEN_TOP, Screen } from './Page';
+import { SCREEN_TOP, Screen, type ScreenScroller } from './Page';
 import { COLORS, GUTTER } from './theme';
 
 /**
@@ -96,8 +96,8 @@ function Closing({ room, stuckAt, children }: { room: number; stuckAt: () => num
  * `subGap` is the room the web leaves between them at scroll 0 (the 12 of `main pt-3`): it is empty, the page's ground
  * shows in it, and it closes as they stick, as two sticky rows meet. (It is part of the sticky child, so the 12 points under
  * the second row take no touch while it is stuck, and show what scrolls under them.) `onScroll` hears the offset in points;
- * a header that only needs to know whether the page has gone past a point asks `useScrolledPast`. `fixed`, `bar` and
- * `contentStyle` are the Screen's own.
+ * a header that only needs to know whether the page has gone past a point asks `useScrolledPast`. `fixed`, `bar`,
+ * `contentStyle` and `scroller` (how a screen asks its page to scroll: Play takes a new stage back to the top) are the Screen's own.
  */
 export function StickyScreen({
   lead,
@@ -109,6 +109,7 @@ export function StickyScreen({
   bar,
   contentStyle,
   onScroll,
+  scroller,
 }: {
   lead?: ReactNode;
   header: ReactNode;
@@ -119,6 +120,7 @@ export function StickyScreen({
   bar?: ReactNode;
   contentStyle?: ViewStyle;
   onScroll?: (y: number) => void;
+  scroller?: Ref<ScreenScroller>;
 }) {
   const offset = useRef<ScrollOffset | null>(null);
   offset.current ??= scrollOffset();
@@ -144,6 +146,7 @@ export function StickyScreen({
         fixed={fixed}
         bar={bar}
         contentStyle={contentStyle}
+        scroller={scroller}
       >
         {lead ? (
           <View onLayout={(event) => store.setLead(event.nativeEvent.layout.y + event.nativeEvent.layout.height)}>{lead}</View>

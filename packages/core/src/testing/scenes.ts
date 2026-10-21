@@ -1,6 +1,9 @@
 import { bots, content } from '@ratrace/content';
 import type { Bot, Locale } from '@ratrace/content';
 import type { GameView } from '@ratrace/engine';
+import type { BasketKeep } from '../game/basket';
+import { FIRSTS, TIPS } from '../game/guide';
+import { ageAt } from '../game/present';
 import { createGameStore } from '../game/store';
 import type { GameStore, RoundActions, RoundState, Stage } from '../game/store';
 import { fixedSessions, fixedSessionsOn, memoryDevice } from '../session/fixed';
@@ -47,6 +50,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'play-finance-r6', locale: 'en' },
   { name: 'play-outcome-r1', locale: 'en' },
   { name: 'play-resolve-r6', locale: 'en' },
+  { name: 'play-news-r6', locale: 'en' },
+  { name: 'play-guide-r1', locale: 'en' },
+  { name: 'play-fault', locale: 'en' },
+  { name: 'play-pageturn', locale: 'en' },
   { name: 'hud-news-r1', locale: 'en' },
   { name: 'hud-cash', locale: 'en', sheet: 'cash' },
   { name: 'hud-flow', locale: 'en', sheet: 'flow' },
@@ -122,6 +129,10 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'play-finance-r6': { life: 'engineer', round: 6, stage: 'finance' },
   'play-outcome-r1': { life: 'engineer', round: 1, stage: 'news', then: [{ action: 'leaveNews' }, { action: 'pick' }], ends: 'outcome' },
   'play-resolve-r6': { life: 'engineer', round: 6, stage: 'finance', then: [{ action: 'orders' }, { action: 'play' }], ends: 'resolve' },
+  'play-news-r6': { life: 'engineer', round: 6, stage: 'news' },
+  'play-guide-r1': { life: 'engineer', round: 1, stage: 'news' },
+  'play-fault': { life: 'engineer', round: 1, stage: 'finance' },
+  'play-pageturn': { life: 'engineer', round: 2, stage: 'news' },
   'hud-news-r1': { life: 'engineer', round: 1, stage: 'news' },
   'hud-cash': { life: 'engineer', round: 1, stage: 'news' },
   'hud-flow': { life: 'engineer', round: 6, stage: 'finance' },
@@ -147,6 +158,49 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
  * them plays for ever (the rat's wheel, the lamp of a crisis's year), and a shot would catch it at any moment of its run.
  */
 const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisis-details']);
+
+/**
+ * The scenes of a player who has read every tip of the guide and every note of a first time: the stage is drawn as it is, with nothing of the
+ * guide over it. (Turning the guide off would not do: a page of the game under development shows the tips all the same, so they can be seen.)
+ * Every other scene is someone new, who is shown the tips as they come.
+ */
+export const GUIDE_READ: ReadonlySet<string> = new Set(['play-news-r1', 'play-news-r6', 'play-pageturn']);
+
+/**
+ * The scenes of a game that cannot go on (the play screen's way out, `Fault`): the orders kept for the round cannot be read back, so the
+ * round cannot be judged and the game opens on its fault, as it does when the engine of a page will not preview a round. The life itself
+ * is sound; what fails is the place the basket is kept, which each client gives its game for the scene (`sceneBasket`).
+ */
+const FAULTS: ReadonlySet<string> = new Set(['play-fault']);
+
+/** Where a scene's game keeps the orders of its round, where that is not the game's own memory: nowhere it can read them back from, for a fault. */
+export function sceneBasket(name: string): BasketKeep | undefined {
+  if (!FAULTS.has(name)) return undefined;
+  return {
+    load: () => {
+      throw new Error(`scene ${name}: the basket cannot be read`);
+    },
+    save: () => undefined,
+  };
+}
+
+/**
+ * How far into its run the calendar of a turning round is held in a scene of it: the middle of a step of the torn page (its steps are 70 ms
+ * each from 270 ms) and well inside one of the new page's (100 ms each), so no engine draws it a step off. The web's scene page holds its two
+ * animations there (`HOLD_TURN`), the phone's scene gives it to the calendar (`held`).
+ */
+export const PAGE_TURN_HELD_MS = 445;
+
+/**
+ * The calendar a scene draws over its screen, turning from the age of the round before to the age of the scene's own: a round has just been
+ * played. Both clients draw it beside the screen, as the screen draws it when the round goes by under it. None for any other scene.
+ */
+export function turnOf(scene: Scene): { from: number; to: number } | undefined {
+  if (scene.name !== 'play-pageturn') return undefined;
+  const reach = PLANS[scene.name];
+  if (!reach) return undefined;
+  return { from: ageAt(content, reach.round - 2), to: ageAt(content, reach.round - 1) };
+}
 
 /** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
 const PLAYER_ID = 'saver';
@@ -190,6 +244,10 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   if (STILL.has(name)) {
     const profile = await store.loadProfile();
     await store.saveProfile({ ...profile, settings: { ...profile.settings, reducedMotion: true } });
+  }
+  if (GUIDE_READ.has(name)) {
+    const profile = await store.loadProfile();
+    await store.saveProfile({ ...profile, guide: { seen: [...TIPS.map((tip) => tip.id), ...FIRSTS.map((first) => first.id)], off: false } });
   }
   const reach = PLANS[name];
   if (reach === null) return store;
@@ -278,8 +336,9 @@ export async function runScene(name: string, game: SceneGame): Promise<void> {
 /**
  * What a client gives its game to draw a scene on: the scene's store behind sessions of their own (with the ids, seeds
  * and clock the screens' tests use, so a life begun on the scene is the same on either client), and no tap ever too
- * soon. Nothing but memory: no database of the device, no cloud.
+ * soon. Nothing but memory: no database of the device, no cloud. A scene that names where its orders are kept (`sceneBasket`) has that basket.
  */
-export function sceneServices(store: MemoryStore): { sessions: Sessions; store: PlayerStore; tapGuardMs: number } {
-  return { sessions: fixedSessions(store), store, tapGuardMs: 0 };
+export function sceneServices(store: MemoryStore, name?: string): { sessions: Sessions; store: PlayerStore; tapGuardMs: number; basket?: BasketKeep } {
+  const basket = name === undefined ? undefined : sceneBasket(name);
+  return { sessions: fixedSessions(store), store, tapGuardMs: 0, ...(basket ? { basket } : {}) };
 }

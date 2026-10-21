@@ -1,5 +1,5 @@
-import { Placeholder } from '../game/screens/Placeholder';
+import { Play } from '../game/screens/Play';
 
 export default function PlayRoute() {
-  return <Placeholder page="play" />;
+  return <Play />;
 }

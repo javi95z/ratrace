@@ -60,6 +60,8 @@ export const EXTRA = {
   backdrop: 'rgba(11,16,34,0.8)',
   /** The strip a city's name is written on, over its banner (the web's `bg-night-900/85`). */
   label: 'rgba(11,16,34,0.85)',
+  /** The newspaper's drop shadow on the table (the web's `4px 4px 0 rgb(0 0 0 / 0.45)`). */
+  paperShadow: 'rgba(0,0,0,0.45)',
   /** The band of light that crosses a rare card (the web's `bg-white/40`). */
   glint: 'rgba(255,255,255,0.4)',
   /** The common badge's rim (RARITY_TONE.common). */

@@ -1,5 +1,5 @@
 import { afterEach, vi } from 'vitest';
-import { resetFakes } from './fakes';
+import { backHandler, resetFakes } from './fakes';
 
 /*
  * Run before every test of the phone's game (see vitest.config.ts): puts `fakes.ts` in place of the native modules the game
@@ -26,5 +26,10 @@ vi.mock('../ui/Sprite', async () => (await import('./fakes')).spriteModule);
 vi.mock('@shopify/react-native-skia', async () => (await import('../ui/testing/skia')).skiaFake());
 // Reanimated needs the worklets runtime: the shared reactive fake stands in for it.
 vi.mock('react-native-reanimated', async () => (await import('../ui/testing/reanimated')).reanimatedFake());
+
+// Android's Back: react-native-web has none (it says so on every listener); the fake keeps who listens, for `pressBack`. Loaded only now, after
+// the media queries are in place: react-native-web reads them as it loads, and with none it takes the phone to be asking for reduced motion.
+const { BackHandler } = await import('react-native');
+Object.assign(BackHandler, backHandler);
 
 afterEach(resetFakes);

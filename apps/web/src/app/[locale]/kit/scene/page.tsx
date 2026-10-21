@@ -10,7 +10,7 @@
 // is not this page's: the shots keep the browser from the project (apps/mobile/scripts/shotDrivers.ts). The date is the shot's to
 // set (the browser's clock is held at SCENE_NOW): a screen here reads it as it always does.
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { runScene, SCENES, sceneServices, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
+import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -20,6 +20,7 @@ import { WeeklyChallenge } from '@/game/screens/Challenge';
 import { Collection } from '@/game/screens/Collection';
 import { Home } from '@/game/screens/Home';
 import { NewLife } from '@/game/screens/NewLife';
+import { PageTurn } from '@/game/screens/PageTurn';
 import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
 import { Legal } from './Legal';
@@ -82,11 +83,36 @@ function OfWidth({ width, children }: { width: number | undefined; children: Rea
   return <div style={{ width, marginInline: 'auto' }}>{children}</div>;
 }
 
+/** Nothing is done when the calendar of a scene has run its time: it is a picture, and stays. */
+const nothing = (): void => {};
+
+/**
+ * The calendar's two animations (the new page shown, the old one torn off) held still `PAGE_TURN_HELD_MS` into their run: paused, started that long
+ * in the past (a negative delay), so the stylesheet's own keyframes are what is drawn, as the kit's motion page holds every effect. In the page from
+ * before the calendar is drawn, so they begin there and stay.
+ */
+const HOLD_TURN = `.animate-page, .animate-tear { animation-play-state: paused !important; animation-delay: -${PAGE_TURN_HELD_MS}ms !important; }`;
+
+/**
+ * The play screen of a scene, and over it the calendar of a round just turned where the scene has one (`turnOf`), held at one moment of its run:
+ * drawn beside the screen, as the screen draws it when the round goes by under it. The phone's scene gives its calendar the same moment.
+ */
+function PlayScene({ scene }: { scene: Scene }) {
+  const turn = turnOf(scene);
+  return (
+    <>
+      <Play />
+      {turn ? <style>{HOLD_TURN}</style> : null}
+      {turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} /> : null}
+    </>
+  );
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
   new: (scene) => <Pressed selector={PRESSED[scene.name]}><NewLife /></Pressed>,
-  play: () => <Play />,
+  play: (scene) => <PlayScene scene={scene} />,
   hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,
   records: () => <Records />,
   collection: () => <Collection />,
@@ -137,7 +163,7 @@ export default function ScenePage({ searchParams }: { searchParams: Promise<{ na
   useEffect(() => {
     if (scene === undefined || !drawable) return;
     let current = true;
-    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: sceneServices(store) }));
+    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: sceneServices(store, scene.name) }));
     return () => {
       current = false;
     };

@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, useEffect } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 
@@ -17,7 +17,38 @@ export const expoRouter = {
   useRouter: () => router,
   useLocalSearchParams: () => params,
   Redirect: ({ href }: { href: string }) => createElement('div', { 'data-redirect': href }),
+  // A screen of a test is the one in front: what it does while it is in front, it does while it is drawn.
+  useFocusEffect: (effect: () => void | (() => void)) => useEffect(effect, [effect]),
 };
+
+/** Who listens to Android's Back (`BackHandler.addEventListener('hardwareBackPress', …)`), in the order they began to: the phone asks the latest first. */
+export const backListeners: Array<() => boolean | null | undefined> = [];
+/** Android's Back as the screens reach it (react-native-web has none: it only says it is not there). */
+export const backHandler = {
+  addEventListener(_event: 'hardwareBackPress', listener: () => boolean | null | undefined) {
+    backListeners.push(listener);
+    return {
+      remove: () => {
+        const at = backListeners.lastIndexOf(listener);
+        if (at >= 0) backListeners.splice(at, 1);
+      },
+    };
+  },
+};
+
+/**
+ * Presses Android's Back, as the phone hears it: a sheet that is open is a Modal, which takes the press itself and asks to be closed (on the web
+ * that react-native-web stands in for, the Modal hears Escape); with none, each listener from the latest is asked until one takes it; and if none
+ * does, the app is left (the system's own Back, on the first screen). Says which of the three it was.
+ */
+export function pressBack(): 'sheet' | 'screen' | 'left' {
+  if (document.querySelector('[aria-modal="true"]') !== null) {
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
+    return 'sheet';
+  }
+  for (const listener of [...backListeners].reverse()) if (listener() === true) return 'screen';
+  return 'left';
+}
 
 /** The phone: its languages in its order of preference, and the time zone it is in. */
 export const device = { languages: ['en'] as string[], timeZone: 'UTC' };
@@ -70,6 +101,7 @@ export const spriteModule = {
 /** Puts every stand-in back as it was found, for the next test. */
 export function resetFakes(): void {
   for (const spy of Object.values(router)) spy.mockReset();
+  backListeners.length = 0;
   device.languages = ['en'];
   device.timeZone = 'UTC';
   for (const key of Object.keys(params)) delete params[key];

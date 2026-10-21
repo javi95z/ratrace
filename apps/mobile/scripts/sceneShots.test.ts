@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, test } from 'vitest';
 import { SCENES } from '@ratrace/core/testing/scenes';
 import type { Result } from './kitCompare';
-import { ACCEPTED, chooseScenes, differing, filesOf, HUD_ONLY, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_INS, unjudgedLine } from './sceneShots';
+import { ACCEPTED, chooseScenes, differing, filesOf, HUD_ONLY, VISIBLE_HEIGHT, WEB_ONLY, webRules, isJudged, jsonOf, lineOf, mergeLines, PAGE_BASELINE, PHONE_PAGES, PHONE_WORDS, sceneAppRoute, sceneWebUrl, SCENES_FOLDER, STAND_IN_SCENES, STAND_INS, unjudgedLine } from './sceneShots';
 
 const [first, second] = SCENES;
 
@@ -74,7 +74,7 @@ test('a wrong page is not a line to keep: its numbers must never be read as a re
 });
 
 test('a scene whose screen the app still draws as a stand-in is unjudged: no numbers, and why', () => {
-  expect(STAND_INS).toEqual(['play', 'records', 'collection']);
+  expect(STAND_INS).toEqual(['records', 'collection']);
   // The screens that are ported are compared; the scenes of the stand-ins are only shot.
   expect(SCENES.filter(isJudged).map((scene) => scene.name)).toEqual([
     'home-new',
@@ -85,6 +85,11 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
     'new-unlocked',
     'new-locked',
     'new-replace',
+    'play-news-r1',
+    'play-news-r6',
+    'play-guide-r1',
+    'play-fault',
+    'play-pageturn',
     'hud-news-r1',
     'hud-cash',
     'hud-flow',
@@ -96,11 +101,18 @@ test('a scene whose screen the app still draws as a stand-in is unjudged: no num
     'challenge-practice',
     'legal',
   ]);
-  expect(SCENES.filter((scene) => !isJudged(scene)).every((scene) => scene.name.startsWith('play-'))).toBe(true);
   expect(isJudged({ name: 'hud-cash', locale: 'en' })).toBe(true);
-  const standIn = SCENES.find((scene) => scene.name === 'play-news-r1')!;
-  expect(unjudgedLine(standIn)).toEqual({ scene: standIn.name, locale: standIn.locale, verdict: 'unjudged', why: 'the app still draws a stand-in for play: its numbers say nothing' });
+  const standIn = { name: 'records-best', locale: 'en' } as const;
+  expect(unjudgedLine(standIn)).toEqual({ scene: 'records-best', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for records: its numbers say nothing' });
   expect(Object.keys(unjudgedLine(standIn))).toEqual(['scene', 'locale', 'verdict', 'why']);
+});
+
+test('a scene of a ported screen at a part of it still to be ported (a stage of Play a later task brings) is unjudged as well, and says which part', () => {
+  expect(Object.keys(STAND_IN_SCENES)).toEqual(['play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
+  for (const name of Object.keys(STAND_IN_SCENES)) expect(SCENES.map((scene) => scene.name), name).toContain(name);
+  expect(SCENES.filter((scene) => !isJudged(scene)).map((scene) => scene.name)).toEqual(['play-cards-r1', 'play-finance-r6', 'play-outcome-r1', 'play-resolve-r6']);
+  const cards = SCENES.find((scene) => scene.name === 'play-cards-r1')!;
+  expect(unjudgedLine(cards)).toEqual({ scene: 'play-cards-r1', locale: 'en', verdict: 'unjudged', why: 'the app still draws a stand-in for the cards of play: its numbers say nothing' });
 });
 
 test('a run of some scenes keeps the lines of the others, and the file has every scene shot, in the list\'s order, a line to each', () => {
@@ -197,7 +209,7 @@ describe('a scene whose words are the phone\'s own', () => {
       lineOf(named('home-new'), result('b', { shape: 1, texts: [] })),
       lineOf(lost, otherWords()),
       lineOf(named('legal'), otherWords({ shape: PAGE_BASELINE.legal.shape })),
-      unjudgedLine(named('play-news-r1')),
+      unjudgedLine(named('play-cards-r1')),
       lineOf(named('challenge-practice'), result('c', { shape: 0, texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 3 }] })),
     ];
     expect(differing(lines).map((line) => line.scene)).toEqual(['home-new', 'challenge-practice']);
@@ -223,7 +235,7 @@ describe('what is accepted of a scene, and no more', () => {
   };
 
   it('is a record for each scene whose residual is explained: the most it may differ by, what it is, and where the parity report says so', () => {
-    expect(Object.keys(ACCEPTED).sort()).toEqual(['home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked']);
+    expect(Object.keys(ACCEPTED).sort()).toEqual(['home-continue', 'new-first', 'new-locked', 'new-replace', 'new-unlocked', 'play-guide-r1', 'play-news-r1', 'play-news-r6', 'play-pageturn']);
     for (const [name, record] of Object.entries(ACCEPTED)) {
       expect(SCENES.map((scene) => scene.name), name).toContain(name);
       expect(isJudged(named(name)), name).toBe(true);

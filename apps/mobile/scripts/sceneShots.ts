@@ -64,7 +64,19 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * the same). A scene on one of them is not compared: web screen against stand-in, its numbers say nothing, and must not be read as
  * results. The task that ports a screen takes its word out of this list.
  */
-export const STAND_INS: readonly string[] = ['play', 'records', 'collection'];
+export const STAND_INS: readonly string[] = ['records', 'collection'];
+
+/**
+ * The scenes of a screen that is ported, at a part of it that is not yet: Play's stages that later tasks bring (the cards and a card's result in
+ * Task 11, the finances in Task 12, the ledger in Task 16), which the app draws as a line that says so. Not compared, as a stand-in's scenes are not,
+ * and for the same reason; the task that ports the part takes its scenes out of this list.
+ */
+export const STAND_IN_SCENES: Readonly<Record<string, string>> = {
+  'play-cards-r1': 'the cards of play',
+  'play-finance-r6': 'the finances of play',
+  'play-outcome-r1': 'a card\'s result on play',
+  'play-resolve-r6': 'the ledger of play',
+};
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
@@ -127,6 +139,36 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     reason: 'The same as new-first (the dice emoji, the arrow, whole CSS pixels against device pixels), over the rows of the locked lives.',
     report: 'Task 7: choosing a new life',
   },
+  'play-news-r1': {
+    shape: 1446,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The paper\'s masthead, centred, stands a device pixel left of the web\'s (a sub-pixel centring), and is not measured as text: the paper\'s rules of the same ink lie within its window, so its glyphs\' edges count as shape.',
+    report: 'Task 9: play, round by round, from the news',
+  },
+  'play-news-r6': {
+    shape: 1518,
+    worstPt: 1,
+    oneSided: 0,
+    reason: 'The masthead as in play-news-r1, and the label of the bar\'s button two device pixels higher than the web\'s (whole CSS pixels against device pixels, as the kit\'s buttons of Task 7).',
+    report: 'Task 9: play, round by round, from the news',
+  },
+  'play-guide-r1': {
+    shape: 3504,
+    // Four device pixels.
+    worstPt: 4 / 3,
+    oneSided: 0,
+    reason: 'The masthead as in play-news-r1, and everything under the guide\'s note two device pixels lower: the web paints the note\'s foot at a whole CSS pixel (564.48 to 564), the phone at a device pixel (564.67).',
+    report: 'Task 9: play, round by round, from the news',
+  },
+  'play-pageturn': {
+    shape: 3918,
+    // Thirteen device pixels.
+    worstPt: 13 / 3,
+    oneSided: 0,
+    reason: 'The torn page, turned, has antialiased edges the other shot draws hard (phase 2\'s exception), the masthead as in play-news-r1, and a line of the paper under the calendar measured through it (the calendar takes no touch, so the web\'s check does not see the line covered).',
+    report: 'Task 9: play, round by round, from the news',
+  },
   'new-replace': {
     shape: 1159,
     worstPt: 1,
@@ -157,8 +199,8 @@ export const PAGE_BASELINE: Readonly<Record<string, PageBaseline>> = {
   },
 };
 
-/** Whether a scene is compared: its screen is the real one on the app. */
-export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene));
+/** Whether a scene is compared: its screen, and the part of it the scene shows, are the real ones on the app. */
+export const isJudged = (scene: Scene): boolean => !STAND_INS.includes(screenOf(scene)) && !Object.hasOwn(STAND_IN_SCENES, scene.name);
 
 /** What the report keeps of a scene: its verdict, and for a scene that is judged how much of the two shots differs and how far apart the text stands. */
 export type Line =
@@ -184,7 +226,12 @@ export type Line =
 const round = (value: number, places: number) => Math.round(value * 10 ** places) / 10 ** places;
 
 /** A scene that is not compared, and why: no numbers. */
-export const unjudgedLine = (scene: Scene): Line => ({ scene: scene.name, locale: scene.locale, verdict: 'unjudged', why: `the app still draws a stand-in for ${screenOf(scene)}: its numbers say nothing` });
+export const unjudgedLine = (scene: Scene): Line => ({
+  scene: scene.name,
+  locale: scene.locale,
+  verdict: 'unjudged',
+  why: `the app still draws a stand-in for ${Object.hasOwn(STAND_IN_SCENES, scene.name) ? STAND_IN_SCENES[scene.name] : screenOf(scene)}: its numbers say nothing`,
+});
 
 /** What a scene of the phone's own words comes to: its layout, by its shape alone, or nothing where the whole page is other words. */
 function phoneVerdict(scene: Scene, result: Result): 'phone words, layout clean' | 'phone words, layout differs' | 'phone words, not comparable' | 'phone words, drifted' {

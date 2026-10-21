@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { act, cleanup, render } from '@testing-library/react';
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, createRef, useContext, type ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { BottomBar } from './Page';
+import { BottomBar, type ScreenScroller } from './Page';
 import { COLORS } from './theme';
 
 vi.mock('react-native-safe-area-context', () => {
@@ -317,4 +317,12 @@ test('outside a StickyScreen nothing has scrolled', () => {
   }
   const { getByText } = wrap(<Away />);
   expect(getByText('here')).toBeTruthy();
+});
+
+test('a StickyScreen hands its Screen the scroller a screen asks its page to scroll by (Play takes a new stage back to the top)', () => {
+  const scroller = createRef<ScreenScroller>();
+  wrap(<StickyScreen header={<Text>figures</Text>} scroller={scroller}><Text>page</Text></StickyScreen>);
+  expect(typeof scroller.current?.reveal).toBe('function');
+  // The page follows its scroll for it, as for the header.
+  expect(last().scrollEventThrottle).toBe(16);
 });

@@ -2081,6 +2081,7 @@
     "lostWaiting": "Your life began on an earlier version of the game, and this version of the app cannot open it. It is kept: update the app to carry on with it.",
     "notSaved": "This phone is not saving right now. Keep the game open: closing it would lose what you have played.",
     "movedGone": "That life was ended on another device.",
+    "moved": "This life was played on another device. Here is where it stands now.",
     "legal": {
       "title": "Privacy and legal notice",
       "updated": "Updated 21 October 2026.",

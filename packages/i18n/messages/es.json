@@ -2081,6 +2081,7 @@
     "lostWaiting": "Tu vida empezó en una versión anterior del juego y esta versión de la aplicación no puede abrirla. Se conserva: actualiza la aplicación para seguir con ella.",
     "notSaved": "Ahora mismo este teléfono no puede guardar. No cierres el juego o perderás lo que has jugado.",
     "movedGone": "Esa vida se terminó en otro dispositivo.",
+    "moved": "Esta vida siguió en otro dispositivo. Así está ahora.",
     "legal": {
       "title": "Privacidad y aviso legal",
       "updated": "Actualizado el 21 de octubre de 2026.",

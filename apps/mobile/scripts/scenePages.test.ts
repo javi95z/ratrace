@@ -47,6 +47,23 @@ test('a scene for a narrower phone is drawn in a box that wide, in the middle of
   expect(web).toContain("return <div style={{ width, marginInline: 'auto' }}>{children}</div>;");
 });
 
+test('a scene of the play screen is Play itself on both sides, with the calendar of a round just turned drawn beside it where the scene has one: held by the web\'s shot, and by the phone\'s prop', () => {
+  expect(web).toContain('play: (scene) => <PlayScene scene={scene} />,');
+  expect(app).toContain('play: (scene) => <PlayScene scene={scene} />,');
+  expect(web).toContain('{turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} /> : null}');
+  expect(app).toContain('{turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} held={PAGE_TURN_HELD_MS} /> : null}');
+  // The web's calendar is held by a rule of the scene's page, in it before the calendar is drawn: its two animations paused that far into their run.
+  expect(web).toContain('const HOLD_TURN = `.animate-page, .animate-tear { animation-play-state: paused !important; animation-delay: -${PAGE_TURN_HELD_MS}ms !important; }`;');
+  expect(web).toContain('{turn ? <style>{HOLD_TURN}</style> : null}');
+  // The two are the web's calendar's own pages.
+  const turning = read('../../web/src/game/screens/PageTurn.tsx');
+  expect(turning).toContain('className="relative h-44 w-36 animate-page"');
+  expect(turning).toContain('className="origin-top-left animate-tear"');
+  // The game of a scene that cannot go on is given its basket on both sides.
+  expect(web).toContain('sceneServices(store, scene.name)');
+  expect(app).toContain('const basket = sceneBasket(scene.name);');
+});
+
 test('the Hud has open, in a scene, the sheet the scene names: the web\'s page presses the Hud\'s own button for it, the phone\'s Hud is given it as its initial state', () => {
   expect(web).toContain("hud: (scene) => <Pressed selector={HUD_SHEETS[scene.sheet ?? '']}><Play /></Pressed>,");
   expect(app).toContain('hud: (scene) => <HudScene open={hudOpenOf(scene)} />,');
@@ -91,7 +108,7 @@ test('the life of a scene is begun with the same ids, seeds and clock wherever i
 // environment, asks the cloud who is playing) is not the page's. The shots keep the browser from the project themselves: shotDrivers.test.ts.
 test('the web\'s scene page names no client of the project and no store of the device, and gives its game its services in memory', () => {
   expect(web).not.toMatch(/supabase|@\/online|indexedDB|localStorage|@ratrace\/online/i);
-  expect(web).toContain('sceneServices(store)');
+  expect(web).toContain('sceneServices(store, scene.name)');
   expect(web).toMatch(/<GameProvider services=\{services\}>/);
 });
 

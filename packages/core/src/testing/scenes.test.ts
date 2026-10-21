@@ -1,12 +1,13 @@
 import { content, lives, weekOf } from '@ratrace/content';
 import { stateHash } from '@ratrace/engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createGameStore } from '../game/store';
 import { fixedSessions, memoryDevice } from '../session/fixed';
 import type { MemoryStore } from '../session/fixed';
 import { newProfile, SAVE_FORMAT } from '../session/types';
 import type { SavedGame } from '../session/types';
-import { runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf } from './scenes';
+import { GUIDE_READ, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, SCENES, sceneServices, sceneStore, screenOf, turnOf } from './scenes';
+import { FIRSTS, TIPS } from '../game/guide';
 
 const saveOf = async (store: MemoryStore) => (await store.loadGame()) as SavedGame | null;
 
@@ -154,6 +155,59 @@ describe('the scenes of the page where a life is chosen', () => {
   });
 });
 
+describe('the scenes of the play screen\'s own: the news, the guide, a fault and the calendar', () => {
+  it('play-news-r1 and play-news-r6 are the news of the engineer\'s first and sixth rounds, for a player who has read every tip: the paper is the whole stage', async () => {
+    const first = await opened(await sceneStore('play-news-r1'));
+    expect(first).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news' });
+    expect(roundOf(first)).toBe(1);
+    const sixth = await opened(await sceneStore('play-news-r6'));
+    expect(sixth).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news' });
+    expect(roundOf(sixth)).toBe(6);
+    expect(sixth.view).toMatchObject({ phase: 'cards', answered: 0 });
+    // Every tip of a first life and every note of a first time, read: the guide says nothing (not even on a page under development, which shows tips to veterans).
+    const read = [...TIPS.map((tip) => tip.id), ...FIRSTS.map((first) => first.id)];
+    for (const name of ['play-news-r1', 'play-news-r6', 'play-pageturn']) {
+      expect(GUIDE_READ.has(name), name).toBe(true);
+      const { guide } = await (await sceneStore(name)).loadProfile();
+      expect(guide, name).toEqual({ seen: read, off: false });
+    }
+  });
+
+  it('play-guide-r1 is the news of the engineer\'s first round for someone new: the first tip of the guide is due', async () => {
+    expect(await saveOf(await sceneStore('play-guide-r1'))).toEqual(await saveOf(await sceneStore('play-news-r1')));
+    expect(await (await sceneStore('play-guide-r1')).loadProfile()).toEqual(newProfile());
+    expect(GUIDE_READ.has('play-guide-r1')).toBe(false);
+  });
+
+  it('play-fault is a life the game cannot go on with: the orders kept for its round cannot be read back, so the round cannot be judged, and the game opens on its fault', async () => {
+    const store = await sceneStore('play-fault');
+    // The life itself is sound: the engineer at the finances of the first round.
+    expect(await opened(store)).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'finance', fault: false });
+    const services = sceneServices(store, 'play-fault');
+    const told = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      const game = createGameStore({ sessions: services.sessions, content, ...(services.basket ? { basket: services.basket } : {}) });
+      await game.getState().boot();
+      expect(game.getState()).toMatchObject({ status: 'playing', stage: 'finance', fault: true });
+      expect(told.mock.calls.map((call) => call[0])).toEqual(['the round could not be previewed:']);
+    } finally {
+      told.mockRestore();
+    }
+    // No other scene is given a basket of its own.
+    for (const { name } of SCENES.filter((scene) => scene.name !== 'play-fault')) expect(sceneServices(store, name).basket, name).toBeUndefined();
+  });
+
+  it('play-pageturn is the news of the engineer\'s second round, with the page of the calendar turning from the first age to the second, held at one moment of its run', async () => {
+    const state = await opened(await sceneStore('play-pageturn'));
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news' });
+    expect(roundOf(state)).toBe(2);
+    expect(turnOf({ name: 'play-pageturn', locale: 'en' })).toEqual({ from: 22, to: 24 });
+    for (const scene of SCENES.filter((one) => one.name !== 'play-pageturn')) expect(turnOf(scene), scene.name).toBeUndefined();
+    // The middle of a step of the torn page's run (its steps are 70 ms from 270) and well inside one of the new page's (100 ms each).
+    expect(PAGE_TURN_HELD_MS).toBe(445);
+  });
+});
+
 describe('the scenes of the HUD', () => {
   it('hud-news-r1, hud-cash, hud-race and hud-status-ru are the news of the engineer\'s first round, play-news-r1\'s very store, each with what it opens', async () => {
     const first = await saveOf(await sceneStore('play-news-r1'));
@@ -203,7 +257,8 @@ describe('the scenes of the HUD', () => {
 
   it('hud-race and hud-crisis are drawn with motion left out, as a player can set it: a shot catches no loop half way (the wheel, the lamp of a crisis)', async () => {
     for (const name of ['hud-race', 'hud-crisis', 'hud-crisis-details']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
-    for (const name of ['hud-news-r1', 'hud-cash', 'play-news-r1']) expect(await (await sceneStore(name)).loadProfile(), name).toEqual(newProfile());
+    for (const name of ['hud-news-r1', 'hud-cash', 'play-guide-r1']) expect(await (await sceneStore(name)).loadProfile(), name).toEqual(newProfile());
+    expect((await (await sceneStore('play-news-r1')).loadProfile()).settings).toEqual(newProfile().settings);
   });
 });
 
@@ -228,6 +283,10 @@ describe('the list of scenes', () => {
       'play-finance-r6',
       'play-outcome-r1',
       'play-resolve-r6',
+      'play-news-r6',
+      'play-guide-r1',
+      'play-fault',
+      'play-pageturn',
       'hud-news-r1',
       'hud-cash',
       'hud-flow',

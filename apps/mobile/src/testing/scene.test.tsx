@@ -181,3 +181,34 @@ test('a scene for a narrower phone is drawn in a box that wide, in the middle of
   await screen.findByText('Age 22', {}, WAIT);
   expect([...document.querySelectorAll<HTMLElement>('div')].some((el) => el.style.width === '360px')).toBe(false);
 });
+
+test('a scene of the play screen is drawn by Play itself: the news with no tip for a player who has read them, the first tip for someone new', async () => {
+  render(<SceneView name="play-news-r1" />);
+  expect(await screen.findByRole('heading', { name: 'News' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'See what life brings' })).toBeTruthy();
+  expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
+  cleanup();
+  render(<SceneView name="play-guide-r1" />);
+  expect((await screen.findByRole('note', { name: 'Guide' }, WAIT)).textContent).toContain('Every round opens with the paper');
+});
+
+test('the scene of a fault is the play screen\'s way out, and the one line its game writes to the log is the one the scene route lets pass unseen', async () => {
+  const told = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  render(<SceneView name="play-fault" />);
+  expect((await screen.findByRole('alert', {}, WAIT)).textContent).toContain('Something went wrong');
+  expect(screen.getByRole('link', { name: 'New life' })).toBeTruthy();
+  expect(told.mock.calls.map((call) => call[0])).toContain('the round could not be previewed:');
+  told.mockRestore();
+});
+
+test('the scene of the calendar is the news of the second round with its page turning over it, held at one moment of its run', async () => {
+  render(<SceneView name="play-pageturn" />);
+  expect(await screen.findByRole('heading', { name: 'News' }, WAIT)).toBeTruthy();
+  const calendar = document.querySelector('[data-motion-only]') as HTMLElement;
+  expect(calendar.querySelector('[data-page="torn"]')?.textContent).toContain('22');
+  expect(calendar.querySelector('[data-page="new"]')?.textContent).toContain('24');
+  // Held: the torn page is part way down, and stays.
+  const torn = calendar.querySelector('[data-page="torn"]') as HTMLElement;
+  expect(Number(torn.style.opacity)).toBeGreaterThan(0);
+  expect(Number(torn.style.opacity)).toBeLessThan(1);
+});

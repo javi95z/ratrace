@@ -8,7 +8,7 @@ away*, *text*, *shape*), the same tool (`kit-shots.ts`). Pictures and numbers li
 section goes to the report of the phase that added it (`reportFolder` in `kitCompare.ts`).
 
 Each task of the phase that draws something adds its rows here. Rows so far: the kit's motion section (task 4), the scenes of the front
-door, the week's challenge and the legal notice (task 6, below), the page where a life is chosen (task 7, below) and the HUD with what hangs from it (task 8, below). Scene rows (one game state drawn by both clients) follow with the screens.
+door, the week's challenge and the legal notice (task 6, below), the page where a life is chosen (task 7, below), the HUD with what hangs from it (task 8, below) and the play screen at the news, its guide, its fault and its calendar (task 9, below). Scene rows (one game state drawn by both clients) follow with the screens.
 
 ## Scenes: one game state, drawn by both clients
 
@@ -44,7 +44,8 @@ point; `differs`: read the numbers) and its numbers. As the kit's shots do, a co
 of the app's registry), its scenes are shot but not compared: their line is `"verdict":"unjudged"` with no numbers, and no diff picture is
 kept. The task that ports a screen takes its word out of `STAND_INS`, and its scenes are compared from then on. Task 6 ported `home`, task 7
 `new`, so their scenes are compared; the five `play-*` scenes of task 5 (`play-news-r1`, `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`,
-`play-resolve-r6`) are still unjudged: they prove that both clients open each scene, and nothing more.
+`play-resolve-r6`) were unjudged: they proved that both clients open each scene, and nothing more. Task 9 ported `play`: `play-news-r1` is compared, and the four
+whose stage a later task brings are unjudged by name (`STAND_IN_SCENES`), until that task takes them out.
 
 **Phone words.** Where the web's words are false or impossible on a phone, the phone has words of its own (`phone.*`), and the two shots cannot agree on their
 text whatever the app does. The scenes that carry them are listed beside the stand-ins (`PHONE_WORDS` in `sceneShots.ts`: `home-lost-newer`, `legal`), and are
@@ -255,7 +256,7 @@ fall at fractions of a point, under the sheet's backdrop in `hud-status-ru` (0 s
 - **The "away" strip** shows only once the page has scrolled past the portrait's row, and a scene is shot at the top: `Hud.test` scrolls the page and finds whose
   life and which round it is. On the phone it is told by the `StickyScreen` (`useScrolledPastLead`: past the bottom of the lead, wherever it ends, followed as it grows), in place of the web's
   `IntersectionObserver`; the web shows it 62 pt of scroll later, when the row has also gone under the status bar, which the phone's page never scrolls under.
-- **The paper's sheet** is a stand-in until Task 9 ports `News` (`Headlines`, its gauges and its paper): the crisis's bar and the round's headlines as lines.
+- **The paper's sheet** is a stand-in until Task 9 ports `News` (`Headlines`, its gauges and its paper): the crisis's bar and the round's headlines as lines. (Task 9: it is News' own `Headlines` now, compared on the news stage of Play.)
 - **The tier-up moment** (the frame jumps, sparks fly and a band of light crosses it once) is the kit's `usePop`, `Sparks` and `Glint`, each held and compared in the kit's
   motion section; the HUD only plays them on a better frame, never on its first draw.
 - **The backdrops of better frames** (teal, stage lights, gold rays) are drawn by `Hud.test` for each tier; `hud-crisis` shows the teal of a bronze frame (status 30)
@@ -266,6 +267,84 @@ fall at fractions of a point, under the sheet's backdrop in `hud-status-ru` (0 s
 The web's `Loop` steps a frame index in React state every `ms` (90 to 230 ms for the wheel), which draws the component again for every frame. The phone draws the four
 frames once, one over the other, and one Reanimated timing per mounted loop (`0` to `n` over `n × ms`, repeated) says which shows, on the UI thread: no React render while
 it turns, and no sprite decoded or drawn again (`Loop.test`: one repeating timing of `n × ms`; the frame for each moment of the run is the web timer's).
+
+## Task 9: play, round by round, from the news
+
+`pnpm --filter @ratrace/web exec tsx ../mobile/scripts/scene-shots.ts web app compare --only=play-news-r1,play-news-r6,play-guide-r1,play-fault,play-pageturn`.
+Play is the real screen on both sides now (`play` is out of `STAND_INS`): the web's page draws the web's `Play`, the app's registry the phone's. Its stages that later
+tasks bring (the cards and a card's result, Task 11; the finances, Task 12; the ledger, Task 16) are a dashed stand-in line on the phone, so the four scenes of them stay
+unjudged by name (`STAND_IN_SCENES` in `sceneShots.ts`: `play-cards-r1`, `play-finance-r6`, `play-outcome-r1`, `play-resolve-r6`; the task that ports a stage takes its
+scenes out). The `hud-*` scenes still compare the HUD alone.
+
+| scene | what | verdict | raw % | beyond % | a point away (px) | shape (px) | text lines | worst text (pt) |
+|---|---|---|---|---|---|---|---|---|
+| play-news-r1 | the engineer's first round at the news, every tip read: the paper (masthead, four clippings, dashed rules, drop shadow), the gauges, the bar's button | accepted | 3.79 | 1.029 | 14124 | 1446 | 42 (4 unmeasured) | 1.00 (▸) |
+| play-news-r6 | the sixth round's news (London, a clipping of the markets on the paper's own cream) | accepted | 4.21 | 1.133 | 13517 | 1518 | 41 (4 unmeasured) | 1.00 (▸) |
+| play-guide-r1 | the first round for someone new: the guide's note over the paper | accepted | 6.16 | 3.778 | 20603 | 3504 | 42 (5 unmeasured) | 1.33 |
+| play-fault | a game that cannot go on: the way out | clean | 3.09 | 0.405 | 6203 | 0 | 6 | 1.00 |
+| play-pageturn | the second round's news (the people the player grew up with in the paper, one of the famous whole in a clipping), the calendar turning from 22 to 24 held 445 ms into its run | accepted | 3.93 | 1.341 | 16650 | 3918 | 47 (10 unmeasured) | 4.33 (a line under the calendar) |
+
+**How the scenes are made.**
+- **The guide.** A page under development shows the guide's tips to everyone, even with the guide off (the web's `developing`, kept on the phone), so the scenes of
+  the paper are a player who has read every tip and every note of a first time (`GUIDE_READ` in core's scenes: `play-news-r1`, `play-news-r6`, `play-pageturn`);
+  `play-guide-r1` is the same store for someone new, with the first tip due. (`play-news-r1`'s store is otherwise the HUD scenes' own.)
+- **A fault.** The fault is a state of the round store, not of a save, and the web's `Fault` is not exported: a scene names a game that cannot go on (`play-fault`), and
+  both clients give its game a basket of orders that cannot be read back (`sceneBasket`, through `sceneServices(store, name)` on the web and `servicesOf` on the
+  phone): the round cannot be judged, and the game opens on its fault, as it does when a page's engine will not preview a round. The game says so in the log; the
+  app's scene route lets that one line pass unseen (`LogBox.ignoreLogs`), or development's banner would be in the shot.
+- **The calendar.** It turns only while Play is on screen as a round goes by, and a scene's screen is first drawn after its steps; so both registries draw the calendar
+  beside Play for the scene that names it (`turnOf`), held at the same moment of its run (`PAGE_TURN_HELD_MS`, 445 ms: the middle of a step of the torn page's, well
+  inside one of the new page's): the phone's `PageTurn` takes `held` (it draws each page as the motion table's frame at that time, as the kit's motion page does),
+  and the web's scene page puts a rule of its own in the page before the calendar is drawn (`HOLD_TURN`: both animations paused with a negative delay). A shot-time rule
+  could not do it: the page is still for 800 ms before the shot, and an animation paused only then is paused where it had got to.
+
+### What differed in the first shots, and was fixed
+
+| # | difference | cause | fix | test |
+|---|---|---|---|---|
+| 1 | the calendar of `play-pageturn` drawn with no torn page on the web (75010 shape pixels) | the hold was first a shot-time rule (`WEB_ONLY`), added after the page had stood still: the torn page's run (900 ms) was over, and it was paused at its end, gone | the hold is the scene page's own rule, in the page before the calendar mounts | `scenePages.test` |
+
+Measured before writing, so not differences: the guide's frame is the bevel's (`bevel frame-gold`: the class list's `shadow-[0_0_0_3px_gold-500]` loses to the bevel's own box-shadow in the stylesheet; no 3-pixel ring is drawn); the guide's
+buttons and the finances' button of orders are 17 pt with 16 of padding (the `text-[15px]`, `text-[14px]` and `px-3` of their class lists lose to the button's own);
+the markets' clipping has no block colour (`bg-teal-500` is no colour of the game's palette, which the stylesheet resets); the dashed rule between clippings is Chrome's
+(dashes three times the border, gaps as near two as a whole count allows: 70 dashes over 346 pt, `dashesOf`).
+
+### The residual, with its cause
+
+1. **The masthead, a device pixel to the left (about 1440 shape pixels in each scene of the paper).** "The Rat Race Times" is centred; measured along a row through it,
+   every stem of the app's letters starts one device pixel left of the web's (the web's have an antialiased column where the app's start), the width the same. Centring
+   puts the line at a fraction of a point, which Chrome draws there and the phone at a device pixel. It is counted as shape because the line is not measured as text:
+   the paper's rules (the double rule of its border above, the 3-point rule under it) are of the same ink and lie inside the text check's window, so the check takes
+   them for a fill round the words (`filled` in `kitCompare.ts`) and keeps the line's glyphs out of its mask. Tried: a hugging box centred by its parent in place of
+   a centred line: the same pixels.
+2. **Whole CSS pixels against device pixels** (Task 7's #4). The label of the bar's button stands two device pixels higher (`play-news-r6`: 75 shape pixels;
+   `play-news-r1`: 0.67 pt, inside its mask). In `play-guide-r1` the guide's note ends at 564.48 pt: the web paints its foot at 564 (and the button above it at 508,
+   its layout 508.48), the phone at 564.67 (Yoga rounds each box's place relative to its parent: the stage at 303 for 302.84, then the note); everything under it is
+   two device pixels lower, and the second line of a two-line headline under it 1.33 pt (the web puts each line's baseline on a whole CSS pixel, 18 apart there, the
+   phone 18.67). About 2000 of its 3504 shape pixels are the clippings' pictures moved by those two device pixels.
+3. **The turned page (`play-pageturn`).** The torn page is turned 3.6° about its top left corner: its edges, the rings and the red band are antialiased on one side and
+   hard on the other (the exception this phase asks for, below), about 2500 shape pixels. The line of the paper under the calendar ("Survey: everyone is middle class…",
+   4.33 pt) is measured through the calendar drawn over it: the calendar takes no touch (`pointer-events: none`), so the web's text check does not find the line
+   covered (`elementFromPoint` passes through it) and measures its ink with the calendar's.
+
+Records: `ACCEPTED` in `scripts/sceneShots.ts` (`play-news-r1` 1446 / 1 pt, `play-news-r6` 1518 / 1 pt, `play-guide-r1` 3504 / 4 device pixels, `play-pageturn` 3918 /
+13 device pixels). `play-fault` is clean.
+
+**The sprites' wait.** Two full runs of every scene, on a machine shared with other work (load average 40 to 170), each failed one to three scenes of other
+tasks (`home-lost-newer`, `new-unlocked`, `new-locked`, `challenge-practice`) for a sprite not drawn yet when the app was shot (a gear, a lock, a city's icon,
+the practice's icon); each was as recorded when shot again alone. A screen is now given 9 s, not 6, before its shot (`SPRITES_MS` in `shotDrivers.ts`). A third run,
+at a load average of 150 to 250, still left out a lock (`new-unlocked`, 5247 shape pixels) and the HUD's coin (`hud-crisis-details`, 5103): the app's shot now
+waits for the screen to be still as well (`stillShot`: shot again every 1.5 s until two shots in a row are the same, at most four more), so a sprite that
+comes late is in it. Nothing is judged more loosely: the shot kept is the screen standing still. The full run after it exits 0, with every scene as recorded
+(`new-unlocked` 738, `hud-crisis-details` clean, the play scenes' numbers the same to the pixel as in the run before).
+
+### What is not compared, and why
+
+- **The stages later tasks bring** (above): a stand-in line, a dashed box with a sign of works, so a life can be played on in the simulator; the stage machine, the
+  bar of the next thing to do (the finances' cash after the round, the button of orders and the warning before a costly round) and the guide round them are the real ones.
+- **The moved toast, the warning before a costly round, Waiting** (the blinking "Loading…" while the game opens) are tested (`Play.test`), not shot: none is a state a
+  scene's screen is first drawn in.
+- **A Russian player on a 360 pt phone**: the HUD at 360 is `hud-status-ru`; the news stage at 360 is not shot (no scene names it; the paper and the gauges wrap their words).
 
 ## The tolerance, and the exception this phase needs
 

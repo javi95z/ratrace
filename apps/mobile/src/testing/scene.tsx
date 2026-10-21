@@ -1,9 +1,9 @@
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
-import { runScene, SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
+import { PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import { GameProvider, useGame } from '../game/context';
 import type { Services } from '../game/context';
 import { WeeklyChallenge } from '../game/screens/Challenge';
@@ -11,7 +11,9 @@ import { Home } from '../game/screens/Home';
 import { Legal } from '../game/screens/Legal';
 import { NewLife } from '../game/screens/NewLife';
 import type { NewLifeOpened } from '../game/screens/NewLife';
+import { PageTurn } from '../game/screens/PageTurn';
 import { Placeholder } from '../game/screens/Placeholder';
+import { Play } from '../game/screens/Play';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { Screen } from '../ui/Page';
 import { ReadText } from '../ui/text';
@@ -28,6 +30,24 @@ import { memoryServices, speaking } from './memoryServices';
 
 /** A sheet shown open for a scene is not closed by anything. */
 const nothing = (): void => {};
+
+// A scene of a game that cannot go on (`play-fault`) is one whose game says so in the log as it opens: in development the app would show that
+// line over the screen it is shooting. Only that line is let pass unseen: every other is shown as it always is.
+LogBox.ignoreLogs(['the round could not be previewed:']);
+
+/**
+ * The play screen of a scene, and over it the calendar of a round just turned where the scene has one (`turnOf`), held at one moment of its run:
+ * drawn beside the screen, as the screen draws it when the round goes by under it. The web's page draws the same, held by a rule of its own.
+ */
+function PlayScene({ scene }: { scene: Scene }) {
+  const turn = turnOf(scene);
+  return (
+    <>
+      <Play />
+      {turn ? <PageTurn from={turn.from} to={turn.to} onDone={nothing} held={PAGE_TURN_HELD_MS} /> : null}
+    </>
+  );
+}
 
 /** What draws a scene's screen: the scene itself is given, so a sheet the scene names (`scene.sheet`) is the screen's to open. */
 export type SceneScreens = Readonly<Record<string, (scene: Scene) => ReactNode>>;
@@ -49,7 +69,7 @@ const hudOpenOf = (scene: Scene): HudSceneOpen | undefined => HUD_OPEN.find((ope
 export const SCENE_SCREENS: SceneScreens = {
   home: (scene) => (scene.sheet === 'settings' ? <><Home /><HomeSettingsSheet open onClose={nothing} /></> : <Home />),
   new: (scene) => <NewLife opened={openedOf(scene)} />,
-  play: () => <Placeholder page="play" />,
+  play: (scene) => <PlayScene scene={scene} />,
   hud: (scene) => <HudScene open={hudOpenOf(scene)} />,
   records: () => <Placeholder page="records" />,
   collection: () => <Placeholder page="collection" />,
@@ -59,10 +79,12 @@ export const SCENE_SCREENS: SceneScreens = {
 
 /**
  * What a scene is drawn with: its store behind the game's services, in the language it names whatever the phone speaks,
- * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by.
+ * and the day every scene is drawn on (`SCENE_NOW`) as the clock a screen reads the date by; and where the scene names one, the place its
+ * game keeps the orders of the round (`sceneBasket`: one that cannot be read, for a game that cannot go on).
  */
 export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneStore>>): Services {
-  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW };
+  const basket = sceneBasket(scene.name);
+  return { ...speaking(memoryServices(store), scene.locale), now: () => SCENE_NOW, ...(basket ? { basket } : {}) };
 }
 
 /** What a mistyped name gets: the scenes there are. */
