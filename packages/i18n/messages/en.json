@@ -2095,6 +2095,7 @@
       "whoBody": "No one but you: the game runs on this phone and talks to no server.",
       "laterTitle": "If this changes",
       "laterBody": "A later version of the game may add an account, rankings or games with others. This notice will be updated to say what they keep, and why, before that version is released."
-    }
+    },
+    "realNetWorth": "Net worth, after inflation"
   }
 }

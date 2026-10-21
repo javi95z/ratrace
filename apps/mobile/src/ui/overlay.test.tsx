@@ -455,3 +455,28 @@ test('a dismissal the Modal reports while the sheet is open takes nothing from i
   expect(screen.getByText('inside')).toBeTruthy();
   expect(await settledAfter(sheetsGone())).toBe(false);
 });
+
+test('a sheet that closes says when it has gone (onGone): once its Modal has dismissed, never while it is leaving, and not for an opening it was reopened from', async () => {
+  platform.OS = 'ios';
+  const gone = vi.fn();
+  const Gone = ({ open }: { open: boolean }) => (
+    <Sheet open={open} onClose={() => {}} onGone={gone} title="Title" closeLabel="Close">
+      <span>inside</span>
+    </Sheet>
+  );
+  const { rerender } = render(<Gone open />);
+  rerender(<Gone open={false} />);
+  // Hidden and still leaving: another sheet presented now would come while this one's view is dismissed.
+  expect(gone).not.toHaveBeenCalled();
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(gone).toHaveBeenCalledTimes(1);
+  // Opened again while it was leaving: the opening that left says nothing, the one shown says it once it goes.
+  rerender(<Gone open />);
+  rerender(<Gone open={false} />);
+  rerender(<Gone open />);
+  await wait(700);
+  expect(gone).toHaveBeenCalledTimes(1);
+  rerender(<Gone open={false} />);
+  act(() => (modal.props!.onDismiss as () => void)());
+  expect(gone).toHaveBeenCalledTimes(2);
+});

@@ -139,10 +139,15 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
 
 /**
  * The scenes whose words are the phone's own (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:
- * "reload the page"). The two shots cannot agree on their text, whatever the app does, so these are compared for their layout and shape only: the
- * text rows are reported (they are in the line) and not judged, and the verdict says so.
+ * "reload the page"; or where the web shows no words at all, but a key that is not in the messages: the net worth after inflation in `balance-r6`,
+ * which the web writes `end.realNetWorth` and the phone `phone.realNetWorth`). The two shots cannot agree on their text, whatever the app does, so these
+ * are compared for their layout and shape only: the text rows are reported (they are in the line) and not judged, and the verdict says so.
  */
-export const PHONE_WORDS: readonly string[] = ['home-lost-newer', 'legal'];
+export const PHONE_WORDS: readonly string[] = [
+  'home-lost-newer',
+  'legal',
+  'balance-r6',
+];
 
 /**
  * Of those, the scenes whose whole page is other words (the legal notice: other sections, other paragraphs, other lengths), where every box

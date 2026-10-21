@@ -2095,6 +2095,7 @@
       "whoBody": "Nadie más que tú: el juego funciona en este teléfono y no habla con ningún servidor.",
       "laterTitle": "Si esto cambia",
       "laterBody": "Una versión futura del juego podría añadir una cuenta, clasificaciones o partidas con otros jugadores. Este aviso se actualizará antes de publicarla para decir qué guardan y para qué."
-    }
+    },
+    "realNetWorth": "Patrimonio, descontando la inflación"
   }
 }

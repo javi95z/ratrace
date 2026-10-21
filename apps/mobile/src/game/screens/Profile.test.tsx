@@ -13,7 +13,7 @@ import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { GameProvider, useGame } from '../context';
 import { Play } from './Play';
-import { ProfileSheet } from './Profile';
+import { Leave, ProfileSheet } from './Profile';
 
 // How often Play draws the profile's sheet: the sheet itself, counted each time it is drawn (a stand-in that draws the real one).
 const drawn = vi.hoisted(() => ({ sheet: 0 }));
@@ -368,6 +368,18 @@ describe('the way out of a life, at the foot of the profile', () => {
     fireEvent.click(within(profile).getByRole('link', { name: 'Leave to the home screen' }));
     await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
     expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
+  });
+
+  it('goes home once for a second press while it is leaving', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    renderGame(<Leave />, services);
+    const leave = await screen.findByRole('link', { name: 'Leave to the home screen' });
+    fireEvent.click(leave);
+    fireEvent.click(leave);
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith('/'));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(router.dismissTo).toHaveBeenCalledTimes(1);
   });
 
   it('says so, in the phone\'s words, when the phone is not saving', async () => {

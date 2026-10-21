@@ -220,14 +220,22 @@ describe('a scene whose words are the phone\'s own', () => {
   const otherWords = (over: Partial<Result> = {}) =>
     result('x', { shape: 0, texts: [{ text: 'a', web: [0, 0, 1, 1], app: [0, 0, 1, 1], apart: 5.67 }, { text: 'Reload the page', web: [0, 0, 1, 1], app: null, apart: Infinity }], ...over });
 
-  it('are listed beside the stand-ins: the notice of a newer life, and the legal page, which is a different text all through', () => {
-    expect(PHONE_WORDS).toEqual(['home-lost-newer', 'legal']);
+  it('are listed beside the stand-ins: the notice of a newer life, the legal page, which is a different text all through, and the net worth\'s sheet, where the web shows a key', () => {
+    expect(PHONE_WORDS).toEqual(['home-lost-newer', 'legal', 'balance-r6']);
     for (const name of PHONE_WORDS) expect(SCENES.map((scene) => scene.name), name).toContain(name);
     // Of those, a page whose every paragraph is other words has no line to compare to a line.
     expect(PHONE_PAGES).toEqual(['legal']);
     for (const name of PHONE_PAGES) expect(PHONE_WORDS).toContain(name);
-    // They are drawn by the real screens, so they are judged, and by their layout only.
-    expect(PHONE_WORDS.every((name) => isJudged(named(name)))).toBe(true);
+    // They are drawn by the real screens, so they are judged, and by their layout only: at once, or once a batch pass has shot them.
+    expect(PHONE_WORDS.every((name) => isJudged(named(name)) || PENDING_SHOTS.has(name))).toBe(true);
+    expect(PHONE_WORDS.filter((name) => !isJudged(named(name)))).toEqual(['balance-r6']);
+    // The net worth's sheet: the web asks for a key the messages do not have, and shows the key; the phone says it in its own words.
+    const web = readFileSync(new URL('../../web/src/game/screens/Balance.tsx', import.meta.url), 'utf8');
+    expect(web).toContain("<Row left={end('realNetWorth')}");
+    const messages = JSON.parse(readFileSync(new URL('../../../packages/i18n/messages/en.json', import.meta.url), 'utf8')) as { end: Record<string, unknown>; phone: Record<string, unknown> };
+    expect(messages.end.realNetWorth).toBeUndefined();
+    expect(messages.phone.realNetWorth).toBe('Net worth, after inflation');
+    expect(readFileSync(new URL('../src/game/screens/Balance.tsx', import.meta.url), 'utf8')).toContain("<Row left={phone('realNetWorth')}");
   });
 
   it('is judged by its layout alone: the shape is held to nothing, and the text rows are reported and not judged, and the verdict says so', () => {

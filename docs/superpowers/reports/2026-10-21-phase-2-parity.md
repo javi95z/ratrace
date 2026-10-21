@@ -602,8 +602,9 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
 - **The work panel is a stand-in until the lanes are merged** (`WorkPanelStub.tsx`: the job's title, its trade and its pay, the head of the web's panel):
   Task 14 ports the web's `WorkPanel` in another lane. `profile-r6` (and the profile under the other two sheets) differs from the web there until the merge;
   the batch pass shoots it after the merge, with the real panel.
-- **The net worth's sheet says `end.realNetWorth`, on the web and on the phone**: the web's Balance.tsx asks for a key that left the messages in 3c18114. The phone
-  shows what the web shows (use-intl's fallback, the key's name) and, in development, logs it as an error: Expo's LogBox may stand over `balance-r6`'s shot.
+- **The net worth after inflation is in the phone's own words** (fix round of Task 17): the web's Balance.tsx asks for a key that left the messages in 3c18114
+  (`end.realNetWorth`), so the web shows the key itself. The phone never shows a key: it says "Net worth, after inflation" (`phone.realNetWorth`, in en, es and
+  ru). `balance-r6` is in `PHONE_WORDS`: the two shots cannot agree on that line's words, so the batch pass judges the scene by its layout only.
 - **Lines that share a baseline** (a figure and its ▸, a pixel 17 in a reading line, a rival's place, name and points, a choice's name and cost, what is owed and its
   figure) are placed from the browser's baselines (`webBaseline`; Rivals.tsx's `webLine` for a line of several texts), as the Hud's are: the batch pass checks them.
 - **Not compared** (no scene shows them; `Profile.test` and `Balance.test` hold them): the sheets of the lifestyle, the home (rented and owned) and the

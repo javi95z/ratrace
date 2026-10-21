@@ -3,7 +3,7 @@ import { cashflow, homeOf, netWorth, quoteItem, quoteLiving, quoteOwnedProperty,
 import type { GameView, InsuranceKind, LifestyleTier, OwnedItem, RentTier } from '@ratrace/engine';
 import { ageAt, insuranceCover } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
-import { createContext, memo, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, memo, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
@@ -197,13 +197,28 @@ export function ProfileBody() {
   const tax = taxAnnual(content, shown);
   const [open, setOpen] = useState<string | null>(opened.item ?? null);
   const [about, setAbout] = useState<About | null>(null);
+  // The line of the balance sheet whose sheet is drawn: open, or leaving (kept until its sheet has gone, so that its Modal can dismiss).
   const [line, setLine] = useState<BalanceLine | null>(opened.line ?? null);
+  const [lineOpen, setLineOpen] = useState(opened.line !== undefined);
+  const openLine = useCallback((which: BalanceLine) => {
+    setLine(which);
+    setLineOpen(true);
+  }, []);
+  const closeLine = useCallback(() => setLineOpen(false), []);
   // Looked up afresh on every draw: a thing sold or lapsed while its sheet is open closes it.
   const thing = life.items.find((owned) => owned.itemId === open);
-  // One of the things owned, opened from the list of them in the balance sheet: the list gives way to it. The same for every drawing (`Thing` is memoised).
+  // One of the things owned, opened from the list of them in the balance sheet: the list gives way to it, and it opens once the list has gone (on iOS a
+  // sheet presented while another is still dismissing can fail, or leave that one half gone). The same for every drawing (`Thing` is memoised).
+  const next = useRef<string | null>(null);
   const openThing = useCallback((itemId: string) => {
+    next.current = itemId;
+    setLineOpen(false);
+  }, []);
+  const lineGone = useCallback(() => {
+    const itemId = next.current;
+    next.current = null;
     setLine(null);
-    setOpen(itemId);
+    if (itemId !== null) setOpen(itemId);
   }, []);
 
   let invested = 0;
@@ -267,15 +282,15 @@ export function ProfileBody() {
       <Panel title={t('balance')} label={t('balance')}>
         {/* Every line opens what it is made of. */}
         {lines.map(([kind, label, amount]) => (
-          <BalanceRow key={kind} line={kind} label={label} amount={amount} onOpen={setLine} />
+          <BalanceRow key={kind} line={kind} label={label} amount={amount} onOpen={openLine} />
         ))}
-        <BalanceRow line="debts" label={t('debts')} amount={fmt.money(-owed)} tone={owed > 0 ? 'wine-300' : undefined} onOpen={setLine} />
-        <Opener onOpen={() => setLine('netWorth')}>
+        <BalanceRow line="debts" label={t('debts')} amount={fmt.money(-owed)} tone={owed > 0 ? 'wine-300' : undefined} onOpen={openLine} />
+        <Opener onOpen={() => openLine('netWorth')}>
           <Row style={TOTAL} left={<NetWorthLabel>{t('netWorth')}</NetWorthLabel>} right={<Opening size={19} tone="gold-500">{fmt.money(netWorth(p))}</Opening>} />
         </Opener>
       </Panel>
       {/* One of the things owned is opened from the list of them: the list gives way to it. */}
-      {line ? <BalanceSheet line={line} shown={shown} onClose={() => setLine(null)} onItem={openThing} /> : null}
+      {line ? <BalanceSheet line={line} shown={shown} open={lineOpen} onClose={closeLine} onGone={lineGone} onItem={openThing} /> : null}
 
       {/* The people the player grew up with, and where the player stands among them. */}
       <RivalsBoard history={history} />
@@ -574,13 +589,14 @@ export function ProfileSheet({ open, onClose }: { open: boolean; onClose(): void
 
 /**
  * The way out of a life in progress. Nothing is lost by taking it. On the phone the sheet it stands in closes first (`onLeave`), and the page moves on
- * once it is gone: a page changed under a sheet that is still leaving is left with it.
+ * once it is gone: a page changed under a sheet that is still leaving is left with it. Taken once: a second press while it leaves goes nowhere twice.
  */
 export function Leave({ onLeave }: { onLeave?: () => void }) {
   const t = useT('profile');
   const phone = useT('phone');
   const saving = useSaving();
   const router = useRouter();
+  const leaving = useRef(false);
   // A life in a room is left with the room, from the room's own sheet.
   const inRoom = useInRoom();
   if (inRoom) return null;
@@ -591,6 +607,8 @@ export function Leave({ onLeave }: { onLeave?: () => void }) {
         bg="night-600"
         style={{ paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}
         onPress={() => {
+          if (leaving.current) return;
+          leaving.current = true;
           onLeave?.();
           void sheetsGone().then(() => router.dismissTo('/'));
         }}

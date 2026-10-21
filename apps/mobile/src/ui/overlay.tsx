@@ -42,9 +42,11 @@ const useSheetOpen = (): boolean => useSyncExternalStore(subscribeTop, () => top
  *
  * A sheet that is closed stays mounted, its Modal hidden, until the Modal has dismissed, so that `sheetsGone` (./back)
  * can tell a screen that moves on after closing its sheets when they are gone. Every opening is a panel of its own,
- * so its rise plays from its first frame.
+ * so its rise plays from its first frame. `onGone` is told when a sheet that closed has gone, its Modal dismissed: a sheet
+ * that gives way to another (a list to one of its things) opens the other then, never while it is still leaving (on iOS
+ * a Modal presented while another dismisses can fail, or leave that one half gone).
  */
-export function Sheet({ open, onClose, title, closeLabel, tone, children }: { open: boolean; onClose(): void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
+export function Sheet({ open, onClose, onGone, title, closeLabel, tone, children }: { open: boolean; onClose(): void; onGone?: () => void; title: string; closeLabel: string; back?: boolean; tone?: 'gold' | 'wine'; children: ReactNode }) {
   const [held, setHeld] = useState({ was: open, opening: open ? 1 : 0, mounted: open });
   let now = held;
   if (open !== held.was) {
@@ -52,8 +54,18 @@ export function Sheet({ open, onClose, title, closeLabel, tone, children }: { op
     setHeld(now);
   }
   const opening = now.opening;
+  // The latest opening, and who is told when a sheet has gone, as they are when the Modal says it has dismissed.
+  const latest = useRef(opening);
+  const told = useRef(onGone);
+  useEffect(() => {
+    latest.current = opening;
+    told.current = onGone;
+  });
   // Said by the panel that is leaving; one that was replaced by another opening has nothing left to say.
-  const leave = useCallback(() => setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current)), [opening]);
+  const leave = useCallback(() => {
+    setHeld((current) => (current.opening === opening ? { ...current, mounted: false } : current));
+    if (latest.current === opening) told.current?.();
+  }, [opening]);
   return now.mounted ? (
     <SheetPanel key={opening} open={open} onClose={onClose} onGone={leave} title={title} closeLabel={closeLabel} tone={tone}>
       {children}

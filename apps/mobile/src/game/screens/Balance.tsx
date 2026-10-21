@@ -16,7 +16,8 @@ import { WorthGraph } from './WorthGraph';
 
 /*
  * The web's Balance.tsx, on the phone. What the phone leaves out: the name of another player of a room who lent the player money (`usePeerName`): a life
- * on the phone is never in a room, and owes no one in one.
+ * on the phone is never in a room, and owes no one in one. One line is in words of the phone's own: the net worth after inflation, which the web asks of a
+ * key no longer in the messages (`end.realNetWorth`, so the web shows the key itself); the phone never shows a key, and says it (`phone.realNetWorth`).
  */
 
 /** The lines of the balance sheet. Each opens what it is made of. */
@@ -86,9 +87,10 @@ const Thing = memo(function Thing({ itemId, name, worth, onItem }: { itemId: str
 
 /**
  * One line of the balance sheet, opened: what it is, and everything it is made of. To be read:
- * buying, selling and repaying are done in the finances. `onItem` opens one thing of those owned.
+ * buying, selling and repaying are done in the finances. `onItem` opens one thing of those owned. Closed (`open` false), it stays drawn
+ * while it leaves, and says when it has gone (`onGone`): a thing opened from it opens then.
  */
-export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLine; shown: GameView; onClose(): void; onItem(itemId: string): void }) {
+export function BalanceSheet({ line, shown, open = true, onClose, onGone, onItem }: { line: BalanceLine; shown: GameView; open?: boolean; onClose(): void; onGone?: () => void; onItem(itemId: string): void }) {
   const t = useT('balance');
   const profile = useT('profile');
   const common = useT('common');
@@ -96,6 +98,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
   const estate = useT('finance.property');
   const debtText = useT('finance.debt');
   const end = useT('end');
+  const phone = useT('phone');
   const words = useWords();
   const { content, text, names, fmt } = words;
   const history = useGame((s) => s.history);
@@ -308,8 +311,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
           <About>{t('netWorth.about')}</About>
           <Panel>
             <Row left={profile('netWorth')} right={<Figure tone="gold-500">{fmt.money(netWorth(p))}</Figure>} />
-            {/* The web's key `end.realNetWorth` is no longer in the messages (it left them in 3c18114): the web shows its name, and so does this. */}
-            <Row left={end('realNetWorth')} sub={t('netWorth.realHint')} right={fmt.money(realNetWorth(shown))} />
+            <Row left={phone('realNetWorth')} sub={t('netWorth.realHint')} right={fmt.money(realNetWorth(shown))} />
           </Panel>
           {history.length > 1 ? (
             <Panel>
@@ -323,7 +325,7 @@ export function BalanceSheet({ line, shown, onClose, onItem }: { line: BalanceLi
   }
 
   return (
-    <Sheet open onClose={onClose} title={t(`${line}.title`)} closeLabel={common('close')}>
+    <Sheet open={open} onClose={onClose} onGone={onGone} title={t(`${line}.title`)} closeLabel={common('close')}>
       <View style={{ gap: 12 }}>{body}</View>
     </Sheet>
   );
