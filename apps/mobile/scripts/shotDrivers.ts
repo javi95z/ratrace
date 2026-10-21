@@ -1,4 +1,4 @@
-import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
+import { execFileSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
@@ -379,6 +379,30 @@ export async function readyServer(port: number): Promise<{ port: number; wait(na
 }
 
 /**
+ * Runs `xcrun simctl …`, and again, a second later, where it fails, up to `tries` times in all: a busy simulator now and then refuses one
+ * screenshot or one URL (exit status 148, no word why: twice in batch pass 1's runs, each time throwing away a run of half an hour). A simulator
+ * that is not there fails every try, and the last failure is thrown.
+ */
+export function simctl(
+  args: readonly string[],
+  {
+    exec = (said: readonly string[]): void => void execFileSync('xcrun', ['simctl', ...said], { stdio: 'ignore' }),
+    pause = (): void => void spawnSync('sleep', ['1']),
+    tries = 3,
+  }: { exec?: (said: readonly string[]) => void; pause?: () => void; tries?: number } = {},
+): void {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      exec(args);
+      return;
+    } catch (error) {
+      if (attempt >= tries) throw error;
+      pause();
+    }
+  }
+}
+
+/**
  * Shoots the app: each route opened in Expo Go on the booted simulator, then its screen taken once it is still (`stillShot`). A shot that names
  * its scene (`name`) first waits for the scene to say it is ready (`readyServer`); one that does not (the kit's sections) is shot as before.
  * The status bar is the same in every shot (it is masked in the comparison anyway). `fresh` first closes Expo Go and opens the first route
@@ -386,9 +410,9 @@ export async function readyServer(port: number): Promise<{ port: number; wait(na
  * changed since, and shows it until it is opened again. Gives back the routes whose screen never stood still, or whose scene never said it was ready.
  */
 export async function shootApp(shots: ReadonlyArray<{ route: string; png: string; name?: string }>, options: { fresh?: boolean } = {}): Promise<string[]> {
-  execFileSync('xcrun', ['simctl', 'status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
+  simctl(['status_bar', 'booted', 'override', '--time', '9:41', '--batteryState', 'charged', '--batteryLevel', '100']);
   const told = shots.some((shot) => shot.name !== undefined) ? await readyServer(READY_PORT) : null;
-  const open = (route: string) => execFileSync('xcrun', ['simctl', 'openurl', 'booted', `${METRO}/--/${told ? routeTold(route, told.port) : route}`]);
+  const open = (route: string) => simctl(['openurl', 'booted', `${METRO}/--/${told ? routeTold(route, told.port) : route}`]);
   // The routes whose screen never stood still: given back for the run's result, and named again at the end.
   const moving: string[] = [];
   try {
@@ -408,13 +432,13 @@ export async function shootApp(shots: ReadonlyArray<{ route: string; png: string
       if (told && name !== undefined && !(await told.wait(name, READY_MS))) {
         console.log(`app ${route} (never said it was ready in ${READY_MS / 1000} s)`);
         moving.push(route);
-        execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
+        simctl(['io', 'booted', 'screenshot', png]);
         continue;
       }
       // Each shot is written where the last is kept: the one left there is the screen as it stood still, its scene ready all the while.
       const { still } = await stillShot(
         () => {
-          execFileSync('xcrun', ['simctl', 'io', 'booted', 'screenshot', png], { stdio: 'ignore' });
+          simctl(['io', 'booted', 'screenshot', png]);
           return readFileSync(png);
         },
         { ready: () => told === null || name === undefined || told.ready(name) },

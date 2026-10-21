@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, openPage, readyServer, refuseServerInUse, routeTold, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -294,4 +294,27 @@ test('a line partly under decoration that takes the pointer in a shot (the calen
   } finally {
     Object.assign(globalThis, saved);
   }
+});
+
+test('a command to the simulator that fails is tried again a second later, up to three times; one that never works throws its last failure', () => {
+  const tried: string[] = [];
+  let pauses = 0;
+  let failures = 2;
+  const flaky = (args: readonly string[]) => {
+    tried.push(args.join(' '));
+    if (failures-- > 0) throw new Error(`refused ${tried.length}`);
+  };
+  simctl(['io', 'booted', 'screenshot', 'a.png'], { exec: flaky, pause: () => void (pauses += 1) });
+  expect(tried).toEqual(['io booted screenshot a.png', 'io booted screenshot a.png', 'io booted screenshot a.png']);
+  expect(pauses).toBe(2);
+  let count = 0;
+  expect(() =>
+    simctl(['openurl', 'booted', 'x'], {
+      exec: () => {
+        count += 1;
+        throw new Error(`gone ${count}`);
+      },
+      pause: () => undefined,
+    }),
+  ).toThrow('gone 3');
 });

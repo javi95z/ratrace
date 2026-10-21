@@ -259,10 +259,12 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'end-share': {
-    shape: 5084,
+    // 5084 and 5085 in the pass's runs: the web's own picture is not the same from one shot to the next (677 of its pixels changed between two shots
+    // of the same page), and the count moves with it by a pixel or two.
+    shape: 5100,
     worstPt: 0.67,
     oneSided: 0,
-    reason: 'The picture to share is a picture, its words no text to the comparison: drawn from the same layout by Skia on the phone and by the canvas on the web, its glyphs\' edges differ (Skia sets them without kerning) and the 1080-wide card is smoothed into its 270 points by each its own way.',
+    reason: 'The picture to share is a picture, its words no text to the comparison: drawn from the same layout by Skia on the phone and by the canvas on the web, its glyphs\' edges differ (Skia sets them without kerning) and the 1080-wide card is smoothed into its 270 points by each its own way, the web\'s a little differently each time it is drawn.',
     report: 'Batch pass 1: every scene shot, compared and judged',
   },
   'end-ru': {
