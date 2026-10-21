@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
-import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, KeyFigure, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
@@ -740,4 +740,35 @@ test('a Stat hands its box to whoever asks for it, to measure where it stands (t
   const box = screen.getByTestId('stat');
   expect(seen.filter((node) => node !== null)).toEqual([box]);
   expect(box.contains(screen.getByRole('button', { name: /Cash/ }))).toBe(true);
+});
+
+test('a small thing that is pressed reaches the 44 a thumb needs in its own layout, taking no room: half above and half below where there is room', () => {
+  // A line of 12 × 1.45: 27 more (whole points), 13.5 a side, as padding with a negative margin as large, so nothing round it moves.
+  const line = reach(12 * 1.45, { above: 20, below: 30 });
+  expect(line).toMatchObject({ top: 13.5, bottom: 13.5, short: 0 });
+  expect(line.box).toBeGreaterThanOrEqual(44);
+  expect(line.style).toEqual({ paddingTop: 13.5, paddingBottom: 13.5, marginTop: -13.5, marginBottom: -13.5 });
+});
+
+test('a reach goes no further than the room there is on a side (a touch past it would be a neighbour\'s), the rest on the other side', () => {
+  // A tag 19 high at the foot of its column: 3 under it, the rest above.
+  expect(reach(19, { above: 60, below: 3 })).toMatchObject({ top: 22, bottom: 3, short: 0, box: 44 });
+  expect(reach(19, { above: 3, below: 60 })).toMatchObject({ top: 3, bottom: 22, short: 0, box: 44 });
+  // A strip 42.8 high in the page's gaps of 8: a point each side.
+  expect(reach(42.8, { above: 8, below: 8 })).toMatchObject({ top: 1, bottom: 1, short: 0 });
+  // Something 44 high or more reaches nothing.
+  expect(reach(44, { above: 10, below: 10 })).toEqual({ style: {}, top: 0, bottom: 0, short: 0, box: 44 });
+  expect(reach(50, { above: 10, below: 10 }).box).toBe(50);
+});
+
+test('where neither side has the room, what is missing is said (`short`), or taken in the layout under the thing when it is asked to grow', () => {
+  // A link of 12 × 1.45 between a choice 4 above it and another 10 below: 13 short.
+  const tight = reach(12 * 1.45, { above: 4, below: 10 });
+  expect(tight).toMatchObject({ top: 4, bottom: 10, short: 13 });
+  expect(tight.box).toBeLessThan(44);
+  const grown = reach(12 * 1.45, { above: 4, below: 10 }, { grow: true });
+  expect(grown).toMatchObject({ top: 4, bottom: 10, short: 13 });
+  expect(grown.box).toBeGreaterThanOrEqual(44);
+  // The frame is 44; the layout takes the line and the 13 it lacked, under it; above and below it reaches no further than the room.
+  expect(grown.style).toEqual({ paddingTop: 4, paddingBottom: 23, marginTop: -4, marginBottom: -10 });
 });

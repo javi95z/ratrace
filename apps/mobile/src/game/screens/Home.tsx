@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { GOLD } from '../../ui/frames';
-import { Notice, Panel, Raised, usePress } from '../../ui/kit';
+import { Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
 import { useBlink } from '../../ui/animations';
 import { adjustedRead } from '../../ui/fonts';
 import { Screen } from '../../ui/Page';
@@ -51,7 +51,7 @@ export function Home() {
   const challengeInProgress = inProgress && challenge !== null && challenge === week?.week;
 
   return (
-    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: 32 }}>
+    <Screen contentStyle={{ flexGrow: 1, alignItems: 'center', gap: returning ? 16 : 20, paddingTop: returning ? 24 : 40, paddingBottom: FOOT }}>
       <View style={{ position: 'absolute', top: 16, right: 12, flexDirection: 'row', gap: 8, zIndex: 20 }}>
         <LanguageMenu />
         <HomePreferences />
@@ -163,7 +163,7 @@ export function Home() {
       )}
 
       {/* The small print, out of the way: only here, at the very foot. */}
-      <SmallPrint label={legal('link')} onPress={() => router.push('/legal')} />
+      <SmallPrint label={legal('link')} onPress={() => router.push('/legal')} above={returning ? 16 : 20} />
     </Screen>
   );
 }
@@ -179,11 +179,17 @@ function Loading() {
   );
 }
 
-/** A line of small print that leads somewhere, plain: its touch is the 44 a thumb needs, though the line is not. */
-function SmallPrint({ label, onPress }: { label: string; onPress: () => void }) {
+/** The room under the last thing of the page (the web's `pb-8`). */
+const FOOT = 32;
+
+/**
+ * A line of small print that leads somewhere, plain: its touch is the 44 a thumb needs, though the line is not. Its box reaches up into the page's gap
+ * (`above`) and down into its foot, over nothing that is pressed, and takes no room; it is wider than a thumb in every language.
+ */
+function SmallPrint({ label, onPress, above }: { label: string; onPress: () => void; above: number }) {
   const press = usePress({ onPress });
   return (
-    <Pressable accessibilityRole="link" hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }} onPress={press}>
+    <Pressable accessibilityRole="link" style={reach(12 * 1.45, { above, below: FOOT }).style} onPress={press}>
       <ReadText size={12} tone="ink-300">{label}</ReadText>
     </Pressable>
   );

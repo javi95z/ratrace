@@ -8,7 +8,8 @@ import { TOUCH } from '../../ui/theme';
 
 /*
  * The touch targets of what the Hud adds that a thumb presses (the constraint: at least 44 points), read from what each pressable is given:
- * its own box and the reach of its touch past it (`hitSlop`). jsdom lays nothing out, so the sizes are the ones the pieces are drawn at.
+ * its own box, padding and all (the kit's `reach`: no `hitSlop`, which React Native never looks for past a parent's edge). jsdom lays nothing out,
+ * so the sizes are the ones the pieces are drawn at.
  */
 type PressProps = ComponentProps<typeof import('react-native').Pressable>;
 const pressed = vi.hoisted(() => [] as Array<Record<string, unknown>>);
@@ -50,12 +51,16 @@ describe('what the Hud adds that is pressed is a target of 44 points or more', (
     await screen.findByRole('button', { name: /^In prison/ });
     const tag = last('jail-tag');
     expect(tag).toBeTruthy();
-    const slop = tag!.hitSlop ?? {};
+    // No reach past its box (React Native looks for no touch past a parent's edge): its box itself is the 44, padding and all.
+    expect(tag!.hitSlop).toBeUndefined();
+    const box = tag!.style as { paddingTop: number; paddingBottom: number; marginTop: number; marginBottom: number };
     // The tag is the kit's: 12 × 1.25 in 2 of padding above and below.
     expect(JAIL_TAG.height).toBe(19);
-    expect(JAIL_TAG.height + (slop.top ?? 0) + (slop.bottom ?? 0)).toBeGreaterThanOrEqual(TOUCH);
-    // A touch is not taken past the column it stands in: below the tag there is only the line's own room.
-    expect(slop.bottom).toBe((tag!.style as { marginBottom: number }).marginBottom);
+    expect(JAIL_TAG.height + box.paddingTop + box.paddingBottom).toBeGreaterThanOrEqual(TOUCH);
+    // A touch is not taken past the column it stands in: its box ends at the column's foot, the line's own room under it.
+    expect(box.marginBottom).toBe(0);
+    // Above it, it reaches over the lines that are always there (the age, 26 high, and the round's line, 4 under it), which are not pressed.
+    expect(box.paddingTop).toBeLessThanOrEqual(26 + 4 + 13 * 1.45);
     // And it is as wide as its words, which are wider than a thumb in every language the game speaks.
     expect(tag!.style).toMatchObject({ alignSelf: 'flex-start' });
   });
@@ -64,9 +69,13 @@ describe('what the Hud adds that is pressed is a target of 44 points or more', (
     renderGame(<CrisisBar crisis={{ id: 'crash', year: 2, of: 3 }} compact />, memoryServices());
     await screen.findByRole('button', { name: /Great Crash/ });
     const strip = last('crisis-strip');
-    const slop = strip!.hitSlop ?? {};
+    expect(strip!.hitSlop).toBeUndefined();
+    const box = strip!.style as { paddingTop: number; paddingBottom: number; marginTop: number; marginBottom: number };
     expect(CRISIS_STRIP.compact).toBeCloseTo(42.8, 5);
-    expect(CRISIS_STRIP.compact + (slop.top ?? 0) + (slop.bottom ?? 0)).toBeGreaterThanOrEqual(TOUCH);
+    expect(CRISIS_STRIP.compact + box.paddingTop + box.paddingBottom).toBeGreaterThanOrEqual(TOUCH);
+    // Taking no room, and reaching no further than the page's gap of 8 either side (the figures above, the stage below).
+    expect([box.marginTop, box.marginBottom]).toEqual([-box.paddingTop, -box.paddingBottom]);
+    expect(Math.max(box.paddingTop, box.paddingBottom)).toBeLessThanOrEqual(8);
   });
 
   it('every other pressable of the Hud stands at least 44 high on its own (the squares, the figures, the way out, the portrait, the link of a sheet)', async () => {

@@ -475,6 +475,11 @@ unjudged until a batch pass shoots, compares and takes them out of it:
   comparing another picture.
 - **Not compared** (no scene shows them; `Cards.test` holds them): the swipe itself (a finger), the choice taken while its answer comes (a moment), the links to
   a career, a city and prison, a rare card that is not legendary, a cover that paid, the credit card's line under a result, coins flying from a result that paid.
+- **A phone's own room (fix round 1)**: a link to a career or a city under a choice is the web's 17-point line; its box reaches 4 up to its choice and 10 down
+  to the next (12 after the last), never over them, and takes the 13 (11) points that leaves short of a thumb's 44 under it, in the layout: on such a card the
+  choices after it stand that much lower than the web's. No scene shows one. Every small pressed thing now has its 44 in its own box (the kit's `reach`):
+  React Native looks for no touch past a parent's edge, so a `hitSlop` past it was never found (Home's small print, the crisis strip, the prison tag kept their
+  places; only the card's links needed room).
 
 ## Task 12: the finances, their tabs, the basket and the portfolio (shots pending)
 

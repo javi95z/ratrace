@@ -108,6 +108,9 @@ function slowly(services: Services): { release(): void } {
   return { release: () => release() };
 }
 
+/** The box inside a choice that eases into its look (pressed, taken, stepped back). */
+const settling = (choice: HTMLElement) => choice.firstElementChild as HTMLElement;
+
 /** A finger on the card: dragged to `x` points sideways and let go there, and what the game does with it. */
 async function swipe(x: number, velocityX = 0) {
   await act(async () => {
@@ -207,6 +210,9 @@ describe('the card waiting', () => {
     await onTheCards(accused);
     // A choice that may end in prison: what prison is, beside the choices, never inside one.
     const see = screen.getByRole('button', { name: 'What happens in prison?' });
+    // Already 44 high on its own: it reaches nothing past it.
+    expect(Number.parseFloat(see.style.minHeight)).toBe(44);
+    expect([see.style.paddingTop, see.style.paddingBottom, see.style.marginTop, see.style.marginBottom]).toEqual(['', '', '', '']);
     expect(within(screen.getByRole('group', { name: /^Your choices/ })).queryByText('What happens in prison?')).toBeNull();
     fireEvent.click(see);
     expect(await screen.findByRole('heading', { name: 'Prison' })).toBeTruthy();
@@ -219,6 +225,36 @@ describe('the card waiting', () => {
     expect(screen.queryByRole('button', { name: /^See / })).toBeNull();
   });
 
+  it('gives a link under a choice the 44 a thumb needs in its own box, reaching no further than the gaps to the choices round it: what they lack, it takes under it', async () => {
+    // The engineer offered a transfer east: two choices that move the city, the first of them with a choice under it, the second the last.
+    const services = await dealt('engineer', 'career_transfer_east');
+    await onTheCards(services);
+    const px = (value: string) => Number.parseFloat(value || '0');
+    const gap = (box: HTMLElement) => px(box.style.rowGap || box.style.gap);
+    const links = screen.getAllByRole('button', { name: /beside your city$/ });
+    expect(links).toHaveLength(2);
+    const group = screen.getByRole('group', { name: /^Your choices/ });
+    const stage = group.parentElement as HTMLElement;
+    for (const [i, link] of links.entries()) {
+      expect(link.getAttribute('hitSlop')).toBeNull();
+      const line = px((link.querySelector('[dir]') as HTMLElement).style.lineHeight);
+      expect(line).toBeCloseTo(12 * 1.45, 5);
+      const [padTop, padBottom, marginTop, marginBottom] = [link.style.paddingTop, link.style.paddingBottom, link.style.marginTop, link.style.marginBottom].map(px);
+      // Its own box, padding and all: the 44.
+      expect(line + padTop + padBottom, `link ${i}`).toBeGreaterThanOrEqual(44);
+      // Above it, no further than the gap to its choice (whose frame's strips take no touch).
+      const wrapper = link.parentElement?.parentElement as HTMLElement;
+      expect(-marginTop, `link ${i}`).toBe(padTop);
+      expect(padTop, `link ${i}`).toBeLessThanOrEqual(gap(wrapper));
+      // Below it, no further than the gap to what follows: the next choice, or after the last one the next thing of the stage.
+      const below = i === 0 ? gap(group) : gap(stage);
+      expect(-marginBottom, `link ${i}`).toBeLessThanOrEqual(below);
+      // What the gaps lack is room it takes under it, in the layout.
+      expect(padBottom + marginBottom, `link ${i}`).toBeGreaterThan(0);
+    }
+    expect([gap(links[0].parentElement?.parentElement as HTMLElement), gap(group), gap(stage)]).toEqual([4, 10, 12]);
+  });
+
   it('shows the choice tapped as taken at once, and the others stepping back, while the answer is on its way', async () => {
     const services = memoryServices();
     await services.sessions.start('nurse');
@@ -228,11 +264,40 @@ describe('the card waiting', () => {
     fireEvent.click(second);
     await waitFor(() => expect(second.getAttribute('aria-selected')).toBe('true'));
     expect(first.getAttribute('aria-selected')).not.toBe('true');
-    // The others step back; every choice waits for the answer.
-    expect(Number(getComputedStyle(first).opacity)).toBe(0.5);
+    // The taken one goes down 2 and the others step back to half, once their 150 ms have run; every choice waits for the answer.
+    await waitFor(() => expect(settling(first).style.opacity).toBe('0.5'));
+    expect(settling(second).style.transform).toBe('translateY(2px)');
+    expect(settling(second).style.opacity).toBe('1');
     expect(first.getAttribute('aria-disabled')).toBe('true');
     await act(async () => answer.release());
     await waitFor(() => expect(probe.state?.stage).toBe('outcome'));
+  });
+
+  it('eases the choice taken down and the others back over the web\'s 150 ms, on Tailwind\'s curve, on the phone\'s animation thread; at once where motion is left out', async () => {
+    const services = memoryServices();
+    await services.sessions.start('nurse');
+    const answer = slowly(services);
+    await onTheCards(services);
+    rea.assigned.length = 0;
+    fireEvent.click(choices()[1]);
+    await waitFor(() => expect(probe.state?.picked).toBe(1));
+    // The web's `transition-[transform,opacity]`: 150 ms on cubic-bezier(0.4, 0, 0.2, 1), for the taken one down and the other back.
+    const eased = rea.assigned.filter((one) => one.kind === 'timing' && one.duration === 150);
+    expect(eased).toEqual(expect.arrayContaining([expect.objectContaining({ to: 2, curve: [0.4, 0, 0.2, 1] }), expect.objectContaining({ to: 0.5, curve: [0.4, 0, 0.2, 1] })]));
+    await act(async () => answer.release());
+    await waitFor(() => expect(probe.state?.stage).toBe('outcome'));
+    cleanup();
+    // Where motion is left out, the look is there at once: nothing eases.
+    const still = memoryServices(await stillStore());
+    await still.sessions.start('nurse');
+    const held = slowly(still);
+    await onTheCards(still);
+    rea.assigned.length = 0;
+    const [first] = choices();
+    fireEvent.click(choices()[1]);
+    await waitFor(() => expect(settling(first).style.opacity).toBe('0.5'));
+    expect(rea.assigned.filter((one) => one.kind === 'timing' && one.duration === 150)).toEqual([]);
+    await act(async () => held.release());
   });
 });
 
@@ -527,6 +592,39 @@ describe('what is drawn again', () => {
     // And what it shows does draw it again: the answer on its way.
     await settled(() => probe.state?.pick(0));
     expect(renders.count).toBeGreaterThan(before);
+  });
+
+  it('is not drawn again by them with motion on either: a legendary card, swipeable, its rainbow, light and sparks running', async () => {
+    const services = await dealt('nurse', 'red_appointment');
+    const renders: Renders = { count: 0 };
+    let hands: { read(tip: string): void; setSound(on: boolean): void } | null = null;
+    function Hands() {
+      const guide = useGuide();
+      const { setSound } = useSettings();
+      hands = { read: guide.read, setSound };
+      return null;
+    }
+    await onTheCards(
+      services,
+      <>
+        <Counted into={renders}>
+          <CardStage />
+        </Counted>
+        <Hands />
+      </>,
+    );
+    // The motion-on tree is there: the swipe, the rainbow, the sparks.
+    expect(pan().enabled).toBe(true);
+    expect(screen.getByRole('article').querySelector('[data-sprite] [data-skia="Group"]')).not.toBeNull();
+    expect(screen.getByRole('article').querySelectorAll('[aria-hidden="true"] > div')).toHaveLength(16);
+    // Everything that comes in once has come in (the turn over, 0.7 s; the sparks, 1.13 s); the loops are next drawn at 3.6 s and 4 s.
+    await settled(undefined, 1_300);
+    const before = renders.count;
+    await settled(() => hands!.read('cards'));
+    await settled(() => hands!.setSound(true));
+    await settled(() => probe.state?.clearMoved());
+    await settled(() => probe.state?.clearRefusal());
+    expect(renders.count).toBe(before);
   });
 });
 

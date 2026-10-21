@@ -50,6 +50,33 @@ export function usePress({ onPress, disabled }: Pick<PressProps, 'onPress' | 'di
 }
 
 /**
+ * The touch box of something small that is pressed (a line of small print, a tag, a link), made the 44 points a thumb needs inside its own layout,
+ * taking no room: padding round it and a negative margin as large, so nothing round it moves. Its box then reaches past its place, and past its
+ * parent's edge where it must: React Native looks for a touch past a parent's edge only where a child's box reaches there (a `hitSlop` past it is
+ * never found, so none is used). `height` is how tall the thing is; `room` how far it may reach above and below before it would come over anything
+ * else that takes a touch (the gap that is really there). It reaches half the way each side, a side short of room the rest on the other (whole
+ * points in all). What neither side has room for is `short`: with `grow`, the thing takes that much more room in the layout, under it, so its box
+ * is the 44 all the same; without, its box is short of 44, and the screen's test says so. Something 44 high or more reaches nothing.
+ */
+export function reach(height: number, room: { above: number; below: number }, { grow = false }: { grow?: boolean } = {}): { style: ViewStyle; top: number; bottom: number; short: number; box: number } {
+  const need = Math.max(0, Math.ceil(TOUCH - height - 1e-9));
+  if (need === 0) return { style: {}, top: 0, bottom: 0, short: 0, box: height };
+  const above = Math.max(0, room.above);
+  const below = Math.max(0, room.below);
+  const bottom = Math.min(need - Math.min(need / 2, above), below);
+  const top = Math.min(need - bottom, above);
+  const short = need - top - bottom;
+  const grown = grow ? short : 0;
+  return {
+    style: { paddingTop: top, paddingBottom: bottom + grown, marginTop: -top, marginBottom: -bottom },
+    top,
+    bottom,
+    short,
+    box: height + top + bottom + grown,
+  };
+}
+
+/**
  * A pixel button. Never smaller than 44 pt, so a thumb can hit it. `size` and `padX` are the web's `text-[Npx]` and `px-N` where a screen sets
  * one smaller than the 17 and 16 every button has (a button in a line of figures: `px-2 text-[13px]`).
  */

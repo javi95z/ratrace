@@ -9,7 +9,7 @@ export type SpringConfig = { stiffness?: number; damping?: number; mass?: number
 export const SPRING_MS = 300;
 
 export const rea = ({
-  assigned: [] as { kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig }[],
+  assigned: [] as { kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[] }[],
   cancelled: 0,
   listeners: new Set<() => void>(),
 });
@@ -17,7 +17,7 @@ export const rea = ({
 export async function reanimatedFake() {
   const { useRef, useReducer, useEffect } = await import('react');
   const { View } = await import('react-native');
-  type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig };
+  type Anim = { __anim: true; kind: 'timing' | 'repeat' | 'spring'; to: number; duration: number; reps?: number; delay?: number; spring?: SpringConfig; curve?: readonly number[] };
   const emit = () => rea.listeners.forEach((l) => l());
   return {
     default: { View },
@@ -31,7 +31,7 @@ export async function reanimatedFake() {
             clearTimeout(b.timer);
             if (v && typeof v === 'object' && (v as Anim).__anim) {
               const a = v as Anim;
-              rea.assigned.push({ kind: a.kind, to: a.to, duration: a.duration, reps: a.reps, delay: a.delay, ...(a.spring ? { spring: a.spring } : null) });
+              rea.assigned.push({ kind: a.kind, to: a.to, duration: a.duration, reps: a.reps, delay: a.delay, ...(a.spring ? { spring: a.spring } : null), ...(a.curve ? { curve: a.curve } : null) });
               b.timer = setTimeout(() => {
                 b.raw = a.to;
                 emit();
@@ -61,7 +61,8 @@ export async function reanimatedFake() {
         return fn();
       },
     }),
-    withTiming: (to: number, cfg: { duration: number }): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration }),
+    // an eased timing keeps the curve it was told (`Easing.bezier`), to be read
+    withTiming: (to: number, cfg: { duration: number; easing?: { curve?: readonly number[] } }): Anim => ({ __anim: true, kind: 'timing', to, duration: cfg.duration, ...(cfg.easing?.curve ? { curve: cfg.easing.curve } : null) }),
     withRepeat: (inner: Anim, reps: number): Anim => ({ ...inner, kind: 'repeat', reps }),
     // a spring has no duration of its own: here it lands after a nominal one, with what it was told kept to be read
     withSpring: (to: number, spring: SpringConfig = {}): Anim => ({ __anim: true, kind: 'spring', to, duration: SPRING_MS, spring }),
@@ -72,6 +73,6 @@ export async function reanimatedFake() {
       rea.cancelled += 1;
       sv.timer?.();
     },
-    Easing: { linear: (t: number) => t },
+    Easing: { linear: (t: number) => t, bezier: (x1: number, y1: number, x2: number, y2: number) => Object.assign((t: number) => t, { curve: [x1, y1, x2, y2] }) },
   };
 }

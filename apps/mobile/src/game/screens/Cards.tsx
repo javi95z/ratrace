@@ -3,16 +3,16 @@ import { cardRarity, chancePct, effectTags, onlyCosts } from '@ratrace/core/game
 import type { EffectTag } from '@ratrace/core/game/present';
 import { previewCard, quoteItem } from '@ratrace/engine';
 import type { CardDef, GameEvent, GameView, OptionPreview, SkillId, WorldState } from '@ratrace/engine';
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
 import { webBaseline } from '../../ui/fonts';
-import { Panel, pressDown, Tag, usePress } from '../../ui/kit';
+import { Panel, reach, Tag, usePress } from '../../ui/kit';
 import { Glint, Holo } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
@@ -33,6 +33,11 @@ import { CityPreview } from './PlayStandIns';
 
 /** How far a card must be dragged before letting go answers it. */
 export const SWIPE = 90;
+
+/** The stage's gaps (the web's `gap-3`, the choices' `gap-2.5`, a choice and its links' `gap-1`): what a link under a choice may reach into. */
+const STAGE_GAP = 12;
+const CHOICES_GAP = 10;
+const LINKS_GAP = 4;
 
 /** How far a finger goes sideways before a touch on the card is a drag, and up or down before it is the page's scroll (the web's `touch-pan-y`). */
 const ACTIVATE = 6;
@@ -172,14 +177,15 @@ const RING: readonly ViewStyle[] = [
 
 /**
  * Words that open a sheet, underlined as the web underlines them (`underline underline-offset-N` under a line of `size` × 1.45): the line is
- * drawn, as iOS puts a font's underline where the font says, with no offset. A thumb reaches it 44 tall, without the words taking more room.
+ * drawn, as iOS puts a font's underline where the font says, with no offset. A thumb has 44 points of it: its box is that tall already
+ * (`style`), or it reaches into the `room` round it (the kit's `reach`), and where that room is too little, it takes the rest under its line.
  */
-function Link({ size, offset, onPress, style, children }: { size: number; offset: number; onPress(): void; style?: ViewStyle; children: string }) {
+function Link({ size, offset, onPress, style, room, children }: { size: number; offset: number; onPress(): void; style?: ViewStyle; room?: { above: number; below: number }; children: string }) {
   const press = usePress({ onPress });
   const line = size * 1.45;
-  const slop = Math.max(0, Math.ceil((TOUCH - line) / 2));
+  const box = room ? reach(line, room, { grow: true }).style : null;
   return (
-    <Pressable accessibilityRole="button" onPress={press} hitSlop={{ top: slop, bottom: slop }} style={style}>
+    <Pressable accessibilityRole="button" onPress={press} style={[box, style]}>
       <View>
         <ReadText size={size} tone="sky-300">{children}</ReadText>
         <View style={{ position: 'absolute', left: 0, right: 0, top: webBaseline('read', 400, size, line) + offset, height: 1, backgroundColor: COLORS['sky-300'] }} />
@@ -188,8 +194,45 @@ function Link({ size, offset, onPress, style, children }: { size: number; offset
   );
 }
 
-/** One option of a card, to be chosen. */
-function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean }) {
+/** The web's `transition-[transform,opacity]` on a choice: Tailwind's 150 ms, on its curve (cubic-bezier(0.4, 0, 0.2, 1)). */
+const SETTLE = { duration: 150, easing: Easing.bezier(0.4, 0, 0.2, 1) };
+
+/**
+ * A choice easing into its look as it changes (the web's `transition-[transform,opacity]`): 2 down while it is held or taken, half faded once
+ * another is taken. It eases on the phone's animation thread, and React draws it once a change, not once a frame. Where motion is left out it is
+ * there at once, as the web's every transition is then.
+ */
+function Settling({ down, faded, children }: { down: boolean; faded: boolean; children: ReactNode }) {
+  const still = useStill();
+  const y = useSharedValue(down ? 2 : 0);
+  const fade = useSharedValue(faded ? 0.5 : 1);
+  // Where each is going: it moves only when that changes (nothing eases on the first drawing), and stops if the choice goes.
+  const aimed = useRef({ y: down ? 2 : 0, fade: faded ? 0.5 : 1 });
+  useEffect(() => {
+    const to = down ? 2 : 0;
+    if (aimed.current.y === to) return;
+    aimed.current.y = to;
+    y.value = still ? to : withTiming(to, SETTLE);
+  }, [down, still, y]);
+  useEffect(() => {
+    const to = faded ? 0.5 : 1;
+    if (aimed.current.fade === to) return;
+    aimed.current.fade = to;
+    fade.value = still ? to : withTiming(to, SETTLE);
+  }, [faded, still, fade]);
+  useEffect(
+    () => () => {
+      cancelAnimation(y);
+      cancelAnimation(fade);
+    },
+    [y, fade],
+  );
+  const look = useAnimatedStyle(() => ({ opacity: fade.value, transform: [{ translateY: y.value }] }));
+  return <Animated.View style={look}>{children}</Animated.View>;
+}
+
+/** One option of a card, to be chosen. `below` is the gap to what follows it, which a link under it reaches into no further. */
+function Option({ def, index, preview, onPick, disabled, below }: { def: CardDef; index: number; preview: OptionPreview; onPick(): void; disabled: boolean; below: number }) {
   const world = useGame((s) => s.view?.timeline[s.view.round]);
   const partnered = useGame((s) => s.view?.player.life.partner ?? false);
   // The option tapped is shown taken at once, pressed and lit, and the others step back, while the answer is on its way.
@@ -207,34 +250,38 @@ function Option({ def, index, preview, onPick, disabled }: { def: CardDef; index
   const career = job?.career;
   // An option that moves the player can show the city beside theirs before it is chosen.
   const city = def.options[index]?.effects?.moveCity;
+  // Drawn once, whatever the press does: only the box round it eases.
+  const face = (
+    <Framed kind="raised" style={{ backgroundColor: COLORS['night-700'], minHeight: TOUCH, paddingHorizontal: 12, paddingVertical: 8, gap: 6 }}>
+      <Offer def={def} index={index} preview={preview} world={world} partnered={partnered} />
+      {taken ? RING.map((side, i) => <View key={i} pointerEvents="none" style={{ position: 'absolute', backgroundColor: COLORS['gold-500'], ...side }} />) : null}
+    </Framed>
+  );
   const option = (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: off, selected: taken }}
-      aria-selected={taken}
-      disabled={off}
-      onPress={press}
-      // The web's buttons are not faded when they cannot be pressed: only the ones not taken step back, once one is.
-      style={({ pressed }) => ({ ...pressDown(taken || (pressed && !off)), opacity: picked !== null && !taken ? 0.5 : 1 })}
-    >
-      <Framed kind="raised" style={{ backgroundColor: COLORS['night-700'], minHeight: TOUCH, paddingHorizontal: 12, paddingVertical: 8, gap: 6 }}>
-        <Offer def={def} index={index} preview={preview} world={world} partnered={partnered} />
-        {taken ? RING.map((side, i) => <View key={i} pointerEvents="none" style={{ position: 'absolute', backgroundColor: COLORS['gold-500'], ...side }} />) : null}
-      </Framed>
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled: off, selected: taken }} aria-selected={taken} disabled={off} onPress={press}>
+      {/* The web's buttons are not faded when they cannot be pressed: only the ones not taken step back, once one is. */}
+      {({ pressed }) => (
+        <Settling down={taken || (pressed && !off)} faded={picked !== null && !taken}>
+          {face}
+        </Settling>
+      )}
     </Pressable>
   );
   if (!career && !city) return option;
+  // A link reaches up to its choice (whose frame's strips take no touch) and down to what follows; between two choices that is too little for a
+  // thumb's 44, so it stands that much further from the next (a phone's own room: the web's link is its 17-point line).
+  const room = { above: LINKS_GAP, below };
   return (
-    <View style={{ gap: 4 }}>
+    <View style={{ gap: LINKS_GAP }}>
       {option}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', columnGap: 12 }}>
         {city ? (
-          <Link size={12} offset={2} onPress={() => setSeeing('city')} style={{ paddingHorizontal: 4 }}>
+          <Link size={12} offset={2} room={room} onPress={() => setSeeing('city')} style={{ paddingHorizontal: 4 }}>
             {t('seeCity', { city: words.names.cities[city] })}
           </Link>
         ) : null}
         {career ? (
-          <Link size={12} offset={2} onPress={() => setSeeing('career')} style={{ paddingHorizontal: 4 }}>
+          <Link size={12} offset={2} room={room} onPress={() => setSeeing('career')} style={{ paddingHorizontal: 4 }}>
             {t('seeCareer', { career: words.text.careers[career].name })}
           </Link>
         ) : null}
@@ -339,9 +386,11 @@ export function CardStage() {
   const shown = previews.flatMap((preview, index) => (preview.available ? [index] : []));
   // Two choices on screen can be swiped, left for the first and right for the second.
   const swipeable = shown.length === 2 && !still && !busy;
-  // What a swipe let go of is judged by: this drawing's, whenever the phone's thread says it was let go.
+  // What a swipe let go of is judged by: the drawing on screen's, whenever the phone's thread says it was let go (kept as each is put on screen).
   const latest = useRef({ shown, swipeable, pick });
-  latest.current = { shown, swipeable, pick };
+  useLayoutEffect(() => {
+    latest.current = { shown, swipeable, pick };
+  });
   const release = useCallback((side: 1 | -1) => {
     const now = latest.current;
     if (!now.swipeable) return;
@@ -354,7 +403,7 @@ export function CardStage() {
   const mayJail = shown.some((i) => def.options[i].effects?.jail !== undefined || (def.options[i].outcomes ?? []).some((outcome) => outcome.effects?.jail !== undefined));
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: STAGE_GAP }}>
       <PixelText size={13} tone="ink-300" style={{ textAlign: 'center' }}>
         {`${t('progress', { n: view.answered + 1, total: view.hand.length })} · ${def.category === 'world' ? t('world') : text.categories[def.category]}`}
       </PixelText>
@@ -365,9 +414,9 @@ export function CardStage() {
         </Entrance>
       </Swiped>
 
-      <View role="group" aria-label={t('choices', { title: written.title })} style={{ gap: 10 }}>
-        {shown.map((i) => (
-          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} />
+      <View role="group" aria-label={t('choices', { title: written.title })} style={{ gap: CHOICES_GAP }}>
+        {shown.map((i, at) => (
+          <Option key={`${def.id}-${i}`} def={def} index={i} preview={previews[i]} onPick={() => void pick(i)} disabled={busy} below={at === shown.length - 1 ? STAGE_GAP : CHOICES_GAP} />
         ))}
       </View>
       {swipeable ? (

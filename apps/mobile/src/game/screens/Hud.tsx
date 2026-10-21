@@ -14,7 +14,7 @@ import { Canvas } from '../../ui/Canvas';
 import { usePop } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { webBaseline } from '../../ui/fonts';
-import { Bar, KeyFigure, Raised, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
+import { Bar, KeyFigure, Raised, reach, Row, Stat, StatRow, Tag, usePress, Well } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Glint } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
@@ -323,12 +323,18 @@ function tagRoom(language: string): { top: number; bottom: number } {
 /** The tag of someone in prison as the kit draws it (`Tag`: a 12-point line of 1.25 in 2 of padding above and below), in points. */
 export const JAIL_TAG = { height: 2 + 12 * 1.25 + 2 };
 
+/** The lines always above the tag in its column, which are not pressed: the age (26 high) and, 4 under it, the round's line (13 × 1.45). */
+const ABOVE_TAG = 26 + 4 + 13 * 1.45;
+
 /**
- * How far a touch on the tag reaches past it, so that a thumb has its 44 points: the tag is 19 high, at the foot of its column, so the touch
- * reaches down only through the line's own room under it (a touch is not taken past the column) and up the rest of the way, over the lines
- * above it, which are not pressed.
+ * The box of the tag, made the 44 points a thumb needs (the kit's `reach`): the tag is 19 high, at the foot of its column, so its box reaches down
+ * only through the line's own room under it (not past the column) and up the rest of the way, over the lines above it, which are not pressed. Its
+ * place is the tag's own (`room`): the padding is given back by its margins.
  */
-const tagReach = (room: { bottom: number }) => ({ top: Math.ceil(TOUCH - JAIL_TAG.height - room.bottom), bottom: room.bottom });
+function tagBox(room: { top: number; bottom: number }) {
+  const { top, bottom } = reach(JAIL_TAG.height, { above: ABOVE_TAG, below: room.bottom });
+  return { paddingTop: top, paddingBottom: bottom, marginTop: room.top - top, marginBottom: room.bottom - bottom, alignSelf: 'flex-start' as const };
+}
 
 /** What the lead of the Hud draws of the life: little of it, so that the portrait's row is not drawn again for every coin. */
 interface Lead {
@@ -487,9 +493,8 @@ function HudLead({ compact, skyline, onProfile, open }: { compact: boolean; skyl
             <Pressable
               accessibilityRole="button"
               testID="jail-tag"
-              hitSlop={tagReach(room)}
               onPress={prison}
-              style={{ marginTop: room.top, marginBottom: room.bottom, alignSelf: 'flex-start' }}
+              style={tagBox(room)}
             >
               <Tag tone="bad">{`${t('inJail')} ›`}</Tag>
             </Pressable>

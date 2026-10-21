@@ -229,6 +229,13 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(scene).toContain('if (port === undefined) return;');
   });
 
+  it('gives a small thing that is pressed its 44 points in its own box (the kit\'s `reach`), never by a `hitSlop`: React Native looks for no touch past a parent\'s edge', () => {
+    const slopping = mine.filter((path) => /\bhitSlop\b/.test(readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).map(rel);
+    expect(slopping).toEqual([]);
+    // A word that only names one, in a comment, is not one.
+    expect(/\bhitSlop\b/.test('const a = 1; // no hitSlop here'.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).toBe(false);
+  });
+
   it('holds the one place a rule could hide: no screen reads the tables a price, a limit or a score is worked out from', () => {
     // The engine's quotes, previews and score breakdown give every figure. A screen that reads one of
     // these tables is working a figure out itself. (Tax rates are shown, not used: they come from `effectiveTax`.)

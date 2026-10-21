@@ -5,10 +5,10 @@ import Animated from 'react-native-reanimated';
 import { useAlarm } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { WINE } from '../../ui/frames';
-import { usePress } from '../../ui/kit';
+import { reach, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
-import { COLORS, TOUCH } from '../../ui/theme';
+import { COLORS } from '../../ui/theme';
 import { useT, useWords } from '../context';
 
 type Crisis = NonNullable<WorldState['crisis']>;
@@ -62,6 +62,9 @@ export function CrisisDetails({ crisis }: { crisis: Crisis }) {
   );
 }
 
+/** The page's gap round the strip of a crisis under the Hud (Play's, between the figures, the strip and the stage): what its touch may reach into. */
+const PAGE_GAP = 8;
+
 /** How tall the strip of a crisis is under the Hud (its 6 of padding round a 12-point and a 16-point pixel line of 1.1), in points. */
 export const CRISIS_STRIP = { compact: 6 + 12 * 1.1 + 16 * 1.1 + 6 };
 
@@ -77,15 +80,16 @@ export function CrisisBar({ crisis, compact = false, open: openAtFirst = false }
   const press = usePress({ onPress: () => setOpen(true) });
   if (!crisis) return null;
   const written = text.crises[crisis.id];
-  // The web's bar is as tall as its two lines (42.8 points as the strip): it is not made taller, the touch reaches past it instead.
-  const reach = compact ? Math.max(0, Math.ceil((TOUCH - CRISIS_STRIP.compact) / 2)) : 0;
+  // The web's bar is as tall as its two lines (42.8 points as the strip): it is not made taller, its box reaches a point into the page's gaps of 8
+  // above and below it instead (the figures, the stage), taking no room.
+  const box = compact ? reach(CRISIS_STRIP.compact, { above: PAGE_GAP, below: PAGE_GAP }).style : undefined;
   return (
     <>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('open', { crisis: written.name, year: crisis.year, of: crisis.of })}
         testID={compact ? 'crisis-strip' : 'crisis-bar'}
-        hitSlop={compact ? { top: reach, bottom: reach } : undefined}
+        style={box}
         onPress={press}
       >
         <Framed

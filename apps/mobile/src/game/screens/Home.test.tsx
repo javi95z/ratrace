@@ -192,6 +192,23 @@ describe('the front door', () => {
     expect(all[all.length - 1]).toBe(link);
   });
 
+  it('gives its small print the 44 a thumb needs in its own box, reaching no further than the gap above it and the page\'s foot below', async () => {
+    renderGame(<Home />, memoryServices());
+    const link = await screen.findByRole('link', { name: 'Privacy and legal notice' });
+    const px = (value: string) => Number.parseFloat(value || '0');
+    expect(link.getAttribute('hitSlop')).toBeNull();
+    const line = px((link.querySelector('[dir]') as HTMLElement).style.lineHeight);
+    expect(line).toBeCloseTo(12 * 1.45, 5);
+    expect(line + px(link.style.paddingTop) + px(link.style.paddingBottom)).toBeGreaterThanOrEqual(44);
+    // It takes no room: the padding is given back.
+    expect(px(link.style.marginTop)).toBe(-px(link.style.paddingTop));
+    expect(px(link.style.marginBottom)).toBe(-px(link.style.paddingBottom));
+    // Over nothing that takes a touch: no further up than the page's gap above it, no further down than the page's foot.
+    const page = link.parentElement as HTMLElement;
+    expect(px(link.style.paddingTop)).toBeLessThanOrEqual(px(page.style.rowGap || page.style.gap));
+    expect(px(link.style.paddingBottom)).toBeLessThanOrEqual(px(page.style.paddingBottom));
+  });
+
   it('shows that it is loading, and nothing else of the game, until the device has answered', () => {
     const services = memoryServices();
     // A device that has not answered yet.
