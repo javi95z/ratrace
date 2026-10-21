@@ -137,7 +137,8 @@ function Actions({ stage, onBasket }: { stage: Stage; onBasket(): void }) {
             </View>
           ) : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Button variant="quiet" size={14} padX={12} onPress={onBasket}>
+            {/* The web's `px-3 text-[14px]` lose to its Button's own `px-4 text-[17px]` (kit.tsx's Button says why): drawn at 17, 16 in. */}
+            <Button variant="quiet" onPress={onBasket}>
               {finance('basket', { count: orders })}
             </Button>
             <View style={{ flex: 1 }}>

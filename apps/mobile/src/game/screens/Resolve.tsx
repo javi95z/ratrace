@@ -29,6 +29,9 @@ import { Loop } from './Loop';
  */
 
 /** The ground, the frame and the words of a note, by its tone (the web's `NOTE`: gold is `frame-gold bg-gold-500 text-ink-900`). */
+/** The confetti round a cheer's picture, as the web's page draws it: 48 high, held to its 40-point box's width. */
+const CHEER = { w: 40, h: 48 };
+
 const NOTE: Record<RoundNote['tone'], { bg: ColorToken; fg: ColorToken; frame?: FrameTone }> = {
   gold: { bg: 'gold-500', fg: 'ink-900', frame: GOLD },
   good: { bg: 'teal-800', fg: 'cream' },
@@ -190,8 +193,9 @@ function Note({ note }: { note: RoundNote }) {
         <Framed kind="frame" tone={look.frame} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 8, backgroundColor: COLORS[look.bg] }}>
           <Bare style={{ width: 40, height: 40 }}>
             <Sprite id={note.icon} />
-            {/* The web's `absolute -inset-1`: a 48-point loop over the 40-point box, 4 out on each side. */}
-            {note.cheer ? <Loop name="confetti" style={{ position: 'absolute', top: -4, left: -4 }} /> : null}
+            {/* The web's `absolute -inset-1`: a 48-point loop 4 out from the 40-point box's corner. Its picture is held to the box's width by the
+                page's `img { max-width: 100% }` (measured: 40 × 48 on the web's page), so it is drawn squeezed into 40 × 48, as there. */}
+            {note.cheer ? <Loop name="confetti" size={CHEER} style={{ position: 'absolute', top: -4, left: -4 }} /> : null}
           </Bare>
           <View style={{ minWidth: 0, flexShrink: 1 }}>
             <PixelText size={17} tone={look.fg}>{note.title}</PixelText>

@@ -126,14 +126,12 @@ export function Screen({
     }),
     [scrollY],
   );
-  // On the UI thread, as the page scrolls: nothing of it goes through React.
-  const onScrollUi = useAnimatedScrollHandler(
-    (event) => {
-      'worklet';
-      if (scrollY !== undefined) scrollY.value = event.contentOffset.y;
-    },
-    [scrollY],
-  );
+  // On the UI thread, as the page scrolls: nothing of it goes through React. (No list of what it depends on: Reanimated reads one on the web only,
+  // and says so on every screen in development.)
+  const onScrollUi = useAnimatedScrollHandler((event) => {
+    'worklet';
+    if (scrollY !== undefined) scrollY.value = event.contentOffset.y;
+  });
   // A bar that is not shown this time (`false`, `null`) is no bar: the scroll then clears the home indicator itself.
   const barred = Boolean(bar);
   const follows = onScroll !== undefined || scroller !== undefined;

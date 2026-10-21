@@ -13,15 +13,15 @@ import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { adjustedRead } from '../../ui/fonts';
-import { Bar, Bare, Button, Figure, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
+import { Bar, Bare, Button, Figure, LineTag, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
-import { COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
-import { useGame, useGuided, useIntroducesTabs, useKnows, useT, useWords } from '../context';
+import { BODY, COLORS, GUTTER, SHELL_WIDTH, TOUCH, type ColorToken } from '../../ui/theme';
+import { useGame, useGuided, useIntroducesTabs, useKnows, useSettings, useT, useWords } from '../context';
 import { AmountSheet } from './AmountSheet';
 import { BusinessTab } from './Business';
 import { CareerMoves } from './CareerMoves';
@@ -33,6 +33,7 @@ import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
+import { webLine } from './Rivals';
 import { realStatus, StatusNote } from './StatusNote';
 import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetFocus } from './Work';
 
@@ -144,12 +145,12 @@ function Portfolio() {
             <Row left={t('savings')} sub={t('savingsRate', { rate: fmt.rate(depositRateBp(content, world)) })} right={fmt.money(p.deposit)} />
           </View>
           {p.cash > 0 ? (
-            <Button variant="secondary" size={13} padX={8} onPress={() => setMove({ kind: 'save' })}>
+            <Button variant="secondary" onPress={() => setMove({ kind: 'save' })}>
               {t('save')}
             </Button>
           ) : null}
           {p.deposit > 0 ? (
-            <Button variant="secondary" size={13} padX={8} onPress={() => setMove({ kind: 'withdraw' })}>
+            <Button variant="secondary" onPress={() => setMove({ kind: 'withdraw' })}>
               {t('withdraw')}
             </Button>
           ) : null}
@@ -465,12 +466,16 @@ function PriceChart({ values, label }: { values: number[]; label: string }) {
   const change = Math.round((last - 1) * 100);
   const up = last >= 1;
   const ageAtRound = (round: number) => START_AGE + round * content.yearsPerRound;
+  const { locale } = useSettings();
+  const caption = webLine([['read', 12, 12 * BODY.lineHeight], ['pixel', 20, 20]], locale);
   return (
     // The web's `figure frame bg-night-900 px-2 pb-1.5 pt-2`.
     <Framed kind="frame" style={{ backgroundColor: COLORS['night-900'], paddingHorizontal: 8, paddingBottom: 6, paddingTop: 8 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingHorizontal: 4 }}>
-        <ReadText size={12} tone="ink-300" style={{ flexShrink: 1 }}>{t('sinceStart')}</ReadText>
-        <PixelText size={20} lineHeight={20} tone={up ? 'teal-300' : 'wine-300'}>{`${change > 0 ? '+' : ''}${change}%`}</PixelText>
+      {/* The web's `flex items-baseline`: the words (a reading 12, the page's line of 1.45) and the figure (a pixel 20, `leading-none`) on the browser's
+          baseline, the caption as tall as the browser makes it (a native row on its texts' baselines is taller: the kit moves glyphs inside their boxes). */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, paddingHorizontal: 4, height: caption.height }}>
+        <ReadText size={12} tone="ink-300" style={{ flexShrink: 1, marginTop: caption.tops[0] }}>{t('sinceStart')}</ReadText>
+        <PixelText size={20} lineHeight={20} tone={up ? 'teal-300' : 'wine-300'} style={{ marginTop: caption.tops[1] }}>{`${change > 0 ? '+' : ''}${change}%`}</PixelText>
       </View>
       <View style={{ marginTop: 4 }}>
         <LineChart points={values} tone={up ? 'teal' : 'wine'} label={label} />
@@ -689,6 +694,8 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
   const [rented, setRented] = useState(quote.letOnly);
   const cashDown = mortgage === 'none' ? quote.price : down;
   const step = Math.max(100_000, Math.round(quote.price / 100 / 100_000) * 100_000);
+  const { locale } = useSettings();
+  const downLine = webLine([['pixel', 14, 14 * 1.1], ['pixel', 17, 17 * 1.1]], locale);
 
   return (
     <Sheet open onClose={onClose} title={t(quote.letOnly ? 'buyLetTitle' : 'buyTitle', { home: homeName(text, typeId, shown.player.cityId) })} closeLabel={common('close')}>
@@ -720,9 +727,12 @@ function BuyHome({ typeId, onClose }: { typeId: string; onClose(): void }) {
 
         {mortgage === 'none' ? null : (
           <View>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <SheetHeading>{t('down')}</SheetHeading>
-              <PixelText size={17}>{fmt.money(down)}</PixelText>
+            {/* The web's `flex items-baseline`: the heading (a pixel 14) and the amount (a pixel 17) on the browser's baseline. */}
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', height: downLine.height }}>
+              <View style={{ marginTop: downLine.tops[0] }}>
+                <SheetHeading>{t('down')}</SheetHeading>
+              </View>
+              <PixelText size={17} style={{ marginTop: downLine.tops[1] }}>{fmt.money(down)}</PixelText>
             </View>
             <Slider value={down} min={quote.minDown} max={quote.price - 1} step={step} onChange={(value) => setDown(Math.max(quote.minDown, Math.min(quote.price - 1, value)))} label={t('down')} valueText={fmt.money(down)} />
           </View>
@@ -1347,16 +1357,22 @@ function SmallCaps({ children }: { children: string }) {
  */
 function Versus({ label, here, there, more = 'better', strong = false }: { label: string; here: number; there?: number; more?: 'better' | 'worse'; strong?: boolean }) {
   const { fmt } = useWords();
+  const { locale } = useSettings();
   const gain = there === undefined ? 0 : more === 'better' ? there - here : here - there;
   const tone: ColorToken = gain > 0 ? 'teal-300' : gain < 0 ? 'wine-300' : 'cream';
+  // The web's `flex items-baseline`: the label (a pixel 15, or a reading 14 in the page's line of 1.45) and the figures (pixel 15s) on the browser's baseline,
+  // the row as tall as the browser makes it (a native row on its texts' baselines stood 5 points taller: the kit moves glyphs inside their boxes).
+  const line = webLine([strong ? ['pixel', 15, 15 * 1.1] : ['read', 14, 14 * BODY.lineHeight], ['pixel', 15, 15 * 1.1]], locale);
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, paddingVertical: 4 }, strong ? { borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 6 } : null]}>
-      {strong ? (
-        <PixelText numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>{label}</PixelText>
-      ) : (
-        <ReadText size={14} numberOfLines={1} style={{ flexShrink: 1, minWidth: 0 }}>{label}</ReadText>
-      )}
-      <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'baseline' }}>
+    <View style={[{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, paddingVertical: 4 }, strong ? { borderTopWidth: 2, borderTopColor: COLORS['night-900'], paddingTop: 6 } : null]}>
+      <View style={{ flexShrink: 1, minWidth: 0, height: line.height }}>
+        {strong ? (
+          <PixelText numberOfLines={1} style={{ marginTop: line.tops[0] }}>{label}</PixelText>
+        ) : (
+          <ReadText size={14} numberOfLines={1} style={{ marginTop: line.tops[0] }}>{label}</ReadText>
+        )}
+      </View>
+      <View style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'flex-start', marginTop: line.tops[1] }}>
         {there === undefined ? (
           <PixelText size={15} style={{ textAlign: 'right' }}>{fmt.money(here)}</PixelText>
         ) : (
@@ -1442,7 +1458,8 @@ const CityRow = memo(function CityRow({ cityId, home, left, tone, onOpen }: { ci
         </Bare>
         <View style={{ flex: 1, minWidth: 0 }}>
           <PixelText size={16} numberOfLines={1}>{names.cities[cityId]}</PixelText>
-          {home ? <Tag tone="good">{t('here')}</Tag> : null}
+          {/* Inline after the name's block, in a line of the page's words (the web's span round both is no flex box). */}
+          {home ? <LineTag tone="good">{t('here')}</LineTag> : null}
         </View>
         <PixelText size={16} tone={tone} style={{ flexShrink: 0, textAlign: 'right' }}>{fmt.compact(left)}</PixelText>
       </Raised>
@@ -1477,7 +1494,7 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
       {asked ? null : (
         // The web's `self-start`: as wide as its words.
         <View style={{ alignSelf: 'flex-start' }}>
-          <Button variant="quiet" size={14} onPress={onBack}>
+          <Button variant="quiet" onPress={onBack}>
             {t('allCities')}
           </Button>
         </View>
@@ -1485,7 +1502,8 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Sprite id={crestArt(city.id)} fallback={CREST} />
         <View style={{ flexShrink: 1, minWidth: 0 }}>
-          {here ? <Tag tone="good">{t('here')}</Tag> : null}
+          {/* Inline before the tagline, in a line of the page's words (the web's `div.min-w-0` round both is no flex box). */}
+          {here ? <LineTag tone="good">{t('here')}</LineTag> : null}
           <ReadText size={13} lineHeight={13 * SNUG} tone="ink-300">{text.cities[city.id].tagline}</ReadText>
         </View>
       </View>
@@ -1503,9 +1521,9 @@ function CityDetail({ city, quote, p, world, onBack, onMoved, asked = false }: {
         </View>
       )}
       <Versus strong label={t('left')} here={now.leftAnnual} there={here ? undefined : there.leftAnnual} />
-      {/* The web's quiet button (`text-[14px]`, as wide as the sheet), which says whether what it folds is open. */}
+      {/* The web's quiet button, as wide as the sheet, which says whether what it folds is open: its `text-[14px]` loses to the Button's own 17 (kit.tsx's Button). */}
       <Raised expanded={numbers} bg="night-700" style={{ paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }} onPress={() => setNumbers((open) => !open)}>
-        <PixelText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{t(numbers ? 'hideNumbers' : 'showNumbers')}</PixelText>
+        <PixelText size={17} tone="ink-200" style={{ textAlign: 'center' }}>{t(numbers ? 'hideNumbers' : 'showNumbers')}</PixelText>
       </Raised>
       {numbers ? (
         <View>
@@ -2118,17 +2136,11 @@ const ShelfTile = memo(function ShelfTile({ itemId, owned, ownedUsed, price, sta
           <ReadText size={13} lineHeight={13 * TIGHT} numberOfLines={2} style={{ textAlign: wide ? 'left' : 'center' }}>{names.items[itemId]}</ReadText>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: wide ? 'flex-start' : 'center', columnGap: 8, rowGap: 2 }}>
             <PixelText size={15} lineHeight={15} tone={owned ? 'teal-300' : 'gold-500'}>{owned ? t(ownedUsed ? 'ownedUsed' : 'owned') : fmt.compact(price)}</PixelText>
-            {/* What it does to the player's status all told, not its own status: a lesser thing beside a better one adds little or none. (Each tag in a
-                box of its own, centred in the line as the web's inline tag is.) */}
-            <View>
-              <Tag tone={status > 0 ? 'good' : undefined}>{t('status', { n: status })}</Tag>
-            </View>
+            {/* What it does to the player's status all told, not its own status: a lesser thing beside a better one adds little or none. (Each tag in
+                the line of the web's `whitespace-nowrap` span round it, a reading line of 15, as the web's inline tag stands in it.) */}
+            <LineTag tone={status > 0 ? 'good' : undefined}>{t('status', { n: status })}</LineTag>
             {/* A long trip is a rest too: the focus it gives says so beside the status. */}
-            {focus ? (
-              <View>
-                <Tag tone="good">{t('focusTag', { n: focus })}</Tag>
-              </View>
-            ) : null}
+            {focus ? <LineTag tone="good">{t('focusTag', { n: focus })}</LineTag> : null}
           </View>
         </View>
       </Raised>

@@ -10,6 +10,7 @@ import { memoryServices, renderGame } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
 import type { Renders } from '../../testing/renders';
 import { COLORS, EXTRA } from '../../ui/theme';
+import { paintOf } from '../../ui/testing/paint';
 
 // As the web's test: what the step on screen earned is the game's to say, so the test says it. `shown.earned` null is the real game.
 const shown = vi.hoisted(() => ({ earned: null as string[] | null, unlocked: [] as string[] }));
@@ -56,7 +57,7 @@ const rgb = (hex: string) => {
   return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
 };
 /** The strips a frame is drawn with, by colour: the outline of a box is four of one colour. */
-const strips = (box: Element, colour: string) => [...box.querySelectorAll<HTMLElement>(':scope > div')].filter((d) => d.style.position === 'absolute' && d.style.backgroundColor === rgb(colour));
+const strips = (box: Element, colour: string) => [...box.querySelectorAll<HTMLElement>(':scope > div')].filter((d) => d.style.position === 'absolute' && paintOf(d) === rgb(colour));
 
 describe('a badge earned', () => {
   it('shows its rarity, in its rim and its colour', () => {

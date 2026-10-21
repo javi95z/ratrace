@@ -8,7 +8,7 @@ import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bare, Button, Notice, Panel, pressDown, Raised, Row, Tag, usePress } from '../../ui/kit';
+import { Bare, Button, LineTag, Notice, Panel, pressDown, Raised, Row, Tag, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
@@ -431,7 +431,7 @@ function AboutSheet({ about, shown, onClose }: { about: About; shown: GameView; 
           </View>
           <ReadText size={14} lineHeight={14 * SNUG} style={{ textAlign: 'center' }}>{life('ownerNote')}</ReadText>
           <Panel>
-            <Row left={homeName(text, home.typeId, home.cityId)} sub={names.cities[home.cityId]} right={owned.status > 0 ? <Tag tone="good">{estate('status', { n: owned.status })}</Tag> : undefined} />
+            <Row left={homeName(text, home.typeId, home.cityId)} sub={names.cities[home.cityId]} right={owned.status > 0 ? <LineTag tone="good" line={['pixel', 15, 15 * 1.1]}>{estate('status', { n: owned.status })}</LineTag> : undefined} />
             <Row left={estate('worth')} right={<Figure tone="gold-500">{fmt.money(owned.value)}</Figure>} />
             <Row left={estate('owed')} right={<Figure tone={owned.mortgage ? 'wine-300' : 'cream'}>{fmt.money(owned.mortgage?.principal ?? 0)}</Figure>} />
           </Panel>

@@ -1,10 +1,11 @@
 import { Children, createContext, Fragment, memo, useContext, useEffect, useRef, useState, type ReactNode, type Ref } from 'react';
 import { Animated, Easing, Pressable, View, type HostInstance, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { Tone } from '@ratrace/core/game/present';
+import { webBaseline } from './fonts';
 import { Framed } from './Frame';
 import { CREAM, GOLD, WINE, type FrameTone } from './frames';
 import { Sprite } from './Sprite';
-import { PixelText, ReadText, TIGHT } from './text';
+import { Language, PixelText, ReadText, TIGHT } from './text';
 import { useTap } from './tap';
 import { BODY, COLORS, TOUCH, type ColorToken } from './theme';
 
@@ -77,11 +78,13 @@ export function reach(height: number, room: { above: number; below: number }, { 
 }
 
 /**
- * A pixel button. Never smaller than 44 pt, so a thumb can hit it. `size` and `padX` are the web's `text-[Npx]` and `px-N` where a screen sets
- * one smaller than the 17 and 16 every button has (a button in a line of figures: `px-2 text-[13px]`). `cell` is a button in a cell of a grid of
+ * A pixel button. Never smaller than 44 pt, so a thumb can hit it. Its words are 17 and its sides 16 in, always: where a web screen gives its
+ * Button a smaller size or side (`px-3 text-[14px]` on the basket's button, `px-2 text-[13px]` beside the savings), the Button's own
+ * `px-4 text-[17px]` come after them in the web's stylesheet and win, so the web draws every button at 17 and 16 (measured on its pages:
+ * `getComputedStyle`), and so does the phone. `cell` is a button in a cell of a grid of
  * them (the web's `grid grid-cols-2 gap-2`, placed in a row): an equal share of the row, and as tall as the tallest in it, as the grid stretches it.
  */
-export function Button({ variant, wide = false, cell = false, disabled = false, size = 17, padX = 16, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean; size?: number; padX?: number }) {
+export function Button({ variant, wide = false, cell = false, disabled = false, onPress, children }: PressProps & { variant: ButtonVariant; wide?: boolean; cell?: boolean }) {
   const { bg, fg, tone } = BUTTON[variant];
   const press = usePress({ onPress, disabled });
   return (
@@ -104,7 +107,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         style={{
           backgroundColor: COLORS[bg],
           minHeight: TOUCH,
-          paddingHorizontal: padX,
+          paddingHorizontal: 16,
           paddingVertical: 8,
           flexDirection: 'row',
           alignItems: 'center',
@@ -114,7 +117,7 @@ export function Button({ variant, wide = false, cell = false, disabled = false, 
         }}
       >
         {setIn(children, (s) => (
-          <PixelText size={size} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
+          <PixelText size={17} tone={fg} style={{ textAlign: 'center' }}>{s}</PixelText>
         ))}
       </Framed>
     </Pressable>
@@ -305,6 +308,28 @@ export function Tag({ tone = 'plain', children }: { tone?: Tone; children: Words
   return (
     <View style={{ alignSelf: 'flex-start', backgroundColor: COLORS[bg], paddingHorizontal: 6, paddingVertical: 2 }}>
       <PixelText size={12} tone={fg} lineHeight={12 * TIGHT}>{String(children)}</PixelText>
+    </View>
+  );
+}
+
+/**
+ * A Tag that stands in a line of words, as the browser lays an inline block: the web's tag inline in a box of text (a reading 15 in the page's line
+ * of 1.45 by default; `line` names another: the pixel cell of a Row's right), not a flex item of its own. The tag's baseline (its 2 of padding and
+ * the pixel 12's in its line of 15) stands on the line's, and the box is as tall as the line and the tag make it together: in a reading 15, 21.75
+ * with the tag a point down. Measured on the web's pages: the shop's tiles, the rung's status under the pay, the city lived in. A tag that is a flex
+ * item of the web's (in a `flex flex-wrap` row of tags) is a `Tag`.
+ */
+export function LineTag({ tone, line = ['read', BODY.size, BODY.size * BODY.lineHeight], children }: { tone?: Tone; line?: readonly ['read' | 'pixel', number, number]; children: Words }) {
+  const language = useContext(Language);
+  const [role, size, height] = line;
+  const strut = webBaseline(role, 400, size, height, language);
+  const tag = 2 + webBaseline('pixel', 400, 12, 12 * TIGHT, language);
+  const above = Math.max(strut, tag);
+  return (
+    <View style={{ height: above + Math.max(height - strut, 12 * TIGHT + 4 - tag), alignSelf: 'flex-start' }}>
+      <View style={{ marginTop: above - tag }}>
+        <Tag tone={tone}>{children}</Tag>
+      </View>
     </View>
   );
 }

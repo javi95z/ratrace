@@ -6,19 +6,22 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
+import { webBaseline } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { Bar, Bare, KeyFigure, Panel, Row, Tag, Toggle, usePress } from '../../ui/kit';
+import { Bar, Bare, KeyFigure, LineTag, Panel, Row, Tag, Toggle, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
 import { spriteBox } from '../../ui/sprites';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
-import { useGame, useKnows, useT, useWords } from '../context';
+import type { ColorToken } from '../../ui/theme';
+import { useGame, useKnows, useSettings, useT, useWords } from '../context';
 import { CareerMoves } from './CareerMoves';
 import { bannerSize } from './Challenge';
 import { Explain } from './Explain';
 import { splitMastered, useFocusNote } from './focusNote';
+import { webLine } from './Rivals';
 
 /*
  * The player's working life, as the web's Work.tsx draws it: the panel that sums it up (the profile's `WorkPanel`), the sheets each of its lines
@@ -51,10 +54,27 @@ function Pips({ level }: { level: number }) {
  * The sign that a line opens more (the web's `ml-1.5 text-[11px] text-ink-300` ▸): in the face of the words it follows, the pixel one after a figure,
  * the reading one after a skill's line.
  */
-function More({ pixel = false }: { pixel?: boolean }) {
+function More({ pixel = false, top = 0, cell = 15 }: { pixel?: boolean; top?: number; cell?: number }) {
+  // In a pixel box the mark takes the letter spacing of the box it is in (`cell`, the figure's size), as the web's span inherits it.
   return (
-    <View aria-hidden style={{ marginLeft: 6 }}>
-      {pixel ? <PixelText size={11} tone="ink-300">{'▸'}</PixelText> : <ReadText size={11} tone="ink-300">{'▸'}</ReadText>}
+    <View aria-hidden style={{ marginLeft: 6, marginTop: top }}>
+      {pixel ? <PixelText size={11} tone="ink-300" style={{ letterSpacing: cell * 0.03 }}>{'▸'}</PixelText> : <ReadText size={11} tone="ink-300">{'▸'}</ReadText>}
+    </View>
+  );
+}
+
+/**
+ * A figure and the ▸ after it, inline in a pixel box of `size` (the web's `pixel text-[N]` box with the mark's `text-[11px]` span in it): on the
+ * browser's baseline, and the line as tall as the box's own (a row of the phone aligned on its texts' baselines is as tall as their boxes' ascents and
+ * descents together, and stood the rung's status 5 points lower than the web's under the pay).
+ */
+function Figured({ size, tone, children }: { size: number; tone?: ColorToken; children: string }) {
+  const { locale } = useSettings();
+  const line = webLine([['pixel', size, size * 1.1], ['pixel', size, size * 1.1], ['pixel', 11, 11 * 1.1]], locale);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', height: line.height }}>
+      <PixelText size={size} tone={tone} style={{ marginTop: line.tops[1], textAlign: 'right' }}>{children}</PixelText>
+      <More pixel top={line.tops[2]} cell={size} />
     </View>
   );
 }
@@ -135,13 +155,10 @@ export function WorkPanel({ shown }: { shown: GameView }) {
           </View>
           {/* The web's `shrink-0 text-right`: the pay, and under it the status of the rung. */}
           <View style={{ flexShrink: 0, alignItems: 'flex-end' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-              <PixelText size={16} tone="gold-500">{perYear(work.payAnnual)}</PixelText>
-              <More pixel />
-            </View>
+            <Figured size={16} tone="gold-500">{perYear(work.payAnnual)}</Figured>
             {rung && rung.status > 0 ? (
               <View style={{ marginTop: 2 }}>
-                <Tag tone="good">{t('status', { n: rung.status })}</Tag>
+                <LineTag tone="good">{t('status', { n: rung.status })}</LineTag>
               </View>
             ) : null}
           </View>
@@ -171,10 +188,7 @@ export function WorkPanel({ shown }: { shown: GameView }) {
           left={t('focus')}
           sub={work.focus.bonus === 0 ? t('focusSub') : work.traits.focus === 0 ? t('focusRested', { n: work.focus.bonus }) : work.traits.focus === work.focus.bonus ? t('focusJob', { n: work.focus.bonus }) : t('focusExtra', { n: work.focus.bonus })}
           right={
-            <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-              <PixelText style={{ textAlign: 'right' }}>{`${work.focus.left}/${work.focus.total}`}</PixelText>
-              <More pixel />
-            </View>
+            <Figured size={15}>{`${work.focus.left}/${work.focus.total}`}</Figured>
           }
         />
       </Opener>
@@ -324,10 +338,15 @@ function Level({ here, dim, children }: { here: boolean; dim: number; children: 
  * of its own, which the row sets on the name's baseline (a Tag places itself at the top of what holds it).
  */
 function LevelHead({ name, tag }: { name: string; tag: ReactNode }) {
+  // Placed from the browser's baselines: the name's (a pixel 16) and the tag's words' (its 2 of padding over a pixel 12 in a line of 15).
+  const { locale } = useSettings();
+  const named = webBaseline('pixel', 400, 16, 16 * 1.1, locale);
+  const tagged = 2 + webBaseline('pixel', 400, 12, 12 * 1.25, locale);
+  const above = tag ? Math.max(named, tagged) : named;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-      <PixelText size={16} style={{ flexShrink: 1 }}>{name}</PixelText>
-      {tag ? <View style={{ flexShrink: 0 }}>{tag}</View> : null}
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+      <PixelText size={16} style={{ flexShrink: 1, marginTop: above - named }}>{name}</PixelText>
+      {tag ? <View style={{ flexShrink: 0, marginTop: above - tagged }}>{tag}</View> : null}
     </View>
   );
 }

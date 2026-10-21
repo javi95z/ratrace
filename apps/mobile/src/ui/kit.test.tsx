@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
+import { paintOf } from './testing/paint';
 import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
@@ -52,14 +53,13 @@ test('Button is at least 44 high with 16 x 8 padding', () => {
   expect(box.style.paddingTop).toBe('8px');
 });
 
-test('a Button set smaller, as the web sets one in a line of figures (`px-2 text-[13px]`): its words that size, its sides that far in, still 44 high', () => {
-  render(<Button variant="secondary" size={13} padX={8} onPress={() => {}}>{'Save'}</Button>);
+test('a Button\'s words are 17 and its sides 16 in, as the web draws every one (a screen\'s `px-2 text-[13px]` loses to the Button\'s own classes there)', () => {
+  render(<Button variant="secondary" onPress={() => {}}>{'Save'}</Button>);
   const box = backed(screen.getByText('Save'));
   expect(box.style.minHeight).toBe('44px');
-  expect(box.style.paddingLeft).toBe('8px');
-  expect(box.style.paddingRight).toBe('8px');
-  expect(box.style.paddingTop).toBe('8px');
-  expect(textOf('Save').style.fontSize).toBe('13px');
+  expect(box.style.paddingLeft).toBe('16px');
+  expect(box.style.paddingRight).toBe('16px');
+  expect(textOf('Save').style.fontSize).toBe('17px');
 });
 
 test('Button press calls onPress and the tap sound', () => {
@@ -299,7 +299,7 @@ test.each([
   render(<Bar value={16} max={16} label="P" tone={tone} />);
   const lamp = screen.getAllByTestId('lamp-lit')[0];
   expect(lamp.style.backgroundColor).toBe(rgb(COLORS[base]));
-  const strips = Array.from(lamp.children).map((c) => (c as HTMLElement).style.backgroundColor);
+  const strips = Array.from(lamp.children).map((c) => paintOf(c as HTMLElement));
   expect(strips).toContain(rgb(COLORS[hi]));
   expect(strips).toContain(rgb(COLORS[lo]));
 });

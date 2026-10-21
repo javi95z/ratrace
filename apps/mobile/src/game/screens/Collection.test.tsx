@@ -5,6 +5,7 @@ import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { COLORS, grey } from '../../ui/theme';
+import { paintOf } from '../../ui/testing/paint';
 import { useGame } from '../context';
 import { memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { Counted, settled } from '../../testing/renders';
@@ -130,7 +131,7 @@ describe('the collection', () => {
     expect(card.style.backgroundColor).toBe(rgb(grey(COLORS['night-700'])));
     const strips = (Array.from(card.children) as HTMLElement[]).filter((kid) => kid.style.position === 'absolute');
     expect(strips.length).toBeGreaterThan(0);
-    for (const strip of strips) expect(strip.style.backgroundColor).toBe(rgb(grey(COLORS['night-900'])));
+    for (const strip of strips) expect(paintOf(strip)).toBe(rgb(grey(COLORS['night-900'])));
     // Its words: the name in ink-200, its rarity in its gold, how it is earned not told, in grey.
     expect(colourOf(within(waiting).getByText('Ten million'))).toBe(rgb(grey(COLORS['ink-200'])));
     expect(colourOf(within(waiting).getByText('Rare'))).toBe(rgb(grey(COLORS['gold-500'])));

@@ -132,17 +132,25 @@ const SUBSETS: Record<string, number[][]> = {
 export const ARIAL = 'Arial';
 /**
  * Where none of them draws a sign, the browser goes on to the system's fonts (Chrome said which: `CSS.getPlatformFontsForNode`):
- * a dingbat (✕ ✓) from Zapf Dingbats, anything else (▸) from the system font, which iOS calls System. Both ship with iOS.
+ * the system font first, which iOS calls System, where it has the sign (▸, and the ✓ of a business's switch: `.SFNS`), and a dingbat it lacks
+ * (the ✕ of a sheet's close) from Zapf Dingbats. Both ship with iOS.
  */
 export const SYSTEM = 'System';
 export const DINGBATS = 'Zapf Dingbats';
-const isDingbat = (point: number) => point >= 0x2700 && point <= 0x27bf;
+/**
+ * An emoji (the dice of a life at random), which Chrome draws in Apple Color Emoji and scales by small letters of its own (below), not as Jersey. The
+ * phone asks for it in the system font (named so, the line is laid from the system font's metrics, as it always was: named Apple Color Emoji, the
+ * line's words stood 1.5 points higher), at the emoji's scale.
+ */
+const isEmoji = (ch: string) => /\p{Extended_Pictographic}|\u{FE0F}|\u{200D}/u.test(ch);
+/** The small-letter height the pixel text's `font-size-adjust` scales an emoji by (1040/2048: the dice measured on the web, 1.103 × its size). */
+const EMOJI_X_HEIGHT = 1040 / 2048;
+/** A dingbat the system font does not draw: of the dingbats, SF has the check mark (U+2713). */
+const isDingbat = (point: number) => point >= 0x2700 && point <= 0x27bf && point !== 0x2713;
 /** The stand-in's `size-adjust` after Chakra (the web's generated `Chakra Petch Fallback`). */
 const ARIAL_FOR_CHAKRA = 1.0251;
 /** Arial's small-letter height over the em (1062/2048), for the pixel text's `font-size-adjust`. */
 const ARIAL_X_HEIGHT = 1062 / 2048;
-/** The system font's small-letter height (SF, 1040/2048). */
-const SYSTEM_X_HEIGHT = 1040 / 2048;
 /** Line metrics of those that are not the game's: Arial (hhea 1854/−434 of 2048), SF (1980/−432), Zapf Dingbats (1667/−362). */
 const OTHER_METRICS: Record<string, { ascent: number; descent: number }> = {
   [ARIAL]: { ascent: 1854 / 2048, descent: 434 / 2048 },
@@ -187,11 +195,14 @@ function stackOf(role: Role, weight: Weight, language: string): string[] {
 
 /**
  * How much a run's font is scaled: pixel text to the common small-letter height, a stand-in to its `size-adjust`.
- * Zapf Dingbats has no small letters to measure, and the browser scales it as it scales Jersey.
+ * A font of the system's, past the stack (Zapf Dingbats, SF), is scaled as the browser scales Jersey, not by its own small letters: measured on the
+ * web's pages, the ▸ after a pixel figure (SF, Chrome says) is 7.223 wide at 11 px, the reading ▸ (SF, unadjusted) 5.266, a ratio of 1.372, which is
+ * Jersey's 1.3745 and not SF's own 1.103 (by SF's small letters the phone drew it 1.33 points narrower). An emoji is not (`emoji`): Apple Color
+ * Emoji keeps the 1.103 it was drawn at before (the dice, measured).
  */
-function scaleOf(family: string, role: Role): number {
+function scaleOf(family: string, role: Role, emoji = false): number {
   if (role === 'pixel') {
-    const x = family === ARIAL ? ARIAL_X_HEIGHT : family === SYSTEM ? SYSTEM_X_HEIGHT : family === DINGBATS ? X_HEIGHT[JERSEY] : X_HEIGHT[family];
+    const x = family === ARIAL ? ARIAL_X_HEIGHT : emoji ? EMOJI_X_HEIGHT : family === SYSTEM || family === DINGBATS ? X_HEIGHT[JERSEY] : X_HEIGHT[family];
     return PIXEL_X_HEIGHT / x;
   }
   return family === ARIAL ? ARIAL_FOR_CHAKRA : 1;
@@ -210,9 +221,10 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
   for (const ch of Array.from(text)) {
     const point = ch.codePointAt(0)!;
     const family = stack.find((f) => draws(f, point)) ?? (isDingbat(point) ? DINGBATS : SYSTEM);
+    const scale = scaleOf(family, role, family === SYSTEM && isEmoji(ch));
     const last = runs[runs.length - 1];
-    if (last && last.family === family) last.text += ch;
-    else runs.push({ text: ch, family, scale: scaleOf(family, role), ...(italic ? (SLANT[family] ? { face: SLANT[family] } : { italic: true }) : null) });
+    if (last && last.family === family && last.scale === scale) last.text += ch;
+    else runs.push({ text: ch, family, scale, ...(italic ? (SLANT[family] ? { face: SLANT[family] } : { italic: true }) : null) });
   }
   return runs;
 }

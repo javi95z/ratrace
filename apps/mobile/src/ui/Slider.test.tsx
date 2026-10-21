@@ -2,6 +2,7 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { COLORS } from './theme';
+import { paintOf } from './testing/paint';
 
 // The gesture handler's native side cannot be loaded here: a stand-in that hands the test the pan's callbacks.
 type Touch = { x: number; y?: number };
@@ -84,7 +85,7 @@ test('a track of 44 points, 8 high in the middle with its 2 point outline, and a
   const slider = container.querySelector('[role="slider"]') as HTMLElement;
   expect(slider.style.height).toBe('44px');
   expect(slider.style.width).toBe('100%');
-  const filled = (colour: string) => Array.from(slider.querySelectorAll('div')).filter((d) => d.style.backgroundColor === rgb(colour));
+  const filled = (colour: string) => Array.from(slider.querySelectorAll('div')).filter((d) => paintOf(d) === rgb(colour));
   // the track: night-600, 8 high, centred in the 44
   const [track] = filled(COLORS['night-600']);
   expect(track.style.height).toBe('8px');

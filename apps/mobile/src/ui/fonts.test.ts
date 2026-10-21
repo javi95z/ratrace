@@ -106,10 +106,22 @@ test('a sign outside the web\'s subsets is drawn by the stand-in, Arial, as the 
   expect(runsOf('Далее →', 'pixel', 400, 'ru').map((r) => r.family)).toEqual([OSWALD, JERSEY, SYSTEM]);
   // Elsewhere Russian letters, too, reach the stand-in before Oswald.
   expect(runsOf('Ранг', 'pixel', 400, 'en').map((r) => r.family)).toEqual([ARIAL]);
-  // Past Arial: a dingbat from Zapf Dingbats, scaled as Jersey is; any other sign from the system font.
+  // Past Arial: a dingbat the system font lacks from Zapf Dingbats, scaled as Jersey is; any other sign from the system font.
   expect(runsOf('✕', 'pixel', 400).map((r) => [r.family, r.scale])).toEqual([[DINGBATS, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT]]);
-  expect(runsOf('✓', 'read', 400).map((r) => r.family)).toEqual([DINGBATS]);
-  expect(runsOf('▸', 'pixel', 400).map((r) => r.family)).toEqual([SYSTEM]);
+  // But the check mark, which the system font draws (Chrome: `.SFNS` for the ✓ of a business's switch).
+  expect(runsOf('✓', 'read', 400).map((r) => r.family)).toEqual([SYSTEM]);
+  expect(runsOf('✓ Run', 'pixel', 400).map((r) => [r.family, r.scale])).toEqual([
+    [SYSTEM, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT],
+    [JERSEY, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT],
+  ]);
+  // An emoji is asked of the system font, at its own scale (the dice of a life at random, measured on the web), a run apart from a sign beside it.
+  expect(runsOf('🎲▸ At', 'pixel', 400).map((r) => [r.text, r.family, r.scale])).toEqual([
+    ['🎲', SYSTEM, PIXEL_X_HEIGHT / (1040 / 2048)],
+    ['▸', SYSTEM, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT],
+    [' At', JERSEY, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT],
+  ]);
+  // The system's font too, scaled as Jersey is (measured: the web's pixel ▸ is SF at Jersey's adjusted size).
+  expect(runsOf('▸', 'pixel', 400).map((r) => [r.family, r.scale])).toEqual([[SYSTEM, PIXEL_X_HEIGHT / JERSEY_X_HEIGHT]]);
 });
 
 test.skipIf(!existsSync(ARIAL_FILE))('the committed Arial coverage is what macOS\'s Arial says (run scripts/fontCoverage.ts when it fails)', () => {
