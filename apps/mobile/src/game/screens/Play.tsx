@@ -25,6 +25,7 @@ import { Hud } from './Hud';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
 import { EndStandIn, StageStandIn } from './PlayStandIns';
+import { ProfileSheet } from './Profile';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
@@ -310,6 +311,10 @@ export function Play() {
   const clearMoved = useGame((s) => s.clearMoved);
   const lifeId = useGame((s) => s.lifeId);
   const [basketOpen, setBasketOpen] = useState(false);
+  // The profile, opened from the portrait (the web's phone layout; the phone has no desk to keep it at the side).
+  const [profileOpen, setProfileOpen] = useState(false);
+  const openProfile = useCallback(() => setProfileOpen(true), []);
+  const closeProfile = useCallback(() => setProfileOpen(false), []);
   const scroller = useRef<ScreenScroller>(null);
 
   // No life to play: the front door is where one is started.
@@ -364,7 +369,7 @@ export function Play() {
 
   // The skyline opens and closes a round. In between, the room goes to the cards and the finances.
   const compact = stage !== 'news' && stage !== 'resolve';
-  const lead = useMemo(() => <Hud part="lead" compact={compact} />, [compact]);
+  const lead = useMemo(() => <Hud part="lead" compact={compact} onProfile={openProfile} />, [compact, openProfile]);
   const header = useMemo(() => <Hud part="header" compact={compact} />, [compact]);
   // The stage is made once a stage, as the Hud's parts are: what Play itself draws again (the basket opened, the calendar turning) does not draw it again.
   const stageView = useMemo(() => <StageView stage={stage} />, [stage]);
@@ -372,6 +377,8 @@ export function Play() {
   const finances = stage === 'finance';
   const financeTabs = useMemo(() => <FinanceTabs />, []);
   const financeLeadIn = useMemo(() => <FinanceLeadIn />, []);
+  // Made once for as long as it is open or shut: a step of the round draws Play again, and not the profile, which draws what it shows itself.
+  const profileSheet = useMemo(() => <ProfileSheet open={profileOpen} onClose={closeProfile} />, [profileOpen, closeProfile]);
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
@@ -429,6 +436,7 @@ export function Play() {
             {stageView}
           </View>
           {basketOpen && finances ? <Basket onClose={() => setBasketOpen(false)} /> : null}
+          {profileSheet}
         </StickyScreen>
       </CoinTargets>
     </FinanceShell>

@@ -15,7 +15,7 @@ import type { Scene } from '@ratrace/core/testing/scenes';
 import { content } from '@ratrace/content';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GameProvider, useGame, useT } from '@/game/context';
+import { GameProvider, useGame, useT, useWords } from '@/game/context';
 import type { Services } from '@/game/context';
 import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
@@ -28,6 +28,7 @@ import { PageTurn } from '@/game/screens/PageTurn';
 import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
 import { WorkPanel } from '@/game/screens/Work';
+import { RivalsBoard } from '@/game/screens/Rivals';
 import { Legal } from './Legal';
 
 /**
@@ -147,9 +148,9 @@ const financePresses = (scene: Scene): string[] => [...(scene.tab === undefined 
 /**
  * Presses each of `selectors` in turn, once the screen is drawn: each as soon as it is there (a tab pressed draws its panel a frame or two later, and
  * the row in it is pressed then), and each once. Once for all, as `Pressed`: the dev server runs an effect twice, and a second press of a tab already
- * open is nothing, but of a row it would open its sheet again.
+ * open is nothing, but of a row it would open its sheet again. A press is a selector, or a function that finds its thing (`null` while it is not there).
  */
-function PressedInTurn({ selectors, children }: { selectors: readonly string[]; children: ReactNode }) {
+function PressedInTurn({ selectors, children }: { selectors: ReadonlyArray<string | (() => HTMLElement | null)>; children: ReactNode }) {
   const pressed = useRef(false);
   useEffect(() => {
     if (selectors.length === 0 || pressed.current) return;
@@ -157,7 +158,8 @@ function PressedInTurn({ selectors, children }: { selectors: readonly string[]; 
     let at = 0;
     let frames = 0;
     const next = () => {
-      const target = document.querySelector<HTMLElement>(selectors[at]);
+      const press = selectors[at];
+      const target = typeof press === 'string' ? document.querySelector<HTMLElement>(press) : press();
       if (target) {
         target.click();
         at += 1;
@@ -223,6 +225,45 @@ function WorkScene() {
   );
 }
 
+/**
+ * The player's profile has no initial state on the web either (on a phone it is the sheet Play opens from the portrait), so a scene of it has the page
+ * press the portrait, and then what the scene names in the profile's sheet: one of the things owned (`profile-owned`: the item's id, its button titled
+ * with its name), or a line of the balance sheet (`balance-r6`: the line's id, its button starting with its label). The phone's registry draws the
+ * profile beside Play and gives it the thing or the line as its initial state (`ProfileOpened`).
+ */
+function ProfileScene({ scene, line }: { scene: Scene; line?: string }) {
+  const hud = useT('hud');
+  const profile = useT('profile');
+  const { names } = useWords();
+  const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
+  const find = [
+    () => document.querySelector<HTMLElement>(`button[aria-label="${hud('openProfile')}"]`),
+    ...(scene.sheet === undefined
+      ? []
+      : line === undefined
+        ? [() => dialog()?.querySelector<HTMLElement>(`button[title="${names.items[scene.sheet as string]}"]`) ?? null]
+        : [() => [...(dialog()?.querySelectorAll<HTMLElement>('button[aria-haspopup="dialog"]') ?? [])].find((button) => button.textContent?.startsWith(profile(line))) ?? null]),
+  ];
+  return (
+    <PressedInTurn selectors={find}>
+      <PlayScene scene={scene} />
+    </PressedInTurn>
+  );
+}
+
+/**
+ * Where the player stands among the rivals (`rivals-r6`): the board alone in the page's column (the web's `main` of a page), as the phone's registry draws
+ * it. In the profile it is far down a sheet that scrolls, where no shot could see it.
+ */
+function RivalsScene() {
+  const history = useGame((s) => s.history);
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-col px-3 pt-4">
+      <RivalsBoard history={history} />
+    </main>
+  );
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
@@ -237,6 +278,9 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
   work: () => <WorkScene />,
+  profile: (scene) => <ProfileScene scene={scene} />,
+  balance: (scene) => <ProfileScene scene={scene} line={scene.sheet} />,
+  rivals: () => <RivalsScene />,
 };
 
 /**

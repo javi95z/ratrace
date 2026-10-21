@@ -505,3 +505,31 @@ test('the scene of the businesses is the founder\'s first round at the tab: her 
   expect(within(within(tab).getByLabelText('Open a business')).getAllByRole('listitem').length).toBeGreaterThan(0);
   expect(screen.queryByRole('note', { name: 'Guide' })).toBeNull();
 });
+
+test('the scenes of the profile are its sheet open over Play, as the portrait opens it, with a thing or a line of its balance open over it from the start', async () => {
+  const sheetOf = async (title: string) => (await screen.findByRole('heading', { name: title }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  render(<SceneView name="profile-r6" />);
+  const profile = await sheetOf('Your life');
+  expect(within(profile).getByText('BALANCE SHEET')).toBeTruthy();
+  // Under it, the news of the sixth round.
+  expect(screen.getByRole('heading', { name: 'News' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="profile-owned" />);
+  const watch = await sheetOf('Casio F-91W');
+  expect(within(watch).getByText(/^Would sell for /)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="balance-r6" />);
+  const worth = await sheetOf('Net worth');
+  // The graph of the five rounds played, and the start: six bars.
+  expect(within(worth).getByRole('img').style.width).toBe(`${6 * 14 - 4}px`);
+  expect(screen.getByRole('heading', { name: 'Your life' })).toBeTruthy();
+});
+
+test('the scene of the rivals is their board alone on a page, where the engineer stands among them', async () => {
+  render(<SceneView name="rivals-r6" />);
+  const board = await screen.findByLabelText('Your rivals', {}, WAIT);
+  expect(within(board).getByText(/^You are #\d of 4$/)).toBeTruthy();
+  expect(within(board).getAllByRole('listitem')).toHaveLength(4);
+  expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
+});

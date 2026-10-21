@@ -22,6 +22,9 @@ import { Placeholder } from '../game/screens/Placeholder';
 import { Play } from '../game/screens/Play';
 import { HomeSettingsSheet } from '../game/screens/Settings';
 import { WorkPanel } from '../game/screens/Work';
+import type { BalanceLine } from '../game/screens/Balance';
+import { ProfileOpened, ProfileSheet } from '../game/screens/Profile';
+import { RivalsBoard } from '../game/screens/Rivals';
 import { KEYFRAMES } from '../ui/motion';
 import { Screen } from '../ui/Page';
 import { useSpritesLoading } from '../ui/spriteImages';
@@ -166,6 +169,33 @@ function ShownWork() {
 }
 
 /**
+ * The player's profile over Play, open as the portrait opens it, with what the scene names open over it from the start (`ProfileOpened`): one of the
+ * things owned (`profile-owned`: its id), or a line of the balance sheet (`balance-r6`: `netWorth`). The web's page presses the portrait, then the thing
+ * or the line. Play's own profile stays shut under it.
+ */
+function ProfileScene({ scene, opened }: { scene: Scene; opened: { item?: string; line?: BalanceLine } }) {
+  return (
+    <ProfileOpened value={opened}>
+      <PlayScene scene={scene} />
+      <ProfileSheet open onClose={nothing} />
+    </ProfileOpened>
+  );
+}
+
+/**
+ * Where the player stands among the rivals (`rivals-r6`): the board alone on a page, the web's `main` column, as the web's page draws it. In the profile it is
+ * far down a sheet that scrolls, where no shot could see it.
+ */
+function RivalsScene() {
+  const history = useGame((s) => s.history);
+  return (
+    <Screen>
+      <RivalsBoard history={history} />
+    </Screen>
+  );
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`: `play-news-r1` is drawn on `play`). Each
  * screen's task puts the screen itself in place of the stand-in of phase 1; the web's page has the same list.
  */
@@ -182,6 +212,9 @@ export const SCENE_SCREENS: SceneScreens = {
   challenge: () => <WeeklyChallenge />,
   legal: () => <Legal />,
   work: () => <WorkScene />,
+  profile: (scene) => <ProfileScene scene={scene} opened={{ item: scene.sheet }} />,
+  balance: (scene) => <ProfileScene scene={scene} opened={{ line: scene.sheet as BalanceLine | undefined }} />,
+  rivals: () => <RivalsScene />,
 };
 
 /**

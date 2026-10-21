@@ -130,6 +130,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'finance-item',
   'finance-taxes',
   'finance-business',
+  // Task 17: the player's profile (over Play, as the portrait opens it), a thing owned, the net worth's line with its graph, and the rivals' board.
+  'profile-r6',
+  'profile-owned',
+  'balance-r6',
+  'rivals-r6',
 ]);
 
 /**

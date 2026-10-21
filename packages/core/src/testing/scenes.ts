@@ -90,6 +90,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'finance-item', locale: 'en', tab: 'shop', sheet: 'item-watch_omega' },
   { name: 'finance-taxes', locale: 'en', tab: 'taxes' },
   { name: 'finance-business', locale: 'en', tab: 'business' },
+  { name: 'profile-r6', locale: 'en' },
+  { name: 'profile-owned', locale: 'en', sheet: 'watch_casio' },
+  { name: 'balance-r6', locale: 'en', sheet: 'netWorth' },
+  { name: 'rivals-r6', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -112,7 +116,9 @@ export type Step =
   /** The saver's orders for the round are put in the basket, one after another. */
   | { action: 'orders' }
   | { action: 'play' }
-  | { action: 'next' };
+  | { action: 'next' }
+  /** These things are bought, an order each, put in the basket one after another (the saver buys none). */
+  | { action: 'buy'; items: readonly string[] };
 
 /**
  * How far a scene's life is played. `round` is the player's: the first round is 1, as the HUD counts it. A life at
@@ -213,6 +219,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'finance-taxes': { life: 'engineer', round: 6, stage: 'finance' },
   // The founder's first round, at the businesses: the online shop she begins with (its line and its two switches, all of them summed) and what she could open.
   'finance-business': { life: 'founder', round: 1, stage: 'finance' },
+  // The player's profile in the engineer's sixth round, at its news: the sheet the portrait opens, over Play.
+  'profile-r6': { life: 'engineer', round: 6, stage: 'news' },
+  // The same round, with three things bought in the fifth (a watch, the gym, a phone): the profile, and the watch's own sheet over it.
+  'profile-owned': { life: 'engineer', round: 5, stage: 'finance', then: [{ action: 'buy', items: ['watch_casio', 'member_gym', 'tech_phone'] }, { action: 'play' }, { action: 'next' }], ends: 'news' },
+  // The same round as profile-r6: the line of the balance sheet that is the net worth, opened, with its graph of the five rounds played.
+  'balance-r6': { life: 'engineer', round: 6, stage: 'news' },
+  // The same round: where the engineer stands among the rivals, the board alone on a page (in the profile it is far down its sheet).
+  'rivals-r6': { life: 'engineer', round: 6, stage: 'news' },
 };
 
 /**
@@ -398,6 +412,9 @@ async function take(name: string, game: SceneGame, bot: Bot, step: Step): Promis
       return await state.play();
     case 'next':
       return state.next();
+    case 'buy':
+      for (const itemId of step.items) game.getState().addOrder({ type: 'buyItem', itemId });
+      return;
   }
 }
 

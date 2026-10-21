@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -267,4 +267,25 @@ test('the work panel of the profile is drawn on a page of its own on both sides,
   // In the column of the game's pages, 16 above and below as the phone's page leaves.
   expect(web).toContain('<main className="mx-auto min-h-safe w-full max-w-md px-3 pb-4 pt-4">');
   expect(app).toContain('return <Screen>{playing ? <ShownWork /> : null}</Screen>;');
+});
+
+test('the profile is open, in a scene, as the portrait opens it: the web\'s page presses the portrait and then what the scene names, the phone\'s draws the profile beside Play with it open', () => {
+  expect(web).toContain('profile: (scene) => <ProfileScene scene={scene} />,');
+  expect(web).toContain('balance: (scene) => <ProfileScene scene={scene} line={scene.sheet} />,');
+  expect(app).toContain('profile: (scene) => <ProfileScene scene={scene} opened={{ item: scene.sheet }} />,');
+  expect(app).toContain('balance: (scene) => <ProfileScene scene={scene} opened={{ line: scene.sheet as BalanceLine | undefined }} />,');
+  // What the web's page presses is the web's own: the portrait by its name, a thing owned by its title, a line of the balance by its popup.
+  expect(web).toContain("button[aria-label=\"${hud('openProfile')}\"]");
+  const hud = read('../../web/src/game/screens/Hud.tsx');
+  expect(hud).toContain("aria-label={t('openProfile')}");
+  const profile = read('../../web/src/game/screens/Profile.tsx');
+  expect(profile).toContain('title={names.items[owned.itemId]}');
+  expect(profile).toContain("onClick={() => setLine('netWorth')}");
+  // A thing a scene opens is one the scene's life owns; a line, one the balance sheet has.
+  const sheets = SCENES.filter((scene) => scene.name.startsWith('profile-') || scene.name.startsWith('balance-')).map((scene) => scene.sheet);
+  expect(sheets).toEqual([undefined, 'watch_casio', 'netWorth']);
+  // The rivals' board is drawn alone in a page's column on both sides.
+  expect(web).toContain('<main className="mx-auto flex w-full max-w-md flex-col px-3 pt-4">');
+  expect(app).toContain('rivals: () => <RivalsScene />,');
+  expect(web).toContain('rivals: () => <RivalsScene />,');
 });

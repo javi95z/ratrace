@@ -166,7 +166,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -521,6 +521,10 @@ describe('the list of scenes', () => {
       'finance-item',
       'finance-taxes',
       'finance-business',
+      'profile-r6',
+      'profile-owned',
+      'balance-r6',
+      'rivals-r6',
     ]);
   });
 
@@ -553,7 +557,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals']));
   });
 });
 
@@ -638,3 +642,43 @@ describe('scenes that go on after the game is open: the result of a card, the le
     await expect(runScene('play-outcome-r1', empty)).rejects.toThrow('scene play-outcome-r1: no life is open');
   });
 });
+
+describe('the scenes of the profile', () => {
+  /** A scene's game, opened on its store and taken through its script, as a client does. */
+  async function opened(name: string) {
+    const game = createGameStore({ sessions: fixedSessions(await sceneStore(name)), content });
+    await game.getState().boot();
+    await runScene(name, game);
+    return game.getState();
+  }
+
+  it('profile-r6, balance-r6 and rivals-r6 are the news of the engineer\'s sixth round: the very store of play-news-r6', async () => {
+    const news = await saveOf(await sceneStore('play-news-r6'));
+    for (const name of ['profile-r6', 'balance-r6', 'rivals-r6']) expect(await saveOf(await sceneStore(name)), name).toEqual(news);
+    const state = await opened('balance-r6');
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news' });
+    expect(roundOf(state)).toBe(6);
+    // Five rounds played: the start and five bars for the graph of the net worth.
+    expect(state.history).toHaveLength(6);
+  });
+
+  it('name the sheet their screen opens: none for the profile, the net worth\'s line for the balance, the watch for the things owned', () => {
+    expect(SCENES.find((scene) => scene.name === 'profile-r6')).toEqual({ name: 'profile-r6', locale: 'en' });
+    expect(SCENES.find((scene) => scene.name === 'balance-r6')).toEqual({ name: 'balance-r6', locale: 'en', sheet: 'netWorth' });
+    expect(SCENES.find((scene) => scene.name === 'profile-owned')).toEqual({ name: 'profile-owned', locale: 'en', sheet: 'watch_casio' });
+    expect(SCENES.find((scene) => scene.name === 'rivals-r6')).toEqual({ name: 'rivals-r6', locale: 'en' });
+  });
+
+  it('profile-owned is the news of the sixth round with three things bought in the fifth, the watch among them', async () => {
+    // Begun on the fifth round's finances, the very store of a scene there would be, and taken on by its script.
+    const state = await opened('profile-owned');
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'news', refusal: null, orders: [] });
+    expect(roundOf(state)).toBe(6);
+    expect(state.view?.player.life.items.map((owned) => owned.itemId)).toEqual(['watch_casio', 'member_gym', 'tech_phone']);
+    // Each the same every time.
+    expect(onScreenOf(await opened('profile-owned'))).toBe(onScreenOf(state));
+  });
+});
+
+/** What a scene's game shows, as a string to compare: the stage, the round and the player. */
+const onScreenOf = (state: { stage: string; view: { round: number; player: unknown } | null }) => JSON.stringify([state.stage, state.view?.round, state.view?.player]);

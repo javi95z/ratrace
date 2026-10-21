@@ -588,6 +588,29 @@ eight tabs of the web's finances are on the phone.
   what is taken out, who runs it, more money in, the sale, living from it), a business opened this round, and Russian on a narrow phone (a tile's name
   clamped to two lines as the web's `line-clamp-2`, nothing else cut; a business's name cut to its line as the web's `truncate`, the rest wrapping).
 
+## Task 17: the player's profile in a life, its balance, rivals and graph of net worth (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it:
+
+| scene | what it is | how its sheet is open |
+|---|---|---|
+| profile-r6 | the engineer's sixth round, at its news: the profile's sheet over Play (work, family, income, the balance sheet, the rivals, nothing owned), someone new | the web's page presses the portrait (`button[aria-label="Open your profile"]`); the phone's registry draws `ProfileSheet` open beside Play |
+| profile-owned | the same round, with a watch, the gym and a phone bought in the fifth (the scene's script: a `buy` step, the round played, the next one opened): the watch's own sheet over the profile | the web's page presses the portrait, then the watch's square (`[role="dialog"] button[title="Casio F-91W"]`); the phone's profile is given it (`ProfileOpened`) |
+| balance-r6 | the same round as profile-r6: the net worth's line opened over the profile, with the graph of the start and five rounds (`Bars`, crisp) | the web's page presses the portrait, then the balance line whose words start with "Net worth"; the phone's profile is given the line (`ProfileOpened`) |
+| rivals-r6 | the same round: the rivals' board alone in a page's column (the web's `main mx-auto max-w-md px-3 pt-4`, the phone's `Screen`), as it is far down a sheet that scrolls in the profile | no sheet |
+
+- **The work panel is a stand-in until the lanes are merged** (`WorkPanelStub.tsx`: the job's title, its trade and its pay, the head of the web's panel):
+  Task 14 ports the web's `WorkPanel` in another lane. `profile-r6` (and the profile under the other two sheets) differs from the web there until the merge;
+  the batch pass shoots it after the merge, with the real panel.
+- **The net worth's sheet says `end.realNetWorth`, on the web and on the phone**: the web's Balance.tsx asks for a key that left the messages in 3c18114. The phone
+  shows what the web shows (use-intl's fallback, the key's name) and, in development, logs it as an error: Expo's LogBox may stand over `balance-r6`'s shot.
+- **Lines that share a baseline** (a figure and its ▸, a pixel 17 in a reading line, a rival's place, name and points, a choice's name and cost, what is owed and its
+  figure) are placed from the browser's baselines (`webBaseline`; Rivals.tsx's `webLine` for a line of several texts), as the Hud's are: the batch pass checks them.
+- **Not compared** (no scene shows them; `Profile.test` and `Balance.test` hold them): the sheets of the lifestyle, the home (rented and owned) and the
+  insurances, and their choices pressed in the finances; a thing sold or cancelled from its sheet; the other lines of the balance sheet (cash, savings, the
+  pension, investments by kind, property, businesses, things, debts); a family at home (its picture as wide as the panel); the way out of the life and its
+  word when the phone is not saving; a thing's uses (`ItemUses`, the gym's) and what is owed on it (`ItemCost`'s note).
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp
