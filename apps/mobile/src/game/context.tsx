@@ -28,6 +28,8 @@ import { WordsProvider } from './words';
 export { useT } from './words';
 export { NO_ROOM, useAccountSaves, useCanSignIn, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './offline';
 export type { Track } from './offline';
+export { usePictureShare } from './sharing';
+export type { PictureShare } from './sharing';
 export { useSound };
 export type { Cue } from '../ui/sound';
 

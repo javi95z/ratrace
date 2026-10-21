@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { content } from '@ratrace/content';
 import { SCENE_NOW, SCENES, sceneStore, screenOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { textFor } from '@ratrace/content';
 import { MemoryStore } from '@ratrace/core/session/memory';
 import type { SavedGame } from '@ratrace/core/session/types';
 import { formatFor } from '@ratrace/core/lib/format';
@@ -532,4 +533,23 @@ test('the scene of the rivals is their board alone on a page, where the engineer
   expect(within(board).getByText(/^You are #\d of 4$/)).toBeTruthy();
   expect(within(board).getAllByRole('listitem')).toHaveLength(4);
   expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull();
+});
+
+test('the scenes of the end of a life are its end screen, Play\'s last stage, with the picture to share open over it where the scene names it', async () => {
+  render(<SceneView name="end-escaped" />);
+  expect(await screen.findByRole('heading', { name: 'The end' }, WAIT)).toBeTruthy();
+  expect(screen.getByText('You left the rat race at 50.')).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull();
+  cleanup();
+  render(<SceneView name="end-share" />);
+  const sheet = (await screen.findByRole('heading', { name: 'A picture of this life' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(await within(sheet).findByRole('img', { name: new RegExp(`^${textFor('en').text.lives.engineer.name}: score `) }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'The end' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="end-bankrupt" />);
+  expect(await screen.findByText('Bankrupt once', {}, WAIT)).toBeTruthy();
+  expect(screen.getByText('You never left the rat race.')).toBeTruthy();
+  cleanup();
+  render(<SceneView name="end-ru" />);
+  expect(await screen.findByRole('heading', { name: 'Конец' }, WAIT)).toBeTruthy();
 });

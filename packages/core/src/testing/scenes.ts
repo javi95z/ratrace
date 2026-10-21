@@ -94,6 +94,10 @@ export const SCENES: readonly Scene[] = [
   { name: 'profile-owned', locale: 'en', sheet: 'watch_casio' },
   { name: 'balance-r6', locale: 'en', sheet: 'netWorth' },
   { name: 'rivals-r6', locale: 'en' },
+  { name: 'end-escaped', locale: 'en' },
+  { name: 'end-bankrupt', locale: 'en' },
+  { name: 'end-share', locale: 'en', sheet: 'share' },
+  { name: 'end-ru', locale: 'ru' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -110,10 +114,10 @@ export const SCENE_NOW = Date.UTC(2026, 9, 22, 12, 0, 0);
 /** One thing done to the round on screen once the game is open: what the player does, by the round store's own name for it. */
 export type Step =
   | { action: 'leaveNews' }
-  /** The card on screen is answered with this option, or the saver's choice. */
+  /** The card on screen is answered with this option, or the choice of the scene's player (the saver, unless it names another). */
   | { action: 'pick'; option?: number }
   | { action: 'afterCard' }
-  /** The saver's orders for the round are put in the basket, one after another. */
+  /** The orders of the scene's player for the round are put in the basket, one after another. */
   | { action: 'orders' }
   | { action: 'play' }
   | { action: 'next' }
@@ -134,7 +138,8 @@ export type Step =
 type Reach = {
   life: string;
   round: number;
-  stage: Extract<Stage, 'news' | 'cards' | 'finance'>;
+  /** `end`: the life played on from `round` to its last, and over: the game opens on its end. */
+  stage: Extract<Stage, 'news' | 'cards' | 'finance' | 'end'>;
   /** The life is then saved as a newer version of the game would have saved it, which this one cannot open (and keeps). */
   newer?: true;
   /** The seed the life is begun on, where the first fixed one's world lacks what the scene needs (`screen-seed-10` has a crisis from the fifth round). */
@@ -144,6 +149,11 @@ type Reach = {
    * would): on `screen-seed-15` the nurse is wrongly accused in her eighth round, goes to court and loses, and is in prison for the round.
    */
   picks?: Readonly<Record<string, number>>;
+  /**
+   * The bot that plays the life, by its id, where it is not the saver (who never goes broke): the chaser lives as grandly as the money lasts, and
+   * on `screen-seed-4` the nurse it plays goes bankrupt in her fourth round. It plays every round and every step of the scene.
+   */
+  player?: string;
 } & ({ then?: undefined; ends?: undefined } | { then: readonly Step[]; ends: Stage });
 
 /** What each scene's store holds: the life to begin and how far to play it, or null for a device with no life. */
@@ -227,6 +237,14 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'balance-r6': { life: 'engineer', round: 6, stage: 'news' },
   // The same round: where the engineer stands among the rivals, the board alone on a page (in the profile it is far down its sheet).
   'rivals-r6': { life: 'engineer', round: 6, stage: 'news' },
+  // The engineer of the first fixed seed, played by the saver to the end of the life: out of the rat race with the fifteenth round, never bankrupt.
+  'end-escaped': { life: 'engineer', round: 1, stage: 'end' },
+  // The nurse of screen-seed-4, played by the chaser to the end of the life: bankrupt with her fourth round, never out of the rat race.
+  'end-bankrupt': { life: 'nurse', round: 1, stage: 'end', seed: 'screen-seed-4', player: 'chaser' },
+  // end-escaped's life, the picture of it to share open over its end (the share card's sheet).
+  'end-share': { life: 'engineer', round: 1, stage: 'end' },
+  // end-escaped's life in Russian.
+  'end-ru': { life: 'engineer', round: 1, stage: 'end' },
 };
 
 /**
@@ -244,7 +262,12 @@ const UNLOCKED: Readonly<Record<string, readonly string[]>> = {
  * them plays for ever (the rat's wheel, the lamp of a crisis's year), and a shot would catch it at any moment of its run; or plays for longer
  * than the web's shot waits (a legendary badge's medal turning in and its sparks, a second and more), which it would catch half way.
  */
-const STILL: ReadonlySet<string> = new Set(['hud-race', 'hud-crisis', 'hud-crisis-details', 'celebrate-legendary', 'celebrate-earned']);
+const STILL: ReadonlySet<string> = new Set([
+  'hud-race', 'hud-crisis', 'hud-crisis-details', 'celebrate-legendary', 'celebrate-earned',
+  // The end of a life: its score counts up, its story rises a paragraph at a time, the portrait walks its line and lights each mark, and a rare badge's
+  // confetti falls for ever. Left out, everything stands where it ends, as a shot can see it.
+  'end-escaped', 'end-bankrupt', 'end-share', 'end-ru',
+]);
 
 /**
  * The scenes of a player who has read every tip of the guide and every note of a first time: the stage is drawn as it is, with nothing of the
@@ -305,8 +328,11 @@ export function turnOf(scene: Scene): { from: number; to: number } | undefined {
   return { from: ageAt(content, reach.round - 2), to: ageAt(content, reach.round - 1) };
 }
 
-/** The bot that plays every scene's life up to the scene: it studies, works, pays the card and saves, and never gambles. */
+/** The bot that plays every scene's life up to the scene, unless the scene names another (`Reach.player`): it studies, works, pays the card and saves, and never gambles. */
 const PLAYER_ID = 'saver';
+
+/** The bot that plays a scene's life. */
+const playerOf = (reach: Reach): Bot => bots.find((candidate) => candidate.id === (reach.player ?? PLAYER_ID)) as Bot;
 
 function mustBe(name: string, game: SceneGame, stage: Stage): void {
   const at = game.getState().stage;
@@ -354,10 +380,10 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
   }
   const reach = PLANS[name];
   if (reach === null) return store;
-  const bot = answering(bots.find((candidate) => candidate.id === PLAYER_ID) as Bot, reach.picks);
+  const bot = answering(playerOf(reach), reach.picks);
   const game = createGameStore({ sessions: reach.seed === undefined ? fixedSessions(store) : fixedSessionsOn(store, reach.seed), content });
   await game.getState().start(reach.life);
-  // The rounds before the scene's, played whole: the cards answered, the saver's orders put in the basket, the round played.
+  // The rounds before the scene's, played whole: the cards answered, the player's orders put in the basket, the round played.
   for (let round = 1; round < reach.round; round++) {
     await toFinances(name, game, bot);
     for (const order of bot.orders(content, game.getState().view as GameView)) game.getState().addOrder(order);
@@ -373,8 +399,21 @@ export async function sceneStore(name: string): Promise<MemoryStore> {
     await answerNext(name, game, bot);
     if (game.getState().view?.phase !== 'cards') throw new Error(`scene ${name}: the hand had no second card`);
   }
+  if (reach.stage === 'end') await toTheEnd(name, game, bot);
   if (reach.newer) await asNewer(store);
   return store;
+}
+
+/** Plays every round left of the life, as the rounds before a scene's are played, until it is over: the game then opens on its end. */
+async function toTheEnd(name: string, game: GameStore, bot: Bot): Promise<void> {
+  for (let left = content.rounds; left > 0 && game.getState().stage !== 'end'; left--) {
+    await toFinances(name, game, bot);
+    for (const order of bot.orders(content, game.getState().view as GameView)) game.getState().addOrder(order);
+    await game.getState().play();
+    mustBe(name, game, 'resolve');
+    game.getState().next();
+  }
+  mustBe(name, game, 'end');
 }
 
 /** The lives a scene's player has unlocked, written to the profile as the game writes them: when, and in which life. */
@@ -394,7 +433,7 @@ async function asNewer(store: MemoryStore): Promise<void> {
 /** The round store of a game, as a scene's script needs it: its state as it is now, each time asked. */
 export type SceneGame = { getState(): RoundState & RoundActions };
 
-/** Takes one step, as the player would, with the saver's choices where the step has none. */
+/** Takes one step, as the player would, with the choices of the scene's player where the step has none. */
 async function take(name: string, game: SceneGame, bot: Bot, step: Step): Promise<void> {
   const state = game.getState();
   if (state.view === null) throw new Error(`scene ${name}: no life is open`);
@@ -428,7 +467,7 @@ export async function runScene(name: string, game: SceneGame): Promise<void> {
   if (!Object.hasOwn(PLANS, name)) throw new Error(`unknown scene: ${name}`);
   const reach = PLANS[name];
   if (reach === null || reach.then === undefined) return;
-  const bot = bots.find((candidate) => candidate.id === PLAYER_ID) as Bot;
+  const bot = playerOf(reach);
   try {
     for (const step of reach.then) await take(name, game, bot, step);
   } catch (error) {

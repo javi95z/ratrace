@@ -7,7 +7,7 @@ import { speaking } from './memoryServices';
 
 // What the tests of the game read of the phone's stand-ins (`fakes.ts`): the router's spies, Android's Back, the phone's languages and
 // key-value store, the cues played, the edges of the screen.
-export { device, heard, insets, kv, params, pressBack, router, spriteRenders } from './fakes';
+export { device, files, heard, insets, kv, params, pressBack, router, shareSheet, spriteRenders } from './fakes';
 // The services with nothing behind them but memory (kept apart: the development route that draws a scene has them too).
 export { memoryServices } from './memoryServices';
 

@@ -135,6 +135,11 @@ export const PENDING_SHOTS: ReadonlySet<string> = new Set([
   'profile-owned',
   'balance-r6',
   'rivals-r6',
+  // Task 18: the end of a life (out of the rat race, bankrupt, its picture to share open, in Russian).
+  'end-escaped',
+  'end-bankrupt',
+  'end-share',
+  'end-ru',
 ]);
 
 /**

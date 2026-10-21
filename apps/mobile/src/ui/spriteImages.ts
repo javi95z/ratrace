@@ -119,6 +119,21 @@ function entryOf(id: string, source: ImageSourcePropType): Entry {
   return entry;
 }
 
+/**
+ * A sprite's picture read and decoded on its own, outside the shared cache, for whoever draws it once and lets it go (`dispose`) when done: the share
+ * card, which draws on a surface of its own while the screen goes on drawing (the cache may let go of a picture nobody is watching). Null where the
+ * sprite has no file, or its file is not read or does not decode.
+ */
+export async function readSprite(id: string): Promise<SkImage | null> {
+  const source = sourceOf(id);
+  if (source === undefined) return null;
+  try {
+    return await load(source);
+  } catch {
+    return null;
+  }
+}
+
 const NONE: SpriteImage = LOADING;
 const nothing = () => () => {};
 

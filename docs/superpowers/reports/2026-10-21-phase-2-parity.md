@@ -612,6 +612,34 @@ Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjud
   pension, investments by kind, property, businesses, things, debts); a family at home (its picture as wide as the panel); the way out of the life and its
   word when the phone is not saving; a thing's uses (`ItemUses`, the gym's) and what is owed on it (`ItemCost`'s note).
 
+## Task 18: the end of a life and its share card (shots pending)
+
+Not shot in its task (the user's call). The scenes are in `PENDING_SHOTS`, unjudged until a batch pass shoots, compares and takes them out of it. All four are
+drawn with motion left out (`STILL`): the score stands counted, the story risen, the portrait at the end of its line with every mark lit, a rare badge's
+confetti still.
+
+| scene | what it is | how its sheet is open |
+|---|---|---|
+| end-escaped | the engineer of the first fixed seed, played by the saver to the end: out of the rat race at 50 (the fifteenth round), never bankrupt, a rank higher (the promotion card), the lives it opened, its badges | no sheet |
+| end-bankrupt | the nurse of screen-seed-4, played by the chaser (`Reach.player`, as Task 16 has it in its lane) to the end: bankrupt with her fourth round, never out | no sheet |
+| end-share | end-escaped's life, the picture of it to share open over its end (drawn on the device, a PNG of 1080 × 1348 shown 270 wide) | the web's page presses the end's own `Share this life` button in its `main`; the phone's End is given it (`EndOpened`) |
+| end-ru | end-escaped's life in Russian | no sheet |
+
+- **Not drawn on the phone** (online only): where the score stands among the lives of others (the community's), the link to the rankings and the week's
+  result (a ranked life), the quick game against others after a life alone (the rooms'). The web draws none of them for a guest with no connection either.
+- **The share card** is the web's drawing on a Skia surface of its own (offscreen, CPU where the GPU gives none): four times the grid, sprites nearest
+  neighbour, every line cut into the runs of the typefaces that draw it as the kit's texts are (`runsOf`), the pixel ones at the page's height of small
+  letters (`PIXEL_X_HEIGHT`, from the fonts' own tables; the web's canvas measures the `x` and the `х`). Skia draws text with the glyphs' advances, without
+  the kerning a browser's canvas applies: a line of the card may be a pixel or two narrower than the web's. The batch pass compares a card drawn on each.
+- **The share sheet has no file to save** (the web's second way): the phone's share sheet offers saving itself. The web's line inviting into the game,
+  sent beside the picture, is not sent: a phone's share sheet takes a file or words, not both. Where the phone has no share sheet, the sheet says so in
+  the web's words for a picture that cannot be had (`share.failed`, which says "browser").
+- **The obituary's title** is a pixel span in a reading line on the web: the kit's reading text now takes a pixel span among the words that run on
+  (`Aside.pixel`, its tracking in em).
+- **Not compared** (no scene shows them; `End.test`, `Play.test`, `ShareCard.test`, `LifeMap.test` hold them): a badge's sheet, a personal best, the
+  legacy line, a life with no badges or no milestones, a quiet line, the motion itself (the rises 350 ms apart from 300, the walker's steps over 3 s, the
+  marks lit as it passes, the count-up), the share card's failures, a route of several cities (both lives of the scenes stay in one city).
+
 ## The tolerance, and the exception this phase needs
 
 Phase 1 accepted no shape difference beyond a point (3 device pixels) or a shade, apart from a few listed platform ones (a Bar's lamp

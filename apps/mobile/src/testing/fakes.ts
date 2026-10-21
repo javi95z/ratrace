@@ -1,6 +1,7 @@
 import { createContext, createElement, useEffect, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
+import { painted } from '../ui/testing/skia';
 
 /*
  * The phone's native modules, as the tests of the game have them. Nothing here loads in a test (they are the phone's
@@ -103,6 +104,32 @@ export const spriteModule = {
   ArtScale: createContext(1),
 };
 
+/** The phone's files, as the game writes them (the picture of a life, in the cache): by their address, what was written there last. */
+export const files = new Map<string, Uint8Array | string>();
+/** The phone's file system, as the share card reaches it: a file in the cache, made (in place of one of that name, when told) and written. */
+export const expoFileSystem = {
+  Paths: { cache: { uri: 'file:///cache/' } },
+  File: class {
+    readonly uri: string;
+    constructor(directory: { uri: string }, name: string) {
+      this.uri = `${directory.uri}${name}`;
+    }
+    create(options: { overwrite?: boolean } = {}): void {
+      if (files.has(this.uri) && options.overwrite !== true) throw new Error(`a file is already at ${this.uri}`);
+      files.set(this.uri, new Uint8Array());
+    }
+    async write(content: Uint8Array | string): Promise<void> {
+      files.set(this.uri, content);
+    }
+  },
+};
+/** The phone's share sheet: whether there is one, and every file it was handed, in order, with what it was told of it. */
+export const shareSheet = { available: true, handed: [] as Array<{ url: string; options?: Record<string, unknown> }> };
+export const expoSharing = {
+  isAvailableAsync: () => Promise.resolve(shareSheet.available),
+  shareAsync: (url: string, options?: Record<string, unknown>) => Promise.resolve(void shareSheet.handed.push({ url, options })),
+};
+
 /** Puts every stand-in back as it was found, for the next test. */
 export function resetFakes(): void {
   for (const spy of Object.values(router)) spy.mockReset();
@@ -114,6 +141,10 @@ export function resetFakes(): void {
   heard.length = 0;
   spriteRenders.clear();
   Object.assign(insets, { top: 0, bottom: 0, left: 0, right: 0 });
+  files.clear();
+  shareSheet.available = true;
+  shareSheet.handed.length = 0;
+  painted.reset();
 }
 
 /**

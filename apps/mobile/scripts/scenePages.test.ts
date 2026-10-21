@@ -21,7 +21,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order: the web\'s pages the phone has not ported yet are stand-ins', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -288,4 +288,18 @@ test('the profile is open, in a scene, as the portrait opens it: the web\'s page
   expect(web).toContain('<main className="mx-auto flex w-full max-w-md flex-col px-3 pt-4">');
   expect(app).toContain('rivals: () => <RivalsScene />,');
   expect(web).toContain('rivals: () => <RivalsScene />,');
+});
+
+test('the end of a life is Play at its last stage on both sides, with the picture to share open where the scene names it: pressed by the web\'s page, given to the phone\'s End as its initial state', () => {
+  expect(web).toContain('end: (scene) => <EndScene scene={scene} />,');
+  expect(app).toContain("end: (scene) => <EndOpened value={{ share: scene.sheet === 'share' }}><Play /></EndOpened>,");
+  // What the web's page presses is the end's own button, by its words, in the end's own page: the web's End draws the share card's button in its `main`.
+  expect(web).toContain("[...document.querySelectorAll<HTMLElement>('main button')].find((button) => button.textContent === share('open'))");
+  const end = read('../../web/src/game/screens/End.tsx');
+  expect(end).toContain('<main className="mx-auto w-full max-w-md px-3 pb-8 pt-6 lg:max-w-5xl">');
+  expect(end).toContain('<ShareCard ops={picture}');
+  expect(read('../../web/src/game/screens/ShareCard.tsx')).toContain("<Button wide onClick={() => setOpen(true)}>\n        {t('open')}");
+  expect(read('../../web/src/game/screens/Play.tsx')).toContain("if (stage === 'end') return <End extra={room?.end} />;");
+  // The one scene of the end with a sheet names the share card's.
+  expect(SCENES.filter((scene) => scene.name.startsWith('end-') && scene.sheet !== undefined).map((scene) => scene.sheet)).toEqual(['share']);
 });

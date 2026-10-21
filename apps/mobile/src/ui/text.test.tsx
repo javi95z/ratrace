@@ -392,3 +392,19 @@ test('a pixel span takes the pixel face\'s 0.03 em where it has no spacing of it
   // The reading words after it keep their own spaces.
   expect((Array.from(said.children) as HTMLElement[]).every((run) => run.style.letterSpacing === '')).toBe(true);
 });
+
+test('a pixel span runs on in a reading text where the web sets one (the obituary\'s title): in the pixel face at the stack\'s small letters, with its own tracking, and the words after it in their own', () => {
+  const { container } = render(<ReadText size={13} lineHeight={13 * SNUG} after={[{ text: 'OBITUARY: ', tone: 'ink-300', pixel: true, tracking: 13 * 0.05 }, { text: 'Paid every bill on time.', italic: true }]}>{''}</ReadText>);
+  const whole = container.firstElementChild as HTMLElement;
+  expect(whole.textContent).toBe('OBITUARY: Paid every bill on time.');
+  const [title, rest] = spans(container);
+  expect(title.style.color).toBe(rgb('ink-300'));
+  expect(parseFloat(title.style.letterSpacing)).toBeCloseTo(13 * 0.05, 5);
+  const run = title.firstElementChild as HTMLElement;
+  expect(run.style.fontFamily).toContain('Jersey15_400Regular');
+  expect(parseFloat(run.style.fontSize)).toBeCloseTo((13 * PIXEL_X_HEIGHT) / JERSEY_X_HEIGHT, 3);
+  // The words after it are the reading text's own: no tracking of the title's, in the slanted face.
+  expect(rest.style.letterSpacing).toBe('');
+  expect((rest.firstElementChild as HTMLElement).style.fontFamily).toContain('ChakraPetch_400Regular_Slant');
+  expect(parseFloat((rest.firstElementChild as HTMLElement).style.fontSize)).toBeCloseTo(13, 5);
+});

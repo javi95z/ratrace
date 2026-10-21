@@ -10,6 +10,7 @@ import type { Services } from '../game/context';
 import { AmountSheet } from '../game/screens/AmountSheet';
 import { HeldShine } from '../game/screens/Cards';
 import { Celebrations } from '../game/screens/Celebrations';
+import { EndOpened } from '../game/screens/End';
 import { WeeklyChallenge } from '../game/screens/Challenge';
 import { Basket, CityPreview, FinanceOpened } from '../game/screens/Finance';
 import { Home } from '../game/screens/Home';
@@ -215,6 +216,7 @@ export const SCENE_SCREENS: SceneScreens = {
   profile: (scene) => <ProfileScene scene={scene} opened={{ item: scene.sheet }} />,
   balance: (scene) => <ProfileScene scene={scene} opened={{ line: scene.sheet as BalanceLine | undefined }} />,
   rivals: () => <RivalsScene />,
+  end: (scene) => <EndOpened value={{ share: scene.sheet === 'share' }}><Play /></EndOpened>,
 };
 
 /**

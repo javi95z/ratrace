@@ -166,7 +166,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {
@@ -525,6 +525,10 @@ describe('the list of scenes', () => {
       'profile-owned',
       'balance-r6',
       'rivals-r6',
+      'end-escaped',
+      'end-bankrupt',
+      'end-share',
+      'end-ru',
     ]);
   });
 
@@ -557,7 +561,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end']));
   });
 });
 
@@ -682,3 +686,48 @@ describe('the scenes of the profile', () => {
 
 /** What a scene's game shows, as a string to compare: the stage, the round and the player. */
 const onScreenOf = (state: { stage: string; view: { round: number; player: unknown } | null }) => JSON.stringify([state.stage, state.view?.round, state.view?.player]);
+
+describe('the scenes of the end of a life', () => {
+  it('end-escaped is the engineer of the first fixed seed, played by the saver to the end: out of the rat race with the fifteenth round, never bankrupt, and the game opens on its end', async () => {
+    const store = await sceneStore('end-escaped');
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'engineer', stage: 'end', bankruptcies: 0 });
+    expect(state.view).toMatchObject({ finished: true, round: content.rounds });
+    expect(state.view?.player.escapedAtRound).toBe(14);
+    // The start and every round: the graph of a whole life.
+    expect(state.history).toHaveLength(content.rounds + 1);
+    // The life is among the finished ones already, with what it earned: its badges, its rank, the lives it opened.
+    const [run] = await store.listRuns();
+    expect(run).toMatchObject({ runId: 'id-1', lifeId: 'engineer' });
+    const profile = await store.loadProfile();
+    expect(profile.rank.lives['id-1']).toBeGreaterThan(0);
+    expect(Object.values(profile.unlocked).some((one) => one.gameId === 'id-1')).toBe(true);
+    expect(state.badges).toContain('escaped');
+  });
+
+  it('end-bankrupt is the nurse of screen-seed-4, played by the chaser to the end: bankrupt with her fourth round, and never out of the rat race', async () => {
+    const store = await sceneStore('end-bankrupt');
+    const state = await opened(store);
+    expect(state).toMatchObject({ status: 'playing', lifeId: 'nurse', stage: 'end', bankruptcies: 1 });
+    expect(state.view).toMatchObject({ finished: true });
+    expect(state.view?.player.escapedAtRound).toBeNull();
+    expect(state.story.find((m) => m.kind === 'bankrupt')?.round).toBe(4);
+    expect(await saveOf(store)).toMatchObject({ seed: 'screen-seed-4', lifeId: 'nurse' });
+  });
+
+  it('end-share and end-ru are end-escaped\'s very store: the picture to share open over it, and the same end in Russian', async () => {
+    const escaped = await saveOf(await sceneStore('end-escaped'));
+    for (const name of ['end-share', 'end-ru']) expect(await saveOf(await sceneStore(name)), name).toEqual(escaped);
+    expect(SCENES.filter((scene) => scene.name.startsWith('end-'))).toEqual([
+      { name: 'end-escaped', locale: 'en' },
+      { name: 'end-bankrupt', locale: 'en' },
+      { name: 'end-share', locale: 'en', sheet: 'share' },
+      { name: 'end-ru', locale: 'ru' },
+    ]);
+    expect(screenOf({ name: 'end-share', locale: 'en' })).toBe('end');
+  });
+
+  it('are drawn with motion left out: the score stands counted, the story risen, the portrait at the end of its line, a rare badge\'s confetti still', async () => {
+    for (const name of ['end-escaped', 'end-bankrupt', 'end-share', 'end-ru']) expect((await (await sceneStore(name)).loadProfile()).settings.reducedMotion, name).toBe(true);
+  });
+});

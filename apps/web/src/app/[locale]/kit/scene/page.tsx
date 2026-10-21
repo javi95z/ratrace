@@ -264,6 +264,21 @@ function RivalsScene() {
   );
 }
 
+/**
+ * The end of a life has no initial state on the web either: a scene of it with the picture to share open (`end-share`) has the page press the end's own
+ * button for it (`Share this life`, in the end's `main`), once the screen is drawn, as a person would. The phone's End is given it as its initial state
+ * (`EndOpened`). The end is Play's last stage on both sides.
+ */
+function EndScene({ scene }: { scene: Scene }) {
+  const share = useT('share');
+  const find = scene.sheet === 'share' ? [() => [...document.querySelectorAll<HTMLElement>('main button')].find((button) => button.textContent === share('open')) ?? null] : [];
+  return (
+    <PressedInTurn selectors={find}>
+      <Play />
+    </PressedInTurn>
+  );
+}
+
 /** The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same. */
 const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   home: (scene) => (scene.sheet === undefined ? <Home /> : <Settled sheet={scene.sheet}><Home /></Settled>),
@@ -281,6 +296,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   profile: (scene) => <ProfileScene scene={scene} />,
   balance: (scene) => <ProfileScene scene={scene} line={scene.sheet} />,
   rivals: () => <RivalsScene />,
+  end: (scene) => <EndScene scene={scene} />,
 };
 
 /**

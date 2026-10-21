@@ -24,7 +24,8 @@ import { Guide } from './Guide';
 import { Hud } from './Hud';
 import { NewsPanel } from './News';
 import { PageTurn } from './PageTurn';
-import { EndStandIn, StageStandIn } from './PlayStandIns';
+import { End } from './End';
+import { StageStandIn } from './PlayStandIns';
 import { ProfileSheet } from './Profile';
 
 /*
@@ -298,6 +299,7 @@ export function Play() {
   const news = useT('news');
   const cards = useT('cards');
   const play = useT('play');
+  const end = useT('end');
   const phone = useT('phone');
   const router = useRouter();
   const { content, text } = useWords();
@@ -352,8 +354,9 @@ export function Play() {
   }, [round, still, content]);
   const pageTurn = turn ? <PageTurn key={turn.to} from={turn.from} to={turn.to} onDone={() => setTurn(null)} /> : null;
 
-  // What the stage is called, for someone who cannot see it change.
-  const stageName = stage === 'news' ? news('title') : stage === 'cards' ? cards('progress', { n: Math.min(answered + 1, hand), total: hand }) : play(`stages.${stage}`);
+  // What the stage is called, for someone who cannot see it change. The end of a life is a screen of its own, called by its title.
+  const stageName =
+    stage === 'news' ? news('title') : stage === 'cards' ? cards('progress', { n: Math.min(answered + 1, hand), total: hand }) : stage === 'end' ? end('title') : play(`stages.${stage}`);
   // A new stage starts at its top, and a screen reader says where the player now is, VoiceOver and TalkBack alike (the web gives the stage the focus,
   // which every screen reader reads).
   const playing = status === 'playing' && round !== null;
@@ -382,15 +385,8 @@ export function Play() {
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
-  if (stage === 'end') {
-    // Task 18: End.
-    return (
-      <Middle>
-        <EndStandIn />
-        <WaysOut />
-      </Middle>
-    );
-  }
+  // A life that is over: its end, with its own two ways on (another life, and home).
+  if (stage === 'end') return <End />;
 
   // The life was played on somewhere else (on a phone, only another device could): the store has already opened it as it now stands, and the player is told why the screen changed.
   const notice = <Toast message={moved ? phone('moved') : null} onDone={clearMoved} ms={6_000} />;

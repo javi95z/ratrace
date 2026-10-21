@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { content, lives } from '@ratrace/content';
+import { content, lives, textFor } from '@ratrace/content';
 import { memoryBasket } from '@ratrace/core/game/basket';
 import { LocalSessions } from '@ratrace/core/session/local';
 import type { GameSession, PlayerStore, SavedGame } from '@ratrace/core/session/types';
@@ -12,6 +12,7 @@ import { KvStore } from '../../kvStore';
 import { memoryServices, pressBack, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
 import { settled } from '../../testing/renders';
+import { painted } from '../../ui/testing/skia';
 import { GameProvider, TAP_GUARD_MS, useGame } from '../context';
 import type { Services } from '../context';
 import { phoneBasket } from '../phoneBasket';
@@ -606,5 +607,111 @@ describe('the profile', () => {
     expect(pressBack()).toBe('sheet');
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Your life' })).toBeNull());
     expect(router.dismissTo).not.toHaveBeenCalled();
+  });
+});
+
+describe('the end of a life', () => {
+  /** A panel by the name it is given (a screen reader's region; the web's `section aria-label`). */
+  const panel = (name: string) => screen.getByLabelText(name);
+
+  it('ends on the score, with the way to another life', async () => {
+    const services = memoryServices();
+    const session = await services.sessions.start('civil_servant');
+    await playRounds(session, 19);
+    renderGame(<Play />, services);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'See what life brings' }));
+    await answerHand();
+    fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'See how it ended' }));
+
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(screen.getByText('Age 62 · Civil servant · Madrid')).toBeTruthy();
+    // The life on one line, from its first age to its last, with what happened on the way in words.
+    const line = panel('Your life on one line');
+    expect(within(line).getByText('22 years old')).toBeTruthy();
+    expect(within(line).getByText('62 years old')).toBeTruthy();
+    const [run] = await services.store.listRuns();
+    expect(run.history).toHaveLength(21);
+    const score = screen.getByRole('group', { name: 'Score' });
+    // The score counts up as it is shown; it is read out as it ends, from words only a screen reader hears.
+    const full = new Intl.NumberFormat('en-US').format(run.score);
+    expect(within(score).getAllByText(full).length).toBeGreaterThan(0);
+    expect(within(score).getByText('Wealth')).toBeTruthy();
+    expect(within(score).getByText('Status')).toBeTruthy();
+    expect(within(score).getByText(String(run.status))).toBeTruthy();
+    expect(screen.getByRole('img', { name: /Your net worth through life/ })).toBeTruthy();
+
+    // A first life lived to the end: its badges are shown, and the life it unlocked.
+    const earned = panel('Badges of this life');
+    expect(run.badges.length).toBeGreaterThan(0);
+    expect(within(earned).getAllByRole('listitem')).toHaveLength(run.badges.length);
+    expect(within(earned).getAllByText('New').length).toBe(run.badges.length);
+    // Two a row and named only: what a badge asks is in its sheet.
+    const [first] = run.badges;
+    const badgeText = textFor('en').text.badges[first];
+    expect(within(earned).queryByText(badgeText.how)).toBeNull();
+    fireEvent.click(within(earned).getByRole('button', { name: new RegExp(`^${badgeText.name}`) }));
+    const sheet = screen.getByRole('heading', { name: badgeText.name }).closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(sheet).getByText(badgeText.how)).toBeTruthy();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: badgeText.name })).toBeNull());
+    expect(screen.getByText('New life unlocked: Delivery rider')).toBeTruthy();
+    // The life unlocked gets a card of its own, with a way to begin it at once.
+    const card = panel('A new life is open');
+    expect(within(card).getByText(/Delivery rider is open to you/)).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Try it now' })).toBeTruthy();
+    // Nothing to beat in a first life, so no personal best is claimed.
+    expect(screen.queryByText('New best score')).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'See your collection' }));
+    expect(router.push).toHaveBeenCalledWith('/collection');
+
+    // The picture to share is shown to someone else: it speaks of the life, not to the player. No sprite arrives in a test: each is left out.
+    fireEvent.click(screen.getByRole('button', { name: 'Share this life' }));
+    await screen.findByRole('img', { name: /^Civil servant: score/ });
+    const written = painted.calls.filter(([kind]) => kind === 'text').map((call) => call[2]);
+    expect(written.join('')).toContain(run.escapedAtRound === null ? 'Never left the rat race' : `Out of the rat race at ${22 + run.escapedAtRound * 2}`);
+    expect(written.some((words) => /\byou\b/i.test(String(words)))).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull());
+
+    // The two ways out: another life, in place of this screen, and the front door.
+    fireEvent.click(screen.getByRole('link', { name: 'Live another life' }));
+    expect(router.replace).toHaveBeenCalledWith('/new');
+    fireEvent.click(screen.getByRole('link', { name: 'Home' }));
+    expect(router.dismissTo).toHaveBeenCalledWith('/');
+
+    // The app is closed on the score and opened again: the score is still there.
+    expect((await saved(services.store)).state.finished).toBe(true);
+    cleanup();
+    renderGame(<Play />, memoryServices(services.store));
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(within(screen.getByRole('group', { name: 'Score' })).getAllByText(full).length).toBeGreaterThan(0);
+
+    // The card offers the life it unlocked, and "Try it now" starts it, on this very screen.
+    fireEvent.click(within(panel('A new life is open')).getByRole('button', { name: 'Try it now' }));
+    expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
+    expect((await saved(services.store)).lifeId).toBe('rider');
+    expect(router.push).not.toHaveBeenCalledWith('/new');
+  });
+
+  it('marks a second life that beats the first', async () => {
+    const services = memoryServices();
+    // A first life that went badly: lavish on a nurse's pay.
+    const poor = await services.sessions.start('nurse');
+    for (let i = 0; i < 20; i++) {
+      while (poor.view().phase === 'cards') await poor.answerCard(0);
+      await poor.playRound({ orders: [{ type: 'setLifestyle', tier: 3 }] });
+    }
+    const better = await services.sessions.start('nurse');
+    await playRounds(better, 20);
+    const runs = await services.store.listRuns();
+    expect(runs[0].score).toBeGreaterThan(runs[1].score);
+    renderGame(<Play />, services);
+    expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
+    expect(await screen.findByText('New best score')).toBeTruthy();
+    expect(screen.getByText('Your richest life yet')).toBeTruthy();
+    // The rider was unlocked by the first life, not by this one.
+    expect(screen.queryByText(/New life unlocked/)).toBeNull();
   });
 });
