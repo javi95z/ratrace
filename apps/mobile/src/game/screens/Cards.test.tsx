@@ -233,6 +233,8 @@ describe('the card waiting', () => {
     const gap = (box: HTMLElement) => px(box.style.rowGap || box.style.gap);
     const links = screen.getAllByRole('button', { name: /beside your city$/ });
     expect(links).toHaveLength(2);
+    // Each underlined by the kit's LinkText, a line under every line its words wrap to (one, until the phone has laid them out).
+    for (const link of links) expect(link.querySelectorAll('[data-testid="underline"]')).toHaveLength(1);
     const group = screen.getByRole('group', { name: /^Your choices/ });
     const stage = group.parentElement as HTMLElement;
     for (const [i, link] of links.entries()) {

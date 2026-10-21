@@ -952,8 +952,10 @@ describe('the market and the debts in Russian, on a narrow phone', () => {
     const terms = linesOf(debt, /в год · Ещё/);
     expect(terms).toHaveLength(1);
     for (const words of terms) expect(cutShort(words, debt), words.textContent ?? '').toBe(false);
-    // The column under the name shrinks to what is left beside the button, so its words wrap there.
+    // The column under the name shrinks to what is left beside the button, so its words wrap there; and wrapped, every line of them is underlined
+    // (the kit's LinkText, which draws a line under each line the phone lays out: until it has, one).
     expect((link.parentElement as HTMLElement).style.minWidth).toBe('0px');
+    expect(link.querySelectorAll('[data-testid="underline"]')).toHaveLength(1);
     // The name is the web's `truncate`: one line, cut.
     const name = linesOf(debt, /^Фиксированная ипотека · /);
     expect(name).toHaveLength(1);

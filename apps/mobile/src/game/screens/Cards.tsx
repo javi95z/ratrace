@@ -11,8 +11,8 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useKeyframes, useRise } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD } from '../../ui/frames';
-import { webBaseline } from '../../ui/fonts';
 import { Panel, reach, Tag, usePress } from '../../ui/kit';
+import { LinkText } from '../../ui/LinkText';
 import { Glint, Holo } from '../../ui/Shine';
 import { Sparks } from '../../ui/Sparks';
 import { ArtScale, Sprite } from '../../ui/Sprite';
@@ -176,8 +176,8 @@ const RING: readonly ViewStyle[] = [
 ];
 
 /**
- * Words that open a sheet, underlined as the web underlines them (`underline underline-offset-N` under a line of `size` × 1.45): the line is
- * drawn, as iOS puts a font's underline where the font says, with no offset. A thumb has 44 points of it: its box is that tall already
+ * Words that open a sheet, underlined as the web underlines them (`underline underline-offset-N` under a line of `size` × 1.45), every line they
+ * wrap to (the kit's `LinkText`). A thumb has 44 points of it: its box is that tall already
  * (`style`), or it reaches into the `room` round it (the kit's `reach`), and where that room is too little, it takes the rest under its line.
  */
 function Link({ size, offset, onPress, style, room, children }: { size: number; offset: number; onPress(): void; style?: ViewStyle; room?: { above: number; below: number }; children: string }) {
@@ -186,10 +186,7 @@ function Link({ size, offset, onPress, style, room, children }: { size: number; 
   const box = room ? reach(line, room, { grow: true }).style : null;
   return (
     <Pressable accessibilityRole="button" onPress={press} style={[box, style]}>
-      <View>
-        <ReadText size={size} tone="sky-300">{children}</ReadText>
-        <View style={{ position: 'absolute', left: 0, right: 0, top: webBaseline('read', 400, size, line) + offset, height: 1, backgroundColor: COLORS['sky-300'] }} />
-      </View>
+      <LinkText size={size} offset={offset}>{children}</LinkText>
     </Pressable>
   );
 }

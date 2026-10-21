@@ -1,17 +1,10 @@
 import { useState } from 'react';
-import { Pressable, View, type ViewStyle } from 'react-native';
-import { webBaseline } from '../../ui/fonts';
+import { Pressable, type ViewStyle } from 'react-native';
 import { usePress } from '../../ui/kit';
+import { LinkText } from '../../ui/LinkText';
 import { ReadText, SNUG } from '../../ui/text';
-import { COLORS, TOUCH } from '../../ui/theme';
+import { TOUCH } from '../../ui/theme';
 import { useT } from '../context';
-
-/**
- * The line under the link, as the web draws it (`underline underline-offset-4` on Chakra Petch at 13): its top 4 points under the
- * baseline the browser gives a line of 13 × 1.45, and as thick as the font's own underline. Drawn, not asked of the font: iOS puts
- * its underline where the font says, with no offset.
- */
-const UNDERLINE = { top: webBaseline('read', 400, 13, 13 * 1.45) + 4, thick: 1 };
 
 /**
  * An explanation kept out of the way until it is wanted: a "What is this?" link, and the text in
@@ -38,10 +31,8 @@ export function Explain({ children, style }: { children: string; style?: ViewSty
       onPress={press}
       style={[{ minHeight: TOUCH, alignSelf: 'flex-start', justifyContent: 'center' }, style]}
     >
-      <View>
-        <ReadText size={13} tone="sky-300">{t('whatIsThis')}</ReadText>
-        <View style={{ position: 'absolute', left: 0, right: 0, top: UNDERLINE.top, height: UNDERLINE.thick, backgroundColor: COLORS['sky-300'] }} />
-      </View>
+      {/* The web's `underline underline-offset-4` on Chakra Petch at 13, under every line. */}
+      <LinkText size={13} offset={4}>{t('whatIsThis')}</LinkText>
     </Pressable>
   );
 }

@@ -6,6 +6,9 @@ import { BODY, COLORS, type ColorToken } from './theme';
 /** The language the page is in (the web's `<html lang>`): Russian titles set their word spaces tighter. */
 export const Language = createContext<string>('en');
 
+/** A line of a text as the phone laid it out (what `onTextLayout` tells of each). */
+export type TextLine = TextLayoutEvent['nativeEvent']['lines'][number];
+
 /** Tailwind's `leading-tight`: a line 1.25 times its size (a Tag, a Stat's label, a hint). */
 export const TIGHT = 1.25;
 
@@ -95,9 +98,11 @@ function pieces(run: Run, size: number, title: number, letterSpacing: number, wo
     .map((part) => (SPACE.test(part) ? { text: part, family, fontSize, letterSpacing: letterSpacing + RU_WORD_SPACING * title, ...italic } : { text: part, family, fontSize, ...italic }));
 }
 
-function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, children, style, numberOfLines, after, italic = false }: TextProps & {
+function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, children, style, numberOfLines, after, italic = false, onLines }: TextProps & {
   after?: readonly Aside[];
   italic?: boolean;
+  /** Told the lines the text is laid out in, each time it is (a link that draws a line under each). */
+  onLines?: (lines: readonly TextLine[]) => void;
   role: 'pixel' | 'read';
   weight: Weight;
   /** The line of this kind of text, where the caller names none. */
@@ -138,7 +143,14 @@ function Runs({ role, weight, size, tone, lineHeight, standard, letterSpacing, c
     <Text
       selectable={false}
       numberOfLines={numberOfLines}
-      onTextLayout={asks ? (event: TextLayoutEvent) => setLines(Math.max(1, event.nativeEvent.lines.length)) : undefined}
+      onTextLayout={
+        asks || onLines !== undefined
+          ? (event: TextLayoutEvent) => {
+              if (asks) setLines(Math.max(1, event.nativeEvent.lines.length));
+              onLines?.(event.nativeEvent.lines);
+            }
+          : undefined
+      }
       // No letter spacing at all where there is none: on iOS a spacing of 0 is not nothing, it turns the font's kerning off.
       // Words are never pressed (a pressable holds them): with the headroom a text's box reaches past its line, over
       // whatever stands above or below it, and must not take a tap meant for a button there.
@@ -178,9 +190,9 @@ export function PixelText({ size = BODY.size, tone = BODY.color, lineHeight, chi
 }
 
 /** Sentences: Chakra Petch 400 or 600 (Exo 2 for Russian letters), 15 pt, line height 1.45, cream. */
-export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, lineHeight, children, style, numberOfLines, after, italic = false }: TextProps & { weight?: Weight; after?: readonly ReadAside[]; italic?: boolean }) {
+export function ReadText({ size = BODY.size, weight = 400, tone = BODY.color, lineHeight, children, style, numberOfLines, after, italic = false, onLines }: TextProps & { weight?: Weight; after?: readonly ReadAside[]; italic?: boolean; onLines?: (lines: readonly TextLine[]) => void }) {
   return (
-    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={lineHeight} standard={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines} after={after} italic={italic}>
+    <Runs role="read" weight={weight} size={size} tone={tone} lineHeight={lineHeight} standard={size * BODY.lineHeight} letterSpacing={0} style={style} numberOfLines={numberOfLines} after={after} italic={italic} onLines={onLines}>
       {children}
     </Runs>
   );

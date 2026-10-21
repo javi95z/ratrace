@@ -11,8 +11,9 @@ import Animated from 'react-native-reanimated';
 import { usePop, useSink } from '../../ui/animations';
 import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
-import { adjustedRead, webBaseline } from '../../ui/fonts';
+import { adjustedRead } from '../../ui/fonts';
 import { Bare, Button, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, usePress } from '../../ui/kit';
+import { LinkText } from '../../ui/LinkText';
 import { Sheet, Tabs, Toast } from '../../ui/overlay';
 import { Slider } from '../../ui/Slider';
 import { Sparks } from '../../ui/Sparks';
@@ -1226,8 +1227,6 @@ function DebtTab() {
   );
 }
 
-/** Where the line under the way to switch a mortgage is drawn (`underline underline-offset-2` on a line of 12 × 1.45): drawn, as iOS puts a font's underline where the font says. */
-const SWITCH_LINE = webBaseline('read', 400, 12, 12 * 1.45) + 2;
 /**
  * Its touch, the 44 a thumb needs (the kit's `reach`): it reaches up over the line of what the debt costs, 2 above it (which takes no touch), and down into
  * its row's foot (8); the button beside it is in a column of its own.
@@ -1246,12 +1245,11 @@ function SwitchLink({ debtId, onOpen }: { debtId: string; onOpen(): void }) {
   if (!knows('switchMortgage') || quote === null || (quote.lock === 'switch-resting' && !ordered)) return null;
   const tone = ordered ? 'teal-300' : 'sky-300';
   return (
-    // The web's button is as wide as its words (inline in its column): its underline is theirs.
+    // The web's button is as wide as its words (inline in its column): its underline is theirs, under every line they wrap to (`underline-offset-2`).
     <Pressable accessibilityRole="button" onPress={press} style={{ ...SWITCH_REACH.style, marginTop: 2 - SWITCH_REACH.top, alignSelf: 'flex-start' }}>
-      <View>
-        <ReadText size={12} tone={tone}>{ordered ? t(quote.to === 'fixed' ? 'switchingToFixed' : 'switchingToVariable') : t(quote.to === 'fixed' ? 'switchToFixed' : 'switchToVariable')}</ReadText>
-        <View style={{ position: 'absolute', left: 0, right: 0, top: SWITCH_LINE, height: 1, backgroundColor: COLORS[tone] }} />
-      </View>
+      <LinkText size={12} offset={2} tone={tone}>
+        {ordered ? t(quote.to === 'fixed' ? 'switchingToFixed' : 'switchingToVariable') : t(quote.to === 'fixed' ? 'switchToFixed' : 'switchToVariable')}
+      </LinkText>
     </Pressable>
   );
 }
@@ -1309,9 +1307,6 @@ function SwitchSheet({ debtId, onClose }: { debtId: string; onClose(): void }) {
 // ------------------------------------------------------------------------------------------------
 // The basket
 
-/** The line under "Undo" (`underline underline-offset-4` on a line of 13 × 1.45): drawn, as iOS puts a font's underline where the font says. */
-const UNDO_LINE = webBaseline('read', 400, 13, 13 * 1.45) + 4;
-
 /** What was just taken out of the basket, and the way to put it back. */
 function PutBack() {
   const t = useT('finance');
@@ -1321,10 +1316,8 @@ function PutBack() {
     <View role="status" accessibilityLiveRegion="polite" style={{ flexDirection: 'row', minHeight: TOUCH, alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
       <ReadText size={13} tone="ink-300" style={{ flexShrink: 1 }}>{t('removed')}</ReadText>
       <Pressable accessibilityRole="button" onPress={press} style={{ minHeight: TOUCH, paddingHorizontal: 8, justifyContent: 'center' }}>
-        <View>
-          <ReadText size={13} tone="sky-300">{t('undo')}</ReadText>
-          <View style={{ position: 'absolute', left: 0, right: 0, top: UNDO_LINE, height: 1, backgroundColor: COLORS['sky-300'] }} />
-        </View>
+        {/* `underline underline-offset-4` on a line of 13 × 1.45. */}
+        <LinkText size={13} offset={4}>{t('undo')}</LinkText>
       </Pressable>
     </View>
   );
