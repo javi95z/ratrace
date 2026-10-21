@@ -10,6 +10,7 @@ import { memo, useContext, useEffect, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useCountUp, usePop, useRise, useSink } from '../../ui/animations';
+import { useDrawnFirst } from '../../ui/drawnFirst';
 import { Framed } from '../../ui/Frame';
 import { CREAM, GOLD, type FrameTone } from '../../ui/frames';
 import { Bare, KeyFigure, Panel, Row, SrOnly } from '../../ui/kit';
@@ -267,6 +268,8 @@ export function Resolve() {
   const view = useGame((s) => s.view);
   const members = useRoom((s) => s.room?.members);
   const room = useT('room');
+  // The panels under the ledger, once the top of the page is on screen (ui/drawnFirst.ts).
+  const rest = useDrawnFirst();
   if (!resolved || !view) return null;
 
   const { before, events } = resolved;
@@ -316,18 +319,24 @@ export function Resolve() {
         </View>
       </Panel>
 
-      <Panel>
-        <Row left={[<Loop key="coin" name="coin" />, t('cashNow')]} right={<CashCount from={before.player.cash} to={view.player.cash} delay={rolled + 450} />} />
-        <WorthRise from={worthBefore} to={worthNow} delay={rolled + 450 + 800} />
-      </Panel>
+      {/* Where the round leaves the player, and what is said of it: under the first screen of a phone, put in once the ledger is on it (the
+          coins and the counts wait for the ledger to roll, far longer). */}
+      {rest ? (
+        <>
+          <Panel>
+            <Row left={[<Loop key="coin" name="coin" />, t('cashNow')]} right={<CashCount from={before.player.cash} to={view.player.cash} delay={rolled + 450} />} />
+            <WorthRise from={worthBefore} to={worthNow} delay={rolled + 450 + 800} />
+          </Panel>
 
-      {/* What is said of the two years, by the bank and at the family's table: for a smile, it changes nothing. */}
-      <Panel>
-        <View style={{ gap: 8 }}>
-          {bank ? <Said title={t('bank.title')} words={t(`bank.${bank}`)} /> : null}
-          <Said title={t('family.title')} words={t(`family.${family}`)} />
-        </View>
-      </Panel>
+          {/* What is said of the two years, by the bank and at the family's table: for a smile, it changes nothing. */}
+          <Panel>
+            <View style={{ gap: 8 }}>
+              {bank ? <Said title={t('bank.title')} words={t(`bank.${bank}`)} /> : null}
+              <Said title={t('family.title')} words={t(`family.${family}`)} />
+            </View>
+          </Panel>
+        </>
+      ) : null}
     </View>
   );
 }

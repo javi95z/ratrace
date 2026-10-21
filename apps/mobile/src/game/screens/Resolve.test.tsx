@@ -108,6 +108,8 @@ async function inPlay(life: Life = {}) {
   );
   fireEvent.click(await screen.findByRole('button', { name: 'Play the round' }));
   await screen.findByRole('heading', { name: 'Two years later' });
+  // The panels under the ledger come once the top of the page is on screen (ui/drawnFirst.ts).
+  await screen.findByText('Cash now');
   return services;
 }
 

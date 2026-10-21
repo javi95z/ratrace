@@ -118,8 +118,8 @@ describe('the play screen', () => {
     const ledger = screen.getByRole('table', { name: 'What came in and went out' });
     expect(within(ledger).getByText('Salary')).toBeTruthy();
     expect(within(ledger).getByText('Living costs')).toBeTruthy();
-    // Where the net worth was and how it changed, said so it cannot be read as before and after.
-    expect(screen.getByText(/^Was \$[\d,]+$/)).toBeTruthy();
+    // Where the net worth was and how it changed, said so it cannot be read as before and after (under the ledger, once it is on screen).
+    expect(await screen.findByText(/^Was \$[\d,]+$/)).toBeTruthy();
     expect((await saved(services.store)).state.round).toBe(1);
     fireEvent.click(button('Next round'));
     expect(await screen.findByRole('heading', { name: 'News' })).toBeTruthy();
@@ -672,7 +672,8 @@ describe('the end of a life', () => {
 
     expect(await screen.findByRole('heading', { name: 'The end' })).toBeTruthy();
     expect(screen.getByText('Age 62 · Civil servant · Madrid')).toBeTruthy();
-    // The life on one line, from its first age to its last, with what happened on the way in words.
+    // The life on one line, from its first age to its last, with what happened on the way in words (under the first screen, once it is on it).
+    await screen.findByLabelText('Your life on one line');
     const line = panel('Your life on one line');
     expect(within(line).getByText('22 years old')).toBeTruthy();
     expect(within(line).getByText('62 years old')).toBeTruthy();
