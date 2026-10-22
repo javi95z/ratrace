@@ -451,7 +451,7 @@ verify_jwt = false
 [functions.report-error]
 verify_jwt = true
 
-# The events the game counts, by the day and the platform, with nothing of who. Anyone may call it: a guest
-# who never signed in still counts. It holds itself to a small body and a limit by a hash of the caller.
+# The events the game counts, by the day and the platform, with nothing of who. Anyone with the project's
+# publishable key may call it: a guest who never signed in still counts. A day's counts have a ceiling.
 [functions.track]
 verify_jwt = false

@@ -18,16 +18,13 @@ export const LIMITS = {
   // The errors a page met: ten kinds at most a page, a call or two each, so twenty a day is a player whose every page fails.
   // Counted by the day, so that one player can make up no more than two hundred kinds a day.
   errors: [20, 86_400],
-  // The events the game counts: a few a life, so two hundred a day is a caller who does nothing but play. By a hash of
-  // the caller's address, as a guest who never signed in counts too.
-  events: [200, 86_400],
 } as const;
 
 export type Counted = keyof typeof LIMITS;
 
 /** The one thing asked of the database: its own function that counts a call and says whether it is within the limit. */
 export interface Counter {
-  rpc(name: 'take_rate' | 'take_rate_by_hash', args: { who: string; what: string; at_most: number; per_seconds: number }): PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  rpc(name: 'take_rate', args: { who: string; what: string; at_most: number; per_seconds: number }): PromiseLike<{ data: unknown; error: { message: string } | null }>;
 }
 
 /**
@@ -37,17 +34,6 @@ export interface Counter {
 export async function allowed(db: Counter, userId: string, kind: Counted): Promise<boolean> {
   const [atMost, perSeconds] = LIMITS[kind];
   const { data, error } = await db.rpc('take_rate', { who: userId, what: kind, at_most: atMost, per_seconds: perSeconds });
-  if (error) throw new Error(`the calls could not be counted: ${error.message}`);
-  return data === true;
-}
-
-/**
- * The same, for a caller with no account, by a hash of who they are (`callerOf` in `events.ts`):
- * never their address.
- */
-export async function allowedHashed(db: Counter, who: string, kind: Counted): Promise<boolean> {
-  const [atMost, perSeconds] = LIMITS[kind];
-  const { data, error } = await db.rpc('take_rate_by_hash', { who, what: kind, at_most: atMost, per_seconds: perSeconds });
   if (error) throw new Error(`the calls could not be counted: ${error.message}`);
   return data === true;
 }

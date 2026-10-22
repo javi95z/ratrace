@@ -1,3 +1,4 @@
+import { json, readJson } from './http.ts';
 import type { Reply } from './replay.ts';
 
 /**
@@ -36,12 +37,13 @@ export interface KeptEvent {
 /** The largest body an event may come in. The largest event is under a hundred characters. */
 export const MAX_EVENT_BODY = 512;
 
-/** What counting an event needs of the world. The function hands in the real thing; a test, its own. */
+/**
+ * What counting an event needs of the world. The function hands in the real thing; a test, its own.
+ * It is handed the event and nothing else: nothing of who sent it reaches the database.
+ */
 export interface EventsDeps {
-  /** Counts this call for this caller. False if it is one too many. */
-  allow(who: string): Promise<boolean>;
-  /** Counts the event, today. */
-  count(event: KeptEvent): Promise<void>;
+  /** Counts the event, today. False, counting nothing, once the day's ceiling of that event on that platform is reached. */
+  count(event: KeptEvent): Promise<boolean>;
 }
 
 const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -74,29 +76,25 @@ export function readEvent(raw: unknown): KeptEvent | { field: string } {
 
 /**
  * Counts one event a page or the app sent. It is read first, so a body that is not an event costs
- * the database nothing; then the caller is held to their limit; then it is counted.
+ * the database nothing; then it is counted, unless the day's counts of it are at their ceiling.
  */
-export async function trackEvent(deps: EventsDeps, who: string, raw: unknown): Promise<Reply> {
+export async function trackEvent(deps: EventsDeps, raw: unknown): Promise<Reply> {
   const event = readEvent(raw);
   if ('field' in event) return { status: 400, body: { error: 'bad-request', field: event.field } };
-  if (!(await deps.allow(who))) return { status: 429, body: { error: 'too-many' } };
-  await deps.count(event);
+  if (!(await deps.count(event))) return { status: 429, body: { error: 'too-many' } };
   return { status: 204, body: {} };
 }
 
-/** The address a request came from, as the platform in front of the function saw it, or '' if none says. */
-function addressOf(headers: Headers): string {
-  const first = (headers.get('x-forwarded-for') ?? '').split(',')[0];
-  return (headers.get('cf-connecting-ip') ?? headers.get('x-real-ip') ?? first).trim().slice(0, 100);
-}
-
 /**
- * Who a caller is, for their limit and nothing else: a hash of their address, the day (UTC) and a
- * secret of the server's, thirty-two hex characters of SHA-256. The address is never kept, and the
- * hash of one day says nothing of the next. Callers with no address are one caller.
+ * The whole answer to a call of `track`, from the request. A call with no `apikey` is refused before
+ * anything is read. That key is the project's publishable key, which every page and app carries: it
+ * turns away what knocks on any address it finds, and makes a browser ask before it sends, but it is
+ * no boundary of security. The wrapper of the function checks that it is the project's.
  */
-export async function callerOf(headers: Headers, secret: string, now: Date): Promise<string> {
-  const bytes = new TextEncoder().encode([secret, now.toISOString().slice(0, 10), addressOf(headers)].join('\u0000'));
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-  return Array.from(digest.slice(0, 16), (byte) => byte.toString(16).padStart(2, '0')).join('');
+export async function answerTrack(req: Request, deps: EventsDeps): Promise<Response> {
+  if (!req.headers.get('apikey')) return json(401, { error: 'no-key' });
+  const read = await readJson(req, MAX_EVENT_BODY);
+  if ('refusal' in read) return read.refusal;
+  const reply = await trackEvent(deps, read.value);
+  return reply.status === 204 ? new Response(null, { status: 204 }) : json(reply.status, reply.body);
 }

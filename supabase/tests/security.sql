@@ -1427,27 +1427,25 @@ begin
 
   -- Only the server counts, and nobody else reads the counts.
   if not has_function_privilege('anon', 'public.count_event(text, jsonb, text)', 'execute') and not has_function_privilege('authenticated', 'public.count_event(text, jsonb, text)', 'execute')
-     and not has_function_privilege('anon', 'public.take_rate_by_hash(text, text, integer, integer)', 'execute') and not has_function_privilege('authenticated', 'public.take_rate_by_hash(text, text, integer, integer)', 'execute')
      and not has_table_privilege('anon', 'private.app_events', 'select') and not has_table_privilege('authenticated', 'private.app_events', 'select')
-     and not has_table_privilege('anon', 'private.rate_by_hash', 'select') and not has_table_privilege('authenticated', 'private.rate_by_hash', 'select')
-    then passed := passed + 1; else failed := array_append(failed, 'a player or a visitor can count events, take calls or read them'); end if;
+    then passed := passed + 1; else failed := array_append(failed, 'a player or a visitor can count events or read them'); end if;
 
-  -- The limit by a caller's hash: so many, then no, and another caller is not held by it.
-  nm := md5(gen_random_uuid()::text);
-  select count(*) filter (where public.take_rate_by_hash(nm, 'events', 200, 86400)) into n from generate_series(1, 201);
-  if n = 200 and not public.take_rate_by_hash(nm, 'events', 200, 86400) and public.take_rate_by_hash(md5(gen_random_uuid()::text), 'events', 200, 86400)
-    then passed := passed + 1; else failed := array_append(failed, (format('the limit by hash let %s of 201 calls through', n))::text); end if;
-  begin
-    perform public.take_rate_by_hash('203.0.113.7', 'events', 200, 86400);
-    failed := array_append(failed, 'a caller was counted by something that is not a hash, such as their address');
-  exception when check_violation then passed := passed + 1;
-  end;
-  -- A caller's hash changes every day: what is three days old is of no use, and goes.
-  nm := md5(gen_random_uuid()::text);
-  insert into private.rate_by_hash (hash, bucket, window_start, used) values (nm, 'events', clock_timestamp() - interval '3 days', 5);
-  perform public.take_rate_by_hash(md5(gen_random_uuid()::text), 'events', 200, 86400);
-  if not exists (select 1 from private.rate_by_hash where hash = nm)
-    then passed := passed + 1; else failed := array_append(failed, 'the count of a caller of days ago was kept'); end if;
+  -- Nothing is kept about who counts: counting takes the event and nothing else, and leaves no row but the count.
+  if pg_get_function_identity_arguments('public.count_event(text, jsonb, text)'::regprocedure) = 'p_name text, p_props jsonb, p_platform text'
+     and not exists (select 1 from pg_class c where c.relnamespace in ('public'::regnamespace, 'private'::regnamespace) and c.relkind = 'r' and c.relname ~ '(caller|hash|address|visitor)')
+    then passed := passed + 1; else failed := array_append(failed, 'counting an event takes or keeps something about who sent it'); end if;
+
+  -- A day's ceiling: twenty thousand of one event on one platform, its props together, then no more.
+  -- Today's own counts of share on the web are set aside for this, and come back when the block ends.
+  delete from private.app_events where day = private.today() and name = 'share' and platform = 'web';
+  insert into private.app_events (day, name, props, platform, count) values (private.today(), 'share', '{"what": "card"}', 'web', 19999);
+  yes1 := public.count_event('share', '{"what": "invite"}', 'web');
+  yes2 := public.count_event('share', '{"what": "invite"}', 'web');
+  yes3 := public.count_event('share', '{"what": "card"}', 'web');
+  if yes1 and not yes2 and not yes3
+     and (select sum(count) from private.app_events where day = private.today() and name = 'share' and platform = 'web') = 20000
+     and public.count_event('share', '{"what": "card"}', 'ios')
+    then passed := passed + 1; else failed := array_append(failed, 'an event was counted past the day''s ceiling, or one under it was not'); end if;
   exception when others then
     failed := array_append(failed, format('the events stopped on: %s (%s)', sqlerrm, sqlstate));
   end;

@@ -35,7 +35,7 @@ pnpm online:stats [days]   # usage numbers from the live project, read-only (day
 pnpm online:health         # is the live game up: site, guest, engine, a game with friends (hourly on GitHub, docs/backups.md)
 ```
 
-Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`. The same eight can be counted in the game's own project through the function `track` (`_shared/events.ts`; `private.app_events`, by day and platform, nothing of who; anyone may call it, 200 a day per hashed address), and `pnpm online:stats` prints them.
+Visits and where they come from: Vercel Web Analytics (no cookies), in the Vercel project's Analytics tab. Custom events (lives begun and ended by mode, challenge attempts, games with others begun and joined, accounts kept, installs, shares) are typed in `apps/web/src/pwa/events.ts`: never an id, a name or a score, production only; screens count through `useTrack()`. The same eight can be counted in the game's own project through the function `track` (`_shared/events.ts`; `private.app_events`, by day and platform, nothing of who sent them; any caller with the publishable key, and a ceiling of 20,000 a day for each event and platform), and `pnpm online:stats` prints them.
 
 ## Versions and games in progress
 
