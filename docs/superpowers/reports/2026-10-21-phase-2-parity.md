@@ -1729,3 +1729,82 @@ Run B, phase 3's scenes (phase 2's are as in its final table, above):
 | room-resolved | accepted | 4.02 | 2 | 2 | 38 (3 unmeasured) | 0.67 | — |  |
 | room-end | accepted | 4.31 | 22 | 20 | 45 (0 unmeasured) | 0.67 | — |  |
 | room-history | accepted | 2.2 | 17 | 8 | 38 (15 unmeasured) | 0.33 | — |  |
+
+## Phase 3 device checks and performance
+
+On the iPhone 16 Pro simulator (iOS 18.0), against a fake project on this machine and never the live one: `scripts/fakeCloud.ts` on 127.0.0.1:54399
+answers the app's own client (supabase-js, unchanged), with guests and their sessions, Google through a page of its own (PKCE, a code exchanged against
+the trip's verifier), the tables and RPCs, the `rooms` and `ranked` functions on the web's in-memory servers (`roomServer.ts`, `rankedServer.ts`: the
+edge functions' own code), the `friends` function's own code, and Realtime (Phoenix vsn 2.0.0) telling a room's channel of its changes; another player
+(Mia) asks the rooms server through its `/control/rooms`. `fakeCloud.test.ts` holds it to the client, Realtime included. The app reached it through
+`EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54399` and nothing else: no wiring of its own, nothing in a bundle. Expo Go on Metro for the development
+checks (`EXPO_NO_METRO_LAZY=1`: with lazy bundling Expo Go could not load supabase-js's chunk, "Requiring unknown module", in development only); the
+release build with the probe (`EXPO_PUBLIC_PERF=1`) and the same two variables for the rest. Screens and bursts of shots were kept beside the task's report.
+
+### The checks
+
+| # | check | how | result |
+|---|---|---|---|
+| 1 | Google, keeping a guest (fake page on 127.0.0.1) | Expo Go and the release build: "Sign in with Google", iOS's "wants to use 127.0.0.1 to sign in", the fake page | ok: refused → the guest stays, nothing half signed in; already a player's (`identity_already_exists`) → the existing account offered, its second trip cancelled → still the guest; the second trip taken → signed in as that player, the account's saves read; a new account → "Linked to Google", the same guest id now a member; a browser closed on an error page → the guest, unchanged |
+| 2 | Android's second trip | — | unchecked → Task 15: no Android emulator (declined) |
+| 3 | The sign-out sheet over the settings sheet, closed before the restart (iOS) | Expo Go, a member: settings, Sign out, Sign out | ok: both sheets gone, the front door as a new guest (`logout`, then `signup`); no "Attempt to present" in the simulator's log |
+| 4 | A room's sheets taken away while shown | The lobby's name sheet open when Mia started the game | ok: the lobby went to the round's news with the sheet; the next sheet (cash) presented at once; nothing in the log |
+| 5 | The hold `DISMISS_MS` / `ANDROID_GONE_MS` | Probe (`dismiss`): a sheet hidden → its Modal's `onDismiss` | iOS: 22.2, 15.9, 19.4, 23.6, 24.8 (the name sheet), 19.9 (cash): median 21 ms, longest 25. **Tuned 600 → 150 ms** (six times the longest). Android: unmeasured, 100 kept |
+| 6 | Shouts held under a sheet | Mia shouted while the cash sheet was open | ok: not drawn over the page under the sheet; shown the moment the sheet had gone (the hold now 150 ms) |
+| 7 | Fields above the keyboard: page, list, sheet | The room code (StickyScreen) and the lobby's name sheet, software keyboard | ok: the page scrolls the field over the keyboard; the sheet rises over it |
+| 8 | The extra ~34 pt over the keyboard | The name sheet with the keyboard up | **found, fixed**: the sheet's foot kept the home indicator's inset (34) over the keyboard, which stands over the indicator. Now 12 while the keyboard is up (`overlay.test`); not shot again after the fix |
+| 9 | A double lift on Android | — | unchecked → Task 15 (no Android) |
+| 10 | The caret mid-word in the room code | Caret between C and D of a full ABCDXY, typed Q then R | **found, fixed**: a letter was let in and the last cut, the caret held, so QR came out RQ. A full code now takes nothing typed into it, as the web's `maxLength` (`TextField.test`) |
+| 11 | A mixed-script field | "Крыса_Rat" pasted into the name sheet | ok: drawn whole (the field's one face, the platform's for the Cyrillic) |
+| 12 | The rat editor's stuck row and tab switches | Release build, a member: the profile scrolled past the editor's tabs | ok: the row sticks under the screen's top; switched to a shorter tab, the page shortens and the row is back in place; back to Clothes and it sticks again |
+| 13 | The Clothes tab's single canvas | Probe | its first drawing settled in 1112 ms (one UI frame of 986 ms: every picture of the grid decoded into one canvas at once); again 77 and 78 ms. Reported, not a budget (below) |
+| 14 | 200 friends and 50 requests each way | The friends tab, flung down and back four times each | every row comes in (windowed); the UI thread missed 5 to 18 frames a second while flinging (longest 65 ms), none between: phase 2's fling class (rows' canvases made as they come in, Metal's simulator driver). Left for a device measure, as phase 2's Records |
+| 15 | `theratrace://room?code=X` | Release build, Mia's room CAAAAA | ok: the invitation with its code; Join → the lobby, Mia the host |
+| 16 | `theratrace://rankings?tab=friends` | Release build | ok: the rankings open on Friends |
+| 17 | Realtime with the in-memory room server | Mia joined, started, shouted from the fake's door | ok: each change reached the phone through its channel; after Mia joined the phone asked for the room 57 ms later and drew her in the lobby; the start took the phone to the round |
+| 18 | Push in Expo Go | Settings, a member | ok: no notices switch, no banner (`'unavailable'`) |
+| 19 | Captcha | — | unchecked → Task 15: Turnstile needs the site's real address and a site key; Cloudflare's test keys would load its page from the network, not a fake |
+| 20 | The blank big rat (part A's fix 4, the review's I1) | The save of a new look refused (the fake's `/control/fail`, answered at once or after 120 to 700 ms), so the old picture comes back as "It could not be saved" rises; bursts of shots | **not reproduced**: Expo Go before the change, 5 bursts on the big rat and the editor's rat, no blank frame; the release build after it, 3 bursts, none |
+
+**The blank rat, cause and fix.** Part A named the trigger (a picture handed to a canvas while a toast rose), not the mechanism. The mechanism, read in
+react-native-skia 2.14: a view keeps one flag for "asked to draw" (`RNSkView::requestRedraw`), and the main thread clears it once the drawing under way is
+done; an ask that lands while a drawing is under way is let go, and the view keeps the picture before. The kit asked once, from the UI thread, after
+both of Skia's hand-overs (`ui/Canvas.tsx`); a drawing started in that moment by another ask (a frame of a rising toast's, Skia's own ask from the JS
+thread) could still swallow it. The kit now asks again on the next UI frame (`Canvas.test`: two asks, one frame), so the last picture handed is the last
+drawn, whatever was under way. Part A's scene change (no canvas until the member is read) is kept. Which of part A's two variables mattered (the
+canvas mounted at opacity 0, or the second picture during the rise) is not settled: neither reproduced here.
+
+### The budgets (release build with the probe)
+
+Each the median of five, settled (the touch let go to two UI frames in a row at the display's pace); 1-minute load 3 to 5. The guest is a real guest of
+the fake project, kept by the phone from an earlier start (its session in `kvStore.ts`), with 65 finished lives and a life in progress on the phone.
+
+| budget | what | settled, ms | median | drawn | verdict |
+|---|---|---|---|---|---|
+| cold start ≤ 2000, signed-in guest | `simctl launch` to the front door drawn (eight launches) | 1547, 1348, 1305, 1227, 1225, 1264, 1304, 1312 | **1305** | — | pass |
+| … the same, no project reachable | (the fake stopped) | 1313, 1336, 1258 | 1313 | — | the account costs the start nothing |
+| Home → Play ≤ 300 | Continue → the round's news | 59, 111, 61, 131, 62 | **62** | 46 | pass |
+| the rankings ≤ 150 | Rankings pressed → the page drawn | 128, 100, 106, 107, 98 | **106** | 28 | pass |
+| … their lines in | → the ranking's 50 lines drawn (the answer of the network, here 1 ms away) | 151, 163, 230, 229, 213 | 213 | 115 | reported, as phase 2's last shelf |
+| a room ≤ 300 | Multiplayer → the way in | 45, 62, 45, 46, 46 | **46** | 29 | pass |
+| a room ≤ 300 | "Back to your game" → the lobby | 128, 45, 46, 46, 79 | **46** | 32 | pass; the lobby the first time, after starting a game: 164 |
+
+**A cold start that sends finished lives.** The first five launches (2359, 1303, 2081, 1304, 2074: median 2074) were each slowed by the account's
+mirror sending five finished lives a start, their whole logs (`finishPerSync`), with JS frames of 800 to 1100 ms in the first two seconds. The fake's
+`finish-run` then kept no run, so the same five went up at every start; it now keeps them, as the server does, and the next eight launches are the
+1305 above. On a real phone this is what the first starts after signing in cost with many lives not yet in the account: a second or so of a busy JS
+thread, five lives a start, until they are all up. Left as a concern, measured.
+
+**The rankings' lines** come with the server's answer: 90 to 110 ms after the touch the commit, then up to 55 ms of UI frames making the lines' faces.
+The page and its head are drawn in 106; what follows is the network's (here a millisecond away), as the web's "Loading…" is. Judged on the page drawn,
+as phase 2's shop was on the screen drawn and not its last shelf.
+
+### Records the review asked for
+
+- `player-friend-code`: the toast measured on the shots. Its words' ink at the same x on both, a device pixel higher on the phone; its box 104 pt on the
+  web, 103⅓ on the phone, one device pixel in from each side. "Code copied" is 79.17 pt of Chakra at 14 (the font's advances) and 12 of padding a side:
+  Chrome lays a box that shrinks to its words at whole CSS pixels (104), the phone at device pixels (103⅓). Written into the record.
+- The editor grids' ⅓ pt: probed. The grid set on a whole point under the part's name (`marginTop` 6 → 5.7, as if the web rounded 14.3 + 6) made all
+  three scenes worse (1048, 1549, 693 px of shape; the dice a further ⅓ pt off): the web does not round there, and part A's arithmetic cause is wrong.
+  Reverted, kept accepted with the probe's result in the record.
+- Part A's fix 4 named the trigger of the blank rat, not its cause: the cause is above.
