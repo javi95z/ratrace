@@ -55,11 +55,13 @@ export const phonePage: Page = {
 /** Whether the phone reached the servers when it was last asked or told: not yet known is not "no", as a browser's `navigator.onLine`. */
 let reachable = true;
 const hearing = new Set<() => void>();
+/** The phone's one listening to its connection, begun with the first who asks and kept as long as the app lasts: what it says is never stale. */
 let stopHearing: (() => void) | null = null;
 
 /**
  * Whether the phone has a connection now, and every change of it, for a screen to read as the web reads `navigator.onLine` and its `online` and
- * `offline` events. The phone is listened to while someone is listening here, and asked once as the listening begins.
+ * `offline` events. The phone is listened to from the first who listens here on, once for the whole app, and asked once as the listening begins: a
+ * screen that comes later reads what the phone last said, never what it said before someone stopped listening.
  */
 export const phoneConnection = {
   connected: (): boolean => reachable,
@@ -83,15 +85,20 @@ export const phoneConnection = {
         .catch(() => undefined);
       stopHearing = () => subscription.remove();
     }
-    return () => {
-      hearing.delete(listener);
-      if (hearing.size === 0) {
-        stopHearing?.();
-        stopHearing = null;
-      }
-    };
+    return () => void hearing.delete(listener);
   },
 };
+
+/**
+ * For the tests' stand-ins only (`resetFakes`, which the wall holds to it, architecture.test.ts): the phone's listening stopped and what it said
+ * forgotten, as a new start of the app has it.
+ */
+export function forgetConnection(): void {
+  stopHearing?.();
+  stopHearing = null;
+  reachable = true;
+  hearing.clear();
+}
 
 /**
  * Tells `set` whether the app is in front: at once, and again each time that changes. The account's session is renewed only then: a phone in the

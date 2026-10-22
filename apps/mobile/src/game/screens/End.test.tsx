@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { heard, memoryServices, renderGame, router, spriteRenders } from '../../testing/render';
 import { speaking } from '../../testing/memoryServices';
-import { settled } from '../../testing/renders';
+import { settled, steady } from '../../testing/renders';
 import { KEYFRAMES } from '../../ui/motion';
 import { rea } from '../../ui/testing/reanimated';
 import { GameProvider, useGame } from '../context';
@@ -260,7 +260,8 @@ describe('what is drawn again', () => {
     // The picture of how the life ended, which the screen draws itself: counted each time the screen is drawn. (Its portrait is the walker's on the
     // life's line too, which moves on its own.)
     const ending = endingArt(document.querySelector('[data-ending]')?.getAttribute('data-ending') as Ending);
-    await settled();
+    // Counted from where the screen has settled: its drawings of the picture stop changing.
+    await steady(() => spriteRenders.get(ending));
     const before = spriteRenders.get(ending);
     expect(before).toBeGreaterThan(0);
     // The figure counts up from nothing to the score, in a leaf of its own.

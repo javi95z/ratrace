@@ -22,9 +22,9 @@ import { roomServer } from '../../../web/src/testing/roomServer';
 import { onlineOver } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
 import { phonePage } from '../online/page';
-import { network } from '../testing/fakes';
+import { network, router } from '../testing/fakes';
 import { kv, memoryServices, renderGame } from '../testing/render';
-import { Counted as Drawn, settled } from '../testing/renders';
+import { Counted as Drawn, settled, steady } from '../testing/renders';
 import type { Renders } from '../testing/renders';
 import {
   GameScope,
@@ -488,6 +488,16 @@ describe('keeping the account with Google, on the phone', () => {
     expect(counted).toEqual([]);
   });
 
+  it('leaves no note behind when the trip breaks on the way', async () => {
+    const { account } = accountAt(guest, async () => {
+      expect(kv.get('ratrace:keeping-account')).toBe('1');
+      throw new Error('the browser could not be opened');
+    });
+    const { seen } = mount({ ...memoryServices(), account });
+    await act(async () => expect(seen.account.keepWithGoogle()).rejects.toThrow('the browser could not be opened'));
+    expect(kv.has('ratrace:keeping-account')).toBe(false);
+  });
+
   it('does not count signing in to an account that was already a player\'s', async () => {
     const counted: Counted[] = [];
     kv.set('ratrace:keeping-account', '1');
@@ -524,9 +534,26 @@ describe('signing out, on the phone', () => {
     expect((await store.loadProfile()).gallery).toEqual(['watch_casio']);
     const { account, asked } = accountAt(guest);
     const mounts = { count: 0 };
-    const { seen } = mount({ ...services, account }, <Mounts into={mounts} />);
+    // What the settings were as each start of the game drew them: the player's, from the first drawing of the second start on.
+    const motion: Array<{ reducedMotion: boolean; sound: boolean }> = [];
+    function Motion() {
+      const { reducedMotion, sound } = useSettings();
+      motion.push({ reducedMotion, sound });
+      return null;
+    }
+    // Where the player lands, and when: once the game has been drawn anew.
+    const landed: number[] = [];
+    router.dismissTo.mockImplementation(() => void landed.push(mounts.count));
+    const { seen } = mount(
+      { ...services, account },
+      <>
+        <Mounts into={mounts} />
+        <Motion />
+      </>,
+    );
     await waitFor(() => expect(seen.lifeId).toBe('nurse'));
     expect(mounts.count).toBe(1);
+    const drawnBefore = motion.length;
     await act(async () => expect(await seen.account.signOut()).toBe(true));
     expect(await store.loadGame()).toBeNull();
     expect(await store.listRuns()).toEqual([]);
@@ -538,6 +565,13 @@ describe('signing out, on the phone', () => {
     await waitFor(() => expect(seen.status).toBe('none'));
     expect(seen.lifeId).toBeNull();
     expect(asked.map((one) => one.what)).toEqual(['start en', 'sign out', 'start en']);
+    // On the front door, on purpose, once the game is drawn anew: the stack started again is not left to say where.
+    expect(router.dismissTo.mock.calls).toEqual([['/']]);
+    expect(landed).toEqual([2]);
+    // The second start drew the player's settings from its first drawing: less motion and no sound never flashed back to their defaults.
+    const second = motion.slice(drawnBefore);
+    expect(second.length).toBeGreaterThan(0);
+    expect(second.every((one) => one.reducedMotion && !one.sound)).toBe(true);
   });
 
   it('leaves everything as it is when the account could not sign out', async () => {
@@ -552,6 +586,7 @@ describe('signing out, on the phone', () => {
     await act(async () => expect(await seen.account.signOut()).toBe(false));
     expect(((await store.loadGame()) as SavedGame).lifeId).toBe('nurse');
     expect(mounts.count).toBe(1);
+    expect(router.dismissTo).not.toHaveBeenCalled();
   });
 });
 
@@ -626,7 +661,7 @@ describe('what the cloud moves draws only what reads it', () => {
   it('draws nothing of the game again when the account, its copy or the room changes: only what reads them', async () => {
     const { account, move } = accountAt(guest);
     const saves = savesAt('sending');
-    const count = { game: 0, words: 0, settings: 0, profile: 0, runs: 0, account: 0, saves: 0, room: 0 };
+    const count = { game: 0, words: 0, settings: 0, profile: 0, runs: 0, account: 0, saves: 0, room: 0, ranking: 0 };
     let rooms: ReturnType<typeof useRooms> | null = null;
     const counter = (key: keyof typeof count, use: () => unknown) =>
       function Counter() {
@@ -641,6 +676,7 @@ describe('what the cloud moves draws only what reads it', () => {
     const Runs = counter('runs', useRuns);
     const Account = counter('account', useAccount);
     const Saves = counter('saves', useAccountSaves);
+    const Ranking = counter('ranking', useRanking);
     function Room() {
       rooms = useRooms();
       useRoom((s) => s.busy);
@@ -660,14 +696,19 @@ describe('what the cloud moves draws only what reads it', () => {
         <Account />
         <Saves />
         <Room />
+        <Ranking />
       </>,
       { ...memoryServices(), account, saves: saves.saves },
     );
-    await settled();
+    // Counted from where the game has settled: the drawings stop changing.
+    await steady(() => ({ ...count, drawn: drawn.count }));
     const before = { ...count, drawn: drawn.count };
     await settled(() => move({ kind: 'member', userId: 'guest-1', email: 'rat@example.com' }));
     await settled(() => saves.set('saved'));
     await settled(() => rooms!.setState({ busy: true }));
+    const ranked = count.ranking;
+    await settled(() => network.set(false));
+    expect(count.ranking).toBeGreaterThan(ranked);
     expect(count.account).toBeGreaterThan(before.account);
     expect(count.saves).toBeGreaterThan(before.saves);
     expect(count.room).toBeGreaterThan(before.room);

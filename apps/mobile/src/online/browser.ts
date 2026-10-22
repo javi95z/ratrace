@@ -2,8 +2,9 @@ import type { Opener } from '@ratrace/online/types';
 import { openAuthSessionAsync } from 'expo-web-browser';
 
 /**
- * Where Google sends the player back to: the app's own address (app.json's `scheme`). The project lets the cloud send a player back here
- * (`additional_redirect_urls`: `theratrace://**`); the account reads a code or a word only from an address that begins with it.
+ * Where Google sends the player back to: the app's own address (app.json's `scheme`). The project lets the cloud send a player back to this
+ * address exactly (`additional_redirect_urls`: `theratrace://auth`, no wider); the account reads a code or a word only from an address that
+ * begins with it.
  */
 export const BACK_FROM_GOOGLE = 'theratrace://auth';
 

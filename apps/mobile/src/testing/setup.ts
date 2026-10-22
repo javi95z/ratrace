@@ -1,5 +1,5 @@
 import { afterEach, vi } from 'vitest';
-import { backHandler, resetFakes } from './fakes';
+import { backHandler, resetAlso, resetFakes } from './fakes';
 
 /*
  * Run before every test of the phone's game (see vitest.config.ts): puts `fakes.ts` in place of the native modules the game
@@ -46,5 +46,9 @@ vi.mock('react-native', async (original) => {
 // the media queries are in place: react-native-web reads them as it loads, and with none it takes the phone to be asking for reduced motion.
 const { BackHandler } = await import('react-native');
 Object.assign(BackHandler, backHandler);
+
+// The phone's connection, listened to once for the whole app: forgotten with the stand-ins, so no test reads another's.
+const { forgetConnection } = await import('../online/page');
+resetAlso(forgetConnection);
 
 afterEach(resetFakes);

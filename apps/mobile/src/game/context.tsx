@@ -14,13 +14,14 @@ import { ResilientStore } from '@ratrace/core/session/resilient';
 import type { RoomsLink } from '@ratrace/core/session/room';
 import { GameSessions } from '@ratrace/core/session/sessions';
 import { newProfile } from '@ratrace/core/session/types';
-import type { FinishedRun, PlayerStore, Profile, Sessions } from '@ratrace/core/session/types';
+import type { FinishedRun, PlayerStore, Profile, Sessions, Settings } from '@ratrace/core/session/types';
 import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Locale } from '@ratrace/i18n';
 import { offlineAccount } from '@ratrace/online/offline';
 import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@ratrace/online/types';
 import { getCalendars, getLocales } from 'expo-localization';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useRouter } from 'expo-router';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { kvKeeping, kvLanguage, kvLastAccount, KvStore } from '../kvStore';
@@ -135,8 +136,11 @@ interface Cloud {
   store: PlayerStore;
   /** True where the phone has a project to sign in to. */
   canSignIn: boolean;
-  /** Starts the game again, as a page is loaded again: everything the screens hold is drawn anew from what the device holds. */
-  restart(): void;
+  /**
+   * Starts the game again, as a page is loaded again: everything the screens hold is drawn anew from what the device holds, from the settings
+   * given (what the device holds of them, so nothing the player set flashes back to its default while the device is read), on the front door.
+   */
+  restart(settings: Settings): void;
 }
 
 const GameContext = createContext<Game | null>(null);
@@ -260,6 +264,14 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
 
 /** The real game of this start of the app: made once, whatever is drawn again above it, and the one cloud of it, whoever signs in or out. */
 let shared: Made | null = null;
+
+/**
+ * For a test (and `testing/*`) only, which the wall holds (architecture.test.ts): the next provider with no services makes the real game anew, as
+ * a new start of the app would.
+ */
+export function forgetTheGame(): void {
+  shared = null;
+}
 /** Round stores that have already asked the device for a life in progress. */
 const booted = new WeakSet<GameStore>();
 
@@ -283,31 +295,53 @@ function Cues({ game }: { game: GameStore }) {
 }
 
 /**
+ * The screen in front, for the reports of what goes wrong (`app:<path>`): heard inside the router, round every screen, by a leaf of its own, so
+ * that a change of screen draws nothing else again.
+ */
+function Place(): null {
+  usePlace();
+  return null;
+}
+
+/**
  * Holds the game for every screen under it: the round store, the player's profile, the words of the language in use, and the cloud. It
  * opens the life in progress, if there is one, as soon as it mounts. Started again (`restart`, when the player signs out) it is drawn anew
- * over a new round store, as the web's page is loaded again: the cloud is the same one, and the account in it starts a new guest.
+ * over a new round store, as the web's page is loaded again: the cloud is the same one, and the account in it starts a new guest. The player
+ * lands then on the front door, as the web's sign-out leaves them on a page that has nothing of the account's left to show.
  */
 export function GameProvider({ children, services }: { children: ReactNode; services?: Services }) {
-  // The screen in front, for the reports of what goes wrong (`app:<path>`): read here, inside the router, round every screen.
-  usePlace();
   const [made] = useState(() => (services ? make(services) : (shared ??= make(phoneServices()))));
-  const [started, setStarted] = useState(0);
-  const restart = useCallback(() => {
-    made.game = roundStore(made);
-    setStarted((count) => count + 1);
-  }, [made]);
+  const [started, setStarted] = useState<{ count: number; settings: Settings | null }>({ count: 0, settings: null });
+  const restart = useCallback(
+    (settings: Settings) => {
+      made.game = roundStore(made);
+      setStarted((was) => ({ count: was.count + 1, settings }));
+    },
+    [made],
+  );
+  const router = useRouter();
+  // Once the game is drawn anew: whatever the stack is, the front door, on purpose. Once for each start, whatever else draws this again.
+  const landed = useRef(0);
+  useEffect(() => {
+    if (started.count === landed.current) return;
+    landed.current = started.count;
+    router.dismissTo('/');
+  }, [started, router]);
   return (
-    <Started key={started} made={made} restart={restart}>
-      {children}
-    </Started>
+    <>
+      <Place />
+      <Started key={started.count} made={made} settings={started.settings} restart={restart}>
+        {children}
+      </Started>
+    </>
   );
 }
 
-function Started({ made, restart, children }: { made: Made; restart: () => void; children: ReactNode }) {
+function Started({ made, settings: startedWith, restart, children }: { made: Made; settings: Settings | null; restart: (settings: Settings) => void; children: ReactNode }) {
   const [game] = useState(() => made.game);
   const [locale, setLocaleState] = useState<Locale>(() => localeOf(made.language.read(), phoneLanguages()));
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
-  const [profile, setProfile] = useState<Profile>(newProfile);
+  const [profile, setProfile] = useState<Profile>(() => (startedWith ? { ...newProfile(), settings: startedWith } : newProfile()));
   const [runs, setRuns] = useState<FinishedRun[] | null>(null);
 
   // Held when read again only if it changed: the device is read after every step and nearly always says what it said.
@@ -612,10 +646,14 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
     keepWithGoogle: async () => {
       // Noted before the browser opens, because the account may be kept (and counted, as the provider hears it) before the call resolves.
       kvKeeping.set();
-      const kept = await account.keepWithGoogle(BACK_FROM_GOOGLE, openForGoogle);
-      // A trip that came to nothing leaves no note behind for a later sign-in to be counted by.
-      if (!kept) kvKeeping.take();
-      return kept;
+      let kept = false;
+      try {
+        kept = await account.keepWithGoogle(BACK_FROM_GOOGLE, openForGoogle);
+        return kept;
+      } finally {
+        // A trip that came to nothing (or broke on the way) leaves no note behind for a later sign-in to be counted by.
+        if (!kept) kvKeeping.take();
+      }
     },
     useExistingAccount: () => {
       // Signing in to an account that was already a player's is not keeping this one: a note left by a trip the app did not see end is not this.
@@ -632,7 +670,7 @@ export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<b
       await store.clearGame();
       for (const run of await store.listRuns()) await store.removeRun(run.runId);
       await store.saveProfile({ ...newProfile(), settings });
-      restart();
+      restart(settings);
       return true;
     },
   };

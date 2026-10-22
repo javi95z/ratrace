@@ -1,7 +1,7 @@
 import { follow } from '@ratrace/online/follow';
 import type { AccountState } from '@ratrace/online/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { appState, network } from '../testing/fakes';
+import { appState, network, resetFakes } from '../testing/fakes';
 import { phoneConnection, phonePage, whileActive } from './page';
 
 /*
@@ -182,14 +182,26 @@ describe('whether there is a connection now', () => {
     network.set(false);
     expect(phoneConnection.connected()).toBe(false);
     expect(told).toHaveBeenCalledTimes(3);
-    // The phone is listened to only while someone listens here.
+    // Nobody listening here, the phone is still listened to, once for the whole app: what a screen that comes later reads is never stale.
     stop();
-    expect(network.listeners.size).toBe(0);
     network.set(true);
     expect(told).toHaveBeenCalledTimes(3);
-    // Listened to again, it is asked again.
+    expect(phoneConnection.connected()).toBe(true);
+    kept(phoneConnection.subscribe(() => undefined));
+    kept(phoneConnection.subscribe(() => undefined));
+    expect(network.listeners.size).toBe(1);
+    expect(phoneConnection.connected()).toBe(true);
+  });
+
+  it('starts again from nothing known after the stand-ins are put back (`resetFakes`): no test reads another\'s connection', async () => {
+    kept(phoneConnection.subscribe(() => undefined));
+    network.set(false);
+    expect(phoneConnection.connected()).toBe(false);
+    resetFakes();
+    expect(phoneConnection.connected()).toBe(true);
+    network.connected = false;
     kept(phoneConnection.subscribe(() => undefined));
     await settled();
-    expect(phoneConnection.connected()).toBe(true);
+    expect(phoneConnection.connected()).toBe(false);
   });
 });

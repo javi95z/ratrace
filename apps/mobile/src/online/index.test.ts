@@ -205,6 +205,14 @@ describe('the cloud of this phone', () => {
     phone.connected(cloudOf('third'));
     appState.set('active');
     expect(told.slice(4)).toEqual(['second false', 'third false', 'third true']);
+    // Stopped (a test's new start of the app): the client is stopped, and the app is no longer listened to.
+    const listening = appState.listeners.size;
+    phone.stop();
+    expect(told.slice(7)).toEqual(['third false']);
+    expect(appState.listeners.size).toBe(listening - 1);
+    appState.set('background');
+    appState.set('active');
+    expect(told).toHaveLength(8);
   });
 
   it('is offline, and plays, when the phone has no connection as it starts', async () => {

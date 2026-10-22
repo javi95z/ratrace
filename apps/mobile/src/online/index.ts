@@ -113,13 +113,14 @@ const offline = (device: PlayerStore): Online => ({ account: offlineAccount, sto
 /**
  * The cloud, with its session renewed only while the app is in front: the one client the account last connected (a start that ended offline
  * connects anew the next time), every one before it stopped, so two never renew the same session. And signing out takes away every key of the
- * session from the phone, not only those the client knows of.
+ * session from the phone, not only those the client knows of. `stop` stops the renewal and the listening to the app (the app never does: it lasts
+ * as long as the app).
  */
-export function onThePhone(): { connected(cloud: Cloud): Cloud } {
+export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
   let current: Cloud | null = null;
   let active = false;
   const renew = (cloud: Cloud | null, on: boolean) => void cloud?.autoRefresh?.(on).catch(() => undefined);
-  whileActive((now) => {
+  const stopListening = whileActive((now) => {
     active = now;
     renew(current, now);
   });
@@ -137,6 +138,11 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud } {
       renew(current, active);
       return current;
     },
+    stop() {
+      stopListening();
+      renew(current, false);
+      current = null;
+    },
   };
 }
 
@@ -145,8 +151,12 @@ let thePhone: ReturnType<typeof onThePhone> | null = null;
 /** How to stop watching the phone's errors: they are watched once, for the cloud made last. */
 let stopWatching: (() => void) | null = null;
 
-/** For a test: the next cloud made starts the phone's renewal and its watch anew, as a new start of the app would. The app never calls it. */
+/**
+ * For a test (and `testing/*`) only, which the wall holds (architecture.test.ts): stops the phone's renewal and its watch, and the next cloud made
+ * starts them anew, as a new start of the app would.
+ */
 export function forgetThePhone(): void {
+  thePhone?.stop();
   thePhone = null;
   stopWatching?.();
   stopWatching = null;

@@ -191,6 +191,17 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(readFileSync(STORAGE_FILES[0], 'utf8')).toMatch(/export const kvSession\b/);
   });
 
+  it('lets only the tests and their stand-ins (testing/*) name what is there for them alone: nothing the app runs starts its cloud, its game or its connection anew', () => {
+    const TEST_ONLY: Record<string, string> = { forgetThePhone: 'online/index.ts', forgetTheGame: 'game/context.tsx', forgetConnection: 'online/page.ts' };
+    for (const [name, home] of Object.entries(TEST_ONLY)) {
+      const word = () => new RegExp(`\\b${name}\\b`, 'g');
+      const naming = mine.filter((path) => !rel(path).startsWith('testing/') && word().test(readFileSync(path, 'utf8'))).map(rel);
+      expect(naming, name).toEqual([home]);
+      // Where it is made, it is only made: nothing there calls it.
+      expect(readFileSync(join(SRC, home), 'utf8').match(word()), name).toHaveLength(1);
+    }
+  });
+
   it('keeps the engine and the content out of the phone\'s store', () => {
     const imports = importsOf(join(SRC, 'kvStore.ts')).map((i) => i.from);
     expect(imports).toContain('expo-sqlite/kv-store');

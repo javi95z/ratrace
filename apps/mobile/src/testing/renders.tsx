@@ -37,3 +37,18 @@ export async function settled(work: () => void | Promise<unknown> = () => undefi
     await new Promise((done) => setTimeout(done, ms));
   });
 }
+
+/**
+ * Waits, a settling at a time, until what `read` reads of the drawings is the same twice running: the baseline of a render-count test, taken once the
+ * game has stopped drawing, however long that takes on a busy machine (not after a fixed wait). Fails if it never stops.
+ */
+export async function steady(read: () => unknown, tries = 40): Promise<void> {
+  let was = JSON.stringify(read());
+  for (let i = 0; i < tries; i++) {
+    await settled();
+    const now = JSON.stringify(read());
+    if (now === was) return;
+    was = now;
+  }
+  throw new Error(`the drawings never settled: ${was}`);
+}

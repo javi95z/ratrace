@@ -272,8 +272,16 @@ export function everyRow<P extends { data?: ArrayLike<unknown> | null; initialNu
   };
 }
 
+/**
+ * What the app keeps of a stand-in for as long as it lasts (the phone's one listening to its connection, `online/page.ts`), put back with them:
+ * handed in by `setup.ts`, because this file cannot import the app's modules that import the stand-ins it makes.
+ */
+const alsoReset: Array<() => void> = [];
+export const resetAlso = (reset: () => void): void => void alsoReset.push(reset);
+
 /** Puts every stand-in back as it was found, for the next test. */
 export function resetFakes(): void {
+  for (const reset of alsoReset) reset();
   for (const spy of Object.values(router)) spy.mockReset();
   backListeners.length = 0;
   device.languages = ['en'];

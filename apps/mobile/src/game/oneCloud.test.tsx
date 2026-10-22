@@ -5,7 +5,7 @@ import { forgetThePhone } from '../online';
 import { place } from '../online/errors';
 import { servers } from '../testing/cloudServers';
 import { appState, pathname } from '../testing/fakes';
-import { GameProvider, useAccount } from './context';
+import { forgetTheGame, GameProvider, useAccount } from './context';
 
 /*
  * The game as the app starts it, with no services handed in: over the phone's own cloud (`phoneServices`, `phoneOnline`), in a build with a project
@@ -15,6 +15,8 @@ import { GameProvider, useAccount } from './context';
 
 afterEach(() => {
   cleanup();
+  // A start of the app of its own, for whatever test comes next in this file: its game and its cloud made anew.
+  forgetTheGame();
   forgetThePhone();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
