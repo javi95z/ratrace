@@ -181,14 +181,15 @@ export function StickyScreen({
     if (!hasBetween) room.value = subGap;
   }, [hasBetween, subGap, room]);
 
-  // React is told the offset only when the page goes past a point asked about, or back over it: which side of each it is on, as one word.
+  // React is told the offset only when the page goes past a point asked about, or back over it, or when the points themselves change (a lead
+  // that grows while the page is far down: the answer may change with no point crossed): the points and which side of each it is on, as one word.
   const mirror = useCallback((y: number) => store.set(y), [store]);
   useAnimatedReaction(
     () => {
       const y = scrollY.value;
       let sides = '';
       for (const mark of marks.value) sides += y > mark ? '1' : '0';
-      return sides;
+      return `${marks.value.join(',')}:${sides}`;
     },
     (sides, before) => {
       if (sides !== before) scheduleOnRN(mirror, scrollY.value);
