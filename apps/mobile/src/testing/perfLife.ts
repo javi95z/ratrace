@@ -51,10 +51,10 @@ export async function putSceneRuns(name: string, copies: number): Promise<void> 
 
 /**
  * A life whose next round both takes it out of the rat race and earns a legendary badge (`escaped_before_40`): the influencer of this seed, played by
- * the saver to the finances of her eighth round (age 36), where playing the round leaves the rat race at 38. For the device check of two sheets at once
- * (the moment of leaving, and the legendary badge's). Found by playing every life with every bot from a few seeds; held by this file's test.
+ * the saver to the finances of her eighth round (age 36), where playing the round as it stands, with no orders (as a player presses it), leaves the
+ * rat race at 38. For the device check of two sheets at once (the moment of leaving, and the legendary badge's). Found by playing every life with every bot from a few seeds; held by this file's test.
  */
-export const EARLY_ESCAPE = { life: 'influencer', bot: 'saver', seed: 'escape-influencer-saver-3'.padEnd(64, '0'), round: 7 } as const;
+export const EARLY_ESCAPE = { life: 'influencer', bot: 'saver', seed: 'escape-influencer-saver-4'.padEnd(64, '0'), round: 7 } as const;
 
 /** That life, played on a store of its own (every life open to it) to its round, at the finances: the store, and its session. */
 export async function earlyEscape(): Promise<{ store: MemoryStore; session: NonNullable<Awaited<ReturnType<LocalSessions['resume']>>['session']> }> {
