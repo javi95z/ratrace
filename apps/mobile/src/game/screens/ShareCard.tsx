@@ -171,7 +171,7 @@ function Drawing({ children }: { children: string }) {
 
 /**
  * The picture of a life, and the two ways to take it away: the phone's share sheet, handed it as a file, and its photos. The picture is drawn when the
- * sheet opens (`opened`: open from the start, for a scene), and let go of when it closes. Where the phone has no share sheet, or the picture cannot be
+ * sheet opens (`opened`: open from the start, for a scene), and let go of when it closes. Where the phone has no share sheet (or it fails), or the picture cannot be
  * drawn or made a file, the sheet says so in the phone's own words (`phone.shareFailed`): the web's for a picture that cannot be had speak of a browser.
  * Saved to the photos, or not allowed there, or not saved, it says that too, under the buttons.
  */
@@ -188,8 +188,9 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
   // The picture being handed over or saved: one at a time, Share or Save, as both write the one file of the cache's `share/` folder (game/sharing.ts),
   // which the other would take away under it. A second press of either meanwhile does nothing.
   const busy = useRef(false);
-  // What came of the last save. The sheet's opening it belongs to: a save that ends after the sheet has closed says nothing the next time it opens.
-  const [saved, setSaved] = useState<'saved' | 'refused' | 'failed' | null>(null);
+  // What came of the last save, or of a share the phone's sheet failed (`unshared`). The sheet's opening it belongs to: one that ends after the sheet
+  // has closed says nothing the next time it opens.
+  const [saved, setSaved] = useState<'saved' | 'refused' | 'failed' | 'unshared' | null>(null);
   const opening = useRef(0);
   const [picture, setPicture] = useState<{ image: SkImage; png: Uint8Array } | 'failed' | null>(null);
 
@@ -247,9 +248,15 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
               onPress={() => {
                 if (busy.current) return;
                 busy.current = true;
+                const mine = opening.current;
+                setSaved(null);
                 void share
                   .send(ready.png, fileName, alt, invite)
-                  .then((shared) => shared && track({ name: 'share', what: 'card' }), () => undefined)
+                  .then(
+                    (shared) => shared && track({ name: 'share', what: 'card' }),
+                    // The phone's sheet would not take it: said in the phone's own words, as a picture that could not be had is.
+                    () => opening.current === mine && setSaved('unshared'),
+                  )
                   .finally(() => {
                     busy.current = false;
                   });
@@ -280,7 +287,7 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
             </Button>
             {saved !== null ? (
               <View accessible role={saved === 'saved' ? 'status' : 'alert'}>
-                <ReadText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{phone(saved === 'saved' ? 'pictureSaved' : saved === 'refused' ? 'saveRefused' : 'saveFailed')}</ReadText>
+                <ReadText size={14} tone="ink-200" style={{ textAlign: 'center' }}>{phone(saved === 'saved' ? 'pictureSaved' : saved === 'refused' ? 'saveRefused' : saved === 'unshared' ? 'shareFailed' : 'saveFailed')}</ReadText>
               </View>
             ) : null}
           </View>

@@ -241,6 +241,20 @@ describe('the share sheet', () => {
     await waitFor(() => expect(shareSheet.handed).toHaveLength(2));
   });
 
+  it('says so in the phone\'s own words when the share sheet fails, and Share can be tried again', async () => {
+    shareSheet.fails = true;
+    show();
+    const sheet = await drawn();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+    expect((await within(sheet).findByRole('alert')).textContent).toBe(FAILED);
+    expect(shareSheet.handed).toEqual([]);
+    // The picture is still there to share: tried again, it goes, and the line is gone.
+    shareSheet.fails = false;
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+    await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
+    expect(within(sheet).queryByRole('alert')).toBeNull();
+  });
+
   it('says so where the phone has no share sheet, in the phone\'s own words, and draws nothing', async () => {
     shareSheet.available = false;
     show();

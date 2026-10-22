@@ -161,10 +161,10 @@ export const expoFileSystem = {
   },
 };
 /** The phone's share sheet: whether there is one, and every file it was handed, in order, with what it was told of it. */
-export const shareSheet = { available: true, handed: [] as Array<{ url: string; options?: Record<string, unknown> }> };
+export const shareSheet = { available: true, fails: false, handed: [] as Array<{ url: string; options?: Record<string, unknown> }> };
 export const expoSharing = {
   isAvailableAsync: () => Promise.resolve(shareSheet.available),
-  shareAsync: (url: string, options?: Record<string, unknown>) => Promise.resolve(void shareSheet.handed.push({ url, options })),
+  shareAsync: (url: string, options?: Record<string, unknown>) => (shareSheet.fails ? Promise.reject(new Error('the share sheet would not open')) : Promise.resolve(void shareSheet.handed.push({ url, options }))),
 };
 
 /**
@@ -221,6 +221,7 @@ export function resetFakes(): void {
   folders.clear();
   folders.add('file:///cache/');
   shareSheet.available = true;
+  shareSheet.fails = false;
   shareSheet.handed.length = 0;
   Object.assign(photos, { allows: true, fails: false, held: null });
   photos.asked.length = 0;
