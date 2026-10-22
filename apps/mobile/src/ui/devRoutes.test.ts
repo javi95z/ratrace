@@ -26,6 +26,7 @@ describe('the development pages in a release build', () => {
       expect(code).not.toContain(module);
       // What the page draws with is `null` there, and the page goes home.
       expect(code).toMatch(/= null;/);
+      expect(code).toMatch(/Redirect, \{\s*href: "\/"/);
     }, 60_000);
   }
 

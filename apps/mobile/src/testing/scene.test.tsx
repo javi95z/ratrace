@@ -13,12 +13,11 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { useEffect, useRef } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { useClock, useGame, useT } from '../game/context';
-import SceneRoute from '../app/scene';
 import { rea } from '../ui/testing/reanimated';
 import { params } from './fakes';
 import { memoryServices } from './memoryServices';
 import { settled } from './renders';
-import { FAULT_LINE, SCENE_SCREENS, SceneView, servicesOf } from './scene';
+import { FAULT_LINE, SCENE_SCREENS, SceneRoute, SceneView, servicesOf } from './scene';
 
 /** A scene's store is built and its steps are taken on a machine that may be busy: waited for as long as a test is allowed, not the second a screen's test gives. */
 const WAIT = { timeout: 15_000 };
@@ -121,15 +120,7 @@ test('the life of a scene is the life the screens\' tests begin: same id, same s
   expect(fromScene).toMatchObject({ gameId: 'id-1', seed: 'screen-seed-1' });
 });
 
-test('the route is for development only: anywhere else it goes home', () => {
-  params.name = 'home-new';
-  vi.stubGlobal('__DEV__', false);
-  const { container } = render(<SceneRoute />);
-  expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/');
-});
-
 test('the route shows the scene its address names', async () => {
-  vi.stubGlobal('__DEV__', true);
   params.name = 'home-new';
   render(<SceneRoute />);
   // The scene's screen, the front door: the name of the game, and the way to a new life.
@@ -259,7 +250,6 @@ test('a scene opened for a shot says when it is ready, to the driver on this mac
   expect(said).not.toHaveBeenCalled();
   cleanup();
   // The route takes the port from its address (`&ready=`), as the driver opens it.
-  vi.stubGlobal('__DEV__', true);
   params.name = 'play-news-r6';
   params.ready = '8093';
   render(<SceneRoute />);

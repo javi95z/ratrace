@@ -120,8 +120,11 @@ test('the web\'s scene page names no client of the project and no store of the d
 });
 
 test('the app\'s route is for development only, and everything it wires is behind testing/scene.tsx', () => {
-  expect(route).toMatch(/if \(!__DEV__\) return <Redirect href="\/" \/>;/);
-  expect([...route.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['expo-router', '../testing/scene']);
+  // What it wires is loaded behind `__DEV__` (folded out of a release build: ui/devRoutes.test.ts), and with none of it the route goes home.
+  expect(route).toMatch(/const scenes: Scenes \| null = __DEV__ \? \(require\('\.\.\/testing\/scene'\) as Scenes\) : null;/);
+  expect(route).toMatch(/if \(scenes === null\) return <Redirect href="\/" \/>;/);
+  expect(route).toMatch(/return <scenes\.SceneRoute \/>;/);
+  expect([...route.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['expo-router']);
 });
 
 test('phase 1\'s stand-in is gone: every screen of a scene is the real one on both sides (the records and the collection were the last, Task 19)', () => {

@@ -2,6 +2,7 @@ import { BADGE_RARITY, content, rarityOf } from '@ratrace/content';
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, SCENES, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -364,4 +365,14 @@ export function SceneView({ name, screens = SCENE_SCREENS, readyPort }: { name: 
   if (built?.scene !== scene) return null;
   // One game for one scene: another name is another store, not the same game opened on another life.
   return <SceneGame key={scene.name} scene={scene} services={built.services} screens={screens} readyPort={readyPort} />;
+}
+
+/**
+ * The /scene route's page (app/scene.tsx loads it behind `__DEV__`, so a release build has none of it): the scene its address names, and, when it
+ * is opened for a shot, the port the driver of the shots listens on for it to say it is ready (`&ready=`, scripts/shotDrivers.ts).
+ */
+export function SceneRoute() {
+  const { name, ready } = useLocalSearchParams<{ name?: string; ready?: string }>();
+  const port = ready !== undefined && /^\d+$/.test(ready) ? Number(ready) : undefined;
+  return <SceneView name={name} readyPort={port} />;
 }
