@@ -1,5 +1,5 @@
 import { execFileSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { mkdirSync, openSync, readFileSync } from 'node:fs';
+import { closeSync, mkdirSync, openSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -248,6 +248,48 @@ export function stoppedWithin(child: ChildProcess, ms: number): Promise<boolean>
   });
 }
 
+/** What `serveThroughNudge` is given of a server: how to start, wait for, watch, read and stop one. */
+export interface ServerParts<Child> {
+  start(): Child;
+  ready(): Promise<void>;
+  stoppedWithin(child: Child, ms: number): Promise<boolean>;
+  /** The server's log so far: every start's, one after the other. */
+  log(): string;
+  /** Stops a server's whole process group, gone already or not. */
+  stop(child: Child): void;
+  logFile: string;
+  tell(line: string): void;
+}
+
+/**
+ * Starts the web's server and waits until it answers and serves on. Next 16.4 stops a dev server it sees started by an agent, once, a moment after it
+ * answers, to recommend an upgrade (its "upgrade nudge"), and lets the same command run if it is started again within five minutes: a server that
+ * stopped so is stopped for good (its process group, none of its workers left) and started once more. Any other stop, or a second one, fails the run
+ * at once, naming the log, rather than shooting a dead server. The recommendation is in the log, for whoever runs the shots to pass on.
+ */
+export async function serveThroughNudge<Child>(parts: ServerParts<Child>): Promise<Child> {
+  const first = parts.start();
+  await parts.ready();
+  if (!(await parts.stoppedWithin(first, NUDGE_MS))) return first;
+  if (!parts.log().includes(NUDGE)) throw new Error(`the web's server stopped: see ${parts.logFile}`);
+  parts.stop(first);
+  parts.tell(`the web's server stopped to recommend an upgrade of Next.js (${parts.logFile}); started again`);
+  const second = parts.start();
+  await parts.ready();
+  if (await parts.stoppedWithin(second, NUDGE_MS)) throw new Error(`the web's server stopped again: see ${parts.logFile}`);
+  return second;
+}
+
+/** Stops a server's process group: one gone already is no error. */
+function stopGroup(child: ChildProcess): void {
+  if (!child.pid) return;
+  try {
+    process.kill(-child.pid, 'SIGTERM');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
+  }
+}
+
 /**
  * Runs `shoot` with a page of Chrome shaped like the iPhone's, in front of the web's own dev server, started here (on a
  * port that is not answering) and stopped after. `probe` is a page of the web that answers once the server is up. The
@@ -262,27 +304,33 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
   // What the server says goes to a file beside the raw shots (`web-server.log`): a server that stops on its own says why there.
   mkdirSync(raw, { recursive: true });
   const logFile = join(raw, 'web-server.log');
+  // Each run's log starts empty; a server started again within the run adds to it, so the first one's words (the recommendation) are kept.
+  closeSync(openSync(logFile, 'w'));
   const start = (): ChildProcess => {
-    const log = openSync(logFile, 'w');
-    return spawn('pnpm', ['exec', 'next', 'dev', '-p', String(PORT)], {
-      cwd: web,
-      stdio: ['ignore', log, log],
-      detached: true,
-      env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' },
-    });
-  };
-  let server = start();
-  try {
-    await waitFor(probe, 180_000);
-    // Next 16.4 stops a dev server it sees started by an agent, once, a moment after it answers, to recommend an upgrade (its "upgrade nudge"),
-    // and lets the same command run if it is started again within five minutes. The shots' server is started once more if it stopped so: the
-    // recommendation is in its log, for whoever runs the shots to pass on.
-    if (await stoppedWithin(server, NUDGE_MS) && readFileSync(logFile, 'utf8').includes(NUDGE)) {
-      console.error(`the web's server stopped to recommend an upgrade of Next.js (${logFile}); started again`);
-      server = start();
-      await waitFor(probe, 180_000);
-      if (await stoppedWithin(server, NUDGE_MS)) throw new Error(`the web's server stopped again: see ${logFile}`);
+    const log = openSync(logFile, 'a');
+    try {
+      return spawn('pnpm', ['exec', 'next', 'dev', '-p', String(PORT)], {
+        cwd: web,
+        stdio: ['ignore', log, log],
+        detached: true,
+        env: { ...process.env, NEXT_PUBLIC_SUPABASE_URL: '', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: '' },
+      });
+    } finally {
+      // The child has its own copy of the file: the parent's is not needed once it is started.
+      closeSync(log);
     }
+  };
+  let server: ChildProcess | null = null;
+  try {
+    server = await serveThroughNudge({
+      start: () => (server = start()),
+      ready: () => waitFor(probe, 180_000),
+      stoppedWithin,
+      log: () => readFileSync(logFile, 'utf8'),
+      stop: stopGroup,
+      logFile,
+      tell: (line) => console.error(line),
+    });
     const { chromium } = fromWeb('@playwright/test') as { chromium: Chromium };
     // The Chrome already on this machine, as the web's e2e tests use: nothing is downloaded.
     const browser = await chromium.launch({ channel: 'chrome' });
@@ -305,13 +353,10 @@ export async function withWebPage(probe: string, shoot: (page: Page) => Promise<
     }
   } finally {
     // A server that is gone already (it stopped on its own) is not an error to hide the one the shots met behind.
-    if (server.pid) {
-      try {
-        process.kill(-server.pid, 'SIGTERM');
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error;
-        console.error(`the web's server (${server.pid}) had stopped before the shots were done`);
-      }
+    const last = server as ChildProcess | null;
+    if (last !== null) {
+      if (last.exitCode !== null || last.signalCode !== null) console.error(`the web's server (${last.pid}) had stopped before the shots were done`);
+      stopGroup(last);
     }
   }
 }

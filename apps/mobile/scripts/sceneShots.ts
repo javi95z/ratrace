@@ -299,7 +299,7 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     shape: 1015,
     lines: { '🎲 At random': 5 / 3 },
     oneSided: 0,
-    reason: 'The grid of choices a device pixel lower on the phone (the web paints it at a whole CSS pixel, 14.3 + 6 under the part\'s name; the phone at a device pixel), each rat in it with it; and the dice emoji of \'At random\', Apple Color Emoji lower on iOS than on macOS Chrome (new-first\'s).',
+    reason: 'The grid of choices a device pixel lower on the phone, each rat in it with it: whole CSS pixels against device pixels (phase 2\'s class), its exact cause not found. Probed in Task 14 part B: the grid set on a whole point under the part\'s name (6 - 0.3, as if the web rounded 14.3 + 6) made every editor scene worse (1048, 1549 and 693 px, the dice a further ⅓ pt off), so the web does not round there; left as it was. And the dice emoji of \'At random\', Apple Color Emoji lower on iOS than on macOS Chrome (new-first\'s).',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'player-editor-wear': {
@@ -319,7 +319,7 @@ export const ACCEPTED: Readonly<Record<string, Accepted>> = {
     shape: 569,
     lines: { '✎': 5 / 3 },
     oneSided: 0,
-    reason: 'The toast\'s words over the tabs (covered there, so not measured as text) three quarters of a point from the web\'s, the toast a point narrower; the bar\'s lamp sliver and the pencil of player-member\'s.',
+    reason: 'The toast over the tabs (covered there, so its words are not measured as text), measured on the shots: its words\' ink at the same x on both and a device pixel higher on the phone; its box 104 pt wide on the web and 103⅓ on the phone, a device pixel in from each side. "Code copied" is 79.17 pt of Chakra at 14 (the font\'s own advances) and 12 of padding each side: Chrome lays the box that shrinks to its words at whole CSS pixels (104), the phone at device pixels (103⅓). Then the bar\'s lamp sliver and the pencil of player-member\'s.',
     report: 'Phase 3 batch pass: the online scenes shot, compared and judged',
   },
   'challenge-attempt': {

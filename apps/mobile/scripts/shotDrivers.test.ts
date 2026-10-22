@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { blocked, guardedContext, NUDGE, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stoppedWithin, TEXT_BOXES } from './shotDrivers';
+import { blocked, guardedContext, NUDGE, serveThroughNudge, openPage, readyServer, refuseServerInUse, routeTold, simctl, SPRITES_MS, STILL_ALIKE, STILL_MS, STILL_SHOTS, stillShot, stoppedWithin, TEXT_BOXES } from './shotDrivers';
 import type { Browser, Context, Page } from './shotDrivers';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -333,4 +333,48 @@ test('tells a server that stopped on its own from one still serving: the web\'s 
   }
   // The words Next.js stops a dev server with (next/dist/lib/upgrade/nudge.js), which the driver looks for in the server's log.
   expect(NUDGE).toBe('This command stopped to show the upgrade recommendation');
+});
+
+/** A server as `serveThroughNudge` sees it: whether it stops in the watch after it answers, and what its log says by then. */
+function servers(stops: boolean[], says: string[]) {
+  const started: number[] = [];
+  const stopped: number[] = [];
+  let log = '';
+  return {
+    started,
+    stopped,
+    parts: {
+      start: () => {
+        const n = started.length;
+        started.push(n);
+        log += says[n] ?? '';
+        return n;
+      },
+      ready: async () => undefined,
+      stoppedWithin: async (n: number) => stops[n] ?? false,
+      log: () => log,
+      stop: (n: number) => void stopped.push(n),
+      logFile: 'web-server.log',
+      tell: () => undefined,
+    },
+  };
+}
+
+test('the web\'s server: kept as it is when it serves on; started once more when Next stopped it to recommend an upgrade, the first one stopped for good; any other stop, or a second one, fails the run at once with the log', async () => {
+  const serving = servers([false], ['ready']);
+  expect(await serveThroughNudge(serving.parts)).toBe(0);
+  expect(serving.started).toEqual([0]);
+
+  const nudged = servers([true, false], [`ready\n${NUDGE}`, 'ready again']);
+  expect(await serveThroughNudge(nudged.parts)).toBe(1);
+  expect(nudged.started).toEqual([0, 1]);
+  // The first server's process group is stopped before the second starts: none of its workers is left behind.
+  expect(nudged.stopped).toEqual([0]);
+
+  const crashed = servers([true], ['ready\nError: listen EADDRINUSE']);
+  await expect(serveThroughNudge(crashed.parts)).rejects.toThrow("the web's server stopped: see web-server.log");
+  expect(crashed.started).toEqual([0]);
+
+  const twice = servers([true, true], [`ready\n${NUDGE}`, `ready\n${NUDGE}`]);
+  await expect(serveThroughNudge(twice.parts)).rejects.toThrow("the web's server stopped again: see web-server.log");
 });
