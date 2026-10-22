@@ -4,6 +4,9 @@
     "strict": true,
     "types": ["node"],
     // src/game/cues.test.ts runs the web's game/sound.ts, which names the web's sound board by the web's own alias.
-    "paths": { "@/ui/sound": ["../web/src/ui/sound"] }
+    "paths": { "@/ui/sound": ["../web/src/ui/sound"] },
+    // src/game/cloud.test.tsx runs the web's in-memory servers (apps/web/src/testing), which are the edge functions' own code, imported as Deno
+    // imports it: by the file's whole name.
+    "allowImportingTsExtensions": true
   }
 }

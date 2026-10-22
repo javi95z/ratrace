@@ -46,6 +46,47 @@ export const phonePage: Page = {
   now: () => Date.now(),
 };
 
+/** Whether the phone reached the servers when it was last asked or told: not yet known is not "no", as a browser's `navigator.onLine`. */
+let reachable = true;
+const hearing = new Set<() => void>();
+let stopHearing: (() => void) | null = null;
+
+/**
+ * Whether the phone has a connection now, and every change of it, for a screen to read as the web reads `navigator.onLine` and its `online` and
+ * `offline` events. The phone is listened to while someone is listening here, and asked once as the listening begins.
+ */
+export const phoneConnection = {
+  connected: (): boolean => reachable,
+  subscribe(listener: () => void): () => void {
+    hearing.add(listener);
+    if (stopHearing === null) {
+      const set = (now: boolean) => {
+        if (now === reachable) return;
+        reachable = now;
+        for (const one of [...hearing]) one();
+      };
+      let told = false;
+      const subscription = Network.addNetworkStateListener((state) => {
+        told = true;
+        set(reaches(state));
+      });
+      void Network.getNetworkStateAsync()
+        .then((state) => {
+          if (!told && stopHearing !== null) set(reaches(state));
+        })
+        .catch(() => undefined);
+      stopHearing = () => subscription.remove();
+    }
+    return () => {
+      hearing.delete(listener);
+      if (hearing.size === 0) {
+        stopHearing?.();
+        stopHearing = null;
+      }
+    };
+  },
+};
+
 /**
  * Tells `set` whether the app is in front: at once, and again each time that changes. The account's session is renewed only then: a phone in the
  * background renews nothing, and a timer kept running there would be stopped by the system half way. Returns how to stop.

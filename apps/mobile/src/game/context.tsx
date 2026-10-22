@@ -1,25 +1,40 @@
-import { content, lives, textFor } from '@ratrace/content';
+import { content, CONTENT_VERSION, lives, textFor } from '@ratrace/content';
 import type { BasketKeep } from '@ratrace/core/game/basket';
 import type { Words } from '@ratrace/core/game/present';
+import { createRoomStore } from '@ratrace/core/game/room';
+import type { RoomActions, RoomStore, RoomStoreState } from '@ratrace/core/game/room';
 import { rulesKnow } from '@ratrace/core/game/rules';
 import { createGameStore } from '@ratrace/core/game/store';
 import type { GameStore, RoundActions, RoundState } from '@ratrace/core/game/store';
 import { formatFor } from '@ratrace/core/lib/format';
 import { LocalSessions, type SessionDeps } from '@ratrace/core/session/local';
 import { settleRank, updateProfile } from '@ratrace/core/session/profile';
+import { RankedSessions } from '@ratrace/core/session/ranked';
 import { ResilientStore } from '@ratrace/core/session/resilient';
+import type { RoomsLink } from '@ratrace/core/session/room';
+import { GameSessions } from '@ratrace/core/session/sessions';
 import { newProfile } from '@ratrace/core/session/types';
 import type { FinishedRun, PlayerStore, Profile, Sessions } from '@ratrace/core/session/types';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Locale } from '@ratrace/i18n';
+import { offlineAccount } from '@ratrace/online/offline';
+import type { Account, AccountLife, AccountSaves, AccountState, CloudSaving, Community } from '@ratrace/online/types';
 import { getCalendars, getLocales } from 'expo-localization';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvLanguage, KvStore } from '../kvStore';
+import { kvKeeping, kvLanguage, kvLastAccount, KvStore } from '../kvStore';
+import { phoneOnline } from '../online';
+import type { Online } from '../online';
+import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
+import { followAccountLanguage } from '../online/language';
+import { phoneConnection, phonePage } from '../online/page';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
 import { SoundProvider, useSound } from '../ui/sound';
 import { cuesFor } from './cues';
+import { countingStarts, gameBegan, ignore, lifeEnded } from './events';
+import type { Track } from './events';
 import { sameProfile, sameRuns } from './keep';
 import { localeOf, type LanguageKeep } from './locale';
 import { loadBundledRules } from './olderRules';
@@ -27,19 +42,16 @@ import { phoneBasket } from './phoneBasket';
 import { WordsProvider } from './words';
 
 export { useT } from './words';
-export { NO_ROOM, useAccountSaves, useCanSignIn, useCommunity, useInRoom, useRanking, useRoom, useTrack } from './offline';
-export type { Track } from './offline';
+export type { Counted, Track } from './events';
 export { usePictureShare } from './sharing';
 export type { PictureShare } from './sharing';
 export { useSound };
 export type { Cue } from '../ui/sound';
 
 /*
- * The phone's counterpart of the web's game/context.tsx: the one place that wires the session, the
- * device's store and the round store. The phone has no cloud yet: nobody signs in, so a life is played
- * on the phone as the web plays one with no account, and what is online (the ranking, the other players,
- * the rooms, the account's copy of the player's things, the counting) answers as it does there for a
- * guest with no connection (`offline.ts`), from this same module.
+ * The phone's counterpart of the web's game/context.tsx: the one place that wires the session, the device's store, the round store and the
+ * cloud. The hooks of the cloud are the web's, by name and by what they answer: with no project in the build (or no services in a test), nobody
+ * signs in, and a life is played on the phone as the web plays one for a guest with no connection.
  */
 
 /** Whether what is played is reaching the device. */
@@ -56,6 +68,16 @@ export interface Services {
   /** How long after a change of screen a tap is ignored. See `GameStoreOptions.guardMs`. */
   tapGuardMs?: number;
   saving?: Saving;
+  /** Who is playing, as the cloud knows them. Left out, the game has no cloud: nobody is signed in. */
+  account?: Account;
+  /** How the account's copy of the player's things stands. Left out, nothing is saved to an account. */
+  saves?: AccountSaves | null;
+  /** The other players, while someone is signed in, and null otherwise. Left out, there are none to ask. */
+  community?: () => Community | null;
+  /** The rooms, while someone is signed in, and null otherwise. Left out, there are none. */
+  rooms?: () => RoomsLink | null;
+  /** Runs something later, for the clocks of a room. Left out, the phone's own timers. */
+  schedule?: (run: () => void, ms: number) => () => void;
   /** Where the orders of a round not yet played are kept. Left out, only in memory. */
   basket?: BasketKeep;
   /** True where the tabs of the money are opened one by one through a guided first life. */
@@ -67,20 +89,29 @@ export interface Services {
    * Left out, the phone's own. A scene (`testing/scene.tsx`) holds it at one day so its shot is the same on any day.
    */
   now?: () => number;
+  /** Where what is counted of how the game is played goes (`events.ts`). Left out, nothing is counted. */
+  track?: Track;
 }
 
 /** Long enough for the second tap of a double tap, short enough that nobody waits for it. */
 export const TAP_GUARD_MS = 400;
 const ALWAYS_SAVING: Saving = { degraded: () => false, subscribe: () => () => {} };
+const NO_SAVES: AccountSaves = { status: () => 'off', offer: () => null, subscribe: () => () => {}, onDeviceChanged: () => () => {}, takeOffer: async () => false, declineOffer: async () => {} };
+const NO_COMMUNITY = (): Community | null => null;
+const NO_ROOMS = (): RoomsLink | null => null;
 
 /**
- * What a screen reads of the game is held in four contexts, so that a screen is drawn again only for what it reads: the game itself (the
+ * What a screen reads of the game is held in five contexts, so that a screen is drawn again only for what it reads: the game itself (the
  * round store, the words, the date, the language: made once, and again only for a language), the settings the player has set, the profile
- * and the finished lives (each put in place only when it has changed). One context for everything drew every screen again, twice, after every
- * card: the profile and the lives were read and set again with each step, whether or not they had changed.
+ * and the finished lives (each put in place only when it has changed), and the cloud (the account, its copy of the player's things, the other
+ * players, the rooms: made once for each start of the game, and read by the screens that ask, through the hooks below, as they change). One
+ * context for everything drew every screen again, twice, after every card: the profile and the lives were read and set again with each step,
+ * whether or not they had changed.
  */
 interface Game {
   game: GameStore;
+  /** True under a `GameScope`: the round store is a room's life, not the device's own. */
+  inRoom: boolean;
   /** Reads the profile and the finished lives again, and holds what is read whether or not it changed. */
   reload(): void;
   store: PlayerStore;
@@ -93,12 +124,27 @@ interface Game {
   changeProfile(change: (profile: Profile) => Profile): void;
 }
 
+/** The cloud, as one start of the game holds it. None of it changes: what moves in it is read by the hooks that watch it. */
+interface Cloud {
+  rooms: RoomStore;
+  account: Account;
+  saves: AccountSaves;
+  community: () => Community | null;
+  track: Track;
+  store: PlayerStore;
+  /** True where the phone has a project to sign in to. */
+  canSignIn: boolean;
+  /** Starts the game again, as a page is loaded again: everything the screens hold is drawn anew from what the device holds. */
+  restart(): void;
+}
+
 const GameContext = createContext<Game | null>(null);
 /** The two settings the player can set that screens read; held apart from the profile so that the rest of it moving is not a change of them. */
 const SettingsContext = createContext<{ reducedMotion: boolean; sound: boolean } | null>(null);
 const ProfileContext = createContext<Profile | null>(null);
 /** Finished lives, the latest first. Null until the device has answered. */
 const RunsContext = createContext<{ runs: FinishedRun[] | null } | null>(null);
+const CloudContext = createContext<Cloud | null>(null);
 
 /** What the phone's lives need from the outside world: ids, seeds, the clock. */
 export function phoneDeps(): SessionDeps {
@@ -115,11 +161,23 @@ export function phoneDeps(): SessionDeps {
   };
 }
 
-/** The services of the real game: the engine on this phone, saved on this phone, with the orders of the round kept as they are put in. */
+const VERSIONS = { engine: ENGINE_VERSION, content: CONTENT_VERSION };
+
+/**
+ * The services of the game over the cloud of a phone (`phoneOnline`, or a test's): the store with the account behind it, and lives of both
+ * kinds, the ones the phone plays and the ranked ones the server plays while someone is signed in.
+ */
+export function servicesOver(online: Online, deps: SessionDeps): Pick<Services, 'sessions' | 'store' | 'account' | 'saves' | 'community' | 'rooms'> {
+  const { account, store, saves, ranked, rooms, community } = online;
+  const sessions = new GameSessions(store, new LocalSessions(store, content, lives, deps), new RankedSessions(ranked, store, content, lives, VERSIONS, deps), VERSIONS);
+  return { sessions, store, account, saves, community, rooms };
+}
+
+/** The services of the real game: the engine on this phone, saved on this phone and in the player's account where there is one, with the orders of the round kept as they are put in. */
 export function phoneServices(): Services {
   const listeners = new Set<() => void>();
   // The phone's store makes each finished life anew from its text for every list (kvStore.ts): the resilient store hands them on without copying them
-  // again (`freshReads`). The probe times both: the device's calls, and what the game waits for with the resilient store's work over them.
+  // again (`freshReads`). The probe times both: the device's calls, and what the game waits for with the resilient store's work (and the account's) over them.
   const resilient = new ResilientStore(
     perfStore(new KvStore(), 'device'),
     (degraded, error) => {
@@ -128,7 +186,7 @@ export function phoneServices(): Services {
     },
     { freshReads: true },
   );
-  const store = perfStore(resilient, 'saved');
+  const online = phoneOnline(resilient);
   const saving: Saving = {
     degraded: () => resilient.degraded,
     subscribe: (listener) => {
@@ -136,25 +194,70 @@ export function phoneServices(): Services {
       return () => listeners.delete(listener);
     },
   };
-  return { sessions: new LocalSessions(store, content, lives, phoneDeps()), store, saving, introduceTabs: true, basket: phoneBasket };
+  const wired = servicesOver({ ...online, store: perfStore(online.store, 'saved') }, phoneDeps());
+  // What is counted goes nowhere until the phone has its own sender for it.
+  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, track: ignore };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */
 interface Made {
+  /** The round store of the game as it was last started (`restart` makes a new one). */
   game: GameStore;
+  rooms: RoomStore;
+  sessions: Sessions;
   store: PlayerStore;
   saving: Saving;
+  account: Account;
+  saves: AccountSaves;
+  community: () => Community | null;
+  canSignIn: boolean;
   introduceTabs: boolean;
   language: LanguageKeep;
   now: () => number;
+  track: Track;
+  basket?: BasketKeep;
+  tapGuardMs: number;
 }
 
-function make({ sessions, store, saving, tapGuardMs, basket, introduceTabs, language, now }: Services): Made {
-  const game = createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs ?? TAP_GUARD_MS, ...(basket ? { basket } : {}) });
-  return { game, store, saving: saving ?? ALWAYS_SAVING, introduceTabs: introduceTabs === true, language: language ?? kvLanguage, now: now ?? Date.now };
+/** A round store over the game's sessions, with nothing in it until it is booted. */
+const roundStore = ({ sessions, tapGuardMs, basket }: Pick<Made, 'sessions' | 'tapGuardMs' | 'basket'>): GameStore =>
+  createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs, ...(basket ? { basket } : {}) });
+
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore }: Services): Made {
+  const guard = tapGuardMs ?? TAP_GUARD_MS;
+  const counted = countingStarts(sessions, track);
+  const roomStore = createRoomStore({
+    link: rooms ?? NO_ROOMS,
+    store,
+    content,
+    lives,
+    versions: VERSIONS,
+    tapClock: () => performance.now(),
+    tapGuardMs: guard,
+    schedule,
+    page: phonePage,
+    onSaveError: (error) => console.warn('could not save the life in the room:', error),
+  });
+  return {
+    game: roundStore({ sessions: counted, tapGuardMs: guard, basket }),
+    rooms: roomStore,
+    sessions: counted,
+    store,
+    saving: saving ?? ALWAYS_SAVING,
+    account: account ?? offlineAccount,
+    saves: saves ?? NO_SAVES,
+    community: community ?? NO_COMMUNITY,
+    canSignIn: account !== undefined && account !== offlineAccount,
+    introduceTabs: introduceTabs === true,
+    language: language ?? kvLanguage,
+    now: now ?? Date.now,
+    track,
+    basket,
+    tapGuardMs: guard,
+  };
 }
 
-/** The real game of this start of the app: made once, whatever is drawn again above it. */
+/** The real game of this start of the app: made once, whatever is drawn again above it, and the one cloud of it, whoever signs in or out. */
 let shared: Made | null = null;
 /** Round stores that have already asked the device for a life in progress. */
 const booted = new WeakSet<GameStore>();
@@ -179,11 +282,26 @@ function Cues({ game }: { game: GameStore }) {
 }
 
 /**
- * Holds the game for every screen under it: the round store, the player's profile, and the words
- * of the language in use. It opens the life in progress, if there is one, as soon as it mounts.
+ * Holds the game for every screen under it: the round store, the player's profile, the words of the language in use, and the cloud. It
+ * opens the life in progress, if there is one, as soon as it mounts. Started again (`restart`, when the player signs out) it is drawn anew
+ * over a new round store, as the web's page is loaded again: the cloud is the same one, and the account in it starts a new guest.
  */
 export function GameProvider({ children, services }: { children: ReactNode; services?: Services }) {
   const [made] = useState(() => (services ? make(services) : (shared ??= make(phoneServices()))));
+  const [started, setStarted] = useState(0);
+  const restart = useCallback(() => {
+    made.game = roundStore(made);
+    setStarted((count) => count + 1);
+  }, [made]);
+  return (
+    <Started key={started} made={made} restart={restart}>
+      {children}
+    </Started>
+  );
+}
+
+function Started({ made, restart, children }: { made: Made; restart: () => void; children: ReactNode }) {
+  const [game] = useState(() => made.game);
   const [locale, setLocaleState] = useState<Locale>(() => localeOf(made.language.read(), phoneLanguages()));
   const [timeZone] = useState(() => getCalendars()[0]?.timeZone ?? undefined);
   const [profile, setProfile] = useState<Profile>(newProfile);
@@ -212,22 +330,80 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
         })
         .catch(() => undefined);
     };
-    if (!booted.has(made.game)) {
-      booted.add(made.game);
-      void made.game.getState().boot();
+    const lookForRoom = () => void made.rooms.getState().boot().catch((error: unknown) => console.error('the room could not be looked for:', error));
+    if (!booted.has(game)) {
+      booted.add(game);
+      void game.getState().boot();
+      lookForRoom();
     }
     refresh(true);
-    const stop = made.game.subscribe((state, before) => {
+    const stop = game.subscribe((state, before) => {
       // The game opening is not a life ending: the lives were read as the provider mounted, and are not read again for it (the profile is, for what opening a life tells it).
       if (before.status === 'booting') refresh(false);
       else if (state.status !== before.status || state.view?.finished !== before.view?.finished) refresh(true);
       else if (state.view !== before.view) refresh(false);
+      const ended = lifeEnded(state, before);
+      if (ended) made.track(ended);
+    });
+    const stopRooms = made.rooms.subscribe((state, before) => {
+      const began = gameBegan(state.room, before.room);
+      if (began) made.track(began);
+    });
+    // Back from Google: a member now, the guest kept their account. Still a guest with a notice, they did not.
+    const kept = () => {
+      const state = made.account.state();
+      if (state.kind === 'member' || (state.kind === 'guest' && state.notice !== null)) {
+        if (kvKeeping.take() && state.kind === 'member') made.track({ name: 'account_kept' });
+      }
+    };
+    kept();
+    // What the account brings from another device: a life is opened as the device now has it, the rest is read again. The same life under a
+    // new id is opened too, with nothing to tell the player: nothing of it changed.
+    const stopSaves = made.saves.onDeviceChanged((what) => {
+      if (what === 'game') void game.getState().reopen();
+      else if (what === 'renamed') void game.getState().boot();
+      else refresh(true);
+    });
+    // The game asks the device for its life before anyone is signed in. A ranked life the device has only a note of has nothing to show until the
+    // server can be asked for it: the device is asked again when someone signs in, unless a life is already open.
+    let signedIn = made.account.state().kind !== 'offline';
+    const stopAccount = made.account.subscribe(() => {
+      kept();
+      const now = made.account.state().kind !== 'offline';
+      const landed = now && !signedIn;
+      const changed = now !== signedIn;
+      signedIn = now;
+      if (landed && game.getState().status !== 'playing') void game.getState().boot();
+      // The rooms are the account's: whoever is now signed in, or nobody, has their own.
+      if (changed) lookForRoom();
     });
     return () => {
       mounted = false;
       stop();
+      stopRooms();
+      stopSaves();
+      stopAccount();
     };
-  }, [made, holdProfile, holdRuns]);
+  }, [made, game, holdProfile, holdRuns]);
+
+  const setLocale = useCallback(
+    (next: Locale) => {
+      made.language.write(next);
+      setLocaleState(next);
+    },
+    [made],
+  );
+
+  // Someone signing in on this phone brings the language of their account with them.
+  useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, setLocale), [made, locale, setLocale]);
+
+  // The player is signed in as a guest in the background. The game does not wait for it and does not need it. Started again (after signing out),
+  // a new guest is.
+  useEffect(() => {
+    void made.account.start(locale);
+    // Once for each start: a change of language is not a new player.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [made]);
 
   const reload = useMemo(
     () => () => {
@@ -238,13 +414,6 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   // Made again only when the language changes: every screen that reads them is not drawn again with each step of the profile.
   const words = useMemo<Words>(() => ({ content, ...textFor(locale), fmt: formatFor(locale) }), [locale]);
-  const setLocale = useCallback(
-    (next: Locale) => {
-      made.language.write(next);
-      setLocaleState(next);
-    },
-    [made],
-  );
   const changeProfile = useCallback(
     (change: (profile: Profile) => Profile) => {
       // Shown at once, then merged into what the device holds: the profile is never written over whole,
@@ -256,7 +425,8 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   );
   const value = useMemo<Game>(
     () => ({
-      game: made.game,
+      game,
+      inRoom: false,
       reload,
       store: made.store,
       saving: made.saving,
@@ -267,29 +437,56 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
       setLocale,
       changeProfile,
     }),
-    [made, words, locale, reload, setLocale, changeProfile],
+    [made, game, words, locale, reload, setLocale, changeProfile],
+  );
+  const cloud = useMemo<Cloud>(
+    () => ({ rooms: made.rooms, account: made.account, saves: made.saves, community: made.community, track: made.track, store: made.store, canSignIn: made.canSignIn, restart }),
+    [made, restart],
   );
   const { reducedMotion, sound } = profile.settings;
   const settings = useMemo(() => ({ reducedMotion, sound }), [reducedMotion, sound]);
   const finished = useMemo(() => ({ runs }), [runs]);
   return (
-    <GameContext.Provider value={value}>
-      <SettingsContext.Provider value={settings}>
-        <ProfileContext.Provider value={profile}>
-          <RunsContext.Provider value={finished}>
-            <WordsProvider locale={locale} timeZone={timeZone}>
-              <ReducedMotionProvider value={reducedMotion}>
-                <SoundProvider on={sound}>
-                  <Cues game={made.game} />
-                  {children}
-                </SoundProvider>
-              </ReducedMotionProvider>
-            </WordsProvider>
-          </RunsContext.Provider>
-        </ProfileContext.Provider>
-      </SettingsContext.Provider>
-    </GameContext.Provider>
+    <CloudContext.Provider value={cloud}>
+      <GameContext.Provider value={value}>
+        <SettingsContext.Provider value={settings}>
+          <ProfileContext.Provider value={profile}>
+            <RunsContext.Provider value={finished}>
+              <WordsProvider locale={locale} timeZone={timeZone}>
+                <ReducedMotionProvider value={reducedMotion}>
+                  <SoundProvider on={sound}>
+                    <Cues game={game} />
+                    {children}
+                  </SoundProvider>
+                </ReducedMotionProvider>
+              </WordsProvider>
+            </RunsContext.Provider>
+          </ProfileContext.Provider>
+        </SettingsContext.Provider>
+      </GameContext.Provider>
+    </CloudContext.Provider>
   );
+}
+
+/**
+ * Shows the screens under it a round store of their own: a life in a room, beside the device's own
+ * life in progress, on the same screens. What the life earns reaches the profile, and its sounds
+ * play, as for any life.
+ */
+export function GameScope({ game, children }: { game: GameStore; children: ReactNode }) {
+  const parent = useGameContext();
+  const { reload } = parent;
+  const play = useSound();
+  useEffect(
+    () =>
+      game.subscribe((state, before) => {
+        if (state.view !== before.view || state.status !== before.status) reload();
+        for (const cue of cuesFor(state, before)) play(cue);
+      }),
+    [game, reload, play],
+  );
+  const value = useMemo<Game>(() => ({ ...parent, game, inRoom: true }), [parent, game]);
+  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 }
 
 function useGameContext(): Game {
@@ -304,6 +501,8 @@ function held<T>(value: T | null): T {
   return value;
 }
 
+const useCloud = (): Cloud => held(useContext(CloudContext));
+
 /** A slice of the round on screen. The component redraws when that slice changes. */
 export function useGame<T>(select: (state: RoundState & RoundActions) => T): T {
   return useStore(useGameContext().game, select);
@@ -317,6 +516,17 @@ export function useKnows(): (key: string) => boolean {
   const rules = useGame((s) => s.rules);
   return (key) => rulesKnow(rules, key);
 }
+
+/** The room the player is in, as this phone follows it. */
+export const useRooms = (): RoomStore => useCloud().rooms;
+
+/** A slice of the room the player is in. The component redraws when that slice changes. */
+export function useRoom<T>(select: (state: RoomStoreState & RoomActions) => T): T {
+  return useStore(useCloud().rooms, select);
+}
+
+/** True for the screens of a life in a room. */
+export const useInRoom = (): boolean => useGameContext().inRoom;
 
 /** The clock the date is read by, in milliseconds: the phone's own, unless the game was given another (a scene's, held at one day). */
 export const useClock = (): (() => number) => useGameContext().now;
@@ -379,9 +589,109 @@ export function useGuide() {
   };
 }
 
+const NOBODY: AccountState = { kind: 'offline' };
+
+/** Whether the account has tried to sign in yet: before, nobody being signed in says nothing. */
+export function useAccountSettled(): boolean {
+  const { account } = useCloud();
+  return useSyncExternalStore(account.subscribe, () => account.settled?.() ?? true, () => false);
+}
+
+/**
+ * Who is playing, as the cloud knows them, and what a player can do about it. Google is opened over the app and comes back to it
+ * (`online/browser.ts`): the calls resolve once it has, as the web's resolve once the page has left for it.
+ */
+export function useAccount(): { state: AccountState; keepWithGoogle(): Promise<boolean>; useExistingAccount(): Promise<boolean>; dismissNotice(): void; signOut(): Promise<boolean> } {
+  const { account, store, restart } = useCloud();
+  const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  return {
+    state,
+    keepWithGoogle: async () => {
+      // Noted before the browser opens, because the account may be kept (and counted, as the provider hears it) before the call resolves.
+      kvKeeping.set();
+      const kept = await account.keepWithGoogle(BACK_FROM_GOOGLE, openForGoogle);
+      // A trip that came to nothing leaves no note behind for a later sign-in to be counted by.
+      if (!kept) kvKeeping.take();
+      return kept;
+    },
+    useExistingAccount: () => {
+      // Signing in to an account that was already a player's is not keeping this one: a note left by a trip the app did not see end is not this.
+      kvKeeping.take();
+      return account.useExistingAccount(BACK_FROM_GOOGLE, openForGoogle);
+    },
+    dismissNotice: () => account.dismissNotice(),
+    // What the account keeps goes from this device with it, so that the guest who comes next does not take it into an account of their own: the
+    // life in progress, the finished ones and the progress. Only the settings stay. Signing in with Google again brings it all back. Then the game
+    // starts again, as the web's page is loaded again, and a new guest with it.
+    signOut: async () => {
+      const settings = (await store.loadProfile()).settings;
+      if (!(await account.signOut())) return false;
+      await store.clearGame();
+      for (const run of await store.listRuns()) await store.removeRun(run.runId);
+      await store.saveProfile({ ...newProfile(), settings });
+      restart();
+      return true;
+    },
+  };
+}
+
+/**
+ * Whether the phone has a way to sign in: a project to sign in to. The web has no such question (a browser always can); a line that tells a guest
+ * to sign in (`challenge.needsAccount`) is not drawn on a phone that cannot: a player is never told to do what the app cannot.
+ */
+export const useCanSignIn = (): boolean => useCloud().canSignIn;
+
+/**
+ * The other players: the rankings, the player's name, whom they follow. Null while nobody is
+ * signed in. It is asked again whenever who is signed in changes.
+ */
+export function useCommunity(): Community | null {
+  const { account, community } = useCloud();
+  // Who is signed in decides whether there is anyone to ask: read here so that a change of it draws the screen anew.
+  useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  return community();
+}
+
+/**
+ * Whether a new life can be a ranked one, played by the server: `yes` when someone is signed in
+ * and there is a connection; `offline` when someone is signed in and there is none, which the
+ * player is told before the life begins; `no` where there is no account at all.
+ */
+export function useRanking(): 'yes' | 'offline' | 'no' {
+  const { account } = useCloud();
+  const state = useSyncExternalStore(account.subscribe, account.state, () => NOBODY);
+  const connected = useSyncExternalStore(phoneConnection.subscribe, phoneConnection.connected, () => true);
+  if (state.kind === 'offline') return 'no';
+  return connected ? 'yes' : 'offline';
+}
+
+/**
+ * How the account's copy of the player's things stands, and the different life waiting there, if
+ * there is one, with the two things a player can do about it.
+ */
+export function useAccountSaves(): { status: CloudSaving; offer: AccountLife | null; takeOffer(): Promise<boolean>; declineOffer(): Promise<void> } {
+  const { saves } = useCloud();
+  const { game } = useGameContext();
+  const status = useSyncExternalStore(saves.subscribe, saves.status, () => 'off' as const);
+  const offer = useSyncExternalStore(saves.subscribe, saves.offer, () => null);
+  return {
+    status,
+    offer,
+    takeOffer: async () => {
+      const taken = await saves.takeOffer();
+      // The player asked for it: the life is opened as the device now has it, with nothing to explain.
+      if (taken) await game.getState().boot();
+      return taken;
+    },
+    declineOffer: () => saves.declineOffer(),
+  };
+}
+
+/** Counts something the player did (`events.ts`): for the screens, at the moment it succeeded. */
+export const useTrack = (): Track => useCloud().track;
+
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
 export function useSaving(): boolean {
   const { saving } = useGameContext();
   return !useSyncExternalStore(saving.subscribe, saving.degraded, () => false);
 }
-

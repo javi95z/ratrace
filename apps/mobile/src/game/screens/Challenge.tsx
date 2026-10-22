@@ -174,7 +174,7 @@ export function WeeklyChallenge() {
 
       <ReadText size={13} tone="ink-200" lineHeight={13 * SNUG}>{t('about')}</ReadText>
 
-      {/* An attempt is the server's to play: it needs someone signed in. The web tells a guest to sign in; the phone has no way to until phase 3, so it says nothing of it. */}
+      {/* An attempt is the server's to play: it needs someone signed in. The web tells a guest to sign in; a phone with no project to sign in to says nothing of it. */}
       {ranking !== 'yes' && canSignIn ? (
         <Notice bg="night-700" tone="ink-200" size={13}>
           {t('needsAccount')}

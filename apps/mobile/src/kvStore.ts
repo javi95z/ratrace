@@ -233,3 +233,47 @@ export const kvText: KeptText = {
   getItem: (key) => Storage.getItemSync(key),
   setItem: (key, value) => Storage.setItemSync(key, value),
 };
+
+/** Noted while a guest is away at Google keeping their account (the web's sessionStorage note), so the account kept is counted once. */
+const KEEPING = 'ratrace:keeping-account';
+
+/** The note of a guest gone to keep their account. A phone that keeps nothing simply counts nothing. */
+export const kvKeeping = {
+  set: (): void => {
+    try {
+      Storage.setItemSync(KEEPING, '1');
+    } catch {
+      // Nothing: the account is kept all the same, only not counted.
+    }
+  },
+  /** True once, if the note was there: it is taken away as it is read. */
+  take: (): boolean => {
+    try {
+      const was = Storage.getItemSync(KEEPING) !== null;
+      if (was) Storage.removeItemSync(KEEPING);
+      return was;
+    } catch {
+      return false;
+    }
+  },
+};
+
+/** Where the phone notes whose account it last saw signed in, under the web's key: for the language of an account to follow a sign-in. */
+const LAST_ACCOUNT = 'ratrace.lastAccount';
+
+export const kvLastAccount = {
+  read: (): string | null => {
+    try {
+      return Storage.getItemSync(LAST_ACCOUNT);
+    } catch {
+      return null;
+    }
+  },
+  write: (userId: string): void => {
+    try {
+      Storage.setItemSync(LAST_ACCOUNT, userId);
+    } catch {
+      // A phone that keeps nothing: the language is simply not brought over on its next sign-in.
+    }
+  },
+};

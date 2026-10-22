@@ -2,7 +2,7 @@ import { follow } from '@ratrace/online/follow';
 import type { AccountState } from '@ratrace/online/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { appState, network } from '../testing/fakes';
-import { phonePage, whileActive } from './page';
+import { phoneConnection, phonePage, whileActive } from './page';
 
 /*
  * What the phone tells the account of itself, as a browser tells it of a page (apps/web/src/online/index.ts, `browserPage`): the connection come
@@ -150,5 +150,33 @@ describe('the session renewed while the app is in front', () => {
     stop();
     appState.set('background');
     expect(told).toEqual([false, true]);
+  });
+});
+
+describe('whether there is a connection now', () => {
+  it('is read as the phone says it, and every change of it is told, as a browser tells `online` and `offline`', async () => {
+    network.connected = false;
+    const told = vi.fn();
+    // Not yet known is not "no".
+    const stop = phoneConnection.subscribe(told);
+    await settled();
+    expect(phoneConnection.connected()).toBe(false);
+    expect(told).toHaveBeenCalledTimes(1);
+    network.set(true);
+    expect(phoneConnection.connected()).toBe(true);
+    network.set(true);
+    expect(told).toHaveBeenCalledTimes(2);
+    network.set(false);
+    expect(phoneConnection.connected()).toBe(false);
+    expect(told).toHaveBeenCalledTimes(3);
+    // The phone is listened to only while someone listens here.
+    stop();
+    expect(network.listeners.size).toBe(0);
+    network.set(true);
+    expect(told).toHaveBeenCalledTimes(3);
+    // Listened to again, it is asked again.
+    kept(phoneConnection.subscribe(() => undefined));
+    await settled();
+    expect(phoneConnection.connected()).toBe(true);
   });
 });
