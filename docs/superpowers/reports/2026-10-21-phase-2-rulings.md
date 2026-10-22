@@ -1,0 +1,137 @@
+# Phase 2: the calls made on the user's behalf
+
+Every ruling recorded while phase 2 ran (plan docs/superpowers/plans/2026-10-21-expo-phase-2-solo-game.md), in order, each with what it costs if wrong, and the deferred minors by the phase they belong to. Copied from the run's ledger before it was deleted.
+
+## Rulings
+
+- Ruling A: a scene with a sheet open is drawn by each client's scene registry as the screen with that sheet's component rendered open (the same component the screen opens, given its open state through the screen's own initial-state prop or by rendering the sheet beside it), never by a scripted tap — the app driver only opens deep links — cost if wrong: a sheet's opening path is not shot; its own tests still cover it.
+- Ruling B: everything that wires stores/sessions for dev and scene routes lives in `apps/mobile/src/testing/` (outside `app/`, `ui/`, `game/screens/`); `app/scene.tsx` and the dev button import only that module; the wall test stays as strict for screens — cost if wrong: one dev-only module with session internals, never reached by a player.
+- Ruling C: T10 adds `CoinTargets` and modifies `Hud.tsx` to register the cash target; T8's Hud carries no coin code — cost if wrong: one extra file touched in T10.
+- Task 2: Ruling: Step 5 proved on /dev through GameProvider→LocalSessions→loadBundledRules, not /play (placeholder until T9) — cost if wrong: none, T20's whole-life run covers /play.
+- Task 4: Ruling: LineChart antialiased, against the plan's "antialiasing off" — the web's PriceChart svg has no crispEdges (Finance.tsx:411-416), so off would build a parity gap — cost if wrong: one prop.
+- Task 4: Ruling: Sparks/Bars/Slider take the web components' props (colours/reach/delayMs/size; {zero,bars}; valueText) over the plan's sketch — the web twin's API is the binding one — cost if wrong: renames.
+- Task 4: Ruling: Slider vertical-scroll capture re-graded Minor→Important (a person scrolling a sheet would change an amount).
+- Task 4: Ruling: motion-2's 1369 shape px (1-device-px rings on transformed edges, chart AA, tear ⅔ pt) documented in the phase 2 report and put to the user for acceptance at phase end, not blocking — cause verified as platform (RN views have no edge AA) — cost if wrong: the user asks for an edge treatment later.
+- Task 5: Ruling: accepted deviations — core session/fixed.ts (web wall forbids core/testing from session internals; inert pure fns), compareShots signature, r6 = sixth round (view.round 5), play-cards-r1 with one card answered.
+- Task 5: Ruling: re-graded Important (by effect): web scene page may sign a guest into live Supabase via layout GameProvider when a 3021 server is reused (standing rule); registry can't carry sheet (load-bearing T6–19); outcome/resolve unbuildable as scenes (load-bearing T11,T16); scene-shots has no verdict/guard.
+- Ruling (before T6): the web shows every guest the week's challenge card and a practice-only Challenge page that plays offline (Challenge.tsx:118,207-227; RoomCard hides itself with no rooms service) — so phase 2 ports WeeklyChallengeCard + Challenge (practice only) in T6 instead of leaving a parity gap on Home; plan amended — cost if wrong: one screen ported early, its online parts still phase 3.
+- Task 6: Ruling R1: phone-only words allowed under a `phone.*` i18n namespace where the web's words are false or impossible on a phone (lostNewer, notSaved, movedGone, legal); messages.test counts apps/mobile/src as a user — the "no new i18n key" constraint was written for parity, not to tell phone players to reload a tab — cost if wrong: a handful of keys to fold back in phase 5.
+- Task 6: Ruling R2: the phone's legal notice states what phase 2's app does (kept on this phone, no account, nothing sent); the user reviews the wording at phase end — cost if wrong: text changes before any store release (phase 4 rewrites it for online anyway).
+- Task 6: Ruling R3: VISIBLE_HEIGHT shot rule stays (web's 62 pt extra under min-h-dvh + safe area is a web layout matter for dev, flagged as a separate task); web scene pressing its gear for home-settings = the one exception to Ruling A (HomeSettingsSheet not exported) — cost if wrong: one scene opened differently on the web.
+- Task 6: Ruling: GameProvider refresh re-render (Task 3 code) fixed inside T6's round since T6's screens are the first to sit on it.
+- Task 7: Ruling: accepted residuals — dice emoji 2 pt low and ▾▴ arrows (platform glyph, phase 1 class), CSS/device offsets ≤0.67 pt, no FlatList (≤20 rows, measured, nested-in-ScrollView), staged locked list, PHONE_PAGES for legal — cost if wrong: small visible offsets in the dice/arrows.
+- Task 7: Ruling: synthetic italics = parity defect with a remedy (build-time oblique fonts via fontTools shear 0.25, OFL RFN respected) done kit-wide now since 5 later screens use italic.
+- Task 7: Ruling: accepted-residuals record in shot tooling re-graded Important (T20 needs a clean full run).
+- Task 8: Ruling: away strip shows when the portrait row leaves the phone's scroll area (62 pt "earlier" than the web's standalone viewport, whose row passes under the opaque safe-area band) — the phone's behaviour equals the web in a browser tab and avoids copying a 62 pt blank — cost if wrong: one offset.
+- Task 8: Ruling: hud-crisis/hud-jailed on fixed seeds screen-seed-10/15 (real game states, not doctored saves); text check skips clipped screen-reader-only text (records only tightened).
+- Task 9: Ruling: Android Back on Play uses router.dismissTo('/') over the plan's replace('/') — replace stacks two Homes (found in T6) — cost if wrong: none.
+- Ruling (before T11): insert a debugging task "blank sprites" (systematic-debugging, reproduce in the app outside shots, find the cause, fix with a test) after T10's review and before T11 — every later screen draws sprites, and a player-visible blank icon breaks the spec's "same look" — cost if wrong: one investigation.
+- Task 10: Ruling: no rarity glow on the phone — verified the web's .frame box-shadow overrides the glow class (compiled CSS order; web shot shows none) — put to the user at phase end whether to restore it on both — cost if wrong: a glow added later on both.
+- User (2026-10-21 ~19:15): speed up — no web/app simulator shots per task, leave them for later. Ruling: from T11 on, scenes are registered but not shot (PENDING_SHOTS); two batch parity passes (after T15, with the release-build perf checkpoint moved there from T12; and T20) shoot, compare and fix. Plan amended. Cost if wrong: parity drift found later, fixed in batches.
+- Ruling (speed, user's request): T11 review runs in parallel with T12's implementation (read-only reviewer + one implementer); a T11 fix round, if any, waits for T12 to finish — cost if wrong: a fix round rebased on T12.
+- Task 11: Ruling: all seven declared deviations accepted (web spring snap-back, instant taken choice → Minor, cancelled swipe picks nothing, cards-three with hidden locked fourth, render-count via inert changes, scenes take no touch, r1 cause unproven).
+- Task 11: Ruling: card career/city links grow the layout 11–13 pt below the link (only cards with such a link; no scene) — the 44 pt rule and no-stealing beat 12 pt of parity; overlap would steal the irreversible pick — cost if wrong: a slightly taller card.
+- User (22:26): "va un poco lento". Pace since no-shots: ~1 h per task + 30–40 min review/fix. Ruling: three lanes in separate git worktrees, all from d986495 — lane A (main worktree, branch expo): T13→T14→T15 (Finance); lane B (.worktrees/expo-b, branch expo-lane-b): T17→T18 (Profile/Balance/WorthGraph → End); lane C (.worktrees/expo-c, branch expo-lane-c): T16→T19 (Resolve/Moments → Records/Collection). Controller rebases lanes onto expo after each reviewed task and resolves append-only conflicts (scenes.ts, registries, PENDING_SHOTS, PlayStandIns, parity doc). Cost if wrong: merge work on shared lists.
+- Task 13: review Needs fixes — Important: switch link underlined only on its first line (ru 360 wraps). Ruling: folded into T14's implementer (same file, lane A) as its own commit with a kit LinkText shared by Cards' Link — T14's review checks it — cost if wrong: one review covers two scopes.
+- Task 13: Ruling: debt name cut to one line as the web (`truncate`); mortgage-switch tests written from web code; ru tests by text (jsdom) — accepted.
+- Ruling: the phone must not show a raw key — use a `phone.realNetWorth` key until dev restores the web's label, then switch on rebase; web bug flagged as a separate task (chip task_220dbead) — cost if wrong: one key to fold back.
+- Task 16: review Approved (no Important). Ruling: coins land on Resolve's own CashCount as the web (brief said HUD) — web is binding.
+- Task 17: review Needs fixes — Important: raw key end.realNetWorth shown to the player (against ruling); Things list → thing swaps two nested Modals in one commit (iOS risk). Ruling: folded into T18's implementer (same lane worktree) as its own commit, with Leave once-guard; T18's review checks it.
+- Ruling (speed): lanes merge once at the end (after T15, T18, T19 and their reviews) by one merge agent — unions on shared lists, stub swaps (WorkPanelStub → T14 WorkPanel, WorthGraphStub → T17 WorthGraph), keep T14's item pieces over T17's — cost if wrong: one larger merge.
+- Task 14: review Needs fixes — Important: LinkText draws every link twice (null start state). Ruling: folded into T15's implementer (same worktree) with minors (move undo via tab test, Lifestyle tab render count, TeaseUse dead code, laptop test).
+- Task 14: Ruling: accepted — TeaseUse null with no room, focusNote.ts name, PlayStandIns.test deleted, ReadText onLines, Work.tsx tests are faithful web ports.
+- Task 19: review Needs fixes — Important: ListScreen FlatList on defaults (windowSize 21, unstable renderItem) and untested; scene determinism test 21.6 s of 30 s under load. Fix round 1 sent to T19 implementer in lane C with 10 minors. Ruling: challenge route kept (ported solo screen), not redirected as the brief said.
+- Task 18: review Needs fixes — Important: share.failed says "browser" on a phone. Ruling: invite line restored — on iOS Share.share({url,message}) carries file + invite to the web game's site (as the web), Android file only via expo-sharing — cost if wrong: invite address changes when a store link exists (phase 4). Fix round 1 sent (+ replace('/new'), pending thing cleared, share in-flight guard, cache folder emptied, prized assertion, typeface retry, Rising shared).
+- Task 15: review Approved (no Important). Ruling: shelf 2 per row (current web) over the plan's stale 3/5; shelf staged, not FlatList (nested scroll can't window) → measure. Polish round sent to lane A (memo Shelf, reveal by visible shelf, Residency guard, AmountSheet one-confirm guard for all users, shared Figure, test titles, ru Taxes test, LinkText render).
+- Ruling (controller): store each finished life under its own KV key on the phone (with migration from the single runs value) to bring finances→resolve under 200 ms with many lives; fling frame drops measured on a device later (simulator Metal XPC).
+- Ruling: batch-1 review fixes go into batch pass 2 (after the decisions task), which re-shoots the PENDING scenes (glow, buttons, ru-360) anyway — cost if wrong: none.
+- Decisions: review Needs fixes — Important: ResilientStore.listRuns clones whole list (JSON on phone) on every step via tellProfile + refresh as life ends (above the probe); Android read permissions removable via blockedPermissions. Ruling: ResilientStore opt-in {freshReads:true} (phone only, web unchanged) + tellProfile avoids the whole list off life's end; folded into batch pass 2 (A10) with minors (share/save race, stale saved message, readRun log copy, cold-start measure, Guide/Room frame shadows, web kit test compile).
+- Ruling: keep the mic/background-audio removal (the app records nothing; fewer store permissions); sheets in the web's order. Escape age shown two ways (HUD 36 vs sheet 38; end 52 vs 50) in shared code → debug task (core/web on expo branch, per decision 4) in parallel with the batch-2 review.
+- Ruling: T20's small code diff (two fixes) is reviewed inside the final whole-branch review, not separately — cost if wrong: none (the final review reads every hunk).
+- Final: Ruling: deferred minors to later phases per the triage (device pass in phase 3/4: sprite dispose, slider lift/cancel, sheet 600 ms fallback, flings; accessibility pass before the store in phase 4; phase 3: bundle-failure logging, moved/movedGone with sync); Moments repeat after Home→Continue (web too) → user later.
+
+## The user's decisions
+
+- User (2026-10-21): continue thoroughly; everything tested; performance adequate; UI as close as possible to the web adapted to mobile → plan gained performance budgets (Global Constraints), a render-count test per screen task, a release-build checkpoint in T12, budgets in T20 (commit 281cf36).
+- User (2026-10-21 ~19:15): speed up — no web/app simulator shots per task, leave them for later. Ruling: from T11 on, scenes are registered but not shot (PENDING_SHOTS); two batch parity passes (after T15, with the release-build perf checkpoint moved there from T12; and T20) shoot, compare and fix. Plan amended. Cost if wrong: parity drift found later, fixed in batches.
+- User (22:26): "va un poco lento". Pace since no-shots: ~1 h per task + 30–40 min review/fix. Ruling: three lanes in separate git worktrees, all from d986495 — lane A (main worktree, branch expo): T13→T14→T15 (Finance); lane B (.worktrees/expo-b, branch expo-lane-b): T17→T18 (Profile/Balance/WorthGraph → End); lane C (.worktrees/expo-c, branch expo-lane-c): T16→T19 (Resolve/Moments → Records/Collection). Controller rebases lanes onto expo after each reviewed task and resolves append-only conflicts (scenes.ts, registries, PENDING_SHOTS, PlayStandIns, parity doc). Cost if wrong: merge work on shared lists.
+- User (2026-10-22): continue the whole roadmap on branch expo, as clean and polished as possible, no errors; don't stop until done; if the session limit hits, wait for the reset.
+- User decisions (2026-10-22): (1) restore the rarity glow on both web and app — yes; (2) phone legal wording — later; (3) accept the motion-2 exception (1-device-px AA ring on transformed edges, smooth chart lines) — yes; (4) fix the web's own bugs on the expo branch — yes: screens' px-3 text-[14px] on Button losing to the Button's own px-4 text-[17px]; balance sheet's raw key end.realNetWorth (then the phone uses the web's key, phone.realNetWorth dropped); (5) Save Image in the share sheet with a photo-library permission — yes.
+- User (2026-10-22): no Android emulator for now — Android checks stay deferred (phase 4 at the latest).
+
+## Deferred minors
+
+- Task 1: minor (deferred): trim() may dispose an SkImage a just-committed holder renders for one frame (defer dispose or check on device >24 MiB)
+- Task 1: minor (deferred): fresh-state-on-forget (spriteImages ~70) not pinned by a test
+- Task 1: minor (deferred): settle() calls width() before notifying; a throw leaves the sprite loading
+- Task 1: minor (deferred): architecture storage fixture passes only by IndexedDB/indexedDB case
+- Task 1: minor (deferred): placeOf misses relative imports from mobile src into packages/core/src (inherited from web)
+- Task 2: minor (deferred): engines.node >=22 but bundle require() in tests needs >=22.12
+- Task 2: minor (deferred): loadBundledRules swallows a bundle's evaluation error silently (warn it)
+- Task 2: minor (deferred): rules.ts warns but leaves index requiring missing files if web rules folder absent
+- Task 2: minor (deferred): tsc parses 18 copied bundle .js (exclude src/rules/v*.js)
+- Task 2: minor (deferred): stale-copy removal in rules.ts main() untested
+- Task 2: minor (deferred): dev "begin it" overwrites a life in progress without a hint
+- Task 3: minor (deferred): mobile tsconfig paths maps @/ui/sound → web file; Metro honours tsconfig paths, so a stray @/ui/sound in app code would bundle the web synth (add a wall line or a test-only d.ts)
+- Task 3: minor (deferred): phoneBasket entry filter untested (array with bad entries)
+- Task 3: minor (deferred): Cues unmount/remount not tested
+- Task 3: minor (deferred → carry to T9): phone vitest glob's `app` segment can't match (tests can't sit in app/); route/shell tests must live under game/ or the glob gets src/*.test.*
+- Task 3: minor (deferred): render.test (1/2),(2/2) order-dependent
+- Task 3: minor (deferred): architecture.test wording/check covers STORAGE_FILES[0] only of three
+- Task 4: minor (deferred): loop-with-delay reset untested (testing/reanimated.ts:62)
+- Task 4: minor (deferred): chart geometry copied thrice (web kit/charts.tsx, mobile, test) with no check against Finance.tsx/WorthGraph.tsx
+- Task 4: minor (deferred): inline `rest` rebuilds the mapper each render (animations.tsx:95,123)
+- Task 4: minor (deferred): Slider writes a ref during render (Slider.tsx:36)
+- Task 4: minor (deferred): kit-shots.ts:181 shadows `all`
+- Task 4: minor (deferred → carry to T10): Slider onFinalize can't tell lift from cancel; a native scroll cancelling under 10 pt reads as a tap — verify one real vertical swipe on the track in a scrolling sheet on device
+- Task 4: minor (deferred): Sticky test "lead scrolls away" checks containment on ROW, weak
+- Task 4: minor (deferred): parity doc says "verified" for blendedEdges (permissive); price-line AA cause not spelled out
+- Task 4: minor (deferred): 12 pt under stuck second row "take no touch" unverified
+- Task 5: minor (deferred): bots.find(...) as Bot unchecked (scenes.ts:94)
+- Task 5: minor (deferred): PLANS and SCENES two sources of names
+- Task 5: minor (deferred): ids/seeds/clock line thrice (fixed.ts, web render.tsx, mobile memoryServices.ts) held by a source-text test
+- Task 5: minor (deferred → T6 fixes it): scene.test.tsx:79 asserts placeholder 'THE RAT RACE'
+- Task 5: minor (deferred): cross-engine (V8 vs Hermes) identity of scenes untested; shots would reveal it
+- Task 5: minor (deferred): scene-shots wiring (wrongPage throw, exitCode, unjudged skip) untested; shotDrivers clock test is a source-order grep
+- Task 5: minor (deferred): kept-host log records HTTP aborts only, not sockets
+- Task 5: minor (deferred): STAND_INS + sceneShots "all unjudged" assertion must both be edited per ported screen
+- Task 5: minor (deferred): scene.test console.error spy not restored on failure; theoretical mounted/effect race
+- Task 5: minor (deferred): kit-shots not re-run end to end after shared driver change
+- Task 6: minor (deferred): abandon failure swallowed after sheets close (Settings.tsx:370-372) — matches web? check in final
+- Task 6: minor (deferred): Sheet unmounts mid-dismissal if iOS dismissal >600 ms (overlay.tsx:46,72-80)
+- Task 6: minor (deferred): phone.movedGone "ended on another device" impossible in phase 2 (no sync)
+- Task 6: minor (deferred → user at phase end): phone.legal "this phone only"/"deleting the app deletes them" ignores iCloud/Android Auto Backup (allowBackup unset) and OS crash reports
+- Task 6: minor (→ carried into T7 as tooling): scene-shots has no "phone words" category, so home-lost-newer and legal make every full run exit 1
+- Task 6: minor (deferred): messages phone-keys test matches last key segment only (weak guard)
+- Task 6: minor (deferred): no test drives a life to its end and checks useRuns() gets the run
+- Task 6: minor (deferred): onTextLayout attached to nearly every iOS text (small per-layout cost)
+- Task 6: minor (deferred): first frame of held paragraphs drawn with lines=1 → ~2 pt jump on long pages
+- Task 7: minor (deferred): SrOnly + hidden city row may be read twice by VoiceOver (unverified)
+- Task 7: minor (deferred): legal baseline ±10 % too loose (tighten to 2–3 %)
+- Task 7: minor (deferred): shootApp docblock detached by SPRITES_MS (shotDrivers.ts:198-209)
+- Task 7: minor (deferred): ACCEPTED bounds aggregate; no ratchet when a residual is fixed
+- Task 7: minor (deferred): CareerPreview selected state on a non-accessible listitem View
+- Task 8: minor (deferred): JAIL_TAG copies Tag geometry (19) — derive from TIGHT
+- Task 9: minor (deferred → carry to T11): play-cards-r1 once advanced past its card during a full scene run, unexplained, not reproduced — T11 must make cards scenes deterministic and find the cause
+- Task 9: minor (deferred): TEXT_BOXES walk on every page (guard with a [data-motion-only] query)
+- Task 9: minor (deferred): sprite readiness tracking runs in production (negligible)
+- Task 9: minor (deferred): readyServer fresh:true may accept a stale ready=1
+- Task 9: minor (deferred): useQuietFault restore may overwrite an intervening console.error wrapper
+- Task 9: minor (deferred): render.test.tsx:104 hard-codes 400
+- Task 9: minor (→ carry to T10): architecture rule that the only fetch( in apps/mobile/src is the dev scene channel (backs the legal notice)
+- Task 10: minor (→ carry to T11): Celebrations VoiceOver announce on iOS + `accessible` on Unlocked; AmountSheet amount live region + iOS announce on chips; FlyingCoins cancelled() check before adding a flight; CoinTargets doc: sources scoped by page-wide names (Outcome/Resolve use their own `from`); architecture "sends nothing" scan add packages/engine, content, i18n roots and stray .js under src
+- Task 10: minor (deferred): RARITY_GLOW used only by a test
+- Blank sprites: minor (→ carry to T12, re-graded: guard worth it, a crash in release if serialization ever breaks): Canvas.tsx:12-15 worklet guard `if (api?.requestRedraw === undefined) return;`; Canvas.test mock should run the worklet synchronously so deleting the deferral fails; widen the one-Canvas rule (import variants, require, index.ts, scripts) or an ESLint no-restricted-imports; fix comments (two hand-overs); parity doc still names removeFromSuperview.
+- Blank sprites: minor (→ batch pass): more loaded full runs; inspect play-pageturn diff of run 3; two worklets stand-ins
+- Task 11: minor (deferred): two links on one option wrapping would shrink the first's box (no such option today); hitSlop null assertions can't fail; stale concern 3 text in report
+- Task 12: minor (deferred → batch pass): Sticky JS mirror y not refreshed when a mark moves (call mirror on mark change); Sprite memo comparator untested (game tests stub Sprite); Toast drawn flag held in useMemo (use ref); useAnimatedScrollHandler built in every plain Screen
+- Task 13: minor (→ batch pass): measure market/property tab switch vs 150 ms (17–22 canvases mount); BuySheet once/each-round re-keys AmountSheet Modal (iOS flash?); ru Property tab layout
+- Task 13: minor (deferred): margin cap/gear preview arithmetic in both clients (future engine quoteGear); render-count test keyed on fmt.change; aria-haspopup not carried (accessibilityHint); Finance.tsx size
+- Task 16: minor (→ T20 measure): useCountUp setState per frame on JS thread (low effect; ReText would lose PixelText runs) — measure on release build
+- Task 16: minor (→ user, web too): Moments `done` is component state on both clients — a crash moment can repeat after resume/Home→Continue; fix belongs in core store (by gameId) for both
+- Task 16: minor (deferred): unknown Reach.player id passes silently (throw); ≤25 ledger rows only in a comment; duplicate assertion Resolve.test:284-285
+- Task 16: minor (→ batch pass): two Modals at once (legendary + escape) order on iOS; moment picture clipped under ~292 pt sheets
+- Task 17: minor (deferred): layout helpers in screen files (webLine, shrunkTo, PAY_DROP, bannerSize, Figure duplicated) → ui/; whole-file vi.mock in Profile.test; profile subscribed ≤600 ms while closing
+- Task 18: minor (→ merge/batch): ShareCard.tsx:175 JSDoc still says web's words; site.ts new URL() throws if EXPO_PUBLIC_SITE_URL set but empty (trim/default like LEGAL_*); guard release after failure/dismissal untested
+- Task 19: minor (deferred): Collection.test pageOf picks first onLayout node; liveThrough throw untested; report body lines superseded not annotated
+- Task 15: minor (deferred → batch): shelfOn seed test can't fail independently; Figure doc "at the Row's size" vs default 15; AmountSheet refuse-then-retry not tested end to end; report concern 4/item 5 stale text
