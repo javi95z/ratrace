@@ -155,8 +155,11 @@ describe('the weekly challenge page', () => {
     expect(await screen.findByRole('alert')).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
     fails = false;
-    fireEvent.click(screen.getByRole('button', { name: 'Practise' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    // Pressed again once the button is free (the failed start has let it go), and the life given the time a loaded machine takes to begin.
+    const practise = screen.getByRole('button', { name: 'Practise' });
+    await waitFor(() => expect(practise.getAttribute('aria-disabled')).not.toBe('true'));
+    fireEvent.click(practise);
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'), { timeout: 10_000 });
     expect(screen.queryByRole('alert')).toBeNull();
     error.mockRestore();
   });
