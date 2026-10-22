@@ -559,6 +559,10 @@ describe('the list of scenes', () => {
       'challenge-played',
       'end-standing',
       'new-ranked',
+      'room-door',
+      'room-lobby-friends',
+      'room-lobby-public',
+      'room-join-code',
     ]);
   });
 
@@ -591,7 +595,7 @@ describe('the screen a scene is drawn on', () => {
     expect(screenOf({ name: 'play-finance-r6', locale: 'en' })).toBe('play');
     expect(screenOf({ name: 'home-new', locale: 'es' })).toBe('home');
     expect(screenOf({ name: 'legal', locale: 'en' })).toBe('legal');
-    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'records', 'collection', 'settings', 'rankings', 'player']));
+    expect(new Set(SCENES.map(screenOf))).toEqual(new Set(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'records', 'collection', 'settings', 'rankings', 'player', 'room']));
   });
 });
 

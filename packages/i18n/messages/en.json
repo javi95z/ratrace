@@ -2101,6 +2101,8 @@
     "pictureSaved": "Saved to your photos.",
     "saveRefused": "The Rat Race may not add to your photos. You can allow it in Settings.",
     "saveFailed": "The picture could not be saved.",
-    "opensLife": "Shows the whole of this life"
+    "opensLife": "Shows the whole of this life",
+    "roomOtherVersion": "That game plays another version. Update the app and try again.",
+    "roomOtherRules": "This game plays another version. Update the app to play it."
   }
 }

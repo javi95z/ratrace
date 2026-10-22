@@ -1564,3 +1564,27 @@ them with an initial state or a press: the registries draw the screens as they o
 - **A choice's count in the sheet of all of them** follows the choice after a space (the web's `ml-1`, 4 px).
 - **The week's result at the end of an attempt** (`ChallengeResult`) has no scene: a ranked life ends on the server, which a scene has none of.
 - **The quick game after a life alone** (`VersusOthers`) comes with Task 9's quick game, and its scenes with it.
+
+## Phase 3, Task 9: the games with others, from the door to the lobby (shots pending)
+
+Not shot in its task: the four scenes are in `PENDING_SHOTS`, unjudged until phase 3's batch pass (Task 14) shoots and compares them. Both registries
+give the game the same table (`packages/core/src/testing/sceneRooms.ts`: the core's `RoomsLink`, answering the same every time and taking nothing),
+and the same player signed in, `Rata_Uno` (`sceneCloud.ts`), so the lobby shows the way to name oneself ("Change"). Every scene is a device with no life.
+
+| scene | what it is | how it is opened |
+|---|---|---|
+| room-door | the way in: the three lines, the pace, the quick game with "2 games are looking for players right now", a game of one's own, the code to type | none |
+| room-lobby-friends | a game among friends the player opened: code `K7Q2XM`, the engineer, 3:00 a round, the rules, three seats (the player as host, `Bea_7`, `Rat C3D4`), Start | none |
+| room-lobby-public | a public game played together, the nurse: its clock "Starts in 1:35" (by the server's clock, `startsAt` 95 s after the room's `now`), two seats, Start now | none |
+| room-join-code | the door come by an invitation's link: the code and the one button that joins it | the web's page puts `code=K7Q2XM` in its address before it draws the door (which reads it there); the phone's Room is given it (`code`, as its route's `?code=`) |
+
+- **The clock counts down from the moment each side drew it**: both start at 1:35 and count once a second; a shot a second later on one side reads 1:34.
+  The batch pass compares the line's shape, not its last digit.
+- **The clock is drawn once a second** on the phone (the web four times a second), and only the clock: it is a leaf of its own (`StartsIn`).
+- **Both ways out of a lobby among friends are there** on the phone, Share and Copy link: the web shows Share only where its browser has a share sheet
+  (`navigator.share`), so its shot may show Copy link alone. The phone's sheet is React Native's `Share` with the web's words (`room.inviteText`) and the web's link
+  (`SITE_URL/<locale>/room?code=`): beside the words on iOS, at their end on Android.
+- **Two refusals in the phone's words**: a game on rules the app lacks says to update the app (`phone.roomOtherVersion`, `phone.roomOtherRules`) where
+  the web says to reload the page. No scene shows them.
+- **A sheet rises over the keyboard** on both platforms (`KeyboardAvoidingView` in the sheet's window): the lobby's name sheet has the first field in a
+  sheet. To be seen on both.

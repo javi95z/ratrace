@@ -22,7 +22,7 @@ import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
-import { useCommunity, useGame, useProfile, useRanking, useRuns, useT, useWords } from '../context';
+import { useCommunity, useGame, useProfile, useRanking, useRoom, useRuns, useT, useTrack, useWords } from '../context';
 import { BackLink } from './BackLink';
 import { ChallengeResult } from './Challenge';
 import { LifeLine } from './LifeLine';
@@ -386,6 +386,9 @@ function Ended({ view, extra }: { view: GameView; extra?: ReactNode }) {
             </Raised>
           </Panel>
 
+          {/* A life alone that ends with an account and no game going offers one against others. In a room, the room says what is next. */}
+          {extra ? null : <VersusOthers />}
+
           <View style={{ gap: 12, paddingTop: 8 }}>
             <ShareCard ops={picture} fileName={`rat-race-${lifeId.replace(/_/g, '-')}-${score.total}.png`} alt={share('alt', { life: lifeName, score: fmt.number(score.total) })} opened={opened.share === true} />
             {/* Another life takes the place of this screen; the front door is wherever it stands in the stack. */}
@@ -497,5 +500,38 @@ function UnlockedLife({ lifeId }: { lifeId: string }) {
         </View>
       </Framed>
     </Rising>
+  );
+}
+
+/** After a life alone, for a player with an account and no game going: the same kind of life, against others, in one press. */
+function VersusOthers() {
+  const t = useT('end');
+  const track = useTrack();
+  const router = useRouter();
+  const status = useRoom((s) => s.status);
+  const busy = useRoom((s) => s.busy);
+  const quick = useRoom((s) => s.quick);
+  if (status !== 'none') return null;
+  return (
+    <Panel title={t('versusTitle')} label={t('versusTitle')}>
+      <ReadText size={14} tone="ink-200" lineHeight={14 * SNUG}>{t('versusAbout')}</ReadText>
+      <View style={{ marginTop: 12 }}>
+        <Button
+          variant="secondary"
+          wide
+          disabled={busy}
+          onPress={() => {
+            // Seated or not, the rooms' page says how it went: the lobby, or why not.
+            void quick().then((joined) => {
+              if (joined) track({ name: 'game_join', via: 'quick' });
+              router.push('/room');
+            });
+          }}
+        >
+          <Sprite id="icon.multiplayer" />
+          {t('versusQuick')}
+        </Button>
+      </View>
+    </Panel>
   );
 }

@@ -31,6 +31,11 @@ const MEMBERS: Readonly<Record<string, SceneMember>> = {
   'player-editor-body': RATA,
   'player-editor-wear': RATA,
   'player-editor-scene': RATA,
+  // The games with others (`sceneRooms`): the same player, at the table.
+  'room-door': RATA,
+  'room-lobby-friends': RATA,
+  'room-lobby-public': RATA,
+  'room-join-code': RATA,
 };
 
 /** The member a scene is played by, or null for a scene with nobody signed in. */

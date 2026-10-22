@@ -15,6 +15,7 @@ import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenO
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
+import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { content, progressOf } from '@ratrace/content';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -37,6 +38,7 @@ import { RivalsBoard } from '@/game/screens/Rivals';
 import { PlayerProfile } from '@/game/screens/PlayerProfile';
 import { useRankName } from '@/game/screens/RankCard';
 import { RatEditor } from '@/game/screens/RatEditor';
+import { Room } from '@/game/screens/Room';
 import { Panel } from '@/ui/kit';
 import { Legal } from './Legal';
 
@@ -415,6 +417,24 @@ function PlayerScene({ scene }: { scene: Scene }) {
 }
 
 /**
+ * The games with others at the scene's table (`sceneRooms`). The web's door reads an invitation's code from the page's address, once it is drawn: a
+ * scene come by one (`room-join-code`) has the page put the code in its address first, as the link would, then draws the door. The phone's registry
+ * gives the code to its screen, as its route does.
+ */
+function RoomScene({ scene }: { scene: Scene }) {
+  const code = sceneInvite(scene.name);
+  const [ready, setReady] = useState(code === undefined);
+  useEffect(() => {
+    if (code === undefined) return;
+    const address = new URL(window.location.href);
+    address.searchParams.set('code', code);
+    window.history.replaceState(null, '', address);
+    setReady(true);
+  }, [code]);
+  return ready ? <Room /> : null;
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same.
  * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
  */
@@ -439,6 +459,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   settings: (scene) => <Settled sheet={scene.sheet}><Home /></Settled>,
   rankings: (scene) => <RankingsScene scene={scene} />,
   player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerScene scene={scene} />),
+  room: (scene) => <RoomScene scene={scene} />,
 };
 
 /**
@@ -503,7 +524,10 @@ export default function ScenePage({ searchParams }: { searchParams: Promise<{ na
     // The other players of a scene of the game online (the rankings', the front door's, the challenge's, an end's, a new life's), the same as the
     // phone's scene gives its screen (`sceneCommunity`): no cloud.
     const community = sceneCommunity(scene.name);
-    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: { ...sceneServices(store, scene.name), ...(community ? { community: () => community } : {}), ...cloudOf(scene.name) } }));
+    // The table of a scene of the games with others, the same as the phone's scene gives its game (`sceneRooms`): never the project's.
+    const rooms = sceneRooms(scene.name);
+    const table = rooms ? { rooms: () => rooms } : {};
+    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: { ...table, ...sceneServices(store, scene.name), ...(community ? { community: () => community } : {}), ...cloudOf(scene.name) } }));
     return () => {
       current = false;
     };

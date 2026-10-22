@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { EXTRA, COLORS } from './theme';
-import { sheetsGone } from './back';
+import { letHeldTurnsGo, sheetsGone } from './back';
 import { Sheet, Tabs, Toast } from './overlay';
 import { Picker } from './Picker';
 import { rea } from './testing/reanimated';
@@ -13,6 +13,10 @@ import { TapProvider } from './tap';
 // The Modal is told how it is used (transparent, no animation of its own) and what Back does. It shows its children while
 // it is visible, as every platform's does; telling that it has dismissed (iOS's onDismiss) is the test's to do.
 const modal = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
+// And the box that leaves the keyboard its room: what it was told.
+const avoiding = vi.hoisted(() => [] as Array<Record<string, unknown>>);
+// And the keyboard put away.
+const keyboard = vi.hoisted(() => ({ dismissed: 0 }));
 const platform = vi.hoisted(() => ({ OS: 'web' }));
 vi.mock('react-native', async () => {
   const rn = await vi.importActual<Record<string, unknown> & { Platform: object }>('react-native-web');
@@ -20,6 +24,11 @@ vi.mock('react-native', async () => {
     ...rn,
     Platform: { ...rn.Platform, get OS() { return platform.OS; } },
     AccessibilityInfo: { isReduceMotionEnabled: () => Promise.resolve(false), addEventListener: () => ({ remove() {} }) },
+    Keyboard: { dismiss: () => void (keyboard.dismissed += 1) },
+    KeyboardAvoidingView: (props: { children: React.ReactNode } & Record<string, unknown>) => {
+      avoiding.push(props);
+      return <div data-testid="keyboard-room">{props.children}</div>;
+    },
     Modal: (props: { children: React.ReactNode; visible?: boolean } & Record<string, unknown>) => {
       modal.props = props;
       return <div data-modal data-visible={String(props.visible !== false)}>{props.visible === false ? null : props.children}</div>;
@@ -47,6 +56,8 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  // A sheet taken away open holds its turn a moment on the phone: let it go before the next test.
+  letHeldTurnsGo();
   vi.useRealTimers();
 });
 
@@ -64,6 +75,63 @@ function sheet(props: Partial<React.ComponentProps<typeof Sheet>> = {}) {
   );
   return onClose;
 }
+
+test('a sheet rises over the keyboard on every platform: its window is its own, which nothing else makes smaller for it', () => {
+  for (const os of ['ios', 'android']) {
+    platform.OS = os;
+    avoiding.length = 0;
+    sheet();
+    expect(avoiding.at(-1)).toMatchObject({ behavior: 'padding', style: { flex: 1 } });
+    const room = screen.getByTestId('keyboard-room');
+    expect(room.contains(screen.getByText('inside'))).toBe(true);
+    expect(room.contains(document.body.querySelector('[data-testid="sheet-backdrop"]'))).toBe(true);
+    cleanup();
+    act(() => void vi.runOnlyPendingTimers());
+  }
+});
+
+test('a sheet puts the page\'s keyboard away as it opens: a field focused on the page never stays over the sheet', () => {
+  keyboard.dismissed = 0;
+  sheet({ open: false });
+  expect(keyboard.dismissed).toBe(0);
+  cleanup();
+  sheet();
+  expect(keyboard.dismissed).toBe(1);
+});
+
+test('a sheet the page takes away while it is shown keeps its turn until its Modal has gone: no other is presented while it is dismissed', () => {
+  function Page({ first }: { first: boolean }) {
+    return first ? (
+      <Sheet key="first" open onClose={() => {}} title="First" closeLabel="Close">
+        <p>first</p>
+      </Sheet>
+    ) : (
+      <Sheet key="second" open onClose={() => {}} title="Second" closeLabel="Close">
+        <p>second</p>
+      </Sheet>
+    );
+  }
+  for (const [os, ms] of [['ios', 600], ['android', 100]] as const) {
+    platform.OS = os;
+    const { rerender, unmount } = render(<Page first />);
+    expect(screen.getByText('first')).toBeTruthy();
+    // The screen changes under it (a room started, or left): the first is taken away whole, the second opens in the same moment.
+    rerender(<Page first={false} />);
+    expect(screen.queryByText('first'), os).toBeNull();
+    expect(screen.queryByText('second'), os).toBeNull();
+    act(() => void vi.advanceTimersByTime(ms - 1));
+    expect(screen.queryByText('second'), os).toBeNull();
+    act(() => void vi.advanceTimersByTime(1));
+    expect(screen.getByText('second'), os).toBeTruthy();
+    unmount();
+    act(() => void vi.runOnlyPendingTimers());
+  }
+  // Where a Modal is gone the moment it is taken away (react-native-web), the next is shown at once.
+  platform.OS = 'web';
+  const { rerender } = render(<Page first />);
+  rerender(<Page first={false} />);
+  expect(screen.getByText('second')).toBeTruthy();
+});
 
 test('a sheet that is not open draws nothing', () => {
   sheet({ open: false });
@@ -574,6 +642,8 @@ test('a sheet drawn inside another is presented by it, at once; and one closed b
   const waiting = render(<Two first={false} second />);
   waiting.rerender(<Two first={false} second={false} />);
   cleanup();
+  // The first, taken away while shown, holds its turn until it has gone (`endTurnOnceGone`).
+  act(() => void vi.runOnlyPendingTimers());
   // Nothing left waiting: a sheet opened next is shown at once.
   render(<Wrapper open />);
   expect(screen.getByText('inside')).toBeTruthy();

@@ -5,6 +5,7 @@ import { FAULTS, PAGE_TURN_HELD_MS, runScene, SCENE_NOW, sceneBasket, sceneCloud
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud as memberCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
+import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -35,6 +36,7 @@ import { RivalsBoard } from '../game/screens/Rivals';
 import { PlayerProfile } from '../game/screens/PlayerProfile';
 import { useRankName } from '../game/screens/RankCard';
 import { RatEditor } from '../game/screens/RatEditor';
+import { Room } from '../game/screens/Room';
 import type { RatGroup } from '../game/screens/RatEditor';
 import { Panel } from '../ui/kit';
 import { KEYFRAMES } from '../ui/motion';
@@ -284,6 +286,8 @@ export const SCENE_SCREENS: SceneScreens = {
   settings: () => <><Home /><HomeSettingsSheet open onClose={nothing} /></>,
   rankings: (scene) => <RankingsScene scene={scene} />,
   player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerProfile copied={scene.name === 'player-friend-code'} />),
+  // The games with others, at the scene's table (`sceneRooms`); one come by an invitation is given its code as the route gives it (`?code=`).
+  room: (scene) => <Room code={sceneInvite(scene.name)} />,
 };
 
 /**
@@ -299,12 +303,15 @@ export function servicesOf(scene: Scene, store: Awaited<ReturnType<typeof sceneS
   // The other players of a scene of the game online (the rankings', the front door's, the challenge's, an end's, a new life's), the same as the web's
   // page gives its screen (`sceneCommunity`).
   const community = sceneCommunity(scene.name);
+  // The table of a scene of the games with others, the same as the web's page gives its game (`sceneRooms`).
+  const rooms = sceneRooms(scene.name);
   return {
     ...speaking(memoryServices(store), scene.locale),
     now: () => SCENE_NOW,
     ...(basket ? { basket } : {}),
     ...sceneCloud(scene.name),
     ...(community ? { community: () => community } : {}),
+    ...(rooms ? { rooms: () => rooms } : {}),
     ...cloudOf(scene),
   };
 }

@@ -2,9 +2,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CONTENT_VERSION } from '@ratrace/content';
+import { ENGINE_VERSION } from '@ratrace/engine';
 import type { Account, Community } from '@ratrace/online/types';
 import { cleanup, screen, waitFor } from '@testing-library/react';
-import type { ReactElement } from 'react';
 import { afterEach, expect, test } from 'vitest';
 import AuthRoute from '../app/auth';
 import CollectionRoute from '../app/collection';
@@ -15,6 +16,7 @@ import RoomRoute from '../app/room';
 import { routerNow } from '../testing/fakes';
 import { GameProvider } from './context';
 import { memoryServices, params, renderGame, router } from '../testing/render';
+import { roomServer } from '../../../web/src/testing/roomServer';
 
 // Beside app/, not in it: every file there is a route.
 afterEach(cleanup);
@@ -49,12 +51,17 @@ test('the player\'s own profile is its own screen', () => {
   expect(screen.getByRole('heading', { name: 'Your profile' })).toBeTruthy();
 });
 
-test('the pages of the game with others go home: no solo screen leads to them, and the phone plays offline', () => {
-  for (const route of [<RoomRoute key="room" />] as ReactElement[]) {
-    const { container } = renderGame(route, memoryServices());
-    expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/');
-    cleanup();
-  }
+test('the games with others are their own screen, which says they need an account where there is none, and is opened on the invitation a link carries: `theratrace://room?code=`', async () => {
+  renderGame(<RoomRoute />, memoryServices());
+  expect(await screen.findByText('Multiplayer needs an account and a connection.')).toBeTruthy();
+  cleanup();
+  const rooms = roomServer();
+  const opened = await rooms.ask('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', { action: 'open', lifeId: 'nurse', seconds: 180, engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION });
+  const code = (opened.body.room as { code: string }).code;
+  params.code = code.toLowerCase();
+  renderGame(<RoomRoute />, { ...memoryServices(), rooms: () => rooms.link('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'), schedule: () => () => {} });
+  const invitation = await screen.findByRole('region', { name: 'You are invited to the game' });
+  expect(invitation.textContent).toContain(code);
 });
 
 test('Google\'s way back to the app, should Android hand it to the router, goes back to where the player was, or home: nothing of it is read or exchanged', () => {
