@@ -88,6 +88,10 @@ describe('the games with others of a scene', () => {
     ]);
   });
 
+  it('draw the ledger of room-resolved with motion left out, as the ledger alone is: its wheel and a promotion\'s confetti turn for ever', async () => {
+    expect((await (await sceneStore('room-resolved')).loadProfile()).settings.reducedMotion).toBe(true);
+  });
+
   it('play the one round of room-resolved on the engine, and the room turns with it', async () => {
     const rooms = createRoomStore({ link: () => sceneRooms('room-resolved'), store: memoryDevice(), content, lives, versions: VERSIONS, schedule: () => () => undefined });
     await rooms.getState().boot();

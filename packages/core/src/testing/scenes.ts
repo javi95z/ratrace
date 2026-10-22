@@ -476,6 +476,8 @@ const STILL: ReadonlySet<string> = new Set([
   'play-resolve-r6', 'moment-escape', 'moment-bankrupt', 'moment-crisis',
   // The word that the player is being taken into their account blinks for as long as it is said.
   'home-account-taken',
+  // A round of a game with others played to its ledger: as the ledger alone, and a promotion's confetti falls for ever.
+  'room-resolved',
 ]);
 
 /**
