@@ -203,8 +203,9 @@ class RankedSession implements GameSession {
       await this.persist(reply.run);
       const had = this.ofGallery.length;
       const news = await this.learn();
-      // The run was written before the profile could say which gallery badges this life earned: write it again with them.
-      if (reply.run && this.ofGallery.length !== had) await this.persist(reply.run);
+      // The run was written before the profile could say which gallery badges this life earned: write it again with them. Only the run: the
+      // note of the life written with it is the same as before.
+      if (reply.run && this.ofGallery.length !== had) await this.persistRun(reply.run);
       return { view, events: reply.events, earned: news.earned, unlocked: news.unlocked };
     };
     const result = this.tail.then(run, run);
@@ -234,6 +235,15 @@ class RankedSession implements GameSession {
       if (run) await this.store.addRun(this.asRun(run));
       await this.store.saveGame(this.game);
       this.stored = this.game.updatedAt;
+    } catch (error) {
+      this.deps.onSaveError?.(error);
+    }
+  }
+
+  /** Writes the finished life's record again, as it now stands. A failure is reported and otherwise ignored. */
+  private async persistRun(run: RankedRun): Promise<void> {
+    try {
+      await this.store.addRun(this.asRun(run));
     } catch (error) {
       this.deps.onSaveError?.(error);
     }

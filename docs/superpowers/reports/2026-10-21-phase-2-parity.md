@@ -1188,7 +1188,7 @@ words on both) and holds its other words to their baseline. Each line judged bey
 
 **The twenty-seven waiting** (the badges' glow, the balance's words, the buttons a screen sizes, the guide's ring, the picture's sheet) were shot first:
 26 clean or within their records, `finance-tabs-ru-360` differed (above). The records kept while they waited are confirmed at the numbers they had:
-`play-guide-r1` 3453, `finance-buy-stock` 149, `finance-taxes` 31, `finance-business` 35, `profile-r6` 30, `end-share` 5084/5085 (record 5100).
+`play-guide-r1` 3453, `finance-buy-stock` 149, `finance-taxes` 31, `finance-business` 35, `profile-r6` 30, `end-share` 5084/5085 (record 5100, tightened in the fix round to 5090: the most measured, 5085, and 5 for the web's own picture, which moved the count by one pixel in four runs).
 `celebrate-earned` and `celebrate-legendary` are clean with their glow; `balance-r6` is clean in the web's words ("After inflation" on both);
 `finance-tabs-ru-360` is clean (its savings line whole beside buttons of 13). `PENDING_SHOTS` is empty.
 

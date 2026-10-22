@@ -31,13 +31,23 @@ const isBytes = (value: unknown): boolean => value instanceof ArrayBuffer || Arr
  */
 export function installClone(): void {
   const before = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone');
-  const theirs = (): Clone | undefined => (before?.get ? (before.get.call(globalThis) as Clone | undefined) : (before?.value as Clone | undefined));
-  const clone = (value: unknown, options?: { transfer?: unknown[] }): unknown => {
+  const install = () => Object.defineProperty(globalThis, 'structuredClone', { value: clone, writable: true, configurable: true, enumerable: true });
+  // Read once, when first needed, and kept. Expo's getter (expo/src/winter/installGlobal.ts, `defineLazyObjectProperty`) puts what it loads on the
+  // global as a plain value as it is read: the JSON clone is put back at once, or every clone of the game after that one would be Expo's again.
+  let theirs: Clone | undefined | null = null;
+  const previous = (): Clone | undefined => {
+    if (theirs === null) {
+      theirs = before?.get ? (before.get.call(globalThis) as Clone | undefined) : (before?.value as Clone | undefined);
+      install();
+    }
+    return theirs;
+  };
+  function clone(value: unknown, options?: { transfer?: unknown[] }): unknown {
     if (options?.transfer !== undefined || isBytes(value)) {
-      const other = theirs();
+      const other = previous();
       if (other) return other(value, options);
     }
     return jsonClone(value);
-  };
-  Object.defineProperty(globalThis, 'structuredClone', { value: clone, writable: true, configurable: true, enumerable: true });
+  }
+  install();
 }

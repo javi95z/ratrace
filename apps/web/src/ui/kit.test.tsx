@@ -164,7 +164,11 @@ describe('choices with pictures', () => {
 
 describe('a frame and a shadow of its own', () => {
   it('are never two classes of one element: the frame\'s box-shadow comes after a `shadow-*` or `ring-*` in the stylesheet and takes its place, so a frame names what it stands in as `--glow`', () => {
-    const FRAMES = ['frame', 'bevel', 'sunk', 'frame-raised', 'lamp', 'frame-double', 'tab'];
+    // The frames that draw `--glow` under their strips (globals.css). The other box-shadow utilities (`sunk`, `lamp`, `frame-double`, `tab`) draw
+    // none, and no element gives them a shadow of its own; one that did would need its `--glow` first.
+    const FRAMES = ['frame', 'bevel', 'frame-raised'];
+    const css = readFileSync(join(__dirname, '../app/globals.css'), 'utf8');
+    for (const name of FRAMES) expect(css.match(new RegExp(`@utility ${name} \\{[^}]*\\}`))?.[0], name).toContain('var(--glow, 0 0 #0000)');
     const files = readdirSync(join(__dirname, '..'), { recursive: true, encoding: 'utf8' }).filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file));
     const both: string[] = [];
     for (const file of files) {

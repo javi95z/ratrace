@@ -128,23 +128,47 @@ describe('installClone', () => {
     expect(asked).toBe(0);
   });
 
-  it('leaves to the clone that was there what JSON cannot copy, as a library asks it: a buffer moved from one stream to another, bytes', () => {
+  it('leaves to the clone that was there what JSON cannot copy, as a library asks it, and stays the clone after Expo\'s has been read', () => {
     const seen: Array<[unknown, unknown]> = [];
+    let loaded = 0;
     const theirs = (value: unknown, options?: unknown) => {
       seen.push([value, options]);
       return value;
     };
-    Object.defineProperty(globalThis, 'structuredClone', { get: () => theirs, configurable: true, enumerable: true });
+    // Expo's getter as Expo writes it (expo/src/winter/installGlobal.ts, `defineLazyObjectProperty`): read once, it loads the clone and puts it on
+    // the global as a plain value, in place of the getter.
+    Object.defineProperty(globalThis, 'structuredClone', {
+      get: () => {
+        loaded += 1;
+        Object.defineProperty(globalThis, 'structuredClone', { value: theirs, configurable: true, enumerable: true, writable: true });
+        return theirs;
+      },
+      configurable: true,
+      enumerable: true,
+    });
     installClone();
+    const ours = globalThis.structuredClone;
+    expect(ours).not.toBe(theirs);
+    expect(loaded).toBe(0);
     // Expo's streams (the web streams polyfill), where Hermes has no `ArrayBuffer.prototype.transfer`.
     const buffer = new Uint8Array([1, 2, 3]).buffer;
     expect(globalThis.structuredClone(buffer, { transfer: [buffer] })).toBe(buffer);
+    expect(globalThis.structuredClone).toBe(ours);
     const bytes = new Uint8Array([4, 5]);
     expect(globalThis.structuredClone(bytes)).toBe(bytes);
+    expect(globalThis.structuredClone).toBe(ours);
     expect(seen).toEqual([
       [buffer, { transfer: [buffer] }],
       [bytes, undefined],
     ]);
+    // Read once, and kept.
+    expect(loaded).toBe(1);
+    // The game's plain data still through JSON: a copy, not theirs.
+    const value = { a: 1 };
+    const copy = globalThis.structuredClone(value);
+    expect(copy).toEqual(value);
+    expect(copy).not.toBe(value);
+    expect(seen).toHaveLength(2);
     // JSON would have made the buffer an empty object.
     expect(jsonClone(buffer)).toEqual({});
   });

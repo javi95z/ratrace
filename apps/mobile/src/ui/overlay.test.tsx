@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { EXTRA, COLORS } from './theme';
@@ -520,6 +521,31 @@ test('two sheets opened side by side take turns, as iOS presents one Modal at a 
   expect(shownSheets()).toEqual(['first inside']);
   expect(modals()).toEqual(['true']);
   rerender(<Two first={false} second={false} />);
+  expect(modals()).toEqual([]);
+});
+
+test('Android Back closes the sheet that is shown, and the one waiting its turn shows then', () => {
+  platform.OS = 'android';
+  function Kept() {
+    const [open, setOpen] = useState({ first: true, second: true });
+    return (
+      <>
+        <Sheet open={open.first} onClose={() => setOpen((now) => ({ ...now, first: false }))} title="First" closeLabel="Close">
+          <span>first inside</span>
+        </Sheet>
+        <Sheet open={open.second} onClose={() => setOpen((now) => ({ ...now, second: false }))} title="Second" closeLabel="Close">
+          <span>second inside</span>
+        </Sheet>
+      </>
+    );
+  }
+  render(<Kept />);
+  expect(shownSheets()).toEqual(['second inside']);
+  // Back is the shown Modal's `onRequestClose`: the second closes, and the first takes its turn.
+  act(() => (modal.props!.onRequestClose as () => void)());
+  expect(shownSheets()).toEqual(['first inside']);
+  act(() => (modal.props!.onRequestClose as () => void)());
+  expect(shownSheets()).toEqual([]);
   expect(modals()).toEqual([]);
 });
 

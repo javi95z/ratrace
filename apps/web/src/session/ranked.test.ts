@@ -222,7 +222,14 @@ describe('a ranked life, as the game plays it', { timeout: 120_000 }, () => {
       const session = await d.sessions.start('nurse', { ranked: true });
       await play(session, buyAt);
       while (session.view().phase === 'cards') await session.answerCard(0);
+      // What the step writes: on the last round, the life's note once, and its record twice (again with the gallery's badge).
+      const writes: string[] = [];
+      const { saveGame, addRun } = d.store;
+      d.store.saveGame = (game) => (writes.push('saveGame'), saveGame(game));
+      d.store.addRun = (run) => (writes.push(`addRun ${run.badges.includes('twenty_items') ? 'with' : 'without'} the gallery's badge`), addRun(run));
       const round = await session.playRound({ orders: [{ type: 'buyItem', itemId: 'watch_casio' }] });
+      Object.assign(d.store, { saveGame, addRun });
+      if (buyAt === content.rounds - 1) expect(writes).toEqual(['addRun without the gallery\'s badge', 'saveGame', 'addRun with the gallery\'s badge']);
       expect(round.earned, `bought in round ${buyAt}`).toContain('twenty_items');
       expect(session.badges()).toContain('twenty_items');
       await play(session);
