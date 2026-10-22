@@ -641,10 +641,10 @@ test('the scenes of the rankings are the rankings themselves, told of the scene\
   cleanup();
   render(<SceneView name="rankings-friends" />);
   expect(await screen.findByRole('list', { name: 'Friends' }, WAIT)).toBeTruthy();
-  const friends = await screen.findByRole('region', { name: 'Your friends' }, WAIT);
-  await waitFor(() => expect(friends.textContent).toContain('MoneyRat'), WAIT);
-  expect(within(friends).getByRole('region', { name: 'Friend requests' })).toBeTruthy();
-  expect(within(friends).getByRole('region', { name: 'Requests sent' })).toBeTruthy();
+  await screen.findByText('YOUR FRIENDS', {}, WAIT);
+  expect(await screen.findByRole('button', { name: 'MoneyRat' }, WAIT)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Friend requests' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Squeak_99 Waiting' })).toBeTruthy();
   cleanup();
   render(<SceneView name="rankings-challenge" />);
   expect(await screen.findByText('40 players · the best 4 are in the top 10%', {}, WAIT)).toBeTruthy();

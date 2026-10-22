@@ -168,7 +168,7 @@ describe('the scenes of the front door beyond its first two, the challenge page 
     expect(await saveOf(await sceneStore('home-settings'))).toEqual(await saveOf(await sceneStore('home-continue')));
     expect(SCENES.find((scene) => scene.name === 'home-settings')?.sheet).toBe('settings');
     // Only a scene that names a sheet has one.
-    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail', 'profile-financed', 'rankings-nickname']);
+    expect(SCENES.filter((scene) => scene.sheet !== undefined).map((scene) => scene.name)).toEqual(['home-settings', 'new-replace', 'finance-basket', 'finance-pension', 'finance-buy-stock', 'hud-cash', 'hud-flow', 'hud-race', 'hud-status-ru', 'hud-jailed', 'hud-crisis-details', 'amount-savings', 'finance-move', 'play-cards-city', 'finance-item', 'profile-owned', 'balance-r6', 'end-share', 'records-detail', 'profile-financed']);
   });
 
   it('home-lost-newer is a life saved by a newer version of the game: the device holds it, this one cannot open it, and it is kept', async () => {

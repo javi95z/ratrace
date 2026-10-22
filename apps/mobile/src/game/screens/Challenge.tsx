@@ -5,12 +5,11 @@ import type { ChallengeRanking, Community } from '@ratrace/online/types';
 import { useRouter } from 'expo-router';
 import { memo, useEffect, useState } from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useBlink } from '../../ui/animations';
 import { sheetsGone } from '../../ui/back';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Button, Notice, Panel, Raised, Tag, Well } from '../../ui/kit';
+import { Loading } from '../../ui/Loading';
 import { Screen } from '../../ui/Page';
 import { Sheet } from '../../ui/overlay';
 import { Sprite } from '../../ui/Sprite';
@@ -245,16 +244,6 @@ export function useChallengeBoard(community: Community | null, open = true): Cha
   return answer?.to === n ? answer.board : undefined;
 }
 
-/** Something is being read (the web's `pixel animate-blink text-center text-ink-300`). */
-export function Loading() {
-  const common = useT('common');
-  const blink = useBlink();
-  return (
-    <Animated.View style={blink}>
-      <PixelText tone="ink-300" style={{ textAlign: 'center' }}>{common('loading')}</PixelText>
-    </Animated.View>
-  );
-}
 
 /**
  * The head of the ranking of this week's challenge (the web's `ChallengeBoard` down to its list): the week's life and rule, and what the ranking
@@ -263,6 +252,7 @@ export function Loading() {
  */
 export function ChallengeBoard({ board }: { board: ChallengeRanking | null | undefined }) {
   const t = useT('challenge');
+  const common = useT('common');
   const { text } = useWords();
   const week = useThisWeek();
   const ruleText = useRuleText();
@@ -281,7 +271,7 @@ export function ChallengeBoard({ board }: { board: ChallengeRanking | null | und
           </View>
         </View>
       </View>
-      {board === undefined ? <Loading /> : null}
+      {board === undefined ? <Loading>{common('loading')}</Loading> : null}
       {board === null ? <Notice role="status">{t('unreachable')}</Notice> : null}
       {board && board.rows.length === 0 ? (
         <Framed kind="frame" style={{ backgroundColor: COLORS['night-700'], padding: 12 }}>
@@ -300,7 +290,8 @@ export function ChallengeBoard({ board }: { board: ChallengeRanking | null | und
 export const ChallengeEntry = memo(function ChallengeEntry({ place, name, day, score, top, mine }: { place: number; name: string; day: string; score: string; top: boolean; mine: boolean }) {
   const t = useT('challenge');
   return (
-    <View role="listitem" accessibilityState={{ selected: mine }} aria-selected={mine}>
+    // One element for a screen reader, which says it is the player's own (the web's `aria-current`), not each of its words apart.
+    <View role="listitem" accessible accessibilityState={{ selected: mine }} aria-selected={mine}>
       <Framed kind="bevel" tone={mine ? GOLD : undefined} style={{ backgroundColor: COLORS[mine ? 'night-600' : 'night-700'], flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8 }}>
         <PixelText size={17} tone="ink-200" style={{ width: 32, flexShrink: 0, textAlign: 'right' }}>{String(place)}</PixelText>
         <View style={{ flex: 1, minWidth: 0 }}>

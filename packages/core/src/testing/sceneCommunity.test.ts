@@ -22,7 +22,8 @@ describe('the other players of a scene of the rankings', () => {
       { tab: 'all', naming: true },
     ]);
     expect(rankingsOpening('records-three')).toBeNull();
-    expect(SCENES.find((scene) => scene.name === 'rankings-nickname')?.sheet).toBe('nickname');
+    // The name's form is in the player's panel, as the web's is: no sheet. The scene's name is what opens it.
+    expect(SCENES.find((scene) => scene.name === 'rankings-nickname')?.sheet).toBeUndefined();
   });
 
   it('are on a device with no life: what the rankings show is the cloud\'s', async () => {

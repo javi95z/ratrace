@@ -2,11 +2,10 @@ import { CHALLENGE_ART, ratArt } from '@ratrace/content';
 import { ageAt } from '@ratrace/core/game/present';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 import { GOLD } from '../../ui/frames';
 import { Notice, Panel, Raised, reach, usePress } from '../../ui/kit';
-import { useBlink } from '../../ui/animations';
 import { adjustedRead } from '../../ui/fonts';
+import { Loading } from '../../ui/Loading';
 import { Screen } from '../../ui/Page';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText } from '../../ui/text';
@@ -26,6 +25,7 @@ export function Home() {
   const settings = useT('settings');
   const legal = useT('legal');
   const phone = useT('phone');
+  const common = useT('common');
   const { content, text, names } = useWords();
   // Only what the door draws: the round and the city of the life, not the whole view that changes with every step of it.
   const status = useGame((s) => s.status);
@@ -75,7 +75,7 @@ export function Home() {
 
       <View style={{ width: '100%', gap: 12 }}>
         {status === 'booting' ? (
-          <Loading />
+          <Loading>{common('loading')}</Loading>
         ) : (
           <>
             {inProgress ? (
@@ -170,16 +170,6 @@ export function Home() {
   );
 }
 
-/** The game is being opened: the device has not said whether there is a life to carry on with. */
-function Loading() {
-  const common = useT('common');
-  const blink = useBlink();
-  return (
-    <Animated.View style={blink}>
-      <PixelText tone="ink-300" style={{ textAlign: 'center' }}>{common('loading')}</PixelText>
-    </Animated.View>
-  );
-}
 
 /** The room under the last thing of the page (the web's `pb-8`). */
 const FOOT = 32;

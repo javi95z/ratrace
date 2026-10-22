@@ -1,6 +1,6 @@
 import { useCallback, useImperativeHandle, useRef } from 'react';
 import type { ReactElement, ReactNode, Ref } from 'react';
-import { FlatList, Image, ScrollView, View, type Role, type ScrollViewInstance, type ViewStyle } from 'react-native';
+import { FlatList, Image, KeyboardAvoidingView, Platform, ScrollView, View, type Role, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedScrollHandler, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import dots from '../../assets/ui/dots.png';
@@ -56,6 +56,26 @@ const columnOf = (inset: Insets, { barred = false }: { barred?: boolean } = {}):
   COLUMN,
   { paddingTop: SCREEN_TOP, paddingBottom: barred ? 16 : 16 + inset.bottom },
 ];
+
+/**
+ * How every page's scroll meets the keyboard, so that a field on a page (the rankings' name and friend code) is typed as the web's is:
+ * - a tap on a button while a field has the keyboard up is the button's, as in a browser (`handled`): the keyboard is not first put away by it,
+ *   leaving the button to be tapped again;
+ * - on iOS the scroll takes the keyboard's height off what it shows and keeps the field being typed in above it (`automaticallyAdjustKeyboardInsets`).
+ * On Android the page stands in a `KeyboardAvoidingView` (`keyboardRoom`): the app draws edge to edge, where the window is no longer made smaller for
+ * the keyboard, so the page is; and a scroll made smaller keeps its focused field in view (Android's own ScrollView does, as its size changes).
+ */
+export const KEYBOARD = { keyboardShouldPersistTaps: 'handled', automaticallyAdjustKeyboardInsets: true } as const;
+
+/** A page's scroll, on Android, in a box that leaves the keyboard its room (`KEYBOARD`); on iOS the scroll does that itself. */
+function keyboardRoom(scroll: ReactElement): ReactElement {
+  if (Platform.OS !== 'android') return scroll;
+  return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      {scroll}
+    </KeyboardAvoidingView>
+  );
+}
 
 /** What a screen can ask of the page it stands in, through `Screen`'s `scroller`. */
 export interface ScreenScroller {
@@ -137,6 +157,7 @@ export function Screen({
   const follows = onScroll !== undefined || scroller !== undefined;
   const scroll = scrollY !== undefined ? (
     <Animated.ScrollView
+      {...KEYBOARD}
       ref={scrolling as never}
       stickyHeaderIndices={sticky}
       onScroll={onScrollUi}
@@ -149,6 +170,7 @@ export function Screen({
     </Animated.ScrollView>
   ) : (
     <ScrollView
+      {...KEYBOARD}
       ref={scrolling}
       stickyHeaderIndices={sticky}
       onScroll={
@@ -167,10 +189,10 @@ export function Screen({
       {children}
     </ScrollView>
   );
-  if (fixed === undefined && !barred) return scroll;
+  if (fixed === undefined && !barred) return keyboardRoom(scroll);
   return (
     <View style={{ flex: 1 }}>
-      {scroll}
+      {keyboardRoom(scroll)}
       {bar}
       {fixed}
     </View>
@@ -233,9 +255,10 @@ export function ListScreen<T>({
     (event: { nativeEvent: { layout: { width: number } } }) => latest.current.onWidth?.(Math.min(event.nativeEvent.layout.width, SHELL_WIDTH) - 2 * GUTTER),
     [],
   );
-  return (
+  return keyboardRoom(
     <FlatList
       {...LIST_WINDOW}
+      {...KEYBOARD}
       strictMode
       data={data}
       renderItem={renderItem}
@@ -248,7 +271,7 @@ export function ListScreen<T>({
       onLayout={measured ? onLayout : undefined}
       style={scrollOf(inset)}
       contentContainerStyle={[...columnOf(inset), contentStyle]}
-    />
+    />,
   );
 }
 

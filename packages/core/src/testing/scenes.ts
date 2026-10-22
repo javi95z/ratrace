@@ -113,7 +113,7 @@ export const SCENES: readonly Scene[] = [
   { name: 'rankings-week', locale: 'en' },
   { name: 'rankings-friends', locale: 'en' },
   { name: 'rankings-challenge', locale: 'en' },
-  { name: 'rankings-nickname', locale: 'en', sheet: 'nickname' },
+  { name: 'rankings-nickname', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */

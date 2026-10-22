@@ -3,9 +3,8 @@ import { recordsOf } from '@ratrace/core/game/records';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { useBlink } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
+import { Loading } from '../../ui/Loading';
 import { Tag, usePress } from '../../ui/kit';
 import { Sheet } from '../../ui/overlay';
 import { PerfDrawn } from '../../ui/perf';
@@ -76,16 +75,6 @@ const PastLife = memo(function PastLife({ runId, lifeId, name, tag, day, score, 
 /** The room between two past lives (the web's `gap-1.5`). */
 const BETWEEN = 6;
 
-/** The page is still asking the device for its lives (the web's `pixel animate-blink text-center text-ink-300`). */
-function Loading() {
-  const common = useT('common');
-  const blink = useBlink();
-  return (
-    <Animated.View style={blink}>
-      <PixelText tone="ink-300" style={{ textAlign: 'center' }}>{common('loading')}</PixelText>
-    </Animated.View>
-  );
-}
 
 /** A line's name in the list. */
 const keyOf = (line: Line): string => line.runId;
@@ -135,7 +124,7 @@ export function Records({ opened }: { opened?: string } = {}) {
         </View>
       </View>
 
-      {runs === null ? <Loading /> : null}
+      {runs === null ? <Loading>{common('loading')}</Loading> : null}
       {runs !== null && runs.length === 0 ? (
         <Framed kind="frame" style={{ backgroundColor: COLORS['night-700'], padding: 12 }}>
           <ReadText size={14} tone="ink-200">{t('empty')}</ReadText>

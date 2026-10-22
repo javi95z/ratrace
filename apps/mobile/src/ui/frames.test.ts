@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { CREAM, GOLD, WINE, anchorsOf, resolveAnchor, stripsOf } from './frames';
+import { CREAM, GOLD, WINE, anchorsOf, cutAnchors, resolveAnchor, stripsOf } from './frames';
 
 const covers = (s: { x: number; y: number; w: number; h: number }, px: number, py: number) =>
   px >= s.x && px < s.x + s.w && py >= s.y && py < s.y + s.h;
@@ -93,4 +93,20 @@ test('stripsOf never gives a negative size', () => {
       expect(s.w).toBeGreaterThanOrEqual(0);
       expect(s.h).toBeGreaterThanOrEqual(0);
     }
+});
+
+test('a frame cut across stacked boxes: the top box draws the top edge and the sides, a middle one the sides, the bottom one the sides and the bottom edge, and together they are the whole frame', () => {
+  for (const kind of ['frame', 'bevel', 'raised', 'lamp', 'tab'] as const) {
+    const whole = anchorsOf(kind, GOLD);
+    const [top, middle, bottom] = (['top', 'middle', 'bottom'] as const).map((cut) => cutAnchors(whole, cut));
+    // Every strip is drawn by the top box or the bottom one; the sides by all three, so stacked they run the whole height.
+    expect(new Set([...top, ...bottom]), kind).toEqual(new Set(whole));
+    expect(middle, kind).toEqual(top.filter((a) => bottom.includes(a)));
+    for (const side of middle) expect(side.height, kind).toBeUndefined();
+  }
+  // A bevel: the top box has the outline's top and the lit top, never a bottom edge; the bottom box the reverse.
+  const bevel = anchorsOf('bevel', {});
+  expect(cutAnchors(bevel, 'top').filter((a) => a.bottom !== undefined && a.height !== undefined)).toEqual([]);
+  expect(cutAnchors(bevel, 'bottom').filter((a) => a.top !== undefined && a.height !== undefined)).toEqual([]);
+  expect(cutAnchors(bevel, 'middle')).toHaveLength(4);
 });
