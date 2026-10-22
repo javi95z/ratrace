@@ -248,6 +248,18 @@ describe('choosing a life', () => {
     expect(screen.queryByRole('heading', { name: en.newLife.confirmTitle })).toBeNull();
   });
 
+  it('does not warn of a life in progress for the life it is beginning, while the page is on its way out', async () => {
+    // Found by hand in the release build: between the life begun and the page replaced, the bar said the new life would be ended.
+    renderGame(<NewLife />, memoryServices());
+    fireEvent.click(await screen.findByRole('button', START));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/play'));
+    await settled();
+    expect(screen.queryByText(en.newLife.replace)).toBeNull();
+    // Nor is a second press, now that a life is in progress, the question that would end it.
+    fireEvent.click(screen.getByRole('button', START));
+    expect(screen.queryByRole('heading', { name: en.newLife.confirmTitle })).toBeNull();
+  });
+
   it('starts one life, not two, for a double tap', async () => {
     const services = memoryServices();
     const begun: string[] = [];

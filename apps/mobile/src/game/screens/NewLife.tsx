@@ -142,6 +142,8 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
   const inProgress = useGame((s) => s.status === 'playing' && s.stage !== 'end');
   const [chosen, setChosen] = useState(lives[0].id);
   const [starting, setStarting] = useState(false);
+  /** A life begun here: the page is on its way to it, and the life in progress it now sees is that one, not one to warn of. */
+  const [begun, setBegun] = useState(false);
   const [asking, setAsking] = useState(opened === 'replace');
   /** The last try to start a life came to nothing, for a reason that is not the player's. */
   const [failed, setFailed] = useState(false);
@@ -213,6 +215,7 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
     try {
       // Replaced, not pushed: the Back button must not lead here again from a life, one tap away from ending it.
       if (await start(chosen)) {
+        setBegun(true);
         if (fromSheet) await sheetsGone();
         router.replace('/play');
       }
@@ -236,13 +239,13 @@ export function NewLife({ opened }: { opened?: NewLifeOpened } = {}) {
               {t('failed')}
             </Notice>
           ) : null}
-          {inProgress ? (
+          {inProgress && !starting && !begun ? (
             <ReadText size={12} tone="wine-300" style={{ textAlign: 'center', marginBottom: 8 }}>
               {t('replace')}
             </ReadText>
           ) : null}
           {/* A life in progress is not ended by one tap: the question is asked first, and its answer sits somewhere else. */}
-          <Button variant="primary" wide disabled={starting} onPress={() => (inProgress ? setAsking(true) : void begin())}>
+          <Button variant="primary" wide disabled={starting || begun} onPress={() => (inProgress ? setAsking(true) : void begin())}>
             {t('start')}
           </Button>
         </BottomBar>
