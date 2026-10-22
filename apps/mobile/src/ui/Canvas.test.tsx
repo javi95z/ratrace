@@ -42,6 +42,19 @@ vi.mock('react-native-worklets', () => ({
     }
   },
 }));
+// A frame of the UI runtime (`requestAnimationFrame` inside a worklet): a moment later, on that thread.
+const frames = vi.hoisted(() => ({ asked: 0 }));
+vi.stubGlobal('requestAnimationFrame', (run: (at: number) => void) => {
+  frames.asked += 1;
+  return setTimeout(() => {
+    onUiThread = true;
+    try {
+      run(performance.now());
+    } finally {
+      onUiThread = false;
+    }
+  }, 1) as unknown as number;
+});
 (globalThis as unknown as { SkiaViewApi: unknown }).SkiaViewApi = {
   requestRedraw: (id: number) => told.push(`${id} asked to draw again on the ${onUiThread ? 'UI' : 'JS'} thread`),
 };
@@ -50,6 +63,7 @@ const { Canvas } = await import('./Canvas');
 
 afterEach(() => {
   told.length = 0;
+  frames.asked = 0;
   worklets.lose = false;
 });
 /** Lets every microtask and timer under way run. */
@@ -138,12 +152,15 @@ test('a canvas handed a drawing is asked to draw it once more, from the UI threa
   const { rerender } = render(<Canvas style={{ width: 8, height: 8 }}><div>first</div></Canvas>);
   await settle();
   const id = nextId - 1;
-  const once = [`drawing handed to ${id} in its commit`, `drawing handed to ${id} again`, `${id} asked to draw again on the UI thread`];
+  // Asked after both hand-overs, and again on the next frame of the UI thread: an ask let go while a drawing was under way is made once more after it.
+  const once = [`drawing handed to ${id} in its commit`, `drawing handed to ${id} again`, `${id} asked to draw again on the UI thread`, `${id} asked to draw again on the UI thread`];
   expect(told).toEqual(once);
   // Each new drawing, the same.
   rerender(<Canvas style={{ width: 8, height: 8 }}><div>second</div></Canvas>);
   await settle();
   expect(told).toEqual([...once, ...once]);
+  // One frame asked for each ask from the UI thread, not one per frame for ever.
+  expect(frames.asked).toBe(2);
 });
 
 test('a canvas whose way to Skia\'s views did not come through to the UI thread asks nothing, and the app goes on', async () => {

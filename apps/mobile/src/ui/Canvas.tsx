@@ -17,6 +17,11 @@ function drawAgain(api: ViewApi | undefined, ids: number[]): void {
   'worklet';
   if (api?.requestRedraw === undefined) return;
   for (const id of ids) api.requestRedraw(id);
+  // And once more on the next frame: an ask the canvas let go because a drawing was under way at that moment (one started by another of Skia's own
+  // asks, or a frame of the picture before it) is made again after that drawing, so the last picture handed is the last one drawn.
+  requestAnimationFrame(() => {
+    for (const id of ids) api.requestRedraw(id);
+  });
 }
 
 /** The canvases handed a drawing since the last ask: asked together, once the drawings handed to them are in. */
