@@ -138,6 +138,14 @@ export const SCENES: readonly Scene[] = [
   { name: 'room-lobby-friends', locale: 'en' },
   { name: 'room-lobby-public', locale: 'en' },
   { name: 'room-join-code', locale: 'en' },
+  // The game among friends in play (`sceneRooms`, the room's life the engine's): the news of a round under the room's bar, the paper telling of the
+  // others; the finances with the loans of the round; the ledger of a round and the room's order under it; the end, the room's order over it; and
+  // the games played with others among the records, one open.
+  { name: 'room-playing', locale: 'en' },
+  { name: 'room-loans', locale: 'en' },
+  { name: 'room-resolved', locale: 'en' },
+  { name: 'room-end', locale: 'en' },
+  { name: 'room-history', locale: 'en' },
 ];
 
 /** The screen a scene is drawn on: the first word of its name (`play-finance-r6` is drawn on `play`; a scene of a page with only one state is that word: `legal`). Each client has a registry of them. */
@@ -337,6 +345,12 @@ const PLANS: Readonly<Record<string, Reach | null>> = {
   'room-lobby-friends': null,
   'room-lobby-public': null,
   'room-join-code': null,
+  // The games with others in play, over and past (`sceneRooms`): the device has no life; the room's is the server's.
+  'room-playing': null,
+  'room-loans': null,
+  'room-resolved': null,
+  'room-end': null,
+  'room-history': null,
 };
 
 /**

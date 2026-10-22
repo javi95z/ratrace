@@ -760,3 +760,29 @@ test('the scenes of the games with others are drawn signed in, at the scene\'s t
   const invitation = await screen.findByRole('region', { name: 'You are invited to the game' }, WAIT);
   expect(within(invitation).getByText('K7Q2XM')).toBeTruthy();
 });
+
+test('the scenes of a game with others in play are drawn on the life in the room, the engine\'s: the news under its bar, its loans, its order under a ledger, its end, its games among the records', async () => {
+  render(<SceneView name="room-playing" />);
+  // Bea and Moe have played; two minutes and a half of the round by the server's clock, counted down from there.
+  expect(await screen.findByRole('button', { name: /^The game: 2:(30|2\d) left, 2 of 4 have played$/ }, WAIT)).toBeTruthy();
+  // The paper tells of Bea's coup at the top, with her rat.
+  expect(within(screen.getByRole('region', { name: 'News' })).getByText('YOUR GAME')).toBeTruthy();
+  cleanup();
+  render(<SceneView name="room-loans" />);
+  expect(await screen.findByRole('region', { name: 'Moe_Money offers you a loan' }, WAIT)).toBeTruthy();
+  expect(screen.getByText('You offer Bea_7 a loan: waiting for an answer', { exact: false })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="room-resolved" />);
+  const order = await screen.findByRole('region', { name: 'After round 6' }, WAIT);
+  expect(within(order).getAllByRole('listitem')).toHaveLength(4);
+  expect(screen.getByRole('heading', { name: 'Two years later' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="room-end" />);
+  const final = await screen.findByRole('region', { name: 'How the game ended' }, WAIT);
+  expect(within(final).getByText('Place 1 of 3')).toBeTruthy();
+  expect(within(final).getByRole('button', { name: 'Rematch' })).toBeTruthy();
+  cleanup();
+  render(<SceneView name="room-history" />);
+  const sheet = (await screen.findByRole('heading', { name: 'Software engineer' }, WAIT)).closest('[aria-modal="true"]') as HTMLElement;
+  expect(within(within(sheet).getAllByRole('list')[0]).getAllByRole('listitem')).toHaveLength(3);
+}, 120_000);

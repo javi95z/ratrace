@@ -28,7 +28,7 @@ import { WorkPanel } from './Work';
 
 /*
  * The web's Profile.tsx, on the phone. What the phone leaves out: the desk's side column (the profile is always the sheet the portrait opens, as on a
- * web phone), and a life in a room (`useInRoom` is false: the way out is always there).
+ * web phone). A life in a room is left with the room, from the room's own sheet (`Leave` is not drawn there).
  */
 
 const INSURANCES: InsuranceKind[] = ['health', 'home', 'life'];

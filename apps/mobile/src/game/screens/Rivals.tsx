@@ -6,11 +6,12 @@ import { Panel } from '../../ui/kit';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useGame, useSettings, useT, useWords } from '../context';
+import { useRoomPaper } from '../roomStory';
 import { useRivals } from '../useRivals';
 
 /*
- * The web's Rivals.tsx, on the phone. What the phone leaves out: a game with friends (`useRoomPaper`, whose rivals are the room's players), which a
- * life on the phone never is.
+ * The web's Rivals.tsx, on the phone. In a game with friends the rivals are the other players (`useRoomPaper`), and the room's order is theirs: no
+ * made-up ones.
  */
 
 /** One rival's line (or the player's): the place and the name on the left, the points on the right, on one baseline (the web's `items-baseline`). */
@@ -60,7 +61,9 @@ export function RivalsBoard({ history }: { history: number[] }) {
   const { locale } = useSettings();
   const view = useGame((s) => s.view);
   const people = useRivals();
-  if (!people || !view || history.length === 0) return null;
+  // In a game with friends the rivals are the other players, and the room's order is theirs: no made-up ones.
+  const room = useRoomPaper();
+  if (room !== null || !people || !view || history.length === 0) return null;
   const last = history.length - 1;
   const rows = [
     { key: 'you', name: t('you'), score: scoreBreakdown(content, view).total, you: true },

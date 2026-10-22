@@ -82,9 +82,10 @@ const keyOf = (line: Line): string => line.runId;
 /**
  * Personal bests, the games played with others (`RoomHistory`), and every life lived to the end with its graph. The lives are one list that draws only the lines near the screen: a player who has lived many has a long one. The list is
  * the web's section of past lives, named as it is; the page above its lines (the title, the bests, their heading) is its header.
- * `opened` is a life whose sheet is open from the start, by its id, once the lives are read (a scene's initial state; the player opens one by a tap).
+ * `opened` is a life whose sheet is open from the start, by its id, once the lives are read (a scene's initial state; the player opens one by a tap);
+ * `game`, a game played with others, by its id, once the games are known.
  */
-export function Records({ opened }: { opened?: string } = {}) {
+export function Records({ opened, game }: { opened?: string; game?: string } = {}) {
   const t = useT('records');
   const common = useT('common');
   const { content, text, fmt } = useWords();
@@ -131,7 +132,7 @@ export function Records({ opened }: { opened?: string } = {}) {
         </Framed>
       ) : null}
       {/* On a phone with no life of its own yet, the account's multiplayer games are still there. */}
-      {runs !== null && runs.length === 0 ? <RoomHistory runs={together} /> : null}
+      {runs !== null && runs.length === 0 ? <RoomHistory runs={together} opened={game} /> : null}
 
       {runs !== null && runs.length > 0 ? (
         <View role="region" aria-label={t('bests')}>
@@ -150,7 +151,7 @@ export function Records({ opened }: { opened?: string } = {}) {
         </View>
       ) : null}
 
-      {runs !== null && runs.length > 0 ? <RoomHistory runs={together} /> : null}
+      {runs !== null && runs.length > 0 ? <RoomHistory runs={together} opened={game} /> : null}
 
       {/* The past lives' heading: their lines are the list's own rows, under it. */}
       {alone.length > 0 ? <Heading>{t('history')}</Heading> : null}

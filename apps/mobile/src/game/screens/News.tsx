@@ -1,6 +1,8 @@
 import { Path } from '@shopify/react-native-skia';
 import { headlineArt } from '@ratrace/content';
+import { ratLookOf } from '@ratrace/core/game/avatar';
 import { ageAt, headlineText, paperOf } from '@ratrace/core/game/present';
+import { memberName } from '@ratrace/core/game/room';
 import { rivalNews } from '@ratrace/core/game/rivals';
 import type { Headline } from '@ratrace/engine';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -10,17 +12,20 @@ import { Canvas } from '../../ui/Canvas';
 import { usePaper } from '../../ui/animations';
 import { Framed } from '../../ui/Frame';
 import { Panel, SrOnly } from '../../ui/kit';
+import { RatAvatar } from '../../ui/RatAvatar';
 import { Sprite } from '../../ui/Sprite';
 import { PixelText, ReadText, TIGHT } from '../../ui/text';
 import { COLORS, EXTRA, type ColorToken } from '../../ui/theme';
 import { useGame, useT, useWords } from '../context';
+import { roomStory, useRoomPaper } from '../roomStory';
+import type { RoomStory } from '../roomStory';
 import { useRivals } from '../useRivals';
 import { CityBanner } from './CityBanner';
 import { CrisisBar } from './Crisis';
 
 /*
- * The news of a round (the web's News.tsx). What it tells of a game with friends (the room's own story, `storyText`, `roomStory`, `useRoomPaper`)
- * is online and not drawn: alone, the paper tells of the people the player grew up with (`useRivals`), now and then.
+ * The news of a round (the web's News.tsx). In a game with friends the paper tells of the players themselves (`roomStory`, `storyText`, the room's
+ * members from `useRoomPaper`); alone, of the people the player grew up with (`useRivals`), now and then.
  */
 
 /**
@@ -58,6 +63,50 @@ const TOPIC: Record<Headline['topic'], ColorToken | null> = {
   noise: 'ink-300',
   government: 'sky-200',
 };
+
+/**
+ * How the paper may tell each story of a game with friends: three ways each, as a tabloid would, so
+ * the same news does not read the same twice in a row. The keys are written out, one by one.
+ */
+const PAPER = {
+  lead: ['paperLead', 'paperLead2', 'paperLead3'],
+  leadMe: ['paperLeadMe', 'paperLeadMe2', 'paperLeadMe3'],
+  passed: ['paperPassed', 'paperPassed2', 'paperPassed3'],
+  passedBy: ['paperPassedBy', 'paperPassedBy2', 'paperPassedBy3'],
+  jump: ['paperJump', 'paperJump2', 'paperJump3'],
+  jumpMe: ['paperJumpMe', 'paperJumpMe2', 'paperJumpMe3'],
+  drop: ['paperDrop', 'paperDrop2', 'paperDrop3'],
+  dropMe: ['paperDropMe', 'paperDropMe2', 'paperDropMe3'],
+  neck: ['paperNeck', 'paperNeck2', 'paperNeck3'],
+  last: ['paperLast', 'paperLast2', 'paperLast3'],
+  lastMe: ['paperLastMe', 'paperLastMe2', 'paperLastMe3'],
+} as const;
+
+/** The story of a game with friends in the words of the paper: one of its ways, turned by the round and by who it is about. */
+export function storyText(t: (key: string, values?: Record<string, string | number>) => string, story: RoomStory, round: number): string {
+  const name = (member: { name: string | null; userId: string; bot: string | null }) => memberName(t, member);
+  const way = (keys: readonly string[]) => {
+    let mix = round;
+    for (const char of story.who.userId) mix += char.charCodeAt(0);
+    return keys[mix % keys.length];
+  };
+  switch (story.kind) {
+    case 'lead':
+      return story.me ? t(way(PAPER.leadMe)) : t(way(PAPER.lead), { who: name(story.who) });
+    case 'passed':
+      return t(way(PAPER.passed), { who: name(story.who) });
+    case 'passedBy':
+      return t(way(PAPER.passedBy), { who: name(story.who) });
+    case 'jump':
+      return story.me ? t(way(PAPER.jumpMe), { n: story.points }) : t(way(PAPER.jump), { who: name(story.who), n: story.points });
+    case 'drop':
+      return story.me ? t(way(PAPER.dropMe), { n: story.points }) : t(way(PAPER.drop), { who: name(story.who), n: story.points });
+    case 'neck':
+      return t(way(PAPER.neck), { who: name(story.who), other: name(story.other) });
+    case 'last':
+      return story.me ? t(way(PAPER.lastMe)) : t(way(PAPER.last), { who: name(story.who) });
+  }
+}
 
 /** Chrome's dashes on a border `width` thick (a dashed rule): each three times as long as it is thick, two widths apart at best. */
 const DASH = 3;
@@ -141,13 +190,16 @@ export function Headlines() {
   const history = useGame((s) => s.history);
   const people = useRivals();
   const r = useT('rivals');
+  const room = useT('room');
+  const players = useRoomPaper();
   // The papers of every round so far are read to pick this one's wording: once for a view, not on every drawing.
   const printed = useMemo(() => (view ? paperOf(words, view.timeline, view.round) : []), [words, view]);
   if (!view) return null;
   const world = view.timeline[view.round];
-  // Alone, the paper tells of the people the player grew up with, now and then.
-  const gossip = people ? rivalNews(people.rivals, history, view.round) : null;
-  const told = gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
+  // In a game with friends the paper tells of the players themselves; alone, of the people the player grew up with, now and then.
+  const story = players ? roomStory(players) : null;
+  const gossip = players === null && people ? rivalNews(people.rivals, history, view.round) : null;
+  const told = story ? storyText(room, story, view.round) : gossip && people ? r(`stories.${gossip.story}`, { who: people.who(gossip.rival) }) : null;
 
   return (
     <View style={{ gap: 12 }}>
@@ -184,7 +236,12 @@ export function Headlines() {
                   );
                 })}
                 {told ? (
-                  <Clipping first={false} topic={r('topic')} picture={<Picture art="icon.percentile" bg="gold-200" />}>
+                  // A story of the game with friends shows the rat it is about.
+                  <Clipping
+                    first={false}
+                    topic={story ? room('paperTopic') : r('topic')}
+                    picture={story ? <RatAvatar look={ratLookOf(story.who.avatar, story.who.userId)} size="md" /> : <Picture art="icon.percentile" bg="gold-200" />}
+                  >
                     {told}
                   </Clipping>
                 ) : null}

@@ -373,13 +373,22 @@ test('the scenes of the game online beside the game alone are drawn by their scr
 });
 
 test('the games with others are drawn at the same table on both sides, the core\'s, never the project\'s: one come by an invitation is given its code as each side\'s link gives it', () => {
-  expect(web).toContain("import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
-  expect(app).toContain("import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
+  expect(web).toContain("import { runRoomScene, sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
+  expect(app).toContain("import { runRoomScene, sceneGameOpened, sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';");
   expect(web).toContain('const table = rooms ? { rooms: () => rooms } : {};');
   expect(app).toContain('...(rooms ? { rooms: () => rooms } : {}),');
   // The web's door reads the code from the page's address; the phone's from its route, which its screen takes as a prop.
   expect(web).toContain("address.searchParams.set('code', code);");
   expect(read('../../web/src/game/screens/Room.tsx')).toContain("new URLSearchParams(window.location.search).get('code')");
-  expect(app).toContain('room: (scene) => <Room code={sceneInvite(scene.name)} />,');
+  expect(app).toContain("room: (scene) => (scene.name === 'room-history' ? <Records game={sceneGameOpened(scene.name)} /> : <Room code={sceneInvite(scene.name)} />),");
   expect(read('../src/app/room.tsx')).toContain('<Room code={');
+});
+
+test('a game with others in play is drawn on both sides once the life in its room is open, its one round played by the same script; the games over are the records\'', () => {
+  // Each side's script waits for the room's life, and takes the scene's steps on it, before the screen is drawn.
+  expect(web).toContain('.then(() => runRoomScene(scene.name, rooms))');
+  expect(app).toContain('.then(() => runRoomScene(scene.name, rooms))');
+  // The web presses the latest game of the records; the phone's Records is given it.
+  expect(web).toContain(`const FIRST_GAME = 'section[aria-label="Multiplayer"] button[aria-haspopup="dialog"]';`);
+  expect(app).toContain('<Records game={sceneGameOpened(scene.name)} />');
 });

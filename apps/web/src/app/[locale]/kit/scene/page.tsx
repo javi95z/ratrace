@@ -15,12 +15,12 @@ import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenO
 import type { Scene } from '@ratrace/core/testing/scenes';
 import { rankingsOpening, sceneCommunity } from '@ratrace/core/testing/sceneCommunity';
 import { sceneCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
-import { sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
+import { runRoomScene, sceneInvite, sceneRooms } from '@ratrace/core/testing/sceneRooms';
 import { ratLookOf } from '@ratrace/core/game/avatar';
 import { content, progressOf } from '@ratrace/content';
 import { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GameProvider, useGame, useProfile, useT, useWords } from '@/game/context';
+import { GameProvider, useGame, useProfile, useRooms, useT, useWords } from '@/game/context';
 import type { Services } from '@/game/context';
 import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
@@ -419,9 +419,21 @@ function PlayerScene({ scene }: { scene: Scene }) {
 /**
  * The games with others at the scene's table (`sceneRooms`). The web's door reads an invitation's code from the page's address, once it is drawn: a
  * scene come by one (`room-join-code`) has the page put the code in its address first, as the link would, then draws the door. The phone's registry
- * gives the code to its screen, as its route does.
+ * gives the code to its screen, as its route does. The games played with others are the records' (`room-history`): the page presses the first, the
+ * latest, as soon as it is drawn; the phone's Records is given it (`game`).
  */
+const FIRST_GAME = 'section[aria-label="Multiplayer"] button[aria-haspopup="dialog"]';
 function RoomScene({ scene }: { scene: Scene }) {
+  if (scene.name === 'room-history') {
+    return (
+      <PressedWhenDrawn selector={FIRST_GAME}>
+        <Records />
+      </PressedWhenDrawn>
+    );
+  }
+  return <RoomTable scene={scene} />;
+}
+function RoomTable({ scene }: { scene: Scene }) {
   const code = sceneInvite(scene.name);
   const [ready, setReady] = useState(code === undefined);
   useEffect(() => {
@@ -464,9 +476,11 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
 
 /**
  * Takes the steps a scene goes on with (`runScene`) once the game has opened on the scene's store, on that game. Needs no more of
- * the game than a screen has: its actions and its state through `useGame`.
+ * the game than a screen has: its actions and its state through `useGame`. A scene of a game with others then waits for the life in its room, and
+ * takes its own steps on that one (`runRoomScene`), so its screen is first drawn there too.
  */
 function Script({ scene, done }: { scene: Scene; done: () => void }) {
+  const rooms = useRooms();
   // The round store's state as it stands, whenever the script asks (it reads the game between its steps): a selector is run on
   // every change the store makes, as it is told of them, so what this one saw last is the latest.
   const latest = useRef<(RoundState & RoundActions) | null>(null);
@@ -478,8 +492,10 @@ function Script({ scene, done }: { scene: Scene; done: () => void }) {
   useEffect(() => {
     if (status === 'booting' || started.current) return;
     started.current = true;
-    runScene(scene.name, { getState: () => latest.current as RoundState & RoundActions }).then(done, (error: unknown) => console.error(error));
-  }, [status, scene, done]);
+    runScene(scene.name, { getState: () => latest.current as RoundState & RoundActions })
+      .then(() => runRoomScene(scene.name, rooms))
+      .then(done, (error: unknown) => console.error(error));
+  }, [status, scene, done, rooms]);
   return null;
 }
 

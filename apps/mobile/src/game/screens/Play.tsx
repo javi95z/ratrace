@@ -32,8 +32,8 @@ import { Resolve } from './Resolve';
 
 /*
  * A life being played, as the web's Play.tsx lays it on a phone. What the phone leaves out: the desk's three columns, the keyboard (its
- * shortcut and skip links), and what is only online (a room's bar, its wait and its order; a ranked life's notices, which a life on the
- * phone never has). Every stage is drawn by its own screen, with the stage machine, the bar of the next thing to do and the guide round them.
+ * shortcut and skip links), and a ranked life's notices, which a life on the phone never has. Every stage is drawn by its own screen, with the
+ * stage machine, the bar of the next thing to do and the guide round them; in a room, with what the room puts round them (`RoomSlots`).
  */
 
 /**
@@ -277,11 +277,13 @@ function CrisisStrip() {
  * the tip's own `mb-3`; with none, the stage's `pt-3`), so the tip is given its 12 above it in place of the one below it, and with no tip the
  * two cancel out to nothing.
  */
-function FinanceLeadIn() {
+function FinanceLeadIn({ bar }: { bar?: ReactNode }) {
   return (
     <>
       <View style={{ height: 8 }} />
       <CrisisStrip />
+      {/* In a room, its bar: 8 under the strip, as the web's stands under its Hud (`pt-2`). */}
+      {bar ? <View style={{ marginTop: 8 }}>{bar}</View> : null}
       <View style={{ marginTop: 12, marginBottom: -12 }}>
         <Guide />
       </View>
@@ -289,13 +291,25 @@ function FinanceLeadIn() {
   );
 }
 
+/** What a room adds to the screens of a life: its bar, what stands in for the next thing to do while the player waits, its order after a round, and at the end. */
+export interface RoomSlots {
+  bar: ReactNode;
+  /** Shown in place of the round's own button, while the player has played and waits for the others. Null otherwise. */
+  actions: ReactNode | null;
+  /** Below the ledger of a round. */
+  resolved: ReactNode;
+  /** Above the end of the life. */
+  end: ReactNode;
+}
+
 /**
- * A life being played: the HUD, the stage of the round, and the next thing to do. The HUD is the two parts of the page's `StickyScreen`:
+ * A life being played: the HUD, the stage of the round, and the next thing to do. In a room, `room` adds the room's bar, its wait and its order
+ * (and the room says itself where to go: no life is never a way home). The HUD is the two parts of the page's `StickyScreen`:
  * the portrait's row scrolls away, the figures stick. Each part is made once for as long as the HUD is compact or not, so a change of
  * stage draws neither again (the figures are drawn again by what they show). Android's Back goes home, and the life stays saved; a sheet
  * that is open takes Back first (its Modal does).
  */
-export function Play() {
+export function Play({ room }: { room?: RoomSlots } = {}) {
   const common = useT('common');
   const news = useT('news');
   const cards = useT('cards');
@@ -320,10 +334,10 @@ export function Play() {
   const closeProfile = useCallback(() => setProfileOpen(false), []);
   const scroller = useRef<ScreenScroller>(null);
 
-  // No life to play: the front door is where one is started.
+  // No life to play: the front door is where one is started. A room says itself where to go: its life may not be open yet, and is asked for again.
   useEffect(() => {
-    if (status === 'none') router.dismissTo('/');
-  }, [status, router]);
+    if (status === 'none' && !room) router.dismissTo('/');
+  }, [status, router, room]);
 
   // Android's Back, while this screen is in front: home, with the life as it stands (it is saved at every step). An open sheet is a Modal,
   // which takes Back itself and closes.
@@ -380,7 +394,8 @@ export function Play() {
   // In the finances, their tabs stick under the figures, and what stands between the two (the strip of a crisis, the guide's tip) scrolls up under them.
   const finances = stage === 'finance';
   const financeTabs = useMemo(() => <FinanceTabs />, []);
-  const financeLeadIn = useMemo(() => <FinanceLeadIn />, []);
+  const bar = room?.bar;
+  const financeLeadIn = useMemo(() => <FinanceLeadIn bar={bar} />, [bar]);
   // Made once for as long as it is open or shut: a step of the round draws Play again, and not the profile, which draws what it shows itself.
   const profileSheet = useMemo(() => <ProfileSheet open={profileOpen} onClose={closeProfile} />, [profileOpen, closeProfile]);
   // The moments that stop the game (a crisis opening, the rat race left, a bankruptcy): a sheet of their own, over everything, made once, as the
@@ -389,12 +404,15 @@ export function Play() {
 
   if (fault) return <Fault />;
   if (!playing) return <Waiting>{common('loading')}</Waiting>;
-  // A life that is over: its end, with its own two ways on (another life, and home).
-  if (stage === 'end') return <End />;
+  // A life that is over: its end, with its own two ways on (another life, and home); in a room, the room's order over it.
+  if (stage === 'end') return <End extra={room?.end} />;
 
   // The life was played on somewhere else (on a phone, only another device could): the store has already opened it as it now stands, and the player is told why the screen changed.
-  const notice = <Toast message={moved ? phone('moved') : null} onDone={clearMoved} ms={6_000} />;
-  const hasActions = stage !== 'cards';
+  // In a room the life moves on with the room, which says itself how many rounds the clock played: no word of another device.
+  const notice = <Toast message={moved && !room ? phone('moved') : null} onDone={clearMoved} ms={6_000} />;
+  // In a room, once the player has played, the wait stands in for the round's button.
+  const actions = room?.actions ?? <Actions stage={stage} onBasket={() => setBasketOpen(true)} />;
+  const hasActions = stage !== 'cards' || room?.actions != null;
   const heading = play('heading', { life: text.lives[lifeId ?? '']?.name ?? '', age: ageAt(content, round) });
 
   return (
@@ -414,7 +432,7 @@ export function Play() {
             hasActions ? (
               // Stuck to the foot of the screen, under the page: the next thing to do is always where the thumb is.
               <BottomBar>
-                <Actions stage={stage} onBasket={() => setBasketOpen(true)} />
+                {actions}
               </BottomBar>
             ) : null
           }
@@ -433,9 +451,13 @@ export function Play() {
           </View>
           <PerfDrawn name={`stage: ${stage}`} />
           {compact && !finances ? <CrisisStrip /> : null}
+          {/* In a room, its bar, 8 under the Hud (the web's `pt-2`); in the finances it stands over their tabs (`FinanceLeadIn`). */}
+          {bar && !finances ? bar : null}
           {/* The web's `main pt-3` under the figures, 8 of it the page's gap. In the finances that room is over their tabs, which the panel stands right under. */}
           <View role="main" aria-label={stageName} style={finances ? { marginTop: -8 } : { paddingTop: 4, paddingBottom: hasActions ? 0 : 16 }}>
             {stageView}
+            {/* In a room, under the ledger of a round, the room's order as it left it (the web's `mt-4`). */}
+            {room && stage === 'resolve' ? <View style={{ marginTop: 16 }}>{room.resolved}</View> : null}
           </View>
           {basketOpen && finances ? <Basket onClose={() => setBasketOpen(false)} /> : null}
           {profileSheet}

@@ -563,6 +563,11 @@ describe('the list of scenes', () => {
       'room-lobby-friends',
       'room-lobby-public',
       'room-join-code',
+      'room-playing',
+      'room-loans',
+      'room-resolved',
+      'room-end',
+      'room-history',
     ]);
   });
 

@@ -193,7 +193,7 @@ describe('the records', () => {
     expect(screen.queryByRole('region', { name: 'Multiplayer' })).toBeNull();
   });
 
-  it('lists the multiplayer games over, with where the player came and how many played, even before a life of their own', async () => {
+  it('lists the multiplayer games over, with where the player came and everyone in a sheet, even before a life of their own', async () => {
     const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
     const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
     const versions = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
@@ -213,11 +213,36 @@ describe('the records', () => {
     const section = await screen.findByRole('region', { name: 'Multiplayer' });
     // That life is told with its game, not again among the lives lived alone.
     expect(screen.queryByRole('list', { name: 'Past lives' })).toBeNull();
-    const [row] = within(section).getAllByRole('listitem');
-    expect(row.textContent).toContain('Nurse');
+    const row = within(section).getByRole('button', { name: /Nurse/ });
     expect(row.textContent).toMatch(/#[12] of 2/);
     expect(row.textContent).toContain('2 players');
+    fireEvent.click(row);
+    const sheet = sheetOf('Nurse');
+    expect(within(within(sheet).getAllByRole('list')[0]).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(sheet).getByText('You')).toBeTruthy();
+    // Everyone's city and job, and the player's own life in it.
+    expect(within(sheet).getAllByText(/Madrid · /)).toHaveLength(2);
+    expect(within(sheet).getByRole('region', { name: 'Your life' }).textContent).toContain('Score 300');
+    expect(within(sheet).getByText(/1:30 a round/)).toBeTruthy();
     // A whole game played on the server first: a few seconds alone, more on a busy machine.
+  }, 60_000);
+
+  it('opens with the sheet of a game it is given open, once the games are known (a scene\'s initial state)', async () => {
+    const HOST = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const versions = { engineVersion: ENGINE_VERSION, contentVersion: CONTENT_VERSION };
+    const server = roomServer();
+    const opened = (await server.ask(HOST, { action: 'open', lifeId: 'nurse', seconds: 90, ...versions })).body.room as { id: string; code: string };
+    await server.ask(B, { action: 'join', code: opened.code, ...versions });
+    await server.ask(HOST, { action: 'start', roomId: opened.id });
+    for (let guard = 0; guard < 50 && server.db.rooms.get(opened.id)?.status !== 'finished'; guard++) {
+      server.wait(96_000);
+      await server.ask(HOST, { action: 'state', roomId: opened.id });
+    }
+    renderGame(<Records game={opened.id} />, { ...memoryServices(), rooms: () => server.link(HOST), schedule: () => () => {} });
+    const heading = await screen.findByRole('heading', { name: 'Nurse' }, { timeout: 10_000 });
+    const sheet = heading.closest('[aria-modal="true"]') as HTMLElement;
+    expect(within(within(sheet).getAllByRole('list')[0]).getAllByRole('listitem')).toHaveLength(2);
   }, 60_000);
 
   it('lists the lives of games with others the phone keeps where the server tells of no game, each opening in a sheet', async () => {
