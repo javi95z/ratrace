@@ -86,6 +86,19 @@ describe('the app in front', () => {
     expect(shown).toHaveBeenCalledTimes(1);
     appState.set('active');
     expect(shown).toHaveBeenCalledTimes(1);
+    // Back from the background through iOS's `inactive`, it is shown all the same.
+    appState.set('background');
+    appState.set('inactive');
+    appState.set('active');
+    expect(shown).toHaveBeenCalledTimes(2);
+  });
+
+  it('says nothing when the app was only covered a moment and never left (the notification shade, the sheet of Google\'s sign-in), as a page that stays visible', () => {
+    const shown = vi.fn();
+    kept(phonePage.onShown(shown));
+    appState.set('inactive');
+    appState.set('active');
+    expect(shown).not.toHaveBeenCalled();
   });
 
   it('tells the time as the phone does', () => {

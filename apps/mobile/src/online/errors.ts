@@ -49,7 +49,7 @@ let here = '/';
 /** The path of the screen in front, for an error report: the router's, which only a component can read (`usePlace`). */
 export const place = (): string => here;
 
-/** Keeps the path of the screen in front for the error reports. Called once, by the layout around every screen. */
+/** Keeps the path of the screen in front for the error reports. Called once, by the game's provider (game/context.tsx), round every screen. */
 export function usePlace(): void {
   const path = usePathname();
   useEffect(() => {

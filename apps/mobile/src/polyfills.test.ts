@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
 /*
  * The phone's JavaScript has no WebCrypto. The account's client hashes the proof of each trip to Google with `crypto.subtle.digest('SHA-256')`
@@ -18,6 +18,10 @@ vi.mock('expo-crypto', () => ({
   },
 }));
 vi.mock('expo-localization', () => ({ getCalendars: () => [{ timeZone: 'UTC' }] }));
+
+// The phone's JavaScript, as the app starts: no WebCrypto at all. (Node's own would make the start's test below pass whatever the polyfill did.)
+vi.stubGlobal('crypto', {});
+afterAll(() => vi.unstubAllGlobals());
 
 const { installCrypto } = await import('./polyfills');
 const hex = (buffer: ArrayBuffer) => Buffer.from(buffer).toString('hex');
@@ -54,7 +58,15 @@ describe('WebCrypto\'s digest on the phone', () => {
     expect(full.crypto.subtle).toBe(own.subtle);
   });
 
-  it('is put in place when the app starts', () => {
-    expect(typeof globalThis.crypto.subtle.digest).toBe('function');
+  it('is put in place when the app starts', async () => {
+    expect(globalThis.crypto.randomUUID()).toBe('00000000-0000-4000-8000-000000000000');
+    expect(hex(await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode('abc')))).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  });
+
+  it('makes only the digests WebCrypto makes, though expo-crypto makes more', async () => {
+    const phone: { crypto?: Crypto } = {};
+    installCrypto(phone);
+    for (const name of ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']) await expect(phone.crypto!.subtle.digest(name, new Uint8Array())).resolves.toBeInstanceOf(ArrayBuffer);
+    for (const name of ['MD5', 'MD4', 'MD2']) await expect(phone.crypto!.subtle.digest(name, new Uint8Array())).rejects.toThrow(name);
   });
 });

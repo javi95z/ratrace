@@ -7,8 +7,11 @@ import { getCalendars } from 'expo-localization';
 import { installClone } from './clone';
 import { readDaysIn } from './intl';
 
-/** The digests expo-crypto makes, by their WebCrypto names (its own names for them are the same: 'SHA-256'). */
-const DIGESTS = new Set<string>(Object.values(Crypto.CryptoDigestAlgorithm));
+/**
+ * The digests WebCrypto makes, by their names, which are expo-crypto's names for them too ('SHA-256'). expo-crypto makes more (MD5 among them), which
+ * WebCrypto refuses, and so does this.
+ */
+const DIGESTS = new Set<string>(['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']);
 
 /**
  * WebCrypto's `subtle.digest`, from expo-crypto's: the bytes hashed natively, into an ArrayBuffer, as a browser answers. The account's client

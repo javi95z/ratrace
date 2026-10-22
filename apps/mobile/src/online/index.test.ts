@@ -2,10 +2,11 @@ import { readFileSync } from 'node:fs';
 import { offlineAccount } from '@ratrace/online/offline';
 import Storage from 'expo-sqlite/kv-store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { KvStore } from '../kvStore';
+import { KvStore, kvSession } from '../kvStore';
+import { servers } from '../testing/cloudServers';
 import { appState, kv } from '../testing/fakes';
 import type { Cloud, SupabaseAccount } from '@ratrace/online/supabase';
-import { givenUpIn, onThePhone, phoneOnline, refusedIn } from './index';
+import { forgetThePhone, givenUpIn, onThePhone, phoneOnline, refusedIn } from './index';
 
 /*
  * The phone's cloud: the twin of the web's (apps/web/src/online/index.ts). What can be the web's, word for word, is held to it below; the rest is
@@ -52,36 +53,6 @@ describe('the phone\'s cloud is the web\'s', () => {
   });
 });
 
-/** A token as the cloud signs one, for the client to read who and until when. */
-function token(sub: string): string {
-  const part = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  return `${part({ alg: 'HS256', typ: 'JWT' })}.${part({ sub, role: 'authenticated', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600, is_anonymous: true })}.signature`;
-}
-
-/**
- * The cloud's servers, as the client reaches them: a guest made on `signup` (counted), its sign-out, and the tables and functions the account
- * reads, empty. Every request is kept.
- */
-function servers() {
-  const asked: string[] = [];
-  let guests = 0;
-  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-  const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
-    const method = (init?.method ?? 'GET').toUpperCase();
-    asked.push(`${method} ${url.pathname}`);
-    if (url.pathname === '/auth/v1/signup') {
-      guests += 1;
-      const user = { id: `guest-${guests}`, aud: 'authenticated', role: 'authenticated', is_anonymous: true, app_metadata: {}, user_metadata: {}, identities: [], created_at: new Date().toISOString() };
-      return json({ access_token: token(user.id), token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, refresh_token: `refresh-${guests}`, user });
-    }
-    if (url.pathname === '/auth/v1/logout') return new Response(null, { status: 204 });
-    if (url.pathname.startsWith('/rest/v1/')) return method === 'GET' ? json([]) : new Response(null, { status: 201 });
-    return json({});
-  });
-  return { fetch, asked, guests: () => guests };
-}
-
 const URL_OF_PROJECT = 'https://abcdefghijklmnop.supabase.co';
 /** A build of the app with a project named. */
 function configured() {
@@ -97,6 +68,8 @@ const settled = () => new Promise((resolve) => setTimeout(resolve, 20));
 afterEach(() => {
   // The client's renewal of the session stops with the app sent away, so nothing of one test runs in the next.
   appState.set('background');
+  // Each test is a start of the app of its own.
+  forgetThePhone();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -170,6 +143,42 @@ describe('the cloud of this phone', () => {
     // What is the game's, not the session's, is the game's to take away (Task 3's sign-out clears the device).
     expect(kv.get('ratrace:game')).toBe('{"a life":"kept"}');
     expect(online.account.state()).toEqual({ kind: 'offline' });
+  });
+
+  it('is signed out all the same when a key of the session cannot be taken away: never a guest with no session behind it', async () => {
+    configured();
+    const online = phoneOnline(new KvStore());
+    await online.account.start('en');
+    vi.spyOn(kvSession, 'clear').mockRejectedValueOnce(new Error('the store would not'));
+    expect(await online.account.signOut()).toBe(true);
+    expect(online.account.state()).toEqual({ kind: 'offline' });
+  });
+
+  it('starts as a new guest, and does not throw, when what is kept of the session cannot be read', async () => {
+    const cloud = configured();
+    kv.set('ratrace:session:sb-abcdefghijklmnop-auth-token', '{not a session');
+    const online = phoneOnline(new KvStore());
+    await expect(online.account.start('en')).resolves.toBeUndefined();
+    expect(online.account.state()).toEqual({ kind: 'guest', userId: 'guest-1', notice: null });
+    expect(cloud.guests()).toBe(1);
+  });
+
+  it('renews one client in the whole app, however many clouds are made: the one connected last', async () => {
+    configured();
+    const first = phoneOnline(new KvStore());
+    await first.account.start('en');
+    const before = (first.account as SupabaseAccount).cloud()!;
+    const stopped = vi.spyOn(before, 'autoRefresh');
+    const second = phoneOnline(new KvStore());
+    await second.account.start('en');
+    // Connecting the second stopped the first, though each was made by a cloud of its own.
+    expect(stopped).toHaveBeenCalledWith(false);
+    const renewing = vi.spyOn((second.account as SupabaseAccount).cloud()!, 'autoRefresh');
+    stopped.mockClear();
+    appState.set('background');
+    appState.set('active');
+    expect(stopped).not.toHaveBeenCalled();
+    expect(renewing.mock.calls).toEqual([[false], [true]]);
   });
 
   it('renews the session only while the app is in front', async () => {

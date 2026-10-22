@@ -34,12 +34,18 @@ export const phonePage: Page = {
       subscription.remove();
     };
   },
-  /** The app back in front from anywhere else (the background, or iOS's `inactive`), as a browser's page made visible again. */
+  /**
+   * The app back in front from the background, as a browser's page made visible again (`visibilitychange`). Only covered a moment (iOS's `inactive`:
+   * the notification shade, the sheet of Google's sign-in) it never left, as a page under a dialog is still visible: that is not told.
+   */
   onShown: (listener) => {
-    let was = AppState.currentState;
+    let away = AppState.currentState === 'background';
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && was !== 'active') listener();
-      was = state;
+      if (state === 'background') away = true;
+      else if (state === 'active') {
+        if (away) listener();
+        away = false;
+      }
     });
     return () => subscription.remove();
   },

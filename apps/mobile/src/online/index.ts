@@ -130,7 +130,8 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud } {
         ...cloud,
         signOut: async () => {
           await cloud.signOut();
-          await kvSession.clear();
+          // Signed out all the same: a key the phone could not take away now is one the next guest's session writes over.
+          await kvSession.clear().catch(() => undefined);
         },
       };
       renew(current, active);
@@ -139,8 +140,21 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud } {
   };
 }
 
+/** The phone's one renewal of the session, made with the first cloud: whichever start connects, every client before it is stopped. */
+let thePhone: ReturnType<typeof onThePhone> | null = null;
+/** How to stop watching the phone's errors: they are watched once, for the cloud made last. */
+let stopWatching: (() => void) | null = null;
+
+/** For a test: the next cloud made starts the phone's renewal and its watch anew, as a new start of the app would. The app never calls it. */
+export function forgetThePhone(): void {
+  thePhone = null;
+  stopWatching?.();
+  stopWatching = null;
+}
+
 /**
- * The cloud of this phone, around the phone's store. With no Supabase project in the build's settings there is none: the store is the phone's
+ * The cloud of this phone, around the phone's store, made once for each start of the app (the game's context holds it, `shared`), whoever signs in
+ * or out. With no Supabase project in the build's settings there is none: the store is the phone's
  * own, and the game is exactly what it is without a network (phase 2's game).
  */
 export function phoneOnline(device: PlayerStore): Online {
@@ -150,7 +164,7 @@ export function phoneOnline(device: PlayerStore): Online {
   if (!url || !key) return offline(device);
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.EXPO_PUBLIC_SUPABASE_REGION || undefined;
-  const phone = onThePhone();
+  const phone = (thePhone ??= onThePhone());
   const online = onlineOver(device, {
     // The session in the phone's store, and renewed only while the app is in front (`onThePhone`), never by a timer of the client's own.
     connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false })),
@@ -165,7 +179,9 @@ export function phoneOnline(device: PlayerStore): Online {
   // Out of a release build, an error is the developer's to read, not to send. A phone that cannot be watched plays on all the same.
   if (process.env.NODE_ENV === 'production') {
     try {
-      watchErrors(online, phoneErrors());
+      stopWatching?.();
+      stopWatching = null;
+      stopWatching = watchErrors(online, phoneErrors());
     } catch {
       // Nothing is watched: the game is what it is without it.
     }

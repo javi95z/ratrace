@@ -27,6 +27,7 @@ import { kvKeeping, kvLanguage, kvLastAccount, KvStore } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
+import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
 import { perfStore } from '../ui/perf';
@@ -287,6 +288,8 @@ function Cues({ game }: { game: GameStore }) {
  * over a new round store, as the web's page is loaded again: the cloud is the same one, and the account in it starts a new guest.
  */
 export function GameProvider({ children, services }: { children: ReactNode; services?: Services }) {
+  // The screen in front, for the reports of what goes wrong (`app:<path>`): read here, inside the router, round every screen.
+  usePlace();
   const [made] = useState(() => (services ? make(services) : (shared ??= make(phoneServices()))));
   const [started, setStarted] = useState(0);
   const restart = useCallback(() => {
