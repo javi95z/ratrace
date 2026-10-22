@@ -18,6 +18,12 @@ export type AccountState =
  */
 export type AccountNotice = 'joining' | 'failed';
 
+/**
+ * Opens an address in the system's browser, for a client that cannot leave its own page (a phone),
+ * and resolves with the address the browser came back to, or null if the player closed it.
+ */
+export type Opener = (url: string) => Promise<string | null>;
+
 /** The one way the screens learn who is playing and ask to keep the account. */
 export interface Account {
   state(): AccountState;
@@ -36,13 +42,16 @@ export interface Account {
   /**
    * Sends the player to Google to keep this account, and brings them back to `returnTo`.
    * The account stays the same one, so nothing has to be moved. Resolves false if it could not even begin.
+   * With `open` (a phone), Google is opened with it and the call resolves once the browser comes back:
+   * true if the account was kept, false if it failed (with its notice) or the player closed the browser (with none).
    */
-  keepWithGoogle(returnTo: string): Promise<boolean>;
+  keepWithGoogle(returnTo: string, open?: Opener): Promise<boolean>;
   /**
    * Signs in as the player a Google account already belongs to, in place of the guest this
    * browser has been so far, and comes back to `returnTo`. For a second device. Resolves false if it could not begin.
+   * With `open`, as `keepWithGoogle`.
    */
-  useExistingAccount(returnTo: string): Promise<boolean>;
+  useExistingAccount(returnTo: string, open?: Opener): Promise<boolean>;
   /** The player has read the notice. */
   dismissNotice(): void;
   /** Signs this browser out of the account. False if it could not. Whoever comes next starts as a new guest. */

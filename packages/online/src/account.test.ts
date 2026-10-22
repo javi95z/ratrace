@@ -246,12 +246,138 @@ describe('an account in the cloud', () => {
   });
 });
 
+describe('an account on a phone, where Google is a browser that comes back', () => {
+  /**
+   * A cloud that, handed a way to open the browser, opens Google with it and does with the answer
+   * what the real one does: a code is a session (the player is now the member it belongs to), anything else is not.
+   */
+  function phoneCloud(answers: Array<string | null>, over: Partial<Cloud> = {}) {
+    const trips: string[] = [];
+    let tell: (user: CloudUser | null) => void = () => {};
+    const trip = (name: string) => async (returnTo: string, open?: (url: string) => Promise<string | null>) => {
+      trips.push(`${name} ${returnTo}`);
+      if (open === undefined) return true;
+      const back = await open(`https://google/${name}`);
+      if (back === null || !new URL(back).searchParams.has('code')) return false;
+      tell(member);
+      return true;
+    };
+    const made = fakeCloud({ currentUser: async () => guest, linkGoogle: trip('link'), signInWithGoogle: trip('sign-in'), ...over });
+    tell = made.tell;
+    const opened: string[] = [];
+    const open = async (url: string) => (opened.push(url), answers.shift() ?? null);
+    return { ...made, trips, opened, open };
+  }
+  /** A phone has no address: nothing to read a notice from, and nothing to clean. */
+  const onPhone = (cloud: Cloud, cleaned: string[] = []) => new SupabaseAccount(async () => cloud, () => null, (url) => cleaned.push(url));
+
+  it('starts with no address at all, as a guest, and cleans nothing', async () => {
+    const cleaned: string[] = [];
+    const { cloud, calls } = fakeCloud();
+    const account = onPhone(cloud, cleaned);
+    await account.start('es');
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+    expect(calls).toEqual(['guest', 'profile user-1 es']);
+    expect(cleaned).toEqual([]);
+  });
+
+  it('keeps the account with Google and says so once the browser comes back with a code', async () => {
+    const { cloud, trips, opened, open } = phoneCloud(['theratrace://auth?code=X']);
+    const account = onPhone(cloud);
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(true);
+    expect(trips).toEqual(['link theratrace://auth']);
+    expect(opened).toEqual(['https://google/link']);
+    expect(account.state()).toEqual({ kind: 'member', userId: 'user-1', email: 'ana@example.com' });
+  });
+
+  it('takes a guest whose Google account already has a player into it, as the web does, with nothing more to tap', async () => {
+    const { cloud, trips, open } = phoneCloud(['theratrace://auth?error=server_error&error_code=identity_already_exists&error_description=Identity+is+already+linked', 'theratrace://auth?code=Y']);
+    const account = onPhone(cloud);
+    await account.start('en');
+    const seen: unknown[] = [];
+    account.subscribe(() => seen.push(account.state()));
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(true);
+    // The web's words for it while the browser goes on into that account, and never a second link.
+    expect(seen).toContainEqual({ kind: 'guest', userId: 'user-1', notice: 'joining' });
+    expect(trips).toEqual(['link theratrace://auth', 'sign-in theratrace://auth']);
+    expect(account.state()).toEqual({ kind: 'member', userId: 'user-1', email: 'ana@example.com' });
+  });
+
+  it('says it failed when Google comes back with any other error, and is a guest as before', async () => {
+    const { cloud, open } = phoneCloud(['theratrace://auth?error=access_denied&error_code=provider_disabled']);
+    const account = onPhone(cloud);
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(false);
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
+  });
+
+  it('says nothing when the player closes the browser, and is a guest as before', async () => {
+    const { cloud, open } = phoneCloud([null]);
+    const account = onPhone(cloud);
+    await account.start('en');
+    const heard = vi.fn();
+    account.subscribe(heard);
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(false);
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+    expect(heard).not.toHaveBeenCalled();
+  });
+
+  it('takes back the word that it is joining when the player closes the browser on the way into their account', async () => {
+    const { cloud, open } = phoneCloud(['theratrace://auth?error_code=identity_already_exists', null]);
+    const account = onPhone(cloud);
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', open)).toBe(false);
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: null });
+  });
+
+  it('says it failed when the browser could not be opened at all, or the trip could not begin', async () => {
+    const broken = phoneCloud([]);
+    const account = onPhone(broken.cloud);
+    await account.start('en');
+    expect(await account.keepWithGoogle('theratrace://auth', async () => { throw new Error('no browser'); })).toBe(false);
+    expect(account.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
+    account.dismissNotice();
+    const refused = phoneCloud([], { linkGoogle: async () => false });
+    const other = onPhone(refused.cloud);
+    await other.start('en');
+    expect(await other.keepWithGoogle('theratrace://auth', refused.open)).toBe(false);
+    expect(refused.opened).toEqual([]);
+    expect(other.state()).toEqual({ kind: 'guest', userId: 'user-1', notice: 'failed' });
+  });
+
+  it('signs in as the player a Google account belongs to, on a second phone', async () => {
+    const { cloud, trips, open } = phoneCloud(['theratrace://auth?code=Z']);
+    const account = onPhone(cloud);
+    await account.start('en');
+    expect(await account.useExistingAccount('theratrace://auth', open)).toBe(true);
+    expect(trips).toEqual(['sign-in theratrace://auth']);
+    expect(account.state()).toMatchObject({ kind: 'member' });
+  });
+
+  it('hands the web\'s calls to the cloud as they always were: an address and nothing else', async () => {
+    const asked: unknown[][] = [];
+    const { cloud } = fakeCloud({
+      linkGoogle: async (...args) => (asked.push(['link', ...args]), true),
+      signInWithGoogle: async (...args) => (asked.push(['sign-in', ...args]), true),
+    });
+    const account = accountOn(cloud);
+    await account.start('en');
+    await account.keepWithGoogle('http://localhost:3000/es/play');
+    await account.useExistingAccount('http://localhost:3000/es');
+    expect(asked).toStrictEqual([['link', 'http://localhost:3000/es/play'], ['sign-in', 'http://localhost:3000/es']]);
+  });
+});
+
 describe('reading what Google sent the player back with', () => {
   it('knows an account that is already someone else\'s from any other failure, in the query or after the hash', () => {
     expect(noticeIn('http://x/en?error_code=identity_already_exists')).toBe('taken');
     expect(noticeIn('http://x/en#error=server_error&error_code=identity_already_exists')).toBe('taken');
     expect(noticeIn('http://x/en?error=access_denied&error_code=provider_disabled')).toBe('failed');
     expect(noticeIn('http://x/en?error=access_denied')).toBe('failed');
+    // The address a phone comes back to.
+    expect(noticeIn('theratrace://auth?error=server_error&error_code=identity_already_exists')).toBe('taken');
+    expect(noticeIn('theratrace://auth?code=X')).toBeNull();
   });
 
   it('finds nothing in an ordinary address, whatever else it carries', () => {

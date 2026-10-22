@@ -2,7 +2,7 @@ import type { RankedApi } from '@ratrace/core/session/ranked';
 import type { RoomsLink } from '@ratrace/core/session/room';
 import type { ErrorReport, Sent } from './errors';
 import type { SyncCloud } from './mirror';
-import type { Account, AccountNotice, AccountState, Community } from './types';
+import type { Account, AccountNotice, AccountState, Community, Opener } from './types';
 
 /** A signed-in player as the cloud describes them. */
 export interface CloudUser {
@@ -27,10 +27,14 @@ export interface Cloud extends SyncCloud {
   currentUser(): Promise<CloudUser | null>;
   /** Makes a guest account with no form. Null if the cloud would not. */
   signInAsGuest(): Promise<CloudUser | null>;
-  /** Starts linking a Google account to the one signed in, and comes back to `redirectTo`. False if it could not start. */
-  linkGoogle(redirectTo: string): Promise<boolean>;
-  /** Starts signing in as the player a Google account already belongs to. False if it could not start. */
-  signInWithGoogle(redirectTo: string): Promise<boolean>;
+  /**
+   * Starts linking a Google account to the one signed in, and comes back to `redirectTo`. False if it could not start.
+   * With `open`, the page is not left: Google is opened with it, and the call resolves once the browser comes back,
+   * true if it came back with a code that was exchanged for the player's session, false otherwise.
+   */
+  linkGoogle(redirectTo: string, open?: Opener): Promise<boolean>;
+  /** Starts signing in as the player a Google account already belongs to. False if it could not start. With `open`, as `linkGoogle`. */
+  signInWithGoogle(redirectTo: string, open?: Opener): Promise<boolean>;
   /** Signs this browser out. Throws if it could not. */
   signOut(): Promise<void>;
   /** Makes the player's profile row if it is not there, in the language of the page. One already there is left as it is. */
@@ -98,11 +102,12 @@ export class SupabaseAccount implements Account {
 
   /**
    * `connect` loads the client, so a game that never goes online never downloads it.
-   * `address` is where the page is; `clean` replaces it once a notice has been read from it.
+   * `address` is where the page is; `clean` replaces it once a notice has been read from it. A phone has
+   * no address (null): what Google says comes back to it with the browser instead (`travel`).
    */
   constructor(
     private readonly connect: () => Promise<Cloud>,
-    private readonly address: () => string,
+    private readonly address: () => string | null,
     private readonly clean: (address: string) => void,
   ) {}
 
@@ -144,9 +149,9 @@ export class SupabaseAccount implements Account {
     try {
       const cloud = this.link ?? (await this.connect());
       const here = this.address();
-      const said = noticeIn(here);
-      const back = withoutFailure(here);
-      if (said !== null) {
+      const said = here === null ? null : noticeIn(here);
+      const back = here === null ? null : withoutFailure(here);
+      if (said !== null && back !== null) {
         // A Google account that already has a player is the player's own, most often: they are taken into it, not asked again.
         this.notice = said === 'taken' ? 'joining' : 'failed';
         this.clean(back);
@@ -164,15 +169,56 @@ export class SupabaseAccount implements Account {
       void cloud.ensureProfile(user.id, language).catch(() => undefined);
       // Sent back from Google to a guest whose Google account is already a player's: straight on into it.
       // What is on this device joins that account, as it does for any sign-in.
-      if (said === 'taken' && user.is_anonymous) void this.leaveFor((c) => c.signInWithGoogle(back));
+      if (said === 'taken' && back !== null && user.is_anonymous) void this.leaveFor((c) => c.signInWithGoogle(back));
     } catch {
       this.set({ kind: 'offline' });
     }
   }
 
-  readonly keepWithGoogle = async (returnTo: string): Promise<boolean> => this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
+  // The web's calls carry the address alone, as they always have: `open` is passed on only where there is one.
+  readonly keepWithGoogle = async (returnTo: string, open?: Opener): Promise<boolean> =>
+    open ? this.travel(returnTo, open, 'link') : this.leaveFor((cloud) => cloud.linkGoogle(returnTo));
 
-  readonly useExistingAccount = async (returnTo: string): Promise<boolean> => this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+  readonly useExistingAccount = async (returnTo: string, open?: Opener): Promise<boolean> =>
+    open ? this.travel(returnTo, open, 'sign-in') : this.leaveFor((cloud) => cloud.signInWithGoogle(returnTo));
+
+  /**
+   * Google through a browser that comes back (a phone). Nothing is left, so the call waits for the
+   * browser and reads the address it came back with as a page reads its own, and follows the web's
+   * paths from there: kept; an account that is already a player's, taken into it with nothing more to
+   * tap; any other failure, said; closed by the player, nothing said.
+   */
+  private async travel(returnTo: string, open: Opener, way: 'link' | 'sign-in', joining = false): Promise<boolean> {
+    const cloud = this.link;
+    if (cloud === null || this.current.kind === 'offline') return false;
+    // Undefined while the browser has not come back: never opened, or it could not be.
+    let back: string | null | undefined;
+    const watched: Opener = async (url) => (back = await open(url));
+    const done = await (way === 'link' ? cloud.linkGoogle(returnTo, watched) : cloud.signInWithGoogle(returnTo, watched)).catch(() => false);
+    if (done) {
+      // The session is the account's now: the cloud tells who it is, and there is nothing left to say.
+      this.notice = null;
+      return true;
+    }
+    if (back === null) {
+      // Closed by the player. Nothing went wrong, and a word that the player is being taken into their account no longer holds.
+      if (joining) this.say(null);
+      return false;
+    }
+    if (back !== undefined && noticeIn(back) === 'taken' && !joining && this.current.kind === 'guest') {
+      this.say('joining');
+      return this.travel(returnTo, open, 'sign-in', true);
+    }
+    this.say('failed');
+    return false;
+  }
+
+  /** Tells a guest something about keeping their account, or takes it back. A member has nothing to be told. */
+  private say(notice: AccountNotice | null): void {
+    if (this.current.kind !== 'guest') return;
+    this.notice = notice;
+    if (this.current.notice !== notice) this.set({ ...this.current, notice });
+  }
 
   /** Sends the player to Google one way or the other. If the journey cannot begin, a guest is told so. */
   private async leaveFor(go: (cloud: Cloud) => Promise<boolean>): Promise<boolean> {

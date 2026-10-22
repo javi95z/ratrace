@@ -18,6 +18,7 @@ const client = vi.hoisted(() => {
         signInAnonymously: async (...a: unknown[]) => (asked.push(['signInAnonymously', ...a]), answers.signInAnonymously),
         linkIdentity: async (...a: unknown[]) => (asked.push(['linkIdentity', ...a]), answers.linkIdentity),
         signInWithOAuth: async (...a: unknown[]) => (asked.push(['signInWithOAuth', ...a]), answers.signInWithOAuth),
+        exchangeCodeForSession: async (...a: unknown[]) => (asked.push(['exchangeCodeForSession', ...a]), answers.exchangeCodeForSession),
         onAuthStateChange: (listener: (event: string, session: unknown) => void) => {
           listeners.push(listener);
           return { data: { subscription: { unsubscribe: () => listeners.splice(listeners.indexOf(listener), 1) } } };
@@ -58,6 +59,7 @@ beforeEach(() => {
     signInAnonymously: { data: { user }, error: null },
     linkIdentity: { data: {}, error: null },
     signInWithOAuth: { data: {}, error: null },
+    exchangeCodeForSession: { data: { session: {}, user }, error: null },
     profiles: { error: null },
     games: { data: [], error: null },
     player_progress: { data: null, error: null },
@@ -72,7 +74,18 @@ describe('the cloud, made from the Supabase client', () => {
   it('is made with the two public values, and keeps the session in the browser', async () => {
     await connectSupabase('https://project.supabase.co', 'sb_publishable_x');
     expect(client.created[0].slice(0, 2)).toEqual(['https://project.supabase.co', 'sb_publishable_x']);
-    expect(client.created[0][2]).toMatchObject({ auth: { persistSession: true, detectSessionInUrl: true, flowType: 'pkce' } });
+    // The web's client, to the letter: no storage of its own named (the browser's is the client's own), and refreshed by itself.
+    expect(client.created[0][2]).toStrictEqual({ auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: expect.any(Function) } });
+  });
+
+  it('keeps the session where a phone says, and renews it by itself only if told to', async () => {
+    const storage = { getItem: async () => null, setItem: async () => {}, removeItem: async () => {} };
+    await connectSupabase('u', 'k', { storage, autoRefresh: false });
+    expect(client.created[0][2]).toMatchObject({ auth: { persistSession: true, autoRefreshToken: false, flowType: 'pkce', storage } });
+    expect((client.created[0][2] as { auth: { storage: unknown } }).auth.storage).toBe(storage);
+    // Named alone, the storage leaves the renewal as it is.
+    await connectSupabase('u', 'k', { storage });
+    expect(client.created[1][2]).toMatchObject({ auth: { autoRefreshToken: true, storage } });
   });
 
   it('says who is signed in, or nobody', async () => {
@@ -113,7 +126,8 @@ describe('the cloud, made from the Supabase client', () => {
     const cloud = await connectSupabase('u', 'k');
     expect(await cloud.linkGoogle('http://localhost:3000/es')).toBe(true);
     expect(await cloud.signInWithGoogle('http://localhost:3000/es')).toBe(true);
-    expect(client.asked).toEqual([
+    // The web's two calls, to the letter: the client itself sends the page to Google, and nothing is added for a phone.
+    expect(client.asked).toStrictEqual([
       ['linkIdentity', { provider: 'google', options: { redirectTo: 'http://localhost:3000/es' } }],
       ['signInWithOAuth', { provider: 'google', options: { redirectTo: 'http://localhost:3000/es' } }],
     ]);
@@ -121,6 +135,53 @@ describe('the cloud, made from the Supabase client', () => {
     client.answers.signInWithOAuth = { data: {}, error: new Error('provider is not enabled') };
     expect(await cloud.linkGoogle('x')).toBe(false);
     expect(await cloud.signInWithGoogle('x')).toBe(false);
+  });
+
+  describe('through a browser that comes back, as on a phone', () => {
+    const google = 'https://project.supabase.co/auth/v1/authorize?provider=google';
+    beforeEach(() => {
+      client.answers.linkIdentity = { data: { provider: 'google', url: google, flowId: 'flow-1' }, error: null };
+      client.answers.signInWithOAuth = { data: { provider: 'google', url: google, flowId: 'flow-2' }, error: null };
+    });
+
+    it('asks for Google\'s address instead of leaving, opens it, and exchanges the code it comes back with', async () => {
+      const cloud = await connectSupabase('u', 'k');
+      const opened: string[] = [];
+      const open = async (url: string) => (opened.push(url), 'theratrace://auth?code=X');
+      expect(await cloud.linkGoogle('theratrace://auth', open)).toBe(true);
+      expect(opened).toEqual([google]);
+      expect(client.asked).toStrictEqual([
+        ['linkIdentity', { provider: 'google', options: { redirectTo: 'theratrace://auth', skipBrowserRedirect: true } }],
+        // The code of this very trip: its own verifier, not whichever was stored last.
+        ['exchangeCodeForSession', 'X', { flowId: 'flow-1' }],
+      ]);
+      client.asked.length = 0;
+      expect(await cloud.signInWithGoogle('theratrace://auth', open)).toBe(true);
+      expect(client.asked).toStrictEqual([
+        ['signInWithOAuth', { provider: 'google', options: { redirectTo: 'theratrace://auth', skipBrowserRedirect: true } }],
+        ['exchangeCodeForSession', 'X', { flowId: 'flow-2' }],
+      ]);
+    });
+
+    it('exchanges nothing when the browser comes back with an error, or is closed, and says it did not', async () => {
+      const cloud = await connectSupabase('u', 'k');
+      expect(await cloud.linkGoogle('theratrace://auth', async () => 'theratrace://auth?error=server_error&error_code=identity_already_exists')).toBe(false);
+      expect(await cloud.linkGoogle('theratrace://auth', async () => null)).toBe(false);
+      expect(client.asked.map(([name]) => name)).toEqual(['linkIdentity', 'linkIdentity']);
+    });
+
+    it('opens nothing when Google\'s address could not be had, and fails when the code is refused', async () => {
+      const cloud = await connectSupabase('u', 'k');
+      const open = vi.fn(async () => 'theratrace://auth?code=X');
+      client.answers.linkIdentity = { data: { provider: 'google', url: null }, error: new Error('manual linking is disabled') };
+      expect(await cloud.linkGoogle('theratrace://auth', open)).toBe(false);
+      expect(open).not.toHaveBeenCalled();
+      client.answers.signInWithOAuth = { data: { provider: 'google', url: google, flowId: null }, error: null };
+      client.answers.exchangeCodeForSession = { data: { session: null, user: null }, error: new Error('code verifier missing') };
+      expect(await cloud.signInWithGoogle('theratrace://auth', open)).toBe(false);
+      // A trip with no flow of its own exchanges as the client always has.
+      expect(client.asked.at(-1)).toStrictEqual(['exchangeCodeForSession', 'X']);
+    });
   });
 
   it('makes the player\'s profile in the language of the page, and leaves the language of one already made alone', async () => {

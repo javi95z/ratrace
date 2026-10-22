@@ -1,10 +1,10 @@
-import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { OAuthResponse, SupabaseClient, SupportedStorage, User } from '@supabase/supabase-js';
 import type { CloudGame } from './merge';
 import type { CloudRun } from './mirror';
 import { rankedApi } from './ranked';
 import { roomsApi } from './rooms';
 import type { Cloud, CloudUser } from './supabase';
-import type { Friend, PushTarget } from './types';
+import type { Friend, Opener, PushTarget } from './types';
 
 const userOf = (user: User | null | undefined): CloudUser | null => (user ? { id: user.id, is_anonymous: user.is_anonymous === true, email: user.email } : null);
 
@@ -95,6 +95,19 @@ export interface CloudOptions {
   region?: string;
   /** The guard at the door of guest sign-in, where the project has one. */
   captcha?: Captcha;
+  /** Where the session is kept, for a client with no browser storage of its own (a phone). Left out, the client's own. */
+  storage?: SupportedStorage;
+  /** Whether the client renews the session by itself (it does unless told not to): a phone renews it only while it is in front. */
+  autoRefresh?: boolean;
+}
+
+/** The value of one part of an address's query, or null: for the address a browser came back to. */
+function queryOf(address: string, name: string): string | null {
+  try {
+    return new URL(address).searchParams.get(name);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -102,6 +115,20 @@ export interface CloudOptions {
  * player reads and writes their own rows and nothing else, whatever this code asks for.
  */
 export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOptions = {}): Cloud {
+  /**
+   * Google through a browser that comes back, for a client that cannot leave its page (a phone): the
+   * address the client asked for is opened, and the code the browser comes back with is exchanged for
+   * the session, against the verifier of this very trip. An error, or a browser closed, exchanges nothing.
+   */
+  const throughBrowser = async (asked: Promise<OAuthResponse>, open: Opener): Promise<boolean> => {
+    const { data, error } = await asked;
+    if (error || !data.url) return false;
+    const back = await open(data.url);
+    const code = back === null ? null : queryOf(back, 'code');
+    if (code === null) return false;
+    const exchanged = await (data.flowId ? client.auth.exchangeCodeForSession(code, { flowId: data.flowId }) : client.auth.exchangeCodeForSession(code));
+    return exchanged.error === null;
+  };
   /** Who is signed in, for the two things that must name their owner. */
   const me = async (): Promise<string> => {
     const { data } = await client.auth.getSession();
@@ -147,13 +174,15 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       const { data, error } = await (word === undefined ? client.auth.signInAnonymously() : client.auth.signInAnonymously({ options: { captchaToken: word } }));
       return error ? null : userOf(data.user);
     },
-    async linkGoogle(redirectTo) {
+    async linkGoogle(redirectTo, open) {
+      if (open) return throughBrowser(client.auth.linkIdentity({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), open);
       // On success the client itself sends the browser to Google.
       const { error } = await client.auth.linkIdentity({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
-    async signInWithGoogle(redirectTo) {
+    async signInWithGoogle(redirectTo, open) {
       // Replaces whoever is signed in here with the player the Google account belongs to.
+      if (open) return throughBrowser(client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, skipBrowserRedirect: true } }), open);
       const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
       return error === null;
     },
@@ -494,5 +523,8 @@ export async function connectSupabase(url: string, key: string, options: CloudOp
   const { createClient } = await import('@supabase/supabase-js');
   // A request that never gets an answer would hold up everything after it: the mirror sends one thing at a time.
   const patient: typeof fetch = (input, init) => fetch(input, { ...init, signal: init?.signal ?? AbortSignal.timeout(PATIENCE) });
-  return cloudOf(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }, global: { fetch: patient } }), options);
+  // A storage is named only where there is one: the browser's client is made as it always was.
+  const { storage, autoRefresh = true } = options;
+  const auth = { persistSession: true, autoRefreshToken: autoRefresh, detectSessionInUrl: true, flowType: 'pkce' as const, ...(storage ? { storage } : {}) };
+  return cloudOf(createClient(url, key, { auth, global: { fetch: patient } }), options);
 }
