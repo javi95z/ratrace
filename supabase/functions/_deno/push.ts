@@ -7,8 +7,8 @@
 // through Expo's push service, which needs no key; EXPO_ACCESS_TOKEN is sent where it is set, for a
 // project that asks for one.
 import webpush from 'npm:web-push@3.6.7';
-import { byPlayer, deliverExpo as sendExpo, deliverTo, isApp } from '../_shared/push.ts';
-import type { AppDevice, Device, Senders, Urgency } from '../_shared/push.ts';
+import { byPlayer, deliverExpo as sendExpo, deliverTo, expoRun, isApp, tellPlayer } from '../_shared/push.ts';
+import type { AppDevice, Device, ExpoRun, Senders, Told, Urgency } from '../_shared/push.ts';
 import type { Notice, NoticeAbout } from '../_shared/notice.ts';
 
 export { byPlayer };
@@ -55,6 +55,17 @@ function sendersOf(db: Db): Senders {
  */
 export function deliver<T extends Device>(db: Db, rows: readonly T[], aboutOf: (row: T) => NoticeAbout, ttl: number, urgency: Urgency = 'normal'): Promise<{ sent: number; removed: number }> {
   return deliverTo(rows, aboutOf, ttl, urgency, sendersOf(db));
+}
+
+/**
+ * What one run of a clock's function tells its players with: every player of the run shares what
+ * the run learns of Expo, so that an Expo that is down costs the run `EXPO_PATIENCE` once. `tell`
+ * takes a player's day with `claim` only when something of theirs can be told (`tellPlayer`).
+ */
+export function clockRun(db: Db): { run: ExpoRun; tell<T extends Device>(rows: readonly T[], claim: () => Promise<boolean>, aboutOf: (row: T) => NoticeAbout, ttl: number, urgency?: Urgency): Promise<Told> } {
+  const run = expoRun();
+  const senders = { ...sendersOf(db), run };
+  return { run, tell: (rows, claim, aboutOf, ttl, urgency = 'normal') => tellPlayer(rows, claim, aboutOf, ttl, urgency, senders) };
 }
 
 /** Sends phones alone their notice, through Expo's push service, a hundred at a time. */

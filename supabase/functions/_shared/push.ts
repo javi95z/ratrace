@@ -50,7 +50,28 @@ export interface Senders {
   forget: (row: Device) => Promise<void>;
   /** Where what went wrong with Expo is written, for the function's logs. Never handed a token. */
   log?: (line: string) => void;
+  /** What this run of the function has learned of Expo, shared by every send of the run. */
+  run?: ExpoRun;
 }
+
+/**
+ * What one run of a function has learned of Expo. Once Expo has kept a batch waiting past
+ * `EXPO_PATIENCE`, or could not be reached at all, it is not asked again in that run: the players
+ * after are told on their browsers alone, and a lasting outage costs the run its patience once, not
+ * once a player. An answer that came, even a refusal, leaves Expo to be asked.
+ */
+export interface ExpoRun {
+  /** Why Expo is left alone for the rest of the run (`timeout` or `unreachable`), or null while it is asked. */
+  down: string | null;
+  /** How many phones were not sent their notice because of it. */
+  skipped: number;
+}
+
+/** A run of a function that has not met Expo yet. */
+export const expoRun = (): ExpoRun => ({ down: null, skipped: 0 });
+
+/** The troubles that say Expo is down, rather than that it answered no. */
+const OUTAGE = new Set(['timeout', 'unreachable']);
 
 /** Expo's push service, and how many messages it takes at once. */
 export const EXPO_SEND = 'https://exp.host/--/api/v2/push/send';
@@ -99,7 +120,7 @@ async function askExpo(senders: Pick<Senders, 'post'>, init: { method: 'POST'; h
   const asked = (async (): Promise<{ tickets: unknown[] } | { trouble: string }> => {
     try {
       const answer = await senders.post(EXPO_SEND, { ...init, signal: controller.signal });
-      if (!answer.ok) return { trouble: `http ${answer.status}` };
+      if (!answer.ok) return { trouble: `http ${answer.status}${await requestError(answer)}` };
       const tickets = ((await answer.json()) as { data?: unknown } | null)?.data;
       return Array.isArray(tickets) ? { tickets } : { trouble: 'unreadable' };
     } catch {
@@ -113,6 +134,20 @@ async function askExpo(senders: Pick<Senders, 'post'>, init: { method: 'POST'; h
   }
 }
 
+/**
+ * The code of the error Expo refused a whole request with, after a space, such as
+ * ` PUSH_TOO_MANY_EXPERIENCE_IDS`: never its message or details, which name the tokens. Empty when
+ * there is none to read.
+ */
+async function requestError(answer: Answer): Promise<string> {
+  try {
+    const code = ((await answer.json()) as { errors?: Array<{ code?: unknown }> } | null)?.errors?.[0]?.code;
+    return typeof code === 'string' && /^[A-Z_]{1,60}$/.test(code) ? ` ${code}` : '';
+  } catch {
+    return '';
+  }
+}
+
 /** The error code of a ticket or a receipt of Expo's: never its message, which may name the token. */
 const errorCode = (ticket: unknown): string => {
   const code = (ticket as { details?: { error?: unknown } } | null)?.details?.error;
@@ -120,28 +155,42 @@ const errorCode = (ticket: unknown): string => {
 };
 
 /**
- * Sends each phone its notice through Expo's push service, a hundred at a time. A phone Expo says
- * is no longer registered is forgotten, as a browser the push service says is gone. Nothing is
- * forgotten when Expo cannot be reached, fails as a whole, or takes longer than `EXPO_PATIENCE`.
- * Batches Expo did not take, and tickets refused for another reason than a phone gone (wrong
- * credentials for Apple's or Google's service, too many messages), are counted in one line of the
- * log, by their codes alone.
+ * Sends each phone its notice through Expo's push service: each player's phones in their own
+ * batches, a hundred at a time, since Expo refuses a whole request whose tokens are of more than one
+ * project, and a player's token of another build must silence only them. A phone Expo says is no
+ * longer registered is forgotten, as a browser the push service says is gone. Nothing is forgotten
+ * when Expo cannot be reached, fails as a whole, or takes longer than `EXPO_PATIENCE`; after the
+ * first and the last, Expo is not asked again in the run (`ExpoRun`). Batches Expo did not take,
+ * and tickets refused for another reason than a phone gone (wrong credentials for Apple's or
+ * Google's service, too many messages), are counted in one line of the log, by their codes alone.
  */
-export async function deliverExpo<T extends AppDevice>(tokens: readonly T[], message: (row: T) => Notice, ttl: number, urgency: Urgency, senders: Pick<Senders, 'post' | 'expoToken' | 'forget' | 'log'>): Promise<{ sent: number; removed: number }> {
+export async function deliverExpo<T extends AppDevice>(tokens: readonly T[], message: (row: T) => Notice, ttl: number, urgency: Urgency, senders: Pick<Senders, 'post' | 'expoToken' | 'forget' | 'log' | 'run'>): Promise<{ sent: number; removed: number }> {
+  const run = senders.run;
+  if (run?.down) {
+    run.skipped += tokens.length;
+    return { sent: 0, removed: 0 };
+  }
   let sent = 0;
   let removed = 0;
+  let tripped = false;
   const failedBatches = new Map<string, number>();
   const refused = new Map<string, number>();
   const count = (into: Map<string, number>, key: string) => into.set(key, (into.get(key) ?? 0) + 1);
   const headers: Record<string, string> = { accept: 'application/json', 'accept-encoding': 'gzip, deflate', 'content-type': 'application/json' };
   if (senders.expoToken) headers.authorization = `Bearer ${senders.expoToken}`;
   const batches: T[][] = [];
-  for (let at = 0; at < tokens.length; at += EXPO_BATCH) batches.push(tokens.slice(at, at + EXPO_BATCH));
+  for (const own of byPlayer(tokens).values()) {
+    for (let at = 0; at < own.length; at += EXPO_BATCH) batches.push(own.slice(at, at + EXPO_BATCH));
+  }
   await Promise.all(
     batches.map(async (batch) => {
       const answer = await askExpo(senders, { method: 'POST', headers, body: JSON.stringify(batch.map((row) => expoMessage(row.token, message(row), ttl, urgency))) });
       if ('trouble' in answer) {
         count(failedBatches, answer.trouble);
+        if (run && run.down === null && OUTAGE.has(answer.trouble)) {
+          run.down = answer.trouble;
+          tripped = true;
+        }
         return;
       }
       // Expo answers a ticket for each message, in the order they were sent.
@@ -163,7 +212,7 @@ export async function deliverExpo<T extends AppDevice>(tokens: readonly T[], mes
   );
   if (failedBatches.size + refused.size > 0) {
     const listed = (counts: Map<string, number>) => [...counts].map(([code, n]) => `${code} ×${n}`).join(', ');
-    senders.log?.(`expo push: ${batches.length} batches, failed: ${listed(failedBatches) || 'none'}; tickets refused: ${listed(refused) || 'none'}`);
+    senders.log?.(`expo push: ${batches.length} batches, failed: ${listed(failedBatches) || 'none'}; tickets refused: ${listed(refused) || 'none'}${tripped ? '; Expo is not asked again in this run' : ''}`);
   }
   return { sent, removed };
 }
@@ -202,6 +251,27 @@ export async function deliverTo<T extends Device>(rows: readonly T[], aboutOf: (
         }),
   ]);
   return { sent, removed };
+}
+
+/** What became of one player in a run of the clock: told (`sent` may be 0, if every device failed), or why not. */
+export type Told = { told: true; sent: number; removed: number } | { told: false; why: 'had-today' | 'unreached' };
+
+/**
+ * Tells one player a notice of the clock on all their browsers and phones, after taking their
+ * notice of the day with `claim`. Their day is not taken when nothing of theirs can be told in this
+ * run: no browser (or no keys for browsers), and Expo left alone after it failed the run. A player
+ * with a phone alone keeps their day through an outage, and can be told by a later run. The player
+ * whose phone met the outage first did have their day taken: whether Expo sent it is not known, and
+ * a notice twice in a day is worse than one missed.
+ */
+export async function tellPlayer<T extends Device>(rows: readonly T[], claim: () => Promise<boolean>, aboutOf: (row: T) => NoticeAbout, ttl: number, urgency: Urgency, senders: Senders): Promise<Told> {
+  const browsers = senders.web === null ? 0 : rows.filter((row) => !isApp(row)).length;
+  if (browsers === 0 && senders.run?.down) {
+    senders.run.skipped += rows.filter((row) => isApp(row)).length;
+    return { told: false, why: 'unreached' };
+  }
+  if (!(await claim())) return { told: false, why: 'had-today' };
+  return { told: true, ...(await deliverTo(rows, aboutOf, ttl, urgency, senders)) };
 }
 
 /** Rows grouped by whose they are: a player's browsers and phones together. */

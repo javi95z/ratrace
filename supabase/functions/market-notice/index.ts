@@ -7,6 +7,7 @@
 // from its seed and log, and only the world the player is already in is read, never the next round.
 // A player is claimed their notice of the day only when there is something to say, and who has had
 // theirs already is left alone. A browser or a phone that turned this notice off is not even read.
+// Once Expo has failed the run, a player with a phone alone is left, with their day not taken.
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
 import { noting } from '../_deno/errors.ts';
@@ -15,7 +16,7 @@ import { json } from '../_shared/http.ts';
 import { GAMES } from '../_shared/game/index.ts';
 import { marketMover } from '../_shared/market.ts';
 import type { MarketRow } from '../_shared/market.ts';
-import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
+import { byPlayer, claimDay, clockRun, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
 type Browser = Subscription & MarketRow;
@@ -31,9 +32,11 @@ export default {
     let removed = 0;
     let skipped = 0;
     let quiet = 0;
+    let unreached = 0;
+    const notices = clockRun(db);
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await db.rpc('notice_market', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
-      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, quiet });
+      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, quiet, unreached });
       const rows = (data ?? []) as Browser[];
       for (const [user, browsers] of byPlayer(rows)) {
         const life = browsers[0];
@@ -44,16 +47,15 @@ export default {
           quiet += 1;
           continue;
         }
-        if (!(await claimDay(db, user, now))) {
-          skipped += 1;
-          continue;
-        }
-        const done = await deliver(db, browsers, () => ({ kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
-        sent += done.sent;
-        removed += done.removed;
+        const done = await notices.tell(browsers, () => claimDay(db, user, now), () => ({ kind: 'marketMoved', asset: mover.assetId, percent: mover.percent }), 86_400);
+        if (done.told) {
+          sent += done.sent;
+          removed += done.removed;
+        } else if (done.why === 'had-today') skipped += 1;
+        else unreached += 1;
       }
       if (rows.length < PAGE) break;
     }
-    return json(200, { sent, removed, skipped, quiet });
+    return json(200, { sent, removed, skipped, quiet, unreached });
   }, noting)),
 };

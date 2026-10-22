@@ -39,7 +39,8 @@ create policy "own phones are removed" on public.push_tokens for delete
 -- A phone follows whoever is signed in on it: from a guest to the account they sign in to, from one
 -- account to the next. Its row is claimed by the player who asks, whoever held it; the rules of the
 -- table could not move it, and the account before would go on being told on a phone it left. The
--- market notice, turned on by someone else, is turned off again for the new player.
+-- market notice, turned on by someone else, is turned off again for the new player, and the row's
+-- age (`created_at`) starts again: it says how long the phone has been this player's.
 create function public.claim_push_token(p_token text, p_platform text, p_locale text)
 returns void
 language sql
@@ -53,7 +54,8 @@ as $$
     user_id = excluded.user_id,
     platform = excluded.platform,
     locale = excluded.locale,
-    market_moved = case when t.user_id = excluded.user_id then t.market_moved else false end;
+    market_moved = case when t.user_id = excluded.user_id then t.market_moved else false end,
+    created_at = case when t.user_id = excluded.user_id then t.created_at else now() end;
 $$;
 revoke all on function public.claim_push_token(text, text, text) from public, anon;
 grant execute on function public.claim_push_token(text, text, text) to authenticated;

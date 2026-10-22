@@ -5,14 +5,15 @@
 // - `idle`, every evening: a life left untouched for a week, once, to a player who has not played
 //   any other since.
 // Neither is sent to a player who has had their notice of the day already, on any of their
-// browsers and phones: each is told on all of them, or on none.
+// browsers and phones: each is told on all of them, or on none. Once Expo has failed the run, a
+// player with a phone alone is left for another day, with their day not taken (`unreached`).
 import { withSupabase } from 'npm:@supabase/server@1.9.0';
 import type { SupabaseContext } from 'npm:@supabase/server@1.9.0';
 import { noting } from '../_deno/errors.ts';
 import { watched } from '../_shared/watch.ts';
 import { json, readJson } from '../_shared/http.ts';
 import { isoWeek } from '../_shared/notice.ts';
-import { byPlayer, claimDay, deliver, vapid } from '../_deno/push.ts';
+import { byPlayer, claimDay, clockRun, vapid } from '../_deno/push.ts';
 import type { Subscription } from '../_deno/push.ts';
 
 /** A browser or a phone, with its player's place in last week's challenge (null in the idle notice's rows). */
@@ -34,6 +35,8 @@ export default {
     let sent = 0;
     let removed = 0;
     let skipped = 0;
+    let unreached = 0;
+    const notices = clockRun(db);
     // Whose notice of the day this very call took: their other browsers and phones, on the next page, are sent it too.
     const taken = new Set<string>();
     for (let from = 0; ; from += PAGE) {
@@ -41,28 +44,29 @@ export default {
         kind === 'weekly'
           ? await db.rpc('notice_week', { week_id: isoWeek(now.getTime() - WEEK_MS) }).range(from, from + PAGE - 1)
           : await db.rpc('notice_idle', { p_now: now.toISOString() }).range(from, from + PAGE - 1);
-      if (error) return json(500, { error: 'read-failed', sent, removed, skipped });
+      if (error) return json(500, { error: 'read-failed', sent, removed, skipped, unreached });
       const rows = (data ?? []) as Placed[];
-      for (const [user, browsers] of byPlayer(rows)) {
-        if (!taken.has(user)) {
-          if (!(await claimDay(db, user, now))) {
-            skipped += 1;
-            continue;
-          }
-          taken.add(user);
-        }
-        const done = await deliver(
-          db,
-          browsers,
+      for (const [user, devices] of byPlayer(rows)) {
+        const done = await notices.tell(
+          devices,
+          async () => {
+            if (taken.has(user)) return true;
+            if (!(await claimDay(db, user, now))) return false;
+            taken.add(user);
+            return true;
+          },
           (row) => (kind === 'weekly' ? { kind: 'weekly', place: row.place, entrants: row.entrants } : { kind: 'idle' }),
           // A day to be delivered: a Monday notice is no use on Wednesday.
           86_400,
         );
-        sent += done.sent;
-        removed += done.removed;
+        if (done.told) {
+          sent += done.sent;
+          removed += done.removed;
+        } else if (done.why === 'had-today') skipped += 1;
+        else unreached += 1;
       }
       if (rows.length < PAGE) break;
     }
-    return json(200, { kind, sent, removed, skipped });
+    return json(200, { kind, sent, removed, skipped, unreached });
   }, noting)),
 };

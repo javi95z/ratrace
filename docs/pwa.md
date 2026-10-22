@@ -69,14 +69,19 @@ installed to the Home screen (iOS 16.4 or later).
   phone in `public.push_tokens` (its `ExponentPushToken[…]`, platform, language, and its own
   `market_moved`, off until turned on), owned by the player through RLS. The clock's notice
   functions list a player's browsers and phones together, so the day's one notice is claimed once for
-  all of them. A phone is sent the same words, in batches of 100, and a tap opens the app's screen
+  all of them. A phone is sent the same words, each player's phones in their own batches of 100 (Expo
+  refuses a whole request whose tokens are of more than one project), and a tap opens the app's screen
   (`theratrace://<page>`; the friends are `theratrace://rankings?tab=friends`, since the app's router
   drops a `#`). A phone Expo answers `DeviceNotRegistered` is deleted. Expo has 10 s to answer a
   batch; batches it fails and tickets it refuses for other reasons are counted in the function's log
-  by their codes alone (wrong Apple or Google credentials show there). `EXPO_ACCESS_TOKEN` is sent as
-  a bearer token where it is set as a secret; without it, Expo needs no key.
+  by their codes alone (wrong Apple or Google credentials show there). After one batch that timed out
+  or could not reach Expo, a run of the clock asks Expo no more: an outage costs the run 10 s once,
+  every browser is still told, and a player with a phone alone keeps their day for a later run (the
+  answer's `unreached`). `EXPO_ACCESS_TOKEN` is sent as a bearer token where it is set as a secret;
+  without it, Expo needs no key.
 - The app keeps its phone through `claim_push_token` (security definer): the row follows whoever
-  signs in on that phone, and its market switch is turned off when it changes hands.
+  signs in on that phone, and its market switch is turned off and its `created_at` starts again when
+  it changes hands.
 
 ### Setup, once
 

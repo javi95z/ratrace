@@ -1268,18 +1268,24 @@ begin
     then passed := passed + 1; else failed := array_append(failed, 'B saw, changed or removed A''s phone'); end if;
   -- A phone follows whoever signs in on it: claimed again by its own player it keeps their switch;
   -- claimed by another, it is theirs, and the market notice is off until they turn it on.
+  -- Its age is how long it has been its player's: kept when they claim it again, new when it changes hands.
+  update public.push_tokens set created_at = now() - interval '30 days' where token = tok_a;
   perform set_config('request.jwt.claims', json_build_object('sub', a, 'role', 'authenticated', 'is_anonymous', true)::text, true);
   set local role authenticated;
   perform public.claim_push_token(tok_a, 'ios', 'ru');
   reset role;
   if (select user_id = a and market_moved and locale = 'ru' from public.push_tokens where token = tok_a)
     then passed := passed + 1; else failed := array_append(failed, 'a player claiming their own phone again lost its switch or its language'); end if;
+  if (select created_at = now() - interval '30 days' from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'a player claiming their own phone again made it new'); end if;
   perform set_config('request.jwt.claims', json_build_object('sub', b, 'role', 'authenticated', 'is_anonymous', true)::text, true);
   set local role authenticated;
   perform public.claim_push_token(tok_a, 'android', 'en');
   reset role;
   if (select user_id = b and not market_moved and platform = 'android' and locale = 'en' from public.push_tokens where token = tok_a)
     then passed := passed + 1; else failed := array_append(failed, 'a phone did not follow the player who signed in on it, or kept the market notice of the one before'); end if;
+  if (select created_at = now() from public.push_tokens where token = tok_a)
+    then passed := passed + 1; else failed := array_append(failed, 'a phone that changed hands kept the age it had with the player before'); end if;
   if not has_function_privilege('anon', 'public.claim_push_token(text, text, text)', 'execute') and has_function_privilege('authenticated', 'public.claim_push_token(text, text, text)', 'execute')
     then passed := passed + 1; else failed := array_append(failed, 'a visitor with no account can claim a phone, or a player cannot'); end if;
   perform set_config('request.jwt.claims', '{}', true);

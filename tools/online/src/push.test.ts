@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_PATIENCE, EXPO_SEND, isApp } from '../../../supabase/functions/_shared/push.ts';
+import { byPlayer, deliverExpo, deliverTo, EXPO_BATCH, EXPO_PATIENCE, EXPO_SEND, expoRun, isApp, tellPlayer } from '../../../supabase/functions/_shared/push.ts';
 import type { AppDevice, Device, Senders, WebDevice } from '../../../supabase/functions/_shared/push.ts';
 import { noticeOf } from '../../../supabase/functions/_shared/notice.ts';
 import type { NoticeAbout } from '../../../supabase/functions/_shared/notice.ts';
@@ -15,7 +15,7 @@ interface Ticket {
 }
 
 /** Senders that remember what they were asked, a push service that answers as told, and Expo answering each message with a ticket. */
-function fakes(options: { web?: boolean; webFails?: (endpoint: string) => number | null; tickets?: (to: string) => Ticket; expoStatus?: number; expoThrows?: boolean } = {}) {
+function fakes(options: { web?: boolean; webFails?: (endpoint: string) => number | null; tickets?: (to: string) => Ticket; expoStatus?: number; expoThrows?: boolean; projectOf?: (to: string) => string } = {}) {
   const web: Array<{ subscription: unknown; payload: string; options: unknown }> = [];
   const posts: Array<{ url: string; headers: Record<string, string>; messages: Array<Record<string, unknown>> }> = [];
   const forgotten: Device[] = [];
@@ -36,6 +36,9 @@ function fakes(options: { web?: boolean; webFails?: (endpoint: string) => number
       if (options.expoThrows) throw new Error('offline');
       const messages = JSON.parse(init.body) as Array<Record<string, unknown>>;
       posts.push({ url, headers: init.headers, messages });
+      // Expo refuses a whole request whose tokens belong to more than one project.
+      const projects = new Set(messages.map((m) => options.projectOf?.(m.to as string) ?? '@ratrace/app'));
+      if (projects.size > 1) return { ok: false, status: 400, json: async () => ({ errors: [{ code: 'PUSH_TOO_MANY_EXPERIENCE_IDS', message: `${messages.map((m) => m.to as string).join(', ')} are of different projects` }] }) };
       const status = options.expoStatus ?? 200;
       return {
         ok: status >= 200 && status < 300,
@@ -152,14 +155,28 @@ describe('a notice to the browsers and the phones of players', () => {
               : { status: 'ok', id: 'x' },
     });
     expect(await deliverTo([phone('creds', 1), phone('creds', 2), phone('busy'), phone('dead'), phone('fine')], () => weekly, 60, 'normal', refusing.senders)).toEqual({ sent: 1, removed: 1 });
-    expect(refusing.logged).toEqual(['expo push: 1 batches, failed: none; tickets refused: InvalidCredentials ×2, MessageRateExceeded ×1']);
+    expect(refusing.logged).toEqual(['expo push: 4 batches, failed: none; tickets refused: InvalidCredentials ×2, MessageRateExceeded ×1']);
     const down = fakes({ expoStatus: 503 });
     await deliverTo([phone('u1')], () => weekly, 60, 'normal', down.senders);
-    expect(down.logged).toEqual(['expo push: 1 batches, failed: http 503 ×1; tickets refused: none']);
+    expect(down.logged).toEqual(['expo push: 1 batches, failed: http 503 INTERNAL_SERVER_ERROR ×1; tickets refused: none']);
     for (const line of [...refusing.logged, ...down.logged]) expect(line).not.toMatch(/ExponentPushToken|creds|busy|dead/);
     const fine = fakes();
     await deliverTo([phone('u1')], () => weekly, 60, 'normal', fine.senders);
     expect(fine.logged).toEqual([]);
+  });
+
+  it("sends each player's phones in their own batch, so that one player's token of another project silences only them", async () => {
+    const { senders, posts, logged } = fakes({ projectOf: (to) => (to.includes('elsewhere') ? '@someone/else' : '@ratrace/app') });
+    const mixed = [phone('u1'), browser('u2'), phone('u2'), { ...phone('u2', 2), token: 'ExponentPushToken[elsewhere]' }, phone('u3'), phone('u4'), phone('u4', 2)];
+    expect(await deliverTo(mixed, () => ({ kind: 'roomStarted', seconds: 90 }), 60, 'high', senders)).toEqual({ sent: 5, removed: 0 });
+    expect(posts.map((post) => post.messages.map((m) => m.to))).toEqual([
+      ['ExponentPushToken[u1-1]'],
+      ['ExponentPushToken[u2-1]', 'ExponentPushToken[elsewhere]'],
+      ['ExponentPushToken[u3-1]'],
+      ['ExponentPushToken[u4-1]', 'ExponentPushToken[u4-2]'],
+    ]);
+    expect(logged).toEqual(['expo push: 4 batches, failed: http 400 PUSH_TOO_MANY_EXPERIENCE_IDS ×1; tickets refused: none']);
+    for (const line of logged) expect(line).not.toMatch(/ExponentPushToken|elsewhere/);
   });
 
   it('still tells the phones where the game has no keys for browsers', async () => {
@@ -197,6 +214,118 @@ describe('a notice to the browsers and the phones of players', () => {
     const players = byPlayer(rows);
     expect([...players.keys()]).toEqual(['u1', 'u2']);
     expect(players.get('u1')?.map(isApp)).toEqual([false, false, true]);
+  });
+});
+
+describe('a run of the clock, when Expo is down', () => {
+  /** Players of a run: some with a phone alone, some with a browser and a phone, some with a browser alone. */
+  const players = (n: number): Device[][] =>
+    Array.from({ length: n }, (_, i) => {
+      const user = `u${i}`;
+      return i % 3 === 0 ? [phone(user)] : i % 3 === 1 ? [browser(user), phone(user)] : [browser(user)];
+    });
+
+  /** Tells each player in turn, as the clock's functions do, taking their day first; what each claim and each outcome was. */
+  async function run(groups: Device[][], senders: Senders) {
+    const claimed: string[] = [];
+    const outcomes: string[] = [];
+    for (const rows of groups) {
+      const told = await tellPlayer(
+        rows,
+        async () => {
+          claimed.push(rows[0].user_id);
+          return true;
+        },
+        () => weekly,
+        86_400,
+        'normal',
+        senders,
+      );
+      outcomes.push(told.told ? `told ${told.sent}` : told.why);
+    }
+    return { claimed, outcomes };
+  }
+
+  it('waits for an Expo that does not answer once in the run, not once a player, and tells every browser', async () => {
+    vi.useFakeTimers();
+    try {
+      const { senders, web, forgotten, logged } = fakes();
+      let asked = 0;
+      const state = expoRun();
+      const hanging: Senders = {
+        ...senders,
+        run: state,
+        post: () => {
+          asked += 1;
+          return new Promise(() => {});
+        },
+      };
+      const groups = players(30);
+      let finished: Awaited<ReturnType<typeof run>> | null = null;
+      void run(groups, hanging).then((result) => {
+        finished = result;
+      });
+      await vi.advanceTimersByTimeAsync(EXPO_PATIENCE - 1);
+      expect(finished).toBeNull();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(finished).not.toBeNull();
+      const { claimed, outcomes } = finished as unknown as Awaited<ReturnType<typeof run>>;
+      expect(asked).toBe(1);
+      expect(state.down).toBe('timeout');
+      // Every browser of the run is told: twenty of the thirty players have one.
+      expect(web.map((sent) => (sent.subscription as { endpoint: string }).endpoint)).toEqual(groups.flat().filter((row) => !isApp(row)).map((row) => (row as WebDevice).endpoint));
+      expect(forgotten).toEqual([]);
+      // The first player, whose phone met the timeout, had their day taken: nobody knows whether Expo sent it.
+      // Every other player with a phone alone keeps their day, and may be told another day.
+      expect(outcomes[0]).toBe('told 0');
+      expect(claimed).toEqual(groups.filter((rows, i) => i === 0 || rows.some((row) => !isApp(row))).map((rows) => rows[0].user_id));
+      expect(outcomes.filter((outcome) => outcome === 'unreached')).toHaveLength(9);
+      expect(state.skipped).toBe(9 + 10);
+      expect(logged).toEqual(['expo push: 1 batches, failed: timeout ×1; tickets refused: none; Expo is not asked again in this run']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('asks no more after Expo could not be reached, and asks again on the next run', async () => {
+    const { senders, posts, web } = fakes({ expoThrows: true });
+    const first = { ...senders, run: expoRun() };
+    const { claimed, outcomes } = await run(players(9), first);
+    expect(first.run.down).toBe('unreachable');
+    expect(outcomes).toEqual(['told 0', 'told 1', 'told 1', 'unreached', 'told 1', 'told 1', 'unreached', 'told 1', 'told 1']);
+    expect(claimed).toEqual(['u0', 'u1', 'u2', 'u4', 'u5', 'u7', 'u8']);
+    expect(web).toHaveLength(6);
+    const next = fakes();
+    const second = { ...next.senders, run: expoRun() };
+    expect((await run(players(9), second)).outcomes).toEqual(['told 1', 'told 2', 'told 1', 'told 1', 'told 2', 'told 1', 'told 1', 'told 2', 'told 1']);
+    expect(next.posts).toHaveLength(6);
+    expect(posts).toHaveLength(0);
+  });
+
+  it('goes on asking Expo after an answer that came quickly, even a refusal', async () => {
+    const { senders, posts } = fakes({ expoStatus: 503 });
+    const state = expoRun();
+    const { outcomes } = await run(players(6), { ...senders, run: state });
+    expect(state.down).toBeNull();
+    expect(posts).toHaveLength(4);
+    expect(outcomes).toEqual(['told 0', 'told 1', 'told 1', 'told 0', 'told 1', 'told 1']);
+  });
+
+  it('never takes the day of a player nothing can be told: no browser keys, and Expo down', async () => {
+    const { senders } = fakes({ web: false });
+    const state = expoRun();
+    state.down = 'timeout';
+    let asked = 0;
+    const told = await tellPlayer([browser('u1'), phone('u1')], async () => (asked += 1) > 0, () => weekly, 60, 'normal', { ...senders, run: state });
+    expect(told).toEqual({ told: false, why: 'unreached' });
+    expect(asked).toBe(0);
+  });
+
+  it('tells nobody whose day was taken already', async () => {
+    const { senders, web, posts } = fakes();
+    expect(await tellPlayer([browser('u1'), phone('u1')], async () => false, () => weekly, 60, 'normal', { ...senders, run: expoRun() })).toEqual({ told: false, why: 'had-today' });
+    expect(web).toEqual([]);
+    expect(posts).toEqual([]);
   });
 });
 
