@@ -42,6 +42,14 @@ export function cleanField(kind: FieldKind, text: string, maxLength: number | un
   return maxLength === undefined ? kept : kept.slice(0, maxLength);
 }
 
+/** Whether `next` is `full` (at its most already) with something typed into it: every letter of it still there, in order, and more. */
+function intoFull(full: string, next: string, max: number): boolean {
+  if (full.length < max || next.length <= full.length) return false;
+  let at = 0;
+  for (const letter of next) if (letter === full[at]) at += 1;
+  return at === full.length;
+}
+
 interface TextFieldProps {
   /** What a screen reader calls it (the web's `<label>` round it, or its `aria-label`). */
   label: string;
@@ -81,7 +89,12 @@ export function TextField({ label, value, onChangeText, kind = 'text', maxLength
         <TextInput
           accessibilityLabel={label}
           value={value}
-          onChangeText={(text) => onChangeText(cleanField(kind, text, max))}
+          onChangeText={(text) => {
+            // A full room code takes nothing typed into it, as the web's `maxLength` refuses it: a letter let in and the last one cut would leave
+            // the caret where it was, and the next letter would land before it. A paste over it is still taken (`intoFull` is an insertion only).
+            if (kind === 'room' && max !== undefined && intoFull(value, cleanField(kind, text, undefined), max)) return;
+            onChangeText(cleanField(kind, text, max));
+          }}
           // A room's code is cleaned, then cut (`cleanField`): the phone's own limit would cut a paste first ('k7-q2 xm' to 'k7-q2 '), and its
           // code would come out short. The web's `maxLength={6}` does the same; holding the cut back is the phone's improvement on it.
           maxLength={kind === 'room' ? undefined : max}

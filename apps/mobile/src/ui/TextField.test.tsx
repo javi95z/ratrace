@@ -170,6 +170,24 @@ test('a room code is the web\'s: letters and digits only, upper-cased, six at mo
   expect(input().style.getPropertyValue('--placeholderTextColor')).toBe(COLORS['ink-500']);
 });
 
+test('a full room code takes nothing typed into it, as the web\'s `maxLength` refuses it: never a letter let in and the last one cut', () => {
+  // Typed between two letters of a full code, a letter cut from the end would leave the caret where it was (the phone keeps it as far from the end
+  // as it was), and the next letter typed would land before the one just typed: QR came out RQ on the simulator.
+  const onChange = vi.fn();
+  render(<Held kind="room" start="ABCDXY" onChange={onChange} />);
+  fireEvent.change(input(), { target: { value: 'ABCQDXY' } });
+  expect(onChange).not.toHaveBeenCalled();
+  expect(input().value).toBe('ABCDXY');
+  // A paste over the whole code is still taken, cleaned and cut.
+  fireEvent.change(input(), { target: { value: 'k7-q2 xm9' } });
+  expect(onChange).toHaveBeenLastCalledWith('K7Q2XM');
+  // And a code with room left takes a letter anywhere.
+  cleanup();
+  render(<Held kind="room" start="ABCD" onChange={onChange} />);
+  fireEvent.change(input(), { target: { value: 'ABxCD' } });
+  expect(onChange).toHaveBeenLastCalledWith('ABXCD');
+});
+
 test('what a field keeps of what is typed, by its kind', () => {
   expect(cleanField('text', 'Ratty 99', 16)).toBe('Ratty 99');
   expect(cleanField('text', 'x'.repeat(20), 16)).toBe('x'.repeat(16));
