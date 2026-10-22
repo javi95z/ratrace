@@ -61,12 +61,22 @@ export function trackTo(parts: TrackParts): Track {
 /** Noted once the install has been counted on this phone (or tried, on its first launch): the next launches count nothing. */
 const INSTALLED = 'ratrace:installed';
 
+/** How many times the install may reach the client and fail on the launch that holds it: a few, never more. */
+export const INSTALL_TRIES = 5;
+
+/** Something that says when it has changed: the account, or the phone's connection. */
+interface Changes {
+  subscribe(listener: () => void): () => void;
+}
+
 /**
  * The install of the app, counted on its first launch (in a release build): noted at once, so it is never counted on another launch, then sent once
- * the account's client has connected and the phone is online. Dropped if that launch never gets there, as any count made offline is. A phone that
- * keeps nothing counts nothing, rather than an install on every launch. Returns how to stop waiting.
+ * the account's client has connected and the phone is online. A send that did not get through (`later`: no answer, the server down) is tried again
+ * on that same launch, as the account or the connection changes, up to `INSTALL_TRIES` times; one the function refused (`never`) is not. Nothing is
+ * kept for another launch: a launch that never gets it through loses it, as any count made offline is lost. A phone that keeps nothing counts
+ * nothing, rather than an install on every launch. Returns how to stop waiting.
  */
-export function countInstalled(parts: TrackParts, account: Pick<Account, 'subscribe'>, noted: KeptText): () => void {
+export function countInstalled(parts: TrackParts, changes: Changes[], noted: KeptText): () => void {
   if (!parts.release) return () => {};
   try {
     if (noted.getItem(INSTALLED) !== null) return () => {};
@@ -76,21 +86,24 @@ export function countInstalled(parts: TrackParts, account: Pick<Account, 'subscr
   }
   let sending = false;
   let over = false;
+  let tries = 0;
+  const stops: Array<() => void> = [];
   const stop = () => {
     over = true;
-    stopListening?.();
+    for (const one of stops.splice(0)) one();
   };
-  // Tried as the account changes (it connects as the app starts, and again when the network comes back), until it has been sent once.
+  // Tried as the account changes (it connects as the app starts) and as the connection changes, until it has gone, been refused, or run out of tries.
   const attempt = () => {
     if (sending || over) return;
     sending = true;
     void send(parts, { name: 'app_installed' }).then((came) => {
       sending = false;
-      if (came !== 'dropped') stop();
+      if (came === 'dropped') return;
+      tries += 1;
+      if (came !== 'later' || tries >= INSTALL_TRIES) stop();
     });
   };
-  let stopListening: (() => void) | null = null;
-  stopListening = account.subscribe(attempt);
+  for (const one of changes) stops.push(one.subscribe(attempt));
   attempt();
   return stop;
 }
@@ -107,6 +120,6 @@ export function phoneTrack(account: Pick<Account, 'subscribe'>, noted: KeptText,
   // Listened to for as long as the app lasts, so that what the phone knows of its connection is never stale when an event is sent.
   if (release) phoneConnection.subscribe(() => undefined);
   const parts: TrackParts = { cloud: phonesCloud, platform, release, connected: phoneConnection.connected };
-  countInstalled(parts, account, noted);
+  countInstalled(parts, [account, phoneConnection], noted);
   return trackTo(parts);
 }

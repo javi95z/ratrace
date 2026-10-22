@@ -10,7 +10,7 @@ import { servers } from '../testing/cloudServers';
 import { appState } from '../testing/fakes';
 import { released } from '../ui/testing/released';
 import { forgetThePhone, phoneOnline } from './index';
-import { countInstalled, phoneTrack, trackTo } from './track';
+import { countInstalled, INSTALL_TRIES, phoneTrack, trackTo } from './track';
 import type { KeptText, TrackParts } from './track';
 
 /*
@@ -122,7 +122,7 @@ describe('the install, counted once', () => {
     const noted = notes();
     const who = account();
     let reached: Cloud | null = null;
-    countInstalled(parts(null, { cloud: () => reached }), who, noted);
+    countInstalled(parts(null, { cloud: () => reached }), [who], noted);
     await settle();
     expect(sent).toEqual([]);
     // The account connects as the app starts: the install goes then.
@@ -134,43 +134,78 @@ describe('the install, counted once', () => {
     expect(who.listening()).toBe(0);
     // The next launch: noted, so nothing.
     const next = account();
-    countInstalled(parts(cloud), next, noted);
+    countInstalled(parts(cloud), [next], noted);
     next.changed();
     await settle();
     expect(sent).toHaveLength(1);
     expect(next.listening()).toBe(0);
   });
 
-  it('waits on the first launch for a connection, and drops it, never keeping it for another launch, if the cloud could not take it', async () => {
-    const { cloud, sent } = cloudCounting(async () => 'later');
+  it('waits on the first launch for a connection, tries again on that launch when it did not get through, and never on another', async () => {
+    let answer: Sent = 'later';
+    const { cloud, sent } = cloudCounting(async () => answer);
     const noted = notes();
     const who = account();
+    const connection = account();
     let online = false;
-    countInstalled(parts(cloud, { connected: () => online }), who, noted);
+    countInstalled(parts(cloud, { connected: () => online }), [who, connection], noted);
     await settle();
     expect(sent).toEqual([]);
+    // The network comes back: tried, and it did not get through.
     online = true;
-    who.changed();
+    connection.changed();
     await settle();
     expect(sent).toHaveLength(1);
-    // It could not be counted: it is not sent again, on this launch or the next.
-    who.changed();
-    countInstalled(parts(cloud), account(), noted);
+    // Tried again on the same launch, as the connection or the account changes, until it gets through.
+    connection.changed();
     await settle();
-    expect(sent).toHaveLength(1);
+    expect(sent).toHaveLength(2);
+    answer = 'sent';
+    who.changed();
+    await settle();
+    expect(sent).toHaveLength(3);
+    expect(who.listening() + connection.listening()).toBe(0);
+    // Never on the next launch, whatever became of it.
+    const next = account();
+    countInstalled(parts(cloud), [next], noted);
+    next.changed();
+    await settle();
+    expect(sent).toHaveLength(3);
+  });
+
+  it('gives up on the launch after a few tries that did not get through, and at once on one the function refused', async () => {
+    const { cloud, sent } = cloudCounting(async () => 'later');
+    const who = account();
+    countInstalled(parts(cloud), [who], notes());
+    for (let change = 0; change < 2 * INSTALL_TRIES; change += 1) {
+      await settle();
+      who.changed();
+    }
+    await settle();
+    expect(sent).toHaveLength(INSTALL_TRIES);
+    expect(who.listening()).toBe(0);
+
+    const refused = cloudCounting(async () => 'never');
+    const again = account();
+    countInstalled(parts(refused.cloud), [again], notes());
+    await settle();
+    again.changed();
+    await settle();
+    expect(refused.sent).toHaveLength(1);
+    expect(again.listening()).toBe(0);
   });
 
   it('notes nothing and sends nothing in development: the first release launch is the one counted', async () => {
     const { cloud, sent } = cloudCounting();
     const noted = notes();
     const who = account();
-    countInstalled(parts(cloud, { release: false }), who, noted);
+    countInstalled(parts(cloud, { release: false }), [who], noted);
     who.changed();
     await settle();
     expect(sent).toEqual([]);
     expect(noted.kept.size).toBe(0);
     expect(who.listening()).toBe(0);
-    countInstalled(parts(cloud), account(), noted);
+    countInstalled(parts(cloud), [account()], noted);
     await settle();
     expect(sent).toEqual([{ name: 'app_installed', props: {}, platform: 'ios' }]);
   });
@@ -178,7 +213,7 @@ describe('the install, counted once', () => {
   it('counts nothing on a phone that keeps nothing, rather than on every launch', async () => {
     const { cloud, sent } = cloudCounting();
     const broken: KeptText = { getItem: () => { throw new Error('no store'); }, setItem: () => { throw new Error('no store'); } };
-    expect(() => countInstalled(parts(cloud), account(), broken)).not.toThrow();
+    expect(() => countInstalled(parts(cloud), [account()], broken)).not.toThrow();
     await settle();
     expect(sent).toEqual([]);
   });
@@ -193,7 +228,7 @@ describe('the phone\'s sender, over the phone\'s cloud', () => {
     vi.unstubAllGlobals();
   });
 
-  it('posts to the project\'s `track` function through the account\'s client, with the publishable key, the install once', async () => {
+  it('posts to the project\'s `track` function through a client with no session, with the publishable key and no player\'s token, the install once', async () => {
     vi.stubEnv('EXPO_PUBLIC_SUPABASE_URL', URL_OF_PROJECT);
     vi.stubEnv('EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_x');
     const project = servers();
@@ -215,7 +250,14 @@ describe('the phone\'s sender, over the phone\'s cloud', () => {
     for (const [, init] of counted) {
       expect(init?.method).toBe('POST');
       expect(new Headers(init?.headers).get('apikey')).toBe('sb_publishable_x');
+      // The guest is signed in, and still no token of theirs goes with an event: only the publishable key.
+      expect(new Headers(init?.headers).get('authorization')).toBeNull();
     }
+    expect(online.account.state()).toEqual({ kind: 'guest', userId: 'guest-1', notice: null });
+    // While the player's own calls carry their session, as they must.
+    const theirs = project.fetch.mock.calls.filter(([input]) => String(input).includes('/rest/v1/'));
+    expect(theirs.length).toBeGreaterThan(0);
+    for (const [, init] of theirs) expect(new Headers(init?.headers).get('authorization')).toMatch(/^Bearer ey/);
 
     // The next launch of the app: the install is not counted again.
     appState.set('background');

@@ -114,11 +114,18 @@ function mayLoad({ url, isTopFrame }: { url: string; isTopFrame: boolean }): boo
   }
 }
 
+/**
+ * What the page may load: Cloudflare's own example for Turnstile in a mobile WebView (developers.cloudflare.com/turnstile/get-started/
+ * mobile-implementation, "Content Security Policy"), with the page's own inline style let in besides.
+ */
+export const PAGE_POLICY = "default-src 'self'; script-src 'self' challenges.cloudflare.com 'unsafe-inline'; connect-src 'self' challenges.cloudflare.com; frame-src 'self' challenges.cloudflare.com; style-src 'self' 'unsafe-inline'";
+
 /** The page: Turnstile's script, and the widget for the site key, its answers posted back. The site key and the look are written in as JSON. */
 function pageFor(siteKey: string, appearance: 'interaction-only' | 'always'): string {
   const background = COLORS['night-800'];
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="${PAGE_POLICY}">
 <style>html,body{margin:0;padding:0;background:${background}}#widget{display:flex;justify-content:center;padding:8px 0}</style>
 </head><body><div id="widget"></div>
 <script>
@@ -150,8 +157,10 @@ function pageFor(siteKey: string, appearance: 'interaction-only' | 'always'): st
 }
 
 /**
- * The page of one ask. Storage and cookies are kept, as Turnstile asks of a WebView; a link in it opens nothing; and what it says is taken only for
- * the ask it belongs to.
+ * The page of one ask. Storage and cookies are kept, as Turnstile asks of a WebView. Every load is put to `mayLoad`, the one gate: the library's
+ * `originWhitelist` is let pass everything (`*`), because what it turns away it hands to the phone to open (react-native-webview's
+ * `createOnShouldStartLoadWithRequest`), a link out of the page, or one of the game's own `theratrace://`. Turned away by `mayLoad`, a load is
+ * only cancelled: nothing is opened. What the page says is taken only for the ask it belongs to.
  */
 function TurnstilePage({ ask, appearance, height }: { ask: Asking; appearance: 'interaction-only' | 'always'; height: number }) {
   const { id, settle } = ask;
@@ -168,7 +177,7 @@ function TurnstilePage({ ask, appearance, height }: { ask: Asking; appearance: '
   return (
     <WebView
       source={{ html: pageFor(ask.siteKey, appearance), baseUrl: `${site()}/` }}
-      originWhitelist={[site(), 'https://challenges.cloudflare.com', 'about:blank', 'about:srcdoc']}
+      originWhitelist={['*']}
       onShouldStartLoadWithRequest={mayLoad}
       onMessage={heard}
       onError={() => settle(null)}

@@ -3,13 +3,14 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { Linking } from 'react-native';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SITE_URL } from '../game/site';
 import { WordsProvider } from '../game/words';
 import { KvStore } from '../kvStore';
 import { servers } from '../testing/cloudServers';
 import { appState, webViews } from '../testing/fakes';
-import { CaptchaHost, phoneTurnstile, TURNSTILE_SCRIPT } from './captcha';
+import { CaptchaHost, PAGE_POLICY, phoneTurnstile, TURNSTILE_SCRIPT } from './captcha';
 import { forgetThePhone, phoneOnline } from './index';
 
 /*
@@ -33,6 +34,7 @@ const sheet = () => screen.queryByRole('heading', { name: 'A quick check' });
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  vi.restoreAllMocks();
   appState.set('background');
   forgetThePhone();
   vi.unstubAllEnvs();
@@ -126,6 +128,9 @@ describe('the page Turnstile runs in', () => {
     expect(web).toContain(`const SCRIPT = '${TURNSTILE_SCRIPT}';`);
     expect(html()).toContain(`src="${TURNSTILE_SCRIPT}"`);
     expect(html()).toContain('"0x4AAAAAAAsite"');
+    // Cloudflare's own policy for the page: its script and its frames, and nothing else from anywhere.
+    expect(html()).toContain(`<meta http-equiv="Content-Security-Policy" content="${PAGE_POLICY}">`);
+    expect(PAGE_POLICY).toBe("default-src 'self'; script-src 'self' challenges.cloudflare.com 'unsafe-inline'; connect-src 'self' challenges.cloudflare.com; frame-src 'self' challenges.cloudflare.com; style-src 'self' 'unsafe-inline'");
     // The web's options: interaction only, one try, one word.
     for (const option of ['"interaction-only"', "theme: 'dark'", "retry: 'never'", "'refresh-expired': 'never'", "'before-interactive-callback'"]) expect(html()).toContain(option);
     expect(page().props.source).toMatchObject({ baseUrl: `${SITE}/` });
@@ -146,6 +151,17 @@ describe('the page Turnstile runs in', () => {
     expect(may({ url: 'https://evil.example/', isTopFrame: true })).toBe(false);
     expect(may({ url: 'https://evil.example/', isTopFrame: false })).toBe(false);
     expect(may({ url: 'not an address', isTopFrame: true })).toBe(false);
+    // The game's own links, and any other scheme, in a frame or not: refused, so only cancelled.
+    for (const url of ['theratrace://room/ABCD', 'theratrace://auth?code=x', 'mailto:a@b.c', 'intent://x#Intent;end', 'https://challenges.cloudflare.com.evil.example/']) {
+      expect(may({ url, isTopFrame: true }), url).toBe(false);
+      expect(may({ url, isTopFrame: false }), url).toBe(false);
+    }
+    // And nothing turned away by a list of the library's own, which would hand it to the phone to open: every load comes to this gate.
+    expect(page().props.originWhitelist).toEqual(['*']);
+    // No page is opened by the app for what the gate refuses.
+    const opened = vi.spyOn(Linking, 'openURL');
+    expect(may({ url: 'theratrace://room/ABCD', isTopFrame: true })).toBe(false);
+    expect(opened).not.toHaveBeenCalled();
   });
 
   it('takes no word but one the page plainly said: from the game\'s site, in its own shape', async () => {
@@ -187,6 +203,21 @@ describe('the page Turnstile runs in', () => {
     // A site key that is not one is never put in a page.
     expect(await phoneTurnstile('0x4"</script><script>alert(1)')()).toBeNull();
     expect(webViews).toEqual([]);
+  });
+
+  it('ends an ask still waiting when a new one is made, with no word, so nothing waits out its time for a page no longer there', async () => {
+    host();
+    let first: string | null | undefined;
+    void phoneTurnstile('0x4AAAAAAAsite')().then((said) => (first = said));
+    await settled();
+    const earlier = page();
+    const second = phoneTurnstile('0x4AAAAAAAsite')();
+    await settled();
+    expect(first).toBeNull();
+    expect(webViews).toHaveLength(1);
+    expect(page()).not.toBe(earlier);
+    act(() => page().props.onMessage?.(says({ turnstile: 'word', word: 'second' })));
+    expect(await second).toBe('second');
   });
 
   it('asks afresh every time, because a word is good once, and a late word from an earlier page is nobody\'s', async () => {

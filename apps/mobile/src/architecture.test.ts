@@ -305,6 +305,8 @@ describe('the wall between the phone\'s screens and the game', () => {
     const captcha = readFileSync(join(SRC, 'online/captcha.tsx'), 'utf8');
     expect(captcha).toContain("export const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';");
     expect(captcha).toContain('onShouldStartLoadWithRequest={mayLoad}');
+    // Every load put to that gate: the library opens with the phone what its own list turns away.
+    expect(captcha).toContain("originWhitelist={['*']}");
     expect(captcha).toContain('baseUrl: `${site()}/`');
   });
 

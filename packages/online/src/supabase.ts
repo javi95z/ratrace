@@ -50,7 +50,8 @@ export interface Cloud extends SyncCloud {
   autoRefresh?(on: boolean): Promise<void>;
   /**
    * Counts one event of how the game is played, in the game's own project (`supabase/functions/track`): what happened, with what, where, and
-   * nothing of who. Never throws. Left out by a cloud that counts nothing (the web counts with Vercel).
+   * nothing of who, sent through a client with no session, so with the publishable key and no player's token. Never throws. Left out by a cloud
+   * that counts nothing (the web counts with Vercel).
    */
   track?(event: TrackedEvent): Promise<Sent>;
 }

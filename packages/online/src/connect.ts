@@ -115,7 +115,7 @@ function queryOf(address: string, name: string): string | null {
  * The cloud, made from a Supabase client. Every table it touches is guarded in the database: a
  * player reads and writes their own rows and nothing else, whatever this code asks for.
  */
-export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOptions = {}): Cloud {
+export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOptions = {}, counting?: () => Pick<SupabaseClient, 'functions'>): Cloud {
   /**
    * Google through a browser that comes back, for a client that cannot leave its page (a phone): the
    * address the client asked for is opened, and the code the browser comes back with is exchanged for
@@ -511,8 +511,10 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
       await (on ? client.auth.startAutoRefresh() : client.auth.stopAutoRefresh());
     },
     async track(event) {
+      // Counted through a client with no session (`connectSupabase`), never the player's: the function is told nothing of who, not even a token.
+      if (counting === undefined) return 'never';
       try {
-        const { error } = await client.functions.invoke('track', { body: event });
+        const { error } = await counting().functions.invoke('track', { body: event });
         if (!error) return 'sent';
         // The function's own no: not an event it knows, no key, or too many of it today. Sent again, it would get the same.
         const word = await wordOf(error);
@@ -543,5 +545,9 @@ export async function connectSupabase(url: string, key: string, options: CloudOp
   // A storage is named only where there is one: the browser's client is made as it always was.
   const { storage, autoRefresh = true } = options;
   const auth = { persistSession: true, autoRefreshToken: autoRefresh, detectSessionInUrl: true, flowType: 'pkce' as const, ...(storage ? { storage } : {}) };
-  return cloudOf(createClient(url, key, { auth, global: { fetch: patient } }), options);
+  // What is counted goes through a client of its own, made the first time something is counted: it has no session to send (`accessToken` answers
+  // none, and it keeps and renews nothing), so a call carries the publishable key and no player's token.
+  let counting: SupabaseClient | null = null;
+  const countingClient = () => (counting ??= createClient(url, key, { accessToken: async () => null, global: { fetch: patient } }));
+  return cloudOf(createClient(url, key, { auth, global: { fetch: patient } }), options, countingClient);
 }
