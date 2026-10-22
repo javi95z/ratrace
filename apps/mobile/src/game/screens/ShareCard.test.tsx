@@ -340,6 +340,49 @@ describe('saving the picture to the phone\'s photos', () => {
     expect(photos.saved).toEqual([FILE]);
   });
 
+  it('takes no Share while the picture is being saved, nor a Save while it is being shared: both write the one file of the cache', async () => {
+    let letGo = () => {};
+    photos.held = new Promise((done) => (letGo = done));
+    show();
+    const sheet = await drawn();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    await waitFor(() => expect(photos.asked).toHaveLength(1));
+    // Shared while it is saving: nothing goes to the share sheet, and the file being saved is not written again under it.
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+    await new Promise((done) => setTimeout(done, 20));
+    expect(shareSheet.handed).toEqual([]);
+    letGo();
+    expect((await within(sheet).findByRole('status')).textContent).toBe('Saved to your photos.');
+    expect(photos.saved).toEqual([FILE]);
+    // Done saving, it shares; and while it is shared (on Android, until the sheet hands it on), a Save is nothing.
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Share' }));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    await waitFor(() => expect(shareSheet.handed).toHaveLength(1));
+    await new Promise((done) => setTimeout(done, 20));
+    expect(photos.asked).toHaveLength(1);
+  });
+
+  it('says nothing of a save that ended after the sheet was closed, when it is opened again', async () => {
+    let letGo = () => {};
+    photos.held = new Promise((done) => (letGo = done));
+    show();
+    const sheet = await drawn();
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Save the picture' }));
+    await waitFor(() => expect(photos.asked).toHaveLength(1));
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'A picture of this life' })).toBeNull());
+    letGo();
+    await waitFor(() => expect(photos.saved).toEqual([FILE]));
+    await new Promise((done) => setTimeout(done, 20));
+    const again = await drawn();
+    expect(within(again).queryByRole('status')).toBeNull();
+    expect(within(again).queryByRole('alert')).toBeNull();
+    // A save made in this opening is told, as ever.
+    photos.held = null;
+    fireEvent.click(within(again).getByRole('button', { name: 'Save the picture' }));
+    expect((await within(again).findByRole('status')).textContent).toBe('Saved to your photos.');
+  });
+
   it('speaks Spanish and Russian', async () => {
     photos.allows = false;
     renderGame(<ShareCard ops={ops} fileName="rat-race-nurse-364.png" alt="Nurse: score 364" load={async () => picture() as never} faces={faces} />, memoryServices(), 'ru');

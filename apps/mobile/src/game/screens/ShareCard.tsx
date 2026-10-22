@@ -185,11 +185,12 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
   // The picture travels with a way into the game, in the language it was played in.
   const invite = t('invite', { url: new URL(`/${locale}`, SITE_URL).href });
   const [open, setOpen] = useState(opened);
-  // A picture being handed over: a second press of Share meanwhile is no second share.
-  const sending = useRef(false);
-  // A picture being saved to the photos: a second press of Save meanwhile is no second picture there. And what came of the last save.
-  const saving = useRef(false);
+  // The picture being handed over or saved: one at a time, Share or Save, as both write the one file of the cache's `share/` folder (game/sharing.ts),
+  // which the other would take away under it. A second press of either meanwhile does nothing.
+  const busy = useRef(false);
+  // What came of the last save. The sheet's opening it belongs to: a save that ends after the sheet has closed says nothing the next time it opens.
   const [saved, setSaved] = useState<'saved' | 'refused' | 'failed' | null>(null);
+  const opening = useRef(0);
   const [picture, setPicture] = useState<{ image: SkImage; png: Uint8Array } | 'failed' | null>(null);
 
   useEffect(() => {
@@ -216,6 +217,7 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
     })();
     return () => {
       live = false;
+      opening.current += 1;
       drawn?.dispose();
       setPicture(null);
       setSaved(null);
@@ -243,13 +245,13 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
               variant="primary"
               wide
               onPress={() => {
-                if (sending.current) return;
-                sending.current = true;
+                if (busy.current) return;
+                busy.current = true;
                 void share
                   .send(ready.png, fileName, alt, invite)
                   .then((shared) => shared && track({ name: 'share', what: 'card' }), () => undefined)
                   .finally(() => {
-                    sending.current = false;
+                    busy.current = false;
                   });
               }}
             >
@@ -260,13 +262,17 @@ export function ShareCard({ ops, fileName, alt, load, faces: typefaces, opened =
               variant="secondary"
               wide
               onPress={() => {
-                if (saving.current) return;
-                saving.current = true;
+                if (busy.current) return;
+                busy.current = true;
+                const mine = opening.current;
+                const say = (what: 'saved' | 'refused' | 'failed') => {
+                  if (opening.current === mine) setSaved(what);
+                };
                 void share
                   .save(ready.png, fileName)
-                  .then(setSaved, () => setSaved('failed'))
+                  .then(say, () => say('failed'))
                   .finally(() => {
-                    saving.current = false;
+                    busy.current = false;
                   });
               }}
             >

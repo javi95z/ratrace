@@ -171,17 +171,25 @@ export const expoSharing = {
  * The phone's photos (expo-media-library): whether the player allows the app to add to them (the system's question, answered), whether saving
  * fails, what was asked (`writeOnly` and, on Android, the kinds of media), and the files saved there, in order.
  */
-export const photos = { allows: true, fails: false, asked: [] as Array<{ writeOnly: boolean | undefined; granular: string[] | undefined }>, saved: [] as string[] };
+export const photos = {
+  allows: true,
+  fails: false,
+  asked: [] as Array<{ writeOnly: boolean | undefined; granular: string[] | undefined }>,
+  saved: [] as string[],
+  /** A save held until this is let go (a phone slow to save), where a test sets one. */
+  held: null as Promise<void> | null,
+};
 export const expoMediaLibrary = {
   requestPermissionsAsync: (writeOnly?: boolean, granular?: string[]) => {
     photos.asked.push({ writeOnly, granular });
     return Promise.resolve({ granted: photos.allows, status: photos.allows ? 'granted' : 'denied', canAskAgain: true, expires: 'never' });
   },
   Asset: {
-    create: (filePath: string) => {
-      if (photos.fails) return Promise.reject(new Error('the phone could not save it'));
+    create: async (filePath: string) => {
+      if (photos.held) await photos.held;
+      if (photos.fails) throw new Error('the phone could not save it');
       photos.saved.push(filePath);
-      return Promise.resolve({ id: `asset-${photos.saved.length}` });
+      return { id: `asset-${photos.saved.length}` };
     },
   },
 };
@@ -214,7 +222,7 @@ export function resetFakes(): void {
   folders.add('file:///cache/');
   shareSheet.available = true;
   shareSheet.handed.length = 0;
-  Object.assign(photos, { allows: true, fails: false });
+  Object.assign(photos, { allows: true, fails: false, held: null });
   photos.asked.length = 0;
   photos.saved.length = 0;
   painted.reset();
