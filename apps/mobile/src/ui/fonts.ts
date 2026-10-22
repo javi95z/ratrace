@@ -230,6 +230,22 @@ export function runsOf(text: string, role: Role, weight: Weight, language = 'en'
 }
 
 /**
+ * The one face a text that cannot be cut into runs is set in: a native text field takes one font for all it holds, and the platform's own
+ * fallback (not the web's) draws what that font lacks. The face the kit's runs give the text, where they give one (a Latin name is Chakra's on
+ * a Russian page too, as the web draws it); where they would give several, the first face of the language's stack that draws every character
+ * (Exo 2 for a Russian name with digits, Oswald for a Russian pixel text), at its run's scale; else the first run's. Empty, the stack's first.
+ */
+export function oneFace(text: string, role: Role, weight: Weight, language = 'en'): Run {
+  const stack = stackOf(role, weight, language);
+  const runs = runsOf(text, role, weight, language);
+  if (runs.length === 0) return { text, family: stack[0], scale: scaleOf(stack[0], role) };
+  if (runs.length === 1) return runs[0];
+  const points = Array.from(text, (ch) => ch.codePointAt(0)!);
+  const all = stack.find((family) => points.every((point) => draws(family, point)));
+  return all === undefined ? { ...runs[0], text } : { text, family: all, scale: scaleOf(all, role) };
+}
+
+/**
  * Where the browser puts the baseline of a line, in points below the line's top: the room left over by the line height is split above and below the first
  * font's ascent and descent (each rounded to a whole pixel), the half above rounded down. The line is set from the first font of the stack, whichever font
  * draws what is in it (the pixel stack's, with Jersey at its adjusted size). It is what two texts of different sizes that share a baseline (the web's

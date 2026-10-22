@@ -10,13 +10,14 @@ import { Screen } from '../ui/Page';
 import { Picker } from '../ui/Picker';
 import { RatAvatar } from '../ui/RatAvatar';
 import { Sprite } from '../ui/Sprite';
+import { TextField } from '../ui/TextField';
 import { Language, PixelText, ReadText } from '../ui/text';
 
 type KitMotion = typeof import('../ui/kitMotion');
 // Cut out of a release build (`__DEV__` is `false` there, folded before the bundle's files are gathered: ui/devRoutes.test.ts), as the route itself goes home.
 const kitMotion: KitMotion | null = __DEV__ ? (require('../ui/kitMotion') as KitMotion) : null;
 
-const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
+const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2', 'forms'] as const;
 type Section = (typeof KIT_SECTIONS)[number];
 
 const LOOK: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
@@ -29,6 +30,13 @@ const RU = { pixel: 'Новый год: 12 346 $', read: 'Вы платите а
 
 /** The pressed look, held still: a pressable's `pressDown`, as the web page copies `active:translate-y-[2px]`. */
 const Pressed = ({ children }: { children: ReactNode }) => <View style={pressDown(true)}>{children}</View>;
+/** A field under its name, as the web's rankings write one (`flex flex-col gap-1 text-[13px] text-ink-200`). */
+const Labelled = ({ name, children }: { name: string; children: ReactNode }) => (
+  <View style={{ gap: 4 }}>
+    <ReadText size={13} tone="ink-200">{name}</ReadText>
+    {children}
+  </View>
+);
 const Wrap = ({ children, gap = 8, end = false }: { children: ReactNode; gap?: number; end?: boolean }) => (
   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap, alignItems: end ? 'flex-end' : 'stretch' }}>{children}</View>
 );
@@ -205,6 +213,19 @@ function Body({ section }: { section: Section }): ReactNode {
       return null;
     case 'motion-2':
       return kitMotion ? <kitMotion.MotionTwo /> : null;
+    case 'forms':
+      // Empty, with a placeholder, filled, focused (held, with no keyboard: the web's `:focus-visible` ring), a friend's code, a room's code.
+      return (
+        <>
+          <Labelled name="Name"><TextField label="Name" value="" onChangeText={noop} maxLength={16} /></Labelled>
+          <Labelled name="Name"><TextField label="Name" value="" placeholder="Your name" onChangeText={noop} maxLength={16} /></Labelled>
+          <Labelled name="Name"><TextField label="Name" value="Ratty_99" onChangeText={noop} maxLength={16} /></Labelled>
+          <Labelled name="Name"><TextField label="Name" value="Ratty_99" onChangeText={noop} maxLength={16} focused /></Labelled>
+          <Labelled name="Friend code"><TextField label="Friend code" kind="code" value="AB12CD34" onChangeText={noop} maxLength={12} /></Labelled>
+          <Labelled name="Code"><TextField label="Code" kind="room" value="K7Q2XM" onChangeText={noop} /></Labelled>
+          <Labelled name="Code"><TextField label="Code" kind="room" value="" placeholder="······" onChangeText={noop} /></Labelled>
+        </>
+      );
   }
 }
 

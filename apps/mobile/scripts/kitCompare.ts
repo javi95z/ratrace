@@ -1,14 +1,24 @@
 import { join } from 'node:path';
 
 /** The sections of the kit page, in their order: the same list as apps/mobile/src/app/kit.tsx and the web's kit/page.tsx. */
-export const SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
+export const SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2', 'forms'] as const;
 export type Section = (typeof SECTIONS)[number];
 
 /** The sections phase 2 added to the kit; the others are phase 1's. */
 export const PHASE_2_SECTIONS: readonly Section[] = ['motion-2'];
 
+/** The sections phase 3 added to the kit: the text fields of the online screens. */
+export const PHASE_3_SECTIONS: readonly Section[] = ['forms'];
+
+/**
+ * The sections on both kit pages and not shot yet. From phase 3 on, a task registers what it adds and does not shoot it (the phase's method, as the
+ * scenes' `PENDING_SHOTS`): the batch pass (phase 3's Task 14) shoots each, compares it, fixes what differs, and takes it out of this list.
+ */
+export const PENDING_SECTIONS: ReadonlySet<Section> = new Set<Section>(['forms']);
+
 /** The folder under `docs/superpowers/reports` that has a section's picture and its numbers: the report of the phase that added it. */
-export const reportFolder = (section: Section): 'phase-1-parity' | 'phase-2-parity' => (PHASE_2_SECTIONS.includes(section) ? 'phase-2-parity' : 'phase-1-parity');
+export const reportFolder = (section: Section): 'phase-1-parity' | 'phase-2-parity' | 'phase-3-parity' =>
+  PHASE_3_SECTIONS.includes(section) ? 'phase-3-parity' : PHASE_2_SECTIONS.includes(section) ? 'phase-2-parity' : 'phase-1-parity';
 
 /** The screen of the comparison: an iPhone 16 Pro, in points, its density, and the safe areas left out (the status bar, the home indicator). */
 export const SCREEN = { width: 402, height: 874, scale: 3, top: 62, bottom: 34 } as const;

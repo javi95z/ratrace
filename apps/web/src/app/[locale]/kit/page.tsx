@@ -9,9 +9,10 @@ import { Sheet, Tabs, Toast } from '@/ui/overlay';
 import { Picker } from '@/ui/Picker';
 import { RatAvatar } from '@/ui/RatAvatar';
 import { Sprite } from '@/ui/Sprite';
+import { FIELD } from '@/game/screens/Rankings';
 import { MotionTwo } from './motion';
 
-const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2'] as const;
+const KIT_SECTIONS = ['buttons', 'surfaces', 'stats', 'bars', 'choices', 'lists', 'sheet-gold', 'sheet-wine', 'tabs', 'art', 'text-es', 'text-ru', 'type', 'dots', 'motion-2', 'forms'] as const;
 type Section = (typeof KIT_SECTIONS)[number];
 
 const LOOK: RatLook = { colour: 'teal', body: 'grey', face: 'grin', outfit: 'suit', hat: 'crown', eyes: 'round', backdrop: 'stars' };
@@ -21,6 +22,11 @@ const SIZES = [11, 12, 14, 15, 16, 17, 19, 28] as const;
 
 const ES = { pixel: 'Año nuevo: 12.346 $', read: 'Pagas el alquiler y te quedan 1.234 $ para el mes.' };
 const RU = { pixel: 'Новый год: 12 346 $', read: 'Вы платите аренду, и на месяц остаётся 1 234 $.' };
+
+/** The room code's field, as Room.tsx writes it. */
+const ROOM_FIELD = 'pixel frame sunk min-h-11 w-full bg-night-900 px-3 text-[22px] tracking-[0.3em] text-cream placeholder:text-ink-500';
+/** The web's `:focus-visible` look, held still with no focus: the outline globals.css gives it. */
+const FOCUSED = { outline: '3px solid var(--color-gold-200)', outlineOffset: 3, position: 'relative', zIndex: 1 } as const;
 
 /** The web's pressed look, held still: the `active:translate-y-[2px]` of a pressable, copied. */
 const Pressed = ({ children }: { children: ReactNode }) => <div style={{ transform: 'translateY(2px)' }}>{children}</div>;
@@ -201,6 +207,40 @@ function Body({ section }: { section: Section }): ReactNode {
       return null;
     case 'motion-2':
       return <MotionTwo />;
+    case 'forms':
+      // Empty, with a placeholder, filled, focused (held: the `:focus-visible` ring), a friend's code, a room's code.
+      return (
+        <>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Name'}
+            <input defaultValue="" maxLength={16} autoComplete="off" autoCapitalize="off" spellCheck={false} className={FIELD} />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Name'}
+            <input defaultValue="" placeholder="Your name" maxLength={16} autoComplete="off" autoCapitalize="off" spellCheck={false} className={FIELD} />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Name'}
+            <input defaultValue="Ratty_99" maxLength={16} autoComplete="off" autoCapitalize="off" spellCheck={false} className={FIELD} />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Name'}
+            <input defaultValue="Ratty_99" maxLength={16} autoComplete="off" autoCapitalize="off" spellCheck={false} className={FIELD} style={FOCUSED} />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Friend code'}
+            <input defaultValue="AB12CD34" maxLength={12} autoComplete="off" autoCapitalize="characters" spellCheck={false} className={`${FIELD} uppercase tracking-[0.12em]`} />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Code'}
+            <input defaultValue="K7Q2XM" maxLength={6} autoComplete="off" autoCapitalize="characters" spellCheck={false} className={ROOM_FIELD} placeholder="······" />
+          </label>
+          <label className="flex flex-col gap-1 text-[13px] text-ink-200">
+            {'Code'}
+            <input defaultValue="" maxLength={6} autoComplete="off" autoCapitalize="characters" spellCheck={false} className={ROOM_FIELD} placeholder="······" />
+          </label>
+        </>
+      );
   }
 }
 

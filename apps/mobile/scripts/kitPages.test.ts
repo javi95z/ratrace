@@ -20,7 +20,7 @@ test('the two kits write the same words', () => {
   const words = (source: string) => new Set(wordsOf(source).filter((w) => !/^(flex|grid|pixel|text-|mb-|h-|contents|@container|mx-auto)/.test(w)));
   const inApp = words(app);
   const inWeb = words(web);
-  for (const w of ['Start a new life', 'Money put aside for a rainy day.', 'A panel without a title.', 'Not enough cash', 'Your salary rises by 400 $ a month.', 'Новый год: 12 346 $', 'Año nuevo: 12.346 $', 'Clicks and coins']) {
+  for (const w of ['Start a new life', 'Money put aside for a rainy day.', 'A panel without a title.', 'Not enough cash', 'Your salary rises by 400 $ a month.', 'Новый год: 12 346 $', 'Año nuevo: 12.346 $', 'Clicks and coins', 'Your name', 'Friend code', 'Ratty_99', 'AB12CD34', 'K7Q2XM']) {
     expect(inApp.has(w), `app: ${w}`).toBe(true);
     expect(inWeb.has(w), `web: ${w}`).toBe(true);
   }

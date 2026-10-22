@@ -223,6 +223,15 @@ export const expoSharing = {
   isAvailableAsync: () => Promise.resolve(shareSheet.available),
   shareAsync: (url: string, options?: Record<string, unknown>) => (shareSheet.fails ? Promise.reject(new Error('the share sheet would not open')) : Promise.resolve(void shareSheet.handed.push({ url, options }))),
 };
+/** The phone's clipboard (expo-clipboard, `ui/copy.ts`): what was last put on it, and whether it takes it (a phone's always does; a test can say no). */
+export const clipboard = { text: null as string | null, refuses: false };
+export const expoClipboard = {
+  setStringAsync: async (text: string): Promise<boolean> => {
+    if (clipboard.refuses) return false;
+    clipboard.text = text;
+    return true;
+  },
+};
 
 /**
  * The phone's photos (expo-media-library): whether the player allows the app to add to them (the system's question, answered), whether saving
@@ -291,6 +300,7 @@ export function resetFakes(): void {
   photos.asked.length = 0;
   photos.saved.length = 0;
   painted.reset();
+  Object.assign(clipboard, { text: null, refuses: false });
 }
 
 /**

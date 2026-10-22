@@ -6,7 +6,7 @@ import { fromWeb, openPage, PORT, raw, root, shootApp, TEXT_BOXES, withWebPage }
 /**
  * The kit beside the web's, shot for shot: every section of the kit page, on the web (Playwright, at the iPhone 16 Pro's
  * 402 × 874 pt at 3×, with its safe areas: 62 on top, 34 below) and in the app (Expo Go on the booted simulator), then
- * compared pixel by pixel into docs/superpowers/reports/phase-1-parity/ or phase-2-parity/, by the phase that added the section.
+ * compared pixel by pixel into docs/superpowers/reports/phase-1-parity/, phase-2-parity/ or phase-3-parity/, by the phase that added the section.
  *
  *   pnpm --filter @ratrace/web exec tsx ../mobile/scripts/kit-shots.ts [web] [app] [compare] [--only=section,section]
  *

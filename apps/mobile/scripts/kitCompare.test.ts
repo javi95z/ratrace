@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { blendedEdges, differences, groundOf, inkOf, PHASE_2_SECTIONS, reportFolder, SECTIONS, textSummary, verdictOf, wrongPage, type Image, type Result } from './kitCompare';
+import { blendedEdges, differences, groundOf, inkOf, PENDING_SECTIONS, PHASE_2_SECTIONS, PHASE_3_SECTIONS, reportFolder, SECTIONS, textSummary, verdictOf, wrongPage, type Image, type Result } from './kitCompare';
 
 const NIGHT = [0x14, 0x1b, 0x33];
 const GOLD = [0xf2, 0xc1, 0x4e];
@@ -118,6 +118,15 @@ test('a section\'s picture and numbers go to the report of the phase that added 
   for (const section of PHASE_2_SECTIONS) expect(SECTIONS).toContain(section);
   // phase 1 is the 14 sections it shot
   expect(SECTIONS.filter((s) => reportFolder(s) === 'phase-1-parity')).toHaveLength(14);
+  // phase 3's text fields go beside phase 3's scenes
+  expect(reportFolder('forms')).toBe('phase-3-parity');
+  expect([...PHASE_3_SECTIONS]).toEqual(['forms']);
+  for (const section of PHASE_3_SECTIONS) expect(SECTIONS).toContain(section);
+});
+
+test('a section waits for its batch pass, unjudged, until it is shot: phase 3\'s forms', () => {
+  expect([...PENDING_SECTIONS]).toEqual(['forms']);
+  for (const section of PENDING_SECTIONS) expect(SECTIONS).toContain(section);
 });
 
 test('an edge one shot blends and the other draws hard is told from a colour that is simply not there', () => {

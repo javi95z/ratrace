@@ -25,6 +25,7 @@ vi.mock('expo-media-library', async () => (await import('./fakes')).expoMediaLib
 vi.mock('expo-network', async () => (await import('./fakes')).expoNetwork);
 vi.mock('expo-web-browser', async () => (await import('./fakes')).expoWebBrowser);
 vi.mock('expo-constants', async () => (await import('./fakes')).expoConstants);
+vi.mock('expo-clipboard', async () => (await import('./fakes')).expoClipboard);
 vi.mock('../ui/soundSources', async () => (await import('./fakes')).soundSources);
 vi.mock('react-native-safe-area-context', async () => (await import('./fakes')).safeArea);
 vi.mock('../ui/Sprite', async () => (await import('./fakes')).spriteModule);
