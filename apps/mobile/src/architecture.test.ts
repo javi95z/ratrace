@@ -310,6 +310,25 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(captcha).toContain('baseUrl: `${site()}/`');
   });
 
+  it('lets one file only reach the phone\'s notices (expo-notifications), the push\'s (online/push.ts): what asks the player, holds the token and opens a tap\'s link', () => {
+    // The library named however it is taken (an import, a type, a `require`, a late `import()`, a file of it).
+    const reachesNotices = (source: string): boolean => /['"]expo-notifications(\/[^'"]*)?['"]/.test(source);
+    expect(reachesNotices("import * as Notifications from 'expo-notifications';")).toBe(true);
+    expect(reachesNotices("import type { NotificationResponse } from 'expo-notifications';")).toBe(true);
+    expect(reachesNotices("const { getExpoPushTokenAsync } = require('expo-notifications');")).toBe(true);
+    expect(reachesNotices("const tokens = await import('expo-notifications/build/getExpoPushTokenAsync');")).toBe(true);
+    // A word that only names one is not one.
+    expect(reachesNotices('// the notices come through expo-notifications, in online/push.ts')).toBe(false);
+    const reaching = shipped.filter((path) => reachesNotices(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
+    // And the tests' stand-in for the library (testing/setup.ts).
+    expect(reaching).toEqual(['apps/mobile/src/online/push.ts', 'apps/mobile/src/testing/setup.ts']);
+    // The push opens only what `pageOf` lets through, and takes no store of the phone's: its note is handed in by the game's context.
+    const push = readFileSync(join(SRC, 'online/push.ts'), 'utf8');
+    expect(push).toMatch(/const path = pageOf\(/);
+    expect(importsOf(join(SRC, 'online/push.ts')).map((i) => i.from)).not.toContain('@/kvStore');
+    expect(readFileSync(join(SRC, 'game/context.tsx'), 'utf8')).toContain('phonePush(kvPush)');
+  });
+
   it('gives a small thing that is pressed its 44 points in its own box (the kit\'s `reach`), never by a `hitSlop`: React Native looks for no touch past a parent\'s edge', () => {
     const slopping = mine.filter((path) => /\bhitSlop\b/.test(readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).map(rel);
     expect(slopping).toEqual([]);

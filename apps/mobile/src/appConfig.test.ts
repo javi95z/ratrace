@@ -33,3 +33,9 @@ test('plays its sounds and asks for nothing more: no microphone (no description 
   expect(audio?.[1]).toEqual({ microphonePermission: false, recordAudioAndroid: false, enableBackgroundPlayback: false });
   expect(config.expo.plugins).not.toContain('expo-audio');
 });
+
+test('shows the game\'s notices in the channel the app names (online/push.ts), with no work in the background: a tap opens the app, nothing more', () => {
+  const notifications = config.expo.plugins.find((plugin): plugin is [string, Record<string, unknown>] => Array.isArray(plugin) && plugin[0] === 'expo-notifications');
+  expect(notifications?.[1]).toEqual({ defaultChannel: 'default', enableBackgroundRemoteNotifications: false });
+  expect(readFileSync(new URL('./online/push.ts', import.meta.url), 'utf8')).toContain("const CHANNEL = 'default';");
+});

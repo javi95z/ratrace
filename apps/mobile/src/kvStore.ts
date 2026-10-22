@@ -258,6 +258,27 @@ export const kvKeeping = {
   },
 };
 
+/** What the app remembers of the game's notices on this phone (`online/push.ts`): turned on, off, or refused by the player, who is never asked twice. */
+const PUSH = 'ratrace:push';
+
+export const kvPush = {
+  read: (): 'on' | 'off' | 'refused' | null => {
+    try {
+      const noted = Storage.getItemSync(PUSH);
+      return noted === 'on' || noted === 'off' || noted === 'refused' ? noted : null;
+    } catch {
+      return null;
+    }
+  },
+  write: (state: 'on' | 'off' | 'refused'): void => {
+    try {
+      Storage.setItemSync(PUSH, state);
+    } catch {
+      // A phone that keeps nothing: the notices are not kept on, and a refusal is the phone's own to remember (it does not ask again).
+    }
+  },
+};
+
 /** Where the phone notes whose account it last saw signed in, under the web's key: for the language of an account to follow a sign-in. */
 const LAST_ACCOUNT = 'ratrace.lastAccount';
 

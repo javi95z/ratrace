@@ -50,7 +50,14 @@
           "granularPermissions": []
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ]
     ],
     "scheme": "theratrace",
     "backgroundColor": "#141b33",

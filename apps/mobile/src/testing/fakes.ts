@@ -312,6 +312,78 @@ function FakeWebView(props: Record<string, unknown>) {
 }
 export const reactNativeWebView = { __esModule: true, default: FakeWebView, WebView: FakeWebView };
 
+/** What a tap on a notice hands the app (expo-notifications' `NotificationResponse`): the notice, with the `data` the server put in it. */
+export interface NoticeTap {
+  notification: { request: { identifier: string; content: { data: Record<string, unknown> } } };
+  actionIdentifier: string;
+}
+/** A tap on a notice that carries `url` in its data, as the game's server sends one (`supabase/functions/_shared/push.ts`). */
+export const tapOn = (url: unknown, identifier = 'notice-1'): NoticeTap => ({
+  notification: { request: { identifier, content: { data: { url, tag: 'room' } } } },
+  actionIdentifier: 'expo.modules.notifications.actions.DEFAULT',
+});
+
+/**
+ * The phone's notices (expo-notifications): what the phone says of the app's permission and what the player answers when asked (`answer`), how
+ * many times they were asked, the token Expo gives (or a failure), the channels made, the tap the app was opened by (`last`), and who listens to
+ * taps and to a new token. `tap` and `newToken` are the phone telling them.
+ */
+export const notices = {
+  status: 'undetermined' as 'granted' | 'denied' | 'undetermined',
+  canAskAgain: true,
+  answer: 'granted' as 'granted' | 'denied',
+  asked: 0,
+  token: 'ExponentPushToken[phone-1]',
+  tokenFails: false,
+  tokenAsks: [] as Array<{ projectId?: string; devicePushToken?: unknown }>,
+  channels: [] as Array<{ id: string; name: string; importance: number }>,
+  last: null as NoticeTap | null,
+  cleared: 0,
+  taps: new Set<(response: NoticeTap) => void>(),
+  tokens: new Set<(token: { type: string; data: string }) => void>(),
+  tap(response: NoticeTap) {
+    for (const listener of [...notices.taps]) listener(response);
+  },
+  newToken(token: { type: string; data: string }) {
+    for (const listener of [...notices.tokens]) listener(token);
+  },
+};
+const permission = () => ({ status: notices.status, granted: notices.status === 'granted', canAskAgain: notices.canAskAgain, expires: 'never' });
+export const expoNotifications = {
+  AndroidImportance: { DEFAULT: 5, HIGH: 6 },
+  getPermissionsAsync: async () => permission(),
+  requestPermissionsAsync: async () => {
+    notices.asked += 1;
+    notices.status = notices.answer;
+    if (notices.answer === 'denied') notices.canAskAgain = false;
+    return permission();
+  },
+  getExpoPushTokenAsync: async (options: { projectId?: string; devicePushToken?: unknown } = {}) => {
+    notices.tokenAsks.push(options);
+    if (notices.tokenFails) throw new Error('no token for this phone');
+    return { type: 'expo', data: notices.token };
+  },
+  setNotificationChannelAsync: async (id: string, channel: { name: string; importance: number }) => {
+    notices.channels.push({ id, name: channel.name, importance: channel.importance });
+    return { id, ...channel };
+  },
+  getLastNotificationResponseAsync: async () => notices.last,
+  clearLastNotificationResponseAsync: async () => {
+    notices.cleared += 1;
+    notices.last = null;
+  },
+  addNotificationResponseReceivedListener: (listener: (response: NoticeTap) => void) => {
+    notices.taps.add(listener);
+    return { remove: () => void notices.taps.delete(listener) };
+  },
+  addPushTokenListener: (listener: (token: { type: string; data: string }) => void) => {
+    notices.tokens.add(listener);
+    return { remove: () => void notices.tokens.delete(listener) };
+  },
+};
+/** The phone itself (expo-device): a real one, unless a test makes it a simulator. */
+export const expoDevice = { isDevice: true };
+
 export const expoClipboard = {
   setStringAsync: async (text: string): Promise<boolean> => {
     if (clipboard.refuses) return false;
@@ -401,6 +473,13 @@ export function resetFakes(): void {
   painted.reset();
   Object.assign(clipboard, { text: null, refuses: false });
   webViews.length = 0;
+  Object.assign(notices, { status: 'undetermined', canAskAgain: true, answer: 'granted', asked: 0, token: 'ExponentPushToken[phone-1]', tokenFails: false, last: null, cleared: 0 });
+  notices.tokenAsks.length = 0;
+  notices.channels.length = 0;
+  notices.taps.clear();
+  notices.tokens.clear();
+  expoDevice.isDevice = true;
+  delete (expoConstants.default as { executionEnvironment?: string }).executionEnvironment;
 }
 
 /**

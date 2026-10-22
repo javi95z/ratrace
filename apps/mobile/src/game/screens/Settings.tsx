@@ -24,7 +24,7 @@ import { CYRILLIC_ALONE } from '../../ui/fonts';
 import { Sprite } from '../../ui/Sprite';
 import { Language, PixelText, ReadText, SNUG, TIGHT } from '../../ui/text';
 import { COLORS, TOUCH } from '../../ui/theme';
-import { useAccount, useAccountSaving, useGame, useGuide, useSaving, useSettings, useWords } from '../context';
+import { useAccount, useAccountSaving, useCommunity, useGame, useGuide, usePush, useSaving, useSettings, useWords } from '../context';
 import { useT } from '../words';
 
 /** The languages the game speaks, each under its own name. */
@@ -155,8 +155,83 @@ export function Switches() {
       <Toggle on={sound} onChange={setSound} label={t('sound')} hint={t('soundHint')} />
       <Toggle on={reducedMotion} onChange={setReducedMotion} label={home('motion')} hint={home('motionHint')} />
       <Toggle on={!guide.off} onChange={(on) => guide.setOff(!on)} label={t('guide')} hint={t('guideHint')} />
+      <WeeklyNotice />
     </View>
   );
+}
+
+/**
+ * Being told when a new weekly challenge begins, even with the game closed (the web's `WeeklyNotice`). It is offered only where the phone can be
+ * told (`usePush().available()`: a phone with the app built for the game's Expo project) and there is an account to keep the token in; a no from the
+ * player is said, since only the phone's settings can undo it, and they are never asked twice.
+ */
+function WeeklyNotice() {
+  const t = useT('settings');
+  const phone = useT('phone');
+  const { locale } = useSettings();
+  const community = useCommunity();
+  const push = usePush();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [refused, setRefused] = useState(false);
+  // The phone gave no token after all: there is nothing to turn on here.
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    let live = true;
+    if (push.available()) void push.isOn().then((held) => live && setOn(held));
+    return () => {
+      live = false;
+    };
+  }, [push]);
+  if (gone || !push.available() || community === null || on === null) return null;
+  const change = async (want: boolean) => {
+    if (want) {
+      const got = await push.pushOn();
+      if (got === 'unavailable') return setGone(true);
+      if (got === 'refused') return setRefused(true);
+      setRefused(false);
+      setOn(await push.register(community, locale));
+    } else {
+      await push.pushOff(community);
+      setOn(false);
+    }
+  };
+  return (
+    <>
+      <Toggle on={on} onChange={(want) => void change(want)} label={t('weeklyNotice')} hint={refused ? phone('noticesBlocked') : t('weeklyNoticeHint')} />
+      {on ? <MarketNotice /> : null}
+    </>
+  );
+}
+
+/**
+ * The notice that something held in a ranked life moved, on its own (the web's `MarketNotice`): it can be turned off while the rest are kept. Shown
+ * only while this phone is told, and only once the server has said what it is now, so the switch never shows a guess.
+ */
+function MarketNotice() {
+  const t = useT('settings');
+  const community = useCommunity();
+  const push = usePush();
+  const [on, setOn] = useState<boolean | null>(null);
+  const [target, setTarget] = useState<{ expo: string } | null>(null);
+  useEffect(() => {
+    let live = true;
+    void push.target().then(async (held) => {
+      if (!held || community === null) return;
+      const now = await community.marketNotice(held);
+      if (live) {
+        setTarget(held);
+        setOn(now);
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [community, push]);
+  if (community === null || target === null || on === null) return null;
+  const change = async (want: boolean) => {
+    if (await community.setMarketNotice(target, want)) setOn(want);
+  };
+  return <Toggle on={on} onChange={(want) => void change(want)} label={t('marketNotice')} hint={t('marketNoticeHint')} />;
 }
 
 /** The account's copy out of reach, with what is played kept on the phone alone for now: the one thing of saving the block says. */

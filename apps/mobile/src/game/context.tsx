@@ -24,7 +24,7 @@ import { useRouter } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvKeeping, kvLanguage, kvLastAccount, KvStore, kvText } from '../kvStore';
+import { kvKeeping, kvLanguage, kvLastAccount, kvPush, KvStore, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
@@ -32,6 +32,8 @@ import { CaptchaHost } from '../online/captcha';
 import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
+import { phonePush } from '../online/push';
+import type { Push } from '../online/push';
 import { phoneTrack } from '../online/track';
 import { closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
 import { perfStore } from '../ui/perf';
@@ -96,6 +98,8 @@ export interface Services {
   now?: () => number;
   /** Where what is counted of how the game is played goes (`events.ts`). Left out, nothing is counted. */
   track?: Track;
+  /** The game's notices on the phone (`online/push.ts`). Left out, the phone's own, over its store. */
+  push?: Push;
 }
 
 /** Long enough for the second tap of a double tap, short enough that nobody waits for it. */
@@ -136,6 +140,7 @@ interface Cloud {
   saves: AccountSaves;
   community: () => Community | null;
   track: Track;
+  push: Push;
   store: PlayerStore;
   /** True where the phone has a project to sign in to. */
   canSignIn: boolean;
@@ -223,6 +228,7 @@ interface Made {
   language: LanguageKeep;
   now: () => number;
   track: Track;
+  push: Push;
   basket?: BasketKeep;
   tapGuardMs: number;
 }
@@ -231,7 +237,7 @@ interface Made {
 const roundStore = ({ sessions, tapGuardMs, basket }: Pick<Made, 'sessions' | 'tapGuardMs' | 'basket'>): GameStore =>
   createGameStore({ sessions, content, now: () => performance.now(), guardMs: tapGuardMs, ...(basket ? { basket } : {}) });
 
-function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore }: Services): Made {
+function make({ sessions, store, saving, tapGuardMs, account, saves, community, rooms, schedule, basket, introduceTabs, language, now, track = ignore, push }: Services): Made {
   const guard = tapGuardMs ?? TAP_GUARD_MS;
   const counted = countingStarts(sessions, track);
   const roomStore = createRoomStore({
@@ -260,6 +266,8 @@ function make({ sessions, store, saving, tapGuardMs, account, saves, community, 
     language: language ?? kvLanguage,
     now: now ?? Date.now,
     track,
+    // The phone's notices, over the note the phone's store keeps of them: made with the game, whatever services a test hands it.
+    push: push ?? phonePush(kvPush),
     basket,
     tapGuardMs: guard,
   };
@@ -307,6 +315,16 @@ function Place(): null {
 }
 
 /**
+ * A tap on one of the game's notices opens the screen it names, over whatever is shown: the tap that opened the app (once the router is there), and
+ * each one while it runs. Inside the router, round every screen, once for the app: a game started again does not open the same tap again.
+ */
+function Taps({ push }: { push: Push }): null {
+  const router = useRouter();
+  useEffect(() => push.onTap((path) => router.push(path)), [push, router]);
+  return null;
+}
+
+/**
  * Holds the game for every screen under it: the round store, the player's profile, the words of the language in use, and the cloud. It
  * opens the life in progress, if there is one, as soon as it mounts. Started again (`restart`, when the player signs out) it is drawn anew
  * over a new round store, as the web's page is loaded again: the cloud is the same one, and the account in it starts a new guest. The player
@@ -348,6 +366,7 @@ export function GameProvider({ children, services }: { children: ReactNode; serv
   return (
     <>
       <Place />
+      <Taps push={made.push} />
       <Started key={started.count} made={made} settings={started.settings} restart={restart}>
         {children}
       </Started>
@@ -452,6 +471,9 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
   // Someone signing in on this phone brings the language of their account with them.
   useEffect(() => followAccountLanguage(made.account, made.community, locale, kvLastAccount, setLocale), [made, locale, setLocale]);
 
+  // The phone's notices, where they are on, follow the account and the language of the game: the next one speaks the language the game does.
+  useEffect(() => made.push.follow(made.account, made.community, locale), [made, locale]);
+
   // The player is signed in as a guest in the background. The game does not wait for it and does not need it. Started again (after signing out),
   // a new guest is.
   useEffect(() => {
@@ -495,7 +517,7 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
     [made, game, words, locale, reload, setLocale, changeProfile],
   );
   const cloud = useMemo<Cloud>(
-    () => ({ rooms: made.rooms, account: made.account, saves: made.saves, community: made.community, track: made.track, store: made.store, canSignIn: made.canSignIn, restart }),
+    () => ({ rooms: made.rooms, account: made.account, saves: made.saves, community: made.community, track: made.track, push: made.push, store: made.store, canSignIn: made.canSignIn, restart }),
     [made, restart],
   );
   const { reducedMotion, sound } = profile.settings;
@@ -786,6 +808,10 @@ export function useAccountSaving(is: (status: CloudSaving) => boolean): boolean 
 
 /** Counts something the player did (`events.ts`): for the screens, at the moment it succeeded. */
 export const useTrack = (): Track => useCloud().track;
+
+/** The game's notices on this phone (`online/push.ts`): whether they can be had, turned on, and the switches of them. */
+export const usePush = (): Push => useCloud().push;
+export type { Push, PushOn } from '../online/push';
 
 /** False while the device is not taking saves. The screens that promise "saved" say so instead. */
 export function useSaving(): boolean {

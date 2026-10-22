@@ -2106,6 +2106,8 @@
     "saveFailed": "The picture could not be saved.",
     "opensLife": "Shows the whole of this life",
     "roomOtherVersion": "That game plays another version. Update the app and try again.",
-    "roomOtherRules": "This game plays another version. Update the app to play it."
+    "roomOtherRules": "This game plays another version. Update the app to play it.",
+    "noticeChannel": "The game's notices",
+    "noticesBlocked": "Notices are blocked for this app: allow them in your phone's settings."
   }
 }

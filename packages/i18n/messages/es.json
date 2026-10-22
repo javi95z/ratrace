@@ -2106,6 +2106,8 @@
     "saveFailed": "No se ha podido guardar la imagen.",
     "opensLife": "Muestra esta vida entera",
     "roomOtherVersion": "Esa partida juega con otra versión del juego. Actualiza la aplicación y vuelve a intentarlo.",
-    "roomOtherRules": "Esta partida juega con otra versión del juego. Actualiza la aplicación para jugarla."
+    "roomOtherRules": "Esta partida juega con otra versión del juego. Actualiza la aplicación para jugarla.",
+    "noticeChannel": "Avisos del juego",
+    "noticesBlocked": "Las notificaciones están bloqueadas para esta aplicación: permítelas en los ajustes del teléfono."
   }
 }
