@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { PIXEL_X_HEIGHT } from '@ratrace/core/game/share';
 import { ARIAL_FILE, buildArialCoverage, buildCoverage, fontPath, readFont, type FontFamily } from '../../scripts/fontCoverage';
 import { COVERAGE, METRICS, X_HEIGHT } from './fontCoverage';
-import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, faceOf, familyFor, SLANT, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, adjustedRuns, CYRILLIC_ALONE, pixelSize, runsOf, webBaseline } from './fonts';
+import { ARIAL, baselineShift, CHAKRA_X_HEIGHT, DINGBATS, faceOf, familyFor, SLANT, SYSTEM, JERSEY_X_HEIGHT, OSWALD_X_HEIGHT, adjustedRead, adjustedRuns, CYRILLIC_ALONE, pixelSize, runsOf, webBaseline, webLine } from './fonts';
 
 const JERSEY = 'Jersey15_400Regular';
 const OSWALD = 'Oswald_500Medium';
@@ -191,6 +191,20 @@ test('where the browser puts the baseline of a line: the room left over split ab
   // A line taller than the font puts the baseline lower, by half the room (rounded down); a reading text is Chakra at its own size.
   expect(webBaseline('pixel', 400, 16, 30)).toBe(webBaseline('pixel', 400, 16, 17.6) + Math.floor((30 - 22) / 2) - Math.floor((17.6 - 22) / 2));
   expect(webBaseline('read', 400, 15, 21.75)).toBe(Math.floor((21.75 - (Math.round(0.992 * 15) + Math.round(0.308 * 15))) / 2) + Math.round(0.992 * 15));
+});
+
+test('where each text of one of the web\'s lines stands, so their baselines meet, and how tall the line is', () => {
+  // A rival's line on the left: the item's strut (a reading 15 in its 1.45), the place (pixel 15) and a rival's name (a reading 14 in its 1.45).
+  // Their baselines are 15, 13 and 15 below their tops: the place stands 2 lower, and the line is as deep as the strut's 6.75 below its baseline.
+  expect(webLine([['read', 15, 15 * 1.45], ['pixel', 15, 15 * 1.1], ['read', 14, 14 * 1.45]], 'en')).toEqual({ tops: [0, 2, 0], above: 15, height: 21.75 });
+  // The player's name is a pixel 16 (baseline 14 in its 17.6): a point lower than the strut's, and the line no deeper.
+  expect(webLine([['read', 15, 15 * 1.45], ['pixel', 15, 15 * 1.1], ['pixel', 16, 16 * 1.1]], 'en')).toEqual({ tops: [0, 2, 1], above: 15, height: 21.75 });
+  // One text alone is its own line: at its top, as tall as its line.
+  expect(webLine([['pixel', 15, 15 * 1.1]], 'en')).toEqual({ tops: [0], above: 13, height: 16.5 });
+  // A text whose line reaches deeper than the others' makes the line deeper: a pixel 11 (baseline 10 in 12.1) under a pixel 15's baseline.
+  const deep = webLine([['pixel', 15, 15 * 1.1], ['pixel', 11, 11 * 1.1]], 'en');
+  expect(deep.tops).toEqual([0, webBaseline('pixel', 400, 15, 16.5) - webBaseline('pixel', 400, 11, 12.1)]);
+  expect(deep.height).toBe(Math.max(16.5, deep.above + 12.1 - webBaseline('pixel', 400, 11, 12.1)));
 });
 
 test('an italic reading text is set in the slanted faces of its fonts, which the web gets by slanting the upright ones: Chakra Petch and Exo 2, in both weights', () => {

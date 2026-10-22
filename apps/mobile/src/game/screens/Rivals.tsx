@@ -1,7 +1,7 @@
 import { scoreBreakdown } from '@ratrace/engine';
 import { rivalScore } from '@ratrace/core/game/rivals';
 import { View } from 'react-native';
-import { webBaseline } from '../../ui/fonts';
+import { webLine } from '../../ui/fonts';
 import { Panel } from '../../ui/kit';
 import { PixelText, ReadText, SNUG } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
@@ -12,22 +12,6 @@ import { useRivals } from '../useRivals';
  * The web's Rivals.tsx, on the phone. What the phone leaves out: a game with friends (`useRoomPaper`, whose rivals are the room's players), which a
  * life on the phone never is.
  */
-
-/** A text of a line, as the web sets it: its face, its size, and the line it stands in (its own `line-height` times its size). */
-export type Piece = readonly [role: 'pixel' | 'read', size: number, line: number];
-
-/**
- * Where each text of one of the web's lines stands, so that their baselines meet as the browser's do (texts inline in one box, or a flex row's
- * `items-baseline`), and how tall the line is: `tops` from the line's top, `above` its baseline. Where the texts are inline in a box, the first is that
- * box's own strut (the text it would set), which takes room and draws nothing. The phone cannot be asked for baselines: the kit moves a text's glyphs
- * inside its box (see `webBaseline`).
- */
-export function webLine(pieces: readonly Piece[], language: string): { tops: number[]; above: number; height: number } {
-  const above = pieces.map(([role, size, line]) => webBaseline(role, 400, size, line, language));
-  const below = pieces.map(([, , line], i) => line - above[i]);
-  const top = Math.max(...above);
-  return { tops: above.map((a) => top - a), above: top, height: top + Math.max(...below) };
-}
 
 /** One rival's line (or the player's): the place and the name on the left, the points on the right, on one baseline (the web's `items-baseline`). */
 function Line({ place, name, points, you, first, language }: { place: number; name: string; points: string; you: boolean; first: boolean; language: string }) {

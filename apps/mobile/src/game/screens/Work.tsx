@@ -6,7 +6,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
-import { webBaseline } from '../../ui/fonts';
+import { webBaseline, webLine } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Bar, Bare, KeyFigure, LineTag, Panel, Row, Tag, Toggle, usePress } from '../../ui/kit';
@@ -21,7 +21,6 @@ import { CareerMoves } from './CareerMoves';
 import { bannerSize } from './Challenge';
 import { Explain } from './Explain';
 import { splitMastered, useFocusNote } from './focusNote';
-import { webLine } from './Rivals';
 
 /*
  * The player's working life, as the web's Work.tsx draws it: the panel that sums it up (the profile's `WorkPanel`), the sheets each of its lines

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { createContext, memo, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { sheetsGone } from '../../ui/back';
+import { webLine } from '../../ui/fonts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
 import { Bare, Button, LineTag, Notice, Panel, pressDown, Raised, Row, Tag, usePress } from '../../ui/kit';
@@ -23,7 +24,7 @@ import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
-import { RivalsBoard, webLine } from './Rivals';
+import { RivalsBoard } from './Rivals';
 import { realStatus, StatusNote } from './StatusNote';
 import { WorkPanel } from './Work';
 

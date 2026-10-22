@@ -4,7 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { View } from 'react-native';
 import { COLORS } from './theme';
 import { paintOf } from './testing/paint';
-import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
+import { TabTitle, Bare, Bar, Button, Figure, KeyFigure, LineTag, Notice, Panel, Raised, reach, Row, Segmented, SrOnly, Stat, StatRow, Tag, TickerBadge, Tile, Toggle, useOnce, Well } from './kit';
 import { GOLD } from './frames';
 import { TapProvider } from './tap';
 
@@ -838,3 +838,27 @@ test('a figure of a line is set in the pixel face, on the right, in its colour, 
 });
 
 const rgbOf = (hex: string) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`;
+
+/** A LineTag's two boxes round its Tag: the line's (its height) and the one that sets the tag down in it (its margin). */
+function lineTagOf(words: string): { line: HTMLElement; down: HTMLElement } {
+  const tag = backed(screen.getByText(words));
+  const down = tag.parentElement as HTMLElement;
+  return { line: down.parentElement as HTMLElement, down };
+}
+
+test('a LineTag stands in a reading line as the browser lays an inline block: the line 21.75 tall, the tag a point down on its baseline', () => {
+  // The line's strut is a reading 15 in its 1.45 (Chakra: baseline 15 of 21.75); the tag's baseline is its 2 of padding over a pixel 12 in its line of 15 (12).
+  render(<LineTag tone="good">Owned</LineTag>);
+  const { line, down } = lineTagOf('Owned');
+  expect(line.style.height).toBe('21.75px');
+  expect(down.style.marginTop).toBe('1px');
+  expect(backed(screen.getByText('Owned')).style.backgroundColor).toBe(rgb(COLORS['teal-800']));
+});
+
+test('a LineTag in a pixel 15 line (a Row\'s right): the tag\'s baseline is the lower, so it stands at the top and the line is the tag\'s 19', () => {
+  // The pixel 15's baseline is 13 of 16.5, the tag's 14: the line's top is the tag's, and below the baseline the tag (5) reaches deeper than the text (3.5).
+  render(<LineTag line={['pixel', 15, 15 * 1.1]}>Rented</LineTag>);
+  const { line, down } = lineTagOf('Rented');
+  expect(line.style.height).toBe('19px');
+  expect(down.style.marginTop).toBe('0px');
+});

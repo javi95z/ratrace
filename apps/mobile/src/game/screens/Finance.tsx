@@ -12,7 +12,7 @@ import { usePop, useSink } from '../../ui/animations';
 import { LineChart } from '../../ui/charts';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
-import { adjustedRead } from '../../ui/fonts';
+import { adjustedRead, webLine } from '../../ui/fonts';
 import { useDrawnFirst, whenShown } from '../../ui/drawnFirst';
 import { Bar, Bare, Button, Figure, LineTag, Panel, Raised, reach, Row, Segmented, Tag, TickerBadge, Toggle, useOnce, usePress } from '../../ui/kit';
 import { LinkText } from '../../ui/LinkText';
@@ -35,7 +35,6 @@ import { HealthCoverNote } from './HealthCover';
 import { useShown } from './Hud';
 import { ItemCost } from './ItemCost';
 import { ItemUses } from './ItemUses';
-import { webLine } from './Rivals';
 import { realStatus, StatusNote } from './StatusNote';
 import { FocusSwitch, LifeUses, MasteredLine, TeaseUse, useFocusOrdered, useSetFocus } from './Work';
 

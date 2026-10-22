@@ -1,11 +1,11 @@
 import { ageAt } from '@ratrace/core/game/present';
 import type { FinishedRun } from '@ratrace/core/session/types';
 import { ScrollView, View } from 'react-native';
+import { webLine } from '../../ui/fonts';
 import { Tag } from '../../ui/kit';
 import { PixelText, ReadText } from '../../ui/text';
 import { COLORS } from '../../ui/theme';
 import { useSettings, useT, useWords } from '../context';
-import { webLine } from './Rivals';
 import { WorthGraph } from './WorthGraph';
 
 /** The whole of a finished life: its kind, where it was lived, how it ended, its score, its net worth and its graph. */
