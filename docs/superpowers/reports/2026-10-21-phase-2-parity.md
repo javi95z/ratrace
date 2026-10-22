@@ -1452,7 +1452,7 @@ beyond a point):
 | the AmountSheets re-keyed, the slider in a sheet, the sticky header's scroll, list windowing | batch pass 1 | ok |
 | greyed badges, the 40 at a list's foot, `profile-owned`/`end-ru`, things → a thing, business → invest | batch pass 1 | ok |
 | a fresh install's first life (locked lives, the first unlock) | here | ok, with fault 1 above |
-| the plain release bundle holds no timing probe | here, both plain builds (the one played, and the one rebuilt and left installed after the measures) | ok: `main.jsbundle` 14.4 MB (Hermes bytecode), 0 matches each of `127.0.0.1:8095`, `perfProbe`, `timedStore`, `putSceneLife`, `putSceneRuns`, `slowFrame`, `settledMs`; the probe's build has them |
+| the plain release bundle holds no timing probe and no test or development code | here: the two plain builds of the play and the measures had no probe; the final review then found the development routes' test code in them (`/scene`, `/dev`, `/kit` imported it statically), now loaded behind `__DEV__` (7c79950 and 2273594, `ui/devRoutes.test.ts`), and the plain build made after the fix wave checked again | ok: `main.jsbundle` 14.3 MB (Hermes bytecode, 14 333 837 bytes), 0 matches each of `sceneStore`, `runScene`, `putOlderLife`, `MotionTwo`, `readyPort`, `fixedSessions`, `memoryServices`, `127.0.0.1`, `perfProbe`, `timedStore`, `putSceneLife`, `putSceneRuns`, `slowFrame`, `settledMs`, `perfLife`, and of the paths `testing/scene`, `kitMotion`, `olderLife`; of the 65 scene names only `legal` (the legal page's own route and words). `SceneView` is there once: React Navigation's own component, inside expo-router (`build/react-navigation/core/SceneView.js`), not ours; `SceneRoute` once, the /scene route's function name (the route itself, which goes home) |
 | screen readers, the tablet's shelf | not run | left (no VoiceOver pass, no iPad simulator) |
 
 ### Performance: the final table
@@ -1494,6 +1494,17 @@ outcome → finances) are one long UI frame each (112, 150, 118 ms), not a slow 
 
 **The flings still drop frames**: twelve over six flings of a list of 65 lives, one or two at a time; the rows' canvases are made as they come
 in, on this simulator through Metal's XPC driver. Left as in batch pass 1, to be measured on a device.
+
+### For the user: two things phase 2 changed beyond the phone
+
+- **The web writes a little less on the step that ends a life.** On that step the session wrote the game a second time, unchanged, with the run
+  written again for the gallery's badges. `persistRun` in core now writes the run alone the second time, for the local and legacy sessions
+  (33e1546) and the ranked one (0b2439a), so the web (ranked lives included) no longer writes its save twice there. Nothing a player sees
+  changes; it is harmless, and tested by counting the writes (`local.test`, web `ranked.test`).
+- **The phone's own words travel in the web's messages until phase 5.** The `phone.*` keys (where the web's words would tell a phone player
+  something false: reload the page, this browser) live in `packages/i18n/messages/{en,es,ru}.json` beside the web's, so the web's message
+  bundle carries them, unused (`apps/web/src/i18n/messages.test.ts` holds that only the app asks for them). A few kilobytes; they can be split
+  out when the web moves to Expo.
 
 ### What is left for later phases
 
