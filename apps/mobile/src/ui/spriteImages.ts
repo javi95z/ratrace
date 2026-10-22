@@ -1,5 +1,5 @@
 import { Skia, type SkImage } from '@shopify/react-native-skia';
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Image, type ImageSourcePropType } from 'react-native';
 import { SOURCES } from '../sprites/sources';
 import { reportMissing } from './sprites';
@@ -154,6 +154,44 @@ export function useSpriteImage(id: string | null | undefined): SpriteImage {
     [entry],
   );
   return useSyncExternalStore(subscribe, () => (entry ? entry.state : NONE), () => NONE);
+}
+
+/**
+ * The pictures of several sprites at once (`useSpriteImage` for each, a list of ids of any length), drawn again when any of them is decoded or
+ * fails. The list given back is the same object for as long as every picture in it is the same.
+ */
+export function useSpriteImages(ids: readonly (string | null | undefined)[]): readonly SpriteImage[] {
+  const key = ids.map((id) => id ?? '').join('\n');
+  // Each picture's entry, its read begun the first time it is asked for (as `useSpriteImage` does), for as long as the ids are the same (`key`
+  // says them all: a list made anew with the same ids keeps its entries).
+  const entries = useMemo(
+    () =>
+      (key === '' ? [] : key.split('\n')).map((id) => {
+        const source = id ? sourceOf(id) : undefined;
+        return id && source !== undefined ? entryOf(id, source) : null;
+      }),
+    [key],
+  );
+  const held = useRef<readonly SpriteImage[]>([]);
+  const subscribe = useCallback(
+    (listener: () => void) => {
+      for (const entry of entries) entry?.listeners.add(listener);
+      return () => {
+        for (const entry of entries) entry?.listeners.delete(listener);
+        // Put down, they may be what kept the cache over its budget.
+        trim();
+      };
+    },
+    [entries],
+  );
+  const snapshot = useCallback(() => {
+    const now = entries.map((entry) => (entry ? entry.state : NONE));
+    const before = held.current;
+    if (before.length === now.length && before.every((state, i) => state === now[i])) return before;
+    held.current = now;
+    return now;
+  }, [entries]);
+  return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
 
 /** How many sprites are being read and decoded right now: none once every picture asked for is in, or has failed. */

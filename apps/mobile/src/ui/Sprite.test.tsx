@@ -52,7 +52,7 @@ vi.mock('../sprites/sources', () => ({
 
 const { Group } = await import('@shopify/react-native-skia');
 const { loadSpritesWith } = await import('./spriteImages');
-const { Sprite, SpriteStrip } = await import('./Sprite');
+const { Sprite, SpriteLayers, SpriteStrip } = await import('./Sprite');
 const { RatAvatar, RatLayers } = await import('./RatAvatar');
 
 afterEach(() => vi.restoreAllMocks());
@@ -215,4 +215,33 @@ test('a loop\'s frames are one canvas, side by side: each drawn pixel for pixel 
   expect(all(container, 'Rect').map((rect) => rect.getAttribute('data-size'))).toEqual(['24x24']);
   expect(all(container, 'Path')).toHaveLength(1);
   expect(warn).toHaveBeenCalledWith('sprite missing: no.such.frame');
+});
+
+test('pictures laid together are drawn once every one of them is in, all on one canvas handed its whole drawing: none comes in on its own later', async () => {
+  const waiting = new Map<string, (image: unknown) => void>();
+  loadSpritesWith((source) => new Promise((done) => waiting.set(String(source), done)) as never);
+  const layers = [
+    { id: 'backdrop.madrid', x: -10, y: -10, w: 64, h: 64 },
+    { id: 'portrait.nurse.22', x: -10, y: -4, w: 64, h: 64 },
+  ];
+  const { container } = render(<SpriteLayers size={{ w: 44, h: 44 }} layers={layers} />);
+  await act(async () => {
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  expect(all(container, 'Canvas')).toHaveLength(0);
+  // The face first: still nothing, the sky is not in.
+  await act(async () => {
+    waiting.get('src:portrait.nurse.22')?.({ src: 'src:portrait.nurse.22', width: () => 64, height: () => 64, dispose: () => {} });
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  expect(all(container, 'Canvas')).toHaveLength(0);
+  await act(async () => {
+    waiting.get('src:backdrop.madrid')?.({ src: 'src:backdrop.madrid', width: () => 64, height: () => 64, dispose: () => {} });
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  expect(all(container, 'Canvas').map((canvas) => canvas.getAttribute('data-size'))).toEqual(['44x44']);
+  expect(all(container, 'Image').map((image) => [image.getAttribute('data-image'), image.getAttribute('data-at')])).toEqual([
+    ['src:backdrop.madrid', '-10,-10'],
+    ['src:portrait.nurse.22', '-10,-4'],
+  ]);
 });

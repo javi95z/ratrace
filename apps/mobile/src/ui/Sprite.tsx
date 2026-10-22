@@ -3,7 +3,7 @@ import { createContext, memo, useContext, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { Canvas } from './Canvas';
-import { sourceOf, useSpriteImage } from './spriteImages';
+import { sourceOf, useSpriteImage, useSpriteImages, type SpriteImage } from './spriteImages';
 import { CHECKER, checkerCells, FALLBACK, reportMissing, spriteBox, spriteOf, type Size, type SpriteScale } from './sprites';
 import { COLORS, GREYSCALE, grey as greyOf } from './theme';
 
@@ -150,9 +150,18 @@ const sameLayers = (a: readonly SpriteLayer[], b: readonly SpriteLayer[]): boole
  * two pictures each (the records, the collection's badges) or a page of loops (the round's ledger) took twice as many and more, with the frames a fling
  * dropped while they were made (measured, the parity report's performance part). Pixel for pixel what the pictures on canvases of their own drew: each
  * lies on the same whole device pixels. Drawn again only when what it draws changes (its layers compared by their numbers).
+ *
+ * The pictures are read here, outside the canvas, and the canvas is put in once every one of them is in (or has failed), as `Sprite` puts its own:
+ * the canvas is then handed its whole drawing from the top each time, which `Canvas` asks it to draw again (a picture that came in by a state of its
+ * own inside the canvas was never asked for again, and a sky was left out of a shot of the records).
  */
 export const SpriteLayers = memo(
   function SpriteLayers({ size, layers, alt = '', style }: { size: Size; layers: readonly SpriteLayer[]; alt?: string; style?: ViewStyle }): ReactNode {
+    const known = layers.map((layer) => spriteOf(layer.id) !== null && sourceOf(layer.id) !== undefined);
+    for (const [i, layer] of layers.entries()) if (!known[i]) reportMissing(layer.id, 'missing');
+    const images = useSpriteImages(layers.map((layer, i) => (known[i] ? layer.id : null)));
+    // Every picture in, or failed (or with no file at all): only then is anything drawn, as a sprite is.
+    const ready = images.every((state, i) => !known[i] || state.failed || state.image !== null);
     return (
       <View
         accessible={alt !== ''}
@@ -162,24 +171,23 @@ export const SpriteLayers = memo(
         importantForAccessibility={alt ? 'yes' : 'no-hide-descendants'}
         style={[{ width: size.w, height: size.h, flexShrink: 0 }, style]}
       >
-        <Canvas style={{ width: size.w, height: size.h }}>
-          {layers.map((layer, i) => (
-            <LayerPicture key={`${i}:${layer.id}`} {...layer} />
-          ))}
-        </Canvas>
+        {ready ? (
+          <Canvas style={{ width: size.w, height: size.h }}>
+            {layers.map((layer, i) => (
+              <LayerPicture key={`${i}:${layer.id}`} layer={layer} picture={known[i] ? images[i] : null} />
+            ))}
+          </Canvas>
+        ) : null}
       </View>
     );
   },
   (a, b) => a.alt === b.alt && a.style === b.style && a.size.w === b.size.w && a.size.h === b.size.h && sameLayers(a.layers, b.layers),
 );
 
-/** One picture of a canvas of layers: once decoded, or the checkerboard in its box where it has none. */
-function LayerPicture({ id, x, y, w, h, grey = false }: SpriteLayer): ReactNode {
-  const known = spriteOf(id) !== null && sourceOf(id) !== undefined;
-  if (!known) reportMissing(id, 'missing');
-  const { image, failed } = useSpriteImage(known ? id : null);
+/** One picture of a canvas of layers, as read: decoded, or the checkerboard in its box where it failed or has no file (`picture` null). */
+function LayerPicture({ layer: { x, y, w, h, grey = false }, picture }: { layer: SpriteLayer; picture: SpriteImage | null }): ReactNode {
   const path = useCheckerPath(w, h);
-  if (!known || failed) {
+  if (picture === null || picture.failed || picture.image === null) {
     return (
       <Group transform={[{ translateX: x }, { translateY: y }]}>
         <Rect x={0} y={0} width={w} height={h} color={COLORS[CHECKER.ground]} />
@@ -187,9 +195,8 @@ function LayerPicture({ id, x, y, w, h, grey = false }: SpriteLayer): ReactNode 
       </Group>
     );
   }
-  if (!image) return null;
   return (
-    <Image image={image} x={x} y={y} width={w} height={h} fit="fill" sampling={PIXELATED}>
+    <Image image={picture.image} x={x} y={y} width={w} height={h} fit="fill" sampling={PIXELATED}>
       {grey ? <ColorMatrix matrix={GREYSCALE as number[]} /> : null}
     </Image>
   );
