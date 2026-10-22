@@ -228,7 +228,8 @@ export function Room({ code }: { code?: string } = {}) {
       </RoomPage>
     );
   }
-  return <RoomPlay game={game} />;
+  // One host a room: another room's game, should the store go straight to it, starts with none of this one's sheets, waits or answers.
+  return <RoomPlay key={room.id} game={game} />;
 }
 
 /** The life lived in the room, on the screens of any life, with the room around it. */
