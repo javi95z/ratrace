@@ -48,6 +48,18 @@ export interface Cloud extends SyncCloud {
    * the app is in front. Left out by a cloud that renews it as it was made to.
    */
   autoRefresh?(on: boolean): Promise<void>;
+  /**
+   * Counts one event of how the game is played, in the game's own project (`supabase/functions/track`): what happened, with what, where, and
+   * nothing of who. Never throws. Left out by a cloud that counts nothing (the web counts with Vercel).
+   */
+  track?(event: TrackedEvent): Promise<Sent>;
+}
+
+/** An event as the `track` function takes it: its name, its props (no id, no name, no score: the function refuses them), and where it happened. */
+export interface TrackedEvent {
+  name: string;
+  props: Record<string, string | boolean>;
+  platform: string;
 }
 
 const FAILURES = ['error', 'error_code', 'error_description'];

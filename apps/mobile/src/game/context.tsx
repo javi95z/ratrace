@@ -24,13 +24,14 @@ import { useRouter } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { useStore } from 'zustand';
-import { kvKeeping, kvLanguage, kvLastAccount, KvStore } from '../kvStore';
+import { kvKeeping, kvLanguage, kvLastAccount, KvStore, kvText } from '../kvStore';
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
 import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
+import { phoneTrack } from '../online/track';
 import { closeEverySheet, openSheetsAgain, sheetsGone } from '../ui/back';
 import { perfStore } from '../ui/perf';
 import { ReducedMotionProvider, useReducedMotion } from '../ui/animations';
@@ -201,8 +202,8 @@ export function phoneServices(): Services {
     },
   };
   const wired = servicesOver({ ...online, store: perfStore(online.store, 'saved') }, phoneDeps());
-  // What is counted goes nowhere until the phone has its own sender for it.
-  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, track: ignore };
+  // What is counted goes to the game's own project, in a release build only (`online/track.ts`), and the install with it, on the first launch.
+  return { ...wired, saving, introduceTabs: true, basket: phoneBasket, track: phoneTrack(online.account, kvText) };
 }
 
 /** Everything one start of the app makes once: the round store and the services behind it. */

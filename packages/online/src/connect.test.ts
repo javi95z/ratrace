@@ -364,6 +364,28 @@ describe('what the cloud keeps of a player', () => {
     }
   });
 
+  it('counts an event of how the game is played through the `track` function, and tells what it will never take from what is worth another try', async () => {
+    const cloud = await connectSupabase('u', 'k');
+    const event = { name: 'life_end', props: { mode: 'solo', escaped: true }, platform: 'ios' };
+    client.answers.invoke = { data: '', error: null };
+    expect(await cloud.track?.(event)).toBe('sent');
+    // The body is the event, as the function reads it: nothing added, nothing of who.
+    expect(client.asked).toEqual([['invoke', 'track', { body: event }]]);
+    // The function's own no: not an event it knows, no key, or too many of it today.
+    const said = (status: number, body: unknown) => ({ data: null, error: { context: new Response(JSON.stringify(body), { status }) } });
+    for (const [status, word] of [[400, 'bad-request'], [401, 'no-key'], [429, 'too-many']] as const) {
+      client.answers.invoke = said(status, { error: word });
+      expect(await cloud.track?.(event), word).toBe('never');
+    }
+    // Anything else: not deployed yet, the server down, no network. And a client that throws is no throw of the game's.
+    for (const context of [new Response('Not Found', { status: 404 }), new Response('{"error":"server"}', { status: 500 }), undefined, new TypeError('failed to fetch')]) {
+      client.answers.invoke = { data: null, error: { context } };
+      expect(await cloud.track?.(event)).toBe('later');
+    }
+    client.answers.invoke = Promise.reject(new TypeError('failed to fetch'));
+    expect(await cloud.track?.(event)).toBe('later');
+  });
+
   it('gives up on a request that gets no answer, so that one stuck request does not stop everything after it', async () => {
     await connectSupabase('u', 'k');
     const through = (client.created[0][2] as { global: { fetch: typeof fetch } }).global.fetch;

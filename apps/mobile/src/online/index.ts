@@ -116,7 +116,7 @@ const offline = (device: PlayerStore): Online => ({ account: offlineAccount, sto
  * session from the phone, not only those the client knows of. `stop` stops the renewal and the listening to the app (the app never does: it lasts
  * as long as the app).
  */
-export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
+export function onThePhone(): { connected(cloud: Cloud): Cloud; cloud(): Cloud | null; stop(): void } {
   let current: Cloud | null = null;
   let active = false;
   const renew = (cloud: Cloud | null, on: boolean) => void cloud?.autoRefresh?.(on).catch(() => undefined);
@@ -138,6 +138,7 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
       renew(current, active);
       return current;
     },
+    cloud: () => current,
     stop() {
       stopListening();
       renew(current, false);
@@ -148,6 +149,12 @@ export function onThePhone(): { connected(cloud: Cloud): Cloud; stop(): void } {
 
 /** The phone's one renewal of the session, made with the first cloud: whichever start connects, every client before it is stopped. */
 let thePhone: ReturnType<typeof onThePhone> | null = null;
+/**
+ * The client the account connected last, signed in or not, or null before one has (and in a build with no project): what the game counts of how it
+ * is played is sent through it (`track.ts`), which a guest who never signed in may do.
+ */
+export const phonesCloud = (): Cloud | null => thePhone?.cloud() ?? null;
+
 /** How to stop watching the phone's errors: they are watched once, for the cloud made last. */
 let stopWatching: (() => void) | null = null;
 

@@ -510,6 +510,17 @@ export function cloudOf(client: SupabaseClient, { region, captcha }: CloudOption
     async autoRefresh(on) {
       await (on ? client.auth.startAutoRefresh() : client.auth.stopAutoRefresh());
     },
+    async track(event) {
+      try {
+        const { error } = await client.functions.invoke('track', { body: event });
+        if (!error) return 'sent';
+        // The function's own no: not an event it knows, no key, or too many of it today. Sent again, it would get the same.
+        const word = await wordOf(error);
+        return word === 'bad-request' || word === 'no-key' || word === 'too-many' ? 'never' : 'later';
+      } catch {
+        return 'later';
+      }
+    },
     async reportErrors(reports) {
       const { error } = await client.functions.invoke('report-error', { body: { reports } });
       if (!error) return 'sent';
