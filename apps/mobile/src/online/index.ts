@@ -14,6 +14,7 @@ import type { Cloud } from '@ratrace/online/supabase';
 import type { Account, AccountSaves, Community } from '@ratrace/online/types';
 import { kvSession, kvText } from '../kvStore';
 import type { KeptText } from '../kvStore';
+import { phoneTurnstile } from './captcha';
 import { phoneErrors, watchErrors } from './errors';
 import { phonePage, whileActive } from './page';
 
@@ -181,10 +182,13 @@ export function phoneOnline(device: PlayerStore): Online {
   if (!url || !key) return offline(device);
   // Where the database is. Named, the functions that use it most are asked for there. Named in full, as the two above.
   const region = process.env.EXPO_PUBLIC_SUPABASE_REGION || undefined;
+  // The guard at the door of guest sign-in, where the project has one (`captcha.tsx`): with no site key, none is asked for, as on the web.
+  const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || undefined;
+  const captcha = siteKey ? phoneTurnstile(siteKey) : undefined;
   const phone = (thePhone ??= onThePhone());
   const online = onlineOver(device, {
     // The session in the phone's store, and renewed only while the app is in front (`onThePhone`), never by a timer of the client's own.
-    connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false })),
+    connect: async () => phone.connected(await connectSupabase(url, key, { region, storage: kvSession, autoRefresh: false, captcha })),
     // A phone has no address: Google's answer comes back with the browser that was opened for it (`browser.ts`), and there is nothing to clean.
     address: () => null,
     clean: () => undefined,

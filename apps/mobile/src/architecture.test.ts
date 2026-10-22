@@ -288,6 +288,26 @@ describe('the wall between the phone\'s screens and the game', () => {
     expect(scene).toContain('if (port === undefined) return;');
   });
 
+  it('lets one file only show a web page (react-native-webview), the captcha\'s (online/captcha.tsx): a page is a place that reaches the network', () => {
+    // The library named however it is taken (an import, a type, a `require`, a late `import()`, a file of it), or the component drawn.
+    const showsPage = (source: string): boolean => /['"]react-native-webview(\/[^'"]*)?['"]/.test(source) || /<WebView\b/.test(source);
+    expect(showsPage("import WebView from 'react-native-webview';")).toBe(true);
+    expect(showsPage("import type { WebViewMessageEvent } from 'react-native-webview';")).toBe(true);
+    expect(showsPage("const { WebView } = require('react-native-webview');")).toBe(true);
+    expect(showsPage("const lib = await import('react-native-webview/lib/WebView');")).toBe(true);
+    expect(showsPage('return <WebView source={{ uri }} />;')).toBe(true);
+    // A word that only names one is not one.
+    expect(showsPage('// the captcha shows its page in a web view, react-native-webview')).toBe(false);
+    const showing = shipped.filter((path) => showsPage(readFileSync(path, 'utf8'))).map((path) => relative(REPO, path));
+    // And the tests' stand-in for the library (testing/setup.ts), which draws no page.
+    expect(showing).toEqual(['apps/mobile/src/online/captcha.tsx', 'apps/mobile/src/testing/setup.ts']);
+    // And that page is the game's site's own, with Turnstile's script in it, and nothing it may leave for.
+    const captcha = readFileSync(join(SRC, 'online/captcha.tsx'), 'utf8');
+    expect(captcha).toContain("export const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';");
+    expect(captcha).toContain('onShouldStartLoadWithRequest={mayLoad}');
+    expect(captcha).toContain('baseUrl: `${site()}/`');
+  });
+
   it('gives a small thing that is pressed its 44 points in its own box (the kit\'s `reach`), never by a `hitSlop`: React Native looks for no touch past a parent\'s edge', () => {
     const slopping = mine.filter((path) => /\bhitSlop\b/.test(readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, ''))).map(rel);
     expect(slopping).toEqual([]);

@@ -28,6 +28,7 @@ import { kvKeeping, kvLanguage, kvLastAccount, KvStore, kvText } from '../kvStor
 import { phoneOnline } from '../online';
 import type { Online } from '../online';
 import { BACK_FROM_GOOGLE, openForGoogle } from '../online/browser';
+import { CaptchaHost } from '../online/captcha';
 import { usePlace } from '../online/errors';
 import { followAccountLanguage } from '../online/language';
 import { phoneConnection, phonePage } from '../online/page';
@@ -504,6 +505,7 @@ function Started({ made, settings: startedWith, restart, children }: { made: Mad
                   <SoundProvider on={sound}>
                     <Cues game={game} />
                     {children}
+                    <CaptchaHost />
                   </SoundProvider>
                 </ReducedMotionProvider>
               </WordsProvider>

@@ -1,4 +1,4 @@
-import { createContext, createElement, useEffect, type ComponentType, type ReactNode } from 'react';
+import { createContext, createElement, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { Cue } from '../ui/sound';
 import { painted } from '../ui/testing/skia';
@@ -262,6 +262,25 @@ export const expoSharing = {
 };
 /** The phone's clipboard (expo-clipboard, `ui/copy.ts`): what was last put on it, and whether it takes it (a phone's always does; a test can say no). */
 export const clipboard = { text: null as string | null, refuses: false };
+/**
+ * The WebViews on screen (react-native-webview: the captcha's page, online/captcha.tsx), each with the props it was last drawn with, in the order they
+ * were mounted: a test reads the page it was handed and answers through its `onMessage`, as the page would. Nothing is loaded.
+ */
+export const webViews: Array<{ props: Record<string, unknown> & { onMessage?(event: { nativeEvent: { data: string; url: string } }): void } }> = [];
+function FakeWebView(props: Record<string, unknown>) {
+  const [me] = useState(() => ({ props }));
+  me.props = props;
+  useEffect(() => {
+    webViews.push(me);
+    return () => {
+      const at = webViews.indexOf(me);
+      if (at >= 0) webViews.splice(at, 1);
+    };
+  }, [me]);
+  return createElement('div', { 'data-webview': 'true' });
+}
+export const reactNativeWebView = { __esModule: true, default: FakeWebView, WebView: FakeWebView };
+
 export const expoClipboard = {
   setStringAsync: async (text: string): Promise<boolean> => {
     if (clipboard.refuses) return false;
@@ -348,6 +367,7 @@ export function resetFakes(): void {
   photos.saved.length = 0;
   painted.reset();
   Object.assign(clipboard, { text: null, refuses: false });
+  webViews.length = 0;
 }
 
 /**

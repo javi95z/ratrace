@@ -2078,6 +2078,9 @@
     "rightsBody": "Los guardamos mientras uses la cuenta. Puedes pedir verlos, corregirlos, llevártelos o borrarlos escribiendo al contacto de arriba, y reclamar ante la Agencia Española de Protección de Datos (aepd.es). Si tienes menos de 14 años, pide permiso a tus padres antes de entrar con Google."
   },
   "phone": {
+    "captcha": {
+      "title": "Una comprobación rápida"
+    },
     "lostNewer": "Tu vida guardada es de una versión más nueva del juego. Actualiza la aplicación para seguir con ella.",
     "lostWaiting": "Tu vida empezó en una versión anterior del juego y esta versión de la aplicación no puede abrirla. Se conserva: actualiza la aplicación para seguir con ella.",
     "notSaved": "Ahora mismo este teléfono no puede guardar. No cierres el juego o perderás lo que has jugado.",
