@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import type { RatLook } from '@ratrace/core/game/avatar';
 
+// How many paths were built (a checkerboard's cells are one): counted by the mock below.
+const paths = vi.hoisted(() => ({ made: 0 }));
+
 // Skia draws on the phone only: here each of its pieces is a <div> that says what it was asked to draw.
 vi.mock('@shopify/react-native-skia', () => {
   const node =
@@ -35,7 +38,15 @@ vi.mock('@shopify/react-native-skia', () => {
     Path: node('Path'),
     Rect: node('Rect'),
     ColorMatrix: node('ColorMatrix'),
-    Skia: { PathBuilder: { Make: () => ({ addRect: () => {}, detach: () => ({}) }) }, XYWHRect: (x: number, y: number, w: number, h: number) => ({ x, y, w, h }) },
+    Skia: {
+      PathBuilder: {
+        Make: () => {
+          paths.made += 1;
+          return { addRect: () => {}, detach: () => ({}) };
+        },
+      },
+      XYWHRect: (x: number, y: number, w: number, h: number) => ({ x, y, w, h }),
+    },
     FilterMode: { Nearest: 0, Linear: 1 },
     MipmapMode: { None: 0 },
   };
@@ -215,6 +226,19 @@ test('a loop\'s frames are one canvas, side by side: each drawn pixel for pixel 
   expect(all(container, 'Rect').map((rect) => rect.getAttribute('data-size'))).toEqual(['24x24']);
   expect(all(container, 'Path')).toHaveLength(1);
   expect(warn).toHaveBeenCalledWith('sprite missing: no.such.frame');
+});
+
+test('a picture laid with others builds no checkerboard when it is read: only the one that is missing does', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  paths.made = 0;
+  const whole = await drawn(<SpriteStrip ids={['anim.coin.0', 'anim.coin.1', 'anim.coin.2', 'anim.coin.3']} frame={{ w: 24, h: 24 }} />);
+  expect(all(whole.container, 'Image')).toHaveLength(4);
+  expect(paths.made).toBe(0);
+  whole.unmount();
+  const holed = await drawn(<SpriteStrip ids={['anim.coin.0', 'no.such.frame', 'anim.coin.2', 'anim.coin.3']} frame={{ w: 24, h: 24 }} />);
+  expect(all(holed.container, 'Path')).toHaveLength(1);
+  expect(paths.made).toBe(1);
+  holed.unmount();
 });
 
 test('pictures laid together are drawn once every one of them is in, all on one canvas handed its whole drawing: none comes in on its own later', async () => {

@@ -184,17 +184,21 @@ export const SpriteLayers = memo(
   (a, b) => a.alt === b.alt && a.style === b.style && a.size.w === b.size.w && a.size.h === b.size.h && sameLayers(a.layers, b.layers),
 );
 
-/** One picture of a canvas of layers, as read: decoded, or the checkerboard in its box where it failed or has no file (`picture` null). */
-function LayerPicture({ layer: { x, y, w, h, grey = false }, picture }: { layer: SpriteLayer; picture: SpriteImage | null }): ReactNode {
+/** The checkerboard of a layer that failed or has no file, in its box on the canvas. Its own piece, so a picture that is read builds no path of cells. */
+function LayerChecker({ layer: { x, y, w, h } }: { layer: SpriteLayer }): ReactNode {
   const path = useCheckerPath(w, h);
-  if (picture === null || picture.failed || picture.image === null) {
-    return (
-      <Group transform={[{ translateX: x }, { translateY: y }]}>
-        <Rect x={0} y={0} width={w} height={h} color={COLORS[CHECKER.ground]} />
-        <Path path={path} color={COLORS[CHECKER.cells]} />
-      </Group>
-    );
-  }
+  return (
+    <Group transform={[{ translateX: x }, { translateY: y }]}>
+      <Rect x={0} y={0} width={w} height={h} color={COLORS[CHECKER.ground]} />
+      <Path path={path} color={COLORS[CHECKER.cells]} />
+    </Group>
+  );
+}
+
+/** One picture of a canvas of layers, as read: decoded, or the checkerboard in its box where it failed or has no file (`picture` null). */
+function LayerPicture({ layer, picture }: { layer: SpriteLayer; picture: SpriteImage | null }): ReactNode {
+  if (picture === null || picture.failed || picture.image === null) return <LayerChecker layer={layer} />;
+  const { x, y, w, h, grey = false } = layer;
   return (
     <Image image={picture.image} x={x} y={y} width={w} height={h} fit="fill" sampling={PIXELATED}>
       {grey ? <ColorMatrix matrix={GREYSCALE as number[]} /> : null}
