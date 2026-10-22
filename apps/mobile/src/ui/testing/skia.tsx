@@ -121,6 +121,7 @@ export function skiaFake() {
     LinearGradient: node('LinearGradient'),
     DashPathEffect: node('DashPathEffect'),
     BlurMask: node('BlurMask'),
+    ColorMatrix: node('ColorMatrix'),
     vec: (x: number, y: number) => ({ x, y }),
     rect: (x: number, y: number, width: number, height: number): Rect => ({ x, y, width, height }),
     Skia: skiaDouble,

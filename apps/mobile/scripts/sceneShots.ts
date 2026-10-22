@@ -101,7 +101,14 @@ export function chooseScenes(only: readonly string[] | undefined): Scene[] {
  * (the phase's exit) shot and judged them. None waits.
  * A record a scene had (`ACCEPTED`) stays while it waits where the change does not touch its cause: the pass that shoots it confirms or tightens it.
  */
-export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([]);
+export const PENDING_SHOTS: ReadonlySet<string> = new Set<string>([
+  // Phase 3, Task 8: the player's own profile, signed in (the scene's cloud), its rat a tab at a time, and its friend code just copied.
+  'player-member',
+  'player-editor-body',
+  'player-editor-wear',
+  'player-editor-scene',
+  'player-friend-code',
+]);
 
 /**
  * The scenes with lines in the phone's own words (`phone.*` in the messages, where the web's words tell a phone player something false or impossible:

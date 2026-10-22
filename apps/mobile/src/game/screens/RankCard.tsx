@@ -1,9 +1,10 @@
-import { progressOf, promoted } from '@ratrace/content';
+import { progressOf, promoted, RANKS } from '@ratrace/content';
 import type { RankId } from '@ratrace/content';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Framed } from '../../ui/Frame';
 import { GOLD } from '../../ui/frames';
+import { Bar, Panel, SrOnly } from '../../ui/kit';
 import { Sprite } from '../../ui/Sprite';
 import { Rising } from '../../ui/Rising';
 import { PixelText, ReadText } from '../../ui/text';
@@ -11,8 +12,8 @@ import { COLORS } from '../../ui/theme';
 import { useProfile, useSound, useT } from '../context';
 
 /*
- * The web's RankCard.tsx, on the phone: what the end of a life says of the rat's rank (`RankGain`). The card of the rank itself (`RankCard`) is the
- * player's page's (PlayerProfile), which the phone does not have yet.
+ * The web's RankCard.tsx, on the phone: the card of the rat's rank on the player's own page (`RankCard`, PlayerProfile's), and what the end of a
+ * life says of it (`RankGain`).
  */
 
 /** The emblem of a rank. */
@@ -22,6 +23,33 @@ export const rankArt = (rank: RankId): string => `rank.${rank}`;
 export function useRankName(): (rank: RankId) => string {
   const t = useT('rank');
   return (rank) => t(`names.${rank}`);
+}
+
+/** The player's rat rank and how far they are to the next: a title earned by playing, which gives nothing in the game. */
+export function RankCard() {
+  const t = useT('rank');
+  const name = useRankName();
+  const profile = useProfile();
+  const progress = progressOf(profile.rank.points);
+  return (
+    <Panel label={t('title')}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        {/* The rank's emblem: grander, the higher the rat has climbed. */}
+        <Sprite id={rankArt(progress.rank)} fallback={{ w: 64, h: 64 }} size={{ w: 48, h: 48 }} />
+        <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+          <View style={{ flexShrink: 1 }}>
+            <SrOnly>{`${t('title')}: `}</SrOnly>
+            <PixelText size={17} tone="gold-500">{name(progress.rank)}</PixelText>
+          </View>
+          <ReadText size={12} tone="ink-300">{t('step', { n: RANKS.indexOf(progress.rank) + 1, of: RANKS.length })}</ReadText>
+        </View>
+      </View>
+      <View style={{ marginTop: 8 }}>
+        <Bar value={progress.share} max={1} label={t('progress')} tone="teal" />
+      </View>
+      <ReadText size={12} tone="ink-300" style={{ marginTop: 4 }}>{progress.next === null ? t('top', { points: progress.points }) : t('toNext', { points: progress.toNext, rank: name(progress.next) })}</ReadText>
+    </Panel>
+  );
 }
 
 /**

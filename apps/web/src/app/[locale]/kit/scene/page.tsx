@@ -6,16 +6,19 @@
 // A scene is a store (packages/core/src/testing/scenes.ts), built the same way on both sides, and sometimes steps taken once the
 // game is open on it (the result of a card, the ledger of a round). This page puts the store behind the game's services in memory,
 // as the tests of the screens put theirs (testing/render.tsx's `memoryServices`: the same ids, seeds and clock, and none of its
-// test library), so the game it draws holds nothing of the device's database and nothing of the cloud. What the page around it does
+// test library), so the game it draws holds nothing of the device's database and nothing of the cloud (a scene of the game online has a
+// cloud of its own, in memory, `sceneCloud`: never the project's). What the page around it does
 // is not this page's: the shots keep the browser from the project (apps/mobile/scripts/shotDrivers.ts). The date is the shot's to
 // set (the browser's clock is held at SCENE_NOW): a screen here reads it as it always does.
 import type { RoundActions, RoundState } from '@ratrace/core/game/store';
 import { PAGE_TURN_HELD_MS, runScene, SCENES, sceneServices, sceneStore, screenOf, SHINE_HELD_MS, turnOf } from '@ratrace/core/testing/scenes';
 import type { Scene } from '@ratrace/core/testing/scenes';
-import { content } from '@ratrace/content';
+import { sceneCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';
+import { ratLookOf } from '@ratrace/core/game/avatar';
+import { content, progressOf } from '@ratrace/content';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { GameProvider, useGame, useT, useWords } from '@/game/context';
+import { GameProvider, useGame, useProfile, useT, useWords } from '@/game/context';
 import type { Services } from '@/game/context';
 import { AmountSheet } from '@/game/screens/AmountSheet';
 import { WeeklyChallenge } from '@/game/screens/Challenge';
@@ -29,6 +32,10 @@ import { Play } from '@/game/screens/Play';
 import { Records } from '@/game/screens/Records';
 import { WorkPanel } from '@/game/screens/Work';
 import { RivalsBoard } from '@/game/screens/Rivals';
+import { PlayerProfile } from '@/game/screens/PlayerProfile';
+import { useRankName } from '@/game/screens/RankCard';
+import { RatEditor } from '@/game/screens/RatEditor';
+import { Panel } from '@/ui/kit';
 import { Legal } from './Legal';
 
 /**
@@ -327,6 +334,54 @@ const COLLECTION_TABS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * The rat of the player of a scene, a tab of it at a time (`player-editor-*`): the profile's panel alone in the page's column, as the profile draws
+ * it (far down the profile, no shot could see it there). The editor has no initial state, so the page presses the tab the scene names (each of the
+ * web's tabs is marked with its id, `data-tab`), as for the finances; the first, the rat itself, is open already. The phone's registry draws the same
+ * panel and gives it the tab. A choice pressed does nothing: a scene is a picture.
+ */
+function RatScene({ scene }: { scene: Scene }) {
+  const t = useT('player');
+  const profile = useProfile();
+  const { text } = useWords();
+  const rankName = useRankName();
+  const member = sceneMember(scene.name);
+  const tab = scene.name.slice('player-editor-'.length);
+  if (member === null) return null;
+  return (
+    <PressedInTurn selectors={tab === 'body' ? [] : [`main [data-tab="${tab}"]`]}>
+      <main className="mx-auto flex w-full max-w-md flex-col px-3 pt-4">
+        <Panel title={t('rat')} label={t('rat')}>
+          <RatEditor
+            look={ratLookOf(member.avatar, member.userId)}
+            earned={profile.badges}
+            rank={progressOf(profile.rank.points).rank}
+            badgeName={(id) => text.badges[id]?.name ?? id}
+            rankName={rankName}
+            onPick={nothing}
+            onLocked={nothing}
+          />
+        </Panel>
+      </main>
+    </PressedInTurn>
+  );
+}
+
+/**
+ * The player's own profile (`player-member`), and the same with their friend code just copied (`player-friend-code`): the profile has no initial
+ * state, so the page presses the code's button once the profile has read it, as a person would, and the toast says it was copied. The phone's
+ * PlayerProfile is given the code as copied (`copied`).
+ */
+function PlayerScene({ scene }: { scene: Scene }) {
+  const code = sceneMember(scene.name)?.friendCode;
+  const find = scene.name === 'player-friend-code' && code !== undefined ? [() => [...document.querySelectorAll<HTMLElement>('main button')].find((button) => button.textContent?.includes(code)) ?? null] : [];
+  return (
+    <PressedInTurn selectors={find}>
+      <PlayerProfile />
+    </PressedInTurn>
+  );
+}
+
+/**
  * The screen each scene is drawn on, by the first word of its name (`screenOf`): the web's pages. The scene is given, so a sheet it names (`scene.sheet`) is the screen's to open. The phone's list is the same.
  * A moment of a life (`moment-*`) is Play's own sheet, open over its stage as the game opens it: Play draws it.
  */
@@ -348,6 +403,7 @@ const SCREENS: Readonly<Record<string, (scene: Scene) => ReactNode>> = {
   rivals: () => <RivalsScene />,
   end: (scene) => <EndScene scene={scene} />,
   moment: (scene) => <PlayScene scene={scene} />,
+  player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : <PlayerScene scene={scene} />),
 };
 
 /**
@@ -385,6 +441,21 @@ function SceneGame({ scene, services }: { scene: Scene; services: Services }) {
   );
 }
 
+/** The other players, as a game's services hand them to its screens. */
+type Community = NonNullable<ReturnType<NonNullable<Services['community']>>>;
+
+/**
+ * The cloud a scene of the game online is drawn with (`sceneCloud`: the same on the phone's): its member signed in from the start, and their profile
+ * on the server. None for a scene of the game alone, which nobody plays signed in: the page holds nothing of the cloud.
+ */
+function cloudOf(name: string): Pick<Services, 'account' | 'community'> {
+  const cloud = sceneCloud(name);
+  if (cloud === null) return {};
+  // What a scene's screen asks of the other players: what the server keeps of the member. The rest it never asks.
+  const community = cloud.community as unknown as Community;
+  return { account: cloud.account, community: () => community };
+}
+
 export default function ScenePage({ searchParams }: { searchParams: Promise<{ name?: string }> }) {
   const { name } = use(searchParams);
   const scene = SCENES.find((candidate) => candidate.name === name);
@@ -393,7 +464,7 @@ export default function ScenePage({ searchParams }: { searchParams: Promise<{ na
   useEffect(() => {
     if (scene === undefined || !drawable) return;
     let current = true;
-    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: sceneServices(store, scene.name) }));
+    void sceneStore(scene.name).then((store) => current && setBuilt({ scene, services: { ...sceneServices(store, scene.name), ...cloudOf(scene.name) } }));
     return () => {
       current = false;
     };

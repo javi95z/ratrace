@@ -20,7 +20,7 @@ const screensOf = (source: string, registry: string): string[] => entriesOf(sour
 
 test('the app and the web draw a scene on the same screens, in the same order', () => {
   const inApp = screensOf(app, 'SCENE_SCREENS');
-  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment']);
+  expect(inApp).toEqual(['home', 'new', 'play', 'finance', 'hud', 'amount', 'celebrate', 'records', 'collection', 'challenge', 'legal', 'work', 'profile', 'balance', 'rivals', 'end', 'moment', 'player']);
   expect(screensOf(web, 'SCREENS')).toEqual(inApp);
 });
 
@@ -330,4 +330,20 @@ test('the records and the collection are drawn by their own screens on both side
   expect(read('../../web/src/game/screens/Collection.tsx')).toContain("tabs={[{ id: 'badges', label: t('badges') }, { id: 'items', label: t('items') }]}");
   // The one scene that names a sheet names the latest life, by its id.
   expect(SCENES.filter((scene) => scene.name.startsWith('records-') && scene.sheet !== undefined).map((scene) => [scene.name, scene.sheet])).toEqual([['records-detail', 'id-3']]);
+});
+
+test('the player\'s own profile is drawn signed in on both sides, with the same cloud: its rat a tab at a time on a page of its own, its code copied', () => {
+  // The cloud is the core's, in memory, the same on both: never the project's.
+  expect(web).toContain("services: { ...sceneServices(store, scene.name), ...cloudOf(scene.name) }");
+  expect(app).toContain('...cloudOf(scene) };');
+  for (const source of [web, app]) {
+    expect(source).toContain("import { sceneCloud, sceneMember } from '@ratrace/core/testing/sceneCloud';");
+    expect(source).toContain("player: (scene) => (scene.name.startsWith('player-editor-') ? <RatScene scene={scene} /> : ");
+    expect(source).toContain("const community = cloud.community as unknown as Community;\n  return { account: cloud.account, community: () => community };");
+  }
+  // The web's page presses the tab and the code, which its screens have no initial state for; the phone's screens are given them.
+  expect(web).toContain('<PressedInTurn selectors={tab === \'body\' ? [] : [`main [data-tab="${tab}"]`]}>');
+  expect(web).toContain('<PressedInTurn selectors={find}>\n      <PlayerProfile />');
+  expect(app).toContain('tab={ratTabOf(scene)}');
+  expect(app).toContain("<PlayerProfile copied={scene.name === 'player-friend-code'} />");
 });

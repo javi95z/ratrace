@@ -39,8 +39,13 @@ test('the records and the collection are their own screens', async () => {
   expect(screen.getByRole('heading', { name: 'Collection' })).toBeTruthy();
 });
 
+test('the player\'s own profile is its own screen', () => {
+  renderGame(<PlayerRoute />, memoryServices());
+  expect(screen.getByRole('heading', { name: 'Your profile' })).toBeTruthy();
+});
+
 test('the pages of the game with others go home: no solo screen leads to them, and the phone plays offline', () => {
-  for (const route of [<RankingsRoute key="rankings" />, <RoomRoute key="room" />, <PlayerRoute key="player" />] as ReactElement[]) {
+  for (const route of [<RankingsRoute key="rankings" />, <RoomRoute key="room" />] as ReactElement[]) {
     const { container } = renderGame(route, memoryServices());
     expect(container.querySelector('[data-redirect]')?.getAttribute('data-redirect')).toBe('/');
     cleanup();

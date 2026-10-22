@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useSyncExternalStore, type ReactNode, type Ref } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import Animated, { measure, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { SCREEN_TOP, Screen, type ScreenScroller } from './Page';
 import { COLORS, GUTTER } from './theme';
@@ -225,5 +225,51 @@ export function StickyScreen({
         {children}
       </Screen>
     </Offset.Provider>
+  );
+}
+
+/**
+ * The page a part of it sticks in (`StickyPart`): how far it has scrolled, written on the UI thread (a `Screen`'s `scrollY`), the column the part
+ * stands in, as Reanimated measures it, and how far below the top of what scrolls that column starts (the `Screen`'s room on top, `SCREEN_TOP`).
+ */
+export interface PageScrolling {
+  scrollY: SharedValue<number>;
+  column: AnimatedRef<View>;
+  top: number;
+}
+export const PageScroll = createContext<PageScrolling | null>(null);
+
+/**
+ * A part of a page whose first row (`head`) stays at the top of the page while the rest of the part scrolls under it, and goes with the part once
+ * its foot comes up: the web's `sticky top-0` on a row inside a part of the page (the rat and its tabs over the choices of PlayerProfile's editor),
+ * not the page's own header (`StickyScreen`). Worked out on the UI thread, frame by frame with the scroll, from where the part and the column stand
+ * on the screen (measured there, so a part that moves as the page above it changes is followed), never drawn again by React for it. Outside a
+ * `PageScroll` (a part drawn on a page of its own) it is the rows as they are. The head is drawn over what passes under it; `gap` is the room
+ * between it and the rest, `style` the part's own.
+ */
+export function StickyPart({ head, gap = 0, style, children }: { head: ReactNode; gap?: number; style?: ViewStyle; children: ReactNode }) {
+  const page = useContext(PageScroll);
+  const part = useAnimatedRef<View>();
+  const row = useAnimatedRef<View>();
+  const scrollY = page?.scrollY;
+  const column = page?.column;
+  const top = page?.top ?? 0;
+  const stuck = useAnimatedStyle(() => {
+    if (scrollY === undefined || column === undefined) return { transform: [{ translateY: 0 }] };
+    const box = measure(part);
+    const sheet = measure(column);
+    const held = measure(row);
+    if (box === null || sheet === null || held === null) return { transform: [{ translateY: 0 }] };
+    // Where the part starts in what scrolls: the column's place in it, and the part's in the column (the scroll moves both alike on the screen).
+    const at = top + box.pageY - sheet.pageY;
+    return { transform: [{ translateY: Math.max(0, Math.min(box.height - held.height, scrollY.value - at)) }] };
+  });
+  return (
+    <Animated.View ref={part} collapsable={false} style={[{ gap }, style]}>
+      <Animated.View ref={row} collapsable={false} style={[{ zIndex: 1 }, stuck]}>
+        {head}
+      </Animated.View>
+      {children}
+    </Animated.View>
   );
 }
