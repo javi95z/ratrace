@@ -54,12 +54,13 @@ const shows = (text: string): boolean => readRun(parsed(text)) !== null;
 /**
  * Moves the lives kept the old way, in one value, each to a key of its own: every life first, then the index, and the old value taken away last. Killed
  * at any point, the old value is still there, and the next read does it all again: a life written twice is the same life, and the index is the old
- * value's ids (with any it already named), so nothing is lost and nothing is there twice.
+ * value's ids (with any it already named), so nothing is lost and nothing is there twice. An old value that cannot be read is taken away as an empty one.
  */
 async function moveOld(): Promise<void> {
   const text = await Storage.getItem(RUNS_BEFORE);
   if (text === null) return;
-  const old = JSON.parse(text) as unknown;
+  // A value that cannot be read holds no life that can be had: it is let go like an empty one, not thrown on every list for ever after.
+  const old = parsed(text);
   const runs = typeof old === 'object' && old !== null && !Array.isArray(old) ? Object.entries(old as Record<string, unknown>) : [];
   for (const [id, run] of runs) await write(RUN + id, run);
   const ids = [...new Set([...runs.map(([id]) => id), ...idsOf(await Storage.getItem(INDEX))])];

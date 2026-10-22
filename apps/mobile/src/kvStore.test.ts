@@ -163,6 +163,18 @@ describe('the lives a phone kept the old way, in one value', () => {
     }
   });
 
+  it('that cannot be read (a value cut short) are none: the old value is taken away, and the list is not refused on every read', async () => {
+    // The lives kept with it are lost either way (no life can be read out of it); keeping it would throw on every list, and no life would ever show.
+    device.values.set(OLD, '{"first": {"runId": "fir');
+    await new KvStore().addRun(life('later', 40));
+    expect(ids(await new KvStore().listRuns())).toEqual(['later']);
+    expect(device.values.has(OLD)).toBe(false);
+    // Read again, it is gone: nothing more is written.
+    device.calls.length = 0;
+    expect(ids(await new KvStore().listRuns())).toEqual(['later']);
+    expect(writes()).toEqual([]);
+  });
+
   it('are none, and no write, on a phone that never finished a life', async () => {
     expect(await new KvStore().listRuns()).toEqual([]);
     expect(writes()).toEqual([]);
